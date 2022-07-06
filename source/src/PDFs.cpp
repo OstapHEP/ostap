@@ -7474,6 +7474,7 @@ Double_t Ostap::Models::Uniform::analyticalIntegral
 
 
 // ============================================================================
+// Rice distrbution
 // ============================================================================
 Ostap::Models::Rice::Rice
 ( const char*  name      , 
@@ -7567,6 +7568,102 @@ Double_t Ostap::Models::Rice::analyticalIntegral
 
 
 // ============================================================================
+// Rice distrbution
+// ============================================================================
+Ostap::Models::GenInvGauss::GenInvGauss
+( const char*  name      , 
+  const char*  title     , 
+  RooAbsReal&  x         ,
+  RooAbsReal&  theta     ,
+  RooAbsReal&  eta       ,
+  RooAbsReal&  p         ,
+  RooAbsReal&  shift     ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"        , "x-observable"       , this , x        )
+  , m_theta    ( "theta"    , "theta-parameter"    , this , theta    )
+  , m_eta      ( "eta  "    , "eta-parameter"      , this , eta      )
+  , m_p        ( "p"        , "p-parameter"        , this , p        )
+  , m_shift    ( "shift"    , "shift-parameter"    , this , shift    )
+  , m_gig () 
+{
+  setPars() ;
+}
+// ============================================================================
+Ostap::Models::GenInvGauss::GenInvGauss
+( const char*  name      , 
+  const char*  title     , 
+  RooAbsReal&  x         ,
+  RooAbsReal&  theta     ,
+  RooAbsReal&  eta       ,
+  RooAbsReal&  p         )
+  : GenInvGauss ( name , title , x , theta , eta , p , RooFit::RooConst ( 0.0 ) ) 
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::GenInvGauss::GenInvGauss
+( const Ostap::Models::GenInvGauss& right ,
+  const char*                       name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "x"        , this , right.m_x        ) 
+  , m_theta    ( "theta"    , this , right.m_theta    ) 
+  , m_eta      ( "eta"      , this , right.m_eta      ) 
+  , m_p        ( "p"        , this , right.m_p        ) 
+  , m_shift    ( "shift"    , this , right.m_shift    ) 
+  , m_gig      ( right.m_gig ) 
+{}  
+// ============================================================================
+// clone method
+// ============================================================================
+Ostap::Models::GenInvGauss* 
+Ostap::Models::GenInvGauss::clone ( const char* name ) const 
+{ return new Ostap::Models::GenInvGauss( *this , name ) ; }
+// ============================================================================
+Ostap::Models::GenInvGauss::~GenInvGauss(){}
+// ============================================================================
+void Ostap::Models::GenInvGauss::setPars () const 
+{
+  m_gig.setTheta ( m_theta ) ;
+  m_gig.setEta   ( m_eta   ) ;
+  m_gig.setP     ( m_p     ) ;
+  m_gig.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::GenInvGauss::evaluate() const 
+{
+  setPars() ;
+  return m_gig ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::GenInvGauss::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::GenInvGauss::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_gig.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
 ClassImp(Ostap::Models::Shape1D            ) 
 ClassImp(Ostap::Models::Shape2D            ) 
 ClassImp(Ostap::Models::Shape3D            ) 
@@ -7648,6 +7745,7 @@ ClassImp(Ostap::Models::ConvexSpline       )
 ClassImp(Ostap::Models::CutOffGauss        )
 ClassImp(Ostap::Models::CutOffStudent      )
 ClassImp(Ostap::Models::Rice               )
+ClassImp(Ostap::Models::GenInvGauss        )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

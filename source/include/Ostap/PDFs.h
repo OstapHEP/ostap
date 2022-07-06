@@ -6242,7 +6242,88 @@ namespace Ostap
       mutable Ostap::Math::Rice m_rice ;          // the function
       // ======================================================================
     } ;
-
+    // ========================================================================
+    /** @class GenInvGauss
+     *  @see Ostap::Math::GenInvGauss
+     *  Generalised Inverse Gaussian distribution using
+     *  \f$ (\theta,\eta) \f$ parameterisation  
+     *  - |f$ \theta = \sqrt{ab}\$ 
+     *  - |f$ \eta   = \sqrt{\frac{b}{a}}\$ 
+     *  @see https://en.wikipedia.org/wiki/Generalized_inverse_Gaussian_distribution
+     */
+    class GenInvGauss : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::GenInvGauss, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      GenInvGauss ( const char*  name      , 
+                    const char*  title     , 
+                    RooAbsReal&  x         ,
+                    RooAbsReal&  theta     ,
+                    RooAbsReal&  eta       ,
+                    RooAbsReal&  p         ,
+                    RooAbsReal&  shift     ) ;
+      GenInvGauss ( const char*  name      , 
+                    const char*  title     , 
+                    RooAbsReal&  x         ,
+                    RooAbsReal&  theta     ,
+                    RooAbsReal&  eta       ,
+                    RooAbsReal&  p         ) ;
+      /// copy constructor 
+      GenInvGauss ( const GenInvGauss& right , const char* name = nullptr ) ;
+      /// clone method
+      GenInvGauss* clone ( const char* name ) const override ;
+      // virtual destructor  
+      virtual ~GenInvGauss() ;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      GenInvGauss () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::GenInvGauss& function() const { return m_gig ; }
+      const Ostap::Math::GenInvGauss& gig     () const { return m_gig ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy   m_x        { } ;
+      RooRealProxy   m_theta    { } ;
+      RooRealProxy   m_eta      { } ;
+      RooRealProxy   m_p        { } ;
+      RooRealProxy   m_shift    { } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::GenInvGauss m_gig ;          // the function
+      // ======================================================================
+    } ;
 
     // ========================================================================
     /** @class Shape1D

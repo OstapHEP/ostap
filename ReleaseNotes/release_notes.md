@@ -1,5 +1,6 @@
 ## New features: 
   1. Add Rice functioni and corresponding pdf 
+  1. Add Generalised Inverse Gaussian function and PDF 
 
 ## Backward incompatible:  
  

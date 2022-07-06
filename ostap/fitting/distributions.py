@@ -20,6 +20,7 @@
 - TwoExpos_pdf       : Difference of two exponents
 - Gumbel_pdf         : Gumbel distributions
 - Rice_pdf           : Rice distribution
+- GenInvGauss_pdf    : Generalized Inverse Gaussian distribution
 - Weibull_pdf        : Weibull distributions
 - Tsallis_pdf        : Tsallis PDF 
 - QGSM_pdf           : QGSM PDF 
@@ -42,6 +43,7 @@ __all__     = (
     'TwoExpos_pdf'       , ## difference of two exponents
     'Gumbel_pdf'         , ## Gumbel distributions
     'Rice_pdf'           , ## Rice distribution 
+    'GenInvGauss_pdf'    , ## Rice distribution 
     'Weibull_pdf'        , ## Weibull distributions
     'Tsallis_pdf'        , ## Tsallis PDF 
     'QGSM_pdf'           , ## QGSM PDF 
@@ -1147,6 +1149,104 @@ class Rice_pdf(PDF) :
 
 models.append ( Rice_pdf ) 
 
+# =============================================================================
+## @class GenInvGauss_pdf
+#  Generalized Inverse Gaussian distribution
+#  @see Ostap::Math::GenInvGauss
+#  Generalised Inverse Gaussian distribution using
+#  \f$ (\theta,\eta) \f$ parameterisation  
+#  - |f$ \theta = \sqrt{ab}\$ 
+#  - |f$ \eta   = \sqrt{\frac{b}{a}}\$ 
+#   @see https://en.wikipedia.org/wiki/Generalized_inverse_Gaussian_distribution
+
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @see Ostap::Math::GenInvGauss
+#  @see Ostap::Models::GenInvGauss
+class GenInvGauss_pdf(PDF) :
+    """ Generalized Inverse Gaussian distribution
+    Generalised Inverse Gaussian distribution using (theta,eta) parameterisation
+    - see https://en.wikipedia.org/wiki/Generalized_inverse_Gaussian_distribution
+    - see Ostap::Math::GenInvGauss
+    """
+    ## constructor
+    def __init__ ( self         ,   
+                   name         ,                               ## the name 
+                   xvar         ,                               ## the variable 
+                   theta        ,                               ## parameter theta
+                   eta          ,                               ## parameter eta
+                   p            ,                               ## parameter p
+                   shift = ROOT.RooFit.RooConst ( 0.0 )  ) : ## shift parameter
+        #
+        PDF.__init__ ( self , name , xvar )
+        #
+
+        
+        self.__theta    = self.make_var ( theta             ,
+                                          'theta_%s'          % name ,
+                                          '#theta_{GIG}(%s)'  % name , theta , 1.0 , 1.e-8 , 100 )
+        self.__eta      = self.make_var ( eta               ,
+                                          'eta_%s'            % name ,
+                                          '#eta_{GIG}(%s)'    % name , eta   , 1.0 , 1.e-8 , 100 )
+        self.__p        = self.make_var ( p                 ,
+                                          'p_%s'              % name ,
+                                          'p_{GIG}(%s)'       % name , p     , 0   , -100  , 100 )
+        
+        self.__shift   = self.make_var ( shift        ,
+                                         'shift_%s'           % name ,
+                                         'shift_{GIG}(%s)'    % name , shift     , 0 , -1.e+6 , 1.e+6 )
+        
+        self.pdf  = Ostap.Models.GenInvGauss (
+            self.roo_name ( 'gig_' )   ,
+            'GenInvGauss %s' % self.name  , 
+            self.x      ,
+            self.theta  ,
+            self.eta    ,
+            self.p      ,
+            self.shift  )
+        
+        ## save the configuration:
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'theta'    : self.theta    ,
+            'eta'      : self.eta      ,
+            'p'        : self.p        ,
+            'shift'    : self.shift    ,            
+            }
+        
+    @property
+    def theta ( self ) :
+        """``theta''-parameter of Generilized Inverse Gaussian  function"""
+        return self.__theta
+    @theta.setter
+    def theta ( self , value ) :
+        self.set_value ( self.__theta , value )
+
+    @property
+    def eta ( self ) :
+        """``eta''-parameter of Generilized Inverse Gaussian  function"""
+        return self.__eta
+    @eta.setter
+    def eta ( self , value ) :
+        self.set_value ( self.__eta , value )
+
+    @property
+    def p   ( self ) :
+        """``p''-parameter of Generilized Inverse Gaussian  function"""
+        return self.__p
+    @p.setter
+    def p ( self , value ) :
+        self.set_value ( self.__p , value )
+
+    @property
+    def shift ( self ) :
+        """``shift''-parameter of Rice function"""
+        return self.__shift
+    @shift.setter
+    def shift ( self , value ) :
+        self.set_value ( self.__shift , value )
+
+models.append ( GenInvGauss_pdf ) 
 
 # =============================================================================
 ## @class Weibull_pdf 

@@ -1679,6 +1679,8 @@ namespace Ostap
       double varsigma () const { return m_varsigma ; }
       // parameger shift 
       double shift    () const { return m_shift    ; }
+      /// minimal x 
+      double xmin     () const { return m_shift    ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1720,8 +1722,107 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace {} ; // workspace
       // ======================================================================
     } ;
-    
-
+    // ========================================================================
+    /** @class GenInvGauss
+     *  Generalised Inverse Gaussian distribution using
+     *  \f$ (\theta,\eta) \f$ parameterisation  
+     *  - |f$ \theta = \sqrt{ab}\$ 
+     *  - |f$ \eta   = \sqrt{\frac{b}{a}}\$ 
+     *  @see https://en.wikipedia.org/wiki/Generalized_inverse_Gaussian_distribution
+     */
+    class GenInvGauss 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      GenInvGauss 
+      ( const double theta = 1 , 
+        const double eta   = 1 , 
+        const double p     = 1 , 
+        const double shift = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // evaluat the function 
+      double evaluate ( const double x ) const ;
+      // evaluat the function 
+      inline double operator() ( const double x ) const 
+      { return evaluate ( x ) ; }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// parameter theta 
+      double theta () const { return m_theta ; }
+      /// parameter eta 
+      double eta   () const { return m_eta   ; }  
+      /// parameter p 
+      double p     () const { return m_p ; }  
+      /// parameter shif
+      double shift () const { return m_shift ; }  
+      // ======================================================================
+    public: // derived parameters
+      // ======================================================================      
+      // parameter a (derived) 
+      double a () const ;
+      // parameter b (derived) 
+      double b () const ;
+      /// minimal x 
+      double xmin () const { return m_shift ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setTheta  ( const double value ) ;
+      bool setEta    ( const double value ) ;
+      bool setP      ( const double value ) ;
+      bool setShift  ( const double value ) ;
+      // ======================================================================
+    public: // properties 
+      // ======================================================================
+      /// mean value 
+      double mean     () const ;
+      /// mode  
+      double mode     () const ;
+      /// variance  
+      double variance () const ;
+      /// RMS 
+      double rms      () const ;
+      /// disparsion 
+      inline double dispersion () const { return variance () ; }
+      /// sigma 
+      inline double sigma      () const { return rms      () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      double integral   () const ;
+      /// get the integral between low and high
+      double integral   ( const double low  ,
+                          const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag() const ;
+      // ======================================================================
+    private:      
+      // ======================================================================
+      /// parameter theta 
+      double m_theta      {  1 } ; // parameter theta 
+      /// parameter eta 
+      double m_eta        {  1 } ; // parameter eta 
+      /// p-parameter
+      double m_p          {  1 } ; // p-parameter
+      /// shift parameter
+      double m_shift      {  1 } ; // shift parameter
+      /// cache 
+      double m_iKp_theta  { -1 } ; // cache 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// workspace
+      Ostap::Math::WorkSpace m_workspace {} ; //
+      // ======================================================================
+    } ;  
     // ========================================================================
     /** @class Tsallis
      *

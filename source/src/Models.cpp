@@ -2930,6 +2930,190 @@ std::size_t Ostap::Math::Rice::tag () const
   
 
 
+
+// ============================================================================
+// Constructor 
+// ============================================================================
+Ostap::Math::GenInvGauss::GenInvGauss 
+( const double theta , 
+  const double eta   ,
+  const double p     ,  
+  const double shift ) 
+  : m_theta ( std::abs ( theta ) ) 
+  , m_eta   ( std::abs ( eta   ) ) 
+  , m_p     ( p     )
+  , m_shift ( shift )
+  , m_iKp_theta ( -1 ) 
+  , m_workspace () 
+{
+  m_iKp_theta = 1.0 / Ostap::Math::bessel_Knu ( m_p , m_theta ) ;
+}
+// ============================================================================
+/// evaluate the function 
+// ============================================================================
+double Ostap::Math::GenInvGauss::evaluate ( const double x ) const 
+{
+  if ( x <= m_shift ) { return 0 ; }
+  //
+  const double dx = x - m_shift ;
+  const double xp = dx / m_eta  ;
+  //
+  return 0.5 * m_iKp_theta / m_eta 
+    * std::pow ( xp , m_p - 1 )  
+    * std::exp ( -0.5 * m_theta * ( xp + 1 / xp ) )  ; 
+}
+// ============================================================================
+// parameter a  
+// ============================================================================
+double Ostap::Math::GenInvGauss::a () const { return m_theta / m_eta ; }
+// ============================================================================
+// parameter b  
+// ============================================================================
+double Ostap::Math::GenInvGauss::b () const { return m_theta * m_eta ; }
+// ============================================================================
+// set parameter theta 
+// ============================================================================
+bool Ostap::Math::GenInvGauss::setTheta  ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_theta , avalue ) ) { return false ; }
+  m_theta     = avalue ;
+  m_iKp_theta = 1.0 / Ostap::Math::bessel_Knu ( m_p , m_theta ) ;  
+  return true ;
+}
+// ============================================================================
+// set parameter eta 
+// ============================================================================
+bool Ostap::Math::GenInvGauss::setEta  ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_eta , avalue ) ) { return false ; }
+  m_eta     = avalue ;
+  return true ;
+}
+// ============================================================================
+// set parameter P
+// ============================================================================
+bool Ostap::Math::GenInvGauss::setP  ( const double value ) 
+{
+  if ( s_equal ( m_p , value ) ) { return false ; }
+  m_p         = value ;
+  m_iKp_theta = 1.0 / Ostap::Math::bessel_Knu ( m_p , m_theta ) ;
+  return true ;
+}
+// ============================================================================
+// set shift parameter 
+// ============================================================================
+bool Ostap::Math::GenInvGauss::setShift  ( const double value ) 
+{
+  if ( s_equal ( m_shift , value ) ) { return false ; }
+  m_shift = value ;
+  return true ;
+}
+// ============================================================================
+// mean value
+// ============================================================================
+double Ostap::Math::GenInvGauss::mean     () const 
+{ return m_shift + m_eta * Ostap::Math::bessel_Knu ( m_p + 1 , m_theta ) * m_iKp_theta ; }
+// ============================================================================
+// variance  
+// ============================================================================
+double Ostap::Math::GenInvGauss::variance () const 
+{
+  const double k1 = Ostap::Math::bessel_Knu ( m_p + 1 , m_theta ) ;
+  const double k2 = Ostap::Math::bessel_Knu ( m_p + 2 , m_theta ) ;
+  return m_eta * m_eta * ( k2 * m_iKp_theta - std::pow ( k1 * m_iKp_theta , 2 ) ) ;
+}
+// ============================================================================
+// RMS
+// ============================================================================
+double Ostap::Math::GenInvGauss::rms () const 
+{ return std::sqrt ( variance () ) ; }
+// ============================================================================
+// mode  
+// ============================================================================
+double Ostap::Math::GenInvGauss::mode     () const 
+{ return m_shift + m_eta * ( ( m_p - 1 ) +  std::hypot ( m_p - 1 , m_theta ) ) / m_theta ; }
+// ============================================================================
+// get the integral 
+// ============================================================================
+double Ostap::Math::GenInvGauss::integral   () const { return 1 ; }
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::GenInvGauss::integral   
+( const double low  ,
+  const double high ) const
+{
+  // 
+  if ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low )        { return - integral ( high , low ) ; }
+  //
+  if ( high <= m_shift ) { return 0 ; }
+  //
+  const double xmin = std::max ( low , m_shift ) ;
+  //
+  const double x0 = m_eta + m_shift ;
+  //
+  // split at m_eta  
+  if ( xmin < x0 && x0 < high ) 
+  { return integral ( xmin , x0 ) + integral ( x0 , high ) ; }
+  //
+  const double sigma = rms () ;
+  //
+  // split at x1 
+  const double x1 = x0 - 3 * sigma ;
+  if ( xmin < x1 && x1 < high ) 
+  { return integral ( xmin , x1 ) + integral ( x1 , high ) ; }
+  //
+  // split at x2 
+  const double x2 = x0 + 4 * sigma ;
+  if ( xmin < x2 && x2 < high ) 
+  { return integral ( xmin , x2 ) + integral ( x2 , high ) ; }
+  //
+  // split at x3 
+  const double x3 = x0 + 10 * sigma ;
+  if ( xmin < x3 && x3 < high ) 
+  { return integral ( xmin , x3 ) + integral ( x3 , high ) ; }
+  //
+  //
+  const bool in_tail = ( x0 + 10 * sigma ) <= low ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<GenInvGauss> s_integrator ;
+  static const char s_message[] = "Integral(GenInvGauss)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag  () , 
+      &F      , 
+      low     , high ,                             // low & high edges
+      workspace ( m_workspace ) ,                  // workspace
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
+      m_workspace.size()                         , // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+  
+
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::GenInvGauss::tag () const 
+{ 
+  static const std::string s_name = "GenInvGauss" ;
+  return std::hash_combine ( s_name , m_theta , m_eta , m_p , m_shift ) ;
+}
+  
+
+
 // ============================================================================
 //                                                                      The END
 // ============================================================================
