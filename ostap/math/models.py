@@ -1009,7 +1009,9 @@ for model in ( Ostap.Math.Chebyshev              ,
                #
                Ostap.Math.GenGaussV1             ,
                Ostap.Math.GenGaussV2             ,
-               Ostap.Math.SkewGauss              , ## (temporarily removed)
+               Ostap.Math.SkewGauss              ,
+               Ostap.Math.ExGauss                ,
+               Ostap.Math.NormalLaplace          ,
                Ostap.Math.GammaDist              ,
                Ostap.Math.GenGammaDist           ,
                Ostap.Math.Amoroso                ,
@@ -1418,7 +1420,6 @@ for pdf in ( Ostap.Models.BreitWigner        ,
     pdf.sp_integrate = sp_integrate_1D_
     if sp_minimum_1D and not hasattr ( pdf , 'minimum' ) : pdf . minimum = sp_minimum_1D_
     if sp_maximum_1D and not hasattr ( pdf , 'maximum' ) : pdf . maximum = sp_maximum_1D_
-    
     
 # ===============================================================================
 def sp_minimum_2D_ ( pdf  ,
@@ -2219,7 +2220,9 @@ _decorated_classes_ = set( [
     #
     Ostap.Math.GenGaussV1             ,
     Ostap.Math.GenGaussV2             ,
-    Ostap.Math.SkewGauss              , ## (temporarily removed)
+    Ostap.Math.SkewGauss              , 
+    Ostap.Math.ExGauss                , 
+    Ostap.Math.NormalLaplace          , 
     Ostap.Math.GammaDist              ,
     Ostap.Math.GenGammaDist           ,
     Ostap.Math.Amoroso                ,

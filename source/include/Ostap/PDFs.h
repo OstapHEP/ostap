@@ -1602,6 +1602,198 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class ExGauss 
+     *  Exponentially modified Gaussian function, EMG
+     *  @see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
+     *  @see Ostap::Math::ExGauss 
+     *  It is a distibutiin for the varibale that is a 
+     *  sum (or difference for negative \f$ k\f$) 
+     *  of a Gaussian and exponential variables: \f$ X \sim Y + sign(k) Z \f$,  
+     *  where 
+     *  - \f$ Y \sim N(\mu,\sigma) \f$
+     *  - \f$ Z \sim  \frac{1}{k\sigma}\mathrm{e}^{-\frac{x}{k\sigma}} \f$ 
+     *  
+     *  For \f$ k=0\f$ one gets a Gaussian distrobution
+     *  - \f$ k>0\f$ corresponds to the rigth tail  
+     *  - \f$ kM0\f$ corresponds to the left tail  
+     *
+     *  It can be considered as "single-tail" version of the Normal Laplace distribution:
+     *  - \f$ k = 0 \f$ corresponds to Gaussian distribution
+     *  - \f$ k > 0 \f$ corresponds to Normal Laplace \f$ NL(\mu,\sigma,0,k)\f$ 
+     *  - \f$ k < 0 \f$ corresponds to Normal Laplace \f$ NL(\mu,\sigma,\left|k\right|,0)\f$ 
+     *
+     *  @see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
+     *       In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
+     *       "Advances in Distribution Theory, Order Statistics, and Inference. 
+     *       Statistics for Industry and Technology". Birkhäuser Boston. 
+     *  @see https://doi.org/10.1007/0-8176-4487-3_4
+     *  @see Ostap::Math::NormalLaplace 
+     */
+    class ExGauss: public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::ExGauss, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      ExGauss
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          varsigma  , 
+        RooAbsReal&          k         ) ;
+      /// "copy" constructor
+      ExGauss ( const ExGauss& right , const char* name = 0  ) ;
+      /// virtual destructor
+      virtual ~ExGauss () ;
+      /// clone
+      ExGauss* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      ExGauss () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::ExGauss& function () const { return m_eg ; }
+      const Ostap::Math::ExGauss& exgauss  () const { return m_eg ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        {} ;
+      RooRealProxy m_mu       {} ;
+      RooRealProxy m_varsigma {} ;
+      RooRealProxy m_k        {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::ExGauss m_eg ;                     // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class NormalLaplace 
+     *  Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
+     *  It behaves line core Gaussian with exponential tails 
+     *  @see Wiliam J. Reed, "The Normal-Laplace Distribution Relatives", 
+     *  October, 2004
+     *  @see https://www.math.uvic.ca/faculty/reed/NL.draft.1.pdf
+     *  @see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
+     *       In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
+     *       "Advances in Distribution Theory, Order Statistics, and Inference. 
+     *       Statistics for Industry and Technology". Birkhäuser Boston. 
+     *  @see https://doi.org/10.1007/0-8176-4487-3_4
+     *
+     *   \f$ f(x; \mu, \sigma, k_L , k_R ) = 
+     *   \frac{1}{\sigma ( k_L + k_R) } 
+     *   \phi ( z ) \left( R ( \frac{1}{k_R} - z ) + 
+     *                     R ( \frac{1}{k_L} + z ) \right) 
+     *   \f$, where
+     *   - \f$ k_L,k_R \ge 0 \f$ 
+     *   - \f$ z = \frac{x-\mu}{\sigma} \f$ 
+     *   - \f$ \phi(z) \f$ is Gaussian PDF  
+     *   - \f$  R(x)   \f$ is Mill's ratio 
+     *  @see Ostap::Math::nills_normal 
+     *  @see Ostap::Math::nills_normal 
+     *  @see Ostap::Math::NormalLaplace
+     */    
+    class NormalLaplace: public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::NormalLaplace, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      NormalLaplace
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          varsigma  , 
+        RooAbsReal&          kL        , 
+        RooAbsReal&          kR        ) ;
+      /// "copy" constructor
+      NormalLaplace ( const NormalLaplace& right , const char* name = 0  ) ;
+      /// virtual destructor
+      virtual ~NormalLaplace () ;
+      /// clone
+      NormalLaplace* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      NormalLaplace () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::NormalLaplace& function       () const { return m_nl ; }
+      const Ostap::Math::NormalLaplace& normallaplace  () const { return m_nl ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        {} ;
+      RooRealProxy m_mu       {} ;
+      RooRealProxy m_varsigma {} ;
+      RooRealProxy m_kL       {} ;
+      RooRealProxy m_kR       {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::NormalLaplace m_nl ;                     // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Bukin
      *  "Bukin"-function, aka "Modified Novosibirsk function"
      *  @see http://arxiv.org/abs/1107.5751
@@ -5398,9 +5590,10 @@ namespace Ostap
      * For negative \f$ \lambda \f$ tails are more heavy..
      *
      * @see Ostap::Math::Hyperbolic
-     *  Usefun subclasses 
-     *  - \f$ \lambda=1\f$ : Hyperbolic distributiobn  
-     *  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Stundent's t-distibution 
+     *  Useful subclasses 
+     *  - \f$ \lambda=1\f$ : Hyperbolic distribution
+     *  - \f$ \lambda=-\frac{1}{2}\f$ : Normal Inverse Gaussian distributtion
+     *  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Student's t-distibution 
      *  - \f$ \lambda \rightarrow \pm\infty, \kappa=0\f$ : Gaussian distribution 
      *  - \f$ \zeta \rightarrow +\infty, \kappa=0\f$ : Gaussian distribution 
      * 

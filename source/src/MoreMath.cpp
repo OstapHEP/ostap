@@ -35,7 +35,7 @@
 #include "Faddeeva.hh"
 #include "gauss.h"
 #include "Ostap/Workspace.h"
-// #include "local_math.h"
+#include "local_math.h"
 #include "local_gsl.h"
 #include "Integrator1D.h"
 // ============================================================================
@@ -57,9 +57,9 @@ namespace
                   "mumeric_limits are not specialized for long doubles" ) ;
   // ==========================================================================
   /// equality criteria for doubles
-  const Ostap::Math::Equal_To<double> s_equal{} ;       // equality criteria for doubles
+  /// const Ostap::Math::Equal_To<double> s_equal{} ;       // equality criteria for doubles
   /// zero for doubles  
-  const Ostap::Math::Zero<double>     s_zero {} ;       // zero for doubles
+  /// const Ostap::Math::Zero<double>     s_zero {} ;       // zero for doubles
   /// "almost infinity" 
   const long double s_infinity = 0.9 * std::numeric_limits<double>::max () ;
   /// "relatively large value" 
@@ -2407,9 +2407,17 @@ double Ostap::Math::carlson_RG_int
 
 
 
-
-
-
+// ============================================================================
+/* Mill's ratio for normal distribution
+ *  - \f$ m (x) = \frac{1 - \Phi(x)}{\phi(x)}\f$  
+ *  - \f$ m(x) =  \sqrt{ \frac{\pi}{2} } \mathrm{e}^{ \frac{x^2}{2}} \mathrm{erfc}{ \frac{x}{\sqrt{2}}}\f$ 
+ *  - \f$ m(x) =  \sqrt{ \frac{\pi}{2} } \mathrm{erfcx}{ \frac{x}{\sqrt{2}}}\f$ 
+ *  @see https://en.wikipedia.org/wiki/Mills_ratio
+ *  @see Ostap::Math::erfcx 
+ */
+// ============================================================================
+double Ostap::Math::mills_normal ( const double x ) 
+{ return s_SQRTPIHALF * Ostap::Math::erfcx ( s_SQRT2i * x ) ; }
 
 
 

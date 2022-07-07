@@ -16,6 +16,7 @@
 #  - generalized Hyperbolic model        (tails are exponential or heavier)
 #  - Hypatia model                       (tails are exponential or heavier)
 #  - Das model                           (gaussian with exponential tails)
+#  - Normal Laplas model                 (gaussian with exponential tails) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-13
 # =============================================================================
@@ -33,6 +34,7 @@
 - Hyperbolic                          (tails are exponential)
 - generalized Hyperbolic              (tails are exponential or heavier)
 - Hypatia model                       (tails are exponential or heavier)
+- Normal Laplace model                 (gaussian with exponential tails) 
 - Das model                           (gaussian with exponential tails)
 - Generalized Gaussian v1             (family that included Gaussian, Laplace, uniform etc...)
 """
@@ -56,6 +58,7 @@ __all__     = (
     'ResoGenHyperbolic' , ## Generalised Hyperbolic resolution model
     'ResoHypatia'       , ## Hypatia resoltuion model
     'ResoDas'           , ## Das resolution model
+    'ResoNormalLaplace' , ## Normal Laplace resolution model
     'ResoGenGaussV1'    , ## Generalized  Gaussian v1 
     )
 # =============================================================================
@@ -1899,7 +1902,122 @@ class ResoGenGaussV1(RESOLUTION) :
     def beta ( self, value ) :
         self.set_value ( self.__beta , value )
 
+
+
+
+
+# =============================================================================
+## @class ResoNormalLaplace
+class ResoNormalLaplace(RESOLUTION) :
+    """
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   varsigma  = None ,
+                   k         = 0    ,  ## k = 0 ives gaussian Resolution
+                   fudge     = 1    , 
+                   mean      = None ,
+                   kappa     = None ) : ## tail symmetry parameter 
+
+        ## initialize the base
+        super(ResoNormalLaplace,self).__init__( name        = name     ,
+                                                xvar        = xvar     ,
+                                                sigma       = varsigma ,                                     
+                                                mean        = mean     ,
+                                                fudge       = fudge    ,
+                                                sigma_name  = 'varsigma_%s'   % name ,                                               
+                                                sigma_title = '#varsigma(%s)' % name )
         
+        self.__varsigma = self.sigma
+
+        ## k-parameter 
+        self.__k     = self.make_var ( k ,
+                                       'k_%s'  % self.name ,
+                                       'k(%s)' % self.name ,
+                                       k  , 0 , -100  , +100 ) 
+        
+        ## asymmetry parameter 
+        self.__kappa = self.make_var ( ZERO if kappa is None else kappa , 
+                                       'kappa_%s'   % self.name ,
+                                       '#kappa(%s)' % self.name ,
+                                       ZERO if kappa is None else kappa , 0 , -1 , +1 ) 
+        
+        
+        if kappa is None :
+            
+            self.__kL = self.__k 
+            self.__kR = self.__k
+            
+        else :
+            
+            self.__kL , self.__kR = self.vars_from_asymmetry (
+                self.k                                            , ## exponenital slope 
+                self.kappa                                        , ## asymmetry parametet
+                v1name  =  self.roo_name ( 'kL' , self.name ) ,
+                v2name  =  self.roo_name ( 'kR' , self.name ) ,
+                v1title = '#k_L: k #times (1+#kappa)'         , 
+                v2title = '#k_R: k #times (1-#kappa)'         )
+  
+        #
+        ## finally build PDF
+        #
+        self.pdf = Ostap.Models.NormalLaplace (
+            self.roo_name ( 'normlapl_' ) , 
+            "Resolution Normal Laplace %s" % self.name ,
+            self.xvar       ,
+            self.mean       ,
+            self.sigma_corr , ## attention 
+            self.kL         ,
+            self.kR         )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name     ,
+            'xvar'      : self.xvar     ,
+            'mean'      : self.mean     ,
+            'varsigma'  : self.varsigma ,
+            'k'         : self.k        ,
+            'kappa'     : self.kappa    ,
+            'fudge'     : self.fudge 
+            }
+        
+    @property
+    def varsigma    ( self ) :
+        """``varsigma'' : varsigma parameter for Normal Laplace function (same as ``sigma'')"""
+        return self.sigma
+    @varsigma.setter
+    def varsigma    ( self , value ) :
+        self.set_value ( self.__varsigma , value )
+
+    @property 
+    def k  ( self ) :
+        """``k'' :  (dimensioneless) k-parameter"""
+        return self.__k
+    @k.setter  
+    def k ( self , value ) :
+        self.set_value ( self.__k , value )
+
+    @property 
+    def kL ( self ) :
+        """``kL'' :  (dimensioneless) kL-parameter"""
+        return self.__kL
+        
+    @property 
+    def kR ( self ) :
+        """``kR'' :  (dimensioneless) kR-parameter"""
+        return self.__kR
+
+    @property
+    def kappa ( self ) :
+        """``kappa'' : yail asymemtry parameter 0.5(kL-kR)/(kL+_kR)
+        """
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :
+        self.setValue ( self.__kappa , value )
+
+
 # =============================================================================
 if '__main__' == __name__ :
     

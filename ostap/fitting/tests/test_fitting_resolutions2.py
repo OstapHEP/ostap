@@ -382,6 +382,35 @@ def test_das () :
         
     models.add ( reso )
 
+
+# =============================================================================
+## Normal Laplace 
+# =============================================================================
+def test_normlapl () :
+    
+    logger = getLogger ( 'test_normlapl' )
+
+    logger.info ('Test Normal Laplace : Gaussian with symmetric exponential tails ' )
+    from   ostap.fitting.resolution import ResoNormalLaplace
+    reso = ResoNormalLaplace ( 'NL' , mass ,
+                               k  = ( 1.0 , 1.e-5 , 20 ) , 
+                               varsigma = ( 0.1 , 0.01 , 5.0 ) ,
+                               kappa = ( 0.1 , -1 , 1 ) )
+    
+    result, frame = reso. fitTo ( dataset , silent = True  )
+    result, frame = reso. fitTo ( dataset , silent = True  )    
+    with wait ( 1 ) , use_canvas ( 'test_normlapl' ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        make_print ( reso , result , 'Symmetric Normal Laplace', logger )
+ 
+    models.add ( reso)
+
+
 # ==============================================================================
 ## dump all models
 # ==============================================================================
@@ -471,6 +500,9 @@ if '__main__' == __name__ :
 
     with timing ("Das"      , logger ) :  
         test_das           ()   ## Das resolution model
+
+    with timing ("Normal Laplace"  , logger ) :  
+        test_normlapl      ()   ## Normal Laplace resolution model
 
     ## check finally that everything is serializeable:
     with timing ("Save to DB"    , logger ) :  

@@ -1283,6 +1283,89 @@ def test_hypatia () :
     models.add ( model_hypatia )
 
 # ==========================================================================
+## ExGauss
+# ==========================================================================
+def test_exgauss () :
+    
+    logger = getLogger ( 'test_ExGauss' )
+       
+    
+    logger.info ('Test ExGauss_pdf: single tail pdf ' ) 
+    model = Models.Fit1D (
+        signal = Models.ExGauss_pdf ( name = 'ExG' , 
+                                      xvar      = mass               ,
+                                      mu        = signal_gauss.mean  ,
+                                      varsigma  = signal_gauss.sigma ,
+                                      k         = ( 1 , -10 , 10.0 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+    
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+
+    model.S.value  = 5000
+    model.B.value  =  500
+    
+    with rooSilent() :
+        result, frame = model. fitTo ( dataset0 )
+        result, frame = model. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_ExGauss' ) : 
+        model.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'ExGauss model \n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model )
+
+
+
+# ==========================================================================
+## NormalLaplace 
+# ==========================================================================
+def test_normlapl () :
+    
+    logger = getLogger ( 'test_NormalLaplace' )
+       
+    
+    logger.info ('Test NormalLaplace_pdf: two-sided tails pdf ' ) 
+    model = Models.Fit1D (
+        signal = Models.NormalLaplace_pdf ( name = 'NL' , 
+                                            xvar      = mass               ,
+                                            mu        = signal_gauss.mean  ,
+                                            varsigma  = signal_gauss.sigma ,
+                                            kL        = ( 1 , -10 , 10.0 ) , 
+                                            kR        = ( 1 , -10 , 10.0 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+    
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+
+    model.S.value  = 5000
+    model.B.value  =  500
+    
+    with rooSilent() :
+        result, frame = model. fitTo ( dataset0 )
+        result, frame = model. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_NormalLaplace' ) : 
+        model.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'NormalLaplace model \n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model )
+
+
+
+
+
+# ==========================================================================
 ## Das
 # ==========================================================================
 def test_das_1 () :
@@ -1554,6 +1637,7 @@ if '__main__' == __name__ :
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           () 
 
+
     ## Das/1                                       + background 
     with timing ('test_das_1'             , logger ) :
         test_das_1            () 
@@ -1562,7 +1646,15 @@ if '__main__' == __name__ :
     with timing ('test_das_2'             , logger ) :
         test_das_2            () 
 
-        
+    
+    ## ExGauss                                       + background 
+    with timing ('test_ExGauss'             , logger ) :
+        test_exgauss            () 
+
+    ## Normal Laplace                                       + background
+    with timing ('test_NormalLaplas'        , logger ) :
+        test_normlapl           () 
+
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()

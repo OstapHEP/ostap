@@ -560,6 +560,218 @@ namespace Ostap
       // =======================================================================
     } ;
     // ========================================================================
+
+    // ========================================================================
+    /** @class ExGauss 
+     *  Exponentially modified Gaussian function, EMG
+     *  @see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
+     *
+     *  It is a distibutiin for the varibale that is a 
+     *  sum (or difference for negative \f$ k\f$) 
+     *  of a Gaussian and exponential variables: \f$ X \sim Y + sign(k) Z \f$,  
+     *  where 
+     *  - \f$ Y \sim N(\mu,\sigma) \f$
+     *  - \f$ Z \sim  \frac{1}{k\sigma}\mathrm{e}^{-\frac{x}{k\sigma}} \f$ 
+     *  
+     *  For \f$ k=0\f$ one gets a Gaussian distribution
+     *  - \f$ k>0\f$ corresponds to the rigth tail  
+     *  - \f$ kM0\f$ corresponds to the left tail  
+     *
+     *  It can be considered as "single-tail" version of the Normal Laplace distribution:
+     *  - \f$ k = 0 \f$ corresponds to Gaussian distribution
+     *  - \f$ k > 0 \f$ corresponds to Normal Laplace \f$ NL(\mu,\sigma,0,k)\f$ 
+     *  - \f$ k < 0 \f$ corresponds to Normal Laplace \f$ NL(\mu,\sigma,\left|\tau\right|,0)\f$ 
+     *
+     *  @see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
+     *       In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
+     *       "Advances in Distribution Theory, Order Statistics, and Inference. 
+     *       Statistics for Industry and Technology". Birkhäuser Boston. 
+     *  @see https://doi.org/10.1007/0-8176-4487-3_4
+     *  @see Ostap::Math::NormalLaplace 
+     */
+    class ExGauss 
+    {
+    public:
+      // ======================================================================
+      /// constructor from all parameters 
+      ExGauss
+      ( const double mu       = 0 , 
+        const double varsigma = 1 , 
+        const double k        = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      double evaluate          ( const double x ) const ;
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// parameter mu
+      double mu       () const { return m_mu        ; }
+      /// parameter varsigma
+      double varsigma () const { return m_varsigma  ; }
+      /// parameter k 
+      double k        () const { return m_k         ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setMu       ( const double value ) ;
+      bool setVarsigma ( const double value ) ;
+      bool setK        ( const double value ) ;
+      // ======================================================================      
+    public:  // integrals
+      // ======================================================================
+      /// get CDF
+      double cdf        ( const double x ) const ;
+      /// get the integral
+      double integral   () const ;
+      /// get the integral between low and high limits
+      double integral   ( const double low  ,
+                          const double high ) const ;
+      // ======================================================================
+    public: // properties 
+      // ======================================================================
+      /// mean value 
+      double mean        () const ;
+      /// variance 
+      double variance    () const ;
+      /// RMS 
+      double rms         () const ;
+      /// dispersion 
+      double dispersion  () const { return variance () ; }
+      /// skewness 
+      double skewness    () const ;
+      /// kurtosis 
+      double kurtosis    () const ;      
+      /// get cumulant 
+      double cumulant    ( const unsigned short r ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// parameter mu 
+      double m_mu       { 0 } ; // parameter mu 
+      /// parameter varsigma
+      double m_varsigma { 1 } ; // parameter varsigma 
+      /// parameter k 
+      double m_k        { 0 } ; // parameter k 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class NormalLaplace 
+     *  Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
+     *  It behaves line core Gaussian with exponential tails 
+     *  @see Wiliam J. Reed, "The Normal-Laplace Distribution Relatives", 
+     *  October, 2004
+     *  @see https://www.math.uvic.ca/faculty/reed/NL.draft.1.pdf
+     *  @see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
+     *       In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
+     *       "Advances in Distribution Theory, Order Statistics, and Inference. 
+     *       Statistics for Industry and Technology". Birkhäuser Boston. 
+     *  @see https://doi.org/10.1007/0-8176-4487-3_4
+     *
+     *   \f$ f(x; \mu, \sigma, k_L , k_R ) = 
+     *   \frac{1}{\sigma ( k_L + k_R) } 
+     *   \phi ( z ) \left( R ( \frac{1}{k_R} - z ) + 
+     *                     R ( \frac{1}{k_L} + z ) \right) 
+     *   \f$, where
+     *   - \f$ k_L,k_R \ge 0 \f$ 
+     *   - \f$ z = \frac{x-\mu}{\sigma} \f$ 
+     *   - \f$ \phi(z) \f$ is Gaussian PDF  
+     *   - \f$  R(x)   \f$ is Mill's ratio 
+     *  @see Ostap::Math::nills_normal 
+     */    
+    class NormalLaplace 
+    {
+    public : 
+      // ======================================================================
+      NormalLaplace 
+      ( const double mu       = 0 ,
+        const double varsigma = 1 ,
+        const double kL       = 0 , 
+        const double kR       = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      double evaluate          ( const double x ) const ;
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// parameter mu
+      double mu       () const { return m_mu        ; }
+      /// parameter varsigma
+      double varsigma () const { return m_varsigma  ; }
+      /// left  exponential 
+      double kL       () const { return m_kL        ; }
+      /// right exponential 
+      double kR       () const { return m_kR        ; }
+      // ======================================================================
+    public: // original parameterisation 
+      // ======================================================================
+      /// parameter alpha 
+      double alpha () const ;
+      /// parametyer beta  
+      double beta  () const  ;      
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setMu       ( const double value ) ;
+      bool setVarsigma ( const double value ) ;
+      bool setKL       ( const double value ) ;
+      bool setKR       ( const double value ) ;
+      // ======================================================================      
+    public:  // integrals
+      // ======================================================================
+      /// get CDF
+      double cdf        ( const double x ) const ;
+      /// get the integral
+      double integral   () const ;
+      /// get the integral between low and high limits
+      double integral   ( const double low  ,
+                          const double high ) const ;
+      // ======================================================================
+    public: // properties 
+      // ======================================================================
+      /// mean value 
+      double mean        () const ;
+      /// variance 
+      double variance    () const ;
+      /// RMS 
+      double rms         () const ;
+      /// dispersion 
+      double dispersion  () const { return variance () ; }
+      /// skewness 
+      double skewness    () const ;
+      /// (excess) kurtosis  
+      double kurtosis    () const ;      
+      /// get cumulant 
+      double cumulant    ( const unsigned short r ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// parameter mu 
+      double m_mu       { 0 } ; // parameter mu 
+      /// parameter varsigma
+      double m_varsigma { 1 } ; // parameter varsigma
+      /// left exponential
+      double m_kL       { 0 } ; // left exponential
+      /// right exponential
+      double m_kR       { 0 } ; // right exponential
+      // ======================================================================
+    };
+    // ========================================================================
     /** @class Bukin
      *  ``Bukin-function'', aka "Modified Novosibirsk function"
      *  for description of asymmetric peaks with the exponential tails
@@ -2637,12 +2849,12 @@ namespace Ostap
      * 
      * @see Ostap::Math::Hyperbolic
      * Useful subclasses 
-     *  - \f$ \lambda=1\f$ : Hyperbolic distributiobn  
-     *  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Stundent's t-distibution 
+     *  - \f$ \lambda=1\f$ : Hyperbolic distribution  
+     *  - \f$ \lambda=-\frac{1}{2}\f$ : Normal Inverse Gaussian distributtion
+     *  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Student's t-distibution 
      *  - \f$ \lambda \rightarrow \pm\infty, \kappa=0\f$ : Gaussian distribution 
      *  - \f$ \zeta \rightarrow +\infty, \kappa=0\f$ : Gaussian distribution 
      *
-     *  
      */
     class GenHyperbolic
     {

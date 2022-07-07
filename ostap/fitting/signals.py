@@ -49,6 +49,8 @@ Empricial PDFs to describe narrow peaks
   - Hyperbolic_pdf
   - GenHyperbolic_pdf
   - Das_pdf
+  - ExGauss_pdf
+  - NormalLaplace_pdf
   - Hypatia_pdf
   
 PDF to describe ``wide'' peaks
@@ -101,6 +103,8 @@ __all__ = (
     'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
     'Das_pdf'                , ## Das: Gaussian with exponentrial tails 
     'Hypatia_pdf'            , ## Generalised Hyperbolic distribution
+    'ExGauss_pdf'            , ## ExGauss distribution 
+    'NormalLaplace_pdf'      , ## Normal Laplace distribution 
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
     'Losev_pdf'              , ## asymmetric hyperbolic secant
@@ -2708,18 +2712,19 @@ models.append ( Hyperbolic_pdf )
 # For negative \f$ \lambda \f$ tails are more heavy..
 #
 # @see Ostap::Math::Hyperbolic
-#  Usefun subclasses 
-#  - \f$ \lambda=1\f$ : Hyperbolic distributiobn  
-#  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Stundent's t-distibution 
+#  Useful subclasses 
+#  - \f$ \lambda=1\f$ : Hyperbolic distribution  
+#  - \f$ \lambda = -\frac{1}{2}\f$ : Normal Inverse Gaussian distribution
+#  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Student's t-distibution 
 #  - \f$ \lambda \rightarrow \pm\infty, \kappa=0\f$ : Gaussian distribution 
 #  - \f$ \zeta \rightarrow +\infty, \kappa=0\f$ : Gaussian distribution 
-# 
+#
 #  @see Ostap::Models::Hyperbolic
 #  @see Ostap::Math::Hyperbolic
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
 class GenHyperbolic_pdf(MASS) :
-    R"""Generalised Hyperbolic distribution
+    r"""Generalised Hyperbolic distribution
     @see https://en.wikipedia.org/wiki/Generalised_hyperbolic_distribution 
     
     - see Ostap::Math::GenHyperbolic
@@ -2732,6 +2737,13 @@ class GenHyperbolic_pdf(MASS) :
     - kappa  : related  to asymmetry 
     - lambda : related to shape
     
+    Useful subclasses 
+    - \f$ \lambda = 1\f$ : Hyperbolic distributiobn  
+    - \f$ \lambda = -\frac{1}{2}\f$ : Normal Inverse Gaussian distribution
+    - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Stundent's t-distibution 
+    - \f$ \lambda \rightarrow \pm\infty, \kappa=0\f$ : Gaussian distribution 
+    - \f$ \zeta \rightarrow +\infty, \kappa=0\f$ : Gaussian distribution 
+
     """
     def __init__ ( self             ,
                    name             ,
@@ -3059,6 +3071,257 @@ class Hypatia_pdf(MASS) :
         return self.genhyp.delta 
 
 
+
+models.append ( Hypatia_pdf )      
+
+
+
+# =============================================================================
+## @class ExGauss_pdf
+#  Exponentially modified Gaussian function, EMG
+#  @see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
+#
+#  It is a distibutiin for the varibale that is a 
+#  sum (or difference for negative \f$ k\f$) 
+#  of a Gaussian and exponential variables: \f$ X \sim Y + sign(k) Z \f$,  
+#  where 
+#  - \f$ Y \sim N(\mu,\sigma) \f$
+#  - \f$ Z \sim  \frac{1}{k\sigma}\mathrm{e}^{-\frac{x}{k\sigma}} \f$ 
+#  
+#  For \f$ k=0\f$ one gets a Gaussian distrobution
+#  - \f$ k>0\f$ corresponds to the rigth tail  
+#  - \f$ kM0\f$ corresponds to the left tail  
+#
+# It can be considered as "single-tail" version of the Normal Laplace distribution:
+#  - \f$ k = 0 \f$ corresponds to Gaussian distribution
+#  - \f$ k > 0 \f$ corresponds to Normal Laplace \f$ NL(\mu,\sigma,0,k)\f$ 
+#  - \f$ k < 0 \f$ corresponds to Normal Laplace \f$ NL(\mu,\sigma,\left|k\right|,0)\f$ 
+#
+#  @see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
+#       In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
+#       "Advances in Distribution Theory, Order Statistics, and Inference. 
+#       Statistics for Industry and Technology". Birkhäuser Boston. 
+#  @see https://doi.org/10.1007/0-8176-4487-3_4
+#  @see Ostap::Math::NormalLaplace 
+#  @see Ostap::Mdoels::NormalLaplace 
+#  @see Ostap::Mdoels::ExGauss
+class ExGauss_pdf(MASS) :
+    """ Exponentially modified Gaussian function, EMG
+    - see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
+    
+    It is a distibutiin for the varibale that is a 
+    sum (or difference for negative k)  
+    of a Gaussian and exponential variables.
+
+    - k = 0 : Gaussian distribution
+    - k>0  corresponds to the rigth tail  
+    - k<0  corresponds to the left tail  
+    
+    - see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
+    In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
+    "Advances in Distribution Theory, Order Statistics, and Inference. 
+    Statistics for Industry and Technology". Birkhäuser Boston.
+    
+    - see https://doi.org/10.1007/0-8176-4487-3_4
+    - see Ostap::Math::NormalLaplace 
+    - see Ostap::Mdoels::NormalLaplace 
+    - see Ostap::Mdoels::ExGauss
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu        = None ,   ## related to mean
+                   varsigma  =  1   ,   ## relatd  to width
+                   k         =  0   ) :
+        # 
+        ## initialize the base
+        #        
+        MASS.__init__  ( self , name , xvar                  , 
+                         mean        = mu                    ,
+                         sigma       = varsigma              ,
+                         mean_name   = 'mu_%s'        % name ,
+                         mean_title  = '#mu(%s)'      % name ,
+                         sigma_name  = 'varsigma_%s'  % name ,
+                         sigma_title = 'varsigma(%s)' % name )
+        
+        self.__mu       = self.mean 
+        self.__varsigma = self.sigma
+        
+        
+        ## k 
+        self.__k= self.make_var ( k              ,
+                                  'k_%s'  % name ,
+                                  'k(%s)' % name , k , 0 , -100 , 100 ) 
+        
+        ## create PDF 
+        self.pdf = Ostap.Models.ExGauss (
+            self.roo_name ( 'exgauss_' ) , 
+            "ExGauss %s" % self.name ,
+            self.xvar      ,
+            self.mu        ,
+            self.varsigma  , 
+            self.k         ) 
+        
+
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'mu'       : self.mu       ,
+            'varsigma' : self.varsigma ,
+            'k'        : self.k        }
+
+    @property
+    def varsigma    ( self ) :
+        """``varsigma'' : varsigma parameter for ExGauss function (same as ``sigma'')"""
+        return self.sigma
+    @varsigma.setter
+    def varsigma    ( self , value ) :
+        self.set_value ( self.__varfsigma , value )
+
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter (same as ``mean'')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :    
+        self.set_value ( self.__mu , value )
+
+    @property 
+    def k  ( self ) :
+        """``k'' :  (dimensioneless) k-parameter"""
+        return self.__k
+    @k.setter  
+    def k ( self , value ) :
+        self.set_value ( self.__k , value )
+    
+models.append ( ExGauss_pdf )      
+
+
+# =============================================================================
+## @class NormalLaplace_pdf 
+#  Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
+#  It behaves line core Gaussian with exponential tails 
+#  @see Wiliam J. Reed, "The Normal-Laplace Distribution Relatives", 
+#  October, 2004
+#  @see https://www.math.uvic.ca/faculty/reed/NL.draft.1.pdf
+#  @see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
+#       In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
+#       "Advances in Distribution Theory, Order Statistics, and Inference. 
+#       Statistics for Industry and Technology". Birkhäuser Boston. 
+#  @see https://doi.org/10.1007/0-8176-4487-3_4
+#
+#   \f$ f(x; \mu, \sigma, k_L , k_R ) = 
+#   \frac{1}{\sigma ( k_L + k_R) } 
+#   \phi ( z ) \left( R ( \frac{1}{k_R} - z ) + 
+#                     R ( \frac{1}{k_L} + z ) \right) 
+#   \f$, where
+#   - \f$ k_L,k_R \ge 0 \f$ 
+#   - \f$ z = \frac{x-\mu}{\sigma} \f$ 
+#   - \f$ \phi(z) \f$ is Gaussian PDF  
+#   - \f$  R(x)   \f$ is Mill's ratio 
+#  @see Ostap::Math::nills_normal 
+#  @see Ostap::Math::nills_normal 
+#  @see Ostap::Math::NormalLaplace
+#
+class NormalLaplace_pdf(MASS) :
+    """Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
+    It behaves line core Gaussian with exponential tails 
+    - see Wiliam J. Reed, "The Normal-Laplace Distribution Relatives", October, 2004
+    - see https://www.math.uvic.ca/faculty/reed/NL.draft.1.pdf
+    - see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
+    In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
+    "Advances in Distribution Theory, Order Statistics, and Inference. 
+    Statistics for Industry and Technology". Birkhäuser Boston. 
+    - see https://doi.org/10.1007/0-8176-4487-3_4
+    
+    - see Ostap::Math::nills_normal 
+    - see Ostap::Math::nills_normal 
+    - see Ostap::Math::NormalLaplace
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu        = None ,   ## related to mean
+                   varsigma  =  1   ,   ## relatd  to width
+                   kL        =  0   ,
+                   kR        =  0   ) :
+        # 
+        ## initialize the base
+        #        
+        MASS.__init__  ( self , name , xvar                  , 
+                         mean        = mu                    ,
+                         sigma       = varsigma              ,
+                         mean_name   = 'mu_%s'        % name ,
+                         mean_title  = '#mu(%s)'      % name ,
+                         sigma_name  = 'varsigma_%s'  % name ,
+                         sigma_title = 'varsigma(%s)' % name )
+        
+        self.__mu       = self.mean 
+        self.__varsigma = self.sigma
+        
+        
+        ## kL 
+        self.__kL = self.make_var ( kL                 ,
+                                    'kL_%s'     % name ,
+                                    'k_{L}(%s)' % name , kL , 0 , 0 , 100 ) 
+        ## kR 
+        self.__kR = self.make_var ( kR                 ,
+                                    'kR_%s'     % name ,
+                                    'k_{R}(%s)' % name , kR , 0 , 0 , 100 ) 
+
+        ## create PDF 
+        self.pdf = Ostap.Models.NormalLaplace (
+            self.roo_name ( 'normlapl_' ) , 
+            "NormalLaplace %s" % self.name ,
+            self.xvar      ,
+            self.mu        ,
+            self.varsigma  , 
+            self.kL        ,
+            self.kR        ) 
+        
+
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'mu'       : self.mu       ,
+            'varsigma' : self.varsigma ,
+            'kL'       : self.kL       ,
+            'kR'       : self.kR       }
+
+    @property
+    def varsigma    ( self ) :
+        """``varsigma'' : varsigma parameter for Normal Laplace function (same as ``sigma'')"""
+        return self.sigma
+    @varsigma.setter
+    def varsigma    ( self , value ) :
+        self.set_value ( self.__varsigma , value )
+
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter (same as ``mean'')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :    
+        self.set_value ( self.__mu , value )
+
+    @property 
+    def kL ( self ) :
+        """``kL'' :  (dimensioneless) kL-parameter"""
+        return self.__kL
+    @kL.setter  
+    def kR ( self , value ) :
+        self.set_value ( self.__kL , value )
+        
+    @property 
+    def kR ( self ) :
+        """``kR'' :  (dimensioneless) kR-parameter"""
+        return self.__kR
+    @kR.setter  
+    def kR ( self , value ) :
+        self.set_value ( self.__kR , value )
+        
+models.append ( NormalLaplace_pdf )      
+
 # =============================================================================
 # @class Das_pdf
 #  Simple gaussian function with exponential tails.
@@ -3261,7 +3524,7 @@ class Das_pdf(MASS) :
     def kappa ( self , value ) :
         self.setValue ( self.__kappa , value )
 
-            
+
 # =============================================================================
 ## @class Voigt_pdf
 #  Voigt-pdf distribution

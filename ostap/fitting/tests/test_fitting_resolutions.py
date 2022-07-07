@@ -459,6 +459,32 @@ def test_das () :
  
     models.add ( reso)
 
+# =============================================================================
+## Normal Laplace 
+# =============================================================================
+def test_normlapl () :
+    
+    logger = getLogger ( 'test_normlapl' )
+
+    logger.info ('Test Normal Laplace : Gaussian with symmetric exponential tails ' )
+    from   ostap.fitting.resolution import ResoNormalLaplace
+    reso = ResoNormalLaplace ( 'NL' , mass ,
+                               k  = ( 1.0 , 1.e-5 , 20 ) , 
+                               varsigma = ( 0.1 , 0.01 , 5.0 ) )
+    
+    result, frame = reso. fitTo ( dataset , silent = True  )
+    result, frame = reso. fitTo ( dataset , silent = True  )    
+    with wait ( 1 ) , use_canvas ( 'test_normlapl' ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        make_print ( reso , result , 'Symmetric Normal Laplace', logger )
+ 
+    models.add ( reso)
+
 # ==============================================================================
 ## dump all models
 # ==============================================================================
@@ -518,47 +544,50 @@ def test_db() :
 if '__main__' == __name__ :
     
     with timing ("Gauss"     , logger ) :  
-        test_gauss      () ## single Gaussian resolution model
+        test_gauss          () ## single Gaussian resolution model
         
     with timing ("2-Gauss"   , logger ) :  
-        test_2gauss     () ## double Gaussian resolution model
+        test_2gauss         () ## double Gaussian resolution model
         
     with timing ("Apo2"      , logger ) :  
-        test_apo2       () ## symmetric Apollonios resoltuion model
+        test_apo2           () ## symmetric Apollonios resoltuion model
         
     with timing ("CB2"       , logger ) :  
-        test_cb2        () ## double-sided Crystal Ball resoltuion model
+        test_cb2            () ## double-sided Crystal Ball resoltuion model
         
     with timing ("Sech"      , logger ) :  
-        test_sech       () ## hyperbolic secant resolution model
+        test_sech           () ## hyperbolic secant resolution model
 
     with timing ("Logistic"  , logger ) :  
-        test_logistic   () ## logistic resolution model
+        test_logistic       () ## logistic resolution model
         
     with timing ("Bukin"     , logger ) :  
-        test_bukin      () ## Bukin resolution model
+        test_bukin          () ## Bukin resolution model
     
     with timing ("SinhAsinh" , logger ) :  
-        test_sinhasinh  () ## SinhAsinh resolution model
+        test_sinhasinh      () ## SinhAsinh resolution model
 
     with timing ("JohnsonSU" , logger ) :  
-        test_johnsonSU  () ## JohnsonSU resolution model
+        test_johnsonSU      () ## JohnsonSU resolution model
 
     with timing ("Hyperbolic" , logger ) :  
-        test_hyperbolic  () ## Hyperbolic resolution model
+        test_hyperbolic     () ## Hyperbolic resolution model
     
     with timing ("GenHyperbolic" , logger ) :  
         test_genhyperbolic  () ## generalised Hyperbolic resolution model
 
     with timing ("Hypatia" , logger ) :  
-        test_hypatia       () ## generalised Hyperbolic resolution model
+        test_hypatia        () ## generalised Hyperbolic resolution model
 
     with timing ("GenGaussV1" , logger ) :  
         test_gengaussv1     ()   ## Das resolution model
 
     with timing ("Das"        , logger ) :  
         test_das           ()   ## Das resolution model
-        
+
+    with timing ("NormalLaplace" , logger ) :  
+        test_normlapl      ()   ## Normal Laplace resolution model
+
     ## check finally that everything is serializeable:
     with timing ("Save to DB"    , logger ) :  
         test_db ()          

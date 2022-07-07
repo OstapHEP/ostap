@@ -130,28 +130,6 @@ namespace Ostap
      */
     double  probit ( const double alpha  ) ;
     // ========================================================================
-    /** scaled complementary error function 
-     *  \f[ 1 -  \mathrm{erf} (x) = e^{-x^2} \mathrm{erfcx}(x)  \f]
-     *  @param x  the argument 
-     *  @return the value of the scaled complementary error function 
-     *  @attention  overflow happens for x<-26.6
-     *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
-     *  @see http://ab-initio.mit.edu/Faddeeva
-     *  @see https://en.wikipedia.org/wiki/Error_function
-     *  @see https://en.wikipedia.org/wiki/Faddeeva_function
-     */
-    double  erfcx ( const double x ) ;
-    // ========================================================================
-    /** complementary error function
-     *  @see std::erfc 
-     */
-    inline  double  erfc  ( const double x ) { return std::erfc ( x ) ; }
-    // ========================================================================
-    /** error function
-     *  @see std::erf 
-     */
-    inline  double  erf   ( const double x ) { return std::erf  ( x ) ; }
-    // ========================================================================
     /** \overload complex error function (the error function of complex arguments)
      *  @param x  the argument 
      *  @return the value of the coplmex error function 
@@ -184,16 +162,6 @@ namespace Ostap
      */
     std::complex<double> erfcx ( const std::complex<double>& x ) ;
     // ========================================================================
-    /** Imaginary error function 
-     *  \f[\mathrm{erfi}(x) = -i \mathrm{erf}(ix) =\frac{2}{\sqrt{\pi}} \int_0^x e^{t^2}dt \f] 
-     *  @param x the argument
-     *  @return the value of the imaginary error function 
-     *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
-     *  @see http://ab-initio.mit.edu/Faddeeva
-     *  @see https://en.wikipedia.org/wiki/Error_function
-     */
-    double               erfi ( const double x ) ;
-    // ========================================================================
     /** \overload Imaginary error function 
      *  \f[\mathrm{erfi}(x) = -i \mathrm{erf}(ix) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2}dt\f] 
      *  @param x the argument
@@ -214,6 +182,48 @@ namespace Ostap
      */
     std::complex<double> faddeeva_w ( const std::complex<double>& x ) ;
     // ========================================================================
+    /** \overload Compute Dowson function 
+     *  \f[ f(x) =  \frac{\sqrt{\pi}}{2}  *  e^{-z^2} * erfi(z) \f] 
+     *  @return the value of Dawson function 
+     *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
+     *  @see http://ab-initio.mit.edu/Faddeeva
+     *  @see https://en.wikipedia.org/wiki/Error_function
+     *  @see https://en.wikipedia.org/wiki/Dowson_function
+     */
+    std::complex<double> dowson     ( const std::complex<double>& x ) ;
+    // ========================================================================
+    /** scaled complementary error function 
+     *  \f[ 1 -  \mathrm{erf} (x) = e^{-x^2} \mathrm{erfcx}(x)  \f]
+     *  @param x  the argument 
+     *  @return the value of the scaled complementary error function 
+     *  @attention  overflow happens for x<-26.6
+     *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
+     *  @see http://ab-initio.mit.edu/Faddeeva
+     *  @see https://en.wikipedia.org/wiki/Error_function
+     *  @see https://en.wikipedia.org/wiki/Faddeeva_function
+     */
+    double  erfcx ( const double x ) ;
+    // ========================================================================
+    /** complementary error function
+     *  @see std::erfc 
+     */
+    inline  double  erfc  ( const double x ) { return std::erfc ( x ) ; }
+    // ========================================================================
+    /** error function
+     *  @see std::erf 
+     */
+    inline  double  erf   ( const double x ) { return std::erf  ( x ) ; }
+    // ========================================================================
+    /** Imaginary error function 
+     *  \f[\mathrm{erfi}(x) = -i \mathrm{erf}(ix) =\frac{2}{\sqrt{\pi}} \int_0^x e^{t^2}dt \f] 
+     *  @param x the argument
+     *  @return the value of the imaginary error function 
+     *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
+     *  @see http://ab-initio.mit.edu/Faddeeva
+     *  @see https://en.wikipedia.org/wiki/Error_function
+     */
+    double               erfi ( const double x ) ;
+    // ========================================================================
     /** Dowson function 
      *  \f[ f(x) =  \frac{\sqrt{\pi}}{2}  *  e^{-z^2} * erfi(z) \f] 
      *  @return the value of Dawson function 
@@ -224,15 +234,14 @@ namespace Ostap
      */
     double               dowson     ( const double                x ) ;
     // ========================================================================
-    /** \overload Compute Dowson function 
-     *  \f[ f(x) =  \frac{\sqrt{\pi}}{2}  *  e^{-z^2} * erfi(z) \f] 
-     *  @return the value of Dawson function 
-     *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
-     *  @see http://ab-initio.mit.edu/Faddeeva
-     *  @see https://en.wikipedia.org/wiki/Error_function
-     *  @see https://en.wikipedia.org/wiki/Dowson_function
+    /** Mill's ratio for normal distribution
+     *  - \f$ m (x) = \frac{1 - \Phi(x)}{\phi(x)}\f$  
+     *  - \f$ m(x) =  \sqrt{ \frac{\pi}{2} } \mathrm{e}^{ \frac{x^2}{2}} \mathrm{erfc}{ \frac{x}{\sqrt{2}}}\f$ 
+     *  - \f$ m(x) =  \sqrt{ \frac{\pi}{2} } \mathrm{erfcx}{ \frac{x}{\sqrt{2}}}\f$ 
+     *  @see https://en.wikipedia.org/wiki/Mills_ratio
+     *  @see Ostap::Math::erfcx 
      */
-    std::complex<double> dowson     ( const std::complex<double>& x ) ;
+    double              mills_normal ( const double x ) ;
     // ========================================================================
     /** Compute <code>sech</code> function 
      *  \f[ f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f]

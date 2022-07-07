@@ -903,10 +903,303 @@ double Ostap::Math::SkewGauss::sigma  () const
 std::size_t Ostap::Math::SkewGauss::tag () const 
 { 
   static const std::string s_name = "SkewGauss" ;
-  return std::hash_combine ( m_xi , m_omega , m_alpha ) ; 
+  return std::hash_combine ( s_name , m_xi , m_omega , m_alpha ) ; 
 }
 // ============================================================================
 
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Math::ExGauss::ExGauss
+( const double mu       , 
+  const double varsigma , 
+  const double k        ) 
+  : m_mu ( mu ) 
+  , m_varsigma ( std::abs ( varsigma ) )
+  , m_k  ( k  )
+{}
+// ============================================================================
+double Ostap::Math::ExGauss::evaluate          ( const double x ) const 
+{
+  //
+  const double z     = ( x - m_mu ) / m_varsigma ;
+  const bool k_zero  = s_zero ( m_k ) ;
+  //
+  const double gauss = Ostap::Math::gauss_pdf ( z ) / m_varsigma ;
+  const double kk    = std::abs ( m_k ) ;
+  //
+  return 
+    k_zero  ? gauss :
+    m_k > 0 ? gauss * Ostap::Math::mills_normal ( 1.0/kk - z ) / kk :
+    m_k < 0 ? gauss * Ostap::Math::mills_normal ( 1.0/kk + z ) / kk :
+    gauss ;
+}
+// ============================================================================
+bool Ostap::Math::ExGauss::setMu        ( const double value ) 
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::ExGauss::setVarsigma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_varsigma , avalue ) ) { return false ; }
+  m_varsigma = avalue ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::ExGauss::setK ( const double value ) 
+{
+  if ( s_equal ( m_k , value ) ) { return false ; }
+  m_k = s_zero ( value ) ? 0.0 : value ;
+  return true ;
+}
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::ExGauss::integral   () const { return 1 ; }
+// ============================================================================
+// get the integral between low and high limits
+// ============================================================================
+double Ostap::Math::ExGauss::integral   
+( const double low  ,
+  const double high ) const 
+{
+  if ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low )        { return -integral ( high , low ) ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// get CDF
+// ============================================================================
+double Ostap::Math::ExGauss::cdf ( const double x ) const 
+{
+  const double z     = ( x - m_mu ) / m_varsigma ;
+  const bool k_zero  = s_zero ( m_k ) ;
+  //
+  const double gauss = Ostap::Math::gauss_cdf ( z ) ;
+  const double kk    = std::abs ( m_k ) ;
+  //
+  return 
+    k_zero  ? gauss  :
+    m_k > 0 ? gauss - Ostap::Math::gauss_pdf ( z ) * Ostap::Math::mills_normal ( 1 / kk - z ) :
+    m_k < 0 ? gauss + Ostap::Math::gauss_pdf ( z ) * Ostap::Math::mills_normal ( 1 / kk + z ) :
+    gauss ;
+}
+// ============================================================================
+// mean value 
+// ============================================================================
+double Ostap::Math::ExGauss::mean        () const 
+{ return m_mu + m_k * m_varsigma ; }
+// ============================================================================
+// variance 
+// ============================================================================
+double Ostap::Math::ExGauss::variance    () const 
+{ return m_varsigma * m_varsigma * ( 1 + m_k * m_k ) ; }
+// ============================================================================
+// RMS value 
+// ============================================================================
+double Ostap::Math::ExGauss::rms        () const
+{ return std::sqrt ( variance () )  ; }
+// ============================================================================
+// skewness 
+// ============================================================================
+double Ostap::Math::ExGauss::skewness    () const 
+{ return cumulant ( 3 ) / std::pow ( cumulant ( 2 ) , 1.5 ) ; }
+// ============================================================================
+// (excess) kurtosis  
+// ============================================================================
+double Ostap::Math::ExGauss::kurtosis    () const 
+{
+  const double k4 = cumulant ( 4 ) ;
+  const double k2 = cumulant ( 2 ) ;
+  const double s2 = variance ()  ;
+  //
+  return ( k4 + 3 * k2 * k2 ) / ( s2 * s2 ) - 3 ;
+}
+// ============================================================================
+// get cumulant 
+// ============================================================================
+double Ostap::Math::ExGauss::cumulant    ( const unsigned short r ) const 
+{
+  return 
+    0 == r ? 0.0         :
+    1 == r ? mean     () :
+    2 == r ? variance () :
+    s_zero ( m_k ) ? 0.0 :
+    std::tgamma ( r ) * std::pow ( m_k * m_varsigma , r ) ;  
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::ExGauss::tag () const 
+{ 
+  static const std::string s_name = "ExGauss" ;
+  return std::hash_combine ( s_name , m_mu , m_varsigma , m_k  ) ; 
+}
+// ============================================================================
+
+// ============================================================================
+// constructor 
+// ============================================================================
+Ostap::Math::NormalLaplace::NormalLaplace 
+( const double mu       ,
+  const double varsigma ,
+  const double kL       , 
+  const double kR       ) 
+  : m_mu ( mu ) 
+  , m_varsigma ( std::abs ( varsigma ) ) 
+  , m_kL       ( std::abs ( kL       ) ) 
+  , m_kR       ( std::abs ( kR       ) ) 
+{}
+// ============================================================================
+bool Ostap::Math::NormalLaplace::setMu        ( const double value ) 
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::NormalLaplace::setVarsigma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_varsigma , avalue ) ) { return false ; }
+  m_varsigma = avalue ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::NormalLaplace::setKL ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_kL , avalue ) ) { return false ; }
+  m_kL = s_zero ( avalue ) ? 0.0 : avalue ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::NormalLaplace::setKR ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_kR , avalue ) ) { return false ; }
+  m_kR = s_zero ( avalue ) ? 0.0 : avalue ;
+  return true ;
+}
+// ============================================================================
+double Ostap::Math::NormalLaplace::evaluate ( const double x ) const 
+{
+  //
+  const double z = ( x - m_mu ) / m_varsigma ;
+  const bool l_zero = s_zero ( m_kL ) ;
+  const bool r_zero = s_zero ( m_kR ) ;
+  //
+  const double gauss = Ostap::Math::gauss_pdf ( z ) / m_varsigma ;
+  //
+  return 
+    l_zero && r_zero ? gauss : 
+    l_zero           ? gauss * Ostap::Math::mills_normal ( 1/m_kR - z ) / m_kR :
+    r_zero           ? gauss * Ostap::Math::mills_normal ( 1/m_kL + z ) / m_kL :
+    gauss * ( Ostap::Math::mills_normal ( 1/m_kR - z ) +
+              Ostap::Math::mills_normal ( 1/m_kL + z ) ) / ( m_kL + m_kR ) ;
+}
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::NormalLaplace::integral   () const { return 1.0 ; } 
+// ============================================================================
+// get the integral between low and high limits
+// ============================================================================
+double Ostap::Math::NormalLaplace::integral  
+( const double low  ,
+  const double high ) const 
+{
+  if ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low )        { return -integral ( high , low ) ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// get CDF
+// ============================================================================
+double Ostap::Math::NormalLaplace::cdf ( const double x ) const 
+{
+  const double z = ( x - m_mu ) / m_varsigma ;
+  const bool l_zero = s_zero ( m_kL ) ;
+  const bool r_zero = s_zero ( m_kR ) ;
+  //
+  const double gauss = Ostap::Math::gauss_cdf ( z ) ;
+  //
+  return 
+    l_zero && r_zero ? gauss : 
+    l_zero           ? gauss - 
+    Ostap::Math::gauss_pdf ( z ) * Ostap::Math::mills_normal ( 1 / m_kR - z ) :
+    r_zero           ? gauss + 
+    Ostap::Math::gauss_pdf ( z ) * Ostap::Math::mills_normal ( 1 / m_kL + z ) :
+    gauss  - Ostap::Math::gauss_pdf ( z ) * 
+    ( Ostap::Math::mills_normal ( 1 / m_kR - z ) * m_kR - 
+      Ostap::Math::mills_normal ( 1 / m_kL + z ) * m_kL ) / ( m_kL + m_kR ) ;
+}
+// ============================================================================
+// get cumulant 
+// ============================================================================
+double Ostap::Math::NormalLaplace::cumulant    ( const unsigned short r ) const 
+{
+  return 
+    0 == r ? 0.0         :
+    1 == r ? mean     () :
+    2 == r ? variance () :
+    std::tgamma ( r ) * ( std::pow ( m_kR * m_varsigma , r )  +
+                          std::pow ( m_kL * m_varsigma , r ) ) ; 
+}
+// ============================================================================
+// mean value 
+// ============================================================================
+double Ostap::Math::NormalLaplace::mean        () const 
+{  return m_mu + m_varsigma * ( m_kR - m_kL ) ; }
+// ============================================================================
+// variance  
+// ============================================================================
+double Ostap::Math::NormalLaplace::variance    () const 
+{  return m_varsigma * m_varsigma * ( 1 + m_kR * m_kR  + m_kL * m_kL ) ; }
+// ============================================================================
+// RMS
+// ============================================================================
+double Ostap::Math::NormalLaplace::rms        () const 
+{ return std::sqrt ( variance () )  ; }
+// ============================================================================
+// skewness 
+// ============================================================================
+double Ostap::Math::NormalLaplace::skewness    () const 
+{ return cumulant ( 3 ) / std::pow ( cumulant ( 2 ) , 1.5 ) ; }
+// ============================================================================
+// (excess) kurtosis  
+// ============================================================================
+double Ostap::Math::NormalLaplace::kurtosis    () const 
+{
+  const double k4 = cumulant ( 4 ) ;
+  const double k2 = cumulant ( 2 ) ;
+  const double s2 = variance ()  ;
+  //
+  return ( k4 + 3 * k2 * k2 ) / ( s2 * s2 ) - 3 ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::NormalLaplace::tag () const 
+{ 
+  static const std::string s_name = "NormalLaplace" ;
+  return std::hash_combine ( s_name , m_mu , m_varsigma , m_kL , m_kR ) ; 
+}
+// ============================================================================
+
+  
+  
+ 
+  
+  
+    
 
 
 // ============================================================================

@@ -2070,6 +2070,189 @@ Double_t Ostap::Models::SkewGauss::analyticalIntegral
 }
 // ============================================================================
 
+
+// ============================================================================
+//         ExGauss
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::ExGauss::ExGauss
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         , 
+  RooAbsReal&          mu        , 
+  RooAbsReal&          varsigma  , 
+  RooAbsReal&          k         )  
+  : RooAbsPdf ( name , title ) 
+//
+  , m_x        ( "!x"         , "Observable" , this , x        ) 
+  , m_mu       ( "!mu"        , "mu"         , this , mu       ) 
+  , m_varsigma ( "!varsigma"  , "varsigma"   , this , varsigma ) 
+  , m_k        ( "!k"         , "k"          , this , k        ) 
+  //
+  , m_eg       () 
+{
+  setPars () ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::ExGauss::ExGauss
+( const Ostap::Models::ExGauss& right , 
+  const char*                        name   ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x         ( "!x"        , this , right.m_x        ) 
+  , m_mu        ( "!mu"       , this , right.m_mu       ) 
+  , m_varsigma  ( "!varsigma" , this , right.m_varsigma ) 
+  , m_k         ( "!k"        , this , right.m_k        ) 
+    //
+  , m_eg     ( right.m_eg ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::ExGauss::~ExGauss (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::ExGauss*
+Ostap::Models::ExGauss::clone( const char* name ) const 
+{ return new Ostap::Models::ExGauss ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::ExGauss::setPars () const 
+{
+  m_eg . setMu       ( m_mu       ) ;
+  m_eg . setVarsigma ( m_varsigma ) ;
+  m_eg . setK        ( m_k        ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::ExGauss::evaluate() const 
+{
+  setPars () ;
+  return m_eg ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::ExGauss::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::ExGauss::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_eg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
+
+// ============================================================================
+//        NormalLaplace 
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::NormalLaplace::NormalLaplace
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         , 
+  RooAbsReal&          mu        , 
+  RooAbsReal&          varsigma  , 
+  RooAbsReal&          kL        ,  
+  RooAbsReal&          kR        )  
+  : RooAbsPdf ( name , title ) 
+//
+  , m_x        ( "!x"         , "Observable" , this , x        ) 
+  , m_mu       ( "!mu"        , "mu"         , this , mu       ) 
+  , m_varsigma ( "!varsigma"  , "varsigma"   , this , varsigma ) 
+  , m_kL       ( "!kL"        , "k-left"     , this , kL       ) 
+  , m_kR       ( "!kR"        , "k-right"    , this , kR       ) 
+  //
+  , m_nl       () 
+{
+  setPars () ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::NormalLaplace::NormalLaplace
+( const Ostap::Models::NormalLaplace& right , 
+  const char*                        name   ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x         ( "!x"        , this , right.m_x        ) 
+  , m_mu        ( "!mu"       , this , right.m_mu       ) 
+  , m_varsigma  ( "!varsigma" , this , right.m_varsigma ) 
+  , m_kL        ( "!kL"       , this , right.m_kL       ) 
+  , m_kR        ( "!kR"       , this , right.m_kR       ) 
+    //
+  , m_nl        ( right.m_nl ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::NormalLaplace::~NormalLaplace(){}
+
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::NormalLaplace*
+Ostap::Models::NormalLaplace::clone( const char* name ) const 
+{ return new Ostap::Models::NormalLaplace( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::NormalLaplace::setPars () const 
+{
+  m_nl . setMu       ( m_mu       ) ;
+  m_nl . setVarsigma ( m_varsigma ) ;
+  m_nl . setKL       ( m_kL       ) ;
+  m_nl . setKR       ( m_kR       ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::NormalLaplace::evaluate() const 
+{
+  setPars () ;
+  return m_nl ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::NormalLaplace::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::NormalLaplace::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_nl.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
 // ============================================================================
 //         Bukin
 // ============================================================================
@@ -7746,6 +7929,8 @@ ClassImp(Ostap::Models::CutOffGauss        )
 ClassImp(Ostap::Models::CutOffStudent      )
 ClassImp(Ostap::Models::Rice               )
 ClassImp(Ostap::Models::GenInvGauss        )
+ClassImp(Ostap::Models::ExGauss            )
+ClassImp(Ostap::Models::NormalLaplace      )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
