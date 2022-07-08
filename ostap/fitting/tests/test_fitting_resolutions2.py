@@ -390,15 +390,21 @@ def test_normlapl () :
     
     logger = getLogger ( 'test_normlapl' )
 
-    logger.info ('Test Normal Laplace : Gaussian with symmetric exponential tails ' )
+    logger.info ('Test Normal Laplace : Gaussian with asymmetric exponential tails ' )
     from   ostap.fitting.resolution import ResoNormalLaplace
     reso = ResoNormalLaplace ( 'NL' , mass ,
                                k  = ( 1.0 , 1.e-5 , 20 ) , 
                                varsigma = ( 0.1 , 0.01 , 5.0 ) ,
                                kappa = ( 0.1 , -1 , 1 ) )
-    
+
+    reso.kappa.fix() 
     result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
+    
+
+    reso.kappa.release() 
+    result, frame = reso. fitTo ( dataset , silent = True  )
+
+    
     with wait ( 1 ) , use_canvas ( 'test_normlapl' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
@@ -497,7 +503,7 @@ if '__main__' == __name__ :
 
     with timing ("Hypatia" , logger ) :  
         test_hypatia        () ## Hypatia resoltuion model
-
+        
     with timing ("Das"      , logger ) :  
         test_das           ()   ## Das resolution model
 

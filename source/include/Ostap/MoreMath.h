@@ -243,6 +243,14 @@ namespace Ostap
      */
     double              mills_normal ( const double x ) ;
     // ========================================================================
+    /** Product of the Gaussian PDF and Millt's ratio 
+     *  \f$ f(a,b) = \phi(a) R(b) \f$
+     *  This expression is used for 
+     *  @see Ostap::Math::ExGauss
+     *  @see Ostap::Math::NormalLaplace
+     */
+    double              gauss_mills ( const double a , const double b ) ;
+    // ========================================================================
     /** Compute <code>sech</code> function 
      *  \f[ f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f]
      *  @return the value of sech function 
@@ -334,7 +342,7 @@ namespace Ostap
      *  @param a low integration limit
      *  @param b high integration limit
      *  @param mu location of Gaussian
-     *  @param sigm awidth of the Gaussian
+     *  @param sigma width of the Gaussian
      */
     double gauss_int
     ( const double a         ,

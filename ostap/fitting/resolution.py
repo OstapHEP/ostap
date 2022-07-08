@@ -1915,7 +1915,7 @@ class ResoNormalLaplace(RESOLUTION) :
                    name             ,
                    xvar             ,
                    varsigma  = None ,
-                   k         = 0    ,  ## k = 0 ives gaussian Resolution
+                   k         = 0    ,  ## k = 0 gives gaussian Resolution
                    fudge     = 1    , 
                    mean      = None ,
                    kappa     = None ) : ## tail symmetry parameter 
@@ -1935,7 +1935,7 @@ class ResoNormalLaplace(RESOLUTION) :
         self.__k     = self.make_var ( k ,
                                        'k_%s'  % self.name ,
                                        'k(%s)' % self.name ,
-                                       k  , 0 , -100  , +100 ) 
+                                       k  , 1 , 0 , +100 ) 
         
         ## asymmetry parameter 
         self.__kappa = self.make_var ( ZERO if kappa is None else kappa , 

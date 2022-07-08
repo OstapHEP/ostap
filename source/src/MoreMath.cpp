@@ -2418,9 +2418,20 @@ double Ostap::Math::carlson_RG_int
 // ============================================================================
 double Ostap::Math::mills_normal ( const double x ) 
 { return s_SQRTPIHALF * Ostap::Math::erfcx ( s_SQRT2i * x ) ; }
-
-
-
+// ============================================================================
+/* Product of the Gaussian PDF and Millt's ratio 
+ *  \f$ f(a,b) = \phi(a) R(b) \f$
+ */
+// ============================================================================
+double Ostap::Math::gauss_mills
+( const double a , 
+  const double b ) 
+{
+  return 
+    0 <= b ? 
+    Ostap::Math::gauss_pdf ( a )             * Ostap::Math::mills_normal ( b ) : 
+    std::exp ( 0.5 * ( b - a ) * ( b + a ) ) * Ostap::Math::erfc ( b * s_SQRT2i ) * 0.5 ; 
+}
 // ============================================================================
 /*  get the intermediate polynom \f$ g_l (x)\f$ used for the calculation of 
  *  the angular-momentum Blatt-Weisskopf centrifugal-barrier factor 

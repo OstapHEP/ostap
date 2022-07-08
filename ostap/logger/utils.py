@@ -56,7 +56,7 @@ __all__     = (
     'DisplayTree'        , ## display tree-like structures 
     )
 # =============================================================================
-import ROOT, time, os , sys ## attention here!!
+import ROOT, time, os, sys, math  ## attention here!!
 ROOT_RooFit_ERROR = 4 
 # =============================================================================
 # logging 
@@ -281,7 +281,12 @@ def fmt_pretty_float ( value , width = 8 , precision = 6 ) :
     from   ostap.core.ostap_types import integer_types, num_types  
 
     assert isinstance ( value     , num_types     ),\
-           'Invalid value parameter %s/%s'   % ( value , type ( value ) )      
+           'Invalid value parameter %s/%s'   % ( value , type ( value ) )
+
+    ## not finite?
+    from ostap.math.base import isfinite 
+    if not isfinite ( value ) : return "%s" , 0
+    
     assert isinstance ( width     , integer_types ) and \
            isinstance ( precision , integer_types ) and 2 <= precision < width, \
            "Invalid width/precision parameters %s/%s" % ( width , precision )

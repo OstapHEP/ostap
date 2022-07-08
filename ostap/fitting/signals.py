@@ -3309,7 +3309,7 @@ class NormalLaplace_pdf(MASS) :
         """``kL'' :  (dimensioneless) kL-parameter"""
         return self.__kL
     @kL.setter  
-    def kR ( self , value ) :
+    def kL ( self , value ) :
         self.set_value ( self.__kL , value )
         
     @property 

@@ -1235,6 +1235,7 @@ Ostap.Math.LegendreSum3  .__str__  =  Ostap.Math.LegendreSum3  .__repr__
 Ostap.Math.LegendreSum4  .__str__  =  Ostap.Math.LegendreSum4  .__repr__
 
 
+
 # =============================================================================
 ## print function for splines 
 def _sp_print_ ( self ,   typ = 'BSpline' ) :
@@ -1342,6 +1343,15 @@ def sp_maximum_1D_ ( pdf , xmin , xmax , x0 , *args ) :
     if hasattr ( pdf , 'setPars' ) : pdf.setPars()
     fun = pdf.function()
     return  sp_maximum_1D ( fun , xmin , xmax , x0 , *args ) 
+
+
+# ============================================================================
+## specfic ptints
+# ============================================================================
+Ostap.Math.NormalLaplace .__str__  = lambda s : "NormalLaplace(mu=%.4g,varsigma=%.4g,kL=%.4g,kR=%.4g)" % ( s.mu       () ,
+                                                                                                       s.varsigma () ,
+                                                                                                       s.kL       () ,
+                                                                                                       s.kR       () )
 
 # =============================================================================
 ## decorate 1D-PDFs

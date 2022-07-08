@@ -151,6 +151,16 @@ namespace
   //   return t >= 0 ? 1 - value : value ;
   // }
   // ==========================================================================
+  /** product of Gaussian PDF and Mill's ratio 
+   *  \f$ f(x; a ) = \phi ( x ) R( a + x ) \f$ 
+   */
+  // inline double gauss_mills 
+  // ( const double x , 
+  //  const double a ) 
+  // { 
+  //   return Ostap::Math::gauss_pdf ( x ) * Ostap::Math::mills_normal ( a + x ) ; 
+  // } ;
+  // ==========================================================================
 }
 // ============================================================================
 
@@ -163,10 +173,10 @@ namespace
  *  @param sigma_R (right sigma)
  */
 // ============================================================================
-Ostap::Math::BifurcatedGauss::BifurcatedGauss
-( const double peak   ,
-  const double sigmaL ,
-  const double sigmaR )
+  Ostap::Math::BifurcatedGauss::BifurcatedGauss
+  ( const double peak   ,
+    const double sigmaL ,
+    const double sigmaR )
   : m_peak    ( peak )
   , m_sigmaL  ( std::fabs ( sigmaL ) )
   , m_sigmaR  ( std::fabs ( sigmaR ) )
@@ -201,10 +211,10 @@ double Ostap::Math::BifurcatedGauss::cdf ( const double x ) const
   // left half-gaussian
   if ( x <= m_peak )
   {
-    const double sigma = sigmaL () ;
-    const double sf    = s_SQRT2i  / sigma  ;
-    const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
-    const double b     = ( x - m_peak ) * sf ;
+  const double sigma = sigmaL () ;
+  const double sf    = s_SQRT2i  / sigma  ;
+  const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
+  const double b     = ( x - m_peak ) * sf ;
     return std::erfc ( -b ) * nf ; // RETURN
   }
   //
@@ -926,14 +936,13 @@ double Ostap::Math::ExGauss::evaluate          ( const double x ) const
   const double z     = ( x - m_mu ) / m_varsigma ;
   const bool k_zero  = s_zero ( m_k ) ;
   //
-  const double gauss = Ostap::Math::gauss_pdf ( z ) / m_varsigma ;
   const double kk    = std::abs ( m_k ) ;
   //
   return 
-    k_zero  ? gauss :
-    m_k > 0 ? gauss * Ostap::Math::mills_normal ( 1.0/kk - z ) / kk :
-    m_k < 0 ? gauss * Ostap::Math::mills_normal ( 1.0/kk + z ) / kk :
-    gauss ;
+    k_zero  ? Ostap::Math::gauss_pdf   ( z ) / m_varsigma : 
+    m_k > 0 ? Ostap::Math::gauss_mills ( z , 1.0/kk - z ) / ( kk * m_varsigma ) :
+    m_k < 0 ? Ostap::Math::gauss_mills ( z , 1.0/kk + z ) / ( kk * m_varsigma ) :
+    Ostap::Math::gauss_pdf   ( z ) / m_varsigma  ;
 }
 // ============================================================================
 bool Ostap::Math::ExGauss::setMu        ( const double value ) 
@@ -986,8 +995,8 @@ double Ostap::Math::ExGauss::cdf ( const double x ) const
   //
   return 
     k_zero  ? gauss  :
-    m_k > 0 ? gauss - Ostap::Math::gauss_pdf ( z ) * Ostap::Math::mills_normal ( 1 / kk - z ) :
-    m_k < 0 ? gauss + Ostap::Math::gauss_pdf ( z ) * Ostap::Math::mills_normal ( 1 / kk + z ) :
+    m_k > 0 ? gauss - Ostap::Math::gauss_mills ( z , 1 / kk - z ) :
+    m_k < 0 ? gauss + Ostap::Math::gauss_mills ( z , 1 / kk + z ) :
     gauss ;
 }
 // ============================================================================
@@ -1095,14 +1104,12 @@ double Ostap::Math::NormalLaplace::evaluate ( const double x ) const
   const bool l_zero = s_zero ( m_kL ) ;
   const bool r_zero = s_zero ( m_kR ) ;
   //
-  const double gauss = Ostap::Math::gauss_pdf ( z ) / m_varsigma ;
-  //
   return 
-    l_zero && r_zero ? gauss : 
-    l_zero           ? gauss * Ostap::Math::mills_normal ( 1/m_kR - z ) / m_kR :
-    r_zero           ? gauss * Ostap::Math::mills_normal ( 1/m_kL + z ) / m_kL :
-    gauss * ( Ostap::Math::mills_normal ( 1/m_kR - z ) +
-              Ostap::Math::mills_normal ( 1/m_kL + z ) ) / ( m_kL + m_kR ) ;
+    l_zero && r_zero ? Ostap::Math::gauss_pdf   ( z ) / m_varsigma :
+    l_zero           ? Ostap::Math::gauss_mills ( z , 1/m_kR - z ) / ( m_kR * m_varsigma ) :
+    r_zero           ? Ostap::Math::gauss_mills ( z , 1/m_kL + z ) / ( m_kL * m_varsigma ) :
+    ( Ostap::Math::gauss_mills ( z , 1/m_kR - z ) +
+      Ostap::Math::gauss_mills ( z , 1/m_kL + z ) ) / ( ( m_kL + m_kR ) * m_varsigma ) ;
 }
 // ============================================================================
 // get the integral
@@ -1133,13 +1140,10 @@ double Ostap::Math::NormalLaplace::cdf ( const double x ) const
   //
   return 
     l_zero && r_zero ? gauss : 
-    l_zero           ? gauss - 
-    Ostap::Math::gauss_pdf ( z ) * Ostap::Math::mills_normal ( 1 / m_kR - z ) :
-    r_zero           ? gauss + 
-    Ostap::Math::gauss_pdf ( z ) * Ostap::Math::mills_normal ( 1 / m_kL + z ) :
-    gauss  - Ostap::Math::gauss_pdf ( z ) * 
-    ( Ostap::Math::mills_normal ( 1 / m_kR - z ) * m_kR - 
-      Ostap::Math::mills_normal ( 1 / m_kL + z ) * m_kL ) / ( m_kL + m_kR ) ;
+    l_zero           ? gauss - Ostap::Math::gauss_mills ( z , 1 / m_kR - z ) :
+    r_zero           ? gauss + Ostap::Math::gauss_mills ( z , 1 / m_kL + z ) :
+    gauss  - ( Ostap::Math::gauss_mills ( z , 1 / m_kR - z ) * m_kR - 
+               Ostap::Math::gauss_mills ( z , 1 / m_kL + z ) * m_kL ) / ( m_kL + m_kR ) ;
 }
 // ============================================================================
 // get cumulant 
