@@ -94,36 +94,36 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
         logger.info    ('%s: fit result\n%s' % ( title , table ) )
 
     
-    rows = [ ( 'Parameter' , 'Value', '(Roo)Value' ) ]
+    ## rows = [ ( 'Parameter' , 'Value', '(Roo)Value' ) ]
 
-    signal = pdf.signal 
+    ## signal = pdf.signal 
     
-    row = 'mean'       , '%+.6g' % signal.get_mean  () , '%+.6g' % signal.roo_mean  ()
-    rows.append ( row )
+    ## row = 'mean'       , '%+.6g' % signal.get_mean  () , '%+.6g' % signal.roo_mean  ()
+    ## rows.append ( row )
     
-    row = 'mode'       , '%+.3g' % signal.mode      () , ''
-    rows.append ( row )
-    row = 'median'     , '%+.3g' % signal.median    () , ''
-    rows.append ( row )
-    row = 'midpoint'   , '%+.3g' % signal.mid_point () , ''
-    rows.append ( row )
-    row = 'rms'        , '%+.6g' % signal.rms       () , '%+.6g' % signal.roo_rms  ()
-    rows.append ( row )    
-    row = 'FWHM'       , '%+.6g' % signal.fwhm      () , ''
-    rows.append ( row )    
-    row = 'skewness'   , '%+.6g' % signal.skewness  () , '%+.6g' % signal.roo_skewness  ()
-    rows.append ( row )    
-    row = 'kurtosis'   , '%+.6g' % signal.kurtosis  () , '%+.6g' % signal.roo_kurtosis  ()  
-    rows.append ( row )    
+    ## row = 'mode'       , '%+.3g' % signal.mode      () , ''
+    ## rows.append ( row )
+    ## row = 'median'     , '%+.3g' % signal.median    () , ''
+    ## rows.append ( row )
+    ## row = 'midpoint'   , '%+.3g' % signal.mid_point () , ''
+    ## rows.append ( row )
+    ## row = 'rms'        , '%+.6g' % signal.rms       () , '%+.6g' % signal.roo_rms  ()
+    ## rows.append ( row )    
+    ## row = 'FWHM'       , '%+.6g' % signal.fwhm      () , ''
+    ## rows.append ( row )    
+    ## row = 'skewness'   , '%+.6g' % signal.skewness  () , '%+.6g' % signal.roo_skewness  ()
+    ## rows.append ( row )    
+    ## row = 'kurtosis'   , '%+.6g' % signal.kurtosis  () , '%+.6g' % signal.roo_kurtosis  ()  
+    ## rows.append ( row )    
 
-    import ostap.logger.table       as     T 
-    table = T.table ( rows , title = title ,  prefix = '# ' )
-    logger.info ( 'Global features for %s\n%s' % ( title , table ) ) 
+    ## import ostap.logger.table       as     T 
+    ## table = T.table ( rows , title = title ,  prefix = '# ' )
+    ## logger.info ( 'Global features for %s\n%s' % ( title , table ) ) 
 
     with wait ( 1 ), use_canvas ( title ) : 
         pdf.draw (  dataset0 )
         
-    models.add ( pdf )
+    ### models.add ( pdf )
     
 # =============================================================================
 ## gauss PDF
@@ -133,18 +133,23 @@ def test_gauss() :
     logger = getLogger ( 'test_gauss' )
     
     logger.info ('Test Gauss_pdf:  simple Gaussian signal' )
+
+    model  = model_gauss
+    signal = model.signal
     
     ## release the sigma of signal:
-    signal_gauss.mean.release()
+    signal.mean.release()
     
     ## simple fit with gaussian only 
-    result = signal_gauss . fitTo ( dataset0 , silent = True )
+    result = signal. fitTo ( dataset0 , silent = True )
     
     with rooSilent() : 
-        result, frame = model_gauss . fitTo ( dataset0 , silent = True )
-        result, frame = model_gauss . fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_gauss , result , 'Simple Gaussian model' , logger )
+    make_print ( model , result , 'Simple Gaussian model' , logger )
+
+    models.add ( model )
 
 # =============================================================================
 ## CrystalBall PDF
@@ -155,7 +160,7 @@ def test_crystalball () :
     logger.info ('Test CrystalBall_pdf: Crystal Ball  function' )
     
     ## composite model: signal + background 
-    model_cb = Models.Fit1D (
+    model = Models.Fit1D (
         signal     = Models.CrystalBall_pdf ( name  = 'CB'     , ## the name 
                                               xvar  = mass     , ## the variable   
                                               alpha = (2,1,5)  , ## tail parameter
@@ -166,15 +171,17 @@ def test_crystalball () :
         S = S , B = B 
         )
     
-    model_cb.signal.n.fix(8) 
+    model.signal.n.fix(8)
+    
     with rooSilent() : 
-        result, frame = model_cb. fitTo ( dataset0 , silent = True )
-        model_cb.signal.alpha.release()
-        result, frame = model_cb. fitTo ( dataset0 , silent = True )
-        result, frame = model_cb. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.alpha.release()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_cb , result , 'Crystal Ball model' , logger )
+    make_print ( model , result , 'Crystal Ball model' , logger )
                       
+    models.add ( model )
 
 # =============================================================================
 ## right side CrystalBall PDF
@@ -184,7 +191,7 @@ def test_crystalball_RS () :
     logger = getLogger ( 'test_crystalball_RS' )
 
     logger.info ('Test CrystalBallRS_pdf:  right-side Crystal Ball function' )
-    model_cbrs = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.CrystalBallRS_pdf ( name  = 'CBRS' , 
                                             xvar  = mass               ,
                                             sigma = signal_gauss.sigma ,
@@ -195,16 +202,18 @@ def test_crystalball_RS () :
         S = S , B = B 
         )
     
-    model_cbrs.S.value  = NS 
-    model_cbrs.B.value  = NB
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
-        result, frame = model_cbrs. fitTo ( dataset0 , silent = True )
-        model_cbrs.signal.alpha.release()
-        result, frame = model_cbrs. fitTo ( dataset0 , silent = True )
-        result, frame = model_cbrs. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.alpha.release()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_cbrs , result , '(Right-side) Crystal Ball model' , logger )
+    make_print ( model , result , '(Right-side) Crystal Ball model' , logger )
+    
+    models.add ( model )
 
 # =============================================================================
 ## double sided CrystalBall PDF
@@ -213,7 +222,7 @@ def test_crystalball_DS () :
     
     logger = getLogger ( 'test_crystalball_DS' )
     logger.info ('Test CrystalBallDS_pdf: double-sided Crystal Ball function' )
-    model_cbds = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.CB2_pdf ( name   = 'CB2'              , 
                                   xvar   = mass               ,
                                   nL     = 10                 , 
@@ -225,20 +234,22 @@ def test_crystalball_DS () :
         background = background   ,
         S = S , B = B 
         )
-
-    model_cbds.S.value  = NS 
-    model_cbds.B.value  = NB
+    
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
-        result, frame = model_cbds. fitTo ( dataset0 )
-        model_cbds.signal.aL.release()
-        model_cbds.signal.aR.release()
-        result, frame = model_cbds. fitTo ( dataset0 )
-        model_cbds.signal.aL.fix(1.5) 
-        model_cbds.signal.aR.fix(1.5)    
-        result, frame = model_cbds. fitTo ( dataset0 )
+        result, frame = model. fitTo ( dataset0 )
+        model.signal.aL.release()
+        model.signal.aR.release()
+        result, frame = model. fitTo ( dataset0 )
+        model.signal.aL.fix(1.5) 
+        model.signal.aR.fix(1.5)    
+        result, frame = model. fitTo ( dataset0 )
         
-    make_print ( model_cbds , result , 'Double-sided Crystal Ball model' , logger )
+    make_print ( model, result , 'Double-sided Crystal Ball model' , logger )
+
+    models.add ( model )
 
 # =============================================================================
 ## Needham PDF
@@ -248,7 +259,7 @@ def test_needham() :
     logger = getLogger ( 'test_needham' )
   
     logger.info ('Test Needham_pdf: Crystal Ball with alpha=f(sigma)' )
-    model_matt = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.Needham_pdf ( name  = 'Matt'             , 
                                       xvar  = mass               ,
                                       sigma = signal_gauss.sigma ,  
@@ -258,13 +269,15 @@ def test_needham() :
         )
     
     with rooSilent() : 
-        result, frame = model_matt. fitTo ( dataset0 , silent = True )
-        model_matt.signal.mean .release()
-        model_matt.signal.sigma.release()
-        result, frame = model_matt. fitTo ( dataset0 , silent = True )
-        result, frame = model_matt. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.mean .release()
+        model.signal.sigma.release()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
 
-    make_print ( model_matt , result , 'Needham model' , logger )
+    make_print ( model , result , 'Needham model' , logger )
+
+    models.add ( model )
 
 # ==========================================================================
 ## Apollonios
@@ -274,26 +287,28 @@ def test_apollonios () :
     logger = getLogger ( 'test_apollonios' )
 
     logger.info ('Test Apollonios_pdf: Modified gaussian with power-law and exponential tails' ) 
-    model_apollonios = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.Apollonios_pdf ( name  = 'APO', 
-                                        xvar  = mass ,
-                                        mean  = signal_gauss.mean    ,
-                                        sigma = signal_gauss.sigma ,
-                                        b     =  1 ,
-                                        n     = 10 ,
-                                        alpha =  3 ) ,
+                                         xvar  = mass ,
+                                         mean  = signal_gauss.mean    ,
+                                         sigma = signal_gauss.sigma ,
+                                         b     =  1 ,
+                                         n     = 10 ,
+                                         alpha =  3 ) ,
         background = background   ,
         S = S , B = B 
         )
     
-    model_apollonios.S.setVal( NS )
-    model_apollonios.B.setVal( NB )
+    model.S = NS 
+    model.B = NB 
     
     with rooSilent() : 
-        result, frame = model_apollonios. fitTo ( dataset0 , silent = True )
-        result, frame = model_apollonios. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_apollonios , result , 'Apollonios model' , logger )
+    make_print ( model , result , 'Apollonios model' , logger )
+
+    models.add ( model )
 
 # ==========================================================================
 ## Apollonios2
@@ -303,10 +318,10 @@ def test_apollonios2() :
     logger = getLogger ( 'test_apollonios2' )
 
     logger.info ('Test Apollonios2_pdf: modified Gaussian with exponential tails' ) 
-    model_apollonios2 = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.Apollonios2_pdf ( name = 'AP2' , 
-                                         xvar      = mass ,
-                                         mean      = signal_gauss.mean  ,
+                                          xvar      = mass ,
+                                          mean      = signal_gauss.mean  ,
                                          sigma     = signal_gauss.sigma ,
                                          beta      =  ( 0.5 , 2 )       ,
                                          asymmetry = 0 ) ,
@@ -314,18 +329,19 @@ def test_apollonios2() :
         S = S , B = B 
         )
     
-    model_apollonios2.signal.mean.fix( m.value() )    
-    model_apollonios2.S.value  = NS 
-    model_apollonios2.B.value  = NB
-    model_apollonios2.signal.sigma.release() 
+    model.signal.mean.fix( m.value() )    
+    model.S = NS 
+    model.B = NB
+    model.signal.sigma.release() 
     
     with rooSilent() :
-        result, frame = model_apollonios2. fitTo ( dataset0 , silent = True )
-        model_apollonios2.signal.asym.release ()
-        result, frame = model_apollonios2. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.asym.release ()
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_apollonios2 , result , 'Apollonios2 model' , logger )
+    make_print ( model, result , 'Apollonios2 model' , logger )
         
+    models.add ( model )
 
 # =============================================================================
 ## Bifurcated gauss PDF
@@ -335,26 +351,28 @@ def test_bifurcated () :
     logger = getLogger ( 'test_bifurcated' )
     logger.info ('Test BifurcatedGauss_pdf: Bifurcated Gaussian' )
     
-    signal_bifurcated = Models.BifurcatedGauss_pdf ( name = 'BfGau' ,
-                                                     mean  = signal_gauss.mean  ,
-                                                     sigma = signal_gauss.sigma ,
-                                                     xvar  = mass    )
-    signal_bifurcated . asym  . setVal ( 0          )
+    signal = Models.BifurcatedGauss_pdf ( name = 'BfGau' ,
+                                          mean  = signal_gauss.mean  ,
+                                          sigma = signal_gauss.sigma ,
+                                          xvar  = mass    )
+    signal.asym = 0 
     
-    model_bifurcated = Models.Fit1D(
-        signal     = signal_bifurcated       ,
-        background = background   ,
+    model = Models.Fit1D(
+        signal     = signal     ,
+        background = background ,
         S = S , B = B 
         ) 
     
-    model_bifurcated.B.setVal (  500 )
-    model_bifurcated.S.setVal ( 6000 )
+    model.B = NB 
+    model.S = NS
+    
     with rooSilent() : 
-        result, frame = model_bifurcated . fitTo ( dataset0 , silent = True )
-        result, frame = model_bifurcated . fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_bifurcated , result , 'Bifurcated Gaussian model' , logger )
+    make_print ( model , result , 'Bifurcated Gaussian model' , logger )
 
+    models.add ( model )
 
 # =============================================================================
 ## Double gauss PDF
@@ -364,28 +382,30 @@ def test_2gauss () :
     logger = getLogger ( 'test_2gauss' )
     logger.info ('Test DoubleGauss_pdf: Double Gaussian' )
     
-    signal_2gauss = Models.DoubleGauss_pdf ( name = 'Gau2' ,
+    signal = Models.DoubleGauss_pdf ( name = 'Gau2' ,
                                              mean  = signal_gauss.mean  ,
                                              sigma = signal_gauss.sigma ,
                                              xvar  = mass               ,
                                              fraction = 0.9             ,
                                              scale    = 1.2             )
     
-    model_2gauss = Models.Fit1D(
-        signal     = signal_2gauss      ,
-        background = background   ,
+    model = Models.Fit1D(
+        signal     = signal      ,
+        background = background  ,
         S = S , B = B 
         )
     
-    model_2gauss.B.setVal (  500 )
-    model_2gauss.S.setVal ( 6000 )
+    model.B = NB 
+    model.S =NS
+    
     with rooSilent() : 
-        result, frame = model_2gauss. fitTo ( dataset0 , silent = True )
-        signal_2gauss.fraction.release() 
-        result, frame = model_2gauss. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.fraction.release() 
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_2gauss , result , 'Double Gaussian model' , logger )
+    make_print ( model , result , 'Double Gaussian model' , logger )
         
+    models.add ( model )
 
 # =============================================================================
 ## GenGaussV1
@@ -395,7 +415,7 @@ def test_gengauss_v1 () :
     logger = getLogger ( 'test_gengauss_v1' )
 
     logger.info ('Test GenGaussV1_pdf: Generalized Gaussian V1' ) 
-    model_gauss_gv1 = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.GenGaussV1_pdf ( name = 'Gv1' , 
                                          xvar = mass  ,
                                          mean = signal_gauss.mean ) ,
@@ -403,19 +423,21 @@ def test_gengauss_v1 () :
         S = S , B = B 
         ) 
     
-    model_gauss_gv1.signal.beta .fix(2)
-    model_gauss_gv1.signal.mean .fix( m.value() ) 
-    model_gauss_gv1.S.setVal( NS )
-    model_gauss_gv1.B.setVal( NB )
+    model.signal.beta .fix(2)
+    model.signal.mean .fix( m.value() ) 
+    model.S = NS 
+    model.B = NB 
     
     with rooSilent() : 
-        result, frame = model_gauss_gv1. fitTo ( dataset0 , silent = True )
-        model_gauss_gv1.signal.alpha.release()
-        result, frame = model_gauss_gv1. fitTo ( dataset0 , silent = True )
-        model_gauss_gv1.signal.mean .release() 
-        result, frame = model_gauss_gv1. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.alpha.release()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.mean .release() 
+        result, frame = model . fitTo ( dataset0 , silent = True )
         
-    make_print ( model_gauss_gv1 , result , 'Generalized Gaussian V1 model' , logger )
+    make_print ( model , result , 'Generalized Gaussian V1 model' , logger )
+
+    models.add ( model )
 
 # =============================================================================
 ## GenGaussV2
@@ -425,7 +447,7 @@ def test_gengauss_v2 () :
     logger = getLogger ( 'test_gengauss_v2' )
     
     logger.info ('Test GenGaussV2_pdf: Generalized Gaussian function V2' ) 
-    model_gauss_gv2 = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.GenGaussV2_pdf ( name = 'Gv2' , 
                                          xvar = mass  ,
                                          mean = signal_gauss.mean ) ,
@@ -433,24 +455,22 @@ def test_gengauss_v2 () :
         S = S , B = B 
         ) 
     
-    model_gauss_gv2.signal.kappa.fix(0)
+    model.signal.kappa.fix(0)
+    
+    model.S = NS 
+    model.B = NB 
     
     with rooSilent() : 
-        result, frame = model_gauss_gv2. fitTo ( dataset0 , silent = True )
-        model_gauss_gv2.signal.mean.release() 
-        model_gauss_gv2.S.setVal( NS )
-        model_gauss_gv2.B.setVal( NB )
-        result, frame = model_gauss_gv2. fitTo ( dataset0 , silent = True )
-        ##model_gauss_gv2.signal.kappa.release() 
-        model_gauss_gv2.S.setVal( NS )
-        model_gauss_gv2.B.setVal( NB )
-        result, frame = model_gauss_gv2. fitTo ( dataset0 , silent = True )
-        result, frame = model_gauss_gv2. fitTo ( dataset0 , silent = True )
-        model_gauss_gv2.S.setVal( NS )
-        model_gauss_gv2.B.setVal( NB )
-        result, frame = model_gauss_gv2. fitTo ( dataset0 , silent = True )        
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.mean.release() 
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )        
 
-    make_print ( model_gauss_gv2 , result , 'Generalized Gaussian V2 model' , logger )
+    make_print ( model , result , 'Generalized Gaussian V2 model' , logger )
+    
+    models.add ( model )
 
 # =============================================================================
 ## SkewGauss
@@ -460,32 +480,33 @@ def test_skewgauss() :
     logger = getLogger ( 'test_skewgauss' )
     
     logger.info ('Test SkewGauss_pdf: Skew Gaussian function' ) 
-    model_gauss_skew = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.SkewGauss_pdf ( name = 'GSk' , 
                                         xvar = mass  , mean = signal_gauss.mean ) ,
         background = background   ,
         S = S , B = B 
         ) 
     
-    model_gauss_skew.signal.alpha.fix(0)
-    model_gauss_skew.S.setVal( NS )
-    model_gauss_skew.B.setVal( NB )
-    
-    with rooSilent() : 
-        result, frame = model_gauss_skew. fitTo ( dataset0 , silent = True )
-        result, frame = model_gauss_skew. fitTo ( dataset0 , silent = True )
+    model.S = NS 
+    model.B = NB 
 
-    make_print ( model_gauss_skew , result , 'Skew  Gaussian model' , logger )
+    with rooSilent() : 
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+
+    make_print ( model , result , 'Skew  Gaussian model' , logger )
+
+    models.add ( model )
 
 # =============================================================================
-## QGauss
+## qGauss
 # =============================================================================
 def test_qgauss () :
     
     logger = getLogger ( 'test_qgauss' )
 
     logger.info ('Test QGaussian_pdf: q-Gaussian' ) 
-    model_qgauss = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.QGaussian_pdf ( name = 'qG'  , 
                                         xvar = mass  ,
                                         q    = (1,0.7,1.2), 
@@ -495,18 +516,19 @@ def test_qgauss () :
         S = S , B = B 
         ) 
     
-    s = model_qgauss.signal
+    s = model.signal
     s.scale = 0.015
     
     with rooSilent() : 
-        result, frame = model_qgauss. fitTo ( dataset0 , silent = True )
-        model_qgauss.signal.scale.release()
-        result, frame = model_qgauss. fitTo ( dataset0 , silent = True )
-        model_qgauss.signal.q .release() 
-        result, frame = model_qgauss. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.scale.release()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.q .release() 
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_qgauss , result , 'q-Gaussian model' , logger )
+    make_print ( model , result , 'q-Gaussian model' , logger )
 
+    models.add ( model )
 
 # =============================================================================
 ## Bukin
@@ -516,7 +538,7 @@ def test_bukin() :
     logger = getLogger ( 'test_bukin' )
 
     logger.info ('Test Bukin_pdf: Bukin function: skew gaussian core + exponenial/gaussian  tails' ) 
-    model_bukin = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.Bukin_pdf ( name  = 'Bukin' ,
                                     xvar  = mass    ,
                                     xi    = 0    ,
@@ -528,24 +550,26 @@ def test_bukin() :
         S = S , B = B 
         )
     
-    model_bukin.signal.mean .fix  ( m.value() )
-    model_bukin.signal.sigma.fix  ( m.error() )
-    model_bukin.S.setVal( NS )
-    model_bukin.B.setVal( NB )
+    model.signal.mean .fix  ( m.value() )
+    model.signal.sigma.fix  ( m.error() )
+    model.S = NS 
+    model.B = NB 
     
     with rooSilent() : 
-        result, frame = model_bukin. fitTo ( dataset0 , silent = True )
-        model_bukin.signal.xi  .release()     
-        result, frame = model_bukin. fitTo ( dataset0 , silent = True )
-        model_bukin.signal.rhoL.release()     
-        result, frame = model_bukin. fitTo ( dataset0 , silent = True )
-        model_bukin.signal.rhoR.release()     
-        result, frame = model_bukin. fitTo ( dataset0 , silent = True )
-        model_bukin.signal.mean .release() 
-        model_bukin.signal.sigma.release() 
-        result, frame = model_bukin. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.xi  .release()     
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.rhoL.release()     
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.rhoR.release()     
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.mean .release() 
+        model.signal.sigma.release() 
+        result, frame = model. fitTo ( dataset0 , silent = True )
 
-    make_print ( model_bukin , result , 'Bukin (modified Novosibirsk) model' , logger )        
+    make_print ( model , result , 'Bukin (modified Novosibirsk) model' , logger )        
+
+    models.add ( model )
 
 # =============================================================================
 ## StudentT
@@ -555,7 +579,7 @@ def test_studentT () :
     logger = getLogger ( 'test_studentT' )
        
     logger.info ('Test StudentT_pdf: Student-t distribution' ) 
-    model_student = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.StudentT_pdf ( name = 'ST' , 
                                        xvar = mass ,
                                        mean = signal_gauss.mean ) ,
@@ -563,16 +587,19 @@ def test_studentT () :
         S = S , B = B 
         ) 
     
-    model_student.signal.n    .setVal(20)
-    model_student.signal.sigma.setVal(0.013)
-    model_student.S.setVal( NS )
-    model_student.B.setVal( NB )
-    
+    model.signal.n      = 20 
+    model.signal.sigma = 0.015 
+
+    model.S = NS 
+    model.B = NB 
+
     with rooSilent() : 
-        result, frame = model_student. fitTo ( dataset0 , silent = True )
-        result, frame = model_student. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_student , result , "Student's t-distribution" , logger )        
+    make_print ( model , result , "Student's t-distribution" , logger )
+    
+    models.add ( model )
 
 # =============================================================================
 ## Bifurcated StudentT
@@ -594,8 +621,8 @@ def test_bifstudentT():
         ) 
     
     signal = model.signal 
-    model.S.setVal( NS )
-    model.B.setVal( NB )
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
@@ -605,6 +632,8 @@ def test_bifstudentT():
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Bifurcated Student's t-distribution" , logger )        
+
+    models.add ( model )
 
 # ==========================================================================
 ## PearsonIV 
@@ -625,9 +654,11 @@ def test_PearsonIV () :
         background = background   ,
         S = S , B = B ,
         )
+
     
-    model.S.value  = NS 
-    model.B.value  = NB
+    model.S = NS 
+    model.B = NB
+    
     signal_gauss.mean .fix ( m.value() )
     model.signal.kappa.fix ( 0 )
     with rooSilent() :
@@ -639,6 +670,8 @@ def test_PearsonIV () :
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Pearson Type IV distribution" , logger )        
+
+    models.add ( model )
 
 # =============================================================================
 ## Test  SinhAsinh-Distribution
@@ -658,13 +691,14 @@ def test_sinhasinh() :
     
     signal = model.signal
     
-    model.S.setVal( NS )
-    model.B.setVal( NB )
+    model.S = NS 
+    model.B = NB
+
     
-    signal.mu      .setVal (  3.10  )
-    signal.sigma   .setVal (  0.015 ) 
-    signal.epsilon .setVal (  0.021 ) 
-    signal.delta   .setVal (  1.0   ) 
+    signal.mu      = 3.10  
+    signal.sigma   = 0.015  
+    signal.epsilon = 0.021 
+    signal.delta   = 1.0   
 
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 , silent = True )  
@@ -676,6 +710,7 @@ def test_sinhasinh() :
         
     make_print ( model , result , "Sinh-asinh model" , logger )        
 
+    models.add ( model )
 
 # =============================================================================
 ## Test  JohnsonSU-Distribution
@@ -695,8 +730,8 @@ def test_johnsonSU () :
     
     signal = model.signal
     
-    model.S.setVal( NS )
-    model.B.setVal( NB )
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 , silent = True )  
@@ -706,6 +741,8 @@ def test_johnsonSU () :
         result,f  = model.fitTo ( dataset0 , silent = True )
         
     make_print ( model, result , "Johnson's SU model" , logger )        
+
+    models.add ( model )
 
 # =============================================================================
 ## Test  ATLAS
@@ -725,8 +762,9 @@ def test_atlas () :
         )
     
     signal = model.signal
-    model.S.setVal( NS )
-    model.B.setVal( NB )
+
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 , silent = True )  
@@ -737,6 +775,8 @@ def test_atlas () :
         
     make_print ( model , result , "ATLAS/ZEUS model" , logger )        
 
+    models.add ( model )
+       
 # ==========================================================================
 ## Das
 # ==========================================================================
@@ -746,7 +786,7 @@ def test_das_1 () :
        
     
     logger.info ('Test Das_pdf: Das pdf with two tails' ) 
-    model_das_1 = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.Das_pdf ( name = 'Das1' , 
                                   xvar      = mass               ,
                                   mu        = signal_gauss.mean  ,
@@ -760,14 +800,16 @@ def test_das_1 () :
     signal_gauss.mean .fix ( m.value() )
     signal_gauss.sigma.fix ( m.error() )
 
-    model_das_1.S.value  = NS 
-    model_das_1.B.value  = NB
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() :
-        result, frame = model_das_1. fitTo ( dataset0 , silent = True )
-        result, frame = model_das_1. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_das_1 , result , "Das model (1) " , logger )        
+    make_print ( model , result , "Das model (1) " , logger )        
+
+    models.add ( model )
 
 # ==========================================================================
 ## Das
@@ -777,7 +819,7 @@ def test_das_2 () :
     logger = getLogger ( 'test_das_2' )
        
     logger.info ('Test Das_pdf: Das pdf with tail and asymmetry' ) 
-    model_das_2 = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.Das_pdf ( name = 'Das2' , 
                                   xvar      = mass               ,
                                   mu        = signal_gauss.mean  ,
@@ -791,16 +833,16 @@ def test_das_2 () :
     signal_gauss.mean .fix ( m.value() )
     signal_gauss.sigma.fix ( m.error() )
 
-    model_das_2.S.value  = NS 
-    model_das_2.B.value  = NB
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() :
-        result, frame = model_das_2. fitTo ( dataset0 , silent = True )
-        result, frame = model_das_2. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model_das_2 , result , "Das model (2) " , logger )        
+    make_print ( model , result , "Das model (2) " , logger )        
 
-
+    models.add ( model )
 
 # =============================================================================
 ## Test  SECH
@@ -819,8 +861,8 @@ def test_sech() :
         )
     
     signal = model.signal
-    model.S.setVal( NS )
-    model.B.setVal( NB )
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 , silent = True )  
@@ -830,6 +872,8 @@ def test_sech() :
         result,f  = model.fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Sech model" , logger )        
+
+    models.add ( model )
 
 # =============================================================================
 ## Test  LOGISTIC
@@ -848,8 +892,8 @@ def test_logistic () :
         )
     
     signal = model.signal
-    model.S.setVal( NS )
-    model.B.setVal( NB )
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 , silent = True )  
@@ -859,7 +903,9 @@ def test_logistic () :
         result,f  = model.fitTo ( dataset0 , silent = True )
 
     make_print ( model , result , "Logistic  model" , logger )        
-    
+
+    models.add ( model )
+
 # =============================================================================
 ## Test  LOSEV
 # =============================================================================
@@ -877,8 +923,8 @@ def test_losev() :
         ) 
     
     signal = model.signal
-    model.S.setVal( NS )
-    model.B.setVal( NB )
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 , silent = True )  
@@ -890,7 +936,7 @@ def test_losev() :
         
     make_print ( model , result , "Losev  model" , logger )        
 
-
+    models.add ( model )
 
 # =============================================================================
 ## Slash
@@ -913,15 +959,16 @@ def test_slash():
     signal.scale.release() 
     signal.mean.fix()
     
-    model.S.setVal ( NS )
-    model.B.setVal ( NB )
-    
+    model.S = NS 
+    model.B = NB
+
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model , result , "Slash model" , logger )        
-
+    make_print ( model , result , "Slash model" , logger )
+    
+    models.add ( model )
 
 
 # =============================================================================
@@ -941,8 +988,8 @@ def test_raisngcosine () :
         )
     
     signal = model.signal
-    model.S.setVal ( NS )
-    model.B.setVal ( NB )
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 , silent = True )  
@@ -953,6 +1000,7 @@ def test_raisngcosine () :
         
     make_print ( model , result , "Rising Cosine model" , logger )        
 
+    models.add ( model )
 
 # =============================================================================
 ## Asymmetric Laplace 
@@ -975,14 +1023,16 @@ def test_laplace():
     signal.slope.release() 
     signal.mean.fix()
     
-    model.S.setVal ( NS )
-    model.B.setVal ( NB )
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
         result, frame = model. fitTo ( dataset0 )
         
     make_print ( model , result , "Laplace model" , logger )        
+
+    models.add ( model )
 
 # ==========================================================================
 ## ExGauss
@@ -1006,8 +1056,8 @@ def test_exgauss () :
     signal_gauss.mean .fix ( m.value() )
     signal_gauss.sigma.fix ( m.error() )
 
-    model.S.value  = NS 
-    model.B.value  = NB
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() :
         result, frame = model. fitTo ( dataset0 , silent = True )
@@ -1015,6 +1065,7 @@ def test_exgauss () :
         
     make_print ( model , result , "ExGauss model" , logger )        
 
+    models.add ( model )
 
 # ==========================================================================
 ## NormalLaplace 
@@ -1039,8 +1090,8 @@ def test_normlapl () :
     signal_gauss.mean .fix ( m.value() )
     signal_gauss.sigma.fix ( m.error() )
 
-    model.S.value  = NS 
-    model.B.value  = NB
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() :
         result, frame = model. fitTo ( dataset0 , silent = True )
@@ -1050,6 +1101,7 @@ def test_normlapl () :
         
     make_print ( model , result , "Normal Laplace model" , logger )        
 
+    models.add ( model )
         
 # ==========================================================================
 ## Hyperbolic
@@ -1060,7 +1112,7 @@ def test_hyperbolic() :
        
     
     logger.info ('Test Hyperbolic_pdf: hyperbolic distribution (exponential tails)' ) 
-    model_hyperbolic = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.Hyperbolic_pdf ( name = 'HB' , 
                                          xvar      = mass               ,
                                          mu        = signal_gauss.mean  ,
@@ -1070,24 +1122,27 @@ def test_hyperbolic() :
         background = background   ,
         S = S , B = B ,
         )
-
+    
     signal_gauss.mean .fix ( m.value() )
     signal_gauss.sigma.fix ( m.error() )
 
-    model_hyperbolic.S.value  = NS 
-    model_hyperbolic.B.value  = NB
+    signal  = model.signal 
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() :
-        model_hyperbolic.signal.kappa.fix ( 0 )    
-        result, frame = model_hyperbolic. fitTo ( dataset0 , silent = True )
-        model_hyperbolic.signal.kappa.release ()
-        model_hyperbolic.signal.zeta .release ()
-        model_hyperbolic.signal.mean .release ()
-        model_hyperbolic.signal.sigma.release ()
-        result, frame = model_hyperbolic. fitTo ( dataset0 , silent = True )
-        result, frame = model_hyperbolic. fitTo ( dataset0 , silent = True )
+        signal.kappa.fix ( 0 )    
+        result, frame = model . fitTo ( dataset0 , silent = True )
+        signal.kappa.release ()
+        signal.zeta .release ()
+        signal.mean .release ()
+        signal.sigma.release ()
+        result, frame = model . fitTo ( dataset0 , silent = True )
+        result, frame = model . fitTo ( dataset0 , silent = True )
         
-    make_print ( model_hyperbolic , result , "Hyperbolic model" , logger )        
+    make_print ( model , result , "Hyperbolic model" , logger )        
+
+    models.add ( model )
 
 # ==========================================================================
 ## Generalised Hyperbolic
@@ -1098,7 +1153,7 @@ def test_genhyperbolic() :
        
     
     logger.info ('Test GenHyperbolic_pdf: generalised hyperbolic distribution (exponential tails)' ) 
-    model_genhyperbolic = Models.Fit1D (
+    model = Models.Fit1D (
         signal = Models.GenHyperbolic_pdf ( name = 'GHB' , 
                                             xvar      = mass               ,
                                             mu        = signal_gauss.mean  ,
@@ -1113,21 +1168,24 @@ def test_genhyperbolic() :
     signal_gauss.mean .fix ( m.value() )
     signal_gauss.sigma.fix ( m.error() )
 
-    model_genhyperbolic.S.value  = NS 
-    model_genhyperbolic.B.value  = NB
+    signal  = model.signal 
+    model.S = NS 
+    model.B = NB
 
     from ostap.utils.gsl import gslCount
     with rooSilent() , gslCount() :
-        model_genhyperbolic.signal.kappa.fix ( 0 )    
-        result, frame = model_genhyperbolic. fitTo ( dataset0 , silent = True )
-        model_genhyperbolic.signal.kappa.release ()
-        model_genhyperbolic.signal.zeta .release ()
-        model_genhyperbolic.signal.sigma.release ()
-        model_genhyperbolic.signal.mean .release ()
-        result, frame = model_genhyperbolic. fitTo ( dataset0 , silent = True )
-        result, frame = model_genhyperbolic. fitTo ( dataset0 , silent = True )
+        signal.kappa.fix ( 0 )    
+        result, frame = model . fitTo ( dataset0 , silent = True )
+        signal.kappa.release ()
+        signal.zeta .release ()
+        signal.sigma.release ()
+        signal.mean .release ()
+        result, frame = model . fitTo ( dataset0 , silent = True )
+        result, frame = model . fitTo ( dataset0 , silent = True )
         
-    make_print ( model_genhyperbolic , result , "Generalized Hyperbolic model" , logger )        
+    make_print ( model , result , "Generalized Hyperbolic model" , logger )
+    
+    models.add ( model )
 
 # ==========================================================================
 ## Hypatia 
@@ -1139,7 +1197,7 @@ def test_hypatia () :
     
     logger.info ('Test Hypatia_pdf: Hypatia pdf' ) 
     model = Models.Fit1D (
-        signal = Models.Hypatia_pdf ( name = 'HP' , 
+        signal = Models.Hypatia_pdf ( name = 'Hypatia' , 
                                       xvar      = mass               ,
                                       mu        = signal_gauss.mean  ,
                                       sigma     = signal_gauss.sigma ,
@@ -1154,22 +1212,28 @@ def test_hypatia () :
     signal_gauss.mean .fix ( m.value() )
     signal_gauss.sigma.fix ( m.error() )
 
-    model.S.value  = NS 
-    model.B.value  = NB 
-    
+    signal  = model.signal 
+    model.S = NS 
+    model.B = NB
+
     from ostap.utils.gsl import gslCount
     with rooSilent() , gslCount() :
-        model.signal.kappa.fix ( 0 )    
+        signal.kappa.fix ( 0 )    
         result, frame = model. fitTo ( dataset0 , silent = True )
-        model.signal.kappa.release ()
-        model.signal.zeta .release ()
-        model.signal.mean .release ()
-        model.signal.sigma.release ()
+        signal.kappa.release ()
+        signal.zeta .release ()
+        signal.mean .release ()
+        signal.sigma.release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Hypatia model" , logger )        
+    
+    ## import pickle
+    ## print ( 'SIGNAL' , pickle.dumps ( signal ) )
+    ## print ( 'MODEL'  , pickle.dumps ( model  ) )
 
+    models.add ( model )
 
 # =============================================================================
 ## Voigt
@@ -1189,22 +1253,26 @@ def test_voigt () :
         )
     
     signal = model.signal
+    
     signal.sigma.fix ( m.error() )
     signal.gamma.fix ( 0.002     )
     signal.m0   .fix() 
     
-    model.S.setVal( NS )
-    model.B.setVal( NB )
+    model.S = NS 
+    model.B = NB
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.m0   .release() 
         signal.sigma.release() 
-        model.signal.sigma.release() 
+        signal.gamma.release() 
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Voigt model" , logger )        
+    
+    models.add ( model )
 
 # =============================================================================
 ## PseudoVoigt
@@ -1224,22 +1292,25 @@ def test_pvoigt () :
         )
     
     signal = model.signal
-    signal.m0   .fix() 
+    
+    model.S = NS 
+    model.B = NB
+
+    signal.m0   .fix () 
     signal.sigma.fix ( m.error() )
     signal.gamma.fix ( 0.002     )
-    
-    model.S.setVal( NS )
-    model.B.setVal( NB )
-    
+
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
-        model.signal.m0    .release() 
-        model.signal.sigma.release() 
+        signal.m0   .release() 
+        signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "pseudo-Voigt model" , logger )        
+
+    models.add ( model )
 
 # =============================================================================
 ## Breit-Wigner
@@ -1271,8 +1342,8 @@ def test_bw () :
         )
 
     signal = model.signal 
-    model.S.setVal ( NS )
-    model.B.setVal ( NB )
+    model.S = NS 
+    model.B = NB
     
     signal.mean.fix ( m.value() )
     
@@ -1284,6 +1355,7 @@ def test_bw () :
         
     make_print ( model , result , "Breit-Wigner model" , logger )        
 
+    models.add ( model )
 
 
 ## # =============================================================================
@@ -1345,21 +1417,10 @@ def test_db() :
     from ostap.utils.timing     import timing 
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         db['mass,vars'] = mass, varset0
-        print ('after-1' )
         ## db['dataset'  ] = dataset0
-        print ('after-3' )
-        for m in models :
-            print ( 'before model/2' , m.name ) 
-            db['model:' + m.name ] = m
-            print ( 'after model/2' , m.name )
-            
-        print ( 'before models') 
+        for m in models : db['model:' + m.name ] = m
         db['models'   ] = models
-        print ( 'after models') 
-        
-        print ('DUMPED!') 
         db.ls() 
-        print ('READ!') 
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -1368,18 +1429,6 @@ if '__main__' == __name__ :
     with timing ('test_gauss'          , logger ) :
         test_gauss          () 
         
-    ## Hyperbolic                                 + background 
-    with timing ('test_hyperbolic'     , logger ) :
-        test_hyperbolic        () 
-        
-    ## Generalised Hyperbolic                      + background 
-    with timing ('test_genhyperbolic'     , logger ) :
-        test_genhyperbolic     () 
-        
-    ## Hypatia                                     + background 
-    with timing ('test_hypatia'           , logger ) :
-        test_hypatia           ()
-
     ## Crystal Ball                              + background
     with timing ('test_crystalball'    , logger ) :
         test_crystalball    () 
@@ -1484,7 +1533,6 @@ if '__main__' == __name__ :
     with timing ('test_raisngcosine'   , logger ) :
         test_raisngcosine   () 
 
-
     ## Laplace-function                            + background 
     with timing ('test_laplace'        , logger ) :
         test_laplace        () 
@@ -1497,6 +1545,17 @@ if '__main__' == __name__ :
     with timing ('test_NormalLaplas'        , logger ) :
         test_normlapl           () 
 
+    ## Hyperbolic                                 + background 
+    with timing ('test_hyperbolic'     , logger ) :
+        test_hyperbolic        () 
+        
+    ## Generalised Hyperbolic                      + background 
+    with timing ('test_genhyperbolic'     , logger ) :
+        test_genhyperbolic     () 
+        
+    ## Hypatia                                     + background 
+    with timing ('test_hypatia'           , logger ) :
+       test_hypatia           ()
 
     ## Voigt profile                             + background
     with timing ('test_voigt'          , logger ) :

@@ -1365,8 +1365,7 @@ def rub_factory ( *args ) :
     """unpickle RooUniformBinning object
     -see ROOT.RooUniformBinnig
     """
-    print ( 'reconstruct U-bining', args ) 
-    return ROOT.RooUniformBining ( *args )
+    return ROOT.RooUniformBinning ( *args )
 
 # =============================================================================
 ## reduce uniform binning scheme
@@ -1377,9 +1376,9 @@ def _rub_reduce_ ( rub ) :
     """
     nbins = rub.numBoundaries()
     if nbins : nbins -= 1
-    content = rub.lowBound () , rub.highBound(), nbins , rub.GetName() 
+    content = rub.lowBound () , rub.highBound(), nbins , rub.GetName()
+    
     return rub_factory, content
-
 
 # =============================================================================
 ## unpickle RooBinning object
@@ -1388,7 +1387,7 @@ def rb_factory ( data , name  ) :
     """unpickle RooBinning object
     -see ROOT.RooUniformBinnig
     """
-    return ROOT.RooBining ( len(data) -1 , data[0] , name )
+    return ROOT.RooBinning ( len(data) -1 , data[0] , name )
 # =============================================================================
 ## reduce RooBinning object
 #  @see RooBinning 
@@ -1419,6 +1418,7 @@ _decorated_classes_ = (
     ROOT.RooAbsReal        ,
     ROOT.RooAbsRealLValue  ,
     ROOT.RooUniformBinning ,
+    ROOT.RooBinning        ,
 )
 
 _new_methods_ = tuple ( _new_methods_ ) 
