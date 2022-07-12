@@ -742,6 +742,29 @@ std::complex<double> Ostap::Math::sech
 { return 700 < std::abs ( x.real() ) ? 
     std::complex<double>(0,0) : 2.0 / ( std::exp(x)+std::exp(-x) ) ; }
 // ============================================================================
+
+
+// ============================================================================
+// Gamma function and friends 
+// ============================================================================
+/*  Gamma function \f$ \Gamma ( x )\ f$ 
+ *  @see Ostap::Math::gamma 
+ */
+// ============================================================================
+double Ostap::Math::tgamma ( const double x ) { return std::tgamma ( x )  ; }
+// ============================================================================
+/*  Gamma function \f$ \Gamma ( x )\ f$ 
+ *  @see Ostap::Math::gamma 
+ */
+// ============================================================================
+double Ostap::Math::gamma  ( const double x ) { return std::tgamma ( x )  ; }
+// ============================================================================
+/* logarithm of gamma function
+ *  \f$ \log \Gamma ( x ) \f$ 
+ */
+// ============================================================================
+double Ostap::Math::lgamma ( const double x ) { return std::lgamma ( x )  ; }
+// ============================================================================
 /*  compute inverse Gamma function 
  *  \$f f(x) = \frac{1}{\Gamma(x)}\f$
  *  @return the value of inverse Gamma functions 
@@ -766,6 +789,69 @@ double Ostap::Math::igamma ( const double x )
   //
   return result.val ;
 }
+// ============================================================================
+/* Logarithm of gamma function for complex argument 
+ *  \f$ \log \Gamma ( x ) $
+ */
+// ============================================================================
+std::complex<double> 
+Ostap::Math::lgamma ( const std::complex<double>& x ) 
+{ 
+  // simple case 
+  if ( s_zero ( x.imag() ) && 0 < x.real() && !s_zero ( x.real() ) ) 
+  { return std::lgamma ( x.real() ) ; }
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result r ;
+  gsl_sf_result a ;
+  //
+  const int ierror = gsl_sf_lngamma_complex_e ( x.real() , x.imag() , &r , &a ) ;
+  //
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_gammainv_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return std::polar ( r.val , a.val ) ;  
+}
+// ===========================================================================
+/*  Gamma function of complex argument 
+ *  \f$ \Gamma ( x ) \f$ 
+ */
+// ===========================================================================
+std::complex<double> 
+Ostap::Math::gamma 
+( const std::complex<double>& x ) 
+{
+  // simple case 
+  if ( s_zero ( x.imag() ) && 0 < x.real() && !s_zero ( x.real() ) ) 
+  { return std::tgamma ( x.real() ) ; }
+  //
+  return std::exp ( Ostap::Math::lgamma ( x ) ) ;
+}
+
+// ===========================================================================
+/*  Gamma function of complex argument 
+ *  \f$ \Gamma ( x ) \f$ 
+ */
+// ===========================================================================
+std::complex<double> 
+Ostap::Math::tgamma 
+( const std::complex<double>& x ) 
+{
+  // simple case 
+  if ( s_zero ( x.imag() ) && 0 < x.real() && !s_zero ( x.real() ) ) 
+  { return std::tgamma ( x.real() ) ; }
+  //
+  return std::exp ( Ostap::Math::lgamma ( x ) ) ;
+}
+
 // ============================================================================
 /*  compute psi function 
  *  \$f f(x) = \frac{d}{dx}\ln \Gamma(x)\f$
@@ -792,6 +878,13 @@ double Ostap::Math::psi ( const double x )
   return result.val ;
 }
 // ============================================================================
+
+
+
+
+
+
+
 
 
 

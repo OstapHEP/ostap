@@ -52,6 +52,7 @@ Empricial PDFs to describe narrow peaks
   - ExGauss_pdf
   - NormalLaplace_pdf
   - Hypatia_pdf
+  - PearsonIV_pdf
   
 PDF to describe ``wide'' peaks
 
@@ -93,6 +94,7 @@ __all__ = (
     'Bukin_pdf'              , ## generic Bukin PDF: skewed gaussian with exponential tails
     'StudentT_pdf'           , ## Student-T function 
     'BifurcatedStudentT_pdf' , ## bifurcated Student-T function
+    'PearsonIV_pdf'          , ## Pearson Type IV pdf  
     'SinhAsinh_pdf'          , ## "Sinh-arcsinh distributions". Biometrika 96 (4): 761
     'JohnsonSU_pdf'          , ## JonhsonSU-distribution 
     'Atlas_pdf'              , ## modified gaussian with exponenital tails 
@@ -1459,8 +1461,8 @@ class StudentT_pdf(MASS) :
     def n ( self, value ) :
         self.set_value ( self.__n , value ) 
     
+models.append ( StudentT_pdf )
 
-models.append ( StudentT_pdf )      
 # =============================================================================
 ## @class BifurcatedStudentT_pdf
 #  bifurcated Student-T distribution
@@ -1592,6 +1594,122 @@ class BifurcatedStudentT_pdf(MASS) :
         return self.__sigmaR
    
 models.append ( BifurcatedStudentT_pdf )      
+
+
+# =============================================================================
+## @class PearsonIV_pdf
+#  Pearson Type IV pdf
+#  @see Ostap::Models::PearsonIV 
+#  @see Ostap::Math::PearsonIV 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2022-07-10
+class PearsonIV_pdf(MASS) :
+    """Pearson Type IV distribution:
+
+    - see Ostap.Models.PearsonIV
+    - see Ostap.Math.PearsonIV
+    """
+    def __init__ ( self         ,
+                   name         ,
+                   xvar         ,
+                   mu           , 
+                   varsigma     ,
+                   n        = 2 , 
+                   kappa    = 0 ) :
+        #
+        ## initialize the base
+        # 
+        MASS.__init__  ( self             ,
+                         name  = name     ,
+                         xvar  = xvar     ,
+                         mean  = mu       ,
+                         sigma = varsigma ,
+                         mean_name   = 'mu_%s'               % name ,
+                         mean_title  = '#mu_{PIV}(%s)'       % name ,
+                         sigma_name  = 'varsigma_%s'         % name ,
+                         sigma_title = '#varsigma_{PIV}(%s)' % name )
+        
+        ## location parameter 
+        self.__mu       = self.mean
+        ## width parameter 
+        self.__varsigma = self.sigma
+        
+        ## n parameter 
+        self.__n     = self.make_var ( n                    ,
+                                       'n_%s'        % name ,
+                                       'n_{PIV}(%s)' % name ,
+                                       n , 1 , 1.e-6 , 100  ) 
+        
+        ## asymmetry parameter 
+        self.__kappa = self.make_var ( kappa                     , 
+                                       'kappa_%s'         % name ,
+                                       '#kappa_{PIV}(%s)' % name ,
+                                       kappa , 0 , -30 , 30  ) 
+
+        ## ditto 
+        self.__nu = self.__kappa
+
+        #  make the final PDF 
+        self.pdf = Ostap.Models.PearsonIV (
+            self.roo_name ( 'pIV_' ) , 
+            "Pearson Type IV %s" % self.name ,
+            self.xvar   ,
+            self.mu     ,
+            self.sigma  ,
+            self.n      ,
+            self.kappa  )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name     ,
+            'xvar'      : self.xvar     ,
+            'mu'        : self.mu       ,
+            'varsigma'  : self.varsigma ,
+            'n'         : self.n        ,
+            'kappa'     : self.kappa    ,
+            }
+
+    @property     
+    def mu ( self ) :
+        """``mu''-parameter (location) for Pearon Type IV distribution (same as ``mean'')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self, value ) :
+        self.set_value ( self.__mu , value ) 
+
+    @property     
+    def varsigma ( self ) :
+        """``varsigma''-parameter for Pearon Type IV distribution (same as ``sigma'')"""
+        return self.__varsigma
+    @varsigma.setter
+    def varsigma ( self, value ) :
+        self.set_value ( self.__varsigma , value ) 
+
+    @property
+    def n  ( self ) :
+        """``n''-parameter for Pearson Type IV distribution"""
+        return self.__n
+    @n.setter
+    def n ( self, value ) :
+        self.set_value ( self.__n , value ) 
+
+    @property
+    def kappa ( self ) :
+        """``kappa''-parameter (asymmetry) for Pearson Type IV distribution"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self, value ) :
+        self.set_value ( self.__kappa , value ) 
+
+    @property     
+    def nu ( self ) :
+        """``nu''-parameter (asymmetry) for Pearon Type IV distribution (same as ``kappa'')"""
+        return self.__nu
+    @nu.setter
+    def nu ( self, value ) :
+        self.set_value ( self.__nu , value ) 
+
+models.append ( PearsonIV_pdf )      
 
 # =============================================================================
 ## @class SinhAsinh_pdf
@@ -2992,7 +3110,8 @@ class Hypatia_pdf(MASS) :
             'kappa'   : self.kappa   ,
             'lambd'   : self.lambd   ,
             'sigma0'  : self.sigma0  ,
-            'cnvpars' : self.cnvpars }
+            'cnvpars' : self.cnvpars 
+            }
         
     @property
     def genhyp ( self ) :

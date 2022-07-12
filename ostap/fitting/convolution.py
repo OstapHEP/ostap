@@ -83,7 +83,7 @@ class Convolution(object):
         elif isinstance ( resolution , ROOT.RooAbsPdf ) :
             self.__resolution = Generic1D_pdf ( resolution , xvar = self.__xvar ) 
         else :
-            ## use   Gaussial resolution
+            ## use   Gaussian resolution
             import ostap.fitting.resolution as OFR
             rname  = ( 'Reso%s_' % name ) if name else 'ResoGauss_'
             rname  = PDF.generate_name ( prefix = rname ) 

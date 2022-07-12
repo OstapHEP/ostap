@@ -592,7 +592,7 @@ if '__main__' == __name__ :
     with timing ("Save to DB"    , logger ) :  
         test_db ()          
 
-    ## prit all models for comparion
+    ## print all models for comparion
     with timing ("Dump models"    , logger ) :  
         dump_models ()           
 

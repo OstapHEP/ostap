@@ -2030,6 +2030,92 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class PearsonIV 
+     *  Pearson Type IV distribution 
+     *   Pearson Type IV distribution  
+     *   \f$ f(x;\mu, n, \kappa) = 
+     *   C \left( 1 + y^{2}\right)^{-(\frac{1}{2}+n)}
+     *   \mathrm{e}^{ -\kappa \atan y }}\f$, where 
+     *   - \f$  y = \frac{x-\mu}{\sigma}\f$,
+     *   - \f$ 0 < n \f$  
+     *  @see https://en.wikipedia.org/wiki/Pearson_distribution
+     *  For $\kappa=0\f$ one gets Student's t-distribution
+     *  @see Ostap::Math::PearsonIV 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2033-07-10
+     */
+    class PearsonIV : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::PearsonIV, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      PearsonIV 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          varsigma  ,
+        RooAbsReal&          n         ,
+        RooAbsReal&          kappa     );
+      /// "copy" constructor
+      PearsonIV ( const PearsonIV& right , const char* name = 0  ) ;
+      /// virtual destructor
+      virtual ~PearsonIV () ;
+      /// clone
+      PearsonIV* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      PearsonIV () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::PearsonIV& function  () const { return m_p4 ; }
+      /// access to underlying function
+      const Ostap::Math::PearsonIV& pearsonIV () const { return m_p4 ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        {} ;
+      RooRealProxy m_mu       {} ;
+      RooRealProxy m_varsigma {} ;
+      RooRealProxy m_n        {} ;
+      RooRealProxy m_kappa    {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::PearsonIV m_p4 ;                // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class GramCharlierA
      *  The peak with Gram-Charlier type A parameterization
      *  @see Ostap::Math::GramCharlierA
@@ -2106,7 +2192,6 @@ namespace Ostap
       mutable Ostap::Math::GramCharlierA m_gca ;                // the function
       // ======================================================================
     } ;
-    // ========================================================================
 
     // ========================================================================
     // Smooth functions for background

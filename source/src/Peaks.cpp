@@ -142,7 +142,7 @@ namespace
       ( -1* GSL_LOG_DBL_MAX > y ) ? -1*s_INFINITY : std::sinh ( y ) ;
   }
   // // ==========================================================================
-  // // Studen-t'
+  // /en-t'
   // // ==========================================================================
   // inline double student_cdf (  const double t , const double nu ) 
   // {
@@ -3303,6 +3303,285 @@ std::size_t Ostap::Math::BifurcatedStudentT::tag () const
 {  
   static const std::string s_name = "BiFurcatedStudentT" ;
   return std::hash_combine ( s_name , m_M , m_sL , m_sR  , m_nL , m_nR ) ; 
+}
+// ============================================================================
+
+
+
+// ============================================================================
+/*  constructor from all parameters 
+ *  @param mu    location parameter 
+ *  @param sigma width/scale parameter 
+ *  @param n     n-parameter 
+ *  @param kappa asymmetry parameter 
+ */
+// ============================================================================
+Ostap::Math::PearsonIV::PearsonIV
+( const double mu       , 
+  const double varsigma , 
+  const double n        , 
+  const double kappa     )
+  : m_mu       ( mu ) 
+  , m_varsigma ( std::abs ( varsigma ) )
+  , m_n        ( std::abs ( n        ) ) 
+  , m_kappa    ( kappa )
+  , m_C        ( -1 ) 
+{
+  setN ( n ) ;
+}
+// ===========================================================================
+// get value of the function 
+// ===========================================================================
+double Ostap::Math::PearsonIV::evaluate ( const double x ) const 
+{
+  const double y = ( x - m_mu ) / m_varsigma ;
+  const double s = m_C * std::pow ( 1 + y * y , - m() ) / m_varsigma ;
+  return s_zero ( m_kappa ) ? s : s * std::exp ( -m_kappa * std::atan ( y ) ) ;
+}
+// ===========================================================================
+// set location parameter
+// ===========================================================================
+bool Ostap::Math::PearsonIV::setMu ( const double value )
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ===========================================================================
+// set width/scale parameter
+// ===========================================================================
+bool Ostap::Math::PearsonIV::setVarsigma ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_varsigma , avalue ) ) { return false ; }
+  m_varsigma = avalue ;
+  return true ;
+}
+// ===========================================================================
+// set n-parameter
+// ===========================================================================
+bool Ostap::Math::PearsonIV::setN ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_n , avalue ) && 0 < m_C ) { return false ; }
+  m_n = avalue ;
+  //
+  m_C = std::norm ( Ostap::Math::gamma ( std::complex<double> ( m() , 0.5 * nu () ) ) /
+                    Ostap::Math::gamma ( m() ) ) / std::beta  ( m() - 0.5 , 0.5 ) ;
+  return true ;
+}   
+// ===========================================================================
+// set asymmetry parameter
+// ===========================================================================
+bool Ostap::Math::PearsonIV::setKappa ( const double value )
+{
+  if ( s_equal ( m_kappa , value ) && 0 < m_C ) { return false ; }
+  m_kappa = value ;
+  m_C     = std::norm ( Ostap::Math::gamma ( std::complex<double> ( m() , 0.5 * nu () ) ) /
+                        Ostap::Math::gamma ( m() ) ) / std::beta  ( m() - 0.5 , 0.5 ) ;
+  return true ;
+}  
+// ===========================================================================
+// get the integral
+// ===========================================================================
+double Ostap::Math::PearsonIV::integral () const { return 1 ; }
+// ===========================================================================
+// get the integral between low and high limits
+// ===========================================================================
+double Ostap::Math::PearsonIV::integral
+( const double low  ,
+  const double high ) const 
+{
+  //
+  if ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low ) { return - integral ( high , low ) ; }
+  //
+  const bool symmetric = s_zero ( nu () ) ;
+  //
+  const double m0      = ( 1 < m() ) ? 0.5 * ( mode () + mean () ) : mode () ;
+  const double width   = ( 2 * m() <= 3 ) ? 0.5 * 
+    std::max ( m_varsigma , 0.5 * infection_width () ) : rms () ;
+  //
+  { // split at mode 
+    const double x1 = mode () ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = x1 + 2 * width ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+    const double x3 = x1 - 2 * width ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x3 ) + integral ( x3 , high ) ; }
+  }
+  //
+  if ( !symmetric && ( 1 < m () ) ) 
+  {
+    // split at mean 
+    const double x1 = mean ()  ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = x1 + 2 * width ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+    const double x3 = x1 - 2 * width ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x3 ) + integral ( x3 , high ) ; }
+  }
+  //
+  // more splits 
+  { 
+    const double x2 = m0 - 6 * width  ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+    const double x3 = m0 + 6 * width  ;
+    if ( low < x3 && x3 < high ) { return integral ( low , x3 ) + integral ( x3 , high ) ; }
+  }
+  //
+  if ( !symmetric && ( 0 < nu() ) )
+  {
+    const double xx = m0 - 12 * width  ;
+    if ( low < xx && xx < high ) { return integral ( low , xx ) + integral ( xx , high ) ; }
+  }
+  //
+  if ( !symmetric && ( 0 > nu() ) )
+  {
+    const double xx = m0 + 12 * width  ;
+    if ( low < xx && xx < high ) { return integral ( low , xx ) + integral ( xx , high ) ; }
+  }
+  //
+  //
+  const bool in_tail = ( high <= m0 - 10 * width ) || ( low >=  m0 + 10 * width ) ;             
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<PearsonIV> s_integrator {} ;
+  static char s_message[] = "Integral(PEarsonIV)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+             ( tag () , 
+               &F     , 
+               low    , high  ,               // low & high edges
+               workspace ( m_workspace ) ,    // workspace
+               in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+               in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
+               m_workspace.size()   ,          // size of workspace
+               s_message           , 
+               __FILE__ , __LINE__ ) ;
+  //
+  return result ; 
+}
+// ============================================================================
+// mode 
+// ============================================================================
+double Ostap::Math::PearsonIV::mode () const // mode of the distribution 
+{ return m_mu - 0.5 * nu() * a() / m() ; }
+// ============================================================================
+// mean
+// ============================================================================
+double Ostap::Math::PearsonIV::mean () const // mean of the distribution 
+{
+  return 
+    s_zero ( nu() ) ? m_mu                                  :
+    1 < m ()        ? m_mu - 0.5 * a() * nu() / ( m() - 1 ) :
+    std::copysign ( std::numeric_limits<double>::infinity() , -nu() ) ;
+}
+// ============================================================================
+// (central) moment 
+// ============================================================================
+double Ostap::Math::PearsonIV::moment ( const unsigned short k ) const 
+{
+  if      ( 0 == k ) { return 1 ; }
+  else if ( 1 == k ) { return 0 ; }
+  //
+  const bool odd = ( 1 == k % 2 )  ;
+  if ( odd && s_zero ( nu () ) ) { return 0 ; }
+  //
+  if ( r () + 1 <= k ) 
+  {
+    return odd ?
+      std::copysign ( std::numeric_limits<double>::infinity () , -nu() ) :
+      std::numeric_limits<double>::infinity () ;
+  }
+  //
+  const double r2  = std::pow ( r  () , 2 ) ;
+  const double nu2 = std::pow ( nu () , 2 ) ;
+  //
+  double m2 = 1  ;
+  double m1 = 0  ;
+  double m  = m1 ;
+  for  ( unsigned short kk = 2 ; kk <= k ; ++kk ) 
+  {
+    const double c = a () * ( kk - 1 ) / ( r2 * ( r () - ( kk - 1 ) ) ) ;
+    m  = -2 * nu() * r () * m1 + a () * ( r2 + nu2 ) * m2 ;
+    m *= c  ;
+    m2 = m1 ;
+    m1 = m  ;
+  }
+  return m ;
+}
+// ============================================================================
+// variance                        (for m>3.5)
+// ============================================================================
+double Ostap::Math::PearsonIV::variance () const  // variance of the distribution 
+{ return 2 * m () <= 3 ? std::numeric_limits<double>::infinity () : moment ( 2 ) ; }
+// ============================================================================
+// rms                              (for m>3.5)
+// ============================================================================
+double Ostap::Math::PearsonIV::rms     () const  // rms of the distribution 
+{ return 2 * m () <= 3 ? std::numeric_limits<double>::infinity () : std::sqrt ( moment ( 2 ) ) ; }
+// ============================================================================
+// skewness ( for m>2) 
+// ============================================================================
+double Ostap::Math::PearsonIV::skewness () const  // skewness 
+{
+  return 
+    s_zero ( nu () ) ? 0.0 :
+    m () <= 2 ? std::copysign ( std::numeric_limits<double>::infinity () , -nu() ) :
+    moment ( 3 ) / std::pow ( moment ( 2 ) , 1.5 ) ;
+}
+// ============================================================================
+// kurtosis ( for m>5/2) 
+// ============================================================================
+double Ostap::Math::PearsonIV::kurtosis () const  // skewness 
+{
+  return 
+    2 * m () <= 5 ? std::numeric_limits<double>::infinity () :
+    moment ( 4 ) / std::pow ( moment ( 2 ) , 2) ;
+}
+// ============================================================================
+// beta1 parameter of Pearson family (m>2) 
+// ============================================================================
+double Ostap::Math::PearsonIV::beta1 () const  // beta1 parameter of Pearson family 
+{ 
+  return 
+    s_zero ( nu () ) ? 0.0 :
+    m () <= 2 ? std::numeric_limits<double>::infinity () :
+    std::pow ( moment ( 3 ) , 2 ) / std::pow ( moment ( 2 ) , 3 ) ;
+}
+// ============================================================================
+// beta2 parameter of Pearson family (m>2) 
+// ============================================================================
+double Ostap::Math::PearsonIV::beta2 () const  // beta2 parameter of Pearson family 
+{ 
+  return 
+    2 * m () <= 5 ? std::numeric_limits<double>::infinity () :
+    moment ( 4 ) / std::pow ( moment ( 2 ) , 2) ;
+}
+// ============================================================================
+/* distance between two infection points:
+ *  distance between two points with \f$ f^{\prime\prime}=0\f$.
+ *  the twp points are equidstance fro mthe mode 
+ */
+// ============================================================================
+double Ostap::Math::PearsonIV::infection_width () const 
+{
+  return a () / m() * std::sqrt ( ( 4 * std::pow ( m() , 2 ) + 
+                                    std::pow ( nu () , 2 ) ) / ( 2 * m() + 1 ) ) ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::PearsonIV::tag () const 
+{  
+  static const std::string s_name = "PearsonIV" ;
+  return std::hash_combine ( s_name , m_mu , m_varsigma , m_n , m_kappa ) ; 
 }
 // ============================================================================
 

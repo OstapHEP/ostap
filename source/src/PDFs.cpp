@@ -2543,6 +2543,103 @@ Double_t Ostap::Models::BifurcatedStudentT::analyticalIntegral
 // ============================================================================
 
 
+
+
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::PearsonIV::PearsonIV
+( const char*          name     , 
+  const char*          title    ,
+  RooAbsReal&          x        ,
+  RooAbsReal&          mu       ,
+  RooAbsReal&          varsigma ,
+  RooAbsReal&          n        ,
+  RooAbsReal&          kappa    )
+  : RooAbsPdf  (name , title ) 
+//
+  , m_x         ( "!x"        , "Observable" , this , x        ) 
+  , m_mu        ( "!mu"       , "Peak"       , this , mu       ) 
+  , m_varsigma  ( "!varsigma" , "Width"      , this , varsigma )
+  , m_n         ( "!n"        , "N"          , this , n        )
+  , m_kappa     ( "!kappa"    , "kappa"      , this , kappa    )
+//
+  , m_p4    () 
+{
+  setPars () ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::PearsonIV::PearsonIV
+( const Ostap::Models::PearsonIV& right , 
+  const char*                     name  ) 
+  : RooAbsPdf ( right , name ) 
+//
+  , m_x         ( "!x"        , this , right.m_x        ) 
+  , m_mu        ( "!mu"       , this , right.m_mu       ) 
+  , m_varsigma  ( "!varsigma" , this , right.m_varsigma )
+  , m_n         ( "!n"        , this , right.m_n        )
+  , m_kappa     ( "!kappa"    , this , right.m_kappa    )
+    //
+  , m_p4 ( right.m_p4) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::PearsonIV::~PearsonIV (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::PearsonIV*
+Ostap::Models::PearsonIV::clone( const char* name ) const 
+{ return new Ostap::Models::PearsonIV(*this,name) ; }
+// ============================================================================
+void Ostap::Models::PearsonIV::setPars () const 
+{
+  //
+  m_p4.setMu       ( m_mu       ) ;
+  m_p4.setVarsigma ( m_varsigma ) ;
+  m_p4.setN        ( m_n        ) ;
+  m_p4.setKappa    ( m_kappa    ) ;
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::PearsonIV::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_p4 ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::PearsonIV::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::PearsonIV::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_p4.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
 // ============================================================================
 //         Gram-Charlier type A 
 // ============================================================================
@@ -7931,6 +8028,7 @@ ClassImp(Ostap::Models::Rice               )
 ClassImp(Ostap::Models::GenInvGauss        )
 ClassImp(Ostap::Models::ExGauss            )
 ClassImp(Ostap::Models::NormalLaplace      )
+ClassImp(Ostap::Models::PearsonIV          )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

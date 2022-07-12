@@ -29,6 +29,7 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, random, array 
+from   builtins               import range
 from   ostap.core.core        import VE, hID, Ostap
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
@@ -1358,6 +1359,59 @@ ROOT.RooConstVar.__reduce__ = rcv_reduce
 
 
 # =============================================================================
+## unpickle RooUniformBinning object
+#  @see RooUniformBinnig  
+def rub_factory ( *args ) :
+    """unpickle RooUniformBinning object
+    -see ROOT.RooUniformBinnig
+    """
+    print ( 'reconstruct U-bining', args ) 
+    return ROOT.RooUniformBining ( *args )
+
+# =============================================================================
+## reduce uniform binning scheme
+#  @see RoUniformBinnig 
+def _rub_reduce_ ( rub ) :
+    """Reduce RooUniformBininkg Object
+    - see ROOT.RooUniformBinning
+    """
+    nbins = rub.numBoundaries()
+    if nbins : nbins -= 1
+    content = rub.lowBound () , rub.highBound(), nbins , rub.GetName() 
+    return rub_factory, content
+
+
+# =============================================================================
+## unpickle RooBinning object
+#  @see RooBinnig  
+def rb_factory ( data , name  ) :
+    """unpickle RooBinning object
+    -see ROOT.RooUniformBinnig
+    """
+    return ROOT.RooBining ( len(data) -1 , data[0] , name )
+# =============================================================================
+## reduce RooBinning object
+#  @see RooBinning 
+def _rb_reduce_ ( rb  )  :
+    """Reduce RooBinning object
+    - see ROOT.RooBinning 
+    """
+    if rb.isUniform() : return _rub_reduce_ ( rb )
+
+    nb    = rb.numBoundaries() 
+    ab    = rb.array ()
+    data  = array.array ( 'd' , [ 1.0 * ab[i] for i in range ( nb ) ] )
+
+    content = data, rb.GetName()  
+    return rb_factory, content
+
+
+ROOT.RooBinning       .__reduce__ = _rb_reduce_
+ROOT.RooUniformBinning.__reduce__ = _rub_reduce_
+        
+# =============================================================================
+
+
 _decorated_classes_ = (
     ROOT.RooRealVar        ,
     ROOT.RooConstVar       ,

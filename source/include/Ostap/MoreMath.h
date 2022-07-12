@@ -263,11 +263,47 @@ namespace Ostap
      */
     std::complex<double> sech ( const std::complex<double>& x ) ;
     // ========================================================================
+
+    // ========================================================================
+    // Gamma function and fiends 
+    // ========================================================================
+    /** Gamma function
+     *  \f$ \Gamma ( x ) \f$ 
+     *  @see Ostapo::Math::gamma 
+     */
+    double               tgamma ( const double x ) ;
+    /** Gamma function
+     *  \f$ \Gamma ( x )\f$ 
+     *  @see Ostapo::Math::tgamma 
+     */
+    double               gamma ( const double x ) ;
+    // ========================================================================
+    /** logarithm of gamma function
+     *  \f$ \log \Gamma ( x ) \f$ 
+     */
+    double               lgamma ( const double x ) ;
+    // ========================================================================
     /** Compute inverse Gamma function 
      *  \f[ f(x) = \frac{1}{\Gamma(x)} \f]
      *  @return the value of inverse Gamma functions 
      */
-    double igamma ( const double x ) ;    
+    double               igamma ( const double x ) ;
+    // ========================================================================
+    /** Gamma function of complex argument 
+     *  \f$ \Gamma ( x ) \f$ 
+     */
+    std::complex<double> gamma ( const std::complex<double>& x ) ;
+    /** =======================================================================
+     *  Gamma function of complex argument 
+     *  \f$ \Gamma ( x ) \f$ 
+     */
+    std::complex<double> tgamma ( const std::complex<double>& x ) ;
+    // ========================================================================
+    /** Logarithm of gamma function of complex argument 
+     *  \f$ \log \Gamma ( x ) \f$ 
+     */
+    std::complex<double> lgamma ( const std::complex<double>& x ) ;
+
     // ========================================================================
     /** Compute psi function 
      *  \f[ f(x) = \frac{d}{dx}\ln \Gamma(x)\f]
@@ -791,7 +827,6 @@ namespace Ostap
     double H2 ( const double a  , 
                 const double u1 , 
                 const double u2 ) ;
-    
 
     // ========================================================================
     /** modified Bessel function of the fist kind  

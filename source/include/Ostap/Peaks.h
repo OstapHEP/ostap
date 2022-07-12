@@ -1552,9 +1552,10 @@ namespace Ostap
        *  @param sigma width parameter
        *  @param n     n-parameter  ( actually  n=1+|N| )
        */
-      StudentT ( const double mass  = 0 ,
-                 const double sigma = 1 ,
-                 const double n     = 2 ) ;
+      StudentT 
+      ( const double mass  = 0 ,
+        const double sigma = 1 ,
+        const double n     = 2 ) ;
       /// destructor
       ~StudentT() ;
       // ======================================================================
@@ -1736,6 +1737,141 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    
+    // ========================================================================
+    /**  @class PearsonIV 
+     *   Pearson Type IV distribution  
+     *   \f$ f(x;\mu, n, \kappa) = 
+     *   C \left( 1 + y^{2}\right)^{-(\frac{1}{2}+n)}
+     *   \mathrm{e}^{ -\kappa \atan y }}\f$, where 
+     *   - \f$  y = \frac{x-\mu}{\sigma}\f$,
+     *   - \f$ 0 < n \f$  
+     *  @see https://en.wikipedia.org/wiki/Pearson_distribution
+     *  For $\kappa=0\f$ one gets Student's t-distribution
+     *  @see J. Heinrich, "A guide to the Pearson Type IV distribution", 
+     *       CDF/MEMO/STATISTICS/PUBLIC/6820, 2004 
+     *  @see http://www-cdf.fnal.gov/physics/statistics/notes/cdf6820_pearson4.pdf
+     *
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2033-07-10
+     */     
+    class PearsonIV 
+    {
+    public: 
+      // ========================================================================
+      /** constructor from all parameters 
+       *  @param mu    location parameter 
+       *  @param sigma width/scale parameter 
+       *  @param n     n-parameter 
+       *  @param kappa asymmetry parameter 
+       */
+      PearsonIV
+      ( const double mu    = 0 , 
+        const double sigma = 1 , 
+        const double n     = 2 , 
+        const double kappa = 0 );
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get value of the function 
+      double evaluate           ( const double x ) const ;
+      /// get value of the function 
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; }
+      /// get value of the function 
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================      
+    public: // getters 
+      // ======================================================================
+      /// location parameter 
+      double mu       () const { return m_mu       ; } ;
+      /// width/scale parameter 
+      double varsigma () const { return m_varsigma ; } ;
+      /// n-parameter 
+      double n        () const { return m_n        ; } ;
+      /// 
+      double kappa    () const { return m_kappa    ; } ;
+      // ======================================================================      
+    public : // derived parameters 
+      // ======================================================================      
+      /// parameteter m
+      inline double m  () const { return m_n + 0.5       ; }
+      /// parameteter nu
+      inline double nu () const { return m_kappa         ; }
+      /// parameter r 
+      inline double r  () const { return 2 * ( m () -1 ) ; }
+      /// parameter a  
+      inline double a  () const { return  m_varsigma     ; }
+      // ======================================================================      
+    public: // setters 
+      // ======================================================================
+      bool setMu       ( const double value ) ;
+      bool setVarsigma ( const double value ) ;
+      bool setN        ( const double value ) ;
+      bool setKappa    ( const double value ) ;
+      // ======================================================================      
+    public: // properties  
+      // ======================================================================
+      /// mode 
+      double mode            () const ; // mode of the distribution 
+      /// mean value of the distribution  (for m>1)
+      double mean            () const ; // mean value of the distribution 
+      /// variance                        (for m>1.5)
+      double variance        () const ; // variance of the distribution 
+      /// RMS  
+      double rms             () const ; // RMS  
+      /// skewness (for m>2) 
+      double skewness        () const ; // skewness 
+      /// kurtosis  (for m > 5/2)
+      double kurtosis        () const ; // kurtosis 
+      /// (central) moment 
+      double moment          ( const unsigned short k ) const ;
+      /// beta1 parameter of Pearson family (m>2) 
+      double beta1           () const ; // beta1 parameter of Pearson family 
+      /// beta2 parameter of Pearson family (m>5/2)
+      double beta2           () const ; // beta2 parameter of Pearson family 
+      /** distance between two infection points:
+       *  distance between two points with \f$ f^{\prime\prime}=0\f$.
+       *  the twp points are equidstance fro mthe mode 
+       */
+      double infection_width () const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      /// get the integral
+      double integral () const ;
+      /// get the integral between low and high limits
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// location parameter 
+      double   m_mu       {  0 } ; // location parameter 
+      /// width/scale  parameter 
+      double   m_varsigma {  1 } ; // width/scale parameter 
+      /// n-parameter 
+      double   m_n        {  1 } ; // n-parameter 
+      /// asymmetry parameter 
+      double   m_kappa    {  0 } ; // asymmetry parameter
+      /// normalization 
+      double   m_C        { -1 } ; // normalization factor 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// workspace
+      Ostap::Math::WorkSpace m_workspace ;
+      // ======================================================================        
+    } ;
+    
+      
+
+
 
     // ========================================================================
     /** @class SinhAsinh
