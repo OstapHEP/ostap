@@ -4656,9 +4656,16 @@ namespace Ostap
       ( const char*           name      ,
         const char*           title     ,
         RooAbsReal&           x         ,
-        RooAbsReal&           shape     ,
-        RooAbsReal&           high      ,
-        RooAbsReal&           low       ) ;
+        RooAbsReal&           mu        ,
+        RooAbsReal&           c         ,
+        RooAbsReal&           chi       ) ;
+      /// constructor from all parameters
+      Argus
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           c         ,
+        RooAbsReal&           chi       ) ;
       /// "copy constructor"
       Argus
       ( const Argus&          right     ,
@@ -4696,19 +4703,110 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Argus& function() const { return m_argus ; }
+      const Ostap::Math::Argus& function () const { return m_argus ; }
+      const Ostap::Math::Argus& argus    () const { return m_argus ; }
       // ======================================================================
     protected:
       // ======================================================================
-      RooRealProxy m_x        ;
-      RooRealProxy m_shape    ;
-      RooRealProxy m_high     ;
-      RooRealProxy m_low      ;
+      RooRealProxy m_x   {} ;
+      RooRealProxy m_mu  {} ;
+      RooRealProxy m_c   {} ;
+      RooRealProxy m_chi {} ;
       // ======================================================================
     private:
       // ======================================================================
       /// the actual function
       mutable Ostap::Math::Argus m_argus ; // the actual function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class GenArgus
+     *  Generelised Argus distribution
+     *  http://en.wikipedia.org/wiki/ARGUS_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2014-06-07
+     *  @see Ostap::Math::GenArgus
+     *  @see Ostap::Models::Argus
+     *  @see Ostap::Math::Argus
+     */
+    class GenArgus : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::GenArgus, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      GenArgus
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           mu        ,
+        RooAbsReal&           c         ,
+        RooAbsReal&           chi       ,
+        RooAbsReal&           dp        ) ;
+      /// constructor from all parameters
+      GenArgus
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           c         ,
+        RooAbsReal&           chi       , 
+        RooAbsReal&           dp      ) ;
+      /// "copy constructor"
+      GenArgus
+      ( const GenArgus&       right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~GenArgus  () ;
+      /// clone
+      GenArgus* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      GenArgus () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::GenArgus& function () const { return m_argus ; }
+      const Ostap::Math::GenArgus& argus    () const { return m_argus ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x   {} ;
+      RooRealProxy m_mu  {} ;
+      RooRealProxy m_c   {} ;
+      RooRealProxy m_chi {} ;
+      RooRealProxy m_dp  {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::GenArgus m_argus ; // the actual function
       // ======================================================================
     } ;
     // ========================================================================

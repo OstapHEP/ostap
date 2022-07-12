@@ -225,13 +225,13 @@ class Convolution_pdf(PDF) :
         
         if   isinstance ( pdf , PDF ) :
             self.__old_pdf = pdf 
-            xvar = pdf.xvar
+            xvar           = pdf.xvar
         elif isinstance ( pdf , ROOT.RooAbsPdf ) and xvar :
             self.__old_pdf = Generic1D_pdf  ( pdf , xvar )
         else :
             raise AttributeError ("Convolution_pdf: invalid pdf/xvar %s/%s"  % ( pdf , xvar ) ) 
 
-        em = pdf.pdf.extendMode()
+        em = self.old_pdf.pdf.extendMode ()
         if   1 == em : self.warning ( "PDF  ``canBeExtended''" )
         elif 2 == em : self.error   ( "PDF ``mustBeExtended''" )
 

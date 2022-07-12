@@ -14,8 +14,8 @@ __date__    = "2011-07-25"
 __all__     = (
     ##
     'PDF'           , ## useful base class for 1D-models
-    'MASSMEAN'      , ## useful base class to create "signal" PDFs for mass-fits
-    'MASS'          , ## useful base class to create "signal" PDFs for mass-fits
+    'PEAKMEAN'      , ## useful base class to create "signal" PDFs for peak-like fits
+    'PEAK'          , ## useful base class to create "signal" PDFs for peak-like fits
     'RESOLUTION'    , ## useful base class to create "resolution" PDFs
     ##
     'Fit1D'         , ## the basic compound 1D-fit model 
@@ -2629,7 +2629,7 @@ class CheckMean(object) :
     def check ( self ) :
         """``check''  : check the mean/location?"""
         return self.__check
-    
+
 # =============================================================================
 ## helper base class for implementation  of various helper pdfs
 #  - it defines alias <code>mass</code> for <code>xvar</code>
@@ -2637,7 +2637,7 @@ class CheckMean(object) :
 #  - optionally it checks that this variable is withing the specified range  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
-class MASSMEAN(PDF) :
+class PEAKMEAN(PDF) :
     """Helper base class for implementation of various pdfs
     It is useful for ``peak-like'' distributions, where one can talk about
     - ``mean/location''
@@ -2674,7 +2674,7 @@ class MASSMEAN(PDF) :
                                    m_title    , ## title/comment
                                    fix = None ) ## fix ? 
         else :
-            raise AttributeError("MASSMEAN: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
+            raise AttributeError("PEAKMEAN: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
 
         ## intialize the base 
         PDF.__init__ ( self , name , xvar = xvar )
@@ -2699,7 +2699,7 @@ class MASSMEAN(PDF) :
             dm      =  mx - mn
             if   self.mean.isConstant() :
                 if not mn <= self.mean.getVal() <= mx : 
-                    self.error ( 'MASSMEAN(%s): Fixed mass %s is not in mass-range (%s,%s)' % ( name , self.mean.getVal() , mn , mx  ) )
+                    self.error ( 'PEAKMEAN(%s): Fixed mass %s is not in mass-range (%s,%s)' % ( name , self.mean.getVal() , mn , mx  ) )
             elif self.mean.minmax() :
                 mmn , mmx = self.mean.minmax()
                 self.mean.setMin ( max ( mmn , mn ) )
@@ -2758,13 +2758,13 @@ class MASSMEAN(PDF) :
         return self.__limits_mean
     
 # =============================================================================
-## @class MASS
-#  helper base class for implementation  of various helper pdfs 
+## @class PEAK
+#  helper base class for implementation  of various helper peak-like pdfs 
 #  - mean/location
 #  - sigma/width/scale
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
-class MASS(MASSMEAN) :
+class PEAK(PEAKMEAN) :
     """Helper base class for implementation of various pdfs
     It is useful for ``peak-like'' distributions, where one can talk about
     - ``mean/location''
@@ -2781,7 +2781,7 @@ class MASS(MASSMEAN) :
                    sigma_title = ''   ) : 
             
         ## base class 
-        MASSMEAN.__init__ ( self                    ,
+        PEAKMEAN.__init__ ( self                    ,
                             name       = name       ,
                             xvar       = xvar       , 
                             mean       = mean       ,
@@ -2851,7 +2851,7 @@ class MASS(MASSMEAN) :
 #  - It simplify creation of the soft/gaussian constraint for the "fudge-factor"
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2017-07-13
-class RESOLUTION(MASS) :
+class RESOLUTION(PEAK) :
     """Helper base class  to parameterize the resolution
     - It allows setting of the ``mean'' to zero,
     - It contains ``fudge-factor'' for the resolution parameter ``sigma''

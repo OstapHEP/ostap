@@ -2,7 +2,10 @@
   1. Add Rice functioni and corresponding pdf 
   1. Add Generalised Inverse Gaussian function and PDF 
   1. Add ExGauss and NormalLapalce functions, pdfs and resoltuion models
-
+  1. add Generlisez Argus distribution - function and PDF 
+  1. simplify  hierarchy for some peak-like models/PDFs 
+  1. rename `MASS` -> `PEAK`, `MASSMEAN` -> `PEAKMEAN`
+ 
 ## Backward incompatible:  
  
 ## Bug fixes:

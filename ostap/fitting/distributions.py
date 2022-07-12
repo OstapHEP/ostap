@@ -17,6 +17,7 @@
 - BetaPrime_pdf      : Beta-prime distribution 
 - Landau_pdf         : Landau distribution 
 - Argus_pdf          : ARGUS distribution 
+- GenArgus_pdf       : Generalized ARGUS distribution 
 - TwoExpos_pdf       : Difference of two exponents
 - Gumbel_pdf         : Gumbel distributions
 - Rice_pdf           : Rice distribution
@@ -40,6 +41,7 @@ __all__     = (
     'BetaPrime_pdf'      , ## Beta-prime distribution 
     'Landau_pdf'         , ## Landau distribution 
     'Argus_pdf'          , ## ARGUS distribution 
+    'GenArgus_pdf'       , ## Generalized ARGUS distribution 
     'TwoExpos_pdf'       , ## difference of two exponents
     'Gumbel_pdf'         , ## Gumbel distributions
     'Rice_pdf'           , ## Rice distribution 
@@ -772,7 +774,8 @@ class Landau_pdf(PDF) :
         self.__delta.setVal ( value ) 
 
 
-models.append ( Landau_pdf ) 
+models.append ( Landau_pdf )
+
 # =============================================================================
 ## @class Argus_pdf
 #  http://en.wikipedia.org/wiki/ARGUS_distribution
@@ -783,113 +786,144 @@ models.append ( Landau_pdf )
 class Argus_pdf(PDF) :
     """Argus distribution
     - http://en.wikipedia.org/wiki/ARGUS_distribution
-    Parameters:
-    - shape : curvature/chi  the  shape/curvatire parameter  
-    - low  : low-edge  parameter
-    - high : high-edge parameter
-    ``low'' and ``high'' are used such  that
-    ``y'' defined  as ``y= (x-low)/(high-low)''
-    has the standard ``Argus'' distribution with ``c''=1
-    The function is zero for ``y'' outside (0,1) interval
     """
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
                    xvar             ,   ## the variable
-                   shape = None     ,   ## shape-parameter/curvature 
-                   high  = None     ,   ## high-edge parameter 
-                   low   = 0        ) : ## low-edge  parameter 
+                   chi              ,
+                   c                , 
+                   mu    = None     ) :
         #
         PDF.__init__ ( self , name , xvar ) 
         #
-        self.__shape  = self.make_var ( shape     ,
-                                  'shape_%s'         % name ,
-                                  '#chi_{Argus}(%s)' % name , shape ,
-                                  1     ,
-                                  1.e-4 , 20 )        
-        limits_high = ()
-        limits_low  = ()
-        if self.xminmax() :
-            mn, mx = self.xminmax()
-            dm = mx - mn
-            limits_high = mx , mn - 5.0 * dm , mx + 5.0 * dm
-            limits_low  = mn , mn - 5.0 * dm , mx + 5.0 * dm 
+        self.__c  = self.make_var ( c     ,
+                                    'c_%s'          % name ,
+                                    'c_{Argus}(%s)' % name ,
+                                    c , 1 , 1.e-6 , 200 )
+        
+        if mu is None :  self.__mu = self.c
+        else          :
+            lims = self.xminmax() 
+            self.__mu = self.make_var ( mu     ,
+                                        'mu_%s'           % name ,
+                                        '#mu_{Argus}(%s)' % name ,
+                                        mu , *self.xminmax() )
             
-        self.__high  = self.make_var ( high      ,
-                                 'high_%s'          % name ,
-                                 'high_{Argus}(%s)' % name , high , *limits_high )
-        
-        self.__low   = self.make_var ( low      ,
-                                 'low_%s'           % name ,
-                                 'low_{Argus}(%s)'  % name , low , *limits_low )
-        
+        self.__chi  = self.make_var ( chi     ,
+                                      'chi_%s'           % name ,
+                                      '#chi_{Argus}(%s)' % name ,
+                                      chi , 1 , 1.e-6 , 20  )
+
+        ## create PDF 
         self.pdf  = Ostap.Models.Argus (
             self.roo_name ( 'argus_' )   ,
             'ARGUS %s' % self.name  , 
             self.x     ,
-            self.shape ,
-            self.high  ,
-            self.low   )
+            self.mu    ,
+            self.c     ,
+            self.chi   )
         
         ## save the configuration:
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'shape' : self.shape ,            
-            'high'  : self.high  ,            
-            'low'   : self.low   ,            
+            'mu'    : self.mu    ,            
+            'c'     : self.c     ,            
+            'chi'   : self.chi   ,            
             }
-            
+
     @property
-    def shape ( self ) :
-        """``shape''-parameter/curvature of Argus distribution"""
-        return self.__shape
-    @shape.setter 
-    def shape ( self , value ) :
-        value = float ( value )
-        self.__shape.setVal ( value )
+    def mu ( self ) :
+        """``mu''-parameter of Argus distribution"""
+        return self.__mu
+    @mu.setter 
+    def mu ( self , value ) :
+        self.set_value ( self.__mu , value )
         
     @property
+    def c  ( self ) :
+        """``c''-parameter of Argus distribution"""
+        return self.__c
+    @c.setter 
+    def mu ( self , value ) :
+        self.set_value ( self.__c , value )
+
+    @property
     def chi ( self ) :
-        """``chi''-parameter/curvature of Argus distribution (same as ``shape'')"""
-        return self.shape
+        """``chi''-parameter of Argus distribution"""
+        return self.__chi
     @chi.setter 
-    def chi ( self , value ) :
-        self.shape = value 
-
-
-    @property
-    def high ( self ) :
-        """``high''-parameter of Argus distribution"""
-        return self.__high
-    @high.setter 
-    def high ( self , value ) :
-        value = float ( value )
-        if self.xminmax() :
-            mn , mx = self.xminmax()
-            if value < mn and self.low.value < mn :
-                logger.error ("Both ``low'' and ``high'' (%s/%s) are less    ``min''/%s" % ( self.low.value , value , mn ) )
-            if value > mx and self.low.value > mx :
-                logger.error ("Both ``low'' and ``high'' (%s/%s) are greater ``max''/%s" % ( self.low.value , value , mx ) )                            
-        self.__high.setVal ( value ) 
-
-    @property
-    def low ( self ) :
-        """``low''-parameter of Argus distribution"""
-        return self.__low
-    @low.setter 
-    def low ( self , value ) :
-        value = float ( value )
-        if self.xminmax() :
-            mn , mx = self.xminmax()
-            if   value < mn and self.high.value < mn :
-                logger.error ("Both ``low'' and ``high'' (%s/%s) are less    ``min''/%s" % ( value , self.high.value , mn ) )
-            elif value > mx and self.high.value > mx :
-                logger.error ("Both ``low'' and ``high'' (%s/%s) are greater ``max''/%s" % ( value , self.high.value , mx ) )                            
-        self.__low.setVal ( value ) 
-
+    def mu ( self , value ) :
+        self.set_value ( self.__chi , value )
 
 models.append ( Argus_pdf ) 
+
+
+# =============================================================================
+## @class GenArgus_pdf
+#  http://en.wikipedia.org/wiki/ARGUS_distribution
+#  Generalised Argus 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-05-11
+#  @see Ostap::Models::GenArgus
+#  @see Ostap::Math::GenArgus
+class GenArgus_pdf(Argus_pdf) :
+    """Generalized Argus distribution
+    - http://en.wikipedia.org/wiki/ARGUS_distribution
+    """
+    ## constructor
+    def __init__ ( self             ,
+                   name             ,   ## the name 
+                   xvar             ,   ## the variable
+                   chi              ,
+                   c                ,
+                   dp    = 1.5      ,   ## corresponds to regular Argus 
+                   mu    = None     ) :
+        #
+        Argus_pdf.__init__ ( self        ,
+                             name = name ,
+                             xvar = xvar ,
+                             c    = c    ,
+                             chi  = chi  ,
+                             mu   = mu   ) 
+                             
+        #
+        self.__dp  = self.make_var ( dp     ,
+                                     'dp_%s'               % name ,
+                                     '#deltap_{Argus}(%s)' % name ,
+                                     dp , 1.5 , 1.e-5 , 20 )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.GenArgus (
+            self.roo_name ( 'gargus_' )   ,
+            'Generlized ARGUS %s' % self.name  , 
+            self.x     ,
+            self.mu    ,
+            self.c     ,
+            self.chi   ,
+            self.dp    )
+            
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'mu'    : self.mu    ,            
+            'c'     : self.c     ,            
+            'chi'   : self.chi   ,            
+            'dp'    : self.dp    ,            
+            }
+
+    @property
+    def dp ( self ) :
+        """``dp''-parameter of Generalized Argus distribution (p=dp-1)"""
+        return self.__dp
+    @dp.setter 
+    def dp ( self , value ) :
+        self.set_value ( self.__dp , value )
+
+models.append ( GenArgus_pdf ) 
 
 
 # =============================================================================

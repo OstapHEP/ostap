@@ -1846,115 +1846,6 @@ std::size_t Ostap::Math::Weibull::tag () const
 //   //
 // }
 // ============================================================================
-// Argus
-// ============================================================================
-/*  constructor with all parameters 
- */
-// ============================================================================
-Ostap::Math::Argus::Argus
-( const double shape , 
-  const double high  ,
-  const double low   )
-  : m_shape ( std::abs ( shape ) ) 
-  , m_high  ( std::abs ( high  ) ) 
-  , m_low   ( std::abs ( low   ) ) 
-{}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::Argus::~Argus (){}
-// ============================================================================
-bool Ostap::Math::Argus::setShape ( const double value ) 
-{
-  const double value_ = std::abs ( value ) ;
-  if ( s_equal ( value_ , m_shape  ) ) { return false ; }
-  m_shape  = value_ ;
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::Argus::setLow ( const double value ) 
-{
-  if ( s_equal ( value , m_low  ) ) { return false ; }
-  m_low  = value ;
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::Argus::setHigh ( const double value ) 
-{
-  if ( s_equal ( value , m_high  ) ) { return false ; }
-  m_high  = value ;
-  return true ;
-}
-// ============================================================================
-// evaluate Argus-distributions 
-// ============================================================================
-namespace 
-{
-  // ==========================================================================
-  inline double phi_ ( const double x ) 
-  { return gsl_ran_gaussian_pdf  ( x , 1 ) ; }
-  inline double Phi_ ( const double x ) 
-  { return gsl_cdf_ugaussian_P   ( x     ) ; }
-  inline double Psi_ ( const double x ) 
-  { return Phi_ ( x ) - x * phi_ ( x ) - 0.5 ; } 
-  // ==========================================================================
-} // ==========================================================================
-// ============================================================================
-double Ostap::Math::Argus::pdf ( const double x ) const 
-{
-  //
-  if      ( x >= std::max ( m_high , m_low ) ) { return 0 ; }
-  else if ( x <= std::min ( m_high , m_low ) ) { return 0 ; }
-  //
-  const double y = y_ ( x ) ;
-  if ( y <= 0 || y >= 1 ) { return 0 ; }
-  //
-  double res   = s_SQRT2PIi ;
-  res         *= Ostap::Math::POW ( m_shape , 3 ) ;
-  res         /= Psi_   ( m_shape ) ;
-  res         *= y ;
-  //
-  const double y2 = 1 - y * y  ;
-  res         *= std::sqrt ( y2 ) ;
-  res         *= my_exp ( -0.5 * m_shape * m_shape * y2 ) ;
-  //
-  return     res / std::abs ( m_high - m_low ) ;
-}
-// ============================================================================
-// evaluate Argus-CDF 
-// ============================================================================
-double Ostap::Math::Argus::cdf ( const double x ) const 
-{
-  //
-  if      ( x > std::max ( m_high , m_low ) ) { return 1 ; }
-  else if ( x < std::min ( m_high , m_low ) ) { return 0 ; }
-  //
-  const double y  = y_ ( x )  ;
-  //
-  const double y2 = 1 - y * y ;
-  //
-  const double res =  Psi_ ( m_shape * std::sqrt ( y2 )) / Psi_( m_shape ) ;
-  return m_high > m_low ?  ( 1 - res ) : res ;
-}
-// ============================================================================
-double Ostap::Math::Argus::integral ( const double low  , 
-                                      const double high ) const 
-{
-  //
-  if ( s_equal ( low , high ) ) { return 0 ; }
-  //
-  return cdf ( high ) - cdf ( low ) ;
-}
-// ============================================================================
-// get the tag
-// ============================================================================
-std::size_t Ostap::Math::Argus::tag () const 
-{ 
-  static const std::string s_name = "Argus" ;
-  return std::hash_combine ( s_name , m_shape , m_high , m_low ) ; 
-}
-// ============================================================================
-
 
 
 // ============================================================================
@@ -3101,8 +2992,6 @@ double Ostap::Math::GenInvGauss::integral
   //
   return result ;
 }
-  
-
 // ============================================================================
 // get the tag
 // ============================================================================
@@ -3112,6 +3001,259 @@ std::size_t Ostap::Math::GenInvGauss::tag () const
   return std::hash_combine ( s_name , m_theta , m_eta , m_p , m_shift ) ;
 }
   
+// =============================================================================
+// constructor for all elements 
+// =============================================================================
+Ostap::Math::Argus::Argus 
+( const double mu  , 
+  const double  c  , 
+  const double chi ) 
+  : m_mu   ( mu ) 
+  , m_c    ( std::abs ( c   ) )
+  , m_chi  ( std::abs ( chi ) )  
+  , m_norm ( -1 ) 
+{ setChi ( chi ) ; }
+// =============================================================================
+// set mu parameter
+// =============================================================================
+bool Ostap::Math::Argus::setMu  ( const double value ) 
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu = value ;
+  return true ;    
+}
+// =============================================================================
+// set c parameter
+// =============================================================================
+bool Ostap::Math::Argus::setC   ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_c , avalue ) ) { return false ; }
+  m_c = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set chi parameter
+// =============================================================================
+bool Ostap::Math::Argus::setChi ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_chi , avalue ) && 0 < m_norm ) { return false ; }
+  m_chi  = avalue ;
+  m_norm = std::pow ( m_chi , 3 ) / psi ( m_chi ) * s_SQRT2PIi  ;
+  return true ;    
+}
+// ============================================================================
+/*  helper function 
+ *  \f$ \Psi ( \chi ) = \Phi(\chi )  - \chi \phi  (\chi ) - \frac{1}{2} \f$ 
+ */
+// ============================================================================
+double Ostap::Math::Argus::psi ( const double value ) const 
+{ return Ostap::Math::gauss_cdf ( value ) - value * Ostap::Math::gauss_pdf ( value ) - 0.5 ; }
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::Argus::evaluate   ( const double x ) const 
+{
+  if ( x + m_c <= m_mu || m_mu <= x ) { return 0 ; }
+  const double dx = ( x + m_c - m_mu ) / m_c ; 
+  const double dd = 1 - dx * dx ;
+  return m_norm * dx * std::sqrt ( dd ) * std::exp ( -0.5 * m_chi * m_chi * dd ) / m_c ;  
+}
+// ============================================================================
+// get CDF 
+// ============================================================================
+double Ostap::Math::Argus::cdf        ( const double x ) const 
+{
+  //
+  if       ( x + m_c <= m_mu ) { return 0 ; }
+  else  if ( m_mu <= x       ) { return 1 ; }
+  //
+  const double dx = ( x + m_c - m_mu ) / m_c ;
+  const double dd = std::sqrt ( 1 - dx * dx ) ;
+  //
+  return 1 - psi ( m_chi * dd ) / psi ( m_chi ) ;
+}
+// ============================================================================
+// get the integral 
+// ============================================================================
+double Ostap::Math::Argus::integral   () const { return 1 ; }
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::Argus::integral  
+( const double low  ,
+  const double high ) const 
+{
+  if      ( s_equal ( low , high )             ) { return 0 ; }
+  else if ( high < low                         ) { return -integral ( high , low ) ; }
+  else if ( high + m_c <=  m_mu                ) { return 0 ; }
+  else if ( m_mu       <=  low                 ) { return 0 ; }
+  else if ( low  + m_c <= m_mu && m_mu <= high ) { return 1 ; }    
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ===========================================================================
+// mean of the distribution 
+// ===========================================================================
+double Ostap::Math::Argus::mean     () const 
+{
+  const double c2  = 0.25 * m_chi * m_chi ;
+  return ( m_mu - m_c ) + 
+    0.5 * m_c * m_chi * s_SQRTPIHALF * std::exp ( - c2 ) * Ostap::Math::bessel_In ( 1 , c2 ) / psi ( m_chi );
+}
+// ===========================================================================
+// mode of the distribution 
+// ===========================================================================
+double Ostap::Math::Argus::mode     () const 
+{
+  const double c2  = m_chi * m_chi ;
+  return ( m_mu - m_c ) + 
+    m_c * s_SQRT2i * std::sqrt ( ( c2 - 2 ) + std::sqrt ( c2 * c2 + 4 ) ) / m_chi ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Argus::tag () const 
+{ 
+  static const std::string s_name = "Argus" ;
+  return std::hash_combine ( s_name , m_mu , m_c , m_chi ) ;
+}
+
+
+
+
+
+
+// =============================================================================
+// constructor for all elements 
+// =============================================================================
+Ostap::Math::GenArgus::GenArgus 
+( const double mu  , 
+  const double  c  , 
+  const double chi ,
+  const double dp  ) 
+  : m_mu   ( mu ) 
+  , m_c    ( std::abs ( c   ) )
+  , m_chi  ( std::abs ( chi ) )  
+  , m_dp   ( std::abs ( dp  ) )  
+  , m_norm ( -1 ) 
+{ 
+  setChi ( chi ) ;
+  setDp  ( dp  ) ;
+}
+// =============================================================================
+// set mu parameter
+// =============================================================================
+bool Ostap::Math::GenArgus::setMu  ( const double value ) 
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu = value ;
+  return true ;    
+}
+// =============================================================================
+// set c parameter
+// =============================================================================
+bool Ostap::Math::GenArgus::setC   ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_c , avalue ) ) { return false ; }
+  m_c = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set chi parameter
+// =============================================================================
+bool Ostap::Math::GenArgus::setChi ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_chi , avalue ) && 0 < m_norm ) { return false ; }
+  m_chi  = avalue ;
+  //
+  const double c2 = m_chi * m_chi ;
+  const double p1 = p() + 1 ;
+  m_norm = 2 * std::pow ( 0.5 * c2 , p1 ) /
+    ( std::tgamma ( p() + 1 ) * ( 1 - Ostap::Math::gamma_inc_Q (   p1 , 0.5 * c2 ) ) ) ;
+  //
+  return true ;    
+}
+// =============================================================================
+// set dp parameter
+// =============================================================================
+bool Ostap::Math::GenArgus::setDp ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_dp , avalue ) && 0 < m_norm ) { return false ; }
+  m_dp   = avalue ;
+  //
+  const double c2 = m_chi * m_chi ;
+  const double p1 = p() + 1 ;
+  m_norm = 2 * std::pow ( 0.5 * c2 , p1 ) /
+    ( std::tgamma ( p() + 1 ) * ( 1 - Ostap::Math::gamma_inc_Q (   p1 , 0.5 * c2 ) ) ) ;
+  //
+  return true ;    
+}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::GenArgus::evaluate   ( const double x ) const 
+{
+  if ( x + m_c <= m_mu || m_mu <= x ) { return 0 ; }
+  const double dx = ( x + m_c - m_mu ) / m_c ; 
+  const double dd = 1 - dx * dx ;
+  return m_norm * dx * std::pow ( dd , p () ) * std::exp ( -0.5 * m_chi * m_chi * dd ) / m_c ;  
+}
+// ============================================================================
+// get CDF 
+// ============================================================================
+double Ostap::Math::GenArgus::cdf        ( const double x ) const 
+{
+  //
+  if       ( x + m_c <= m_mu ) { return 0 ; }
+  else  if ( m_mu <= x       ) { return 1 ; }
+  //
+  const double dx = ( x + m_c - m_mu ) / m_c ;
+  const double dd = 1 - dx * dx  ;
+  //
+  const double p1 = p() + 1 ;
+  const double c2 = 0.5 * m_chi * m_chi ;
+  //
+  const double a1 = Ostap::Math::gamma_inc_Q ( p1 , c2 * dd ) ;
+  const double a2 = Ostap::Math::gamma_inc_Q ( p1 , c2      ) ;
+  //
+  return ( a1 - a2 ) / ( 1 - a2 ) ;
+}
+// ============================================================================
+// get the integral 
+// ============================================================================
+double Ostap::Math::GenArgus::integral   () const { return 1 ; }
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::GenArgus::integral  
+( const double low  ,
+  const double high ) const 
+{
+  if      ( s_equal ( low , high )             ) { return 0 ; }
+  else if ( high < low                         ) { return -integral ( high , low ) ; }
+  else if ( high + m_c <=  m_mu                ) { return 0 ; }
+  else if ( m_mu       <=  low                 ) { return 0 ; }
+  else if ( low  + m_c <= m_mu && m_mu <= high ) { return 1 ; }    
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::GenArgus::tag () const 
+{ 
+  static const std::string s_name = "GenArgus" ;
+  return std::hash_combine ( s_name , m_mu , m_c , m_chi , m_dp ) ;
+}
+
+
+
+
 
 
 // ============================================================================

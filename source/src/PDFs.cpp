@@ -6159,20 +6159,31 @@ Ostap::Models::Argus::Argus
 ( const char*          name   , 
   const char*          title  ,
   RooAbsReal&          x      ,
-  RooAbsReal&          shape  ,
-  RooAbsReal&          high   ,
-  RooAbsReal&          low    )
+  RooAbsReal&          mu     ,
+  RooAbsReal&          c      ,
+  RooAbsReal&          chi    )
   : RooAbsPdf ( name , title ) 
-//
-  , m_x       ( "x"      , "Observable" , this , x      ) 
-  , m_shape   ( "shape"  , "shape"      , this , shape  ) 
-  , m_high    ( "high"   , "high"       , this , high   ) 
-  , m_low     ( "low"    , "low"        , this , low    ) 
+    //
+  , m_x       ( "!x"   , "Observable" , this , x      ) 
+  , m_mu      ( "!mu"  , "mu"         , this , mu     ) 
+  , m_c       ( "!c"   , "c"          , this , c      ) 
+  , m_chi     ( "!chi" , "chi"        , this , chi    ) 
     //
   , m_argus  ( 1 , 1 , 0 ) 
 {
   setPars() ;
 }
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Argus::Argus
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          c      ,
+  RooAbsReal&          chi    )
+  : Argus ( name , title , x , c , c , chi )
+{}
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
@@ -6181,10 +6192,10 @@ Ostap::Models::Argus::Argus
   const char*                     name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_shape  ( "shape"  , this , right.m_shape  )
-  , m_high   ( "high"   , this , right.m_high   )
-  , m_low    ( "low"    , this , right.m_low    )
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_mu     ( "!mu"     , this , right.m_mu     )
+  , m_c      ( "!c"      , this , right.m_c      )
+  , m_chi    ( "!chi"    , this , right.m_chi    )
 //
   , m_argus  (                   right.m_argus  ) 
 {
@@ -6204,9 +6215,9 @@ Ostap::Models::Argus::clone( const char* name ) const
 void Ostap::Models::Argus::setPars () const 
 {
   //
-  m_argus.setShape  ( m_shape  ) ;
-  m_argus.setLow    ( m_low    ) ;
-  m_argus.setHigh   ( m_high   ) ;
+  m_argus.setMu  ( m_mu     ) ;
+  m_argus.setC   ( m_c      ) ;
+  m_argus.setChi ( m_chi    ) ;
   //
 }
 // ============================================================================
@@ -6230,6 +6241,113 @@ Int_t Ostap::Models::Argus::getAnalyticalIntegral
 }
 // ============================================================================
 Double_t Ostap::Models::Argus::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_argus.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::GenArgus::GenArgus
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          mu     ,
+  RooAbsReal&          c      ,
+  RooAbsReal&          chi    ,
+  RooAbsReal&          dp     )
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x       ( "!x"   , "Observable" , this , x      ) 
+  , m_mu      ( "!mu"  , "mu"         , this , mu     ) 
+  , m_c       ( "!c"   , "c"          , this , c      ) 
+  , m_chi     ( "!chi" , "chi"        , this , chi    ) 
+  , m_dp      ( "!do"  , "dp"         , this , dp    ) 
+    //
+  , m_argus  ( 1 , 1 , 0 , 1.5 ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::GenArgus::GenArgus
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          c      ,
+  RooAbsReal&          chi    ,
+  RooAbsReal&          dp     )
+  : GenArgus ( name , title , x , c , c , chi , dp )
+{}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::GenArgus::GenArgus
+( const Ostap::Models::GenArgus&  right ,
+  const char*                     name  ) 
+  : RooAbsPdf ( right , name ) 
+//
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_mu     ( "!mu"     , this , right.m_mu     )
+  , m_c      ( "!c"      , this , right.m_c      )
+  , m_chi    ( "!chi"    , this , right.m_chi    )
+  , m_dp     ( "!dp"     , this , right.m_dp     )
+//
+  , m_argus  (                   right.m_argus  ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::GenArgus::~GenArgus () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::GenArgus*
+Ostap::Models::GenArgus::clone( const char* name ) const 
+{ return new Ostap::Models::GenArgus ( *this , name) ; }
+// ============================================================================
+void Ostap::Models::GenArgus::setPars () const 
+{
+  //
+  m_argus.setMu  ( m_mu     ) ;
+  m_argus.setC   ( m_c      ) ;
+  m_argus.setChi ( m_chi    ) ;
+  m_argus.setDp  ( m_dp     ) ;
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::GenArgus::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_argus ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::GenArgus::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::GenArgus::analyticalIntegral 
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
@@ -8005,6 +8123,7 @@ ClassImp(Ostap::Models::Sech               )
 ClassImp(Ostap::Models::Losev              ) 
 ClassImp(Ostap::Models::Logistic           ) 
 ClassImp(Ostap::Models::Argus              ) 
+ClassImp(Ostap::Models::GenArgus           ) 
 ClassImp(Ostap::Models::Slash              ) 
 ClassImp(Ostap::Models::AsymmetricLaplace  ) 
 ClassImp(Ostap::Models::Tsallis            ) 

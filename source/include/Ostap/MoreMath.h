@@ -79,6 +79,29 @@ namespace Ostap
      */
     double gamma_star ( const int n , const double x ) ;
     // ========================================================================
+    /** normalized incomplete gamma function 
+     *  \f$ Q(a,x) = \frac { \Gamma ( a , x ) }{\Gamma(a) } \f$, 
+     *  where \f$ \Gamma(a,x) =  \int_x^{+\infty} t^{a-1} e^{-t}dt \f$ 
+     *  is an incomplete uppper Gamma function
+     *  @return the value of normalized incomplete gamma function 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2022-07-12
+     */
+    double gamma_inc_Q
+    ( const double a , 
+      const double x ) ;
+    // ========================================================================
+    /** normalized incomplete gamma function 
+     *  \f$ P(a,x) = 1 - Q  (a, x ) = 
+     *    = \frac{ \int_0^{x} t^{a-1} e^{-t}dt } { \Gamma(a) } \f$ 
+     *  @return the value of normalized incomplete gamma function 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2022-07-12
+     */
+    double gamma_inc_P
+    ( const double a , 
+      const double x ) ;
+    // ========================================================================
     /** alpha_n 
      *  \f[\alpha_n(x) = \int_1^\infty t^n e^{-tx}dt\f] for \f$x>0\f$
      *  Abramowitz & Stegun, 5.1.5

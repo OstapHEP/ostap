@@ -132,7 +132,7 @@ __all__ = (
 import ROOT, math
 # =============================================================================
 from   ostap.core.core        import cpp , Ostap, VE  
-from   ostap.fitting.basic    import MASS, PDF, MASSMEAN, CheckMean, all_args
+from   ostap.fitting.basic    import PEAK, PDF, PEAKMEAN, CheckMean, all_args
 from   ostap.fitting.utils    import Phases
 import ostap.math.dalitz 
 # =============================================================================
@@ -148,20 +148,32 @@ models = []
 #  @see RooGaussian
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
-class Gauss_pdf(MASS) :
+class Gauss_pdf(PEAK) :
     """Trivial Gaussian function:
     http://en.wikipedia.org/wiki/Normal_distribution
     """
-    def __init__ ( self          ,
-                   name          ,
-                   xvar          ,
-                   mean   = None ,
-                   sigma  = None ) :
+    def __init__ ( self               ,
+                   name               ,
+                   xvar               ,
+                   mean        = None ,
+                   sigma       = None ,
+                   mean_name   = ''   , 
+                   mean_title  = ''   ,
+                   sigma_name  = ''   , 
+                   sigma_title = ''   ) : 
+
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , sigma  )
-        
+        PEAK.__init__  ( self ,
+                         name        = name        ,
+                         xvar        = xvar        ,
+                         mean        = mean        ,
+                         sigma       = sigma       ,
+                         mean_name   = mean_name   , 
+                         mean_title  = mean_title  ,
+                         sigma_name  = sigma_name  , 
+                         sigma_title = sigma_title )              
         #
         ## build pdf
         # 
@@ -199,7 +211,7 @@ models.append ( Gauss_pdf )
 #                    \f$ n_{0} \leftarrow \left| n_{here} \right| + 1  \f$
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class CrystalBall_pdf(MASS) :
+class CrystalBall_pdf(PEAK) :
     """Crystal Ball function
     http://en.wikipedia.org/wiki/Crystal_Ball_function
     
@@ -233,17 +245,17 @@ class CrystalBall_pdf(MASS) :
         #
         ## initialize the base
         #
-        MASS.__init__ ( self , name , xvar , mean , sigma    )
+        PEAK.__init__ ( self , name , xvar , mean , sigma )
         
         self.__alpha = self.make_var ( alpha ,
-                                 'alpha_%s'        % name ,
-                                 '#alpha_{CB}(%s)' % name ,  alpha  ,
-                                 2.0 , 0.01  ,  5 )
+                                       'alpha_%s'        % name ,
+                                       '#alpha_{CB}(%s)' % name ,  alpha  ,
+                                       2.0 , 0.01  ,  5 )
         
         self.__n     = self.make_var ( n   ,
-                                 'n_%s'            % name ,
-                                 'n_{CB}(%s)'      % name , n       ,
-                                 1.0 , 1.e-8 , 50 )
+                                       'n_%s'            % name ,
+                                       'n_{CB}(%s)'      % name , n       ,
+                                       1.0 , 1.e-8 , 50 )
         
         #
         ## finally build PDF 
@@ -336,7 +348,7 @@ models.append ( CrystalBallRS_pdf )
 #  @see CrystalBall_pdf 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class CB2_pdf(MASS) :
+class CB2_pdf(PEAK) :
     """Double sided Crystal Ball function with both left and rigth sides
     It appears to be very powerful and is used for many LHCb papers to describe
     B-hadron mass signals, especially for B->J/psi X final states 
@@ -361,22 +373,22 @@ class CB2_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , sigma )
+        PEAK.__init__  ( self , name , xvar , mean , sigma )
         #
         ## treat the specific parameters
         #
         self.__aL    = self.make_var ( alphaL                  ,
-                                 "aL_%s"          % name ,
-                                 "#alpha_{L}(%s)" % name , alphaL    , 2.0 ,  0.01 ,   5 )
+                                       "aL_%s"          % name ,
+                                       "#alpha_{L}(%s)" % name , alphaL    , 2.0 ,  0.01 ,   5 )
         self.__nL    = self.make_var ( nL                      ,                     
-                                 "nL_%s"          % name ,
-                                 "n_{L}(%s)"      % name , nL        , 1   , 1.e-8 , 100 )
+                                       "nL_%s"          % name ,
+                                       "n_{L}(%s)"      % name , nL        , 1   , 1.e-8 , 100 )
         self.__aR    = self.make_var ( alphaR ,
-                                 "aR_%s"          % name ,
-                                 "#alpha_{R}(%s)" % name , alphaR    , 2.0 , 0.01  ,   5 )
+                                       "aR_%s"          % name ,
+                                       "#alpha_{R}(%s)" % name , alphaR    , 2.0 , 0.01  ,   5 )
         self.__nR    = self.make_var ( nR                      ,
-                                 "nR_%s"          % name ,
-                                 "n_{R}(%s)"      % name , nR        , 1   , 1.e-8 , 100 )
+                                       "nR_%s"          % name ,
+                                       "n_{R}(%s)"      % name , nR        , 1   , 1.e-8 , 100 )
         
         self.pdf = Ostap.Models.CrystalBallDS(
             self.roo_name ( 'cb2_' ) , 
@@ -450,7 +462,7 @@ models.append ( CB2_pdf )
 #  @see Ostap::Math::Needham 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
-class Needham_pdf(MASS) :
+class Needham_pdf(PEAK) :
     """Needham function: specific parameterisation of Crystal Ball function with
     - n = 1 
     - alpha(sigma) = a_0 + sigma*(a_1+sigma*a_2)
@@ -471,7 +483,7 @@ class Needham_pdf(MASS) :
                    a1       = -0.0011   ,   ## GeV^-1
                    a2       = -0.00018  ) : ## GeV^-2  
         
-        MASS.__init__ ( self , name , xvar , mean , sigma )
+        PEAK.__init__ ( self , name , xvar , mean , sigma )
         
         #
         unit = 1000
@@ -482,17 +494,17 @@ class Needham_pdf(MASS) :
         elif 9460  in self.xvar : unit = 1
         #
         self.__a0 = self.make_var ( a0                  ,
-                              "a0_%s"     % name  ,
-                              "a_{0}(%s)" % name  , a0 , 
-                              1.975               ,   0           , 10           )
+                                    "a0_%s"     % name  ,
+                                    "a_{0}(%s)" % name  , a0 , 
+                                    1.975               ,   0           , 10           )
         self.__a1 = self.make_var ( a1                  ,
-                              "a1_%s"     % name  ,
-                              "a_{1}(%s)" % name  , a1 , 
-                              -0.0011   * unit    , -10 * unit    , 10 * unit    )
+                                    "a1_%s"     % name  ,
+                                    "a_{1}(%s)" % name  , a1 , 
+                                    -0.0011   * unit    , -10 * unit    , 10 * unit    )
         self.__a2 = self.make_var ( a2                  ,
-                              "a2_%s"     % name  ,
-                              "a_{2}(%s)" % name  , a2 , 
-                              -0.00018  * unit**2 , -10 * unit**2 , 10 * unit**2 )
+                                    "a2_%s"     % name  ,
+                                    "a_{2}(%s)" % name  , a2 , 
+                                    -0.00018  * unit**2 , -10 * unit**2 , 10 * unit**2 )
         #
         self.pdf = Ostap.Models.Needham (
             self.roo_name ( 'needham_' ) , 
@@ -552,7 +564,7 @@ models.append ( Needham_pdf )
 #  to be coherent with local definitions of Crystal Ball
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Apollonios_pdf(MASS) :
+class Apollonios_pdf(PEAK) :
     """Apollonios function
     http://arxiv.org/abs/1312.5000
     
@@ -580,22 +592,22 @@ class Apollonios_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , sigma ) 
+        PEAK.__init__  ( self , name , xvar , mean , sigma ) 
         
         self.__alpha = self.make_var ( alpha                     ,
-                                 'alpha_%s'         % name ,
-                                 '#alpha_{Apo}(%s)' % name , alpha , 
-                                 2.0   , 0.01 ,   5 )
+                                       'alpha_%s'         % name ,
+                                       '#alpha_{Apo}(%s)' % name , alpha , 
+                                       2.0   , 0.01 ,   5 )
         
         self.__n     = self.make_var ( n                    ,
-                                 'n_%s'        % name ,
-                                 'n_{Apo}(%s)' % name , n ,
-                                 2.0   , 1.e-6 , 50 )
+                                       'n_%s'        % name ,
+                                       'n_{Apo}(%s)' % name , n ,
+                                       2.0   , 1.e-6 , 50 )
         
         self.__b     = self.make_var ( b                    ,
-                                 'b_%s'        % name ,
-                                 'b_{Apo}(%s)' % name ,  b  ,
-                                 1         , 1.e-5 , 10000 ) 
+                                       'b_%s'        % name ,
+                                       'b_{Apo}(%s)' % name ,  b  ,
+                                       1         , 1.e-5 , 10000 ) 
         
         #
         ## finally build PDF
@@ -667,7 +679,7 @@ models.append ( Apollonios_pdf )
 #  @see Ostap::Models::Apollonios2 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-08-20
-class Apollonios2_pdf(MASS) :
+class Apollonios2_pdf(PEAK) :
     """Bifurcated Apollonios:
     Gaussian with exponential (asymmetrical) tails
     
@@ -697,13 +709,14 @@ class Apollonios2_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , sigma  )
+        PEAK.__init__  ( self , name , xvar , mean , sigma  )
         
+        ## asymmetry parameter 
         self.__asym = self.make_var ( asymmetry                 ,
                                       'asym_%s'          % name ,
                                       '#asym_{Apo2}(%s)' % name , asymmetry , 0, -1 , 1  ) 
-
-        ## constreuct left and right sigmas 
+        
+        ## construct left and right sigmas 
         self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
             self.sigma                                    , ## mean/average sigma 
             self.asym                                     , ## asymmetry parametet
@@ -780,7 +793,7 @@ models.append ( Apollonios2_pdf )
 #  @see RooGaussian
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class BifurcatedGauss_pdf(MASS) :
+class BifurcatedGauss_pdf(PEAK) :
     """Bifurcated Gauss function
     
     f(x; mu, sigma_l, sigma_r ) ~ exp ( -0.5 * dx^2 )
@@ -802,7 +815,7 @@ class BifurcatedGauss_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , sigma ) 
+        PEAK.__init__  ( self , name , xvar , mean , sigma ) 
         
         ## asymmetry parameter  
         self.__asym = self.make_var ( asymmetry                 ,
@@ -874,7 +887,7 @@ models.append ( BifurcatedGauss_pdf )
 #  @see RooGaussian
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-12
-class DoubleGauss_pdf(MASS) :
+class DoubleGauss_pdf(PEAK) :
     """Double Gauss :
 
     f(x;mu,sigma,scale,fraction) =
@@ -892,7 +905,7 @@ class DoubleGauss_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , sigma )
+        PEAK.__init__  ( self , name , xvar , mean , sigma )
         
         self.__scale = self.make_var (
             scale ,
@@ -980,7 +993,7 @@ models.append ( DoubleGauss_pdf )
 #  @see Nadarajah, Saralees (September 2005). "A generalized normal distribution".
 #       Journal of Applied Statistics. 32 (7): 685–694. doi:10.1080/02664760500079464.
 #  @see https://doi.org/10.1080%2F02664760500079464
-class GenGaussV1_pdf(MASS) :
+class GenGaussV1_pdf(PEAK) :
     """Generalized Normal distribution v1
     see http://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_1
 
@@ -1023,12 +1036,11 @@ class GenGaussV1_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self  , name , xvar ,
-                         mean        = mean  ,
-                         sigma       = alpha ,
-                         sigma_name  = 'alpha_%s'   % name ,
-                         sigma_title = '#alpha(%s)' % name )
-                 
+        PEAK.__init__  ( self  , name , xvar               ,
+                              mean        = mean                ,
+                              sigma       = alpha               ,
+                              sigma_name  = 'alpha_%s'   % name ,
+                              sigma_title = '#alpha(%s)' % name )
         
         #
         ## rename it!
@@ -1084,7 +1096,7 @@ models.append ( GenGaussV1_pdf )
 #  @see Ostap::Math::GenGaussV2 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
-class GenGaussV2_pdf(MASS) :
+class GenGaussV2_pdf(PEAK) :
     """Generalized normal distribution v2
     see http://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_2
 
@@ -1110,11 +1122,11 @@ class GenGaussV2_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar ,
-                         mean        = mean  ,
-                         sigma       = alpha ,
-                         sigma_name  = 'alpha_%s'   % name ,
-                         sigma_title = '#alpha(%s)' % name )
+        PEAK.__init__  ( self , name , xvar ,
+                              mean        = mean  ,
+                              sigma       = alpha ,
+                              sigma_name  = 'alpha_%s'   % name ,
+                              sigma_title = '#alpha(%s)' % name )
         #
         ## rename it!
         #
@@ -1175,7 +1187,7 @@ models.append ( GenGaussV2_pdf )
 #  @see Ostap::Math::SkewGauss 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class SkewGauss_pdf(MASS) :
+class SkewGauss_pdf(PEAK) :
     """Skew normal distribution
     see http://en.wikipedia.org/wiki/Skew_normal_distribution
     
@@ -1196,23 +1208,22 @@ class SkewGauss_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , 
-                         mean        = mean  ,
-                         sigma       = omega ,
-                         sigma_name  = 'omega_%s'   % name ,
-                         sigma_title = '#omega(%s)' % name )
-        
-                
+        PEAK.__init__  ( self , name , xvar , 
+                              mean        = mean  ,
+                              sigma       = omega ,
+                              sigma_name  = 'omega_%s'   % name ,
+                              sigma_title = '#omega(%s)' % name )
+                        
         #
         ## rename it!
         #
         
         self.__omega = self.sigma        
-        self.__xi   = self.mean         
+        self.__xi    = self.mean         
         self.__alpha = self.make_var ( alpha ,
-                                 'alpha_%s'   % name  ,
-                                 '#alpha(%s)' % name  , alpha, 
-                                 0 , -1000 , 1000  ) 
+                                       'alpha_%s'   % name  ,
+                                       '#alpha(%s)' % name  , alpha, 
+                                       0 , -1000 , 1000  ) 
         #
         ## finally build pdf
         # 
@@ -1286,7 +1297,7 @@ models.append ( SkewGauss_pdf )
 #  @see Analusis::Models::Bukin
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
-class Bukin_pdf(MASS) :
+class Bukin_pdf(PEAK) :
     """Bukin function, aka ``modified Novosibirsk function'':
     - asymmetrical gaussian-like core
     - exponential (optionally gaussian) asymmetrical tails
@@ -1320,23 +1331,23 @@ class Bukin_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name  , xvar , mean , sigma )
+        PEAK.__init__  ( self , name  , xvar , mean , sigma )
         #
         ## treat the specific parameters
         #
         
         ## asymmetry 
         self.__xi    = self.make_var ( xi                    ,
-                                 "xi_%s"        % name ,
-                                 "#xi(%s)"      % name , xi   , 0  , -1 , 1    )
+                                       "xi_%s"        % name ,
+                                       "#xi(%s)"      % name , xi   , 0  , -1 , 1    )
         ## left tail
         self.__rhoL  = self.make_var ( rhoL                  ,
-                                 "rhoL_%s"      % name ,
-                                 "#rho_{L}(%s)" % name , rhoL , 0  ,  -1 , 10 )        
+                                       "rhoL_%s"      % name ,
+                                       "#rho_{L}(%s)" % name , rhoL , 0  ,  -1 , 10 )        
         ## right tail
         self.__rhoR  = self.make_var ( rhoR                  ,
-                                 "rhoR_%s"      % name ,
-                                 "#rho_{R}(%s)" % name , rhoR  , 0  ,  -1 , 10 )
+                                       "rhoR_%s"      % name ,
+                                       "#rho_{R}(%s)" % name , rhoR  , 0  ,  -1 , 10 )
         # 
         ## create PDF
         # 
@@ -1401,7 +1412,7 @@ models.append ( Bukin_pdf )
 #  @see Ostap::Math::StudentT
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class StudentT_pdf(MASS) :
+class StudentT_pdf(PEAK) :
     """Student-T distribution:
     http://en.wikipedia.org/wiki/Student%27s_t-distribution
     
@@ -1426,13 +1437,13 @@ class StudentT_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , sigma ) 
+        PEAK.__init__  ( self , name , xvar , mean , sigma ) 
         
         # 
         self.__n  = self.make_var ( n                    ,
-                              'n_%s'        % name ,
-                              '#n_{ST}(%s)' % name , n , 
-                              2 , 1.e-8 , 100  ) 
+                                    'n_%s'        % name ,
+                                    '#n_{ST}(%s)' % name , n , 
+                                    2 , 1.e-8 , 100  ) 
         #
         ## finally build pdf
         # 
@@ -1471,7 +1482,7 @@ models.append ( StudentT_pdf )
 #  @see Ostap::Math::BifurcatedStudentT
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class BifurcatedStudentT_pdf(MASS) :
+class BifurcatedStudentT_pdf(PEAK) :
     """Bifurcated Student-T distribution:
 
     f(dx) ~ (1 + dx^2/n)^{-(n+1)/2 }
@@ -1500,14 +1511,14 @@ class BifurcatedStudentT_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , sigma )
+        PEAK.__init__  ( self , name , xvar , mean , sigma )
         
         ##  asymmetry 
         self.__asym = self.make_var ( asymmetry               ,
-                                'asym_%s'        % name ,
-                                '#xi_{asym}(%s)' % name ,
-                                asymmetry , 0 , -1 , 1  ) 
-
+                                      'asym_%s'        % name ,
+                                      '#xi_{asym}(%s)' % name ,
+                                      asymmetry , 0 , -1 , 1  ) 
+        
         ## construct left and right sigmas 
         self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
             self.sigma                                    , ## mean/average sigma 
@@ -1519,14 +1530,14 @@ class BifurcatedStudentT_pdf(MASS) :
 
         ## left exponent 
         self.__nL =  self.make_var ( nL                     ,
-                               'nL_%s'         % name ,
-                               '#nL_{BST}(%s)' % name , nL , 
-                               2  , 1.e-6 , 100  )
+                                     'nL_%s'         % name ,
+                                     '#nL_{BST}(%s)' % name , nL , 
+                                     2  , 1.e-6 , 100  )
         ## right exponent 
         self.__nR =  self.make_var ( nR                    ,
-                               'nR_%s'         % name ,
-                               '#nR_{BST}(%s)' % name , nR , 
-                               2  , 1.e-6 , 100  ) 
+                                     'nR_%s'         % name ,
+                                     '#nR_{BST}(%s)' % name , nR , 
+                                     2  , 1.e-6 , 100  ) 
         #
         ## finally build pdf
         # 
@@ -1603,7 +1614,7 @@ models.append ( BifurcatedStudentT_pdf )
 #  @see Ostap::Math::PearsonIV 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2022-07-10
-class PearsonIV_pdf(MASS) :
+class PearsonIV_pdf(PEAK) :
     """Pearson Type IV distribution:
 
     - see Ostap.Models.PearsonIV
@@ -1619,15 +1630,15 @@ class PearsonIV_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self             ,
-                         name  = name     ,
-                         xvar  = xvar     ,
-                         mean  = mu       ,
-                         sigma = varsigma ,
-                         mean_name   = 'mu_%s'               % name ,
-                         mean_title  = '#mu_{PIV}(%s)'       % name ,
-                         sigma_name  = 'varsigma_%s'         % name ,
-                         sigma_title = '#varsigma_{PIV}(%s)' % name )
+        PEAK.__init__  ( self                   ,
+                              name        = name     ,
+                              xvar        = xvar     ,
+                              mean        = mu       ,
+                              sigma       = varsigma ,
+                              mean_name   = 'mu_%s'               % name ,
+                              mean_title  = '#mu_{PIV}(%s)'       % name ,
+                              sigma_name  = 'varsigma_%s'         % name ,
+                              sigma_title = '#varsigma_{PIV}(%s)' % name )
         
         ## location parameter 
         self.__mu       = self.mean
@@ -1731,7 +1742,7 @@ models.append ( PearsonIV_pdf )
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-02
-class SinhAsinh_pdf(MASS) :
+class SinhAsinh_pdf(PEAK) :
     """SinhAsinh-function: 
     see Jones, M. C.; Pewsey, A. (2009).
     ``Sinh-arcsinh distributions''. Biometrika 96 (4): 761. 
@@ -1758,8 +1769,8 @@ class SinhAsinh_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name  , xvar , mean , sigma )
-
+        PEAK.__init__  ( self , name  , xvar , mean , sigma )
+        
         ##
         self.__mu      = self.mean
         self.__epsilon = self.make_var ( epsilon ,
@@ -1855,7 +1866,7 @@ models.append ( SinhAsinh_pdf )
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-019
-class JohnsonSU_pdf(MASS) :
+class JohnsonSU_pdf(PEAK) :
     """Johnson, N. L. (1949) 
     Systems of frequency curves generated by methods of translation
     Biometrika 36: 149–176 JSTOR 2332539
@@ -1887,27 +1898,25 @@ class JohnsonSU_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self    , name , xvar ,
-                         mean        = xi                   ,
-                         sigma       = lambd                ,
-                         mean_name   = 'xi_%s'       % name ,
-                         mean_title  = '#xi(%s)'     % name ,
-                         sigma_name  = 'lambda_%s'   % name ,
-                         sigma_title = '#lambda(%s)' % name )
+        PEAK.__init__  ( self    , name , xvar ,
+                              mean        = xi                   ,
+                              sigma       = lambd                ,
+                              mean_name   = 'xi_%s'       % name ,
+                              mean_title  = '#xi(%s)'     % name ,
+                              sigma_name  = 'lambda_%s'   % name ,
+                              sigma_title = '#lambda(%s)' % name )
         
-        self.__xi = self.mean
+        self.__xi    = self.mean
         self.__lambd = self.sigma
         self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
-    
         self.__delta   = self.make_var ( delta                 ,
-                                   'delta_%s'     % name ,
-                                   '#delta(%s)'   % name , delta ,
-                                   1 , 1.e-6 , 1000   )
-        
+                                         'delta_%s'     % name ,
+                                         '#delta(%s)'   % name , delta ,
+                                         1 , 1.e-6 , 1000   )
         self.__gamma   = self.make_var ( gamma               ,
-                                   'gamma_%s'   % name ,
-                                   '#gamma(%s)' % name , gamma ,
-                                   0 , -1000 , +1000 )
+                                         'gamma_%s'   % name ,
+                                         '#gamma(%s)' % name , gamma ,
+                                         0 , -1000 , +1000 )
         
         
         #
@@ -1980,7 +1989,7 @@ models.append ( JohnsonSU_pdf )
 #  @see Ostap::Models::Atlas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-024
-class Atlas_pdf(MASS) :
+class Atlas_pdf(PEAK) :
     r"""Modified gaussian with exponential tails
     \f$  f(x) \propto \exp( -frac{\delta x^{1+\dfrac{1}{1+\delta x/2}}}{2})\f$,
     where \f$\delta x = \left| x - \mu \right|/\sigma\f$
@@ -1994,9 +2003,8 @@ class Atlas_pdf(MASS) :
 
         #
         ## initialize the base
-        #
-        
-        MASS.__init__  ( self , name , xvar , mean, sigma  )
+        #        
+        PEAK.__init__  ( self , name , xvar , mean, sigma  )
         
         #
         ## finally build pdf
@@ -2027,7 +2035,7 @@ models.append ( Atlas_pdf )
 #  @see Ostap::Models::Slash
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-004
-class Slash_pdf(MASS) :
+class Slash_pdf(PEAK) :
     """Symmetric function with very heavy tails.
     - see https://en.wikipedia.org/wiki/Slash_distribution
     The tails  are so heavy that moments does not exists
@@ -2041,11 +2049,11 @@ class Slash_pdf(MASS) :
                    scale   = None ) : ## related to scale
 
         ## initialize the base
-        MASS.__init__  ( self , name , xvar ,
-                         mean        = mean  ,
-                         sigma       = scale ,
-                         sigma_name  = 'scale_%s'   % name ,
-                         sigma_title = '#scale(%s)' % name )
+        PEAK.__init__  ( self , name , xvar  ,
+                              mean        = mean  ,
+                              sigma       = scale ,
+                              sigma_name  = 'scale_%s'   % name ,
+                              sigma_title = '#scale(%s)' % name )
         
         self.__scale = self.sigma
 
@@ -2092,7 +2100,7 @@ models.append ( Slash_pdf )
 #  \f$  f(x) \propto \exp ( \pm \dfrac{x-\mu}{ \lambda_{L,R}} ) \f$ 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-004
-class AsymmetricLaplace_pdf(MASS) :
+class AsymmetricLaplace_pdf(PEAK) :
     r"""Asymmetric version of Laplace distribution:
     
     f(x) \propto \exp ( \pm \dfrac { x- \mu } { \lambda_{ L , R } } )
@@ -2110,16 +2118,16 @@ class AsymmetricLaplace_pdf(MASS) :
                    asymmetry = 0    ) : ## 0 corresponds to symmetric laplace 
 
         ## initialize the base
-        MASS.__init__  ( self , name , xvar ,
-                         mean        = mean  ,
-                         sigma       = slope ,
-                         sigma_name  = 'slope_%s'   % name ,
-                         sigma_title = '#slope(%s)' % name )
+        PEAK.__init__  ( self , name , xvar ,
+                              mean        = mean  ,
+                              sigma       = slope ,
+                              sigma_name  = 'slope_%s'   % name ,
+                              sigma_title = '#slope(%s)' % name )
         
         self.__asym = self.make_var ( asymmetry               ,
-                                'asym_%s'        % name ,
-                                '#asym_{AL}(%s)' % name , asymmetry , 0 , -1 , 1  ) 
-
+                                      'asym_%s'        % name ,
+                                      '#asym_{AL}(%s)' % name , asymmetry , 0 , -1 , 1  ) 
+        
         self.__slope = self.sigma
 
         ## constreuct left and right lambdas
@@ -2218,7 +2226,7 @@ models.append ( AsymmetricLaplace_pdf )
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-04-025
-class Sech_pdf(MASS) :
+class Sech_pdf(PEAK) :
     r"""Hyperbolic secant distribution or ``inverse-cosh'' distribution
     
     The hyperbolic secant distribution shares many properties with the 
@@ -2242,9 +2250,8 @@ class Sech_pdf(MASS) :
 
         #
         ## initialize the base
-        #
-        
-        MASS.__init__  ( self , name , xvar , mean , sigma  )
+        #        
+        PEAK.__init__  ( self , name , xvar , mean , sigma  )
         
         #
         ## finally build pdf
@@ -2283,7 +2290,7 @@ models.append ( Sech_pdf )
 #   @see Ostap::Math::Losev 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-11-026
-class Losev_pdf(MASSMEAN) :
+class Losev_pdf(PEAKMEAN) :
     """ Asymmetric variant of hyperbolic secant distribution
     - Leptokurtic distribution with exponential tails
     see Losev, A., ``A new lineshape for fitting x‐ray photoelectron peaks'', 
@@ -2304,8 +2311,8 @@ class Losev_pdf(MASSMEAN) :
         ## initialize the base
         #
         
-        MASSMEAN.__init__  ( self , name , xvar , 
-                             mean        = mean  ,
+        PEAKMEAN.__init__  ( self , name , xvar , 
+                             mean       = mean  ,
                              mean_name  = 'mu_%s'   % name ,
                              mean_title = '#mu(%s)' % name )
 
@@ -2381,7 +2388,7 @@ models.append ( Losev_pdf )
 #  @see Ostap::Models::Logistic
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
-class Logistic_pdf(MASS) :
+class Logistic_pdf(PEAK) :
     r""" Logistic, aka ``sech-square'' PDF
      \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
      where
@@ -2400,7 +2407,7 @@ class Logistic_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self , name , xvar , mean , sigma  )
+        PEAK.__init__  ( self , name , xvar , mean , sigma  )
         
         #
         ## finally build pdf
@@ -2433,7 +2440,7 @@ models.append ( Logistic_pdf )
 #  @see Ostap::Math::RaisingCosine 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
-class RaisingCosine_pdf(MASS) :
+class RaisingCosine_pdf(PEAK) :
     r"""``Raising cosine'' distribution
     (x,\mu,s) = \dfrac{1}{2s}   \left( 1   +\cos \pi y \right), 
     where y  \equiv = \dfrac{x-\mu}{s} 
@@ -2451,7 +2458,7 @@ class RaisingCosine_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self , name , xvar ,
+        PEAK.__init__  ( self , name , xvar ,
                          mean        = mean  ,
                          sigma       = scale ,
                          sigma_name  = 'scale_%s'   % name ,
@@ -2502,7 +2509,7 @@ models.append ( RaisingCosine_pdf )
 #  Here we use \f$ \beta = \dfrac{1}{2\sigma^2}\f$
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
-class QGaussian_pdf(MASS) :
+class QGaussian_pdf(PEAK) :
     r"""q-Gaussian distribution:
     \f$ f(x) = \dfrac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)$, 
     where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\dfrac{1}{1-q}}\f$ 
@@ -2523,14 +2530,13 @@ class QGaussian_pdf(MASS) :
 
         #
         ## initialize the base
-        #
+        #        
+        PEAK.__init__  ( self , name , xvar  , 
+                              mean        = mean  ,
+                              sigma       = scale,
+                              sigma_name  = 'scale_%s'  % name ,
+                              sigma_title = 'scale(%s)' % name )
         
-        MASS.__init__  ( self , name , xvar  , 
-                         mean        = mean  ,
-                         sigma       = scale,
-                         sigma_name  = 'scale_%s'  % name ,
-                         sigma_title = 'scale(%s)' % name )
-                 
 
         self.__scale = self.sigma
 
@@ -2643,7 +2649,7 @@ models.append ( QGaussian_pdf )
 #  @see Ostap::Math::Hyperbolic
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
-class Hyperbolic_pdf(MASS) :
+class Hyperbolic_pdf(PEAK) :
     r"""Hyperbolic distribution
     - see  https://en.wikipedia.org/wiki/Hyperbolic_distribution
     - see  Barndorff-Nielsen, Ole, 
@@ -2672,14 +2678,13 @@ class Hyperbolic_pdf(MASS) :
         
         #
         ## initialize the base
-        #
+        #        
+        PEAK.__init__  ( self , name , xvar               , 
+                              mean        = mu                 ,
+                              sigma       = sigma              ,
+                              mean_name   = 'mu_%s'     % name ,
+                              mean_title  = '#mu(%s)'   % name )
         
-        MASS.__init__  ( self , name , xvar               , 
-                         mean        = mu                 ,
-                         sigma       = sigma              ,
-                         mean_name   = 'mu_%s'     % name ,
-                         mean_title  = '#mu(%s)'   % name )
-                 
         
         self.__mu    = self.mean 
         
@@ -2761,30 +2766,6 @@ class Hyperbolic_pdf(MASS) :
         self.pdf.setPars ()
         return self.pdf.function().delta ()
 
-    @property
-    def nominal_mean ( self ) :
-        """``nominal_mean'' : actual mean of distribution"""
-        self.pdf.setPars ()
-        return self.pdf.function().delta ()
-
-    @property
-    def nominal_mode ( self ) :
-        """``nominal_mode'' : actual mode of distribution"""
-        self.pdf.setPars ()
-        return self.pdf.function().mode ()
-    
-    @property
-    def nominal_variance ( self ) :
-        """``nominal_variance'' : actual variance of distribution"""
-        self.pdf.setPars ()
-        return self.pdf.function().variance ()
-
-    @property
-    def nominal_rms ( self ) :
-        """``nominal_rms'' : actual RMS of distribution"""
-        self.pdf.setPars ()
-        return self.pdf.function().rms ()
-
         
 models.append ( Hyperbolic_pdf )      
 
@@ -2841,7 +2822,7 @@ models.append ( Hyperbolic_pdf )
 #  @see Ostap::Math::Hyperbolic
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
-class GenHyperbolic_pdf(MASS) :
+class GenHyperbolic_pdf(Hyperbolic_pdf) :
     r"""Generalised Hyperbolic distribution
     @see https://en.wikipedia.org/wiki/Generalised_hyperbolic_distribution 
     
@@ -2876,22 +2857,13 @@ class GenHyperbolic_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self , name , xvar               , 
-                         mean        = mu                 ,
-                         sigma       = sigma              ,
-                         mean_name   = 'mu_%s'     % name ,
-                         mean_title  = '#mu(%s)'   % name )
-                 
-        self.__mu     = self.mean 
-        
-        ## Zeta
-        self.__zeta   = self.make_var ( zeta                 ,
-                                        'zeta_%s'     % name ,
-                                        '#zeta(%s)'   % name , zeta  ,  1 , 1.e-10 , 1.e+5 ) 
-        ## kappa  
-        self.__kappa  = self.make_var ( kappa                ,
-                                        'kappa_%s'    % name ,
-                                        '#kappa(%s)'  % name , kappa ,  0 ,  -10   ,  10 ) 
+        Hyperbolic_pdf.__init__  ( self ,
+                                   name   = name  ,
+                                   xvar   = xvar  , 
+                                   mu     = mu    ,
+                                   sigma  = sigma ,
+                                   zeta   = zeta  ,
+                                   kappa  = kappa ) 
         
         ## lambda 
         self.__lambda = self.make_var ( lambd               ,
@@ -2922,79 +2894,12 @@ class GenHyperbolic_pdf(MASS) :
             'lambd'     : self.lambd }
         
     @property
-    def mu ( self ) :
-        """``mu'' : location parameter, same as ``mean'')"""
-        return self.__mu
-    @mu.setter
-    def mu ( self , value ) :    
-        self.set_value ( self.__mu , value )
-
-    @property 
-    def zeta  ( self ) :
-        """``zeta'' : dimensioneless parameter, related to shape """
-        return self.__zeta
-    @zeta.setter  
-    def zeta ( self , value ) :
-        self.set_value ( self.__zeta , value )
-    
-    @property
-    def kappa ( self ) :
-        """``kappa'' : dimensionless parameter, related to asymmetry"""
-        return self.__kappa
-    @kappa.setter
-    def kappa ( self , value ) :    
-        self.set_value ( self.__kappa , value )
-
-    @property
     def lambd ( self ) :
         """``lambd'' : dimensionless parameter, related to shape """
         return self.__lambda
     @lambd.setter
     def lambd ( self , value ) :    
         self.set_value ( self.__lambd , value )
-
-
-    @property
-    def alpha ( self ) :
-        """``alpha'' : value of canonical parameter ``alpha''"""
-        self.pdf.setPars ()
-        return self.pdf.function().alpha ()
-
-    @property
-    def beta ( self ) :
-        """``beta'' : value of canonical parameter ``beta''"""
-        self.pdf.setPars ()
-        return self.pdf.function().beta ()
-
-    @property
-    def gamma ( self ) :
-        """``gamma'' : value of canonical parameter ``gamma''"""
-        self.pdf.setPars ()
-        return self.pdf.function().gamma ()
-    
-    @property
-    def delta ( self ) :
-        """``delta'' : value of canonical parameter ``delta''"""
-        self.pdf.setPars ()
-        return self.pdf.function().delta ()
-
-    @property
-    def nominal_mean ( self ) :
-        """``nominal_mean'' : actual mean of distribution"""
-        self.pdf.setPars ()
-        return self.pdf.function().delta ()
-
-    @property
-    def nominal_variance ( self ) :
-        """``nominal_variance'' : actual variance of distribution"""
-        self.pdf.setPars ()
-        return self.pdf.function().variance ()
-
-    @property
-    def nominal_rms ( self ) :
-        """``nominal_rms'' : actual RMS of distribution"""
-        self.pdf.setPars ()
-        return self.pdf.function().rms ()
 
         
 models.append ( GenHyperbolic_pdf )      
@@ -3016,7 +2921,7 @@ models.append ( GenHyperbolic_pdf )
 # @see GenHyperbolic_pdf
 # @see Ostap::Math::GenHyperbolic
 # @see Ostap::Models::GenHyperbolic
-class Hypatia_pdf(MASS) :
+class Hypatia_pdf(GenHyperbolic_pdf) :
     r""" Variant of Hypatia pdf
     Convolution of Generalized Hyperbolic distrobution with ``offset''
     Gaussian distribution
@@ -3048,40 +2953,21 @@ class Hypatia_pdf(MASS) :
         # 
         ## initialize the base
         #        
-        MASS.__init__  ( self , name , xvar               , 
-                         mean        = mu                 ,
-                         sigma       = sigma              ,
-                         mean_name   = 'mu_%s'     % name ,
-                         mean_title  = '#mu(%s)'   % name )
-        
-        self.__mu     = self.mean 
-        
-        ## Zeta
-        self.__zeta   = self.make_var ( zeta                 ,
-                                        'zeta_%s'     % name ,
-                                        '#zeta(%s)'   % name , zeta  ,  1 , 1.e-10 , 1.e+5 ) 
-        ## kappa  
-        self.__kappa  = self.make_var ( kappa                ,
-                                        'kappa_%s'    % name ,
-                                        '#kappa(%s)'  % name , kappa ,  0 ,  -10   ,  10 ) 
-        
-        ## lambda 
-        self.__lambda = self.make_var ( lambd               ,
-                                        'lambda_%s'   % name ,
-                                        '#lambda(%s)' % name , lambd , -2 , -100   , 100 ) 
-        
-        ## create a generalized hyperbolic PDF 
-        hname  = self.generate_name ( prefix = self.name , suffix = 'GHD' ) 
-        self.__genhyp = GenHyperbolic_pdf ( name  = hname      , 
-                                            xvar  = self.xvar  ,
-                                            mu    = self.mu    , 
-                                            sigma = self.sigma ,
-                                            zeta  = self.zeta  ,
-                                            kappa = self.kappa ,
-                                            lambd = self.lambd )
+        GenHyperbolic_pdf.__init__  ( self ,
+                                      name        = name  ,
+                                      xvar        = xvar  , 
+                                      mu          = mu    ,                                      
+                                      sigma       = sigma ,
+                                      zeta        = zeta  ,
+                                      kappa       = kappa ,
+                                      lambd       = lambd )
+
+
+        self.__genhyp = self.pdf
         
         ## prepare FFT convolution
-        from ostap.fitting.resolution import ResoGauss 
+        from ostap.fitting.resolution import ResoGauss
+        
         gname = self.generate_name ( prefix = self.name , suffix = 'offset' ) 
         self.__resolution = ResoGauss     ( name  = gname     , 
                                             xvar  = self.xvar ,
@@ -3115,7 +3001,7 @@ class Hypatia_pdf(MASS) :
         
     @property
     def genhyp ( self ) :
-        """``genhyp'': get underlying generalized hyperbilis PDF"""
+        """``genhyp'': get underlying generalized hyperbolic PDF"""
         return self.__genhyp
     
     @property
@@ -3136,63 +3022,8 @@ class Hypatia_pdf(MASS) :
         """``cnvpars'' : parameters for convolution"""
         return self.__cnvpars 
 
-    @property
-    def mu ( self ) :
-        """``mu'' : location parameter (same as ``mean'')"""
-        return self.__mu
-    @mu.setter
-    def mu ( self , value ) :    
-        self.set_value ( self.__mu , value )
-
-    @property 
-    def zeta  ( self ) :
-        """``zeta'' : dimensioneless parameter, related to shape """
-        return self.__zeta
-    @zeta.setter  
-    def zeta ( self , value ) :
-        self.set_value ( self.__zeta , value )
-    
-    @property
-    def kappa ( self ) :
-        """``kappa'' : dimensionless parameter, related to asymmetry"""
-        return self.__kappa
-    @kappa.setter
-    def kappa ( self , value ) :    
-        self.set_value ( self.__kappa , value )
-
-    @property
-    def lambd ( self ) :
-        """``lambd'' : dimensionless parameter, related to shape """
-        return self.__lambda
-    @lambd.setter
-    def lambd ( self , value ) :    
-        self.set_value ( self.__lambd , value )
-
-
-    @property
-    def alpha ( self ) :
-        """``alpha'' : value of canonical parameter ``alpha''"""
-        return self.genhyp.alpha 
-
-    @property
-    def beta ( self ) :
-        """``beta'' : value of canonical parameter ``beta''"""
-        return self.genhyp.beta
-
-    @property
-    def gamma ( self ) :
-        """``gamma'' : value of canonical parameter ``gamma''"""
-        return self.genhyp.gamma
-    
-    @property
-    def delta ( self ) :
-        """``delta'' : value of canonical parameter ``delta''"""
-        return self.genhyp.delta 
-
-
 
 models.append ( Hypatia_pdf )      
-
 
 
 # =============================================================================
@@ -3200,7 +3031,7 @@ models.append ( Hypatia_pdf )
 #  Exponentially modified Gaussian function, EMG
 #  @see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
 #
-#  It is a distibutiin for the varibale that is a 
+#  It is a distibution for the varibale that is a 
 #  sum (or difference for negative \f$ k\f$) 
 #  of a Gaussian and exponential variables: \f$ X \sim Y + sign(k) Z \f$,  
 #  where 
@@ -3224,7 +3055,7 @@ models.append ( Hypatia_pdf )
 #  @see Ostap::Math::NormalLaplace 
 #  @see Ostap::Mdoels::NormalLaplace 
 #  @see Ostap::Mdoels::ExGauss
-class ExGauss_pdf(MASS) :
+class ExGauss_pdf(PEAK) :
     """ Exponentially modified Gaussian function, EMG
     - see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
     
@@ -3255,18 +3086,17 @@ class ExGauss_pdf(MASS) :
         # 
         ## initialize the base
         #        
-        MASS.__init__  ( self , name , xvar                  , 
-                         mean        = mu                    ,
-                         sigma       = varsigma              ,
-                         mean_name   = 'mu_%s'        % name ,
-                         mean_title  = '#mu(%s)'      % name ,
-                         sigma_name  = 'varsigma_%s'  % name ,
-                         sigma_title = 'varsigma(%s)' % name )
+        PEAK.__init__  ( self , name , xvar                  , 
+                              mean        = mu                    ,
+                              sigma       = varsigma              ,
+                              mean_name   = 'mu_%s'        % name ,
+                              mean_title  = '#mu(%s)'      % name ,
+                              sigma_name  = 'varsigma_%s'  % name ,
+                              sigma_title = 'varsigma(%s)' % name )
         
         self.__mu       = self.mean 
         self.__varsigma = self.sigma
-        
-        
+                
         ## k 
         self.__k= self.make_var ( k              ,
                                   'k_%s'  % name ,
@@ -3342,7 +3172,7 @@ models.append ( ExGauss_pdf )
 #  @see Ostap::Math::nills_normal 
 #  @see Ostap::Math::NormalLaplace
 #
-class NormalLaplace_pdf(MASS) :
+class NormalLaplace_pdf(PEAK) :
     """Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
     It behaves line core Gaussian with exponential tails 
     - see Wiliam J. Reed, "The Normal-Laplace Distribution Relatives", October, 2004
@@ -3367,13 +3197,13 @@ class NormalLaplace_pdf(MASS) :
         # 
         ## initialize the base
         #        
-        MASS.__init__  ( self , name , xvar                  , 
-                         mean        = mu                    ,
-                         sigma       = varsigma              ,
-                         mean_name   = 'mu_%s'        % name ,
-                         mean_title  = '#mu(%s)'      % name ,
-                         sigma_name  = 'varsigma_%s'  % name ,
-                         sigma_title = 'varsigma(%s)' % name )
+        PEAK.__init__  ( self , name , xvar                  , 
+                              mean        = mu                    ,
+                              sigma       = varsigma              ,
+                              mean_name   = 'mu_%s'        % name ,
+                              mean_title  = '#mu(%s)'      % name ,
+                              sigma_name  = 'varsigma_%s'  % name ,
+                              sigma_title = 'varsigma(%s)' % name )
         
         self.__mu       = self.mean 
         self.__varsigma = self.sigma
@@ -3474,7 +3304,7 @@ models.append ( NormalLaplace_pdf )
 #
 # @see Ostap::Math::Das
 # @see Ostap::Models::Das
-class Das_pdf(MASS) :
+class Das_pdf(PEAK) :
     r"""Simple gaussian function with exponential tails.
     It corresponds to `ExpGaussExp` function from ref below
     
@@ -3511,12 +3341,12 @@ class Das_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar ,
-                         mean        = mu                ,
-                         sigma       = sigma             ,
-                         mean_name   = 'mu_%s'    % name ,
-                         mean_title  = '#mu_(%s)' % name ) 
-
+        PEAK.__init__  ( self , name , xvar ,
+                              mean        = mu                ,
+                              sigma       = sigma             ,
+                              mean_name   = 'mu_%s'    % name ,
+                              mean_title  = '#mu_(%s)' % name ) 
+        
         
         if k is None and kappa is None :
             
@@ -3654,7 +3484,7 @@ class Das_pdf(MASS) :
 #  @see http://ab-initio.mit.edu/wiki/index.php/Faddeeva_Package
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Voigt_pdf(MASS) :
+class Voigt_pdf(PEAK) :
     """Voigt function:
     Convolution of non-relativistic Breit-Wigner with gaussian resolution
     
@@ -3676,11 +3506,11 @@ class Voigt_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar ,
-                         mean        = m0                  ,
-                         sigma       = sigma               ,
-                         mean_name   = 'm0_%s'      % name ,
-                         mean_title  = '#m_{0}(%s)' % name ) 
+        PEAK.__init__  ( self , name , xvar ,
+                              mean        = m0                  ,
+                              sigma       = sigma               ,
+                              mean_name   = 'm0_%s'      % name ,
+                              mean_title  = '#m_{0}(%s)' % name ) 
                          
         limits_gamma = ()
         if  self.xminmax() :
@@ -3805,7 +3635,7 @@ models.append ( PseudoVoigt_pdf )
 #  @see Ostap::Math::BreitWigner
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class BreitWigner_pdf(MASS) :
+class BreitWigner_pdf(PEAK) :
     """Relativistic Breit-Wigner function using Jackson's parameterization
     J.D.Jackson, ``Remarks on the Phenomenological Analysis of Resonances'',
     In Nuovo Cimento, Vol. XXXIV, N.6
@@ -3832,13 +3662,13 @@ class BreitWigner_pdf(MASS) :
         #
         ## initialize the base
         #
-        MASS.__init__  ( self  , name  , xvar ,
-                         mean        = m0                  ,
-                         sigma       = gamma               ,
-                         mean_name   = 'm0_%s'      % name ,
-                         mean_title  = '#m_{0}(%s)' % name ,                         
-                         sigma_name  = 'gamma_%s'   % name ,
-                         sigma_title = '#Gamma(%s)' % name )
+        PEAK.__init__  ( self  , name  , xvar ,
+                              mean        = m0                  ,
+                              sigma       = gamma               ,
+                              mean_name   = 'm0_%s'      % name ,
+                              mean_title  = '#m_{0}(%s)' % name ,                         
+                              sigma_name  = 'gamma_%s'   % name ,
+                              sigma_title = '#Gamma(%s)' % name )
         
         bw = breitwigner
         assert isinstance ( bw , Ostap.Math.BW ), \
@@ -3947,7 +3777,7 @@ models.append ( BreitWigner_pdf )
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-11-25
-class BWMC_pdf(MASS) :
+class BWMC_pdf(PEAK) :
     """Multi-channel version of Relativistic Breit-Wigner function
 
     >>> m_Kp  =  493.677 * MeV    ## mass of K+ 
@@ -4035,7 +3865,7 @@ class BWMC_pdf(MASS) :
         # =====================================================================
         ## initialize the base 
         # =====================================================================
-        MASS.__init__ ( self , name , xvar                ,
+        PEAK.__init__ ( self , name , xvar                ,
                         mean        =  m0                 ,
                         siga        =  gamma              ,
                         mean_name   = 'm0_%s'      % name ,
@@ -4492,7 +4322,7 @@ models.append ( BW3L_pdf )
 #  @see Ostap::Math::Flatte2
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-01-18
-class Flatte_pdf(MASSMEAN) :
+class Flatte_pdf(PEAKMEAN) :
     """Flatte function:
     S.M.Flatte, ``Coupled-channel analysis of the (pi eta)
     and (KbarK) systems near (KbarK) threshold'' 
@@ -4518,7 +4348,7 @@ class Flatte_pdf(MASSMEAN) :
         ## initialize the base
         with CheckMean ( False ) :
             # for Flatte-function m0 can be outside the interesting interval 
-            MASSMEAN.__init__  ( self , name , xvar ,
+            PEAKMEAN.__init__  ( self , name , xvar ,
                                  mean       = m0  ,
                                  mean_name  = 'm0_%s'      % name ,
                                  mean_title = '#m_{0}(%s)' % name )
@@ -4807,7 +4637,7 @@ models.append ( FlattePS_pdf )
 #  @see Ostap::Math::LASS
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class LASS_pdf(MASS) :
+class LASS_pdf(PEAK) :
     """Kappa pole:
     The LASS parameterization (Nucl. Phys. B296, 493 (1988))
     describes the 0+ component of the Kpi spectrum.
@@ -4828,7 +4658,7 @@ class LASS_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , 
+        PEAK.__init__  ( self , name , xvar , 
                          mean        = m0 ,
                          sigma       = g0 ,
                          mean_name   = 'm0_%s'      % name ,
@@ -4940,7 +4770,7 @@ models.append ( LASS_pdf )
 #  @see Ostap::Math::Bugg
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Bugg_pdf(MASS) :
+class Bugg_pdf(PEAK) :
     """ The parameterization of sigma pole by
     B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
     https://doi.org/10.1103/PhysRevD.48.R3948
@@ -4959,7 +4789,7 @@ class Bugg_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar ,
+        PEAK.__init__  ( self , name , xvar ,
                          mean        = m    ,
                          sigma       = g2   ,
                          mean_name   = 'mBugg_%s'        % name ,

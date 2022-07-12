@@ -1167,69 +1167,6 @@ namespace Ostap
       // ======================================================================
     };    
     // ========================================================================
-    /** @class Argus
-     *  http://en.wikipedia.org/wiki/ARGUS_distribution
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2013-05-11
-     */
-    class  Argus
-    {
-    public:
-      // ======================================================================
-      /** constructor with all parameters
-       *  @param shape shape parameter 
-       *  @param high  high parameter 
-       *  @param low   low parameter 
-       */
-      Argus  ( const double shape  = 1   ,
-               const double high   = 1   ,
-               const double low    = 0   ) ;
-      /// destructor
-      ~Argus () ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// evaluate beta'-distributions
-      double pdf        ( const double x ) const ;
-      /// evaluate beta'-distributions
-      double operator() ( const double x ) const { return pdf ( x ) ; }
-      // ======================================================================
-    public: // direct getters
-      // ======================================================================
-      double shape  () const { return m_shape  ; }
-      double low    () const { return m_low    ; }
-      double high   () const { return m_high   ; }
-      // ======================================================================
-    protected:
-      // ======================================================================
-      double  y_ ( const double x ) const
-      { return ( x - m_low  ) / ( m_high - m_low ) ; }
-      // ======================================================================
-    public: // direct setters
-      // ======================================================================
-      bool   setHigh  ( const double value ) ;
-      bool   setLow   ( const double value ) ;
-      bool   setShape ( const double value ) ;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      double cdf      ( const double x    ) const ;
-      double integral ( const double low  ,
-                        const double high ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // get the tag
-      std::size_t tag () const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      double m_shape ;
-      double m_high  ;
-      double m_low   ;
-      // ======================================================================
-    } ;
-    // ========================================================================
     /** @class ExpoPositive
      *  useful function for parameterizing smooth background:
      *  product of the exponential and positive polinonmial
@@ -1823,6 +1760,198 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace {} ; //
       // ======================================================================
     } ;  
+    // ========================================================================
+    /** @class Argus 
+     *  Slightly modified version of Argus distribution, with 
+     *  support in the interval  \f$ \mu - c \le x \le \mu \f$
+     *  @see https://en.wikipedia.org/wiki/ARGUS_distribution
+     *  @see ARGUS Collab oration, H. Albrecht et al., 
+     *      "Measurement of the polarization in the decay B → J/ψK*". 
+     *      Physics Letters B. 340 (3): 217–220.
+     *  @see doi:10.1016/0370-2693(94)01302-0.
+     *  @see https://doi.org/10.1016%2F0370-2693%2894%2901302-0
+     */
+    class Argus 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      // constructor for all elements 
+      Argus 
+      ( const double mu  = 1 , 
+        const double  c  = 1 , 
+        const double chi = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate function 
+      double        evaluate   ( const double x ) const ;
+      /// get PDF
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      /// get PDF
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public:  // gettters 
+      // ====================================================================== 
+      /// parameter mu 
+      double mu  () const { return m_mu  ; }
+      /// parameter c 
+      double c   () const { return m_c   ; }
+      /// parameter chi 
+      double chi () const { return m_chi ; }        
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// set mu parameter
+      bool setMu  ( const double value ) ;
+      /// set c parameter
+      bool setC   ( const double value ) ;
+      /// set chi parameter
+      bool setChi ( const double value ) ;
+      // ======================================================================
+    public: // properties 
+      // ======================================================================
+      /// mean of the distribution 
+      double mean     () const ;
+      /// mode of the distribution 
+      double mode     () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// xmin
+      double xmin () const { return m_mu - m_c ; }
+      /// xmax
+      double xmax () const { return m_mu       ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      double integral   () const ;
+      /// get the integral between low and high
+      double integral   ( const double low  ,
+                          const double high ) const ;
+      /// get CDF 
+      double cdf        ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private: // helper function
+      // ======================================================================
+      /** helper function 
+       *  \f$ \Psi ( \chi ) = \Phi(\chi )  - \chi \phi  (\chi ) - \frac{1}{2} \f$ 
+       */
+      double psi ( const double value ) const ;
+      // ======================================================================
+   private:
+      // ======================================================================
+      /// parameter mu 
+      double   m_mu   {  1 } ; // parameter mu      
+      /// parameter c 
+      double   m_c    {  1 } ; // parameter c 
+      /// parameter chi 
+      double   m_chi  {  1 } ; // parameter chi
+      /// normalization 
+      double   m_norm { -1 } ; // normalization
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class GenArgus 
+     *  Slightly modified version of generalized Argus distribution, with 
+     *  support in the interval  \f$ \mu - c \le x \le \mu \f$
+     *  @see https://en.wikipedia.org/wiki/ARGUS_distribution
+     *  @see ARGUS Collab oration, H. Albrecht et al., 
+     *      "Measurement of the polarization in the decay B → J/ψK*". 
+     *      Physics Letters B. 340 (3): 217–220.
+     *  @see doi:10.1016/0370-2693(94)01302-0.
+     *  @see https://doi.org/10.1016%2F0370-2693%2894%2901302-0
+     */
+    class GenArgus 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      // constructor for all elements 
+      GenArgus 
+      ( const double mu  = 1   , 
+        const double  c  = 1   ,  
+        const double chi = 1   ,
+        const double dp  = 1.5 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate function 
+      double        evaluate   ( const double x ) const ;
+      /// get PDF
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      /// get PDF
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public:  // gettters 
+      // ====================================================================== 
+      /// parameter mu 
+      double mu  () const { return m_mu  ; }
+      /// parameter c 
+      double c   () const { return m_c   ; }
+      /// parameter chi 
+      double chi () const { return m_chi ; }        
+      /// parameter dp 
+      double dp  () const { return m_dp  ; }        
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// parameter p 
+      double p () const { return m_dp - 1 ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// set mu parameter
+      bool setMu  ( const double value ) ;
+      /// set c parameter
+      bool setC   ( const double value ) ;
+      /// set chi parameter
+      bool setChi ( const double value ) ;
+      /// set dp parameter
+      bool setDp  ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// xmin
+      double xmin () const { return m_mu - m_c ; }
+      /// xmax
+      double xmax () const { return m_mu       ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      double integral   () const ;
+      /// get the integral between low and high
+      double integral   ( const double low  ,
+                          const double high ) const ;
+      /// get CDF 
+      double cdf        ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+   private:
+      // ======================================================================
+      /// parameter mu 
+      double   m_mu   {  1 } ; // parameter mu      
+      /// parameter c 
+      double   m_c    {  1 } ; // parameter c 
+      /// parameter chi 
+      double   m_chi  {  1 } ; // parameter chi
+      /// parameter dp 
+      double   m_dp   {  1 } ; // parameter chi
+      /// normalization 
+      double   m_norm { -1 } ; // normalization
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class Tsallis
      *

@@ -6,9 +6,9 @@
 #  - Typical usage:
 #  @code
 #  import math
-#  from ostap.fitting.basic import MASS
+#  from ostap.fitting.basic import PEAK
 #  from ostap.fitting.pypdf import PyPDF 
-#  class PyGauss(MASS,PyPDF) :
+#  class PyGauss(PEAK,PyPDF) :
 #       norm = 1.0 / math.sqrt ( 2 * math.pi )
 #       def __init__ ( self         ,
 #                      name         ,
@@ -16,7 +16,7 @@
 #                      mean         ,    // parameter: mean-value 
 #                      sigma        ,    // parameter: sigma
 #                      pdf   = None ) :  // MANDATORY ARGUMENT
-#           MASS .__init__ ( self , name      , xvar , mean , sigma ) 
+#           PEAK .__init__ ( self , name      , xvar , mean , sigma ) 
 #           PyPDF.__init__ ( self , self.name , ( self.xvar  ,
 #                                                 self.mean  ,
 #                                                 self.sigma ) , pdf = pdf )
@@ -40,7 +40,7 @@
 #
 # Note:
 #  - 1. The double inheritance pattern: It is not mandatory, but it allows to
-#       get all benefits from the left bas-class, <code>MASS</code> in this  case
+#       get all benefits from the left bas-class, <code>PEAK</code> in this  case
 #  - 2. The <code>__init__</code> method *must* have keyword argument
 #       <code>pdf</code> (default is <code>None</code>)
 #  - 3. One *must* specify the <code>config</code> dictionary
@@ -55,9 +55,9 @@
     Typical usage:
     
     ... import math
-    ... from ostap.fitting.basic import MASS
+    ... from ostap.fitting.basic import PEAK
     ... from ostap.fitting.pypdf import PyPDF 
-    ... class PyGauss(MASS,PyPDF) :
+    ... class PyGauss(PEAK,PyPDF) :
     ...    norm = 1.0 / math.sqrt ( 2 * math.pi )
     ...    def __init__ ( self         ,
     ...                   name         ,
@@ -65,7 +65,7 @@
     ...                   mean         ,    // parameter: mean-value 
     ...                   sigma        ,    // parameter: sigma
     ...                   pdf   = None ) :  // MANDATORY ARGUMENT
-    ...        MASS .__init__ ( self , name      , xvar , mean , sigma ) 
+    ...        PEAK .__init__ ( self , name      , xvar , mean , sigma ) 
     ...        PyPDF.__init__ ( self , self.name , ( self.xvar  ,
     ...                                              self.mean  ,
     ...                                              self.sigma ) , pdf = pdf )
@@ -90,7 +90,7 @@
     Note:
     
     1. the double inhetiance pattern: It is not mandatory, but it allows to
-    get all benefits from the left base-class, MASS in this  case
+    get all benefits from the left base-class, PEAK in this  case
     2. The __init__ method *must* have keyword argument `pdf` (default is `None`)
     3. one *must* specify the `config` dictionary
     
@@ -130,9 +130,9 @@ if old_PyROOT :
     #  - Typical usage:
     #  @code
     #  import math 
-    #  from ostap.fitting.basic import MASS
+    #  from ostap.fitting.basic import PEAK
     #  from ostap.fitting.pypdf import PyPDF 
-    #  class PyGauss(MASS,PyPDF) :
+    #  class PyGauss(PEAK,PyPDF) :
     #       norm = 1.0 / math.sqrt ( 2 * math.pi )
     #       def __init__ ( self         ,
     #                      name         ,
@@ -140,7 +140,7 @@ if old_PyROOT :
     #                      mean         ,    // parameter: mean-value 
     #                      sigma        ,    // parameter: sigma
     #                      pdf   = None ) :  // MANDATORY ARGUMENT
-    #           MASS .__init__ ( self , name      , xvar , mean , sigma ) 
+    #           PEAK .__init__ ( self , name      , xvar , mean , sigma ) 
     #           PyPDF.__init__ ( self , self.name , ( self.xvar  ,
     #                                                 self.mean  ,
     #                                                 self.sigma ) , pdf = pdf )
@@ -164,7 +164,7 @@ if old_PyROOT :
     #
     # Note:
     #  - 1. The double inheritance pattern: It is not mandatory, but it allows to
-    #       get all benefits from the left base-class, <code>MASS</code> in this  case
+    #       get all benefits from the left base-class, <code>PEAK</code> in this  case
     #  - 2. The <code>__init__</code> method *must* have keyword argument
     #       <code>pdf</code> (default is <code>None</code>)
     #  - 3. One *must* specify the <code>config</code> dictionary
@@ -211,9 +211,9 @@ if old_PyROOT :
         Typical usage (for OLD PyROOT):
         
         ... import math
-        ... from ostap.fitting.basic import MASS
+        ... from ostap.fitting.basic import PEAK
         ... from ostap.fitting.pypdf import PyPDF 
-        ... class PyGauss(MASS,PyPDF) :
+        ... class PyGauss(PEAK,PyPDF) :
         ...    norm = 1.0 / math.sqrt ( 2 * math.pi )
         ...    def __init__ ( self         ,
         ...                   name         ,
@@ -221,7 +221,7 @@ if old_PyROOT :
         ...                   mean         ,    // parameter: mean-value 
         ...                   sigma        ,    // parameter: sigma
         ...                   pdf   = None ) :  // MANDATORY ARGUMENT
-        ...        MASS .__init__ ( self , name      , xvar , mean , sigma ) 
+        ...        PEAK .__init__ ( self , name      , xvar , mean , sigma ) 
         ...        PyPDF.__init__ ( self , self.name , ( self.xvar  ,
         ...                                              self.mean  ,
         ...                                              self.sigma ) , pdf = pdf )
@@ -246,7 +246,7 @@ if old_PyROOT :
         Note:
         
         1. the double inheritance pattern: It is not mandatory, but it allows to
-        get all benefits from the left base-class, MASS in this  case
+        get all benefits from the left base-class, PEAK in this  case
         2. The __init__ method *must* have keyword argument `pdf` (default is `None`)
         3. one *must* specify the `config` dictionary
         

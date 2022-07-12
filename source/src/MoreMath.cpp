@@ -352,6 +352,65 @@ double Ostap::Math::gamma_star ( const int n , const double x )
     1.1 <  x ? _gamma_star_2_ ( n ,  y ) : _gamma_star_  ( n , y ) ;  
 }
 // ============================================================================
+/*  normalized incomplete gamma function 
+ *  \f$ Q(a,x) = \frac { \Gamma ( a , x ) }{\Gamma(a) } \f$, 
+ *  where \f$ \Gamma(a,x) =  \int_x^{+\infty} t^{a-1} e^{-t}dt \f$ 
+ *  is an incomplete uppper Gamma function
+ *  @return the value of normalized incomplete gamma function 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2022-07-12
+ */
+// ============================================================================
+double Ostap::Math::gamma_inc_Q
+( const double a , 
+  const double x ) 
+{
+  if ( 0 < a && 0 <= x && s_zero ( x ) ) { return 1 ; }
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_gamma_inc_Q_e ( a  , x, &result) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_gamma_inc_Q_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN() ; }
+    //
+  }
+  return result.val ;
+}
+// ============================================================================
+/* normalized incomplete gamma function 
+ *  \f$ P(a,x) = 1 - Q  (a, x ) = 
+ *    = \frac{ \int_0^{x} t^{a-1} e^{-t}dt } { \Gamma(a) } \f$ 
+ *  @return the value of normalized incomplete gamma function 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2022-07-12
+ */
+// ============================================================================
+double Ostap::Math::gamma_inc_P
+( const double a , 
+  const double x ) 
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_gamma_inc_P_e ( a  , x, &result) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_gamma_inc_P_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN() ; }
+    //
+  }
+  return result.val ;
+}
+// ============================================================================
 /*  alpha_n 
  *  \f$\alpha_n(x) = \int_1^\inf t^n e^{-tz}dt \f$
  *  @param n INPUT n-parameter 
