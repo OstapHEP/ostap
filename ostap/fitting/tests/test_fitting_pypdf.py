@@ -18,7 +18,7 @@ import ROOT, random, math, time
 import ostap.fitting.roofit 
 from   builtins                 import range
 from   ostap.core.core          import VE, dsID, Ostap
-from   ostap.fitting.basic      import MASS,     Fit1D , Generic1D_pdf 
+from   ostap.fitting.basic      import PEAK,     Fit1D , Generic1D_pdf 
 from   ostap.utils.utils        import timing
 from   ostap.core.meta_info     import old_PyROOT 
 from   ostap.plotting.canvas    import use_canvas
@@ -83,7 +83,7 @@ def test_PyPDF() :
     # =============================================================================
     ## @class PyGauss
     #  local ``pure-python'' PDF 
-    class PyGauss(MASS,PyPDF) :
+    class PyGauss(PEAK,PyPDF) :
         """Local ``pure-python'' PDF
         """    
         def __init__ ( self         ,
@@ -94,7 +94,7 @@ def test_PyPDF() :
                        pypdf = None ) :
             
             
-            MASS .__init__ ( self , name      , xvar , mean , sigma ) 
+            PEAK .__init__ ( self , name      , xvar , mean , sigma ) 
             PyPDF.__init__ ( self , self.name , ( self.xvar  ,
                                                   self.mean  ,
                                                   self.sigma ) , pypdf = pypdf )
@@ -163,7 +163,7 @@ def test_PyPDF_AI() :
     # =========================================================================
     ## @class PyGaussAI
     #  local ``pure-python'' PDF with analytical integrals 
-    class PyGaussAI(MASS,PyPDF) :
+    class PyGaussAI(PEAK,PyPDF) :
         """Local ``pure-python'' PDF with analytical integrals """    
         def __init__ ( self         ,
                        name         ,
@@ -173,7 +173,7 @@ def test_PyPDF_AI() :
                        pypdf = None ) :
             
             
-            MASS .__init__ ( self , name      , xvar , mean , sigma ) 
+            PEAK .__init__ ( self , name      , xvar , mean , sigma ) 
             PyPDF.__init__ ( self , self.name , ( self.xvar  ,
                                                   self.mean  ,
                                                   self.sigma ) , pypdf = pypdf )
@@ -265,7 +265,7 @@ def test_PyPDF2 () :
     # =============================================================================
     ## @class PyGauss2
     #  local ``pure-python'' PDF 
-    class PyGauss2(MASS,PyPDF2) :
+    class PyGauss2(PEAK,PyPDF2) :
         """Local ``pure-python'' PDF """    
         def __init__ ( self         ,
                        name         ,
@@ -276,7 +276,7 @@ def test_PyPDF2 () :
                        title = '' 
                        ) :
             
-            MASS  .__init__ ( self , name      , xvar , mean , sigma ) 
+            PEAK  .__init__ ( self , name      , xvar , mean , sigma ) 
             PyPDF2.__init__ ( self      ,
                               name     = self.name ,
                               function = function  ,
