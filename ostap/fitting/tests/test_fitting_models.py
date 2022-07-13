@@ -50,9 +50,15 @@ NS = 10000
 NB =  1000
 
 ## fill it 
-m = VE(3.100,0.015**2)
-for i in range(0,NS) :
+m  = VE(3.100,  0.015**2)
+m1 = VE(3.100,2*0.015**2)
+NS1 = int ( 0.75 * NS )
+NS2 = NS  - NS1 
+for i in range(0,NS1) :
     mass.value = m.gauss () 
+    dataset0.add ( varset0 )
+for i in range(0,NS2) :
+    mass.value = m1.gauss () 
     dataset0.add ( varset0 )
 
 for i in range(0,NB) :
@@ -97,19 +103,19 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
     signal = pdf.signal 
 
     
-    data = { 'mean'          : signal.get_mean      () ,
-             'mode'          : signal.mode          () , 
-             'median'        : signal.median        () ,
-             'rms'           : signal.rms           () ,
-             'roo_rms'       : signal.roo_rms       () ,
-             'skewness'      : signal.skewness      () ,
-             ## 'roo_mean'      : signal.roo_mean      () ,
-             ## 'roo_skewness'  : signal.roo_skewness  () ,             
-             ## 'kurtosis'      : signal.kurtosis      () ,
-             ## 'roo_kurtosis'  : signal.roo_kurtosis  ()
-             }
+    ## data = { 'mean'          : signal.get_mean      () ,
+    ##          'mode'          : signal.mode          () , 
+    ##          'median'        : signal.median        () ,
+    ##          'rms'           : signal.rms           () ,
+    ##          'skewness'      : signal.skewness      () ,
+    ##          'kurtosis'      : signal.kurtosis      () ,
+    ##          ## 'roo_rms'       : signal.roo_rms       () ,
+    ##          ## 'roo_mean'      : signal.roo_mean      () ,
+    ##          ## 'roo_skewness'  : signal.roo_skewness  () ,             
+    ##          ## 'roo_kurtosis'  : signal.roo_kurtosis  ()
+    ##          }
 
-    stats [ signal.name ]  = data 
+    ## stats [ signal.name ]  = data 
 
     with wait ( 1 ), use_canvas ( title ) : 
         pdf.draw (  dataset0 )
@@ -1068,6 +1074,8 @@ def test_laplace():
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
+        signal.slope.release() 
+        signal.mean .release()
         result, frame = model. fitTo ( dataset0 )
         
     make_print ( model , result , "Laplace model" , logger )        
@@ -1093,13 +1101,15 @@ def test_exgauss () :
         S = S , B = B ,
         )
     
-    signal_gauss.mean .fix ( m.value() )
-    signal_gauss.sigma.fix ( m.error() )
 
+    signal = model.signal
     model.S = NS 
     model.B = NB
-    
+
     with rooSilent() :
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.mu    .release()
+        signal.sigma.release()        
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         
