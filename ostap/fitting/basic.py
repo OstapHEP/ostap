@@ -1774,11 +1774,12 @@ class PDF (FUNC) :
         fun   = self.fun
         ftype = type ( fun ) 
         if   hasattr ( ftype , 'rms' ) and not ftype.rms is sp_rms :
-            return fun.rms()        
-        elif hasattr ( ftype , 'Rms' ) :
-            return fun.Rms()        
-        elif hasattr ( ftype , 'RMS' ) :
-            return fun.RMS()        
+            return fun.rms ()        
+        elif hasattr ( ftype , 'Rms' )                             :
+            return fun.Rms ()        
+        elif hasattr ( ftype , 'RMS' )                             :
+            return fun.RMS ()
+        
         elif self.tricks and hasattr ( fun , 'function' ) :
 
             if   hasattr ( fun , 'setPars'    ) : fun.setPars()
@@ -1788,7 +1789,7 @@ class PDF (FUNC) :
             if   hasattr ( ftype , 'rms'        ) and not ftype.rms        is sp_rms      :
                 return ff.rms()
             elif hasattr ( ftype , 'variance'   ) and not ftype.variance   is sp_variance :
-                return ff.variance   ()**0.5  
+                return ff.variance   () ** 0.5  
             elif hasattr ( ftype , 'dispersion' ) and not ftype.dispersion is sp_variance :
                 return ff.dispersion ()**0.5 
 
@@ -1864,25 +1865,40 @@ class PDF (FUNC) :
         return self._get_stat_ ( _moment , N , **kwargs ) 
 
     # =========================================================================
+    ## get the standartized moment for the distribution
+    def std_moment ( self , N , **kwargs ) :
+        """Get the standartized moment
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'MOMENT: %s ' % pdf.std_moment( 10 )
+        """
+        from ostap.stats.moments import std_moment as _moment
+        return self._get_stat_ ( _moment , N , **kwargs ) 
+
+    # =========================================================================
     ## get moment using <code>RooAbsPdf::moment</code> method
     #  @see RooAbsPdf::moment
     #  @code
     #  pdf = ...
-    #  v4  = pdf.sroo_moment ( 5 , central = True )
+    #  v4  = pdf.roo_moment ( 5 , central = True )
     #  @endcode
     def roo_moment ( self , order , central ) :
         """Get moment using <code>RooAbsPdf::moment</code> method
         >>> pdf = ...
-        >>> v5  = pdf.sroo_moment ( 5 , central = True )
+        >>> v5  = pdf.roo_moment ( 5 , central = True )
         - see `ROOT.RooAbsPdf.moment`
         """
         assert isinstance ( order , integer_types ) and 0<= order , \
                'roo_moment: invalid moment order %s !' % order
 
+        if   central and 0 == order : return 1
+        elif central and 1 == order : return 0
+        
         from ostap.logger.utils import rootWarning, roo_silent 
         with rootWarning() , roo_silent ( True ) : 
             mom    = self.pdf.moment ( self.xvar , order , central , False  )
             result = mom.getVal ()
+            mom.Delete() 
             del mom
             return result 
 
@@ -1925,6 +1941,7 @@ class PDF (FUNC) :
 
     # =========================================================================
     ## get skewness using RooAbdPdf method
+    #   \f$  k = \frac{\mu_3}{\mu_2^{3/2}}\f$ 
     #  @see RooAbdPdf::moment 
     def roo_skewness ( self ) :
         """get skewness using RooAbdPdf method
@@ -1932,20 +1949,20 @@ class PDF (FUNC) :
         """
         m2 = self.roo_moment ( 2 , central = True )
         m3 = self.roo_moment ( 3 , central = True )        
-        return m3/ ( m2 ** ( 3.0 / 2 ) )
+        return m3 / ( m2 ** ( 3.0 / 2 ) )
 
     # =========================================================================
-    ## get kurtosis  using RooAbdPdf method
+    ## get (excessive) kurtosis  using RooAbdPdf method
+    #   \f$  k = \frac{\mu_4}{\mu_2^2} -3 \f$ 
     #  @see RooAbdPdf::moment 
     def roo_kurtosis ( self ) :
-        """get kurtosis using RooAbdPdf method
+        """get (excessive) kurtosis using RooAbdPdf method
         -see `ROOT.RooAbdPdf.moment`
         """
         m2 = self.roo_moment ( 2 , central = True )
         m4 = self.roo_moment ( 4 , central = True )    
         return m4 / ( m2 * m2 ) - 3.0 
     
-
     # =========================================================================
     ## get the effective quantile 
     def quantile ( self , prob  , **kwargs ) :

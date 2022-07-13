@@ -822,6 +822,21 @@ namespace Ostap
     ( const double x , 
       const double y ) ;
     // ========================================================================
+    
+    // ========================================================================
+    /** \f$ \left| \frac{\Gamma(x+iy)}{\Gamma(x)} \right|^2 \f$ for 
+     *  \f$  x> 0\f$.
+     *  
+     *  \f$ \left| \right|^2 = \left| \frac{1}{F(-iy,iy,x,1)}\right| \f$, where 
+     *  \f$ F(a,b,c;z)\f$ is a hypergeometrical function.
+     *
+     *  This expression appears in normalization for the Pearson Type IV pdf 
+     *  @see J. Heinrich, "A guide to the Pearson Type IV distribution", 
+     *       CDF/MEMO/STATISTICS/PUBLIC/6820, 2004 
+     *  @see http://www-cdf.fnal.gov/physics/statistics/notes/cdf6820_pearson4.pdf
+     */
+    double   pearsonIV_g2 ( const double x , const double y ) ;
+    // ========================================================================
 
     // ========================================================================
     /** Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile

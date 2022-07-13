@@ -3366,8 +3366,11 @@ bool Ostap::Math::PearsonIV::setN ( const double value )
   if ( s_equal ( m_n , avalue ) && 0 < m_C ) { return false ; }
   m_n = avalue ;
   //
-  m_C = std::norm ( Ostap::Math::gamma ( std::complex<double> ( m() , 0.5 * nu () ) ) /
-                    Ostap::Math::gamma ( m() ) ) / std::beta  ( m() - 0.5 , 0.5 ) ;
+  // m_C = std::norm ( Ostap::Math::gamma ( std::complex<double> ( m() , 0.5 * nu () ) ) /
+  //                   Ostap::Math::gamma ( m() ) ) / std::beta  ( m() - 0.5 , 0.5 ) ;
+  //
+  m_C = Ostap::Math::pearsonIV_g2 ( m() , 0.5 * nu() ) / std::beta  ( m() - 0.5 , 0.5 ) ;
+  //
   return true ;
 }   
 // ===========================================================================
@@ -3377,8 +3380,12 @@ bool Ostap::Math::PearsonIV::setKappa ( const double value )
 {
   if ( s_equal ( m_kappa , value ) && 0 < m_C ) { return false ; }
   m_kappa = value ;
-  m_C     = std::norm ( Ostap::Math::gamma ( std::complex<double> ( m() , 0.5 * nu () ) ) /
-                        Ostap::Math::gamma ( m() ) ) / std::beta  ( m() - 0.5 , 0.5 ) ;
+  //
+  // m_C     = std::norm ( Ostap::Math::gamma ( std::complex<double> ( m() , 0.5 * nu () ) ) /
+  //                       Ostap::Math::gamma ( m() ) ) / std::beta  ( m() - 0.5 , 0.5 ) ;
+  //
+  m_C = Ostap::Math::pearsonIV_g2 ( m() , 0.5 * nu() ) / std::beta  ( m() - 0.5 , 0.5 ) ;
+  //
   return true ;
 }  
 // ===========================================================================
@@ -3537,13 +3544,13 @@ double Ostap::Math::PearsonIV::skewness () const  // skewness
     moment ( 3 ) / std::pow ( moment ( 2 ) , 1.5 ) ;
 }
 // ============================================================================
-// kurtosis ( for m>5/2) 
+// (excessive) kurtosis ( for m>5/2) 
 // ============================================================================
-double Ostap::Math::PearsonIV::kurtosis () const  // skewness 
+double Ostap::Math::PearsonIV::kurtosis () const  // (excessive) kurtosis 
 {
   return 
     2 * m () <= 5 ? std::numeric_limits<double>::infinity () :
-    moment ( 4 ) / std::pow ( moment ( 2 ) , 2) ;
+    moment ( 4 ) / std::pow ( moment ( 2 ) , 2) - 3 ;
 }
 // ============================================================================
 // beta1 parameter of Pearson family (m>2) 

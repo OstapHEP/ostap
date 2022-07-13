@@ -5,7 +5,10 @@
   1. add Generlisez Argus distribution - function and PDF 
   1. simplify  hierarchy for some peak-like models/PDFs 
   1. rename `MASS` -> `PEAK`, `MASSMEAN` -> `PEAKMEAN`
- 
+  1. imporve normalization for Pearson Type IV function 
+  1. add `StdMoment` to `ostap.stats.moments`
+  1. sdd `std_moment` method for `PDF`
+  
 ## Backward incompatible:  
  
 ## Bug fixes:

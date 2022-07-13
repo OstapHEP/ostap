@@ -1821,8 +1821,8 @@ namespace Ostap
       double rms             () const ; // RMS  
       /// skewness (for m>2) 
       double skewness        () const ; // skewness 
-      /// kurtosis  (for m > 5/2)
-      double kurtosis        () const ; // kurtosis 
+      /// (excess) kurtosis  (for m > 5/2)
+      double kurtosis        () const ; // (excess) kurtosis 
       /// (central) moment 
       double moment          ( const unsigned short k ) const ;
       /// beta1 parameter of Pearson family (m>2) 

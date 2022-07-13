@@ -5,6 +5,7 @@
 #  Utilities to get moments for various functions/distributions/pdfs
 #  - Moment
 #  - CentralMoment
+#  - StdlMoment
 #  - Mean
 #  - Variance 
 #  - RMS 
@@ -20,7 +21,8 @@
 #
 #  All objects exists as classes/functors and as standalone simple functions
 #  - moment
-#  - centralMoment
+#  - central_moment
+#  - std_moment
 #  - mean
 #  - variance 
 #  - rms 
@@ -38,6 +40,7 @@
 """Utilities to get moments for various functions/distributions/pdfs
 - Moment
 - CentralMoment
+- StdMoment
 - Mean
 - Variance 
 - RMS 
@@ -52,7 +55,8 @@ For these quantities numerical integration and root-finding are used.
 
 All objects exists as classes/functors and as standalone simlpe functions
 - moment
-- centralMoment
+- central_moment
+- std_moment
 - mean
 - variance 
 - rms 
@@ -74,7 +78,8 @@ __all__     = (
     ## stat-quantities 
     "Moment"        , ## calculate N-th moment of functions/distributions, etc 
     "CentralMoment" , ## calculate N-th central moment of functions/distributions
-    "Mean"          , ## calculate "mean"     for functions/distributions, etc 
+    "StdMoment"     , ## calculate N-th standartized moment of functions/distributions
+    "Mean"          , ## "mean"     for functions/distributions, etc 
     "Variance"      , ## calculate "variance" for functions/distributions, etc 
     "RMS"           , ## calculate "RMS"      for functions/distributions, etc 
     "Skewness"      , ## calculate "skewness" for functions/distributions, etc 
@@ -113,16 +118,12 @@ else                       : logger = getLogger ( __name__              )
 from ostap.core.ostap_types import integer_types, num_types 
 from ostap.core.core import Ostap 
 # =============================================================================
-## @class Moment
-#  Calculate the N-th moment for the distribution 
-#  @code
-#   xmin,xmax = 0,math.pi 
-#   mean  = Moment(1,xmin,xmax)  ## specify min/max
-#   value = mean  ( math.sin )
+## @class BaseMoment
+#  Base class for calcualtionof varosu momnet
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
-class Moment(object) :
+class BaseMoment(object) :
     """Calculate the N-th moment for the distribution
     
     >>> xmin,xmax = 0,math.pi 
@@ -130,58 +131,153 @@ class Moment(object) :
     >>> value = mean  ( math.sin )
     """
     ## constructor
-    def __init__ ( self , N , xmin , xmax , err = False , x0 = 0 , *args ) :
+    def __init__ ( self , N , xmin , xmax , err = False , *args ) :
         """Contructor 
         """
-        if not isinstance ( N , integer_types ) or 0 > N  :
-            raise TypeError('Moment: illegal order')
+        assert isinstance ( N , integer_types ) and  0 <= N , \
+               'BaseMoment: illegal order: %s' % N 
         
         self.__N     = N 
         self.__xmin  = float ( xmin ) if isinstance ( xmin , integer_types ) else xmin 
         self.__xmax  = float ( xmax ) if isinstance ( xmax , integer_types ) else xmax 
         self.__err   = err
         self.__args  = args
-        self.__x0    = x0  
 
-    ## make an integral 
-    def _integral_ ( self , func , xmn , xmx , *args ) :
-        from ostap.math.integral import IntegralCache 
-        integrator = IntegralCache ( func , xmn , err = self.err , args = args )
-        return integrator ( xmx , *args )
-    
-    ## calculate un-normalized 0-moment  
-    def _moment0_ ( self , func , *args ) :
-        """Calculate un-normalized 0-moment
+    # =========================================================================
+    ## get the normalized moment
+    def moment ( self , K , func , center , *args ) :
+        """Get the normalized momentum
         """
-        return self._integral_ ( func , self.xmin , self.xmax , *args )
-    
-    ## calculate un-normalized k-moment  
-    def _momentK_ ( self , k , func , mu = None , *args ) :
-        """Calculate unnormalized k-moment
-        """
-        x0     = self.x0 if mu is None else mu 
-        func_N = lambda x,*a : func( x , *a ) * ( ( x - x0 ) ** k  )
-        return self._integral_ ( func_N , self.xmin , self.xmax , *args )
-    
-    ## calculate the moment 
-    def __call__ ( self , func , *args ) :
-        ##
-        args   = args if args else self.args
-        ##
+        assert isinstance ( K , integer_types ) and 0 <= K , \
+               'Invalid type/valeu for K=%s' %k
         
-        n0  = self._moment0_ (          func ,           *args ) 
-        nN  = self._momentK_ ( self.N , func , self.x0 , *args ) 
-        ##
-        return nN/n0
+        m0 = self.normalization ( func , *args )
+        mK = self.umoment ( K , func , center = center , *args )
+        return mK / float ( m0 ) 
 
-    ## print it!
-    def __str__ ( self ) :
-        return "Moment(%d,%s,%s,%s,%s)" % ( self.N    ,
-                                            self.xmin ,
-                                            self.xmax ,
-                                            self.err  ,
-                                            self.x0   )                                            
-                                            
+    # =========================================================================
+    ## get the unormalized moment
+    def umoment ( self , K , func , center  , *args ) :
+        """Get the unormalized moment
+        """
+        if 0 == K : return self.normalization ( func , *args ) 
+
+        x0  = float ( center ) 
+        fnK = lambda x , *a  : func ( x , *a ) * ( ( x - x0 ) ** K )
+        ##
+        return self.integral ( fnK , self.xmin , self.xmax , *args )
+
+    # =========================================================================
+    ## get the normalization integral within the specified range 
+    def normalization ( self, func , *args ) :
+        """get the normalization integral within the specified range 
+        """        
+        return self.integral ( func , xmin = self.xmin , xmax = self.xmax , *args )
+
+    # =========================================================================
+    ## get the mean value
+    def mean ( self , func , *args ) :
+        """Get the mean value 
+        """
+        return self.moment ( 1 , func , center = 0.0 , *args )
+    
+    # =========================================================================
+    ## get the  central moment
+    def central_moment ( self , K , func , *args ) :
+        """Get the central moment
+        """
+        ##
+        if   0 == K : return 1.0 
+        elif 1 == K : return 0.0
+        ##
+        m0 = self.normalization (     func ,                *args ) 
+        m1 = self.umoment       ( 1 , func , center = 0.0 , *args )
+        mu = float ( m1 ) / float ( m0 ) 
+        mK = self.umoment       ( K , func , center = mu  , *args )        
+        ##
+        return mK / float ( m0 )
+
+    # =========================================================================
+    ## get the standartizeds central moment
+    def std_moment ( self , K , func , *args ) :
+        """Get the standartized central moment
+        """
+        ##
+        if   0 == K : return 1.0 
+        elif 1 == K : return 0.0
+        elif 2 == K : return 1.0
+        ##
+        m0 = self.normalization (     func ,                *args ) 
+        m1 = self.umoment       ( 1 , func , center = 0.0 , *args )
+        mu = float ( m1 ) / float ( m0 ) 
+        mK = self.umoment       ( K , func , center = mu  , *args )        
+        m2 = self.umoment       ( 2 , func , center = mu  , *args )        
+        ##
+        return mK / pow ( m2 , 0.5 * K ) 
+    
+    # =========================================================================
+    ## get the variance 
+    def variance      ( self , func , *args ) :
+        """Get the  variance"""
+        return self.central_moment ( 2 , func , *args )
+
+    # =========================================================================
+    ## get the RMS
+    def rms          ( self , func , *args ) :
+        """Get the  RMS"""
+        return self.variance ( func , *args ) **0.5 
+
+    # =========================================================================
+    ## get the skewness 
+    def skewness      ( self , func , *args ) :
+        """Get the skewness"""
+        return self.std_moment ( 3 , func , *args )
+
+    # =========================================================================
+    ## get the (excess) kurtosis 
+    def kurtosis      ( self , func , *args ) :
+        """Get the (excess) kurtosis """
+        return self.std_moment ( 4 , func , *args ) - 3.0 
+    
+    # =========================================================================
+    ## integrate the function between xmin and xmax 
+    def integral ( self , func , xmin , xmax , *args ) :
+        """Integrate the function between xmin and xmax"""
+        from ostap.math.integral import IntegralCache 
+        integrator = IntegralCache ( func , xmin , err = self.err , args = args )
+        return integrator ( xmax , *args )
+
+    # ==========================================================================
+    ## calculate the median
+    def median ( self , func , *args ) :
+
+        ## need to know the integral
+        from ostap.math.integral import Integral
+
+        iint   = Integral      ( func ,  self.xmin , err = False ,  args = args )
+        half   = 2.0 / iint    ( self.xmax ) 
+
+        ifun   = lambda x : iint( x ) * half - 1.0
+
+        from ostap.math.rootfinder import findroot
+        
+        ## @see https://en.wikipedia.org/wiki/Median#Inequality_relating_means_and_medians
+        try: 
+            meanv = self.mean ( func , *args )
+            sigma = self.rms  ( func , *args )
+            import math
+            xmn   = meanv - 2 * sigma ## use 2 instead of 1 
+            xmx   = meanv + 2 * sigma ## use 2 instead of 1
+            #
+            if isinstance ( self.xmin , float ) : xmn = max ( xmn , self.xmin ) 
+            if isinstance ( self.xmax , float ) : xmx = min ( xmx , self.xmax )
+            #
+            result = findroot ( ifun , xmn       , xmx       )
+        except :
+            result = findroot ( ifun , self.xmin , self.xmax )
+            
+        return result
+
     @property
     def args ( self ) :
         "``args'' - other arguments for the function call"
@@ -189,7 +285,7 @@ class Moment(object) :
     
     @property
     def  err( self ) :
-        "``err''- evaluate the error/uncrtaity?"
+        "``err''- evaluate the error/uncertanty?"
         return self.__err
 
     @property
@@ -205,11 +301,54 @@ class Moment(object) :
     def N ( self ) :
         "``N''- the moment order"
         return self.__N
+
+# =============================================================================    
+## @class Moment
+#  Calculate the N-th moment for the distribution 
+#  @code
+#   xmin,xmax = 0,math.pi 
+#   mean  = Moment(1,xmin,xmax)  ## specify min/max
+#   value = mean  ( math.sin )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-06
+class Moment(BaseMoment) :
+    """Calculate the N-th moment for the distribution
+    
+    >>> xmin,xmax = 0,math.pi 
+    >>> mean  = Moment(1,xmin,xmax)  ## specify min/max
+    >>> value = mean  ( math.sin )
+    """
+    ## constructor
+    def __init__ ( self , N , xmin , xmax , err = False , center = 0.0 , *args ) :
+        """Contructor 
+        """
+        BaseMoment.__init__ ( self , N = N , xmin = xmin , xmax = xmax , err = err , *args )
+        self.__center = float ( center )   
+
+    # =========================================================================
+    ## The main method: get the moment of the function/distribution 
+    def __call__ ( self , func , *args ) :
+        ##
+        args   = args if args else self.args
+        ##
+        return self.moment ( self.N , func , self.__center , *args )
+
+    ## print it!
+    def __str__ ( self ) :
+        return "Moment(%d,%s,%s,%s,%s)" % ( self.N      ,
+                                            self.xmin   ,
+                                            self.xmax   ,
+                                            self.err    ,
+                                            self.center )
     @property
     def x0 ( self ) :
         "``x0''- the center"
-        return self.__x0
-    
+        return self.__center 
+    @property
+    def center ( self ) :
+        "``center''- the center (same as ``x0'')"
+        return self.__center
     
 # =============================================================================
 ## @class CentralMoment
@@ -221,7 +360,7 @@ class Moment(object) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
-class CentralMoment(Moment) :
+class CentralMoment(BaseMoment) :
     """Calculate the N-th central moment for the distribution
     
     >>> xmin,xmax = 0,math.pi 
@@ -232,21 +371,21 @@ class CentralMoment(Moment) :
     def __init__ ( self , N , xmin , xmax , err = False, *args ) :
         """Contructor 
         """
-        Moment.__init__ ( self , N , xmin , xmax , err , 0.0 , *args ) 
-
+        BaseMoment.__init__ ( self        ,
+                              N    = N    ,
+                              xmin = xmin ,
+                              xmax = xmax ,
+                              err  = err  , *args ) 
+        
     ## calculate the central moment
     def __call__ ( self , func , *args ) :
-        ## 
+        ##
         args   = args if args else self.args
         ##
-        n0  = self._moment0_ (          func ,             *args ) 
-        n1  = self._momentK_ ( 1      , func , mu = 0.0  , *args )
-        ## get mean
-        mu  = float( n1 / n0 )
-        ## use it 
-        nN  = self._momentK_ ( self.N , func , mu , *args ) 
+        if   0 == self.N : return 1.0
+        elif 1 == self.N : return 0.0
         ##
-        return nN / n0
+        return self.central_moment ( self.N , func , *args )
 
     ## print it!
     def __str__ ( self ) :
@@ -254,7 +393,48 @@ class CentralMoment(Moment) :
                                                 self.xmin ,
                                                 self.xmax ,
                                                 self.err  )
-                                                
+
+# =============================================================================
+## @class StdMoment
+#  Calculate the N-th standartizez moment for the distribution 
+#  @code
+#   xmin,xmax = 0,math.pi 
+#   mc        = StdMoment(1,xmin,xmax)  ## specify min/max
+#   value     = mome  ( math.sin )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-06
+class StdMoment(CentralMoment) :
+    """Calculate the N-th central moment for the distribution
+    
+    >>> xmin,xmax = 0,math.pi 
+    >>> mc        = CentralMoment(1,xmin,xmax)  ## specify min/max
+    >>> value     = mc  ( math.sin )    
+    """
+    ## constructor
+    def __init__ ( self , N , xmin , xmax , err = False, *args ) :
+        """Contructor 
+        """
+        CentralMoment.__init__ ( self , N = N , xmin = xmin , xmax = xmax , err = err , *args ) 
+
+    ## calculate the central moment
+    def __call__ ( self , func , *args ) :
+        ##
+        args   = args if args else self.args
+        ##
+        if   0 == self.N : return 1.0
+        elif 1 == self.N : return 0.0
+        elif 2 == self.N : return 1.0 
+        ##
+        return self.std_moment ( self.N , func , *args )
+
+    ## print it!
+    def __str__ ( self ) :
+        return "StdMoment(%d,%s,%s,%s)" % ( self.N    ,
+                                            self.xmin ,
+                                            self.xmax ,
+                                            self.err  )
+    
 # =============================================================================
 ## @class Mean
 #  Calculate the mean-value for the distribution 
@@ -274,8 +454,8 @@ class Mean(Moment) :
     
     """
     
-    def __init__ ( self , xmin , xmax , err = False ) :
-        Moment.__init__ ( self , 1 , xmin , xmax , err )
+    def __init__ ( self , xmin , xmax , err = False , *args ) :
+        Moment.__init__ ( self , N = 1 , xmin = xmin , xmax = xmax , err = err , center = 0.0 , *args )
 
     def __str__ ( self ) :
         return "Mean(%s,%s,%s)" % ( self.xmin ,
@@ -292,28 +472,15 @@ class Mean(Moment) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
-class Variance(Mean) :
+class Variance(CentralMoment) :
     """Calculate the variance for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> variance  = Variance ( xmin,xmax )  ## specify min/max
     >>> value     = variance ( math.sin  )
     """
-    def __init__ ( self , xmin , xmax , err = False ) :
-        Mean.__init__ ( self , xmin , xmax , err )
-    ## calculate the variance 
-    def __call__ ( self , func , *args ) :
-        ## 
-        args   = args if args else self.args
-        ##
-        n0 = self._moment0_ (     func ,            *args ) ## moment-0, normalization 
-        n1 = self._momentK_ ( 1 , func , mu = 0.0 , *args ) ## moment-1 
-        ##
-        mu = float(n1/n0)                                   ## mean-value        
-        ## central moment
-        m2 = self._momentK_ ( 2 , func , mu , *args )
-        ##
-        return m2/n0
-    
+    def __init__ ( self , xmin , xmax , err = False , *args ) :
+        CentralMoment.__init__ ( self , N = 2 , xmin = xmin , xmax = xmax , err = err , *args )
+
     def __str__ ( self ) :
         return "Variance(%s,%s,%s)" % ( self.xmin ,
                                         self.xmax ,
@@ -335,8 +502,8 @@ class RMS(Variance) :
     >>> rms       = RMS ( xmin,xmax )  ## specify min/max
     >>> value     = rms ( math.sin  )
     """
-    def __init__ ( self , xmin , xmax , err = False ) :
-        Variance.__init__ ( self , xmin , xmax , err )
+    def __init__ ( self , xmin , xmax , err = False , *args ) :
+        Variance.__init__ ( self , xmin = xmin , xmax = xmax , err = err , *args )
         
     ## calculate the variance 
     def __call__ ( self , func , *args ) :
@@ -365,33 +532,16 @@ class RMS(Variance) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-09
-class Skewness(Variance) :
+class Skewness(StdMoment) :
     """
     Calculate the variance for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> skew      = Skewness ( xmin,xmax )  ## specify min/max
     >>> value     = skew     ( math.sin  )
     """
-    def __init__ ( self , xmin , xmax , err = False ) :
-        Variance.__init__ ( self , xmin , xmax , err )
-    ## calculate the variance 
-    def __call__ ( self , func , *args ) :
-        ## 
-        args   = args if args else self.args
-        ##
-        n0 = self._moment0_ (     func ,          *args ) ## norm
-        n1 = self._momentK_ ( 1 , func , mu = 0 , *args ) ## m1
-        ## get mean-value 
-        mu = float(n1/n0) ## mean-value
-        ## 
-        m2 = self._momentK_ ( 2 , func , mu     , *args ) ## mu2 
-        m3 = self._momentK_ ( 3 , func , mu     , *args ) ## mu3 
-        ##
-        m2 /= n0 ## normalize 
-        m3 /= n0 ## normalize
-        ##
-        return m3/(m2**(3.0/2))
-    
+    def __init__ ( self , xmin , xmax , err = False , *args ) :
+        StdMoment.__init__ ( self , N = 3 ,  xmin = xmin , xmax = xmax , err = err , *args )
+        
     def __str__ ( self ) :
         return "Skewness(%s,%s,%s)" % ( self.xmin ,
                                         self.xmax ,
@@ -408,32 +558,20 @@ class Skewness(Variance) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-09
-class Kurtosis(Skewness) :
+class Kurtosis(StdMoment) :
     """Calculate the variance for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> kurt      = Kurtosis ( xmin,xmax )  ## specify min/max
     >>> value     = kurt     ( math.sin  )
     """
-    def __init__ ( self , xmin , xmax , err = False ) :
-        Skewness.__init__ ( self , xmin , xmax , err )
+    def __init__ ( self , xmin , xmax , err = False , *args ) :
+        StdMoment.__init__ ( self , N = 4 , xmin = xmin , xmax = xmax , err = err , *args )
+        
     ## calculate the kurtosis
     def __call__ ( self , func , *args ) :
-        ## 
-        args   = args if args else self.args
         ##
-        n0 = self._moment0_ (     func ,          *args ) ## norm
-        n1 = self._momentK_ ( 1 , func , mu = 0 , *args ) ## m1
-        ## get mean-value 
-        mu = float(n1/n0) ## mean-value
-        ## 
-        m2 = self._momentK_ ( 2 , func , mu     , *args ) ## mu2 
-        m4 = self._momentK_ ( 4 , func , mu     , *args ) ## mu3 
-        ##
-        m2 /= n0 ## normalize 
-        m4 /= n0 ## normalize
-        ## 
-        return m4/(m2*m2)-3.0 
-    
+        return StdMoment.__call__ ( self , func , *args ) - 3.0 
+
     def __str__ ( self ) :
         return "Kurtosis(%s,%s,%s)" % ( self.xmin ,
                                         self.xmax ,
@@ -460,39 +598,9 @@ class Median(RMS) :
     def __init__ ( self , xmin , xmax ) :
         RMS.__init__ ( self , xmin , xmax , err = False )
         
-    ## calculate the median
-    def _median_ ( self , func , xmin , xmax , *args ) :
-
-        ## need to know the integral
-        from ostap.math.integral import Integral
-        
-        iint   = Integral      ( func ,  xmin , err = False ,  args = args )
-        half   = 2.0 / iint    ( xmax ) 
-
-        ifun   = lambda x : iint( x ) * half - 1.0
-
-        from ostap.math.rootfinder import findroot
-        
-        ## @see https://en.wikipedia.org/wiki/Median#Inequality_relating_means_and_medians
-        try: 
-            meanv = Mean . __call__ ( self , func , *args )
-            sigma = RMS  . __call__ ( self , func , *args )
-            import math
-            xmn   = meanv - 2 * sigma ## use 2 instead of 1 
-            xmx   = meanv + 2 * sigma ## use 2 instead of 1
-            #
-            if isinstance ( xmin , float ) : xmn = max ( xmn , xmin ) 
-            if isinstance ( xmax , float ) : xmx = min ( xmx , xmax )
-            #
-            result = findroot ( ifun , xmn  , xmx  )
-        except :
-            result = findroot ( ifun , xmin , xmax )
-            
-        return result
-
     ## calculate the median 
     def __call__ ( self , func , *args ) :
-        return self._median_ ( func , self.xmin , self.xmax ,  *args )
+        return self.median ( func ,  *args )
 
     def __str__ ( self ) :
         return "Median(%s,%s)" % ( self.xmin , self.xmax )
@@ -527,7 +635,7 @@ class Quantile(Median) :
     def __call__ ( self , func , *args ) :
         ##
 
-        if    0.5 == self.Q : return Median.__call__ ( self , func , *args ) 
+        if    0.5 == self.Q : return self.median ( func , *args ) 
         elif  0.0 == self.Q : return self.xmin
         elif  1.0 == self.Q : return self.xmax
 
@@ -547,8 +655,9 @@ class Quantile(Median) :
         ## make some bracketing before next step 
         while ( not isinstance ( xmn , float ) ) or ( not isinstance ( xmx , float ) ) or l>0.1 :   
         
-            l /= 2            
-            m = self._median_ ( func , xmn , xmx , *args ) 
+            l /= 2
+            mm = Median ( xmn , xmx )
+            m  = mm .median ( func , *args )
             
             if   self.Q < p :
                 xmn   = xmn 
@@ -592,16 +701,18 @@ class Mode(Median) :
     """
     def __init__ ( self , xmin , xmax ) :
         Median.__init__ ( self , xmin , xmax )
-
+        
     ## calculate the mode 
     def __call__ ( self , func , *args ) :
 
-        ## mean
-        _mean     = Mean   .__call__ ( self , func , *args )
         ## median 
-        _median   = Median .__call__ ( self , func , *args )
-        ## rms 
-        _sigma    = RMS    .__call__ ( self , func , *args )
+        _median   = self.median ( func , *args )
+
+        ## mean
+        _mean     = self.mean   ( func , *args )
+
+        ## rms
+        _sigma    = self.rms    ( func , *args )
 
         _imin = _median - 1.75 * _sigma
         _imax = _median + 1.75 * _sigma
@@ -610,16 +721,16 @@ class Mode(Median) :
         mx = min ( _imax , self.xmax )
 
         mm = Mode ( mn , mx )
-        _median   = Median.__call__ ( mm , func , *args )
-        _sigma    = RMS   .__call__ ( mm , func , *args )
+        _median   = mm.median ( func , *args )
+        _sigma    = mm.rms    ( func , *args )
         
         ## readjust the interval 
         mn        = max ( mn , _median - 1.75 * _sigma )
         mx        = min ( mx , _median + 1.75 * _sigma )
 
-        mm = Mode ( mn , mx ) 
-        _mean     = Mean  .__call__ ( mm , func , *args )
-        _median   = Median.__call__ ( mm , func , *args )
+        mm        = Mode ( mn , mx ) 
+        _mean     = mm.mean   ( func , *args )
+        _median   = mm.median ( func , *args )
 
         ## use the empirical approximation 
         _mode = 3.0 * _median - 2.0 * _mean
@@ -650,8 +761,8 @@ class Mode(Median) :
                     break
 
                 mm = Mode ( mn , mx )
-                _mean     = Mean  .__call__ ( mm , func , *args )
-                _median   = Median.__call__ ( mm , func , *args )
+                _mean     = mm.mean   ( func , *args )
+                _median   = mm.median ( func , *args )
                 _new_mode = 3.0 * _median - 2.0 * _mean
 
                 _new_fnm  = func ( _new_mode , *args ) 
@@ -1051,8 +1162,30 @@ def central_moment ( func , N , xmin = None , xmax = None , err = False ) :
     >>> fun  = ...
     >>> mom5 = central_moment ( fun , 5 , xmin = 10 , xmax = 50 )
     """
-    ## get the functions from ostap.stats.moments 
+    ## get the functions from ostap.stats.moments
+    if   0 == N : return 1
+    elif 1 == N : return 0
     actor = lambda x1,x2 : CentralMoment ( N , x1 , x2 , err ) 
+    return sp_action ( func , actor , xmin , xmax )
+
+# =============================================================================
+## get the N-th standartized moment of variable, considering function to be PDF 
+# @code 
+# >>> fun  = ...
+# >>> m5   = std_moment( fun , 5 , xmin = 10 , xmax = 50 )
+# @endcode
+# @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+# @date 2022-07-13
+def std_moment ( func , N , xmin = None , xmax = None , err = False ) :
+    """Get the standartized moment for the distribution using 
+    >>> fun  = ...
+    >>> mom5 = std_moment ( fun , 5 , xmin = 10 , xmax = 50 )
+    """
+    ## get the functions from ostap.stats.moments
+    if   0 == N : return 1
+    elif 1 == N : return 0
+    elif 2 == N : return 1
+    actor = lambda x1,x2 : StdMoment ( N , x1 , x2 , err ) 
     return sp_action ( func , actor , xmin , xmax )
 
 # =============================================================================

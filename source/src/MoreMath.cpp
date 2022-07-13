@@ -2844,7 +2844,53 @@ double Ostap::Math::H2 ( const double a  ,
   if ( a  < 0 ) { return H2 ( std::abs ( a ) , u1 , u2 ) ; }
   return 0 ;
 }
-
+// ============================================================================
+/* \f$ \left| \frac{\Gamma(x+iy)}{\Gamma(x)} \right|^2 \f$ for 
+ *  \f$  x> 0\f$.
+ *  
+ *  \f$ \left| \right|^2 = \left| \frac{1}{F(-iy,iy,x,1)}\right| \f$, where 
+ *  \f$ F(a,b,c;z)\f$ is a hypergeometrical function.
+ *
+ *  This expression appears in normalization for  the Pearson Type IV pdf 
+ *  @see J. Heinrich, "A guide to the Pearson Type IV distribution", 
+ *       CDF/MEMO/STATISTICS/PUBLIC/6820, 2004 
+ *  @see http://www-cdf.fnal.gov/physics/statistics/notes/cdf6820_pearson4.pdf
+ */
+// ============================================================================
+double Ostap::Math::pearsonIV_g2 ( const double x , const double y ) 
+{
+  if ( s_zero ( y ) ) { return 1 ; }
+  //
+  if ( x <= 0 || s_zero ( x ) ) 
+  {
+    // use GSL error reporting/handling system 
+    Ostap::Math::GSL::GSL_Error_Handler sentry ;
+    gsl_error ( "Invalid x for Ostap::Math::pearsonIV" , __FILE__ , __LINE__ , GSL_EDOM ) ;
+    return std::numeric_limits<double>::quiet_NaN() ;
+  }
+  //
+  const double y2   = y * y ;
+  const double xmin = std::max ( 2 * y2 , 10.0 ) ;
+  //
+  double xx = x ;
+  double r  = 1 ;
+  while ( xx < xmin ) 
+  {
+    const double t = y / xx++ ;
+    r *= 1 + t * t ;
+  }
+  double p = 1 ;
+  double s = 1 ;
+  double f = 0 ;
+  while ( p > s * DBL_EPSILON ) 
+  {
+    p *= y2   + f * f ;
+    p /= xx++ *   ++f ;
+    s += p ;
+  }
+  return 1 / ( r * s ) ;
+}
+// ============================================================================
 
 
 // ============================================================================

@@ -76,13 +76,14 @@ model_gauss = Models.Fit1D(
     background = background   
     )
 
-signal_gauss.sigma.setMin ( 0.1 * m.error () )
-signal_gauss.sigma.setMax ( 3.0 * m.error () )
+signal_gauss.sigma.setMin (  0.1 * m.error () )
+signal_gauss.sigma.setMax ( 10.0 * m.error () )
 
 S = model_gauss.S
 B = model_gauss.B
 
 
+stats = {} 
 # =============================================================================
 def make_print ( pdf , fitresult , title , logger = logger ) :
 
@@ -93,37 +94,66 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
     else :
         logger.info    ('%s: fit result\n%s' % ( title , table ) )
 
-    
-    ## rows = [ ( 'Parameter' , 'Value', '(Roo)Value' ) ]
+    signal = pdf.signal 
 
-    ## signal = pdf.signal 
     
-    ## row = 'mean'       , '%+.6g' % signal.get_mean  () , '%+.6g' % signal.roo_mean  ()
-    ## rows.append ( row )
-    
-    ## row = 'mode'       , '%+.3g' % signal.mode      () , ''
-    ## rows.append ( row )
-    ## row = 'median'     , '%+.3g' % signal.median    () , ''
-    ## rows.append ( row )
-    ## row = 'midpoint'   , '%+.3g' % signal.mid_point () , ''
-    ## rows.append ( row )
-    ## row = 'rms'        , '%+.6g' % signal.rms       () , '%+.6g' % signal.roo_rms  ()
-    ## rows.append ( row )    
-    ## row = 'FWHM'       , '%+.6g' % signal.fwhm      () , ''
-    ## rows.append ( row )    
-    ## row = 'skewness'   , '%+.6g' % signal.skewness  () , '%+.6g' % signal.roo_skewness  ()
-    ## rows.append ( row )    
-    ## row = 'kurtosis'   , '%+.6g' % signal.kurtosis  () , '%+.6g' % signal.roo_kurtosis  ()  
-    ## rows.append ( row )    
+    data = { 'mean'          : signal.get_mean      () ,
+             'mode'          : signal.mode          () , 
+             'median'        : signal.median        () ,
+             'rms'           : signal.rms           () ,
+             'roo_rms'       : signal.roo_rms       () ,
+             'skewness'      : signal.skewness      () ,
+             ## 'roo_mean'      : signal.roo_mean      () ,
+             ## 'roo_skewness'  : signal.roo_skewness  () ,             
+             ## 'kurtosis'      : signal.kurtosis      () ,
+             ## 'roo_kurtosis'  : signal.roo_kurtosis  ()
+             }
 
-    ## import ostap.logger.table       as     T 
-    ## table = T.table ( rows , title = title ,  prefix = '# ' )
-    ## logger.info ( 'Global features for %s\n%s' % ( title , table ) ) 
+    stats [ signal.name ]  = data 
 
     with wait ( 1 ), use_canvas ( title ) : 
         pdf.draw (  dataset0 )
+    
+    
+# =============================================================================
+def dump_peaks ()  :
+    
+    header = ( 'Model'         , 
+               'mean'          , 
+               'mode'          , 
+               'median'        , 
+               'rms'           , 
+               'skewness'      , 
+               'kurtosis'      ,
+               ## '(roo) mean'    , 
+               ## '(roo)rms'      , 
+               ## '(roo)skewness' , 
+               ## '(roo)kurtosis'
+               )
+               
+    rows = [ header ] 
+    for key in sorted ( stats.keys() ) :
+
+        data = stats[key]
         
-    ### models.add ( pdf )
+        row = ( key , 
+                '%+.6g' % data['mean'    ] ,
+                '%+.6g' % data['mode'    ] ,
+                '%+.6g' % data['median'  ] , 
+                '%+.6g' % data['rms'     ] ,
+                '%+.6g' % data['skewness'] ,
+                '%+.6g' % data['kurtosis'] ,
+                ## '%+.5g' % data['roo_mean'    ] , 
+                ## '%+.5g' % data['roo_rms'     ] , 
+                ## '%+.5g' % data['roo_skewness'] , 
+                ## '%+.5g' % data['roo_kurtosis']
+                ) 
+        rows.append ( row )
+
+    title = 'Global features for the peaking models'
+    import ostap.logger.table       as     T 
+    table = T.table ( rows , title = title ,  prefix = '# ' )
+    logger.info ( 'Global features for %s\n%s' % ( title , table ) ) 
     
 # =============================================================================
 ## gauss PDF
@@ -176,6 +206,7 @@ def test_crystalball () :
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
         model.signal.alpha.release()
+        model.signal.n    .release()
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         
@@ -205,9 +236,12 @@ def test_crystalball_RS () :
     model.S = NS 
     model.B = NB
     
+    model.signal.n.fix(8)
+
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
         model.signal.alpha.release()
+        model.signal.n    .release()
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         
@@ -337,6 +371,7 @@ def test_apollonios2() :
     with rooSilent() :
         result, frame = model. fitTo ( dataset0 , silent = True )
         model.signal.asym.release ()
+        model.signal.mean.release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model, result , 'Apollonios2 model' , logger )
@@ -432,7 +467,9 @@ def test_gengauss_v1 () :
         result, frame = model. fitTo ( dataset0 , silent = True )
         model.signal.alpha.release()
         result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.beta .release() 
         model.signal.mean .release() 
+        result, frame = model . fitTo ( dataset0 , silent = True )
         result, frame = model . fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , 'Generalized Gaussian V1 model' , logger )
@@ -462,7 +499,7 @@ def test_gengauss_v2 () :
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
-        model.signal.mean.release() 
+        model.signal.kappa.release() 
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
@@ -649,24 +686,27 @@ def test_PearsonIV () :
                                         xvar      = mass                ,
                                         mu        = signal_gauss.mean   ,
                                         varsigma  = signal_gauss.sigma  ,
-                                        n         = ( 30 , 1.e-6 , 100 ) , 
-                                        kappa     = ( 0  , -0.1 , 0.1  ) ) ,
+                                        n         = ( 10 ,  1   , 500 ) , 
+                                        kappa     = ( 0  , -100 , 100 ) ) ,
         background = background   ,
         S = S , B = B ,
         )
 
-    
+
+    signal = model.signal 
     model.S = NS 
     model.B = NB
-    
-    signal_gauss.mean .fix ( m.value() )
-    model.signal.kappa.fix ( 0 )
+
+    model.signal.kappa.fix (   0 )
+    model.signal.n.fix     ()
+    signal.mu    .fix      ( 3.1 )  
     with rooSilent() :
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
-        model.signal.kappa.release ()
-        model.signal.mu   .release () 
+        signal.sigma .release ()
+        signal.n     .release () 
         result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.kappa .release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Pearson Type IV distribution" , logger )        
@@ -1573,6 +1613,7 @@ if '__main__' == __name__ :
     with timing ('test_db'             , logger ) :
         test_db ()
 
+    dump_peaks () 
 
 
          

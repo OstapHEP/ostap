@@ -657,10 +657,12 @@ class FUNC(XVar) :
         """
         fun         = self.fun
         
-        if self.xminmax() : 
+        if self.xminmax() :
+            
             xmin , xmax = self.xminmax()
             xmin = kwargs.pop ( 'xmin' , xmin )
             xmax = kwargs.pop ( 'xmax' , xmax )
+            
         else : 
             xmin = kwargs.pop ( 'xmin' , None )
             xmax = kwargs.pop ( 'xmax' , None )
@@ -673,9 +675,9 @@ class FUNC(XVar) :
             ff = fun.function()
             if   hasattr  ( fun , 'setPars'   ) : fun.setPars()             
         else :
-            ff = PDF_fun  ( fun , self.xvar , xmin , xmax )
-            
-        return funcall ( ff , xmin , xmax , *args , **kwargs )
+            ff = PDF_fun  ( fun , self.xvar , xmin = xmin , xmax = xmax )
+
+        return funcall ( ff , xmin = xmin , xmax = xmax , *args , **kwargs )
 
     # ========================================================================
     ## get the effective Full Width at Half Maximum
