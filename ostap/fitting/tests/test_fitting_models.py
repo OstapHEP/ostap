@@ -581,6 +581,41 @@ def test_qgauss () :
     models.add ( model )
 
 # =============================================================================
+## Novosibirs
+# =============================================================================
+def test_novosibirsk () :
+    
+    logger = getLogger ( 'test_novosibirsk' )
+
+    logger.info ('Test Bukin_pdf: Novisibirsk function: asymmetric tail' ) 
+    model = Models.Fit1D (
+        signal = Models.Novosibirsk_pdf ( name  = 'Novosibirsk' ,
+                                          xvar  = mass    ,
+                                          tau   = ( 0 , -1 , 1 ) ,
+                                          mean  = signal_gauss.mean  , 
+                                          sigma = signal_gauss.sigma ) ,
+        background = background   ,
+        S = S , B = B 
+        )
+    
+    model.signal.mean .fix  ( m.value() )
+    model.signal.sigma.fix  ( m.error() )
+    model.S = NS 
+    model.B = NB 
+    
+    with rooSilent() : 
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.tau .release()     
+        model.signal.mean .release() 
+        model.signal.sigma.release() 
+        result , frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        
+    make_print ( model , result , 'Novisibirsk model' , logger )        
+
+    models.add ( model )
+
+# =============================================================================
 ## Bukin
 # =============================================================================
 def test_bukin() :
@@ -1539,10 +1574,14 @@ if '__main__' == __name__ :
     with timing ('test_qgauss'         , logger ) :
         test_qgauss         () 
 
-    ## Bukin - skew Gaussian core with exponential tails  + background         
+    ## Novisibirsk + background
+    with timing ('test_novosibirsk'          , logger ) :
+        test_novosibirsk     ()
+
+            ## Bukin - skew Gaussian core with exponential tails  + background         
     with timing ('test_bukun'          , logger ) :
         test_bukin          ()
-        
+
     ## Student-t shape                           + background 
     with timing ('test_studentT'       , logger ) :
         test_studentT       () 

@@ -33,6 +33,7 @@ Empricial PDFs to describe narrow peaks
   - generalized normal v1 
   - generalized normal v2
   - skew Gaussian  (temporarily removed)
+  - Novosibirsk,
   - Bukin,
   - Student-T
   - bifurcated Student-T
@@ -84,13 +85,14 @@ __all__ = (
     'CrystalBallRS_pdf'      , ## right-side Crystal-ball function
     'CB2_pdf'                , ## double-sided Crystal Ball function    
     'Needham_pdf'            , ## Needham function for J/psi or Y fits 
-    'Apollonios_pdf'          , ## Apollonios function         
-    'Apollonios2_pdf'         , ## Apollonios function         
+    'Apollonios_pdf'         , ## Apollonios  function         
+    'Apollonios2_pdf'        , ## Apollonios2 function         
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
     'DoubleGauss_pdf'        , ## double Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
     'GenGaussV2_pdf'         , ## generalized normal v2 
     'SkewGauss_pdf'          , ## skewed gaussian (temporarily removed)
+    'Novosibirsk_pdf'        , ## Novosibirsk PDF
     'Bukin_pdf'              , ## generic Bukin PDF: skewed gaussian with exponential tails
     'StudentT_pdf'           , ## Student-T function 
     'BifurcatedStudentT_pdf' , ## bifurcated Student-T function
@@ -1274,7 +1276,83 @@ class SkewGauss_pdf(PEAK) :
     def alpha ( self, value ) :
         self.set_value ( self.__alpha , value ) 
 
-models.append ( SkewGauss_pdf )      
+models.append ( SkewGauss_pdf )
+
+
+# =============================================================================
+## @class Novosibirsk_pdf
+#  Novosibirsk-function for description of gaussian with tails
+#  @see H.Ikeda et al., 'A detailed test of the CsI(Tl) calorimeter 
+#      for BELLE with photon beams of energy between 20MeV and 5.4 GeV',
+#       Nucl. Instrum. Meth. A441, (2000) 401.
+#  @see DOI: 10.1016/S0168-9002(99)00992-4
+#  @see https://inspirehep.net/literature/508223 
+#  @see https://doi.org/10.1016/S0168-9002(99)00992-4
+#
+#  \f$ f(x;\mu,\sigma,\tau) = \frac{1}{\sqrt{2\pi}\sigma}
+#  \mathrm{e}^{  -\frac{1}{2} \frac { \log^2 \left( 1 + \Lambda \tau \delta \right) }{\tau^2} 
+#                -\frac{\tau^2}{2} } \f$
+#  where
+#  - \f$ \delta  = \frac{ x - \mu}{\sigma}\f$ 
+#  - \f$ \Lambda = \frac{  \sinh{ \tau \sqrt{\log 4}} }{\tau\sqrt{\log 4 }}\f$ 
+class Novosibirsk_pdf(PEAK) :
+    """Novosibirsk-function for description of gaussian with tails
+    - see H.Ikeda et al., 'A detailed test of the CsI(Tl) calorimeter 
+    for BELLE with photon beams of energy between 20MeV and 5.4 GeV',
+    Nucl. Instrum. Meth. A441, (2000) 401.
+    - see DOI: 10.1016/S0168-9002(99)00992-4
+    - see https://inspirehep.net/literature/508223 
+    - see https://doi.org/10.1016/S0168-9002(99)00992-4
+    """
+    def __init__ ( self          ,
+                   name          ,
+                   xvar          , 
+                   mean   = None ,
+                   sigma  = None ,
+                   tau    = 0    ) : ## tails/&asymmety
+        
+        #
+        ## initialize the base
+        # 
+        PEAK.__init__  ( self , name  , xvar , mean , sigma )
+        #
+        ## treat the specific parameters
+
+        ## tail&asymmetry 
+        self.__tau = self.make_var ( tau                    ,
+                                     "tau_%s"        % name ,
+                                     "#tau(%s)"      % name ,
+                                     True , 0  , -2 , 2 )
+        # 
+        ## create PDF
+        # 
+        self.pdf = Ostap.Models.Novosibirsk  (
+            self.roo_name ( 'novo_' ) , 
+            "Novosibirsk %s" % self.name ,
+            self.xvar  ,
+            self.mean  ,
+            self.sigma ,
+            self.tau   )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'tau'       : self.tau
+            }
+
+    @property
+    def tau ( self ) :
+        """'tau'  : tails&asymmetry for Novosibirsk function"""
+        return self.__tau
+    @tau.setter
+    def tau ( self, value ) :
+        self.set_value ( self.__tau , value ) 
+
+models.append ( Novosibirsk_pdf )      
+
 # =============================================================================
 ## @class Bukin_pdf
 #  Bukin function, aka 'modified Novosibirsk function'

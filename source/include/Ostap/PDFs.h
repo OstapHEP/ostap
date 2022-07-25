@@ -1794,6 +1794,93 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Novosibirsk
+     *  Novosibirsk-function for description of gaussian with tails
+     *  @see H.Ikeda et al., 'A detailed test of the CsI(Tl) calorimeter 
+     *      for BELLE with photon beams of energy between 20MeV and 5.4 GeV',
+     *       Nucl. Instrum. Meth. A441, (2000) 401.
+     *  @see DOI: 10.1016/S0168-9002(99)00992-4
+     *  @see https://inspirehep.net/literature/508223 
+     *  @see https://doi.org/10.1016/S0168-9002(99)00992-4
+     *
+     *  \f$ f(x;\mu,\sigma,\tau) = \frac{1}{\sqrt{2\pi}\sigma}
+     *  \mathrm{e}^{  -\frac{1}{2} \frac { \log^2 \left( 1 + \Lambda \tau \delta \right) }{\tau^2} 
+     *                -\frac{\tau^2}{2} } \f$
+     *  where 
+     *  - \f$ \delta  = \frac{ x - \mu}{\sigma}\f$ 
+     *  - \f$ \Lambda = \frac{  \sinh{ \tau \sqrt{\log 4}} }{\tau\sqrt{\log 4 }}\f$ 
+     *
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     */
+    class  Novosibirsk : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Novosibirsk, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      Novosibirsk
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          peak      ,   // peak position
+        RooAbsReal&          sigma     ,   // "width"
+        RooAbsReal&          tau       ) ; // tail/asymmetry pareamneter
+      /// "copy" constructor
+      Novosibirsk ( const Novosibirsk& right , const char* name = 0  ) ;
+      /// virtual destructor
+      virtual ~Novosibirsk () ;
+      /// clone
+      Novosibirsk * clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Novosibirsk () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Novosibirsk& function    () const { return m_novosibirsk ; }
+      const Ostap::Math::Novosibirsk& novosibirsk () const { return m_novosibirsk ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x      {} ;
+      RooRealProxy m_peak   {} ;
+      RooRealProxy m_sigma  {} ;
+      RooRealProxy m_tau    {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Novosibirsk m_novosibirsk ;          // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Bukin
      *  "Bukin"-function, aka "Modified Novosibirsk function"
      *  @see http://arxiv.org/abs/1107.5751
@@ -1856,7 +1943,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Bukin& function() const { return m_bukin ; }
+      const Ostap::Math::Bukin& function () const { return m_bukin ; }
+      const Ostap::Math::Bukin& bukin    () const { return m_bukin ; }
       // ======================================================================
     protected:
       // ======================================================================

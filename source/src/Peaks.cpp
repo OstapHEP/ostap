@@ -1495,16 +1495,13 @@ std::size_t Ostap::Math::Bukin::tag () const
  */
 // ============================================================================
 Ostap::Math::Novosibirsk::Novosibirsk
-( const double m0         ,
-  const double sigma      ,
-  const double tau        )
+( const double m0    ,
+  const double sigma ,
+  const double tau   )
   : m_m0        ( m0                   )
   , m_sigma     ( std::fabs ( sigma )  )
-  , m_tau       ( std::tanh ( tau   )  )
-//
-  , m_lambda    ( 0.0   )
-//
-  , m_integral  ( -1000 )
+  , m_tau       (             tau      )
+    //
   , m_workspace ()
 {
   //
@@ -1520,11 +1517,8 @@ Ostap::Math::Novosibirsk::~Novosibirsk() {}
 // ============================================================================
 bool Ostap::Math::Novosibirsk::setM0    ( const double value )
 {
-  //
   if ( s_equal ( m_m0 ,  value ) ) { return false ; }
-  //
   m_m0 = value ;
-  //
   return true ;
 }
 // ============================================================================
@@ -1532,12 +1526,9 @@ bool Ostap::Math::Novosibirsk::setM0    ( const double value )
 // ============================================================================
 bool Ostap::Math::Novosibirsk::setSigma ( const double value )
 {
-  const double value_ = std::fabs ( value ) ;
-  if ( s_equal ( value_ , m_sigma ) ) { return false ; }
-  //
-  m_sigma    = value_ ;
-  m_integral = -1000 ;
-  //
+  const double avalue = std::fabs ( value ) ;
+  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  m_sigma    = value ;
   return true ;
 }
 // ============================================================================
@@ -1545,15 +1536,9 @@ bool Ostap::Math::Novosibirsk::setSigma ( const double value )
 // ============================================================================
 bool Ostap::Math::Novosibirsk::setTau ( const double value )
 {
-  //
-  const double value_ = std::tanh ( value )   ;
-  if ( s_equal ( value_ , m_tau ) ) { return false ; }
-  //
-  m_tau      = value_ ;
-  m_integral = -1000 ;
-  //
+  if ( s_equal ( value , m_tau ) ) { return false ; }
+  m_tau      = value ;
   m_lambda   = x_sinh ( m_tau * s_Novosibirsk ) ;
-  //
   return true ;
 }
 // ============================================================================
@@ -1561,18 +1546,13 @@ bool Ostap::Math::Novosibirsk::setTau ( const double value )
 // ============================================================================
 double Ostap::Math::Novosibirsk::pdf  ( const double x ) const
 {
-  //
   const double dx     = ( x - m_m0 ) / m_sigma ;
-  //
   const double arg    = m_lambda * dx * m_tau ;
-  //
   if ( arg <= -1 || s_equal ( arg , -1 ) ) { return 0 ; } // RETURN
-  //
   const double l      =  x_log ( arg ) * m_lambda * dx ;
+  const double result = l * l ; // + m_tau * m_tau ;
   //
-  const double result = l * l  + m_tau * m_tau ;
-  //
-  return  my_exp ( -0.5 * result ) ;
+  return  my_exp ( -0.5 * result ) * s_SQRT2PIi / m_sigma ;
 }
 // =========================================================================
 // get the integral between low and high limits
@@ -1588,33 +1568,41 @@ double Ostap::Math::Novosibirsk::integral
   //
   // split into reasonable sub intervals
   //
-  const double x1     = m_m0 - 10 * m_sigma  ;
-  const double x2     = m_m0 + 10 * m_sigma  ;
+  if ( low <  m_m0  && m_m0 < high ) { return integral ( low , m_m0 ) + integral ( m_m0 , high ) ; }
+  //
+  {
+    const double x1 = m_m0 +  3 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_m0 -  3 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }
+  //
+  {
+    const double x1 = m_m0 +  5 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_m0 -  5 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }  
+  //
+  {
+    const double x1 = m_m0 + 10 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_m0 - 10 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }
+  //
+  {
+    const double x1 = m_m0 + 15 * m_sigma ;
+    if ( 0 < m_tau && low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_m0 - 15 * m_sigma ;
+    if ( 0 > m_tau && low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }
+  //
+  const double x1     = m_m0 - 15 * m_sigma  ;
+  const double x2     = m_m0 + 15 * m_sigma  ;
   const double x_low  = std::min ( x1 , x2 ) ;
   const double x_high = std::max ( x1 , x2 ) ;
   //
-  if      ( low < x_low  && x_low < high )
-  {
-    return
-      integral (   low , x_low  ) +
-      integral ( x_low ,   high ) ;
-  }
-  else if ( low <  x_high && x_high < high )
-  {
-    return
-      integral (   low  , x_high  ) +
-      integral ( x_high ,   high  ) ;
-  }
-  //
-  // split, if the interval is too large
-  //
-  const double width = std::max ( std::abs  ( m_sigma )  , 0.0 ) ;
-  if ( 0 < width &&  3 * width < high - low  )
-  {
-    return
-      integral ( low                   , 0.5 *  ( high + low ) ) +
-      integral ( 0.5 *  ( high + low ) ,          high         ) ;
-  }
   //
   // use GSL to evaluate the integral
   //
@@ -1645,24 +1633,14 @@ double Ostap::Math::Novosibirsk::integral
 // =========================================================================
 double Ostap::Math::Novosibirsk::integral () const
 {
-  if ( m_integral <= 0 )
-  {
-    Novosibirsk* novosibirsk = const_cast<Novosibirsk*> ( this ) ;
-    novosibirsk -> integrate() ;
-  }
   //
-  return m_integral ;
-}
-// ============================================================================
-// calculate  the integral
-// =========================================================================
-void Ostap::Math::Novosibirsk::integrate()
-{
+  if ( s_zero ( m_tau ) ) { return 1 ; }
   //
-  const double x1     = m_m0 - 10 * m_sigma ;
-  const double x2     = m_m0 + 10 * m_sigma ;
-  const double x_low  = std::min ( x1 , x2 ) ;
-  const double x_high = std::max ( x1 , x2 ) ;
+  const double tau1 = std::max ( 1.0 , std::abs ( m_tau ) ) ;
+  const double tau2 = 1 ;
+  //
+  const double x_low  = m_m0 - ( 0 <= m_tau ?  5 * tau2 : 15 * tau1 ) * m_sigma ;
+  const double x_high = m_m0 + ( 0 <= m_tau ? 15 * tau1 :  5 * tau2 ) * m_sigma ;
   //
   // use GSL to evaluate the tails:
   //
@@ -1700,8 +1678,8 @@ void Ostap::Math::Novosibirsk::integrate()
       s_message2          , 
       __FILE__ , __LINE__ ) ;
   //
-  m_integral = result1 + result2 + integral ( x_low ,  x_high ) ;
-  //
+  return result1 + result2 + integral ( x_low ,  x_high ) ;
+  //  
 }
 // ============================================================================
 // get the tag 

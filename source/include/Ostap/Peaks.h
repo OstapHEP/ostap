@@ -878,7 +878,21 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class Novosibirsk
-     *  ``Novosibirsk-function'' for description of gaussian with tails
+     *  Novosibirsk-function for description of gaussian with tails
+     *  @see H.Ikeda et al., 'A detailed test of the CsI(Tl) calorimeter 
+     *      for BELLE with photon beams of energy between 20MeV and 5.4 GeV',
+     *       Nucl. Instrum. Meth. A441, (2000) 401.
+     *  @see DOI: 10.1016/S0168-9002(99)00992-4
+     *  @see https://inspirehep.net/literature/508223 
+     *  @see https://doi.org/10.1016/S0168-9002(99)00992-4
+     *
+     *  \f$ f(x;\mu,\sigma,\tau) = \frac{1}{\sqrt{2\pi}\sigma}
+     *  \mathrm{e}^{  -\frac{1}{2} \frac { \log^2 \left( 1 + \Lambda \tau \delta \right) }{\tau^2} 
+     *                -\frac{\tau^2}{2} } \f$
+     *  where 
+     *  - \f$ \delta  = \frac{ x - \mu}{\sigma}\f$ 
+     *  - \f$ \Lambda = \frac{  \sinh{ \tau \sqrt{\log 4}} }{\tau\sqrt{\log 4 }}\f$ 
+     *
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
@@ -926,36 +940,28 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the tag 
       std::size_t tag () const ;
       // ======================================================================
-    private: // recalculate constants
-      // ======================================================================
-      /// recalculate integral
-      void integrate () ; // recalculate integral
-      /// get parameter lambda
-      void getLambda () ; // get parameter lambda
-      // ======================================================================
     private: // parameters
       // ======================================================================
       /// the peak position
-      double m_m0      ;      //                              the peak position
+      double m_m0      { 0 } ; //                            the peak position
       /// the effective resolution
-      double m_sigma   ;      //                       the effective resolution
+      double m_sigma   { 1 } ; //                     the effective resolution
       /// the tail parameter
-      double m_tau     ;      //                             the tail parameter
+      double m_tau     { 0 } ; //                           the tail parameter
       // ======================================================================
     private: // internals
       // ======================================================================
       /// lambda value
-      double m_lambda    ;   // lambda value
-      // integration
-      double m_integral  ;
+      double m_lambda  { 1 } ; // lambda value
       /// workspace
       Ostap::Math::WorkSpace m_workspace ;
       // ======================================================================

@@ -2354,6 +2354,97 @@ Double_t Ostap::Models::Bukin::analyticalIntegral
 }
 // ============================================================================
 
+
+
+
+// ============================================================================
+//         Novosibirsk
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Novosibirsk::Novosibirsk
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         , 
+  RooAbsReal&          peak      , 
+  RooAbsReal&          sigma     , 
+  RooAbsReal&          tau       ) 
+  : RooAbsPdf ( name , title ) 
+//
+  , m_x       ( "!x"       , "Observable" , this , x      ) 
+  , m_peak    ( "!peak"    , "peak"       , this , peak   ) 
+  , m_sigma   ( "!sigma"   , "sigma"      , this , sigma  )
+  , m_tau     ( "!tau"     , "tau"        , this , tau    )
+//
+  , m_novosibirsk ( 1 , 1 , 0 ) 
+{
+  //
+  setPars () ;
+  //
+} 
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Novosibirsk::Novosibirsk
+( const Ostap::Models::Novosibirsk& right  , 
+  const char*                       name   ) 
+  : RooAbsPdf ( right , name ) 
+//
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_peak   ( "!peak"   , this , right.m_peak   ) 
+  , m_sigma  ( "!sigma"  , this , right.m_sigma  ) 
+  , m_tau    ( "!tau"    , this , right.m_tau     ) 
+//
+  , m_novosibirsk ( right.m_novosibirsk ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::Novosibirsk::~Novosibirsk(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Novosibirsk*
+Ostap::Models::Novosibirsk::clone( const char* name ) const 
+{ return new Ostap::Models::Novosibirsk(*this,name) ; }
+// ============================================================================
+void Ostap::Models::Novosibirsk::setPars () const 
+{
+  m_novosibirsk.setPeak   ( m_peak  ) ;
+  m_novosibirsk.setSigma  ( m_sigma ) ;
+  m_novosibirsk.setTau    ( m_tau   ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Novosibirsk::evaluate() const 
+{
+  setPars () ;
+  return m_novosibirsk   ( m_x     ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Novosibirsk::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Novosibirsk::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  setPars() ;
+  return m_novosibirsk.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
   
 // ============================================================================
 // constructor from all parameters 
@@ -8075,7 +8166,7 @@ ClassImp(Ostap::Models::Flatte             )
 ClassImp(Ostap::Models::LASS               ) 
 ClassImp(Ostap::Models::Voigt              ) 
 ClassImp(Ostap::Models::PseudoVoigt        ) 
-// ClassImp(Ostap::Models::Swanson            ) 
+// ClassImp(Ostap::Models::Swanson         ) 
 ClassImp(Ostap::Models::CrystalBall        ) 
 ClassImp(Ostap::Models::CrystalBallRS      ) 
 ClassImp(Ostap::Models::CrystalBallDS      ) 
@@ -8086,6 +8177,7 @@ ClassImp(Ostap::Models::BifurcatedGauss    )
 ClassImp(Ostap::Models::GenGaussV1         ) 
 ClassImp(Ostap::Models::GenGaussV2         ) 
 ClassImp(Ostap::Models::SkewGauss          ) 
+ClassImp(Ostap::Models::Novosibirsk        ) 
 ClassImp(Ostap::Models::Bukin              ) 
 ClassImp(Ostap::Models::StudentT           ) 
 ClassImp(Ostap::Models::BifurcatedStudentT ) 
