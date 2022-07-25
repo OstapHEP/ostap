@@ -311,7 +311,8 @@ class VarMaker (object) :
             var = name , title if title else name , float ( var ) 
 
         ## convert sequence of values 
-        if isinstance ( var , sequence_types ) : var = tuple ( var )
+        if   isinstance ( var , ROOT.RooAbsReal ) : pass 
+        elif isinstance ( var , sequence_types  ) : var = tuple ( var )
 
         ## units form var 
         if var and isinstance ( var , tuple ) :
