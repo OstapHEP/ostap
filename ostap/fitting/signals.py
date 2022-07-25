@@ -1863,11 +1863,11 @@ class SinhAsinh_pdf(PEAK) :
         self.__epsilon = self.make_var ( epsilon ,
                                          'epsilon_%s'   % name ,
                                          '#epsilon(%s)' % name ,
-                                         None , 0 , -1000 , +1000 )
+                                         None , 0 , -100 , +100 )
         self.__delta   = self.make_var ( delta ,
                                          'delta_%s'   % name ,
                                          '#delta(%s)' % name , 
-                                         None , 1 , 1.e-6 , 1000 )
+                                         None , 1 , 1.e-6 , 100 )
         
         #
         ## finally build pdf

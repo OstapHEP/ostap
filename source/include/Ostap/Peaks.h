@@ -1909,10 +1909,11 @@ namespace Ostap
        *  @param epsilon  \f$\epsilon\f$-parameter  \f$-\infty<\epsilon<+\infty\f$
        *  @param delta    \f$\delta\f$-parameter    \f$0<\epsilon<+\infty\f$
        */
-      SinhAsinh  ( const double location  = 1   ,
-                   const double scale     = 1   ,
-                   const double epsilon   = 0   ,
-                   const double delta     = 1   ) ;
+      SinhAsinh  
+      ( const double location  = 1   ,
+        const double scale     = 1   ,
+        const double epsilon   = 0   ,
+        const double delta     = 1   ) ;
       /// destructor
       ~SinhAsinh() ;
       // ======================================================================
@@ -1932,7 +1933,6 @@ namespace Ostap
       double sigma    () const { return m_sigma   ; }
       double epsilon  () const { return m_epsilon ; }
       double delta    () const { return m_delta   ; }
-      // ======================================================================
       double peak     () const { return m_mu      ; }
       // ======================================================================
     public: // setters
@@ -1944,11 +1944,23 @@ namespace Ostap
       bool setEpsilon  ( const double value ) ;
       bool setDelta    ( const double value ) ;
       // ======================================================================
+    public : 
+      // ======================================================================
+      /// get median
+      double median   () const ;
+      /// get the mean for the distgribution
+      double mean     () const ;
+      /// get the variance for the distribution
+      double variance () const ;
+      /// get the RMS for the distribution
+      double rms      () const ;
+      // ======================================================================
     public: // integrals
       // ======================================================================
       double cdf      ( const double x    ) const ;
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================

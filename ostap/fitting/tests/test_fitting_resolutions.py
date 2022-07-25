@@ -300,6 +300,7 @@ def test_johnsonSU () :
 ## Sinh-Asinh
 # =============================================================================
 def test_sinhasinh () :
+## if 1 < 2 :
     
     logger = getLogger ( 'test_sinhasinh' )
 
@@ -308,7 +309,12 @@ def test_sinhasinh () :
     reso = ResoSinhAsinh ( 'SinhAsinh' , mass ,  
                            delta = ( 0.7 , 1.e-5 , 1000 ) )
     
+    reso.delta.fix     ( 0.73 ) 
+    reso.sigma.release () 
+    reso.sigma = 0.31
+    
     result, frame = reso. fitTo ( dataset , silent = True  )
+    reso.delta.release () 
     result, frame = reso. fitTo ( dataset , silent = True  )    
     with wait ( 1 ) , use_canvas ( 'test_sinhasinh' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )

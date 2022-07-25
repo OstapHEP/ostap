@@ -18,6 +18,7 @@
   1. sdd `std_moment` method for `PDF`
   1. mase a bypass for long standing issue with segfaults from `RooFitResult::globalCorr`
   1. Add Novosiboirsk function and PDF 
+  1. add more properties for `SinhAsinh` function 
   
 ## Backward incompatible:  
 

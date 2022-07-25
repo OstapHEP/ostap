@@ -3657,6 +3657,59 @@ double Ostap::Math::SinhAsinh::integral ( const double low  ,
   if ( s_equal ( low , high ) ) { return 0 ; }
   return cdf ( high ) - cdf ( low ) ;
 }
+// ======================================================================
+// get median
+// ======================================================================
+double Ostap::Math::SinhAsinh::median () const 
+{ return m_mu - m_sigma * std::sinh ( m_epsilon / m_delta ) ; }
+// ============================================================================
+// get the mean for the distgribution
+// ============================================================================
+double Ostap::Math::SinhAsinh::mean   () const 
+{
+  const double d1 = 0.5 * ( 1 - m_delta ) / m_delta ;
+  const double d2 = 0.5 * ( 1 - m_delta ) / m_delta ;
+  //
+  static const double s_const1 = std::pow ( std::exp ( 1 ) , 0.25 ) / std::sqrt ( 8 *M_PI ) ;
+  //
+  const double a = std::sinh ( m_epsilon / m_delta ) * s_const1 *
+    ( Ostap::Math::bessel_Knu ( d1 , 0.25 ) + 
+      Ostap::Math::bessel_Knu ( d2 , 0.25 ) ) ;
+  //
+  return m_mu - m_sigma * a ;
+}
+// ============================================================================
+// get the variance for the distribution
+// ============================================================================
+double Ostap::Math::SinhAsinh::variance () const
+{
+  //
+  const double d1 = 0.5 * ( 1 + m_delta ) / m_delta ;
+  const double d2 = 0.5 * ( 1 - m_delta ) / m_delta ;
+  //
+  static const double s_const1 = std::pow ( std::exp ( 1 ) , 0.25 ) / std::sqrt ( 8 *M_PI ) ;
+  //
+  const double a = std::sinh (     m_epsilon / m_delta ) * s_const1 *
+    ( Ostap::Math::bessel_Knu ( d1 , 0.25 ) + 
+      Ostap::Math::bessel_Knu ( d2 , 0.25 ) ) ;
+  //
+  const double p1 = 0.5 * ( 2 + m_delta ) / m_delta ;
+  const double p2 = 0.5 * ( 2 - m_delta ) / m_delta ;
+  //
+  static const double s_const2 = s_const1 / 2 ;
+  //
+  const double b = std::cosh ( 2 * m_epsilon / m_delta ) * s_const2 *
+    ( Ostap::Math::bessel_Knu ( p1 , 0.25 ) + 
+      Ostap::Math::bessel_Knu ( p2 , 0.25 ) ) ;
+  //
+  return m_sigma * m_sigma * ( b - a * a - 0.5 ) ;
+}
+// ============================================================================
+// get the RMS for the distribution
+// ============================================================================
+double Ostap::Math::SinhAsinh::rms () const
+{ return std::sqrt ( variance () ) ; }
+
 // ============================================================================
 // get the tag 
 // ============================================================================
