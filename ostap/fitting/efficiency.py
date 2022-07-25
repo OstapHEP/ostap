@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 # =============================================================================
-"""Set of useful basic utilities to fit ``efficiency''"""
+"""Set of useful basic utilities to fit 'efficiency'"""
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -20,10 +20,10 @@ __all__     = (
 # =============================================================================
 import ROOT
 from   ostap.core.core        import Ostap 
-from   ostap.fitting.funbasic import FUNC, FUNC2 , FUNC3 , Fun1D , Fun2D , Fun3D 
-from   ostap.fitting.basic    import PDF , Generic1D_pdf
-from   ostap.fitting.fit2d    import PDF2, Generic2D_pdf
-from   ostap.fitting.fit3d    import PDF3, Generic3D_pdf
+from   ostap.fitting.funbasic import FUN1 , FUN2 , FUN3 , Fun1D , Fun2D , Fun3D 
+from   ostap.fitting.pdfbasic import ( PDF1 , Generic1D_pdf ,
+                                       PDF2 , Generic2D_pdf ,
+                                       PDF3 , Generic3D_pdf )
 # =============================================================================
 # logging 
 # =============================================================================
@@ -55,7 +55,7 @@ class Efficiency ( object ) :
 
         assert eff_pdf or eff_fun ,'Function or PDF must be specified!'
         
-        assert isinstance ( cut , ROOT.RooCategory ) , "``Cut'' is not RooCategory!"
+        assert isinstance ( cut , ROOT.RooCategory ) , "'Cut' is not RooCategory!"
 
         self.__eff_pdf = eff_pdf
         self.__eff_fun = eff_fun
@@ -88,7 +88,7 @@ class Efficiency ( object ) :
             
         ## create the main PDF: RooEfficiency 
         self.__pdf =  ROOT.RooEfficiency (
-            PDF.roo_name ( 'eff_' )       ,
+            PDF1.roo_name ( 'eff_' )       ,
             "Efficiency  %s"  % self.name ,
             self.eff_fun                  ,
             self.cut                      ,
@@ -100,7 +100,7 @@ class Efficiency ( object ) :
                                              xvar  = vars[0]  ,
                                              yvar  = vars[1]  ,
                                              zvar  = vars[2]  ,
-                                             name  = PDF.generate_name ( 'eff_fit_%s'   % self.name ) ,
+                                             name  = PDF1.generate_name ( 'eff_fit_%s'   % self.name ) ,
                                              special        = True  ,
                                              add_to_signals = False )
             ## pdf-object for drawing
@@ -108,7 +108,7 @@ class Efficiency ( object ) :
                                               xvar  = vars[0]        ,
                                               yvar  = vars[1]        ,
                                               zvar  = vars[2]        ,
-                                              name  = PDF.generate_name ( 'eff_draw_%s'  % self.name ) ,
+                                              name  = PDF1.generate_name ( 'eff_draw_%s'  % self.name ) ,
                                               special        = True  ,
                                               add_to_signals = False )
         elif 2 == len (  vars ) :
@@ -116,27 +116,27 @@ class Efficiency ( object ) :
             self.__pdf_fit  = Generic2D_pdf ( pdf   = self.pdf ,
                                               xvar  = vars[0]  ,
                                               yvar  = vars[1]  ,
-                                              name  = PDF.generate_name ( 'eff_fit_%s'   % self.name ) ,
+                                              name  = PDF1.generate_name ( 'eff_fit_%s'   % self.name ) ,
                                               special        = True  ,
                                               add_to_signals = False )
             ## pdf-object for drawing
             self.__pdf_draw = Generic2D_pdf ( pdf   = self.eff_fun   ,
                                               xvar  = vars[0]        ,
                                               yvar  = vars[1]        ,
-                                              name  = PDF.generate_name ( 'eff_draw_%s'  % self.name ) ,
+                                              name  = PDF1.generate_name ( 'eff_draw_%s'  % self.name ) ,
                                               special        = True  ,
                                               add_to_signals = False )
         elif 1 == len (  vars ) :
             ## pdf-object for fit 
             self.__pdf_fit  = Generic1D_pdf ( pdf   = self.pdf ,
                                               xvar  = vars[0]  ,
-                                              name  = PDF.generate_name ( 'eff_fit_%s'   % self.name ) ,
+                                              name  = PDF1.generate_name ( 'eff_fit_%s'   % self.name ) ,
                                               special        = True  ,
                                               add_to_signals = False )
             ## pdf-object for drawing
             self.__pdf_draw = Generic1D_pdf ( pdf   = self.eff_fun   ,
                                               xvar  = vars[0]        ,
-                                              name  = PDF.generate_name ( 'eff_draw_%s'  % self.name ) ,
+                                              name  = PDF1.generate_name ( 'eff_draw_%s'  % self.name ) ,
                                               special        = True  ,
                                               add_to_signals = False )
         else :
@@ -147,17 +147,17 @@ class Efficiency ( object ) :
         
     @property 
     def name ( self ) :
-        """``name'': the name of Efficiency object"""
+        """'name' : the name of Efficiency object"""
         return self.__name
 
     @property
     def vars  ( self ) :
-        """``vars'' - list of variables (RooArgSet)"""
+        """'vars'  - list of variables (RooArgSet)"""
         return self.__vars
     
     @property 
     def scale ( self ) :
-        """``scale'': the scale factor to be applied to eff_pdf"""
+        """'scale' : the scale factor to be applied to eff_pdf"""
         return self.__scale
     @scale.setter
     def scale ( self , value ) :
@@ -166,42 +166,42 @@ class Efficiency ( object ) :
     
     @property 
     def cut ( self ) :
-        """``cut'' : RooCategory to describe ``accepted'' and ``rejected'' samples"""
+        """'cut'  : RooCategory to describe 'accepted' and 'rejected' samples"""
         return self.__cut
     
     @property 
     def accept ( self ) :
-        """``accept'' : the name of category for ``accepted'' sample"""
+        """'accept' : the name of category for 'accepted' sample"""
         return str(self.__accept)
         
     @property
     def eff_pdf ( self ) :
-        """``eff_pdf'' : efficiency PDF (could be fictive)"""
+        """'eff_pdf' : efficiency PDF (could be fictive)"""
         return  self.__eff_pdf
     
     @property
     def eff_fun ( self ) :
-        """``eff_fun'' : efficiency function"""
+        """'eff_fun' : efficiency function"""
         return  self.__eff_fun
 
     @property
     def pdf    ( self ) :
-        """``pdf''  : the actual   RooEfficiency object"""
+        """'pdf'  : the actual   RooEfficiency object"""
         return self.__pdf
 
     @property
     def pdf_fit  ( self ) :
-        """```pdf_fit'' : the actual PDF-object used for fit"""
+        """'`pdf_fit' : the actual PDF-object used for fit"""
         return self.__pdf_fit
     
     @property
     def pdf_draw ( self ) :
-        """```pdf_draw'' : the actual PDF-object used for drawing"""
+        """'`pdf_draw' : the actual PDF-object used for drawing"""
         return self.__pdf_draw 
 
     @property
     def fit_result ( self ) :
-        """``fit_result'' :  fit  results  from the last fit"""
+        """'fit_result' :  fit  results  from the last fit"""
         return self.__fit_result
     
     # =========================================================================
@@ -308,7 +308,7 @@ class Efficiency1D (Efficiency) :
     
     def __init__  ( self              ,
                     name              ,
-                    efficiency        , ## the function, FUNC or PDF 
+                    efficiency        , ## the function, FUN1 or PDF1 
                     cut               ,
                     xvar   = None     ,
                     accept = 'accept' ,
@@ -316,11 +316,11 @@ class Efficiency1D (Efficiency) :
 
         self.__eff = efficiency
         
-        if   isinstance   ( efficiency , PDF  ) :
+        if   isinstance   ( efficiency , PDF1 ) :
             eff_pdf = efficiency
             xvar    = efficiency.xvar
             eff_fun = None
-        elif isinstance   ( efficiency , FUNC ) :
+        elif isinstance   ( efficiency , FUN1 ) :
             eff_fun = efficiency.fun 
             xvar    = efficiency.xvar
             eff_pdf = None  
@@ -339,7 +339,7 @@ class Efficiency1D (Efficiency) :
     
     @property 
     def xvar ( self ) :
-        """``xvar'': the x-variable """
+        """'xvar': the x-variable """
         return self.__xvar
 
     # =========================================================================
@@ -443,11 +443,11 @@ class Efficiency2D (Efficiency) :
                     yvar   = None     ,
                     accept = 'accept' ) :
 
-        if isinstance   ( efficiency , PDF2  ) :            
+        if isinstance   ( efficiency , PDF2 ) :            
             eff_pdf = efficiency
             xvar    = efficiency.xvar
             eff_fun = None            
-        elif isinstance   ( efficiency , FUNC2 ) :
+        elif isinstance ( efficiency , FUN2 ) :
             eff_fun = efficiency.fun 
             xvar    = efficiency.xvar
             yvar    = efficiency.yvar
@@ -481,11 +481,11 @@ class Efficiency2D (Efficiency) :
 
     @property 
     def xvar ( self ) :
-        """``xvar'': the x-variable """
+        """'xvar' : the x-variable """
         return self.__xvar
     @property 
     def yvar ( self ) :
-        """``yvar'': the y-variable """
+        """'yvar' : the y-variable """
         return self.__yvar
 
     # =========================================================================
@@ -624,13 +624,13 @@ class Efficiency3D (Efficiency) :
                     zvar   = None     ,
                     accept = 'accept' ) :
 
-        if isinstance   ( efficiency , PDF3  ) :            
+        if isinstance   ( efficiency , PDF3 ) :            
             eff_pdf = efficiency
             xvar    = efficiency.xvar
             yvar    = efficiency.yvar
             zvar    = efficiency.zvar
             eff_fun = None            
-        elif isinstance   ( efficiency , FUNC3 ) :
+        elif isinstance ( efficiency , FUN3 ) :
             eff_fun = efficiency.fun 
             xvar    = efficiency.xvar
             yvar    = efficiency.yvar
@@ -662,15 +662,15 @@ class Efficiency3D (Efficiency) :
 
     @property 
     def xvar ( self ) :
-        """``xvar'': the x-variable """
+        """'xvar' : the x-variable """
         return self.__xvar
     @property 
     def yvar ( self ) :
-        """``yvar'': the y-variable """
+        """'yvar' : the y-variable """
         return self.__yvar
     @property 
     def zvar ( self ) :
-        """``zvar'': the z-variable """
+        """'zvar' : the z-variable """
         return self.__zvar
 
     # =========================================================================

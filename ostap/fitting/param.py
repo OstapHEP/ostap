@@ -39,7 +39,7 @@ class C1Fun(object) :
     """
     def __init__ ( self , fun , xmin , xmax ) :
 
-        assert callable ( fun ) , "C1Fun: ``fun'' must be callable!"
+        assert callable ( fun ) , "C1Fun: 'fun' must be callable!"
         
         self.__fun  = fun 
         self.__xmin = min ( xmin , xmax )
@@ -120,17 +120,17 @@ class C1Fun(object) :
 
     @property
     def xmin ( self ) :
-        """``xmin'' : low edge"""
+        """'xmin' : low edge"""
         return self.__xmin
     
     @property    
     def xmax ( self ) :
-        """``xmax'' : high edge"""
+        """'xmax' : high edge"""
         return self.__xmax
     
     @property
     def fun  ( self ) :
-        """``fun'' : actual callable to   use"""
+        """'fun' : actual callable to   use"""
         return self.__fun
 
     def Draw ( self , *args , **kwargs ) : return self.draw ( *args , **kwargs ) 
@@ -147,8 +147,8 @@ class HFIT(object) :
     ## constructor from hfit an dTF1 objects 
     def __init__ ( self , hfit , tf1 ) :
         
-        assert hfit and callable   ( hfit )              , "HFIT: ``hfit'' must be callable"
-        assert tf1  and isinstance ( tf1   , ROOT.TF1 )  , "HFIT: ``tf1'' must be ROOT.TF1"
+        assert hfit and callable   ( hfit )              , "HFIT: 'hfit' must be callable"
+        assert tf1  and isinstance ( tf1   , ROOT.TF1 )  , "HFIT: 'tf1'  must be ROOT.TF1"
         
         self.__hfit = hfit
         self.__fun  = tf1
@@ -168,12 +168,12 @@ class HFIT(object) :
 
     @property
     def fun  ( self ) :
-        """``fun'' : actual ROOT.TF1  object"""
+        """'fun' : actual ROOT.TF1  object"""
         return self.__fun 
 
     @property
     def hfit ( self ) :
-        """``hfin'' : actual ``hfit'' object"""
+        """'hfin' : actual `hfit' object"""
         return self.__hfit 
 
     ## get list of parameters 

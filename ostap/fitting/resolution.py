@@ -64,7 +64,9 @@ __all__     = (
 # =============================================================================
 import ROOT
 # =============================================================================
-from ostap.fitting.basic import Ostap, RESOLUTION, CheckMean 
+from ostap.core.core        import Ostap
+from ostap.fitting.pdfbasic import Generic1D_pdf 
+from ostap.fitting.fit1d    import RESOLUTION, CheckMean 
 # =============================================================================    
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.resolution' )
@@ -101,7 +103,7 @@ class ResoGauss(RESOLUTION) :
         self.__kappa = self.make_var ( ZERO if kappa is None else kappa , 
                                        'kappa_%s'   % self.name ,
                                        '#kappa(%s)' % self.name ,
-                                       ZERO if kappa is None else kappa , 0 , -1 , +1 ) 
+                                       None , 0 , -1 , +1 ) 
 
         if kappa is None :
 
@@ -154,7 +156,7 @@ class ResoGauss(RESOLUTION) :
 
     @property
     def kappa ( self ) :
-        """``kappa'' : asymmetry parameter"""
+        """'kappa' : asymmetry parameter"""
         return self.__kappa
     @kappa.setter
     def kappa ( self , value ) :
@@ -162,11 +164,11 @@ class ResoGauss(RESOLUTION) :
 
     @property
     def sigmaL ( self ) :
-        """``sigmaL'': left sigma"""
+        """'sigmaL': left sigma"""
         return self.__sigmaL
     @property
     def sigmaR ( self ) :
-        """``sigmaR'': left sigma"""
+        """'sigmaR': left sigma"""
         return self.__sigmaR
         
         
@@ -200,17 +202,17 @@ class ResoGauss2(RESOLUTION) :
                                            mean  = mean  ,
                                            fudge = fudge )
         ## fraction of sigma-1-component 
-        self.__fraction = self.make_var (
-            fraction                   , 
-            'CoreFraction_'     + name ,
-            'CoreFraction(%s)'  % name , fraction , 0 ,  1 ) 
+        self.__fraction = self.make_var ( fraction                   , 
+                                          'CoreFraction_'     + name ,
+                                          'CoreFraction(%s)'  % name ,
+                                          None , 0.75 , 0.01 ,  1 ) 
         
         ## sigma-2/sigma-1 width ratio;
-        self.__scale = self.make_var (
-            scale ,
-            'SigmaScale_'       + name ,
-            'SigmaScale(%s)'    % name , scale    , 1 , 10 ) 
-
+        self.__scale = self.make_var   ( scale ,
+                                         'SigmaScale_'       + name ,
+                                         'SigmaScale(%s)'    % name ,
+                                         None , 1.5  , 1.01 , 10 ) 
+        
         #
         ## build the resolution model
         # 
@@ -237,27 +239,26 @@ class ResoGauss2(RESOLUTION) :
 
     @property
     def fraction ( self  ) :
-        """``fraction'' parameter for double Gaussian resolution function
+        """'fraction' : fraction parameter for the double Gaussian resolution function
         """
         return self.__fraction
     @fraction.setter
     def fraction ( self , value ) :
         value = float ( value )
-        assert 0<= value <= 1, "``Fraction'' must be in  (0,1) range"
-        self.__fraction.setVal ( value )
+        assert 0 <= value <= 1, "'Fraction' must be in  (0,1) range!"
+        self.set_value ( self.__fraction , value ) 
 
     @property
     def scale ( self  ) :
-        """``scale'' parameter for double Gaussian resolution function
+        """'scale' : scale  parameter for double Gaussian resolution function
         """
         return self.__scale
     @scale.setter
     def scale ( self , value ) :
         value = float ( value )
-        assert 1 < value, "``scale''-parameter must be >1"
-        self.__scale.setVal ( value )
+        assert 1 < value, "'scale'-parameter must be larger than 1"
+        self.set_value ( self.__scale , value )
   
-            
 models.add ( ResoGauss2 ) 
 # =============================================================================
 ## @class ResoApo2
@@ -299,7 +300,8 @@ class ResoApo2(RESOLUTION) :
 
             self.__kappa = self.make_var ( kappa        ,
                                            'kappa_%s'   % self.name ,
-                                           '#kappa(%s)' % self.name , kappa , 0 , -1 , +1 ) 
+                                           '#kappa(%s)' % self.name ,
+                                           None , 0 , -1 , +1 ) 
             
             self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
                 self.sigma_corr                                   , ## mean/average sigma
@@ -309,10 +311,10 @@ class ResoApo2(RESOLUTION) :
                 v1title = '#sigma_L: #sigma #times (1+#kappa)'    , 
                 v2title = '#sigma_R: #sigma #times (1-#kappa)'    )
                 
-        self.__beta    = self.make_var (
-            beta ,
-            'beta_%s'   % name  ,
-            '#beta(%s)' % name  , beta , 0.0001 , 10000 )
+        self.__beta    = self.make_var ( beta ,
+                                         'beta_%s'   % name  ,
+                                         '#beta(%s)' % name  ,
+                                         None , 0.0001 , 10000 )
 
         #
         ## build the resolution model
@@ -341,17 +343,17 @@ class ResoApo2(RESOLUTION) :
         
     @property
     def beta ( self  ) :
-        """``beta'' parameter for symmetric Apollonios resolution function"""
+        """'beta' parameter for symmetric Apollonios resolution function"""
         return self.__beta
     @beta.setter
     def beta ( self , value ) :
         value = float ( value )
-        assert 0< value , "``beta''-parameter must be positive"
-        self.__beta.setVal ( value )
+        assert 0< value , "'beta'-parameter must be positive!"
+        self.set_value ( self.__beta , value )
 
     @property
     def kappa ( self ) :
-        """``kappa'' : asymmetry parameter
+        """'kappa' : asymmetry parameter
         """
         return self.__kappa
     @kappa.setter
@@ -360,11 +362,11 @@ class ResoApo2(RESOLUTION) :
         
     @property
     def sigmaL ( self )  :
-        """``sigmaL'' : left sigma-parameter"""
+        """'sigmaL' : left sigma-parameter"""
         return self.__sigmaL
     @property
     def sigmaR ( self )  :
-        """``sigmaR'' : right  sigma-parameter"""
+        """'sigmaR' : right  sigma-parameter"""
         return self.__sigmaR
     
 models.add ( ResoApo2 ) 
@@ -401,15 +403,15 @@ class ResoCB2(RESOLUTION) :
                                        mean  = mean  ,
                                        fudge = fudge )
         
-        self.__alpha = self.make_var (
-            alpha                  ,
-            'alpha_'     + name ,
-            '#alpha(%s)' % name , alpha , 0.05   , 10 )
+        self.__alpha = self.make_var ( alpha               ,
+                                       'alpha_'     + name ,
+                                       '#alpha(%s)' % name ,
+                                       None , 2.0 , 0.05   , 5 )
         
-        self.__n     = self.make_var (
-            n                  ,
-            'n_'         + name ,
-            'n(%s)'      % name , n     , 1.e-6 , 50 )
+        self.__n     = self.make_var ( n                  ,
+                                       'n_'         + name ,
+                                       'n(%s)'      % name ,
+                                       None , 5 , 1.e-6 , 200 )
         
         if kappaN is None :
 
@@ -421,7 +423,8 @@ class ResoCB2(RESOLUTION) :
             
             self.__kappaN = self.make_var ( kappaN                     ,
                                             'kappa_n%s'    % self.name ,
-                                            '#kappa_{n}(%s)' % self.name , kappaN , 0 , -1 , +1 ) 
+                                            '#kappa_{n}(%s)' % self.name ,
+                                            None , 0 , -1 , +1 ) 
             
             self.__nL , self.__nR = self.vars_from_asymmetry (
                 self.n                                        , ## mean/average n
@@ -441,7 +444,8 @@ class ResoCB2(RESOLUTION) :
             
             self.__kappaA = self.make_var ( kappaA                            ,
                                             'kappa_a%s'           % self.name ,
-                                            '#kappa_{#alpha}(%s)' % self.name , kappaA , 0 , -1 , +1 ) 
+                                            '#kappa_{#alpha}(%s)' % self.name ,
+                                            None , 0 , -1 , +1 ) 
             
             
             self.__alphaL , self.__alphaR = self.vars_from_asymmetry (
@@ -482,28 +486,24 @@ class ResoCB2(RESOLUTION) :
 
     @property
     def alpha ( self  ) :
-        """``alpha'' parameter for double-sided symmetric resolution function
+        """'alpha' parameter for double-sided symmetric resolution function
         """
         return self.__alpha
     @alpha.setter
     def alpha ( self , value ) :
-        value = float ( value )
-        assert 0.1<= value<=6 , "``alpha''-parameter must be in [0.1,6] interval"
         self.set_value ( self.__alpha , value  ) 
 
     @property
     def n ( self  ) :
-        """``n'' parameter for double-sided symmetric resolution function"""
+        """'n' parameter for double-sided symmetric resolution function"""
         return self.__n
     @n.setter
     def n ( self , value ) :
-        value = float ( value )
-        assert 1.e-6 <= value <= 100,  "``n'' must be in [1.e-6,100] interval"
         self.set_value ( self.__n , value  ) 
 
     @property
     def kappaN ( self ) :
-        """``kappaN'' : asymmetry for parameter ``n''
+        """'kappaN' : asymmetry for parameter 'n'
         """
         return self.__kappaN
     @kappaN.setter
@@ -512,7 +512,7 @@ class ResoCB2(RESOLUTION) :
 
     @property
     def kappaA ( self ) :
-        """``kappaA'' : asymmetry for parameter ``alpha''
+        """'kappaA' : asymmetry for parameter 'alpha'
         """
         return self.__kappaA
     @kappaA.setter
@@ -521,24 +521,24 @@ class ResoCB2(RESOLUTION) :
 
     @property
     def nL ( self ) :
-        """``nL'' : parameter ``n'' for left tail
+        """'nL' : parameter 'n' for left tail
         """
         return self.__nL
     @property
     def nR ( self ) :
-        """``nR'' : parameter ``n'' for right tail
+        """'nR' : parameter 'n' for right tail
         """
         return self.__nR
 
     @property
     def alphaL ( self ) :
-        """``alphaL'' : parameter ``alpha'' for left tail
+        """'alphaL' : parameter 'alpha' for left tail
         """
         return self.__alphaL
 
     @property
     def alphaR ( self ) :
-        """``alphaR'' : parameter ``alpha'' for right tail
+        """'alphaR' : parameter 'alpha' for right tail
         """
         return self.__alphaR
 
@@ -582,21 +582,21 @@ class ResoStudentT(RESOLUTION) :
         
         self.__n     = self.make_var ( n                      ,
                                        'ResoN_'        + name ,
-                                       'ResoN(%s)'     % name , n , 1 , 1.e-6 , 100 )
+                                       'ResoN(%s)'     % name ,
+                                       None , 1 , 1.e-6 , 200 )
 
         if kappaN is None :
 
             self.__kappaN = ZERO 
             self.__nL     = self.n
-            slef.__nR     = self.n
+            self.__nR     = self.n
 
         else :
             
             self.__kappaN = self.make_var ( ZERO if kappaN is None else kappaN ,
                                             "kappaN_%s"      % name ,
                                             "#kappa_{n}(%s)" % name ,
-                                            ZERO if kappaN is None else kappaN ,
-                                            0 , -1 , 1 )
+                                            None , 0 , -1 , 1 )
             
             self.__nL , self.__nR = self.vars_from_asymmetry (
                 self.n                                        , ## mean/average n
@@ -663,17 +663,15 @@ class ResoStudentT(RESOLUTION) :
         
     @property
     def n ( self  ) :
-        """``n'' parameter for symmetric Student-T resolution function"""
+        """'n' parameter for symmetric Student-T resolution function"""
         return self.__n
     @n.setter
     def n ( self , value ) :
-        value = float ( value )
-        assert 1.e-5 <= value , "``n'' must be positive!"
-        self.__n.setVal ( value )
+        self.set_value ( self.__n , value ) 
 
     @property
     def kappaN ( self  ):
-        """``kappaN'' : asymmetry for ``n''-parameter"""
+        """'kappaN' : asymmetry for 'n'-parameter"""
         return self.__kappaN
     @kappaN.setter
     def kappaN ( self , value ) :
@@ -681,7 +679,7 @@ class ResoStudentT(RESOLUTION) :
 
     @property
     def kappaS ( self  ):
-        """``kappaS'' : asymmetry for ``sigma''-parameter"""
+        """'kappaS' : asymmetry for 'sigma'-parameter"""
         return self.__kappaS
     @kappaS.setter
     def kappaS ( self , value ) :
@@ -689,20 +687,20 @@ class ResoStudentT(RESOLUTION) :
 
     @property
     def nL ( self ) :
-        """``nL'' : ``n''parameter for left  part"""
+        """'nL' : 'n'-parameter for left  part"""
         return self.__nL        
     @property
     def nR ( self ) :
-        """``nR'' : ``n''parameter for right part"""
+        """'nR' : 'n'-parameter for right part"""
         return self.__nR
 
     @property
     def sigmaL ( self ) :
-        """``sigmaL'' : ``sigma''parameter for left  part"""
+        """'sigmaL' : 'sigma'-parameter for left  part"""
         return self.__sigmaL        
     @property
     def sigmaR ( self ) :
-        """``sigmaR'' : ``sigma''parameter for right part"""
+        """'sigmaR' : 'sigma'-parameter for right part"""
         return self.__sigmaR        
     
     
@@ -796,18 +794,19 @@ class ResoBukin (RESOLUTION) :
         self.__xi = self.make_var ( ZERO if xi is None else xi ,
                                     "xi_%s"   % name ,
                                     "#xi(%s)" % name ,
-                                    ZERO if xi is None else xi , 0 , -10 , +10 )
+                                    None , 0 , -10 , +10 )
         
         ## rho 
         self.__rho = self.make_var   ( rho               ,
                                        "rho_%s"   % name ,
-                                       "#rho(%s)" % name , rho , 0 , 0 , 25 )        
+                                       "#rho(%s)" % name ,
+                                       None , 0 , -1 , 25 )        
         
         ## parameter 
         self.__kappa = self.make_var ( ZERO if kappa is None else kappa ,
                                        "kappa_%s"          % name ,
                                        "#kappa_{#rho}(%s)" % name ,
-                                       ZERO if kappa is None else kappa , 0 , -1 , +1 )
+                                       None , 0 , -1 , +1 )
         
         if kappa is None :
 
@@ -851,7 +850,7 @@ class ResoBukin (RESOLUTION) :
 
     @property
     def xi ( self ) :
-        """``xi''-parameter (asymmetry) for Bukin function"""
+        """'xi'-parameter (asymmetry) for Bukin function"""
         return self.__xi
     @xi.setter
     def xi ( self , value ) :
@@ -859,7 +858,7 @@ class ResoBukin (RESOLUTION) :
     
     @property
     def rho ( self ) :
-        """``rho''-parameter (tail) for Bukin function"""
+        """'rho'-parameter (tail) for Bukin function"""
         return self.__rho
     @rho.setter
     def rho ( self , value ) :
@@ -867,7 +866,7 @@ class ResoBukin (RESOLUTION) :
 
     @property
     def kappa ( self ) :
-        """``kappa''-parameter (tail asymmetry)  for Bukin function"""
+        """'kappa'-parameter (tail asymmetry)  for Bukin function"""
         return self.__kappa
     @kappa.setter
     def kappa ( self , value ) :
@@ -875,11 +874,11 @@ class ResoBukin (RESOLUTION) :
 
     @property
     def rhoL ( self ) :
-        """``rhoL''-parameter (left tail) for Bukin function"""
+        """'rhoL'-parameter (left tail) for Bukin function"""
         return self.__rhoL
     @property
     def rhoR ( self ) :
-        """``rhoR''-parameter (right tail) for Bukin function"""
+        """'rhoR'-parameter (right tail) for Bukin function"""
         return self.__rhoR
 
 # =============================================================================
@@ -941,13 +940,12 @@ class ResoJohnsonSU(RESOLUTION) :
         self.__gamma = self.make_var ( ZERO if gamma is None else gamma , 
                                        'gamma_%s'     % name ,
                                        '#gamma(%s)'   % name ,
-                                       ZERO if gamma is None else gamma ,                                        
-                                       0 , -1000 , 1000 ) 
+                                       None , 0 , -1000 , 1000 ) 
         
         self.__delta = self.make_var ( delta                 ,
                                        'delta_%s'     % name ,
-                                       '#delta(%s)'   % name , delta ,
-                                       1 , 1.e-6 , 1000   )
+                                       '#delta(%s)'   % name ,
+                                       None , 1 , 1.e-6 , 1000 )
         
         #
         ## finally build pdf
@@ -974,17 +972,16 @@ class ResoJohnsonSU(RESOLUTION) :
 
     @property
     def delta ( self ) :
-        """``delta''-parameter for Johnson-SU function"""
+        """'delta'-parameter for Johnson-SU function"""
         return self.__delta
     @delta.setter
     def delta ( self, value ) :
         value = float ( value )
-        assert   0 < value, "``delta''-parameter must be positive"
-        self.__delta.setVal ( value ) 
+        self.set_value ( self.__delta , value )
 
     @property
     def gamma ( self ) :
-        """``gamma''-parameter for Johnson-SU function - related to asymmetry"""
+        """'gamma'-parameter for Johnson-SU function - related to asymmetry"""
         return self.__gamma
     @gamma.setter
     def gamma ( self , value ) :
@@ -992,23 +989,19 @@ class ResoJohnsonSU(RESOLUTION) :
         
     @property
     def xi ( self ) :
-        """``xi''-parameter (location) for Johnson-SU function (the   same as ``mean'')"""
+        """'xi'-parameter (location) for Johnson-SU function (the   same as 'mean')"""
         return self.__xi
     @xi.setter
     def xi ( self, value ) :
-        value = float ( value )
-        self.__xi.setVal ( value ) 
+        self.set_value ( self.__xi , value )
 
     @property
     def lambd ( self ) :
-        """``lambda''-parameter (scale) for Johnson-SU function (the  same  as ``sigma'')"""
+        """'lambda'-parameter (scale) for Johnson-SU function (the  same  as 'sigma')"""
         return self.__lambd
     @lambd.setter
     def lambd ( self, value ) :
-        value = float ( value )
-        assert   0 < value, "``lambda''-parameter must be positive"        
-        self.__lambd.setVal ( value ) 
-
+        self.set_value ( self.__lambd , value )
     
 # =============================================================================
 ## @class ResoSinhAsinh
@@ -1036,7 +1029,7 @@ class ResoSinhAsinh(RESOLUTION) :
     """ Resolution model based on symmetric form of `SinhAsinh`-function:
     
     see Jones, M. C.; Pewsey, A. (2009).
-    ``Sinh-arcsinh distributions''. Biometrika 96 (4): 761. 
+    'Sinh-arcsinh distributions'. Biometrika 96 (4): 761. 
     doi:10.1093/biomet/asp053
     http://oro.open.ac.uk/22510
     
@@ -1069,13 +1062,13 @@ class ResoSinhAsinh(RESOLUTION) :
         self.__epsilon =  self.make_var ( ZERO if epsilon is None else epsilon ,
                                           'epsilon_%s'  % name ,
                                           '#epsilon(%s)' % name ,
-                                          ZERO if epsilon is None else epsilon , 0 , -1000 , 1000   )
-
+                                          None , 0 , -1000 , 1000   )
+        
         ## parameter delta 
         self.__delta  = self.make_var ( delta ,
                                         'delta_%s'   % name ,
-                                        '#delta(%s)' % name , delta ,
-                                        1 , 1.e-6 , 1000   )
+                                        '#delta(%s)' % name ,
+                                        None , 1 , 1.e-6 , 1000 )
     
         #
         ## finally build pdf
@@ -1102,7 +1095,7 @@ class ResoSinhAsinh(RESOLUTION) :
 
     @property
     def epsilon( self ) :
-        """``epsilon''-parameter for Sinh-Asinh function"""
+        """'epsilon'-parameter for Sinh-Asinh function"""
         return self.__epsilon
     @epsilon.setter
     def epsilon ( self , value ) :
@@ -1110,12 +1103,10 @@ class ResoSinhAsinh(RESOLUTION) :
         
     @property
     def delta ( self ) :
-        """``delta-parameter'' for Sinh-Asinh function"""
+        """'delta'-parameter for Sinh-Asinh function"""
         return self.__delta
     @delta.setter
     def delta ( self, value ) :
-        value = float ( value )
-        assert 0  < value, "``delta''-parameter must be positive"         
         self.set_value ( self.__delta , value  ) 
         
 # =============================================================================
@@ -1130,7 +1121,7 @@ class ResoSinhAsinh(RESOLUTION) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
 class ResoLogistic(RESOLUTION) :
-    r""" Logistic, aka ``sech-square'' PDF
+    r""" Logistic, aka 'sech-square' PDF
      \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
      where
      \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$
@@ -1202,7 +1193,8 @@ class ResoHyperbolic(RESOLUTION) :
         ## Zeta
         self.__zeta  = self.make_var ( zeta                ,
                                        'zeta_%s'    % name ,
-                                       '#zeta(%s)'  % name , zeta  , 1 , 1.e-10  , +100 )
+                                       '#zeta(%s)'  % name ,
+                                       None , 1 , 1.e-10  , +100 )
         
         ## mu 
         self.__mu    = self.mean 
@@ -1211,7 +1203,7 @@ class ResoHyperbolic(RESOLUTION) :
         self.__kappa = self.make_var ( ZERO if kappa is None else kappa  ,
                                        'kappa_%s'    % name ,
                                        '#kappa(%s)'  % name ,
-                                       ZERO if kappa is None else kappa  , 0 , -100 , +100 ) 
+                                       None , 0 , -200 , +200 ) 
         
         #
         ## finally build pdf
@@ -1238,12 +1230,12 @@ class ResoHyperbolic(RESOLUTION) :
 
     @property
     def mu ( self ) :
-        """``mu'' : location parameter, same as ``mean'')"""
+        """'mu' : location parameter, same as 'mean')"""
         return self.__mu
 
     @property 
     def zeta  ( self ) :
-        """``zeta'' : dimensioneless parameter, related to kurtosis"""
+        """'zeta' : dimensioneless parameter, related to kurtosis"""
         return self.__zeta
     @zeta.setter  
     def zeta ( self , value ) :
@@ -1251,7 +1243,7 @@ class ResoHyperbolic(RESOLUTION) :
     
     @property
     def kappa ( self ) :
-        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        """'kappa' : dimensionless parameter, related to asymmetry"""
         return self.__kappa
     @kappa.setter  
     def kappa ( self , value ) :
@@ -1260,49 +1252,49 @@ class ResoHyperbolic(RESOLUTION) :
 
     @property
     def alpha ( self ) :
-        """``alpha'' : value of canonical parameter ``alpha''"""
+        """'alpha' : value of canonical parameter 'alpha' """
         self.pdf.setPars ()
         return self.pdf.function().alpha ()
 
     @property
     def beta ( self ) :
-        """``beta'' : value of canonical parameter ``beta''"""
+        """'beta' : value of canonical parameter 'beta'"""
         self.pdf.setPars ()
         return self.pdf.function().beta ()
 
     @property
     def gamma ( self ) :
-        """``gamma'' : value of canonical parameter ``gamma''"""
+        """'gamma' : value of canonical parameter 'gamma'"""
         self.pdf.setPars ()
         return self.pdf.function().gamma ()
     
     @property
     def delta ( self ) :
-        """``delta'' : value of canonical parameter ``delta''"""
+        """'delta' : value of canonical parameter 'delta'"""
         self.pdf.setPars ()
         return self.pdf.function().delta ()
 
     @property
     def nominal_mean ( self ) :
-        """``nominal_mean'' : actual mean of distribution"""
+        """'nominal_mean' : the actual mean of distribution"""
         self.pdf.setPars ()
-        return self.pdf.function().delta ()
+        return self.pdf.function().mean  ()
 
     @property
     def nominal_mode ( self ) :
-        """``nominal_mode'' : actual mode of distribution"""
+        """'nominal_mode' : the actual mode of distribution"""
         self.pdf.setPars ()
         return self.pdf.function().mode ()
     
     @property
     def nominal_variance ( self ) :
-        """``nominal_variance'' : actual variance of distribution"""
+        """'nominal_variance' : actual variance of distribution"""
         self.pdf.setPars ()
         return self.pdf.function().variance ()
 
     @property
     def nominal_rms ( self ) :
-        """``nominal_rms'' : actual RMS of distribution"""
+        """'nominal_rms' : actual RMS of distribution"""
         self.pdf.setPars ()
         return self.pdf.function().rms ()
 
@@ -1340,18 +1332,20 @@ class ResoGenHyperbolic(RESOLUTION) :
         ## Zeta
         self.__zeta  = self.make_var ( zeta                ,
                                        'zeta_%s'    % name ,
-                                       '#zeta(%s)'  % name , zeta  , 1 , 1.e-10 , +100 ) 
-
+                                       '#zeta(%s)'  % name ,
+                                       None , 1 , 1.e-10 , +100 ) 
+        
         ## parameter kappa
         self.__kappa = self.make_var ( ZERO if kappa is None else kappa ,
                                        'kappa_%s'    % name ,
                                        '#kappa(%s)'  % name ,
-                                       ZERO if kappa is None else kappa , 0 , -100 , +100 ) 
+                                       None , 0 , -200 , +200 ) 
         
         ## lambda 
         self.__lambda = self.make_var ( lambd               ,
                                         'lambda_%s'   % name ,
-                                        '#lambda(%s)' % name , lambd , -2 , -100 , 100 )
+                                        '#lambda(%s)' % name ,
+                                        True ,  -2 , -200 , 200 )
         
         ## mu 
         self.__mu    = self.mean 
@@ -1382,12 +1376,12 @@ class ResoGenHyperbolic(RESOLUTION) :
 
     @property
     def mu ( self ) :
-        """``mu'' : location parameter, same as ``mean'')"""
+        """'mu' : location parameter (same as 'mean')"""
         return self.__mu
 
     @property 
     def zeta  ( self ) :
-        """``zeta'' : dimensioneless parameter, related to shape"""
+        """'zeta' : dimensioneless parameter, related to shape"""
         return self.__zeta
     @zeta.setter  
     def zeta ( self , value ) :
@@ -1395,7 +1389,7 @@ class ResoGenHyperbolic(RESOLUTION) :
     
     @property
     def kappa ( self ) :
-        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        """'kappa' : dimensionless parameter, related to asymmetry"""
         return self.__kappa
     @kappa.setter  
     def kappa ( self , value ) :
@@ -1403,7 +1397,7 @@ class ResoGenHyperbolic(RESOLUTION) :
     
     @property
     def lambd ( self ) :
-        """``lambd'' : dimensionless parameter, related to shape """
+        """'lambd' : dimensionless parameter, related to shape """
         return self.__lambda
     @lambd.setter
     def lambd ( self , value ) :    
@@ -1411,49 +1405,49 @@ class ResoGenHyperbolic(RESOLUTION) :
         
     @property
     def alpha ( self ) :
-        """``alpha'' : value of canonical parameter ``alpha''"""
+        """'alpha' : value of canonical parameter 'alpha'"""
         self.pdf.setPars ()
         return self.pdf.function().alpha ()
 
     @property
     def beta ( self ) :
-        """``beta'' : value of canonical parameter ``beta''"""
+        """'beta' : value of canonical parameter 'beta'"""
         self.pdf.setPars ()
         return self.pdf.function().beta ()
 
     @property
     def gamma ( self ) :
-        """``gamma'' : value of canonical parameter ``gamma''"""
+        """'gamma' : value of canonical parameter 'gamma'"""
         self.pdf.setPars ()
         return self.pdf.function().gamma ()
     
     @property
     def delta ( self ) :
-        """``delta'' : value of canonical parameter ``delta''"""
+        """'delta' : value of canonical parameter 'delta'"""
         self.pdf.setPars ()
         return self.pdf.function().delta ()
 
     @property
     def nominal_mean ( self ) :
-        """``nominal_mean'' : actual mean of distribution"""
+        """'nominal_mean' : the actual mean of distribution"""
         self.pdf.setPars ()
-        return self.pdf.function().delta ()
+        return self.pdf.function().mean  ()
 
     @property
     def nominal_mode ( self ) :
-        """``nominal_mode'' : actual mode of distribution"""
+        """'nominal_mode' : actual mode of distribution"""
         self.pdf.setPars ()
         return self.pdf.function().mode ()
     
     @property
     def nominal_variance ( self ) :
-        """``nominal_variance'' : actual variance of distribution"""
+        """'nominal_variance' : actual variance of distribution"""
         self.pdf.setPars ()
         return self.pdf.function().variance ()
 
     @property
     def nominal_rms ( self ) :
-        """``nominal_rms'' : actual RMS of distribution"""
+        """'nominal_rms' : actual RMS of distribution"""
         self.pdf.setPars ()
         return self.pdf.function().rms ()
      
@@ -1474,13 +1468,13 @@ class ResoGenHyperbolic(RESOLUTION) :
 # @see GenHyperbolic_pdf
 # @see Ostap::Math::GenHyperbolic
 # @see Ostap::Models::GenHyperbolic
-class ResoHypatia(RESOLUTION):
+class ResoHypatia(ResoGenHyperbolic) : 
     r""" Variant of Hypatia pdf
-    Convolution of Generalized Hyperbolic distrobution with ``offset''
+    Convolution of Generalized Hyperbolic distrobution with 'offset'
     Gaussian distribution
     
     - see D. Martinez Santos, F. Duipertois,
-    ``Mass distributions marginalized over per-event errors'',
+    'Mass distributions marginalized over per-event errors',
     Nucl.Instrum.Meth.A 764 (2014) 150,
     arXiv:1312.5000 [hep-ex]
     - see https://doi.org/10.1016/j.nima.2014.06.081
@@ -1500,54 +1494,28 @@ class ResoHypatia(RESOLUTION):
                    sigma     =  1   ,   ## relatd  to width  
                    zeta      =  1   ,   ## related to shape 
                    lambd     = -2   ,   ## related to shape 
-                   sigma0    = None ,   ## width of the ``offset'' Gaussian
+                   sigma0    = None ,   ## width of the 'offset" Gaussian
                    fudge     =  1   ,   ## fudge factor 
                    mu        = None ,   ## related to mean
                    kappa     = None ,   ## related to asymmetry
                    cnvpars   = {}   ) : ## convolution parameters
-        
+
         ## initialize the base 
         super(ResoHypatia,self).__init__ ( name       = name  ,
                                            xvar       = xvar  ,
                                            sigma      = sigma ,
-                                           mean       = mu    ,
+                                           zeta       = zeta  ,
                                            fudge      = fudge ,
-                                           mean_name  = 'mu_%s'   % name ,
-                                           mean_title = '#mu(%s)' % name )
-        
-        self.__mu    = self.mean 
+                                           mu         = mu    ,
+                                           kappa      = kappa )
 
-        ## Zeta
-        self.__zeta   = self.make_var ( zeta                 ,
-                                        'zeta_%s'     % name ,
-                                        '#zeta(%s)'   % name , zeta  ,  1 , 1.e-10 , 1.e+5 ) 
-        ## kappa  
-        self.__kappa  = self.make_var ( ZERO if kappa is None else kappa , 
-                                        'kappa_%s'    % name ,
-                                        '#kappa(%s)'  % name ,
-                                        ZERO if kappa is None else kappa , 0 ,  -50  ,  50 ) 
         
-        ## lambda 
-        self.__lambda = self.make_var ( lambd               ,
-                                        'lambda_%s'   % name ,
-                                        '#lambda(%s)' % name , lambd ,  -2 , -100   , 100 ) 
-        
-
-        ## create a generalized hyperbolic PDF 
-        hname  = self.generate_name ( prefix = self.name , suffix = 'GHD' )
-        from   ostap.fitting.signals import GenHyperbolic_pdf 
-        with CheckMean ( False ) :
-            self.__genhyp = GenHyperbolic_pdf ( name  = hname           , 
-                                                xvar  = self.xvar       ,
-                                                mu    = self.mu         , 
-                                                sigma = self.sigma_corr , ## ATTENTION HERE!
-                                                zeta  = zeta            ,
-                                                kappa = kappa           ,
-                                                lambd = lambd           )
+        ## safe created generic PDF 
+        self.__genhyp = Generic1D_pdf ( self.pdf , xvar = self.xvar , name = self.new_name ( 'GenHyp' ) )
         
         ## prepare FFT convolution
         from ostap.fitting.resolution import ResoGauss 
-        gname = self.generate_name ( prefix = self.name , suffix = 'offset' ) 
+        gname = self.generate_name ( 'gauss' , suffix = 'offset' ) 
         self.__resolution = ResoGauss     ( name  = gname     , 
                                             xvar  = self.xvar ,
                                             sigma = sigma0    )
@@ -1580,80 +1548,26 @@ class ResoHypatia(RESOLUTION):
         
     @property
     def genhyp ( self ) :
-        """``genhyp'': get underlying generalized hyperbilis PDF"""
+        """'genhyp': get underlying generalized hyperbolic PDF"""
         return self.__genhyp
     
     @property
     def convolved ( self ) :
-        """``convolved'' : get PDF as convolution"""
+        """'convolved' : get PDF as convolution"""
         return self.__convolved
     
     @property
     def sigma0    ( self ) :
-        """``sigma0'' : width for the ``offset'' Gaussian"""
+        """'sigma0' : width for the 'offset' Gaussian function"""
         return self.__resolution.sigma
     @sigma0.setter
     def sigma0    ( self , value ) :
         self.__resolution.sigma = value
-
     
     @property
     def cnvpars ( self ) :
-        """``cnvpars'' : parameters for convolution"""
+        """'cnvpars' : parameters for convolution"""
         return self.__cnvpars 
-
-    @property
-    def mu ( self ) :
-        """``mu'' : location parameter (same as ``mean'')"""
-        return self.__mu
-    @mu.setter
-    def mu ( self , value ) :    
-        self.set_value ( self.__mu , value )
-   
-
-    @property 
-    def zeta  ( self ) :
-        """``zeta'' : dimensioneless parameter, related to shape """
-        return self.__zeta
-    @zeta.setter  
-    def zeta ( self , value ) :
-        self.set_value ( self.__zeta , value )
-    
-    @property
-    def kappa ( self ) :
-        """``kappa'' : dimensionless parameter, related to asymmetry"""
-        return self.__kappa
-    @kappa.setter
-    def kappa ( self , value ) :    
-        self.set_value ( self.__kappa , value )
-
-    @property
-    def lambd ( self ) :
-        """``lambd'' : dimensionless parameter, related to shape """
-        return self.__lambda
-    @lambd.setter
-    def lambd ( self , value ) :    
-        self.set_value ( self.__lambd , value )
-
-    @property
-    def alpha ( self ) :
-        """``alpha'' : value of canonical parameter ``alpha''"""
-        return self.genhyp.alpha 
-
-    @property
-    def beta ( self ) :
-        """``beta'' : value of canonical parameter ``beta''"""
-        return self.genhyp.beta
-
-    @property
-    def gamma ( self ) :
-        """``gamma'' : value of canonical parameter ``gamma''"""
-        return self.genhyp.gamma
-    
-    @property
-    def delta ( self ) :
-        """``delta'' : value of canonical parameter ``delta''"""
-        return self.genhyp.delta 
 
 
 # =============================================================================
@@ -1684,13 +1598,14 @@ class ResoDas(RESOLUTION) :
         
         self.__k     = self.make_var ( k                    ,
                                        'k_%s'      % name   ,  
-                                       'k(%s)'     % name   , k , 1 , 1.e-6 , 1000 )
+                                       'k(%s)'     % name   ,
+                                       None , 1 , 1.e-6 , 1000 )
         
         ## parameter kappa  
         self.__kappa = self.make_var ( ZERO if kappa is None else kappa ,
                                        'kappa_%s'    % name ,
                                        '#kappa(%s)'  % name ,
-                                       ZERO if kappa is None else kappa , 0 , -1 , +1 ) 
+                                       None , 0 , -1 , +1 ) 
         
         if kappa  is None :
 
@@ -1733,7 +1648,7 @@ class ResoDas(RESOLUTION) :
 
     @property
     def mu ( self ) :
-        """``mu'' : location parameter, same as ``mean'')"""
+        """'mu' : location parameter (same as 'mean')"""
         return self.__mu
     @mu.setter
     def mu ( self , value ) :
@@ -1741,8 +1656,7 @@ class ResoDas(RESOLUTION) :
 
     @property
     def k ( self ) :
-        """``k'' : tail parameter (exponential slope)
-        """
+        """'k' : tail parameter (exponential slope)"""
         return self.__k
     @k.setter
     def k ( self , value ) :
@@ -1750,7 +1664,7 @@ class ResoDas(RESOLUTION) :
         
     @property
     def kappa ( self ) :
-        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        """'kappa' : dimensionless parameter, related to asymmetry"""
         return self.__kappa
     @kappa.setter
     def kappa ( self , value ) :
@@ -1758,16 +1672,14 @@ class ResoDas(RESOLUTION) :
 
     @property
     def kL  ( self ) :
-        """``kL'' : left tail parameter
-        """
+        """'kL' : left tail parameter"""
         return self.__kL
 
     @property
     def kR  ( self ) :
-        """``kR'' : right tail parameter
-        """
+        """'kR' : right tail parameter"""
         return self.__kR
-     
+    
 # =============================================================================
 ## @class ResoGenGaussV1
 #  Simple class that implements the generalized normal distribution v1
@@ -1826,9 +1738,9 @@ class ResoGenGaussV1(RESOLUTION) :
     and a continuum of symmetric, leptokurtic densities spanning from the Laplace
     (beta=1) to the normal density (beta=2).
     
-    - see M. T. Subbotin, “On the Law of Frequency of Error”, Mat. Sb., 31:2 (1923), 296–301
+    - see M. T. Subbotin, 'On the Law of Frequency of Error', Mat. Sb., 31:2 (1923), 296–301
     - see http://www.mathnet.ru/php/archive.phtml?wshow=paper&jrnid=sm&paperid=6854&option_lang=eng
-    - see Nadarajah, Saralees (September 2005). "A generalized normal distribution".
+    - see Nadarajah, Saralees (September 2005). 'A generalized normal distribution'.
     Journal of Applied Statistics. 32 (7): 685–694. doi:10.1080/02664760500079464.
     - see https://doi.org/10.1080%2F02664760500079464
     
@@ -1857,8 +1769,8 @@ class ResoGenGaussV1(RESOLUTION) :
         self.__alpha = self.sigma         
         self.__beta  = self.make_var ( beta ,
                                        'beta_%s'        % name  ,
-                                       '#beta_{v1}(%s)' % name  , beta , 
-                                       2 , 1.e-4  , 1.e+6 ) 
+                                       '#beta_{v1}(%s)' % name  ,  
+                                       None , 2 , 1.e-4  , 1.e+6 ) 
         #
         ## finally build PDF
         #
@@ -1883,7 +1795,7 @@ class ResoGenGaussV1(RESOLUTION) :
 
     @property
     def alpha ( self ) :
-        """``alpha''-parameter for Generalized V1 Gaussian (the same as ``sigma'')"""
+        """'alpha'-parameter for Generalized V1 Gaussian (the same as 'sigma')"""
         return self.__alpha
     @alpha.setter
     def alpha ( self, value ) :
@@ -1891,25 +1803,51 @@ class ResoGenGaussV1(RESOLUTION) :
 
     @property
     def alpha_corr ( self ) :
-        """Cprrected ``alpha''-parameter for Generalized V1 Gaussian (the same as ``sigma_corr'')"""
+        """Corrected 'alpha'-parameter for Generalized V1 Gaussian (the same as 'sigma_corr')"""
         return self.sigma_corr
 
     @property
     def beta ( self ) :
-        """``beta''-parameter for Generalized  V1 Gaussian"""
+        """'beta'-parameter for Generalized  V1 Gaussian"""
         return self.__beta
     @beta.setter
     def beta ( self, value ) :
         self.set_value ( self.__beta , value )
 
-
-
-
-
 # =============================================================================
 ## @class ResoNormalLaplace
+#  Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
+#  It behaves like core Gaussian with exponential tails 
+#  @see Wiliam J. Reed, "The Normal-Laplace Distribution Relatives", 
+#  October, 2004
+#  @see https://www.math.uvic.ca/faculty/reed/NL.draft.1.pdf
+#  @see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
+#        In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
+#       "Advances in Distribution Theory, Order Statistics, and Inference. 
+#       Statistics for Industry and Technology". Birkhäuser Boston. 
+#  @see https://doi.org/10.1007/0-8176-4487-3_4
+#
+#  \f$ f(x; \mu, \sigma, k_L , k_R ) = 
+#   \frac{1}{\sigma ( k_L + k_R) } 
+#   \phi ( z ) \left( R ( \frac{1}{k_R} - z ) + 
+#                     R ( \frac{1}{k_L} + z ) \right) 
+#   \f$, where
+#   - \f$ k_L,k_R \ge 0 \f$ 
+#   - \f$ z = \frac{x-\mu}{\sigma} \f$ 
+#   - \f$ \phi(z) \f$ is Gaussian PDF  
+#   - \f$  R(x)   \f$ is Mill's ratio 
+#    
 class ResoNormalLaplace(RESOLUTION) :
-    """
+    """Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
+    It behaves like core Gaussian with exponential tails 
+    - see Wiliam J. Reed, "The Normal-Laplace Distribution Relatives", 
+    October, 2004
+    -  see https://www.math.uvic.ca/faculty/reed/NL.draft.1.pdf
+    - see Reed, W.J, 'The Normal-Laplace Distribution and Its Relatives'. 
+    In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
+    'Advances in Distribution Theory, Order Statistics, and Inference. 
+    Statistics for Industry and Technology'. Birkhäuser Boston. 
+    - see https://doi.org/10.1007/0-8176-4487-3_4
     """
     def __init__ ( self             ,
                    name             ,
@@ -1935,13 +1873,13 @@ class ResoNormalLaplace(RESOLUTION) :
         self.__k     = self.make_var ( k ,
                                        'k_%s'  % self.name ,
                                        'k(%s)' % self.name ,
-                                       k  , 1 , 0 , +100 ) 
+                                       None  , 1 , 0 , +100 ) 
         
         ## asymmetry parameter 
         self.__kappa = self.make_var ( ZERO if kappa is None else kappa , 
                                        'kappa_%s'   % self.name ,
                                        '#kappa(%s)' % self.name ,
-                                       ZERO if kappa is None else kappa , 0 , -1 , +1 ) 
+                                       None , 0 , -1 , +1 ) 
         
         
         if kappa is None :
@@ -1984,7 +1922,7 @@ class ResoNormalLaplace(RESOLUTION) :
         
     @property
     def varsigma    ( self ) :
-        """``varsigma'' : varsigma parameter for Normal Laplace function (same as ``sigma'')"""
+        """'varsigma' : varsigma parameter for Normal Laplace function (same as 'sigma')"""
         return self.sigma
     @varsigma.setter
     def varsigma    ( self , value ) :
@@ -1992,7 +1930,7 @@ class ResoNormalLaplace(RESOLUTION) :
 
     @property 
     def k  ( self ) :
-        """``k'' :  (dimensioneless) k-parameter"""
+        """'k' :  (dimensioneless) k-parameter"""
         return self.__k
     @k.setter  
     def k ( self , value ) :
@@ -2000,22 +1938,22 @@ class ResoNormalLaplace(RESOLUTION) :
 
     @property 
     def kL ( self ) :
-        """``kL'' :  (dimensioneless) kL-parameter"""
+        """'kL' :  (dimensioneless) kL-parameter"""
         return self.__kL
         
     @property 
     def kR ( self ) :
-        """``kR'' :  (dimensioneless) kR-parameter"""
+        """'kR' :  (dimensioneless) kR-parameter"""
         return self.__kR
 
     @property
     def kappa ( self ) :
-        """``kappa'' : yail asymemtry parameter 0.5(kL-kR)/(kL+_kR)
+        """'kappa' : tail asymmetry parameter 0.5(kL-kR)/(kL+_kR)
         """
         return self.__kappa
     @kappa.setter
     def kappa ( self , value ) :
-        self.setValue ( self.__kappa , value )
+        self.set_value ( self.__kappa , value )
 
 
 # =============================================================================

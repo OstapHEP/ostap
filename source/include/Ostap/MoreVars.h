@@ -37,12 +37,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the variable, range and the list of coefficients
-      Bernstein ( const std::string& name  ,
-                  const std::string& title ,
-                  RooAbsReal&        xvar  ,
-                  const double       xmin  , 
-                  const double       xmax  ,
-                  const RooArgList&  pars  ) ;
+      Bernstein
+      ( const std::string& name  ,
+        const std::string& title ,
+        RooAbsReal&        xvar  ,
+        const RooArgList&  pars  ,
+        const double       xmin  , 
+        const double       xmax  ) ;
       // ======================================================================
       /// copy constructor 
       Bernstein ( const Bernstein& right , 
@@ -65,11 +66,23 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const Ostap::Math::Bernstein& bernstein () const { return m_bernstein ; }
+      /// get the varibale 
+      const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
+      /// get parameters 
+      const RooArgList& params () const { return m_pars       ; }
+      /// xmin for bernstein 
+      double            xmin   () const { return m_bernstein.xmin() ; }
+      /// xmax for bernstein 
+      double            xmax   () const { return m_bernstein.xmax() ; }
       // ======================================================================
     public:
       // ======================================================================
       void setPars       () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      const Ostap::Math::Bernstein& function  () const { return m_bernstein ; }
+      const Ostap::Math::Bernstein& bernstein () const { return m_bernstein ; }
       // ======================================================================
     public: 
       // ======================================================================
@@ -102,24 +115,28 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the variable, range and list of coefficients
-      Monotonic ( const std::string& name       ,
-                  const std::string& title      ,
-                  RooAbsReal&        xvar       ,
-                  const bool         increasing , 
-                  const double       xmin       , 
-                  const double       xmax       ,
-                  RooAbsReal&        a          ,
-                  RooAbsReal&        b          ,
-                  const RooArgList&  pars       ) ;
+      Monotonic 
+      ( const std::string& name       ,
+        const std::string& title      ,
+        RooAbsReal&        xvar       ,
+        const RooArgList&  pars       ,
+        const bool         increasing , 
+        const double       xmin       , 
+        const double       xmax       ,
+        RooAbsReal&        a          ,
+        RooAbsReal&        b          ) ;
       // ======================================================================
       /// constructor from the variable, range and list of coefficients
-      Monotonic ( const std::string& name       ,
-                  const std::string& title      ,
-                  RooAbsReal&        xvar       ,
-                  const bool         increasing , 
-                  const double       xmin       , 
-                  const double       xmax       ,
-                  const RooArgList&  pars       ) ;
+      Monotonic 
+      ( const std::string& name       ,
+        const std::string& title      ,
+        RooAbsReal&        xvar       ,
+        const RooArgList&  pars       ,
+        const bool         increasing , 
+        const double       xmin       , 
+        const double       xmax       ,
+        const double       a  = 0     , 
+        const double       b  = 1     ) ;
       // ======================================================================
       /// copy constructor 
       Monotonic ( const Monotonic& right , 
@@ -143,6 +160,22 @@ namespace Ostap
     public:
       // ======================================================================
       const Ostap::Math::Monotonic& monotonic () const { return m_monotonic ; }
+      const Ostap::Math::Monotonic& function  () const { return m_monotonic ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the varibale 
+      const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
+      /// get parameters 
+      const RooArgList& params () const { return m_pars       ; }
+      /// get the shift  
+      const RooAbsReal& a      () const { return m_a.arg()    ; }
+      /// get the scale   
+      const RooAbsReal& b      () const { return m_b.arg()    ; }
+      /// xmin for bernstein 
+      double xmin () const { return m_monotonic.xmin() ; }
+      /// xmax for bernstein 
+      double xmax () const { return m_monotonic.xmax() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -182,16 +215,30 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the variable, range and list of coefficients
-      Convex    ( const std::string& name       ,
-                  const std::string& title      ,
-                  RooAbsReal&        xvar       ,
-                  const bool         increasing , 
-                  const bool         convex     , 
-                  const double       xmin       , 
-                  const double       xmax       ,
-                  RooAbsReal&        a          ,
-                  RooAbsReal&        b          ,
-                  const RooArgList&  pars       ) ;
+      Convex
+      ( const std::string& name       ,
+        const std::string& title      ,
+        RooAbsReal&        xvar       ,
+        const RooArgList&  pars       ,
+        const bool         increasing , 
+        const bool         convex     , 
+        const double       xmin       , 
+        const double       xmax       ,
+        RooAbsReal&        a          ,
+        RooAbsReal&        b          ) ;
+      // ======================================================================
+      /// constructor from the variable, range and list of coefficients
+      Convex
+      ( const std::string& name       ,
+        const std::string& title      ,
+        RooAbsReal&        xvar       ,
+        const RooArgList&  pars       ,
+        const bool         increasing , 
+        const bool         convex     , 
+        const double       xmin       , 
+        const double       xmax       ,
+        const double       a = 0      , 
+        const double       b = 1      ) ;
       // ======================================================================
       /// copy constructor 
       Convex    ( const Convex&    right , 
@@ -211,6 +258,21 @@ namespace Ostap
       Double_t    analyticalIntegral
       ( Int_t code , 
         const char* rangeName = nullptr ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the varibale 
+      const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
+      /// get parameters 
+      const RooArgList& params () const { return m_pars       ; }
+      /// get the shift  
+      const RooAbsReal& a      () const { return m_a.arg()    ; }
+      /// get the scale   
+      const RooAbsReal& b      () const { return m_b.arg()    ; }
+      /// xmin for bernstein 
+      double xmin () const { return m_convex.xmin() ; }
+      /// xmax for bernstein 
+      double xmax () const { return m_convex.xmax() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -253,15 +315,27 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the variable, range and list of coefficients
-      ConvexOnly ( const std::string& name       ,
-                   const std::string& title      ,
-                   RooAbsReal&        xvar       ,
-                   const bool         convex     , 
-                   const double       xmin       , 
-                   const double       xmax       ,
-                   RooAbsReal&        a          ,
-                   RooAbsReal&        b          ,
-                   const RooArgList&  pars       ) ;
+      ConvexOnly
+      ( const std::string& name       ,
+        const std::string& title      ,
+        RooAbsReal&        xvar       ,
+        const RooArgList&  pars       ,
+        const bool         convex     , 
+        const double       xmin       , 
+        const double       xmax       ,
+        RooAbsReal&        a          ,
+        RooAbsReal&        b          ) ;
+      /// constructor from the variable, range and list of coefficients
+      ConvexOnly
+      ( const std::string& name       ,
+        const std::string& title      ,
+        RooAbsReal&        xvar       ,
+        const RooArgList&  pars       ,
+        const bool         convex     , 
+        const double       xmin       , 
+        const double       xmax       ,
+        const double       a = 0      , 
+        const double       b = 1      ) ;
       // ======================================================================
       /// copy constructor 
       ConvexOnly ( const ConvexOnly&    right , 
@@ -288,6 +362,21 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the variable
+      const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
+      /// get parameters 
+      const RooArgList& params () const { return m_pars       ; }
+      /// get the shift  
+      const RooAbsReal& a      () const { return m_a.arg()    ; }
+      /// get the scale   
+      const RooAbsReal& b      () const { return m_b.arg()    ; }
+      /// xmin for bernstein 
+      double xmin () const { return m_convex.xmin() ; }
+      /// xmax for bernstein 
+      double xmax () const { return m_convex.xmax() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       void setPars       () const ;
       // ======================================================================
     public: 
@@ -303,6 +392,7 @@ namespace Ostap
       mutable Ostap::Math::ConvexOnly m_convex    ;
       // ======================================================================
     } ;
+
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit
   // ==========================================================================

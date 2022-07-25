@@ -54,8 +54,9 @@ namespace Ostap
        *  @param sx (INPUT) the first  Legendre sum 
        *  @param sy (INPUT) the second Legendre sum 
        */
-      LegendreSum2 ( const LegendreSum& sx , 
-                     const LegendreSum& sy ) ;
+      LegendreSum2 
+      ( const LegendreSum& sx , 
+        const LegendreSum& sy ) ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -82,24 +83,26 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      unsigned short degree_x  () const { return m_NX ; }
-      unsigned short degree_y  () const { return m_NY ; }
-      unsigned short nx        () const { return m_NX ; }
-      unsigned short ny        () const { return m_NY ; }
+      std::size_t degree_x  () const { return m_NX ; }
+      std::size_t degree_y  () const { return m_NY ; }
+      std::size_t nx        () const { return m_NX ; }
+      std::size_t ny        () const { return m_NY ; }
       // ======================================================================
     public:
       // ======================================================================
       using Parameters::par    ;
       using Parameters::setPar ;
       /// get 2D-parameter 
-      inline double par ( const unsigned int ix , 
-                          const unsigned int iy ) const 
+      inline double par 
+      ( const unsigned short ix , 
+        const unsigned short iy ) const 
       { return Parameters::par ( index ( ix , iy ) ) ;  }
       // ======================================================================
       /// set 2D-parameter
-      bool setPar ( const unsigned int ix     ,
-                    const unsigned int iy     ,
-                    const double       value  ) 
+      bool setPar
+      ( const unsigned short ix     ,
+        const unsigned short iy     ,
+        const double         value  ) 
       { return Parameters::setPar ( index ( ix , iy ) , value ) ; }
       // ======================================================================
     public:
@@ -125,9 +128,10 @@ namespace Ostap
        *  This is a useful function to make an unbinned parameterization 
        *  of certain distribution and/or efficiency 
        */
-      bool fill ( const double x          , 
-                  const double y          , 
-                  const double weight = 1 ) ;
+      bool fill
+      ( const double x          , 
+        const double y          , 
+        const double weight = 1 ) ;
       // ======================================================================
     public: // several useful operators and operations 
       // ======================================================================
@@ -200,10 +204,11 @@ namespace Ostap
        *  \f$ \int_{x_{low}}^{x_{high}}
        *      \int_{y_{low}}^{y_{high}} F(x,y){\mathrm{d}} x {\mathrm{d}} y \f$
        */
-      double      integral   ( const double xlow  ,   
-                               const double xhigh , 
-                               const double ylow  ,   
-                               const double yhigh ) const ;
+      double      integral  
+      ( const double xlow  ,   
+        const double xhigh , 
+        const double ylow  ,   
+        const double yhigh ) const ;
       // =====================================================================
       /** get the integral 
        *  \f$ \int_{x_{min}}^{x_{max}}
@@ -221,26 +226,27 @@ namespace Ostap
     private: 
       // ======================================================================
       /// 2D-index into 1D-index 
-      inline unsigned int index ( const unsigned short ix , 
-                                  const unsigned short iy ) const 
+      inline std::size_t index 
+      ( const unsigned short ix , 
+        const unsigned short iy ) const 
       { return ix * ( m_NY + 1 ) + iy ; }
       // ======================================================================
       double calculate () const
       {
         long double value = 0 ;
-        for ( unsigned short ix = 0 ; ix <= m_NX ; ++ix ) 
-        { for ( unsigned short iy = 0 ; iy <= m_NY ; ++iy ) 
+        for ( unsigned int ix = 0 ; ix <= m_NX ; ++ix ) 
+        { for ( unsigned int iy = 0 ; iy <= m_NY ; ++iy ) 
           { value += m_pars [ index ( ix , iy ) ] * 1.0L
-              * m_cache_x[ ix ] * m_cache_y[ iy ] ; } }
+              * m_cache_x [ ix ] * m_cache_y[ iy ] ; } }
         return value ;
       }
       // ======================================================================
     private : 
       // ======================================================================
       /// x-degree 
-      unsigned short      m_NX   ; // x-degree
+      std::size_t         m_NX   ; // x-degree
       /// y-degree 
-      unsigned short      m_NY   ; //  y-degree
+      std::size_t         m_NY   ; //  y-degree
       // ======================================================================
       /// x-min 
       double              m_xmin ; // x-min
@@ -312,37 +318,42 @@ namespace Ostap
        *  @param sy (INPUT) the second Legendre sum 
        *  @param sz (INPUT) the third Legendre sum 
        */
-      LegendreSum3 ( const LegendreSum&  sx , 
-                     const LegendreSum&  sy ,
-                     const LegendreSum&  sz ) ;
+      LegendreSum3 
+      ( const LegendreSum&  sx , 
+        const LegendreSum&  sy ,
+        const LegendreSum&  sz ) ;
       // ======================================================================
       /** constructor form the product of two Legendre sums
        *  \f$ S(x,y,z) = S_{xy}(x,y) \times S_z(z) \f$ 
        *  @param sxy (INPUT) the first  Legendre sum 
        *  @param sz  (INPUT) the second Legendre sum 
        */
-      LegendreSum3 ( const LegendreSum2& sxy , 
-                     const LegendreSum&  sz  ) ;
+      LegendreSum3 
+      ( const LegendreSum2& sxy , 
+        const LegendreSum&  sz  ) ;
       // ======================================================================
       /** constructor form the product of two Legendre sums
        *  \f$ S(x,y,z) = S_x(x) \times S_{yz}(y,z)\f$ 
        *  @param sx   (INPUT) the first  Legendre sum 
        *  @param syz  (INPUT) the second Legendre sum 
        */
-      LegendreSum3 ( const LegendreSum&  sx   , 
-                     const LegendreSum2& syz  ) ;
-       // ======================================================================
+      LegendreSum3 
+      ( const LegendreSum&  sx   , 
+        const LegendreSum2& syz  ) ;
+      // ======================================================================
     public: 
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x , 
-                           const double y , 
-                           const double z ) const ;
+      double evaluate 
+      ( const double x , 
+        const double y , 
+        const double z ) const ;
       // ======================================================================
       /// get the value
-      double operator () ( const double x , 
-                           const double y , 
-                           const double z ) const 
+      double operator () 
+      ( const double x , 
+        const double y , 
+        const double z ) const 
       { return 
           x < m_xmin || x > m_xmax ? 0 : 
           y < m_ymin || y > m_ymax ? 0 : 
@@ -367,12 +378,12 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      unsigned short degree_x  () const { return m_NX ; }
-      unsigned short degree_y  () const { return m_NY ; }
-      unsigned short degree_z  () const { return m_NZ ; }
-      unsigned short nx        () const { return m_NX ; }
-      unsigned short ny        () const { return m_NY ; }
-      unsigned short nz        () const { return m_NZ ; }
+      std::size_t degree_x  () const { return m_NX ; }
+      std::size_t degree_y  () const { return m_NY ; }
+      std::size_t degree_z  () const { return m_NZ ; }
+      std::size_t nx        () const { return m_NX ; }
+      std::size_t ny        () const { return m_NY ; }
+      std::size_t nz        () const { return m_NZ ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -396,16 +407,18 @@ namespace Ostap
       using Parameters::par    ;
       using Parameters::setPar ;
       /// get 3D-parameter 
-      inline double par ( const unsigned int ix , 
-                          const unsigned int iy ,
-                          const unsigned int iz ) const 
+      inline double par 
+      ( const unsigned short ix , 
+        const unsigned short iy ,
+        const unsigned short iz ) const 
       { return par ( index ( ix , iy , iz ) ) ;  }    
       // ======================================================================
       /// set 3D-parameter
-      bool setPar ( const unsigned int ix     ,
-                    const unsigned int iy     ,
-                    const unsigned int iz     ,
-                    const double       value  ) 
+      bool setPar
+      ( const unsigned short ix     ,
+        const unsigned short iy     ,
+        const unsigned short iz     ,
+        const double       value  ) 
       { return setPar ( index ( ix , iy , iz ) , value ) ; }
       // ======================================================================
     public:
@@ -419,10 +432,11 @@ namespace Ostap
        *  This is a useful function to make an unbinned parameterization 
        *  of certain distribution and/or efficiency 
        */
-      bool fill ( const double x          , 
-                  const double y          , 
-                  const double z          , 
-                  const double weight = 1 ) ;
+      bool fill 
+      ( const double x          , 
+        const double y          , 
+        const double z          , 
+        const double weight = 1 ) ;
       // ======================================================================
     public: // several useful operators and operations 
       // ======================================================================
@@ -505,9 +519,10 @@ namespace Ostap
        *  \f$ \int_{x_{low}}^{x_{high}}\int_{y_{low}}^{y_{high}}
        *    \int_{z_{low}}^{z_{high}} f(x,y,z) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z \f$ 
        */
-      double integral ( const double xlow , const double xhigh , 
-                        const double ylow , const double yhigh , 
-                        const double zlow , const double zhigh ) const ;
+      double integral 
+      ( const double xlow , const double xhigh , 
+        const double ylow , const double yhigh , 
+        const double zlow , const double zhigh ) const ;
       // ======================================================================
       /** integral 
        *  \f$ \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}
@@ -518,9 +533,10 @@ namespace Ostap
     private: 
       // ======================================================================
       /// 3D-index into 1D-index 
-      inline unsigned int index ( const unsigned short ix , 
-                                  const unsigned short iy , 
-                                  const unsigned short iz ) const 
+      inline std::size_t index 
+      ( const unsigned short ix , 
+        const unsigned short iy , 
+        const unsigned short iz ) const 
       { return ( ix * ( m_NY + 1 ) + iy ) * ( m_NZ + 1 ) + iz ; }
       // ====================================================================== 
       double calculate () const
@@ -537,11 +553,11 @@ namespace Ostap
     private:
       // ======================================================================
       /// x-degree 
-      unsigned short      m_NX   ; // x-degree
+      std::size_t         m_NX   ; // x-degree
       /// y-degree 
-      unsigned short      m_NY   ; //  y-degree
+      std::size_t         m_NY   ; //  y-degree
       /// z-degree 
-      unsigned short      m_NZ   ; //  z-degree
+      std::size_t         m_NZ   ; //  z-degree
       // ======================================================================
       /// x-min 
       double              m_xmin ; // x-min
@@ -627,17 +643,34 @@ namespace Ostap
       // ======================================================================
     public: 
       // ======================================================================
-      /// get the value
-      double evaluate    ( const double x , 
-                           const double y , 
-                           const double z ,
-                           const double u ) const ;
+      /** constructor orm the product of two Legendre sums
+       *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \times S_z(z) \f$ 
+       *  @param sx (INPUT) the first  Legendre sum 
+       *  @param sy (INPUT) the second Legendre sum 
+       *  @param sz (INPUT) the third  Legendre sum 
+       *  @param su (INPUT) the fourth Legendre sum 
+       */
+      LegendreSum4 
+      ( const LegendreSum&  sx , 
+        const LegendreSum&  sy ,
+        const LegendreSum&  sz ,
+        const LegendreSum&  su ) ;
+      // ======================================================================
+    public: 
       // ======================================================================
       /// get the value
-      double operator () ( const double x , 
-                           const double y , 
-                           const double z ,
-                           const double u ) const 
+      double evaluate
+      ( const double x , 
+        const double y , 
+        const double z ,
+        const double u ) const ;
+      // ======================================================================
+      /// get the value
+      double operator ()
+      ( const double x , 
+        const double y , 
+        const double z ,
+        const double u ) const 
       { return 
           x < m_xmin || x > m_xmax ? 0 : 
           y < m_ymin || y > m_ymax ? 0 : 
@@ -668,14 +701,14 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      unsigned short degree_x  () const { return m_NX ; }
-      unsigned short degree_y  () const { return m_NY ; }
-      unsigned short degree_z  () const { return m_NZ ; }
-      unsigned short degree_u  () const { return m_NU ; }
-      unsigned short nx        () const { return m_NX ; }
-      unsigned short ny        () const { return m_NY ; }
-      unsigned short nz        () const { return m_NZ ; }
-      unsigned short nu        () const { return m_NU ; }
+      std::size_t degree_x  () const { return m_NX ; }
+      std::size_t degree_y  () const { return m_NY ; }
+      std::size_t degree_z  () const { return m_NZ ; }
+      std::size_t degree_u  () const { return m_NU ; }
+      std::size_t nx        () const { return m_NX ; }
+      std::size_t ny        () const { return m_NY ; }
+      std::size_t nz        () const { return m_NZ ; }
+      std::size_t nu        () const { return m_NU ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -704,18 +737,20 @@ namespace Ostap
       using Parameters::par    ;
       using Parameters::setPar ;
       /// get 4D-parameter 
-      inline double par ( const unsigned int ix , 
-                          const unsigned int iy ,
-                          const unsigned int iz ,
-                          const unsigned int iu ) const 
+      inline double par
+      ( const unsigned short ix , 
+        const unsigned short iy ,
+        const unsigned short iz ,
+        const unsigned short iu ) const 
       { return par ( index ( ix , iy , iz , iu ) ) ;  }    
       // ======================================================================
       /// set 4D-parameter
-      bool setPar ( const unsigned int ix     ,
-                    const unsigned int iy     ,
-                    const unsigned int iz     ,
-                    const unsigned int iu     ,
-                    const double       value  ) 
+      bool setPar
+      ( const unsigned short ix     ,
+        const unsigned short iy     ,
+        const unsigned short iz     ,
+        const unsigned short iu     ,
+        const double       value  ) 
       { return  setPar ( index ( ix , iy , iz , iu ) , value ) ; }
       // ======================================================================
     public:
@@ -729,11 +764,12 @@ namespace Ostap
        *  This is a useful function to make an unbinned parameterization 
        *  of certain distribution and/or efficiency 
        */
-      bool fill ( const double x          , 
-                  const double y          , 
-                  const double z          , 
-                  const double u          , 
-                  const double weight = 1 ) ;
+      bool fill
+      ( const double x          , 
+        const double y          , 
+        const double z          , 
+        const double u          , 
+        const double weight = 1 ) ;
       // ======================================================================
     public: // several useful operators and operations 
       // ======================================================================
@@ -827,10 +863,11 @@ namespace Ostap
        *      \int_{z_{low}}^{z_{high}}\int_{u_{low}}^{u_{high}}
        *       f(x,y,z,u) {\mathrm{d}} x {\mathrm{d}} y {\mathrm{d}} z {\mathrm{d}} u \f$ 
        */
-      double integral ( const double xlow , const double xhigh , 
-                        const double ylow , const double yhigh , 
-                        const double zlow , const double zhigh ,
-                        const double ulow , const double uhigh) const ;
+      double integral
+      ( const double xlow , const double xhigh , 
+        const double ylow , const double yhigh , 
+        const double zlow , const double zhigh ,
+        const double ulow , const double uhigh) const ;
       // ======================================================================
       /** integral 
        *  \f$ \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}
@@ -842,10 +879,11 @@ namespace Ostap
     private: 
       // ======================================================================
       /// 4D-index into 1D-index 
-      inline unsigned int index ( const unsigned short ix , 
-                                  const unsigned short iy , 
-                                  const unsigned short iz ,
-                                  const unsigned short iu ) const 
+      inline unsigned int index 
+      ( const unsigned short ix , 
+        const unsigned short iy , 
+        const unsigned short iz ,
+        const unsigned short iu ) const 
       { return ( ( ix * ( m_NY + 1 ) + iy ) * ( m_NZ + 1 ) + iz ) * ( m_NU + 1 ) + iu ; }
       // ====================================================================== 
       double calculate () const
@@ -864,13 +902,13 @@ namespace Ostap
     private:
       // ======================================================================
       /// x-degree 
-      unsigned short      m_NX   ; // x-degree
+      std::size_t         m_NX   ; // x-degree
       /// y-degree 
-      unsigned short      m_NY   ; //  y-degree
+      std::size_t         m_NY   ; //  y-degree
       /// z-degree 
-      unsigned short      m_NZ   ; //  z-degree
+      std::size_t         m_NZ   ; //  z-degree
       /// u-degree 
-      unsigned short      m_NU   ; //  u-degree
+      std::size_t         m_NU   ; //  u-degree
       // ======================================================================
       /// x-min 
       double              m_xmin ; // x-min

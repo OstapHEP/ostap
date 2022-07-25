@@ -266,15 +266,15 @@ class BaseMoment(object) :
             meanv = self.mean ( func , *args )
             sigma = self.rms  ( func , *args )
             import math
-            xmn   = meanv - 2 * sigma ## use 2 instead of 1 
-            xmx   = meanv + 2 * sigma ## use 2 instead of 1
+            xmn   = meanv - 1.5 * sigma ## use 1.5 instead of 1 
+            xmx   = meanv + 1.5 * sigma ## use 1.5 instead of 1
             #
             if isinstance ( self.xmin , float ) : xmn = max ( xmn , self.xmin ) 
             if isinstance ( self.xmax , float ) : xmx = min ( xmx , self.xmax )
             #
-            result = findroot ( ifun , xmn       , xmx       )
+            result = findroot ( ifun , xmn       , xmx       , maxiter = 500 )
         except :
-            result = findroot ( ifun , self.xmin , self.xmax )
+            result = findroot ( ifun , self.xmin , self.xmax , maxiter = 500 )
             
         return result
 

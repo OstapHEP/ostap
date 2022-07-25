@@ -43,7 +43,7 @@
 # @endcode
 #
 # The module has been developed and used with great success in
-# ``Kali, framework for fine calibration of LHCb Electromagnetic Calorimeter''
+# "Kali, framework for fine calibration of LHCb Electromagnetic Calorimeter"
 #
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
@@ -79,11 +79,11 @@ The module provides the 'recovery' for missing methods
 # 
 # chain = ...
 #
-# chain.process ( selector )  ## NB: note lowercase ``process'' here !!!
+# chain.process ( selector )  ## NB: note lowercase 'process' here !!!
 #
 
 The module has been developed and used with great success in
-``Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter''
+'Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter'
 
 More complicated (and more useful) cases are covered by
 SelectorWithCuts and SelectorWithVars classes 
@@ -95,8 +95,8 @@ __date__    = "2010-04-30"
 __version__ = "$Revision$" 
 # =============================================================================
 __all__ = (
-    'Selector'         ,        ## The ``fixed'' TPySelector
-    'SelectorWithCuts' ,        ## The ``fixed'' TPySelector with TTree-formula 
+    'Selector'         ,        ## The "fixed" TPySelector
+    'SelectorWithCuts' ,        ## The "fixed" TPySelector with TTree-formula 
     'SelectorWithVars' ,        ## Generic selctor to fill RooDataSet from TTree/TChain
     'Variable'         ,        ## helper class to define variable
     'DataSet_NEW_FILL' ,        ## Is new efficient filing machinery activated? 
@@ -143,7 +143,7 @@ class Selector ( Ostap.Selector ) :
         """
     @property 
     def tree ( self ) :
-        """``tree'' : get the actual TTree pointer"""
+        """'tree' : get the actual TTree pointer"""
         return self.get_tree() 
     
     # =========================================================================
@@ -247,7 +247,7 @@ if old_PyROOT :
 
 # =============================================================================
 ## @class SelectorWithCuts
-#  Efficient selector that runs only for ``good''-events  
+#  Efficient selector that runs only for "good"-events  
 #  @see Ostap::SelectorWithCuts
 #  @see Ostap::Selector
 #  @see TPySelector
@@ -255,7 +255,7 @@ if old_PyROOT :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-09
 class SelectorWithCuts (Ostap.SelectorWithCuts) :
-    """Efficient selector that runs only for ``good''-events  
+    """Efficient selector that runs only for 'good'-events  
     """
     ## constructor 
     def __init__ ( self             , 
@@ -278,26 +278,24 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         if self.cuts () and not self.silence :
             self.logger.info ( 'SelectorWithCuts: %s' % self.cuts() )
 
-        print ( 'AFTER CONSTRUCTOR!' )
-        
     @property
     def silence ( self ) :
-        """``silence''  : silent processing?"""
+        """'silence'  : silent processing?"""
         return self.__silence 
     
     @property
     def selection ( self ) :
-        """``selection'' -  selection to be used to preprocess TTree/TChain"""
+        """'selection' -  selection to be used to preprocess TTree/TChain"""
         return self.__selection
 
     @property
     def tree ( self ) :
-        """``tree'' : get the tree/chain  itself"""
+        """'tree' : get the tree/chain  itself"""
         return self.get_tree()  
 
     @property
     def logger ( self ) :
-        """``logger'' : get the logger"""
+        """'logger' : get the local logger object"""
         return self.__logger 
     
     # =========================================================================
@@ -383,9 +381,9 @@ class Variable(object) :
                    accessor    = None  ) :
         
         assert var and isinstance ( var ,  ( str , ROOT.RooRealVar ) ) , \
-               "Variable: invalid type for ``var''  %s/%s"      % ( var         , type (  var        ) ) 
+               "Variable: invalid type for 'var'  %s/%s"      % ( var         , type (  var        ) ) 
         assert accessor is None or callable ( accessor ) or isinstance ( accessor , str )  , \
-               "Variable: illegal type for ``accessor'' %s/%s"  % ( accessor    , type ( accessor    ) )
+               "Variable: illegal type for 'accessor' %s/%s"  % ( accessor    , type ( accessor    ) )
 
         self.__vmin = None
         self.__vmax = None
@@ -394,17 +392,17 @@ class Variable(object) :
 
             var = var.strip() 
             assert isinstance ( description , str ) , \
-                   "Variable: illegal type for ``description''"     % ( description , type ( description ) ) 
+                   "Variable: illegal type for 'description'"     % ( description , type ( description ) ) 
             assert isinstance ( vmin , num_types ) , \
-                   "Variable: illegal type for ``vmin'' %s/%s"      % ( vmin        , type ( vmin        ) )
+                   "Variable: illegal type for 'vmin' %s/%s"      % ( vmin        , type ( vmin        ) )
             assert isinstance ( vmax , num_types ) , \
-                   "Variable: illegal type for ``vmax'' %s/%s"      % ( vmax        , type ( vmax        ) )
+                   "Variable: illegal type for 'vmax' %s/%s"      % ( vmax        , type ( vmax        ) )
             assert vmin < vmax, \
-                   "Variable: invalid ``minmax'' range (%g,%g)"     % ( vmin , vmax ) 
+                   "Variable: invalid 'minmax' range (%g,%g)"     % ( vmin , vmax ) 
 
             if    description                   : pass
             elif  isinstance ( accessor , str ) : description = accessor
-            else                                : description = "``%s''-variable" % var
+            else                                : description = "'%s'-variable" % var
             
             description = description.replace('\n',' ')
 
@@ -435,57 +433,57 @@ class Variable(object) :
         
     @property
     def var         ( self ) :
-        """``var'' - the variable itself/ROOT.RooRealVar"""
+        """'var' : the variable itself/ROOT.RooRealVar"""
         return self.__var
     @property
     def name        ( self ) :
-        """``name'' - the name of the variable"""
+        """'name' : the name of the variable"""
         return self.__var.GetName() 
     @property
     def description ( self ) :
-        """``description'' - the variable description/title"""
+        """'description' : the variable description/title"""
         return self.__var.GetTitle()
     @property
     def minmax      (  self ) :
-        """``minmax'' - the range for the variable """
+        """'minmax' : the range for the variable """
         return self.__minmax    
     @property
     def vmin ( self ) :
-        """``vmin'' : minimal value (if set) """
+        """'vmin' : minimal value (if set) """
         if not self.__vmin is None : return self.__vmin
         mnmx = self.minmax
         if mnmx : return mnmx  [0]
         return None    
     @property
     def vmax ( self ) :
-        """``vmax'' : maximal value (if set) """
+        """'vmax' : maximal value (if set) """
         if not self.__vmax is None : return self.__vmax
         mnmx = self.minmax
         if mnmx : return mnmx [1]
         return None    
     @property
     def accessor    ( self ) :
-        """``accessor'' - the actual callable to get the value from TTree/TChain"""
+        """'accessor' - the actual callable to get the value from TTree/TChain"""
         return self.__accessor
     @property
     def formula ( self ) :
-        """``formula'' - formula for this variable (when applicable)?"""
+        """'formula' - formula for this variable (when applicable)?"""
         return self.__formula
     
     @property
     def trivial ( self ) :
-        """``trivial'' - is this variable ``trivial''?"""
+        """'trivial' - is this variable 'trivial'?"""
         return self.__formula ## and self.__formula == self.name
 
     @property
     def really_trivial ( self ) :
-        """``really_trivial'' - is it really trivial enough for RooFit?"""
+        """'really_trivial' - is it really trivial enough for RooFit?"""
         triv = self.trivial 
         return triv and  ( not '[' in triv ) and ( not ']' in triv )
     
     @property
     def checked ( self ) :
-        """``checked'' : checked?
+        """'checked' : checked?
         """
         return self.__checked
 
@@ -542,12 +540,12 @@ class Variables(object) :
 
     @property
     def variables ( self ) :
-        """``varibales'' the actual list/tuple of variables"""
+        """'variables' :  the actual list/tuple of variables"""
         return self.__variables
 
     @property
     def trivial_vars( self ) :
-        """``trivial_vars'' : are all variables ``trivial'' (suitable for fast-processing)?"""
+        """'trivial_vars' : are all variables 'trivial' (suitable for fast-processing)?"""
         return self.__triv_vars
 
     ## number of variables 
@@ -635,32 +633,32 @@ class SelStat(object) :
         
     @property
     def total ( self ) :
-        """``total''   : total number of events"""
+        """'total'   : total number of events"""
         return self.__total
     @total.setter
     def total ( self , value ) :
         assert isinstance ( value , integer_types ) and 0 <= value ,\
-               "Invalid value for ``total''"
+               "Invalid value for 'total'"
         self.__total = value
             
     @property
     def processed ( self ) :
-        """``processed''   : number of processed events"""
+        """'processed'   : number of processed events"""
         return self.__processed
     @processed.setter
     def processed ( self , value ) :
         assert isinstance ( value , integer_types ) and 0 <= value ,\
-               "Invalid value for ``processed''"
+               "Invalid value for 'processed'"
         self.__processed = value
         
     @property
     def skipped ( self ) :
-        """``skipped''   : number of skipped events (e.g. due to variabel ranges)"""
+        """'skipped'   : number of skipped events (e.g. due to variabel ranges)"""
         return self.__skipped
     @skipped.setter
     def skipped ( self , value ) :
         assert isinstance ( value , integer_types ) and 0 <= value ,\
-               "Invalid value for ``skipped''"
+               "Invalid value for 'skipped'"
         self.__skipped = value
 
     def __str__ ( self ) :
@@ -724,7 +722,7 @@ class SelStat(object) :
 class SelectorWithVars(SelectorWithCuts) :
     """Create and fill the basic dataset for RooFit
     
-    - Define the list of ``variables'' for selector:
+    - Define the list of 'variables' for selector:
     
     >>> variables = [ ... ]
     
@@ -911,7 +909,7 @@ class SelectorWithVars(SelectorWithCuts) :
         if roo_cuts :
             varlist = self.__data.varlist() 
             roosel  = Ostap.FormulaVar    ( roo_cuts, varlist , False )          
-            assert roosel .ok() , 'SelectorWithVars: invalid ``roo_cuts'': %s' % roo_cuts
+            assert roosel .ok() , "SelectorWithVars: invalid 'roo_cuts': %s" % roo_cuts
             del    roosel
             used    = Ostap.usedVariables ( roo_cuts , varlist  )            
             roosel  = Ostap.FormulaVar    ( roo_cuts , used     , True )
@@ -930,17 +928,17 @@ class SelectorWithVars(SelectorWithCuts) :
         
     @property 
     def name ( self ) :
-        """``name''  - the name of selector/dataset"""
+        """'name'  : the name of selector/dataset"""
         return self.__name
     
     @property 
     def fullname ( self ) :
-        """``fullname''  - the fullname of selector/dataset"""
+        """'fullname' : the fullname of selector/dataset"""
         return self.__fullname 
     
     @property 
     def data ( self ) :
-        """``data''  - the dataset"""
+        """'data'  : the dataset"""
         return self.__data
     @data.setter
     def data ( self , dataset ) :
@@ -951,69 +949,69 @@ class SelectorWithVars(SelectorWithCuts) :
 
     @property 
     def variables ( self ) :
-        """``variables'' - the list/tuple of variables (cleared in Terminate)"""
+        """'variables' : the list/tuple of variables (cleared in Terminate)"""
         return self.__variables
     
     @property
     def varset ( self ) :
-        """``varset'' : the structure of RooDataSet"""
+        """'varset' : the structure of RooDataSet"""
         return self.__varset
     
     @property
     def morecuts ( self ) :
-        """``morecuts'' -   additional cust to be applied in selection"""
+        """'morecuts' : additional cust to be applied in selection"""
         return self.__cuts
 
     @property
     def roo_cuts( self ) :
-        """``roo-cuts'': addtional selection/cuts based on RooFit machinery (RooFormula)"""
+        """'roo-cuts' : addtional selection/cuts based on RooFit machinery (RooFormula)"""
         return self.__roo_cuts
 
     @property
     def trivial_vars( self ) :
-        """``trivial_vars'' : are all variables ``trivial'' (suitable for fast-processing)?"""
+        """'trivial_vars' : are all variables 'trivial' (suitable for fast-processing)?"""
         return self.__variables.trivial_vars
 
     @property
     def really_trivial ( self ) :
-        """``really_trivial'' : is a set of variables really trivial (for RooFit)?"""
+        """'really_trivial' : is a set of variables really trivial (for RooFit)?"""
         for v in self.variables :
             if not v.really_trivial : return False
         return  not '[' in self.selection and not ']' in self.selection 
 
     @property
     def trivial_sel( self ) :
-        """``trivial_sel'' : is the selection ``trivial'' (suitable for fast-processing)?"""
+        """'trivial_sel' : is the selection 'trivial' (suitable for fast-processing)?"""
         return self.__triv_sel
     
     @property
     def trivial ( self ) :
-        """``trivial'' : Are variables/selection/cuts ``trivial'' (suitable for fast-processing)?"""
+        """'trivial' : Are variables/selection/cuts 'trivial' (suitable for fast-processing)?"""
         return self.__trivial
 
     @property
     def skip ( self ) :
-        """``skip'' : dictionary of skept entries"""
+        """'skip' : dictionary of skept entries"""
         return self.__skip
     
     @property
     def skipped ( self ) :
-        """``skipped'' : total number of skipped entries"""
+        """'skipped': total number of skipped entries"""
         return self.stat.skipped
     
     @property
     def processed  ( self ) :
-        """``processed'' : number of processeed events (after cuts)"""
+        """'processed' : number of processeed events (after cuts)"""
         return self.stat.processed 
     
     @property
     def total  ( self ) :
-        """``total'' : total number of processeed events (before cuts)"""
+        """`total' : total number of processeed events (before cuts)"""
         return self.stat.total
 
     @property
     def stat ( self ) :
-        """``stat'' : Total/processed/skipped events"""
+        """'stat' : Total/processed/skipped events"""
         return self.__stat    
     @stat.setter
     def stat ( self , value  ) :
@@ -1073,10 +1071,10 @@ class SelectorWithVars(SelectorWithCuts) :
     # =========================================================================
     ## fill it! 
     def fill ( self , bamboo ) :
-        """The  actual processing for the given ``bamboo''
+        """The  actual processing for the given 'bamboo'
         Note that   this method is independent on TTree/TChain and can be used directy
         One just needs to  ensure that:
-        - 'accessor functions' for the variables and 'cuts' agree with the type of ``bamboo''
+        - 'accessor functions' for the variables and 'cuts' agree with the type of 'bamboo'
         """
         
         ## apply cuts (if needed) 
@@ -1105,9 +1103,9 @@ class SelectorWithVars(SelectorWithCuts) :
         return 1 
 
     # =========================================================================
-    ## ``callable'' interface 
+    ## 'callable' interface 
     def __call__ ( self ,  entry ) :
-        """``callable'' interface to Selector
+        """'callable' interface to Selector
         """
         return self.fill ( entry ) 
 
@@ -1311,7 +1309,7 @@ class SelectorWithVars(SelectorWithCuts) :
             del self.__roo_formula 
             varlist = self.__data.varlist() 
             roosel  = Ostap.FormulaVar    ( roo_cuts, varlist , False )          
-            assert roosel .ok() , 'SelectorWithVars: invalid ``roo_cuts'': %s' % roo_cuts
+            assert roosel .ok() , "SelectorWithVars: invalid 'roo_cuts': %s" % roo_cuts
             del    roosel
             used    = Ostap.usedVariables ( roo_cuts , varlist  )            
             roosel  = Ostap.FormulaVar    ( roo_cuts , used     , True )
@@ -1346,7 +1344,7 @@ class SelectorWithVars(SelectorWithCuts) :
             del self.__roo_formula 
             varlist = self.__data.varlist() 
             roosel  = Ostap.FormulaVar    ( roo_cuts, varlist , False )          
-            assert roosel .ok() , 'SelectorWithVars: invalid ``roo_cuts'': %s' % roo_cuts
+            assert roosel .ok() , "SelectorWithVars: invalid 'roo_cuts': %s" % roo_cuts
             del    roosel
             used    = Ostap.usedVariables ( roo_cuts , varlist  )            
             roosel  = Ostap.FormulaVar    ( roo_cuts , used     , True )
@@ -1538,7 +1536,7 @@ def make_dataset_old ( tree              ,
     """
 
     if DataSet_NEW_FILL :
-        if not silent : logger.info ( "Switch to more efficient function ``make_dataset''" )
+        if not silent : logger.info ( "Switch to more efficient function 'make_dataset'" )
         return make_dataset ( tree                  ,
                               variables = variables ,
                               seletion  = selection ,
@@ -1552,7 +1550,7 @@ def make_dataset_old ( tree              ,
 
     variables = Variables ( variables )
     if not variables.trivial_vars or ( '[' in selection ) or ( '[' in roo_cuts ) :
-        if not silent : logger.info ( "Variables/selection are not trivial, switch to ``fill_dataset''" )
+        if not silent : logger.info ( "Variables/selection are not trivial, switch to 'fill_dataset'" )
         return fill_dataset ( tree                  ,
                               variables = variables ,
                               selection = selection ,
@@ -1589,7 +1587,7 @@ def make_dataset_old ( tree              ,
 
         if vv.trivial and vv.name == vv.formula : 
             
-            assert hasattr  ( tree , vv.name ) , "Tree/Chain has no branch ``%s''" % vv.name
+            assert hasattr  ( tree , vv.name ) , "Tree/Chain has no branch '%s'" % vv.name
             
             varset.add  ( vv.var )
             vars.add    ( vv )
@@ -1835,7 +1833,7 @@ def make_dataset ( tree              ,
         ## define new variable 
         frame = frame.Define ( v.name , v.formula )
 
-    ## define ``range/limit'' cuts: 
+    ## define 'range/limit' cuts: 
     for c , f in limits :
         frame = frame.Filter ( c , f )
         
@@ -1915,7 +1913,7 @@ ROOT.TTree.make_dataset = make_dataset
 # @endcode
 #
 # The module has been developed and used with great success in
-# ``Kali, framework for fine cailbration of LHCb Electormagnetic Calorimeter''
+# "Kali, framework for fine cailbration of LHCb Electormagnetic Calorimeter"
 #
 # @see Ostap::Selector 
 # @see Ostap::Process 
@@ -1928,12 +1926,12 @@ def fill_dataset2 ( self              ,
                     shortcut  = True  ,
                     silent    = False ,
                     use_frame = 50000 ) :
-    """ ``Process'' the tree/chain with proper TPySelector :
+    """ 'Process' the tree/chain with proper TPySelector :
     
     >>> from ostap.fitting.pyselectors import SelectorWithCVars     
     >>> selector = SelectorWithVars ( ... ) 
     >>> chain    = ...
-    >>> chain.fill_dataset2 ( selector )  ## NB: note lowercase ``process'' here !!!    
+    >>> chain.fill_dataset2 ( selector )  ## NB: note lowercase 'process' here !!!    
     """
 
     ## if use_frame and root_info < (6,15) :
@@ -2294,21 +2292,21 @@ ROOT.TTree.fill_dataset = fill_dataset
 # @endcode
 #
 # The module has been developed and used with great success in
-# ``Kali, framework for fine cailbration of LHCb Electormagnetic Calorimeter''
+# "Kali, framework for fine cailbration of LHCb Electormagnetic Calorimeter"
 #
 # @see Ostap::Selector 
 # @see Ostap::Process 
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
 def _process_ ( self , selector , nevents = -1 , first = 0 , **kwargs ) :
-    """ ``Process'' the tree/chain with proper TPySelector :
+    """ 'Process' the tree/chain with proper TPySelector :
     
     >>> from ostap.fitting.pyselectors import Selector    
     >>> class MySelector ( Selector ) : ... 
     ...
     >>> selector = MySelector()    
     >>> chain = ...
-    >>> chain.process ( selector )  ## NB: note lowercase ``process'' here !!!    
+    >>> chain.process ( selector )  ## NB: note lowercase 'process' here !!!    
     """
 
     if isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :

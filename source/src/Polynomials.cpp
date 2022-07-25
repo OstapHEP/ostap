@@ -470,7 +470,7 @@ double Ostap::Math::Hermite::integral
 // constructor from number of parameters 
 // ============================================================================
 Ostap::Math::Parameters::Parameters 
-( const unsigned int          np ) 
+( const std::size_t np ) 
   : m_pars ( np , 0.0 ) 
 {}
 // ============================================================================
@@ -495,10 +495,11 @@ bool Ostap::Math::Parameters::zero  () const { return s_vzero ( m_pars ) ; }
 // set k-parameter
 // ============================================================================
 bool Ostap::Math::Parameters::_setPar 
-( const unsigned short k , const double value ) 
+( const std::size_t k     , 
+  const double      value ) 
 {
-  if ( m_pars.size() <= k            ) { return false ; }
-  if ( s_equal ( m_pars[k] , value ) ) { return false ; }
+  if ( m_pars.size() <= k               ) { return false ; }
+  if ( s_equal ( m_pars [ k ] , value ) ) { return false ; }
   m_pars [ k ] = value ;
   return true ;
 }

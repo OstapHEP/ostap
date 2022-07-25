@@ -37,12 +37,12 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
-from   ostap.core.core       import cpp, Ostap
-from   ostap.math.base       import iszero
-from   ostap.fitting.utils   import Phases
-from   ostap.fitting.fit2d   import PDF2, Flat2D
-from   ostap.fitting.signals import Gauss_pdf, CB2_pdf
-from   ostap.core.meta_info  import root_info
+from   ostap.core.core          import cpp, Ostap
+from   ostap.math.base          import iszero
+from   ostap.fitting.fithelpers import Phases
+from   ostap.fitting.fit2d      import PDF2, Flat2D
+from   ostap.fitting.signals    import Gauss_pdf, CB2_pdf
+from   ostap.core.meta_info     import root_info
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_2d' )
@@ -56,8 +56,8 @@ class PolyBase2(PDF2,Phases) :
     """Helper base class to implement various polynomial-like shapes
     """
     def __init__ ( self , name , xvar  , yvar , power , the_phis = None ) :
-        PDF2  .__init__ ( self , name  , xvar , yvar  )
-        Phases.__init__ ( self , power , the_phis  )
+        PDF2  .__init__ ( self , name  = name  , xvar = xvar , yvar = yvar  )
+        Phases.__init__ ( self , power = power , the_phis = the_phis  )
 # =============================================================================
 ## @class PolyPos2D_pdf
 #  positive polynomial in 2D:
@@ -95,10 +95,14 @@ class PolyPos2D_pdf(PolyBase2) :
                    the_phis = None  ) : 
 
         ## check arguments 
-        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx 
-        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "'nx'-parameter is illegal: %s" % nx 
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "'ny'-parameter is illegal: %s" % ny
         ## 
-        PolyBase2.__init__ ( self , name , xvar , yvar ,  ( nx + 1 ) * ( ny + 1 ) - 1 , the_phis )
+        PolyBase2.__init__ ( self ,
+                             name = name ,
+                             xvar = xvar ,
+                             yvar = yvar ,
+                             power = ( nx + 1 ) * ( ny + 1 ) - 1 , the_phis = the_phis )
 
         self.__nx = nx 
         self.__ny = ny
@@ -126,11 +130,11 @@ class PolyPos2D_pdf(PolyBase2) :
 
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx' : order/degree of 2D-polynom in x-direction"""
         return self.__nx
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__ny
     
         
@@ -174,7 +178,7 @@ class PolyPos2Dsym_pdf(PolyBase2) :
                    the_phis = None  ) : 
         
         ## check arguments 
-        assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
+        assert isinstance ( n , int ) and 0 <= n < 100 , "'n'-parameter is illegal: %s" % n
         ## 
         self.__n = n 
         PolyBase2.__init__ ( self , name , xvar , yvar , ( n + 1 ) * ( n + 2 ) / 2 - 1 , the_phis )
@@ -203,15 +207,15 @@ class PolyPos2Dsym_pdf(PolyBase2) :
     
     @property
     def n  ( self ) :
-        """``n''-parameter - order/degree of 2D-polynom in x&y-directions"""
+        """'n'  :  order/degree of 2D-polynom in x&y-directions"""
         return self.__n
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx' : order/degree of 2D-polynom in x-direction"""
         return self.__n
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__n
        
 models.append ( PolyPos2Dsym_pdf )
@@ -264,8 +268,8 @@ class PSPol2D_pdf(PolyBase2) :
                    the_phis = None  ) :
         
         ## check arguments 
-        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
-        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "'nx'-parameter is illegal: %s" % nx
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "'ny'-parameter is illegal: %s" % ny
 
         ## the base 
         PolyBase2.__init__ ( self , name , xvar , yvar ,
@@ -305,31 +309,31 @@ class PSPol2D_pdf(PolyBase2) :
     
     @property 
     def mass1 ( self ) :
-        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        """'mass1'-variable for the fit (alias for 'x' and 'xvar')"""
         return self.xvar
     
     @property 
     def mass2 ( self ) :
-        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        """'mass2'-variable for the fit (alias for 'y' or 'yvar')"""
         return self.yvar
 
     @property
     def phasespacex( self ) :
-        """``x-phasespace''-function for  PSPol2D-function"""
+        """'x-phasespace'  : function for  PSPol2D-function"""
         return self.__phasespacex
     
     @property
     def phasespacey( self ) :
-        """``y-phasespace''-function for  PSPol2D-function"""
+        """'y-phasespace' : function for  PSPol2D-function"""
         return self.__phasespacey 
     
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx' : order/degree of 2D-polynom in x-direction"""
         return self.__nx
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__ny
     
         
@@ -391,9 +395,9 @@ class PSPol2D2_pdf(PolyBase2) :
                    the_phis = None  ) :
         
         ## check arguments 
-        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
-        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
-        assert isinstance ( mmax , float ) , "``mmax''-parameter is illegal: %s" % mmax
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "'nx'-parameter is illegal: %s" % nx
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "'ny'-parameter is illegal: %s" % ny
+        assert isinstance ( mmax , float ) , "'mmax'-parameter is illegal: %s" % mmax
 
         ## the base 
         PolyBase2.__init__ ( self , name , xvar , yvar ,
@@ -436,36 +440,36 @@ class PSPol2D2_pdf(PolyBase2) :
     
     @property 
     def mass1 ( self ) :
-        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        """'mass1'-variable for the fit (alias for 'x' or 'xvar')"""
         return self.xvar
     
     @property 
     def mass2 ( self ) :
-        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        """'mass2'-variable for the fit (alias for 'y' or 'yvar')"""
         return self.yvar
 
     @property
     def phasespacex( self ) :
-        """``x-phasespace''-function for  PSPol2D-function"""
+        """'x-phasespace' : function for  PSPol2D-function"""
         return self.__phasespacex
     
     @property
     def phasespacey( self ) :
-        """``y-phasespace''-function for  PSPol2D-function"""
+        """'y-phasespace' : function for  PSPol2D-function"""
         return self.__phasespacey 
 
     @property
     def mmax  ( self ) :
-        """``mmax''-parameter - the maximal allowed mass"""
+        """'mmax' :  the maximal allowed mass"""
         return self.__mmax
     
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx'  : order/degree of 2D-polynom in x-direction"""
         return self.__nx
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__ny
     
 models.append ( PSPol2D2_pdf ) 
@@ -532,9 +536,9 @@ class PSPol2D3_pdf(PolyBase2) :
                    the_phis = None  ) :
         
         ## check arguments 
-        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
-        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
-        assert isinstance ( mmax , float ) , "``mmax''-parameter is illegal: %s" % mmax
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "'nx'-parameter is illegal: %s" % nx
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "'ny'-parameter is illegal: %s" % ny
+        assert isinstance ( mmax , float ) , "'mmax'-parameter is illegal: %s" % mmax
 
         ## the base 
         PolyBase2.__init__ ( self , name , xvar , yvar , nx + ny , the_phis )
@@ -576,36 +580,36 @@ class PSPol2D3_pdf(PolyBase2) :
     
     @property 
     def mass1 ( self ) :
-        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        """'mass1'-variable for the fit (alias for 'x' or 'xvar')"""
         return self.xvar
     
     @property 
     def mass2 ( self ) :
-        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        """'mass2'-variable for the fit (alias for 'y' or 'yvar')"""
         return self.yvar
 
     @property
     def phasespacex( self ) :
-        """``x-phasespace''-function for  PSPol2D-function"""
+        """'x-phasespace' : function for  PSPol2D-function"""
         return self.__phasespacex
     
     @property
     def phasespacey( self ) :
-        """``y-phasespace''-function for  PSPol2D-function"""
+        """'y-phasespace' : function for  PSPol2D-function"""
         return self.__phasespacey 
 
     @property
     def mmax  ( self ) :
-        """``mmax''-parameter - the maximal allowed mass"""
+        """'mmax' : the maximal allowed mass"""
         return self.__mmax
     
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx'  : order/degree of 2D-polynom in x-direction"""
         return self.__nx
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__ny
     
 models.append ( PSPol2D3_pdf ) 
@@ -662,7 +666,7 @@ class PSPol2Dsym_pdf(PolyBase2) :
                    the_phis = None  ) :
         
         ## check arguments 
-        assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
+        assert isinstance ( n , int ) and 0 <= n < 100 , "'n'-parameter is illegal: %s" % n
         ## 
 
         ## the base 
@@ -700,40 +704,40 @@ class PSPol2Dsym_pdf(PolyBase2) :
         
     @property 
     def mass1 ( self ) :
-        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        """'mass1'-variable for the fit (alias for 'x' and 'xvar')"""
         return self.xvar
     
     @property 
     def mass2 ( self ) :
-        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        """'mass2'-variable for the fit (alias for 'y' or 'yvar')"""
         return self.yvar
 
     @property
     def phasespace ( self ) :
-        """``phasespace''-function for PSPol2DSym-function"""
+        """'phasespace' : function for PSPol2DSym-function"""
         return self.__phasespace
     
     @property
     def phasespacex( self ) :
-        """``x-phasespace''-function for PSPol2Dsym-function"""
+        """'x-phasespace' : function for PSPol2Dsym-function"""
         return self.__phasespace
     
     @property
     def phasespacey( self ) :
-        """``y-phasespace''-function for PSPol2Dsym-function"""
+        """'y-phasespace' : function for PSPol2Dsym-function"""
         return self.__phasespace 
 
     @property
     def n  ( self ) :
-        """``n''-parameter  - order/degree of 2D-polynom in x&y-directions"""
+        """'n'  :  order/degree of 2D-polynom in x&y-directions"""
         return self.__n
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx' : order/degree of 2D-polynom in x-direction"""
         return self.__n
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__n
     
         
@@ -795,8 +799,8 @@ class PSPol2D2sym_pdf(PolyBase2) :
                    the_phis = None  ) :
         
         ## check arguments 
-        assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
-        assert isinstance ( mmax , float ) , "``mmax''-parameter is illegal: %s" % mmax
+        assert isinstance ( n , int ) and 0 <= n < 100 , "'n'-parameter is illegal: %s" % n
+        assert isinstance ( mmax , float ) , "'mmax'-parameter is illegal: %s" % mmax
         ## 
 
         ## the base 
@@ -836,45 +840,45 @@ class PSPol2D2sym_pdf(PolyBase2) :
         
     @property 
     def mass1 ( self ) :
-        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        """'mass1'-variable for the fit (alias for 'x' or 'xvar')"""
         return self.xvar
     
     @property 
     def mass2 ( self ) :
-        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        """'mass2'-variable for the fit (alias for 'y' or 'yvar')"""
         return self.yvar
 
     @property
     def phasespace ( self ) :
-        """``phasespace''-function for PSPol2DSym-function"""
+        """'phasespace' : function for PSPol2DSym-function"""
         return self.__phasespace
     
     @property
     def phasespacex( self ) :
-        """``x-phasespace''-function for PSPol2Dsym-function"""
+        """'x-phasespace' : function for PSPol2Dsym-function"""
         return self.__phasespace
     
     @property
     def phasespacey( self ) :
-        """``y-phasespace''-function for PSPol2Dsym-function"""
+        """'y-phasespace' : function for PSPol2Dsym-function"""
         return self.__phasespace 
 
     @property
     def mmax  ( self ) :
-        """``mmax''-parameter - the maximal allowed mass"""
+        """'mmax' : the maximal allowed mass"""
         return self.__mmax
     
     @property
     def n  ( self ) :
-        """``n''-parameter  - order/degree of 2D-polynom in x&y-directions"""
+        """'n'  : order/degree of 2D-polynom in x&y-directions"""
         return self.__n
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx' : order/degree of 2D-polynom in x-direction"""
         return self.__n
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__n
     
         
@@ -937,8 +941,8 @@ class PSPol2D3sym_pdf(PolyBase2) :
                    the_phis = None  ) :
         
         ## check arguments 
-        assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
-        assert isinstance ( mmax , float ) , "``mmax''-parameter is illegal: %s" % mmax
+        assert isinstance ( n , int ) and 0 <= n < 100 , "'n'-parameter is illegal: %s" % n
+        assert isinstance ( mmax , float ) , "'mmax'-parameter is illegal: %s" % mmax
         ## 
 
         ## the base 
@@ -978,45 +982,45 @@ class PSPol2D3sym_pdf(PolyBase2) :
         
     @property 
     def mass1 ( self ) :
-        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        """'mass1'-variable for the fit (alias for 'x' and 'xvar')"""
         return self.xvar
     
     @property 
     def mass2 ( self ) :
-        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        """'mass2'-variable for the fit (alias for 'y' and 'yvar')"""
         return self.yvar
 
     @property
     def phasespace ( self ) :
-        """``phasespace''-function for PSPol2DSym-function"""
+        """'phasespace' : function for PSPol2DSym-function"""
         return self.__phasespace
     
     @property
     def phasespacex( self ) :
-        """``x-phasespace''-function for PSPol2Dsym-function"""
+        """'x-phasespace' : function for PSPol2Dsym-function"""
         return self.__phasespace
     
     @property
     def phasespacey( self ) :
-        """``y-phasespace''-function for PSPol2Dsym-function"""
+        """'y-phasespace' : function for PSPol2Dsym-function"""
         return self.__phasespace 
 
     @property
     def mmax  ( self ) :
-        """``mmax''-parameter - the maximal allowed mass"""
+        """'mmax' : the maximal allowed mass"""
         return self.__mmax
     
     @property
     def n  ( self ) :
-        """``n''-parameter  - order/degree of 2D-polynom in x&y-directions"""
+        """'n'  : order/degree of 2D-polynom in x&y-directions"""
         return self.__n
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx' : order/degree of 2D-polynom in x-direction"""
         return self.__n
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__n
     
         
@@ -1059,8 +1063,8 @@ class ExpoPSPol2D_pdf(PolyBase2) :
                    the_phis = None  ) :
         
         ## check arguments 
-        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
-        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "'nx'-parameter is illegal: %s" % nx
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "'ny'-parameter is illegal: %s" % ny
 
         ## the base 
         PolyBase2.__init__ ( self , name , xvar , yvar , ( nx + 1 ) * ( ny + 1 ) - 1 , the_phis = the_phis )
@@ -1073,8 +1077,9 @@ class ExpoPSPol2D_pdf(PolyBase2) :
             
         ## the exponential slope
         self.__tau  = self.make_var ( tau              ,
-                                "tau_%s"  % name ,
-                                "tau(%s)" % name , tau , 0 , *limits_tau )
+                                      "tau_%s"  % name ,
+                                      "tau(%s)" % name ,
+                                      None , 0 , *limits_tau )
         #
         self.__phasespace = psy
 
@@ -1109,40 +1114,39 @@ class ExpoPSPol2D_pdf(PolyBase2) :
 
     @property 
     def mass1 ( self ) :
-        """``mass1''-variable for the fit (alias for ``x'' or ``xvar'')"""
+        """'mass1'-variable for the fit (alias for 'x' and  'xvar')"""
         return self.xvar
     
     @property 
     def mass2 ( self ) :
-        """``mass2''-variable for the fit (alias for ``y'' or ``yvar'')"""
+        """'mass2'-variable for the fit (alias for 'y' and 'yvar')"""
         return self.yvar
 
     @property
     def tau ( self ) :
-        """``tau''-parameters, the exponential slope for  x-dimension"""
+        """'tau' : the exponential slope for  x-dimension"""
         return   self.__tau 
     @tau.setter
     def tau ( self , value ) :
-        value = float ( value )
-        self.__tau.setVal ( value )
+        self.set_value ( self.__tau , value )
     
     @property
     def phasespace ( self ) :
-        """``phasespace''-function for PSPol2DSym-function"""
+        """'phasespace' : function for PSPol2DSym-function"""
         return self.__phasespace
         
     @property
     def phasespacey( self ) :
-        """``y-phasespace''-function for PSPol2Dsym-function"""
+        """'y-phasespace' : function for PSPol2Dsym-function"""
         return self.phasespace
     
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx' : order/degree of 2D-polynom in x-direction"""
         return self.__nx
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__ny
     
 
@@ -1183,8 +1187,8 @@ class ExpoPol2D_pdf(PolyBase2) :
                    the_phis = None  ) : 
         
         ## check arguments 
-        assert isinstance ( nx , int ) and 0 <= nx < 100 , "``nx''-parameter is illegal: %s" % nx
-        assert isinstance ( ny , int ) and 0 <= ny < 100 , "``ny''-parameter is illegal: %s" % ny
+        assert isinstance ( nx , int ) and 0 <= nx < 100 , "'nx'-parameter is illegal: %s" % nx
+        assert isinstance ( ny , int ) and 0 <= ny < 100 , "'ny'-parameter is illegal: %s" % ny
 
         PolyBase2.__init__ ( self , name , xvar , yvar ,
                              ( nx + 1 ) * ( ny + 1 ) - 1 , the_phis )
@@ -1207,12 +1211,14 @@ class ExpoPol2D_pdf(PolyBase2) :
         ## the exponential slopes
         #
         self.__taux  = self.make_var ( taux              ,
-                                 "taux_%s"  % name ,
-                                 "taux(%s)" % name , taux , 0 , *limits_taux )
+                                       "taux_%s"  % name ,
+                                       "taux(%s)" % name ,
+                                       None , 0 , *limits_taux )
         #
         self.__tauy  = self.make_var ( tauy              ,
-                                 "tauy_%s"  % name ,
-                                 "tauy(%s)" % name , tauy , 0 , *limits_tauy )
+                                       "tauy_%s"  % name ,
+                                       "tauy(%s)" % name ,
+                                       None , 0 , *limits_tauy )
             
         #
         ## finally build PDF 
@@ -1242,29 +1248,27 @@ class ExpoPol2D_pdf(PolyBase2) :
 
     @property
     def taux ( self ) :
-        """``tau-x''-parameters, the exponential slope for x-dimension"""
+        """'tau-x' : the exponential slope for x-dimension"""
         return   self.__taux 
     @taux.setter
     def taux ( self , value ) :
-        value = float ( value )
-        self.__taux.setVal ( value )
+        self.set_value ( self.__taux , value )
 
     @property
     def tauy ( self ) :
-        """``tau-y''-parameters, the exponential slope for y-dimension"""
+        """'tau-y'' : the exponential slope for y-dimension"""
         return   self.__tauy
     @tauy.setter
     def tauy ( self , value ) :
-        value = float ( value )
-        self.__tauy.setVal ( value )
+        self.set_value ( self.__tauy , value )
     
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx' : order/degree of 2D-polynom in x-direction"""
         return self.__nx
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__ny
     
         
@@ -1303,7 +1307,7 @@ class ExpoPol2Dsym_pdf(PolyBase2) :
                    the_phis = None  ) : 
         
         ## check arguments 
-        assert isinstance ( n , int ) and 0 <= n < 100 , "``n''-parameter is illegal: %s" % n
+        assert isinstance ( n , int ) and 0 <= n < 100 , "'n'-parameter is illegal: %s" % n
         ## 
         PolyBase2.__init__ ( self , name , xvar , yvar ,
                              ( n + 1 ) * ( n + 2 ) / 2 - 1 , the_phis )
@@ -1323,8 +1327,9 @@ class ExpoPol2Dsym_pdf(PolyBase2) :
         ## the exponential slopes
         #
         self.__tau  = self.make_var ( tau              ,
-                                "tau_%s"  % name ,
-                                "tau(%s)" % name , tau , 0 , *limits_tau )
+                                      "tau_%s"  % name ,
+                                      "tau(%s)" % name ,
+                                      None , 0 , *limits_tau )
             
         #
         ## finally build PDF 
@@ -1350,42 +1355,39 @@ class ExpoPol2Dsym_pdf(PolyBase2) :
         
     @property
     def tau ( self ) :
-        """``tau''-parameter, the exponential slope for x&y-dimensions"""
+        """'tau' : the exponential slope for x&y-dimensions"""
         return   self.__tau 
     @tau.setter
     def tau ( self , value ) :
-        value = float ( value )
-        self.__tau.setVal ( value )
+        self.set_value ( self.__tau , value )
 
     @property
     def taux ( self ) :
-        """``tau-x''-parameters, the exponential slope for x-dimension"""
+        """'tau-x' : the exponential slope for x-dimension"""
         return   self.__tau
     @taux.setter
     def taux ( self , value ) :
-        value = float ( value )
-        self.__tau.setVal ( value )
+        self.set_value ( self.__tau , value )
 
     @property
     def tauy ( self ) :
-        """``tau-y''-parameters, the exponential slope for y-dimension"""
+        """'tau-y' : the exponential slope for y-dimension"""
         return   self.__tau
     @tauy.setter
     def tauy ( self , value ) :
-        value = float ( value )
-        self.__tau.setVal ( value )
+        self.set_value ( self.__tau , value )
     
     @property
     def n  ( self ) :
-        """``n''-parameter - order/degree of 2D-polynom in x&y-directions"""
+        """'n'  : order/degree of 2D-polynom in x&y-directions"""
         return self.__n
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 2D-polynom in x-direction"""
+        """'nx'' : order/degree of 2D-polynom in x-direction"""
         return self.__n
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 2D-polynom in y-direction"""
+        """'ny' : order/degree of 2D-polynom in y-direction"""
         return self.__n
     
 
@@ -1442,7 +1444,7 @@ class Spline2D_pdf(PolyBase2) :
 
     @property
     def spline ( self ) :
-        """``spline''-function for Spline2D PDF"""
+        """'spline'-function for Spline2D PDF"""
         return self.__spline
 
 models.append ( Spline2D_pdf ) 
@@ -1501,7 +1503,7 @@ class Spline2Dsym_pdf(PolyBase2) :
         
     @property
     def spline ( self ) :
-        """``spline''-function for Spline2Dsym PDF"""
+        """'spline'-function for Spline2Dsym PDF"""
         return self.__spline
 
 models.append ( Spline2Dsym_pdf )
@@ -1550,31 +1552,31 @@ class Gauss2D_pdf(PDF2) :
             my_lims = ylims[0] - 0.1 * dy , ylims[1] + 0.1 * dy 
 
             
-        self.__muX = self.make_var ( muX  ,
-                                     'mu_x_%s'     % self.name ,
-                                     '#mu_{x}(%s)' % self.name ,
-                                     None , muX , *mx_lims )
+        self.__muX    = self.make_var ( muX  ,
+                                        'mu_x_%s'     % self.name ,
+                                        '#mu_{x}(%s)' % self.name ,
+                                        None , *mx_lims )
         
-        self.__muY = self.make_var ( muY  ,
-                                     'mu_y_%s'     % self.name ,
-                                     '#mu_{y}(%s)' % self.name ,
-                                     None , muY , *my_lims )
+        self.__muY    = self.make_var ( muY  ,
+                                        'mu_y_%s'     % self.name ,
+                                        '#mu_{y}(%s)' % self.name ,
+                                        None , *my_lims )
         
         
         self.__sigmaX = self.make_var ( sigmaX  ,
                                         'sigma_x_%s'     % self.name ,
                                         '#sigma_{x}(%s)' % self.name ,
-                                        None     ,  sigmaX , *sx_lims )
+                                        None    , *sx_lims )
         
         self.__sigmaY = self.make_var ( sigmaY  ,
                                         'sigma_y_%s'     % self.name ,
                                         '#sigma_{y}(%s)' % self.name ,
-                                        None     ,  sigmaY , *sy_lims )
+                                        None    , *sy_lims )
         
         self.__theta   = self.make_var ( theta  ,
                                          'theta_%s'   % self.name ,
                                          '#theta(%s)' % self.name ,
-                                         None     ,  theta , -10 , +10  )
+                                         None   , -10 , +10  )
         
         ## make PDF
         self.pdf = Ostap.Models.Gauss2D (
@@ -1603,7 +1605,7 @@ class Gauss2D_pdf(PDF2) :
         
     @property
     def muX ( self ) :
-        """``x-locaiton for 2D gaussian"""
+        """x-locaiton for 2D gaussian"""
         return self.__muX
     @muX.setter
     def muX ( self , value ) :
@@ -1611,7 +1613,7 @@ class Gauss2D_pdf(PDF2) :
 
     @property
     def muY ( self ) :
-        """``y-locaiton for 2D gaussian"""
+        """y-locaiton for 2D gaussian"""
         return self.__muY
     @muY.setter
     def muY ( self , value ) :
@@ -1619,7 +1621,7 @@ class Gauss2D_pdf(PDF2) :
         
     @property
     def sigmaX ( self ) :
-        """``sigma-X for 2D gaussian"""
+        """'sigma-X' for 2D gaussian"""
         return self.__sigmaX
     @sigmaX.setter
     def sigmaX ( self , value ) :
@@ -1627,7 +1629,7 @@ class Gauss2D_pdf(PDF2) :
 
     @property
     def sigmaY ( self ) :
-        """``sigma-Y for 2D gaussian"""
+        """'sigma-Y' for 2D gaussian"""
         return self.__sigmaY
     @sigmaY.setter
     def sigmaY ( self , value ) :
@@ -1635,7 +1637,7 @@ class Gauss2D_pdf(PDF2) :
         
     @property
     def theta ( self ) :
-        """``theta-rotation for 2D gaussian"""
+        """'theta' :  rotation for 2D gaussian"""
         return self.__theta
     @theta.setter
     def theta ( self , value ) :
@@ -1714,27 +1716,27 @@ class RooKeys2D_pdf(PDF2) :
 
     @property
     def data   ( self ) :
-        """``data'' : the actual data set for RooNDKeysPdf"""
+        """'data' : the actual data set for RooNDKeysPdf"""
         return self.__data
     @property
     def options ( self ) :
-        """``options'' : ``ootions'' string for RooNDKeysPdf"""
+        """'options' : 'options'-string for RooNDKeysPdf"""
         return self.__mirror        
     @property
     def rho    ( self )  :
-        """``rho'' : ``rho'' parameter for RooNDKeysPdf"""
+        """'rho' :  'rho'-parameter for RooNDKeysPdf"""
         return self.__rho 
     @property
     def rotate    ( self )  :
-        """``rotate'' : ``rotate'' flag for RooNDKeysPdf"""
+        """'rotate' : `'rotate'-flag for RooNDKeysPdf"""
         return self.__rotate
     @property
     def sort      ( self )  :
-        """``sort'' : ``sort'' flag for RooNDKeysPdf"""
+        """'sort' : 'sort''-flag for RooNDKeysPdf"""
         return self.__sort 
     @property
     def nsigma    ( self )  :
-        """``nsigma'' : ``nsigma'' parameter for RooNDKeysPdf"""
+        """'nsigma' : 'nsigma' parameter for RooNDKeysPdf"""
         return self.__nsigma 
 
 # =============================================================================

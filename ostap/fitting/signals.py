@@ -3,7 +3,7 @@
 # =============================================================================
 ## @file ostap/fitting/signals.py
 #
-#  Set of useful PDFs for various ``signal'' 1D and 2D fits
+#  Set of useful PDFs for various 'signal' 1D and 2D fits
 #  It includes
 #  - soeme empricial PDFs to describe narrow peaks: Gauss, CrystalBall, ....
 #  - some PDF to describe "wide" peaks: BreitWigner,LASS, Bugg, Flatte, ...
@@ -15,7 +15,7 @@
 #  @date 2011-07-25
 # 
 # =============================================================================
-"""Set of useful PDFs for various ``signal'' 1D and 2D fits
+"""Set of useful PDFs for various 'signal' 1D and 2D fits
 
 It includes
 
@@ -54,7 +54,7 @@ Empricial PDFs to describe narrow peaks
   - Hypatia_pdf
   - PearsonIV_pdf
   
-PDF to describe ``wide'' peaks
+PDF to describe 'wide' peaks
 
   - BreitWigner
   - BreitWigner with interference 
@@ -131,9 +131,10 @@ __all__ = (
 # =============================================================================
 import ROOT, math
 # =============================================================================
-from   ostap.core.core        import cpp , Ostap, VE  
-from   ostap.fitting.basic    import PEAK, PDF, PEAKMEAN, CheckMean, all_args
-from   ostap.fitting.utils    import Phases
+from   ostap.core.core          import Ostap  
+from   ostap.fitting.pdfbasic   import PDF1 , all_args
+from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
+from   ostap.fitting.fithelpers import Phases
 import ostap.math.dalitz 
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -216,21 +217,21 @@ class CrystalBall_pdf(PEAK) :
     http://en.wikipedia.org/wiki/Crystal_Ball_function
     
     - T. Skwarnicki,
-    ``A study of the radiative cascade transitions between the Upsilon-Prime
-    and Upsilon resonances'', Ph.D Thesis, DESY F31-86-02(1986), Appendix E.
+    'A study of the radiative cascade transitions between the Upsilon-Prime
+    and Upsilon resonances', Ph.D Thesis, DESY F31-86-02(1986), Appendix E.
     http://inspirehep.net/record/230779/files/f31-86-02.pdf
     - J. E. Gaiser,
-    ``Charmonium Spectroscopy from Radiative Decays of the J/Psi and Psi-Prime'',
+    'Charmonium Spectroscopy from Radiative Decays of the J/Psi and Psi-Prime',
     Ph.D. Thesis, SLAC-R-255 (1982), Appendix F, p 178
     http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-r-255.pdf
     - M. J. Oreglia,
-    ``A Study of the Reactions psi prime --> gamma gamma psi'',
+    'A Study of the Reactions psi prime --> gamma gamma psi',
     Ph.D. Thesis, SLAC-R-236 (1980), Appendix D.
     http://www.slac.stanford.edu/pubs/slacreports/slac-r-236.html
     
     Note:
     - Unlike the original definition parameter 'n' here is shifted by 1: n <- |n| + 1
-    - Typical value of parameter alpha for ``physical'' peaks is 1.5<alpha<3.0,
+    - Typical value of parameter alpha for 'physical' peaks is 1.5<alpha<3.0,
     - For large alpha (e.g. alpha>3), there is no sensitivity for n;
     similarly in the limit of large n, sensitivity for alpha is minimal
     """
@@ -249,13 +250,13 @@ class CrystalBall_pdf(PEAK) :
         
         self.__alpha = self.make_var ( alpha ,
                                        'alpha_%s'        % name ,
-                                       '#alpha_{CB}(%s)' % name ,  alpha  ,
-                                       2.0 , 0.01  ,  5 )
+                                       '#alpha_{CB}(%s)' % name ,
+                                       None , 2.0 , 0.05 , 5 )
         
         self.__n     = self.make_var ( n   ,
                                        'n_%s'            % name ,
-                                       'n_{CB}(%s)'      % name , n       ,
-                                       1.0 , 1.e-8 , 50 )
+                                       'n_{CB}(%s)'      % name ,
+                                       None , 5.0 , 1.e-6 , 100 )
         
         #
         ## finally build PDF 
@@ -288,7 +289,7 @@ class CrystalBall_pdf(PEAK) :
     
     @property
     def n ( self ) :
-        """N-parameter for Crystal Ball tail (actually ``n+1'' is used)"""
+        """N-parameter for Crystal Ball tail (actually 'n+1' is used)"""
         return self.__n
     @n.setter
     def n ( self, value ) :
@@ -356,7 +357,7 @@ class CB2_pdf(PEAK) :
     Note:
     - Similar to CrystalBall_pdf and unlike the original definition,
     the parameters 'n' here are shifted by 1: n <- |n| + 1
-    - Typical value of parameters alpha for ``physical'' peaks is 1.5<alpha<3.0,
+    - Typical value of parameters alpha for 'physical' peaks is 1.5<alpha<3.0,
     - For large alpha (e.g. alpha>3), there is no sensitivity for n;
     similarly in the limit of large n, sensitivity for alpha is minimal
     """
@@ -379,16 +380,20 @@ class CB2_pdf(PEAK) :
         #
         self.__aL    = self.make_var ( alphaL                  ,
                                        "aL_%s"          % name ,
-                                       "#alpha_{L}(%s)" % name , alphaL    , 2.0 ,  0.01 ,   5 )
+                                       "#alpha_{L}(%s)" % name ,
+                                       None , 2.0 ,  0.05 , 5 )
         self.__nL    = self.make_var ( nL                      ,                     
                                        "nL_%s"          % name ,
-                                       "n_{L}(%s)"      % name , nL        , 1   , 1.e-8 , 100 )
+                                       "n_{L}(%s)"      % name ,
+                                       None  , 5 , 1.e-6 , 100 )
         self.__aR    = self.make_var ( alphaR ,
                                        "aR_%s"          % name ,
-                                       "#alpha_{R}(%s)" % name , alphaR    , 2.0 , 0.01  ,   5 )
+                                       "#alpha_{R}(%s)" % name ,
+                                       None , 2.0 ,  0.05 , 5 )
         self.__nR    = self.make_var ( nR                      ,
                                        "nR_%s"          % name ,
-                                       "n_{R}(%s)"      % name , nR        , 1   , 1.e-8 , 100 )
+                                       "n_{R}(%s)"      % name ,
+                                       None  , 5 , 1.e-6 , 100 )
         
         self.pdf = Ostap.Models.CrystalBallDS(
             self.roo_name ( 'cb2_' ) , 
@@ -495,16 +500,18 @@ class Needham_pdf(PEAK) :
         #
         self.__a0 = self.make_var ( a0                  ,
                                     "a0_%s"     % name  ,
-                                    "a_{0}(%s)" % name  , a0 , 
-                                    1.975               ,   0           , 10           )
+                                    "a_{0}(%s)" % name  ,
+                                    True , 1.975 , 0 , 10  )
+        
         self.__a1 = self.make_var ( a1                  ,
                                     "a1_%s"     % name  ,
-                                    "a_{1}(%s)" % name  , a1 , 
-                                    -0.0011   * unit    , -10 * unit    , 10 * unit    )
+                                    "a_{1}(%s)" % name  ,
+                                    True , -0.0011   * unit , -10 * unit , 10 * unit )
+        
         self.__a2 = self.make_var ( a2                  ,
                                     "a2_%s"     % name  ,
-                                    "a_{2}(%s)" % name  , a2 , 
-                                    -0.00018  * unit**2 , -10 * unit**2 , 10 * unit**2 )
+                                    "a_{2}(%s)" % name  ,
+                                    True , -0.00018  * unit**2 , -10 * unit**2 , 10 * unit**2 )
         #
         self.pdf = Ostap.Models.Needham (
             self.roo_name ( 'needham_' ) , 
@@ -530,7 +537,7 @@ class Needham_pdf(PEAK) :
         
     @property
     def a0 ( self ) :
-        """``a0''-parameter for Needham function"""
+        """'a0'-parameter for Needham function"""
         return self.__a0
     @a0.setter
     def a0 ( self, value ) :
@@ -538,7 +545,7 @@ class Needham_pdf(PEAK) :
 
     @property
     def a1 ( self ) :
-        """``a1''-parameter for Needham function"""
+        """'a1'-parameter for Needham function"""
         return self.__a1
     @a1.setter
     def a1 ( self, value ) :
@@ -546,7 +553,7 @@ class Needham_pdf(PEAK) :
 
     @property
     def a2 ( self ) :
-        """``a2''-parameter for Needham function"""
+        """'a2'-parameter for Needham function"""
         return self.__a2
     @a2.setter
     def a2 ( self, value ) :
@@ -575,7 +582,7 @@ class Apollonios_pdf(PEAK) :
     - similar to CrystalBall case,  parameter n is redefined:   n <- |n|+1
     to be coherent with local definitions of Crystal Ball
     - unfortuately neither sigma nor b parameters allows easy interpretation
-    - typical value of parameters alpha for ``physical'' peaks is 1.5<alpha<2.1,
+    - typical value of parameters alpha for 'physical' peaks is 1.5<alpha<2.1,
     - for large alpha (e.g. alpha>3), there is no sensitivity for n;
     similarly in the limit of large n, sensitivity for alpha is minimal
     """
@@ -596,19 +603,18 @@ class Apollonios_pdf(PEAK) :
         
         self.__alpha = self.make_var ( alpha                     ,
                                        'alpha_%s'         % name ,
-                                       '#alpha_{Apo}(%s)' % name , alpha , 
-                                       2.0   , 0.01 ,   5 )
+                                       '#alpha_{Apo}(%s)' % name ,
+                                       None , 2.0 , 0.01 , 5 )
         
         self.__n     = self.make_var ( n                    ,
                                        'n_%s'        % name ,
-                                       'n_{Apo}(%s)' % name , n ,
-                                       2.0   , 1.e-6 , 50 )
+                                       'n_{Apo}(%s)' % name ,
+                                       None , 5.0 , 1.e-6 , 100  )
         
         self.__b     = self.make_var ( b                    ,
                                        'b_%s'        % name ,
-                                       'b_{Apo}(%s)' % name ,  b  ,
-                                       1         , 1.e-5 , 10000 ) 
-        
+                                       'b_{Apo}(%s)' % name ,
+                                       None , 1.e-5 , 10000 ) 
         #
         ## finally build PDF
         #
@@ -635,7 +641,7 @@ class Apollonios_pdf(PEAK) :
         
     @property
     def alpha ( self ) :
-        """``alpha''-parameter for Apollonios tail"""
+        """'alpha'-parameter for Apollonios tail"""
         return self.__alpha
     @alpha.setter
     def alpha ( self, value ) :
@@ -643,7 +649,7 @@ class Apollonios_pdf(PEAK) :
     
     @property
     def n ( self ) :
-        """``n''-parameter for Apollonios tail"""
+        """'n'-parameter for Apollonios tail"""
         return self.__n
     @n.setter
     def n ( self, value ) :
@@ -651,7 +657,7 @@ class Apollonios_pdf(PEAK) :
 
     @property
     def b ( self ) :
-        """``b''-parameter for Apollonios function"""
+        """'b'-parameter for Apollonios function"""
         return self.__b
     @b.setter
     def b ( self, value ) :
@@ -693,9 +699,9 @@ class Apollonios2_pdf(PEAK) :
     
     The function is inspired by Appolonios function, but it has no power-law tails:
     instead the exponential tails are used.
-    Reparameterization reduces the correlation between ``sigma'' and ``beta'',
+    Reparameterization reduces the correlation between 'sigma' and 'beta',
     allowing their easy interpretation.
-    Large ``beta'' and small ``asymmetry'' corresponds to gaussian
+    Large 'beta' and small 'asymmetry' corresponds to gaussian
     
     """
     def __init__ ( self               ,
@@ -714,7 +720,8 @@ class Apollonios2_pdf(PEAK) :
         ## asymmetry parameter 
         self.__asym = self.make_var ( asymmetry                 ,
                                       'asym_%s'          % name ,
-                                      '#asym_{Apo2}(%s)' % name , asymmetry , 0, -1 , 1  ) 
+                                      '#asym_{Apo2}(%s)' % name ,
+                                      None , 0 , -1 , 1 )
         
         ## construct left and right sigmas 
         self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
@@ -726,9 +733,9 @@ class Apollonios2_pdf(PEAK) :
             v2title = '#sigma_{R}: #sigma #times (1-#kappa)'        )
 
         self.__beta    = self.make_var ( beta ,
-                                         'beta_%s'          % name  ,
-                                         '#beta_{Apo2}(%s)' % name  ,
-                                         beta , 1 , 0.01  , 1000 ) 
+                                         'beta_%s'          % name ,
+                                         '#beta_{Apo2}(%s)' % name ,
+                                         None , 1 , 1.e-5 , 10000  ) 
         #
         ## finally build PDF
         #
@@ -753,7 +760,7 @@ class Apollonios2_pdf(PEAK) :
 
     @property
     def asym ( self ) :
-        """``asym''- asymmetry parameter for Apollonios2 function (same as ``kappa'')"""
+        """'asym'- asymmetry parameter for Apollonios2 function (same as 'kappa')"""
         return self.__asym
     @asym.setter
     def asym ( self, value ) :
@@ -761,7 +768,7 @@ class Apollonios2_pdf(PEAK) :
 
     @property
     def kappa ( self ) :
-        """``kappa''-parameter for Apollonios2 function (same as ``asym'')"""
+        """'kappa'-parameter for Apollonios2 function (same as 'asym')"""
         return self.__asym
     @kappa.setter
     def kappa ( self, value ) :
@@ -769,7 +776,7 @@ class Apollonios2_pdf(PEAK) :
 
     @property
     def beta ( self ) :
-        """``beta''-parameter for Apollonios-2 function"""
+        """'beta'-parameter for Apollonios-2 function"""
         return self.__beta
     @beta.setter
     def beta ( self, value ) :
@@ -821,7 +828,7 @@ class BifurcatedGauss_pdf(PEAK) :
         self.__asym = self.make_var ( asymmetry                 ,
                                       'asym_%s'          % name ,
                                       '#asym_{asym}(%s)' % name ,
-                                      asymmetry , 0 , -1 , 1  )
+                                      None , 0 , -1 , 1  )
         
         ## constreuct left and right sigmas 
         self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
@@ -854,7 +861,7 @@ class BifurcatedGauss_pdf(PEAK) :
 
     @property
     def asym ( self ) :
-        """``asymmetry''-parameter for Bifurcated Gaussian"""
+        """'asymmetry'-parameter for Bifurcated Gaussian"""
         return self.__asym
     @asym.setter
     def asym ( self, value ) :
@@ -862,7 +869,7 @@ class BifurcatedGauss_pdf(PEAK) :
 
     @property
     def kappa ( self ) :
-        """``kappa''-parameter for Bifurcated Gaussian function (same as ``asym''"""
+        """'kappa'-parameter for Bifurcated Gaussian function (same as 'asym'"""
         return self.__asym
     @kappa.setter
     def kappa ( self, value ) :
@@ -870,12 +877,12 @@ class BifurcatedGauss_pdf(PEAK) :
 
     @property
     def sigmaL ( self ) :
-        """(left)``sigma''-parameter for Bifurcated Gaussian"""
+        """(left)'sigma'-parameter for Bifurcated Gaussian"""
         return self.__sigmaL
     
     @property
     def sigmaR ( self ) :
-        """(right)``sigma''-parameter for Bifurcated Gaussian"""
+        """(right)'sigma'-parameter for Bifurcated Gaussian"""
         return self.__sigmaR
 
 models.append ( BifurcatedGauss_pdf )
@@ -907,16 +914,16 @@ class DoubleGauss_pdf(PEAK) :
         # 
         PEAK.__init__  ( self , name , xvar , mean , sigma )
         
-        self.__scale = self.make_var (
-            scale ,
-            'SigmaScale'        + name ,
-            'SigmaScale(%s)'    % name , scale , 1 , 10 ) 
+        self.__scale    = self.make_var ( scale ,
+                                          'SigmaScale'        + name ,
+                                          'SigmaScale(%s)'    % name ,
+                                          None , 1.5 , 1 , 10 ) 
         
         ## the fraction 
-        self.__fraction = self.make_var (
-            fraction                   , 
-            'CoreFraction'      + name ,
-            'CoreFraction(%s)'  % name , fraction , 0 , 1 ) 
+        self.__fraction = self.make_var ( fraction                   , 
+                                          'CoreFraction'      + name ,
+                                          'CoreFraction(%s)'  % name ,
+                                          None , 0.75 , 0 , 1  ) 
         
         self.pdf = Ostap.Models.DoubleGauss (
             self.roo_name ( 'gauss2_' ) , 
@@ -1073,7 +1080,7 @@ class GenGaussV1_pdf(PEAK) :
 
     @property
     def alpha ( self ) :
-        """``alpha''-parameter for Generalized V1 Gaussian (the same as ``sigma'')"""
+        """'alpha'-parameter for Generalized V1 Gaussian (the same as 'sigma')"""
         return self.__alpha
     @alpha.setter
     def alpha ( self, value ) :
@@ -1081,7 +1088,7 @@ class GenGaussV1_pdf(PEAK) :
 
     @property
     def beta ( self ) :
-        """``beta''-parameter for Generalized  V1 Gaussian"""
+        """'beta'-parameter for Generalized  V1 Gaussian"""
         return self.__beta
     @beta.setter
     def beta ( self, value ) :
@@ -1123,20 +1130,19 @@ class GenGaussV2_pdf(PEAK) :
         ## initialize the base
         # 
         PEAK.__init__  ( self , name , xvar ,
-                              mean        = mean  ,
-                              sigma       = alpha ,
-                              sigma_name  = 'alpha_%s'   % name ,
-                              sigma_title = '#alpha(%s)' % name )
+                         mean        = mean  ,
+                         sigma       = alpha ,
+                         sigma_name  = 'alpha_%s'   % name ,
+                         sigma_title = '#alpha(%s)' % name )
         #
         ## rename it!
         #
         self.__alpha = self.sigma        
         self.__xi    = self.mean 
         self.__kappa = self.make_var ( kappa ,
-                                 'kappa_%s'        % name  ,
-                                 '#kappa_{v2}(%s)' % name  , kappa , 
-                                 0 , -4  , 4 ) 
-        
+                                       'kappa_%s'        % name  ,
+                                       '#kappa_{v2}(%s)' % name  ,
+                                       None , 0 , -5 , 5 )
         #
         ## finally build PDF
         #
@@ -1159,7 +1165,7 @@ class GenGaussV2_pdf(PEAK) :
         
     @property
     def alpha ( self ) :
-        """alpha-parameter for Generalized V2 Gaussian (same as ``sigma'')"""
+        """alpha-parameter for Generalized V2 Gaussian (same as 'sigma')"""
         return self.__alpha
     @alpha.setter
     def alpha ( self, value ) :
@@ -1175,7 +1181,7 @@ class GenGaussV2_pdf(PEAK) :
     
     @property
     def xi ( self ) :
-        """xi-parameter (location) for Generalized V2 Gaussian (same  as ``mean'')"""
+        """xi-parameter (location) for Generalized V2 Gaussian (same  as 'mean')"""
         return self.__xi
  
 models.append ( GenGaussV2_pdf )    
@@ -1204,16 +1210,16 @@ class SkewGauss_pdf(PEAK) :
                    xvar             ,
                    mean      = None ,
                    omega     = None ,
-                   alpha     = 0    ) : ## alpha=0 correspond to gaussian 
+                   alpha     = 0    ) : ## alpha=0 correspond to Gaussian 
         #
         ## initialize the base
         # 
         PEAK.__init__  ( self , name , xvar , 
-                              mean        = mean  ,
-                              sigma       = omega ,
-                              sigma_name  = 'omega_%s'   % name ,
-                              sigma_title = '#omega(%s)' % name )
-                        
+                         mean        = mean  ,
+                         sigma       = omega ,
+                         sigma_name  = 'omega_%s'   % name ,
+                         sigma_title = '#omega(%s)' % name )
+        
         #
         ## rename it!
         #
@@ -1222,8 +1228,8 @@ class SkewGauss_pdf(PEAK) :
         self.__xi    = self.mean         
         self.__alpha = self.make_var ( alpha ,
                                        'alpha_%s'   % name  ,
-                                       '#alpha(%s)' % name  , alpha, 
-                                       0 , -1000 , 1000  ) 
+                                       '#alpha(%s)' % name  ,
+                                       None , 0 , -1000 , 1000  ) 
         #
         ## finally build pdf
         # 
@@ -1246,7 +1252,7 @@ class SkewGauss_pdf(PEAK) :
 
     @property
     def xi ( self ) :
-        """xi-parameter (location) for Skew Gaussian (Same  as ``mean'')"""
+        """xi-parameter (location) for Skew Gaussian (Same  as 'mean')"""
         return self.__xi
     @xi.setter
     def xi ( self, value ) :
@@ -1254,7 +1260,7 @@ class SkewGauss_pdf(PEAK) :
 
     @property
     def omega ( self ) :
-        """omega-parameter (scale/width) for Skew Gaussian (same as ``sigma'')"""
+        """omega-parameter (scale/width) for Skew Gaussian (same as 'sigma')"""
         return self.__omega
     @omega.setter
     def omega ( self, value ) :
@@ -1271,7 +1277,7 @@ class SkewGauss_pdf(PEAK) :
 models.append ( SkewGauss_pdf )      
 # =============================================================================
 ## @class Bukin_pdf
-#  Bukin function, aka ``modified Novosibirsk function''
+#  Bukin function, aka 'modified Novosibirsk function'
 #  - asymmetrical gaussian-like core
 #  - exponential (optionally gaussian) asymmetrical tails
 #  @see http://journals.aps.org/prd/abstract/10.1103/PhysRevD.84.112007
@@ -1298,7 +1304,7 @@ models.append ( SkewGauss_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Bukin_pdf(PEAK) :
-    """Bukin function, aka ``modified Novosibirsk function'':
+    """Bukin function, aka 'modified Novosibirsk function':
     - asymmetrical gaussian-like core
     - exponential (optionally gaussian) asymmetrical tails
     see http://journals.aps.org/prd/abstract/10.1103/PhysRevD.84.112007
@@ -1339,15 +1345,18 @@ class Bukin_pdf(PEAK) :
         ## asymmetry 
         self.__xi    = self.make_var ( xi                    ,
                                        "xi_%s"        % name ,
-                                       "#xi(%s)"      % name , xi   , 0  , -1 , 1    )
+                                       "#xi(%s)"      % name ,
+                                       None , 0  , -1 , 1    )
         ## left tail
         self.__rhoL  = self.make_var ( rhoL                  ,
                                        "rhoL_%s"      % name ,
-                                       "#rho_{L}(%s)" % name , rhoL , 0  ,  -1 , 10 )        
+                                       "#rho_{L}(%s)" % name ,
+                                       None , 0  ,  -1 , 100 )        
         ## right tail
         self.__rhoR  = self.make_var ( rhoR                  ,
                                        "rhoR_%s"      % name ,
-                                       "#rho_{R}(%s)" % name , rhoR  , 0  ,  -1 , 10 )
+                                       "#rho_{R}(%s)" % name ,
+                                       None , 0  ,  -1 , 100 )
         # 
         ## create PDF
         # 
@@ -1374,7 +1383,7 @@ class Bukin_pdf(PEAK) :
 
     @property
     def xi ( self ) :
-        """``xi''-parameter (asymmetry) for Bukin function"""
+        """'xi'-parameter (asymmetry) for Bukin function"""
         return self.__xi
     @xi.setter
     def xi ( self, value ) :
@@ -1382,7 +1391,7 @@ class Bukin_pdf(PEAK) :
 
     @property
     def rhoL ( self ) :
-        """``rho''-parameter (left tail) for Bukin function"""
+        """'rho'-parameter (left tail) for Bukin function"""
         return self.__rhoL
     @rhoL.setter
     def rhoL ( self, value ) :
@@ -1390,7 +1399,7 @@ class Bukin_pdf(PEAK) :
 
     @property
     def rhoR ( self ) :
-        """``rho''-parameter (right tail) for Bukin function"""
+        """'rho'-parameter (right tail) for Bukin function"""
         return self.__rhoR
     @rhoR.setter
     def rhoR ( self, value ) :
@@ -1442,8 +1451,8 @@ class StudentT_pdf(PEAK) :
         # 
         self.__n  = self.make_var ( n                    ,
                                     'n_%s'        % name ,
-                                    '#n_{ST}(%s)' % name , n , 
-                                    2 , 1.e-8 , 100  ) 
+                                    '#n_{ST}(%s)' % name ,
+                                    None , 2 , 1.e-8 , 100  ) 
         #
         ## finally build pdf
         # 
@@ -1466,7 +1475,7 @@ class StudentT_pdf(PEAK) :
 
     @property
     def n ( self ) :
-        """``n''-parameter for Student-T function (well, actually it is ``n+1'' is used)"""
+        """'n'-parameter for Student-T function (well, actually it is 'n+1' is used)"""
         return self.__n
     @n.setter
     def n ( self, value ) :
@@ -1517,7 +1526,7 @@ class BifurcatedStudentT_pdf(PEAK) :
         self.__asym = self.make_var ( asymmetry               ,
                                       'asym_%s'        % name ,
                                       '#xi_{asym}(%s)' % name ,
-                                      asymmetry , 0 , -1 , 1  ) 
+                                      None , 0 , -1 , 1  ) 
         
         ## construct left and right sigmas 
         self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
@@ -1531,13 +1540,13 @@ class BifurcatedStudentT_pdf(PEAK) :
         ## left exponent 
         self.__nL =  self.make_var ( nL                     ,
                                      'nL_%s'         % name ,
-                                     '#nL_{BST}(%s)' % name , nL , 
-                                     2  , 1.e-6 , 100  )
+                                     '#nL_{BST}(%s)' % name ,
+                                     None , 2 , 1.e-6 , 200 )
         ## right exponent 
         self.__nR =  self.make_var ( nR                    ,
                                      'nR_%s'         % name ,
-                                     '#nR_{BST}(%s)' % name , nR , 
-                                     2  , 1.e-6 , 100  ) 
+                                     '#nR_{BST}(%s)' % name ,
+                                     None ,  2 , 1.e-6 , 200 ) 
         #
         ## finally build pdf
         # 
@@ -1564,7 +1573,7 @@ class BifurcatedStudentT_pdf(PEAK) :
 
     @property     
     def nL ( self ) :
-        """``n''-parameter (left) for Bifurcated Student-T function  (actually ``n+1'' is used)"""
+        """'n'-parameter (left) for Bifurcated Student-T function  (actually 'n+1' is used)"""
         return self.__nL
     @nL.setter
     def nL ( self, value ) :
@@ -1572,7 +1581,7 @@ class BifurcatedStudentT_pdf(PEAK) :
 
     @property
     def nR ( self ) :
-        """``n''-parameter (right) for Bifurcated Student-T function (actually ``n+1'' is used)"""
+        """'n'-parameter (right) for Bifurcated Student-T function (actually 'n+1' is used)"""
         return self.__nR
     @nR.setter
     def nR ( self, value ) :
@@ -1580,7 +1589,7 @@ class BifurcatedStudentT_pdf(PEAK) :
         
     @property
     def asym ( self ) :
-        """``asymmetry''-parameter for Bifurcated Student-T function"""
+        """'asymmetry'-parameter for Bifurcated Student-T function"""
         return self.__asym
     @asym.setter
     def asym ( self, value ) :
@@ -1588,7 +1597,7 @@ class BifurcatedStudentT_pdf(PEAK) :
         
     @property
     def kappa ( self ) :
-        """``kappa''-parameter for Apollonios2 function (same as ``asym''"""
+        """'kappa'-parameter for Apollonios2 function (same as 'asym'"""
         return self.__asym
     @kappa.setter
     def kappa ( self, value ) :
@@ -1596,12 +1605,12 @@ class BifurcatedStudentT_pdf(PEAK) :
 
     @property
     def sigmaL( self ) :
-        """(left)``sigma''-parameter for Bifurcated Student-T function"""
+        """(left)'sigma'-parameter for Bifurcated Student-T function"""
         return self.__sigmaL
 
     @property
     def sigmaR( self ) :
-        """(right)``sigma''-parameter for Bifurcated Student-T function"""
+        """(right)'sigma'-parameter for Bifurcated Student-T function"""
         return self.__sigmaR
    
 models.append ( BifurcatedStudentT_pdf )      
@@ -1649,14 +1658,14 @@ class PearsonIV_pdf(PEAK) :
         self.__n     = self.make_var ( n                    ,
                                        'n_%s'        % name ,
                                        'n_{PIV}(%s)' % name ,
-                                       n , 1 , 1.e-6 , 100  ) 
+                                       None , 1 , 1.e-6 , 200 ) 
         
         ## asymmetry parameter 
         self.__kappa = self.make_var ( kappa                     , 
                                        'kappa_%s'         % name ,
                                        '#kappa_{PIV}(%s)' % name ,
-                                       kappa , 0 , -30 , 30  ) 
-
+                                       None , 0 , -200 , 200 ) 
+        
         ## ditto 
         self.__nu = self.__kappa
 
@@ -1682,7 +1691,7 @@ class PearsonIV_pdf(PEAK) :
 
     @property     
     def mu ( self ) :
-        """``mu''-parameter (location) for Pearon Type IV distribution (same as ``mean'')"""
+        """'mu'-parameter (location) for Pearon Type IV distribution (same as 'mean')"""
         return self.__mu
     @mu.setter
     def mu ( self, value ) :
@@ -1690,7 +1699,7 @@ class PearsonIV_pdf(PEAK) :
 
     @property     
     def varsigma ( self ) :
-        """``varsigma''-parameter for Pearon Type IV distribution (same as ``sigma'')"""
+        """'varsigma'-parameter for Pearon Type IV distribution (same as 'sigma')"""
         return self.__varsigma
     @varsigma.setter
     def varsigma ( self, value ) :
@@ -1698,7 +1707,7 @@ class PearsonIV_pdf(PEAK) :
 
     @property
     def n  ( self ) :
-        """``n''-parameter for Pearson Type IV distribution"""
+        """'n'-parameter for Pearson Type IV distribution"""
         return self.__n
     @n.setter
     def n ( self, value ) :
@@ -1706,7 +1715,7 @@ class PearsonIV_pdf(PEAK) :
 
     @property
     def kappa ( self ) :
-        """``kappa''-parameter (asymmetry) for Pearson Type IV distribution"""
+        """'kappa'-parameter (asymmetry) for Pearson Type IV distribution"""
         return self.__kappa
     @kappa.setter
     def kappa ( self, value ) :
@@ -1714,7 +1723,7 @@ class PearsonIV_pdf(PEAK) :
 
     @property     
     def nu ( self ) :
-        """``nu''-parameter (asymmetry) for Pearon Type IV distribution (same as ``kappa'')"""
+        """'nu'-parameter (asymmetry) for Pearon Type IV distribution (same as 'kappa')"""
         return self.__nu
     @nu.setter
     def nu ( self, value ) :
@@ -1745,7 +1754,7 @@ models.append ( PearsonIV_pdf )
 class SinhAsinh_pdf(PEAK) :
     """SinhAsinh-function: 
     see Jones, M. C.; Pewsey, A. (2009).
-    ``Sinh-arcsinh distributions''. Biometrika 96 (4): 761. 
+    'Sinh-arcsinh distributions'. Biometrika 96 (4): 761. 
     doi:10.1093/biomet/asp053
     http://oro.open.ac.uk/22510
     
@@ -1775,12 +1784,12 @@ class SinhAsinh_pdf(PEAK) :
         self.__mu      = self.mean
         self.__epsilon = self.make_var ( epsilon ,
                                          'epsilon_%s'   % name ,
-                                         '#epsilon(%s)' % name , epsilon ,
-                                         0 , -1000 , +1000 )
+                                         '#epsilon(%s)' % name ,
+                                         None , 0 , -1000 , +1000 )
         self.__delta   = self.make_var ( delta ,
                                          'delta_%s'   % name ,
-                                         '#delta(%s)' % name , delta ,
-                                         1 , 1.e-6 , 1000   )
+                                         '#delta(%s)' % name , 
+                                         None , 1 , 1.e-6 , 1000 )
         
         #
         ## finally build pdf
@@ -1806,7 +1815,7 @@ class SinhAsinh_pdf(PEAK) :
 
     @property
     def epsilon( self ) :
-        """``epsilon''-parameter for Sinh-Asinh function"""
+        """'epsilon'-parameter for Sinh-Asinh function"""
         return self.__epsilon
     @epsilon.setter
     def epsilon ( self, value ) :
@@ -1814,7 +1823,7 @@ class SinhAsinh_pdf(PEAK) :
 
     @property
     def delta ( self ) :
-        """``delta-parameter'' for Sinh-Asinh function"""
+        """'delta-parameter' for Sinh-Asinh function"""
         return self.__delta
     @delta.setter
     def delta ( self, value ) :
@@ -1822,7 +1831,7 @@ class SinhAsinh_pdf(PEAK) :
 
     @property
     def mu ( self ) :
-        """``mu''-parameter (location) for Sinh-Asinh function (same as ``mean'')"""
+        """'mu'-parameter (location) for Sinh-Asinh function (same as 'mean')"""
         return self.__mu
     @mu.setter
     def mu (  self , value ) :
@@ -1911,12 +1920,12 @@ class JohnsonSU_pdf(PEAK) :
         self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
         self.__delta   = self.make_var ( delta                 ,
                                          'delta_%s'     % name ,
-                                         '#delta(%s)'   % name , delta ,
-                                         1 , 1.e-6 , 1000   )
+                                         '#delta(%s)'   % name , 
+                                         None , 1 , 1.e-6 , 1000 )
         self.__gamma   = self.make_var ( gamma               ,
                                          'gamma_%s'   % name ,
-                                         '#gamma(%s)' % name , gamma ,
-                                         0 , -1000 , +1000 )
+                                         '#gamma(%s)' % name , 
+                                         None , 0 , -1000 , +1000 )
         
         
         #
@@ -1943,7 +1952,7 @@ class JohnsonSU_pdf(PEAK) :
 
     @property
     def delta ( self ) :
-        """``delta''-parameter for Johnson-SU function"""
+        """'delta'-parameter for Johnson-SU function"""
         return self.__delta
     @delta.setter
     def delta ( self, value ) :
@@ -1951,7 +1960,7 @@ class JohnsonSU_pdf(PEAK) :
 
     @property
     def gamma ( self ) :
-        """``gamma''-parameter for Johnson-SU function"""
+        """'gamma'-parameter for Johnson-SU function"""
         return self.__gamma
     @gamma.setter
     def gamma ( self, value ) :
@@ -1959,7 +1968,7 @@ class JohnsonSU_pdf(PEAK) :
         
     @property
     def xi ( self ) :
-        """``xi''-parameter (location) for Johnson-SU function (the   same as ``mean'')"""
+        """'xi'-parameter (location) for Johnson-SU function (the   same as 'mean')"""
         return self.__xi
     @xi.setter
     def xi ( self, value ) :
@@ -1967,7 +1976,7 @@ class JohnsonSU_pdf(PEAK) :
 
     @property
     def lambd ( self ) :
-        """``lambda''-parameter (scale) for Johnson-SU function (the  same  as ``sigma'')"""
+        """'lambda'-parameter (scale) for Johnson-SU function (the  same  as 'sigma')"""
         return self.__lambd
     @lambd.setter
     def lambd ( self, value ) :
@@ -2074,15 +2083,15 @@ class Slash_pdf(PEAK) :
             }
     @property
     def mu ( self ) :
-        """``mu''  - location parameter, the same as ``mean'' or ``location''"""
+        """'mu'  - location parameter, the same as 'mean' or 'location'"""
         return self.mean
     @property
     def location ( self ) :
-        """``location''  - location parameter, the same as ``mean'' or ``mu''"""
+        """'location'  - location parameter, the same as 'mean' or 'mu'"""
         return self.mean
     @property
     def scale ( self ) :
-        """``scale''  - scale parameter, the same as ``sigma''"""
+        """'scale'  - scale parameter, the same as 'sigma'"""
         return self.__scale
     @scale.setter
     def scale ( self , value ) :
@@ -2126,7 +2135,8 @@ class AsymmetricLaplace_pdf(PEAK) :
         
         self.__asym = self.make_var ( asymmetry               ,
                                       'asym_%s'        % name ,
-                                      '#asym_{AL}(%s)' % name , asymmetry , 0 , -1 , 1  ) 
+                                      '#asym_{AL}(%s)' % name ,
+                                      None , 0 , -1 , 1  ) 
         
         self.__slope = self.sigma
 
@@ -2159,16 +2169,16 @@ class AsymmetricLaplace_pdf(PEAK) :
         
     @property
     def mu ( self ) :
-        """``mu''  - location parameter, the same as ``mean'' or ``location''"""
+        """'mu'  - location parameter, the same as 'mean' or 'location'"""
         return self.mean
     @property
     def location ( self ) :
-        """``location''  - location parameter, the same as ``mean'' or ``mu''"""
+        """'location'  - location parameter, the same as 'mean' or 'mu'"""
         return self.mean
 
     @property
     def slope ( self ) :
-        """``slope''-parameter the mean exponential slope,  the same as ``sigma''"""
+        """'slope'-parameter the mean exponential slope,  the same as 'sigma'"""
         return self.__slope
     @slope.setter
     def slope ( self, value ) :
@@ -2176,7 +2186,7 @@ class AsymmetricLaplace_pdf(PEAK) :
     
     @property
     def asym ( self ) :
-        """``asymmetry''-parameter for Asymmetric Laplace"""
+        """'asymmetry'-parameter for Asymmetric Laplace"""
         return self.__asym
     @asym.setter
     def asym ( self, value ) :
@@ -2184,7 +2194,7 @@ class AsymmetricLaplace_pdf(PEAK) :
 
     @property
     def kappa ( self ) :
-        """``kappa''-parameter for Apollonios2 function (same as ``asym''"""
+        """'kappa'-parameter for Apollonios2 function (same as 'asym'"""
         return self.__asym
     @kappa.setter
     def kappa ( self, value ) :
@@ -2192,12 +2202,12 @@ class AsymmetricLaplace_pdf(PEAK) :
 
     @property
     def lambdaL ( self ) :
-        """(left)``lambda''-parameter (exponential slope) for Asymmetric Laplace"""
+        """(left)'lambda'-parameter (exponential slope) for Asymmetric Laplace"""
         return self.__lambdaL
     
     @property
     def lambdaR ( self ) :
-        """(right)``lambda''-parameter (exponential slope) for Asymmetric Laplace"""
+        """(right)'lambda'-parameter (exponential slope) for Asymmetric Laplace"""
         return self.__lambdaR
     
 
@@ -2227,7 +2237,7 @@ models.append ( AsymmetricLaplace_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-04-025
 class Sech_pdf(PEAK) :
-    r"""Hyperbolic secant distribution or ``inverse-cosh'' distribution
+    r"""Hyperbolic secant distribution or 'inverse-cosh' distribution
     
     The hyperbolic secant distribution shares many properties with the 
     standard normal distribution: 
@@ -2293,7 +2303,7 @@ models.append ( Sech_pdf )
 class Losev_pdf(PEAKMEAN) :
     """ Asymmetric variant of hyperbolic secant distribution
     - Leptokurtic distribution with exponential tails
-    see Losev, A., ``A new lineshape for fitting x‐ray photoelectron peaks'', 
+    see Losev, A., 'A new lineshape for fitting x‐ray photoelectron peaks', 
     Surf. Interface Anal., 14: 845-849. doi:10.1002/sia.740141207
     see https://doi.org/10.1002/sia.740141207
     see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
@@ -2320,14 +2330,14 @@ class Losev_pdf(PEAKMEAN) :
         ## left tail 
         self.__alpha = self.make_var ( alpha ,
                                        'alpha_%s'           % name ,
-                                       '#alpha_{Losev}(%s)' % name , alpha ,
-                                       1.0 , 1.e-3 , 1000 )
+                                       '#alpha_{Losev}(%s)' % name , 
+                                       None , 1.0 , 1.e-3 , 1000 )
 
         ## right tail 
         self.__beta  = self.make_var ( beta   ,
                                        'beta_%s'            % name ,
-                                       '#beta_{Losev}(%s)'  % name , beta  ,
-                                       1.0 , 1.e-3 , 1000 )
+                                       '#beta_{Losev}(%s)'  % name , 
+                                       None , 1.0 , 1.e-3 , 1000 )
         #
         ## finally build pdf
         # 
@@ -2350,7 +2360,7 @@ class Losev_pdf(PEAKMEAN) :
         
     @property
     def mu ( self ) :
-        """``mu''- location parameter for Losev distribution (same as ``mean'')
+        """'mu'- location parameter for Losev distribution (same as 'mean')
         """
         return self.mean
     @mu.setter 
@@ -2359,7 +2369,7 @@ class Losev_pdf(PEAKMEAN) :
 
     @property
     def alpha ( self ) :
-        """`alpha''- parameter for Losev distribution (left tail)
+        """`alpha'- parameter for Losev distribution (left tail)
         """
         return self.__alpha
     @alpha.setter 
@@ -2368,7 +2378,7 @@ class Losev_pdf(PEAKMEAN) :
 
     @property
     def beta ( self ) :
-        """`beta''- parameter for Losev distribution (right tail)
+        """`beta'- parameter for Losev distribution (right tail)
         """
         return self.__beta
     @beta.setter 
@@ -2389,7 +2399,7 @@ models.append ( Losev_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
 class Logistic_pdf(PEAK) :
-    r""" Logistic, aka ``sech-square'' PDF
+    r""" Logistic, aka 'sech-square' PDF
      \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
      where
      \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$
@@ -2441,7 +2451,7 @@ models.append ( Logistic_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
 class RaisingCosine_pdf(PEAK) :
-    r"""``Raising cosine'' distribution
+    r"""'Raising cosine' distribution
     (x,\mu,s) = \dfrac{1}{2s}   \left( 1   +\cos \pi y \right), 
     where y  \equiv = \dfrac{x-\mu}{s} 
     - see https://en.wikipedia.org/wiki/Raised_cosine_distribution
@@ -2487,7 +2497,7 @@ class RaisingCosine_pdf(PEAK) :
         
     @property
     def scale ( self ) :
-        """``scale''-parameter, the same as ``sigma''"""
+        """'scale'-parameter, the same as 'sigma'"""
         return self.__scale
     @scale.setter
     def scale ( self, value ) :
@@ -2539,12 +2549,12 @@ class QGaussian_pdf(PEAK) :
         
 
         self.__scale = self.sigma
-
+        
         ## Q 
         self.__q = self.make_var ( q               ,
-                             'q_%s'   % name ,
-                             '#q(%s)' % name , q , 1 , -1e+9 , 3-1.e-6 ) 
-        
+                                   'q_%s'   % name ,
+                                   '#q(%s)' % name ,
+                                   None , 1 , -1000 , 3-1.e-6 ) 
         #
         ## finally build pdf
         # 
@@ -2567,7 +2577,7 @@ class QGaussian_pdf(PEAK) :
         
     @property
     def scale ( self ) :
-        """``scale''-parameter, the same as ``sigma''"""
+        """'scale'-parameter, the same as 'sigma'"""
         return self.__scale
     @scale.setter
     def scale ( self, value ) :
@@ -2575,7 +2585,7 @@ class QGaussian_pdf(PEAK) :
         
     @property
     def q ( self ) :
-        """``q''-parameter"""
+        """'q'-parameter"""
         return self.__q
     @q.setter
     def q ( self, value ) :
@@ -2661,7 +2671,7 @@ class Hyperbolic_pdf(PEAK) :
     - see Ostap::Math::Hyperbolic
     - see Ostap::Models::Hyperbolic
     
-    Parameters are different from ``canonical''
+    Parameters are different from 'canonical'
     - mu     : related to location   (equal to mean/mode for kappa=0) 
     - sigma  : relates to width      (equal to RMS           for kappa=0)
     - zeta   : related to kurtosis   (kurtosis varies from 3 to 0 when zeta varies from 0 to infinity)
@@ -2691,11 +2701,13 @@ class Hyperbolic_pdf(PEAK) :
         ## Zeta
         self.__zeta  = self.make_var ( zeta                ,
                                        'zeta_%s'    % name ,
-                                       '#zeta(%s)'  % name , zeta  ,  1 , 0  , 100 ) 
+                                       '#zeta(%s)'  % name ,
+                                       None ,  1 , 0  , 100 ) 
         ## kappa  
         self.__kappa = self.make_var ( kappa               ,
                                        'kappa_%s'   % name ,
-                                       '#kappa(%s)' % name , kappa ,  0 , -10 , 10  ) 
+                                       '#kappa(%s)' % name ,
+                                       None ,  0 , -50 , 50 ) 
         
         #
         ## finally build pdf
@@ -2720,7 +2732,7 @@ class Hyperbolic_pdf(PEAK) :
         
     @property
     def mu ( self ) :
-        """``mu'' : location parameter, same as ``mean'')"""
+        """'mu' : location parameter, same as 'mean')"""
         return self.__mu
     @mu.setter
     def mu ( self , value ) :    
@@ -2728,7 +2740,7 @@ class Hyperbolic_pdf(PEAK) :
 
     @property 
     def zeta  ( self ) :
-        """``zeta'' : dimensioneless parameter, related to shape"""
+        """'zeta' : dimensioneless parameter, related to shape"""
         return self.__zeta
     @zeta.setter  
     def zeta ( self , value ) :
@@ -2736,7 +2748,7 @@ class Hyperbolic_pdf(PEAK) :
     
     @property
     def kappa ( self ) :
-        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        """'kappa' : dimensionless parameter, related to asymmetry"""
         return self.__kappa
     @kappa.setter
     def kappa ( self , value ) :    
@@ -2744,25 +2756,25 @@ class Hyperbolic_pdf(PEAK) :
 
     @property
     def alpha ( self ) :
-        """``alpha'' : value of canonical parameter ``alpha''"""
+        """'alpha' : value of canonical parameter 'alpha'"""
         self.pdf.setPars ()
         return self.pdf.function().alpha ()
 
     @property
     def beta ( self ) :
-        """``beta'' : value of canonical parameter ``beta''"""
+        """'beta' : value of canonical parameter 'beta'"""
         self.pdf.setPars ()
         return self.pdf.function().beta ()
 
     @property
     def gamma ( self ) :
-        """``gamma'' : value of canonical parameter ``gamma''"""
+        """'gamma' : value of canonical parameter 'gamma'"""
         self.pdf.setPars ()
         return self.pdf.function().gamma ()
     
     @property
     def delta ( self ) :
-        """``delta'' : value of canonical parameter ``delta''"""
+        """'delta' : value of canonical parameter 'delta'"""
         self.pdf.setPars ()
         return self.pdf.function().delta ()
 
@@ -2829,7 +2841,7 @@ class GenHyperbolic_pdf(Hyperbolic_pdf) :
     - see Ostap::Math::GenHyperbolic
     - see Ostap::Models::GenHyperbolic
     
-    Parameters are different from ``canonical''
+    Parameters are different from 'canonical'
     - mu     : related to location   (equal to mean/mode for kappa=0) 
     - sigma  : relates to width      (equal to RMS           for kappa=0)
     - zeta   : related to kurtosis   (kurtosis varies from 3 to 0 when zeta varies from 0 to infinity)
@@ -2868,8 +2880,8 @@ class GenHyperbolic_pdf(Hyperbolic_pdf) :
         ## lambda 
         self.__lambda = self.make_var ( lambd               ,
                                         'lambda_%s'   % name ,
-                                        '#lambda(%s)' % name , lambd , -2 , -100   , 100 ) 
-        
+                                        '#lambda(%s)' % name ,
+                                        True , -2 , -100 , 100 ) 
         #
         ## finally build pdf
         # 
@@ -2895,7 +2907,7 @@ class GenHyperbolic_pdf(Hyperbolic_pdf) :
         
     @property
     def lambd ( self ) :
-        """``lambd'' : dimensionless parameter, related to shape """
+        """'lambd' : dimensionless parameter, related to shape """
         return self.__lambda
     @lambd.setter
     def lambd ( self , value ) :    
@@ -2923,11 +2935,11 @@ models.append ( GenHyperbolic_pdf )
 # @see Ostap::Models::GenHyperbolic
 class Hypatia_pdf(GenHyperbolic_pdf) :
     r""" Variant of Hypatia pdf
-    Convolution of Generalized Hyperbolic distrobution with ``offset''
+    Convolution of Generalized Hyperbolic distrobution with 'offset'
     Gaussian distribution
     
     - see D. Martinez Santos, F. Duipertois,
-    ``Mass distributions marginalized over per-event errors'',
+    'Mass distributions marginalized over per-event errors',
     Nucl.Instrum.Meth.A 764 (2014) 150,
     arXiv:1312.5000 [hep-ex]
     - see https://doi.org/10.1016/j.nima.2014.06.081
@@ -2948,7 +2960,7 @@ class Hypatia_pdf(GenHyperbolic_pdf) :
                    zeta      =  1   ,   ## related to shape 
                    kappa     =  0   ,   ## related to asymmetry
                    lambd     = -2   ,   ## related to shape 
-                   sigma0    = None ,   ## width of the ``offset'' Gaussian 
+                   sigma0    = None ,   ## width of the 'offset' Gaussian 
                    cnvpars   = {}   ) : ## convolution parameters 
         # 
         ## initialize the base
@@ -3001,17 +3013,17 @@ class Hypatia_pdf(GenHyperbolic_pdf) :
         
     @property
     def genhyp ( self ) :
-        """``genhyp'': get underlying generalized hyperbolic PDF"""
+        """'genhyp': get underlying generalized hyperbolic PDF"""
         return self.__genhyp
     
     @property
     def convolved ( self ) :
-        """``convolved'' : get PDF as convolution"""
+        """'convolved' : get PDF as convolution"""
         return self.__convolved
     
     @property
     def sigma0    ( self ) :
-        """``sigma0'' : width for the ``offset'' Gaussian"""
+        """'sigma0' : width for the 'offset' Gaussian"""
         return self.__resolution.sigma
     @sigma0.setter
     def sigma0    ( self , value ) :
@@ -3019,7 +3031,7 @@ class Hypatia_pdf(GenHyperbolic_pdf) :
         
     @property
     def cnvpars ( self ) :
-        """``cnvpars'' : parameters for convolution"""
+        """'cnvpars' : parameters for convolution"""
         return self.__cnvpars 
 
 
@@ -3100,7 +3112,8 @@ class ExGauss_pdf(PEAK) :
         ## k 
         self.__k= self.make_var ( k              ,
                                   'k_%s'  % name ,
-                                  'k(%s)' % name , k , 0 , -100 , 100 ) 
+                                  'k(%s)' % name ,
+                                  None , 0 , -200 , 200 ) 
         
         ## create PDF 
         self.pdf = Ostap.Models.ExGauss (
@@ -3121,7 +3134,7 @@ class ExGauss_pdf(PEAK) :
 
     @property
     def varsigma    ( self ) :
-        """``varsigma'' : varsigma parameter for ExGauss function (same as ``sigma'')"""
+        """'varsigma' : varsigma parameter for ExGauss function (same as 'sigma')"""
         return self.sigma
     @varsigma.setter
     def varsigma    ( self , value ) :
@@ -3129,7 +3142,7 @@ class ExGauss_pdf(PEAK) :
 
     @property
     def mu ( self ) :
-        """``mu'' : location parameter (same as ``mean'')"""
+        """'mu' : location parameter (same as 'mean')"""
         return self.__mu
     @mu.setter
     def mu ( self , value ) :    
@@ -3137,7 +3150,7 @@ class ExGauss_pdf(PEAK) :
 
     @property 
     def k  ( self ) :
-        """``k'' :  (dimensioneless) k-parameter"""
+        """'k' :  (dimensioneless) k-parameter"""
         return self.__k
     @k.setter  
     def k ( self , value ) :
@@ -3212,12 +3225,14 @@ class NormalLaplace_pdf(PEAK) :
         ## kL 
         self.__kL = self.make_var ( kL                 ,
                                     'kL_%s'     % name ,
-                                    'k_{L}(%s)' % name , kL , 0 , 0 , 100 ) 
+                                    'k_{L}(%s)' % name ,
+                                    None , 0 , 0 , 200 ) 
         ## kR 
         self.__kR = self.make_var ( kR                 ,
                                     'kR_%s'     % name ,
-                                    'k_{R}(%s)' % name , kR , 0 , 0 , 100 ) 
-
+                                    'k_{R}(%s)' % name ,
+                                    None , 0 , 0 , 200 ) 
+        
         ## create PDF 
         self.pdf = Ostap.Models.NormalLaplace (
             self.roo_name ( 'normlapl_' ) , 
@@ -3239,7 +3254,7 @@ class NormalLaplace_pdf(PEAK) :
 
     @property
     def varsigma    ( self ) :
-        """``varsigma'' : varsigma parameter for Normal Laplace function (same as ``sigma'')"""
+        """'varsigma' : varsigma parameter for Normal Laplace function (same as 'sigma')"""
         return self.sigma
     @varsigma.setter
     def varsigma    ( self , value ) :
@@ -3247,7 +3262,7 @@ class NormalLaplace_pdf(PEAK) :
 
     @property
     def mu ( self ) :
-        """``mu'' : location parameter (same as ``mean'')"""
+        """'mu' : location parameter (same as 'mean')"""
         return self.__mu
     @mu.setter
     def mu ( self , value ) :    
@@ -3255,7 +3270,7 @@ class NormalLaplace_pdf(PEAK) :
 
     @property 
     def kL ( self ) :
-        """``kL'' :  (dimensioneless) kL-parameter"""
+        """'kL' :  (dimensioneless) kL-parameter"""
         return self.__kL
     @kL.setter  
     def kL ( self , value ) :
@@ -3263,7 +3278,7 @@ class NormalLaplace_pdf(PEAK) :
         
     @property 
     def kR ( self ) :
-        """``kR'' :  (dimensioneless) kR-parameter"""
+        """'kR' :  (dimensioneless) kR-parameter"""
         return self.__kR
     @kR.setter  
     def kR ( self , value ) :
@@ -3308,16 +3323,16 @@ class Das_pdf(PEAK) :
     r"""Simple gaussian function with exponential tails.
     It corresponds to `ExpGaussExp` function from ref below
     
-    - see Souvik Das, ``A simple alternative to Crystall Ball fnuction''
+    - see Souvik Das, 'A simple alternative to Crystall Ball fnuction'
     arXiv:1603.08591  [hep-ex]
     
     - see https://arxiv.org/abs/1603.08591
 
     Function was used in 
     - see CMS collaboration, V.Khachatryan, 
-    ``Search for resonant pair production of Higgs bosons decaying 
+    'Search for resonant pair production of Higgs bosons decaying 
     to two bottom quark\textendash{}antiquark pairs 
-    in proton-proton collisions at 8 TeV'',
+    in proton-proton collisions at 8 TeV',
     Phys. Lett. B749 (2015) 560
     
     - see https://arxiv.org/abs/1503.04114 
@@ -3352,20 +3367,22 @@ class Das_pdf(PEAK) :
             
             self.__kL    = self.make_var ( kL ,
                                            'kL_%s'    % name ,   
-                                           '#k_L(%s)' % name , kL , 1.e-6 , 1000 )
+                                           '#k_L(%s)' % name ,
+                                           None , 1 , 1.e-6 , 1000 )
             self.__kR    = self.make_var ( kR ,
                                            'kR_%s'    % name ,   
-                                           '#k_R(%s)' % name , kR , 1.e-6 , 1000 )
+                                           '#k_R(%s)' % name ,
+                                           None , 1 , 1.e-6 , 1000 )
 
             ## name of k-variable 
-            k = Ostap.MoreRooFit.Addition ( self.roo_name ( 'k' , self.name ) ,
+            k = Ostap.MoreRooFit.Addition2 ( self.roo_name ( 'k' , self.name ) ,
                                             '0.5*(kL+kR)' , 
-                                            self.kL ,
-                                            self.kR ,
-                                            0.5     ,
-                                            0.5     )
+                                             self.kL ,
+                                             self.kR ,
+                                             0.5     ,
+                                             0.5     )
             
-            self.__k     = self.make_var ( k , k.name , k.title , k , 1.e-6 , 1000 )
+            self.__k     = self.make_var ( k , k.name , k.title , None , 1 , 1.e-6 , 1000 )
             
             kk = Ostap.MoreRooFit.Asymmetry ( self.roo_name ('kappa' , self.name ) ,
                                               '0.5*(kL-rR)/(kL+kR)' ,
@@ -3373,18 +3390,18 @@ class Das_pdf(PEAK) :
                                               self.kR ,
                                               0.5     ) 
             
-            self.__kappa = self.make_var ( kk , kk.name , kk.title , kk , -1 , 1 )
+            self.__kappa = self.make_var ( kk , kk.name , kk.title , None , 0 , -1 , 1 )
  
         elif kL is None and kR is None :
             
             self.__k     = self.make_var ( k                    ,
                                            'k_%s'      % name   ,  
                                            'k(%s)'     % name   ,
-                                           k , 1.e-6 , 1000 )
+                                           None , 1 , 1.e-6 , 1000 )
             self.__kappa = self.make_var ( kappa                ,
                                            'kappa_%s'   % name  ,  
                                            '#kappa(%s)' % name  ,
-                                           kappa , -1 , 1 )
+                                           None , 0 , -1 , 1 )
 
             
             kl = Ostap.MoreRooFit.Combination ( self.roo_name ( 'kL' , self.name ) ,
@@ -3398,12 +3415,12 @@ class Das_pdf(PEAK) :
                                                 self.kappa    ,
                                                 1 , 1 , -1    )
             
-            self.__kL     = self.make_var ( kl , kl.name , kl.title , kl , 1.e-6 , 1000 )
-            self.__kR     = self.make_var ( kr , kr.name , kr.title , kr , 1.e-6 , 1000 )
+            self.__kL     = self.make_var ( kl , kl.name , kl.title , None , 1 , 1.e-6 , 1000 )
+            self.__kR     = self.make_var ( kr , kr.name , kr.title , None , 1 , 1.e-6 , 1000 )
 
         else :
             
-            raise TypeError( 'Invalid setting!' )
+            raise TypeError( 'Invalid setting for k/kappa/kL/kR!' )
 
 
         ## build PDF
@@ -3430,7 +3447,7 @@ class Das_pdf(PEAK) :
 
     @property
     def mu ( self ) :
-        """``mu'' : peak location, same as ``mean''
+        """'mu' : peak location, same as 'mean'
         """
         return self.mean
     @mu.setter 
@@ -3439,7 +3456,7 @@ class Das_pdf(PEAK) :
     
     @property
     def kL  ( self ) :
-        """``kL'' : left tail parameter
+        """'kL' : left tail parameter
         """
         return self.__kL
     @kL.setter
@@ -3448,7 +3465,7 @@ class Das_pdf(PEAK) :
 
     @property
     def kR  ( self ) :
-        """``kR'' : left tail parameter
+        """'kR' : left tail parameter
         """
         return self.__kR
     @kR.setter
@@ -3457,7 +3474,7 @@ class Das_pdf(PEAK) :
 
     @property
     def k   ( self ) :
-        """``k'' : (kL+kR)/2 parameter
+        """'k' : (kL+kR)/2 parameter
         """
         return self.__k
     @k.setter
@@ -3466,7 +3483,7 @@ class Das_pdf(PEAK) :
 
     @property
     def kappa ( self ) :
-        """``k'' : 0.5*(kL-kR)/(kL+kR) parameter
+        """'k' : 0.5*(kL-kR)/(kL+kR) parameter
         """
         return self.__kappa
     @kappa.setter
@@ -3518,10 +3535,10 @@ class Voigt_pdf(PEAK) :
             dm = mx - mn
             limits_gamma = 1.e-5 * dm , dm
             
-        self.__gamma  = self.make_var ( gamma               ,
-                                  'gamma_%s'   % name ,   
-                                  '#gamma(%s)' % name , gamma ,
-                                  *limits_gamma )
+        self.__gamma  = self.make_var ( gamma                ,
+                                        'gamma_%s'   % name  ,   
+                                        '#gamma(%s)' % name  ,
+                                        None , *limits_gamma )
         #
         ## finally build pdf
         # 
@@ -3544,7 +3561,7 @@ class Voigt_pdf(PEAK) :
     
     @property
     def m0 ( self ) :
-        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        """'m0' : m_0 parameter for Breit-Wigner function (alias for 'mean')"""
         return self.mean
     @m0.setter
     def m0 ( self , value ) :
@@ -3552,12 +3569,12 @@ class Voigt_pdf(PEAK) :
 
     @property
     def gamma ( self ) :
-        """``gamma''-parameter for Voigt function"""
+        """'gamma'-parameter for Voigt function"""
         return self.__gamma
     @gamma.setter
     def gamma ( self, value ) :
         value = float ( value )
-        assert 0 < value , "``gamma''-parameter must be positive"
+        assert 0 < value , "'gamma'-parameter must be positive"
         self.__gamma.setVal ( value ) 
         return self.__gamma.getVal ()
 
@@ -3581,7 +3598,7 @@ class PseudoVoigt_pdf(Voigt_pdf) :
     
     CPU-efficient Approximation of Voight profile
     -@see T. Ida, M. Ando and H. Toraya, 
-    ``Extended pseudo-Voigt function for approximating the Voigt profile''
+    'Extended pseudo-Voigt function for approximating the Voigt profile'
     J. Appl. Cryst. (2000). 33, 1311-1316
     - see doi:10.1107/S0021889800010219
     - see https://doi.org/10.1107/S0021889800010219
@@ -3637,7 +3654,7 @@ models.append ( PseudoVoigt_pdf )
 #  @date 2011-07-25
 class BreitWigner_pdf(PEAK) :
     """Relativistic Breit-Wigner function using Jackson's parameterization
-    J.D.Jackson, ``Remarks on the Phenomenological Analysis of Resonances'',
+    J.D.Jackson, 'Remarks on the Phenomenological Analysis of Resonances',
     In Nuovo Cimento, Vol. XXXIV, N.6
     http://www.springerlink.com/content/q773737260425652/
 
@@ -3698,7 +3715,7 @@ class BreitWigner_pdf(PEAK) :
 
     @property
     def m0 ( self ) :
-        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        """'m0' : m_0 parameter for Breit-Wigner function (alias for 'mean')"""
         return self.mean
     @m0.setter
     def m0 ( self , value ) :
@@ -3706,7 +3723,7 @@ class BreitWigner_pdf(PEAK) :
 
     @property
     def gamma ( self ) :
-        """``gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
+        """'gamma'-parameter for Breit-Wigner function (alias for 'sigma')"""
         return self.sigma 
     @gamma.setter
     def gamma ( self, value ) :
@@ -3714,7 +3731,7 @@ class BreitWigner_pdf(PEAK) :
     
     @property
     def Gamma ( self ) :
-        """``Gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
+        """'Gamma'-parameter for Breit-Wigner function (alias for 'sigma')"""
         return self.sigma 
     @Gamma.setter
     def Gamma ( self, value ) :
@@ -3846,7 +3863,8 @@ class BWMC_pdf(PEAK) :
                 gi = widths[i] 
                 gg = self.make_var ( gi ,
                                      'gamma_%d_%s'     % ( i+1 , name ) ,
-                                     '#Gamma_{%d}(%s)' % ( i+1 , name ) , gi , gi )
+                                     '#Gamma_{%d}(%s)' % ( i+1 , name ) ,
+                                     None )
                 
                 self.__trash.append ( gg )
                 self.widths.add     ( gg )
@@ -3897,7 +3915,7 @@ class BWMC_pdf(PEAK) :
                 bi = fractions [i] 
                 br = self.make_var       ( bi ,
                                            'brfr_%d_%s'  % ( i+1 , name ) ,
-                                           'Br_{%d}(%s)' % ( i+1 , name ) , bi , bi ) 
+                                           'Br_{%d}(%s)' % ( i+1 , name ) ,None ) 
                 self.brfrs.add       ( br )    
                 self.__trash.append  ( br ) 
                 
@@ -3946,7 +3964,7 @@ class BWMC_pdf(PEAK) :
                                                  'widths'    : ()             } )
     @property
     def m0 ( self ) :
-        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        """'m0' : m_0 parameter for Breit-Wigner function (alias for 'mean')"""
         return self.mean
     @m0.setter
     def m0 ( self , value ) :
@@ -3954,7 +3972,7 @@ class BWMC_pdf(PEAK) :
 
     @property
     def gamma ( self ) :
-        """``gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
+        """'gamma'-parameter for Breit-Wigner function (alias for 'sigma')"""
         return self.sigma 
     @gamma.setter
     def gamma ( self, value ) :
@@ -3962,7 +3980,7 @@ class BWMC_pdf(PEAK) :
     
     @property
     def Gamma ( self ) :
-        """``Gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
+        """'Gamma'-parameter for Breit-Wigner function (alias for 'sigma')"""
         return self.gamma 
     @Gamma.setter
     def Gamma ( self, value ) :
@@ -3975,22 +3993,22 @@ class BWMC_pdf(PEAK) :
 
     @property
     def widths  ( self ) :
-        """``widths''  : partial widths for different decay channels"""
+        """'widths'  : partial widths for different decay channels"""
         return self.__widths
 
     @property
     def brfrs   ( self ) :
-        """``brfrs''  : branching fractions for different decay channels"""
+        """'brfrs'  : branching fractions for different decay channels"""
         return self.__brfrs 
 
     @property
     def gammas ( self ) :
-        """``gammas''  : partial widths for different decay channels"""
+        """'gammas'  : partial widths for different decay channels"""
         return self.__gammas  
 
     @property
     def fractions ( self ) :
-        """``fractions''  : branching fractions for different decay channels"""
+        """'fractions'  : branching fractions for different decay channels"""
         return self.__fractions
 
     # =========================================================================
@@ -4045,7 +4063,7 @@ class BWI_pdf (BreitWigner_pdf) :
 
         self.__bw = self.pdf
 
-        if   isinstance ( bkg , PDF             ) :             ## PDF ? 
+        if   isinstance ( bkg , PDF1            ) :             ## PDF ? 
             ## PDF?
             self.__bkg = bkg
             self.__b   = self.__bkg.pdf
@@ -4059,7 +4077,7 @@ class BWI_pdf (BreitWigner_pdf) :
             self.__bkg = bkg
             self.__b   = self.make_var ( bkg              ,
                                          "bkg_%s"  % name ,
-                                         "bkg(%s)" % name , bkg )
+                                         "bkg(%s)" % name , None )
         elif isinstance ( bkg , ROOT.RooAbsReal ) :               ## function ?
             ## function? 
             from ostap.fitting.basic import Generic1D_pdf as G1D 
@@ -4071,17 +4089,18 @@ class BWI_pdf (BreitWigner_pdf) :
             self.__bkg = MKB ( bkg , 'B_4'+ self.name , self.xvar )
             self.__b   = self.__bkg.pdf 
             
-        ## create background phase
+        ## create background magnitude 
         self.__a  = self.make_var  ( a              ,
                                      "a_%s"    % name ,
-                                     "a(%s)"   % name , a , 0 , 1.e+5 )
+                                     "a(%s)"   % name ,
+                                     None , 0 , 1.e+5 )
         
         ## create background phase 
         self.__phi = self.make_var ( phi              ,
                                      "phi_%s"  % name ,
-                                     "phi(%s)" % name , phi , -10 , 10 )
+                                     "phi(%s)" % name ,
+                                     None , -12 , 12  )
 
-        
         ## finally create PDF
         self.pdf = Ostap.Models.BWI (
             self.roo_name ( 'bwi_' ) ,
@@ -4104,7 +4123,7 @@ class BWI_pdf (BreitWigner_pdf) :
                         
     @property
     def m0 ( self ) :
-        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        """'m0' : m_0 parameter for Breit-Wigner function (alias for 'mean')"""
         return self.mean
     @m0.setter
     def m0 ( self , value ) :
@@ -4199,7 +4218,7 @@ class BWPS_pdf(BreitWigner_pdf,Phases) :
         
     @property
     def bw_pdf  ( self ) :
-        """``bw_pdf'' : ``original'' Breit-Wigner pdf (no additional phase space  factors)"""
+        """'bw_pdf' : 'original' Breit-Wigner pdf (no additional phase space  factors)"""
         return self.__bw_pdf
     
     @property
@@ -4297,7 +4316,7 @@ class BW3L_pdf(BreitWigner_pdf) :
         
     @property
     def bw_pdf  ( self ) :
-        """``bw_pdf'' : ``original'' Breit-Wigner pdf (no additional factors)"""
+        """'bw_pdf' : 'original' Breit-Wigner pdf (no additional factors)"""
         return self.__bw_pdf
     
     @property
@@ -4324,8 +4343,8 @@ models.append ( BW3L_pdf )
 #  @date 2014-01-18
 class Flatte_pdf(PEAKMEAN) :
     """Flatte function:
-    S.M.Flatte, ``Coupled-channel analysis of the (pi eta)
-    and (KbarK) systems near (KbarK) threshold'' 
+    S.M.Flatte, 'Coupled-channel analysis of the (pi eta)
+    and (KbarK) systems near (KbarK) threshold' 
     Phys. Lett. B63, 224 (1976
     http://www.sciencedirect.com/science/article/pii/0370269376906547
 
@@ -4364,19 +4383,18 @@ class Flatte_pdf(PEAKMEAN) :
         self.__gamma0 = self.make_var  ( gamma0                  ,
                                          'gamma0_%s'      % name ,
                                          '#Gamma_{0}(%s)' % name ,
-                                         gamma0 , gamma0 , 0 , gamma0 )
-        
+                                         None   , 0 , gamma0 )
         if  1 == self.case : 
             
             self.__m0g1 = self.make_var  ( m0g1                     ,
                                            'm0g1_%s'          % name ,
                                            '#m_{0}#g_{1}(%s)' % name ,
-                                           m0g1 , m0g1 )
+                                           None  )
             
-            self.__g2og1 = self.make_var ( g2og1    ,
+            self.__g2og1 = self.make_var ( g2og1 ,
                                            'g2og1_%s'          % name ,
                                            '#g_{2}/#g_{1}(%s)' % name ,
-                                           g2og1    ,  g2og1  , 0.005  , 200  ) 
+                                           None , 0.001 , 200  ) 
 
             self.__g1 = self.vars_divide   ( self.m0g1  , self.m0 , name = 'g1_%s' % name , title = "g_1(%s)" % name )
             self.__g2 = self.vars_multiply ( self.g2og1 , self.g1 , name = 'g2_%s' % name , title = "g_2(%s)" % name )
@@ -4386,11 +4404,11 @@ class Flatte_pdf(PEAKMEAN) :
             self.__g1 =  self.make_var  ( g1                 ,
                                           'g1_%s'     % name ,
                                           'g_{1}(%s)' % name ,
-                                          g1                 , g1 )
+                                          g1                 , None  )
             self.__g2 =  self.make_var  ( g2                 ,
                                           'g2_%s'     % name ,
                                           'g_{2}(%s)' % name ,
-                                          g2                 , g2 )
+                                          g2                 , None )
             
             self.__m0g1  = self.vars_multiply ( self.m0 , self.g1 , name = 'm0g1_%s'  % name , title = "m_0g_1(%s)"  % name )
             self.__g2og1 = self.vars_divide   ( self.g2 , self.g1 , name = 'g2og1_%s' % name , title = "g_2/g_1(%s)" % name )
@@ -4422,12 +4440,12 @@ class Flatte_pdf(PEAKMEAN) :
         
     @property
     def case  (self ) :
-        """``case'' : How the input argument are  specified: 1: (m0g1,g2og1) vs 2: (g1,g2) """
+        """'case' : How the input argument are  specified: 1: (m0g1,g2og1) vs 2: (g1,g2) """
         return self.__my_case
     
     @property
     def m0 ( self ) :
-        """``m0''-parameter for Flatte-function (same as ``mean'')"""
+        """'m0'-parameter for Flatte-function (same as 'mean')"""
         return self.mean 
     @m0.setter
     def m0  ( self, value ) :
@@ -4435,48 +4453,48 @@ class Flatte_pdf(PEAKMEAN) :
 
     @property
     def m0g1 ( self ) :
-        """``m0*g1''-parameter for Flatte-function"""
+        """'m0*g1'-parameter for Flatte-function"""
         return self.__m0g1
     @m0g1.setter
     def m0g1 ( self, value ) :
-        assert gasattr ( self.__m0g1 , 'setVal' ),"``m0g1''-parameter can't be set!"
+        assert gasattr ( self.__m0g1 , 'setVal' ),"'m0g1'-parameter can't be set!"
         value = float ( value )
         self.__m0g1.setVal ( value ) 
 
     @property
     def g2og1 ( self ) :
-        """``g2/g1''-parameter for Flatte-function"""
+        """'g2/g1'-parameter for Flatte-function"""
         return self.__g2og1
     @g2og1.setter
     def g2og1 ( self, value ) :
-        assert hasattr ( self.__g2og1 , 'setVal'),"``g2og1''-parameter can't be set!"        
+        assert hasattr ( self.__g2og1 , 'setVal'),"'g2og1'-parameter can't be set!"        
         value = float ( value )
-        assert 0 < value, "``g2/g1''-parameter for Flatte-function must be positive"
+        assert 0 < value, "'g2/g1'-parameter for Flatte-function must be positive"
         self.__g2og1.setVal ( value )
 
     @property
     def g1 ( self ) :
-        "``g1''-parameter for Flatte-function"
+        "'g1'-parameter for Flatte-function"
         return self.__g1
     @g1.setter
     def g1 ( self , value ) :
-        assert hasattr ( self.__g1 , 'setVal' ),"``g1''-parameter can't be set!"
+        assert hasattr ( self.__g1 , 'setVal' ),"'g1'-parameter can't be set!"
         value = float ( value )
         self.__g1.setVal ( value ) 
 
     @property
     def g2 ( self ) :
-        "``g2''-parameter for Flatte-function"
+        "'g2'-parameter for Flatte-function"
         return self.__g2
     @g2.setter
     def g2 ( self , value ) :
-        assert hasattr ( self.__g2 , 'setVal' ),"``g2''-parameter can't be set!"
+        assert hasattr ( self.__g2 , 'setVal' ),"'g2'-parameter can't be set!"
         value = float ( value )
         self.__g2.setVal ( value ) 
 
     @property
     def gamma0 ( self ) :
-        "``gamma0''-parameter for Flatte-function"
+        "'gamma0'-parameter for Flatte-function"
         return self.__gamma0
     @gamma0.setter
     def gamma0 ( self , value ) :
@@ -4517,8 +4535,8 @@ models.append ( Flatte_pdf )
 # ============================================================================
 class FlattePS_pdf(Flatte_pdf,Phases) :
     """Flatte function:
-    S.M.Flatte, ``Coupled-channel analysis of the (pi eta)
-    and (KbarK) systems near (KbarK) threshold'' 
+    S.M.Flatte, 'Coupled-channel analysis of the (pi eta)
+    and (KbarK) systems near (KbarK) threshold' 
     Phys. Lett. B63, 224 (1976
     http://www.sciencedirect.com/science/article/pii/0370269376906547
 
@@ -4612,7 +4630,7 @@ class FlattePS_pdf(Flatte_pdf,Phases) :
 
     @property
     def flatte_pdf  ( self ) :
-        """``flatte_pdf'' : ``original'' Flatte pdf (no additional phase space  factors)"""
+        """'flatte_pdf' : 'original' Flatte pdf (no additional phase space  factors)"""
         return self.__flatte_pdf
     
     @property
@@ -4622,7 +4640,7 @@ class FlattePS_pdf(Flatte_pdf,Phases) :
     
     @property
     def g_list ( self ) :
-        """``g_list'' list of gammas for Breit-Wigner"""
+        """'g_list' list of gammas for Breit-Wigner"""
         return self.__g_list
 
 models.append ( FlattePS_pdf )
@@ -4672,22 +4690,25 @@ class LASS_pdf(PEAK) :
             
         self.__a = self.make_var ( a                  ,
                                    'aLASS_%s'  % name ,
-                                   "aLASS(%s)" % name , a , 
+                                   "aLASS(%s)" % name ,
+                                   None               , 
                                    1.94e-3            ,
                                    1.94e-3            ,
                                    1.94e-3            ) 
         self.__r = self.make_var ( r             ,
                                    'rLASS_%s'  % name ,
-                                   "rLASS(%s)" % name , r , 
+                                   "rLASS(%s)" % name ,
+                                   None               ,
                                    1.76e-3            ,
                                    1.76e-3            ,
                                    1.76e-3            ) 
         self.__e = self.make_var ( e            ,
                                    'eLASS_%s'  % name ,
-                                   "eLASS(%s)" % name , e ,
+                                   "eLASS(%s)" % name ,
+                                   None               , 
                                    1.0                , 
-                                   1.0                ,
-                                   1.0                )
+                                   0.5                ,
+                                   2.0                )
         
         self.__mKaon = mKaon
         self.__mPion = mPion
@@ -4720,7 +4741,7 @@ class LASS_pdf(PEAK) :
     
     @property
     def g0 ( self ) :
-        """``g0''-parameter for LASS-function (same as ``sigma'')"""
+        """'g0'-parameter for LASS-function (same as 'sigma')"""
         return self.sigma
     @g0.setter
     def g0 ( self, value ) :
@@ -4728,7 +4749,7 @@ class LASS_pdf(PEAK) :
 
     @property
     def m0 ( self ) :
-        """``m0''-parameter for LASS-function (same as ``mean'')"""
+        """'m0'-parameter for LASS-function (same as 'mean')"""
         return self.__gamma
     @m0.setter
     def m0 ( self, value ) :
@@ -4736,7 +4757,7 @@ class LASS_pdf(PEAK) :
 
     @property
     def a ( self ) :
-        """``a''-parameter for LASS-function"""
+        """'a'-parameter for LASS-function"""
         return self.__a_
     @a.setter
     def a ( self, value ) :
@@ -4745,7 +4766,7 @@ class LASS_pdf(PEAK) :
 
     @property
     def r ( self ) :
-        """``r''-parameter for LASS-function"""
+        """'r'-parameter for LASS-function"""
         return self.__r
     @r.setter
     def r ( self, value ) :
@@ -4754,7 +4775,7 @@ class LASS_pdf(PEAK) :
 
     @property
     def e ( self ) :
-        """``e''-parameter for LASS-function"""
+        """'e'-parameter for LASS-function"""
         return self.__e
     @e.setter
     def e ( self, value ) :
@@ -4805,33 +4826,28 @@ class Bugg_pdf(PEAK) :
 
         self.__bugg_b1 = self.make_var ( b1                  ,
                                          'b1Bugg_%s'  % name ,
-                                         "b1Bugg(%s)" % name , b1 ,
-                                         0.5848 , 
-                                         0 , 2  )
+                                         "b1Bugg(%s)" % name ,
+                                         None , 0.5848 , 0 , 2  )
         
         self.__bugg_b2 = self.make_var ( b2             ,
                                          'b2Bugg_%s'  % name ,
-                                         "b2Bugg(%s)" % name , b2 , 
-                                         1.6663 ,
-                                         1 , 2  ) 
+                                         "b2Bugg(%s)" % name ,
+                                         None ,  1.6663 , 1 , 2  ) 
         
         self.__bugg_a  = self.make_var ( a             ,
                                          'aBugg_%s'  % name ,
-                                         "aBugg(%s)" % name , a , 
-                                         1.082    ,
-                                         0.5 , 5  ) 
+                                         "aBugg(%s)" % name ,
+                                         None , 1.082 , 0.5 , 5  ) 
         
         self.__bugg_s1  = self.make_var ( s1           ,
                                           's1Bugg_%s'  % name ,
-                                          "s1Bugg(%s)" % name , s1 , 
-                                          2.8              ,
-                                          1 , 5            ) 
+                                          "s1Bugg(%s)" % name ,
+                                          None , 2.8 , 1 , 5  ) 
         
         self.__bugg_s2  = self.make_var ( s2           ,
                                           's2Bugg_%s'  % name ,
-                                          "s2Bugg(%s)" % name , s2 , 
-                                          3.5              ,
-                                          1 , 5            ) 
+                                          "s2Bugg(%s)" % name ,
+                                          None , 3.5 , 1 , 5  ) 
         
         self.__mPion = mPion 
         ## create PDF 
@@ -4864,7 +4880,7 @@ class Bugg_pdf(PEAK) :
 
     @property
     def gamma ( self ) :
-        """``gamma''-parameter (``g2'') for Bugg function"""
+        """'gamma'-parameter ('g2') for Bugg function"""
         return self.__gamma
     @gamma.setter
     def gamma ( self, value ) :
@@ -4873,7 +4889,7 @@ class Bugg_pdf(PEAK) :
 
     @property
     def g2 ( self ) :
-        """``g2''-parameter for Bugg function"""
+        """'g2'-parameter for Bugg function"""
         return self.__bugg_g2
     @g2.setter
     def g2 ( self, value ) :
@@ -4882,7 +4898,7 @@ class Bugg_pdf(PEAK) :
 
     @property
     def b1 ( self ) :
-        """``b1''-parameter for Bugg function"""
+        """'b1'-parameter for Bugg function"""
         return self.__bugg_b1
     @b1.setter
     def b1 ( self, value ) :
@@ -4891,7 +4907,7 @@ class Bugg_pdf(PEAK) :
 
     @property
     def b2 ( self ) :
-        """``b2''-parameter for Bugg function"""
+        """'b2'-parameter for Bugg function"""
         return self.__bugg_b2
     @b2.setter
     def b1 ( self, value ) :
@@ -4900,7 +4916,7 @@ class Bugg_pdf(PEAK) :
 
     @property
     def a ( self ) :
-        """``a''-parameter for Bugg function"""
+        """'a'-parameter for Bugg function"""
         return self.__bugg_a
     @a.setter
     def a ( self, value ) :
@@ -4909,7 +4925,7 @@ class Bugg_pdf(PEAK) :
 
     @property
     def s1 ( self ) :
-        """``s1''-parameter for Bugg function"""
+        """'s1'-parameter for Bugg function"""
         return self.__bugg_s1
     @s1.setter
     def s1 ( self, value ) :
@@ -4918,7 +4934,7 @@ class Bugg_pdf(PEAK) :
 
     @property
     def s2 ( self ) :
-        """``s2''-parameter for Bugg function"""
+        """'s2'-parameter for Bugg function"""
         return self.__bugg_s2
     @s2.setter
     def s2 ( self, value ) :
@@ -4971,7 +4987,7 @@ models.append ( Bugg_pdf )
 ##                              m_title    , ## title/comment
 ##                              fix = None ) ## fix ? 
 ##         else :
-##             raise AttributeError("Swanson: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
+##             raise AttributeError("Swanson: Unknown type of 'xvar' parameter %s/%s" % ( type ( xvar ) , xvar ) )
 
             
 ##         PDF.__init__  ( self , name , xvar , None , None    ) 
@@ -5001,7 +5017,7 @@ models.append ( Bugg_pdf )
     
 ##     @property
 ##     def beta0 ( self ) :
-##         """``beta0''-parameter for Swanson function"""
+##         """'beta0'-parameter for Swanson function"""
 ##         return self.__beta0
 ##     @beta0.setter
 ##     def beta0 ( self, value ) :
@@ -5010,7 +5026,7 @@ models.append ( Bugg_pdf )
 
 ##     @property
 ##     def swanson ( self ) :
-##         """``swanson''-function itself for Swanson PDF"""
+##         """'swanson'-function itself for Swanson PDF"""
 ##         return self.__swanson
 
 ## models.append ( Swanson_pdf )

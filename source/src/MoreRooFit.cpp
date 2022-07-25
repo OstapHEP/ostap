@@ -19,6 +19,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
+#include "local_roofit.h"
 // ============================================================================
 /** @file
  *  implementaton of various small additions to RooFit 
@@ -26,7 +27,9 @@
  *  @date 2019-11-21
  */
 // ============================================================================
+ClassImp(Ostap::MoreRooFit::Constant      )
 ClassImp(Ostap::MoreRooFit::Addition      )
+ClassImp(Ostap::MoreRooFit::Addition2     )
 ClassImp(Ostap::MoreRooFit::Subtraction   )
 ClassImp(Ostap::MoreRooFit::Division      )
 ClassImp(Ostap::MoreRooFit::Combination   )
@@ -51,11 +54,14 @@ ClassImp(Ostap::MoreRooFit::Gamma         )
 ClassImp(Ostap::MoreRooFit::LGamma        )
 ClassImp(Ostap::MoreRooFit::IGamma        )
 ClassImp(Ostap::MoreRooFit::Id            )
+ClassImp(Ostap::MoreRooFit::MaxV          )
+ClassImp(Ostap::MoreRooFit::MinV          )
 ClassImp(Ostap::MoreRooFit::OneVar        )
 ClassImp(Ostap::MoreRooFit::TwoVars       )
 ClassImp(Ostap::MoreRooFit::FunOneVar     )
 ClassImp(Ostap::MoreRooFit::FunTwoVars    )
 ClassImp(Ostap::MoreRooFit::ProductPdf    )
+ClassImp(Ostap::MoreRooFit::WrapPdf    )
 // ============================================================================
 namespace 
 {
@@ -104,33 +110,137 @@ namespace
   // ==========================================================================
 }
 // ============================================================================
-// constructor with two variables 
+// constructor with no variables 
 // ============================================================================
-Ostap::MoreRooFit::Addition::Addition
+Ostap::MoreRooFit::Constant::Constant
 ( const std::string& name  , 
   const std::string& title , 
-  RooAbsReal&        a     , 
-  RooAbsReal&        b     )
-  : RooAddition ( name_  ( name  , "sum" , a , b ).c_str() , 
-                  title_ ( title , "+"   , a , b ).c_str() , 
-                  RooArgList  ( a , b ) )
-{}
+  const double       value ) 
+  : RooAbsReal ( name.c_str () , title.c_str() ) 
+  , m_value    ( value ) 
+  , m_vlst     ( "!vlst" , "variables" , this ) 
+{
+  // _fast = true ;
+  setAttribute("Constant",true) ;
+}
 // ============================================================================
-// construct c1*a + c2*b 
+// constructor with one variables 
+// ============================================================================
+Ostap::MoreRooFit::Constant::Constant
+( const std::string& name  , 
+  const std::string& title , 
+  const double       value ,
+  RooAbsReal&        x     )
+  : Constant ( name , title , value ) 
+{
+  m_vlst.add ( x ) ;
+}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Constant::Constant
+( const std::string& name  , 
+  const std::string& title , 
+  const double       value ,
+  RooAbsReal&        x     ,
+  RooAbsReal&        y     )
+  : Constant ( name , title , value  ) 
+{
+  m_vlst.add ( x ) ;
+  m_vlst.add ( y ) ;
+}
+// ============================================================================
+// constructor with three variables 
+// ============================================================================
+Ostap::MoreRooFit::Constant::Constant
+( const std::string& name  , 
+  const std::string& title , 
+  const double       value ,
+  RooAbsReal&        x     ,
+  RooAbsReal&        y     ,
+  RooAbsReal&        z     )
+  : Constant ( name , title , value ) 
+{
+  m_vlst.add ( x ) ;
+  m_vlst.add ( y ) ;
+  m_vlst.add ( z ) ;
+}
+// ============================================================================
+// constructor with list of variables 
+// ============================================================================
+Ostap::MoreRooFit::Constant::Constant
+( const std::string& name  , 
+  const std::string& title , 
+  const double       value ,
+  const RooArgList&  v     )
+  : Constant ( name , title , value ) 
+{
+  ::copy_real ( v , m_vlst , "Invalid var parameter" , "Ostap::MoreRooFit::Constant!" ) ;  
+}
+// ============================================================================
+// copy 
+// ============================================================================
+Ostap::MoreRooFit::Constant::Constant
+( const Ostap::MoreRooFit::Constant& right   , 
+  const char*                        newname ) 
+  : RooAbsReal ( right , newname ) 
+  , m_value    ( right.m_value   )
+  , m_vlst     ( "!vlst" , this , right.m_vlst )
+{
+  // _fast = true ;
+}
+// ============================================================================
+Ostap::MoreRooFit::Constant*
+Ostap::MoreRooFit::Constant::clone ( const char* newname ) const 
+{ return new Ostap::MoreRooFit::Constant(*this , newname ) ; }
+// ============================================================================
+// REDEFINED METHODS 
+// ============================================================================
+#if ROOT_VERSION(6,24,0)<=ROOT_VERSION_CODE
+#include "RunContext.h"
+RooSpan<const double> 
+Ostap::MoreRooFit::Constant::getValues 
+( RooBatchCompute::RunContext& evalData   , 
+  const                        RooArgSet* ) const 
+{
+  if ( evalData.spans.end() == evalData.spans.find ( this ) )
+  { evalData.spans[this] = {&m_value, 1}; }
+  return evalData.spans[this];
+}
+#endif
+// ============================================================================
+// write to the stream 
+// ============================================================================
+void Ostap::MoreRooFit::Constant::writeToStream(std::ostream& os, bool compact) const
+{ os << m_value ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t Ostap::MoreRooFit::Constant::evaluate () const
+{ return m_value ; } 
+// ============================================================================
+// the actual evaluation of the result
+// ============================================================================
+double   Ostap::MoreRooFit::Constant::getValV 
+( const RooArgSet* /* a */ ) const 
+{ return m_value ; }
+
+
+
+// ============================================================================
+// construct a + b 
 // ============================================================================
 Ostap::MoreRooFit::Addition::Addition
 ( const std::string& name  , 
   const std::string& title ,
-  RooAbsReal&        a     ,
-  RooAbsReal&        b     ,
-  RooAbsReal&        c1    ,
-  RooAbsReal&        c2    ) 
-  : RooAddition ( name .c_str() , title.c_str() ,
-                  RooArgList ( a  ,  b  ) , 
-                  RooArgList ( c1 ,  c2 ) )
+  RooAbsReal&        x     ,
+  RooAbsReal&        y     ) 
+  : RooAddition ( name_  ( name  , "add" , x , y ).c_str() , 
+                  title_ ( title , "+"   , x , y ).c_str() ,
+                  RooArgList ( x  , y  ) ) 
+  , m_x  ( "!x"  , "x"  , this , x  ) 
+  , m_y  ( "!y"  , "y"  , this , y  ) 
 {}
-  
-
 // ============================================================================
 //  copy constructor 
 // ============================================================================
@@ -138,6 +248,8 @@ Ostap::MoreRooFit::Addition::Addition
 ( const Ostap::MoreRooFit::Addition& right   , 
   const char*                        newname ) 
   : RooAddition ( right , newname )
+  , m_x  ( "!x"  , this , right.m_x  ) 
+  , m_y  ( "!y"  , this , right.m_y  ) 
 {}
 // ============================================================================
 // destructor 
@@ -149,6 +261,47 @@ Ostap::MoreRooFit::Addition::clone ( const char* newname ) const
 { return new Addition ( *this , newname ) ; }
 // ============================================================================
 
+// ============================================================================
+// construct c1*x + c2*y 
+// ============================================================================
+Ostap::MoreRooFit::Addition2::Addition2
+( const std::string& name  , 
+  const std::string& title ,
+  RooAbsReal&        x     ,
+  RooAbsReal&        y     , 
+  RooAbsReal&        c1    ,
+  RooAbsReal&        c2    )
+  : RooAddition ( name_  ( name  , "add" , x , y ).c_str() , 
+                  title_ ( title , "+"   , x , y ).c_str() ,
+                  RooArgList ( x  , y  ) , 
+                  RooArgList ( c1 , c2 ) ) 
+  , m_x  ( "!x"  , "x"  , this , x  ) 
+  , m_y  ( "!y"  , "y"  , this , y  ) 
+  , m_c1 ( "!c1" , "c1" , this , c1 )
+  , m_c2 ( "!c2" , "c2" , this , c2 ) 
+{}
+// ============================================================================
+//  copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::Addition2::Addition2
+( const Ostap::MoreRooFit::Addition2& right   , 
+  const char*                         newname ) 
+  : RooAddition ( right , newname )
+  , m_x  ( "!x"  , this , right.m_x  ) 
+  , m_y  ( "!y"  , this , right.m_y  ) 
+  , m_c1 ( "!c1" , this , right.m_c1 ) 
+  , m_c2 ( "!c2" , this , right.m_c2 )
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::Addition2::~Addition2(){}
+// ============================================================================
+Ostap::MoreRooFit::Addition2* 
+Ostap::MoreRooFit::Addition2::clone ( const char* newname ) const 
+{ return new Addition2 ( *this , newname ) ; }
+// ============================================================================
+
 
 
 // ============================================================================
@@ -157,11 +310,14 @@ Ostap::MoreRooFit::Addition::clone ( const char* newname ) const
 Ostap::MoreRooFit::Product::Product
 ( const std::string& name  , 
   const std::string& title , 
-  RooAbsReal&        a     , 
-  RooAbsReal&        b     )
+  RooAbsReal&        x     , 
+  RooAbsReal&        y     )
   : RooProduct 
-    ( name_  ( name  , "mult" , a , b ).c_str() , 
-      title_ ( title , "*"    , a , b ).c_str() , RooArgList ( a , b ) ) 
+    ( name_  ( name  , "mult" , x , y ).c_str() , 
+      title_ ( title , "*"    , x , y ).c_str() , 
+      RooArgList ( x , y ) ) 
+  , m_x  ( "!x"  , "x"  , this , x  ) 
+  , m_y  ( "!y"  , "y"  , this , y  ) 
 {}
 // ============================================================================
 //  copy constructor 
@@ -170,6 +326,8 @@ Ostap::MoreRooFit::Product::Product
 ( const Ostap::MoreRooFit::Product& right   , 
   const char*                        newname ) 
   : RooProduct ( right , newname )
+  , m_x  ( "!x"  , this , right.m_x  ) 
+  , m_y  ( "!y"  , this , right.m_y  ) 
 {}
 // ============================================================================
 // destructor 
@@ -191,7 +349,7 @@ Ostap::MoreRooFit::Subtraction::Subtraction
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     )
-  : Addition 
+  : Addition2 
     ( name_  ( name  , "subtract" , a , b )  ,
       title_ ( title , "-"        , a , b )  , a , b , 1 , -1 )    
 {}
@@ -199,7 +357,7 @@ Ostap::MoreRooFit::Subtraction::Subtraction
 Ostap::MoreRooFit::Subtraction::Subtraction
 ( const Ostap::MoreRooFit::Subtraction& right   , 
   const char*                           newname ) 
-  : Addition ( right , newname )
+  : Addition2 ( right , newname )
 {}
 // ============================================================================
 // destructor 
@@ -549,6 +707,28 @@ Ostap::MoreRooFit::Atan2::Atan2
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
+Ostap::MoreRooFit::MaxV::MaxV
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "max" , a , b ) ,
+              title1_ ( title , "max" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::MinV::MinV
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "min" , a , b ) ,
+              title1_ ( title , "min" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
 Ostap::MoreRooFit::Gamma::Gamma
 ( const std::string& name  , 
   const std::string& title , 
@@ -580,6 +760,7 @@ Ostap::MoreRooFit::IGamma::IGamma
                  title1_ ( title , "igamma" , a , b ) , a , b )
 {}
 // ============================================================================
+
 
 // ============================================================================
 // the actual evaluation of the result 
@@ -667,7 +848,12 @@ Double_t Ostap::MoreRooFit::Sech::evaluate () const
 Double_t Ostap::MoreRooFit::Atan2::evaluate () const 
 { const double a = m_x ; const double b = m_y ; return std::atan2  ( a , b ) ; }
 // ============================================================================
-
+Double_t Ostap::MoreRooFit::MaxV::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::max  ( a , b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::MinV::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::min  ( a , b ) ; }
+// ============================================================================
 
 
 
@@ -785,6 +971,87 @@ Double_t Ostap::MoreRooFit::ProductPdf::evaluate () const
   return v1 * v2 ;
 }
 // ============================================================================
+
+
+
+// ============================================================================
+// constructor 
+// ============================================================================
+Ostap::MoreRooFit::WrapPdf::WrapPdf 
+( const char *name  , 
+  const char *title , 
+  RooAbsReal& func  ) 
+  : RooAbsPdf ( name , title ) 
+  , m_func ( "!func" , "a function" , this , func )
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::WrapPdf::WrapPdf 
+( const Ostap::MoreRooFit::WrapPdf& right   , 
+  const char*           newname ) 
+  : RooAbsPdf ( right , newname ) 
+  , m_func ( "!func" , this , right.m_func )
+{}
+// ============================================================================
+/// cloning method 
+// ============================================================================
+Ostap::MoreRooFit::WrapPdf*
+Ostap::MoreRooFit::WrapPdf::clone ( const char* newname ) const 
+{ return new Ostap::MoreRooFit::WrapPdf ( *this , newname ) ; }
+// ============================================================================
+// Analytical Integration handling
+// ============================================================================
+bool Ostap::MoreRooFit::WrapPdf::forceAnalyticalInt 
+( const RooAbsArg& dep ) const 
+{ return m_func.arg().forceAnalyticalInt ( dep ); }
+// ============================================================================
+Int_t Ostap::MoreRooFit::WrapPdf::getAnalyticalIntegralWN 
+( RooArgSet& allVars         , 
+  RooArgSet& analVars        , 
+  const RooArgSet* normSet   ,
+  const char*      rangeName ) const 
+{
+  return m_func.arg().getAnalyticalIntegralWN ( allVars   ,  
+                                                analVars  , 
+                                                normSet   , 
+                                                rangeName ) ;
+}
+// ============================================================================
+Int_t Ostap::MoreRooFit::WrapPdf::getAnalyticalIntegral
+( RooArgSet&       allVars   , 
+  RooArgSet&       numVars   ,
+  const char*      rangeName ) const 
+{ return m_func.arg().getAnalyticalIntegral ( allVars , numVars , rangeName ); }
+// ============================================================================
+// Hints for optimized brute-force sampling
+Int_t  Ostap::MoreRooFit::WrapPdf::getMaxVal
+( const RooArgSet& vars) const 
+{ return m_func.arg().getMaxVal ( vars ) ; }
+// ============================================================================
+double  Ostap::MoreRooFit::WrapPdf::maxVal(Int_t code) const
+{ return m_func.arg().maxVal ( code ) ; }
+// ============================================================================
+Int_t Ostap::MoreRooFit::WrapPdf::minTrialSamples
+( const RooArgSet& arGenObs ) const 
+{ return m_func.arg().minTrialSamples ( arGenObs ) ; }
+// Plotting and binning hints
+bool  Ostap::MoreRooFit::WrapPdf::isBinnedDistribution 
+( const RooArgSet& obs     ) const 
+{ return m_func.arg().isBinnedDistribution ( obs ) ; }
+// ============================================================================
+std::list<double>* Ostap::MoreRooFit::WrapPdf::binBoundaries
+( RooAbsRealLValue& obs , 
+  double            xlo , 
+  double            xhi ) const 
+{ return m_func.arg().binBoundaries ( obs , xlo , xhi ) ; }
+// ============================================================================
+std::list<double>* Ostap::MoreRooFit::WrapPdf::plotSamplingHint
+( RooAbsRealLValue& obs , 
+  double            xlo , 
+  double            xhi ) const 
+{ return m_func.arg().plotSamplingHint ( obs , xlo , xhi ) ; }
+
 
 // ============================================================================
 //                                                                      The END

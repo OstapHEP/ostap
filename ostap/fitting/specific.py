@@ -33,17 +33,13 @@ __all__     = (
 # =============================================================================
 import ROOT, math
 # =============================================================================
+from   ostap.core.core        import Ostap 
+from   ostap.fitting.pdfbasic import PDF1, PDF2 
+from   ostap.fitting.signals  import CB2_pdf, Needham_pdf, Bukin_pdf
+# =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.specific' )
 else                       : logger = getLogger ( __name__                 )
-# =============================================================================
-from   ostap.core.core           import cpp, Ostap, VE 
-# =============================================================================
-# Specializations of double-sided Crystal Ball function 
-# =============================================================================
-from   ostap.fitting.basic   import PDF
-from   ostap.fitting.fit2d   import PDF2 
-from   ostap.fitting.signals import CB2_pdf, Needham_pdf, Bukin_pdf
 # =============================================================================
 models = [] 
 # =============================================================================
@@ -381,7 +377,7 @@ models.append ( Lc_pdf )
 #  bins in pt and rapidity  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-08-02
-class Manca_pdf (PDF) :
+class Manca_pdf (PDF1) :
     """Manca: the final fit model for Y->mu+mu- fit
     This is physically well-motivated function for fits in narrow bins in pt and rapidity
     - three Needham functions for Y(1S), Y(2S) and Y(3S) peaks
@@ -400,7 +396,7 @@ class Manca_pdf (PDF) :
                    a2     = None ) : 
 
         #
-        PDF.__init__ ( self , name , mass )
+        PDF1.__init__ ( self , name , mass )
         #
         if   9460.  in self.mass and 10023. in self.mass and 10355. in self.mass :  gev_ = 1000        
         elif 9.460  in self.mass and 10.023 in self.mass and 10.355 in self.mass : gev_ = 1
@@ -417,19 +413,19 @@ class Manca_pdf (PDF) :
         # =====================================================================
         
         self.__a0   = self.make_var ( a0                 ,
-                                'a0m_%s' % name    ,
-                                "a0 for Needham's function" , a0 , 
-                                1.91               ,    0.1             ,   3.0            )
+                                      'a0m_%s' % name    ,
+                                      "a0 for Needham's function" ,
+                                      True  , 1.91  , 0.1 , 3.0   )
         
         self.__a1   = self.make_var ( a1                 ,
-                                'a1m_%s' % name    ,
-                                "a1 for Needham's function" , a1 ,  
-                                1.1174 / gev_      ,  -10.0  / gev_     ,  10.0  /gev_     )
+                                      'a1m_%s' % name    ,
+                                      "a1 for Needham's function" ,
+                                      True , 1.1174 / gev_ ,  -10.0 / gev_ , 10.0 /gev_ )
         
         self.__a2   = self.make_var ( a2                 ,
-                                'a2m_%s' % name    ,
-                              "a2 for Needham's function" , a2 , 
-                                -5.299 / gev_**2   , -100.0  / gev_**2  , 100.0  /gev_**2  )
+                                      'a2m_%s' % name    ,
+                                      "a2 for Needham's function" , 
+                                      True , -5.299 / gev_**2   , -100.0  / gev_**2  , 100.0  /gev_**2 )
         
         ## default logic does not work nicely here, therefore we need to be explicit:
         if a0 is None and not self.a0.isConstant () : self.a0.fix (  1.91             ) 
@@ -437,14 +433,14 @@ class Manca_pdf (PDF) :
         if a2 is None and not self.a2.isConstant () : self.a2.fix ( -5.299  / gev_**2 ) 
         
         self.__m1s   = self.make_var ( m1s                   ,
-                                 "m1S_%s"       % name ,
-                                 "mass Y1S(%s)" % name , m1s ,
-                                 m_y1s , m_y1s - 0.15 * s_y1s , m_y1s + 0.15 * s_y1s ) 
+                                       "m1S_%s"       % name ,
+                                       "mass Y1S(%s)" % name , 
+                                       None , m_y1s , m_y1s - 0.15 * s_y1s , m_y1s + 0.15 * s_y1s ) 
         
         self.__s1s   = self.make_var ( sigma                  ,
-                                 "s1S_%s"        % name ,
-                                 "sigma Y1S(%s)" % name , sigma ,
-                                 s_y1s , 0.3 * s_y1s , 4 * s_y1s )
+                                       "s1S_%s"        % name ,
+                                       "sigma Y1S(%s)" % name ,
+                                       None , s_y1s , 0.3 * s_y1s , 4 * s_y1s )
         
         self.__sigma = self.s1s 
         self.__Y1S   = Needham_pdf (
@@ -460,15 +456,15 @@ class Manca_pdf (PDF) :
         ## Y(2S)
         # =====================================================================
         self.__dm2s  = self.make_var ( None ,
-                                 "dm2s"      + name    ,
-                                 "dm2s(%s)"  % name    ,
-                                 dm_y2s                ,
-                                 dm_y2s - 0.20 * s_y1s , 
-                                 dm_y2s + 0.20 * s_y1s )
+                                       "dm2s"      + name    ,
+                                       "dm2s(%s)"  % name    ,
+                                       True ,
+                                       dm_y2s ,
+                                       dm_y2s - 0.20 * s_y1s , 
+                                       dm_y2s + 0.20 * s_y1s )
         
         self.__aset11 = ROOT.RooArgList ( self.__m1s , self.__dm2s )
 
-            
         ## self.__m2s    = ROOT.RooFormulaVar (
         ## "m_" + name + '2S'   ,
         ## "m2s(%s)"  % name    ,
@@ -499,12 +495,13 @@ class Manca_pdf (PDF) :
         # =====================================================================
         ## Y(3S)
         # =====================================================================
-        self.__dm3s  = self.make_var ( None ,
-                                 "dm3s"      + name ,
-                                 "dm3s(%s)"  % name    ,
-                                 dm_y3s                ,
-                                 dm_y3s - 0.20 * s_y1s , 
-                                 dm_y3s + 0.20 * s_y1s )
+        self.__dm3s  = self.make_var ( None                  ,
+                                       "dm3s"      + name    ,
+                                       "dm3s(%s)"  % name    ,
+                                       True                  , 
+                                       dm_y3s                ,
+                                       dm_y3s - 0.20 * s_y1s , 
+                                       dm_y3s + 0.20 * s_y1s )
         
         self.__aset21 = ROOT.RooArgList ( self.__m1s , self.__dm3s )
         ## self.__m3s    = ROOT.RooFormulaVar (
@@ -547,17 +544,17 @@ class Manca_pdf (PDF) :
         self.background = self.make_bkg ( power , 'Bkg%s' % name , self.mass )
 
         self.__n1s = self.make_var ( None ,
-                             "N1S" + name  ,
-                               "Signal(Y1S)" ,  None , 1000 ,  0 ,  1.e+8 )
+                                     "N1S" + name  ,
+                                     "Signal(Y1S)" ,  None , 1000 ,  0 ,  1.e+8 )
         self.__n2s = self.make_var ( None ,
-                               "N2S" + name  ,
-                               "Signal(Y2S)" ,  None ,  300 ,  0 ,  1.e+7 )
+                                     "N2S" + name  ,
+                                     "Signal(Y2S)" ,  None ,  300 ,  0 ,  1.e+7 )
         self.__n3s = self.make_var ( None ,
-                               "N3S" + name  ,
-                               "Signal(Y3S)" ,  None ,  100 ,  0 ,  1.e+6 )
+                                     "N3S" + name  ,
+                                     "Signal(Y3S)" ,  None ,  100 ,  0 ,  1.e+6 )
         self.__b   = self.make_var ( None ,
-                               "B"   + name  ,
-                               "Background"  ,  None ,  100 ,  0 ,  1.e+8 )
+                                     "B"   + name  ,
+                                     "Background"  ,  None ,  100 ,  0 ,  1.e+8 )
         
         self.alist1 = ROOT.RooArgList ( self.__y1s , self.__y2s , self.__y3s ) 
         self.alist2 = ROOT.RooArgList ( self.__n1s , self.__n2s , self.__n3s ) 
@@ -606,138 +603,116 @@ class Manca_pdf (PDF) :
 
     @property
     def mass ( self ) :
-        """``mass''-variable, ailas for ``x'' and ``xvar''"""
+        """'mass'-variable, ailas for 'x' and 'xvar'"""
         return self.xvar
     
     @property
     def power ( self ) :
-        """``power''-variable for background"""
+        """'power'-variable for background"""
         return self.__power
 
     @property
     def  s1s (  self ) :
-        """``s1s''-parameter (resoltuion for Y(1S) peak) (same as ``sigma'')"""
+        """'s1s'-parameter (resoltuion for Y(1S) peak) (same as 'sigma')"""
         return self.__sigma
     @s1s.setter
     def  s1s (  self , value ) :
-        value = float (  value )
-        assert  0 < value , "``sigma''-parameter must be positive"
-        self.__s1s.setVal ( value )
-        return self.__s1s.getVal ()
+        self.set_value ( self.__s1s , value )
 
     @property
     def  sigma (  self ) :
-        """``sigma''-parameter (resoltuion for Y(1S) peak) (same as ``s1s'')"""
+        """'sigma'-parameter (resolution for Y(1S) peak) (same as 's1s')"""
         return self.s1s
     @sigma.setter
     def  sigma (  self , value ) :
         self.s1s = value
-        return self.s1s.getVal()
 
     @property
     def a0 ( self ) :
-        """``a0'' parameter or Needham function"""
+        """'a0' parameter for Needham function"""
         return self._a0
     @property
     def a1 ( self ) :
-        """``a1'' parameter or Needham function"""
+        """'a1' parameter for Needham function"""
         return self._a1
     @property
     def a2 ( self ) :
-        """``a2'' parameter or Needham function"""
+        """'a2' parameter for Needham function"""
         return self._a0
     
     @property
     def  m1s (  self ) :
-        """``m1s''-parameter (mass for Y(1S) peak)"""
+        """'m1s'-parameter (mass for Y(1S) peak)"""
         return self.__m1s
     @m1s.setter
     def  m1s (  self , value ) :
-        value = float (  value )
-        self.__m1s.setVal ( value )
-        return self.__m1s.getVal ()
+        self.set_value ( self.__m1s , value )
 
     @property
     def  m2s (  self ) :
-        """``m2s''-parameter (mass for Y(2S) peak)"""
+        """'m2s'-parameter (mass for Y(2S) peak)"""
         return self.__m2s
     @property
     def  m3s (  self ) :
-        """``m3s''-parameter (mass for Y(3S) peak)"""
+        """'m3s'-parameter (mass for Y(3S) peak)"""
         return self.__m3s
 
     @property
     def  s2s (  self ) :
-        """``s2s''-parameter (resolution for Y(2S) peak)"""
+        """'s2s'-parameter (resolution for Y(2S) peak)"""
         return self.__s2s
     @property
     def  s3s (  self ) :
-        """``s3s''-parameter (resolution for Y(3S) peak)"""
+        """'s3s'-parameter (resolution for Y(3S) peak)"""
         return self.__s3s
     
     @property
     def  dm2s (  self ) :
-        """``dm2s''-parameter (mass  difference for Y(2S) and Y(1S) peaks)"""
+        """'dm2s'-parameter (mass  difference for Y(2S) and Y(1S) peaks)"""
         return self.__dm2s    
     @dm2s.setter
     def  dm2s (  self , value ) :
-        value = float (  value )
-        self.__dm2s.setVal ( value )
-        return self.__dm2s.getVal ()
+        self.set_value ( self.__dm2s , value )
 
     @property
     def  dm3s (  self ) :
-        """``dm3s''-parameter (mass  difference for Y(3S) and Y(1S) peaks)"""
+        """'dm3s'-parameter (mass  difference for Y(3S) and Y(1S) peaks)"""
         return self.__dm3s    
     @dm3s.setter
     def  dm3s (  self , value ) :
-        value = float (  value )
-        self.__dm3s.setVal ( value )
-        return self.__dm3s.getVal ()
-    
+        self.set_avlue ( self.__dm3s , value )
+        
     @property
     def N1S ( self ) :
-        """``N1S''-parameter: yield of Y(1S)"""
+        """'N1S'-parameter: yield of Y(1S)"""
         return self.__n1s
     @N1S.setter
     def N1S ( self , value ) :
-        value = float ( value )
-        assert value in self.__n1s, "Value %s is outside the range %s " % ( value , self.__n1s.minmax() )
-        self.__n1s.setVal (  value )
-        return self.__n1s.getVal ()
+        self.set_value ( self.__n1s , value )
 
     @property
     def N2S ( self ) :
-        """``N2S''-parameter: yield of Y(2S)"""
+        """'N2S'-parameter: yield of Y(2S)"""
         return self.__n2s
     @N2S.setter
     def N2S ( self , value ) :
-        value = float ( value )
-        assert value in self.__n2s, "Value %s is outside the range %s " % ( value , self.__n2s.minmax() )
-        self.__n2s.setVal (  value )
-        return self.__n2s.getVal ()
+        self.set_avlue ( self.__n2s , value )
 
     @property
     def N3S ( self ) :
-        """``N3S''-parameter: yield of Y(3S)"""
+        """'N3S'-parameter: yield of Y(3S)"""
         return self.__n3s
     @N3S.setter
     def N3S ( self , value ) :
-        value = float ( value )
-        assert value in self.__n3s, "Value %s is outside the range %s " % ( value , self.__n3s.minmax() )
-        self.__n3s.setVal (  value )
-        return self.__n3s.getVal ()        
+        self.set_value ( self.__n3s , value )
 
     @property
     def B ( self ) :
-        """``B''-parameter: yield of background component"""
+        """'B'-parameter: yield of background component"""
         return self.__b
     @B.setter
     def B ( self , value ) :
-        value = float ( value )
-        assert value in self.__b, "Value %s is outside the range %s " % ( value , self.__b.minmax() )
-        self.__b.setVal (  value )
-        return self.__b.getVal ()
+        self.set_value ( self.__b , value )
         
     
 models.append ( Manca_pdf ) 
@@ -747,7 +722,7 @@ models.append ( Manca_pdf )
 #  This is an effective function for fit in global bin, without pt/y-binning 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-06-24
-class Manca2_pdf (PDF) :
+class Manca2_pdf (PDF1) :
     """Manca2: the final fit model for Y->mu+mu- fit
     This is an effective function for fit in global bin, without pt/y-binning
     - three double-sided Crystal Ball functions for Y(1S), Y(2S) and Y(3S) peaks
@@ -766,7 +741,7 @@ class Manca2_pdf (PDF) :
                    nR     = 1.5751e+01 ) :
 
         #
-        PDF.__init__ ( self , name , mass )
+        PDF1.__init__ ( self , name , mass )
         #
         if   9460.  in self.mass and 10023. in self.mass and 10355. in self.mass :  gev_ = 1000        
         elif 9.460  in self.mass and 10.023 in self.mass and 10.355 in self.mass : gev_ = 1
@@ -784,27 +759,32 @@ class Manca2_pdf (PDF) :
         ## Y(1S)
         # =====================================================================
         self.__aL    = self.make_var ( alphaL                  ,
-                                 "aL_%s"          % name ,
-                                 "#alpha_{L}(%s)" % name , alphaL , 1.5462     , 0.1   , 10 )
+                                       "aL_%s"          % name ,
+                                       "#alpha_{L}(%s)" % name ,
+                                       True , 1.5462     , 0.1   , 10 )
         self.__nL    = self.make_var ( nL                      ,                     
-                                 "nL_%s"          % name ,
-                                 "n_{L}(%s)"      % name , nL     , 1.3119     , 1.e-5 , 25 )
+                                       "nL_%s"          % name ,
+                                       "n_{L}(%s)"      % name ,
+                                       True , 1.3119     , 1.e-5 , 25 )
         self.__aR    = self.make_var ( alphaR                  ,
-                                 "aR_%s"          % name ,
-                                 "#alpha_{R}(%s)" % name , alphaR , 1.6952e+00 , 0.1   , 10 )
+                                       "aR_%s"          % name ,
+                                       "#alpha_{R}(%s)" % name ,
+                                       True , 1.6952e+00 , 0.1   , 10 )
         self.__nR    = self.make_var ( nR                      ,
-                                 "nR_%s"          % name ,
-                                 "n_{R}(%s)"      % name , nR     , 1.5751e+01 , 1.e-5 , 25 )
+                                       "nR_%s"          % name ,
+                                       "n_{R}(%s)"      % name ,
+                                       True , 1.5751e+01 , 1.e-5 , 25 )
         
         self.__m1s   = self.make_var ( m1s                   ,
-                                 "m1S_%s"       % name ,
-                                 "mass Y1S(%s)" % name , m1s ,
-                                 m_y1s , m_y1s - 0.15 * s_y1s , m_y1s + 0.15 * s_y1s ) 
+                                       "m1S_%s"       % name ,
+                                       "mass Y1S(%s)" % name , m1s ,
+                                       None  , 
+                                       m_y1s , m_y1s - 0.15 * s_y1s , m_y1s + 0.15 * s_y1s ) 
         
         self.__s1s   = self.make_var ( sigma                  ,
-                                 "s1S_%s"        % name ,
-                                 "sigma Y1S(%s)" % name , sigma ,
-                                 s_y1s , 0.3 * s_y1s , 4 * s_y1s )
+                                       "s1S_%s"        % name ,
+                                       "sigma Y1S(%s)" % name ,
+                                       None  , s_y1s , 0.3 * s_y1s , 4 * s_y1s )
         self.__sigma = self.__s1s
         
         self.__Y1S   = CB2_pdf (
@@ -821,11 +801,12 @@ class Manca2_pdf (PDF) :
         ## Y(2S)
         # =====================================================================
         self.__dm2s  = self.make_var ( None                  ,
-                                 "dm2s"      + name    ,
-                                 "dm2s(%s)"  % name    ,
-                                 dm_y2s                ,
-                                 dm_y2s - 0.20 * s_y1s , 
-                                 dm_y2s + 0.20 * s_y1s )
+                                       "dm2s"      + name    ,
+                                       "dm2s(%s)"  % name    ,
+                                       True                  , 
+                                       dm_y2s                ,
+                                       dm_y2s - 0.20 * s_y1s , 
+                                       dm_y2s + 0.20 * s_y1s )
         
         self.__aset11 = ROOT.RooArgList ( self.__m1s , self.__dm2s )
         
@@ -862,11 +843,12 @@ class Manca2_pdf (PDF) :
         ## Y(3S)
         # =====================================================================
         self.__dm3s  = self.make_var ( None                  ,
-                                 "dm3s"      + name    ,
-                                 "dm3s(%s)"  % name    ,
-                                 dm_y3s                ,
-                                 dm_y3s - 0.20 * s_y1s , 
-                                 dm_y3s + 0.20 * s_y1s )
+                                       "dm3s"      + name    ,
+                                       "dm3s(%s)"  % name    ,
+                                       True                  , 
+                                       dm_y3s                ,
+                                       dm_y3s - 0.20 * s_y1s , 
+                                       dm_y3s + 0.20 * s_y1s )
         
         self.__aset21 = ROOT.RooArgList ( self.__m1s , self.__dm3s )
         ## self.__m3s    = ROOT.RooFormulaVar (
@@ -911,17 +893,17 @@ class Manca2_pdf (PDF) :
 
         
         self.__n1s = self.make_var ( None ,
-                             "N1S" + name  ,
-                             "Signal(Y1S)" ,  None , 1000 ,  0 ,  1.e+7 )
+                                     "N1S" + name  ,
+                                     "Signal(Y1S)" ,  None , 1000 ,  0 ,  1.e+7 )
         self.__n2s = self.make_var ( None ,
-                               "N2S" + name  ,
-                               "Signal(Y2S)" ,  None ,  300 ,  0 ,  1.e+6 )
+                                     "N2S" + name  ,
+                                     "Signal(Y2S)" ,  None ,  300 ,  0 ,  1.e+6 )
         self.__n3s = self.make_var ( None ,
-                               "N3S" + name  ,
-                               "Signal(Y3S)" ,  None ,  100 ,  0 ,  1.e+6 )
+                                     "N3S" + name  ,
+                                     "Signal(Y3S)" ,  None ,  100 ,  0 ,  1.e+6 )
         self.__b   = self.make_var ( None ,
-                               "B"   + name  ,
-                               "Background"  ,  None ,  100 ,  0 ,  1.e+8 )
+                                     "B"   + name  ,
+                                     "Background"  ,  None ,  100 ,  0 ,  1.e+8 )
         
         self.alist1 = ROOT.RooArgList ( self.__y1s , self.__y2s , self.__y3s ) 
         self.alist2 = ROOT.RooArgList ( self.__n1s , self.__n2s , self.__n3s ) 
@@ -968,164 +950,130 @@ class Manca2_pdf (PDF) :
 
     @property
     def mass ( self ) :
-        """``mass''-variable, ailas for ``x'' and ``xvar''"""
+        """'mass'-variable, ailas for 'x' and 'xvar'"""
         return self.xvar
     
     @property
     def  s1s (  self ) :
-        """``s1s''-parameter (resoltuion for Y(1S) peak) (same as ``sigma'')"""
+        """'s1s'-parameter (resoltuion for Y(1S) peak) (same as 'sigma')"""
         return self.__sigma
     @s1s.setter
     def  s1s (  self , value ) :
-        value = float (  value )
-        assert  0 < value , "``sigma''-parameter must be positive"
-        self.__s1s.setVal ( value )
-        return self.__s1s.getVal ()
+        self.set_value ( self.__s1s , value )
     
     @property
     def  sigma (  self ) :
-        """``sigma''-parameter (resoltuion for Y(1S) peak) (same as ``s1s'')"""
+        """'sigma'-parameter (resoltuion for Y(1S) peak) (same as 's1s')"""
         return self.s1s
     @sigma.setter
     def  sigma (  self , value ) :
         self.s1s = value
-        return self.s1s.getVal()
 
     @property
     def  m1s (  self ) :
-        """``m1s''-parameter (mass for Y(1S) peak)"""
+        """'m1s'-parameter (mass for Y(1S) peak)"""
         return self.__m1s
     @m1s.setter
     def  m1s (  self , value ) :
-        value = float (  value )
-        self.__m1s.setVal ( value )
-        return self.__m1s.getVal ()
+        self.set_value ( self.__m1s , value )
 
     @property
     def  m2s (  self ) :
-        """``m2s''-parameter (mass for Y(2S) peak)"""
+        """'m2s'-parameter (mass for Y(2S) peak)"""
         return self.__m2s
     @property
     def  m3s (  self ) :
-        """``m3s''-parameter (mass for Y(3S) peak)"""
+        """'m3s'-parameter (mass for Y(3S) peak)"""
         return self.__m3s
 
     @property
     def  s2s (  self ) :
-        """``s2s''-parameter (resolution for Y(2S) peak)"""
+        """'s2s'-parameter (resolution for Y(2S) peak)"""
         return self.__s2s
     @property
     def  s3s (  self ) :
-        """``s3s''-parameter (resolution for Y(3S) peak)"""
+        """'s3s'-parameter (resolution for Y(3S) peak)"""
         return self.__s3s
     
     @property
     def  dm2s (  self ) :
-        """``dm2s''-parameter (mass  difference for Y(2S) and Y(1S) peaks)"""
+        """'dm2s'-parameter (mass  difference for Y(2S) and Y(1S) peaks)"""
         return self.__dm2s    
     @dm2s.setter
     def  dm2s (  self , value ) :
-        value = float (  value )
-        self.__dm2s.setVal ( value )
-        return self.__dm2s.getVal ()
-
+        self.set_value ( self.__dm2s , value ) 
+        
     @property
     def  dm3s (  self ) :
-        """``dm3s''-parameter (mass  difference for Y(3S) and Y(1S) peaks)"""
+        """'dm3s'-parameter (mass  difference for Y(3S) and Y(1S) peaks)"""
         return self.__dm3s    
     @dm3s.setter
     def  dm3s (  self , value ) :
-        value = float (  value )
-        self.__dm3s.setVal ( value )
-        return self.__dm3s.getVal ()
-    
+        self.Set_value ( self.__dm3s , value )
+        
     @property
     def N1S ( self ) :
-        """``N1S''-parameter: yield of Y(1S)"""
+        """'N1S'-parameter: yield of Y(1S)"""
         return self.__n1s
     @N1S.setter
     def N1S ( self , value ) :
-        value = float ( value )
-        assert value in self.__n1s, "Value %s is outside the range %s " % ( value , self.__n1s.minmax() )
-        self.__n1s.setVal (  value )
-        return self.__n1s.getVal ()
+        self.set_value ( self.__n1s , value )
 
     @property
     def N2S ( self ) :
-        """``N2S''-parameter: yield of Y(2S)"""
+        """'N2S'-parameter: yield of Y(2S)"""
         return self.__n2s
     @N2S.setter
     def N2S ( self , value ) :
-        value = float ( value )
-        assert value in self.__n2s, "Value %s is outside the range %s " % ( value , self.__n2s.minmax() )
-        self.__n2s.setVal (  value )
-        return self.__n2s.getVal ()
+        self.set_value ( self.__n2s , value )
 
     @property
     def N3S ( self ) :
-        """``N3S''-parameter: yield of Y(3S)"""
+        """'N3S'-parameter: yield of Y(3S)"""
         return self.__n3s
     @N3S.setter
     def N3S ( self , value ) :
-        value = float ( value )
-        assert value in self.__n3s, "Value %s is outside the range %s " % ( value , self.__n3s.minmax() )
-        self.__n3s.setVal (  value )
-        return self.__n3s.getVal ()        
+        self.set_value ( self.__n3s , value )
 
     @property
     def B ( self ) :
-        """``B''-parameter: yield of background component"""
+        """'B'-parameter: yield of background component"""
         return self.__b
     @B.setter
     def B ( self , value ) :
-        value = float ( value )
-        assert value in self.__b, "Value %s is outside the range %s " % ( value , self.__b.minmax() )
-        self.__b.setVal (  value )
-        return self.__b.getVal ()
+        self.set_value ( self.__b , value )
 
     @property
     def aL (  self ) :
-        """(left)``alpha''-parameter for Y-peaks"""
+        """(left)'alpha'-parameter for Y-peaks"""
         return self.__aL
     @aL.setter 
     def aL (  self , value ) :
-        value = float ( value )
-        assert 0.1 < value < 10 , "(left)``alpha''  must be between 0.1 and 5"
-        self.__aL.setVal ( value )
-        return  self.__aL.getVal()
-
+        self.set_value ( self.__aL , value )
+        
     @property
     def aR (  self ) :
-        """(right)``alpha''-parameter for Y-peaks"""
+        """(right)'alpha'-parameter for Y-peaks"""
         return self.__aR
     @aR.setter 
     def aR (  self , value ) :
-        value = float ( value )
-        assert 0.1 < value < 10 , "(right)``alpha''  must be between 0.1 and 5"
-        self.__aR.setVal ( value )
-        return  self.__aR.getVal()
-    
+        self.set_avlue ( self.__aR , value )
+        
     @property
     def nL (  self ) :
-        """(left)``n''-parameter for Y-peaks"""
+        """(left)'n'-parameter for Y-peaks"""
         return self.__nL
     @nL.setter 
     def nL (  self , value ) :
-        value = float ( value )
-        assert 1.e-3 < value < 20 , "(left)``n''  must be between 1.e-3 and 20"
-        self.__nL.setVal ( value )
-        return  self.__nL.getVal()
+        self.set_value ( self.__nL , value )
 
     @property
     def nR (  self ) :
-        """(right)``n''-parameter for Y-peaks"""
+        """(right)'n'-parameter for Y-peaks"""
         return self.__nR
     @nR.setter 
     def nR (  self , value ) :
-        value = float ( value )
-        assert 1.e-3 < value < 20 , "(right)``n''  must be between 1.e-3 and 20"
-        self.__nR.setVal ( value )
-        return  self.__nR.getVal()
+        self.set_value ( self.__nR , value )
         
 models.append ( Manca2_pdf ) 
 # =============================================================================
@@ -1250,11 +1198,11 @@ class MancaX_pdf(PDF2) :
 
     @property
     def manca (  self ) :
-        """``manca''-function to decribe Upsilon peaks"""
+        """'manca'-function to decribe Upsilon peaks"""
         return self.__manca
     @property
     def charm (  self ) :
-        """``charm''-function to decribe Charm peak"""
+        """'charm'-function to decribe Charm peak"""
         return self.__charm
     
 models.append ( MancaX_pdf ) 
@@ -1267,5 +1215,5 @@ if '__main__' == __name__ :
 
  
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

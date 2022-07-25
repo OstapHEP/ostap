@@ -118,7 +118,7 @@ bb_cmp=bkg_x*bkg_y
 # =============================================================================
 ## Test  multi-component  3d fit'
 def test_components_2dSymfit () :
-
+    
     logger = getLogger ( 'test_components_2dSymfit' ) 
     logger.info ('Test  multi-component  2d Sym fit')
     
@@ -164,9 +164,10 @@ def test_components_2dSymfit () :
 # =============================================================================
 if '__main__' == __name__ :
 
+
     with  timing( "2dSym-fit" ,   logger ) : 
         test_components_2dSymfit    () 
-    
+        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

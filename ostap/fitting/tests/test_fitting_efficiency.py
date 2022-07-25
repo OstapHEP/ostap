@@ -87,7 +87,7 @@ def make_table ( func , title , prefix = "# ") :
 # =============================================================================
 # use some PDF to parameterize efficiciency
 def test_pdf () :
-
+    
     logger = getLogger ( 'test_pdf' )
 
     effPdf = Models.Monotonic_pdf ( 'P6' , xvar = x , power = 4 , increasing = True )
@@ -111,15 +111,27 @@ def test_pdf () :
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
-def test_vars1 () :
-
+## def test_vars1 () :
+if 1 < 2 :
+    
     from ostap.fitting.roofuncs import BernsteinPoly as BP 
     
     logger = getLogger ( 'test_vars1' )
 
-    f      = BP ( 'G' , xvar = x , power = 4 )
-    f.pars = 0.2 , 0.2 , 0.2 , 0.2 
+    power = 3 
+    f     = BP ( 'G'           ,
+                 xvar  = x     ,
+                 power = power ,
+                 pars  = ( power + 1 ) * [ ( 0.2 , 0 , 1 ) ] )
+
+    for p in f.pars :
+        p.setMin ( 0 )
+        p.setMax ( 1 )
+        p.setVal ( 0.2)
+        p.release()
         
+    ## f.release_par() 
+    
     eff2   = Efficiency1D ( 'E3' , f.fun , cut = acc  , xvar = x )
     
     r2     = eff2.fitTo ( ds )
@@ -192,18 +204,21 @@ def test_vars3 () :
 if '__main__' == __name__ :
 
 
-    with timing ("PDF"   , logger ) :  
-        test_pdf   ()
+    
+    ## with timing ("PDF"   , logger ) :  
+    ##     test_pdf   ()
         
-    with timing ("Vars1" , logger ) :  
-        test_vars1 ()
+    ## with timing ("Vars1" , logger ) :  
+    ##     test_vars1 ()
         
-    with timing ("Vars2" , logger ) :        
-        test_vars2 ()
+    ## with timing ("Vars2" , logger ) :        
+    ##     test_vars2 ()
         
-    with timing ("Vars3" , logger ) :        
-        test_vars3 ()
+    ## with timing ("Vars3" , logger ) :        
+    ##    test_vars3 ()
 
+    pass 
+     
 # =============================================================================
 ##                                                                      The END 
 # ============================================================================= 

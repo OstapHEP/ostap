@@ -31,10 +31,10 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
-from   ostap.core.core     import cpp, Ostap
-from   ostap.math.base     import iszero
-from   ostap.fitting.fit3d import PDF3, Flat3D 
-from   ostap.fitting.utils import Phases
+from   ostap.core.core          import cpp, Ostap
+from   ostap.math.base          import iszero
+from   ostap.fitting.fithelpers import Phases
+from   ostap.fitting.fit3d      import PDF3, Flat3D 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_3d' )
@@ -86,9 +86,9 @@ class PolyPos3D_pdf(PolyBase3) :
                    the_phis = None ) : 
         
         ## check arguments 
-        assert isinstance ( nx , int ) and 0 <= nx < 50 , "``nx''-parameter is illegal: %s" % nx 
-        assert isinstance ( ny , int ) and 0 <= ny < 50 , "``ny''-parameter is illegal: %s" % ny
-        assert isinstance ( nz , int ) and 0 <= nz < 50 , "``nz''-parameter is illegal: %s" % nz
+        assert isinstance ( nx , int ) and 0 <= nx < 50 , "'nx'-parameter is illegal: %s" % nx 
+        assert isinstance ( ny , int ) and 0 <= ny < 50 , "'ny'-parameter is illegal: %s" % ny
+        assert isinstance ( nz , int ) and 0 <= nz < 50 , "'nz'-parameter is illegal: %s" % nz
         
         ##   inialize the base :
         PolyBase3.__init__ ( self , name , xvar , yvar , zvar ,
@@ -125,15 +125,15 @@ class PolyPos3D_pdf(PolyBase3) :
 
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 3D-polynom in x-direction"""
+        """'nx' : order/degree of 3D-polynom in x-direction"""
         return self.__nx
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 3D-polynom in z-direction"""
+        """'ny' : order/degree of 3D-polynom in z-direction"""
         return self.__ny
     @property
     def nz ( self ) :
-        """``nz''-parameter - order/degree of 3D-polynom in z-direction"""
+        """'nz' : order/degree of 3D-polynom in z-direction"""
         return self.__nz
     
 models.append ( PolyPos3D_pdf ) 
@@ -177,7 +177,7 @@ class PolyPos3Dsym_pdf(PolyBase3) :
                    the_phis = None ) :
         
         ## check arguments 
-        assert isinstance ( n , int ) and 0 <= n < 50 , "``n''-parameter is illegal: %s" % n 
+        assert isinstance ( n , int ) and 0 <= n < 50 , "'n'-parameter is illegal: %s" % n 
         
         ##   inialize the base :
         PolyBase3.__init__ ( self , name , xvar , yvar , zvar ,
@@ -215,19 +215,19 @@ class PolyPos3Dsym_pdf(PolyBase3) :
         
     @property
     def n  ( self ) :
-        """``n''-parameter - order/degree of 3D-polynom in x,y&z-directions"""
+        """'n' : order/degree of 3D-polynom in x,y&z-directions"""
         return self.__n
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 3D-polynom in x-direction"""
+        """'nx' : order/degree of 3D-polynom in x-direction"""
         return self.__n
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 3D-polynom in z-direction"""
+        """ny' : order/degree of 3D-polynom in z-direction"""
         return self.__n
     @property
     def nz ( self ) :
-        """``nz''-parameter - order/degree of 3D-polynom in z-direction"""
+        """`nz' : order/degree of 3D-polynom in z-direction"""
         return self.__n
  
 models.append ( PolyPos3Dsym_pdf ) 
@@ -268,8 +268,8 @@ class PolyPos3DmixXY_pdf(PolyBase3) :
                    the_phis = None ) :
         
         ## check arguments 
-        assert isinstance ( n  , int ) and 0 <= n  < 50 , "``n''-parameter is illegal: %s"  % n
-        assert isinstance ( nz , int ) and 0 <= nz < 50 , "``nz''-parameter is illegal: %s" % nz
+        assert isinstance ( n  , int ) and 0 <= n  < 50 , "'n'-parameter is illegal: %s"  % n
+        assert isinstance ( nz , int ) and 0 <= nz < 50 , "'nz'-parameter is illegal: %s" % nz
         
         ##   inialize the base :
         PolyBase3.__init__ ( self , name , xvar , yvar , zvar ,
@@ -306,19 +306,19 @@ class PolyPos3DmixXY_pdf(PolyBase3) :
        
     @property
     def n  ( self ) :
-        """``n''-parameter - order/degree of 3D-polynom in x&y-directions"""
+        """'n' : order/degree of 3D-polynom in x&y-directions"""
         return self.__n
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 3D-polynom in x-direction"""
+        """'n' : order/degree of 3D-polynom in x-direction"""
         return self.__n
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 3D-polynom in z-direction"""
+        """'n' : order/degree of 3D-polynom in z-direction"""
         return self.__n
     @property
     def nz ( self ) :
-        """``nz''-parameter - order/degree of 3D-polynom in z-direction"""
+        """'nz' : order/degree of 3D-polynom in z-direction"""
         return self.__nz
 
 models.append ( PolyPos3DmixXY_pdf ) 
@@ -363,8 +363,8 @@ class PolyPos3DmixYZ_pdf(PolyBase3) :
                    the_phis = None ) :
         
         ## check arguments 
-        assert isinstance ( nx , int ) and 0 <= nx < 50 , "``nx''-parameter is illegal: %s" % nx
-        assert isinstance ( n  , int ) and 0 <= n  < 50 , "``n''-parameter  is illegal: %s" % n
+        assert isinstance ( nx , int ) and 0 <= nx < 50 , "'nx'-parameter is illegal: %s" % nx
+        assert isinstance ( n  , int ) and 0 <= n  < 50 , "'n'-parameter  is illegal: %s" % n
         
         ##   inialize the base :
         PolyBase3.__init__ ( self , name , xvar , yvar , zvar ,
@@ -409,19 +409,19 @@ class PolyPos3DmixYZ_pdf(PolyBase3) :
        
     @property
     def n  ( self ) :
-        """``n''-parameter - order/degree of 3D-polynom in y&z-directions"""
+        """'n' : order/degree of 3D-polynom in y&z-directions"""
         return self.__n
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 3D-polynom in x-direction"""
+        """'nx' : order/degree of 3D-polynom in x-direction"""
         return self.__nx
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 3D-polynom in y-direction"""
+        """'ny' : order/degree of 3D-polynom in y-direction"""
         return self.__n
     @property
     def nz ( self ) :
-        """``nz''-parameter - order/degree of 3D-polynom in z-direction"""
+        """'nz' : order/degree of 3D-polynom in z-direction"""
         return self.__n
 
 models.append ( PolyPos3DmixYZ_pdf ) 
@@ -467,8 +467,8 @@ class PolyPos3DmixXZ_pdf(PolyBase3) :
                    the_phis = None ) :
         
         ## check arguments 
-        assert isinstance ( ny , int ) and 0 <= ny < 50 , "``ny''-parameter is illegal: %s" % ny
-        assert isinstance ( n  , int ) and 0 <= n  < 50 , "``n''-parameter  is illegal: %s" % n
+        assert isinstance ( ny , int ) and 0 <= ny < 50 , "'ny'-parameter is illegal: %s" % ny
+        assert isinstance ( n  , int ) and 0 <= n  < 50 , "`n'-parameter  is illegal: %s" % n
         
         ##   inialize the base :
         PolyBase3.__init__ ( self , name , xvar , yvar , zvar ,
@@ -513,19 +513,19 @@ class PolyPos3DmixXZ_pdf(PolyBase3) :
        
     @property
     def n  ( self ) :
-        """``n''-parameter - order/degree of 3D-polynom in x&z-directions"""
+        """'n'  : order/degree of 3D-polynom in x&z-directions"""
         return self.__n
     @property
     def nx ( self ) :
-        """``nx''-parameter - order/degree of 3D-polynom in x-direction"""
+        """'nx': order/degree of 3D-polynom in x-direction"""
         return self.__n
     @property
     def ny ( self ) :
-        """``ny''-parameter - order/degree of 3D-polynom in y-direction"""
+        """'ny' : order/degree of 3D-polynom in y-direction"""
         return self.__ny
     @property
     def nz ( self ) :
-        """``nz''-parameter - order/degree of 3D-polynom in z-direction"""
+        """'nz' : order/degree of 3D-polynom in z-direction"""
         return self.__n
 
 models.append ( PolyPos3DmixXZ_pdf ) 
@@ -591,47 +591,47 @@ class Gauss3D_pdf(PDF3) :
         self.__muX = self.make_var ( muX  ,
                                      'mu_x_%s'     % self.name ,
                                      '#mu_{x}(%s)' % self.name ,
-                                     None , muX , *mx_lims )
+                                     None , *mx_lims )
         
         self.__muY = self.make_var ( muY  ,
                                      'mu_y_%s'     % self.name ,
                                      '#mu_{y}(%s)' % self.name ,
-                                     None , muY , *my_lims )
+                                     None , *my_lims )
 
         self.__muZ = self.make_var ( muZ  ,
                                      'mu_z_%s'     % self.name ,
                                      '#mu_{z}(%s)' % self.name ,
-                                     None , muZ , *mz_lims )
+                                     None , *mz_lims )
         
         
         self.__sigmaX = self.make_var ( sigmaX  ,
                                         'sigma_x_%s'     % self.name ,
                                         '#sigma_{x}(%s)' % self.name ,
-                                        None     ,  sigmaX , *sx_lims )
+                                        None     , *sx_lims )
         
         self.__sigmaY = self.make_var ( sigmaY  ,
                                         'sigma_y_%s'     % self.name ,
                                         '#sigma_{y}(%s)' % self.name ,
-                                        None     ,  sigmaY , *sy_lims )
+                                        None     , *sy_lims )
 
         self.__sigmaZ = self.make_var ( sigmaZ  ,
                                         'sigma_z_%s'     % self.name ,
                                         '#sigma_{z}(%s)' % self.name ,
-                                        None     ,  sigmaZ , *sy_lims )
+                                        None     , *sy_lims )
         
         self.__phi    = self.make_var ( phi  ,
                                         'phi_%s'   % self.name ,
                                         '#phi(%s)' % self.name ,
-                                        None     ,  phi , -10 , +10  )
+                                        None     , -12 , +12  )
         
         self.__theta   = self.make_var ( theta  ,
                                          'theta_%s'   % self.name ,
                                          '#theta(%s)' % self.name ,
-                                         None     ,  theta , -10 , +10  )
+                                         None     , -12 , +12  )
         self.__psi    = self.make_var ( psi  ,
                                         'psi_%s'   % self.name ,
                                         '#psi(%s)' % self.name ,
-                                        None     ,  psi , -10 , +10  )
+                                        None     , -12 , +12  )
         
         ## make PDF
         self.pdf = Ostap.Models.Gauss3D (
@@ -670,7 +670,7 @@ class Gauss3D_pdf(PDF3) :
         
     @property
     def muX ( self ) :
-        """``x-location for 3D gaussian"""
+        """x-location for 3D gaussian"""
         return self.__muX
     @muX.setter
     def muX ( self , value ) :
@@ -678,7 +678,7 @@ class Gauss3D_pdf(PDF3) :
 
     @property
     def muY ( self ) :
-        """``y-location for 3D gaussian"""
+        """y-location for 3D gaussian"""
         return self.__muY
     @muY.setter
     def muY ( self , value ) :
@@ -686,7 +686,7 @@ class Gauss3D_pdf(PDF3) :
 
     @property
     def muZ ( self ) :
-        """``z-location for 3D gaussian"""
+        """z-location for 3D gaussian"""
         return self.__muZ
     @muZ.setter
     def muZ ( self , value ) :
@@ -694,7 +694,7 @@ class Gauss3D_pdf(PDF3) :
 
     @property
     def sigmaX ( self ) :
-        """``sigma-X for 3D gaussian"""
+        """'sigma-X' for 3D gaussian"""
         return self.__sigmaX
     @sigmaX.setter
     def sigmaX ( self , value ) :
@@ -702,7 +702,7 @@ class Gauss3D_pdf(PDF3) :
 
     @property
     def sigmaY ( self ) :
-        """``sigma-Y for 3D gaussian"""
+        """'sigma-Y' for 3D gaussian"""
         return self.__sigmaY
     @sigmaY.setter
     def sigmaY ( self , value ) :
@@ -710,7 +710,7 @@ class Gauss3D_pdf(PDF3) :
 
     @property
     def sigmaZ ( self ) :
-        """``sigma-Z for 3D gaussian"""
+        """'sigma-Z' for 3D gaussian"""
         return self.__sigmaZ
     @sigmaZ.setter
     def sigmaZ ( self , value ) :
@@ -718,7 +718,7 @@ class Gauss3D_pdf(PDF3) :
         
     @property
     def phi  ( self ) :
-        """``phi'' : Euler angle ``phi'' for 3D gaussian"""
+        """`phi' : Euler angle 'phi' for 3D gaussian"""
         return self.__phi
     @phi.setter
     def phi  ( self , value ) :
@@ -726,7 +726,7 @@ class Gauss3D_pdf(PDF3) :
 
     @property
     def theta ( self ) :
-        """``theta'' : Euler anlgle ``theta'' for 3D gaussian"""
+        """`'theta' : Euler anlgle 'theta' for 3D gaussian"""
         return self.__theta
     @theta.setter
     def theta ( self , value ) :
@@ -734,7 +734,7 @@ class Gauss3D_pdf(PDF3) :
 
     @property
     def psi ( self ) :
-        """``psi'' : Euler angle ``psi'' for 3D gaussian"""
+        """'psi' : Euler angle 'psi' for 3D gaussian"""
         return self.__psi
     @psi.setter
     def psi ( self , value ) :
@@ -818,27 +818,27 @@ class RooKeys3D_pdf(PDF3) :
 
     @property
     def data   ( self ) :
-        """``data'' : the actual data set for RooNDKeysPdf"""
+        """'data' : the actual data set for RooNDKeysPdf"""
         return self.__data
     @property
     def options ( self ) :
-        """``options'' : ``ootions'' string for RooNDKeysPdf"""
+        """'options' : 'ootions' string for RooNDKeysPdf"""
         return self.__mirror        
     @property
     def rho    ( self )  :
-        """``rho'' : ``rho'' parameter for RooNDKeysPdf"""
+        """'rho' : 'rho' parameter for RooNDKeysPdf"""
         return self.__rho 
     @property
     def rotate    ( self )  :
-        """``rotate'' : ``rotate'' flag for RooNDKeysPdf"""
+        """'rotate' : 'rotate' flag for RooNDKeysPdf"""
         return self.__rotate
     @property
     def sort      ( self )  :
-        """``sort'' : ``sort'' flag for RooNDKeysPdf"""
+        """'sort' : 'sort' flag for RooNDKeysPdf"""
         return self.__sort 
     @property
-    def nsigma    ( self )  :
-        """``nsigma'' : ``nsigma'' parameter for RooNDKeysPdf"""
+    def nsigma    ( self ) : 
+        """'nsigma' : 'nsigma' parameter for RooNDKeysPdf"""        
         return self.__nsigma 
 
 

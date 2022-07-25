@@ -24,7 +24,7 @@ from   ostap.logger.utils       import rooSilent
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
 from   ostap.fitting.simfit     import combined_data
-from   ostap.fitting.utils      import H1D_dset 
+from   ostap.fitting.fithelpers import H1D_dset 
 # =============================================================================
 # logging 
 # =============================================================================

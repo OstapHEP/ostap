@@ -52,13 +52,12 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
+from   ostap.core.core        import Ostap, VE 
+from   ostap.fitting.pdfbasic import PDF1
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.distributions' )
 else                       : logger = getLogger ( __name__                      )
-# =============================================================================
-from   ostap.core.core     import Ostap, VE 
-from   ostap.fitting.basic import PDF
 # =============================================================================
 models = []
 # =============================================================================
@@ -70,7 +69,7 @@ models = []
 #  @date   2013-05-11
 #  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
-class GammaDist_pdf(PDF) :
+class GammaDist_pdf(PDF1) :
     """Gamma-distribution with shape/scale parameters
     http://en.wikipedia.org/wiki/Gamma_distribution
     It suits nicely for fits of multiplicity and/or, especially chi2 distributions
@@ -106,14 +105,17 @@ class GammaDist_pdf(PDF) :
                    k     = None     ,   ## k-parameter
                    theta = None     ) : ## theta-parameter
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
         #
         self.__k     = self.make_var ( k       ,
-                                 'k_%s'                % name ,
-                                 'k_{#Gamma}(%s)'      % name , k     , 1 , 1.e-3 , 100 )
+                                       'k_%s'                % name ,
+                                       'k_{#Gamma}(%s)'      % name ,
+                                       None , 1 , 1.e-3 , 100 )
         self.__theta = self.make_var ( theta   ,
-                                 'theta_%s'            % name ,
-                                 '#theta_{#Gamma}(%s)' % name , theta , 1 , 1.e-3 , 100 )
+                                       'theta_%s'            % name ,
+                                       '#theta_{#Gamma}(%s)' % name ,
+                                       None , 1 , 1.e-3 , 100 )
+        
         self.pdf  = Ostap.Models.GammaDist (
             self.roo_name ( 'gamma_' ) ,
             'Gamma distribution %s' % self.name , 
@@ -168,7 +170,7 @@ models.append ( GammaDist_pdf )
 #  @date   2013-05-11
 #  @see Ostap::Math::GenGammaDist 
 #  @see Ostap::Models::GenGammaDist 
-class GenGammaDist_pdf(PDF) :
+class GenGammaDist_pdf(PDF1) :
     """Generalized Gamma-distribution with additional shift parameter 
     http://en.wikipedia.org/wiki/Generalized_gamma_distribution
     Special cases : 
@@ -186,17 +188,20 @@ class GenGammaDist_pdf(PDF) :
                    p     = None  ,   ## p-parameter
                    low   = None  ) : ## low-parameter
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
         #
         self.__k     = self.make_var ( k       ,
-                                 'k_%s'                % name ,
-                                 'k_{#Gamma}(%s)'      % name , k     , 1 , 1.e-3 , 100 )
+                                       'k_%s'                % name ,
+                                       'k_{#Gamma}(%s)'      % name ,
+                                       None , 1 , 1.e-3 , 100 )
         self.__theta = self.make_var ( theta   ,
-                                 'theta_%s'            % name ,
-                                 '#theta_{#Gamma}(%s)' % name , theta , 1 , 1.e-3 , 100 )
+                                       'theta_%s'            % name ,
+                                       '#theta_{#Gamma}(%s)' % name , theta ,
+                                       None , 1.e-3 , 100 )
         self.__p     = self.make_var ( p       ,
-                                 'p_%s'                % name ,
-                                 'p_{#Gamma}(%s)'      % name , p     , 1 , 1.e-3 ,   6 )
+                                       'p_%s'                % name ,
+                                       'p_{#Gamma}(%s)'      % name ,
+                                       NNone , 1 , 1.e-3 ,   6 )
 
         limits_low = ()
         if   self.xminmax() :
@@ -204,8 +209,9 @@ class GenGammaDist_pdf(PDF) :
             limits_low = mn , mn , mx
             
         self.__low   = self.make_var ( low      ,
-                                 'low_%s'         % name ,
-                                 'l_{#Gamma}(%s)' % name , low , *limits_low )
+                                       'low_%s'         % name ,
+                                       'l_{#Gamma}(%s)' % name ,
+                                       None , *limits_low )
         
         self.pdf  = Ostap.Models.GenGammaDist (
             self.roo_name ( 'ggamma_' ) ,
@@ -274,7 +280,7 @@ models.append ( GenGammaDist_pdf )
 #  @date   2013-05-11
 #  @see Ostap::Math::Amoroso
 #  @see Ostap::Models::Amoroso
-class Amoroso_pdf(PDF) :
+class Amoroso_pdf(PDF1) :
     """Another view on generalized gamma distribution
     http://arxiv.org/pdf/1005.3274
     """
@@ -288,21 +294,25 @@ class Amoroso_pdf(PDF) :
                    a     = None  ) : ## a-parameter
         
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
         #
         
         self.__theta = self.make_var ( theta   ,
-                                 'theta_%s'             % name ,
-                                 '#theta_{Amoroso}(%s)' % name , theta , 1 , 1.e-3 , 100 )
+                                       'theta_%s'             % name ,
+                                       '#theta_{Amoroso}(%s)' % name ,
+                                       None , 1 , 1.e-3 , 100 )
         self.__alpha = self.make_var ( alpha   ,
-                                 'alpha_%s'             % name ,
-                                 '#alpha_{Amoroso}(%s)' % name , alpha , 1 , 1.e-3 , 100 )
+                                       'alpha_%s'             % name ,
+                                       '#alpha_{Amoroso}(%s)' % name ,
+                                       None , 1 , 1.e-3 , 100 )
         self.__beta  = self.make_var ( beta    ,
-                                 'beta_%s'              % name ,
-                                 '#beta_{Amoroso}(%s) ' % name , beta  , 1 , 1.e-3 ,  10 )        
+                                       'beta_%s'              % name ,
+                                       '#beta_{Amoroso}(%s) ' % name ,
+                                       None , 1 , 1.e-3 ,  10 )        
         self.__a     = self.make_var ( a       ,
-                                 'a_%s'                 % name ,
-                                 'a_{Amoroso}(%s)'      % name , a     , 1 , -10   ,  10  )
+                                       'a_%s'                 % name ,
+                                       'a_{Amoroso}(%s)'      % name ,
+                                       None , 1 , -10   ,  10  )
         
         self.pdf  = Ostap.Models.Amoroso (
             self.roo_name ( 'amo_' ) ,
@@ -375,7 +385,7 @@ models.append ( Amoroso_pdf )
 #  @see Ostap::Math::LogGammaDist 
 #  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
-class LogGammaDist_pdf(PDF) :
+class LogGammaDist_pdf(PDF1) :
     """Distribution for log(x), where x follows Gamma distribution
     It suits nicely for fits of log(multiplicity) and/or log(chi2) distributions
     """
@@ -386,14 +396,16 @@ class LogGammaDist_pdf(PDF) :
                    k     = None ,   ## k-parameter
                    theta = None ) : ## theta-parameter
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
         #
         self.__k     = self.make_var ( k       ,
-                                 'k_%s'                   % name ,
-                                 'k_{log#Gamma}(%s)'      % name , k     , 1 , 1.e-5 , 1000 )
+                                       'k_%s'                   % name ,
+                                       'k_{log#Gamma}(%s)'      % name ,
+                                       None , 1 , 1.e-5 , 1000 )
         self.__theta = self.make_var ( theta   ,
-                                 'theta_%s'               % name ,
-                                 '#theta_{log#Gamma}(%s)' % name , theta , 1 , 1.e-5 , 1000 )
+                                       'theta_%s'               % name ,
+                                       '#theta_{log#Gamma}(%s)' % name ,
+                                       None , 1 , 1.e-5 , 1000 )
 
         self.pdf  = Ostap.Models.LogGammaDist (
             self.roo_name ( 'lgamma_' ) ,
@@ -443,7 +455,7 @@ models.append ( LogGammaDist_pdf )
 #  @see Ostap::Math::LogGammaDist 
 #  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
-class Log10GammaDist_pdf(PDF) :
+class Log10GammaDist_pdf(PDF1) :
     """Distribution for log10(x), where x follows Gamma distribution
     It suits nicely for fits of log10(multiplicity) and/or log10(chi2) distributions
     """
@@ -454,14 +466,16 @@ class Log10GammaDist_pdf(PDF) :
                    k     = None ,   ## k-parameter
                    theta = None ) :  ## theta-parameter
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
         #
         self.__k     = self.make_var ( k       ,
-                               'k_%s'                     % name ,
-                               'k_{log10#Gamma}(%s)'      % name , k     , 1 , 1.e-4 , 10000 )
+                                       'k_%s'                     % name ,
+                                       'k_{log10#Gamma}(%s)'      % name ,
+                                       None , 1 , 1.e-4 , 10000 )
         self.__theta = self.make_var ( theta   ,
-                               'theta_%s'                 % name ,
-                               '#theta_{log10#Gamma}(%s)' % name , theta , 1 , 1.e-4 , 10000 )
+                                       'theta_%s'                 % name ,
+                                       '#theta_{log10#Gamma}(%s)' % name ,
+                                       None , 1 , 1.e-4 , 10000 )
 
         self.pdf  = Ostap.Models.Log10GammaDist (
             self.roo_name ( 'l10gamma_' ) ,
@@ -513,7 +527,7 @@ models.append ( Log10GammaDist_pdf )
 #  @date   2013-05-11
 #  @see Ostap::Models::LogGamma
 #  @see Ostap::Math::LogGamma
-class LogGamma_pdf(PDF) :
+class LogGamma_pdf(PDF1) :
     """ Log-Gamma distribution
     - http://arxiv.org/pdf/1005.3274
     - Prentice, R. L. (1974). A log gamma model and its maximum likelihood
@@ -532,7 +546,7 @@ class LogGamma_pdf(PDF) :
                    lambd = None ,   ## lambda-parameter
                    alpha = None ) : ## nu-parameter
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
         #
         limits_nu = ()
         if   self.xminmax() :
@@ -541,16 +555,19 @@ class LogGamma_pdf(PDF) :
             xm = 0.5 * ( mn + mx ) , mn - 10* dx , mx + 10 *  dx 
             
         self.__nu     = self.make_var ( nu       ,
-                                  'nu_%s'                    % name ,
-                                  '#nu_{#log#Gamma}(%s)'     % name , nu , *limits_nu )
+                                        'nu_%s'                    % name ,
+                                        '#nu_{#log#Gamma}(%s)'     % name ,
+                                        None , *limits_nu )
         
         self.__lambd  = self.make_var ( lambd      ,
-                                  'lambda_%s'                % name ,
-                                  '#lambda_{#log#Gamma}(%s)' % name , lambd , 2 , -1000 , 1000 )
+                                        'lambda_%s'                % name ,
+                                        '#lambda_{#log#Gamma}(%s)' % name ,
+                                        None  , 2 , -1000 , 1000 )
         
         self.__alpha  = self.make_var ( alpha    ,
-                                  'alpha_%s'                 % name ,
-                                  '#alpha_{#log#Gamma}(%s)'  % name , alpha , 1 , 1.e-3 , 1000 )
+                                        'alpha_%s'                 % name ,
+                                        '#alpha_{#log#Gamma}(%s)'  % name ,
+                                        None , 1 , 1.e-3 , 1000 )
         
         self.pdf  = Ostap.Models.LogGamma (
             self.roo_name ( 'loggamma_' ) ,
@@ -608,7 +625,7 @@ models.append ( LogGamma_pdf )
 #  @date   2013-05-11
 #  @see Ostap::Models::BetaPrime
 #  @see Ostap::Math::BetaPrime
-class BetaPrime_pdf(PDF) :
+class BetaPrime_pdf(PDF1) :
     """Beta-prime disribution 
     - http://en.wikipedia.org/wiki/Beta_prime_distribution
     """
@@ -621,19 +638,20 @@ class BetaPrime_pdf(PDF) :
                    scale = 1    ,   ## scale-parameter 
                    delta = 0    ) : ## shift-parameter 
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
         # 
         self.__alpha  = self.make_var ( alpha    ,
-                                  'alpha_%s'                 % name ,
-                                  '#alpha_{#beta#prime}(%s)' % name , alpha , 1 , 1.e-3 , 1000 )
+                                        'alpha_%s'                 % name ,
+                                        '#alpha_{#beta#prime}(%s)' % name ,
+                                        None , 1 , 1.e-3 , 1000 )
         self.__beta   = self.make_var ( beta     ,
-                                  'beta_%s'                  % name ,
-                                  '#beta_{#beta#prime}(%s)'  % name , beta  , 1 , 1.e-3 , 1000 )
-        
+                                        'beta_%s'                  % name ,
+                                        '#beta_{#beta#prime}(%s)'  % name ,
+                                        None , 1 , 1.e-3 , 1000 )        
         self.__scale  = self.make_var ( scale     ,
-                                  'scale_%s'                 % name ,
-                                  '#theta_{#beta#prime}(%s)' % name , scale ,
-                                  1 , -1000 , 1000 )
+                                        'scale_%s'                 % name ,
+                                        '#theta_{#beta#prime}(%s)' % name , 
+                                        None , 1 , -1000 , 1000 )
 
         limits_delta = ()
         if self.xminmax() :
@@ -642,10 +660,10 @@ class BetaPrime_pdf(PDF) :
             limits_delta = mn - 10 * dx , mx + 10 * dx
             
         self.__delta  = self.make_var ( delta     ,
-                                  'delta_%s'                 % name ,
-                                  '#delta_{#beta#prime}(%s)' % name , delta ,
-                                  0 , *limits_delta )
-            
+                                        'delta_%s'                 % name ,
+                                        '#delta_{#beta#prime}(%s)' % name , 
+                                        None , 0 , *limits_delta )
+        
         self.pdf  = Ostap.Models.BetaPrime (
             self.roo_name ( 'betap_' )   ,
             'Beta-prime %s' % self.name  , 
@@ -711,7 +729,7 @@ models.append ( BetaPrime_pdf )
 #  @date   2013-05-11
 #  @see Ostap::Models::Landau
 #  @see Ostap::Math::Landau
-class Landau_pdf(PDF) :
+class Landau_pdf(PDF1) :
     """Landau distribution 
     - http://en.wikipedia.org/wiki/Landau_distribution
     """
@@ -722,13 +740,13 @@ class Landau_pdf(PDF) :
                    scale = 1 ,   ## scale-parameter 
                    delta = 0 ) : ## shift-parameter 
         #
-        PDF.__init__ ( self , name , xvar ) 
+        PDF1.__init__ ( self , name , xvar ) 
         #
         self.__scale  = self.make_var ( scale     ,
-                                'scale_%s'            % name ,
-                                '#theta_{Landau}(%s)' % name , scale ,
-                                1 , -1000 , 1000 )
-
+                                        'scale_%s'            % name ,
+                                        '#theta_{Landau}(%s)' % name ,
+                                        None , 1 , -1000 , 1000 )
+        
         
         limits_delta = ()
         if self.xminmax() :
@@ -737,9 +755,9 @@ class Landau_pdf(PDF) :
             limits_delta = mn - 10 * dx , mx + 10 * dx
             
         self.__delta  = self.make_var ( delta     ,
-                                  'delta_%s'            % name ,
-                                  '#delta_{Landau}(%s)' % name , delta ,
-                                  0 , *limits_delta )
+                                        'delta_%s'            % name ,
+                                        '#delta_{Landau}(%s)' % name , 
+                                        None , 0 , *limits_delta )
         self.pdf  = Ostap.Models.Landau (
             self.roo_name ( 'landau_' )   ,
             'Landau %s' % self.name  , 
@@ -783,7 +801,7 @@ models.append ( Landau_pdf )
 #  @date   2013-05-11
 #  @see Ostap::Models::Argus
 #  @see Ostap::Math::Argus
-class Argus_pdf(PDF) :
+class Argus_pdf(PDF1) :
     """Argus distribution
     - http://en.wikipedia.org/wiki/ARGUS_distribution
     """
@@ -795,12 +813,12 @@ class Argus_pdf(PDF) :
                    c                , 
                    mu    = None     ) :
         #
-        PDF.__init__ ( self , name , xvar ) 
+        PDF1.__init__ ( self , name , xvar ) 
         #
         self.__c  = self.make_var ( c     ,
                                     'c_%s'          % name ,
                                     'c_{Argus}(%s)' % name ,
-                                    c , 1 , 1.e-6 , 200 )
+                                    None  , 1 , 1.e-6 , 200 )
         
         if mu is None :  self.__mu = self.c
         else          :
@@ -808,12 +826,12 @@ class Argus_pdf(PDF) :
             self.__mu = self.make_var ( mu     ,
                                         'mu_%s'           % name ,
                                         '#mu_{Argus}(%s)' % name ,
-                                        mu , *self.xminmax() )
+                                        None , *self.xminmax() )
             
         self.__chi  = self.make_var ( chi     ,
                                       'chi_%s'           % name ,
                                       '#chi_{Argus}(%s)' % name ,
-                                      chi , 1 , 1.e-6 , 20  )
+                                      None , 1 , 1.e-6 , 20  )
 
         ## create PDF 
         self.pdf  = Ostap.Models.Argus (
@@ -892,7 +910,7 @@ class GenArgus_pdf(Argus_pdf) :
         self.__dp  = self.make_var ( dp     ,
                                      'dp_%s'               % name ,
                                      '#deltap_{Argus}(%s)' % name ,
-                                     dp , 1.5 , 1.e-5 , 20 )
+                                     None , 1.5 , 1.e-5 , 20 )
         
         ## create PDF 
         self.pdf  = Ostap.Models.GenArgus (
@@ -935,7 +953,7 @@ models.append ( GenArgus_pdf )
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @see Ostap::Models::TwoExpos
 #  @see Ostap::Math::TwoExpos
-class TwoExpos_pdf(PDF) :
+class TwoExpos_pdf(PDF1) :
     r""" Simple difference of two exponents:    
     \f$ f \propto 
     \mathrm{e}^{-a_1    x}       -\mathrm{e}^{-a_2 x} = 
@@ -949,18 +967,16 @@ class TwoExpos_pdf(PDF) :
                    delta = None     ,   ## high-parameter 
                    x0    = 0        ) : ## low-parameter 
         #
-        PDF.__init__ ( self , name , xvar ) 
+        PDF1.__init__ ( self , name , xvar ) 
         #
         self.__alpha  = self.make_var ( alpha      ,
-                                  'alpha_%s'        % name ,
-                                  '#alpha_{2e}(%s)' % name , alpha ,
-                                  1     ,
-                                  1.e-4 , 50 )
+                                        'alpha_%s'        % name ,
+                                        '#alpha_{2e}(%s)' % name , 
+                                        None , 1 , 1.e-4 , 100 )
         self.__delta  = self.make_var ( delta     ,
-                                  'delta_%s'        % name ,
-                                  '#delta_{2e}(%s)' % name , delta ,
-                                  1     ,
-                                  1.e-4 , 50 )
+                                        'delta_%s'        % name ,
+                                        '#delta_{2e}(%s)' % name , 
+                                        None , 1 , 1.e-4 , 100 )
         
         limits_x0  = ()
         if  self.xminmax() :
@@ -969,8 +985,9 @@ class TwoExpos_pdf(PDF) :
             limits_x0 = mn , mn - 0.2 *  dm , mx  + 0.1 *  dm
 
         self.__x0     = self.make_var ( x0    ,
-                                  'x0_%s'       % name ,
-                                  'x0_{2e}(%s)' % name , x0 , *limits_x0 )
+                                        'x0_%s'       % name ,
+                                        'x0_{2e}(%s)' % name ,
+                                        None , *limits_x0 )
         
         self.pdf  = Ostap.Models.TwoExpos (
             self.roo_name ( 'exp2_' )   ,
@@ -1035,7 +1052,7 @@ models.append ( TwoExpos_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2017-09-02
 #  @see Ostap::Models::Gumbel
-class Gumbel_pdf(PDF) :
+class Gumbel_pdf(PDF1) :
     r"""Gumbel distribution
     - see https://en.wikipedia.org/wiki/Gumbel_distribution
     \f$  f(x,\mu,\beta) = \frac{1}{\left|\beta\right|} e^{-e^{-z}} \f$,
@@ -1053,14 +1070,14 @@ class Gumbel_pdf(PDF) :
                    mu   = 0  ,   ## shift parameter/mode
                    beta = 1  ) : ## scale parameter 
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
         #
         self.__mu    = self.make_var ( mu      ,
-                               'mu_%s'                  % name ,
-                               'mu_{Gumbel}(%s)'        % name , mu   )
+                                       'mu_%s'                  % name ,
+                                       'mu_{Gumbel}(%s)'        % name , None )
         self.__beta  = self.make_var ( beta        ,
-                                 'beta_%s'                % name ,
-                                 'beta_{Gumbel}(%s)'      % name , beta ) 
+                                       'beta_%s'                % name ,
+                                       'beta_{Gumbel}(%s)'      % name , None ) 
         
         self.pdf  = Ostap.Models.Gumbel (
             self.roo_name ( 'gumbel_' )   ,
@@ -1113,7 +1130,7 @@ models.append ( Gumbel_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @see Ostap::Math::Rice
 #  @see Ostap::Models::Rice 
-class Rice_pdf(PDF) :
+class Rice_pdf(PDF1) :
     """Rice distribution
     - see https://en.wikipedia.org/wiki/Rice_distribution
     """
@@ -1125,20 +1142,21 @@ class Rice_pdf(PDF) :
                    varsigma = 1 ,                               ## parameter varsigma
                    shift    = ROOT.RooFit.RooConst ( 0.0 )  ) : ## shift parameter
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
         #
-
-        
 
         self.__nu       = self.make_var ( nu        ,
                                           'nu_%s'                  % name ,
-                                          '#nu_{Rice}(%s)'         % name , nu        , 0 , 0.0    , 1.e+6 )
+                                          '#nu_{Rice}(%s)'         % name ,
+                                          None , 0 , 0.0    , 1.e+6 )
         self.__varsigma = self.make_var ( varsigma ,
                                           'varsigma_%s'            % name ,
-                                          '#varsigma_{Rice}(%s)'   % name , varsigma  , 0 , 1.e-6  , 1.e+4 )
+                                          '#varsigma_{Rice}(%s)'   % name ,
+                                          None , 1 , 1.e-6  , 1.e+4 )
         self.__shift   = self.make_var ( shift        ,
                                          'shift_%s'                % name ,
-                                         'shift_{Rice}(%s)'        % name , shift     , 0 , -1.e+6 , 1.e+6 )
+                                         'shift_{Rice}(%s)'        % name ,
+                                         None , 0 , -1.e+6 , 1.e+6 )
         
         self.pdf  = Ostap.Models.Rice (
             self.roo_name ( 'rice_' )   ,
@@ -1196,7 +1214,7 @@ models.append ( Rice_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @see Ostap::Math::GenInvGauss
 #  @see Ostap::Models::GenInvGauss
-class GenInvGauss_pdf(PDF) :
+class GenInvGauss_pdf(PDF1) :
     """ Generalized Inverse Gaussian distribution
     Generalised Inverse Gaussian distribution using (theta,eta) parameterisation
     - see https://en.wikipedia.org/wiki/Generalized_inverse_Gaussian_distribution
@@ -1211,23 +1229,25 @@ class GenInvGauss_pdf(PDF) :
                    p            ,                               ## parameter p
                    shift = ROOT.RooFit.RooConst ( 0.0 )  ) : ## shift parameter
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
         #
 
-        
         self.__theta    = self.make_var ( theta             ,
                                           'theta_%s'          % name ,
-                                          '#theta_{GIG}(%s)'  % name , theta , 1.0 , 1.e-8 , 100 )
+                                          '#theta_{GIG}(%s)'  % name ,
+                                          None , 1.0 , 1.e-8 , 100 )
         self.__eta      = self.make_var ( eta               ,
                                           'eta_%s'            % name ,
-                                          '#eta_{GIG}(%s)'    % name , eta   , 1.0 , 1.e-8 , 100 )
+                                          '#eta_{GIG}(%s)'    % name ,
+                                          None ,  1.0 , 1.e-8 , 100 )
         self.__p        = self.make_var ( p                 ,
                                           'p_%s'              % name ,
-                                          'p_{GIG}(%s)'       % name , p     , 0   , -100  , 100 )
-        
+                                          'p_{GIG}(%s)'       % name ,
+                                          None , 0   , -100  , 100 )        
         self.__shift   = self.make_var ( shift        ,
                                          'shift_%s'           % name ,
-                                         'shift_{GIG}(%s)'    % name , shift     , 0 , -1.e+6 , 1.e+6 )
+                                         'shift_{GIG}(%s)'    % name ,
+                                         None  , 0 , -1.e+6 , 1.e+6 )
         
         self.pdf  = Ostap.Models.GenInvGauss (
             self.roo_name ( 'gig_' )   ,
@@ -1296,7 +1316,7 @@ models.append ( GenInvGauss_pdf )
 #  @see Ostap::Math::Weibull 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
-class Weibull_pdf(PDF) :
+class Weibull_pdf(PDF1) :
     r"""3-parameter  Weibull distribution 
     \f$ f(x,\lambda,k,x_0) = \frac{k}{\lambda}  y^{k-1} e^{-y^k}\f$, where 
     \f$ y \equiv \frac{x-x_0}{\lambda}\f$
@@ -1321,15 +1341,17 @@ class Weibull_pdf(PDF) :
         ## initialize the base
         #
         
-        PDF.__init__  ( self , name , xvar )
+        PDF1.__init__  ( self , name , xvar )
         
         self.__scale = self.make_var ( scale                   ,
-                                 'scale_%s'              % name ,
-                                 'scale_{Weibull}(%s)'   % name , scale , 1 , 1.e-8 , 1.e+6 )
+                                       'scale_%s'              % name ,
+                                       'scale_{Weibull}(%s)'   % name ,
+                                       None , 1 , 1.e-8 , 1.e+6 )
         self.__shape = self.make_var ( shape                   ,
-                                 'shape_%s'              % name ,
-                                 'shape_{Weibull}(%s)'   % name , shape , 1 , 1.e-8 , 1.e+6 )
-
+                                       'shape_%s'              % name ,
+                                       'shape_{Weibull}(%s)'   % name ,
+                                       None , 1 , 1.e-8 , 1.e+6 )
+        
         limits_shift = () 
         if self.xminmax() :
             mn , mx = self.xminmax()
@@ -1337,8 +1359,9 @@ class Weibull_pdf(PDF) :
             limits_shift = mn + 0.01 * dx , mn , mx
             
         self.__shift = self.make_var ( shift                   ,
-                                 'shift_%s'              % name ,
-                                 'shift_{Weibull}(%s)'   % name , shift , *limits_shift )
+                                       'shift_%s'              % name ,
+                                       'shift_{Weibull}(%s)'   % name ,
+                                       None , *limits_shift )
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Weibull (
@@ -1416,7 +1439,7 @@ models.append ( Weibull_pdf )
 #  @see Ostap::Math::Tsallis
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
-class Tsallis_pdf(PDF) :
+class Tsallis_pdf(PDF1) :
     r"""Useful function to describe pT-spectra of particles 
     
     - C. Tsallis, 
@@ -1441,19 +1464,22 @@ class Tsallis_pdf(PDF) :
                    name      = ''         ) :
 
         ## initialize the base 
-        PDF.__init__  ( self , name , xvar )
+        PDF1.__init__  ( self , name , xvar )
         
         self.__m0   = self.make_var ( m0              ,
-                                'm0_%s'  % name , 
-                                'm0(%s)' % name , m0 , 0     , 1e+6 )
+                                      'm0_%s'  % name , 
+                                      'm0(%s)' % name ,
+                                      None , 0     , 1e+6 )
         
         self.__n    = self.make_var ( n               ,
-                                'n_%s'   % name , 
-                                'n(%s) ' % name , n  , 0.01  , 1000 )  
+                                      'n_%s'   % name , 
+                                      'n(%s) ' % name ,
+                                      None , 1 , 0.01  , 1000 )  
         
         self.__T    = self.make_var ( T               ,
-                                'T_%s'   % name , 
-                                'T(%s) ' % name , T  , 1.e-3 , 1e+6 )
+                                      'T_%s'   % name , 
+                                      'T(%s) ' % name ,
+                                      None , 1 , 1.e-4 , 1e+6 )
         
         self.pdf  = Ostap.Models.Tsallis (
             self.roo_name ( 'tsallis_' )   ,
@@ -1525,7 +1551,7 @@ models.append ( Tsallis_pdf )
 #  @see Ostap::Math::QGSM
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
-class QGSM_pdf(PDF) :
+class QGSM_pdf(PDF1) :
     r"""Useful function to describe pT-spectra of particles 
     
     - A. B. Kaidalov and O. I. Piskunova, Z. Phys. C 30 (1986) 145.
@@ -1546,16 +1572,18 @@ class QGSM_pdf(PDF) :
                    name      = ''   ) :
         
         ## initialize the base 
-        PDF.__init__  ( self , name , pt )
+        PDF1.__init__  ( self , name , pt )
 
         
         self.__m0   = self.make_var ( m0              ,
-                                'm0_%s'  % name , 
-                                'm0(%s)' % name , mass , 0     , 1e+6 )
+                                      'm0_%s'  % name , 
+                                      'm0(%s)' % name ,
+                                      None , 0  , 1e+6 )
         
         self.__b    = self.make_var ( b               ,
-                                'b_%s'   % name , 
-                                'b(%s) ' % name , b    , 0.    , 1e+6 )  
+                                      'b_%s'   % name , 
+                                      'b(%s) ' % name ,
+                                      None , 0. , 1e+6 )  
         
         self.pdf  = Ostap.Models.QGSM (
             self.roo_name ( 'qgsm_' ) ,

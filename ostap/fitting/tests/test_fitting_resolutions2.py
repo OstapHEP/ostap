@@ -15,11 +15,11 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
-ROOT.PyConfig.IgnoreCommandLineOptions = False 
+from   builtins                 import range
 # 
 import ostap.fitting.roofit 
 from   ostap.core.core          import VE, dsID
-from   builtins                 import range
+from   ostap.utils.gsl          import gslCount
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
@@ -278,19 +278,21 @@ def test_hyperbolic () :
                             sigma   = ( 0.5  ,  0.1  ,  1.0 ) ,
                             kappa   = ( -3   , -100  , +100 ) ,                            
                             zeta    = ( +30  , 1.e-5 , 1.e+5 ) )
-    
-    result, frame = reso. fitTo ( dataset , silent = True )
-    result, frame = reso. fitTo ( dataset , silent = True )
-    with wait ( 1 ) , use_canvas ( 'test_hyperbolic' ) : 
-        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+
+    with gslCount () :
         
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        make_print ( reso , result , 'Asymmetric Hyperbolic', logger )
+        result, frame = reso. fitTo ( dataset , silent = True )
+        result, frame = reso. fitTo ( dataset , silent = True )
+        with wait ( 1 ) , use_canvas ( 'test_hyperbolic' ) : 
+            result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+            
+        if 0 != result.status() or 3 != result.covQual() :
+            logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+            print(result)
+        else :     
+            make_print ( reso , result , 'Asymmetric Hyperbolic', logger )
         
-    models.add ( reso )
+        models.add ( reso )
 
 
 # =============================================================================
@@ -309,16 +311,18 @@ def test_genhyperbolic () :
                                zeta  = ( +30  , 1.e-1 , 1.e+5 ) , 
                                lambd = ( -2  , -100  ,  100   ) )
     
-    result, frame = reso. fitTo ( dataset , silent = True )
-    result, frame = reso. fitTo ( dataset , silent = True )
-    with wait ( 1 ) , use_canvas ( 'test_genhyperbolic' ) : 
-        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+    with gslCount () :
         
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        make_print ( reso , result , 'Asymmetric Generalised Hyperbolic', logger )
+        result, frame = reso. fitTo ( dataset , silent = True )
+        result, frame = reso. fitTo ( dataset , silent = True )
+        with wait ( 1 ) , use_canvas ( 'test_genhyperbolic' ) : 
+            result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+            
+        if 0 != result.status() or 3 != result.covQual() :
+            logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+            print(result)
+        else :     
+            make_print ( reso , result , 'Asymmetric Generalised Hyperbolic', logger )
         
     models.add ( reso )
 
@@ -339,19 +343,21 @@ def test_hypatia () :
                          lambd  = ( -2  , -100  ,  100   ) ,
                          sigma0 = 0.01                   )
     
-    result, frame = reso. fitTo ( dataset , silent = True )
-    result, frame = reso. fitTo ( dataset , silent = True )
-    with wait ( 1 ) , use_canvas ( 'test_hypatia' ) : 
-        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+    with gslCount () :
         
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        make_print ( reso , result , 'Asymmetric Hypatia', logger )
+        result, frame = reso. fitTo ( dataset , silent = True )
+        result, frame = reso. fitTo ( dataset , silent = True )
+        with wait ( 1 ) , use_canvas ( 'test_hypatia' ) : 
+            result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+            
+        if 0 != result.status() or 3 != result.covQual() :
+            logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+            print(result)
+        else :     
+            make_print ( reso , result , 'Asymmetric Hypatia', logger )
         
     models.add ( reso )
-
+        
 
 
 # =============================================================================
@@ -422,7 +428,7 @@ def test_normlapl () :
 # ==============================================================================
 def dump_models () :
 
-
+    
     header =  'Model'   , \
              'mean'     , 'mode' , 'midpoint' , 'median' , \
              'rms'      , 'fwhm' ,  \
@@ -434,7 +440,9 @@ def dump_models () :
 
     rows = [ header ] 
     for m in sorted ( mods ) :
-        model = mods [ m ] 
+        model = mods [ m ]
+        print ( model )
+        model.draw() 
         row = m , \
               '%+.4g' % model.get_mean  () , \
               '%+.4g' % model.mode      () , \
@@ -514,9 +522,9 @@ if '__main__' == __name__ :
     with timing ("Save to DB"    , logger ) :  
         test_db ()          
 
-    ## check finally that everything is serializeable:
-    with timing ("Dump models"    , logger ) :  
-        dump_models ()           
+##    ## check finally that everything is serializeable:
+##    with timing ("Dump models"    , logger ) :  
+##        dump_models ()           
 
 # =============================================================================
 ##                                                                      The END 

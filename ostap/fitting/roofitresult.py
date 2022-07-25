@@ -18,7 +18,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   builtins import range 
-import ROOT
+import ROOT, math
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
@@ -277,7 +277,6 @@ def _rfr_results_( self , *vars ) :
             c2 [ i , j ] = cm ( i , j )
 
     return v
-
     
 # ==============================================================================
 ## Get vector of eigenvalues for the covariance matrix
@@ -652,6 +651,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
 
 
     with_globcorr = not ( (6,24) <= root_info < (6,28) )
+    with_globcorr = True or not ( (6,24) <= root_info < (6,28) )
 
 
     if with_globcorr : rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
@@ -689,7 +689,6 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
         if n : n = '[10^%+d]' % n
         else : n = '' 
 
-
         if 0 <= cq and 1 < len ( pars_float ) :
 
             mxr , mxv = r.max_cor    ( p )
@@ -697,7 +696,9 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
             if with_globcorr :
                 
                 gc = -1.0 
-                gc    = r.globalCorr ( p ) if 3 == cq else -1.00
+                ## gc    = r.globalCorr ( p ) if 3 == cq else -1.00
+                gc    = r.global_corr ( p ) if 3 == cq else -1.00
+                
                 if 0 <= gc :  cc = '% +5.1f/(% +5.1f,%s)' % ( gc*100 , mxr*100   , mxv )
                 else       :  cc = '% +5.1f : %-s'        % (          mxr * 100 , mxv )                
                 if 0.95 < abs ( mxr ) or 0.95 < gc : cc = attention ( cc )
@@ -744,7 +745,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     return T.table ( all , title = title if title else r.GetTitle() , prefix = prefix , alignment = 'llll' )
 
 # =============================================================================
-## ``easy'' print of RooFitResult
+## 'easy' print of RooFitResult
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _rfr_print_ ( self , opts = 'v' ) :
@@ -772,6 +773,47 @@ def _rfr_print_ ( self , opts = 'v' ) :
     return self.print_multiline ( content = 1 , verbose = True )
 
 
+# =============================================================================
+## Get global correlation coefficient for the parameter
+#  \f$ \rho_k = \sqrt{    1 - \left[ C_{kk} V_{kk}\right]^{-1} } \f$
+#  where \f$ C \f$ is covarinace matrix and \f$ V = C^{-1}\$ is inverse
+#  @code
+#  resut = ...
+#  result.global_corr ( 'S' ) 
+#  @endcode 
+#  It should be accessible via <code>RooFitResult::globalCorr</code> method
+#  but it often results in segfault
+#  @see RooFitResult::globalCorr
+def _rfr_global_corr_ ( self , par ) :
+    """ Get global correlation coefficient for the parameter
+    rho_k = sqrt ( 1 - 1/( C_{kk} V_{kk}) )
+    - where C is covariance  matrix and V is inverse
+    
+    It should be accessible via `RooFitResult.globalCorr`method
+    but it often results in segfauls
+    - see `RooFitResult.globalCorr`
+    """
+    if  isinstance  ( par , string_types    ) :
+        index = self.floatParsFinal().index ( par ) 
+        if index < 0 :                                     return -1
+    elif isinstance ( par , integer_types   ) :
+        if not 0 <= par < len ( self.floatParsFinal () ) : return -1
+        index = par 
+    elif isinstance ( par , ROOT.RooAbsArg ) :
+        return _rfr_global_corr_ ( self , par.name )
+    else : return -1 
+
+    ## get the covariance matrix and invert it! 
+    v = self.covmatrix()
+    if not v.InvertChol () : return -1   
+
+    ## get covariance matrix 
+    c = self.covmatrix()
+
+    cv = c [ index , index ] * v [ index , index ]
+    
+    return  math.sqrt ( 1.0 - 1.0 / cv )
+    
 # =============================================================================
 ## Run MIGRAD for RooMinimizer object
 #  @code
@@ -865,7 +907,7 @@ if not hasattr ( ROOT.RooMinimizer , '_old_minos_' ) :
     ROOT.RooMinimizer.     minos   = _rm_minos_ 
 
 # =============================================================================
-## make 2D contours  in units of ``sigma''
+## make 2D contours  in units of 'sigma'
 #  @code
 #  pdf    = ...
 #  minuit = pdf.minuit( ... )
@@ -878,7 +920,7 @@ def _rm_contour_ ( self                   ,
                    npoints = 100          ,
                    *levels                ) : 
 
-    """Make 2D contours  in uniys  of ``sigma''
+    """Make 2D contours  in uniys  of 'sigma'
     >>> pdf    = ...
     >>> minuit = pdf.minuit( ... )
     >>> minuit.migrad() 
@@ -949,7 +991,8 @@ ROOT.RooFitResult . fraction        = _rfr_fraction_
 ROOT.RooFitResult . results         = _rfr_results_
 ROOT.RooFitResult . evaluate        = _rfr_evaluate_ 
 ROOT.RooFitResult . cov_eigenvalues = _rfr_eigenvalues_
-ROOT.RooFitResult . table            = _rfr_table_
+ROOT.RooFitResult . table           = _rfr_table_
+ROOT.RooFitResult . global_corr     = _rfr_global_corr_
 
 _new_methods_ += [
     ROOT.RooFitResult . __repr__         ,

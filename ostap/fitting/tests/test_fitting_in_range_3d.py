@@ -30,7 +30,7 @@ else                       : logger = getLogger ( __name__  )
 
 # ============================================================================= 
 def test_fitting_in_range_3d () :
-
+        
 	logger = getLogger ( 'test_fitting_in_range_3d' )
 	
         ## make simple test mass 
@@ -119,7 +119,6 @@ def test_fitting_in_range_3d () :
 		
 	logger.info ('Dataset:\n%s' % dataset.table ( prefix = '# ' ) )  
 
-
 	
 	signal_x1 = Models.Gauss_pdf ( 'G1x'  , xvar = m_x  , mean = m1.value() , sigma = m1.error() )  
 	signal_y1 = Models.Gauss_pdf ( name='G1y'  , xvar = m_y  , mean = m2.value() , sigma = m2.error()  ) 
@@ -131,10 +130,10 @@ def test_fitting_in_range_3d () :
 	
 	
 	model = Models.Fit3D (
-		name    = 'fit_comp', 
-		signal_x    = signal_x1, 
-		signal_y    = signal_y1,
-		signal_z    = signal_z1,
+		name        = 'fit3'    , 
+		signal_x    = signal_x1 , 
+		signal_y    = signal_y1 ,
+		signal_z    = signal_z1 ,
 		bkg_1x  = bkg_x ,
 		bkg_1y  = bkg_y ,
 		bkg_1z  = bkg_z ,
@@ -152,12 +151,18 @@ def test_fitting_in_range_3d () :
 	r = model.fitTo ( dataset , silent = True )
 	r = model.fitTo ( dataset , silent = True )
 
+	t = 1.0
+        
+	with use_canvas ( 'test_fitting_in_range_3d (no-ranges) ' ) :
+		with wait ( t ) : model.draw1 (dataset,nbins=200)
+		with wait ( t ) : model.draw2 (dataset,nbins=200)
+		with wait ( t ) : model.draw3 (dataset,nbins=200)
+
 	dataset.m_y.setRange ( 'fit' , 6,8. )
 	model.yvar.setRange ( 'fit' , 6,8. )
-
-	t = 1.0
+                
 	
-	with use_canvas ( 'test_fitting_in_range_3d' ) :
+	with use_canvas ( 'test_fitting_in_range_3d/1' ) :
 		with wait ( t ) : model.draw1(dataset,nbins=200, in_range3=(11,12),in_range2=(8,10))
 		with wait ( t ) : model.draw1(dataset,nbins=200, in_range3=(11,12),in_range2='fit')
 		with wait ( t ) : model.draw1(dataset,nbins=200, in_range3=(11,12))
@@ -166,7 +171,7 @@ def test_fitting_in_range_3d () :
 	dataset.m_x.setRange ( 'fit2' , 2.5,3. )
 	model.xvar.setRange ( 'fit2' , 2.5,3. )
 	
-	with use_canvas ( 'test_fitting_in_range_3d' ) :		
+	with use_canvas ( 'test_fitting_in_range_3d/2' ) :		
 		with wait ( t ) : model.draw2(dataset,nbins=200, in_range3=(11,12),in_range1=(0,3))
 		with wait ( t ) : model.draw2(dataset,nbins=200, in_range3=(11,12),in_range1='fit2')
 		with wait ( t ) : model.draw2(dataset,nbins=200, in_range3=(11,12))
@@ -175,7 +180,7 @@ def test_fitting_in_range_3d () :
 	dataset.m_x.setRange ( 'fit3' , 2.5,3. )
 	model.xvar.setRange ( 'fit3' , 2.5,3. )
 	
-	with use_canvas ( 'test_fitting_in_range_3d' ) :		
+	with use_canvas ( 'test_fitting_in_range_3d/3' ) :		
 		with wait ( t ) : model.draw3(dataset,nbins=200, in_range2=(6,8),in_range1=(0,3))
 		with wait ( t ) : model.draw3(dataset,nbins=200, in_range2=(6,8),in_range1='fit3')
 		with wait ( t ) : model.draw3(dataset,nbins=200, in_range2=(6,8))
@@ -185,7 +190,7 @@ def test_fitting_in_range_3d () :
 if '__main__' == __name__ :
 
 	test_fitting_in_range_3d ()
-    
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

@@ -50,7 +50,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-06-07
 # =============================================================================
-"""Very specific helper class to implement ``pythonic'' PDF for RooFit
+"""Very specific helper class to implement 'pythonic' PDF for RooFit
 
     Typical usage:
     
@@ -103,7 +103,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     ##
-    'PyPDF2' , ## ``pythonic'' PDF for RooFit 
+    'PyPDF2' , ## 'pythonic' PDF for RooFit 
     )
 # =============================================================================
 import ROOT, math
@@ -121,12 +121,12 @@ else                       : logger = getLogger ( __name__              )
 if old_PyROOT :
 
     __all__ = (
-    'PyPDF'  , ## ``pythonic'' PDF for RooFit 
-    'PyPDF2' , ## ``pythonic'' PDF for RooFit 
+    'PyPDF'  , ## 'pythonic' PDF for RooFit 
+    'PyPDF2' , ## 'pythonic' PDF for RooFit 
         )
     # =========================================================================
     ## @class PyPDF
-    #  helper base class to implement ``pure-python'' PDF
+    #  helper base class to implement 'pure-python' PDF
     #  - Typical usage:
     #  @code
     #  import math 
@@ -206,7 +206,7 @@ if old_PyROOT :
     #        return CDF ( xmax , m , s  ) - CDF ( xmin , m , s  )
     # @endcode
     class PyPDF (object) :
-        """Helper base class to implement ``pure-python'' PDF
+        """Helper base class to implement 'pure-python' PDF
         
         Typical usage (for OLD PyROOT):
         
@@ -283,7 +283,7 @@ if old_PyROOT :
             
             
             assert ( not pypdf ) or isinstance ( pypdf , Ostap.Models.PyPdf  ) , \
-                   "Invalid type of ``pypdf'': %s/%s" % ( pypdf , type ( pypdf ) )
+                   "Invalid type of 'pypdf': %s/%s" % ( pypdf , type ( pypdf ) )
             
             if not pypdf :
                 
@@ -315,7 +315,7 @@ if old_PyROOT :
 
         @property
         def pypdf ( self ) :
-            """``pypdf'' : get the actual Ostap::Models::PyPdf object"""
+            """'pypdf' : get the actual Ostap::Models::PyPdf object"""
             return self.__pypdf
         @pypdf.setter
         def pypdf ( self , value ) :
@@ -325,35 +325,35 @@ if old_PyROOT :
             
         @property
         def varlist ( self ) :
-            """``varlist'' : get all variables (as RooArgList)  from Ostap::Models::PyPdf
+            """'varlist' : get all variables (as RooArgList)  from Ostap::Models::PyPdf
             - all variables *MUST* be accessed via this collection!
             """
             return self.pypdf.varlist ()
         
         @property
         def allDeps ( self ) :
-            """``allDeps'' - the first parameter  of ``getAnalyticalIntegra/get_analytical_integral''-method 
+            """'allDeps' - the first parameter  of 'getAnalyticalIntegra/get_analytical_integral'-method 
             - attention:  it could be a null pointer! check it before usage! 
             """
             return self.pypdf.allDeps()
         
         @property
         def analDeps ( self ) :
-            """``analDeps'' - the second parameter  of ``getAnalyticalIntegral/get_analystical_integral''-method 
+            """'analDeps' - the second parameter  of 'getAnalyticalIntegral/get_analystical_integral'-method 
             - attention:  it could be a null pointer! check it before usage!
             """
             return self.pypdf.allDeps()
         
         @property
         def rangeName ( self )  :
-            """``rangeName'' -  the ``rangeName''  parameter for ``(get_)analytical_integral''-method
+            """'rangeName' -  the 'rangeName'  parameter for `(get_)analytical_integral'-method
             - attention - it could be a null pointer! check it before usage! 
             """
             return self.pypdf.rangeName ()
         
         @property
         def intCode   ( self )  :
-            """``intCode'' -  the ``integration code'' parameter for ``analytic_integral''-method
+            """'intCode' -  the 'integration code' parameter for 'analytic_integral'-method
             """
             return self.pypdf.intCode ()
         
@@ -368,7 +368,7 @@ if old_PyROOT :
             >>> pdf = ...
             >>> pdf.evaluate() 
             """
-            raise NotImplementedError("PyPDF: ``evaluate'' is not implemented!")
+            raise NotImplementedError("PyPDF: 'evaluate' is not implemented!")
         
         # =====================================================================
         ## get a value of certain variale
@@ -412,12 +412,12 @@ if old_PyROOT :
         
 # =============================================================================
 ## @class PyPDF2
-#  ``Light'' version of ``pythonic-Pdf''
+#  'Light' version of 'pythonic-Pdf'
 #  
 #  @see Ostap::Models::PyPdf
 #  @see Ostap::Models::PyPdf2
 class PyPDF2(object) :
-    """  ``Light'' version of ``pythonic-Pdf''
+    """  'Light' version of 'pythonic-Pdf'
     """
     def __init__ (  self       ,
                     name       ,
@@ -426,7 +426,7 @@ class PyPDF2(object) :
                     title = '' ) :
 
         ## function must be valid function! 
-        assert function and callable ( function ) , "``function'' is not callable!"
+        assert function and callable ( function ) , "'function' is not callable!"
 
         if not title : title = 'PyPDF2(%s)' % name
 
@@ -464,22 +464,22 @@ class PyPDF2(object) :
 
     @property
     def pypdf ( self ) :
-        """``pypdf''   : get the actual Ostap::Models::PyPdf2 object"""
+        """'pypdf'   : get the actual Ostap::Models::PyPdf2 object"""
         return  self.__pypdf 
 
     @property
     def function ( self ) :
-        """``function'' : get the actual python function/callable"""
+        """'function' : get the actual python function/callable"""
         return self.__pyfunction
     
     @property
     def variables  ( self ) :
-        """``variables'' : list(ROOT.RooArgList) of all variables"""
+        """'variables' : list(ROOT.RooArgList) of all variables"""
         return self.__vars
     
     @property
     def vars       ( self ) :
-        """``vars'' : tuple of all variables"""
+        """'vars' : tuple of all variables"""
         return  tuple ( [ i for i in self.__vars ] ) 
     
     ## clone the object (needed by C++ partner class)

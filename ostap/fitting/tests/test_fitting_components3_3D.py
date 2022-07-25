@@ -226,8 +226,7 @@ def test_fitting_components3_3D () :
 if '__main__' == __name__ :
 
     with timing ( "3dMix-fit" , logger ) : 
-        test_fitting_components3_3D () 
-        
+        test_fitting_components3_3D ()
     
 # =============================================================================
 ##                                                                      The END 

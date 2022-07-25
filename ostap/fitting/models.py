@@ -49,9 +49,9 @@ Empricial PDFs to describe narrow peaks :
   - Asymmetric Laplace shape
   - Sech  shape
   - Losev  shape
-  - Logistic, aka ``sech-squared'' shape
+  - Logistic, aka 'sech-squared' shape
   
-PDF to describe ``wide'' peaks : 
+PDF to describe 'wide' peaks : 
 
   - BreitWigner
   - LASS
@@ -109,7 +109,7 @@ __all__ = (
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant (inverse-cosh) distribution
     'Losev_pdf'              , ## asymmetric hyperbolic secant distribution
-    'Logistic_pdf'           , ## Logistic aka ``sech-squared'' PDF
+    'Logistic_pdf'           , ## Logistic aka 'sech-squared' PDF
     #
     ## specializations:
     # 
@@ -256,42 +256,45 @@ from   ostap.logger.logger          import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
-from ostap.fitting.basic         import *
-logger.debug ("Import signal     (peaking) models from ``signals''"      )
-from ostap.fitting.signals       import * 
-logger.debug ("Import background (smooth)  models from ``background''"   )
-from ostap.fitting.background    import *
-logger.debug ("Import specialized models from ``specific''"              )
-from ostap.fitting.specific      import * 
-logger.debug ("Import ``other''   models from ``distributions''"         )
-from ostap.fitting.distributions import *
-logger.debug ("Import 2D-fit machinery            from ``fit2d''"        )
+from ostap.fitting.pdfbasic      import *
+logger.debug ("Import 1D-fit machinery            from 'fit1d'"         )
+from ostap.fitting.fit1d         import *
+logger.debug ("Import 2D-fit machinery            from 'fit2d'"         )
 from ostap.fitting.fit2d         import *
-logger.debug ("Import 2D background        models from ``models_2d''"    )
+logger.debug ("Import 2D background        models from 'models_2d'"     )
 from ostap.fitting.models_2d     import *  
-logger.debug ("Import 3D-fit machinery            from ``fit3d''"        )
+logger.debug ("Import 3D-fit machinery            from 'fit3d'"         )
 from ostap.fitting.fit3d         import *
-logger.debug ("Import 3D background        models from ``models_3d''"    )
+logger.debug ("Import 3D background        models from 'models_3d'"     )
 from ostap.fitting.models_3d     import *  
-logger.debug ("Import simultaneous fit            from ``simfit''"       )
+logger.debug ("Import simultaneous fit            from 'simfit'"        )
 from ostap.fitting.simfit        import Sim1D, SimFit 
-logger.debug ("Import convolution          models from ``convolution''"  )
+logger.debug ("Import convolution          models from 'convolution'"   )
 from ostap.fitting.convolution   import *  
-logger.debug ("Import resoltuion           models from ``resolution''"   )
+logger.debug ("Import resoltuion           models from 'resolution'"    )
 from ostap.fitting.resolution    import *  
-logger.debug ("Import adjustment           models from ``adjust''"       )
+logger.debug ("Import adjustment           models from 'adjust'"        )
 from ostap.fitting.adjust        import *  
-logger.debug ("Import modifiers                   from ``modifiers''"    )
+logger.debug ("Import modifiers                   from 'modifiers'"     )
 from ostap.fitting.modifiers     import *
-logger.debug ("Import functions                   from ``roofuncs''"     )
+logger.debug ("Import functions                   from 'roofuncs'"      )
 from ostap.fitting.roofuncs      import * 
+logger.debug ("Import signal     (peaking) models from 'signals'"       )
+from ostap.fitting.signals       import * 
+logger.debug ("Import background (smooth)  models from 'background'"    )
+from ostap.fitting.background    import * 
+logger.debug ("Import specialized models          from 'specific'"      )
+from ostap.fitting.specific      import *
+logger.debug ("Import 'other'     models          from 'distributions'" )
+from ostap.fitting.distributions import *
+
 
 models = []
 from ostap.fitting.signals       import models as _models 
 models += _models
-from ostap.fitting.background    import models as _models 
+from ostap.fitting.background    import models as _models
 models += _models
-from ostap.fitting.distributions import models as _models 
+from ostap.fitting.distributions import models as _models
 models += _models
 from ostap.fitting.specific      import models as _models 
 models += _models
@@ -299,12 +302,8 @@ from ostap.fitting.resolution    import models as _models
 models += _models
 from ostap.fitting.models_2d     import models as _models 
 models += _models
-
-
-
-# ============================================================================
-## add the product operator for multiplication of two PDFs 
-import ostap.fitting.pdf_ops
+from ostap.fitting.models_3d     import models as _models 
+models += _models
 
 
 # =============================================================================

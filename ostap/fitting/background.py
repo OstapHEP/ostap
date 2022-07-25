@@ -50,33 +50,32 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
-from   ostap.core.core     import cpp, Ostap
-from   ostap.core.ostap_types    import integer_types , num_types 
-from   ostap.math.base     import iszero
-from   ostap.fitting.basic import PDF , Sum1D, Combine1D
-from   ostap.fitting.utils import Phases, ParamsPoly 
+from   ostap.core.core          import Ostap
+from   ostap.core.ostap_types   import integer_types , num_types 
+from   ostap.math.base          import iszero
+from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf 
+from   ostap.fitting.fit1d      import Flat1D,  Sum1D
+from   ostap.fitting.fithelpers import Phases, ParamsPoly 
 # =============================================================================
-from   ostap.logger.logger     import getLogger
+from   ostap.logger.logger      import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 ## list of "left" phase space functions 
 PSL = ( Ostap.Math.PhaseSpaceLeft , Ostap.Math.PhaseSpaceNL ,
         Ostap.Math.PhaseSpace2    , Ostap.Math.PhaseSpace3  , Ostap.Math.PhaseSpace3s )
-
-    
+# =============================================================================
 models  = []
 # =============================================================================
 ##  @class PolyBase
 #   helper base class to implement various polynomial-like shapes
-class PolyBase(PDF,Phases) :
+class PolyBase(PDF1,Phases) :
     """Helper base class to implement various polynomial-like shapes
     """
-    def __init__ ( self , name , power , xvar = None , the_phis = None ) :
+    def __init__ ( self , name , power , xvar , the_phis = None ) :
         ## check  the arguments 
-        xvar = self.make_var  ( xvar , 'xvar' , 'x-variable' )
-        PDF   .__init__ ( self , name  , xvar      )
-        Phases.__init__ ( self , power , the_phis  )
+        PDF1  .__init__ ( self , name  , xvar = xvar )
+        Phases.__init__ ( self , power , the_phis    )
 
 
 # =============================================================================        
@@ -120,7 +119,8 @@ class Bkg_pdf(PolyBase) :
         #
         self.__tau  = self.make_var ( tau              ,
                                       "tau_%s"  % name ,
-                                      "tau(%s)" % name , tau , 0 , *limits_tau  )
+                                      "tau(%s)" % name ,
+                                      None , 0 , *limits_tau  )
         
         self.pdf  = Ostap.Models.ExpoPositive (
             self.roo_name ( "exppol_"  ) ,
@@ -759,14 +759,16 @@ class PSLeftExpoPol_pdf(PolyBase) :
         #
         self.__tau  = self.make_var ( tau              ,
                                       "tau_%s"  % name ,
-                                      "tau(%s)" % name , tau , 0 , *limits_tau  )
+                                      "tau(%s)" % name ,
+                                      None , 0 , *limits_tau  )
 
         #
         ## the scale factor 
         #
         self.__scale = self.make_var ( scale             ,
                                       "scale_%s"  % name ,
-                                      "scale(%s)" % name , scale , 1 , 1.e-3 , 1.e+6 )
+                                      "scale(%s)" % name ,
+                                       None , 1 , 1.e-3 , 1.e+6 )
 
         self.pdf  = Ostap.Models.PhaseSpaceLeftExpoPol (
             self.roo_name ( "psepol_"  ) ,
@@ -868,17 +870,20 @@ class TwoExpoPoly_pdf(PolyBase) :
 
 
         self.__alpha  = self.make_var ( alpha               ,
-                                  "alpha_%s"   % name ,
-                                  "#alpha(%s)" % name , alpha , *limits_alpha ) 
+                                        "alpha_%s"   % name ,
+                                        "#alpha(%s)" % name ,
+                                        None , *limits_alpha ) 
         
         self.__delta  = self.make_var ( delta               ,
-                                  "delta_%s"   % name ,
-                                  "#delta(%s)" % name , delta , *limits_delta )
+                                        "delta_%s"   % name ,
+                                        "#delta(%s)" % name ,
+                                        None , *limits_delta )
         
         self.__x0     = self.make_var ( x0                  ,
-                                  "x0_%s"     % name  ,
-                                  "x_{0}(%s)" % name  , x0  ,  *limits_x0 )
-
+                                        "x0_%s"     % name  ,
+                                        "x_{0}(%s)" % name  ,
+                                        None ,  *limits_x0 )
+        
         #
         xmin , xmax = self.xminmax() 
         self.pdf  = Ostap.Models.TwoExpoPositive (
@@ -982,13 +987,15 @@ class Sigmoid_pdf(PolyBase) :
 
         ## alpha 
         self.__alpha  = self.make_var ( alpha               ,
-                                  'alpha_%s'  % name  ,
-                                  'alpha(%s)' % name  , alpha , *limits_alpha )
-
+                                        'alpha_%s'  % name  ,
+                                        'alpha(%s)' % name  ,
+                                        None , *limits_alpha )
+        
         ## x0 
         self.__x0    = self.make_var  ( x0                  ,
-                                  'x0_%s'     % name  ,
-                                  'x0(%s)'    % name  , x0    , *limits_x0    )
+                                        'x0_%s'     % name  ,
+                                        'x0(%s)'    % name  ,
+                                        None , *limits_x0    )
 
         xmin,xmax = self.xminmax() 
         self.pdf  = Ostap.Models.PolySigmoid (
@@ -1311,7 +1318,7 @@ models.append ( CPSpline_pdf )
 #  @see Ostap::Math::PhaseSpace2
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class PS2_pdf(PDF) :
+class PS2_pdf(PDF1) :
     """ Primitive 2-body phase space function
     >>> mass  = ... ## mass variable
     >>> m_pi  = 139
@@ -1326,7 +1333,7 @@ class PS2_pdf(PDF) :
                    m2               ) : ## the second mass (constant)
         
         ## initialize the base 
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar = xvar )
         #
         self.__am1 = abs ( float ( m1 ) )
         self.__am2 = abs ( float ( m2 ) )
@@ -1378,7 +1385,7 @@ models.append ( PS2_pdf )
 #  @see Ostap::Math::PhaseSpaceLeft
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class PSLeft_pdf(PDF) :
+class PSLeft_pdf(PDF1) :
     """Left edge of N-body phase space function (with possible scaling)
     >>> mass  = ... ## mass variable
     >>> low   = 139 + 139 + 139  ## 3 pion mass
@@ -1398,7 +1405,7 @@ class PSLeft_pdf(PDF) :
 
         # 
         ## initialize the base 
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar = xvar )
         #
         
         self.__phasespace = phasespace
@@ -1413,15 +1420,17 @@ class PSLeft_pdf(PDF) :
         ## left threshold variable 
         self.__left = self.make_var ( left                     ,
                                       'left_%s'    % self.name ,
-                                      'm_left(%s)' % self.name , None , left , *lminmax ) 
-
+                                      'm_left(%s)' % self.name ,
+                                      None , *lminmax ) 
+        
         ## scale variable 
         if scale is None :
             self.__scale = ROOT.RooFit.RooConst ( 1.0 )
         else             :
             self.__scale = self.make_var ( scale                   ,
                                            'scale_%s'  % sefl.name ,
-                                           'scale(%s)' % self.name , None , scale , 0.1 , 1.e+6 )
+                                           'scale(%s)' % self.name ,
+                                           None , 0.1 , 1.e+6 )
             
         if  self.xminmax() and self.left.minmax() : 
             mn  , mx  = self.xminmax()
@@ -1488,7 +1497,7 @@ models.append ( PSLeft_pdf )
 #  @see Ostap::Math::PhaseSpaceRight
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class PSRight_pdf(PDF) :
+class PSRight_pdf(PDF1) :
     """ Right edge of L-body phase space for N-body decay 
     >>> mass  = ... ## mass variable
     >>> high  = 5.278-3.096 ## m(B)-m(J/psi)
@@ -1502,7 +1511,7 @@ class PSRight_pdf(PDF) :
                    N                ,   ## N
                    right   = None   ) : 
         #
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar = xvar )
         #
         self.__L = L 
         self.__N = N
@@ -1516,7 +1525,7 @@ class PSRight_pdf(PDF) :
         self.__right = self.make_var ( right ,
                                        'right_%s'      % name  ,
                                        'm_{right}(%s)' % name  ,
-                                       None , right ,  *limits )
+                                       None , *limits )
 
         if self.xminmax() and self.right.minmax() :
             mn  , mx  = self      .xminmax()
@@ -1579,7 +1588,7 @@ models.append ( PSRight_pdf )
 #  @see Ostap::Math::PhaseSpaceNL
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class PSNL_pdf(PDF) :
+class PSNL_pdf(PDF1) :
     """L-body phase space from N-body decay
     >>> mass  = ... ## mass variable
     >>> low   = 3*139       ## 3*m(pi)
@@ -1600,7 +1609,7 @@ class PSNL_pdf(PDF) :
         assert isinstance ( N , int ) and L< N , 'PSNL: invalid N=%s (must be N>L)'  % N
 
         ## initialize the base 
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar = xvar )
         #
         self.__L = L
         self.__N = N
@@ -1614,12 +1623,14 @@ class PSNL_pdf(PDF) :
             limits_right = 0.05 * mn + 0.95 * mx , mn - dx , mx + dx 
             
         self.__left  = self.make_var ( left ,
-                                 'left_%s'        % name ,
-                                 'm_{left}(%s)'   % name , left  , *limits_left )
+                                       'left_%s'        % name ,
+                                       'm_{left}(%s)'   % name ,
+                                       None , *limits_left )
         
         self.__right = self.make_var ( right ,
-                                 'right_%s'       % name ,
-                                 'm_{right}(%s)'  % name , right , *limits_right )
+                                       'right_%s'       % name ,
+                                       'm_{right}(%s)'  % name ,
+                                       None , *limits_right )
 
         ## pdf 
         self.pdf  = Ostap.Models.PhaseSpaceNL (
@@ -1693,7 +1704,7 @@ models.append ( PSNL_pdf )
 #  @see Ostap::Math::PhaseSpace23L
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class PS23L_pdf(PDF) :
+class PS23L_pdf(PDF1) :
     """2-body phase space from 3-body decay with orbital momenta
     e.g. m(2pi) from Bs -> J/psi pi pi decay
     >>> mass  = ... # mass variable for 2 pions 
@@ -1713,7 +1724,7 @@ class PS23L_pdf(PDF) :
                    l  = 0           ) : ## orbital momentum between 1 and 2
         #
         ## initialize the base 
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar = xvar )
         #
         assert isinstance ( dalitz , Ostap.Kinematics.Dalitz ), \
                "Invalid type of ``dalitz''!"
@@ -1799,7 +1810,7 @@ models.append ( PS23L_pdf )
 #  The phase-space-based PDF is required to have constructor with keyword
 #  <code>phasespace</code>
 # 
-class PSSmear_pdf ( PDF ) :
+class PSSmear_pdf ( PDF1 ) :
     """Usefull class to represent ``smear'' phase space function
     >>> pspdf = PSPol_pdf ( ... )
     >>> smeared_pdf = PSSmear_pdf ( pspdf , sigma = 2.5 * MeV , step = 0.5 , nstep = 8 ) 
@@ -1845,7 +1856,7 @@ class PSSmear_pdf ( PDF ) :
         
         ## initialize the base
         name =  name if name else pdf0.name + '_smear'
-        PDF.__init__ ( self , name , pdf0.xvar )
+        PDF1.__init__ ( self , name , xvar = pdf0.xvar )
 
         ## keep the template 
         self.__pdf0 = pdf0
@@ -1905,7 +1916,7 @@ class PSSmear_pdf ( PDF ) :
             pdfm = self.pdf0.clone ( name = self.generate_name ( name + '%dm' % i ) , phasespace = psm )
             
             fraction = ROOT.RooConstVar ( 'fF%s%dfix' % ( name , i ) , '' , 0.5 )
-            pdfi     = Sum1D ( pdfp , pdfm , self.generate_name ( name + '%d' % i  ) , fraction = fraction )
+            pdfi     = Sum1D ( pdfs = ( pdfp , pdfm ) , name = self.generate_name ( name + '%d' % i  ) , fraction = fraction )
             
             ## wp = gpdf ( step * i ) 
             wp = gcdf ( step * ( i + 0.5 ) ) - gcdf ( step * ( i - 0.5 ) ) 
@@ -1948,11 +1959,11 @@ class PSSmear_pdf ( PDF ) :
         ##     fractions = self.__ff     )
         
         ## combine all components into single PDF 
-        self.__combined_pdf = Combine1D ( [ p for p in self.__pdfs ] ,
-                                          xvar      = self.xvar      ,
-                                          name      = 'Smeared phase space %s' % self.name , 
-                                          recursive = False          ,
-                                          fractions = self.__ff      )
+        self.__combined_pdf = Sum1D ( pdfs      = self.pdfs      ,
+                                      xvar      = self.xvar      ,
+                                      name      = 'Smeared phase space %s' % self.name , 
+                                      recursive = False          ,
+                                      fractions = self.__ff      )
         
         self.pdf = self.combined_pdf.pdf
         
@@ -2035,7 +2046,7 @@ class PSSmear_pdf ( PDF ) :
 #  @see Ostap::Math::PhaseSpace3    
 #  @see Ostap::Math::PhaseSpace3s    
 #  @see Ostap::Math::PhaseSpaceLeft
-class PSSmear2_pdf ( PDF ) :
+class PSSmear2_pdf ( PDF1 ) :
     """ Usefull class to represent ``smear'' phase space function
     >>> pspdf  = PSPol_pdf ( ... )
     >>> gamma  = 10 * MeV 
@@ -2072,7 +2083,7 @@ class PSSmear2_pdf ( PDF ) :
         
         ## initialize the base
         name =  name if name else pdf0.name + '_smear2'
-        PDF.__init__ ( self , name , pdf0.xvar )
+        PDF1.__init__ ( self , name , xvar = pdf0.xvar )
 
         ## keep the template 
         self.__pdf0 = pdf0
@@ -2181,11 +2192,11 @@ class PSSmear2_pdf ( PDF ) :
         ##     fractions = self.__ff     )
         
         ## combine all components into single PDF 
-        self.__combined_pdf = Combine1D ( [ p for p in self.__pdfs ] ,
-                                          xvar      = self.xvar      ,
-                                          name      = 'Smeared phase space %s' % self.name , 
-                                          recursive = False          ,
-                                          fractions = self.__ff      )
+        self.__combined_pdf = Sum1D ( pdfs      = self.pdfs      ,
+                                      xvar      = self.xvar      ,
+                                      name      = 'Smeared phase space %s' % self.name , 
+                                      recursive = False          ,
+                                      fractions = self.__ff      )
         
         self.pdf = self.combined_pdf.pdf
         
@@ -2233,13 +2244,12 @@ class PSSmear2_pdf ( PDF ) :
 # ==============================================================================
 ##  @class RooPoly
 #   helper base class to implement various polynomial-like shapes
-class RooPoly(PDF,ParamsPoly) :
+class RooPoly(PDF1,ParamsPoly) :
     """Helper base class to implement various polynomial-like shapes
     """
-    def __init__ ( self , name , power , xvar = None , pars = None ) :
+    def __init__ ( self , name , power , xvar , pars = None ) :
         ## check  the arguments 
-        xvar = self.make_var  ( xvar , 'xvar' , 'x-variable' )
-        PDF        .__init__  ( self , name  , xvar          )
+        PDF1       .__init__  ( self , name  , xvar = xvar   )
         ParamsPoly .__init__  ( self , power , pars          )
 
 # =============================================================================        
@@ -2336,7 +2346,7 @@ class RooCheb_pdf(RooPoly) :
 #  @see RooNDKeysPdf
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-04-27
-class RooKeys1D_pdf(PDF) :
+class RooKeys1D_pdf(PDF1) :
     """Trivial Ostap wrapper for the native RooNDKeysPdf from RooFit
     - see ROOT.RooKeysPdf
     >>> xvar = ...
@@ -2354,7 +2364,7 @@ class RooKeys1D_pdf(PDF) :
                    sort    = True ) : 
         
         ## initialize the base class 
-        PDF.__init__ (  self , name , xvar )
+        PDF1.__init__ (  self , name , xvar = xvar )
 
         self.__data    = data
         self.__rho     = rho 
@@ -2495,9 +2505,13 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
     """
     if not logger : logger = globals()['logger'] 
     
-    from ostap.fitting.basic import Flat1D, Generic1D_pdf
     model = None
 
+    prefix = kwargs.pop ( 'prefix' , '' )
+    suffix = kwargs.pop ( 'suffix' , '' )
+    if prefix : name = prefix + name  
+    if suffix : name = name   + suffix 
+    
     if   bkg is None :         
         model = Flat1D ( name = name , xvar =  xvar )
         if kwargs : logger.warning ('make_bkg: kwargs %s are ignored' % kwargs )
@@ -2519,7 +2533,7 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
         if kwargs : logger.warning ('make_bkg: kwargs %s are ignored' % kwargs )
 
     ## some Ostap-based background model ?
-    elif isinstance ( bkg , PDF ) : 
+    elif isinstance ( bkg , PDF1 ) : 
         
         ## return the same model/PDF 
         if   xvar is bkg.xvar and not  kwargs :

@@ -21,9 +21,8 @@ __all__     = (
 import ROOT
 import ostap.fitting.roofit
 from   ostap.fitting.roofuncs import var_mul  
-from   ostap.fitting.funbasic import FUNC 
-from   ostap.fitting.basic    import PDF 
-from   ostap.fitting.fit2d    import PDF2
+from   ostap.fitting.funbasic import AFUN1 
+from   ostap.fitting.pdfbasic import PDF1, make_pdf 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.transform_pdf' )
@@ -53,7 +52,7 @@ else                       : logger = getLogger ( __name__                      
 #  ## PDF as function of new variable 
 #  g2 = TrPDF ( pdf = g1, new_var = NX , jacob = J )
 #  @endcode
-class TrPDF(PDF) :
+class TrPDF(PDF1) :
     """ PDF of the transformed variable.
     
     - e.g. gaussian in log10 scale:
@@ -72,24 +71,23 @@ class TrPDF(PDF) :
     """
     
     def __init__ ( self         ,
-                   pdf          ,   ## template PDF of "old" variabe  
+                   pdf          ,   ## template PDF of "old" variable  
                    new_var      ,   ## old variable as function of a new variable
                    jacob = None ,   ## absolute value of the Jacobian: |d(old)/d(new)|
                    name  = ''   ) : ## proposed name   
         
-        assert pdf     and isinstance ( pdf     , PDF  ) , 'Invalid PDF type %s'     % type ( pdf     )
-        assert new_var and isinstance ( new_var , FUNC ) , 'Invalid new_var type %s' % type ( new_var )
-
+        assert pdf     and isinstance ( pdf     ,  PDF1 ) , 'Invalid PDF type %s'     % type ( pdf     )
+        assert new_var and isinstance ( new_var , AFUN1 ) , 'Invalid new_var type %s' % type ( new_var )
+        
         xvar = new_var.xvar
 
         name = name if name else "Transform_%s" % pdf.name 
-        PDF.__init__ ( self , name , xvar = xvar )
+        PDF1.__init__ ( self , name , xvar = xvar )
         
         if not jacob : jacob = abs ( new_var.dFdX () )
 
-        assert isinstance ( jacob , FUNC ) , 'Invalid Jacobian %s' % type ( jacob )
-        if not xvar in jacob :
-            self.warning ( 'Jacobian has does not depend on xvar!')  
+        assert isinstance ( jacob , AFUN1 ) , 'Invalid Jacobian %s' % type ( jacob )
+        if not xvar in jacob : self.warning ( 'Jacobian does not depend on xvar!')  
 
         self.__jacob   = jacob
         self.__new_var = new_var 
@@ -100,7 +98,6 @@ class TrPDF(PDF) :
         ## new PDF as a function
         self.__new_fun = var_mul ( jacob.fun  , self.__clo_pdf.pdf )
 
-        from ostap.fitting.basic import make_pdf
         self.__new_pdf = make_pdf ( self.__new_fun , [ xvar ] , self.name + '_' )
         
         ## finally the new PDF:
@@ -119,22 +116,22 @@ class TrPDF(PDF) :
         
     @property
     def orig_pdf ( self ) :
-        """``orig_pdf'': original, not-transformed PDF"""
+        """'orig_pdf': original, not-transformed PDF"""
         return self.__ori_pdf
 
     @property
     def new_pdf ( self ) :
-        """``new_pdf'':  transformed PDF"""
+        """'new_pdf':  transformed PDF"""
         return self.__new_pdf
     
     @property
     def new_var ( self ) :
-        """``new_var''  : new/old variable """
+        """'new_var'  : new/old variable """
         return self.__new_var
 
     @property
     def jacob( self ) :
-        """``jacob''  : absolute value of the Jacobian |d(old)/d(new)| """
+        """'jacob'  : absolute value of the Jacobian |d(old)/d(new)| """
         return self.__jacob 
 
         

@@ -1669,10 +1669,10 @@ def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
         h1.xvar = ROOT.RooRealVar ( 'x' + h1.GetName() , 'xvar(%s)' % h1.GetName() , *h1.xminmax() )
 
     ## create pdf
-    from ostap.fitting.utils import MakeVar 
-    name = MakeVar.generate_name (  'pdf_' + h1.GetName() )
+    from ostap.fitting.fithelpers import VarMaker 
+    name   = VarMaker.generate_name (  'pdf' , '' , h1.GetName() )
     ##
-    pdf  = pdf_type     ( name , h1.xvar , *pars )
+    pdf    = pdf_type     ( name , h1.xvar , *pars )
     ## fit the histogram 
     r , f  = pdf.fitHisto ( h1 , *args, **kwargs )
     ##

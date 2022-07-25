@@ -684,7 +684,6 @@ namespace Ostap
      *   - \f$ z = \frac{x-\mu}{\sigma} \f$ 
      *   - \f$ \phi(z) \f$ is Gaussian PDF  
      *   - \f$  R(x)   \f$ is Mill's ratio 
-     *  @see Ostap::Math::nills_normal 
      */    
     class NormalLaplace 
     {

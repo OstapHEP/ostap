@@ -415,7 +415,7 @@ class CompressShelf(shelve.Shelf,object):
             size = '%.2fMB' % ( float ( fs ) / ( 1024 * 1024 ) )
         else :
             size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
-                                    
+
         keys = [] 
         for k in self.ikeys ( pattern ): keys.append ( k )
         keys.sort()
@@ -462,7 +462,6 @@ class CompressShelf(shelve.Shelf,object):
             row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size  , timetag 
             table.append ( row )
             
-        
         import ostap.logger.table as T
         t      = type( self ).__name__
         title  = '%s:%s' % ( t  , n )

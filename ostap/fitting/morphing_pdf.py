@@ -21,8 +21,8 @@ __all__     = (
 # =============================================================================
 import ROOT
 # =============================================================================
-from   ostap.fitting.basic     import PDF, Generic1D_pdf
-from   ostap.core.ostap_types  import integer_types 
+from   ostap.fitting.pdfbasic import PDF1, Generic1D_pdf
+from   ostap.core.ostap_types import integer_types 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.morphing_pdf' )
@@ -38,13 +38,13 @@ else                       : logger = getLogger ( __name__                     )
 #       Nuclear Instruments & Methods in Physics Research.
 #       Section A - Accelerators Spectrometers Detectors and Associated Equipment, 771, 39-48.
 #  @see https://doi.org/10.1016/j.nima.2014.10.033
-class Morphing1D_pdf (PDF) :
+class Morphing1D_pdf (PDF1) :
     """ Wrapper for ROOT.RooMomentMorph PDF
     - 1D morphing/1D PDF
     - see ROOT.RooMomentMorph
     - see Baak, M., Gadatsch, S., Harrington, R., & Verkerke, W. (2015).
-    ``Interpolation between multi-dimensional histograms using
-    a new non-linear moment morphing method''.
+    'Interpolation between multi-dimensional histograms using
+    a new non-linear moment morphing method'.
     Nuclear Instruments & Methods in Physics Research.
     Section A - Accelerators Spectrometers Detectors and Associated Equipment, 771, 39-48.
     - see https://doi.org/10.1016/j.nima.2014.10.033
@@ -74,7 +74,7 @@ class Morphing1D_pdf (PDF) :
             raise TypeError("Morphing_pdf: cannot identify xvar!")
                 
         ## initialize the base class 
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
 
         ## convert the dictionary of PDFs into  ordered list/tuple of pairs (mu,pdf)        
         self.__pdflist = []
@@ -138,24 +138,20 @@ class Morphing1D_pdf (PDF) :
         
     @property
     def mu ( self ) :
-        """``mu'' : morphing variable"""
+        """'mu' : morphing variable"""
         return self.__mu
     @mu.setter
     def mu ( self , value ) :
-        v = float ( value ) 
-        mm = self.__mu.minmax()
-        if mm and not mm[0] <= v <= mm[1] :
-            self.error ( "Morphing parameter %s is outside [%s,%s]" % ( v , mm[0] , mm[1] ) )
-        self.__mu.setVal ( v )
+        self.set_value ( self.__mu , value ) 
 
     @property
     def pdflist ( self ) :
-        """``pdflist'' : (sorted) tuple of (morphing parameter, pdf) pairs"""
+        """'pdflist' : (sorted) tuple of (morphing parameter, pdf) pairs"""
         return self.__pdflist
 
     @property 
     def setting ( self ) :
-        """``setting'': morphing setting"""
+        """'setting': morphing setting"""
         return self.__setting 
 
 
@@ -170,13 +166,13 @@ class Morphing1D_pdf (PDF) :
 #       Nuclear Instruments & Methods in Physics Research.
 #       Section A - Accelerators Spectrometers Detectors and Associated Equipment, 771, 39-48.
 #  @see https://doi.org/10.1016/j.nima.2014.10.033
-class Morphing2D_pdf (PDF) :
+class Morphing2D_pdf (PDF1) :
     """ Wrapper for ROOT.RooMomentMorphND PDF for N = 2 
     - 1D morphing/2D PDF
     - see ROOT.RooMomentMorphND
     - see Baak, M., Gadatsch, S., Harrington, R., & Verkerke, W. (2015).
-    ``Interpolation between multi-dimensional histograms using
-    a new non-linear moment morphing method''.
+    'Interpolation between multi-dimensional histograms using
+    a new non-linear moment morphing method'.
     Nuclear Instruments & Methods in Physics Research.
     Section A - Accelerators Spectrometers Detectors and Associated Equipment, 771, 39-48.
     - see https://doi.org/10.1016/j.nima.2014.10.033
@@ -186,7 +182,7 @@ class Morphing2D_pdf (PDF) :
                    pdfs                , ## dictionary {mu1,mu2 -> pdf }
                    setting    = None   , ## morphing setting 
                    morph_var1 = None   , ## morphing variable mu1 
-                   morph_var2 = None   , ## morphing variable mu1 
+                   morph_var2 = None   , ## morphing variable mu2 
                    xvar       = None ) : ## observable (1D) 
 
         assert pdfs and 2 <= len ( pdfs ) , \
@@ -205,7 +201,7 @@ class Morphing2D_pdf (PDF) :
             v1ps.add ( v1 )
             v2ps.add ( v2 )
             p = pdfs [ k ]
-            if not xvar and isinstance ( p , PDF ) :
+            if not xvar and isinstance ( p , PDF1 ) :
                 xvar = p.xvar
 
         assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , 'Cannot deduce xvar!'
@@ -222,7 +218,7 @@ class Morphing2D_pdf (PDF) :
                'Invalid table/dict structure!'
         
         ## initialize the base class 
-        PDF.__init__ ( self , name , xvar )
+        PDF1.__init__ ( self , name , xvar )
 
         ## create morphing variables 
         self.__mu1 = self.make_var (
@@ -306,7 +302,7 @@ class Morphing2D_pdf (PDF) :
         
     @property
     def mu1 ( self ) :
-        """``mu1'' : the first morphing variable"""
+        """'mu1' : the first morphing variable"""
         return self.__mu1
     @mu1.setter
     def mu1 ( self , value ) :
@@ -318,7 +314,7 @@ class Morphing2D_pdf (PDF) :
 
     @property
     def mu2 ( self ) :
-        """``mu2'' : the second morphing variable"""
+        """'mu2' : the second morphing variable"""
         return self.__mu2
     @mu2.setter
     def mu2 ( self , value ) :
@@ -330,17 +326,17 @@ class Morphing2D_pdf (PDF) :
 
     @property
     def grid    ( self ) :
-        """``grid'' : morphing grid"""
+        """'grid' : morphing grid"""
         return self.__grid
     
     @property
     def pdfdict ( self ) :
-        """``pdfdict'' : Dictionary { morphing parameters : pdf } """
+        """'pdfdict' : Dictionary { morphing parameters : pdf } """
         return self.__pdfdict
 
     @property 
     def setting ( self ) :
-        """``setting'': morphing setting"""
+        """'setting': morphing setting"""
         return self.__setting 
                        
     

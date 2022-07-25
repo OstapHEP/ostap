@@ -23,9 +23,11 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math,  random , warnings 
-from   ostap.core.core     import std , Ostap , dsID , items_loop 
-from   ostap.fitting.utils import MakeVar
-from   ostap.fitting.basic import PDF , Generic1D_pdf
+from   ostap.core.core          import std , Ostap , dsID , items_loop 
+from   ostap.fitting.fithelpers import VarMaker
+from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf , 
+                                         PDF2 , Generic2D_pdf , 
+                                         PDF3 , Generic3D_pdf )
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.simfit' )
@@ -140,7 +142,7 @@ def combined_data ( sample          ,
             largs.append (  ROOT.RooFit.Import ( label , dset ) )
         else :
             uwdset , wnam = dset.unWeighted ()
-            assert uwdset and wnam, "Cannot ``unweight'' dataset!"
+            assert uwdset and wnam, "Cannot 'unweight' dataset!"
             largs.append (  ROOT.RooFit.Import ( label , uwdset ) )
             ds_keep.append ( uwdset ) 
             weights.add    ( wnam   )
@@ -293,7 +295,7 @@ def combined_hdata ( sample        ,
 #  @see RooSimultaneous
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-11-23
-class Sim1D(PDF) :
+class Sim1D(PDF1) :
     """Helper class to simplify the creation and usage of simultaneous PDF
     
     - see RooSimultaneous 
@@ -337,7 +339,7 @@ class Sim1D(PDF) :
                         cmp = ii[1]
                         break
                     
-            if   isinstance ( cmp , PDF ) :
+            if   isinstance ( cmp , PDF1 ) :
                 
                 _xv = cmp.xvar
                 if _xvar and not ( _xvar is _xv ) : self.error('Mismatch in XVAR!')
@@ -357,7 +359,7 @@ class Sim1D(PDF) :
         assert _xvar, 'Unable to define "xvar"'
 
         ## initialize the base 
-        PDF.__init__ ( self , name , xvar = _xvar ) 
+        PDF1.__init__ ( self , name , xvar = _xvar ) 
         
         self.pdf = ROOT.RooSimultaneous (
             self.roo_name ( 'sim1d_' ) ,
@@ -396,17 +398,17 @@ class Sim1D(PDF) :
     
     @property
     def sample  ( self ) :
-        "``sample'' : RooCategory object for simultaneous PDF"
+        "'sample': RooCategory object for simultaneous PDF"
         return self.__sample
 
     @property
     def samples ( self ) :
-        "``samples'' : list/tuple of known categories"
+        "'samples' : list/tuple of the known categories"
         return tuple ( self.__categories.keys() ) 
 
     @property
     def categories ( self ) :
-        "``categories'' : map { category : pdf } "
+        "'categories' : map { category : pdf }"
         return self.__categories
 
     # =========================================================================
@@ -444,14 +446,14 @@ class Sim1D(PDF) :
         assert self.sample in dataset      ,\
                'Category %s is not in dataset' % self.sample.GetName()
 
-        res , frame = PDF.fitTo ( self ,
-                                  dataset = dataset ,
-                                  draw    = False   , ## ATTENTION! False is here! 
-                                  nbins   = nbins   ,
-                                  silent  = silent  ,
-                                  refit   = refit   ,
-                                  timer   = timer   , 
-                                  args    = args    , **kwargs )
+        res , frame = PDF1.fitTo ( self ,
+                                   dataset = dataset ,
+                                   draw    = False   , ## ATTENTION! False is here! 
+                                   nbins   = nbins   ,
+                                   silent  = silent  ,
+                                   refit   = refit   ,
+                                   timer   = timer   , 
+                                   args    = args    , **kwargs )
         
         if   not draw                 : return res , None 
         elif not draw in self.samples :
@@ -526,11 +528,11 @@ class Sim1D(PDF) :
                  KeepArgs ( self . crossterms1 , cat_pdf . crossterms1 ) as _k4 ,\
                  KeepArgs ( self . crossterms2 , cat_pdf . crossterms2 ) as _k5 :
             
-            return PDF.draw ( self ,
-                              dataset = dataset ,
-                              nbins   = nbins   ,
-                              silent  = silent  ,
-                              args    = args    , **kwargs )
+            return PDF1.draw ( self ,
+                               dataset = dataset ,
+                               nbins   = nbins   ,
+                               silent  = silent  ,
+                               args    = args    , **kwargs )
         
         
 # =============================================================================
@@ -587,7 +589,7 @@ for _a in (
 #  - <code>minuit</code> 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-11-23
-class SimFit ( MakeVar ) :
+class SimFit (VarMaker) :
     """Helper pdf-like class to simplify the creation and usage of simultaneous PDF
     
     >>> sample = ROOT.RooCategory( 'sample', 'fitting sample' , 'A' , 'B' )
@@ -627,9 +629,10 @@ class SimFit ( MakeVar ) :
         assert isinstance ( sample , ROOT.RooCategory ),\
                'Invalid type for "sample":' % ( sample ,  type ( sample ) )
         
-        name = name if name else self.generate_name ( prefix = 'simfit_%s_' % sample.GetName() )
-        
+        name = name if name else self.generate_name ( 'simfit' , '' , sample.GetName() )
 
+
+        
         ## propagate the name 
         self.name = name
         
@@ -640,10 +643,6 @@ class SimFit ( MakeVar ) :
         ## components
         # =====================================================================
         labels = sample.labels()
-
-        from ostap.fitting.basic import PDF 
-        from ostap.fitting.fit2d import PDF2
-        from ostap.fitting.fit3d import PDF3
 
         _xv = None 
         for label in labels :
@@ -656,14 +655,14 @@ class SimFit ( MakeVar ) :
                         cmp = ii[1]
                         break
 
-            if not isinstance  ( cmp , PDF  ) :
+            if not isinstance  ( cmp , ( PDF1 , PDF2 , PDF3 ) ) :
                 raise TypeError ( 'Can not find the proper category component: "%s"' % label ) 
             
             self.__categories [ label ] = cmp
             _xv = cmp.xvar
 
             
-        sim_pdf     = PDF ( self.name + '_Sim' , xvar = _xv )            
+        sim_pdf     = PDF1 ( self.name + '_Sim' , xvar = _xv )            
         sim_pdf.pdf = ROOT.RooSimultaneous (
             self.roo_name ( 'simfit_' ) ,
             title if title else "Simultaneous %s" % self.name , 
@@ -696,7 +695,6 @@ class SimFit ( MakeVar ) :
 
             cmp = self.categories [ key ] 
             if isinstance  ( cmp , PDF3 ) :
-                from ostap.fitting.fit3d import Generic3D_pdf                
                 dpdf = Generic3D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
                                        cmp.yvar    ,
@@ -704,14 +702,12 @@ class SimFit ( MakeVar ) :
                                        name           = sim_pdf.name + '_draw_' + key , 
                                        add_to_signals = False )
             elif isinstance  ( cmp , PDF2 ) :
-                from ostap.fitting.fit2d import Generic2D_pdf                                
                 dpdf = Generic2D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
                                        cmp.yvar    ,
                                        name           = sim_pdf.name + '_draw_' + key , 
                                        add_to_signals = False )
-            elif isinstance  ( cmp , PDF  ) :
-                from ostap.fitting.basic import Generic1D_pdf   
+            elif isinstance  ( cmp , PDF1 ) :
                 dpdf = Generic1D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
                                        name           = sim_pdf.name + '_draw_' + key , 
@@ -746,32 +742,32 @@ class SimFit ( MakeVar ) :
     
     @property
     def sample  ( self ) :
-        "``sample'' : RooCategory object for simultaneous PDF"
+        "'sample' : RooCategory object for simultaneous PDF"
         return self.__sample
 
     @property
     def pdf     ( self ) :
-        "``pdf''  : the actual PDF with RooSimultaneous "
+        "'pdf'  : the actual PDF with RooSimultaneous "
         return self.__pdf
     
     @property
     def samples ( self ) :
-        "``samples'' : list/tuple of known categories"
+        "'samples' : list/tuple of known categories"
         return tuple ( self.__categories.keys() ) 
 
     @property
     def categories ( self ) :
-        "``categories'' : map { category : pdf } "
+        "'categories' : map { category : pdf } "
         return self.__categories
 
     @property
     def drawpdfs ( self ) :
-        "``drawpdfs'' dictionary with PDFs for drawing"
+        "'drawpdfs' dictionary with PDFs (manily for drawing)"
         return self.__drawpdfs
 
     @property
     def draw_options ( self ) :
-        """``draw_options'' : disctionary with predefined draw-options for this PDF
+        """`draw_options' : disctionary with predefined draw-options for this PDF
         """
         return self.pdf.draw_options
 
@@ -929,10 +925,6 @@ class SimFit ( MakeVar ) :
         ##          KeepArgs ( draw_pdf . crossterms1 , cat_pdf . crossterms1 ) as _k4 ,\
         ##          KeepArgs ( draw_pdf . crossterms2 , cat_pdf . crossterms2 ) as _k5 :
 
-            from ostap.fitting.basic import PDF 
-            from ostap.fitting.fit2d import PDF2
-            from ostap.fitting.fit3d import PDF3
-
             if   isinstance ( draw_pdf , PDF3 ) :
 
                 if   3 == dvar or dvar in  ( 'z' , 'Z' , '3' , draw_pdf.zvar.name ) :    
@@ -951,7 +943,7 @@ class SimFit ( MakeVar ) :
                                             silent  = silent  ,
                                             args    = args    , **kwargs )
                 else :
-                    self.error('Unknown ``dvar'' for 3D-draw pdf!')
+                    self.error("Unknown 'dvar' for 3D-draw pdf!")
                     return None
                 
             elif isinstance ( draw_pdf , PDF2 ) :
@@ -967,10 +959,10 @@ class SimFit ( MakeVar ) :
                                             silent  = silent  ,
                                             args    = args    , **kwargs )
                 else :
-                    self.error('Unknown ``dvar'' for 2D-draw pdf! %s' %  dvar )
+                    self.error("Unknown 'dvar' for 2D-draw pdf! %s" %  dvar )
                     return None 
 
-            elif isinstance ( draw_pdf , PDF  ) :
+            elif isinstance ( draw_pdf , PDF3 ) :
                 
                 return draw_pdf.draw ( dataset = dataset ,
                                        nbins   = nbins   ,
@@ -1037,7 +1029,7 @@ class SimFit ( MakeVar ) :
                 range    = ( 0 , None )  ,
                 silent   = True          ,
                 args     = () , **kwargs ) :
-        """Evaluate ``significance'' using Wilks' theorem via NLL
+        """Evaluate 'significance' using Wilks' theorem via NLL
         >>> data = ...
         >>> pdf  = ...
         >>> pdf.fitTo ( data , ... )
@@ -1068,7 +1060,7 @@ class SimFit ( MakeVar ) :
                  ## max_iterations = -1            ,
                  ## strategy       = None          ,
                  args           = () , **kwargs ) :
-        """Evaluate ``significance'' using Wilks' theorem via NLL
+        """Evaluate 'significance' using Wilks' theorem via NLL
         >>> data = ...
         >>> pdf  = ...
         >>> pdf.fitTo ( data , ... )

@@ -138,7 +138,7 @@ def jackknife_statistics ( statistics , theta = None ) :
     >>> jacknife , theta_corr , bias  = jackknife_esiimator ( statistics , value )
     """
     assert isinstance ( theta , VE ) or theta is None  ,\
-           "jackknife_statistics: invalid type of ``value'' %s" % type ( value ) 
+           "jackknife_statistics: invalid type of 'value': %s" % type ( value ) 
     
     N         = statistics . nEntries ()             ## number of jackknife samples 
     theta_dot = statistics . mean     ()             ## mean over jackknife samples 
@@ -176,12 +176,12 @@ def print_jackknife  ( fitresult          ,
             p     = fitresult [ name ]
             theta = p * 1.0
             if not isinstance ( theta , VE ) or theta.cov2() <= 0 :
-                logger.warning ('print_jackknife: parameter "%s" is invalid in ``fitresult'', skip %s' % ( name , theta ) )
+                logger.warning ("print_jackknife: parameter '%s' is invalid in 'fitresult', skip %s" % ( name , theta ) )
                 continue
         elif name in morevars :
             theta = morevars [ name ]
             if not isinstance ( theta , VE ) or theta.cov2() <= 0 :
-                logger.warning ('print_jackknife: parameter "%s" is invalid in ``morevars'',  skip %s' % ( name , theta ) ) 
+                logger.warning ("print_jackknife: parameter '%s' is invalid in 'morevars',  skip %s" % ( name , theta ) ) 
                 continue
         else :
             continue 
@@ -251,12 +251,12 @@ def print_bootstrap  ( fitresult          ,
             p     = fitresult [ name ]
             theta = p * 1.0
             if not isinstance ( theta , VE ) or theta.cov2() <= 0 :
-                logger.warning ('print_bootstrap: parameter "%s" is invalid in ``fitresult'', skip %s' % ( name , theta ) )
+                logger.warning ("print_bootstrap: parameter '%s' is invalid in 'fitresult, skip %s" % ( name , theta ) )
                 continue
         elif name in morevars :
             theta = morevars [ name ]
             if not isinstance ( theta , VE ) or theta.cov2() <= 0 :
-                logger.warning ('print_bootstrap: parameter "%s" is invalid in ``morevars'',  skip %s' % ( name , theta ) ) 
+                logger.warning ("print_bootstrap: parameter '%s' is invalid in 'morevars',  skip %s" % ( name , theta ) ) 
                 continue
         else :
             continue 
@@ -477,31 +477,31 @@ def make_toys ( pdf                 ,
 
     ## 1. generator function? 
     if gen_fun is None :
-        if not silent : logger.info ( "make_toys: use default ``generate_data'' function!")
+        if not silent : logger.info ( "make_toys: use default 'generate_data' function!")
         gen_fun = generate_data 
     assert gen_fun and callable ( gen_fun ) , 'Invalid generator function!'
     
     ## 2. fitting function? 
     if fit_fun is None :
-        if not silent : logger.info ( "make_toys: use default ``make_fit'' function!")
+        if not silent : logger.info ( "make_toys: use default 'make_fit' function!")
         fit_fun = make_fit 
     assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
 
     ## 3. accept function? 
     if accept_fun is None :
-        if not silent : logger.info ( "make_toys: use default ``accept_fit'' function!")
+        if not silent : logger.info ( "make_toys: use default accept_fit' function!")
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
     if progress and not silent :
         assert isinstance ( frequency , integer_types ) and 0 < frequency,\
-               "make_toys: invalid ``frequency'' parameter %s" % frequency
+               "make_toys: invalid 'frequency' parameter %s" % frequency
 
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
     import ostap.fitting.roofitresult
-    import ostap.fitting.basic 
+    import ostap.fitting.pdfbasic 
 
     params = pdf.params ()
     varset = ROOT.RooArgSet() 
@@ -724,31 +724,31 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
     
     ## 1. generator function? 
     if gen_fun is None :
-        if not silent :  logger.info ( "make_toys2: use default ``generate_data'' function!")
+        if not silent :  logger.info ( "make_toys2: use default 'generate_data' function!")
         gen_fun = generate_data 
     assert gen_fun and callable ( gen_fun ) , 'Invalid generator function!'
     
     ## 2. fitting function? 
     if fit_fun is None :
-        if not silent :  logger.info ( "make_toys2: use default ``make_fit'' function!")
+        if not silent :  logger.info ( "make_toys2: use default 'make_fit' function!")
         fit_fun = make_fit 
     assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
 
     ## 3. accept function? 
     if accept_fun is None :
-        if not silent : logger.info ( "make_toys2: use default ``accept_fit'' function!")
+        if not silent : logger.info ( "make_toys2: use default 'accept_fit' function!")
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
     if progress and not silent :
         assert isinstance ( frequency , integer_types ) and 0 < frequency,\
-               "make_toys2: invalid ``frequency'' parameter %s" % frequency
+               "make_toys2: invalid 'frequency' parameter %s" % frequency
     
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
     import ostap.fitting.roofitresult
-    import ostap.fitting.basic 
+    import ostap.fitting.pdfbasic 
 
     gparams = gen_pdf.params ()
     varset  = ROOT.RooArgSet () 
@@ -931,25 +931,25 @@ def make_jackknife ( pdf                  ,
     
     ## 1. fitting function? 
     if fit_fun is None :
-        if not silent :  logger.info ( "make_jackknife: use default ``make_fit'' function!")
+        if not silent :  logger.info ( "make_jackknife: use default 'make_fit' function!")
         fit_fun = make_fit 
     assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
 
     ## 2. accept function? 
     if accept_fun is None :
-        if not silent : logger.info ( "make_jackknife: use default ``accept_fit'' function!")
+        if not silent : logger.info ( "make_jackknife: use default 'accept_fit' function!")
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
     if progress and not silent :
         assert isinstance ( frequency , integer_types ) and 0 < frequency,\
-               "make_makejackknife: invalid ``frequency'' parameter %s" % frequency
+               "make_makejackknife: invalid 'frequency' parameter %s" % frequency
     
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
     import ostap.fitting.roofitresult
-    import ostap.fitting.basic 
+    import ostap.fitting.pdfbasic 
        
     ## parameters for fitting 
 
@@ -1106,29 +1106,29 @@ def make_bootstrap ( pdf                  ,
 
     from ostap.core.ostap_types import integer_types  
     assert isinstance ( size , integer_types ) and 0 < size, \
-           "make_bootstrap: invalid ``size'' parameter %s" % size 
+           "make_bootstrap: invalid 'size' parameter %s" % size 
     
     ## 1. fitting function? 
     if fit_fun is None :
-        if not silent :  logger.info ( "make_bootstrap: use default ``make_fit'' function!")
+        if not silent :  logger.info ( "make_bootstrap: use default 'make_fit' function!")
         fit_fun = make_fit 
     assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
 
     ## 2. accept function? 
     if accept_fun is None :
-        if not silent : logger.info ( "make_bootstrap: use default ``accept_fit'' function!")
+        if not silent : logger.info ( "make_bootstrap: use default 'accept_fit' function!")
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
     if progress and not silent :
         assert isinstance ( frequency , integer_types ) and 0 < frequency,\
-               "make_bootstrap: invalid ``frequency'' parameter %s" % frequency
+               "make_bootstrap: invalid 'frequency' parameter %s" % frequency
     
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
     import ostap.fitting.roofitresult
-    import ostap.fitting.basic 
+    import ostap.fitting.pdfbasic 
        
     ## parameters for fitting 
 

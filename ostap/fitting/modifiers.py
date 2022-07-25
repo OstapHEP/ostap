@@ -20,8 +20,8 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
-from   ostap.core.core     import Ostap 
-from   ostap.fitting.basic import PDF , Generic1D_pdf
+from   ostap.core.core        import Ostap 
+from   ostap.fitting.pdfbasic import PDF1 , Generic1D_pdf
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.modifiers' )
@@ -47,7 +47,7 @@ models = []
 # 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2018-11-29  
-class Product1D_pdf(PDF) :
+class Product1D_pdf(PDF1) :
     """Simple product of 1D-PDFs
     - actually it is a trivial wrapper for RooProdPdf
     
@@ -76,32 +76,32 @@ class Product1D_pdf(PDF) :
         self.__pdf1 = None 
         self.__pdf2 = None
 
-        if isinstance ( pdf1 , PDF ) :
+        if isinstance ( pdf1 , PDF1 ) :
             self.__pdf1 = pdf1
             if xvar and not ( xvar is pdf1.xvar ) :
-                self.error ("Mismatch in ``xvar''-observable (1) %s/%s" % ( xvar , pdf1.xvar ) ) 
+                self.error ("Mismatch in 'xvar'-observable (1) %s/%s" % ( xvar , pdf1.xvar ) ) 
             elif not xvar : xvar = pdf1.xvar 
         elif isinstance ( pdf1 , ROOT.RooAbsPdf ) and xvar :
             self.__pdf1 = Generic1D_pdf ( pdf1 , xvar )
         else :
-            raise TypeError("Illegal setting for ``pdf1'': %s/%s" % ( pdf1 , type ( pdf1 ) ) )
+            raise TypeError("Illegal setting for 'pdf1': %s/%s" % ( pdf1 , type ( pdf1 ) ) )
 
-        assert isinstance ( self.__pdf1  , PDF ), 'Invalid pdf1 type'
+        assert isinstance ( self.__pdf1  , PDF1 ), 'Invalid pdf1 type'
 
-        if isinstance ( pdf2 , PDF ) :
+        if isinstance ( pdf2 , PDF1 ) :
             self.__pdf2 = pdf2
             if xvar and not ( xvar is pdf2.xvar ) :
-                self.error ("Mismatch in ``xvar''-observable (2) %s/%s" % ( xvar , pdf2.xvar ) ) 
+                self.error ("Mismatch in 'xvar'-observable (2) %s/%s" % ( xvar , pdf2.xvar ) ) 
             elif not xvar : xvar = pdf2.xvar 
         elif isinstance ( pdf2 , ROOT.RooAbsPdf ) and xvar :
             self.__pdf2 = Generic1D_pdf ( pdf2 , xvar )
         else :
-            raise TypeError("Illegal setting for ``pdf2'': %s/%s" % ( pdf2 , type ( pdf1 ) ) )
+            raise TypeError("Illegal setting for 'pdf2': %s/%s" % ( pdf2 , type ( pdf1 ) ) )
         
-        assert isinstance ( self.__pdf2  , PDF ), 'Invalid pdf2 type'
+        assert isinstance ( self.__pdf2  , PDF1 ), 'Invalid pdf2 type'
         
         assert isinstance ( xvar , ROOT.RooAbsReal ),\
-               "Invalid ``xvar'':%s/%s" % ( xvar , type  ( xvar ) ) 
+               "Invalid 'xvar':%s/%s" % ( xvar , type  ( xvar ) ) 
 
         name = name if name else self.generate_name ( prefix = "product_%s_%s_"  % ( self.pdf1.name , self.pdf2.name ) )
 
@@ -111,11 +111,11 @@ class Product1D_pdf(PDF) :
         em1 = self.pdf1.pdf.extendMode()
         em2 = self.pdf2.pdf.extendMode()
         
-        if   2 == em1 : self.warning ( "pdf1 ``must-be-extended''" )
-        elif 1 == em1 : self.warning ( "pdf1  ``can-be-extended''" )
+        if   2 == em1 : self.warning ( "pdf1 'must-be-extended'" )
+        elif 1 == em1 : self.warning ( "pdf1  'can-be-extended'" )
         
-        if   2 == em2 : self.warning ( "pdf2 ``must-be-extended''" )
-        elif 1 == em2 : self.warning ( "pdf2  ``can-be-extended''" )
+        if   2 == em2 : self.warning ( "pdf2 'must-be-extended'" )
+        elif 1 == em2 : self.warning ( "pdf2  'can-be-extended'" )
 
         self.__use_roo = True if use_roo else False
         
@@ -141,17 +141,17 @@ class Product1D_pdf(PDF) :
         
     @property
     def pdf1 ( self ) :
-        """``pdf1'' : the first PDF"""
+        """'pdf1' : the first PDF"""
         return self.__pdf1
     
     @property
     def pdf2 ( self ) :
-        """``pdf2'' : the second PDF"""
+        """'pdf2' : the second PDF"""
         return self.__pdf2
     
     @property
     def use_roo ( self ) :
-        """``use_roo'' : use RooProdPdf or Ostap.MoreRooFit.ProductPdf ?"""
+        """'use_roo'' : use RooProdPdf or Ostap.MoreRooFit.ProductPdf ?"""
         return self.__use_roo 
     
     ## redefine the clone 
@@ -165,7 +165,7 @@ class Product1D_pdf(PDF) :
         if not pdf1 : pdf1 = self.pdf1.clone ( **kwargs )
         if not pdf2 : pdf2 = self.pdf2.clone ( **kwargs )
 
-        return FUNC.clone ( self , pdf1 = pdf1 , pdf2 = pdf2 , **kwargs ) 
+        return AFUN1.clone ( self , pdf1 = pdf1 , pdf2 = pdf2 , **kwargs ) 
     
         
 
@@ -200,21 +200,21 @@ class Modify1D_pdf(Product1D_pdf) :
                    the_phis = None ) :
         
         assert isinstance ( power , int ) and 0 <= power,\
-               "Invalid ``power''   %s" % power
+               "Invalid 'power'   %s" % power
 
         self.__pdf_1 = pdf
         
-        if isinstance ( pdf , PDF ) : 
+        if isinstance ( pdf , PDF1 ) : 
             if xvar and not ( xvar is pdf.xvar ) :
-                self.error ("Mismatch in ``xvar''-observable") 
+                self.error ("Mismatch in 'xvar'-observable") 
             elif not xvar : xvar = pdf.xvar            
         elif isinstance ( pdf , ROOT.RooAbsPdf ) and xvar :
             pdf = Generic1D_pdf ( pdf , xvar )            
         else :
-            raise TypeError("Illegal setting for ``pdf'': %s/%s" % ( pdf , type ( pdf ) ) )
+            raise TypeError("Illegal setting for 'pdf': %s/%s" % ( pdf , type ( pdf ) ) )
 
         assert isinstance ( xvar , ROOT.RooAbsReal ),\
-               "Invalid ``xvar'':%s/%s" % ( xvar , type  ( xvar ) ) 
+               "Invalid 'xvar':%s/%s" % ( xvar , type  ( xvar ) ) 
 
         name = name if name else self.generate_name ( prefix = "modify_%s_%s"  % ( pdf.name , power ) )
 
@@ -259,7 +259,7 @@ class Modify1D_pdf(Product1D_pdf) :
         
     @property
     def old_pdf ( self ):
-        """``old_pdf''  : original (not modified) PDF"""
+        """'old_pdf'  : original (not modified) PDF"""
         return self.pdf1
     
     ## redirect any other attributes to original PDF
@@ -271,7 +271,7 @@ class Modify1D_pdf(Product1D_pdf) :
 
     @property
     def phis    ( self ) :
-        """``phis'' : phases for correction polynomials"""
+        """'phis' : phases for correction polynomials"""
         return self.__pdf_2.phis
     @phis.setter
     def phis ( self , values ) :
@@ -299,7 +299,7 @@ models.append ( Modify1D_pdf )
 #    \end{array}\right. \f] 
 # @see Ostap::Math::CutOffGauss
 # @see Ostap::Models::CutOffGauss
-class CutOffGauss_pdf(PDF) :
+class CutOffGauss_pdf(PDF1) :
     """ Useful function for smooth Gaussian-like  cut-off
     - see Ostap.Math.CutOffGauss
     - see Ostap.Models.CutOffGauss
@@ -311,15 +311,17 @@ class CutOffGauss_pdf(PDF) :
                    x0    ,
                    sigma ) :
         
-        PDF.__init__ ( self , name , xvar = xvar ) 
+        PDF1.__init__ ( self , name , xvar = xvar ) 
         
         self.__x0   = self.make_var  ( x0       ,
                                        'x0_%s'           % name ,
-                                       '#x_{0}(%s)'      % name , x0 , x0 )
+                                       '#x_{0}(%s)'      % name ,
+                                       True )
         
         self.__sigma = self.make_var ( sigma   ,
                                        'csigma_%s'       % name ,
-                                       '#sigma_{CB}(%s)' % name , sigma , sigma , 0 , 1.e+6 ) 
+                                       '#sigma_{CB}(%s)' % name ,
+                                       True , 0 , 1.e+6 ) 
         
         self.__right = True if right else False
         
@@ -342,7 +344,7 @@ class CutOffGauss_pdf(PDF) :
         
     @property
     def x0 ( self ) :
-        """``x0'' : threshold/location parameter for Gaussial cut-off"""
+        """'x0' : threshold/location parameter for Gaussial cut-off"""
         return self.__x0
     @x0.setter 
     def x0 ( self , value ) :
@@ -350,7 +352,7 @@ class CutOffGauss_pdf(PDF) :
 
     @property
     def sigma ( self ) :
-        """``sigma'' : width parameter for Gaussial cut-off"""
+        """'sigma' : width parameter for Gaussial cut-off"""
         return self.__sigma
     @sigma.setter 
     def sigma ( self , value ) :
@@ -358,12 +360,12 @@ class CutOffGauss_pdf(PDF) :
     
     @property
     def right ( self ) :
-        """``right'' : parameter of the Gaussian cut-off"""
+        """'right' : parameter of the Gaussian cut-off"""
         return self.__right 
 
     @property
     def left ( self ) :
-        """``left'' : parameter of the Gaussian cut-off"""
+        """'left' : parameter of the Gaussian cut-off"""
         return not self.right 
 
 
@@ -382,7 +384,7 @@ models.append ( CutOffGauss_pdf )
 #    \end{array}\right. \f] 
 # @see Ostap::Math::CutOffGauss
 # @see Ostap::Models::CutOffGauss
-class CutOffStudent_pdf(PDF) :
+class CutOffStudent_pdf(PDF1) :
     """ Useful function for smooth Student's t=-like (power-law) cut-off:
     - see Ostap.Math.CutOffStudent
     - see Ostap.Models.CutOffStudent
@@ -395,19 +397,22 @@ class CutOffStudent_pdf(PDF) :
                    nu    ,
                    sigma ) :
         
-        PDF.__init__ ( self , name , xvar = xvar ) 
+        PDF1.__init__ ( self , name , xvar = xvar ) 
         
         self.__x0   = self.make_var   ( x0       ,
                                         'x0_%s'      % name ,
-                                        '#x_{0}(%s)' % name , x0 , x0 )
+                                        '#x_{0}(%s)' % name ,
+                                        True )
         
         self.__nu   = self.make_var  ( nu    ,
                                        'nu_%s'        % name ,
-                                       '#nu_{CB}(%s)' % name , nu , nu , 0 , 1000 )
+                                       '#nu_{CB}(%s)' % name ,
+                                       True , 0 , 1000 )
         
         self.__sigma = self.make_var ( sigma   ,
                                        'sigma_%s'        % name ,
-                                       '#sigma_{CB}(%s)' % name , sigma , sigma , 0 , 1.e+6 ) 
+                                       '#sigma_{CB}(%s)' % name ,
+                                       True    , 0 , 1.e+6 ) 
 
 
         self.__right = True if right else False
@@ -433,7 +438,7 @@ class CutOffStudent_pdf(PDF) :
         
     @property
     def x0 ( self ) :
-        """``x0'' : threshold/location parameter for Student's t-like cut-off"""
+        """'x0' : threshold/location parameter for Student's t-like cut-off"""
         return self.__x0
     @x0.setter 
     def x0 ( self , value ) :
@@ -441,7 +446,7 @@ class CutOffStudent_pdf(PDF) :
 
     @property
     def sigma ( self ) :
-        """``sigma'' : width parameter for Student's t-like cut-off"""
+        """'sigma' : width parameter for Student's t-like cut-off"""
         return self.__sigma
     @sigma.setter 
     def sigma ( self , value ) :
@@ -449,7 +454,7 @@ class CutOffStudent_pdf(PDF) :
 
     @property
     def nu ( self ) :
-        """``nu'' : power parameter for Student's t-like cut-off"""
+        """'nu' : power parameter for Student's t-like cut-off"""
         return self.__nu
     @nu.setter 
     def nu ( self , value ) :
@@ -457,12 +462,12 @@ class CutOffStudent_pdf(PDF) :
     
     @property
     def right ( self ) :
-        """``right'' : parameter of the Student's t-like cut-off"""
+        """'right' : parameter of the Student's t-like cut-off"""
         return self.__right 
 
     @property
     def left ( self ) :
-        """``left'' : parameter of the Student's t-like cut-off"""
+        """'left' : parameter of the Student's t-like cut-off"""
         return not self.right 
 
 
@@ -504,12 +509,12 @@ class CutOff_pdf(Product1D_pdf) :
         
     @property
     def orig_pdf  ( self ) :
-        """``orig_pdf'' : original PDF"""
+        """'orig_pdf' : original PDF"""
         return self.pdf1
 
     @property
     def cutoff   ( self ) :
-        """``cutoff'' : PDF ised for cut-off"""
+        """'cutoff' : PDF ised for cut-off"""
         return self.pdf2
 
 # =============================================================================

@@ -18,7 +18,7 @@ __all__     = (
     'sqrt'       , 'cbrt'       , 'pow'    ,   
     'sin'        , 'cos'        , 'tan'    , 
     'sinh'       , 'cosh'       , 'tanh'   , 'sech'   ,
-    'asin'       , 'acos'       , 'atan'   , 
+    'asin'       , 'acos'       , 'atan'   , 'atan2'  , 
     'asinh'      , 'acosh'      , 'atanh'  ,
     'erf'        , 'erfc'       , 'erfi'   , 'erfcx'  ,
     'probit'     , 'pochhammer' , 
@@ -26,6 +26,7 @@ __all__     = (
     'exp2'       , 'log2'       ,
     'gauss_pdf'  , 'gauss_cdf'  ,
     'hypot'      , 'fma'        ,
+    'minv'       , 'maxv'       
     )
 # =============================================================================
 import ROOT,math
@@ -265,6 +266,16 @@ def atan ( x ) :
     return math.atan ( x )
 
 # =============================================================================
+## define ``atan2'' function 
+def atan2 ( x , b = 1 ) :
+    """'atan2' function
+    """
+    fun = getattr ( x , '__atan2__' , None )
+    if fun : return fun ( b )
+    return math.atan2 ( x , b )
+
+
+# =============================================================================
 ## define ``asinh'' function 
 def asinh ( x ) :
     """'asinh' function taking into account the uncertainties
@@ -349,6 +360,29 @@ def probit ( x ) :
     fun = getattr ( x , '__probit__' , None )
     if fun : return fun()
     return _probit_ ( x )
+
+# =============================================================================
+## define ``min'' function \f$ \min (x,y) \f$ 
+def minv ( x , y ) :
+    """'minv' function: min (x,y) 
+    """
+    fun = getattr ( x , '__minv__' , None )
+    if fun : return fun ( y )
+    fun = getattr ( y , '__minv__' , None )
+    if fun : return fun ( x )
+    return min ( x , y )
+
+# =============================================================================
+## define ``max'' function \f$ \max (x,y) \f$ 
+def maxv ( x , y ) :
+    """'maxv' function: max (x,y) 
+    """
+    fun = getattr ( x , '__maxv__' , None )
+    if fun : return fun ( y )
+    fun = getattr ( y , '__maxv__' , None )
+    if fun : return fun ( x )
+    return max ( x , y )
+
 
 _fma_ = Ostap.Math.fma
 # =============================================================================
@@ -449,8 +483,7 @@ _gauss_cdf_ = Ostap.Math.gauss_cdf
 #  @param sigma sigma-parameter (width)
 #  @return gaussian CDF 
 def gauss_cdf ( x , mu = 0.0 , sigma = 1.0 ) :
-    """Standard gaussian CDF:
-    
+    """Standard gaussian CDF:    
     >>> x,mu, sigma = ....
     >>> cdf = gauss_cdf ( x  , mu , sigma )
     """

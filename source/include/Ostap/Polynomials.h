@@ -1284,7 +1284,7 @@ namespace Ostap
     public:
       // =======================================================================
       /// constructor from number of parameters 
-      Parameters ( const unsigned int          np = 1 ) ; 
+      Parameters ( const std::size_t           np = 1 ) ; 
       /// constructor from  the list of parameters 
       Parameters ( const std::vector<double>&  pars   ) ;
       /// constructor from  the list of parameters 
@@ -1302,7 +1302,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// number of parameters 
-      inline unsigned short npars  () const { return m_pars.size()     ; }
+      inline std::size_t npars  () const { return m_pars.size()     ; }
       /// all parameters are zero ?
       bool           zero   () const ;
       /** set k-parameter
@@ -1311,8 +1311,8 @@ namespace Ostap
        *  @return true if parameter is actually changed 
        */
       inline bool setPar          
-      ( const unsigned short k     , 
-        const double         value ) 
+      ( const std::size_t  k     , 
+        const double       value ) 
       { return k < m_pars.size() ?  _setPar ( k , value ) : false ; }
       /** set k-parameter
        *  @param k index
@@ -1320,8 +1320,8 @@ namespace Ostap
        *  @return true if parameter is actually changed 
        */
       inline bool setParameter
-      ( const unsigned short k     , 
-        const double         value ) { return setPar      ( k , value ) ; }
+      ( const std::size_t k     , 
+        const double      value ) { return setPar      ( k , value ) ; }
       /** set several/all parameters at once 
        *  @param begin  start iterator for the sequence of coefficients 
        *  @param end    end   iterator for the sequence of coefficients 
@@ -1342,10 +1342,10 @@ namespace Ostap
       { return setPars ( pars.begin() , pars.end() ) ; }
       // ======================================================================
       /// get the parameter value
-      inline double  par          ( const unsigned short k ) const
+      inline double  par          ( const std::size_t k ) const
       { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
       /// get the parameter value
-      inline double  parameter    ( const unsigned short k ) const { return par ( k ) ; }      
+      inline double  parameter    ( const std::size_t k ) const { return par ( k ) ; }      
       /// get all parameters:
       const std::vector<double>& pars () const { return m_pars ; }
       // ======================================================================
@@ -1369,8 +1369,8 @@ namespace Ostap
        *  @return true if parameter is actually changed 
        */
       bool _setPar 
-      ( const unsigned short k     , 
-        const double         value ) ;
+      ( const std::size_t k     , 
+        const double      value ) ;
       // ======================================================================
     protected :
       // ======================================================================

@@ -23,10 +23,13 @@ __all__     = (
     )
 # =============================================================================
 import ROOT
-from   ostap.fitting.utils import MakeVar
-from   ostap.fitting.basic import PDF , Flat1D, Generic1D_pdf  
-from   ostap.fitting.fit2d import PDF2, Flat2D, Generic2D_pdf  
-from   ostap.fitting.fit3d import PDF3, Flat3D, Generic3D_pdf  
+from   ostap.fitting.fithelpers import VarMaker
+from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf ,
+                                         PDF2 , Generic2D_pdf ,
+                                         PDF3 , Generic3D_pdf )
+from   ostap.fitting.fit1d      import Flat1D 
+from   ostap.fitting.fit2d      import Flat2D
+from   ostap.fitting.fit3d      import Flat3D
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.adjust' )
@@ -34,7 +37,7 @@ else                       : logger = getLogger ( __name__               )
 # =============================================================================
 ## @class Adjust1D
 #  simple class to adjust certain PDF to avoid zeroes 
-class Adjust1D(MakeVar) :
+class Adjust1D(VarMaker) :
     """Simple class to ``adjust'' certain PDF to avoid zeroes
     - a small flat component is added and the compound PDF is constructed
     """
@@ -96,7 +99,7 @@ class Adjust1D(MakeVar) :
 # =============================================================================
 ## @class Adjust2D
 #  simple class to adjust certain PDF to avoid zeroes 
-class Adjust2D(MakeVar) :
+class Adjust2D(VarMaker) :
     """Simple class to ``adjust'' certain PDF to avoid zeroes
     - a small flat component is added and the compound PDF is constructed
     """
@@ -159,7 +162,7 @@ class Adjust2D(MakeVar) :
 # =============================================================================
 ## @class Adjust3D
 #  simple class to adjust certain PDF to avoid zeroes
-class Adjust3D(MakeVar) :
+class Adjust3D(VarMaker) :
     """Simple class to ``adjust'' certain PDF to avoid zeroes
     - a small flat component is added and the compound PDF is constructed
     """
@@ -230,7 +233,7 @@ class Adjust3D(MakeVar) :
 #  @endcode 
 #  @see Adjust1D
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-class Adjust1D_pdf(PDF) :
+class Adjust1D_pdf(PDF1) :
     """Simple class to ``adjust'' certain 1D-PDF to avoid zeroes
     - a small flat component is added and the compound 1D-PDF is constructed
     
@@ -260,7 +263,7 @@ class Adjust1D_pdf(PDF) :
 
 
         ## initialize the base
-        PDF.__init__ ( self , name = name , xvar = xvar )
+        PDF1.__init__ ( self , name = name , xvar = xvar )
 
         em = self.old_pdf.pdf.extendMode()
         if   1 == em : self.warning("PDF  ``canBeExtended''")

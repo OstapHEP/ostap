@@ -1,4 +1,12 @@
+
+
 ## New features: 
+
+  1. redesign structure of base classed for functions and pdf 
+  1. rename major base classes for fitting, e.g `MakeVar` -> `VarMaker` etc
+  1. make operations for functions and PDFs much more robust 
+  1. rreshuffle fittling classes between modeules 
+  1. eliminate `ostap.fitting.basic` module 
   1. Add Rice functioni and corresponding pdf 
   1. Add Generalised Inverse Gaussian function and PDF 
   1. Add ExGauss and NormalLapalce functions, pdfs and resoltuion models
@@ -8,8 +16,12 @@
   1. imporve normalization for Pearson Type IV function 
   1. add `StdMoment` to `ostap.stats.moments`
   1. sdd `std_moment` method for `PDF`
+  1. mase a bypass for long standing issue with segfaults from `RooFitResult::globalCorr`
   
 ## Backward incompatible:  
+
+  1. fix a bug in evaluation of integrals for  `LegendreSum2` and  `LegendreSum3`. Tnaks to Ivan Polyakov for
+     reporting a problmes and the fix 
  
 ## Bug fixes:
 

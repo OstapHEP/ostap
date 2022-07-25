@@ -36,6 +36,10 @@ __all__     = (
     )
 # =============================================================================
 import ROOT
+import ostap.fitting.roofitresult
+from   ostap.fitting.pdfbasic     import PDF1,  Generic1D_pdf 
+from   ostap.fitting.variables    import FIXVAR
+from   ostap.histos.histos        import Histo1DFun 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -43,11 +47,6 @@ from ostap.logger.logger import getLogger
 # =============================================================================
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.splot' )
 else                       : logger = getLogger ( __name__            )
-# =============================================================================
-import ostap.fitting.roofitresult
-from   ostap.fitting.basic        import PDF,  Generic1D_pdf 
-from   ostap.fitting.variables    import FIXVAR
-from   ostap.histos.histos        import Histo1DFun 
 # =============================================================================
 #  @class sPlot1D
 #  Helper class to get <code>sWeigts</code> in a form of a historgams  or function objects.
@@ -95,7 +94,7 @@ class sPlot1D(object) :
                 
         assert dataset or fitresult, 'Either dataset or fitresult must be specified!'
         
-        assert isinstance ( pdf     , PDF              ) and \
+        assert isinstance ( pdf     , PDF1             ) and \
                isinstance ( pdf.pdf , ROOT.RooAddPdf   ) and \
                len ( pdf.alist1 ) ==  len ( pdf.alist2 )     , 'Invalid type of PDF!'
 

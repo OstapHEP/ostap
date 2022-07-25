@@ -18,7 +18,8 @@ import ROOT, random, math, time
 import ostap.fitting.roofit 
 from   builtins                 import range
 from   ostap.core.core          import VE, dsID, Ostap
-from   ostap.fitting.basic      import PEAK,     Fit1D , Generic1D_pdf 
+from   ostap.fitting.pdfbasic   import Generic1D_pdf 
+from   ostap.fitting.fit1d      import PEAK ,  Fit1D 
 from   ostap.utils.utils        import timing
 from   ostap.core.meta_info     import old_PyROOT 
 from   ostap.plotting.canvas    import use_canvas
@@ -259,7 +260,6 @@ def test_PyPDF2 () :
     logger = getLogger("test_PyPDF2")
     
     logger.info  ("Test pure python PDF: PyPDF2 with python function")
-
         
     from   ostap.fitting.pypdf  import PyPDF2
     # =============================================================================

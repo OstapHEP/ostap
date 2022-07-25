@@ -15,7 +15,7 @@ __date__    = "2011-06-07"
 __all__     = (
     'setStorage'    , ## define the default storage for  RooDataStore 
     'useStorage'    , ## define (as context) the default storage for  RooDataStore 
-    'PDF_fun'       , ## wrapper of PDF to ``simple'' function 
+    'PDF_fun'       , ## wrapper of PDF to "simple" function 
     'SETVAR'        , ## context manager to preserve the current value for RooRealVar
     'FIXVAR'        , ## context manager to fix/unfix the variable 
     'var_from_name' , ## "convert" name/expression into variable/formula
@@ -147,18 +147,18 @@ class PDF_fun(object):
 
     @property
     def pdf ( self ) :
-        """``pdf'' : get the actual RooAbsPdf
+        """'pdf' : get the actual RooAbsPdf
         """
         return self.__pdf
     @property
     def norm ( self ) :
-        """``norm'' : additional normalization factor
+        """'norm' : additional normalization factor
         """
         return self.__norm
 
     @property
     def xvar ( self ) :
-        """``xvar'': x-variable
+        """'xvar': x-variable
         """
         return self.__xvar
     

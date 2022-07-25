@@ -103,19 +103,19 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
     signal = pdf.signal 
 
     
-    ## data = { 'mean'          : signal.get_mean      () ,
-    ##          'mode'          : signal.mode          () , 
-    ##          'median'        : signal.median        () ,
-    ##          'rms'           : signal.rms           () ,
-    ##          'skewness'      : signal.skewness      () ,
-    ##          'kurtosis'      : signal.kurtosis      () ,
-    ##          ## 'roo_rms'       : signal.roo_rms       () ,
-    ##          ## 'roo_mean'      : signal.roo_mean      () ,
-    ##          ## 'roo_skewness'  : signal.roo_skewness  () ,             
-    ##          ## 'roo_kurtosis'  : signal.roo_kurtosis  ()
-    ##          }
+    data = { ## 'mean'          : signal.get_mean      () ,
+             ## 'mode'          : signal.mode          () , 
+             ## 'median'        : signal.median        () ,
+             ## 'rms'           : signal.rms           () ,
+             ## 'skewness'      : signal.skewness      () ,
+             ## 'kurtosis'      : signal.kurtosis      () ,
+             ## 'roo_rms'       : signal.roo_rms       () ,
+             ## 'roo_mean'      : signal.roo_mean      () ,
+             ## 'roo_skewness'  : signal.roo_skewness  () ,             
+             ## 'roo_kurtosis'  : signal.roo_kurtosis  ()
+             }
 
-    ## stats [ signal.name ]  = data 
+    stats [ signal.name ]  = data 
 
     with wait ( 1 ), use_canvas ( title ) : 
         pdf.draw (  dataset0 )
@@ -125,9 +125,9 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
 def dump_peaks ()  :
     
     header = ( 'Model'         , 
-               'mean'          , 
-               'mode'          , 
-               'median'        , 
+               ## 'mean'          , 
+               ## 'mode'          , 
+               ## 'median'        , 
                'rms'           , 
                'skewness'      , 
                'kurtosis'      ,
@@ -143,12 +143,12 @@ def dump_peaks ()  :
         data = stats[key]
         
         row = ( key , 
-                '%+.6g' % data['mean'    ] ,
-                '%+.6g' % data['mode'    ] ,
-                '%+.6g' % data['median'  ] , 
-                '%+.6g' % data['rms'     ] ,
-                '%+.6g' % data['skewness'] ,
-                '%+.6g' % data['kurtosis'] ,
+                ## '%+.6g' % data['mean'        ] ,
+                ## '%+.6g' % data['mode'        ] ,
+                ## '%+.6g' % data['median'      ] , 
+                ## '%+.6g' % data['rms'         ] ,
+                ## '%+.6g' % data['skewness'    ] ,
+                ## '%+.6g' % data['kurtosis'    ] ,
                 ## '%+.5g' % data['roo_mean'    ] , 
                 ## '%+.5g' % data['roo_rms'     ] , 
                 ## '%+.5g' % data['roo_skewness'] , 
@@ -529,12 +529,15 @@ def test_skewgauss() :
         background = background   ,
         S = S , B = B 
         ) 
-    
+
+    signal = model.signal 
     model.S = NS 
     model.B = NB 
-
+    
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.mean .release() 
+        signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 , silent = True )
 
     make_print ( model , result , 'Skew  Gaussian model' , logger )
@@ -558,15 +561,19 @@ def test_qgauss () :
         background = background   ,
         S = S , B = B 
         ) 
-    
-    s = model.signal
-    s.scale = 0.015
+
+    signal = model.signal
+    model.S = NS 
+    model.B = NB 
+
+    signal.scale = 0.015
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
-        model.signal.scale.release()
+        signal.scale.release()
+        signal.mean.release()
         result, frame = model. fitTo ( dataset0 , silent = True )
-        model.signal.q .release() 
+        signal.q .release() 
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , 'q-Gaussian model' , logger )
@@ -781,9 +788,11 @@ def test_johnsonSU () :
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset0 , silent = True )  
-        result,f  = model.fitTo ( dataset0 , silent = True )  
         signal.lambd .release()
         signal.delta.release()
+        result,f  = model.fitTo ( dataset0 , silent = True )  
+        signal.gamma.release()
+        signal.mean .release()
         result,f  = model.fitTo ( dataset0 , silent = True )
         
     make_print ( model, result , "Johnson's SU model" , logger )        
@@ -843,14 +852,17 @@ def test_das_1 () :
         S = S , B = B ,
         )
 
-    signal_gauss.mean .fix ( m.value() )
-    signal_gauss.sigma.fix ( m.error() )
+    signal = model.signal 
+    signal.mean .fix ( m.value() )
+    signal.sigma.fix ( m.error() )
 
     model.S = NS 
     model.B = NB
     
     with rooSilent() :
         result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.mean .release() 
+        signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Das model (1) " , logger )        
@@ -876,14 +888,17 @@ def test_das_2 () :
         S = S , B = B ,
         )
 
-    signal_gauss.mean .fix ( m.value() )
-    signal_gauss.sigma.fix ( m.error() )
+    signal = model.signal 
+    signal.mean .fix ( m.value() )
+    signal.sigma.fix ( m.error() )
 
     model.S = NS 
     model.B = NB
     
     with rooSilent() :
         result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.mean .release() 
+        signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Das model (2) " , logger )        
@@ -1010,6 +1025,7 @@ def test_slash():
 
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.mean.release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Slash model" , logger )
@@ -1073,10 +1089,10 @@ def test_laplace():
     model.B = NB
     
     with rooSilent() : 
-        result, frame = model. fitTo ( dataset0 )
+        result, frame = model. fitTo ( dataset0 , silent = True )
         signal.slope.release() 
         signal.mean .release()
-        result, frame = model. fitTo ( dataset0 )
+        result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Laplace model" , logger )        
 
@@ -1279,10 +1295,6 @@ def test_hypatia () :
         
     make_print ( model , result , "Hypatia model" , logger )        
     
-    ## import pickle
-    ## print ( 'SIGNAL' , pickle.dumps ( signal ) )
-    ## print ( 'MODEL'  , pickle.dumps ( model  ) )
-
     models.add ( model )
 
 # =============================================================================
@@ -1465,9 +1477,9 @@ def test_db() :
     logger.info ( 'Saving all objects into DBASE' )
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
-    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
         db['mass,vars'] = mass, varset0
-        ## db['dataset'  ] = dataset0
+        db['dataset'  ] = dataset0
         for m in models : db['model:' + m.name ] = m
         db['models'   ] = models
         db.ls() 
@@ -1623,7 +1635,7 @@ if '__main__' == __name__ :
     with timing ('test_db'             , logger ) :
         test_db ()
 
-    dump_peaks () 
+    ## dump_peaks () 
 
 
          

@@ -221,7 +221,7 @@ def test_fitting_components2_3D () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ( "3dSym-fit" , logger ) : 
+    with timing ( "3dSym-fit" , logger ) :
         test_fitting_components2_3D () 
         
 # =============================================================================

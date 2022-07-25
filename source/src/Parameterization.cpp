@@ -229,7 +229,7 @@ double Ostap::Math::LegendreSum2::integral
   _legendre_integrals ( m_cache_x , txl , txh ) ;
   _legendre_integrals ( m_cache_y , tyl , tyh ) ;
   //
-  return calculate()  * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) ;
+  return calculate()  * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) * 1./4 ;
 }
 // ============================================================================
 /*  get the integral 
@@ -237,7 +237,7 @@ double Ostap::Math::LegendreSum2::integral
  */
 // ============================================================================
 double Ostap::Math::LegendreSum2::integral   () const 
-{ return m_pars[0] * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) * 4 ; }
+{ return m_pars[0] * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ); }
 // ============================================================================
 /*  integrate over x dimension 
  *  \f$ f(y) =  \int_{x_{min}}^{x_{max}} F(x,y) {\mathrm{d}} x \f$
@@ -305,9 +305,9 @@ Ostap::Math::LegendreSum2::integralX
   //
   for ( unsigned short iy = 0 ; iy <= m_NY ; ++iy ) 
   { for ( unsigned short ix = 0 ;  ix <= m_NX ; ++ix ) 
-    { pars[iy] += m_pars [ index ( ix , iy )  ] * m_cache_x[ix] ; } }
+  { pars[iy] += 0.5 * m_pars [ index ( ix , iy )  ] * m_cache_x[ix] ; } }
   //
-  Ostap::Math::scale ( pars , xh - xl ) ;
+  Ostap::Math::scale ( pars , m_xmax - m_xmin ) ;
   return LegendreSum ( pars , m_ymin , m_ymax ) ; 
 }
 // ============================================================================
@@ -339,9 +339,9 @@ Ostap::Math::LegendreSum2::integralY
   //
   for ( unsigned short iy = 0 ; iy <= m_NY ; ++iy ) 
   { for ( unsigned short ix = 0 ;  ix <= m_NX ; ++ix ) 
-    { pars[ix] += m_pars [ index ( ix , iy )  ] * m_cache_y[iy] ; } }
+      { pars[ix] += 0.5 * m_pars [ index ( ix , iy )  ] * m_cache_y[iy] ; } } // <<---- !!!
   //
-  Ostap::Math::scale ( pars , yh - yl ) ;
+  Ostap::Math::scale ( pars , m_ymax - m_ymin ) ;
   return LegendreSum ( pars , m_xmin , m_xmax ) ; 
 }
 // ============================================================================
@@ -638,12 +638,12 @@ Ostap::Math::LegendreSum3::integralX
     { 
       double value = 0 ;
       for ( unsigned short ix = 0 ; ix <= m_NX ; ++ix ) 
-      { value += m_pars [ index ( ix, iy, iz ) ] * m_cache_x [ ix ] ; }
+      { value += 0.5 * m_pars [ index ( ix, iy, iz ) ] * m_cache_x [ ix ] ; }
       r.setPar ( iy , iz , value ) ; 
     }
   }
   //
-  r *= ( xh - xl ) ;
+  r *= ( m_xmax - m_xmin ) ;
   //
   return r ;
 }
@@ -681,12 +681,12 @@ Ostap::Math::LegendreSum3::integralY
     { 
       double value = 0 ;
       for ( unsigned short iy = 0 ; iy <= m_NY ; ++iy ) 
-      { value += m_pars [ index ( ix, iy, iz ) ] * m_cache_y [ iy ] ; }
+      { value += 0.5 * m_pars [ index ( ix, iy, iz ) ] * m_cache_y [ iy ] ; }
       r.setPar ( ix , iz , value ) ; 
     }
   }
   //
-  r *= ( yh - yl ) ;
+  r *= ( m_ymax - m_ymin ) ;
   //
   return r ;
 }
@@ -710,7 +710,7 @@ Ostap::Math::LegendreSum3::integralZ
   //
   if  ( zh <= m_zmin || zl >= m_zmax ) { return r  ; }
   //
-  if  ( s_equal ( zl , m_zmin ) && s_equal ( zh , m_zmax ) ) { return integralY () ; }
+  if  ( s_equal ( zl , m_zmin ) && s_equal ( zh , m_zmax ) ) { return integralZ () ; }
   //
   const double tzl =  tz ( zl ) ;
   const double tzh =  tz ( zh ) ;
@@ -724,12 +724,12 @@ Ostap::Math::LegendreSum3::integralZ
     { 
       double value = 0 ;
       for ( unsigned short iz = 0 ; iz <= m_NZ ; ++iz ) 
-      { value += m_pars [ index ( ix, iy, iz ) ] * m_cache_z [ iz ] ; }
+      { value += 0.5 * m_pars [ index ( ix, iy, iz ) ] * m_cache_z [ iz ] ; }
       r.setPar ( ix , iy , value ) ; 
     }
   }
   //
-  r *= ( zh - zl ) ;
+  r *= ( m_zmax - m_zmin ) ;
   //
   return r ;
 }
@@ -781,7 +781,7 @@ double Ostap::Math::LegendreSum3::integral
   _legendre_integrals ( m_cache_y , tyl , tyh ) ;
   _legendre_integrals ( m_cache_z , tzl , tzh ) ;
   //
-  return calculate()  * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) * ( m_zmax - m_zmin ) ;
+  return calculate()  * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) * ( m_zmax - m_zmin ) * 1./8 ;
 }
 // ============================================================================
 /*  integral 
@@ -790,9 +790,7 @@ double Ostap::Math::LegendreSum3::integral
  */
 // ============================================================================
 double Ostap::Math::LegendreSum3::integral () const 
-{ return m_pars[0] * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) * ( m_zmax - m_zmin ) ; }
-
-
+{ return m_pars[0] * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) * ( m_zmax - m_zmin ); }
 
 // ============================================================================
 // 4D
@@ -835,6 +833,55 @@ Ostap::Math::LegendreSum4::LegendreSum4
   , m_cache_u ( m_NU + 1 , 0.0 )
     //
 {}
+// ============================================================================
+/*  constructor orm the product of two Legendre sums
+ *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \times S_z(z) \f$ 
+ *  @param sx (INPUT) the first  Legendre sum 
+ *  @param sy (INPUT) the second Legendre sum 
+ *  @param sz (INPUT) the third  Legendre sum 
+ *  @param su (INPUT) the fourth Legendre sum 
+ */
+// ============================================================================
+Ostap::Math::LegendreSum4::LegendreSum4 
+( const LegendreSum&  sx , 
+  const LegendreSum&  sy ,
+  const LegendreSum&  sz ,
+  const LegendreSum&  su ) 
+  : Parameters ( ( sx.degree() + 1 ) * 
+                 ( sy.degree() + 1 ) * 
+                 ( sz.degree() + 1 ) * 
+                 ( su.degree() + 1 ) )
+    //
+  , m_NX   ( sx.degree () ) 
+  , m_NY   ( sy.degree () ) 
+  , m_NZ   ( sz.degree () ) 
+  , m_NU   ( su.degree () ) 
+    //
+  , m_xmin ( sx.xmin   () )
+  , m_xmax ( sx.xmax   () )
+    //
+  , m_ymin ( sy.xmin   () )
+  , m_ymax ( sy.xmax   () )
+    //
+  , m_zmin ( sz.xmin   () )
+  , m_zmax ( sz.xmax   () )
+    //
+  , m_umin ( su.xmin   () )
+  , m_umax ( su.xmax   () )
+    //
+  , m_cache_x ( ( m_NX + 1 ) , 0.0 )
+  , m_cache_y ( ( m_NY + 1 ) , 0.0 )
+  , m_cache_z ( ( m_NZ + 1 ) , 0.0 )
+  , m_cache_u ( ( m_NU + 1 ) , 0.0 )
+{
+  for ( unsigned short ix = 0 ; ix <= m_NX ; ++ix ) 
+  { for ( unsigned short iy = 0 ; iy <= m_NY ; ++iy ) 
+    { for ( unsigned short iz = 0 ; iz <= m_NZ ; ++iz ) 
+      { for ( unsigned short iu = 0 ; iu <= m_NU ; ++iu ) 
+        { m_pars [ index ( ix , iy , iz , iu ) ] = sx.par ( ix ) * sy.par ( iy ) * sz.par ( iz ) * su.par ( iu ) ; } } 
+    }
+  } 
+}
 // ============================================================================
 // get the value
 // ============================================================================
@@ -1039,10 +1086,10 @@ Ostap::Math::LegendreSum4::integralX
       { 
         double value = 0 ;
         for ( unsigned short ix = 0 ; ix <= m_NX ; ++ix ) 
-        { value += m_pars [ index ( ix, iy, iz , iu ) ] * m_cache_x [ ix ] ; }
+        { value += 0.5 * m_pars [ index ( ix, iy, iz , iu ) ] * m_cache_x [ ix ] ; }
         r.setPar ( iy , iz , iu , value ) ; } } }
   //
-  r *= ( xh - xl ) ;
+  r *= ( m_xmax - m_xmin ) ;
   //
   return r ;
 }
@@ -1084,10 +1131,10 @@ Ostap::Math::LegendreSum4::integralY
       { 
         double value = 0 ;
         for ( unsigned short iy = 0 ; iy <= m_NY ; ++iy ) 
-        { value += m_pars [ index ( ix, iy, iz , iu ) ] * m_cache_y [ iy ] ; }
+        { value += 0.5 * m_pars [ index ( ix, iy, iz , iu ) ] * m_cache_y [ iy ] ; }
         r.setPar ( ix , iz , iu , value ) ; } } }
   //
-  r *= ( yh - yl ) ;
+  r *= ( m_ymax - m_ymin ) ;
   //
   return r ;
 }
@@ -1129,10 +1176,10 @@ Ostap::Math::LegendreSum4::integralZ
       { 
         double value = 0 ;
         for ( unsigned short iz = 0 ; iz <= m_NZ ; ++iz ) 
-        { value += m_pars [ index ( ix, iy, iz , iu ) ] * m_cache_z [ iz ] ; }
+        { value += 0.5 * m_pars [ index ( ix, iy, iz , iu ) ] * m_cache_z [ iz ] ; }
         r.setPar ( ix , iy , iu , value ) ; } } }
   //
-  r *= ( zh - zl ) ;
+  r *= ( m_zmax - m_zmin ) ;
   //
   return r ;
 }
@@ -1174,10 +1221,10 @@ Ostap::Math::LegendreSum4::integralU
       { 
         double value = 0 ;
         for ( unsigned short iu = 0 ; iu <= m_NU ; ++iu ) 
-        { value += m_pars [ index ( ix, iy, iz , iu ) ] * m_cache_u [ iu ] ; }
+        { value += 0.5 * m_pars [ index ( ix, iy, iz , iu ) ] * m_cache_u [ iu ] ; }
         r.setPar ( ix , iy , iz , value ) ; } } }
   //
-  r *= ( uh - ul ) ;
+  r *= ( m_umax - m_umin ) ;
   //
   return r ;
 }
@@ -1185,4 +1232,3 @@ Ostap::Math::LegendreSum4::integralU
 // ============================================================================
 // The END 
 // ============================================================================
- 

@@ -41,6 +41,7 @@ __all__ = (
     'enabledFatal'   , ## is FATAL    level allowed by the global thresholds?
     ##
     'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL' ,
+    ##
     )
 # =============================================================================
 # Message levels   (a'la Gaudi) 
@@ -585,6 +586,8 @@ if log_file :
     atexit.register ( func )
 
 logging.disable ( logging.INFO - 1 )  
+
+
 # =============================================================================
 if __name__ == '__main__' :
 

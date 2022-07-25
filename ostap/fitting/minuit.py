@@ -249,7 +249,7 @@ ROOT.TMinuit.execute = _mn_exec_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-04-01
 def _mn_show_ ( self , what = 'PAR' , *args ) :
-    """Execute MINUIT  ``SHOW''-command
+    """Execute MINUIT  'SHOW'-command
     """
     return _mn_exec_ ( self , "SHOW %s" % what.upper() ,  *args )
 

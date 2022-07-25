@@ -47,9 +47,9 @@ Ostap::MoreRooFit::Bernstein::Bernstein
 ( const std::string& name  ,
   const std::string& title ,
   RooAbsReal&        xvar  ,
+  const RooArgList&  pars  ,
   const double       xmin  , 
-  const double       xmax  ,
-  const RooArgList&  pars  ) 
+  const double       xmax  )
   : RooAbsReal ( name.c_str  () , title.c_str () )
   , m_xvar      ( "x"    , "Dependent"  , this , xvar ) 
   , m_pars      ( "pars" , "Parameters" , this ) 
@@ -126,12 +126,12 @@ Ostap::MoreRooFit::Monotonic::Monotonic
 ( const std::string& name       ,
   const std::string& title      ,
   RooAbsReal&        xvar       ,
+  const RooArgList&  pars       ,
   const bool         increasing ,
   const double       xmin       , 
   const double       xmax       ,
   RooAbsReal&        a          ,
-  RooAbsReal&        b          ,
-  const RooArgList&  pars       ) 
+  RooAbsReal&        b          )
   : RooAbsReal ( name.c_str  () , title.c_str () )
   , m_xvar      ( "x"    , "Dependent"  , this , xvar ) 
   , m_a         ( "a"    , "shift/bias" , this , a    ) 
@@ -154,15 +154,15 @@ Ostap::MoreRooFit::Monotonic::Monotonic
 ( const std::string& name       ,
   const std::string& title      ,
   RooAbsReal&        xvar       ,
-  const bool         increasing , 
+  const RooArgList&  pars       ,
+  const bool         increasing ,
   const double       xmin       , 
   const double       xmax       ,
-  const RooArgList&  pars       ) 
-  : Monotonic ( name , title , 
-                xvar , increasing , xmin , xmax ,
-                RooFit::RooConst ( 0.0 ) , 
-                RooFit::RooConst ( 1.0 ) ,
-                pars ) 
+  const double       a          ,
+  const double       b          ) 
+  : Monotonic ( name , title , xvar , pars , increasing , xmin , xmax ,
+                RooFit::RooConst ( a ) , 
+                RooFit::RooConst ( b ) )
 {}
 // =============================================================================
 // copy constructor 
@@ -240,13 +240,13 @@ Ostap::MoreRooFit::Convex::Convex
 ( const std::string& name       ,
   const std::string& title      ,
   RooAbsReal&        xvar       ,
+  const RooArgList&  pars       ,
   const bool         increasing ,
   const bool         convex     ,
   const double       xmin       , 
   const double       xmax       ,
   RooAbsReal&        a          ,
-  RooAbsReal&        b          ,
-  const RooArgList&  pars       ) 
+  RooAbsReal&        b          )
   : RooAbsReal ( name.c_str  () , title.c_str () )
   , m_xvar      ( "x"    , "Dependent"  , this , xvar ) 
   , m_a         ( "a"    , "shift/bias" , this , a    ) 
@@ -262,6 +262,24 @@ Ostap::MoreRooFit::Convex::Convex
   Ostap::Assert ( m_convex.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v3 , 512 ) ;
   //
 }
+// ============================================================================
+// constructor from the variable, range and list of coefficients
+// ============================================================================
+Ostap::MoreRooFit::Convex::Convex
+( const std::string& name       ,
+  const std::string& title      ,
+  RooAbsReal&        xvar       ,
+  const RooArgList&  pars       ,
+  const bool         increasing ,
+  const bool         convex     ,
+  const double       xmin       , 
+  const double       xmax       ,
+  const double       a          , 
+  const double       b          )
+  : Convex ( name , title , xvar , pars , increasing , convex , xmin , xmax , 
+             RooFit::RooConst ( a ) , 
+             RooFit::RooConst ( b ) )
+{}
 // =============================================================================
 // copy constructor 
 // =============================================================================
@@ -338,12 +356,12 @@ Ostap::MoreRooFit::ConvexOnly::ConvexOnly
 ( const std::string& name       ,
   const std::string& title      ,
   RooAbsReal&        xvar       ,
+  const RooArgList&  pars       ,
   const bool         convex     ,
   const double       xmin       , 
   const double       xmax       ,
   RooAbsReal&        a          ,
-  RooAbsReal&        b          ,
-  const RooArgList&  pars       ) 
+  RooAbsReal&        b          )
   : RooAbsReal ( name.c_str  () , title.c_str () )
   , m_xvar      ( "x"    , "Dependent"  , this , xvar ) 
   , m_a         ( "a"    , "shift/bias" , this , a    ) 
@@ -359,6 +377,23 @@ Ostap::MoreRooFit::ConvexOnly::ConvexOnly
   Ostap::Assert ( m_convex.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v4 , 512 ) ;
   //
 }
+// ============================================================================
+// constructor from the variable, range and list of coefficients
+// ============================================================================
+Ostap::MoreRooFit::ConvexOnly::ConvexOnly
+( const std::string& name       ,
+  const std::string& title      ,
+  RooAbsReal&        xvar       ,
+  const RooArgList&  pars       ,
+  const bool         convex     ,
+  const double       xmin       , 
+  const double       xmax       ,
+  const double       a          ,
+  const double       b          )
+  : ConvexOnly ( name , title , xvar , pars , convex , xmin , xmax ,
+                 RooFit::RooConst ( a ) , 
+                 RooFit::RooConst ( b ) )
+{}
 // =============================================================================
 // copy constructor 
 // =============================================================================

@@ -6479,20 +6479,23 @@ namespace Ostap
     public:
       // ======================================================================
       /// flat in 1D 
-      Uniform ( const char*                      name  ,
-                const char*                      title ,
-                RooAbsReal&                      x     ) ;
+      Uniform
+      ( const char*       name  ,
+        const char*       title ,
+        RooAbsReal&       x     ) ;
       /// flat in 2D 
-      Uniform ( const char*                      name  ,
-                const char*                      title ,
-                RooAbsReal&                      x     , 
-                RooAbsReal&                      y     ) ;
+      Uniform
+      ( const char*       name  ,
+        const char*       title ,
+        RooAbsReal&       x     , 
+        RooAbsReal&       y     ) ;
       /// flat in 3D 
-      Uniform ( const char*                      name  ,
-                const char*                      title ,
-                RooAbsReal&                      x     , 
-                RooAbsReal&                      y     ,
-                RooAbsReal&                      z     ) ;
+      Uniform
+      ( const char*       name  ,
+        const char*       title ,
+        RooAbsReal&       x     , 
+        RooAbsReal&       y     ,
+        RooAbsReal&       z     ) ;
       /// copy
       Uniform
         ( const Uniform& right     ,
@@ -6525,14 +6528,18 @@ namespace Ostap
     public:
       // ======================================================================
       //  dimensionality of the PDF
-      unsigned short dim () const { return m_dim ; }      
+      unsigned short    dim  () const { return m_dim      ; }      
+      const RooAbsReal& x    () const { return m_x.arg () ; }      
+      const RooAbsReal& y    () const { return m_y.arg () ; }      
+      const RooAbsReal& z    () const { return m_z.arg () ; }      
       // ======================================================================
     protected :
       // ======================================================================
-      unsigned short m_dim { 0 } ;
-      RooRealProxy   m_x   {   } ;
-      RooRealProxy   m_y   {   } ;
-      RooRealProxy   m_z   {   } ;
+      /// variables 
+      unsigned  int m_dim { 0 } ;
+      RooRealProxy  m_x   {   } ;
+      RooRealProxy  m_y   {   } ;
+      RooRealProxy  m_z   {   } ;
       // ======================================================================
     };
     // ========================================================================

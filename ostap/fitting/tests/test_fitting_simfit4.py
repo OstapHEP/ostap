@@ -22,7 +22,7 @@ import ROOT, random
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models
 from   builtins                 import range 
-from   ostap.fitting.utils      import MakeVar 
+from   ostap.fitting.fithelpers import FitHelper 
 from   ostap.core.core          import dsID
 from   ostap.utils.timing       import timing 
 from   ostap.logger.utils       import rooSilent
@@ -90,7 +90,7 @@ def test_simfit4() :
 
     logger = getLogger( 'test_simfit4' ) 
     # =========================================================================
-    VARS = MakeVar ()
+    VARS  = FitHelper ()
     
     ## MC/DATA ratio for signal widths
     Rs   = ROOT.RooRealVar ( 'Rs' , 'MC/DATA ratio for signal widths' , 1.0 , 0.2 , 3.0 )

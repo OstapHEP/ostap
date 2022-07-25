@@ -20,10 +20,10 @@ __all__     = (
     'SETVAR'          , ## context manager to preserve the current value for RooRealVar
     'FIXVAR'          , ## context manager to fix/unfix variables
     'KeepBinning'     , ## context manager to preserve the binning scheme
-    ## ``converters''
-    'total_ratio'     , ## ``converter'': A,B ->  (T,R) == ( A+B , A/B     )
-    'total_ratio'     , ## ``converter'': A,B ->  (T,F) == ( A+B , A/(A+B) ) 
-    'two_yields'      , ## ``converter'': T,F ->  (A,B) == ( R*F , T*(1-F) )
+    ## converters
+    'total_ratio'     , ## converter : A,B ->  (T,R) == ( A+B , A/B     )
+    'total_ratio'     , ## converter : A,B ->  (T,F) == ( A+B , A/(A+B) ) 
+    'two_yields'      , ## converter : T,F ->  (A,B) == ( R*F , T*(1-F) )
     'depends_on'      , ## Is this "RooFit" function depends on the variable?
     'binning'         , ## create RooBinning object 
     ) 
@@ -211,9 +211,9 @@ _new_methods_ += [
 val_types = num_types + ( VE , ROOT.RooAbsReal )
 
 # ============================================================================
-## Addition of RooRealVar and ``number''
+## Addition of RooRealVar and "the number"
 def _rrv_add_ ( s , o ) :
-    """Addition of RooRealVar and ``number''
+    """Addition of RooRealVar and 'the number' 
 
     >>> var = ...
     >>> num = ...
@@ -230,9 +230,9 @@ def _rrv_add_ ( s , o ) :
     return v + o
 
 # ============================================================================
-## Subtraction  of RooRealVar and ``number''
+## Subtraction  of RooRealVar and "the number"
 def _rrv_sub_ ( s , o ) :
-    """Subtraction of RooRealVar and ``number''
+    """Subtraction of RooRealVar and 'the 'number'
     
     >>> var = ...
     >>> num = ...
@@ -249,9 +249,9 @@ def _rrv_sub_ ( s , o ) :
     return v - o
 
 # ============================================================================
-## Multiplication of RooRealVar and ``number''
+## Multiplication of RooRealVar and "the number"
 def _rrv_mul_ ( s , o ) :
-    """Multiplication  of RooRealVar and ``number''
+    """Multiplication  of RooRealVar and 'the number' 
     
     >>> var = ...
     >>> num = ...
@@ -268,9 +268,9 @@ def _rrv_mul_ ( s , o ) :
     return v * o
 
 # ============================================================================
-## Division of RooRealVar and ``number''
+## Division of RooRealVar and "the number"
 def _rrv_div_ ( s , o ) :
-    """Division of RooRealVar and ``number''
+    """Division of RooRealVar and 'the number'
     
     >>> var = ...
     >>> num = ...
@@ -287,9 +287,9 @@ def _rrv_div_ ( s , o ) :
     return v / o
 
 # ============================================================================
-## (right) Addition of RooRealVar and ``number''
+## (right) Addition of RooRealVar and "the number"
 def _rrv_radd_ ( s , o ) :
-    """(right) Addition of RooRealVar and ``number''
+    """(right) Addition of RooRealVar and 'the number'
     
     >>> var = ...
     >>> num = ...
@@ -306,9 +306,9 @@ def _rrv_radd_ ( s , o ) :
     return o + v 
 
 # ============================================================================
-## (right) subtraction  of RooRealVar and ``number''
+## (right) subtraction  of RooRealVar and "number"
 def _rrv_rsub_ ( s , o ) :
-    """(right) subtraction of RooRealVar and ``number''
+    """(right) subtraction of RooRealVar and 'the number' 
     
     >>> var = ...
     >>> num = ...
@@ -325,9 +325,9 @@ def _rrv_rsub_ ( s , o ) :
     return o - v 
 
 # ============================================================================
-## (right) multiplication of RooRealVar and ``number''
+## (right) multiplication of RooRealVar and "the number"
 def _rrv_rmul_ ( s , o ) :
-    """(right) Multiplication  of RooRealVar and ``number''
+    """(right) Multiplication  of RooRealVar and 'the number'
     
     >>> var = ...
     >>> num = ...
@@ -343,9 +343,9 @@ def _rrv_rmul_ ( s , o ) :
     return o * v 
 
 # ============================================================================
-## (right) Division of RooRealVar and ``number''
+## (right) Division of RooRealVar and "the number"
 def _rrv_rdiv_ ( s , o ) :
-    """(right) Division of RooRealVar and ``number''
+    """(right) Division of RooRealVar and 'the number'
     
     >>> var = ...
     >>> num = ...
@@ -361,9 +361,9 @@ def _rrv_rdiv_ ( s , o ) :
     return o / v 
 
 # ============================================================================
-## pow of RooRealVar and ``number''
+## pow of RooRealVar and "the number"
 def _rrv_pow_ ( s , o ) :
-    """pow of RooRealVar and ``number''
+    """pow of RooRealVar and 'the number'
     
     >>> var = ...
     >>> num = ...
@@ -379,9 +379,9 @@ def _rrv_pow_ ( s , o ) :
     return v**o  
 
 # ============================================================================
-## (right) pow of RooRealVar and ``number''
+## (right) pow of RooRealVar and "the number"
 def _rrv_rpow_ ( s , o ) :
-    """pow of RooRealVar and ``number''
+    """pow of RooRealVar and 'the number'
     
     >>> var = ...
     >>> num = ...
@@ -455,46 +455,46 @@ _new_methods_ += [
     ]
 
 # =============================================================================
-## (compare RooRealVar and "number"
+## (compare RooRealVar and "the number"
 def _rrv_le_ ( s , o ) :
-    """compare RooRealVal and ``number''
+    """compare RooRealVal and 'the number'
     
     >>> var = ...
     >>> num = ...
-    >>> iv var <= num : print ' ok! '
+    >>> iv var <= num : print ( ' ok! ') 
     """
     return o >= s.getVal()
 
 # ============================================================================
-## (compare RooRealVar and "number"
+## (compare RooRealVar and "the number"
 def _rrv_lt_ ( s , o ) :
-    """compare RooRealVal and ``number''
+    """compare RooRealVal and 'the number'
     
     >>> var = ...
     >>> num = ...
-    >>> iv var < num : print ' ok! '
+    >>> iv var < num : print ( ' ok! ' ) 
     """
     return o > s.getVal()
 
 # ============================================================================
-## (compare RooRealVar and "number"
+## (compare RooRealVar and "the number"
 def _rrv_ge_ ( s , o ) :
-    """compare RooRealVal and ``number''
+    """compare RooRealVal and 'the number'
     
     >>> var = ...
     >>> num = ...
-    >>> iv var >= num : print ' ok! '
+    >>> iv var >= num : print ( ' ok! ' )
     """
     return o <= s.getVal()
 
 # ============================================================================
-## (compare RooRealVar and "number"
+## (compare RooRealVar and "the number"
 def _rrv_gt_ ( s , o ) :
-    """compare RooRealVal and ``number''
+    """compare RooRealVal and 'the number'
     
     >>> var = ...
     >>> num = ...
-    >>> iv var > num : print ' ok! '
+    >>> iv var > num : print ( ' ok! ') 
     """
     return o < s.getVal()
 
@@ -542,7 +542,7 @@ _new_methods_ += [
 def _rav_getval_  ( self ) :
     """Get the value, associated with the variable
     >>> var = ...
-    >>> print var.value 
+    >>> print ( var.value )
     """
     return self.getVal()
 
@@ -550,7 +550,7 @@ def _rav_getval_  ( self ) :
 def _rav_getvale_ ( self ) :
     """Get the value(and the error), associated with the variable
     >>> var = ...
-    >>> print  var.value 
+    >>> print  ( var.value )
     """
     v = self.getVal()
     e = self.getError() 
@@ -708,7 +708,7 @@ def _rar_name_ ( vname ) :
 #  total , ratio = total_ratio (  yield1 , yield2 ) 
 #  @endcode
 def  total_ratio ( var1 , var2 ) :
-    """Convert two yields into ``total yield'' and ``ratio''
+    """Convert two yields into 'total yield' and 'ratio'
     
     >>> yield1 = ROOT.RooRelaVar( ... )
     >>> yield2 = ROOT.RooRelaVar( ... )
@@ -716,9 +716,9 @@ def  total_ratio ( var1 , var2 ) :
     """
     
     assert isinstance ( var1 , ROOT.RooAbsReal,\
-                        "Invalid type of ``var1'' %s/%s" % ( var1 , type ( var1 ) ) )
+                        "Invalid type of 'var1': %s/%s" % ( var1 , type ( var1 ) ) )
     assert isinstance ( var2 , ROOT.RooAbsReal,\
-                        "Invalid type of ``var2'' %s/%s" % ( var2 , type ( var2 ) ) )
+                        "Invalid type of 'var2': %s/%s" % ( var2 , type ( var2 ) ) )
     
     name     = var1.name ,  var2.name 
     total    = add_var   ( var1 , var2 ,
@@ -737,16 +737,16 @@ def  total_ratio ( var1 , var2 ) :
 #  total , fraction = total_fraction (yield1 , yield2 ) 
 #  @endcode
 def total_fraction ( var1 , var2 ) :
-    """Convert two yields into ``total yield'' and ``fraction''
+    """Convert two yields into 'total yield'' and 'fraction'
     >>> yield1 = ROOT.RooRelaVar( ... )
     >>> yield2 = ROOT.RooRelaVar( ... )
     >>> total , fraction = total_fraction (  yield1 , yield2 ) 
     """
     
     assert isinstance ( var1 , ROOT.RooAbsReal,\
-                        "Invalid type of ``var1'' %s/%s" % ( var1 , type ( var1 ) ) )
+                        "Invalid type of 'var1': %s/%s" % ( var1 , type ( var1 ) ) )
     assert isinstance ( var2 , ROOT.RooAbsReal,\
-                        "Invalid type of ``var2'' %s/%s" % ( var2 , type ( var2 ) ) )
+                        "Invalid type of 'var2': %s/%s" % ( var2 , type ( var2 ) ) )
     
     names    = var1.name ,  var2.name 
     total    = add_var      ( var1 , var2 ,
@@ -867,12 +867,12 @@ class FIXVAR(object):
 
     @property
     def variables ( self ) :
-        """``variables'' : list of variables"""
+        """'variables' : list of variables"""
         return self.__variables
 
     @property
     def fixed ( self ) :
-        """``fixed'' : fixed variable?"""
+        """'fixed' : fixed variable?"""
         return self.__fixed
         
 # =============================================================================
@@ -904,7 +904,7 @@ class KeepBinning(object):
     
     @property
     def bins ( self ) :
-        """``bins'' : the binning scheme"""
+        """'bins' : the binning scheme"""
         return self.__bins
     
 # =============================================================================
@@ -1117,10 +1117,10 @@ def binning ( edges , nbins = 0 , name = '' ) :
     - see ROOT.RooBinning
     """
     assert isinstance ( nbins , integer_types ) and 0 <= nbins, \
-           "Invalid ``nbins'' parameter %s/%s" % ( nbins , type ( nbins ) )
+           "Invalid 'nbins' parameter %s/%s" % ( nbins , type ( nbins ) )
 
     nb = len ( edges ) 
-    assert 2 <= nb , "Invalid length of ``edges'' array!"
+    assert 2 <= nb , "Invalid length of 'edges' array!"
 
     if 2 == nb :
         return ROOT.RooBinning ( max ( 1 , nbins ) , edges[0] , edges[1] , name ) 
@@ -1132,29 +1132,38 @@ def binning ( edges , nbins = 0 , name = '' ) :
     
 # =============================================================================
 ## Dedicated unpickling factory for RooRealVar
-def rrv_factory ( args , errors , binnings , fixed ) :
+def _rrv_factory ( args , errors , binnings , fixed , *attrs ) :
     """ Dedicated unpickling factory for `ROOT.RooRealVar`
     """
+
     ## create it
     rrv = ROOT.RooRealVar ( *args )
 
     ## set errors if needed 
-    if errors :
-        if   2 == len ( errors ) : rrv.setAsymError ( *errors ) 
-        elif 1 == len ( errors ) : rrv.setError     ( *errors )
+    if   errors and  2 == len ( errors ) : rrv.setAsymError ( *errors ) 
+    elif errors and  1 == len ( errors ) : rrv.setError     ( *errors )
 
     for b in binnings :
-        nb = b.GetName() 
-        if nb : rrv.setBinning ( b , nb ) 
-        
+        if b : rrv.setBinning ( b , b.GetName ()) 
+
     rrv.setConstant ( fixed )
+    
+    if attrs :
+        battrs = attrs[0] 
+        for n , a in battrs : rrv.setAttribute          ( n , a )
+        if 1 < len ( attrs ) :
+            sattrs = attrs[1] 
+            for n , a in sattrs : rrv.setStringAttribute    ( n , a )
+            if 2 < len ( attrs ) :
+                tattrs = attrs[2]             
+                for n , a in tattrs : rrv.setTransientAttribute ( n , a ) 
     
     return rrv
 
 # =============================================================================
 ## Reducing of <code>RooRealVar</code> for pickling/unpickling 
 #  @see RooRooRealVar 
-def rrv_reduce ( rrv ) :
+def _rrv_reduce ( rrv ) :
     """ Reducing of `ROOT.RooRealVar` for pickling 
     - see ROOT.RooRooRealVar 
     """
@@ -1184,31 +1193,39 @@ def rrv_reduce ( rrv ) :
     else :
         errors = () 
 
-    ## bining schemes 
-    bnames   = rrv.getBinningNames()
-    binnings = [] 
-    for nb in bnames:
-        if not nb : continue
-        bb = rrv.getBinning ( nb , False ) 
-        if bb.GetName () : binnings.append ( bb )
+    ## binings 
         
-    binnings = tuple ( binnings ) 
+    binnings = tuple (   rrv.getBinning ( n , False )       for n in rrv.getBinningNames     () )
 
+    ## attributes:
+    
+    battrs   = tuple ( ( n , rrv.getAttribute          ( n ) ) for   n       in rrv.attributes          () ) 
+    sattrs   = tuple ( ( n , a                               ) for ( n , a ) in rrv.stringAttributes    () ) 
+    tattrs   = tuple ( ( n , rrv.getTransientAttribute ( n ) ) for   n       in rrv.transientAttributes () ) 
+        
     ## fixed ? 
     fixed = True if rrv.isConstant() else False 
+
+    if tattrs : 
+        content = args , errors , binnings , fixed , battrs , sattrs , tattrs
+    elif sattrs :
+        content = args , errors , binnings , fixed , battrs , sattrs
+    elif battrs : 
+        content = args , errors , binnings , fixed , battrs 
+    else :        
+        content = args , errors , binnings , fixed 
     
-    content = args , errors , binnings , fixed
     
-    return rrv_factory , content 
+    return _rrv_factory , content 
 
 
-ROOT.RooRealVar.__reduce__ = rrv_reduce
+ROOT.RooRealVar.__reduce__ = _rrv_reduce
 
 
 # =============================================================================
 ## factory for unpickling of <code>RooFormulaVar</code> and
 #  <code>Ostap::FormulaVar</code>
-def rfv_factory ( klass , args , vars ) :
+def _rfv_factory ( klass , args , vars ) :
     """Factory for unpickling of `RooFormulaVar` and `Ostap.FormulaVar`
     """
 
@@ -1229,7 +1246,7 @@ def rfv_factory ( klass , args , vars ) :
 ## Reduce <code>RooFormulaVar</code> and <code>Ostap::FormulaVar</code> for pickling
 #  @see RooFormulaVar 
 #  @see Ostap::FormulaVar 
-def rfv_reduce ( rfv ) : 
+def _rfv_reduce ( rfv ) : 
     """Reduce `RooFormulaVar` and `Ostap::FormulaVar` for pickling
     - see RooFormulaVar 
     - see Ostap.FormulaVar 
@@ -1249,7 +1266,7 @@ def rfv_reduce ( rfv ) :
 
     args  = name , title , expression 
     
-    return rfv_factory , ( type ( rfv ) , args , vars ) 
+    return _rfv_factory , ( type ( rfv ) , args , vars ) 
 
 
 # =============================================================================
@@ -1283,18 +1300,18 @@ if (6,22) <= root_info :
     ROOT.RooFormulaVar. expression = _rfv_expr_
     ROOT.RooFormulaVar. __str__    = _rfv_str_
     ROOT.RooFormulaVar. __repr__   = _rfv_repr_
-    ROOT.RooFormulaVar.__reduce__  = rfv_reduce
+    ROOT.RooFormulaVar.__reduce__  = _rfv_reduce
 else :
-    Ostap.FormulaVar.__reduce__    = rfv_reduce
+    Ostap.FormulaVar.__reduce__    = _rfv_reduce
     Ostap.FormulaVar. __str__      = _rfv_str_
     Ostap.FormulaVar. __repr__     = _rfv_repr_
-    Ostap.FormulaVar.__reduce__    = rfv_reduce
+    Ostap.FormulaVar.__reduce__    = _rfv_reduce
 
 
 # =============================================================================
 ## unpickle <code>Ostap::MoreFooFit::TwoVars</code> objects
 #  @see Ostap::MoreRooFit.TwoVars
-def r2v_factory ( klass , *args ) :
+def _r2v_factory ( klass , *args ) :
     """unpickle `Ostap::MoreFooFit::TwoVars` objects
     - see Ostap.MoreRooFit.TwoVars
     """
@@ -1303,24 +1320,49 @@ def r2v_factory ( klass , *args ) :
 # =============================================================================
 ## Reduce <code>Ostap::MoreFooFit::TwoVars</code> objects
 #  @see Ostap::MoreRooFit.TwoVars
-def r2v_reduce ( vars ) :
+def _r2v_reduce ( var ) :
     """Reduce `Ostap::MoreFooFit::TwoVars` objects
     - see Ostap.MoreRooFit.TwoVars
     """
-    return r2v_factory , ( type ( var ) , var.name , var.title , var.x() , var.y() )
+    return _r2v_factory , ( type ( var ) , var.name , var.title , var.x() , var.y() )
 
+Ostap.MoreRooFit.TwoVars.__reduce__  = _r2v_reduce
 
-Ostap.MoreRooFit.TwoVars.__reduce__  = r2v_reduce
+# ===================================================================
+## Reduce <code>Ostap::MoreFooFit::Addition</code> objects
+#  @see Ostap::MoreRooFit.Addition
+def _radd1_reduce ( var ) :
+    """Reduce `Ostap.MoreFooFit.Addition` objects
+    - see Ostap.MoreRooFit.Addition
+    """
+    content = type ( var ) , var.name , var.title , var.x () , var.y ()
+    return _r2v_factory , content 
 
+# ===================================================================
+## Reduce <code>Ostap::MoreFooFit::Addition3</code> objects
+#  @see Ostap::MoreRooFit.Addition3
+def _radd2_reduce ( var ) :
+    """Reduce `Ostap.MoreFooFit.Addition` objects
+    - see Ostap.MoreRooFit.Addition2
+    """
+    content = type ( var ) , var.name , var.title , var.x () , var.y () , var.c1 () , var.c2 () 
+    return _r2v_factory , content 
+
+Ostap.MoreRooFit.Addition    .__reduce__  = _radd1_reduce
+Ostap.MoreRooFit.Addition2   .__reduce__  = _radd2_reduce
+
+Ostap.MoreRooFit.Subtraction .__reduce__  = _r2v_reduce
+Ostap.MoreRooFit.Product     .__reduce__  = _r2v_reduce
+Ostap.MoreRooFit.ProductPdf  .__reduce__  = _r2v_reduce
 
 # ===================================================================
 ## Reduce <code>Ostap::MoreFooFit::Combination</code> objects
 #  @see Ostap::MoreRooFit.Combination
-def _rc_reduce ( vars ) :
+def _rcomb_reduce ( var ) :
     """Reduce `Ostap.MoreFooFit.Combination` objects
     - see Ostap.MoreRooFit.Combination
     """
-    return r2v_factory , ( type ( var ) ,
+    return _r2v_factory , ( type ( var ) ,
                            var.name , var.title ,
                            var.x()  , var.y()   ,
                            var.alpha() , var.beta() , var.gamma () )
@@ -1328,40 +1370,194 @@ def _rc_reduce ( vars ) :
 # ===================================================================
 ## Reduce <code>Ostap::MoreFooFit::Asymmetry</code> objects
 #  @see Ostap::MoreRooFit.Asymmetry
-def _ra_reduce ( vars ) :
+def _rasym_reduce ( var ) :
     """Reduce  `Ostap::MoreFooFit::Asymmetry` objects
     - see Ostap.MoreRooFit.Asymmetry
     """
-    return r2v_factory , ( type ( var ) ,
-                           var.name , var.title ,
-                           var.x()  , var.y()   ,
-                           var.scale () )
+    return _r2v_factory , ( type ( var ) ,
+                            var.name , var.title ,
+                            var.x()  , var.y()   ,
+                            var.scale () )
 
+Ostap.MoreRooFit.Combination.__reduce__  = _rcomb_reduce
+Ostap.MoreRooFit.Asymmetry.  __reduce__  = _rasym_reduce
 
-Ostap.MoreRooFit.Combination.__reduce__  = _rc_reduce
-Ostap.MoreRooFit.Asymmetry.  __reduce__  = _ra_reduce
 
 
 
 # =============================================================================
 ## Reduce <code>RooConstVar</code>
 #  @see RooConstVar 
-def rcv_reduce ( var ) :
+def _rconst_reduce ( var ) :
     """ Reduce `ROOT.RooConstVar`
     - see ROOT.RooConstVar
     """
-    return r2v_factory , ( type ( var )  ,
+    return _r2v_factory , ( type ( var )  ,
                            var.name      ,
                            var.title     ,
                            float ( var ) )  
 
-ROOT.RooConstVar.__reduce__ = rcv_reduce 
+ROOT.RooConstVar.__reduce__ = _rconst_reduce 
 
+# =============================================================================
+## unpickle <code>Ostap::MoreFooFit::Constant</code> objects
+#  @see Ostap::MoreRooFit.Constant
+def _rconst2_factory ( klass , name , title , value , vars ) :
+    """unpickle `Ostap.MoreFooFit.Constant` objects
+    - see Ostap.MoreRooFit.Constant
+    """
+    vlst = ROOT.RooArgList()
+    for v in vars : vlst.add ( v ) 
+    return klass ( name , title , value , vlst )
+
+# =============================================================================
+## Reduce <code>Ostap::MoreRooFit::Constant</code>
+#  @see RooConstVar 
+def _rconst2_reduce ( var ) :
+    """ Reduce `ROOT.RooConstVar`
+    - see ROOT.RooConstVar
+    """
+    return _rconst2_factory , ( type ( var )  ,
+                                var.name      ,
+                                var.title     ,
+                                float ( var ) , 
+                                tuple (  c for c in var.vlst () ) )
+
+Ostap.MoreRooFit.Constant.  __reduce__  = _rconst2_reduce
+
+# =============================================================================
+## unpickle <code>Ostap::MoreFooFit::Bernstein</code> objects
+#  @see Ostap::MoreRooFit::Bernstein
+#  @see Ostap::MoreRooFit::Monotonic 
+#  @see Ostap::MoreRooFit::Convex 
+#  @see Ostap::MoreRooFit::ConvexOnly
+def _rpoly_factory ( klass , name , title , xvar , pars , *args ) :
+    """unpickle `Ostap.MoreFooFit.Bernstein` objects
+    - see Ostap.MoreRooFit.Bernstein
+    """
+    plst = ROOT.RooArgList()
+    for v in pars : plst.add ( v ) 
+    return klass ( name , title , xvar , plst , *args )
+
+
+# =============================================================================
+## Reduce <coide>Ostap::MoreRooFit::Bernstein</code> object 
+#  @see Ostap::MoreRooDit::Bernstein
+def _rbern_reduce ( var ) :
+    """Reduce `Ostap.MoreRooFit.Bernstein` object 
+    - see Ostap.MoreRooDit.Bernstein
+    """
+    return _rpoly_factory , ( type ( var )  ,
+                              var.name      ,
+                              var.title     ,
+                              var.xvar ()   ,
+                              tuple ( c for c in var.pars () ) ,                               
+                              var.xmin ()   ,
+                              var.xmax ()   )
+
+Ostap.MoreRooFit.Bernstein.  __reduce__  = _rbern_reduce
+
+# =============================================================================
+## Reduce <coide>Ostap::MoreRooFit::Monotonic</code> object 
+#  @see Ostap::MoreRooDit::Monotonic
+def _rmono_reduce ( var ) :
+    """Reduce `Ostap.MoreRooFit.Monotonic` object 
+    - see Ostap.MoreRooDit.Monotonic
+    """
+    return _rpoly_factory , ( type ( var )  ,
+                              var.name      ,
+                              var.title     ,
+                              var.xvar ()   ,
+                              tuple ( c for c in var.pars () ) ,                               
+                              var.monotonic().increasing() , 
+                              var.xmin ()   ,
+                              var.xmax ()   ,
+                              var.a    ()   ,
+                              var.b    ()   )
+
+Ostap.MoreRooFit.Monotonic.  __reduce__  = _rmono_reduce
+
+# =============================================================================
+## Reduce <coide>Ostap::MoreRooFit::Convex</code> object 
+#  @see Ostap::MoreRooDit::Monotonic
+def _rconv1_reduce ( var ) :
+    """Reduce `Ostap.MoreRooFit.Monotonic` object 
+    - see Ostap.MoreRooDit.Monotonic
+    """
+    return _rpoly_factory , ( type ( var )  ,
+                              var.name      ,
+                              var.title     ,
+                              var.xvar ()   ,
+                              tuple ( c for c in var.pars () ) ,                               
+                              var.convex ().increasing () , 
+                              var.convex ().convex     () , 
+                              var.xmin ()   ,
+                              var.xmax ()   ,
+                              var.a    ()   ,
+                              var.b    ()   )
+
+Ostap.MoreRooFit.Convex.  __reduce__  = _rconv1_reduce
+
+# =============================================================================
+## Reduce <coide>Ostap::MoreRooFit::ConvexOnly</code> object 
+#  @see Ostap::MoreRooDit::ConvexOnly
+def _rconv2_reduce ( var ) :
+    """Reduce `Ostap.MoreRooFit.ConvexOnly` object 
+    - see Ostap.MoreRooDit.ConvexOnly
+    """
+    return _rpoly_factory , ( type ( var )  ,
+                              var.name      ,
+                              var.title     ,
+                              var.xvar ()   ,
+                              tuple ( c for c in var.pars () ) ,                               
+                              var.convex ().convex     () , 
+                              var.xmin ()   ,
+                              var.xmax ()   ,
+                              var.a    ()   ,
+                              var.b    ()   )
+
+Ostap.MoreRooFit.ConvexOnly.  __reduce__  = _rconv2_reduce
+
+
+
+# ============================================================================
+## get variables from <code>Ostap::Models::Uniform<code> object
+#  @see Ostap::Models::Uniform
+#  @code
+#  unipdf = ...
+#  vars = unipdf.vars() 
+#  @endocide
+def _runi_vars_ ( u ) :
+    """get variables from <code>Ostap::Models::Uniform<code> object
+    -see Ostap.Models.Uniform 
+    >>> unipdf = ...
+    >>> vars = unipdf.vars() 
+    """
+    d = uni.dim()
+    ##
+    if   1 == d : return uni.x() , 
+    elif 2 == d : return uni.x() , uni.y()  
+    elif 3 == d : return uni.x() , uni.y() , unu.z()
+    ##
+    return () 
+
+# ============================
+## reduce <code>Ostap::Models::Uniform<code> object
+#  @see Ostap::Models.Uniform 
+def _runi_reduce_ ( uni ) :
+    """reduce <code>Ostap::Models::Uniform<code> object
+    - see Ostap::Models.Uniform 
+    """
+    return _r2v_factory , ( type ( uni ) ,
+                            uni.name     ,
+                            uni.title    ) + uni.vars() 
+
+Ostap.Models.Uniform.__reduce__ = _runi_reduce_
 
 # =============================================================================
 ## unpickle RooUniformBinning object
 #  @see RooUniformBinnig  
-def rub_factory ( *args ) :
+def _rub_factory ( *args ) :
     """unpickle RooUniformBinning object
     -see ROOT.RooUniformBinnig
     """
@@ -1378,12 +1574,12 @@ def _rub_reduce_ ( rub ) :
     if nbins : nbins -= 1
     content = rub.lowBound () , rub.highBound(), nbins , rub.GetName()
     
-    return rub_factory, content
+    return _rub_factory, content
 
 # =============================================================================
 ## unpickle RooBinning object
 #  @see RooBinnig  
-def rb_factory ( data , name  ) :
+def _rb_factory ( data , name  ) :
     """unpickle RooBinning object
     -see ROOT.RooUniformBinnig
     """
@@ -1402,12 +1598,15 @@ def _rb_reduce_ ( rb  )  :
     data  = array.array ( 'd' , [ 1.0 * ab[i] for i in range ( nb ) ] )
 
     content = data, rb.GetName()  
-    return rb_factory, content
+    return _rb_factory, content
 
 
 ROOT.RooBinning       .__reduce__ = _rb_reduce_
 ROOT.RooUniformBinning.__reduce__ = _rub_reduce_
         
+# =============================================================================
+
+
 # =============================================================================
 
 

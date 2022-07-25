@@ -11,7 +11,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-06-07
 # =============================================================================
-"""Very specific helper class to implement ``pythonic'' RooAbsReal for RooFit
+"""Very specific helper class to implement 'pythonic' RooAbsReal for RooFit
 
 - For *OLD* PyROOT only
 
@@ -77,7 +77,7 @@ if old_PyROOT :
     #      print 'function value is %s ', myVar()
     # @endcode
     class PyVAR (object) :
-        """Helper base class to implement ``pure-python'' RooAbsVar
+        """Helper base class to implement 'pure-python' RooAbsVar
         
         - Typical usage (for *OLD* PyROOT only!):
         
@@ -140,22 +140,22 @@ if old_PyROOT :
             
         @property
         def var     ( self ) :
-            """``var'': the actual C++ RooAbsReal object"""
+            """'var': the actual C++ RooAbsReal object"""
             return self.__var
         
         @property
         def name    ( self ) :
-            """``name'' : the name of the variable"""
+            """'name' : the name of the variable"""
             return self.var.GetName()
         
         @property
         def title   ( self ) :
-            """``title'' : the title of the variable"""
+            """'title' : the title of the variable"""
             return self.var.GetTitle()
     
         @property
         def varlist ( self ) :
-            """``variables'' : get all variables (as RooArgList)  from Ostap::Functions::PyVar
+            """`variables' : get all variables (as RooArgList)  from Ostap::Functions::PyVar
             """
             return self.var.varlist ()
     
@@ -177,7 +177,7 @@ if old_PyROOT :
         ## clone the object (needed by C++ partner class)
         def clone ( self , **kwargs ) :
             """Clone the object
-            -  attention: existing PDF is ``copied'', unless specified via kwargs (by C++)
+            -  attention: existing PDF is 'copied', unless specified via kwargs (by C++)
             """
             conf =  {
                 'name'    : self.name    ,
@@ -202,7 +202,7 @@ if old_PyROOT :
             >>> var = ...
             >>> var.evaluate() 
             """
-            raise NotImplementedError("PyVAR: ``evaluate'' is not implemented!")
+            raise NotImplementedError("PyVAR: 'evaluate' is not implemented!")
         
         # =====================================================================
         ## get the value of the function
@@ -236,7 +236,7 @@ if old_PyROOT :
 ## @class PyVAR2
 #  Light version of PyVAR
 class PyVAR2 (object) :
-    """Helper base class to implement ``pure-python'' RooAbsVar
+    """Helper base class to implement 'pure-python' RooAbsVar
     
     - Typical usage:
     
@@ -277,7 +277,7 @@ class PyVAR2 (object) :
                    title  = ''   ):  ## the title 
         
         ## function must be valid function! 
-        assert function and callable ( function ) , "``function'' is not callable!"
+        assert function and callable ( function ) , "`function' is not callable!"
         
         if not title : title = "PyVAR2(%s)"  % name
         
@@ -305,27 +305,27 @@ class PyVAR2 (object) :
         
     @property
     def var       ( self ) :
-        """``var'': the actual C++ RooAbsReal object"""
+        """'var': the actual C++ RooAbsReal object"""
         return self.__var
     
     @property
     def name      ( self ) :
-        """``name'' : the name of the varibale"""
+        """'name' : the name of the varibale"""
         return self.var.GetName()
     
     @property
     def title     ( self ) :
-        """``title'' : the title of the variable"""
+        """'title' : the title of the variable"""
         return self.var.GetTitle()
     
     @property
     def variables ( self ) :
-        """``variables'' : list(ROOT.RooArgList) of all variables"""
+        """'variables' : list(ROOT.RooArgList) of all variables"""
         return self.__vars
     
     @property
     def vars      ( self ) :
-        """``vars'' : tuple of all variables"""
+        """'vars' : tuple of all variables"""
         return  tuple ( [ i for i in self.__vars ] ) 
     
 # =============================================================================
