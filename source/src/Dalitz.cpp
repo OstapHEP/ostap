@@ -642,7 +642,7 @@ double Ostap::Kinematics::Dalitz0::P_R12
   const double /* s2 */ ) const
 {
   const double f1 = Ostap::Kinematics::triangle ( s , s1 , m3sq () ) ;
-  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s ) : 0.0 ;
+  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s1 ) : 0.0 ;
 }
 // =============================================================================
 // momentum of 1st particle in (1,2) restframe
@@ -703,7 +703,7 @@ double Ostap::Kinematics::Dalitz0::P_R23
   const double    s2 ) const
 {
   const double f1 = Ostap::Kinematics::triangle ( s , s2 , m1sq () ) ;
-  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s ) : 0.0 ;
+  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s2 ) : 0.0 ;
 }
 // =============================================================================
 // momentum of 2nd particle in (2,3) restframe
@@ -763,7 +763,7 @@ double Ostap::Kinematics::Dalitz0::P_R31
 {
   const double s3_ = s3 ( s , s1 , s2 ) ;
   const double f1 = Ostap::Kinematics::triangle ( s , s3_ , m2sq () ) ;
-  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s ) : 0.0 ;
+  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s3_ ) : 0.0 ;
 }
 // =============================================================================
 // momentum of 3rd particle in (3,1) restframe

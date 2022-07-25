@@ -1,4 +1,4 @@
-3#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file  ostap/fitting/pdfbasic.py
@@ -4666,7 +4666,7 @@ class PDF3(APDF3,FUN3) :
         """
         return self.fun.getVal ( self.vars ) 
     
-    # =Ча========================================================================
+    # =========================================================================
     ## make a product of two PDFs
     def __mul__ ( self , other ) :
         """Make a product of two PDFs
