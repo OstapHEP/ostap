@@ -82,7 +82,7 @@ class Morphing1D_pdf (PDF1) :
             
             pdfk = pdfs [ k ]
 
-            if   isinstance ( pdfk , PDF            ) and pdfk.xvar is self.xvar : pass 
+            if   isinstance ( pdfk , PDF1           ) and pdfk.xvar is self.xvar : pass 
             elif isinstance ( pdfk , ROOT.RooAbsPdf ) : 
                 pdfk = Generic1D_pdf ( pdfk , xvar = self.xvar ) 
             else :
