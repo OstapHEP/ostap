@@ -16,6 +16,13 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
+from   ostap.core.pyrouts       import hID, VE 
+import ostap.fitting.models     as     Models
+import ostap.fitting.toys       as     Toys
+import ostap.histos.histos
+from   ostap.utils.timing       import timing 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 import ROOT, time, random, math
 # =============================================================================
 # logging 
@@ -26,13 +33,7 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-from   ostap.core.pyrouts       import hID, VE 
-import ostap.fitting.models     as     Models
-import ostap.fitting.toys       as     Toys
-import ostap.histos.histos
-from   ostap.utils.timing       import timing 
-from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+
 # =============================================================================
 mass        = ROOT.RooRealVar  ( 'mass' , '', 0 , 1 )  
 gauss       = Models.Gauss_pdf ( 'G'    , xvar = mass )

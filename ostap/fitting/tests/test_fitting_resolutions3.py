@@ -14,12 +14,12 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random
 from   ostap.core.pyrouts       import Ostap
 import ostap.fitting.models     as     Models 
 from   ostap.fitting.simfit     import combined_data 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ROOT, random
 # ============================================================================= 
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_fitting_resolution3' )

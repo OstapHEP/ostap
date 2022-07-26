@@ -16,8 +16,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, time, random
-# =============================================================================
 from   ostap.core.pyrouts   import hID
 import ostap.fitting.models as     Models
 import ostap.fitting.toys   as     Toys
@@ -25,6 +23,7 @@ import ostap.histos.histos
 from   ostap.utils.timing   import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ROOT, time, random
 # =============================================================================
 # logging 
 # =============================================================================

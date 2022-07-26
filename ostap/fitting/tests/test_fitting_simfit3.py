@@ -18,7 +18,6 @@ Simultaneous fit of 1D and 2D-distributions
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
 from   builtins    import range 
@@ -27,6 +26,7 @@ from   ostap.utils.timing       import timing
 from   ostap.logger.utils       import rooSilent
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ROOT, random
 # =============================================================================
 # logging 
 # =============================================================================

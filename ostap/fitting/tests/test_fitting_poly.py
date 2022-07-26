@@ -16,7 +16,6 @@ from   __future__               import print_function
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-import ROOT, random
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID
@@ -24,6 +23,7 @@ from   ostap.logger.utils       import rooSilent
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ROOT, random
 # =============================================================================
 # logging 
 # =============================================================================

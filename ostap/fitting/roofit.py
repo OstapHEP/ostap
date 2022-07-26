@@ -21,7 +21,6 @@ __all__     = (
     'var_from_name' , ## "convert" name/expression into variable/formula
     ) 
 # =============================================================================
-import ROOT, random, math 
 from   ostap.core.core              import Ostap, VE
 from   ostap.fitting.variables      import SETVAR, FIXVAR  
 import ostap.fitting.roocollections
@@ -30,6 +29,7 @@ import ostap.fitting.printable
 import ostap.fitting.roocmdarg   
 from   ostap.fitting.dataset        import setStorage, useStorage
 from   ostap.core.ostap_types       import integer_types 
+import ROOT, random, math 
 # =============================================================================
 # logging 
 # =============================================================================

@@ -13,7 +13,6 @@
 # ============================================================================= 
 from   __future__               import print_function
 # ============================================================================= 
-import ROOT, random
 from   builtins                 import      range
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
@@ -23,6 +22,7 @@ import ostap.io.zipshelve       as     DBASE
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ROOT, random
 # =============================================================================
 # logging 
 # =============================================================================

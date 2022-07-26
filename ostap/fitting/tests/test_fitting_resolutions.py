@@ -16,7 +16,6 @@ from   __future__               import print_function
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random
 import ostap.fitting.roofit 
 from   ostap.core.core          import VE, dsID
 from   builtins                 import range
@@ -25,6 +24,7 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
 import ostap.logger.table       as     T 
 from   ostap.core.meta_info     import root_info, python_info
+import ROOT, random
 # =============================================================================
 # logging 
 # =============================================================================

@@ -13,10 +13,10 @@
 # ============================================================================= 
 from   __future__        import print_function
 # ============================================================================= 
-import ROOT, random 
 import ostap.fitting.minuit
 from   ostap.utils.timing   import timing
 from   ostap.core.meta_info import old_PyROOT 
+import ROOT, random 
 # =============================================================================
 # logging 
 # =============================================================================

@@ -14,7 +14,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random, sys 
 from   builtins                     import range
 from   ostap.core.meta_info         import root_info 
 import ostap.core.pyrouts 
@@ -27,6 +26,7 @@ from   ostap.fitting.pyselectors    import Variable, SelectorWithVars, DataSet_N
 from   ostap.logger.colorized       import attention
 import ostap.logger.table           as     T
 import ostap.parallel.parallel_fill
+import ROOT, random, sys 
 # =============================================================================
 # logging 
 # =============================================================================

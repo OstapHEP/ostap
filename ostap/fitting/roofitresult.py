@@ -810,7 +810,7 @@ def _rfr_global_corr_ ( self , par ) :
     ## get covariance matrix 
     c = self.covmatrix()
 
-    cv = c [ index , index ] * v [ index , index ]
+    cv = c ( index , index ) * v ( index , index ) 
     
     return  math.sqrt ( 1.0 - 1.0 / cv )
     

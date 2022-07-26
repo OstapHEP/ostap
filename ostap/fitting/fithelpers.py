@@ -303,19 +303,20 @@ class VarMaker (object) :
         # var = ( min , max )
         # var = ( value , min , max )
         
-        if  var is None : 
+        if   isinstance ( var , ROOT.RooAbsReal ) : pass 
+        elif var is None : 
             assert name and args , "make_var: 'name' and 'args' must be specified when 'var' is None!"
             var = name , title if title else name            
         elif isinstance ( var , num_types ) :
             assert name , "make_var: 'name' must be specified when 'var' is of numerical type!"
             var = name , title if title else name , float ( var ) 
-
+            
         ## convert sequence of values 
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif isinstance ( var , sequence_types  ) : var = tuple ( var )
 
-        ## units form var 
-        if var and isinstance ( var , tuple ) :
+        if   var and isinstance ( var , ROOT.RooAbsReal ) : pass 
+        elif var and isinstance ( var , tuple ) :
 
             ## content of args 
 

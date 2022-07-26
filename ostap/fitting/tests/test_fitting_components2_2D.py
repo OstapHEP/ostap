@@ -14,7 +14,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID
@@ -23,6 +22,7 @@ from   builtins                 import range
 from   ostap.fitting.background import make_bkg 
 from   ostap.plotting.canvas    import use_canvas 
 from   ostap.utils.timing       import timing 
+import ROOT, random
 # =============================================================================
 # logging 
 # =============================================================================

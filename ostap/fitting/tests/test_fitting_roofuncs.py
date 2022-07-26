@@ -16,13 +16,13 @@ from   __future__               import print_function
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random, math 
 from   builtins                 import range
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
 from   ostap.fitting.funbasic   import Id, Fun1D
 import ostap.fitting.roofuncs   as     RF 
+import ROOT, random, math 
 # =============================================================================
 # logging 
 # =============================================================================

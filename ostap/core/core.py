@@ -64,7 +64,6 @@ __all__     = (
 import math, sys, os 
 from   sys                    import version_info  as python_version 
 from   builtins               import range
-import ROOT, cppyy
 # =============================================================================
 ## ROOT.ROOT.EnableThreadSafety()
 from   ostap.math.base        import ( Ostap    , std     , cpp ,  
@@ -77,6 +76,7 @@ from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.meta_info   import root_info
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types   
+import ROOT, cppyy
 # =============================================================================
 # logging 
 # =============================================================================

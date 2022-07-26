@@ -11,7 +11,6 @@
 - It tests various multicomponents models 
 """
 # ============================================================================= 
-import ROOT, random, time, sys, datetime  
 from   ostap.core.pyrouts       import *
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
@@ -22,6 +21,7 @@ from   ostap.fitting.background import make_bkg
 from   ostap.core.meta_info     import root_info 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ROOT, random, time, sys, datetime  
 # ============================================================================= 
 from   ostap.logger.logger      import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'test_fitting_in_range_2d' )

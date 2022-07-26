@@ -11,7 +11,6 @@
 # ============================================================================= 
 from   __future__        import print_function
 # ============================================================================= 
-import ROOT, time 
 import ostap.fitting.roofit 
 import ostap.fitting.models  as     Models 
 from   ostap.core.core       import Ostap, std, VE, dsID
@@ -20,6 +19,7 @@ import ostap.io.zipshelve    as     DBASE
 from   ostap.utils.timing    import timing
 from   ostap.plotting.canvas import use_canvas 
 from   builtins              import range
+import ROOT, time 
 # =============================================================================
 # logging 
 # =============================================================================

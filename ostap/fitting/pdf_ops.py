@@ -494,7 +494,8 @@ def pdf1_sum ( pdf1 , pdf2 , *other ) :
     """Make an non-extended  sum of the 1D PDFs
     - see Sum1D
     """
-    if isinstance ( pdf2 , sequence_types ) :
+    if   isinstance ( pdf2 , PDF1 ) : pass 
+    elif isinstance ( pdf2 , sequence_types ) :
         args = tuple ( pdf2 ) + other 
         return pdf1_sum ( pdf1 , *args )
 
@@ -518,7 +519,8 @@ def pdf2_sum ( pdf1 , pdf2 , *other ) :
     """Make an non-extended  sum of the 2D PDFs
     - see Sum2D
     """
-    if isinstance ( pdf2 , sequence_types ) :
+    if   isinstance ( pdf2 , PDF2 ) : pass 
+    elif isinstance ( pdf2 , sequence_types ) :
         args = tuple ( pdf2 ) + other 
         return pdf2_sum ( pdf1 , *args )
 
@@ -543,7 +545,9 @@ def pdf3_sum ( pdf1 , pdf2 , *other ) :
     """Make an non-extended  sum of the 3D PDFs
     - see Sum3D
     """
-    if isinstance ( pdf2 , sequence_types ) :
+    
+    if   isinstance ( pdf2 , PDF3 ) : pass 
+    elif isinstance ( pdf2 , sequence_types ) :
         args = tuple ( pdf2 ) + other 
         return pdf3_sum ( pdf1 , *args )
 
