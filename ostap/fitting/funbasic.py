@@ -3243,21 +3243,20 @@ class AFUN3(AFUN2,ZVar) :
 class FUN3(AFUN3) :
     """Base class for 3D-function
     """
-
     def __init__ ( self , name , xvar , yvar , zvar , tricks = True , keep = () , **kwargs ) :
 
-        FUN2.__init__ ( self , name , xvar , yvar , tricks = tricks , keep = keep , **kwargs )
-        ZVar.__init__ ( self , zvar )
+        AFUN3.__init__ ( self , name , xvar , yvar , zvar , tricks = tricks , keep = keep , **kwargs )
         
         self.vars     .add    ( self.zvar )
         self.variables.append ( self.zvar )
         
         ## save the configuration
         self.config = {
-            'name' : self.name ,
-            'xvar' : self.xvar ,
-            'yvar' : self.yvar ,            
-            'zvar' : self.zvar ,            
+            'name'   : self.name   ,
+            'xvar'   : self.xvar   ,
+            'yvar'   : self.yvar   ,            
+            'zvar'   : self.zvar   ,            
+            'tricks' : self.tricks ,            
             }
         
         self.__call_OK = isinstance ( self.xvar , ROOT.RooAbsRealLValue ) and \

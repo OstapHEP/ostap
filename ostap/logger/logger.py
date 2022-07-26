@@ -56,10 +56,6 @@ FATAL   = 6
 ## some manipulations with logging module
 if not hasattr ( logging , 'VERBOSE' ) : logging.VERBOSE = 5
 # =============================================================================
-## some manipulations with logging module
-if not hasattr ( logging , 'VERBOSE' ) : logging.VERBOSE = 5
-
-# =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose1_(self, msg, *args, **kwargs):
     """Log 'msg % args' with severity 'VERBOSE'.
@@ -110,7 +106,6 @@ logging_date_format = "%Y-%m-%d %H:%M:%S"
 
 from ostap.utils.basic import isatty
 
-# =============================================================================
 ## The basic configuration 
 if isatty () :
     logging.basicConfig (
@@ -538,52 +533,52 @@ if isatty  () : make_colors()
 ## define the default logging thresholds as 'INFO'
 setLogging ( 3 )
 
-# =============================================================================
-# Log file?
-# =============================================================================
-log_file = os.getenv ( 'OSTAP_LOGFILE' , '' )
-if log_file : 
+## # =============================================================================
+## # Log file?
+## # =============================================================================
+## log_file = os.getenv ( 'OSTAP_LOGFILE' , '' )
+## if log_file : 
 
-    ## set buffering to be 1-line and decolorize the output   
-    class LogHandler(logging.FileHandler) :
-        def __init__(self, filename, mode='w', encoding=None, delay=0):
-            logging.FileHandler.__init__ ( self , filename , mode , encoding, delay ) 
-        def _open(self):
-            """
-            Open the current base file with the (original) mode and encoding.
-            Return the resulting stream.
-            """
-            stream = open(self.baseFilename, self.mode, buffering = 1 )
-            return stream
+##     ## set buffering to be 1-line and decolorize the output   
+##     class LogHandler(logging.FileHandler) :
+##         def __init__(self, filename, mode='w', encoding=None, delay=0):
+##             logging.FileHandler.__init__ ( self , filename , mode , encoding, delay ) 
+##         def _open(self):
+##             """
+##             Open the current base file with the (original) mode and encoding.
+##             Return the resulting stream.
+##             """
+##             stream = open(self.baseFilename, self.mode, buffering = 1 )
+##             return stream
         
-        def emit(self, record):
-            """Emit an ddecolorize the record
-            """
-            lname = logging_levels.get ( record.levelno , '' )
-            if not lname : lname = '%s' % record.levelno
-            record.levelname = lname
-            if with_colors () : record.msg = decolorize ( record.msg ) 
-            return logging.FileHandler.emit ( self , record ) 
+##         def emit(self, record):
+##             """Emit an ddecolorize the record
+##             """
+##             lname = logging_levels.get ( record.levelno , '' )
+##             if not lname : lname = '%s' % record.levelno
+##             record.levelname = lname
+##             if with_colors () : record.msg = decolorize ( record.msg ) 
+##             return logging.FileHandler.emit ( self , record ) 
     
-    loglev = os.getenv ( 'OSTAP_LOGLEVEL' , '%s' % logging.INFO )
-    try :
-        loglev = int ( loglev )
-        if not loglev in logging_levels : loglev = logging.INFO 
-    except :
-        loglev = logging.INFO
-    log_handler = LogHandler ( log_file , mode = 'w' )
-    log_handler.setLevel ( loglev ) 
-    formatter   = logging.Formatter ( logging_file_format , logging_date_format )
-    log_handler.setFormatter ( formatter   ) 
-    logging.root.addHandler  ( log_handler )
+##     loglev = os.getenv ( 'OSTAP_LOGLEVEL' , '%s' % logging.INFO )
+##     try :
+##         loglev = int ( loglev )
+##         if not loglev in logging_levels : loglev = logging.INFO 
+##     except :
+##         loglev = logging.INFO
+##     log_handler = LogHandler ( log_file , mode = 'w' )
+##     log_handler.setLevel ( loglev ) 
+##     formatter   = logging.Formatter ( logging_file_format , logging_date_format )
+##     log_handler.setFormatter ( formatter   ) 
+##     logging.root.addHandler  ( log_handler )
 
-if log_file :
+## if log_file :
 
-    logger = getLogger('ostap.logger.logger')
-    func   = lambda : logger.info ( 'Log-file is %s' %  log_file )
-    func () 
-    import atexit    
-    atexit.register ( func )
+##     logger = getLogger('ostap.logger.logger')
+##     func   = lambda : logger.info ( 'Log-file is %s' %  log_file )
+##     func () 
+##     import atexit    
+##     atexit.register ( func )
 
 logging.disable ( logging.INFO - 1 )  
 

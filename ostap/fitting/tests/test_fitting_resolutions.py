@@ -52,7 +52,7 @@ logger.info ('DATASET\n%s' % dataset.table ( prefix = "# " ) )
 # =============================================================================
 def make_print ( pdf , fitresult , title , logger = logger ) :
     
-    title2 ='%s resolution model' % title 
+    title2 ='%s' % title 
     logger.info ('%-20s : fit result\n%s' % ( title ,
                                               fitresult.table ( title  = title2 ,
                                                                 prefix = '# '   ) ) )
@@ -92,7 +92,7 @@ def test_gauss () :
     
     logger = getLogger ( 'test_gauss' )
     
-    logger.info ('Test ResoGauss:  single Gaussian resolution model' )
+    logger.info ('Test ResoGauss:  single Gaussian resolution' )
     from   ostap.fitting.resolution import ResoGauss 
     reso = ResoGauss( 'Gauss' , mass ,  sigma = ( 0.2 , 0.01 , 5 )  )
     
@@ -116,7 +116,7 @@ def test_2gauss () :
     
     logger = getLogger ( 'test_2gauss' )
 
-    logger.info ('Test ResoGauss2:  double Gaussian resolution model' )
+    logger.info ('Test ResoGauss2:  double Gaussian resolution' )
     from   ostap.fitting.resolution import ResoGauss2
     reso = ResoGauss2( 'Gauss2' , mass ,
                        sigma    = ( 0.2 , 0.01 , 5     ) ,
@@ -144,7 +144,7 @@ def test_apo2 () :
     
     logger = getLogger ( 'test_apo2' )
 
-    logger.info ('Test ResoApo2:  symmetric Apollonios resolution model' )
+    logger.info ('Test ResoApo2:  symmetric Apollonios2 resolution' )
     from   ostap.fitting.resolution import ResoApo2
     reso= ResoApo2( 'Apollonious2' , mass ,
                     sigma = ( 0.4 ,  0.01 ,  5.0 ) ,
@@ -171,7 +171,7 @@ def test_cb2 () :
     
     logger = getLogger ( 'test_cb2' )
 
-    logger.info ('Test ResoCB2: symmetric double-sided Crystal Ball resolution model' )
+    logger.info ('Test ResoCB2: symmetric double-sided Crystal Ball resolution' )
     from   ostap.fitting.resolution import ResoCB2
     reso = ResoCB2( 'CrystalBall2' , mass ,                        
                     sigma = ( 0.4 ,  0.01 ,  5.0 ) ,
@@ -199,7 +199,7 @@ def test_sech () :
     
     logger = getLogger ( 'test_sech' )
 
-    logger.info ('Test ResoSech: hyperbolic secant resolution model' )
+    logger.info ('Test ResoSech: hyperbolic secant resolution' )
     from   ostap.fitting.resolution import ResoSech
     reso = ResoSech ( 'Sech' , mass , sigma = ( 0.5 , 0.01 , 5.0 ) )
     
@@ -224,7 +224,7 @@ def test_logistic () :
     
     logger = getLogger ( 'test_logistic' )
 
-    logger.info ('Test ResoLogistic: logistic (sech-squared) resolution model' )
+    logger.info ('Test ResoLogistic: logistic (sech-squared) resolution' )
     from   ostap.fitting.resolution import ResoLogistic
     reso = ResoLogistic ( 'Logistic' , mass ,  sigma = ( 0.4 , 0.01 , 5.0 ) )
             
@@ -249,7 +249,7 @@ def test_bukin () :
     
     logger = getLogger ( 'test_bukin' )
 
-    logger.info ('Test ResoBukin: symmetric Bukin resolution model' )
+    logger.info ('Test ResoBukin: symmetric Bukin resolution' )
     from   ostap.fitting.resolution import ResoBukin
 
     reso = ResoBukin ( 'Bukin' , mass ,
@@ -276,7 +276,7 @@ def test_bukin () :
 # =============================================================================
 def test_johnsonSU () :
     
-    logger.info ('Test JohnsonSU: symmetric JohnsonSU  resolution model' )
+    logger.info ('Test JohnsonSU: symmetric JohnsonSU  resolution' )
     from   ostap.fitting.resolution import ResoJohnsonSU 
     reso = ResoJohnsonSU ( 'JohnsonSU' , mass ,
                            delta = ( 1.7 , 1.e-6 , 1000 ) ,
@@ -304,7 +304,7 @@ def test_sinhasinh () :
     
     logger = getLogger ( 'test_sinhasinh' )
 
-    logger.info ('Test SinhAsinh: symmetric SinhAsinh resolution model' )
+    logger.info ('Test SinhAsinh: symmetric SinhAsinh resolution' )
     from   ostap.fitting.resolution import ResoSinhAsinh
     reso = ResoSinhAsinh ( 'SinhAsinh' , mass ,  
                            delta = ( 0.7 , 1.e-5 , 1000 ) )
@@ -335,7 +335,7 @@ def test_hyperbolic () :
     
     logger = getLogger ( 'test_hyperbolic' )
 
-    logger.info ('Test Hyperbolic: symmetric Hyperbolic resolution model' )
+    logger.info ('Test Hyperbolic: symmetric Hyperbolic resolution' )
     from   ostap.fitting.resolution import ResoHyperbolic
     reso = ResoHyperbolic ( 'Hyperbolic' , mass ,
                             sigma = ( 0.1 , 0.01 , 5.0 ) ,                            
@@ -362,7 +362,7 @@ def test_genhyperbolic () :
     
     logger = getLogger ( 'test_genhyperbolic' )
 
-    logger.info ('Test Hyperbolic: symmetric generalised Hyperbolic resolution model' )
+    logger.info ('Test Hyperbolic: symmetric generalised Hyperbolic resolution' )
     from   ostap.fitting.resolution import ResoGenHyperbolic
     reso = ResoGenHyperbolic ( 'GenHyperbolic' , mass ,
                                sigma = ( 0.1 , 0.01 , 5.0 ) ,
@@ -389,7 +389,7 @@ def test_hypatia () :
     
     logger = getLogger ( 'test_hypatia' )
 
-    logger.info ('Test Hyperbolic: symmetric generalised Hyperbolic resolution model' )
+    logger.info ('Test Hyperbolic: symmetric generalised Hyperbolic resolution' )
     from   ostap.fitting.resolution import ResoHypatia
     reso = ResoHypatia ( 'Hypatia' , mass ,
                          sigma  = ( 0.1 , 0.01 , 5.0 ) ,
@@ -416,16 +416,22 @@ def test_hypatia () :
 ## Generalized Gauss v1 
 # =============================================================================
 def test_gengaussv1  () : 
+## if 1 <2  :
     
     logger = getLogger ( 'test_generalized_gauss_v1' )
     
-    logger.info ('Test GenGaussV1 : symmetric generalised gaussian resolution model' )
+    logger.info ('Test GenGaussV1 : symmetric generalised gaussian resolution' )
     from   ostap.fitting.resolution import ResoGenGaussV1
     reso = ResoGenGaussV1 ( 'GenGaussV1' , mass ,
-                            alpha  = ( 0.1 , 0.0001 , 10.0  ) ,
-                            beta   = ( 2.0 , 1.e-5  , 1.e+5 ) )
-    
-    for i in range ( 6 ) :
+                            alpha  = ( 0.5 , 0.001 , 10.0  ) ,
+                            beta   = ( 1.4 , 0.1   , 5     ) )
+
+    reso.alpha.release () 
+    reso.beta .fix     () 
+    result, frame = reso. fitTo ( dataset , silent = True  )
+    result, frame = reso. fitTo ( dataset , silent = True  )
+    reso.beta.release  () 
+    for i in range ( 4 ) :
         result, frame = reso. fitTo ( dataset , silent = True  )
         
     with wait ( 1 ) , use_canvas ( 'test_gengaussv1' ) : 
@@ -472,7 +478,7 @@ def test_normlapl () :
     
     logger = getLogger ( 'test_normlapl' )
 
-    logger.info ('Test Normal Laplace : Gaussian with symmetric exponential tails ' )
+    logger.info ('Test Normal Laplace : Gaussian with symmetric exponential tails' )
     from   ostap.fitting.resolution import ResoNormalLaplace
     reso = ResoNormalLaplace ( 'NL' , mass ,
                                k  = ( 1.0 , 1.e-5 , 20 ) , 
@@ -503,20 +509,38 @@ def dump_models () :
     
     mods = {}
     for m in models :
-        mods[ m.name ] = m
+        mods [ m.name ] = m
 
     rows = [ header ] 
     for m in sorted ( mods ) :
-        model = mods [ m ] 
-        row = m , \
-              '%+.3g' % model.get_mean  () , \
-              '%+.3g' % model.mode      () , \
-              '%+.3g' % model.median    () , \
-              '%+.3g' % model.mid_point () , \
-              '%+.5g' % model.rms       () , \
-              '%+.5g' % model.fwhm      () , \
-              '%+.5g' % model.skewness  () , \
-              '%+.5g' % model.kurtosis  ()
+        model = mods [ m ]
+        
+        try    : mean     =  "%+.3g" % mode.get_mean     () 
+        except : mean     = '<error>' 
+
+        try    : mode     =  "%+.3g" % model .mode       () 
+        except : mode     = '<error>' 
+
+        try    : median   =  "%+.3g" % model .median     () 
+        except : median   = '<error>' 
+
+        try    : midpoint =  "%+.3g" % model .mid_point  () 
+        except : midpoint = '<error>' 
+
+        try    : rms      =  "%+.3g" % model .rms        () 
+        except : rms      = '<error>' 
+
+        try    : fwhm     =  "%+.3g" % model .fwhm       () 
+        except : fwhm     = '<error>' 
+
+        try    : skewness =  "%+.3g" % model .skewness   () 
+        except : skewness = '<error>' 
+
+        try    : kurtosis =  "%+.3g" % model .kurtosis   () 
+        except : kurtosis = '<error>' 
+
+        row   = m , mean , mode , median , midpoint , rms , fwhm , skewness , kurtosis
+
         rows.append ( row )
 
     table = T.table ( rows , title = "Model's features" ,  prefix = '# ' )

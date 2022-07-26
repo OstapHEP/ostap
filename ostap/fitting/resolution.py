@@ -1768,9 +1768,9 @@ class ResoGenGaussV1(RESOLUTION) :
         
         self.__alpha = self.sigma         
         self.__beta  = self.make_var ( beta ,
-                                       'beta_%s'        % name  ,
-                                       '#beta_{v1}(%s)' % name  ,  
-                                       None , 2 , 1.e-4  , 1.e+6 ) 
+                                       'beta_%s'        % name ,
+                                       '#beta_{v1}(%s)' % name ,  
+                                       None , 2 , 0.5 , 20     ) 
         #
         ## finally build PDF
         #

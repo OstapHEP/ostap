@@ -404,7 +404,7 @@ class RESOLUTION(PEAK) :
             self.__fudge = self.make_var ( value ,
                                            'fudge_factor_%s'  % self.name ,
                                            'fudge_factor(%s)' % self.name ,
-                                           False , vmin , vmax            )
+                                           True , vmin , vmax            )
             
             ## create soft/gaussian constraint for fudge-factor
             self.__fudge_constraint = self.soft_constraint (
