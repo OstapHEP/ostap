@@ -78,11 +78,11 @@ __all__     = (
     'shoot'             , ## generate random  numbers         
     )
 # =============================================================================
-import  ROOT, math  
 from    ostap.core.core        import Ostap , funID
 from    ostap.core.ostap_types import is_integer
 from    ostap.math.base        import iszero, isequal, signum
 import  ostap.math.reduce 
+import  ROOT, math  
 # =============================================================================
 # logging 
 # =============================================================================

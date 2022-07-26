@@ -484,16 +484,14 @@ def test_legendresum_8 ( ) :
 # =============================================================================
 if '__main__' == __name__ :
     
-    ## test_legendresum_1 ()
-    ## test_legendresum_2 ()
-    ## test_legendresum_3 ()
-    ## test_legendresum_4 ()
-    ## test_legendresum_5 ()
+    test_legendresum_1 ()
+    test_legendresum_2 ()
+    test_legendresum_3 ()
+    test_legendresum_4 ()
+    test_legendresum_5 ()
     test_legendresum_6 ()    
-    ## test_legendresum_7 ()
-    ## test_legendresum_8 ()
-
-
+    test_legendresum_7 ()
+    test_legendresum_8 ()
 
 # =============================================================================
 ##                                                                      The END  
