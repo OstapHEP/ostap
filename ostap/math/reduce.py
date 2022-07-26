@@ -9,10 +9,9 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-12-01"
 __all__     = ()
 # =============================================================================
-import  ROOT
-from    array                  import array
 from    ostap.math.base        import Ostap, doubles 
 from    ostap.core.ostap_types import sequence_types 
+import  ROOT, array 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -129,7 +128,7 @@ def poly_reduce ( p ) :
     - see Ostap.Math.PositiveEven 
     """
     return poly_factory , ( type ( p ) ,
-                            array ( 'd' ,  p.pars() ) ,
+                            array.array ( 'd' ,  p.pars() ) ,
                             p.xmin () ,
                             p.xmax () )
 
@@ -159,7 +158,7 @@ def pm_reduce ( p ) :
     - see Ostap.Math.Monotonic
     """
     return poly_factory , ( type ( p ) ,
-                            array ( 'd' , p.pars() ) ,
+                            array.array ( 'd' , p.pars() ) ,
                             p.xmin () ,
                             p.xmax () ,
                             True if p.increasing() else False )
@@ -172,7 +171,7 @@ def pc_reduce ( p ) :
     - see Ostap.Math.Convex
     """
     return poly_factory , ( type ( p ) ,
-                            array ( 'd' ,  p.pars() ) ,
+                            array.array ( 'd' ,  p.pars() ) ,
                             p.xmin () ,
                             p.xmax () ,
                             True if p.increasing () else False , 
@@ -186,7 +185,7 @@ def pco_reduce ( p ) :
     - see Ostap.Math.ConvexOnly
     """
     return poly_factory , ( type ( p ) ,
-                            array ( 'd' , p.pars() ) ,
+                            array.array ( 'd' , p.pars() ) ,
                             p.xmin () ,
                             p.xmax () ,
                             True if p.convex     () else False ) 
@@ -230,8 +229,8 @@ def sp_reduce (  sp ) :
     - see Ostap.Math.PositiveSpline 
     """
     return sp_factory , ( type  ( sp ) ,
-                          array ( 'd' , sp.knots() ) ,
-                          array ( 'd' , sp.pars () ) ) 
+                          array.array ( 'd' , sp.knots() ) ,
+                          array.array ( 'd' , sp.pars () ) ) 
 
 
 Ostap.Math.BSpline        . __reduce__ = sp_reduce 
@@ -249,8 +248,8 @@ def spm_reduce (  sp ) :
     - see Ostap.Math.MonotonicSpline 
     """
     return sp_factory , ( type  ( sp ) ,
-                          array ( 'd' , sp.knots() ) ,
-                          array ( 'd' , sp.pars () ) , 
+                          array.array ( 'd' , sp.knots() ) ,
+                          array.array ( 'd' , sp.pars () ) , 
                           True if sp.increasing () else False )
                           
 
@@ -262,8 +261,8 @@ def spc_reduce (  sp ) :
     - see Ostap.Math.ConvexSpline 
     """
     return sp_factory , ( type  ( sp ) ,
-                          array ( 'd' , sp.knots() ) ,
-                          array ( 'd' , sp.pars () ) , 
+                          array.array ( 'd' , sp.knots() ) ,
+                          array.array ( 'd' , sp.pars () ) , 
                           True if sp.increasing () else False , 
                           True if sp.convex     () else False )
                           
@@ -277,8 +276,8 @@ def spco_reduce (  sp ) :
     - see Ostap.Math.ConvexOnlySpline 
     """
     return sp_factory , ( type  ( sp ) ,
-                          array ( 'd' , sp.knots() ) ,
-                          array ( 'd' , sp.pars () ) , 
+                          array.array ( 'd' , sp.knots() ) ,
+                          array.array ( 'd' , sp.pars () ) , 
                           True if p.convex     () else False )
                           
 Ostap.Math.MonotonicSpline . __reduce__ = spm_reduce 
@@ -316,7 +315,7 @@ def abs_reduce ( a ) :
                Ostap.Math.Interpolation.Abscissas.Chebyshev2 ) :
         return abs_factory, ( a.n () , a.xmin() , a.xmax () , int ( at ) )
 
-    return abs_factory, ( array ('d' , a.x() ) , ) 
+    return abs_factory, ( array.array ('d' , a.x() ) , ) 
 
 # ============================================================================
 ## the factory for serialisation of the interpolation table 
@@ -329,7 +328,7 @@ def tab_factory ( abscissas , values ) :
 def tab_reduce ( table ) :
     """Reduce the interpolation table"""
     return tab_factory , ( table.abscissas ()              ,
-                           array ( 'd' , table.values () ) )
+                           array.array ( 'd' , table.values () ) )
 
 
 Ostap.Math.Interpolation.Abscissas . __reduce__ = abs_reduce 
@@ -350,7 +349,7 @@ def int_reduce ( table ) :
     """Reduce the interpolation object"""
     return int_factory , ( type ( table )                  ,
                            table.abscissas ()              ,
-                           array ( 'd' , table.values () ) ) 
+                           array.array ( 'd' , table.values () ) ) 
 
 ## ===========================================================================
 ## Reduce the interpolation Floater-Hormann interpolant 
@@ -358,7 +357,7 @@ def intfh_reduce ( table ) :
     """Reduce the Floater-Hormann interpolant"""
     return int_factory , ( type ( table )                  ,
                            table.abscissas ()              ,
-                           array ( 'd' , table.values () ) , 
+                           array.array ( 'd' , table.values () ) , 
                            table.d ()                      ) 
 
 for t in ( Ostap.Math.Neville     ,
