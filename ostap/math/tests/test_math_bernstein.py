@@ -428,7 +428,7 @@ def test_integration () :
     b = BP ( 5 , 0 , 2  )
     for i in b  : b[i] = random.uniform ( -1 , 50 ) 
 
-    from ostap.math.integral import romberg 
+    import ostap.math.integral as I
 
     xmax = b.xmin() + 0.9 * ( b.xmax() - b.xmin() ) 
     for i in range ( 500 ) :
@@ -438,7 +438,7 @@ def test_integration () :
         x2 = random.uniform ( x1       , b.xmax() )
 
         i1 = b.integral (      x1 , x2 )
-        i2 = romberg    ( b ,  x1 , x2 )
+        i2 = I.integral ( b ,  x1 , x2 )
 
         dd = ( i1 - i2 )
         ds = ( abs ( i1 ) + abs ( i2 ) )
