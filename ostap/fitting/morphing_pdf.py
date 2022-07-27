@@ -14,8 +14,9 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2020-07-22"
 __all__     = (
     ##
-    'MorphingN1_pdf' , ## 1D-morphing PDF
-    'MorphingN2_pdf' , ## 2D-morphing PDF
+    'MorphingN1_pdf'  , ## 1D-morphing PDF
+    'MorphingN2_pdf'  , ## 2D-morphing PDF
+    'LinearMorth_pdf' , ## linear morphing 
     ##
     )
 # =============================================================================
@@ -28,9 +29,84 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.morphing_pdf' )
 else                       : logger = getLogger ( __name__                     )
 # =============================================================================
+## @class LinearMorph_pdf
+#  Wrapper for <code>RooIntegralMorth</code> PDF
+#  @see RooIntegralMorph
+#  @see Alex Read, 'Linear interpolation of histograms', NIM A 425 (1999) 357-369
+#  @see DOI: 10.1016/S0168-9002(98)01347-3
+#  @see https://doi.org/10.1016/S0168-9002(98)01347-3
+class LinearMorph_pdf (PDF1) :
+    """Wrapper for <code>RooIntegralMorth</code> PDF
+    - see RooIntegralMorph
+    - see Alex Read, 'Linear interpolation of histograms', NIM A 425 (1999) 357-369
+    - see DOI: 10.1016/S0168-9002(98)01347-3
+    - see https://doi.org/10.1016/S0168-9002(98)01347-3
+    """
+    def __init__ ( self                ,
+                   name                ,   ## PDF name
+                   pdf1                ,   ## pdf at low  value of alppha 
+                   pdf2                ,   ## pdf at high value of alpha
+                   alpha       = None  ,   ## morphing variable 
+                   xvar        = None  ,
+                   cache_alpha = False ) : ## observable
+
+        self.__pdf1 , xvar = self.make_PDF1 ( pdf1 , xvar = xvar )
+        self.__pdf2 , xvar = self.make_PDF1 ( pdf2 , xvar = xvar )
+                
+        ## initialize the base class 
+        PDF1.__init__ ( self , name , xvar )
+        
+        ## create morphing variable 
+        self.__alpha = self.make_var (
+            alpha               ,
+            "alpha_%s"   % name ,
+            "#alpha(%s)" % name , False , 0 , 1 )
+        
+        self.__cache_alpha = True if cache_alpha else False
+
+        ## finally creathe the PDF 
+        self.pdf = ROOT.RooIntegralMorph (
+            self.new_roo_name ( 'linMorph_' ),
+            "Linear Morphing %s" % self.name ,
+            self.pdf1.pdf    ,
+            self.pdf2.pdf    ,
+            self.xvar        ,
+            self.alpha       ,
+            self.cache_alpha ) 
+
+        self.config = {
+            'name'        : self.name        ,
+            'pdf1'        : self.pdf1        ,
+            'pdf2'        : self.pdf2        ,
+            'xvar'        : self.xvar        ,
+            'alpha'       : self.alpha       ,
+            'cache_alpha' : self.cache_alpha ,            
+            }
+
+    @property
+    def pdf1 ( self ) :
+        """'pdf1' : the first PDF (value of resulting pdf at the left edge of 'alpha')"""
+        return self.__pdf1
+    @property
+    def pdf2 ( self ) :
+        """'pdf2' : the first PDF (value of resulting pdf at the right edge of 'alpha')"""
+        return self.__pdf2
+    @property
+    def alpha ( self ) :
+        """'alpha' : morphing parameter"""
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self , value ) :
+        self.set_value ( self.__alpha , value )
+    @property
+    def cache_alpha ( self ) :
+        """'cache_alpha' : create cache for morphing parameter 'alpha'?"""
+        return self.__cache_alpha
+
+
+# =============================================================================
 ## @class MorphingN1_pdf
 #  Wrapper for <code>RooMomentMorph</code> PDF
-#  - 1D morphing/1D PDF
 #  @see RooMomentMorph
 #  @see Baak, M., Gadatsch, S., Harrington, R., & Verkerke, W. (2015).
 #       "Interpolation between multi-dimensional histograms using
@@ -40,7 +116,6 @@ else                       : logger = getLogger ( __name__                     )
 #  @see https://doi.org/10.1016/j.nima.2014.10.033
 class MorphingN1_pdf (PDF1) :
     """ Wrapper for ROOT.RooMomentMorph PDF
-    - 1D morphing/1D PDF
     - see ROOT.RooMomentMorph
     - see Baak, M., Gadatsch, S., Harrington, R., & Verkerke, W. (2015).
     'Interpolation between multi-dimensional histograms using
@@ -105,7 +180,8 @@ class MorphingN1_pdf (PDF1) :
         self.__mu = self.make_var (
             morph_var                ,
             "mu_%s"           % name ,
-            "morphing mu(%s)" % name , morph_var , mu_min , mu_max )
+            "morphing mu(%s)" % name ,
+            False , mu_min , mu_max )
 
         ## vector of morphing values 
         muvct  = ROOT.TVectorD ( len ( self.pdflist ) )
@@ -153,6 +229,7 @@ class MorphingN1_pdf (PDF1) :
     def setting ( self ) :
         """'setting': morphing setting"""
         return self.__setting 
+
 
 
 # =============================================================================

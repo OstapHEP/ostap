@@ -19,6 +19,7 @@
   1. mase a bypass for long standing issue with segfaults from `RooFitResult::globalCorr`
   1. Add Novosiboirsk function and PDF 
   1. add more properties for `SinhAsinh` function 
+  1. add `LinearMorph_pdf`  
   
 ## Backward incompatible:  
 
