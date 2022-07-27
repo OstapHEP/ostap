@@ -121,7 +121,7 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx11
                  OUTPUT_VARIABLE CXX11_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
- if     ( ${CXX17_ROOT} STREQUAL "yes" )    
+ if     ( ${CXX17_ROOT} STREQUAL "yes" ) 
  target_compile_features (ostap PUBLIC cxx_std_17 )
  elseif ( ${CXX14_ROOT} STREQUAL "yes" ) 
  target_compile_features (ostap PUBLIC cxx_std_14 )
