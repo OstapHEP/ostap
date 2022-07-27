@@ -16,7 +16,7 @@ __all__     = (
     ##
     'MorphingN1_pdf'  , ## 1D-morphing PDF
     'MorphingN2_pdf'  , ## 2D-morphing PDF
-    'LinearMorth_pdf' , ## linear morphing 
+    'LinearMorph_pdf' , ## linear morphing 
     ##
     )
 # =============================================================================
