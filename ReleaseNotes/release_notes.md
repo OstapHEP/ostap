@@ -22,13 +22,17 @@
   
 ## Backward incompatible:  
 
+  1.  rename `Morphing1N_pdf` -> `MorphingN1_pdf`
+  1.  rename `Morphing2D_pdf` -> `MorphingN2_pdf`
+
+## Bug fixes:
+
   1. fix a bug in evaluation of integrals for  `LegendreSum2` and  `LegendreSum3`
      Tnanks to Ivan Polyakov for
      reporting a problmes and the fix 
   1. fix `Dalitz0::P_R12`, `Dalitz0::P_R23`, `Dalitz0::P_R31`. 
      Thanksk to Ivan Polyakov for reporting the probles
  
-## Bug fixes:
 
 
 # v1.7.3.0

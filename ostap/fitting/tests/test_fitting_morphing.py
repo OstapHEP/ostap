@@ -17,7 +17,7 @@ __all__    = () ## nothing to import
 import ostap.fitting.roofit
 import ostap.fitting.models        as     Models
 from   ostap.core.meta_info        import root_info 
-from   ostap.fitting.morphing_pdf  import Morphing1D_pdf, Morphing2D_pdf 
+from   ostap.fitting.morphing_pdf  import MorphingN1_pdf, MorphingN2_pdf 
 from   ostap.utils.utils           import vrange
 from   builtins                    import range
 from   ostap.utils.timing          import timing 
@@ -44,30 +44,33 @@ for i in range ( N ) :
 def test_morphing1 () :
 
     logger = getLogger ('test_morphing1')    
-    if root_info < ( 6 , 23 )  :
+    if root_info < ( 6 , 23 )  or ( 6 , 27 ) <= root_info :
         logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
         return
 
-    if ( 6 , 27 ) <= root_info  :
-        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
-        return
+    shapes = {}
 
-    pdf1 = Models.Gauss_pdf ( 'G1' , xvar = mass , mean = 10 , sigma = 1 )
-    pdf2 = Models.Gauss_pdf ( 'G2' , xvar = mass , mean = 10 , sigma = 2 )
-    pdf3 = Models.Gauss_pdf ( 'G3' , xvar = mass , mean = 10 , sigma = 3 )
-    pdf4 = Models.Gauss_pdf ( 'G4' , xvar = mass , mean = 10 , sigma = 4 )
-
-    pdf  = Morphing1D_pdf ( 'M1' , { 1.0 : pdf1 ,
-                                     2.0 : pdf2 ,
-                                     3.0 : pdf3 ,
-                                     4.0 : pdf4 , } , xvar =  mass )
+    mean        = 10 
+    sigma_range = 0.5 , 5.0
     
-    for mu in vrange ( 1 , 3 , 6 ) :
+    for i , sigma in  enumerate ( vrange ( *sigma_range , 10 ) ) :
+
+        gauss = Models.Gauss_pdf ( 'G1_%d' % i ,
+                                   xvar  = mass ,
+                                   mean  = ROOT.RooFit.RooConst ( mean  ) ,
+                                   sigma = ROOT.RooFit.RooConst ( sigma ) )
+        shapes [ sigma ] = gauss
+        
+    ## create morphing PDF 
+    pdf  = MorphingN1_pdf ( 'M1' , shapes , xvar =  mass )
+        
+    for mu in vrange ( *sigma_range , 6 ) :
         pdf.mu = mu
         logger.info ( 'Mu= %s' % mu ) 
-        with wait ( 1 ) , use_canvas ( 'test_morphing1' ) :
+        with wait ( 0.2 ) , use_canvas ( 'test_morphing1' ) :
             pdf.draw()
 
+    r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_morphing1' ) :
         r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
@@ -75,56 +78,80 @@ def test_morphing1 () :
 # ============================================================================
 def test_morphing2 () :
     
-    logger = getLogger ('test_morphing2')
+    logger = getLogger ('test_morphing3')
     
-    if root_info < ( 6 , 23 )  :
+    if root_info < ( 6 , 23 )  or ( 6 , 27 ) <= root_info :
         logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
         return
 
-    if ( 6 , 27 ) <= root_info  :
-        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
-        return
 
-    pdf11 = Models.Gauss_pdf ( 'G11' , xvar = mass , mean =  8 , sigma = 1 )
-    pdf12 = Models.Gauss_pdf ( 'G12' , xvar = mass , mean = 10 , sigma = 1 )
-    pdf13 = Models.Gauss_pdf ( 'G13' , xvar = mass , mean = 12 , sigma = 1 )
-    pdf21 = Models.Gauss_pdf ( 'G21' , xvar = mass , mean =  8 , sigma = 2 )
-    pdf22 = Models.Gauss_pdf ( 'G22' , xvar = mass , mean = 10 , sigma = 2 )
-    pdf23 = Models.Gauss_pdf ( 'G23' , xvar = mass , mean = 12 , sigma = 2 )
-    pdf31 = Models.Gauss_pdf ( 'G31' , xvar = mass , mean =  8 , sigma = 3 )
-    pdf32 = Models.Gauss_pdf ( 'G32' , xvar = mass , mean = 10 , sigma = 3 )
-    pdf33 = Models.Gauss_pdf ( 'G33' , xvar = mass , mean = 12 , sigma = 3 )    
-    pdf41 = Models.Gauss_pdf ( 'G41' , xvar = mass , mean =  8 , sigma = 4 )
-    pdf42 = Models.Gauss_pdf ( 'G42' , xvar = mass , mean = 10 , sigma = 4 )
-    pdf43 = Models.Gauss_pdf ( 'G43' , xvar = mass , mean = 12 , sigma = 4 )    
+    shapes = {}
+
+    sigma       = 2.5
+    mean_range  = 8.0 , 12.0
     
-    pdf  = Morphing2D_pdf ( 'M2' , { ( 8,1) : pdf11 ,
-                                     (10,1) : pdf12 ,
-                                     (12,1) : pdf13 ,
-                                     ( 8,2) : pdf21 ,
-                                     (10,2) : pdf22 ,
-                                     (12,2) : pdf23 ,                                     
-                                     ( 8,3) : pdf31 ,
-                                     (10,3) : pdf32 ,
-                                     (12,3) : pdf33 ,
-                                     ( 8,4) : pdf41 ,
-                                     (10,4) : pdf42 ,
-                                     (12,4) : pdf43 } , 
-                            xvar =  mass ,
-                            setting = ROOT.RooMomentMorphND.Linear ) 
+    for j , mean in  enumerate ( vrange ( *mean_range , 10 ) ) :
+        gauss = Models.Gauss_pdf ( 'G2_%d' % j  , 
+                                   xvar  = mass ,
+                                   mean  = ROOT.RooFit.RooConst ( mean  ) ,
+                                   sigma = ROOT.RooFit.RooConst ( sigma ) )
+        shapes [ mean ] = gauss
+        
+    ## create morphing PDF 
+    pdf  = MorphingN1_pdf ( 'M2'    , shapes , 
+                            xvar    =  mass ,
+                            setting = ROOT.RooMomentMorphND.Linear )
     
+    r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
     r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_morphing2' ) :
         r , f = pdf.fitHisto ( h1 , draw = True  , nbins = 100 , silent = True )
-    ## logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
+        logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
     
+# ============================================================================
+def test_morphing3 () :
+    
+    logger = getLogger ('test_morphing3')
+    
+    if root_info < ( 6 , 23 )  or ( 6 , 27 ) <= root_info :
+        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
+        return
+
+
+    shapes = {}
+    
+    sigma_range = 0.5 ,  5.0
+    mean_range  = 8.0 , 12.0
+    
+    for i , sigma in  enumerate ( vrange ( *sigma_range , 10 ) ) :
+        for j , mean in  enumerate ( vrange ( *mean_range , 10 ) ) :
+            gauss = Models.Gauss_pdf ( 'G3_%d_%d' % ( i , j ) , 
+                                       xvar  = mass ,
+                                       mean  = ROOT.RooFit.RooConst ( mean  ) ,
+                                       sigma = ROOT.RooFit.RooConst ( sigma ) )
+            shapes [ mean , sigma ] = gauss
+
+    ## create morphing PDF 
+    pdf  = MorphingN2_pdf ( 'M3'    , shapes , 
+                            xvar    =  mass ,
+                            setting = ROOT.RooMomentMorphND.Linear )
+            
+    r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
+    r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
+    with wait ( 1 ) , use_canvas ( 'test_morphing3' ) :
+        r , f = pdf.fitHisto ( h1 , draw = True  , nbins = 100 , silent = True )
+        logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
+    
+
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ("Morphing1"   , logger ) :  
+    with timing ("Morphing1" , logger ) :  
         test_morphing1   () 
-    with timing ("Morphing2"   , logger ) :  
+    with timing ("Morphing2" , logger ) :  
         test_morphing2   () 
+    with timing ("Morphing3" , logger ) :  
+        test_morphing3   () 
     
 # =============================================================================
 ##                                                                      The END 

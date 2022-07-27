@@ -14,8 +14,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2020-07-22"
 __all__     = (
     ##
-    'Morphing1D_pdf' , ## 1D-morphing/1D PDF
-    'Morphing2D_pdf' , ## 1D-morphing/2D PDF
+    'MorphingN1_pdf' , ## 1D-morphing PDF
+    'MorphingN2_pdf' , ## 2D-morphing PDF
     ##
     )
 # =============================================================================
@@ -28,7 +28,7 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.morphing_pdf' )
 else                       : logger = getLogger ( __name__                     )
 # =============================================================================
-## @class Morphing1D_pdf
+## @class MorphingN1_pdf
 #  Wrapper for <code>RooMomentMorph</code> PDF
 #  - 1D morphing/1D PDF
 #  @see RooMomentMorph
@@ -38,7 +38,7 @@ else                       : logger = getLogger ( __name__                     )
 #       Nuclear Instruments & Methods in Physics Research.
 #       Section A - Accelerators Spectrometers Detectors and Associated Equipment, 771, 39-48.
 #  @see https://doi.org/10.1016/j.nima.2014.10.033
-class Morphing1D_pdf (PDF1) :
+class MorphingN1_pdf (PDF1) :
     """ Wrapper for ROOT.RooMomentMorph PDF
     - 1D morphing/1D PDF
     - see ROOT.RooMomentMorph
@@ -156,7 +156,7 @@ class Morphing1D_pdf (PDF1) :
 
 
 # =============================================================================
-## @class Morphing2D_pdf
+## @class MorphingN2_pdf
 #  Wrapper for <code>RooMomentMorph</code> PDF
 #  - 1D morphing/2D  PDF   
 #  @see RooMomentMorphND
@@ -166,7 +166,7 @@ class Morphing1D_pdf (PDF1) :
 #       Nuclear Instruments & Methods in Physics Research.
 #       Section A - Accelerators Spectrometers Detectors and Associated Equipment, 771, 39-48.
 #  @see https://doi.org/10.1016/j.nima.2014.10.033
-class Morphing2D_pdf (PDF1) :
+class MorphingN2_pdf (PDF1) :
     """ Wrapper for ROOT.RooMomentMorphND PDF for N = 2 
     - 1D morphing/2D PDF
     - see ROOT.RooMomentMorphND
@@ -238,7 +238,7 @@ class Morphing2D_pdf (PDF1) :
             v1 , v2 = k
             
             pdfk = pdfs [ k ] 
-            if   isinstance ( pdfk , PDF            ) and pdfk.xvar is self.xvar : pass 
+            if   isinstance ( pdfk , PDF1           ) and pdfk.xvar is self.xvar : pass 
             elif isinstance ( pdfk , ROOT.RooAbsPdf ) : 
                 pdfk = Generic1D_pdf ( pdfk , xvar = self.xvar ) 
             else :
