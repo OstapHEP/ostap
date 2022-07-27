@@ -19,9 +19,7 @@ __all__     = (
 )
 # =============================================================================
 import ROOT, sys 
-
 groot = ROOT.ROOT.GetROOT()
-
 # =============================================================================
 ## dill has problems with serialization of ROOT objects for python3
 #  @see https://github.com/root-project/root/issues/6370

@@ -14,6 +14,11 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
+from   ostap.math.ve        import VE 
+from   ostap.core.core      import hID 
+from   ostap.histos.histos  import h1_axis
+import ostap.histos.compare
+from   builtins             import range
 import ROOT, random
 # =============================================================================
 # logging 
@@ -26,11 +31,7 @@ else :
 # =============================================================================
 logger.info ( 'Test for 1D-histogram compare')
 # =============================================================================
-from   ostap.math.ve        import VE 
-from   ostap.core.core      import hID 
-from   ostap.histos.histos  import h1_axis
-import ostap.histos.compare
-from   builtins             import range
+
 
 #
 ## histos for gaussian distributions

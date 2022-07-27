@@ -33,12 +33,12 @@ import ROOT, math, random
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 from   builtins                import range
-from   ostap.core.core         import Ostap, rootID, VE, items_loop, isequal 
+from   ostap.core.core         import ( Ostap, rootID, VE,
+                                        items_loop, isequal , roo_silent )
 from   ostap.core.ostap_types  import ( num_types      , list_types     ,
                                         integer_types  , string_types   ,
                                         is_good_number , sequence_types ,
                                         is_integer     )
-from   ostap.logger.utils      import roo_silent
 from   ostap.math.random_ext   import ve_gauss, poisson
 from   ostap.core.meta_info    import root_version_int, root_info 
 from   ostap.fitting.variables import SETVAR 

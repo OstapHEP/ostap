@@ -18,12 +18,12 @@ __all__     = (
     'Efficiency3D', ## helper utility to get the efficiency (3D-case)
     )
 # =============================================================================
-import ROOT
-from   ostap.core.core        import Ostap 
+from   ostap.core.core        import Ostap, roo_silent  
 from   ostap.fitting.funbasic import FUN1 , FUN2 , FUN3 , Fun1D , Fun2D , Fun3D 
 from   ostap.fitting.pdfbasic import ( PDF1 , Generic1D_pdf ,
                                        PDF2 , Generic2D_pdf ,
                                        PDF3 , Generic3D_pdf )
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================
@@ -224,7 +224,6 @@ class Efficiency ( object ) :
         vargs = tuple ( vargs ) 
         ##
         draw  = kwargs.pop ( 'draw' , False ) 
-        from ostap.logger.utils import roo_silent
         with roo_silent ( silent ) : 
             result , frame = self.pdf_fit.fitTo ( dataset ,                            
                                                   draw   = False  ,

@@ -27,13 +27,13 @@ __all__     = (
     'use_canvas'       , ## context manager to create currect canvas
     )
 # =============================================================================
-import ROOT, os, tempfile, math   
-import ostap.core.core
+from   sys                     import version_info as python_version
+from   ostap.utils.cidict      import cidict
+from   ostap.utils.utils       import KeepCanvas, keepCanvas 
+from   ostap.core.core         import cidict_fun
+from   ostap.core.core         import rootWarning 
 import ostap.plotting.style
-from   sys import version_info as python_version
-from   ostap.utils.cidict import cidict
-from   ostap.utils.utils  import KeepCanvas, keepCanvas 
-from   ostap.core.core    import cidict_fun
+import ROOT, os, tempfile, math   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -134,7 +134,6 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
         logger.debug ( "create directory %s" % os.path.abspath ( dirname ) ) 
         make_dirs ( dirname ) 
     
-    from ostap.logger.utils import rootWarning
     n , e  = os.path.splitext ( fname )
 
     el = e.lower()

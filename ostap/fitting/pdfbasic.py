@@ -30,18 +30,18 @@ __all__     = (
     ##
     )
 # =============================================================================
-import ROOT, math,  random
 import ostap.fitting.roofit 
 import ostap.fitting.variables
 import ostap.fitting.roocollections 
 from   builtins                 import range
-from   ostap.core.core          import cpp , Ostap , VE , hID , dsID , rootID, valid_pointer
+from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID,
+                                         valid_pointer ,
+                                         roo_silent    , rootWarning  )
 from   ostap.math.base          import iszero , frexp10 
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
 from   ostap.fitting.roofit     import SETVAR
-from   ostap.logger.utils       import roo_silent   , rootWarning
 from   ostap.fitting.utils      import ( RangeVar   , numcpu     ,
                                          make_name  , fit_status ,
                                          cov_qual   , get_i      )
@@ -51,6 +51,7 @@ from   ostap.utils.cidict       import select_keys
 from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command  
 from   ostap.core.meta_info     import root_info
 import ostap.histos.histos 
+import ROOT, math,  random
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )

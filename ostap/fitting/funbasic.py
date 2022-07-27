@@ -26,15 +26,16 @@ __all__     = (
     'make_fun'          , ## helper functno to reate FUN-objects
     )
 # =============================================================================
-import ROOT, math, sys, abc  
 from   sys                           import version_info as python_version 
 from   ostap.core.ostap_types        import ( integer_types  , num_types   ,
                                               dictlike_types , list_types  ,
                                               is_good_number )
-from   ostap.core.core               import Ostap  , valid_pointer
+from   ostap.core.core               import ( Ostap         ,
+                                              valid_pointer ,
+                                              roo_silent    ,
+                                              rootWarning   )   
 from   ostap.math.base               import iszero , isequal  
 from   ostap.fitting.variables       import SETVAR
-from   ostap.logger.utils            import roo_silent , rootWarning
 from   ostap.fitting.roofit          import PDF_fun 
 from   ostap.fitting.fithelpers      import ( VarMaker , FitHelper ,
                                               XVar, YVar, ZVar, NameDuplicates ) 
@@ -42,8 +43,7 @@ from   ostap.utils.cidict            import cidict
 from   ostap.plotting.fit_draw       import key_transform, draw_options  
 import ostap.fitting.variables
 import ostap.fitting.roocollections
-from   ostap.logger.utils            import rootWarning, roo_silent 
-
+import ROOT, math, sys, abc  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.funbasic' )

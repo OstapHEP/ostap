@@ -16,13 +16,14 @@ __date__    = "2006-10-08"
 __version__ = "$Revision$"
 __all__     = () 
 # =============================================================================
+from ostap.utils.basic import with_ipython
+# =============================================================================
 ## logging
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' == __name__ : logger = getLogger ( 'ostap.core.startup' )
 else                      : logger = getLogger ( __name__ )
 # =============================================================================
-from ostap.utils.basic import with_ipython
     
 # =============================================================================
 ## check if the file is actually "empty"

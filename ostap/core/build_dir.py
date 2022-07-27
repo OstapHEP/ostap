@@ -25,8 +25,8 @@ __all__     = (
     'use_build_dir'  , ## use  (temporary) build directory for ROOT    
     )
 # =============================================================================
-import ROOT, os, glob  
 from   ostap.utils.basic import make_dir, writeable 
+import ROOT, os, glob  
 # =============================================================================
 build_dir  = None
 prefix_dir = 'ostap-build-dir-'

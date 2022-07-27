@@ -35,11 +35,11 @@ __all__     = (
     'sPlot1D'  , ## 1D-splot
     )
 # =============================================================================
-import ROOT
 import ostap.fitting.roofitresult
 from   ostap.fitting.pdfbasic     import PDF1,  Generic1D_pdf 
 from   ostap.fitting.variables    import FIXVAR
 from   ostap.histos.histos        import Histo1DFun 
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================

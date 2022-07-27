@@ -15,8 +15,7 @@ from   __future__              import print_function
 # ============================================================================= 
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
-from   ostap.core.core          import Ostap, VE, dsID
-from   ostap.logger.utils       import rooSilent 
+from   ostap.core.core          import Ostap, VE, dsID, rooSilent 
 from   builtins                 import range
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas

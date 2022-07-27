@@ -26,17 +26,16 @@ __all__     = (
     ##
     )
 # =============================================================================
-import ROOT, math,  random
 from   builtins                 import range
-from   ostap.core.core          import Ostap , VE , valid_pointer
+from   ostap.core.core          import Ostap , VE , valid_pointer, roo_silent 
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
-from   ostap.logger.utils       import roo_silent 
 from   ostap.fitting.fithelpers import H1D_dset, Fractions  
 from   ostap.fitting.funbasic   import FUN1
 from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.fitting.utils      import make_name
+import ROOT, math,  random
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )

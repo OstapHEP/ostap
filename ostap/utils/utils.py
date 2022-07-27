@@ -29,10 +29,8 @@ __all__     = (
     'timing'             , ## context manager to count time 
     'timer'              , ## ditto
     'profiler'           , ## context manager to perform profiling
-    'rootException'      , ## context manager to perform ROOT Error -> C++/Python exception
     #
     'Profiler'           , ## context manager to perform profiling 
-    'RootError2Exception', ## context manager to perform ROOT Error -> C++/Python exception
     ##
     'takeIt'             , ## take and later delete ...
     'isatty'             , ## is the stream ``isatty'' ?
@@ -102,18 +100,17 @@ __all__     = (
     )
 
 # =============================================================================
-import ROOT, time, os , sys, math, time, functools, abc, random ## attention here!!
-from   builtins             import range
-from   itertools            import repeat, chain, islice 
-# =============================================================================
-from sys                    import version_info  as python_version 
+from   builtins               import range
+from   itertools              import repeat, chain, islice 
+from   sys                    import version_info  as python_version 
 ## timing stuff
-from ostap.utils.timing     import timing, timer
+from   ostap.utils.timing     import timing, timer
 ## other useful stuff 
-from ostap.utils.basic      import isatty, with_ipython
-from ostap.core.ostap_types import integer_types 
+from   ostap.utils.basic      import isatty, with_ipython, NoContext
+from   ostap.core.ostap_types import integer_types 
 ## ... and more useful stuff 
-from ostap.utils.memory     import memory, virtualMemory, Memory 
+from   ostap.utils.memory     import memory, virtualMemory, Memory 
+import ROOT, time, os , sys, math, time, functools, abc, random ## attention here!!
 # =============================================================================
 try :
     from string import ascii_letters, digits 
@@ -205,26 +202,6 @@ def profiler( name = '' ) :
     return Profiler ( name )
             
 
-# =============================================================================
-## @class NoContext
-#  Fake empty context manager to be used as empty placeholder
-#  @code
-#  with NoContext() :
-#  ...  do_something() 
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  date 2013-01-12
-class NoContext(object) :
-    """Fake (empty) context manager to be used as empty placeholder
-    >>> with NoContext() :
-    ...         do_something() 
-    """
-    def __init__  ( self , *args , **kwargs ) : pass
-    ## context manager
-    def __enter__ ( self         ) : return self 
-    ## context manager 
-    def __exit__  ( self , *args ) : pass  
-
 
 # =============================================================================
 ## @class TakeIt
@@ -305,57 +282,6 @@ def get_file_names_from_file_number(fds):
     for fd in fds:
         names.append(os.readlink('/proc/self/fd/%d' % fd))
     return names
-
-# =============================================================================
-## helper context manager to activate ROOT Error -> Python exception converter 
-#  @see Ostap::Utils::useErrorHandler
-#  @see Ostap::Utils::ErrorSentry
-#  @code
-#  with RootError2Exception() :
-#  .... do something here 
-#  @endcode 
-class RootError2Exception (object) :
-    """Helper context manager to activate ROOT Error -> Python exception converter
-    #
-    with RootError2Exception() :
-    ... do something here 
-    """
-    def __init__ ( self ) :
-        import ROOT,cppyy 
-        Ostap = cppyy.gbl.Ostap
-        self.e_handler  = Ostap.Utils.useErrorHandler 
-        self.m_previous = False 
-
-    ## context manager entry point  
-    def __enter__ ( self ) :    
-        self.m_previous = self.e_handler ( True ) 
-        return self
-    
-    ## context manager exit point
-    def __exit__ ( self , *_ ) :    
-        if self.m_previous : self.e_handler ( False ) 
-        self.m_previous = False 
-
-    def __del__ ( self ) :
-        if self.m_previous : self.e_handler ( False ) 
-        
-
-# =============================================================================
-## helper context manager to activate ROOT Error -> Python exception converter 
-#  @see Ostap::Utils::useErrorHandler
-#  @see Ostap::Utils::ErrorSentry
-#  @code
-#  with rootException () :
-#  .... do something here 
-#  @endcode
-def rootException () :
-    """Helper context manager to activate ROOT Error -> Python exception converter
-    #
-    with rootException() :
-    ... do something here 
-    """
-    return RootError2Exception()
-
 
 # =============================================================================
 ## context manager to keep ROOT ``batch'' state

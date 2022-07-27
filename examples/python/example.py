@@ -7,8 +7,12 @@ import ROOT
 ## cpp    = cppyy.gbl
 Ostap  = ROOT.Ostap
 
+print ('simplest example/1')
+
 ve = Ostap.Math.ValueWithError(2, 2)
 print("value=%f, cov2=%f, error=%f"  % (ve.value(), ve.cov2(), ve.error()))
+
+print ('simplest example/2')
 
 #print Ostap.Math.lomont_compare_double(1.011, 1.01,2)
 #print Ostap.math.next_double(0.1,1000)

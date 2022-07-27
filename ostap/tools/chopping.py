@@ -87,7 +87,6 @@ __all__     = (
     'addChoppingResponse'  , ## add ``chopping'' response to RooDataSet
     )
 # =============================================================================
-import ROOT, os, shutil, tarfile  
 from   ostap.tools.tmva       import Trainer as TMVATrainer
 from   ostap.tools.tmva       import Reader  as TMVAReader
 from   ostap.tools.tmva       import dir_name, good_for_negative, trivial_opts   
@@ -98,6 +97,7 @@ import ostap.trees.trees
 import ostap.trees.cuts
 import ostap.utils.utils      as     Utils 
 from   ostap.core.meta_info   import root_version_int, root_info 
+import ROOT, os, shutil, tarfile  
 # =============================================================================
 from ostap.logger.logger      import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.chopping' )

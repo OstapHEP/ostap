@@ -14,6 +14,10 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
+from   ostap.math.ve        import VE 
+from   ostap.core.core      import hID 
+from   ostap.histos.histos  import h1_axis, h2_axes 
+from   builtins             import range
 import ROOT, random, math 
 # =============================================================================
 # logging 
@@ -26,10 +30,6 @@ else :
 # =============================================================================
 logger.info ( 'Test for basic operations with histograms')
 # =============================================================================
-from  ostap.math.ve        import VE 
-from  ostap.core.core      import hID 
-from  ostap.histos.histos  import h1_axis, h2_axes 
-from  builtins             import range
 # =============================================================================
 ## Test for very basic operations with 1D-histograms
 def test_basic_1D() :

@@ -52,16 +52,16 @@ __all__     = (
     'DataAndLumi' , ## collect files and create two TChain objects (one for Lumi)
     )
 # =============================================================================
+from copy                     import deepcopy
+from ostap.core.core          import rootError
+from ostap.trees.data_utils   import Data2 
+from ostap.contribs.lhcb.lumi import getLumi
+# =============================================================================
 # logging 
 # =============================================================================
 from   ostap.logger.logger    import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.contribs.lhcb.data' )
 else                       : logger = getLogger ( __name__     )
-# =============================================================================
-from copy                     import deepcopy
-from ostap.logger.utils       import rootError
-from ostap.trees.data_utils   import Data2 
-from ostap.contribs.lhcb.lumi import getLumi
 # =============================================================================
 ## @class DataAndLumi
 #  Simple utility to access to certain chain in the set of ROOT-files

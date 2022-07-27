@@ -1662,9 +1662,8 @@ def make_dataset_old ( tree              ,
     elif f2 < 0.10 and not silent : 
         logger.warning ( "Only tiny fraction of data (% 4.1F%%) is requested: prefiltering can speedup process" % ( f2 * 100 ) ) 
         
-    from ostap.logger.utils import rooSilent, rootError
+    from ostap.core.core    import rooSilent, rootError, NoContext
     from ostap.utils.timing import timing
-    from ostap.utils.utils  import NoContext
     TIMING = timing if not silent else NoContext
 
     with TIMING ( 'Fill RooDataSet' , logger = logger ) : 

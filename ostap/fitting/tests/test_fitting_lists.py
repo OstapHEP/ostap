@@ -15,7 +15,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 import ostap.fitting.roofit 
-from   ostap.logger.utils   import rooSilent 
+from   ostap.core.core      import rooSilent 
 from   ostap.utils.timing   import timing 
 import ROOT, random
 # =============================================================================

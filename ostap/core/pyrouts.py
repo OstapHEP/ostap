@@ -71,73 +71,56 @@ else                      : logger = getLogger ( __name__             )
 # =============================================================================
 logger.info ( 'Zillions of decorations for ROOT/RooFit objects')
 # =============================================================================
-from   ostap.logger.utils import ROOTIgnore
+from ostap.core.core import ( cpp      , std       , Ostap           , 
+                              ROOTCWD  , rootID    , 
+                              funcID   , funID     , fID             ,
+                              histoID  , hID       , dsID            ,
+                              cwd      , pwd       ,
+                              VE       , SE        , WSE             ,
+                              binomEff , binomEff2 ,
+                              zechEff  , wilsonEff , agrestiCoullEff ,
+                              iszero   , isequal   ,
+                              isint    , islong    , natural_entry   )     
 # =============================================================================
 import ROOT
 # =============================================================================
-with ROOTIgnore ( 2001 ) : 
-    from ostap.core.core import ( cpp      , std       , Ostap           , 
-                                  ROOTCWD  , rootID    , 
-                                  funcID   , funID     , fID             ,
-                                  histoID  , hID       , dsID            ,
-                                  cwd      , pwd       ,
-                                  VE       , SE        , WSE             ,
-                                  binomEff , binomEff2 ,
-                                  zechEff  , wilsonEff , agrestiCoullEff ,
-                                  iszero   , isequal   ,
-                                  isint    , islong    , natural_entry   ) 
-    
-    
-## ## silently load RooFit library trick...
-## from ostap.logger.utils import mute
-## with mute() : _tmp = ROOT.RooRealVar
-## del mute
-
-
-# =============================================================================
 ## decorate histograms 
 # =============================================================================    
-with ROOTIgnore( 2001 ) : 
-    from ostap.histos.histos import ( binomEff_h1 , binomEff_h2 , binomEff_h3 ,
-                                      h1_axis     , h2_axes     , h3_axes     ,
-                                      axis_bins   , ve_adjust   , histoGuess  )
-    
+from ostap.histos.histos import ( binomEff_h1 , binomEff_h2 , binomEff_h3 ,
+                                  h1_axis     , h2_axes     , h3_axes     ,
+                                  axis_bins   , ve_adjust   , histoGuess  )
+
     
 # =============================================================================
 # Other decorations 
 # =============================================================================
-with ROOTIgnore( 2001 ) : 
-    
-    import ostap.trees.trees
-    import ostap.trees.cuts
-    
-    import ostap.histos.param
-    import ostap.histos.compare
-    
-    import ostap.io.root_file
-    
-    import ostap.math.polynomials
-    import ostap.math.models
-    import ostap.utils.hepdata 
-    import ostap.utils.pdg_format 
-    
-    import ostap.plotting.canvas
-    
-    import ostap.fitting.minuit 
-    import ostap.fitting.roofit 
+import ostap.trees.trees
+import ostap.trees.cuts
 
-    import ostap.plotting.draw_attributes 
-    
+import ostap.histos.param
+import ostap.histos.compare
+
+import ostap.io.root_file
+
+import ostap.math.polynomials
+import ostap.math.models
+import ostap.utils.hepdata 
+import ostap.utils.pdg_format 
+
+import ostap.plotting.canvas
+
+import ostap.fitting.minuit 
+import ostap.fitting.roofit 
+
+import ostap.plotting.draw_attributes 
+
 # =============================================================================
 ## graphs 
 # =============================================================================
-with ROOTIgnore( 2001 ) :     
-    from ostap.histos.graphs import ( makeGraph , lw_graph  , 
-                                      hToGraph  , hToGraph2 , hToGraph3 )
+from ostap.histos.graphs import ( makeGraph , lw_graph  , 
+                                  hToGraph  , hToGraph2 , hToGraph3 )
 
-    
 
-del ROOTIgnore 
 # =============================================================================
 if '__main__' == __name__ :
             

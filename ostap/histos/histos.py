@@ -29,7 +29,6 @@ __all__     = (
     'Histo3DFun'      , ## 3D-histogram as function object
     )
 # =============================================================================
-import ROOT, sys, math, ctypes, array 
 from   ostap.core.core import ( cpp      , Ostap     , 
                                 ROOTCWD  , rootID    , 
                                 funcID   , funID     , fID             ,
@@ -45,6 +44,7 @@ from   ostap.math.base          import frexp10
 from   ostap.core.ostap_types   import integer_types, num_types , long_type, sequence_types
 from   ostap.utils.progress_bar import progress_bar 
 import ostap.plotting.draw_attributes 
+import ROOT, sys, math, ctypes, array 
 # =============================================================================
 # logging 
 # =============================================================================

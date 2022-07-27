@@ -110,9 +110,9 @@ __all__ = (
     'read_root' , ## real all ROOT objects from the file 
     )
 # =============================================================================
-import ROOT
 import ostap.io.root_file
 from   ostap.core.meta_info import root_version_int 
+import ROOT
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.dump_root' )

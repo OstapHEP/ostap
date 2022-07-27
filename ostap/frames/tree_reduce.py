@@ -21,12 +21,11 @@ __all__     = (
     'reduce'     ,    
     ) 
 # =============================================================================
-import ROOT, os 
-# =============================================================================
 import ostap.trees.trees
 from   ostap.core.meta_info import root_info 
 from   ostap.core.core      import cpp, Ostap 
 from   ostap.utils.cleanup  import CleanUp 
+import ROOT, os 
 # =============================================================================
 # logging 
 # =============================================================================

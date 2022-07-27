@@ -36,10 +36,10 @@ MetaInfo = namedtuple ( 'MetaInfo'  , ( 'User' , 'Ostap' , 'Python' , 'ROOT'  ) 
 RootInfo = namedtuple ( 'RootInfo'  , ( 'major' , 'minor' , 'patch'           ) ) 
 
 # =============================================================================
-import sys, getpass, socket, ROOT 
 from   ostap             import version      as ostap_version
 from   ostap             import version_info as ostap_info  
 from   ostap             import version_int  as ostap_version_int 
+import sys, getpass, socket, ROOT 
 # =============================================================================
 
 user           = "%s@%s" % ( getpass.getuser() , socket.getfqdn () )

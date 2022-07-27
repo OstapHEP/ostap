@@ -19,7 +19,6 @@ __all__     = (
     'active_branches' , ## context manager to activate certain branches 
   ) 
 # =============================================================================
-import ROOT, os, math, array 
 from   ostap.core.meta_info   import root_info
 from   ostap.core.core        import ( std , Ostap , VE  , WSE , hID ,
                                        ROOTCWD , strings  , split_string ) 
@@ -30,6 +29,7 @@ from   ostap.core.ostap_types import ( integer_types  , long_type      ,
 from   ostap.utils.utils      import chunked 
 import ostap.histos.histos
 import ostap.trees.param
+import ROOT, os, math, array 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -115,7 +115,7 @@ def _iter_cuts_ ( self , cuts = '' , first = 0 , last = _large , progress = Fals
         abrs = tuple ( abrs ) 
         context = ActiveBranches ( self , *abrs )
     else :
-        from ostap.utils.utils import NoContext 
+        from ostap.utils.basic import NoContext 
         context = NoContext () 
     
     from ostap.utils.progress_bar import ProgressBar 

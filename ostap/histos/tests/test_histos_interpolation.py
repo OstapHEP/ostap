@@ -14,6 +14,8 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
+from   ostap.core.core      import hID, SE 
+import ostap.histos.histos  
 import ROOT, random
 # =============================================================================
 # logging 
@@ -27,8 +29,7 @@ else :
 logger.info ( 'Test for 1,2&3D-histogram interpolation')
 # =============================================================================
 
-import ROOT, random, ostap.histos.histos  
-from   ostap.core.core      import hID, SE 
+
 
 h1 = ROOT.TH1D ( hID() , '', 5 , 0 , 1 )
 h2 = ROOT.TH2D ( hID() , '', 5 , 0 , 1 , 5 , 0 , 1 ) 

@@ -34,11 +34,10 @@ __all__     = (
     "tmvaGUI"
     )
 # =============================================================================
+from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning 
+from   ostap.core.ostap_types  import num_types, string_types
+from   ostap.core.meta_info    import root_version_int, root_info  
 import ROOT, os, math, tarfile, shutil 
-# =============================================================================
-from ostap.core.core         import items_loop, WSE, Ostap
-from ostap.core.ostap_types  import num_types, string_types
-from ostap.core.meta_info    import root_version_int, root_info  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1259,7 +1258,6 @@ class Trainer(object):
         
         self.logger.info ('Making the standard TMVA plots') 
         from ostap.utils.utils import batch , cmd_exists, keepCanvas  
-        from ostap.logger.utils import rootWarning
         with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , keepCanvas() : ##  , rootWarning ()  :
             
             if hasattr ( ROOT.TMVA , 'variables'    ) :

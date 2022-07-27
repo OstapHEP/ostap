@@ -45,12 +45,12 @@ __all__     = (
     'func_executor' , ## helper function to execute callable
     )
 # =============================================================================
+import os, operator, abc  
+from   itertools   import repeat, count 
+# =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.task' )
 else                      : logger = getLogger ( __name__              )
-# =============================================================================
-import os, operator, abc  
-from   itertools   import repeat, count 
 # ==============================================================================
 ## @class Task
 #  Basic base class to encapsulate any processing
@@ -757,18 +757,18 @@ def task_executor ( item ) :
     if task.batch_set :
         from ostap.utils.utils    import Batch       as batch_context 
     else :
-        from ostap.utils.utils    import NoContext   as batch_context 
+        from ostap.utils.basic    import NoContext   as batch_context 
 
     if task.build_set :
         from ostap.core.build_dir import UseBuildDir as build_context
     else :
-        from ostap.utils.utils    import NoContext   as build_context 
+        from ostap.utils.basic    import NoContext   as build_context 
 
     ##
     if task.cleanup : 
         from ostap.utils.cleanup  import CleanUpPID  as clean_context
     else : 
-        from ostap.utils.utils    import NoContext   as clean_context 
+        from ostap.utils.basic    import NoContext   as clean_context 
        
     
     ## use clean, build & batch context 

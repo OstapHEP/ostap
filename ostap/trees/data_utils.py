@@ -48,6 +48,7 @@ __all__     = (
     'Data2'       , ## collect files and create two TChain objects 
     )
 # =============================================================================
+from   ostap.core.core import rootError, rootWarning
 import ROOT, os, glob, random, math
 # =============================================================================
 # logging 
@@ -683,7 +684,6 @@ class Data(Files):
         """
 
         ## suppress Warning/Error messages from ROOT 
-        from ostap.logger.utils import rootError
         with rootError() :
 
             ## new temporary chani/tree 
@@ -710,7 +710,6 @@ class Data(Files):
             
     ## printout 
     def __str__(self):
-        from ostap.logger.utils import rootWarning
         with rootWarning() :
             nf = len ( self.files     )
             nc = '??'
@@ -840,7 +839,6 @@ class Data2(Data):
         """
         
         ## suppress Warning/Error messages from ROOT 
-        from ostap.logger.utils import rootError
         with rootError() :
             
             tree1 = ROOT.TChain ( self.chain1_name  )
@@ -890,7 +888,6 @@ class Data2(Data):
     ## printout 
     def __str__(self):
 
-        from ostap.logger.utils import rootWarning
         with rootWarning() :
             nf  = len ( self.files      )
             nf2 = len ( self.files2     )

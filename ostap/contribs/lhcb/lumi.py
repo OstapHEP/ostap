@@ -37,6 +37,10 @@ __all__     = (
     'getLumi'     ,  ## get the lumi
     )
 # =============================================================================
+from   ostap.core.meta_info import root_info 
+from   ostap.core.core      import VE, hID, rootError 
+import ostap.trees.trees 
+import ostap.io.root_file
 import ROOT, os  
 # =============================================================================
 # logging 
@@ -44,12 +48,6 @@ import ROOT, os
 from ostap.logger.logger   import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.contribs.lhcb.lumi' )
 else                       : logger = getLogger ( __name__        )
-# ==============================================================================
-import ostap.trees.trees 
-import ostap.io.root_file
-from   ostap.logger.utils   import rootError 
-from   ostap.core.core      import VE, hID
-from   ostap.core.meta_info import root_info 
 # ==============================================================================
 lumi_tree = 'GetIntegratedLuminosity/LumiTuple'
 lumi      = 'IntegratedLuminosity'

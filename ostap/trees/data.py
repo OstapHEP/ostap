@@ -61,16 +61,15 @@ __all__     = (
     'DataAndLumi' , ## collect files and create two TChain objects (LHCb specific)
     )
 # =============================================================================
-import ROOT, glob 
+import glob 
+from   ostap.trees.data_utils   import Files, Data, Data2
+from   ostap.contribs.lhcb.data import DataAndLumi 
 # =============================================================================
 # logging 
 # =============================================================================
 from   ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.trees.data' )
 else                       : logger = getLogger ( __name__     )
-# =============================================================================
-from ostap.trees.data_utils   import Files, Data, Data2
-from ostap.contribs.lhcb.data import DataAndLumi 
 # =============================================================================
 
 # =============================================================================

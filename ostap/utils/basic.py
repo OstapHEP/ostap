@@ -27,6 +27,7 @@ __all__     = (
     'whoami'        , ## who am I? 
     'commonpath'    , ## common path(prefix) for list of files
     'copy_file'     , ## copy fiel creating inetremadiet directorys if needed 
+    'NoContext'     , ## empty context manager
     ## 
     )
 # =============================================================================
@@ -206,7 +207,28 @@ else :
             # could give priority to other errors like EACCES or EROFS
             if not exist_ok or not os.path.isdir ( name ) :
                 raise
-            
+
+# =============================================================================
+## @class NoContext
+#  Fake empty context manager to be used as empty placeholder
+#  @code
+#  with NoContext() :
+#  ...  do_something() 
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  date 2013-01-12
+class NoContext(object) :
+    """Fake (empty) context manager to be used as empty placeholder
+    >>> with NoContext() :
+    ...         do_something() 
+    """
+    def __init__  ( self , *args , **kwargs ) : pass
+    ## context manager
+    def __enter__ ( self         ) : return self 
+    ## context manager 
+    def __exit__  ( self , *args ) : pass  
+
+
 # =========================================================================
 ## copy source file into destination, creating intermediate directories
 #  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 

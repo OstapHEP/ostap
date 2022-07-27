@@ -21,16 +21,6 @@ __all__     = (
     'W2Data'          , ## helper to add the clacualted weight to ROOT.RooAbsData
     ) 
 # =============================================================================
-import ROOT, operator
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger    import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweight' )
-else                       : logger = getLogger ( __name__               )
-# =============================================================================
-logger.info ( 'Set of utitilities for re-weigthing')
-# =============================================================================
 from   ostap.core.pyrouts     import VE, SE
 from   ostap.math.base        import iszero
 from   ostap.core.ostap_types import string_types, list_types, num_types  
@@ -42,6 +32,13 @@ import ostap.histos.histos
 import ostap.histos.compare 
 import ostap.trees.trees
 import ostap.fitting.dataset
+import ROOT, operator
+# =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger    import getLogger
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweight' )
+else                       : logger = getLogger ( __name__               )
 # =============================================================================
 ## @class AttrGetter
 #  simple class to bypass <code>operator.attrgetter</code> that

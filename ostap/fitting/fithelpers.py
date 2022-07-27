@@ -34,12 +34,12 @@ __all__     = (
 # =============================================================================
 import ROOT, sys, random
 from   ostap.core.meta_info    import root_info 
-from   ostap.core.core         import Ostap, rootID, VE, items_loop, isequal
+from   ostap.core.core         import ( Ostap, rootID, VE,
+                                        items_loop, isequal , roo_silent ) 
 from   ostap.core.ostap_types  import ( string_types   , num_types      ,
                                         integer_types  , list_types     , 
                                         is_good_number , is_integer     ,
                                         sequence_types )
-from   ostap.logger.utils      import roo_silent
 from   ostap.utils.utils       import make_iterable
 from   ostap.fitting.variables import SETVAR 
 from   ostap.fitting.utils     import make_name, numcpu, ncpu, get_i  

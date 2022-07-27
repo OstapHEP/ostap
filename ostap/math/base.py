@@ -100,7 +100,9 @@ __all__     = (
     'axis_range'     , ## suitable axis range
     ## 
     'gcd'            , ## gcd-function 
-    'lcm'            , ## lcm-function 
+    'lcm'            , ## lcm-function
+    ##
+    'ROOTIgnore'     , ## control ROOT verbosity, suppress ROOT errors
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import root_version_int 
@@ -130,7 +132,47 @@ std = cpp.std
 Ostap = cpp.Ostap 
 
 # =============================================================================
-from ostap.logger.utils import ROOTIgnore
+## Very simple context manager to suppress ROOT printout
+#  @code
+#  >>> with ROOTIgnore( ROOT.kError + 1 ) : some_ROOT_code_here()
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-07-30
+class ROOTIgnore( object ) :
+    """Very simple context manager to suppress ROOT printout
+    >>> with ROOTIgnore ( ROOT.kError + 1 ) : some_ROOT_code_here()
+    """
+    ## constructor
+    #  @param level  (INPUT) print level 
+    #  @param silent (print level 
+    # 
+    def __init__ ( self , level ) :
+        """ Constructor:        
+        >>> with rootError   () : some_ROOT_code_here()
+        >>> with rootWarning () : some_ROOT_code_here()
+        """
+        #
+        self._level = int ( level )
+        
+    ## context manager: ENTER 
+    def __enter__ ( self ) :
+        "The actual context manager: ENTER"
+        self._old = int ( ROOT.gErrorIgnoreLevel ) 
+        if self._old != self._level :
+            groot = ROOT.ROOT.GetROOT()
+            groot.ProcessLine("gErrorIgnoreLevel= %d ; " % self._level ) 
+            
+        return self
+    
+    ## context manager: EXIT 
+    def __exit__ ( self , *_ ) : 
+        "The actual context manager: EXIT"
+        if self._old != int ( ROOT.gErrorIgnoreLevel )  :
+            groot = ROOT.ROOT.GetROOT()            
+            groot.ProcessLine("gErrorIgnoreLevel= %d ; " % self._old ) 
+            
+
+# =============================================================================
 from ostap.logger.mute  import mute
 logger.debug ("Suppress error/warnings from ROOT")
 with ROOTIgnore ( ROOT.kWarning + 1 ) : 
@@ -140,7 +182,8 @@ with ROOTIgnore ( ROOT.kWarning + 1 ) :
     isequalf = Ostap.Math.Equal_To ('float' )()
     isint    = Ostap.Math.isint 
     islong   = Ostap.Math.islong
-    
+
+
 vDoubles = std.vector ( 'double' )
 vFloats  = std.vector ( 'float'  )
 vInts    = std.vector ( 'int'    )

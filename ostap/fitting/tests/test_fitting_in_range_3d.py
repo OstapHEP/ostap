@@ -14,8 +14,7 @@
 from   ostap.core.pyrouts       import *
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
-from   ostap.core.core          import cpp, VE, dsID
-from   ostap.logger.utils       import rooSilent
+from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   builtins                 import range
 from   ostap.fitting.background import make_bkg 
 from   ostap.core.meta_info     import root_info 

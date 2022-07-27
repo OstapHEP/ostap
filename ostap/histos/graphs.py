@@ -36,11 +36,11 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-import ROOT, ctypes        
 from   ostap.core.core                import cpp, VE, grID
 from   ostap.core.ostap_types         import num_types, integer_types  
 from   builtins                       import range
 from   ostap.plotting.draw_attributes import copy_graph_attributes  
+import ROOT, ctypes        
 # =============================================================================
 # logging 
 # =============================================================================

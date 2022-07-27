@@ -15,13 +15,13 @@ __all__     = (
     'workdir' , ## workdir where selector cache, etc. can be placed  
     )
 # =============================================================================
+import os 
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.core.workdir'  )
 else                       : logger = getLogger ( __name__              )
-# =============================================================================
-import os 
 # =============================================================================
 ## import ostap.core.config as _config 
 workdir = os.environ.get('OSTAP_DIR') or os.environ.get('OSTAPDIR') or '$HOME/.ostap'
@@ -47,5 +47,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

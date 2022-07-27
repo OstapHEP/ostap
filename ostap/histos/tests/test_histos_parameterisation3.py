@@ -14,14 +14,13 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-import ROOT, random, time
 from   builtins import range
-# =============================================================================
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ROOT, random, time
 # =============================================================================
 # logging 
 # =============================================================================

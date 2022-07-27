@@ -34,13 +34,15 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2012-09-10"
 __version__ = '$Revision$'
 # =============================================================================
-import ROOT, os, sys   
+from ostap.core.core     import rootError
+# =============================================================================
 ## ROOT.PyConfig.IgnoreCommandLineOptions = True
 try :
     from cString import StringIO
 except :
     from io      import StringIO
 # =============================================================================
+import os, sys   
 
 # =============================================================================
 ## parse arguments 
@@ -309,11 +311,12 @@ if arguments.Profile :
 # =============================================================================
 ## set ROOT into batch mode 
 # =============================================================================
+import ostap.fixes.fixes
+import ROOT 
 groot = ROOT.ROOT.GetROOT() 
 groot.SetBatch ( arguments.batch )
 if groot.IsBatch() : logger.info ('Batch processing is activated') 
 
-import ostap.fixes.fixes 
 
 # =============================================================================
 # specify the build directory for ROOT 
@@ -416,7 +419,6 @@ def _load_macro_ ( macro , silent = True ) :
     logger.debug  ("Try to load macro '%s'" % macro )
     groot = ROOT.ROOT.GetROOT() 
     if silent :
-        from ostap.logger.utils import rootError
         with rootError() : sc = groot.LoadMacro ( macro )
     else :
         sc = groot.LoadMacro ( macro )
@@ -450,7 +452,6 @@ def load_macro ( pattern ) :
     import glob
     _glob   = False 
     _loaded = 0
-    from  ostap.logger.utils import rootError
     
     for pat,ext in patterns :
         

@@ -12,8 +12,7 @@ from   __future__               import print_function
 # ============================================================================= 
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
-from   ostap.core.core          import Ostap, std, VE, dsID
-from   ostap.logger.utils       import rooSilent 
+from   ostap.core.core          import Ostap, std, VE, dsID, rooSilent 
 import ostap.io.zipshelve       as     DBASE
 from   ostap.utils.timing       import timing 
 from   builtins                 import range

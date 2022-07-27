@@ -15,8 +15,7 @@ __all__    = () ## nothing to import
 from   builtins                 import range 
 import ostap.fitting.roofit
 import ostap.fitting.models     as     Models 
-from   ostap.core.core          import cpp, VE, dsID,    Ostap 
-from   ostap.logger.utils       import rooSilent
+from   ostap.core.core          import cpp, VE, dsID, Ostap, rooSilent  
 from   ostap.fitting.efficiency import Efficiency1D
 from   ostap.utils.utils        import timing
 from   ostap.core.meta_info     import old_PyROOT

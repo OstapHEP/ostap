@@ -14,7 +14,6 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-05-10"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-import ROOT, random, math, os, time 
 from   builtins               import range
 from   ostap.core.pyrouts     import hID
 from   ostap.histos.histos    import h1_axis, h2_axes 
@@ -24,6 +23,7 @@ from   ostap.utils.utils      import vrange
 from   ostap.utils.timing     import timing
 from   ostap.trees.data_utils import Data 
 from   ostap.logger.colorized import attention, allright  
+import ROOT, random, math, os, time 
 # =============================================================================
 # logging 
 # =============================================================================

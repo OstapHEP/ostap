@@ -20,8 +20,7 @@ __all__    = () ## nothing to import
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
 from   builtins                 import range 
-from   ostap.core.core          import dsID
-from   ostap.logger.utils       import rooSilent
+from   ostap.core.core          import dsID, rooSilent
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 

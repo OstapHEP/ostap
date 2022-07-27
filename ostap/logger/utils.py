@@ -25,13 +25,7 @@ __all__     = (
     'silence_py'         , ## ditto 
     'mute'               , ## context manager to suppress stdout/strerr printout 
     'silence'            , ## ditto 
-    'rooSilent'          , ## control RooFit verbosity
-    'roo_silent'         , ## control RooFit verbosity 
-    'rootError'          , ## control ROOT verbosity 
-    'rootWarning'        , ## control ROOT verbosity 
     'NoContext'          , ## empty context manager
-    'RooSilent'          , ## control RooFit verbosity
-    'ROOTIgnore'         , ## control ROOT verbosity, suppress ROOT errors
     ## logging   
     'logColor'           , ## switch on  locally the colored logging
     'logNoColor'         , ## switch off locally the colored logging
@@ -40,9 +34,6 @@ __all__     = (
     'logInfo'            , ## redefine (locally) the logging level
     'logWarning'         , ## redefine (locally) the logging level
     'logError'           , ## redefine (locally) the logging level
-    ## convert ROOT Errors into C++/python exceptions 
-    'rootException'      , ## context manager to perform ROOT Error -> C++/Python exception
-    'RootError2Exception', ## context manager to perform ROOT Error -> C++/Python exception
     ##
     'pretty_float'       , ## pretty print of the floatig number 
     'pretty_ve'          , ## pretty print of the value with error 
@@ -56,8 +47,14 @@ __all__     = (
     'DisplayTree'        , ## display tree-like structures 
     )
 # =============================================================================
-import ROOT, time, os, sys, math  ## attention here!!
-ROOT_RooFit_ERROR = 4 
+import time, os, sys, math  ## attention here!!
+from   ostap.logger.logger    import logVerbose,  logDebug, logInfo, logWarning, logError
+from   ostap.logger.mute      import ( mute   , mute_py ,
+                                       tee_py , tee_cpp ,
+                                       output , silence , silence_py ,
+                                       MuteC  , MutePy  ,
+                                       TeeCpp , TeePy   , OutputC    )
+from   ostap.utils.basic      import NoContext
 # =============================================================================
 # logging 
 # =============================================================================
@@ -66,206 +63,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.utils' )
 else                       : logger = getLogger( __name__ )
 del getLogger 
 # =============================================================================
-from   ostap.logger.logger    import logVerbose,  logDebug, logInfo, logWarning, logError
-from   ostap.utils.utils      import RootError2Exception, rootException
-from   ostap.logger.mute      import ( mute   , mute_py ,
-                                       tee_py , tee_cpp ,
-                                       output , silence , silence_py ,
-                                       MuteC  , MutePy  ,
-                                       TeeCpp , TeePy   , OutputC    )
-# =============================================================================
-## very simple context manager to suppress RooFit printout
-#
-#  @code
-#
-#  >>> with rooSilent( 4 , False ) :
-#  ...        some_RooFit_code_here()
-#
-#  @endcode
-#  @see RooMgsService
-#  @see RooMgsService::globalKillBelow
-#  @see RooMgsService::silentMode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-07-09
-class RooSilent(object) :
-    """Very simple context manager to suppress RooFit printout
-    
-    >>> with rooSilent( 4 , False ) :
-    ...        some_RooFit_code_here ()
-    
-    """
-    ## constructor
-    #  @param level  (INPUT) print level 
-    #  @param silent (print level 
-    # 
-    def __init__ ( self , level = ROOT_RooFit_ERROR , silent = True ) :
-        """ Constructor
-        @param level  (INPUT) print level 
-        @param silent (print level 
-        
-        >>> with rooSilent( ROOT.RooFit.ERROR , True  ) :
-        ...        some_RooFit_code_here ()
-        
-        
-        >>> with rooSilent( ROOT.RooFit.INFO , False  ) :
-        ...        some_RooFit_code_here ()
-        
-        
-        """
-        #
-        if level > ROOT.RooFit.FATAL : level = ROOT.RooFit.FATAL 
-        if level < ROOT.RooFit.DEBUG : level = ROOT.RooFit.DEBUG 
-        #
-        self._level  = level 
-        self._silent = True if silent else False  
-        self._svc    = ROOT.RooMsgService.instance()
-        
-    ## context manager
-    def __enter__ ( self ) :
-
-        self._prev_level  = self._svc.globalKillBelow  () 
-        self._prev_silent = self._svc.silentMode       () 
-        
-        self._svc.setGlobalKillBelow  ( self._level      )
-        self._svc.setSilentMode       ( self._silent     )
-        
-        return self
-    
-    ## context manager 
-    def __exit__ ( self , *_ ) : 
-            
-        self._svc.setSilentMode      ( self._prev_silent )
-        self._svc.setGlobalKillBelow ( self._prev_level  )
-
-
-# =============================================================================
-## Very simple context manager to suppress ROOT printout
-#  @code
-#  >>> with ROOTIgnore( ROOT.kError + 1 ) : some_ROOT_code_here()
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2015-07-30
-class ROOTIgnore( object ) :
-    """Very simple context manager to suppress ROOT printout
-    >>> with ROOTIgnore ( ROOT.kError + 1 ) : some_ROOT_code_here()
-    """
-    ## constructor
-    #  @param level  (INPUT) print level 
-    #  @param silent (print level 
-    # 
-    def __init__ ( self , level ) :
-        """ Constructor:        
-        >>> with rootError   () : some_ROOT_code_here()
-        >>> with rootWarning () : some_ROOT_code_here()
-        """
-        #
-        self._level = int ( level )
-        
-    ## context manager: ENTER 
-    def __enter__ ( self ) :
-        "The actual context manager: ENTER" 
-        self._old = int ( ROOT.gErrorIgnoreLevel ) 
-        if self._old != self._level :
-            groot = ROOT.ROOT.GetROOT()
-            groot.ProcessLine("gErrorIgnoreLevel= %d ; " % self._level ) 
-            
-        return self
-    
-    ## context manager: EXIT 
-    def __exit__ ( self , *_ ) : 
-        "The actual context manager: EXIT"             
-        if self._old != int ( ROOT.gErrorIgnoreLevel )  :
-            groot = ROOT.ROOT.GetROOT()            
-            groot.ProcessLine("gErrorIgnoreLevel= %d ; " % self._old ) 
-            
-# =============================================================================
-## @class NoContext
-#  Fake empty context manager to be used as empty placeholder
-#  @code
-#  with NoContext() :
-#  ...  do_something() 
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  date 2013-01-12
-class NoContext(object) :
-    """ Fake (empty) context manager to be used as empty placeholder
-    >>> with NoContext() :
-    ...         do_something() 
-    """
-    def __init__  ( self , *args , **kwargs ) : pass
-    ## context manager
-    def __enter__ ( self         ) : return self 
-    ## context manager 
-    def __exit__  ( self , *args ) : pass  
-
-
-
-# =============================================================================
-## very simple context manager to suppress RooFit printout
-#
-#  @code
-#
-#  >>> with rooSilent( 4 , False ) :
-#  ...        some_RooFit_code_here()
-#
-#  @endcode
-#  @see RooMgsService
-#  @see RooMgsService::globalKillBelow
-#  @see RooMgsService::silentMode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-07-09
-def rooSilent ( level = ROOT_RooFit_ERROR , silent = True ) :
-    """Very simple context manager to suppress RooFit printout
-    >>> with rooSilent( 4 , False ) :
-    ...        some_RooFit_code_here()    
-    """
-    return RooSilent ( level , silent ) 
-
-# =============================================================================
-## helper context manager
-#  @code
-#
-#  >>> with roo_silent( True ) : 
-#  ...        some_RooFit_code_here()
-#
-#  @endcode
-#  @see rooSilent
-#  @see NoContex
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-07-09
-def roo_silent ( silence , *args ) :
-    """ Helper context manager#
-    >>> with roo_silent ( True ) : 
-    ...        some_RooFit_code_here()
-    """
-    return rooSilent ( *args ) if silence else NoContext() 
-
-# =============================================================================
-## very simple context manager to suppress ROOT printout
-#  @code
-#  >>> with rootError () : some_ROOT_code_here()
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2015-07-30
-def rootError   ( level = 1 ) :
-    """Very simple context manager to suppress ROOT printout
-    >>> with rootError () : some_ROOT_code_here()
-    """
-    return ROOTIgnore ( ROOT.kError   + level )
-
-# =============================================================================
-## very simple context manager to suppress ROOT printout
-#  @code
-#  >>> with rootError () : some_ROOT_code_here()
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2015-07-30
-def rootWarning ( level = 1 ) :
-    """Very simple context manager to suppress ROOT printout
-    >>> with rootWarning () : some_ROOT_code_here()
-    """
-    return ROOTIgnore ( ROOT.kWarning + level )
-
 
 # =============================================================================
 ## Format for nice printout of the floating number (string + exponent)

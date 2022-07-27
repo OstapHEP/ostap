@@ -113,9 +113,10 @@ __all__ = (
     'tmpdb'         , ## helper function to create TEMPORARY  RootShelve database 
     )
 # =============================================================================
-import ROOT, shelve, zlib, os 
+from   sys import version_info as     python_version 
 import ostap.io.root_file
-from   sys import version_info as python_version 
+from   ostap.io.dbase          import TmpDB 
+import ROOT, shelve, zlib, os 
 # =============================================================================
 try : 
     from cPickle import Pickler, Unpickler, HIGHEST_PROTOCOL
@@ -127,11 +128,10 @@ try :
 except ImportError : 
     from shelve import StringIO as BytesIO
 # =============================================================================
-from   ostap.io.dbase import TmpDB 
-# =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.rootshelve' )
 else                      : logger = getLogger ( __name__              )
+# =============================================================================
 logger.debug ( "Simple generic ROOT-based shelve-like-database" )
 # =============================================================================
 PROTOCOL = 2

@@ -68,8 +68,8 @@ __all__     = (
     'REOPEN'       , ## context manager to <code>ROOT.TFileReOpen('UPDATE')</code>
     ) 
 # =============================================================================
-import ROOT, sys, os , cppyy              ## attention here!!
-cpp = cppyy.gbl
+from   ostap.core.core import ROOTCWD, valid_pointer
+import ROOT, sys, os   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -77,11 +77,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.io.root_file' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-logger.debug ( 'Some useful decorations for TFile objects')
-# ==============================================================================
-## context manager to preserve current directory (rather confusing stuff in ROOT)
-from ostap.core.core import ROOTCWD, valid_pointer 
-# ===============================================================================
 ## write the (T)object to ROOT-file/directory
 #  @code
 #  histo1 = ...
@@ -398,7 +393,7 @@ def _rd_iteritems_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_di
     >>> for key,obj  in rfile.iteritems( lambda name,tkey,obj : name[0]=='M' ) : print key,obj
     """
     ##
-    if isinstance ( fun , type ) and issubclass ( fun , ( ROOT.TObject, cpp.TObject) ) : 
+    if isinstance ( fun , type ) and issubclass ( fun , ( ROOT.TObject , ) ) : 
         tobj = fun 
         fun  = lambda k,t,o : isinstance ( o , tobj )
     ##

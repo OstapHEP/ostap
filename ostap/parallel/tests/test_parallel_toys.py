@@ -18,8 +18,7 @@ import ROOT, random
 from   builtins                     import range
 import ostap.fitting.roofit 
 import ostap.fitting.models         as     Models 
-from   ostap.core.core              import cpp, VE, dsID, hID 
-from   ostap.logger.utils           import rooSilent
+from   ostap.core.core              import cpp, VE, dsID, hID, rooSilent
 import ostap.fitting.models         as     Models
 import ostap.parallel.parallel_toys as     Toys
 from   ostap.plotting.canvas        import use_canvas

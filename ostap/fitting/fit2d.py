@@ -24,15 +24,14 @@ __all__     = (
     ##
     )
 # =============================================================================
-import ROOT, random
 from   builtins                 import range
-from   ostap.core.core          import Ostap , valid_pointer
+from   ostap.core.core          import Ostap , valid_pointer, roo_silent 
 from   ostap.core.ostap_types   import integer_types, num_types, list_types, iterable_types   
-from   ostap.logger.utils       import roo_silent
 from   ostap.fitting.funbasic   import FUN2
 from   ostap.fitting.pdfbasic   import PDF2, Generic2D_pdf 
 from   ostap.fitting.utils      import component_similar , component_clone 
 from   ostap.fitting.fithelpers import H2D_dset, Fractions  
+import ROOT, random
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit2d' )

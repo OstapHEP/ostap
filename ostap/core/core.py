@@ -13,70 +13,83 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'cpp'              ,  ## global C++ namespace
-    'std'              ,  ## C++ namespace std
-    'Ostap'            ,  ## C++ namespace Ostap
-    'ROOTCWD'          ,  ## context manager to keep/preserve ROOT current directory
-    'rootID'           ,  ## global identifier for ROOT objects
-    'funcID'           ,  ## global identifier for ROOT functions 
-    'funID'            ,  ## global identifier for ROOT functions 
-    'fID'              ,  ## global identifier for ROOT functions 
-    'histoID'          ,  ## global identifier for ROOT histograms 
-    'hID'              ,  ## global identifier for ROOT histograms 
-    'grID'             ,  ## global identifier for ROOT graphs 
-    'dsID'             ,  ## global identifier for ROOT/RooFit datasets
+    'cpp'                 , ## global C++ namespace
+    'std'                 , ## C++ namespace std
+    'Ostap'               , ## C++ namespace Ostap
+    'ROOTCWD'             , ## context manager to keep/preserve ROOT current directory
+    'rootID'              , ## global identifier for ROOT objects
+    'funcID'              , ## global identifier for ROOT functions 
+    'funID'               , ## global identifier for ROOT functions 
+    'fID'                 , ## global identifier for ROOT functions 
+    'histoID'             , ## global identifier for ROOT histograms 
+    'hID'                 , ## global identifier for ROOT histograms 
+    'grID'                , ## global identifier for ROOT graphs 
+    'dsID'                , ## global identifier for ROOT/RooFit datasets
     ##
-    'VE'               ,  ## shortcut for Gaudi::Math::ValuewithError
-    'SE'               ,  ## shortcut for StatEntity
-    'WSE'              ,  ## shortcut for Gaudi::Math::WStatEntity 
+    'VE'                  , ## shortcut for Gaudi::Math::ValuewithError
+    'SE'                  , ## shortcut for StatEntity
+    'WSE'                 , ## shortcut for Gaudi::Math::WStatEntity 
     ##
-    'binomEff'         ,  ## binomial efficiency  
-    'binomEff2'        ,  ## binomial efficiency
-    'zechEff'          ,  ## binomial efficiency: Zech's recipe 
-    'wilsonEff'        ,  ## binomial efficiency: Wilson 
-    'agrestiCoullEff'  ,  ## binomial efficiency: Agresti-Coull
+    'binomEff'            , ## binomial efficiency  
+    'binomEff2'           , ## binomial efficiency
+    'zechEff'             , ## binomial efficiency: Zech's recipe 
+    'wilsonEff'           , ## binomial efficiency: Wilson 
+    'agrestiCoullEff'     , ## binomial efficiency: Agresti-Coull
     ##
-    'iszero'           ,  ## comparison with zero  for doubles  
-    'isequal'          ,  ## comparison for doubles 
-    'isint'            ,  ## Is float value actually int  ? 
-    'islong'           ,  ## Is float value actually long ?
-    'inrange'          ,  ## Is float walue in range ?  
+    'iszero'              , ## comparison with zero  for doubles  
+    'isequal'             , ## comparison for doubles 
+    'isint'               , ## Is float value actually int  ? 
+    'islong'              , ## Is float value actually long ?
+    'inrange'             , ## Is float walue in range ?  
     ##
-    'natural_entry'    ,  ## natural entry?  @see Ostap::Math::natural_entry 
-    'natural_number'   ,  ## natural nunber? @see Ostap::Math::natural_number
+    'natural_entry'       , ## natural entry?  @see Ostap::Math::natural_entry 
+    'natural_number'      , ## natural nunber? @see Ostap::Math::natural_number
     ##
-    'valid_pointer'    ,  ## Is it a valid C++ pointer?
-    'root_enum'        ,  ## Get enum from ROOT by name 
+    'valid_pointer'       , ## Is it a valid C++ pointer?
+    'root_enum'           , ## Get enum from ROOT by name 
     ##
-    'strings'          , ## construct std::vector<std::string>
-    'split_string'     , ## split the string  according to separators 
+    'strings'             , ## construct std::vector<std::string>
+    'split_string'        , ## split the string  according to separators 
     ##
-    'StatusCode'       , ## status code
-    'SUCCESS'          , ## status code SUCCESS 
-    'FAILURE'          , ## status code FAILURE
+    'StatusCode'          , ## status code
+    'SUCCESS'             , ## status code SUCCESS 
+    'FAILURE'             , ## status code FAILURE
     ##
-    'loop_items'       , ## loop over dictionary items 
-    'items_loop'       , ## ditto
+    'loop_items'          , ## loop over dictionary items 
+    'items_loop'          , ## ditto
     ##
-    'is_sorted'        , ## check that list is sorted 
+    'is_sorted'           , ## check that list is sorted
+    ## 
+    'RooSilent'           , ## control RooFit verbosity
+    'ROOTIgnore'          , ## control ROOT verbosity, suppress ROOT errors
+    'rooSilent'           , ## control RooFit verbosity
+    'roo_silent'          , ## control RooFit verbosity 
+    'rootError'           , ## control ROOT verbosity 
+    'rootWarning'         , ## control ROOT verbosity
+    ## 
+    'rootException'       , ## context manager to perform ROOT Error -> C++/Python exception
+    'RootError2Exception' , ## context manager to perform ROOT Error -> C++/Python exception
+    ##
     )
 # =============================================================================
 import math, sys, os 
 from   sys                    import version_info  as python_version 
 from   builtins               import range
-# =============================================================================
-## ROOT.ROOT.EnableThreadSafety()
 from   ostap.math.base        import ( Ostap    , std     , cpp ,  
                                        iszero   , isequal ,
                                        isint    , islong  ,
                                        inrange  , strings , 
                                        natural_number     ,
-                                       natural_entry      )
+                                       natural_entry      ,
+                                       ROOTIgnore         )
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.meta_info   import root_info
-from   ostap.core.ostap_types import integer_types, sequence_types, string_types   
+from   ostap.core.ostap_types import integer_types, sequence_types, string_types
+from   ostap.utils.basic      import NoContext
 import ROOT, cppyy
+# =============================================================================
+## ROOT.ROOT.EnableThreadSafety()
 # =============================================================================
 # logging 
 # =============================================================================
@@ -497,7 +510,6 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
                 
         if kw : logger.warning('draw: unknown attributes: %s' % kw.keys() )
             
-        from ostap.logger.utils import  rootWarning,   rooSilent 
         with rootWarning() , rooSilent ( 2 )  :
             result = obj.Draw( option , *args )
             
@@ -831,6 +843,197 @@ def _rtc_iadd_ ( self , item ) :
 
 ROOT.TCollection. __iadd__ = _rtc_iadd_ 
     
+
+# =============================================================================
+## very simple context manager to suppress RooFit printout
+#
+#  @code
+#
+#  >>> with rooSilent( 4 , False ) :
+#  ...        some_RooFit_code_here()
+#
+#  @endcode
+#  @see RooMgsService
+#  @see RooMgsService::globalKillBelow
+#  @see RooMgsService::silentMode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-07-09
+class RooSilent(object) :
+    """Very simple context manager to suppress RooFit printout
+    
+    >>> with rooSilent( 4 , False ) :
+    ...        some_RooFit_code_here ()
+    
+    """
+    ## constructor
+    #  @param level  (INPUT) print level 
+    #  @param silent (print level 
+    # 
+    def __init__ ( self , level = ROOT.RooFit.ERROR , silent = True ) :
+        """ Constructor
+        @param level  (INPUT) print level 
+        @param silent (print level 
+        
+        >>> with rooSilent( ROOT.RooFit.ERROR , True  ) :
+        ...        some_RooFit_code_here ()
+        
+        
+        >>> with rooSilent( ROOT.RooFit.INFO , False  ) :
+        ...        some_RooFit_code_here ()
+        
+        
+        """
+        #
+        import ROOT
+        #
+        if level > ROOT.RooFit.FATAL : level = ROOT.RooFit.FATAL 
+        if level < ROOT.RooFit.DEBUG : level = ROOT.RooFit.DEBUG 
+        #
+        self._level  = level 
+        self._silent = True if silent else False  
+        self._svc    = ROOT.RooMsgService.instance()
+        
+    ## context manager
+    def __enter__ ( self ) :
+
+        self._prev_level  = self._svc.globalKillBelow  () 
+        self._prev_silent = self._svc.silentMode       () 
+        
+        self._svc.setGlobalKillBelow  ( self._level      )
+        self._svc.setSilentMode       ( self._silent     )
+        
+        return self
+    
+    ## context manager 
+    def __exit__ ( self , *_ ) : 
+            
+        self._svc.setSilentMode      ( self._prev_silent )
+        self._svc.setGlobalKillBelow ( self._prev_level  )
+
+
+
+# =============================================================================
+## very simple context manager to suppress ROOT printout
+#  @code
+#  >>> with rootError () : some_ROOT_code_here()
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-07-30
+def rootError   ( level = 1 ) :
+    """Very simple context manager to suppress ROOT printout
+    >>> with rootError () : some_ROOT_code_here()
+    """
+    return ROOTIgnore ( ROOT.kError   + level )
+
+# =============================================================================
+## very simple context manager to suppress ROOT printout
+#  @code
+#  >>> with rootError () : some_ROOT_code_here()
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-07-30
+def rootWarning ( level = 1 ) :
+    """Very simple context manager to suppress ROOT printout
+    >>> with rootWarning () : some_ROOT_code_here()
+    """
+    return ROOTIgnore ( ROOT.kWarning + level )
+
+
+# =============================================================================
+## very simple context manager to suppress RooFit printout
+#
+#  @code
+#
+#  >>> with rooSilent( 4 , False ) :
+#  ...        some_RooFit_code_here()
+#
+#  @endcode
+#  @see RooMgsService
+#  @see RooMgsService::globalKillBelow
+#  @see RooMgsService::silentMode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-07-09
+def rooSilent ( level = ROOT.RooFit.ERROR , silent = True ) :
+    """Very simple context manager to suppress RooFit printout
+    >>> with rooSilent( 4 , False ) :
+    ...        some_RooFit_code_here()    
+    """
+    return RooSilent ( level , silent ) 
+
+# =============================================================================
+## helper context manager
+#  @code
+#
+#  >>> with roo_silent( True ) : 
+#  ...        some_RooFit_code_here()
+#
+#  @endcode
+#  @see rooSilent
+#  @see NoContex
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-07-09
+def roo_silent ( silence , *args ) :
+    """ Helper context manager#
+    >>> with roo_silent ( True ) : 
+    ...        some_RooFit_code_here()
+    """
+    return rooSilent ( *args ) if silence else NoContext() 
+
+# =============================================================================
+
+
+# =============================================================================
+## helper context manager to activate ROOT Error -> Python exception converter 
+#  @see Ostap::Utils::useErrorHandler
+#  @see Ostap::Utils::ErrorSentry
+#  @code
+#  with RootError2Exception() :
+#  .... do something here 
+#  @endcode 
+class RootError2Exception (object) :
+    """Helper context manager to activate ROOT Error -> Python exception converter
+    #
+    with RootError2Exception() :
+    ... do something here 
+    """
+    def __init__ ( self ) :
+        import ROOT,cppyy 
+        Ostap = cppyy.gbl.Ostap
+        self.e_handler  = Ostap.Utils.useErrorHandler 
+        self.m_previous = False 
+
+    ## context manager entry point  
+    def __enter__ ( self ) :    
+        self.m_previous = self.e_handler ( True ) 
+        return self
+    
+    ## context manager exit point
+    def __exit__ ( self , *_ ) :    
+        if self.m_previous : self.e_handler ( False ) 
+        self.m_previous = False 
+
+    def __del__ ( self ) :
+        if self.m_previous : self.e_handler ( False ) 
+        
+
+# =============================================================================
+## helper context manager to activate ROOT Error -> Python exception converter 
+#  @see Ostap::Utils::useErrorHandler
+#  @see Ostap::Utils::ErrorSentry
+#  @code
+#  with rootException () :
+#  .... do something here 
+#  @endcode
+def rootException () :
+    """Helper context manager to activate ROOT Error -> Python exception converter
+    #
+    with rootException() :
+    ... do something here 
+    """
+    return RootError2Exception()
+
+
+
 
 # =============================================================================
 _decorated_classes_ = (
