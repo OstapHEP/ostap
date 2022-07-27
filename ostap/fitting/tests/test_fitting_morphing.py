@@ -102,7 +102,7 @@ def test_morphing1 () :
     ## create morphing PDF 
     pdf  = MorphingN1_pdf ( 'M1' , shapes , xvar =  mass )
         
-    for mu in vrange ( *sigma_range , 6 ) :
+    for mu in vrange ( smin , smax , 6 ) :
         pdf.mu = mu
         logger.info ( 'Mu= %s' % mu ) 
         with wait ( 0.2 ) , use_canvas ( 'test_morphing1' ) :
