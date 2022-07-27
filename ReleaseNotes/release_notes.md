@@ -20,7 +20,8 @@
   1. Add Novosiboirsk function and PDF 
   1. add more properties for `SinhAsinh` function 
   1. add `LinearMorph_pdf`  
-  
+  1, remove '/' and '\' from constructed roo-names 
+
 ## Backward incompatible:  
 
   1.  rename `Morphing1N_pdf` -> `MorphingN1_pdf`

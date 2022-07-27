@@ -216,19 +216,21 @@ class VarMaker (object) :
         ## RooFit does no tline coma in the names
         ## RooAbsCollection::selectByName treat commas special case 
         
-        to_replace = ( ( ',' ,'_'      ) ,
-                       ( ';' ,'_'      ) ,
-                       ( ':' ,'_'      ) ,
-                       ( '?' ,'_'      ) ,
-                       ( ' ' ,'_'      ) ,
-                       ( '+' ,'_plus_' ) ,
-                       ( '______' ,'_' ) ,
-                       ( '_____'  ,'_' ) ,
-                       ( '____'   ,'_' ) ,
-                       ( '___'    ,'_' ) ,
-                       ( '__'     ,'_' ) ,
-                       ( '__'     ,'_' ) ,
-                       ( '__'     ,'_' ) )
+        to_replace = ( ( ','  ,'_'      ) ,
+                       ( ';'  ,'_'      ) ,
+                       ( ':'  ,'_'      ) ,
+                       ( '?'  ,'_'      ) ,
+                       ( '/'  ,'_'      ) ,
+                       ( '\\' ,'_'      ) ,
+                       ( ' '  ,'_'      ) ,
+                       ( '+'  ,'_plus_' ) ,
+                       ( '______'  ,'_' ) ,
+                       ( '_____'   ,'_' ) ,
+                       ( '____'    ,'_' ) ,
+                       ( '___'     ,'_' ) ,
+                       ( '__'      ,'_' ) ,
+                       ( '__'      ,'_' ) ,
+                       ( '__'      ,'_' ) )
                        
         def rootify  ( nam ) :
             for a , b in to_replace : nam = nam.replace ( a , b )
