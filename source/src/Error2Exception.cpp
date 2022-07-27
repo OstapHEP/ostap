@@ -55,12 +55,12 @@ namespace
                               tag               , 
                               Ostap::StatusCode ( 10000 + level ) ) ;
     }
-    else if ( kWarning <= level ) 
+    else if ( kWarning <= level && Py_IsInitialized() ) 
     {
       // python warning here 
       PyErr_WarnExplicit( NULL, (char*)message, (char*)location, 0, (char*)"ROOT", NULL );
     }
-    else if ( nullptr != s_handler ) 
+    else if ( nullptr != s_handler && s_handler != &errorHandler ) 
     { (*s_handler) ( level , abort , location , message ) ; }
     else 
     { ::DefaultErrorHandler( level , abort , location , message ); } 
@@ -75,15 +75,14 @@ bool Ostap::Utils::useErrorHandler ( const bool use )
   if      ( !use && GetErrorHandler() == &errorHandler ) 
   {
     if  ( nullptr != s_handler  && s_handler != &errorHandler ) 
-    { SetErrorHandler ( s_handler ) ; return true ; }             // RETURN 
+    { SetErrorHandler ( s_handler ) ; }             // RETURN
   }
   else if (  use && GetErrorHandler() != &errorHandler ) 
   {
     s_handler = GetErrorHandler() ; 
     SetErrorHandler ( &errorHandler ) ; 
-    return true ;                                                  // RETURN 
   }
-  return false ;
+  return &errorHandler == GetErrorHandler() ;
 }  
 // ============================================================================
 // constructor: make use of local error handler

@@ -15,11 +15,11 @@
 - see Ostap::Math::LegendreSum3
 """
 # ============================================================================= 
-import ROOT, random, math 
 from   ostap.core.core        import Ostap
 from   ostap.logger.colorized import attention
 import ostap.math.integral    as     I 
 import ostap.logger.table     as     T
+import ROOT, random, math 
 # ============================================================================= 
 # logging 
 # =============================================================================

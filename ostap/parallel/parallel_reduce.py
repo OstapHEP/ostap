@@ -16,13 +16,13 @@ __all__     = (
     'reduce'  , ## paralell reduce 
     ) 
 # =============================================================================
+from   ostap.parallel.parallel import Task, WorkManager
+import ROOT
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 logger = getLogger ( 'ostap.parallel.reduce' )
-# =============================================================================
-import ROOT
-from   ostap.parallel.parallel import Task, WorkManager
 # =============================================================================
 ## The simple task object for more efficient reduce of long TChain 
 #  @see GaudiMP.Parallel

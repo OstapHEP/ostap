@@ -9,7 +9,6 @@
 """ Test module for ostap/math/interpolation.py
 """
 # ============================================================================= 
-import ROOT, random, math
 from   ostap.utils.utils        import vrange 
 import ostap.core.pyrouts 
 import ostap.fitting.models     as M 
@@ -26,6 +25,7 @@ from   ostap.math.models        import f1_draw
 from   ostap.utils.utils        import wait
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
+import ROOT, random, math
 # =============================================================================
 # logging 
 # =============================================================================

@@ -163,12 +163,12 @@ __all__     = (
     'Styles'                       , ## helper class to define the style for the component
     )
 # =============================================================================
-import ROOT
 from   ostap.core.ostap_types import integer_types, list_types
 from   ostap.core.core  import items_loop
 import ostap.plotting.style  
 import ostap.plotting.canvas
-import ostap.fitting.roocmdarg   
+import ostap.fitting.roocmdarg
+import ROOT
 # =============================================================================
 from   ostap.logger.logger  import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.plotting.fit_draw' )

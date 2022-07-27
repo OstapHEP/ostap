@@ -14,7 +14,6 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-08"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-import ROOT,os,  random  
 from   builtins                import range
 import ostap.core.pyrouts 
 from   ostap.utils.timing      import timing
@@ -24,6 +23,8 @@ import ostap.parallel.parallel as     Parallel
 import ostap.parallel.kisa              ## ATTENTION!
 import ostap.parallel.parallel_project  ## ATTENTION!
 import ostap.parallel.parallel_fill     ## ATTENTION!
+##
+import ROOT,os,  random  
 ##
 # =============================================================================
 # logging 

@@ -9,18 +9,18 @@
 """ Test module for the file ostap/math/bernstein.py
 """
 # ============================================================================= 
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_bernstein' ) 
-else                       : logger = getLogger ( __name__                    )
-# ============================================================================= 
 import random  
 import ostap.math.models 
 import ostap.math.bernstein
 from   ostap.core.core      import Ostap, SE 
 from   ostap.utils.timing   import timing 
 # ============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_bernstein' ) 
+else                       : logger = getLogger ( __name__                    )
+# ============================================================================= 
 functions = set() 
 # ============================================================================
 ##  test solution of equation  B(x) = c

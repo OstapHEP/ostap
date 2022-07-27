@@ -9,7 +9,13 @@
 """ Test module for 3D models
 """
 # ============================================================================= 
-from   __future__        import print_function
+from   __future__          import print_function
+import ostap.math.models 
+from   ostap.core.core     import Ostap, SE
+from   ostap.math.integral import integral3
+from   ostap.math.integral import Integrate3D_X , Integrate3D_Y  , Integrate3D_Z
+from   ostap.math.integral import Integrate3D_XY, Integrate3D_XZ , Integrate3D_YZ
+import ROOT, random  
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -17,12 +23,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_models_3d' ) 
 else                       : logger = getLogger ( __name__         )
 # ============================================================================= 
-import ROOT, random  
-import ostap.math.models 
-from   ostap.core.core     import Ostap, SE
-from   ostap.math.integral import integral3
-from   ostap.math.integral import Integrate3D_X , Integrate3D_Y  , Integrate3D_Z
-from   ostap.math.integral import Integrate3D_XY, Integrate3D_XZ , Integrate3D_YZ
 
 
 # ============================================================================

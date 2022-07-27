@@ -9,7 +9,6 @@
 """Test for reweighting machinery in  Ostap
 """
 # =============================================================================
-import ROOT, random, math, os, time  
 from   builtins               import range
 from   ostap.core.pyrouts     import *
 import ostap.io.zipshelve     as     DBASE
@@ -18,6 +17,7 @@ import ostap.trees.trees
 import ostap.parallel.kisa 
 from   ostap.utils.timing     import timing
 from   ostap.logger.colorized import attention, allright  
+import ROOT, random, math, os, time  
 # =============================================================================
 # logging 
 # =============================================================================

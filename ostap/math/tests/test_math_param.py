@@ -14,9 +14,7 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-import ROOT, random, math,  time
 from   builtins               import range
-# =============================================================================
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
@@ -24,6 +22,7 @@ from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.utils      import wait 
 from   ostap.utils.timing     import timing
 from   ostap.math.models      import f1_draw 
+import ROOT, random, math,  time
 # =============================================================================
 # logging 
 # =============================================================================

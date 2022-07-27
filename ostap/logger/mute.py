@@ -31,7 +31,7 @@ __all__     = (
     'OutputC'            , ## context manager (output for C/C++  code) 
     )
 # =============================================================================
-import sys, os ## attention here!!
+import sys, os 
 # =============================================================================
 ## @class MutePy
 #  Very simple context manager to suppress python printout 
@@ -68,10 +68,10 @@ class MutePy(object):
         
         sys.stdout = self.stdout
         sys.stderr = self.stderr
-        
+
 # ============================================================================
 ## @class MuteC
-#  context manager to suppress pythion prinout
+#  context manager to suppress C/c++ printout
 #  the actual code is stallen from
 #  http://stackoverflow.com/questions/11130156/suppress-stdout-stderr-print-from-python-functions
 #  A fix is added for "IOError: [Errno 24] Too many open files" :

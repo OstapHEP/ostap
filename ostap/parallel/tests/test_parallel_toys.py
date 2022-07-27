@@ -14,7 +14,6 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random
 from   builtins                     import range
 import ostap.fitting.roofit 
 import ostap.fitting.models         as     Models 
@@ -23,6 +22,7 @@ import ostap.fitting.models         as     Models
 import ostap.parallel.parallel_toys as     Toys
 from   ostap.plotting.canvas        import use_canvas
 from   ostap.utils.utils            import wait 
+import ROOT, random
 # =============================================================================
 # logging 
 # =============================================================================

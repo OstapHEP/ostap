@@ -23,12 +23,12 @@ Four ways to add branch into TTree/Tchain
 """
 # ============================================================================= 
 from   __future__               import print_function
-import ROOT, math, random, array  
 import ostap.trees.trees
 import ostap.histos.histos
 from   ostap.trees.data         import Data
 from   ostap.utils.timing       import timing 
 from   ostap.utils.progress_bar import progress_bar
+import ROOT, math, random, array  
 # ============================================================================= 
 # logging 
 # =============================================================================

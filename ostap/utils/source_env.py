@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/utils/source_env.py
-#  ``Source'' the  environmentfile
+#  'Source' the  environmentfile
 #  @code
 #  from ostap.utuls.source_env import source_env
 #  ## get the dict of all modified/new variables 
@@ -15,7 +15,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2020-09-15
 # =============================================================================
-"""``Source'' the environment file
+"""'Source' the environment file
 
 >>> from ostap.utuls.source_env import source_env
 >>> # get the dict of all modified/new variables 
@@ -30,7 +30,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2020-09-15"
 __all__     = (  
-    'source_env' , ## ``source'' environment script 
+    'source_env' , ## 'source' environment script 
   ) 
 # =============================================================================
 import ROOT, sys , os , time
@@ -52,7 +52,7 @@ def clip ( text  , lmax = 55 ) :
     return  text [:ll] + '<...>' + text [-ll:]
 
 # ============================================================================
-#  ``Source'' the  environmentfile
+#  'Source' the  environmentfile
 #  @code
 #  from ostap.utuls.source_env import source_env
 #  ## get the dict of all modified/new variables 
@@ -63,7 +63,7 @@ def clip ( text  , lmax = 55 ) :
 #        os.environ [ key ] = variables [  key ] 
 #  @endcode 
 def source_env ( scripts , silent = False , lmax1 = 65 , lmax2 = 55 ) :
-    """``Source'' the environment file
+    """'Source' the environment file
     >>> from ostap.utuls.source_env import source_env
     >>> get the dict of all modified/new variables 
     >>> variables =  source_env ( 'my_env_script.sh' )
@@ -84,7 +84,7 @@ def source_env ( scripts , silent = False , lmax1 = 65 , lmax2 = 55 ) :
     variables = {} 
     for script in scripts :
         if not os.path.exists ( script ) or not os.path.isfile ( script ) :
-            logger.error ( "Invalid script ``%s'' for sourcing! skip it!" % script )
+            logger.error ( "Invalid script '%s' for sourcing! skip it!" % script )
             
         command = 'sh -c "source %s && env"' % script 
         args    = shlex.split ( command )
@@ -98,7 +98,7 @@ def source_env ( scripts , silent = False , lmax1 = 65 , lmax2 = 55 ) :
     ##     error = True
         
     ## assert not error,\
-    ##        "source_env: cannot source script %s using ``%s''" % ( script , command )
+    ##        "source_env: cannot source script %s using '%s'" % ( script , command )
         vars = {} 
         for line in proc.stdout:
             if line : line  = line [:-1]        
@@ -187,22 +187,22 @@ if '__main__' == __name__ :
     parser.add_argument    (
         '-l1', '--lmax1'  ,
         type    = int ,
-        help    = "Maximal width of columns in ``new-variables'' table [default: %(default)s]" , 
+        help    = "Maximal width of columns in 'new-variables' table [default: %(default)s]" , 
         default = 65  )
     parser.add_argument    (
         '-l2', '--lmax2'  ,
         type    = int ,
-        help    = "Maximal width of columns in ``modified-variables'' table [default: %(default)s]" ,
+        help    = "Maximal width of columns in 'modified-variables' table [default: %(default)s]" ,
         default = 55  )
     parser.add_argument   (
         "scripts"     ,
         nargs   = '*' ,
-        help    = "Scripts to be ``sourced''"
+        help    = "Scripts to be 'sourced'"
         )
     
     import sys
     config = parser.parse_args ( sys.argv[1:] )
-    logger.debug ( "Configurtaion: %s" % config ) 
+    logger.debug ( "Configuration: %s" % config ) 
 
     if config.scripts :
         source_env ( config.scripts , config.silent , config.lmax1 , config.lmax2 ) 

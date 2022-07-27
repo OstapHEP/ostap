@@ -10,10 +10,9 @@
 """
 # ============================================================================= 
 import math
-
-from ostap.math.ve      import VE
-from ostap.math.base    import cpp, iszero, isequal
-from ostap.math.math_ve import *
+from   ostap.math.ve      import VE
+from   ostap.math.base    import cpp, iszero, isequal
+from   ostap.math.math_ve import *
 # ============================================================================= 
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_ve2' )

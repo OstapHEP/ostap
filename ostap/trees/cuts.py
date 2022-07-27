@@ -15,10 +15,10 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
-import ROOT
 from   ostap.core.core        import cpp, VE, hID, dsID
 from   ostap.core.ostap_types import num_types, string_types
 from   ostap.utils.utils      import balanced 
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================

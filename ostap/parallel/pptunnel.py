@@ -18,13 +18,13 @@ __all__     = (
     'show_tunnels' , ## show the table of tunnels 
     )
 # =============================================================================
-from ostap.logger.logger import getLogger, keepLevel, enabledVerbose 
-if '__main__' == __name__ : logger = getLogger ( 'ostap.paralllel.pptunnel' )
-else                      : logger = getLogger ( __name__                   ) 
-# =============================================================================
 import sys, os, time 
 import pathos.core    as PC
 import pathos.secure  as PS
+# =============================================================================
+from ostap.logger.logger import getLogger, keepLevel, enabledVerbose 
+if '__main__' == __name__ : logger = getLogger ( 'ostap.paralllel.pptunnel' )
+else                      : logger = getLogger ( __name__                   ) 
 # =============================================================================
 ## @class ppServer
 #  Helper class that starts <code>ppserver</code> on remote site

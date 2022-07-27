@@ -13,10 +13,9 @@ It tests local implementation of numerical derivatives
 # ============================================================================= 
 from __future__ import print_function
 # ============================================================================= 
-import ROOT, random, math 
 from   math                   import exp, sin, cos, pi, tanh
 from   ostap.core.core        import VE 
-from ostap.math.models        import f1_draw
+from   ostap.math.models      import f1_draw
 from   ostap.math.derivative  import ( Derivative  , iszero      , Eval2VE     ,
                                        Derivative1 , Derivative2 , Derivative3 ,
                                        Derivative4 , Derivative5 , Derivative6 )
@@ -28,6 +27,7 @@ import ostap.logger.table     as     T
 from   ostap.logger.utils     import pretty_ve
 from   ostap.utils.utils      import wait
 from   ostap.plotting.canvas  import use_canvas
+import ROOT, random, math 
 # ============================================================================= 
 # logging 
 # =============================================================================

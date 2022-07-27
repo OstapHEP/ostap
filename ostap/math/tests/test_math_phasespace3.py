@@ -9,7 +9,6 @@
 """ Test module for 3-boidy phase space 
 """
 # ============================================================================= 
-import ROOT, math, random, itertools   
 from   ostap.core.pyrouts     import Ostap, SE 
 from   ostap.utils.gsl        import gslCount
 from   ostap.logger.colorized import attention 
@@ -18,6 +17,7 @@ from   ostap.utils.utils      import wait
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.math.models      import f1_draw
 from   ostap.math.minimize    import minimize_scalar 
+import ROOT, math, random, itertools   
 # ============================================================================
 from   ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_phasespace3' ) 

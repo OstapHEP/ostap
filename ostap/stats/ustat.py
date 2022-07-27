@@ -62,6 +62,8 @@ __all__     = (
     "uCalc" ,  ## calclulate the distance between two data points 
     )
 # ============================================================================
+from   ostap.core.core import cpp, Ostap, hID
+import ostap.histos.histos
 import ROOT, math, ctypes
 # =============================================================================
 # logging 
@@ -69,8 +71,6 @@ import ROOT, math, ctypes
 from   ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.ustat' )
 else                       : logger = getLogger ( __name__      )
-# =============================================================================
-from   ostap.core.core import cpp, Ostap, hID
 # =============================================================================
 ## calculate the distance between two data points 
 #  @author Vanya Belyaev Ivan.Belyaev@cern.ch

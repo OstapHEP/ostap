@@ -13,10 +13,10 @@ Prepare tests/examples for the  summary graphs
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # =============================================================================
-import ROOT, time
 from   ostap.core.pyrouts           import VE 
 from   ostap.plotting.graph_summary import  ( Average , Record   , draw_summary ,
                                               Point   , Interval , Limit  ) 
+import ROOT, time
 # =============================================================================
 # logging
 # =============================================================================

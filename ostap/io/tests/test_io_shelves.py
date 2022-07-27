@@ -23,16 +23,6 @@
 ## sys.modules['bsddb' ] = None
 ## sys.modules['gdbm'  ] = None
 ## ##  sys.modules['dbm'   ] = None
-
-
-import os, random
-import ROOT
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_io_shelves' )
-else                       : logger = getLogger ( __name__          )
 # =============================================================================
 from   ostap.math.base       import iszero
 from   ostap.core.pyrouts    import VE
@@ -42,14 +32,22 @@ from   ostap.io.dbase        import dbsize
 import ostap.utils.cleanup   as     CU
 import ostap.io.zipshelve    as     zipshelve
 import ostap.io.bz2shelve    as     bz2shelve
+import ostap.io.sqliteshelve as     sqliteshelve
+import ostap.io.rootshelve   as     rootshelve
+import ROOT, os, random
+# =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger ( 'test_io_shelves' )
+else                       : logger = getLogger ( __name__          )
+# =============================================================================
 if  2 < python_version.major :
     import ostap.io.lzshelve as     lzshelve
 else :
     lzshelve = None 
-import ostap.io.sqliteshelve as     sqliteshelve
-import ostap.io.rootshelve   as     rootshelve
 
-# =============================================================================
+
  
 bins    = 1000
 data    = {}

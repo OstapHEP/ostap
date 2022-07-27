@@ -7,10 +7,10 @@
 """Helper utilities to deal with ROOT styles 
 """
 # =============================================================================
-import ROOT, ctypes 
 import ostap.plotting.color
 from   ostap.utils.cidict import cidict
 from   ostap.core.core    import cidict_fun
+import ROOT, ctypes 
 # =============================================================================
 __all__ = (
     'StyleStore'       , ## the storage/dictionary of created/known styles

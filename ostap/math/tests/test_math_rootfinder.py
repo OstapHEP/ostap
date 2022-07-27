@@ -9,15 +9,15 @@
 """ Test module for ostap/math/rootfinder.py.
 """
 # ============================================================================= 
+import random,math 
+import ostap.math.models 
+from   ostap.math.rootfinder    import find_root, findroot 
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_rootfinder' ) 
 else                       : logger = getLogger ( __name__               )
-# =============================================================================
-import random,math 
-import ostap.math.models 
-from   ostap.math.rootfinder    import find_root, findroot 
 # =============================================================================
 
 

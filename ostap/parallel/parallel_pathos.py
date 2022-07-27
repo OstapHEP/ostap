@@ -37,10 +37,6 @@ __all__     = (
     'WorkManager' , ## task manager
     )
 # =============================================================================
-from ostap.logger.logger        import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel_pathos' )
-else                      : logger = getLogger ( __name__                         ) 
-# =============================================================================
 import sys, os 
 from   builtins                 import range
 from   itertools                import repeat , count
@@ -59,6 +55,13 @@ else                              : from collections     import Sized
 ## CORE pathos 
 # =============================================================================
 import pathos.core as PC
+# =============================================================================
+## Logging
+# =============================================================================
+from ostap.logger.logger        import getLogger
+if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel_pathos' )
+else                      : logger = getLogger ( __name__                         ) 
+# =============================================================================
 
 # =============================================================================
 ## helper function to access the underlyng <code>pp.Server</code> object

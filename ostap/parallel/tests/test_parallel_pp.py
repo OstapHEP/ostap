@@ -8,12 +8,12 @@
 - see https://www.parallelpython.com/examples.php#CALLBACK
 """
 # =============================================================================
-import ROOT, time, sys 
 import pp
 import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ROOT, time, sys 
 # =============================================================================
 # logging 
 # =============================================================================

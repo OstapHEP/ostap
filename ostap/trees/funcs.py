@@ -26,9 +26,9 @@ __all__     = (
     'FuncTH3'           , ## TH3-based Tree-function 
     ) 
 # =============================================================================
-import ROOT
 from   ostap.core.core      import Ostap, valid_pointer
 from   ostap.core.meta_info import old_PyROOT 
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================

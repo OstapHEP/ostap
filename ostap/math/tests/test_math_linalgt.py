@@ -9,8 +9,11 @@
 """ Test module for ostap/math/linalgt.py
 """
 # ============================================================================= 
-from __future__ import print_function
-from   sys      import version_info as python_version
+from __future__             import print_function
+from   sys                  import version_info as python_version
+import ostap.math.linalg
+from   ostap.core.core      import Ostap
+from   ostap.core.meta_info import root_version_int 
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -18,9 +21,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_math_linalgt'  )
 else                       : logger = getLogger ( __name__              )
 # ============================================================================= 
-import ostap.math.linalg
-from   ostap.core.core      import Ostap
-from   ostap.core.meta_info import root_version_int 
 try :
     import numpy as np
 except ImportError :

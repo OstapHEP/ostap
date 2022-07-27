@@ -21,9 +21,9 @@ __all__     = (
     'NSE' , ## simple smart running counter     :     Ostap::NStatEntity 
     ) 
 # =============================================================================
-import ROOT, cppyy
 from   ostap.math.ve   import Ostap, VE
 from   ostap.math.base import isequal, isequalf  
+import ROOT, cppyy
 # =============================================================================
 _new_methods_ = []
 # =============================================================================

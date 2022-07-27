@@ -8,9 +8,9 @@
 """ Oversimplified script for parallel execution using Parallel Python
 """
 # =============================================================================
-import ROOT, time, sys 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ROOT, time, sys 
 # =============================================================================
 # logging 
 # =============================================================================

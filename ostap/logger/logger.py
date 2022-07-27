@@ -9,8 +9,6 @@ Based on the logging of the Gaudi software project of CERN:
  Primitive utilities for colorized logging.
 """
 # =============================================================================
-import logging, os, sys  
-# =============================================================================
 __all__ = (
     'getLogger'      , ## get (configured) logger
     'setLogging'     , ## set disable level according to MSG.Level
@@ -44,7 +42,20 @@ __all__ = (
     ##
     )
 # =============================================================================
-# Message levels   (a'la Gaudi) 
+import logging, os, sys  
+# =============================================================================
+## BASIC   colorization
+# =============================================================================
+from   ostap.logger.colorized import ( isatty         ,
+                                       with_colors    ,
+                                       colored_string ,
+                                       attention      ,
+                                       allright       ,
+                                       infostr        ,
+                                       decolorize     )
+# =============================================================================
+## Message levels   (a'la Gaudi) 
+# =============================================================================
 ALL     = 0
 VERBOSE = 1
 DEBUG   = 2
@@ -103,8 +114,6 @@ for a in logging_levels : logging.addLevelName ( a ,  logging_levels[a]  )
 logging_format      = '# %(name)-30s %(levelname)-7s %(message)s'
 logging_file_format = '# %(asctime)s %(name)-30s %(levelname)-7s %(message)s'
 logging_date_format = "%Y-%m-%d %H:%M:%S" 
-
-from ostap.utils.basic import isatty
 
 ## The basic configuration 
 if isatty () :
@@ -360,15 +369,6 @@ def logFatal   () :
     return logLevel (  logging.FATAL   - 1 )
 
 
-# =============================================================================
-## BASIC   colorization
-# =============================================================================
-from ostap.logger.colorized import ( with_colors    ,
-                                     colored_string ,
-                                     attention      ,
-                                     allright       ,
-                                     infostr        ,
-                                     decolorize     )
 # =============================================================================
 __colored_logger = []
 # =============================================================================

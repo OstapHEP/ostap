@@ -50,16 +50,15 @@ __all__     = (
     'data_decorate'       , ## technical function to decorate the class
     )
 # =============================================================================
-from   builtins             import range
+from   builtins           import range
+from   ostap.core.core    import Ostap
+import ostap.stats.moment 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.statvars' )
 else                       : logger = getLogger ( __name__               )
-# =============================================================================
-from   ostap.core.core import Ostap
-import ostap.stats.moment 
 # =============================================================================
 StatVar = Ostap.StatVar 
 # =============================================================================

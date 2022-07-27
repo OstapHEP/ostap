@@ -9,7 +9,11 @@
 """ Test module for 2D-models
 """
 # ============================================================================= 
-from   __future__        import print_function
+from   __future__          import print_function
+import ostap.math.models 
+from   ostap.core.core     import Ostap, SE
+from   ostap.math.integral import integral2, Integrate2D_X, Integrate2D_Y
+import ROOT, random  
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -17,10 +21,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_models_2d' ) 
 else                       : logger = getLogger ( __name__              )
 # ============================================================================= 
-import ROOT, random  
-import ostap.math.models 
-from   ostap.core.core     import Ostap, SE
-from   ostap.math.integral import integral2, Integrate2D_X, Integrate2D_Y
 
 # ============================================================================
 def test_models ():

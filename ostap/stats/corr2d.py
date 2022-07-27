@@ -13,6 +13,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-08"
 __all__     = ( 'Corr2D', )
 # =============================================================================
+from   ostap.core.core import cpp , WSE
 import ROOT,math
 # =============================================================================
 # logging 
@@ -20,7 +21,6 @@ import ROOT,math
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'Ostap.Corr2D' )
 else                       : logger = getLogger( __name__ )
-from   ostap.core.core import cpp , WSE
 # =============================================================================
 ## get error-function 
 if  not hasattr ( math , 'erf' ) :

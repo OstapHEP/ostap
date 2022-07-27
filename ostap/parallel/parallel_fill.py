@@ -16,15 +16,14 @@ __all__     = (
     'pprocess'  , ## paralell processing 
     ) 
 # =============================================================================
+from   ostap.parallel.parallel import Task, WorkManager
+import ROOT
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.fill' )
 else                       : logger = getLogger ( __name__     )
-# =============================================================================
-import ROOT
-from   ostap.parallel.parallel import Task, WorkManager
-
 # =============================================================================
 ## The simple task object for more efficient fill of RooDataSet from TChain 
 #  @see GaudiMP.Parallel

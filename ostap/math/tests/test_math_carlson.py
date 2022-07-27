@@ -9,13 +9,13 @@
 """ Test module for Carlson symmetric forms 
 """
 # ============================================================================= 
-import ROOT, math, random  
 from   ostap.core.pyrouts     import Ostap, SE 
 from   ostap.utils.gsl        import gslCount
 from   ostap.logger.colorized import attention 
 import ostap.logger.table     as     T
 from   ostap.utils.utils      import wait
 from   ostap.plotting.canvas  import use_canvas
+import ROOT, math, random  
 # ============================================================================
 from   ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_carlson' ) 

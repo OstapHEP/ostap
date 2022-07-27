@@ -97,6 +97,8 @@ __all__     = (
     'numcalls'           , ## decoratro for #ncalls  
     ##
     'hadd'               , ## merge ROOT files using command `hadd`
+    'num_fds'            , ## get number of opened file descriptors 
+    'get_open_fds'       , ## get list of opened file descriptors 
     )
 
 # =============================================================================
@@ -249,6 +251,7 @@ def takeIt (  other ):
     """
     return TakeIt ( other ) 
 
+    
 # =============================================================================
 ## get all open file descriptors
 #  The actual code is copied from http://stackoverflow.com/a/13624412
@@ -261,15 +264,34 @@ def get_open_fds():
     import fcntl
     #
     fds = []
-    soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-    for fd in range(0, soft):
+    soft , hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    for fd in range ( 0 , soft ) :
         try:
             flags = fcntl.fcntl(fd, fcntl.F_GETFD)
         except IOError:
             continue
-        fds.append(fd)
-    return fds
+        fds.append ( fd )
+    return tuple ( fds ) 
 
+
+# =============================================================================
+try :
+    # =========================================================================
+    import psutil
+    ## get number of opened file descriptors 
+    def num_fds () :
+        "Get number of popened file descriptors"        
+        p = psutil.Process() 
+        return p.num_fds()
+    # =========================================================================
+except ImportError :
+    # =========================================================================
+    ## get number of opened file descriptors 
+    def num_fds () :
+        "Get number of popened file descriptors"        
+        return len ( get_open_fds () )
+    # =========================================================================
+    
 # =============================================================================
 ## get the actual file name form file descriptor 
 #  The actual code is copied from http://stackoverflow.com/a/13624412
@@ -522,16 +544,13 @@ class Wait(object):
         self.__before = before 
 
     def __enter__ ( self ) :
-        if 0 < self.__before :
-            time.sleep  ( self.__before ) 
+        if 0 < self.__before : time.sleep  ( self.__before ) 
     def __exit__ ( self , *_ ) :
-        if 0 < self.__after :
-            time.sleep  ( self.__after  ) 
+        if 0 < self.__after : time.sleep  ( self.__after  ) 
     @property
     def before ( self ) :
         """``before'': wait some time before the action"""
-        return self.__before
-    
+        return self.__before    
     @property
     def after  ( self ) :
         """``after'': wait some time after the action"""
@@ -548,7 +567,7 @@ def wait ( after = 0 , before = 0 ) :
     >>> with wait ( after = 5 , before = 0 ) :
     >>> ...
     """    
-    return Wait  (after = after , before = before )
+    return Wait ( after = after , before = before )
 
 # =============================================================================
 ## EnableImplicitMT
@@ -973,7 +992,6 @@ def gen_password ( size = 12 ) :
     ## 
     return result
 
-
 # =============================================================================
 
 try :
@@ -1125,13 +1143,16 @@ except ImportError :
 
 # =============================================================================
 if ( 3 , 0 ) <= python_version :
+    
     from itertools import zip_longest
+    
 else :
+    
     from itertools import izip_longest as zip_longest
 
 # =============================================================================
 ## Collect data into fixed-length chunks or blocks"
-def grouper(iterable, n, fillvalue=None):
+def grouper ( iterable , n , fillvalue = None ):
     "Collect data into fixed-length chunks or blocks"
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n

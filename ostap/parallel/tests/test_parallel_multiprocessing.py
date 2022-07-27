@@ -6,15 +6,13 @@
 """ Oversimplified script for parallel execution using multiprocessing
 """
 # =============================================================================
-import ROOT, time, sys 
-# =============================================================================
 import multiprocessing
 from   itertools                import count    
-# =============================================================================
 import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ROOT, time, sys 
 # =============================================================================
 # logging 
 # =============================================================================

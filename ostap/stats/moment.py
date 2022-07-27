@@ -32,6 +32,9 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2020-06-08"
 __all__     = ()
 # =============================================================================
+from   ostap.core.ostap_types import integer_types, num_types 
+from   ostap.core.core        import Ostap, VE
+from   ostap.core.meta_info   import root_version_int 
 import ROOT 
 # =============================================================================
 # logging 
@@ -39,10 +42,6 @@ import ROOT
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.moment' )
 else                       : logger = getLogger ( __name__             )
-# =============================================================================
-from   ostap.core.ostap_types import integer_types, num_types 
-from   ostap.core.core        import Ostap, VE
-from   ostap.core.meta_info   import root_version_int 
 # =============================================================================
 # new stuff: Ostap::Math::Moment_<N> 
 # =============================================================================

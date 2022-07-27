@@ -5,8 +5,8 @@
 # ============================================================================
 """ Oversimplified script for parallel execution using parallel_pathos
 """
+# =============================================================================
 from   __future__        import print_function
-import ROOT, time, sys 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
 from   itertools            import count 
@@ -14,6 +14,7 @@ from   ostap.parallel.task  import Task, GenericTask
 from   ostap.parallel.utils import pool_context 
 import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
+import ROOT, time, sys 
 # =============================================================================
 # logging 
 # =============================================================================

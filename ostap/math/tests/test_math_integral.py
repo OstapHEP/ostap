@@ -24,7 +24,6 @@ if '__main__' ==  __name__ : logger = getLogger ( 'test_math_integral' )
 else                       : logger = getLogger ( __name__             )
 # ============================================================================= 
 
-
 def test_integral ():
 
     from math import sin, cos , exp, log, pi, e  
@@ -108,5 +107,5 @@ if '__main__' == __name__ :
     test_integral_3D ()
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

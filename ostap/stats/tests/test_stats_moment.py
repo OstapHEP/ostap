@@ -8,6 +8,8 @@
 """ Test module for ostap/stat/moment.py.
 """
 # =============================================================================
+import ostap.stats.moment
+from   ostap.core.core import Ostap
 import ROOT,random
 # ============================================================================= 
 # logging 
@@ -15,9 +17,6 @@ import ROOT,random
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_stats_moment' )
 else                       : logger = getLogger ( __name__            )
-# ============================================================================= 
-import ostap.stats.moment
-from   ostap.core.core import Ostap
 # ============================================================================= 
 root_version = ROOT.gROOT.GetVersionInt() 
 # ============================================================================= 

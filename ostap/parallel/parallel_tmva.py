@@ -20,14 +20,14 @@ __all__     = (
     "addTMVAResponse" , ## add TMVA response to looong ROOT.TChain 
     )
 # =============================================================================
+from   ostap.parallel.parallel import Task, WorkManager
+import ROOT
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.tmva'       )
 else                       : logger = getLogger ( __name__     )
-# =============================================================================
-import ROOT
-from   ostap.parallel.parallel import Task, WorkManager
 # =============================================================================
 ## @class AddTMVA
 #  Add TMVA response to looong TChain 

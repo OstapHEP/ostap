@@ -17,17 +17,16 @@ __all__     = (
     'tproject' , ## parallel project from looong TTree 
     ) 
 # =============================================================================
+from   ostap.parallel.parallel import Task, WorkManager
+import ostap.core.pyrouts 
+import ostap.trees.trees
+import ROOT
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.project'    )
 else                       : logger = getLogger ( __name__     )
-# =============================================================================
-import ROOT
-from   ostap.parallel.parallel import Task, WorkManager
-import ostap.core.pyrouts 
-import ostap.trees.trees
-
 # =============================================================================
 ## The simple task object for more efficient projection of loooong chains/trees 
 #  into histogarms

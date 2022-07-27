@@ -17,15 +17,15 @@ __all__     = (
     'copy_files' , ## copy files in parallel
     )
 # =============================================================================
+from   ostap.parallel.parallel import Task, WorkManager
+from   ostap.core.ostap_types  import string_types, integer_types  
+import ROOT
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.copy' )
 else                       : logger = getLogger ( __name__              )
-# =============================================================================
-import ROOT
-from   ostap.parallel.parallel import Task, WorkManager
-from   ostap.core.ostap_types  import string_types, integer_types  
 # =============================================================================
 ## The simple task object for parallel copy 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

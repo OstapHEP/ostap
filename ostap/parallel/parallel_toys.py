@@ -19,15 +19,15 @@ __all__     = (
     'parallel_toys2' , ## run parallel toys (separate PDFs to generate and fit) 
     )
 # =============================================================================
+from   ostap.parallel.parallel import Task, WorkManager
+from   ostap.core.ostap_types  import string_types, integer_types  
+import ROOT
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.toys' )
 else                       : logger = getLogger ( __name__              )
-# =============================================================================
-import ROOT
-from   ostap.parallel.parallel import Task, WorkManager
-from   ostap.core.ostap_types  import string_types, integer_types  
 # =============================================================================
 ## merge results of toys 
 #  Helper function to merge results of toys

@@ -16,14 +16,14 @@ __all__     = (
     'pStatVar'   , ## get the statistics from loooong TChain in paralell
     ) 
 # =============================================================================
+from   ostap.parallel.parallel import Task, WorkManager
+import ROOT
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.statvar' )
 else                       : logger = getLogger ( __name__     )
-# =============================================================================
-import ROOT
-from   ostap.parallel.parallel import Task, WorkManager
 # =============================================================================
 n_large = ROOT.TVirtualTreePlayer.kMaxEntries
 # =============================================================================

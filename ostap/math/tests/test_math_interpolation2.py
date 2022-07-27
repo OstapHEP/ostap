@@ -9,16 +9,14 @@
 """ Test module for ostap/math/interpolation.py
 """
 # ============================================================================= 
-import ROOT, random, math  
 import ostap.math.linalg
-
 import ostap.math.models
 from   ostap.math.interpolation import ( Berrut1st      ,
                                          Berrut2nd      ,
                                          Barycentric    ,
                                          FloaterHormann )
-
 from   ostap.core.core          import Ostap
+import ROOT, random, math  
 # =============================================================================
 # logging 
 # =============================================================================

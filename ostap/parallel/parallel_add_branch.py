@@ -16,14 +16,14 @@ __all__     = (
     'add_new_branch'  , ## add new branch to loooong TChain in parallel
     ) 
 # =============================================================================
+from   ostap.parallel.parallel import Task, WorkManager
+import ROOT
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.add_branch' )
 else                       : logger = getLogger ( __name__     )
-# =============================================================================
-import ROOT
-from   ostap.parallel.parallel import Task, WorkManager
 # =============================================================================
 ## @class AddBranch
 #  parallel adding of new branch for looong TChains

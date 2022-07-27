@@ -997,8 +997,6 @@ class RootError2Exception (object) :
     ... do something here 
     """
     def __init__ ( self ) :
-        import ROOT,cppyy 
-        Ostap = cppyy.gbl.Ostap
         self.e_handler  = Ostap.Utils.useErrorHandler 
         self.m_previous = False 
 
@@ -1012,8 +1010,8 @@ class RootError2Exception (object) :
         if self.m_previous : self.e_handler ( False ) 
         self.m_previous = False 
 
-    def __del__ ( self ) :
-        if self.m_previous : self.e_handler ( False ) 
+#    def __del__ ( self ) :
+##        if self.m_previous : self.e_handler ( False ) 
         
 
 # =============================================================================

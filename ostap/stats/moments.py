@@ -109,14 +109,14 @@ __all__     = (
     ##
     ) 
 # =============================================================================
+from ostap.core.ostap_types import integer_types, num_types 
+from ostap.core.core import Ostap 
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.moments' )
 else                       : logger = getLogger ( __name__              )
-# =============================================================================
-from ostap.core.ostap_types import integer_types, num_types 
-from ostap.core.core import Ostap 
 # =============================================================================
 ## @class BaseMoment
 #  Base class for calcualtionof varosu momnet

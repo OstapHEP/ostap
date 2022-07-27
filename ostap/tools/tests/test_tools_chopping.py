@@ -14,13 +14,13 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-import ROOT, os
+from   builtins                 import range
 import ostap.io.root_file
 from   ostap.core.meta_info     import root_info
-from   builtins                 import range
 from   ostap.core.core          import ROOTCWD
 from   ostap.utils.progress_bar import progress_bar 
 from   array                    import array
+import ROOT, os
 # =============================================================================
 # logging 
 # =============================================================================

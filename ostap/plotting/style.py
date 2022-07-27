@@ -6,8 +6,6 @@
 # =============================================================================
 """Ostap Style for ROOT-plots"""
 # =============================================================================
-import ROOT
-import ostap.plotting.color 
 __all__ = (
     'UseStyle'         ,  ## context manager  for the style (class) 
     'useStyle'         ,  ## context manager  for the style (function)
@@ -25,6 +23,9 @@ __all__ = (
     'Style2Z'          ,  ## the style for downscaled 2-in-row COLZ plots
     'Style3Z'          ,  ## the style for downscaled 3-in-row COLZ plots
     )
+# =============================================================================
+import ostap.plotting.color 
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================

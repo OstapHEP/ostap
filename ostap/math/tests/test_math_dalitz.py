@@ -11,13 +11,13 @@
 - see Ostap.Kinematics.Dalitz
 """
 # ============================================================================= 
-import ROOT, random, time  
 from   ostap.core.core        import Ostap, hID 
 import ostap.math.kinematic
 import ostap.math.dalitz
 import ostap.logger.table     as     T
 from   ostap.utils.utils      import wait
 from   ostap.plotting.canvas  import use_canvas
+import ROOT, random, time  
 # ============================================================================= 
 # logging 
 # =============================================================================

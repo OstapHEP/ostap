@@ -20,14 +20,14 @@ __all__     = (
     "addChoppingResponse" , ## add TMVA/Chopping response to looong ROOT.TChain 
     )
 # =============================================================================
+from   ostap.parallel.parallel import Task, WorkManager
+import ROOT
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.chopping' )
 else                       : logger = getLogger ( __name__     )
-# =============================================================================
-import ROOT
-from   ostap.parallel.parallel import Task, WorkManager
 # =============================================================================
 ## @class AddChopping
 #  Add TMVA/Chopping response to looong TChain 

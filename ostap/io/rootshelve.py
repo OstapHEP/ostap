@@ -113,7 +113,7 @@ __all__ = (
     'tmpdb'         , ## helper function to create TEMPORARY  RootShelve database 
     )
 # =============================================================================
-from   sys import version_info as     python_version 
+from   sys                     import version_info as     python_version 
 import ostap.io.root_file
 from   ostap.io.dbase          import TmpDB 
 import ROOT, shelve, zlib, os 

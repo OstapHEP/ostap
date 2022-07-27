@@ -26,15 +26,15 @@ __all__ = (
 import sys, os, time
 from   itertools                 import repeat , count
 from   ostap.utils.progress_bar  import progress_bar
-from   ostap.logger.logger       import getLogger
 from   ostap.parallel.task       import Task, TaskManager 
+import multiprocessing           as     MP
 # =============================================================================
-logger  = getLogger('ostap.parallel.parallel_gaudi')
+from    ostap.logger.logger       import getLogger
 # =============================================================================
 if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
 else                              : from collections     import Sized 
 # =============================================================================
-import multiprocessing     as MP
+logger  = getLogger('ostap.parallel.parallel_gaudi')
 
 # =============================================================================
 class pool_context :

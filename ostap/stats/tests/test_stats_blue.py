@@ -10,12 +10,13 @@
 - see ostap/stat/combine.py.
 """
 # =============================================================================
+from   ostap.stats.combine import Combine, Ostap, VE 
 import ROOT
+# =============================================================================
 from   ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_blue' )
 else                       : logger = getLogger ( __name__           )
 # ==============================================================================
-from   ostap.stats.combine import Combine, Ostap, VE 
 
 def test_stats_blue1 () :
 

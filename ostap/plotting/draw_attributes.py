@@ -22,8 +22,8 @@ __all__     = (
     'copy_draw_attributes'  ,  ## ditto 
   )  
 # =============================================================================
-import ROOT 
 from   ostap.utils.cidict import cidict
+import ROOT 
 # =============================================================================
 ## set line attributes for the object
 #  @code

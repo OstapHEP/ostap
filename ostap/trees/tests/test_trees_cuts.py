@@ -7,14 +7,15 @@
 """ Test module for ostap/trees/cuts.py.
 """
 # ============================================================================= 
+import ostap.trees.cuts 
+import ROOT
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_trees_cuts' )
 else                       : logger = getLogger ( __name__          )
 # ============================================================================= 
-import ROOT
-import ostap.trees.cuts 
 
 def test_cuts() :
 

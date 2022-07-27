@@ -7,7 +7,10 @@
 """ Test module or soem core utils 
 """
 # =============================================================================
-import ROOT
+from   ostap.core.core   import *
+from   ostap.utils.utils import num_fds
+from   ostap.logger.mute import mute
+import ROOT, warnings  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -15,12 +18,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_core_core'  )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
-from   ostap.core.core       import *
-
-
 
 def test_core_core1() :
 
+    logger = getLogger ( 'test_core_core1' ) 
 
     with ROOTCWD () :
 
@@ -53,13 +54,58 @@ def test_core_core1() :
         logger.info ( 'Strings  :%s' % a )
         a = split_string ( "a,b;c,b:e" )
         logger.info ( 'Split    :%s' % a )
+
+def test_core_core2() :
+    
+    logger = getLogger ( 'test_core_core2' )
+    
+    before = num_fds() 
+    logger.info ( '#open file descriptors before is %d' % before )
+    dummy  = 0 
+    for i in range ( 10000  ) :
+        with mute ( True , True ) :
+            dummy += 1 
         
+    after = num_fds() 
+    logger.info ( '#open file descriptors after  is %d' % after ) 
+
+
+def test_core_core3() :
+    
+    logger = getLogger ( 'test_core_core3' )
+
+    logger.error ("A ROOT error occurs just after:" )  
+    ROOT.Error   ( 'test_core_core3' , 'fictive ROOT Error/1'    )
+
+    try : 
+        with rootException()  : 
+            logger.error ("A ROOT error occurs just after:" )  
+            ROOT.Error   ( 'test_core_core3' , 'fictive ROOT Error/2'    )
+    except :
+        logger.exception ( "An exception is here (here it is perfectly OK)" )
         
+    logger.error   ("A ROOT error occurs just after:" )  
+    ROOT.Error     ( 'test_core_core3' , 'fictive ROOT Error/3'    )
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")                
+
+        logger.warning ("A ROOT warning occurs just after:" )  
+        ROOT.Warning   ( 'test_core_core3' , 'fictive ROOT Warning/1'  )
+        
+        with rootException()  : 
+            logger.warning ("A ROOT warning occurs just after:" )  
+            ROOT.Warning   ( 'test_core_core3' , 'fictive ROOT Warning/2'  )
+            
+        logger.warning ("A ROOT warning occurs just after:" )  
+        ROOT.Warning ( 'test_core_core3' , 'fictive ROOT Warning/3'  )
+            
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_core_core1() 
-
+    test_core_core1 () 
+    test_core_core2 () 
+    test_core_core3 () 
 
 # =============================================================================
 ##                                                                      The END 

@@ -9,6 +9,9 @@
 """ Test module for ostap/math/covtransform.py
 """
 # ============================================================================= 
+import ostap.math.linalg 
+from   ostap.core.core         import Ostap, VE
+from   ostap.math.covtransform import transform 
 import ROOT, math 
 # ============================================================================= 
 # logging 
@@ -17,9 +20,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'tests_math_covtranform'  )
 else                       : logger = getLogger ( __name__                  )
 # =============================================================================
-import ostap.math.linalg 
-from   ostap.core.core         import Ostap, VE
-from   ostap.math.covtransform import transform 
 
 
 def test_covtransform1 ()  :

@@ -9,13 +9,13 @@
 """
 # ============================================================================= 
 from   __future__               import print_function
-import ROOT, math, random 
 import ostap.trees.trees
 import ostap.histos.histos
 from   ostap.core.pyrouts       import Ostap, VE,   SE
 from   ostap.utils.timing       import timing 
 from   ostap.trees.data         import Data 
 from   ostap.utils.progress_bar import progress_bar
+import ROOT, math, random 
 # ============================================================================= 
 # logging 
 # =============================================================================
