@@ -51,9 +51,9 @@ __all__     = (
     'QGSM_pdf'           , ## QGSM PDF 
     )
 # =============================================================================
-import ROOT, math
 from   ostap.core.core        import Ostap, VE 
 from   ostap.fitting.pdfbasic import PDF1
+import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.distributions' )

@@ -14,6 +14,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
+from   ostap.math.ve    import VE 
+from   ostap.core.ostap_types import integer_types
 import ROOT
 # =============================================================================
 # logging 
@@ -23,9 +25,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.fitresult' )
 else                       : logger = getLogger( __name__                  )
 # =============================================================================
 logger.debug ( 'Tiny decoration for ROOT.FitResult object')
-# =============================================================================
-from ostap.math.ve    import VE 
-from ostap.core.ostap_types import integer_types
 # =============================================================================
 ## representation of TFitResult object 
 #  @code 

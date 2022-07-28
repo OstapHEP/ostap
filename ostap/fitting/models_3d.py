@@ -30,11 +30,11 @@ __all__     = (
     'make_B3DmixXZ'     , ## create mixed symmetry (x<-->z) 3D "background" function 
     )
 # =============================================================================
-import ROOT, math
 from   ostap.core.core          import cpp, Ostap
 from   ostap.math.base          import iszero
 from   ostap.fitting.fithelpers import Phases
 from   ostap.fitting.fit3d      import PDF3, Flat3D 
+import ROOT, math
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_3d' )

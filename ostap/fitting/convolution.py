@@ -18,9 +18,9 @@ __all__     = (
     'Convolution_pdf'  , ## ``ready-to-use'' PDF for convolution 
     )
 # =============================================================================
-import ROOT, math
 from   ostap.fitting.pdfbasic import PDF1, Generic1D_pdf
 from   ostap.core.ostap_types import num_types ,  integer_types 
+import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.convolution' )

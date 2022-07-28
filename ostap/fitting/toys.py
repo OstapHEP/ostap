@@ -23,9 +23,9 @@ __all__     = (
     "print_bootstrap"  , ## print bootstrap statistics 
     )
 # =============================================================================
-import ROOT
 from   builtins          import range
 from   ostap.core.core   import VE
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================

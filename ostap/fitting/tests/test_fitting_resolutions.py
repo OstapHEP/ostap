@@ -22,7 +22,8 @@ from   builtins                 import range
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
-import ostap.logger.table       as     T 
+from   ostap.logger.colorized   import attention 
+import ostap.logger.table       as     T
 from   ostap.core.meta_info     import root_info, python_info
 import ROOT, random
 # =============================================================================
@@ -48,6 +49,7 @@ reso = ResoHypatia       ( 'H'    , mass   ,
 dataset = reso.generate ( 10000 )
 logger.info ('DATASET\n%s' % dataset.table ( prefix = "# " ) ) 
 
+stats = {} 
 
 # =============================================================================
 def make_print ( pdf , fitresult , title , logger = logger ) :
@@ -58,28 +60,92 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
                                                                 prefix = '# '   ) ) )
     
     rows = [ ( 'Parameter' , 'Value', '(Roo)Value' ) ]
-    
-    row = 'mean'       , '%+.6g' % pdf.get_mean  () , '%+.6g' % pdf.roo_mean  ()
-    rows.append ( row )
-    
-    row = 'mode'       , '%+.3g' % pdf.mode      () , ''
-    rows.append ( row )
-    row = 'median'     , '%+.3g' % pdf.median    () , ''
-    rows.append ( row )
-    row = 'midpoint'   , '%+.3g' % pdf.mid_point () , ''
-    rows.append ( row )
-    row = 'rms'        , '%+.6g' % pdf.rms       () , '%+.6g' % pdf.roo_rms  ()
-    rows.append ( row )    
-    row = 'FWHM'       , '%+.6g' % pdf.fwhm      () , ''
-    rows.append ( row )    
-    row = 'skewness'   , '%+.6g' % pdf.skewness  () , '%+.6g' % pdf.roo_skewness  ()
-    rows.append ( row )    
-    row = 'kurtosis'   , '%+.6g' % pdf.kurtosis  () , '%+.6g' % pdf.roo_kurtosis  ()  
-    rows.append ( row )    
 
+    mean, mode, median, midpoint, rms , fwhm, skewness , kurtosis = 8 * ( attention ( '<error>' ) , )
+    
+    model = pdf
+    
+    try    :
+        mean     =  "%+.3g" % model.get_mean     () 
+    except :
+        pass
+    
+    try    :
+        mode     =  "%+.3g" % model .mode       () 
+    except :
+        pass 
+
+    try    :
+        median   =  "%+.3g" % model .median     () 
+    except :
+        pass
+    
+    try    :
+        midpoint =  "%+.3g" % model .mid_point  () 
+    except :
+        pass
+
+    try    :
+        rms      =  "%+.3g" % model .rms        () 
+    except :
+        pass
+    
+    try    :
+        fwhm     =  "%+.3g" % model .fwhm       () 
+    except :
+        pass
+    
+    try    :
+        skewness =  "%+.3g" % model .skewness   () 
+    except :
+        pass
+
+    try    :
+        kurtosis =  "%+.3g" % model .kurtosis   () 
+    except :
+        pass
+    
+    row   = model.name  , mean , mode , median , midpoint , rms , fwhm , skewness , kurtosis
+
+    stats [ model.name ] = row
+
+    try : 
+        row = 'mean'       , mean , '%+.6g' % pdf.roo_mean  ()
+        rows.append ( row )
+    except :
+        pass 
+    
+    row = 'mode'       , mode          , ''
+    rows.append ( row )
+    row = 'median'     , median        , ''
+    rows.append ( row )
+    row = 'midpoint'   , midpoint      , ''
+    rows.append ( row )
+
+    try : 
+        row = 'rms'        , rms           , '%+.6g' % pdf.roo_rms  ()
+        rows.append ( row )
+    except :
+        pass
+    
+    row = 'FWHM'       , fwhm          , ''
+    rows.append ( row )
+
+    try : 
+        row = 'skewness'   , skewness      , '%+.6g' % pdf.roo_skewness  ()
+        rows.append ( row )
+    except :
+        pass
+
+    try : 
+        row = 'kurtosis'   , kurtosis      , '%+.6g' % pdf.roo_kurtosis  ()  
+        rows.append ( row )
+    except :
+        pass 
+        
     table = T.table ( rows , title = title2 ,  prefix = '# ' )
     logger.info ( 'Global features for %s\n%s' % ( title2 , table ) ) 
-    
+
 
 models = set() 
 
@@ -455,8 +521,9 @@ def test_das () :
 
     logger.info ('Test Das: Gaussian with symmetric exponential tails ' )
     from   ostap.fitting.resolution import ResoDas
-    reso = ResoDas ( 'Das' , mass ,  k  = ( 1.0 , 1.e-5 , 20 ) , 
-                     sigma = ( 0.1 , 0.01 , 5.0 ) )
+    reso = ResoDas ( 'Das' , mass ,
+                     k     = ( 1.33 , 1.e-5 , 20 ) , 
+                     sigma = ( 0.41 , 0.01 , 5.0 ) )
     
     result, frame = reso. fitTo ( dataset , silent = True  )
     result, frame = reso. fitTo ( dataset , silent = True  )    
@@ -507,45 +574,12 @@ def dump_models () :
              'rms'      , 'fwhm' ,  \
              'skewness' , 'kurtosis'
     
-    mods = {}
-    for m in models :
-        mods [ m.name ] = m
-
     rows = [ header ] 
-    for m in sorted ( mods ) :
-        model = mods [ m ]
-        
-        try    : mean     =  "%+.3g" % mode.get_mean     () 
-        except : mean     = '<error>' 
-
-        try    : mode     =  "%+.3g" % model .mode       () 
-        except : mode     = '<error>' 
-
-        try    : median   =  "%+.3g" % model .median     () 
-        except : median   = '<error>' 
-
-        try    : midpoint =  "%+.3g" % model .mid_point  () 
-        except : midpoint = '<error>' 
-
-        try    : rms      =  "%+.3g" % model .rms        () 
-        except : rms      = '<error>' 
-
-        try    : fwhm     =  "%+.3g" % model .fwhm       () 
-        except : fwhm     = '<error>' 
-
-        try    : skewness =  "%+.3g" % model .skewness   () 
-        except : skewness = '<error>' 
-
-        try    : kurtosis =  "%+.3g" % model .kurtosis   () 
-        except : kurtosis = '<error>' 
-
-        row   = m , mean , mode , median , midpoint , rms , fwhm , skewness , kurtosis
-
-        rows.append ( row )
+    for m in sorted ( stats  ) :
+        rows.append ( stats [ m ]  )
 
     table = T.table ( rows , title = "Model's features" ,  prefix = '# ' )
     logger.info ( 'Features of models\n%s' % table )
-  
   
 
 # =============================================================================
@@ -606,12 +640,12 @@ if '__main__' == __name__ :
     with timing ("GenHyperbolic" , logger ) :  
         test_genhyperbolic  () ## generalised Hyperbolic resolution model
 
-    with timing ("Hypatia" , logger ) :  
-        test_hypatia        () ## generalised Hyperbolic resolution model
+    ## with timing ("Hypatia" , logger ) :  
+    ##     test_hypatia        () ## generalised Hyperbolic resolution model
 
     with timing ("GenGaussV1" , logger ) :  
         test_gengaussv1     ()   ## Das resolution model
-
+    
     with timing ("Das"        , logger ) :  
         test_das           ()   ## Das resolution model
 

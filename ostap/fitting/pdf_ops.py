@@ -30,10 +30,10 @@ __all__     = (
     'pdf_sum'     , ## helper fnuction to create a non-extended sum of PDFs  
     )
 # =============================================================================
-import ROOT
 from   ostap.core.ostap_types import sequence_types, sized_types 
 from   ostap.fitting.funbasic import constant_types 
 from   ostap.fitting.pdfbasic import APDF1, PDF1, PDF2, PDF3
+import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pdf_ops' )

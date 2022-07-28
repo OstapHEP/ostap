@@ -18,7 +18,6 @@ __all__     = (
     ) 
 # =============================================================================
 from   builtins import range 
-import ROOT, math
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
@@ -27,6 +26,7 @@ import ostap.fitting.variables
 import ostap.fitting.printable
 from   ostap.logger.colorized   import allright, attention
 from   ostap.logger.utils       import pretty_float, pretty_ve, pretty_2ve 
+import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roofitresult' )
@@ -810,10 +810,13 @@ def _rfr_global_corr_ ( self , par ) :
     ## get covariance matrix 
     c = self.covmatrix()
 
-    cv = c ( index , index ) * v ( index , index ) 
+    cv = c ( index , index ) * v ( index , index )
     
-    return  math.sqrt ( 1.0 - 1.0 / cv )
+    rho2 = 1.0 - 1.0 / cv
+    if rho2 < 0 : return -1.0
     
+    return  math.sqrt ( rho2 )
+
 # =============================================================================
 ## Run MIGRAD for RooMinimizer object
 #  @code

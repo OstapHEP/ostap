@@ -19,10 +19,10 @@ __all__     = (
     'command'        , ## merge arguments into single command 
     ) 
 # =============================================================================
-import ROOT
 from   ostap.core.ostap_types       import string_types, integer_types 
 from   ostap.utils.utils            import chunked
 import ostap.fitting.roocollections 
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================

@@ -17,12 +17,11 @@ __all__     = (
     'H_Nfit' ,
     ) 
 # =============================================================================
-import ROOT, abc 
-# =============================================================================
 import ostap.histos.histos 
 import ostap.fitting.fitresult 
 from   ostap.core.core        import Ostap, funID
 from   ostap.core.ostap_types import num_types, integer_types 
+import ROOT, abc 
 # =============================================================================
 # logging 
 # =============================================================================

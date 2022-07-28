@@ -22,7 +22,6 @@ __all__     = (
     'Adjust3D_pdf' , ## make adjusted 3D-pdf 
     )
 # =============================================================================
-import ROOT
 from   ostap.fitting.fithelpers import VarMaker
 from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf ,
                                          PDF2 , Generic2D_pdf ,
@@ -30,6 +29,7 @@ from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf ,
 from   ostap.fitting.fit1d      import Flat1D 
 from   ostap.fitting.fit2d      import Flat2D
 from   ostap.fitting.fit3d      import Flat3D
+import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.adjust' )

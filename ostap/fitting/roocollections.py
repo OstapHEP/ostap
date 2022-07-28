@@ -22,10 +22,10 @@ __all__     = (
     'KeepArgs'  , ## context manager to preserve the content of the list
     ) 
 # =============================================================================
-import ROOT, sys, random
 from   ostap.core.core         import Ostap
 from   ostap.core.ostap_types  import string_types 
 import ostap.fitting.variables
+import ROOT, sys, random
 # =============================================================================
 # logging 
 # =============================================================================
@@ -38,7 +38,6 @@ else                        : from collections     import Container
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
-
 
 # =============================================================================
 ## iterator for RooArgList

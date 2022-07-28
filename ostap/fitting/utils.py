@@ -29,7 +29,6 @@ __all__     = (
     #
     )
 # =============================================================================
-import ROOT, math, random 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 from   builtins                import range
@@ -42,6 +41,7 @@ from   ostap.core.ostap_types  import ( num_types      , list_types     ,
 from   ostap.math.random_ext   import ve_gauss, poisson
 from   ostap.core.meta_info    import root_version_int, root_info 
 from   ostap.fitting.variables import SETVAR 
+import ROOT, math, random 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )

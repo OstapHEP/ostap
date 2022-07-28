@@ -31,11 +31,10 @@ __all__     = (
     #
     )
 # =============================================================================
-import ROOT, math
-# =============================================================================
 from   ostap.core.core        import Ostap 
 from   ostap.fitting.pdfbasic import PDF1, PDF2 
 from   ostap.fitting.signals  import CB2_pdf, Needham_pdf, Bukin_pdf
+import ROOT, math
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.specific' )

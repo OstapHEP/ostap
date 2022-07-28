@@ -26,10 +26,10 @@ __all__     = (
     'PyVAR2'  , ## simple utility to build "pythonic" RooAbsReal 
     ) 
 # =============================================================================
-import ROOT, math
 from   ostap.core.core      import Ostap
 from   ostap.core.meta_info import old_PyROOT 
 import ostap.fitting.roofit 
+import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pyvar' )

@@ -84,7 +84,7 @@ def make_table ( func , title , prefix = "# ") :
     
 
 # =============================================================================
-# use some PDF to parameterize efficiciency
+# use some PDF to parameterize efficienct
 def test_pdf () :
     
     logger = getLogger ( 'test_pdf' )
@@ -96,7 +96,7 @@ def test_pdf () :
     s0     = min ( 1.0 / emax , 1.0 / maxe ) 
     scale  = ROOT.RooRealVar ( 'scaleX' , 'scaleX' , s0 , 0.2 * s0 , 5.0 * s0  )
     
-    eff2   = Efficiency1D ( 'E2' , effPdf , cut = acc  , scale = scale )
+    eff2   = Efficiency1D ( 'EPDF' , effPdf , cut = acc  , scale = scale )
     
     r2     = eff2.fitTo ( ds )
     
@@ -110,8 +110,7 @@ def test_pdf () :
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
-## def test_vars1 () :
-if 1 < 2 :
+def test_vars1 () :
     
     from ostap.fitting.roofuncs import BernsteinPoly as BP 
     
@@ -131,7 +130,7 @@ if 1 < 2 :
         
     ## f.release_par() 
     
-    eff2   = Efficiency1D ( 'E3' , f.fun , cut = acc  , xvar = x )
+    eff2   = Efficiency1D ( 'Ev1' , f.fun , cut = acc  , xvar = x )
     
     r2     = eff2.fitTo ( ds )
 
@@ -139,7 +138,7 @@ if 1 < 2 :
     logger.info ( "Compare with true efficiency (using BernsteinPoly)\n%s" % make_table (
         eff2 , title = 'using BernsteinPoly') )
     
-    with wait ( 2 ) , use_canvas ( 'test_pdf' ) : 
+    with wait ( 2 ) , use_canvas ( 'test_vars1' ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
         
 # =============================================================================
@@ -157,7 +156,7 @@ def test_vars2 () :
     f.a.release ()
     f.b.release ()
 
-    eff2   = Efficiency1D ( 'E4' , f , cut = acc  , xvar = x )
+    eff2   = Efficiency1D ( 'Ev2' , f , cut = acc  , xvar = x )
     
     r2     = eff2.fitTo ( ds )
     
@@ -165,15 +164,42 @@ def test_vars2 () :
     logger.info ( "Compare with true efficiency (using MonotonicPoly)\n%s" % make_table (
         eff2 , title = 'using MonotonicPoly') )
     
-    with wait ( 2 ) , use_canvas ( 'test_pdf' ) : 
+    with wait ( 2 ) , use_canvas ( 'test_vars2' ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
         
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
 def test_vars3 () :
-
+    
     logger = getLogger ( 'test_vars3' )
+
+    from ostap.fitting.roofuncs import BSplineFun as BS
+
+    for power in range ( 4 ) :
+        
+        f      = BS ( 'BS%s' % power  , xvar = x ,
+                      knots = ( 0 , 3 , 7 , 10 ) ,
+                      power = power ,
+                      pars  = 12 * [ ( 0.2 , 0 , 1 ) ] )
+        
+        eff2   = Efficiency1D ( 'Ev3_%s' % power , f , cut = acc  , xvar = x )
+        
+        r2     = eff2.fitTo ( ds )
+        
+        logger.info ( "Fit result using BSpline(%d) \n%s" %  ( power , r2.table ( prefix = "# ") ) )
+        logger.info ( "Compare with true efficiency (using BSpine(%d))\n%s" % ( power , make_table (
+            eff2 , title = 'using MonotonicPoly') ) ) 
+        
+        with wait ( 2 ) , use_canvas ( 'test_var3_%s' % power  ) : 
+            f2     = eff2.draw  ( ds , nbins = 25 )
+        
+
+# =============================================================================
+# use some functions  to parameterize efficiciency
+def test_vars4 () :
+
+    logger = getLogger ( 'test_vars4' )
 
     a  = ROOT.RooRealVar  ( 'A', 'a' , 0.05  ,   0   , 1   )
     b  = ROOT.RooRealVar  ( 'B', 'b' , 0.02  , -0.05 , 0.1 )
@@ -183,7 +209,6 @@ def test_vars3 () :
     from   ostap.fitting.funbasic import Fun1D 
     X   = Fun1D ( x , xvar = x , name = 'X' )
     
-    ##F   = (X**2) * c + X * b + a 
     F   = a +  b * X + c * X**2
     
     eff2   = Efficiency1D ( 'E5' , F , cut = acc  , xvar = x )
@@ -195,7 +220,7 @@ def test_vars3 () :
         eff2 , title = 'using Fnu1D') )
 
     
-    with wait ( 2 ) , use_canvas ( 'test_vars3' ) : 
+    with wait ( 2 ) , use_canvas ( 'test_vars4' ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
     
     
@@ -213,8 +238,11 @@ if '__main__' == __name__ :
     ## with timing ("Vars2" , logger ) :        
     ##     test_vars2 ()
         
-    ## with timing ("Vars3" , logger ) :        
-    ##    test_vars3 ()
+    with timing ("Vars3" , logger ) :        
+        test_vars3 ()
+
+    ## with timing ("Vars4" , logger ) :        
+    ##    test_vars4 ()
 
     pass 
      

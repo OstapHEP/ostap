@@ -23,6 +23,9 @@
   1. add more properties for `SinhAsinh` function 
   1. add `LinearMorph_pdf`  
   1, remove '/' and '\' from constructed roo-names 
+  1. add bspline as RooAbsPdf 
+  1. tiny tweaks for serialization/pickling/unpicklig for some classes 
+  1. remove more warnings for old ROOT 
 
 ## Backward incompatible:  
 

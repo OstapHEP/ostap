@@ -22,12 +22,12 @@ __all__     = (
     'combined_hdata' , ## prepare combined binned dataset for the simultaneous fit
     )
 # =============================================================================
-import ROOT, math,  random , warnings 
 from   ostap.core.core          import std , Ostap , dsID , items_loop 
 from   ostap.fitting.fithelpers import VarMaker
 from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf , 
                                          PDF2 , Generic2D_pdf , 
                                          PDF3 , Generic3D_pdf )
+import ROOT, math,  random , warnings 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.simfit' )

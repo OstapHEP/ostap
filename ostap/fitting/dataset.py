@@ -24,7 +24,6 @@ __all__     = (
     'ds_combine' , ## combine two datasets with weights 
     )
 # =============================================================================
-import ROOT, random, math, sys, ctypes  
 from   builtins                 import range
 from   ostap.core.core          import ( Ostap, VE, hID, dsID , strings , 
                                          valid_pointer , split_string   , ROOTCWD )
@@ -35,6 +34,7 @@ import ostap.trees.cuts
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
+import ROOT, random, math, sys, ctypes  
 # =============================================================================
 if   ( 3 , 5 ) <= sys.version_info  : from collections.abc import Generator, Collection, Sequence, Iterable  
 elif ( 3 , 3 ) <= sys.version_info  :

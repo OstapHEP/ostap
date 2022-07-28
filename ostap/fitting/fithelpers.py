@@ -32,7 +32,6 @@ __all__     = (
     'SETPARS'           , ## context manager to keep/preserve parameters 
     )
 # =============================================================================
-import ROOT, sys, random
 from   ostap.core.meta_info    import root_info 
 from   ostap.core.core         import ( Ostap, rootID, VE,
                                         items_loop, isequal , roo_silent ) 
@@ -45,6 +44,7 @@ from   ostap.fitting.variables import SETVAR
 from   ostap.fitting.utils     import make_name, numcpu, ncpu, get_i  
 from   ostap.fitting.roocmdarg import check_arg 
 from   ostap.math.random_ext   import ve_gauss, poisson
+import ROOT, sys, random
 # =============================================================================
 from   ostap.logger.logger   import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fithelpers')
@@ -2740,13 +2740,13 @@ class ParamsPoly(object) :
     - it requres the method `make_var`
     - it requres the method `component_setter`
     """
-    def __init__ ( self , power = 1 , pars = None ) :
+    def __init__ ( self , npars = 1 , pars = None ) :
         
         from ostap.math.base import isint as _isint 
-        assert pars or ( isinstance ( power , integer_types or _isint ( power ) ) and 0 <= power ) ,\
-               'Inconsistent power/npars setting'
+        assert pars or ( ( isinstance ( npars , integer_types ) or _isint ( npars ) ) and 0 <= npars ) ,\
+               "ParamsPoly: Inconsistent 'npars' setting"
         
-        power = int ( power )
+        npars = int ( npars )
 
         self.__pars     = [] 
         limits = 0 , -1.e+6 , 1.e+6 
@@ -2754,11 +2754,11 @@ class ParamsPoly(object) :
         if isinstance ( pars , ParamsPoly      ) :
             
             self.__pars = [ p for p in pars.pars ]
-            power = len ( self.__pars ) - 1
+            npars = len ( self.__pars ) 
             
         else : 
             
-            newpars     = make_iterable ( pars , size = power + 1 )
+            newpars     = make_iterable ( pars , size = npars )
             self.__pars = [ self.make_var ( p ,
                                             'par%d_%s'            % ( i , self.name ) ,
                                             'parameter %d for %s' % ( i , self.name ) ,
@@ -2797,7 +2797,7 @@ class ParamsPoly(object) :
     @pars.setter
     def pars ( self , values ) :
         self.component_setter ( self.__pars , values )
-            
+
     def reset_pars ( self , value = 0 ) :
         """Set all pars to be value 
         >>> pdf = ...
@@ -2811,9 +2811,9 @@ class ParamsPoly(object) :
         return self.__pars_lst
     
     @property
-    def power ( self ) :
-        """'power'  : polynomial degree """
-        return len  ( self.pars ) - 1
+    def npars ( self ) :
+        """'npars'  : number of parameters """
+        return len  ( self.pars ) 
 
 # =============================================================================
 ## @class Phases

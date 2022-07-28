@@ -131,13 +131,12 @@ __all__ = (
     #
     )
 # =============================================================================
-import ROOT, math
-# =============================================================================
 from   ostap.core.core          import Ostap  
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
 from   ostap.fitting.fithelpers import Phases
 import ostap.math.dalitz 
+import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_signal' )

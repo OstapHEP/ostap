@@ -29,13 +29,12 @@ __all__     = (
     #
     )
 # =============================================================================
+from   ostap.core.core  import cpp, Ostap, VE , funID 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.spectra' )
 else                       : logger = getLogger ( __name__           )
-# =============================================================================
-from   ostap.core.core  import cpp, Ostap, VE , funID 
 # =============================================================================
 models = [] 
 from ostap.fitting.distributions import   Tsallis_pdf

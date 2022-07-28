@@ -33,6 +33,7 @@ namespace
   const std::string s_v2          = "Ostap::MoreRooFit::Monotonic"     ;
   const std::string s_v3          = "Ostap::MoreRooFit::Convex"        ;
   const std::string s_v4          = "Ostap::MoreRooFit::ConvexOnly"    ;
+  const std::string s_v5          = "Ostap::MoreRooFit::BSpline"       ;
   // ===========================================================================
 }
 // ============================================================================
@@ -40,6 +41,7 @@ ClassImp ( Ostap::MoreRooFit::Bernstein  ) ;
 ClassImp ( Ostap::MoreRooFit::Monotonic  ) ;
 ClassImp ( Ostap::MoreRooFit::Convex     ) ;
 ClassImp ( Ostap::MoreRooFit::ConvexOnly ) ;
+ClassImp ( Ostap::MoreRooFit::BSpline    ) ;
 // ============================================================================
 // constructor from the variable, range and list of coefficients
 // ============================================================================
@@ -459,6 +461,97 @@ Double_t Ostap::MoreRooFit::ConvexOnly::analyticalIntegral
   //
   return a * ( xmax - xmin ) + b * m_convex.integral ( xmin , xmax ) ;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================================
+// constructor from the variable, range and list of coefficients
+// ============================================================================
+Ostap::MoreRooFit::BSpline::BSpline
+( const std::string&         name  ,
+  const std::string&         title ,
+  RooAbsReal&                xvar  ,
+  const std::vector<double>& knots ,
+  const RooArgList&          pars  )
+  : RooAbsReal  ( name.c_str  () , title.c_str () )
+  , m_xvar      ( "!x"    , "observable" , this , xvar ) 
+  , m_pars      ( "!pars" , "parameters" , this )
+  , m_bspline   ( knots , std::vector<double>( ::size( pars ) , 0 ) )
+{
+  //
+  Ostap::Assert ( 1 <= ::size ( pars ) , s_EMPTYPARS  , s_v5 , 510 ) ;
+  ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v1 ) ;
+  Ostap::Assert ( m_bspline.npars () == ::size ( m_pars ), s_INVALIDPARS , s_v5 , 512 ) ;
+  //
+}
+// =============================================================================
+// copy constructor 
+// =============================================================================
+Ostap::MoreRooFit::BSpline::BSpline
+( const Ostap::MoreRooFit::BSpline& right , 
+  const char*                         name  )
+  : RooAbsReal  ( right , name ) 
+  , m_xvar      ( "!x"    , this , right.m_xvar ) 
+  , m_pars      ( "!pars" , this , right.m_pars ) 
+  , m_bspline   ( right.m_bspline ) 
+{}
+// =============================================================================
+// default constructor 
+// ============================================================================
+Ostap::MoreRooFit::BSpline::BSpline(){}
+// =============================================================================
+// destructor  
+// ============================================================================
+Ostap::MoreRooFit::BSpline::~BSpline(){}
+// ============================================================================
+// clone it!
+// ============================================================================
+Ostap::MoreRooFit::BSpline*
+Ostap::MoreRooFit::BSpline::clone ( const char* newname ) const
+{ return new BSpline( *this , newname ) ; }
+// ============================================================================
+void Ostap::MoreRooFit::BSpline::setPars() const 
+{ ::set_pars ( m_pars , m_bspline ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::BSpline::evaluate  () const 
+{
+  setPars () ;
+  const double x = m_xvar ;
+  return m_bspline ( x ) ;
+}
+// ============================================================================
+Int_t    Ostap::MoreRooFit::BSpline::getAnalyticalIntegral
+( RooArgSet&  allVars   , 
+  RooArgSet&  analVars  , 
+  const char* /* rangeName */ ) const 
+{
+  return matchArgs  ( allVars , analVars , m_xvar ) ? 1 : 0 ;
+}
+// ===========================================================================
+Double_t Ostap::MoreRooFit::BSpline::analyticalIntegral 
+( Int_t code            , 
+  const char* rangeName ) const 
+{
+  setPars() ;
+  const double xmin = m_xvar.min ( rangeName ) ;
+  const double xmax = m_xvar.max ( rangeName ) ;
+  return m_bspline.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+
+
+
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

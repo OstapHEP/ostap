@@ -14,12 +14,12 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () 
 # =============================================================================
-import ROOT, ctypes
 from   builtins               import range 
 from   ostap.core.core        import cpp, VE 
 from   ostap.core.ostap_types import integer_types, string_types
 from   ostap.core.meta_info   import root_info
 from   ostap.logger.colorized import allright, attention 
+import ROOT, ctypes
 # =============================================================================
 # logging 
 # =============================================================================

@@ -106,10 +106,10 @@ __all__     = (
     'PyPDF2' , ## 'pythonic' PDF for RooFit 
     )
 # =============================================================================
-import ROOT, math
 from   ostap.core.core      import Ostap
 import ostap.fitting.roofit
 from   ostap.core.meta_info import old_PyROOT 
+import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pypdf' )

@@ -36,13 +36,13 @@ __all__     = (
     'make_B2Dsym'     , ## create symmetric 2D "background" function 
     )
 # =============================================================================
-import ROOT, math
 from   ostap.core.core          import cpp, Ostap
 from   ostap.math.base          import iszero
 from   ostap.fitting.fithelpers import Phases
 from   ostap.fitting.fit2d      import PDF2, Flat2D
 from   ostap.fitting.signals    import Gauss_pdf, CB2_pdf
 from   ostap.core.meta_info     import root_info
+import ROOT 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_2d' )

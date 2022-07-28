@@ -19,6 +19,7 @@ __all__     = (
     'ConvexPoly'     , ## monotonic convex/concave polynomial      (RooAbsReal)
     'ConvexOnlyPoly' , ## convex/concave polynomial                (RooAbsReal)
     'ScaleAndShift'  , ## scale and shift                          (RooAbsReal)
+    'BSplineFun'     , ## BSpline                                  (RooAbsReal)
     ##
     'var_sum'        , ## sum                          for RooAbsReal objects           
     'var_mul'        , ## product                      for RooAbsReal objects           
@@ -51,13 +52,13 @@ __all__     = (
     'asymmetry_var'  , ## var_asymmetry
    )
 # =============================================================================
-import ROOT, math
 from   ostap.core.core                import Ostap 
 from   ostap.core.ostap_types         import num_types
 from   ostap.math.base                import iszero, isequal 
 from   ostap.fitting.fithelpers       import ParamsPoly , ShiftScalePoly
 import ostap.fitting.variables 
 from   ostap.fitting.funbasic         import FUN1, Fun1D, Fun2D, Fun3D
+import ROOT, math, array
 # =============================================================================
 from   ostap.logger.logger          import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roofuncs' )
@@ -87,9 +88,11 @@ class BernsteinPoly(FUN1,ParamsPoly) :
         
         ## initialize the base class 
         FUN1      .__init__ ( self  , name  , xvar = xvar )
-        ParamsPoly.__init__ ( self          ,
-                              power = power ,
-                              pars  = pars  )
+        ParamsPoly.__init__ ( self              ,
+                              npars = power + 1 ,
+                              pars  = pars      )
+
+        assert 1 <= self.npars , 'Invalid number of parameters! '
         
         xmin , xmax = self.xminmax ()
         
@@ -104,9 +107,10 @@ class BernsteinPoly(FUN1,ParamsPoly) :
 
         self.tricks = True 
         self.config = {
-            'name' : self.name ,
-            'xvar' : self.xvar ,
-            'pars' : self.pars
+            'name'  : self.name      ,
+            'xvar'  : self.xvar      ,
+            'pars'  : self.pars      ,
+            'power' : self.npars - 1 
             }
     
 # =============================================================================
@@ -420,6 +424,76 @@ class ScaleAndShift (FUN1) :
     def c ( self , value ) :
         self.set_value ( self.__c , value )
 
+# =============================================================================
+## @class BSplineFun 
+#  BSpline as RooAbsReal
+#  @code
+#  knots = ...
+#  p1 =  Bspline ( 'S1' , xvar = (0,1) , knots = knots , power = 3  )
+#  p2 =  Bspline ( 'S1' , xvar = (0,1) , knots = knots , pars = ... )
+#  @endcode 
+#  @see Ostap::MoreRooFit::BSpline
+#  @see Ostap::Math::BSpline
+class BSplineFun(FUN1,ParamsPoly) :
+    """ BSpline as RooAbsReal
+    >>> knots = ...
+    >>> p1 =  Bspline ( 'S1' , xvar = (0,1) , knots = knots , power = 3  )
+    - see Ostap.MoreRooFit.BSpline
+    - see Ostap.Math.BSpline
+    """
+    def __init__ ( self , name , xvar , knots , power  , pars = None ) :
+        
+        from ostap.math.base import isint as _isint 
+        assert pars or ( ( isinstance ( power, integer_types ) or _isint ( power ) ) and 0 <= power ) ,\
+               "BSplineFun: Inconsistent 'power' setting!"
+ 
+        ## initialize the first base class 
+        FUN1      .__init__ ( self  , name  , xvar = xvar )
+
+        from ostap.math.base import doubles 
+        knots = doubles ( knots ) 
+        assert 2 <= len ( knots ) , "BSplineFun: invalid size of 'knots'!"
+
+        ## number of inner knots 
+        inner = len ( knots ) - 2 
+
+        ## number of parameters 
+        npars = power + inner + 1 
+        
+        ## initialize the second base class        
+        ParamsPoly.__init__ ( self          ,
+                              npars = npars ,
+                              pars  = pars  )
+        
+        ## create the function
+        self.fun    = Ostap.MoreRooFit.BSpline (
+            self.roo_name ( 'bspline_' )   ,
+            'BSpline %s' % self.name  ,
+            self.xvar                 ,
+            knots                     ,            
+            self.pars_lst             )
+
+
+        self.__knots = array.array ( 'd' , self.fun.knots () )
+        
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'knots' : self.knots ,
+            'power' : self.power , 
+            'pars'  : self.pars  ,
+            }
+
+    @property 
+    def knots ( self ) :
+        """'knots' : array of knots for BSpline object""" 
+        return self.__knots
+    
+    @property 
+    def power ( self ) :
+        """'power' : degree for BSpline object""" 
+        return self.fun.degree() 
+        
 # ==============================================================================
 # primitive functions for RooAbsReal objects 
 # ==============================================================================

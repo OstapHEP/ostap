@@ -14,6 +14,7 @@
 // ============================================================================
 #include  "Ostap/Bernstein.h"
 #include  "Ostap/Bernstein1D.h"
+#include  "Ostap/BSpline.h"
 // ============================================================================
 namespace Ostap 
 {
@@ -276,7 +277,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const Ostap::Math::Convex& convex () const { return m_convex ; }
+      const Ostap::Math::Convex& function () const { return m_convex ; }
+      const Ostap::Math::Convex& convex   () const { return m_convex ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -358,7 +360,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const Ostap::Math::ConvexOnly& convex () const { return m_convex ; }
+      const Ostap::Math::ConvexOnly& function () const { return m_convex ; }
+      const Ostap::Math::ConvexOnly& convex   () const { return m_convex ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -392,7 +395,85 @@ namespace Ostap
       mutable Ostap::Math::ConvexOnly m_convex    ;
       // ======================================================================
     } ;
-
+    // ========================================================================
+    /** @class BSpline
+     *  The basic spline   ("B-spline")
+     *  @see http://en.wikipedia.org/wiki/B-spline
+     *  @see http://link.springer.com/chapter/10.1007%2F978-3-0348-7692-6_6
+     *  @see Ostap::Math::Bspline 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2022-07-27     
+     */
+    class BSpline : public RooAbsReal 
+    {
+      // ======================================================================
+      ClassDefOverride ( Ostap::MoreRooFit::BSpline , 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from the variable, range and the list of coefficients
+      BSpline
+      ( const std::string&         name  ,
+        const std::string&         title ,
+        RooAbsReal&                xvar  ,
+        const std::vector<double>& knots ,
+        const RooArgList&          pars  ) ;
+      // ======================================================================
+      /// copy constructor 
+      BSpline
+      ( const BSpline& right , 
+        const char*    name = nullptr ) ;
+      // ======================================================================
+      BSpline () ;
+      virtual ~BSpline () ;
+      // ======================================================================
+      BSpline* clone ( const char* newname ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&  allVars             , 
+        RooArgSet&  analVars            , 
+        const char* rangeName = nullptr ) const override ;
+      Double_t    analyticalIntegral
+      ( Int_t code , 
+        const char* rangeName = nullptr ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the varibale 
+      const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
+      /// get parameters 
+      const RooArgList& params () const { return m_pars       ; }
+      /// vector of knots 
+      const std::vector<double>& knots () const { return m_bspline.knots() ; }
+      /// xmin
+      double            xmin   () const { return m_bspline.xmin() ; }
+      /// xmax 
+      double            xmax   () const { return m_bspline.xmax() ; }
+      /// degree 
+      unsigned short    degree () const { return m_bspline.degree () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      void setPars       () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      const Ostap::Math::BSpline& function () const { return m_bspline ; }
+      const Ostap::Math::BSpline& bspline  () const { return m_bspline ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      Double_t evaluate  () const override ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      RooRealProxy                  m_xvar    {} ;
+      RooListProxy                  m_pars    {} ;
+      mutable Ostap::Math::BSpline  m_bspline {} ; 
+      // ======================================================================
+    } ; //                          The end of class Ostap::MoreRooFit::BSpline 
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit
   // ==========================================================================

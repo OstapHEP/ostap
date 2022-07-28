@@ -62,11 +62,10 @@ __all__     = (
     'ResoGenGaussV1'    , ## Generalized  Gaussian v1 
     )
 # =============================================================================
+from   ostap.core.core        import Ostap
+from   ostap.fitting.pdfbasic import Generic1D_pdf 
+from   ostap.fitting.fit1d    import RESOLUTION, CheckMean 
 import ROOT
-# =============================================================================
-from ostap.core.core        import Ostap
-from ostap.fitting.pdfbasic import Generic1D_pdf 
-from ostap.fitting.fit1d    import RESOLUTION, CheckMean 
 # =============================================================================    
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.resolution' )

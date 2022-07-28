@@ -28,13 +28,12 @@ __all__     = (
     'binning'         , ## create RooBinning object 
     ) 
 # =============================================================================
-import ROOT, random, array 
 from   builtins               import range
 from   ostap.core.core        import VE, hID, Ostap
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
                                        integer_types , string_types )
-
+import ROOT, random, array 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1068,6 +1067,16 @@ def _rub_str_ ( bins ) :
 ROOT.RooUniformBinning.__str__  = _rub_str_
 ROOT.RooUniformBinning.__repr__ = _rub_str_
 
+# =============================================================================
+## printout for RooRangeBinning
+def _rrb_str_ ( bins ) :
+    """Printout for RooRangeBinning"""
+    l = bins. lowBound ()
+    h = bins.highBound ()
+    return "RooRangeBinning(%s,%s,%d')" % ( l , h , bins.GetName() )
+    
+ROOT.RooRangeBinning.__str__  = _rrb_str_
+ROOT.RooRangeBinning.__repr__ = _rrb_str_
 
 # =============================================================================
 ## Does  this variable depends on another one?
@@ -1167,7 +1176,6 @@ def _rrv_reduce ( rrv ) :
     """ Reducing of `ROOT.RooRealVar` for pickling 
     - see ROOT.RooRooRealVar 
     """
-    
     name    = rrv.name 
     title   = rrv.title
     value   = rrv.getVal () 
@@ -1202,7 +1210,7 @@ def _rrv_reduce ( rrv ) :
     battrs   = tuple ( ( n , rrv.getAttribute          ( n ) ) for   n       in rrv.attributes          () ) 
     sattrs   = tuple ( ( n , a                               ) for ( n , a ) in rrv.stringAttributes    () ) 
     tattrs   = tuple ( ( n , rrv.getTransientAttribute ( n ) ) for   n       in rrv.transientAttributes () ) 
-        
+
     ## fixed ? 
     fixed = True if rrv.isConstant() else False 
 
@@ -1214,7 +1222,6 @@ def _rrv_reduce ( rrv ) :
         content = args , errors , binnings , fixed , battrs 
     else :        
         content = args , errors , binnings , fixed 
-    
     
     return _rrv_factory , content 
 
@@ -1583,7 +1590,7 @@ def _rb_factory ( data , name  ) :
     """unpickle RooBinning object
     -see ROOT.RooUniformBinnig
     """
-    return ROOT.RooBinning ( len(data) -1 , data[0] , name )
+    return ROOT.RooBinning ( len ( data ) - 1 , data [ 0 ] , name )
 # =============================================================================
 ## reduce RooBinning object
 #  @see RooBinning 
@@ -1600,12 +1607,40 @@ def _rb_reduce_ ( rb  )  :
     content = data, rb.GetName()  
     return _rb_factory, content
 
+# ==========================================================================
+## unpickle RooRangeBinning object
+#  @see RooRangeBinnig 
+def _rrb_factory ( low , high , name ) :
+    """unpickle RooRangeBinning object"""
+    return ROOT.RooRangeBinning( low , high , name )
+# ============================================================================
+## reduce RooRangeBinnig object
+#  @see RooRangeBinnig 
+def _rrb_reduce_ ( rrb ) :
+    """Reduce RooRangeBinnig object"""
+    return _rrb_factory ,  ( rrb.lowBound() , rrb.highBound() , rrb.GetName() ) 
 
 ROOT.RooBinning       .__reduce__ = _rb_reduce_
 ROOT.RooUniformBinning.__reduce__ = _rub_reduce_
+ROOT.RooRangeBinning  .__reduce__ = _rrb_reduce_
         
 # =============================================================================
+## Unpickle RooAbsCollection object
+#  @see RooAbsCollectio
+def _rac_factory ( klass , *args ) :
+    """ Unpickle RooAbsCollection object
+    """
+    c = klass ()
+    for a in args : c.add ( a )
+    return c
+# =============================================================================
+## reduce `RooAbsCollection`
+def _rac_reduce_ ( rac ) :
+    """Reduce `RooAbsCollection` instances"""    
+    return _rac_factory, ( type ( rac ) , ) + tuple ( a for a in rac ) 
 
+ROOT.RooArgSet  .__reduce__ = _rac_reduce_
+ROOT.RooArgList .__reduce__ = _rac_reduce_
 
 # =============================================================================
 

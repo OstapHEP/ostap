@@ -250,8 +250,6 @@ __all__ = (
     ##
     )
 # =============================================================================
-import ROOT, math
-# =============================================================================
 from   ostap.logger.logger          import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models' )
 else                       : logger = getLogger ( __name__               )

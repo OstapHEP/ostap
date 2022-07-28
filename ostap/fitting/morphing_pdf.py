@@ -20,10 +20,9 @@ __all__     = (
     ##
     )
 # =============================================================================
-import ROOT
-# =============================================================================
 from   ostap.fitting.pdfbasic import PDF1, Generic1D_pdf
 from   ostap.core.ostap_types import integer_types 
+import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.morphing_pdf' )

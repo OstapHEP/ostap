@@ -24,6 +24,8 @@ from   builtins                 import range
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
 from   ostap.fitting.background import make_bkg
+from   ostap.logger.colorized   import attention
+import ostap.logger.table       as     T
 import ROOT, random
 # =============================================================================
 # logging 
@@ -101,64 +103,56 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
 
     signal = pdf.signal 
 
+    mean, mode, median, midpoint, rms , fwhm, skewness , kurtosis = 8 * ( attention ( '<error>' ) , )
     
-    data = { ## 'mean'          : signal.get_mean      () ,
-             ## 'mode'          : signal.mode          () , 
-             ## 'median'        : signal.median        () ,
-             ## 'rms'           : signal.rms           () ,
-             ## 'skewness'      : signal.skewness      () ,
-             ## 'kurtosis'      : signal.kurtosis      () ,
-             ## 'roo_rms'       : signal.roo_rms       () ,
-             ## 'roo_mean'      : signal.roo_mean      () ,
-             ## 'roo_skewness'  : signal.roo_skewness  () ,             
-             ## 'roo_kurtosis'  : signal.roo_kurtosis  ()
-             }
+    model = signal
+    
+    try    :
+        mean     =  "%+.3g" % model.get_mean     () 
+    except :
+        pass
+    
+    try    :
+        mode     =  "%+.3g" % model .mode       () 
+    except :
+        pass 
 
-    stats [ signal.name ]  = data 
+    try    :
+        median   =  "%+.3g" % model .median     () 
+    except :
+        pass
+    
+    try    :
+        midpoint =  "%+.3g" % model .mid_point  () 
+    except :
+        pass
+
+    try    :
+        rms      =  "%+.3g" % model .rms        () 
+    except :
+        pass
+    
+    try    :
+        fwhm     =  "%+.3g" % model .fwhm       () 
+    except :
+        pass
+    
+    try    :
+        skewness =  "%+.3g" % model .skewness   () 
+    except :
+        pass
+
+    try    :
+        kurtosis =  "%+.3g" % model .kurtosis   () 
+    except :
+        pass
+    
+    row   = model.name  , mean , mode , median , midpoint , rms , fwhm , skewness , kurtosis
+
+    stats [ model.name ] = row
 
     with wait ( 1 ), use_canvas ( title ) : 
         pdf.draw (  dataset0 )
-    
-    
-# =============================================================================
-def dump_peaks ()  :
-    
-    header = ( 'Model'         , 
-               ## 'mean'          , 
-               ## 'mode'          , 
-               ## 'median'        , 
-               'rms'           , 
-               'skewness'      , 
-               'kurtosis'      ,
-               ## '(roo) mean'    , 
-               ## '(roo)rms'      , 
-               ## '(roo)skewness' , 
-               ## '(roo)kurtosis'
-               )
-               
-    rows = [ header ] 
-    for key in sorted ( stats.keys() ) :
-
-        data = stats[key]
-        
-        row = ( key , 
-                ## '%+.6g' % data['mean'        ] ,
-                ## '%+.6g' % data['mode'        ] ,
-                ## '%+.6g' % data['median'      ] , 
-                ## '%+.6g' % data['rms'         ] ,
-                ## '%+.6g' % data['skewness'    ] ,
-                ## '%+.6g' % data['kurtosis'    ] ,
-                ## '%+.5g' % data['roo_mean'    ] , 
-                ## '%+.5g' % data['roo_rms'     ] , 
-                ## '%+.5g' % data['roo_skewness'] , 
-                ## '%+.5g' % data['roo_kurtosis']
-                ) 
-        rows.append ( row )
-
-    title = 'Global features for the peaking models'
-    import ostap.logger.table       as     T 
-    table = T.table ( rows , title = title ,  prefix = '# ' )
-    logger.info ( 'Global features for %s\n%s' % ( title , table ) ) 
     
 # =============================================================================
 ## gauss PDF
@@ -1291,13 +1285,14 @@ def test_genhyperbolic() :
 ## Hypatia 
 # ==========================================================================
 def test_hypatia () :
-
+## if 1 < 2 :
+    
     logger = getLogger ( 'test_hypatia' )
        
     
     logger.info ('Test Hypatia_pdf: Hypatia pdf' ) 
     model = Models.Fit1D (
-        signal = Models.Hypatia_pdf ( name = 'Hypatia' , 
+        signal = Models.Hypatia_pdf ( name      = 'Hypatia' , 
                                       xvar      = mass               ,
                                       mu        = signal_gauss.mean  ,
                                       sigma     = signal_gauss.sigma ,
@@ -1512,11 +1507,30 @@ def test_db() :
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
-        db['mass,vars'] = mass, varset0
+        db['mass'] = mass 
+        db['vars'] = varset0 
         db['dataset'  ] = dataset0
         for m in models : db['model:' + m.name ] = m
         db['models'   ] = models
         db.ls() 
+
+# ==============================================================================
+## dump all models
+# ==============================================================================
+def dump_models () :
+    
+    header =  'Model'   , \
+             'mean'     , 'mode' , 'midpoint' , 'median' , \
+             'rms'      , 'fwhm' ,  \
+             'skewness' , 'kurtosis'
+    
+    rows = [ header ] 
+    for m in sorted ( stats  ) :
+        rows.append ( stats [ m ]  )
+
+    table = T.table ( rows , title = "Model's features" ,  prefix = '# ' )
+    logger.info ( 'Features of models\n%s' % table )
+  
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -1673,8 +1687,7 @@ if '__main__' == __name__ :
     with timing ('test_db'             , logger ) :
         test_db ()
 
-    ## dump_peaks () 
-
+    dump_models () 
 
          
 # =============================================================================

@@ -49,13 +49,13 @@ __all__     = (
     'make_bkg'          , ## helper function to create backgrounds 
     )
 # =============================================================================
-import ROOT, math
 from   ostap.core.core          import Ostap
 from   ostap.core.ostap_types   import integer_types , num_types 
 from   ostap.math.base          import iszero
 from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf 
 from   ostap.fitting.fit1d      import Flat1D,  Sum1D
 from   ostap.fitting.fithelpers import Phases, ParamsPoly 
+import ROOT, math
 # =============================================================================
 from   ostap.logger.logger      import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
@@ -2247,11 +2247,11 @@ class PSSmear2_pdf ( PDF1 ) :
 class RooPoly(PDF1,ParamsPoly) :
     """Helper base class to implement various polynomial-like shapes
     """
-    def __init__ ( self , name , power , xvar , pars = None ) :
+    def __init__ ( self , name , xvar , power = 1 , pars = None ) :
         ## check  the arguments 
-        PDF1       .__init__  ( self , name  , xvar = xvar   )
-        ParamsPoly .__init__  ( self , power , pars          )
-
+        PDF1       .__init__  ( self , name          , xvar = xvar )
+        ParamsPoly .__init__  ( self , npars = power , pars = pars )
+        
 # =============================================================================        
 ## @class RooPoly_pdf
 #  Trivial Ostap wrapper for the native <code>RooPolynomial</code> PDF from RooFit
@@ -2271,14 +2271,14 @@ class RooPoly_pdf(RooPoly) :
     >>> poly = RooPoly_pdf ( 'P3' , xvar , coefficients = [ 1, 2 , 3 ] )
     """
     ## constructor
-    def __init__ ( self                ,
-                   name                , ## the name 
-                   xvar                , ## the variable
-                   power        = 0    , ## degree of polynomial
-                   coefficients = [] ) : ## the list of coefficients 
+    def __init__ ( self         ,
+                   name         , ## the name 
+                   xvar         , ## the variable
+                   power = 1    , ## degree of polynomial
+                   pars  = [] ) : ## the list of coefficients 
         
         ## initialize the base class 
-        RooPoly.__init__ (  self , name , xvar , power ,  coefficients )
+        RooPoly.__init__ (  self , name , xvar = xvar , power = power , npars = pars )
 
         ## create PDF
         self.pdf = ROOT.RooPolynomial (
@@ -2288,10 +2288,10 @@ class RooPoly_pdf(RooPoly) :
 
         ## save configuration 
         self.config = {
-            'name'        : self.name         ,
-            'xvar'        : self.xvar         ,
-            'power'       : self.power        ,            
-            'coefficients': self.coefficients ,            
+            'name'        : self.name  ,
+            'xvar'        : self.xvar  ,
+            'power'       : self.npars ,            
+            'coefficients': self.pars  ,            
             }
 
 # =============================================================================        

@@ -14,6 +14,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
+from   ostap.core.core        import cpp, Ostap, VE, funID
+from   ostap.core.ostap_types import num_types , integer_types
 import ROOT, ctypes 
 # =============================================================================
 # logging 
@@ -23,9 +25,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.funcs' )
 else                       : logger = getLogger( __name__              )
 # =============================================================================
 logger.debug ( 'Tiny decoration for ROOT.TF objects')
-# =============================================================================
-from ostap.core.core   import cpp, Ostap, VE, funID
-from ostap.core.ostap_types  import num_types , integer_types
 # =============================================================================
 
 # =============================================================================
