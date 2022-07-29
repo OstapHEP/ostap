@@ -56,10 +56,6 @@ def test_morphingL () :
                               xvar  = mass ,
                               mean  = ROOT.RooFit.RooConst ( 10 ) ,
                               sigma = ROOT.RooFit.RooConst ( 1  ) )
-    ## pdf2 = Models.Gauss_pdf ( 'GL2'  ,
-    ##                          xvar  = mass ,
-    ##                          mean  = ROOT.RooFit.RooConst ( 10 ) ,
-    ##                          sigma = ROOT.RooFit.RooConst ( 5  ) )
     pdf2 = Models.Flat1D    ( xvar = mass )
     
     ## create morphing PDF 
@@ -82,7 +78,7 @@ def test_morphingL () :
 def test_morphing1 () :
 
     logger = getLogger ('test_morphing1')    
-    if root_info < ( 6 , 23 )  or ( 6 , 27 ) <= root_info :
+    if root_info < ( 6 , 23 ) or ( 6 , 27 ) <= root_info :
         logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
         return
 

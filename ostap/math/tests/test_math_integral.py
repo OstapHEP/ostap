@@ -14,8 +14,13 @@ It tests local implementation of numerical integrtauon using Romberg's method
 - see https://en.wikipedia.org/wiki/Numerical_integration#Adaptive_algorithms
 CPU performance is not superb, but it is numerically stable.
 """
-# ============================================================================= 
-from __future__ import print_function
+# =============================================================================
+from   __future__          import print_function
+from   ostap.math.integral import ( integral  , romberg     , 
+                                    integral2 , genzmalik2  ,  
+                                    integral3 , genzmalik3  ,
+                                    complex_circle_integral ) 
+import ostap.logger.table  as     T
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -26,9 +31,10 @@ else                       : logger = getLogger ( __name__             )
 
 def test_integral ():
 
+    logger = getLogger('test_integral')
+    
     from math import sin, cos , exp, log, pi, e  
 
-    from ostap.math.integral import integral, romberg 
     funcs = [
         ( sin , 0      , pi , 2   ) ,
         ( cos , 0      , pi , 0   ) ,
@@ -39,10 +45,11 @@ def test_integral ():
     for entry in funcs :
 
         args = entry[:3]
-        vi = integral ( *entry[:3] , err = True )
-        vr = romberg  ( *entry[:3] , err = True , maxdepth = 100 )
+        vi   = integral ( *entry[:3] , err = True )
+        vr   = romberg  ( *entry[:3] , err = True , maxdepth = 100 )
         
         value   = entry[ 3]
+        
         func    = 'int(%s,%g,%g)' % ( entry[0].__name__ , entry[1] , entry[2] )
         logger.info ( '%20s: I        %-20s %-20s' % ( func , vi       , vr   ) ) 
         logger.info ( '%20s: Delta    %-20s %-20s' % ( func , vi-value , vr - value  ) )
@@ -51,9 +58,10 @@ def test_integral ():
         
 def test_integral_2D ():
 
+    logger = getLogger('test_integral_2D')
+
     from math import sin, cos , exp, log, pi, e  
 
-    from ostap.math.integral import  genzmalik2, integral2  
     funcs = [
         ( lambda x,y: x*x+y*y                     , -1 , 1 , -1  , 1 , 8/3. )  ,
         ( lambda x,y: x*x+y*sin(y)                , -1 , 1 , -2  , 1 , 6.085519557719447 ) , 
@@ -66,7 +74,7 @@ def test_integral_2D ():
         v1    = genzmalik2 ( *entry[:5] , err = True )
         v2    = integral2  ( *entry[:5] , err = True )
         vv    = entry[-1]
-        print ( vv, '%.20f'    % v2.value()  ) 
+
         logger.info ( '%20s: I        %-20s %-20s  %-20s ' % ( entry[0] , v1 , v2  , vv ) ) 
         logger.info ( '%20s: Delta    %-20s %-20s'         % ( entry[0] , v1-vv , v2 - vv ) )
         logger.info ( '%20s: Delta/I  %-20s %-20s'         % ( entry[0] , (v1-vv)/vv         , (v2 - vv)/vv         ) ) 
@@ -75,6 +83,8 @@ def test_integral_2D ():
 
         
 def test_integral_3D ():
+
+    logger = getLogger('test_integral_3D')
 
     from math import sin, cos , exp, log, pi, e  
 
@@ -90,7 +100,6 @@ def test_integral_3D ():
         v1    = genzmalik3 ( *entry[:7] , err = True )
         v2    = integral3  ( *entry[:7] , err = True )
         vv    = entry[-1]
-        print ( vv , '%.20f'    % v2.value()  )
         logger.info ( '%20s: I        %-20s %-20s  %-20s ' % ( entry[0] , v1 , v2  , vv ) ) 
         logger.info ( '%20s: Delta    %-20s %-20s'         % ( entry[0] , v1-vv , v2 - vv ) )
         logger.info ( '%20s: Delta/I  %-20s %-20s'         % ( entry[0] , (v1-vv)/vv         , (v2 - vv)/vv         ) ) 
@@ -98,13 +107,56 @@ def test_integral_3D ():
                 
 
 
-        
+def test_integral_contour ():
+
+    logger = getLogger('test_integral_contour')
+
+    import cmath
+    
+    from   math import pi
+
+
+    ## function with simple poles
+
+    poles = ( -1j , +1j )     
+    cc    = 1.0 / ( 2 * pi ) 
+    func  = lambda x : cc * sum ( 1.0 / ( x - p ) for p in poles )
+
+    rows = [  ( 'center' , 'radius' , 'result' , 'delta [10^-12]' ) ] 
+              
+    ## radius 
+    for radius in ( 0.5 , 5.5 ) :
+        ## center
+        for real in ( -1 , 0 , 1 ) :
+            for imag in ( -1 , 0 , 1 ) :
+                center = real+imag*1j
+
+                result = complex_circle_integral ( func , center = center , radius = radius )
+
+                exact = 0
+                for p in poles :
+                    if abs ( center - p ) < radius : exact += 1.0j
+
+                row = '%-+.1f%+.1fj' % ( center.real , center.imag )  , \
+                      '%.2f' % radius , \
+                      '%-+.6f%+.6fj' % ( result.real , result.imag )  , \
+                      '%.3e'   %  ( abs ( exact - result ) * 1e+12 ) 
+                       
+                rows.append ( row )
+
+
+    title = 'Complex Contour integrals'
+    table = T.table ( rows , title = title ,  prefix = '# ' )
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+
+
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_integral    ()
-    test_integral_2D ()
-    test_integral_3D ()
+    test_integral         ()
+    test_integral_2D      ()
+    test_integral_3D      ()
+    test_integral_contour ()
     
 # =============================================================================
 ##                                                                      The END 
