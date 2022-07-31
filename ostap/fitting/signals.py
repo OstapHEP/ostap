@@ -54,6 +54,7 @@ Empricial PDFs to describe narrow peaks
   - NormalLaplace_pdf
   - Hypatia_pdf
   - PearsonIV_pdf
+  - Hat & Up functions
   
 PDF to describe 'wide' peaks
 
@@ -113,6 +114,8 @@ __all__ = (
     'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
     'Losev_pdf'              , ## asymmetric hyperbolic secant
     'Logistic_pdf'           , ## Logistic aka "sech-squared"   
+    'Hat_pdf'                , ## hat function (smoth&finite)
+    'Up_pdf'                 , ## finite atomin fnuction up
     #
     ## pdfs for "wide" peaks, to be used with care - phase space corrections are large!
     # 
@@ -3567,6 +3570,121 @@ class Das_pdf(PEAK) :
     def kappa ( self , value ) :
         self.setValue ( self.__kappa , value )
 
+
+# ==============================================================================
+## @class Hat_pdf
+#  Finite smooth function
+#   \f$ f(x;\mu\sigma) = \frac{C}{\sigma} 
+#   \mathrm{e}^{  - frac{1}{1-y^2} }\f$, where 
+#  \F$ y = \frac{m-\mu}{\sigma}\f$ 
+#  @see Ostap::Math::hat 
+#  @see Ostap::Math::Hat 
+#  @see Ostap::Models::Hat 
+class Hat_pdf(PEAK) :
+    """ Finite smooth function
+    - see Ostap.Math.hat 
+    - see Ostap.Math.Hat 
+    - see Ostap.Models.Hat 
+    """
+    def __init__ ( self               ,
+                   name               ,
+                   xvar               ,
+                   mean        = None ,
+                   varsigma    = None ) : 
+    
+        #
+        ## initialize the base
+        # 
+        PEAK.__init__  ( self ,
+                         name        = name      ,
+                         xvar        = xvar      ,
+                         mean        = mean      ,
+                         sigma       = varsigma  )
+        #
+        ## build pdf
+        # 
+        self.pdf = Ostap.Models.Hat (
+            self.roo_name ( 'hat_' ) ,
+            "Hat %s" % self.name ,
+            self.xvar  ,
+            self.mean  ,
+            self.sigma )
+        ## save the configuration
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'mean'     : self.mean     ,
+            'varsigma' : self.varsigma ,
+            }
+        
+    @property
+    def varsigma ( self ) :
+        """'varisgma' : scale parameter, same as 'sigma'"""
+        return self.sigma
+    @varsigma.setter
+    def varsigma ( self , value ) :
+        self.sigma = value 
+    
+models.append ( Hat_pdf ) 
+# =============================================================================
+
+# ==============================================================================
+## @class Up_pdf
+#  Finite stomic functon <code>up</code>,  a finite soltuion  
+#  of the equation 
+#  \f[ f^{\prime(x) = 2 \left( f( 2x+1) - f(2x-1)\right) }\f] with
+#  \f$ f(0) = 1 \f$ 
+#  @see Ostap::Math::up_F 
+#  @see Ostap::Math::Up 
+#  @see Ostap::Models::Up 
+class Up_pdf(PEAK) :
+    """ Finite smooth function
+    - see Ostap.Math.up_F 
+    - see Ostap.Math.Up
+    - see Ostap.Models.Up
+    """
+    def __init__ ( self               ,
+                   name               ,
+                   xvar               ,
+                   mean        = None ,
+                   varsigma    = None ) : 
+        
+        #
+        ## initialize the base
+        # 
+        PEAK.__init__  ( self                    ,
+                         name        = name      ,
+                         xvar        = xvar      ,
+                         mean        = mean      ,
+                         sigma       = varsigma  )
+        #
+        ## build pdf
+        # 
+        self.pdf = Ostap.Models.Up (
+            self.roo_name ( 'up_' ) ,
+            "Up %s" % self.name ,
+            self.xvar  ,
+            self.mean  ,
+            self.sigma )
+        ## save the configuration
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'mean'     : self.mean     ,
+            'varsigma' : self.varsigma ,
+            }
+        
+    @property
+    def varsigma ( self ) :
+        """'varisgma' : scale parameter, same as 'sigma'"""
+        return self.sigma
+    @varsigma.setter
+    def varsigma ( self , value ) :
+        self.sigma = value 
+
+models.append ( Up_pdf ) 
+# =============================================================================
+        
 
 # =============================================================================
 ## @class Voigt_pdf

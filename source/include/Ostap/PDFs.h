@@ -5042,7 +5042,159 @@ namespace Ostap
       /// the actual function
       mutable Ostap::Math::AsymmetricLaplace m_laplace ; // the actual function
       // ======================================================================
-    } ;   
+    } ;
+    // ========================================================================
+    /** @class Hat
+     *  Finite smooth functon
+     *  \f$ f(x;\mu\sigma) = \frac{C}{\sigma} 
+     *   \mathrm{e}^{  - frac{1}{1-y^2} }\f$, where 
+     *  \F$ y = \frac{m-\mu}{\sigma}\f$ 
+     *  @see Ostap::Math::hat 
+     *  @see Ostap::Models::Hat 
+     */
+    class Hat : public RooAbsPdf 
+    {
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Hat, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      Hat
+      ( const char* name      ,
+        const char* title     ,
+        RooAbsReal& x         ,
+        RooAbsReal& mu        ,
+        RooAbsReal& varsigma  ) ;
+      /// "copy constructor"
+      Hat 
+      ( const Hat&  right     ,
+        const char* name  = 0 )  ;
+      /// destructor
+      virtual ~Hat() ;
+      /// clone
+      Hat* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Hat () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Hat& function () const { return m_hat ; }
+      const Ostap::Math::Hat& hat      () const { return m_hat ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        {} ;
+      RooRealProxy m_mu       {} ;
+      RooRealProxy m_varsigma {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Hat m_hat ; // the actual function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Up 
+     *  Finite stomic functon <code>up</code>,  a finite soltuion  
+     *  of the equation 
+     *  \f[ f^{\prime(x) = 2 \left( f( 2x+1) - f(2x-1)\right) }\f] with
+     *  \f$ f(0) = 1 \f$ 
+     *  @see Ostap::Math::up_F 
+     *  @see Ostap::Models::Up
+     */
+    class Up : public RooAbsPdf 
+    {
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Up, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      Up
+      ( const char* name      ,
+        const char* title     ,
+        RooAbsReal& x         ,
+        RooAbsReal& mu        ,
+        RooAbsReal& varsigma  ) ;
+      /// "copy constructor"
+      Up 
+      ( const Up&   right     ,
+        const char* name  = 0 )  ;
+      /// destructor
+      virtual ~Up() ;
+      /// clone
+      Up* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Up () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Up& function () const { return m_up ; }
+      const Ostap::Math::Up& up       () const { return m_up ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        {} ;
+      RooRealProxy m_mu       {} ;
+      RooRealProxy m_varsigma {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Up m_up ; // the actual function
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class Tsallis
      *  Useful function to describe pT-spectra of particles
@@ -5312,13 +5464,14 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      DoubleGauss ( const char*          name      , 
-                    const char*          title     ,
-                    RooAbsReal&          x         ,
-                    RooAbsReal&          sigma     ,   // narrow sigma 
-                    RooAbsReal&          fraction  ,   // fraction of narrow sigma 
-                    RooAbsReal&          scale     ,   // wide/narrow sigma ratio    
-                    RooAbsReal&          mean      ) ; // mean, presumably fixed at 0
+      DoubleGauss 
+      ( const char*          name      , 
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          sigma     ,   // narrow sigma 
+        RooAbsReal&          fraction  ,   // fraction of narrow sigma 
+        RooAbsReal&          scale     ,   // wide/narrow sigma ratio    
+        RooAbsReal&          mean      ) ; // mean, presumably fixed at 0
       /// "copy" constructor 
       DoubleGauss ( const DoubleGauss& , const char* name = 0 ) ;
       /// virtual destructor 
@@ -5398,11 +5551,12 @@ namespace Ostap
        *  @param  b    the scale b-parameter 
        *  @param  xmin the bias  parameter
        */
-      Gumbel ( const char*          name      , 
-               const char*          title     ,
-               RooAbsReal&          x         ,   // observable 
-               RooAbsReal&          mu        ,   // mode/shift
-               RooAbsReal&          beta      ) ; // beta/scale 
+      Gumbel
+      ( const char*          name      , 
+        const char*          title     ,
+        RooAbsReal&          x         ,   // observable 
+        RooAbsReal&          mu        ,   // mode/shift
+        RooAbsReal&          beta      ) ; // beta/scale 
       /// "copy" constructor 
       Gumbel ( const Gumbel& , const char* name = 0 ) ;
       /// clone 
@@ -5473,12 +5627,13 @@ namespace Ostap
        *  @param  shape the shape parameter 
        *  @param  shift the shift parameter 
        */
-      Weibull ( const char*          name      , 
-                const char*          title     ,
-                RooAbsReal&          x         ,   // observable 
-                RooAbsReal&          scale     ,   // scale/lambda 
-                RooAbsReal&          shape     ,   // shape/k 
-                RooAbsReal&          shift     ) ; // shift/x0 
+      Weibull 
+      ( const char*          name      , 
+        const char*          title     ,
+        RooAbsReal&          x         ,   // observable 
+        RooAbsReal&          scale     ,   // scale/lambda 
+        RooAbsReal&          shape     ,   // shape/k 
+        RooAbsReal&          shift     ) ; // shift/x0 
       /// "copy" constructor 
       Weibull ( const Weibull& , const char* name = 0 ) ;
       /// clone 
@@ -5549,11 +5704,12 @@ namespace Ostap
        *  @param  mean   the mean/mode/median/location 
        *  @param  scale  the scale parameter 
        */
-      RaisingCosine ( const char*          name      , 
-                      const char*          title     ,
-                      RooAbsReal&          x         ,   // observable 
-                      RooAbsReal&          mean      ,   // mean/mode/location
-                      RooAbsReal&          scale     ) ; // scale parameter 
+      RaisingCosine 
+      ( const char*          name      , 
+        const char*          title     ,
+        RooAbsReal&          x         ,   // observable 
+        RooAbsReal&          mean      ,   // mean/mode/location
+        RooAbsReal&          scale     ) ; // scale parameter 
       /// "copy" constructor 
       RaisingCosine ( const RaisingCosine& , const char* name = 0 ) ;
       /// clone 
@@ -5628,12 +5784,13 @@ namespace Ostap
        *  @param  q      the q-value 
        *  @param  scale  the scale parameter 
        */
-      QGaussian ( const char*          name      , 
-                  const char*          title     ,
-                  RooAbsReal&          x         ,   // observable 
-                  RooAbsReal&          mean      ,   // mean/mode/location
-                  RooAbsReal&          q         ,   // q-value
-                  RooAbsReal&          scale     ) ; // scale parameter 
+      QGaussian
+      ( const char*          name      , 
+        const char*          title     ,
+        RooAbsReal&          x         ,   // observable 
+        RooAbsReal&          mean      ,   // mean/mode/location
+        RooAbsReal&          q         ,   // q-value
+        RooAbsReal&          scale     ) ; // scale parameter 
       /// "copy" constructor 
       QGaussian ( const QGaussian& , const char* name = 0 ) ;
       /// clone 
@@ -6055,6 +6212,13 @@ namespace Ostap
       mutable Ostap::Math::Das m_das ;
       // =====================================================================
     };
+
+
+
+
+
+
+
 
 
     // ========================================================================

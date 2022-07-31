@@ -6620,6 +6620,172 @@ Double_t Ostap::Models::AsymmetricLaplace::analyticalIntegral
 // ============================================================================
 
 
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Hat::Hat
+( const char*          name     , 
+  const char*          title    ,
+  RooAbsReal&          x        ,
+  RooAbsReal&          mu       ,
+  RooAbsReal&          varsigma ) 
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x        ( "!x"        , "observable" , this , x        ) 
+  , m_mu       ( "!mu"       , "location"   , this , mu       ) 
+  , m_varsigma ( "!varsigma" , "scale"      , this , varsigma ) 
+    //
+  , m_hat ( 0 , 1  ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Hat::Hat
+( const Ostap::Models::Hat&  right ,
+  const char*                     name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x         ( "!x"        , this , right.m_x        ) 
+  , m_mu        ( "!mu"       , this , right.m_mu       )
+  , m_varsigma  ( "!varsigma" , this , right.m_varsigma )
+    //
+  , m_hat  ( right.m_hat ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::Hat::~Hat(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Hat*
+Ostap::Models::Hat::clone( const char* name ) const 
+{ return new Ostap::Models::Hat( *this , name) ; }
+// ============================================================================
+void Ostap::Models::Hat::setPars () const 
+{
+  m_hat.setMu       ( m_mu       ) ;
+  m_hat.setVarsigma ( m_varsigma ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Hat::evaluate() const 
+{
+  setPars () ;
+  return m_hat ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Hat::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Hat::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_hat.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Up::Up
+( const char*          name     , 
+  const char*          title    ,
+  RooAbsReal&          x        ,
+  RooAbsReal&          mu       ,
+  RooAbsReal&          varsigma ) 
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x        ( "!x"        , "observable" , this , x        ) 
+  , m_mu       ( "!mu"       , "location"   , this , mu       ) 
+  , m_varsigma ( "!varsigma" , "scale"      , this , varsigma ) 
+    //
+  , m_up ( 0 , 1  ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Up::Up
+( const Ostap::Models::Up& right ,
+  const char*              name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x         ( "!x"        , this , right.m_x        ) 
+  , m_mu        ( "!mu"       , this , right.m_mu       )
+  , m_varsigma  ( "!varsigma" , this , right.m_varsigma )
+    //
+  , m_up  ( right.m_up ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::Up::~Up(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Up*
+Ostap::Models::Up::clone( const char* name ) const 
+{ return new Ostap::Models::Up( *this , name) ; }
+// ============================================================================
+void Ostap::Models::Up::setPars () const 
+{
+  m_up.setMu       ( m_mu       ) ;
+  m_up.setVarsigma ( m_varsigma ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Up::evaluate() const 
+{
+  setPars () ;
+  return m_up ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Up::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Up::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_up.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -8215,6 +8381,8 @@ ClassImp(Ostap::Models::Argus              )
 ClassImp(Ostap::Models::GenArgus           ) 
 ClassImp(Ostap::Models::Slash              ) 
 ClassImp(Ostap::Models::AsymmetricLaplace  ) 
+ClassImp(Ostap::Models::Hat                ) 
+ClassImp(Ostap::Models::Up                 ) 
 ClassImp(Ostap::Models::Tsallis            ) 
 ClassImp(Ostap::Models::QGSM               ) 
 ClassImp(Ostap::Models::TwoExpos           ) 

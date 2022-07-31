@@ -2892,6 +2892,174 @@ double Ostap::Math::pearsonIV_g2 ( const double x , const double y )
 }
 // ============================================================================
 
+// ============================================================================
+/*  simple infinitely smooth and finite function 
+ *  \f$ f(x) = \mathrm{e}^{ - \frac{1}{1-x^2}}\f$ 
+ *   for \f$ \left| x \right| \< 1\f$. else 0.
+ */
+// ============================================================================
+double Ostap::Math::hat ( const double x ) 
+{ return 1 <= std::abs ( x )  ?  0.0 : std::exp ( - 1.0 / ( 1.0 - x * x ) ) ; }
+// ============================================================================
+/*  Sinc function 
+ *  \f$ f(x) = \frac{ \sin x }{x}  \f$ 
+ *  @see https://en.wikipedia.org/wiki/Sinc_function
+ */
+// ============================================================================
+double Ostap::Math::sinc ( const double x ) 
+{
+  const double absx = std::abs ( x ) ;
+  // 
+  if ( 1.e-3 < absx ) { return std::sin ( absx ) / absx ; } 
+  //
+  const long double x2     = absx * absx ;
+  //
+  long double       term   = - x2 / 6 ;
+  long double       result = 1 ;
+  unsigned long     k      = 3 ;
+  //
+  while ( std::abs ( term ) > 0.5 * s_EPSILON  ) 
+  {
+    result += term ;
+    term   *= - x2 / ( ( k + 1 ) * ( k + 2 ) ) ;
+    k      += 2 ;
+  }
+  //
+  return result ;
+}
+// ========================================================================
+/*  \f$ f(x) = \frac{ \sin x }{x}  \f$ 
+ *  @see https://en.wikipedia.org/wiki/Sinc_function
+ */
+// ========================================================================
+double Ostap::Math::sin_x  ( const double x ) 
+{ return Ostap::Math::sinc ( x ) ; }
+// ========================================================================
+/*  \f$ f(x) = \frac{ \sinh x }{x}  \f$ 
+ *  @see https://en.wikipedia.org/wiki/Sinc_function
+ */
+// ========================================================================
+double Ostap::Math::sinh_x ( const double x ) 
+{
+  const double absx = std::abs ( x ) ;
+  if ( 1.e-3 < absx ) { return std::sinh ( absx ) / absx ; } 
+  //
+  const long double x2     = absx * absx ;
+  //
+  long double       term   = x2 / 6 ;
+  long double       result = 1 ;
+  unsigned long     k      = 3 ;
+  //
+  while ( std::abs ( term ) > 0.5 * s_EPSILON  ) 
+  {
+    result += term ;
+    term   *= x2 / ( ( k + 1 ) * ( k + 2 ) ) ;
+    k      += 2 ;
+  }
+  //
+  return result ;
+}
+// ============================================================================
+/*  \f$ f(x) = \frac{ \log ( 1 + x ) }{x}  \f$ 
+ *  precise for small x 
+ */
+// ============================================================================
+double Ostap::Math::log1p_x ( const double x ) 
+{
+  //
+  const double absx = std::abs ( x ) ;
+  if ( 1.e-3 < absx ) { return std::log1p ( x ) / x ; } 
+  //
+  long double       term   = -x ;
+  long double       result =  1 ;
+  unsigned long     k      =  1 ;
+  //
+  while ( k * std::abs ( term ) > 0.5 * s_EPSILON  ) 
+  {
+    result += term / ( k + 1 ) ;
+    term   *= -x ;
+    k      +=  1 ;
+  }
+  //
+  return result ;
+}
+// ============================================================================
+/*  \f$ f(x) = \frac{ \mathrm{e}^{x} -1 }{x}  \f$ 
+ *  precise for small x 
+ */
+// ============================================================================
+double Ostap::Math::expm1_x ( const double x ) 
+{
+  const double absx = std::abs ( x ) ;
+  if ( 1.e-3 < absx ) { return std::expm1 ( x ) / x  ; } 
+  //
+  long double       term   = x / 2 ;
+  long double       result = 1 ;
+  unsigned long     k      = 2 ;
+  //
+  while ( std::abs ( term ) > 0.5 * s_EPSILON  ) 
+  {
+    result += term ;
+    term   *= x  / ( k + 1 ) ;
+    k      += 1 ;
+  }
+  //
+  return result ;
+}
+// ============================================================================
+
+// ============================================================================
+/** Fourrier-image of the finite atomic function <code>up</code> 
+ *  \f$ \hat{up}(p) = \Pi_{k=1}^{\infty} \frac{ \sin p 2^{-k}}{ p 2^{-k}}\f$ 
+ */
+// ============================================================================
+double Ostap::Math::up_F ( const double p ) 
+{
+  long double   result = 1     ;
+  long double   arg    = p / 2 ;
+  for  (; ;)
+  {
+    const double term = Ostap::Math::sinc ( arg ) ;  
+    if      ( s_zero ( term   ) ) { return 0.0 ; }
+    else if ( s_zero ( result ) ) { return 0.0 ; }
+    else if ( std::abs ( term - 1.0L ) <= 1.2 * s_EPSILON ) 
+    { return result * term ;}
+    //
+    result *= term ;
+    arg    /= 2 ;
+  }
+  return result ;
+}
+// ========================================================================
+/** Fourrier-image of the finite atomic function <code>fup_N</code> 
+ *  \f$ \hat{fup_N}(p) = 
+ *   \left(  \frac{\sin x /2 }{ x/2 }  \right )^N 
+ * \Pi_{k=1}^{\infty} \frac{ \sin p 2^{-k}}{ p 2^{-k}}\f$ 
+ */
+// ========================================================================
+double Ostap::Math::fupN_F 
+( const unsigned short N , 
+  const double         p ) 
+{
+  if ( 0 == N ) { return up_F ( p ) ; }
+  long double   result = std::pow ( Ostap::Math::sinc ( p / 2 ) , N ) ;
+  long double   arg    = p / 2 ;
+  for  (; ;)
+  {
+    const double term = Ostap::Math::sinc ( arg ) ;  
+    if      ( s_zero ( term   ) ) { return 0.0 ; }
+    else if ( s_zero ( result ) ) { return 0.0 ; }
+    else if ( std::abs ( term - 1.0L ) <= 1.2 * s_EPSILON ) 
+    { return result * term ;}
+    //
+    result *= term ;
+    arg    /= 2 ;
+  }
+  return result ;
+}
+// ========================================================================
+
+ 
 
 // ============================================================================
 //                                                                      The END 

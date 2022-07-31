@@ -52,6 +52,9 @@ namespace
   constexpr unsigned long s_UL_max = std::numeric_limits<unsigned int>::max () - 1 ;
   static_assert ( 1 < s_UL_max ,  "s_UL_max is not large enough!" ) ;
   // ==========================================================================
+  /// epsilon 
+  const double s_EPSILON = std::numeric_limits<double>::epsilon() ;
+  // ==========================================================================
   /// small value 
   const Ostap::Math::Small<long double> s_small
   ( 2.0L * std::numeric_limits<double>::epsilon() ) ;
@@ -230,30 +233,6 @@ namespace
   /// helper expression for erf(x)/x 
   inline double error_func_x ( const long double x ) 
   { return 0 == x || s_zero ( x ) ? s_HALFSQRTPIi : error_func( x ) / x ; }
-  // ==========================================================================
-  /** evaluate the helper function  \f[ f = \frac{\log(1+x)}{x} \f]
-   *  it allows to calculate Bukin' function in efficient and regular way
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  inline long double x_log ( const long double x  ) // , double precision = s_PRECISION )
-  {
-    //
-    if      ( s_equal   ( x , 0 )       ) { return 1 ; } // RETURN
-    else if ( x <= -1                   ) { return 0 ; } // RETURN ?
-    else if ( s_equal   ( x , -1 )      ) { return 0 ; } // RETURN ?
-    else if ( x < 0.9                   ) { return std::log1p ( x ) / x ; }
-    //
-    // the generic evaluation
-    //
-    return std::log ( 1.0 + x ) / x ;
-  }
-  // ==========================================================================
-  /** get "reduced" exponent
-   *  \f[ f(x) = \frac{ e^{x}-1 }{x} \f]
-   */
-  inline long double reduced_exp ( const long double x ) 
-  { return ( 0 == x || s_zero ( x ) ) ? 1.0 : std::expm1 ( x ) / x ; }
   // ==========================================================================
 }
 // ============================================================================

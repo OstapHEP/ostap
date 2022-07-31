@@ -1,5 +1,8 @@
 ## New features: 
 
+  1. add some finite functions: `hat` and `up` and correspoondg models/PDFs
+ 
+
 ## Backward incompatible:  
 
 ## Bug fixes:

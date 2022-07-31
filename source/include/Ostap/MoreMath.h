@@ -837,6 +837,63 @@ namespace Ostap
      */
     double   pearsonIV_g2 ( const double x , const double y ) ;
     // ========================================================================
+ 
+
+    // ========================================================================
+    /** Sinc function 
+     *  \f$ f(x) = \frac{ \sin x }{x}  \f$ 
+     *  @see https://en.wikipedia.org/wiki/Sinc_function
+     *  precise for small x 
+     */
+    double sinc ( const double x ) ;
+    // ========================================================================
+    /** \f$ f(x) = \frac{ \sin x }{x}  \f$ 
+     *  @see https://en.wikipedia.org/wiki/Sinc_function
+     *  @see Ostap::Math::sinc 
+     *  precise for small x 
+     */
+    double sin_x  ( const double x ) ;    
+    // ========================================================================
+    /** \f$ f(x) = \frac{ \sinh x }{x}  \f$ 
+     *  precise for small x 
+     */
+    double sinh_x  ( const double x ) ;
+    // ========================================================================
+    /** \f$ f(x) = \frac{ \log ( 1 + x ) }{x}  \f$ 
+     *  precise for small x 
+     */
+    double log1p_x ( const double x ) ;
+    // ========================================================================
+    /** \f$ f(x) = \frac{ \mathrm{e}^{x} -1 }{x}  \f$ 
+     *  precise for small x 
+     */
+    double expm1_x ( const double x ) ;
+    // ========================================================================
+
+    
+    // ========================================================================
+    /** simple infinitely smooth and finite function 
+     *  \f$ f(x) = \mathrm{e}^{ - \frac{1}{1-x^2}}\f$ 
+     *   for \f$ \left| x \right| \< 1\f$. else 0.
+     */
+    double hat ( const double  x ) ;
+    // ========================================================================
+
+    // ========================================================================
+    /** Fourrier-image of the finite atomic function <code>up</code> 
+     *  \f$ \hat{up}(p) = \Pi_{k=1}^{\infty} \frac{ \sin p 2^{-k}}{ p 2^{-k}}\f$ 
+     */
+    double up_F ( const double p ) ;
+    // ========================================================================
+    /** Fourrier-image of the finite atomic function <code>fup_N</code> 
+     *  \f$ \hat{fup_N}(p) = 
+     *   \left(  \frac{\sin x /2 }{ x/2 }  \right )^N 
+     *  \Pi_{k=1}^{\infty} \frac{ \sin p 2^{-k}}{ p 2^{-k}}\f$ 
+     */
+    double fupN_F 
+    ( const unsigned short N , 
+      const double         p ) ;
+    // ========================================================================
 
     // ========================================================================
     /** Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile

@@ -211,8 +211,8 @@ double Ostap::Math::details::exponent_int
   const double beta_a = beta * a ;
   //
   double result = 0 ;
-  if ( !s_zero ( b ) ) { result += b * reduced_exp ( beta_b ) ; }
-  if ( !s_zero ( a ) ) { result -= a * reduced_exp ( beta_a ) ; }
+  if ( !s_zero ( b ) ) { result += b * Ostap::Math::expm1_x ( beta_b ) ; }
+  if ( !s_zero ( a ) ) { result -= a * Ostap::Math::expm1_x ( beta_a ) ; }
   //
   return result ;
 }

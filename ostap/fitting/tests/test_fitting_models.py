@@ -933,6 +933,78 @@ def test_das_2 () :
 
     models.add ( model )
 
+# ==========================================================================
+## Hat
+# ==========================================================================
+def test_hat  () :
+    
+    logger = getLogger ( 'test_hat' )
+       
+    logger.info ('Test Hat_pdf: smnooth simmetricfinite function' ) 
+    model = Models.Fit1D (
+        signal = Models.Hat_pdf ( name     = 'Hat'              , 
+                                  xvar     = mass               ,
+                                  mean     = signal_gauss.mean  ,
+                                  varsigma = signal_gauss.sigma ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+
+    signal = model.signal 
+
+    signal.sigma.release() 
+    signal.mean .release() 
+
+    model.S = NS 
+    model.B = NB
+    
+    with rooSilent() :
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        
+    make_print ( model , result , "Hat model" , logger )        
+
+    models.add ( model )
+
+
+# ==========================================================================
+## Up
+# ==========================================================================
+def test_up  () :
+## if 1 < 2 :
+    
+    logger = getLogger ( 'test_up' )
+       
+    logger.info ('Test Up_pdf: smnooth atomic finite function' ) 
+    model = Models.Fit1D (
+        signal = Models.Up_pdf ( name     = 'Up' , 
+                                 xvar     = mass               ,
+                                 mean     = signal_gauss.mean  ,
+                                 varsigma = signal_gauss.sigma ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+    
+    signal = model.signal 
+    
+    signal.mean .release() 
+    
+    signal.sigma.fix ( 0.033     ) 
+    signal.mean .fix ( m.value() ) 
+    
+    model.S = NS 
+    model.B = NB
+    
+    with rooSilent() :
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.sigma.release()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        
+    make_print ( model , result , "Up model" , logger )        
+
+    models.add ( model )
+
+
 # =============================================================================
 ## Test  SECH
 # =============================================================================
@@ -1591,7 +1663,7 @@ if '__main__' == __name__ :
     with timing ('test_novosibirsk'          , logger ) :
         test_novosibirsk     ()
 
-            ## Bukin - skew Gaussian core with exponential tails  + background         
+    ## Bukin - skew Gaussian core with exponential tails  + background         
     with timing ('test_bukun'          , logger ) :
         test_bukin          ()
 
@@ -1626,6 +1698,14 @@ if '__main__' == __name__ :
     ## Das/2                                       + background 
     with timing ('test_das_2'             , logger ) :
         test_das_2            () 
+
+    ## Hat                                       + background 
+    with timing ('test_hat'             , logger ) :
+        test_hat            () 
+
+    ## Up                                       + background 
+    with timing ('test_up'             , logger ) :
+        test_up            () 
 
     ## Sech (1/cosh)  distribution               + background    
     with timing ('test_sech'           , logger )  : 

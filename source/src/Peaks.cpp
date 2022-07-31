@@ -4,6 +4,7 @@
 // STD & STL
 // ============================================================================
 #include <cmath>
+#include <array>
 // ============================================================================
 // GSL
 // ============================================================================
@@ -17,6 +18,8 @@
 // ============================================================================
 #include "Ostap/Peaks.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/Clenshaw.h"
+#include "Ostap/Polynomials.h"
 // ============================================================================
 //  Local
 // ============================================================================
@@ -1298,14 +1301,14 @@ bool Ostap::Math::Bukin::setXi    ( const double value )
   //
   m_A     = alpha             ;
   //
-  m_B2    = 1/x_log ( beta )  ;
+  m_B2    = 1/Ostap::Math::log1p_x ( beta )  ;
   m_B2   *= m_B2              ;
   m_B2   *= ab*ab             ;
   //
   //
   const double delta = xi + xi2sqrt - 1 ;
   const double tail  =
-    0.5 * s_Bukin * xi2sqrt * ( 1 + xi + xi2sqrt ) / ( xi + xi2sqrt ) / x_log ( delta ) ;
+    0.5 * s_Bukin * xi2sqrt * ( 1 + xi + xi2sqrt ) / ( xi + xi2sqrt ) / Ostap::Math::log1p_x  ( delta ) ;
   //
   // left  tail parameter
   //
@@ -1376,7 +1379,7 @@ double Ostap::Math::Bukin::pdf ( const double x ) const
   // central region
   //
   const double dx   = ( x - m_peak ) / m_sigma ;
-  const double A    = x_log ( m_A * dx ) ;
+  const double A    = Ostap::Math::log1p_x ( m_A * dx ) ;
   //
   return my_exp ( - s_ln2 * dx * dx * A * A * m_B2 ) ;
 }
@@ -1549,7 +1552,7 @@ double Ostap::Math::Novosibirsk::pdf  ( const double x ) const
   const double dx     = ( x - m_m0 ) / m_sigma ;
   const double arg    = m_lambda * dx * m_tau ;
   if ( arg <= -1 || s_equal ( arg , -1 ) ) { return 0 ; } // RETURN
-  const double l      =  x_log ( arg ) * m_lambda * dx ;
+  const double l      = Ostap::Math::log1p_x  ( arg ) * m_lambda * dx ;
   const double result = l * l ; // + m_tau * m_tau ;
   //
   return  my_exp ( -0.5 * result ) * s_SQRT2PIi / m_sigma ;
@@ -4973,10 +4976,257 @@ std::size_t Ostap::Math::Das::tag () const
 }
 // ============================================================================
 
+// ===========================================================================
+// constructor with location and scale parmaeters 
+// ===========================================================================
+Ostap::Math::Hat::Hat
+( const double mu       , 
+  const double varsigma ) 
+  : m_mu       ( mu )
+  , m_varsigma ( std::abs ( varsigma ) ) 
+{}
+// ============================================================================
+// set mu
+// ============================================================================
+bool Ostap::Math::Hat::setMu
+( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+// set varsigma
+// ============================================================================
+bool Ostap::Math::Hat::setVarsigma
+( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_varsigma ) ) { return false ; }
+  m_varsigma = avalue ;
+  return true ;
+}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::Hat::evaluate 
+( const double x ) const
+{
+  static const double s_norm = 1/0.443993816168079313833061405603 ;
+  const double z = ( x - m_mu ) / m_varsigma ;
+  return 1 <= std::abs ( z ) ? 0.0 : Ostap::Math::hat ( z )  * s_norm / m_varsigma ;
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::Hat::integral () const { return 1 ; }
+// ============================================================================
+// integral
+// ============================================================================
+double Ostap::Math::Hat::integral
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low             ) { return - integral ( high , low ) ; }
+  //
+  const double mn = ( low  - m_mu ) / m_varsigma ;
+  const double mx = ( high - m_mu ) / m_varsigma ;
+  //
+  if      ( mx <= -1            ) { return 0 ; }
+  else if ( mn >=  1            ) { return 0 ; }
+  else if ( mn <= -1 && mx >= 1 ) { return 1 ; }
+  //
+  const double xmn = std::max ( low  , m_mu - m_varsigma ) ;
+  const double xmx = std::min ( high , m_mu + m_varsigma ) ;
+  //
+   // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Hat> s_integrator {} ;
+  static char s_message[] = "Integral(Hat)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag () , 
+      &F     ,  
+      xmn    , xmx              , // low & high edges
+      workspace ( m_workspace ) , // workspace
+      s_APRECISION              , // absolute precision
+      s_RPRECISION              , // relative precision
+      m_workspace.size ()       , // size of workspace
+      s_message                 , 
+      __FILE__ , __LINE__       ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the variance of the distribution 
+// ============================================================================
+double Ostap::Math::Hat::variance () const 
+{ return m_varsigma * m_varsigma * 0.15811363626379668 ; }
+// ============================================================================
+// get the RMS of the distribution 
+// ============================================================================
+double Ostap::Math::Hat::rms      () const 
+{ return m_varsigma * 0.3976350541184676 ; }
+// ============================================================================
+// get the (excess) kurtosis 
+// ============================================================================
+double Ostap::Math::Hat::kurtosis () const 
+{ return -0.8807206646393597 ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Hat::tag () const 
+{ 
+  static const std::string s_name = "Hat" ;
+  return std::hash_combine ( s_name , m_mu , m_varsigma ) ;
+}
+// ============================================================================
 
 
-
-
+// ===========================================================================
+// constructor with location and scale parmaeters 
+// ===========================================================================
+Ostap::Math::Up::Up
+( const double mu       , 
+  const double varsigma ) 
+  : m_mu       ( mu )
+  , m_varsigma ( std::abs ( varsigma ) ) 
+{}
+// ============================================================================
+// set mu
+// ============================================================================
+bool Ostap::Math::Up::setMu
+( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+// set varsigma
+// ============================================================================
+bool Ostap::Math::Up::setVarsigma
+( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_varsigma ) ) { return false ; }
+  m_varsigma = avalue ;
+  return true ;
+}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::Up::evaluate 
+( const double x ) const
+{
+  const double z = ( x - m_mu ) / m_varsigma ;
+  return 1 <= std::abs ( z ) ? 0.0 : eval ( z ) / m_varsigma ;
+}
+// ===========================================================================
+// evaluate the "standard" up function 
+// ===========================================================================
+double Ostap::Math::Up::eval ( const double z )  const 
+{
+  //
+  auto fourrier = []( unsigned int k ) -> double  
+    { return k == 0 || 1 == k % 2 ?  Ostap::Math::up_F ( M_PI * k ) : 0.0 ; } ;
+  static const std::array<double,120> s_fourrier = 
+    detail::make_array( fourrier , std::make_index_sequence<120>() ) ;
+  //
+  return 1 <= std::abs ( z ) ? 0.0 : Ostap::Math::Clenshaw::cosine_sum 
+    ( s_fourrier.begin () , s_fourrier.end () , z * M_PI ) ; 
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::Up::integral () const { return 1 ; }
+// ============================================================================
+// integral
+// ============================================================================
+double Ostap::Math::Up::integral
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low             ) { return - integral ( high , low ) ; }
+  //
+  const double mn = ( low  - m_mu ) / m_varsigma ;
+  const double mx = ( high - m_mu ) / m_varsigma ;
+  //
+  if      ( mx <= -1            ) { return 0 ; }
+  else if ( mn >=  1            ) { return 0 ; }
+  else if ( mn <= -1 && mx >= 1 ) { return 1 ; }
+  //
+  const double xmn = std::max ( low  , m_mu - m_varsigma ) ;
+  const double xmx = std::min ( high , m_mu + m_varsigma ) ;
+  //
+   // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Up> s_integrator {} ;
+  static char s_message[] = "Integral(Up)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag () , 
+      &F     ,  
+      xmn    , xmx              , // low & high edges
+      workspace ( m_workspace ) , // workspace
+      s_APRECISION              , // absolute precision
+      s_RPRECISION              , // relative precision
+      m_workspace.size ()       , // size of workspace
+      s_message                 , 
+      __FILE__ , __LINE__       ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the variance of the distribution 
+// ============================================================================
+double Ostap::Math::Up::variance () const 
+{ return m_varsigma * m_varsigma / 9 ;}
+// ============================================================================
+// get the RMS of the distribution 
+// ============================================================================
+double Ostap::Math::Up::rms      () const 
+{ return m_varsigma / 3 ; }
+// ============================================================================
+// get the (excess) kurtosis 
+// ============================================================================
+double Ostap::Math::Up::kurtosis () const 
+{
+  static const double s_kurtosis = 19.0 * 9 * 9 / ( std::pow ( 3 , 3 ) * 5 * 5 ) - 3 ;
+  return s_kurtosis ;
+}
+// ============================================================================
+// get the value of the derivative 
+// ============================================================================
+double Ostap::Math::Up::derivative ( const double x ) const 
+{
+  const double z = ( x - m_mu ) / m_varsigma ;
+  return 1 <= std::abs ( z )  ? 0.0 : 
+    2 * ( eval ( 2 * z + 1 )  - eval ( 2 * z - 1 ) ) / m_varsigma ;
+}  
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Up::tag () const 
+{ 
+  static const std::string s_name = "Up" ;
+  return std::hash_combine ( s_name , m_mu , m_varsigma ) ;
+}
+// ============================================================================
+  
+   
 
 
 

@@ -7,6 +7,7 @@
 // STD & STL 
 // ============================================================================
 #include <cmath>
+#include <vector>
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -3285,6 +3286,202 @@ namespace Ostap
       double m_kR    { 2 } ; // right tail      
       // ======================================================================
     };
+    // ========================================================================
+
+    // ========================================================================
+    /// some finite functions 
+    // ========================================================================
+    /** @class Hat 
+     *  Finite smooth functon
+     *  \f$ f(x;\mu\sigma) = \frac{C}{\sigma} 
+     *   \mathrm{e}^{  - frac{1}{1-y^2} }\f$, where 
+     *  \F$ y = \frac{m-\mu}{\sigma}\f$ 
+     *  @see Ostap::Math::hat 
+     */
+    class Hat 
+    {
+    public:
+      // ======================================================================
+      /// constructor with location and scale parmaeters 
+      Hat
+      ( const double mu       = 0 , 
+        const double varsigma = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function 
+      double evaluate ( const double x ) const ;
+      /// evaluate the function 
+      inline double pdf         ( const double x ) const 
+      { return evaluate ( x )  ; }
+      /// evaluate the function 
+      inline double operator()  ( const double x ) const 
+      { return evaluate ( x )  ; }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// get mu 
+      double mu       () const { return m_mu       ; }
+      /// get varsigma 
+      double varsigma () const { return m_varsigma ; } 
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// set mu
+      bool setMu        ( const double value ) ;
+      /// set varsigma 
+      bool setVarsigma  ( const double value ) ;
+      // ======================================================================
+    public: // some properteis 
+      // ======================================================================
+      /// get the mean     of the distribution 
+      double mean     () const { return m_mu; }      
+      /// get the mode     of the distribution 
+      double mode     () const { return m_mu; }      
+      /// get the median   of the distribution 
+      double median   () const { return m_mu; }      
+      /// get the variance of the distribution 
+      double variance () const ;
+      /// get the RMS  of the distribution 
+      double rms      () const ;
+      /// get the skewness 
+      double skewness () const { return 0 ; }
+      /// get the (excess) kurtosis 
+      double kurtosis () const ;
+      // ======================================================================
+    public: // integrals 
+      // ======================================================================
+      /// integral 
+      double integral () const ;
+      /// integral from 
+      double integral
+      ( const double low  , 
+        const double high ) const ;
+      // ======================================================================
+    public: // derivative 
+      // ======================================================================
+      /// get the value of the derivative 
+      double derivative ( const double x ) const ;
+      // ======================================================================
+    public: // unique tag 
+      // ======================================================================
+      /// unique tag 
+      std::size_t tag() const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// evaluate the "standard" up function 
+      double eval ( const double z )  const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// location parametyer 
+      double m_mu        { 0 } ;
+      /// scale paramewter 
+      double m_varsigma  { 0 } ;
+      // ====================================================================== 
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class Up 
+     *  Finite stomic functon <code>up</code>,  a finite soltuion  
+     *  of the equation 
+     *  \f[ f^{\prime(x) = 2 \left( f( 2x+1) - f(2x-1)\right) }\f] with
+     *  \f$ f(0) = 1 \f$ 
+     *  @see Ostap::Math::up_F 
+     */
+    class Up 
+    {
+    public:
+      // ======================================================================
+      /// constructor with location and scale parmaeters 
+      Up 
+      ( const double mu       = 0 , 
+        const double varsigma = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function 
+      double evaluate ( const double x ) const ;
+      /// evaluate the function 
+      inline double pdf         ( const double x ) const 
+      { return evaluate ( x )  ; }
+      /// evaluate the function 
+      inline double operator()  ( const double x ) const 
+      { return evaluate ( x )  ; }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// get mu 
+      double mu       () const { return m_mu       ; }
+      /// get varsigma 
+      double varsigma () const { return m_varsigma ; } 
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// set mu
+      bool setMu        ( const double value ) ;
+      /// set varsigma 
+      bool setVarsigma  ( const double value ) ;
+      // ======================================================================
+    public: // some properteis 
+      // ======================================================================
+      /// get the mean     of the distribution 
+      double mean     () const { return m_mu; }      
+      /// get the mode     of the distribution 
+      double mode     () const { return m_mu; }      
+      /// get the median   of the distribution 
+      double median   () const { return m_mu; }      
+      /// get the variance of the distribution 
+      double variance () const ;
+      /// get the RMS  of the distribution 
+      double rms      () const ;
+      /// get the skewness 
+      double skewness () const { return 0 ; }
+      /// get the (excess) kurtosis 
+      double kurtosis () const ;
+      // ======================================================================
+    public: // integrals 
+      // ======================================================================
+      /// integral 
+      double integral () const ;
+      /// integral from 
+      double integral
+      ( const double low  , 
+        const double high ) const ;
+      // ======================================================================
+    public: // derivative 
+      // ======================================================================
+      /// get the value of the derivative 
+      double derivative ( const double x ) const ;
+      // ======================================================================
+    public: // unique tag 
+      // ======================================================================
+      /// unique tag 
+      std::size_t tag() const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// evaluate the "standard" up function 
+      double eval ( const double z )  const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// location parametyer 
+      double m_mu        { 0 } ;
+      /// scale paramewter 
+      double m_varsigma  { 0 } ;
+      // ====================================================================== 
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
+      // ======================================================================      
+    } ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
