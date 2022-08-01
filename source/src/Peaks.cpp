@@ -20,6 +20,7 @@
 #include "Ostap/MoreMath.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Polynomials.h"
+#include "Ostap/ToStream.h"
 // ============================================================================
 //  Local
 // ============================================================================
@@ -29,6 +30,7 @@
 #include "local_hash.h"
 #include "gauss.h"      
 #include "Integrator1D.h"      
+#include "syncedcache.h"  // the cache 
 // ============================================================================
 /** @file 
  *  implmentation file for classes from the file Ostap/Peaks.h
@@ -5164,8 +5166,8 @@ double Ostap::Math::Up::integral
   else if ( mn >=  1            ) { return 0 ; }
   else if ( mn <= -1 && mx >= 1 ) { return 1 ; }
   //
-  const double xmn = std::max ( low  , m_mu - m_varsigma ) ;
-  const double xmx = std::min ( high , m_mu + m_varsigma ) ;
+  const double xmn = std::max ( low  , xmin () ) ;
+  const double xmx = std::min ( high , xmax () ) ;
   //
    // use GSL to evaluate the integral
   //
@@ -5225,9 +5227,144 @@ std::size_t Ostap::Math::Up::tag () const
   return std::hash_combine ( s_name , m_mu , m_varsigma ) ;
 }
 // ============================================================================
-  
-   
 
+
+// ============================================================================
+namespace 
+{  
+  // ==========================================================================
+  typedef std::array<double,120>           RESULT ;
+  typedef std::map<unsigned short,RESULT>  MAP    ;
+  typedef SyncedCache<MAP>                 CACHE  ;
+  // =========================================================================
+  CACHE s_FupN_cache {} ;
+  // =========================================================================
+}
+// ===========================================================================
+// constructor with location and scale parmaeters 
+// ===========================================================================
+Ostap::Math::FupN::FupN
+( const unsigned short N        , 
+  const double         mu       , 
+  const double         varsigma ) 
+  : m_N        ( N  )
+  , m_mu       ( mu )
+  , m_varsigma ( std::abs ( varsigma ) ) 
+{
+  CACHE::Lock lock { s_FupN_cache.mutex() } ;
+  auto it = s_FupN_cache->find  ( m_N  ) ;
+  if ( s_FupN_cache->end() == it ) 
+  {
+    auto fourrier = [this]( unsigned int k ) -> double
+      { return Ostap::Math::fupN_F ( this->m_N , M_PI * k / ( this->m_N + 1 ) ) ; } ;
+    //
+    const RESULT res = detail::make_array( fourrier , std::make_index_sequence<120>() ) ;
+    s_FupN_cache->insert ( std::make_pair ( m_N , res ) ) ;  
+  }
+}
+// ============================================================================
+// set mu
+// ============================================================================
+bool Ostap::Math::FupN::setMu
+( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+// set varsigma
+// ============================================================================
+bool Ostap::Math::FupN::setVarsigma
+( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_varsigma ) ) { return false ; }
+  m_varsigma = avalue ;
+  return true ;
+}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::FupN::evaluate 
+( const double x ) const
+{
+  const double z = ( x - m_mu ) / m_varsigma ;
+  return 0.5 * ( m_N + 2 )  <= std::abs ( z ) ? 0.0 : eval ( z ) / m_varsigma ;
+}
+// ===========================================================================
+// evaluate the "standard" fupN function 
+// ===========================================================================
+double Ostap::Math::FupN::eval ( const double z )  const 
+{
+  //
+  auto it = s_FupN_cache->find  ( m_N  ) ;
+  Ostap::Assert ( s_FupN_cache->end() != it , 
+                  "Cache does not exist!"   , 
+                  "Ostap::Math::FupN"       ) ;
+  //
+  return 0.5 * ( m_N + 2 ) <= std::abs ( z ) ? 0.0 : Ostap::Math::Clenshaw::cosine_sum 
+    ( it->second.begin () , 
+      it->second.end   () ,  M_PI * z / ( m_N + 1 ) ) / ( m_N + 1 ) ; 
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::FupN::integral () const { return 1 ; }
+// ============================================================================
+// integral
+// ============================================================================
+double Ostap::Math::FupN::integral
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low             ) { return - integral ( high , low ) ; }
+  //
+  const double mn = ( low  - m_mu ) / m_varsigma ;
+  const double mx = ( high - m_mu ) / m_varsigma ;
+  //
+  const double nn = 0.5 * ( m_N + 2 ) ;
+  //
+  if      ( mx <= -1               ) { return 0 ; }
+  else if ( mn >=  1               ) { return 0 ; }
+  else if ( mn <= -nn  && mx >= nn ) { return 1 ; }
+  //
+  const double xmn = std::max ( low  , xmin () ) ;
+  const double xmx = std::min ( high , xmax () ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<FupN> s_integrator {} ;
+  static char s_message[] = "Integral(FupN)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag () , 
+      &F     ,  
+      xmn    , xmx              , // low & high edges
+      workspace ( m_workspace ) , // workspace
+      s_APRECISION              , // absolute precision
+      s_RPRECISION              , // relative precision
+      m_workspace.size ()       , // size of workspace
+      s_message                 , 
+      __FILE__ , __LINE__       ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::FupN::tag () const 
+{ 
+  static const std::string s_name = "FupN" ;
+  return std::hash_combine ( s_name , m_N , m_mu , m_varsigma ) ;
+}
+// ============================================================================
 
 
 // ============================================================================

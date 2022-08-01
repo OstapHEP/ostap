@@ -5196,6 +5196,80 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class FupN 
+     *  Finite stomic functon <code>fup_N</code>
+     *  @see Ostap::Math::fupN_F 
+     *  @see Ostap::Models::FupN
+     */
+    class FupN : public RooAbsPdf 
+    {
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::FupN, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      FupN
+      ( const char*          name     ,
+        const char*          title    ,
+        RooAbsReal&          x        ,
+        const unsigned short N        , 
+        RooAbsReal&          mu       ,
+        RooAbsReal&          varsigma ) ;
+      /// "copy constructor"
+      FupN 
+      ( const FupN& right     ,
+        const char* name  = 0 )  ;
+      /// destructor
+      virtual ~FupN() ;
+      /// clone
+      FupN* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      FupN () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::FupN& function () const { return m_fupN ; }
+      const Ostap::Math::FupN& fupN     () const { return m_fupN ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        {} ;
+      RooRealProxy m_mu       {} ;
+      RooRealProxy m_varsigma {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::FupN m_fupN ; // the actual function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Tsallis
      *  Useful function to describe pT-spectra of particles
      *

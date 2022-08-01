@@ -940,7 +940,7 @@ def test_hat  () :
     
     logger = getLogger ( 'test_hat' )
        
-    logger.info ('Test Hat_pdf: smnooth simmetricfinite function' ) 
+    logger.info ('Test Hat_pdf: smooth simmetricfinite function' ) 
     model = Models.Fit1D (
         signal = Models.Hat_pdf ( name     = 'Hat'              , 
                                   xvar     = mass               ,
@@ -966,16 +966,16 @@ def test_hat  () :
 
     models.add ( model )
 
+    signal.mean.release() 
 
 # ==========================================================================
 ## Up
 # ==========================================================================
 def test_up  () :
-## if 1 < 2 :
     
     logger = getLogger ( 'test_up' )
        
-    logger.info ('Test Up_pdf: smnooth atomic finite function' ) 
+    logger.info ('Test Up_pdf: smooth atomic finite function' ) 
     model = Models.Fit1D (
         signal = Models.Up_pdf ( name     = 'Up' , 
                                  xvar     = mass               ,
@@ -989,7 +989,7 @@ def test_up  () :
     
     signal.mean .release() 
     
-    signal.sigma.fix ( 0.033     ) 
+    signal.sigma = 0.057  
     signal.mean .fix ( m.value() ) 
     
     model.S = NS 
@@ -997,13 +997,52 @@ def test_up  () :
     
     with rooSilent() :
         result, frame = model. fitTo ( dataset0 , silent = True )
-        signal.sigma.release()
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Up model" , logger )        
 
     models.add ( model )
 
+    signal.mean.release() 
+
+# ==========================================================================
+## FupN
+# ==========================================================================
+def test_fupn  () :
+## if 1 < 2 :
+    
+    logger = getLogger ( 'test_fupN' )
+
+    for N in range ( 8 , 9 ) :
+        
+        logger.info ('Test Fup%d_pdf: smooth atomic finite function' % N ) 
+        model = Models.Fit1D (
+            signal = Models.FupN_pdf ( name     = 'Fup%d' % N        , 
+                                       xvar     = mass               ,
+                                       N        = N                  ,
+                                       mean     = signal_gauss.mean  ,
+                                       varsigma = signal_gauss.sigma ) ,
+            background = background   ,
+            S = S , B = B ,
+            )
+        
+        signal = model.signal 
+        
+        
+        signal.sigma = 0.051  
+        signal.mean .fix ( m.value() ) 
+        
+        model.S = NS 
+        model.B = NB
+        
+        with rooSilent() :
+            result, frame = model. fitTo ( dataset0 , silent = True )
+            result, frame = model. fitTo ( dataset0 , silent = True )
+            
+        make_print ( model , result , "Fup%d model" % N  , logger )        
+        
+        models.add ( model )
+        signal.mean.release() 
 
 # =============================================================================
 ## Test  SECH
@@ -1706,6 +1745,10 @@ if '__main__' == __name__ :
     ## Up                                       + background 
     with timing ('test_up'             , logger ) :
         test_up            () 
+
+    ## FupN                                       + background 
+    with timing ('test_fupN'             , logger ) :
+        test_fupn          () 
 
     ## Sech (1/cosh)  distribution               + background    
     with timing ('test_sech'           , logger )  : 

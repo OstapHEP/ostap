@@ -1,7 +1,8 @@
 ## New features: 
 
   1. add some finite functions: `hat` and `up` and correspoondg models/PDFs
- 
+  1. add finite atomic function `fupN` and corresponding PDF 
+  
 
 ## Backward incompatible:  
 

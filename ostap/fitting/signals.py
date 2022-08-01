@@ -54,7 +54,7 @@ Empricial PDFs to describe narrow peaks
   - NormalLaplace_pdf
   - Hypatia_pdf
   - PearsonIV_pdf
-  - Hat & Up functions
+  - Hat, Up & FupN finite functions
   
 PDF to describe 'wide' peaks
 
@@ -116,6 +116,7 @@ __all__ = (
     'Logistic_pdf'           , ## Logistic aka "sech-squared"   
     'Hat_pdf'                , ## hat function (smoth&finite)
     'Up_pdf'                 , ## finite atomin fnuction up
+    'FupN_pdf'               , ## finite atomin fnuction up
     #
     ## pdfs for "wide" peaks, to be used with care - phase space corrections are large!
     # 
@@ -134,7 +135,8 @@ __all__ = (
     #
     )
 # =============================================================================
-from   ostap.core.core          import Ostap  
+from   ostap.core.core          import Ostap
+from   ostap.core.ostap_types   import integer_types 
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
 from   ostap.fitting.fithelpers import Phases
@@ -3684,7 +3686,74 @@ class Up_pdf(PEAK) :
 
 models.append ( Up_pdf ) 
 # =============================================================================
+
+
+# ==============================================================================
+## @class FupN_pdf
+#  Finite stomic functon <code>fup_N</code>
+#  @see Ostap::Math::fupN_F 
+#  @see Ostap::Math::FupN 
+#  @see Ostap::Models::FupN 
+class FupN_pdf(PEAK) :
+    """ Finite smooth function
+    - see Ostap.Math.fup_F 
+    - see Ostap.Math.FupN
+    - see Ostap.Models.FupN
+    """
+    def __init__ ( self               ,
+                   name               ,
+                   xvar               ,
+                   N           = 1    , 
+                   mean        = None ,
+                   varsigma    = None ) : 
         
+        assert isinstance ( N , integer_types ) and 0 <= N <= 200 , \
+               "FupN_pdf: Invalid value of 'N'!"
+        #
+        ## initialize the base
+        # 
+        PEAK.__init__  ( self                    ,
+                         name        = name      ,
+                         xvar        = xvar      ,
+                         mean        = mean      ,
+                         sigma       = varsigma  )
+
+        #
+        ## build pdf
+        # 
+        self.pdf = Ostap.Models.FupN (
+            self.roo_name ( 'up_' ) ,
+            "Up %s" % self.name ,
+            self.xvar  ,
+            N          ,  
+            self.mean  ,
+            self.sigma )
+        ## save the configuration
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'N'        : self.N        , 
+            'mean'     : self.mean     ,
+            'varsigma' : self.varsigma ,
+            }
+        
+    @property
+    def varsigma ( self ) :
+        """'varisgma' : scale parameter, same as 'sigma'"""
+        return self.sigma
+    @varsigma.setter
+    def varsigma ( self , value ) :
+        self.sigma = value 
+
+    @property
+    def N ( self ) :
+        """'N' : shape parameter 'N' """
+        return self.pdf.fupN().N()
+
+models.append ( Up_pdf ) 
+# =============================================================================
+
+
 
 # =============================================================================
 ## @class Voigt_pdf
