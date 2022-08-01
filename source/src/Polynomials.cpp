@@ -465,49 +465,8 @@ double Ostap::Math::Hermite::integral
   const double high ) const 
 { return  _hermite_int_ ( m_N , low ,  high ) ; }
 // ============================================================================
-// PARAMETERS
-// ============================================================================
-// constructor from number of parameters 
-// ============================================================================
-Ostap::Math::Parameters::Parameters 
-( const std::size_t np ) 
-  : m_pars ( np , 0.0 ) 
-{}
-// ============================================================================
-// constructor from  the list of parameters 
-// ============================================================================
-Ostap::Math::Parameters::Parameters 
-( const std::vector<double>&  pars   ) 
-  : m_pars ( pars ) 
-{}
-// ============================================================================
-// constructor from  the list of parameters 
-// ============================================================================
-Ostap::Math::Parameters::Parameters 
-(       std::vector<double>&& pars   ) 
-  : m_pars ( std::forward<std::vector<double> > ( pars ) ) 
-{}
-// ============================================================================
-// all zero ?
-// ============================================================================
-bool Ostap::Math::Parameters::zero  () const { return s_vzero ( m_pars ) ; }
-// ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::Parameters::_setPar 
-( const std::size_t k     , 
-  const double      value ) 
-{
-  if ( m_pars.size() <= k               ) { return false ; }
-  if ( s_equal ( m_pars [ k ] , value ) ) { return false ; }
-  m_pars [ k ] = value ;
-  return true ;
-}
-// ============================================================================
-// swap two objects 
-// ============================================================================
-void Ostap::Math::Parameters::swap (  Ostap::Math::Parameters& right ) 
-{ std::swap ( m_pars ,  right.m_pars ); }
+
+
 // ============================================================================
 // simple  manipulations with parameters: scale it! 
 // ============================================================================

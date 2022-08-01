@@ -62,6 +62,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Ostap.cpp
                          src/OstapDataFrame.cpp
                          src/P2Quantile.cpp
+                         src/Parameters.cpp
                          src/Parameterization.cpp
                          src/Params.cpp
                          src/Peaks.cpp

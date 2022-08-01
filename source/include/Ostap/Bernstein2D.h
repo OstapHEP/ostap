@@ -13,6 +13,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Parameters.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/Bernstein.h"
 // ============================================================================
@@ -41,18 +42,19 @@ namespace Ostap
      *  - \f$ B_n^k(x) \f$ is basic Bernstein polynomial
      *  @see Ostap::Math::Bernstein
      */
-    class Bernstein2D 
+    class Bernstein2D : public Ostap::Math::Parameters 
     {
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from the order
-      Bernstein2D ( const unsigned short       nX    =  1 ,
-                    const unsigned short       nY    =  1 ,
-                    const double               xmin  =  0 ,
-                    const double               xmax  =  1 ,
-                    const double               ymin  =  0 ,
-                    const double               ymax  =  1 ) ;
+      Bernstein2D 
+      ( const unsigned short       nX    =  1 ,
+        const unsigned short       nY    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               ymin  =  0 ,
+        const double               ymax  =  1 ) ;
       // ======================================================================
       /** As a product of two 1D-polynomials:
        *  \f[  B_{n^x,n^y}(x,y) \equiv 
@@ -62,11 +64,13 @@ namespace Ostap
        *    \sum_{i=0}{n^{x}}
        *    \sum_{j=0}{n^{y}} \alpha_{i}\beta_{j} B_{n^{x}}^i(x) B_{n^{y}}^j(y) \f]
        */          
-      Bernstein2D ( const Bernstein& bx , 
-                    const Bernstein& by ) ;
+      Bernstein2D
+      ( const Bernstein& bx , 
+        const Bernstein& by ) ;
       // ======================================================================
       /// from symmetric variant 
-      Bernstein2D ( const Bernstein2DSym& right ) ;
+      Bernstein2D 
+      ( const Bernstein2DSym& right ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -76,53 +80,34 @@ namespace Ostap
       double operator () ( const double x , const double y ) const 
       { return evaluate ( x , y ) ; }
       // ======================================================================
-    public: // setters
+    public: // getters & setters 
       // ======================================================================
-      /// set k-parameter
-      bool setPar       ( const unsigned int   k     ,
-                          const double         value ) ;
-      /// set k-parameter
-      bool setParameter ( const unsigned int   k     ,
-                          const double         value )
-      { return ( k < m_pars.size() ) && setPar ( k , value ) ; }
-      /// set (l,m)-parameter
-      bool setPar       ( const unsigned short l     ,
-                          const unsigned short m     ,
-                          const double         value ) 
+      using Ostap::Math::Parameters::par    ;
+      using Ostap::Math::Parameters::setPar ;
+      // ======================================================================      
+      /// get (l,m)-parameter
+      double  par       
+      ( const unsigned short l ,
+        const unsigned short m ) const 
+      { return l > m_nx ? 0 : m > m_ny ? 0 : par ( index ( l , m ) ) ; }
+      // ======================================================================
+      bool setPar   
+      ( const unsigned short l     ,
+        const unsigned short m     ,
+        const double         value ) 
         
       { 
         return 
           l > m_nx ? false :
           m > m_ny ? false : setPar ( index ( l , m ) , value ) ; 
       }
-      /// set (l,m)-parameter
-      bool setParameter ( const unsigned short l     ,
-                          const unsigned short m     ,
-                          const double         value )
-      { return setPar   ( l , m  , value ) ; }
-      // ======================================================================
-    public: // getters
-      // ======================================================================
-      /// get (l,m)-parameter
-      double  par       ( const unsigned short l ,
-                          const unsigned short m ) const 
-      { return l > m_nx ? 0 : m > m_ny ? 0 : par ( index ( l , m ) ) ; }
-      /// get (l,m)-parameter
-      double  parameter ( const unsigned short l ,
-                          const unsigned short m ) const { return par (  l , m  ) ; }
-      /// get k-parameter
-      double  par       ( const unsigned int k ) const
-      { return k < m_pars.size() ? m_pars[k] : 0.0 ; }
-      /// get k-parameter
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get all parameters at once
-      const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
     public:
       // ======================================================================
       ///  convert (l,m)-index into single k-index
-      unsigned int index ( const unsigned short l , 
-                           const unsigned short m ) const 
+      unsigned int index 
+      ( const unsigned short l , 
+        const unsigned short m ) const 
       {
         return
           l > m_nx ? -1 :
@@ -132,8 +117,6 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get the actual number of parameters
-      std::size_t npars () const { return m_pars.size() ; }
       /// get lower edge
       double xmin () const { return m_xmin ; }
       /// get upper edge
@@ -168,28 +151,33 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral   ( const double xlow  , 
-                          const double xhigh ,
-                          const double ylow  , 
-                          const double yhigh ) const ;
+      double integral  
+      ( const double xlow  , 
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param y     variable
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y     ,
-                          const double xlow  , 
-                          const double xhigh ) const ;
+      double integrateX 
+      ( const double y     ,
+        const double xlow  , 
+        const double xhigh ) const ;
+      // ======================================================================
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  , 
-                          const double yhigh ) const ;
+      double integrateY 
+      ( const double x     ,
+        const double ylow  , 
+        const double yhigh ) const ;
       // ======================================================================
     public: // special cases
       // ======================================================================
@@ -270,8 +258,9 @@ namespace Ostap
     private: // helper functions to make the calculations
       // ======================================================================
       /// helper function to make calculations
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy ) const ;
+      double calculate
+      ( const std::vector<double>& fx , 
+        const std::vector<double>& fy ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -279,8 +268,6 @@ namespace Ostap
       unsigned short m_nx ; // polynom order in x-dimension
       // polynom order in y-dimension
       unsigned short m_ny ; // polynom order in y-dimension
-      /// the list of parameters
-      std::vector<double>  m_pars ;                // the list of parameters
       /// the left edge of interval
       double m_xmin  ;                             // the left edge of interval
       /// the right edge of interval
@@ -347,12 +334,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      Positive2D ( const unsigned short       Nx    =  1 ,
-                   const unsigned short       Ny    =  1 ,
-                   const double               xmin  =  0 ,
-                   const double               xmax  =  1 ,
-                   const double               ymin  =  0 ,
-                   const double               ymax  =  1 ) ;
+      Positive2D 
+      ( const unsigned short       Nx    =  1 ,
+        const unsigned short       Ny    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               ymin  =  0 ,
+        const double               ymax  =  1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -408,19 +396,21 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral   ( const double xlow  , 
-                          const double xhigh ,
-                          const double ylow  , 
-                          const double yhigh ) const ;
+      double integral
+      ( const double xlow  , 
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param y     variable
        *  @param xlow  low  edge in x
        *  @param xhigh high edge in x
        */
-      double integrateX ( const double y     ,
-                          const double xlow  ,
-                          const double xhigh ) const
+      double integrateX 
+      ( const double y     ,
+        const double xlow  ,
+        const double xhigh ) const
       { return m_bernstein.integrateX ( y , xlow , xhigh ) ; }
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y) \mathrm{d}y\f]
@@ -428,9 +418,10 @@ namespace Ostap
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const
+      double integrateY 
+      ( const double x     ,
+        const double ylow  ,
+        const double yhigh ) const
       { return m_bernstein.integrateY ( x , ylow , yhigh ) ; }
       // ======================================================================
     public: // specific
@@ -520,15 +511,16 @@ namespace Ostap
      *  @see Ostap::Math::Bernstein2D
      *  @see Ostap::Math::Bernstein
      */
-    class Bernstein2DSym 
+    class Bernstein2DSym : public Ostap::Math::Parameters 
     {
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from the order
-      Bernstein2DSym ( const unsigned short       n     =  1 ,
-                       const double               xmin  =  0 ,
-                       const double               xmax  =  1 ) ;
+      Bernstein2DSym
+      ( const unsigned short       n     =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -540,53 +532,35 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_pars.size() ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int   k     ,
-                          const double         value ) ;
-      /// set k-parameter
-      bool setParameter ( const unsigned int   k     ,
-                          const double         value )
-      { return ( k < m_pars.size() ) && setPar ( k , value ) ; }
+      using Ostap::Math::Parameters::par    ;
+      using Ostap::Math::Parameters::setPar ;
+      // ======================================================================
       /// set (l,m)-parameter
-      bool setPar       ( const unsigned short l     ,
-                          const unsigned short m     ,
-                          const double         value ) 
+      bool setPar      
+      ( const unsigned short l     ,
+        const unsigned short m     ,
+        const double         value ) 
       {
         return
           l > m_n ? false : 
           m > m_n ? false : setPar ( index ( l , m ) , value ) ;
       }
-      /// set (l,m)-parameter
-      bool setParameter ( const unsigned short l     ,
-                          const unsigned short m     ,
-                          const double         value )
-      { return setPar   ( l , m  , value ) ; }
       /// get (l,m)-parameter
-      double  par       ( const unsigned short l ,
-                          const unsigned short m ) const 
+      double  par       
+      ( const unsigned short l ,
+        const unsigned short m ) const 
       {
         return 
           l > m_n ? 0 : 
           m > m_n ? 0 : par ( index ( l , m ) ) ;
       }
-      /// get (l,m)-parameter value
-      double  parameter ( const unsigned short l ,
-                          const unsigned short m ) const { return par (  l , m  ) ; }
-      /// get k-parameter
-      double  par       ( const unsigned int   k ) const
-      { return k < m_pars.size() ? m_pars [k] : 0.0 ; }
-      /// get k-parameter
-      double  parameter ( const unsigned int   k ) const { return par ( k ) ; }
-      /// get all parameters at once
-      const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
     public:
       // ======================================================================
       ///  convert (l,m)-index into single k-index
-      unsigned int index ( const unsigned short l , 
-                           const unsigned short m ) const 
+      unsigned int index 
+      ( const unsigned short l , 
+        const unsigned short m ) const 
       {
         return
           m > l   ? index ( m , l )  :
@@ -630,28 +604,31 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral   ( const double xlow  , 
-                          const double xhigh ,
-                          const double ylow  , 
-                          const double yhigh ) const ;
+      double integral 
+      ( const double xlow  , 
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
       /** integral over x-dimension
        *  \f[ \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param y     variable
        *  @param xlow  low  edge in x
        *  @param xhigh high edge in x
        */
-      double integrateX ( const double y     ,
-                          const double xlow  , 
-                          const double xhigh ) const ;
+      double integrateX
+      ( const double y     ,
+        const double xlow  , 
+        const double xhigh ) const ;
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{x_{high}} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
+      double integrateY
+      ( const double x     ,
+        const double ylow  ,
+        const double yhigh ) const ;
       // ======================================================================
     public: // specific integrals
       // ======================================================================
@@ -728,15 +705,14 @@ namespace Ostap
     private: // helper functions to make the calculations
       // ======================================================================
       /// helper function to make calculations
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy ) const ;
+      double calculate 
+      ( const std::vector<double>& fx , 
+        const std::vector<double>& fy ) const ;
       // ======================================================================
-   private:
+    private:
       // ======================================================================
       // polynom order
       unsigned short m_n  ; // polynom order in x-dimension
-      /// the list of parameters
-      std::vector<double>  m_pars ;                // the list of parameters
       /// the left edge of interval
       double m_xmin  ;                             // the left edge of interval
       /// the right edge of interval
@@ -797,9 +773,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      Positive2DSym ( const unsigned short       Nx    =  1 ,
-                      const double               xmin  =  0 ,
-                      const double               xmax  =  1 ) ;
+      Positive2DSym 
+      ( const unsigned short       Nx    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -852,10 +829,11 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral   ( const double xlow  , 
-                          const double xhigh ,
-                          const double ylow  , 
-                          const double yhigh ) const ;
+      double integral  
+      ( const double xlow  , 
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
       // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
@@ -863,9 +841,10 @@ namespace Ostap
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y     ,
-                          const double xlow  ,
-                          const double xhigh ) const ;
+      double integrateX 
+      ( const double y     ,
+        const double xlow  ,
+        const double xhigh ) const ;
       // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
@@ -873,9 +852,10 @@ namespace Ostap
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  , 
-                          const double yhigh ) const ;
+      double integrateY 
+      ( const double x     ,
+        const double ylow  , 
+        const double yhigh ) const ;
       // ======================================================================
     public: // specific
       // ======================================================================

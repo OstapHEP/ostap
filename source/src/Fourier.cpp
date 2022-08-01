@@ -29,7 +29,7 @@ Ostap::Math::FourierSum::FourierSum
   const double         xmin   , 
   const double         xmax   , 
   const bool           fejer  )
-  : m_pars  ( 2 * degree + 1 , 0.0 ) 
+  : Ostap::Math::Parameters ( 2 * degree + 1 )
   , m_xmin  ( std::min ( xmin , xmax ) )
   , m_xmax  ( std::max ( xmin , xmax ) )
   , m_scale ( 1 ) 
@@ -53,7 +53,7 @@ Ostap::Math::FourierSum::FourierSum
 // ============================================================================
 Ostap::Math::FourierSum::FourierSum 
 ( const Ostap::Math::CosineSum& sum )
-  : m_pars  ( 2 * sum.degree() + 1 , 0.0  ) 
+  : Ostap::Math::Parameters ( 2 * sum.degree() + 1 )
   , m_xmin  ( 2 * sum.xmin() - sum.xmax() )
   , m_xmax  ( sum.xmax() )
   , m_scale ( 1 ) 
@@ -82,7 +82,7 @@ Ostap::Math::FourierSum::FourierSum
 Ostap::Math::FourierSum::FourierSum 
 ( const Ostap::Math::FourierSum& sum   , 
   const bool                     fejer )
-  : m_pars  ( sum.m_pars  ) 
+  : Ostap::Math::Parameters ( sum.m_pars  ) 
   , m_xmin  ( sum.m_xmin  )
   , m_xmax  ( sum.m_xmax  )
   , m_scale ( sum.m_scale )
@@ -94,7 +94,7 @@ Ostap::Math::FourierSum::FourierSum
 // ============================================================================
 Ostap::Math::FourierSum::FourierSum 
 ( const Ostap::Math::FourierSum& sum )
-  : m_pars  ( sum.m_pars  ) 
+  : Ostap::Math::Parameters ( sum.m_pars  ) 
   , m_xmin  ( sum.m_xmin  )
   , m_xmax  ( sum.m_xmax  )
   , m_scale ( sum.m_scale )
@@ -106,7 +106,7 @@ Ostap::Math::FourierSum::FourierSum
 // ============================================================================
 Ostap::Math::FourierSum::FourierSum
 (       Ostap::Math::FourierSum&& sum ) 
-  : m_pars  ( std::move ( sum.m_pars  ) ) 
+  : Ostap::Math::Parameters ( std::move ( sum.m_pars  ) ) 
   , m_xmin  ( std::move ( sum.m_xmin  ) )
   , m_xmax  ( std::move ( sum.m_xmax  ) )
   , m_scale ( std::move ( sum.m_scale ) )
@@ -121,13 +121,17 @@ Ostap::Math::FourierSum::FourierSum
   const double               xmin  , 
   const double               xmax  , 
   const double               fejer )
-  : m_pars  ( pars )
+  : Ostap::Math::Parameters ( pars ) 
   , m_xmin  ( std::min ( xmin , xmax ) )
   , m_xmax  ( std::max ( xmin , xmax ) )
   , m_scale ( 1 ) 
   , m_delta ( 0 ) 
   , m_fejer ( fejer ) 
 {
+  Ostap::Assert ( 1 ==  pars.size() % 2                        ,  
+                  "odd number of parameters must be supplied!" , 
+                  "Ostap::Math::FourierSum"                  ) ;
+  //
   m_scale = 2 * M_PI / ( m_xmax - m_xmin ) ;
   m_delta = 0.5      * ( m_xmax + m_xmin ) ;
 }
@@ -136,28 +140,12 @@ Ostap::Math::FourierSum::FourierSum
 // ============================================================================
 void Ostap::Math::FourierSum::swap ( Ostap::Math::FourierSum&  right ) 
 {
-  std::swap ( m_pars  ,  right.m_pars  ) ;
+  Ostap::Math::Parameters::swap ( right ) ;
   std::swap ( m_xmin  ,  right.m_xmin  ) ;
   std::swap ( m_xmax  ,  right.m_xmax  ) ;
   std::swap ( m_scale ,  right.m_scale ) ;
   std::swap ( m_delta ,  right.m_delta ) ;
   std::swap ( m_fejer ,  right.m_fejer ) ; 
-}
-// ============================================================================
-// all zero ?
-// ============================================================================
-bool Ostap::Math::FourierSum::zero  () const { return s_vzero ( m_pars ) ; }
-// ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::FourierSum::setPar 
-( const unsigned short k , const double value ) 
-{
-  if ( m_pars.size() <= k            ) { return false ; }
-  if ( s_equal ( m_pars[k] , value ) ) { return false ; }
-  //
-  m_pars[k] = s_zero ( value ) ? 0.0 : value ;
-  return true ;
 }
 // ============================================================================
 /* get the magnitude of nth-harmonic
@@ -188,7 +176,7 @@ double Ostap::Math::FourierSum::fourier_sum ( const double x ) const
 {
   /// transform to "t"-representation 
   const long double tv = t(x) ;
-  return Ostap::Math::Clenshaw::fourier_sum ( m_pars.begin() , m_pars.end () , tv ) ;
+  return Ostap::Math::Clenshaw::fourier_sum ( begin() , end () , tv ) ;
 }
 // ============================================================================
 // calculate Fejer sum 
@@ -197,7 +185,7 @@ double Ostap::Math::FourierSum::fejer_sum ( const double x ) const
 {
   /// transform to "t"-representation 
   const long double tv = t(x) ;
-  return Ostap::Math::Clenshaw::fejer_sum ( m_pars.begin() , m_pars.end ()  , tv ) ;
+  return Ostap::Math::Clenshaw::fejer_sum ( begin() , end ()  , tv ) ;
 }
 // ============================================================================
 // get Fejer sum 
@@ -607,7 +595,7 @@ Ostap::Math::CosineSum::CosineSum
   const double         xmin   , 
   const double         xmax   , 
   const bool           fejer  )
-  : m_pars  ( degree + 1 , 0.0 ) 
+  : Ostap::Math::Parameters ( degree + 1 ) 
   , m_xmin  ( std::min ( xmin , xmax ) )
   , m_xmax  ( std::max ( xmin , xmax ) )
   , m_scale ( 1 ) 
@@ -629,7 +617,7 @@ Ostap::Math::CosineSum::CosineSum
 // ============================================================================
 Ostap::Math::CosineSum::CosineSum 
 ( const Ostap::Math::FourierSum& sum ) 
-  : m_pars  ( sum.degree() + 1 , 0.0 ) 
+  : Ostap::Math::Parameters ( sum.degree() + 1  )
   , m_xmin  ( 0.5 * ( sum.xmax() + sum.xmin() ) )
   , m_xmax  (         sum.xmax()                )
   , m_scale ( 1 ) 
@@ -655,7 +643,7 @@ Ostap::Math::CosineSum::CosineSum
 Ostap::Math::CosineSum::CosineSum 
 ( const Ostap::Math::CosineSum& sum   ,
   const bool                    fejer )
-  : m_pars  ( sum.m_pars  ) 
+  : Ostap::Math::Parameters ( sum )
   , m_xmin  ( sum.m_xmin  )
   , m_xmax  ( sum.m_xmax  )
   , m_scale ( sum.m_scale )
@@ -666,7 +654,7 @@ Ostap::Math::CosineSum::CosineSum
 // ============================================================================
 Ostap::Math::CosineSum::CosineSum 
 ( const Ostap::Math::CosineSum& sum )
-  : m_pars  ( sum.m_pars  ) 
+  : Ostap::Math::Parameters ( sum  )
   , m_xmin  ( sum.m_xmin  )
   , m_xmax  ( sum.m_xmax  )
   , m_scale ( sum.m_scale )
@@ -677,26 +665,29 @@ Ostap::Math::CosineSum::CosineSum
 // ============================================================================
 Ostap::Math::CosineSum::CosineSum
 (       Ostap::Math::CosineSum&& sum ) 
-  : m_pars  ( std::move ( sum.m_pars  ) ) 
+  : Ostap::Math::Parameters ( std::move ( sum ) ) 
   , m_xmin  ( std::move ( sum.m_xmin  ) )
   , m_xmax  ( std::move ( sum.m_xmax  ) )
   , m_scale ( std::move ( sum.m_scale ) )
   , m_fejer ( std::move ( sum.m_fejer ) )
 {}
 // ============================================================================
-// protected constructor from the parameters 
+// constructor from non-empty list of parameters 
 // ============================================================================
 Ostap::Math::CosineSum::CosineSum
 ( const std::vector<double>& pars  , 
   const double               xmin  , 
   const double               xmax  , 
   const double               fejer )
-  : m_pars  ( pars )
+  : Ostap::Math::Parameters ( pars )
   , m_xmin  ( std::min ( xmin , xmax ) )
   , m_xmax  ( std::max ( xmin , xmax ) )
   , m_scale ( 1 ) 
   , m_fejer ( fejer ) 
 {
+  Ostap::Assert ( 1 <= pars.size()                       , 
+                  "List ofparmaeters must be non-empty!" , 
+                  "Ostap::Math::CosineSum"               ) ;
   m_scale = M_PI / ( m_xmax - m_xmin ) ;
 }
 // ============================================================================
@@ -704,28 +695,11 @@ Ostap::Math::CosineSum::CosineSum
 // ============================================================================
 void Ostap::Math::CosineSum::swap ( Ostap::Math::CosineSum&  right ) 
 {
-  std::swap ( m_pars  ,  right.m_pars  ) ;
+  Ostap::Math::Parameters::swap ( right ) ;
   std::swap ( m_xmin  ,  right.m_xmin  ) ;
   std::swap ( m_xmax  ,  right.m_xmax  ) ;
   std::swap ( m_scale ,  right.m_scale ) ;
   std::swap ( m_fejer ,  right.m_fejer ) ; 
-}
-// ============================================================================
-// all zero ?
-// ============================================================================
-bool Ostap::Math::CosineSum::zero  () const { return s_vzero ( m_pars ) ; }
-// ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::CosineSum::setPar 
-( const unsigned short k , const double value ) 
-{
-  if ( m_pars.size() <= k            ) { return false ; }
-  if ( s_equal ( m_pars[k] , value ) ) { return false ; }
-  //
-  m_pars[k] = s_zero ( value ) ? 0.0 : value ;
-  //
-  return true ;
 }
 // ============================================================================
 // calculate Fourier sum 
@@ -734,7 +708,7 @@ double Ostap::Math::CosineSum::fourier_sum ( const double x ) const
 {
   /// transform to "t"-representation 
   const long double tv = t(x) ;
-  return Ostap::Math::Clenshaw::cosine_sum ( m_pars.begin() , m_pars.end ()  , tv ) ;
+  return Ostap::Math::Clenshaw::cosine_sum ( begin() , end ()  , tv ) ;
 }
 // ============================================================================
 // calculate Fejer sum 
@@ -743,7 +717,7 @@ double Ostap::Math::CosineSum::fejer_sum ( const double x ) const
 {
   /// transform to "t"-representation 
   const long double tv = t(x) ;
-  return Ostap::Math::Clenshaw::fejer_cosine_sum ( m_pars.begin() , m_pars.end ()  , tv ) ;
+  return Ostap::Math::Clenshaw::fejer_cosine_sum ( begin() , end ()  , tv ) ;
 }
 // ============================================================================
 // get Fejer sum 

@@ -13,6 +13,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/Parameters.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/Interpolation.h"
@@ -40,7 +41,7 @@ namespace Ostap
      *  @see http://link.springer.com/chapter/10.1007%2F978-3-0348-7692-6_6
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
-    class BSpline 
+    class BSpline : public Ostap::Math::Parameters 
     {
       // ======================================================================
     public:
@@ -110,26 +111,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get number of parameters
-      inline std::size_t npars  () const { return m_pars.size() ; }
-      /// are all parameters zero?
-      // bool        zero   () const ;
-      /// set k-parameter
-      bool setPar        ( const unsigned short k , const double value ) ;
-      /// set k-parameter
-      inline bool setParameter  ( const unsigned short k , const double value )
-      { return setPar    ( k , value ) ; }
-      /// get the parameter value
-      inline double  par        ( const unsigned short k ) const
-      { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
-      /// get the parameter value
-      inline double  parameter ( const unsigned short k ) const { return par ( k ) ; }
       /// get lower edge
       inline double xmin () const { return m_xmin ; }
       /// get upper edge
       inline double xmax () const { return m_xmax ; }
-      /// get all parameters:
-      inline const std::vector<double>& pars  () const { return m_pars  ; }
       /// get all knots
       inline const std::vector<double>& knots () const { return m_knots ; }
       /// the spline order
@@ -207,26 +192,32 @@ namespace Ostap
     public: // B-splines
       // ======================================================================
       /// get the value of the B-spline  i at point x
-      double bspline ( const          short i , const double x )  const ;
+      double bspline 
+      ( const          short i , const double x )  const ;
       /// get the value of the B-spline  (i,k) at point x
-      double bspline ( const          short i ,
-                       const unsigned short k , const double x )  const ;
+      double bspline 
+      ( const          short i ,
+        const unsigned short k , const double x )  const ;
       // ======================================================================
     public: // M-splines
       // ======================================================================
       /// get the value of the M-spline  i at point x
-      double mspline ( const          short i , const double x )  const ;
+      double mspline
+      ( const          short i , const double x )  const ;
       /// get the value of the M-spline  (i,k) at point x
-      double mspline ( const          short i ,
-                       const unsigned short k , const double x )  const ;
+      double mspline 
+      ( const          short i ,
+        const unsigned short k , const double x )  const ;
       // ======================================================================
     public: // I-splines
       // ======================================================================
       /// get the value of the I-spline  i at point x
-      double ispline ( const          short i , const double x )  const ;
+      double ispline 
+      ( const          short i , const double x )  const ;
       /// get the value of the I-spline  (i,k) at point x
-      double ispline ( const          short i ,
-                       const unsigned short k , const double x )  const ;
+      double ispline 
+      ( const          short i ,
+        const unsigned short k , const double x )  const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -277,12 +268,15 @@ namespace Ostap
       /// Negate B-spline
       BSpline __neg__   () const ;
       // ======================================================================
+    public: // swapping 
+      // ======================================================================
+      /// swap it! 
+      void swap ( BSpline& right ) ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the list of knots
       std::vector<double>  m_knots  ;              // the list of knots
-      /// the list of parameters
-      std::vector<double>  m_pars   ;              // the list of parameters
       /// order of polynomial
       unsigned short       m_order  ;              // order of polynomial
       unsigned short       m_inner  ;              // number of inner points
@@ -344,8 +338,9 @@ namespace Ostap
        *  - duplicated inner knots will be ignored
        *  - min/max value will be used as interval boundaries
        */
-      PositiveSpline ( const std::vector<double>& points    ,
-                       const unsigned short       order = 3 ) ;
+      PositiveSpline 
+      ( const std::vector<double>& points    ,
+        const unsigned short       order = 3 ) ;
       // ======================================================================
       /** Constructor from the list of knots and list of parameters
        *  The spline order will be calculated automatically
@@ -355,8 +350,9 @@ namespace Ostap
        *  - duplicated inner knots will be ignored
        *  - min/max value will be used as interval boundaries
        */
-      PositiveSpline ( const std::vector<double>& points    ,
-                       const std::vector<double>& pars      ) ;
+      PositiveSpline 
+      ( const std::vector<double>& points    ,
+        const std::vector<double>& pars      ) ;
       // ======================================================================
       /** Constructor for uniform binning
        *  @param xmin   low  edge of spline interval
@@ -364,10 +360,11 @@ namespace Ostap
        *  @param inner  number of inner points in   (xmin,xmax) interval
        *  @param order  the degree of splline
        */
-      PositiveSpline ( const double         xmin   = 0 ,
-                       const double         xmax   = 1 ,
-                       const unsigned short inner  = 3 ,   // number of inner points
-                       const unsigned short order  = 3 ) ;
+      PositiveSpline 
+      ( const double         xmin   = 0 ,
+        const double         xmax   = 1 ,
+        const unsigned short inner  = 3 ,   // number of inner points
+        const unsigned short order  = 3 ) ;
       /// constructor from the basic spline
       PositiveSpline ( const BSpline& spline ) ;
       /// destructor
@@ -407,7 +404,7 @@ namespace Ostap
       // ======================================================================
       double knot_i ( const int index ) const { return m_bspline.knot_i ( index ) ; }
       // ======================================================================
-    public:    public:
+    public:    
       // ======================================================================
       /// is it a decreasing function?
       bool   decreasing    () const { return m_bspline.decreasing () ; }
@@ -454,6 +451,11 @@ namespace Ostap
       BSpline __div__     ( const double value ) const { return __truediv__ ( value ) ; }
       /// Negate spline
       BSpline __neg__   () const { return -m_bspline; }
+      // ======================================================================
+    public: // swapping 
+      // ======================================================================
+      /// swap it! 
+      void swap ( PositiveSpline& right ) ;
       // ======================================================================
     protected:
       // ======================================================================
@@ -542,11 +544,13 @@ namespace Ostap
           const unsigned short order      = 3    ,
           const bool           convex     = true ) ;
       /// constructor from positive spline
-      ConvexOnlySpline ( const PositiveSpline& spline     ,
-                         const bool            increasing ) ;
+      ConvexOnlySpline 
+      ( const PositiveSpline& spline     ,
+        const bool            increasing ) ;
       /// constructor from the basic spline
-      ConvexOnlySpline ( const BSpline&        spline     ,
-                         const bool            increasing ) ;
+      ConvexOnlySpline 
+      ( const BSpline&        spline     ,
+        const bool            increasing ) ;
       /// destructor
       virtual ~ConvexOnlySpline() ;
       // ======================================================================
@@ -556,6 +560,11 @@ namespace Ostap
       bool convex    () const { return m_convex    ; }
       /// concave function ?
       bool concave   () const { return  !convex () ; }
+      // ======================================================================
+    public: // swapping 
+      // ======================================================================
+      /// swap it! 
+      void swap ( ConvexOnlySpline& right ) ;
       // ======================================================================
     protected:
       // ======================================================================
@@ -643,6 +652,11 @@ namespace Ostap
       bool increasing () const { return m_increasing    ; }
       bool decreasing () const { return  !increasing () ; }
       bool monotonic () const { return true ; }
+      // ======================================================================
+    public: // swapping 
+      // ======================================================================
+      /// swap it! 
+      void swap ( MonotonicSpline& right ) ;
       // ======================================================================
     protected:
       // ======================================================================
@@ -737,6 +751,11 @@ namespace Ostap
       /// concave?
       bool concave  () const { return  !convex () ; } // concave?
       // ======================================================================
+    public: // swapping
+      // ======================================================================
+      /// swap it! 
+      void swap ( ConvexSpline& right ) ;
+      // ======================================================================
     protected:
       // ======================================================================
       /// update coefficients
@@ -752,13 +771,15 @@ namespace Ostap
     /** @class BSpline2D
      *  Generic ``2D-spline'' : spline in 2 dimensions 
      */
-    class BSpline2D
+    class BSpline2D : public Ostap::Math::Parameters 
     {
       // ======================================================================
     public:
       // ======================================================================
-      BSpline2D ( const BSpline& xspline = BSpline() ,
-                  const BSpline& yspline = BSpline() ) ;
+      /// constructr from two splines 
+      BSpline2D 
+      ( const BSpline& xspline = BSpline() ,
+        const BSpline& yspline = BSpline() ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -770,34 +791,23 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_pars.size() ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return setParameter ( k , value ) ; }
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value ) ;
+      using Ostap::Math::Parameters::par    ;
+      using Ostap::Math::Parameters::setPar ;
+      // ======================================================================
       /// set (i,j) paramter 
       bool setPar       ( const unsigned short i ,
                           const unsigned short j , const double value ) 
       { return setPar ( index ( i , j ) , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return k < m_pars.size() ? m_pars[k] : 0.0 ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
       /// get (i,j)-parameter 
       double  par       ( const unsigned short i ,  
                           const unsigned short j ) const 
       { return par ( index ( i  , j ) ) ; }      
       // ======================================================================
-      // get all parameters
-      const std::vector<double>& pars() const { return m_pars ; }
-      // ======================================================================
     public :
       // ======================================================================
-      unsigned int index ( const unsigned short i , 
-                           const unsigned short j ) const 
+      unsigned int index 
+      ( const unsigned short i , 
+        const unsigned short j ) const 
       {
         const unsigned short nx = m_xspline.npars() ;
         const unsigned short ny = m_yspline.npars() ;        
@@ -862,8 +872,9 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ) const ;
+      double integral  
+      ( const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ) const ;
       /** get the integral over X  for given Y
        *  @param y  (INPU) y-value
        *  @param xlow  low  edge in x
@@ -908,13 +919,20 @@ namespace Ostap
       // =====================================================================
       // get x-spline
       const Ostap::Math::BSpline& xspline () const { return m_xspline ; }
+      // get y-spline
       const Ostap::Math::BSpline& yspline () const { return m_yspline ; }
+      // ======================================================================
+    public: // swapping 
+      // ======================================================================
+      /// swap it! 
+      void swap ( BSpline2D& right ) ;
       // ======================================================================
     private:
       // ======================================================================
       // make the calcualtions 
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy ) const ;
+      double calculate 
+      ( const std::vector<double>& fx , 
+        const std::vector<double>& fy ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -922,8 +940,6 @@ namespace Ostap
       mutable Ostap::Math::BSpline m_xspline ; // x-spline
       /// Y-spline
       mutable Ostap::Math::BSpline m_yspline ; // y-spline
-      /// parameters 
-      std::vector<double>          m_pars    ; // parameters 
       // ======================================================================
     };
     // ========================================================================
@@ -949,7 +965,7 @@ namespace Ostap
     /** @class BSpline2DSym
      *  - Symmeric ``2D-spline'' :  symmetric spline in 2 dimensions 
      */
-    class BSpline2DSym
+    class BSpline2DSym : public Ostap::Math::Parameters 
     {
       // ======================================================================
     public:
@@ -966,35 +982,26 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_pars.size() ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return setParameter ( k , value ) ; }
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value ) ;
+      using Ostap::Math::Parameters::par    ;
+      using Ostap::Math::Parameters::setPar ;
+      // =======================================================================
       /// set (i,j) paramter 
-      bool setPar       ( const unsigned short i ,
-                          const unsigned short j , const double value ) 
+      bool setPar  
+      ( const unsigned short i ,
+        const unsigned short j , const double value ) 
       { return setPar ( index ( i , j ) , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return k < m_pars.size() ? m_pars[k] : 0.0 ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
       /// get (i,j)-parameter 
-      double  par       ( const unsigned short i ,  
-                          const unsigned short j ) const 
+      double  par   
+      ( const unsigned short i ,  
+        const unsigned short j ) const 
       { return par ( index ( i  , j ) ) ; }      
-      // ======================================================================
-      // get all parameters
-      const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
     public : 
       // ======================================================================
       ///  convert (l,m)-index into single k-index
-      unsigned int index ( const unsigned short l , 
-                           const unsigned short m ) const 
+      unsigned int index 
+      ( const unsigned short l , 
+        const unsigned short m ) const 
       {
         const unsigned short n = m_spline.npars() ;
         return
@@ -1099,18 +1106,22 @@ namespace Ostap
       // get t-spline
       const Ostap::Math::BSpline& yspline () const { return m_spline ; }
       // ======================================================================
+    public: // swapping 
+      // ======================================================================
+      /// swap it! 
+      void swap ( BSpline2DSym& right ) ;
+      // ======================================================================
     private:
       // ======================================================================
       // make the calcualtions 
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy ) const ;
+      double calculate 
+      ( const std::vector<double>& fx , 
+        const std::vector<double>& fy ) const ;
       // ======================================================================
     private:
       // ======================================================================
       /// X-spline
       mutable Ostap::Math::BSpline m_spline ; // x-spline
-      /// parameters 
-      std::vector<double>          m_pars ;
       // ======================================================================
     };
     // ========================================================================
@@ -1141,8 +1152,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      PositiveSpline2D ( const BSpline& xspline = BSpline() ,
-                         const BSpline& yspline = BSpline() ) ;
+      PositiveSpline2D 
+      ( const BSpline& xspline = BSpline() ,
+        const BSpline& yspline = BSpline() ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1248,6 +1260,11 @@ namespace Ostap
       const Ostap::Math::BSpline&   yspline () const { return m_spline.yspline() ; }
       /// get the parameter sphere
       const Ostap::Math::NSphere&   sphere  () const { return m_sphere ; }
+      // ======================================================================
+    public: // swapping 
+      // ======================================================================
+      /// swap it! 
+      void swap ( PositiveSpline2D& right ) ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1373,6 +1390,11 @@ namespace Ostap
       /// get the parameter sphere
       const Ostap::Math::NSphere&      sphere  () const { return m_sphere ; }
       // ======================================================================
+    public: // swapping 
+      // ======================================================================
+      /// swap it! 
+      void swap ( PositiveSpline2DSym& right ) ;
+      // ======================================================================
     private:
       // ======================================================================
       ///  update spline  coefficients 
@@ -1386,6 +1408,18 @@ namespace Ostap
       Ostap::Math::NSphere      m_sphere  ; // parameter sphere
       // ======================================================================
     };
+    // ========================================================================
+    /// swapping stuff
+    // ========================================================================
+    inline void swap ( BSpline&             a , BSpline&             b ) { a.swap ( b ) ; }
+    inline void swap ( PositiveSpline&      a , PositiveSpline&      b ) { a.swap ( b ) ; }
+    inline void swap ( MonotonicSpline&     a , MonotonicSpline&     b ) { a.swap ( b ) ; }
+    inline void swap ( ConvexOnlySpline&    a , ConvexOnlySpline&    b ) { a.swap ( b ) ; }
+    inline void swap ( ConvexSpline&        a , ConvexSpline&        b ) { a.swap ( b ) ; }
+    inline void swap ( BSpline2D&           a , BSpline2D&           b ) { a.swap ( b ) ; }
+    inline void swap ( BSpline2DSym&        a , BSpline2DSym&        b ) { a.swap ( b ) ; }
+    inline void swap ( PositiveSpline2D&    a , PositiveSpline2D&    b ) { a.swap ( b ) ; }
+    inline void swap ( PositiveSpline2DSym& a , PositiveSpline2DSym& b ) { a.swap ( b ) ; }
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

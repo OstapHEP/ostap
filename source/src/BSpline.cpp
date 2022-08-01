@@ -276,8 +276,8 @@ namespace
 Ostap::Math::BSpline::BSpline 
 ( const std::vector<double>& knots  ,
   const unsigned short       order  ) 
-  : m_knots   ( knots  ) 
-  , m_pars    () 
+  : Ostap::Math::Parameters ()
+  , m_knots   ( knots  ) 
   , m_order   ( order  ) 
   , m_inner   ( 0      )  
   , m_xmin    ( 0 ) 
@@ -329,8 +329,8 @@ Ostap::Math::BSpline::BSpline
 Ostap::Math::BSpline::BSpline 
 ( const std::vector<double>& knots  ,
   const std::vector<double>& pars   ) 
-  : m_knots ( knots  ) 
-  , m_pars  ( pars   ) 
+  : Ostap::Math::Parameters ( pars   )
+  , m_knots ( knots  ) 
   , m_order ( 1      ) 
   , m_inner ( 0      )  
   , m_xmin  ( 0      ) 
@@ -381,8 +381,8 @@ Ostap::Math::BSpline::BSpline
   const double         xmax    , 
   const unsigned short inner   , // number of inner points  
   const unsigned short order   ) 
-  : m_knots () 
-  , m_pars  ( order + inner + 1 , 0.0 ) 
+  : Ostap::Math::Parameters ( order + inner + 1 )
+  , m_knots () 
   , m_order ( order )  
   , m_inner ( inner )  
   , m_xmin  ( std::min ( xmin  , xmax ) ) 
@@ -422,8 +422,8 @@ Ostap::Math::BSpline::BSpline
 ( const Ostap::Math::BSpline& b   , 
   const double                xmn , 
   const double                xmx )
-  : m_knots ( b.m_knots ) 
-  , m_pars  ( b.m_pars  ) 
+  : Ostap::Math::Parameters ( b ) 
+  , m_knots ( b.m_knots ) 
   , m_order ( b.m_order ) 
   , m_inner ( 0      )  
   , m_xmin  ( std::min ( xmn , xmx ) )  
@@ -491,8 +491,8 @@ Ostap::Math::BSpline::BSpline
 // move constructor 
 // ============================================================================
 Ostap::Math::BSpline::BSpline( Ostap::Math::BSpline&&  right ) 
-  : m_knots   ( std::move ( right.m_knots   ) ) 
-  , m_pars    ( std::move ( right.m_pars    ) ) 
+  : Ostap::Math::Parameters ( std::move ( right ) ) 
+  , m_knots   ( std::move ( right.m_knots   ) ) 
   , m_order   ( std::move ( right.m_order   ) ) 
   , m_inner   ( std::move ( right.m_inner   ) ) 
   , m_xmin    ( std::move ( right.m_xmin    ) ) 
@@ -520,6 +520,23 @@ Ostap::Math::BSpline& Ostap::Math::BSpline::operator=
   m_knots_i = std::move ( right.m_knots_i ) ;
   //
   return *this ;
+}
+// ============================================================================
+//  swap it! 
+// ============================================================================
+void Ostap::Math::BSpline::swap 
+( Ostap::Math::BSpline& right ) 
+{
+  Ostap::Math::Parameters::swap ( right   ) ;
+  //
+  std::swap ( m_knots   , right.m_knots   ) ;
+  std::swap ( m_order   , right.m_order   ) ;
+  std::swap ( m_inner   , right.m_inner   ) ;
+  std::swap ( m_xmin    , right.m_xmin    ) ;
+  std::swap ( m_xmax    , right.m_xmax    ) ;
+  std::swap ( m_jlast   , right.m_jlast   ) ;
+  std::swap ( m_pars_i  , right.m_pars_i  ) ;
+  std::swap ( m_knots_i , right.m_knots_i ) ;
 }
 // ============================================================================
 /*  calculate q-norm of the spline 
@@ -701,21 +718,11 @@ Ostap::Math::BSpline::__truediv__   ( const double value ) const
 Ostap::Math::BSpline
 Ostap::Math::BSpline::__neg__ ()  const { return -(*this); }
 // ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::BSpline::setPar ( const unsigned short k , const double value ) 
-{
-  if ( k >= m_pars.size()          ) { return false ; }
-  if ( s_equal ( m_pars[k] , value ) ) { return false ; }
-  //
-  m_pars[k ] = value ;
-  return true ;
-}
-// ============================================================================
 // get the value of the B-spline  i at point x 
 // ============================================================================
-double Ostap::Math::BSpline::bspline ( const short  i , 
-                                       const double x )  const 
+double Ostap::Math::BSpline::bspline 
+( const short  i , 
+  const double x )  const 
 { 
   return  
     x < m_xmin || x > m_xmax ? 0.0 :
@@ -724,9 +731,10 @@ double Ostap::Math::BSpline::bspline ( const short  i ,
 // ============================================================================
 // get the value of the B-spline  (i,k) at point x
 // ============================================================================
-double Ostap::Math::BSpline::bspline ( const          short i , 
-                                       const unsigned short k , 
-                                       const double         x )  const 
+double Ostap::Math::BSpline::bspline 
+( const          short i , 
+  const unsigned short k , 
+  const double         x )  const 
 { 
   return 
     x < m_xmin || x > m_xmax ? 0.0 :
@@ -735,8 +743,9 @@ double Ostap::Math::BSpline::bspline ( const          short i ,
 // ============================================================================
 // get the value of the M-spline  i at point x
 // ============================================================================
-double Ostap::Math::BSpline::mspline ( const short  i , 
-                                       const double x )  const 
+double Ostap::Math::BSpline::mspline
+( const short  i , 
+  const double x )  const 
 { 
   return 
     x < m_xmin || x > m_xmax ? 0.0 :
@@ -745,9 +754,10 @@ double Ostap::Math::BSpline::mspline ( const short  i ,
 // ============================================================================
 // get the value of the M-spline  (i,k) at point x 
 // ============================================================================
-double Ostap::Math::BSpline::mspline ( const          short i , 
-                                       const unsigned short k , 
-                                       const double         x )  const 
+double Ostap::Math::BSpline::mspline
+( const          short i , 
+  const unsigned short k , 
+  const double         x )  const 
 { 
   return 
     x < m_xmin || x > m_xmax ? 0.0 :
@@ -756,8 +766,9 @@ double Ostap::Math::BSpline::mspline ( const          short i ,
 // ============================================================================
 // get the value of the I-spline  i at point x 
 // ============================================================================
-double Ostap::Math::BSpline::ispline ( const short  i , 
-                                       const double x )  const 
+double Ostap::Math::BSpline::ispline 
+( const short  i , 
+  const double x )  const 
 {
   return 
     x < m_xmin || m_xmax > x  ? 0.0 :
@@ -766,9 +777,10 @@ double Ostap::Math::BSpline::ispline ( const short  i ,
 // ============================================================================
 // get the value of the M-spline  (i,k) at point x 
 // ============================================================================
-double Ostap::Math::BSpline::ispline ( const          short i , 
-                                       const unsigned short k , 
-                                       const double         x )  const 
+double Ostap::Math::BSpline::ispline 
+( const          short i , 
+  const unsigned short k , 
+  const double         x )  const 
 { 
   return 
     x < m_xmin || x > m_xmax ? 0.0 :
@@ -1025,11 +1037,12 @@ double Ostap::Math::deboor
  */
 // ============================================================================
 unsigned short 
-Ostap::Math::boehm ( const double         x     , 
-                     std::vector<double>& knots ,
-                     std::vector<double>& pars  , 
-                     const unsigned short order , 
-                     const unsigned short num   ) 
+Ostap::Math::boehm 
+( const double         x     , 
+  std::vector<double>& knots ,
+  std::vector<double>& pars  , 
+  const unsigned short order , 
+  const unsigned short num   ) 
 { return _insert_  ( x , num , knots , pars , order ) ; }
 // ============================================================================
 /*  get a vector of knots from Greville abscissas 
@@ -1212,6 +1225,15 @@ bool Ostap::Math::PositiveSpline::setPar
   return updateCoefficients () ;
 }
 // ============================================================================
+// swap it!
+// ============================================================================
+void Ostap::Math::PositiveSpline::swap 
+( Ostap::Math::PositiveSpline& right )  
+{
+  m_bspline.swap ( right.m_bspline ) ;
+  m_sphere .swap ( right.m_sphere  ) ;
+}
+// ============================================================================
 // get the integral between xmin and xmax
 // ============================================================================
 double  Ostap::Math::PositiveSpline::integral   () const { return 1 ; }
@@ -1342,6 +1364,15 @@ bool Ostap::Math::MonotonicSpline::updateCoefficients  ()
   }
   //
   return update ;
+}
+// ============================================================================
+// swap it!
+// ============================================================================
+void Ostap::Math::MonotonicSpline::swap 
+( Ostap::Math::MonotonicSpline& right )  
+{
+  PositiveSpline::swap ( right ) ;
+  std::swap ( m_increasing , right.m_increasing ) ;
 }
 // ============================================================================
 // ============================================================================
@@ -1533,6 +1564,15 @@ bool Ostap::Math::ConvexOnlySpline::updateCoefficients  ()
   return update ;
 }
 // ============================================================================
+// swap it!
+// ============================================================================
+void Ostap::Math::ConvexOnlySpline::swap 
+( Ostap::Math::ConvexOnlySpline& right )  
+{
+  PositiveSpline::swap ( right ) ;
+  std::swap ( m_convex , right.m_convex ) ;
+}
+// ============================================================================
 // ============================================================================
 // convex SPLINE 
 // ============================================================================
@@ -1699,8 +1739,15 @@ bool Ostap::Math::ConvexSpline::updateCoefficients  ()
   //
   return update ;
 }
-
-
+// ============================================================================
+// swap it!
+// ============================================================================
+void Ostap::Math::ConvexSpline::swap 
+( Ostap::Math::ConvexSpline& right )  
+{
+  MonotonicSpline::swap ( right ) ;
+  std::swap ( m_convex , right.m_convex ) ;
+}
 // ============================================================================
 // 2D-objects 
 // ============================================================================
@@ -1716,25 +1763,12 @@ bool Ostap::Math::ConvexSpline::updateCoefficients  ()
 Ostap::Math::BSpline2D::BSpline2D
 ( const Ostap::Math::BSpline& xspline ,
   const Ostap::Math::BSpline& yspline )
-  : m_xspline ( xspline        )
+  : Ostap::Math::Parameters ( xspline.npars() * yspline.npars() )
+  , m_xspline ( xspline        )
   , m_yspline ( yspline        )
-  , m_pars    ( xspline.npars() * yspline.npars() )
 {
   for ( unsigned i = 0 ; i < m_xspline.npars() ; ++i ) { m_xspline.setPar ( i , 0 ) ; }
   for ( unsigned i = 0 ; i < m_yspline.npars() ; ++i ) { m_yspline.setPar ( i , 0 ) ; }
-}
-// ===========================================================================
-// set k-parameter
-// ===========================================================================
-bool Ostap::Math::BSpline2D::setParameter
-( const unsigned int k , const double value ) 
-{
-  if ( k >= m_pars.size() )    { return false  ; }
-  const double v = m_pars[k] ;
-  if ( s_equal ( v , value ) ) { return false ; }
-  //
-  m_pars[k] = value ;
-  return true ;
 }
 // ===========================================================================
 // make the calcualtions 
@@ -2235,8 +2269,15 @@ Ostap::Math::BSpline2D::__truediv__  ( const double value ) const
 Ostap::Math::BSpline2D 
 Ostap::Math::BSpline2D::__neg__  () const { return  -(*this) ; }
 // ============================================================================
-
-
+// swap it!
+// ============================================================================
+void Ostap::Math::BSpline2D::swap 
+( Ostap::Math::BSpline2D& right )  
+{
+  Ostap::Math::Parameters::swap ( right ) ;
+  m_xspline.swap ( right.m_xspline ) ;
+  m_yspline.swap ( right.m_yspline ) ;  
+}
 // ============================================================================
 // Symmetric 
 // ============================================================================
@@ -2246,23 +2287,10 @@ Ostap::Math::BSpline2D::__neg__  () const { return  -(*this) ; }
 // ============================================================================
 Ostap::Math::BSpline2DSym::BSpline2DSym
 ( const Ostap::Math::BSpline& spline )
-  : m_spline ( spline        )
-  , m_pars   ( spline.npars() * ( spline.npars() + 1 ) / 2 )
+  : Ostap::Math::Parameters ( spline.npars() * ( spline.npars() + 1 ) / 2 )
+  , m_spline ( spline        )
 {
   for ( unsigned i = 0 ; i < m_spline.npars() ; ++i ) { m_spline.setPar ( i , 0 ) ; }
-}
-// ===========================================================================
-// set k-parameter
-// ===========================================================================
-bool Ostap::Math::BSpline2DSym::setParameter
-( const unsigned int k , const double value ) 
-{
-  if ( k >= m_pars.size() )    { return false  ; }
-  const double v = m_pars[k] ;
-  if ( s_equal ( v , value ) ) { return false ; }
-  //
-  m_pars[k] = value ;
-  return true ;
 }
 // ===========================================================================
 // make the calcualtions 
@@ -2291,7 +2319,8 @@ double Ostap::Math::BSpline2DSym::calculate
 // get the value
 // ============================================================================
 double Ostap::Math::BSpline2DSym::evaluate 
-( const double x , const double y ) const
+( const double x , 
+  const double y ) const
 {
   //
   if ( x < xmin() || y < ymin() || x > xmax() || y > ymax() ) { return 0 ; }
@@ -2679,6 +2708,16 @@ Ostap::Math::BSpline2DSym::__truediv__  ( const double value ) const
 Ostap::Math::BSpline2DSym 
 Ostap::Math::BSpline2DSym::__neg__  () const { return  -(*this) ; }
 // ============================================================================
+// swap it!
+// ============================================================================
+void Ostap::Math::BSpline2DSym::swap 
+( Ostap::Math::BSpline2DSym& right )  
+{
+  Ostap::Math::Parameters::swap ( right ) ;
+  m_spline.swap ( right.m_spline ) ;  
+}
+
+
 
 // ============================================================================
 // Positive 2D spline 
@@ -2734,8 +2773,14 @@ bool Ostap::Math::PositiveSpline2DSym::updateSpline()
   return update ;
 }
 // ============================================================================
-
-
+// swap it!
+// ============================================================================
+void Ostap::Math::PositiveSpline2DSym::swap 
+( Ostap::Math::PositiveSpline2DSym& right )  
+{
+  m_spline.swap ( right.m_spline ) ;  
+  m_sphere.swap ( right.m_sphere ) ;  
+}
 
 
 // ============================================================================

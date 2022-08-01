@@ -7,6 +7,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/Parameters.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/NSphere.h"
 // ============================================================================
@@ -32,7 +33,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2017-11-14
      */
-    class Bernstein3D
+    class Bernstein3D : public Ostap::Math::Parameters 
     {
       // ======================================================================
     public:
@@ -86,18 +87,12 @@ namespace Ostap
         const double z ) const 
       { return evaluate ( x ,   y , z ) ; }
       // ======================================================================
-    public: // setters
+    public: // getters & setters
       // ======================================================================
-      /// set k-parameter
-      bool setPar 
-      ( const unsigned int   k     ,
-        const double         value ) ;
-      /// set k-parameter
-      bool setParameter 
-      ( const unsigned int   k     ,
-        const double         value )
-      { return ( k < m_pars.size() ) && setPar ( k , value ) ; }
-      /// set (l,m)-parameter
+      using Ostap::Math::Parameters::par    ;
+      using Ostap::Math::Parameters::setPar ;
+      // ======================================================================
+      /// set (l,m,n)-parameter
       bool setPar
       ( const unsigned short l     ,
         const unsigned short m     ,
@@ -107,36 +102,12 @@ namespace Ostap
         const unsigned int k = index ( l , m , n ) ;
         return  ( k < m_pars.size() ) && setPar ( k , value )  ;
       }
-      /// set (l,m)-parameter
-      bool setParameter 
-      ( const unsigned short l     ,
-        const unsigned short m     ,
-        const unsigned short n     ,
-        const double         value )
-      { return setPar   ( l , m  , n , value ) ; }
-      // ======================================================================
-    public: // getters
-      // ======================================================================
       /// get (l,m,n)-parameter
       double  par
       ( const unsigned short l ,
         const unsigned short m ,
         const unsigned short n ) const 
       {  return par ( index ( l , m , n ) ) ; }
-      /// get (l,m,n)-parameter
-      double  parameter
-      ( const unsigned short l ,
-        const unsigned short m ,
-        const unsigned short n ) const { return par (  l , m , n ) ; }
-      /// get k-parameter
-      double  par   
-      ( const unsigned int k ) const
-      { return k < m_pars.size() ? m_pars[k] : 0.0 ; }
-      /// get k-parameter
-      double  parameter
-      ( const unsigned int k ) const { return par ( k ) ; }
-      /// get all parameters at once
-      const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
     public: // convert (l,m,n) into single index k
       // ======================================================================
@@ -405,9 +376,10 @@ namespace Ostap
     private: // helper functions to make calculations
       // ======================================================================
       /// helper function to make calculations
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy , 
-                         const std::vector<double>& fz ) const ;
+      double calculate
+      ( const std::vector<double>& fx , 
+        const std::vector<double>& fy , 
+        const std::vector<double>& fz ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -417,8 +389,6 @@ namespace Ostap
       unsigned short m_ny ; // polynom order in y-dimension
       // polynom order in z-dimension
       unsigned short m_nz ; // polynom order in z-dimension
-      /// the list of parameters
-      std::vector<double>  m_pars ;                // the list of parameters
       /// the left edge of interval
       double m_xmin  ;                             // the left edge of interval
       /// the right edge of interval
@@ -474,7 +444,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2017-11-14
      */
-    class Bernstein3DSym
+    class Bernstein3DSym : public Ostap::Math::Parameters
     {
       // ======================================================================
     public:
@@ -500,18 +470,12 @@ namespace Ostap
         const double z ) const 
       { return evaluate ( x ,   y , z ) ; }
       // ======================================================================
-    public: // setters
+    public: // getters & setters
       // ======================================================================
-      /// set k-parameter
-      bool setPar  
-      ( const unsigned int   k     ,
-        const double         value ) ;
-      /// set k-parameter
-      bool setParameter 
-      ( const unsigned int   k     ,
-        const double         value )
-      { return ( k < m_pars.size() ) && setPar ( k , value ) ; }
-      /// set (l,m)-parameter
+      using Ostap::Math::Parameters::par    ;
+      using Ostap::Math::Parameters::setPar ;
+      // ======================================================================
+      /// set (l,m,n)-parameter
       bool setPar
       ( const unsigned short l     ,
         const unsigned short m     ,
@@ -521,35 +485,12 @@ namespace Ostap
         const unsigned int k = index ( l , m , n ) ;
         return  ( k < m_pars.size() ) && setPar ( k , value )  ;
       }
-      /// set (l,m)-parameter
-      bool setParameter
-      ( const unsigned short l     ,
-        const unsigned short m     ,
-        const unsigned short n     ,
-        const double         value )
-      { return setPar   ( l , m  , n , value ) ; }
-      // ======================================================================
-    public: // getters
-      // ======================================================================
       /// get (l,m,n)-parameter
       double  par 
       ( const unsigned short l ,
         const unsigned short m ,
         const unsigned short n ) const 
       { return par ( index ( l , m , n ) ) ; }
-      /// get (l,m,n)-parameter
-      double  parameter 
-      ( const unsigned short l ,
-        const unsigned short m ,
-        const unsigned short n ) const 
-      { return par (  l , m , n ) ; }
-      /// get k-parameter
-      double  par       ( const unsigned int k ) const
-      { return k < m_pars.size() ? m_pars[k] : 0.0 ; }
-      /// get k-parameter
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get all parameters at once
-      const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
     public : // convert (i,j,k) into single index 
       // ======================================================================
@@ -820,16 +761,15 @@ namespace Ostap
     private: // helper functions to make calculations
       // ======================================================================
       /// helper function to make calculations
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy , 
-                         const std::vector<double>& fz ) const ;
+      double calculate 
+      ( const std::vector<double>& fx , 
+        const std::vector<double>& fy , 
+        const std::vector<double>& fz ) const ;
       // ======================================================================
     private:
       // ======================================================================
       // polynom order in x-dimension
       unsigned short m_n  ; // polynom order in x-dimension
-      /// the list of parameters
-      std::vector<double>  m_pars ;                // the list of parameters
       /// the left edge of interval
       double m_xmin  ;                             // the left edge of interval
       /// the right edge of interval
@@ -874,7 +814,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2017-11-14
      */
-    class Bernstein3DMix
+    class Bernstein3DMix : public Ostap::Math::Parameters 
     {
       // ======================================================================
     public:
@@ -906,53 +846,27 @@ namespace Ostap
         const double z ) const 
       { return evaluate ( x ,   y , z ) ; }
       // ======================================================================
-    public: // setters
+    public: // getters & setters
       // ======================================================================
-      /// set k-parameter
-      bool setPar
-      ( const unsigned int   k     ,
-        const double         value ) ;
-      /// set k-parameter
-      bool setParameter 
-      ( const unsigned int   k     ,
-        const double         value )
-      { return ( k < m_pars.size() ) && setPar ( k , value ) ; }
-      /// set (l,m)-parameter
+      using Ostap::Math::Parameters::par    ;
+      using Ostap::Math::Parameters::setPar ;
+      // ======================================================================
+      /// set (l,m,n)-parameter
       bool setPar
       ( const unsigned short l     ,
         const unsigned short m     ,
         const unsigned short n     ,
-        const double         value ) ;
-      /// set (l,m)-parameter
-      bool setParameter 
-      ( const unsigned short l     ,
-        const unsigned short m     ,
-        const unsigned short n     ,
-        const double         value )
-      { return setPar   ( l , m  , n , value ) ; }
-      // ======================================================================
-    public: // getters
-      // ======================================================================
+        const double         value ) 
+      {
+        const unsigned int k = index ( l , m , n ) ;
+        return  ( k < m_pars.size() ) && setPar ( k , value )  ;
+      }
       /// get (l,m,n)-parameter
       double  par
       ( const unsigned short l ,
         const unsigned short m ,
         const unsigned short n ) const 
       { return par ( index ( l , m , n ) ) ; }
-      /// get (l,m,n)-parameter
-      double  parameter 
-      ( const unsigned short l ,
-        const unsigned short m ,
-        const unsigned short n ) const 
-      { return par (  l , m , n ) ; }
-      /// get k-parameter
-      double  par       ( const unsigned int k ) const
-      { return k < m_pars.size() ? m_pars[k] : 0.0 ; }
-      /// get k-parameter
-      double  parameter ( const unsigned int k ) const 
-      { return par ( k ) ; }
-      /// get all parameters at once
-      const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
     public:  // convert (i,j,k) into single index 
       // ======================================================================
@@ -1218,9 +1132,10 @@ namespace Ostap
     private: // helper functions to make calculations
       // ======================================================================
       /// helper function to make calculations
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy , 
-                         const std::vector<double>& fz ) const ;
+      double calculate 
+      ( const std::vector<double>& fx , 
+        const std::vector<double>& fy , 
+        const std::vector<double>& fz ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1228,8 +1143,6 @@ namespace Ostap
       unsigned short m_n  ; // polynom order in x,y-dimensions
       /// polynom order in z-dimension
       unsigned short m_nz ; // polynom order in z-dimension
-      /// the list of parameters
-      std::vector<double>  m_pars ;                // the list of parameters
       /// the left edge of interval
       double m_xmin  ;                             // the left edge of interval
       /// the right edge of interval

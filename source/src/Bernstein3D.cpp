@@ -35,11 +35,11 @@ Ostap::Math::Bernstein3D::Bernstein3D
   const double               ymax  ,
   const double               zmin  ,
   const double               zmax  ) 
-  : m_nx   ( nX )
+  : Ostap::Math::Parameters ( ( nX + 1 ) * ( nY + 1 ) * ( nZ + 1 ) )
+  , m_nx   ( nX )
   , m_ny   ( nY )
   , m_nz   ( nZ )
     //
-  , m_pars ( ( nX + 1 ) * ( nY + 1 ) * ( nZ + 1 ) , 0.0 )
     //
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
@@ -86,10 +86,10 @@ Ostap::Math::Bernstein3D::Bernstein3D
 ( const Ostap::Math::Bernstein& bx , 
   const Ostap::Math::Bernstein& by ,
   const Ostap::Math::Bernstein& bz ) 
-  : m_nx   ( bx. n   () )
+  : Ostap::Math::Parameters ( ( bx.n  () + 1 ) * ( by.n () + 1 ) * ( bz.n () + 1 ) )
+  , m_nx   ( bx. n   () )
   , m_ny   ( by. n   () )
   , m_nz   ( bz. n   () )
-  , m_pars ( ( bx.n  () + 1 ) * ( by.n () + 1 ) * ( bz.n () + 1 ) , 0.0 )
   , m_xmin ( bx.xmin () )
   , m_xmax ( bx.xmax () )
   , m_ymin ( by.xmin () )
@@ -127,11 +127,10 @@ Ostap::Math::Bernstein3D::Bernstein3D
 // ============================================================================
 Ostap::Math::Bernstein3D::Bernstein3D 
 ( const Ostap::Math::Bernstein3DSym& right ) 
-  : m_nx   ( right.nX() )
+  : Ostap::Math::Parameters ( ( right.nX() + 1 ) * ( right.nY() + 1 ) * ( right.nZ () + 1 ) )
+  , m_nx   ( right.nX() )
   , m_ny   ( right.nY() )
   , m_nz   ( right.nZ() )
-    //
-  , m_pars ( ( right.nX() + 1 ) * ( right.nY() + 1 ) * ( right.nZ () + 1 ) , 0.0 )
     //
   , m_xmin ( right.xmin() )
   , m_xmax ( right.xmax() )
@@ -165,11 +164,10 @@ Ostap::Math::Bernstein3D::Bernstein3D
 // ============================================================================
 Ostap::Math::Bernstein3D::Bernstein3D 
 ( const Ostap::Math::Bernstein3DMix& right ) 
-  : m_nx   ( right.nX() )
+  : Ostap::Math::Parameters ( ( right.nX() + 1 ) * ( right.nY() + 1 ) * ( right.nZ () + 1 ) )
+  , m_nx   ( right.nX() )
   , m_ny   ( right.nY() )
   , m_nz   ( right.nZ() )
-    //
-  , m_pars ( ( right.nX() + 1 ) * ( right.nY() + 1 ) * ( right.nZ () + 1 ) , 0.0 )
     //
   , m_xmin ( right.xmin() )
   , m_xmax ( right.xmax() )
@@ -203,10 +201,11 @@ Ostap::Math::Bernstein3D::Bernstein3D
 // ============================================================================
 void Ostap::Math::Bernstein3D::swap ( Ostap::Math::Bernstein3D&  right ) 
 {
+  Ostap::Math::Parameters::swap ( right ) ;
+  //
   std::swap ( m_nx   , right.m_nx    ) ;
   std::swap ( m_ny   , right.m_ny    ) ;
   std::swap ( m_nz   , right.m_nz    ) ;
-  std::swap ( m_pars , right.m_pars  ) ;
   std::swap ( m_xmin , right.m_xmin  ) ;
   std::swap ( m_xmax , right.m_xmax  ) ;
   std::swap ( m_ymin , right.m_ymin  ) ;
@@ -739,18 +738,6 @@ double Ostap::Math::Bernstein3D::integrateYZ ( const double x    ) const
   return calculate ( fx , fy , fz ) ;
 }
 // ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::Bernstein3D::setPar
-( const unsigned int   k     ,
-  const double         value )
-{
-  if ( k >= npars() )                     { return false ; }
-  if ( s_equal ( m_pars [ k ] , value ) ) { return false ; }
-  m_pars [ k ] = value ;
-  return true ;
-}
-// ============================================================================
 Ostap::Math::Bernstein3D&
 Ostap::Math::Bernstein3D::operator+=( const double a )
 {
@@ -866,9 +853,9 @@ Ostap::Math::Bernstein3DSym::Bernstein3DSym
 ( const unsigned short       N     ,
   const double               xmin  ,
   const double               xmax  )
-  : m_n    ( N )
+  : Ostap::Math::Parameters ( ( N + 1 ) * ( N + 2 ) * ( N + 3 ) / 6  )
+  , m_n    ( N )
     //
-  , m_pars ( ( N + 1 ) * ( N + 2 ) * ( N + 3 ) / 6 , 0.0 )
     //
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
@@ -887,7 +874,8 @@ Ostap::Math::Bernstein3DSym::Bernstein3DSym
 void Ostap::Math::Bernstein3DSym::swap
 ( Ostap::Math::Bernstein3DSym&  right ) 
 {
-  std::swap ( m_n    , right.m_n     ) ;
+  Ostap::Math::Parameters::swap ( right ) ;
+  //
   std::swap ( m_pars , right.m_pars  ) ;
   std::swap ( m_xmin , right.m_xmin  ) ;
   std::swap ( m_xmax , right.m_xmax  ) ;
@@ -1201,18 +1189,6 @@ double Ostap::Math::Bernstein3DSym::integrateXY ( const double z    ) const
   return calculate ( fx , fy , fz ) ;
 }
 // ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::Bernstein3DSym::setPar
-( const unsigned int   k     ,
-  const double         value )
-{
-  if ( k >= npars() )                     { return false ; }
-  if ( s_equal ( m_pars [ k ] , value ) ) { return false ; }
-  m_pars [ k ] = value ;
-  return true ;
-}
-// ============================================================================
 Ostap::Math::Bernstein3DSym&
 Ostap::Math::Bernstein3DSym::operator+=( const double a )
 {
@@ -1329,10 +1305,9 @@ Ostap::Math::Bernstein3DMix::Bernstein3DMix
   const double               xmax  ,
   const double               zmin  ,
   const double               zmax  )
-  : m_n    ( N  )
+  : Ostap::Math::Parameters ( ( N + 1 ) * ( N + 2 ) * ( Nz + 1 ) / 2 )
+  , m_n    ( N  )
   , m_nz   ( Nz )
-    //
-  , m_pars ( ( N + 1 ) * ( N + 2 ) * ( Nz + 1 ) / 2 , 0.0 )
     //
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
@@ -1355,10 +1330,11 @@ Ostap::Math::Bernstein3DMix::Bernstein3DMix
 // ============================================================================
 Ostap::Math::Bernstein3DMix::Bernstein3DMix
 ( const Ostap::Math::Bernstein3DSym& right ) 
-  : m_n    ( right.nX() )
+  : Ostap::Math::Parameters ( ( right.nZ() + 1 ) * ( right.nX() + 2 ) * ( right.nZ() + 1 ) / 2  )
+    //
+  , m_n    ( right.nX() )
   , m_nz   ( right.nZ() )
     //
-  , m_pars ( ( right.nZ() + 1 ) * ( right.nX() + 2 ) * ( right.nZ() + 1 ) / 2 , 0.0 )
     //
   , m_xmin ( right.xmin () )
   , m_xmax ( right.xmin () )
@@ -1382,9 +1358,10 @@ Ostap::Math::Bernstein3DMix::Bernstein3DMix
 void Ostap::Math::Bernstein3DMix::swap
 ( Ostap::Math::Bernstein3DMix&  right ) 
 {
+  Ostap::Math::Parameters::swap ( right ) ;
+  //
   std::swap ( m_n    , right.m_n     ) ;
   std::swap ( m_nz   , right.m_nz    ) ;
-  std::swap ( m_pars , right.m_pars  ) ;
   std::swap ( m_xmin , right.m_xmin  ) ;
   std::swap ( m_xmax , right.m_xmax  ) ;
   std::swap ( m_zmin , right.m_zmin  ) ;
@@ -1809,18 +1786,6 @@ double Ostap::Math::Bernstein3DMix::integrateXZ ( const double y    ) const
   const std::vector<double> fz ( nZ () + 1 , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
   //
   return calculate ( fx , fy , fz ) ;
-}
-// ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::Bernstein3DMix::setPar
-( const unsigned int   k     ,
-  const double         value )
-{
-  if ( k >= npars() )                     { return false ; }
-  if ( s_equal ( m_pars [ k ] , value ) ) { return false ; }
-  m_pars [ k ] = value ;
-  return true ;
 }
 // ============================================================================
 Ostap::Math::Bernstein3DMix&

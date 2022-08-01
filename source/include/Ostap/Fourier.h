@@ -8,6 +8,10 @@
 #include <vector>
 #include <complex>
 // ============================================================================
+// Ostap
+// ============================================================================
+#include "Parameters.h"
+// ============================================================================
 /** @file Ostap/Fourier.h
  *  set of useful models
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -29,8 +33,9 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-07-26
      */
-    class  FourierSum 
+    class  FourierSum : public Ostap::Math::Parameters 
     {
+      // ======================================================================
     public:
       // ======================================================================
       /** @param degree  degree
@@ -38,10 +43,11 @@ namespace Ostap
        *  @param xmax    high edge
        *  @param fejer   use fejer summation
        */
-      FourierSum ( const unsigned short degree = 0     ,   // degree
-                   const double         xmin   = 0     ,   // low edge
-                   const double         xmax   = 1     ,   // high edge
-                   const bool           fejer  = false );  // use Fejer summation
+      FourierSum 
+      ( const unsigned short degree = 0     ,   // degree
+        const double         xmin   = 0     ,   // low edge
+        const double         xmax   = 1     ,   // high edge
+        const bool           fejer  = false );  // use Fejer summation
       /// constructor from cosine serie
       FourierSum ( const CosineSum&  sum ) ;
       /// constructor from Fourier series and fejer flag
@@ -51,14 +57,12 @@ namespace Ostap
       FourierSum ( const FourierSum&  sum ) ;
       ///  move 
       FourierSum (       FourierSum&& sum ) ;
-      // ======================================================================
-    protected:  // protected constructor from parameters
-      // ======================================================================
-      /// protected constructor from parameters
-      FourierSum ( const std::vector<double>& pars  ,
-                   const double               xmin  ,
-                   const double               xmax  ,
-                   const double               fejer );
+      /// constructor from odd numbers of parameters 
+      FourierSum
+      ( const std::vector<double>& pars  ,
+        const double               xmin  ,
+        const double               xmax  ,
+        const double               fejer );
       // ======================================================================
     public:
       // ======================================================================
@@ -91,30 +95,6 @@ namespace Ostap
       // ======================================================================
       /// degree  of polynomial
       unsigned short degree () const { return ( m_pars.size() - 1 ) / 2 ; }
-      /// number of parameters
-      unsigned short npars  () const { return m_pars.size()     ; }
-      /// all zero ?
-      bool           zero   () const ;
-      /** set k-parameter
-       *  @param k index
-       *  @param value new value
-       *  @return true if parameter is actually changed
-       */
-      bool setPar          ( const unsigned short k , const double value ) ;
-      /** set k-parameter
-       *  @param k index
-       *  @param value new value
-       *  @return true if parameter is actually changed
-       */
-      bool setParameter    ( const unsigned short k , const double value )
-      { return setPar      ( k , value ) ; }
-      /// get the parameter value
-      double  par          ( const unsigned short k ) const
-      { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
-      /// get the parameter value
-      double  parameter    ( const unsigned short k ) const { return par ( k ) ; }
-      /// get all parameters:
-      const std::vector<double>& pars () const { return m_pars ; }
       /// get k-th cos-parameter
       double a ( const unsigned short k ) const { return par ( 2 * k     ) ; }
       /// get k-th sin-parameter
@@ -162,15 +142,17 @@ namespace Ostap
        *  @param sigma resoltuion parameter for gaussian
        *  @return convolution witgh gaussian
        */
-      FourierSum   convolve     ( const double sigma     ) const ;
+      FourierSum   convolve 
+      ( const double sigma     ) const ;
       /** deconvolute with optional regularization
        *  @param sigma sigma of gaussian
        *  @param delta parameter of Tikhonov's regularization
        *  for delta<=0, no regularization
        *  @return regularised deconvolution
        */
-      FourierSum deconvolve     ( const double sigma     ,
-                                  const double delta = 0 ) const ;
+      FourierSum deconvolve  
+      ( const double sigma     ,
+        const double delta = 0 ) const ;
       /**  get the effective cut-off (==number of effective harmonics)
        *   of Tikhonov's regularization
        *   \f$ n \equiv  \sqrt{2 \ln \delta} \frac{\pi\sigma}{L} \f$
@@ -178,8 +160,9 @@ namespace Ostap
        *   @param delta  regularization parameter
        *   @return number of effective harmonic
        */
-      double     regularization ( const double sigma     ,
-                                  const double delta     ) const ;
+      double     regularization
+      ( const double sigma     ,
+        const double delta     ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -233,8 +216,6 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// actual vector of coefficients
-      std::vector<double> m_pars ; // actual vector of coefficients
       /// low edge
       double m_xmin  ;             // the low edge
       /// high edge
@@ -244,7 +225,7 @@ namespace Ostap
       /// delta
       double m_delta ;             // delta
       /// summation algorithm
-      bool m_fejer   ;             // summation algorithm
+      bool   m_fejer ;             // summation algorithm
        // ======================================================================
     } ;
     // ========================================================================
@@ -273,7 +254,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-07-26
      */
-    class  CosineSum
+    class  CosineSum : public Ostap::Math::Parameters 
     {
     public:
       // ======================================================================
@@ -282,10 +263,11 @@ namespace Ostap
        *  @param xmax    high edge
        *  @param fejer   use fejer summation
        */
-      CosineSum ( const unsigned short degree = 0     ,    // degree
-                  const double         xmin   = 0     ,    // low edge
-                  const double         xmax   = 1     ,    // high edge
-                  const bool           fejer  = false ) ;  // use Fejer summation
+      CosineSum 
+      ( const unsigned short degree = 0     ,    // degree
+        const double         xmin   = 0     ,    // low edge
+        const double         xmax   = 1     ,    // high edge
+        const bool           fejer  = false ) ;  // use Fejer summation
       /// constructor from Fourier sum
       CosineSum ( const FourierSum&    sum            ) ;
       /// constructor from Fourier series and fejer flag
@@ -295,14 +277,12 @@ namespace Ostap
       CosineSum ( const CosineSum&  sum ) ;
       ///  move 
       CosineSum (       CosineSum&& sum ) ;
-      // ======================================================================
-    protected:  // protected constructor from parameters
-      // ======================================================================
-      /// protected constructor from parameters
-      CosineSum ( const std::vector<double>& pars  ,
-                  const double               xmin  ,
-                  const double               xmax  ,
-                  const double               fejer );
+      /// constructor from on-empty list of parameters
+      CosineSum 
+      ( const std::vector<double>& pars  ,
+        const double               xmin  ,
+        const double               xmax  ,
+        const double               fejer );
       // ======================================================================
     public:
       // ======================================================================
@@ -335,30 +315,6 @@ namespace Ostap
       // ======================================================================
       /// degree  of polynomial
       unsigned short degree () const { return m_pars.size() - 1 ; }
-      /// number of parameters
-      unsigned short npars  () const { return m_pars.size()     ; }
-      /// all zero ?
-      bool           zero   () const ;
-      /** set k-parameter
-       *  @param k index
-       *  @param value new value
-       *  @return true if parameter is actually changed
-       */
-      bool setPar          ( const unsigned short k , const double value ) ;
-      /** set k-parameter
-       *  @param k index
-       *  @param value new value
-       *  @return true if parameter is actually changed
-       */
-      bool setParameter    ( const unsigned short k , const double value )
-      { return setPar      ( k , value ) ; }
-      /// get the parameter value
-      double  par          ( const unsigned short k ) const
-      { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
-      /// get the parameter value
-      double  parameter    ( const unsigned short k ) const { return par ( k ) ; }
-      /// get all parameters:
-      const std::vector<double>& pars () const { return m_pars ; }
       /// get k-th cos-parameter
       double a    ( const unsigned short k ) const { return par ( k     ) ; }
       // set cosine terms
@@ -373,9 +329,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the derivative at point x
-      double     derivative ( const double x ) const ;
+      double     derivative   ( const double x ) const ;
       /// get the derivative as function
-      FourierSum derivative ( ) const ;
+      FourierSum derivative   ( ) const ;
       /// get nth derivative as function
       FourierSum derivative_n ( const unsigned short n ) const ;
       // ======================================================================
@@ -442,8 +398,6 @@ namespace Ostap
       // ======================================================================
     public: // for python
       // ======================================================================
-    public: // for python
-      // ======================================================================
       CosineSum __add__     ( const double value ) const ;
       CosineSum __mul__     ( const double value ) const ;
       CosineSum __sub__     ( const double value ) const ;
@@ -461,8 +415,6 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// actual vector of coefficients
-      std::vector<double> m_pars ; // actual vector of coefficients
       /// low edge
       double m_xmin  ;             // the low edge
       /// high edge

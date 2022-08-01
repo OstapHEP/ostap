@@ -2,7 +2,10 @@
 
   1. add some finite functions: `hat` and `up` and correspoondg models/PDFs
   1. add finite atomic function `fupN` and corresponding PDF 
-  
+  1. reduce code duplication for variosu parameteric functions
+  1. make more active use of `Parameters`  
+  1. add more `swap` functions 
+
 
 ## Backward incompatible:  
 

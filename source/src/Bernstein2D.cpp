@@ -37,11 +37,9 @@ Ostap::Math::Bernstein2D::Bernstein2D
   const double              xmax ,
   const double              ymin ,
   const double              ymax )
-  : m_nx   ( nX ) 
+  : Ostap::Math::Parameters  ( ( nX + 1 ) * ( nY + 1 ) )
+  , m_nx   ( nX ) 
   , m_ny   ( nY )
-//
-  , m_pars ( ( nX + 1 ) * ( nY + 1 ) , 0.0 )
-//
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
   , m_ymin ( std::min ( ymin , ymax ) )
@@ -67,9 +65,9 @@ Ostap::Math::Bernstein2D::Bernstein2D
 // ============================================================================
 Ostap::Math::Bernstein2D::Bernstein2D
 ( const Ostap::Math::Bernstein2DSym& right ) 
-  : m_nx ( right.nX() ) 
+  : Ostap::Math::Parameters  ( ( right.nX () + 1 ) * ( right.nY () + 1 ) )
+  , m_nx ( right.nX() ) 
   , m_ny ( right.nY() ) 
-  , m_pars ( ( right.nX () + 1 ) * ( right.nY () + 1 ) , 0.0 ) 
   , m_xmin ( right.xmin() ) 
   , m_xmax ( right.xmax() ) 
   , m_ymin ( right.xmin() ) 
@@ -112,9 +110,9 @@ Ostap::Math::Bernstein2D::Bernstein2D
 Ostap::Math::Bernstein2D::Bernstein2D 
 ( const Ostap::Math::Bernstein& bx , 
   const Ostap::Math::Bernstein& by ) 
-  : m_nx   ( bx.n    () ) 
+  : Ostap::Math::Parameters  ( ( bx.n  () + 1 ) * ( by.n () + 1 ) )
+  , m_nx   ( bx.n    () ) 
   , m_ny   ( by.n    () ) 
-  , m_pars ( ( bx.n  () + 1 ) * ( by.n () + 1 ) , 0.0 )    
   , m_xmin ( bx.xmin () )
   , m_xmax ( bx.xmax () )
   , m_ymin ( by.xmin () )
@@ -144,9 +142,9 @@ Ostap::Math::Bernstein2D::Bernstein2D
 // ============================================================================
 void Ostap::Math::Bernstein2D::swap ( Ostap::Math::Bernstein2D& right ) 
 {
+  Ostap::Math::Parameters::swap ( right ) ;
   std::swap ( m_nx   , right.m_nx    ) ;
   std::swap ( m_ny   , right.m_ny    ) ;
-  std::swap ( m_pars , right.m_pars  ) ;
   std::swap ( m_xmin , right.m_xmin  ) ;
   std::swap ( m_xmax , right.m_xmax  ) ;
   std::swap ( m_ymin , right.m_ymin  ) ;
@@ -358,18 +356,6 @@ double Ostap::Math::Bernstein2D::integrateY
   return calculate ( fx ,  fy ) ;
 }
 // ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::Bernstein2D::setPar
-( const unsigned int   k     , 
-  const double         value )
-{
-  if ( k >= npars() )                     { return false ; }
-  if ( s_equal ( m_pars [ k ] , value ) ) { return false ; }
-  m_pars [ k ] = value ;
-  return true ;
-}
-// ============================================================================
 // Operators 
 // ============================================================================
 Ostap::Math::Bernstein2D&
@@ -485,13 +471,11 @@ Ostap::Math::Bernstein2DSym::Bernstein2DSym
 ( const unsigned short      n    ,
   const double              xmin ,
   const double              xmax )
-  : m_n    ( n ) 
-//
-  , m_pars ( ( n + 1 ) * ( n + 2 ) / 2 , 0.0 )
-//
+  : Ostap::Math::Parameters ( ( n + 1 ) * ( n + 2 ) / 2  )
+  , m_n    ( n ) 
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
-//
+  //
   , m_b    () 
 {
   //
@@ -505,8 +489,8 @@ Ostap::Math::Bernstein2DSym::Bernstein2DSym
 // ============================================================================
 void Ostap::Math::Bernstein2DSym::swap( Ostap::Math::Bernstein2DSym& right )
 {
+  Ostap::Math::Parameters::swap ( right ) ;
   std::swap ( m_n    ,  right.m_n    ) ;
-  std::swap ( m_pars ,  right.m_pars ) ;
   std::swap ( m_xmin ,  right.m_xmin ) ;
   std::swap ( m_xmax ,  right.m_xmax ) ;
   std::swap ( m_b    ,  right.m_b    ) ;
@@ -682,20 +666,6 @@ double Ostap::Math::Bernstein2DSym::integrateY ( const double x ) const
   const std::vector<double> fy ( m_n + 1 , ( ymax() - ymin () ) / ( m_n + 1 ) ) ;
   //
   return  calculate ( fx , fy ) ;
-}
-// ============================================================================
-// set (k)-parameter
-// ============================================================================
-bool Ostap::Math::Bernstein2DSym::setPar
-( const unsigned int   k     , 
-  const double         value )
-{
-  //
-  if ( k >= npars() )                     { return false ; }
-  if ( s_equal ( m_pars [ k ] , value ) ) { return false ; }
-  m_pars [ k ] = value ;
-  //
-  return true ;
 }
 // ============================================================================
 Ostap::Math::Bernstein2DSym&
