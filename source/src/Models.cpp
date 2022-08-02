@@ -3254,6 +3254,206 @@ std::size_t Ostap::Math::GenArgus::tag () const
 
 
 
+// ============================================================================
+/*  constructor fron all parameters
+ *  @param a position of the left paraboilic horn
+ *  @param delta half-distance fron left to right parabolic horn 
+ *  @param phi   linear correction parameter ("efficiency")
+ */
+// ============================================================================
+Ostap::Math::HORNSdini::HORNSdini
+( const double a     , 
+  const double delta ,
+  const double phi   ) 
+  : m_a        ( a   ) 
+  , m_delta    ( std::abs ( delta ) )
+  , m_phi      ( phi ) 
+  , m_cos2_phi ( std::pow ( std::cos ( phi + 0.25 * M_PI ) , 2 ) ) 
+  , m_sin2_phi ( std::pow ( std::sin ( phi + 0.25 * M_PI ) , 2 ) ) 
+{}
+// ======================================================================
+// evaluate the function 
+// ======================================================================
+double Ostap::Math::HORNSdini::evaluate ( const double x )  const 
+{
+  if ( x < xmin () || xmax () < x ) { return 0 ; }
+  const double z = ( x - m_a ) / m_delta - 1 ;
+  return 1.5 * z * z * ( 1 + z * ( m_cos2_phi - m_sin2_phi ) ) / m_delta ;                        
+}
+// =============================================================================
+// set a parameter
+// =============================================================================
+bool Ostap::Math::HORNSdini::setA   ( const double value ) 
+{
+  if ( s_equal ( m_a , value ) ) { return false ; }
+  m_a = value ;
+  return true ;    
+}
+// =============================================================================
+// set delta parameter
+// =============================================================================
+bool Ostap::Math::HORNSdini::setDelta ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_delta , avalue ) ) { return false ; }
+  m_delta = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set phi parameter
+// =============================================================================
+bool Ostap::Math::HORNSdini::setPhi ( const double value ) 
+{
+  if ( s_equal ( m_phi , value ) ) { return false ; }
+  //
+  m_phi      = value ;
+  m_cos2_phi = std::pow ( std::cos ( m_phi + 0.25 * M_PI ) , 2 ) ;
+  m_sin2_phi = std::pow ( std::sin ( m_phi + 0.25 * M_PI ) , 2 ) ;
+  //
+  return true ;    
+}
+// ============================================================================
+// get the integral 
+// ============================================================================
+double Ostap::Math::HORNSdini::integral  () const { return 1 ; }
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::HORNSdini::integral 
+( const double low  ,
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high )           ) { return 0 ; }
+  else if ( high < low                       ) { return - integral ( high , low ) ; }
+  else if ( high < xmin ()                   ) { return 0 ; }
+  else if ( low  > xmax ()                   ) { return 0 ; }
+  else if ( low <= xmin () && high>= xmax () ) { return 1 ; }
+  //
+  const double xl  = std::max ( low  , xmin () ) ;
+  const double xh  = std::min ( high , xmax () ) ;
+  //
+  const double zl  = ( xl - m_a ) / m_delta - 1  ;
+  const double zh  = ( xh - m_a ) / m_delta - 1 ;
+  //
+  const double zh3 = std::pow ( zh , 3 ) ;
+  const double zl3 = std::pow ( zl , 3 ) ;
+  //
+  return ( ( zh3 - zl3 ) / 3 + 
+           ( m_cos2_phi - m_sin2_phi ) * ( zh3 * zh - zl3 * zl ) / 4 ) * 1.5 ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::HORNSdini::tag () const 
+{ 
+  static const std::string s_name = "HORNSdini" ;
+  return std::hash_combine ( s_name , m_a , m_delta , m_phi ) ;
+}
+
+
+// ============================================================================
+/*  constructor fron all parameters
+ *  @param a position of the left paraboilic horn
+ *  @param delta half-distance fron left to right parabolic horn 
+ *  @param phi   linear correction parameter ("efficiency")
+ */
+// ============================================================================
+Ostap::Math::HILLdini::HILLdini
+( const double a     , 
+  const double delta ,
+  const double phi   ) 
+  : m_a        ( a   ) 
+  , m_delta    ( std::abs ( delta ) )
+  , m_phi      ( phi ) 
+  , m_cos2_phi ( std::pow ( std::cos ( phi + 0.25 * M_PI ) , 2 ) ) 
+  , m_sin2_phi ( std::pow ( std::sin ( phi + 0.25 * M_PI ) , 2 ) ) 
+{}
+// ======================================================================
+// evaluate the function 
+// ======================================================================
+double Ostap::Math::HILLdini::evaluate ( const double x )  const 
+{
+  if ( x < xmin () || xmax () < x ) { return 0 ; }
+  const double z  = ( x - m_a ) / m_delta - 1 ;
+  return 0.75 * ( 1 - z * z ) * ( 1 + z * ( m_cos2_phi - m_sin2_phi ) ) / m_delta ;                        
+}
+// =============================================================================
+// set a parameter
+// =============================================================================
+bool Ostap::Math::HILLdini::setA   ( const double value ) 
+{
+  if ( s_equal ( m_a , value ) ) { return false ; }
+  m_a = value ;
+  return true ;    
+}
+// =============================================================================
+// set delta parameter
+// =============================================================================
+bool Ostap::Math::HILLdini::setDelta ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_delta , avalue ) ) { return false ; }
+  m_delta = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set phi parameter
+// =============================================================================
+bool Ostap::Math::HILLdini::setPhi ( const double value ) 
+{
+  if ( s_equal ( m_phi , value ) ) { return false ; }
+  //
+  m_phi      = value ;
+  m_cos2_phi = std::pow ( std::cos ( m_phi + 0.25 * M_PI ) , 2 ) ;
+  m_sin2_phi = std::pow ( std::sin ( m_phi + 0.25 * M_PI ) , 2 ) ;
+  //
+  return true ;    
+}
+// ============================================================================
+// get the integral 
+// ============================================================================
+double Ostap::Math::HILLdini::integral  () const { return 1 ; }
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::HILLdini::integral 
+( const double low  ,
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high )           ) { return 0 ; }
+  else if ( high < low                       ) { return - integral ( high , low ) ; }
+  else if ( high < xmin ()                   ) { return 0 ; }
+  else if ( low  > xmax ()                   ) { return 0 ; }
+  else if ( low <= xmin () && high>= xmax () ) { return 1 ; }
+  //
+  const double xl  = std::max ( low  , xmin () ) ;
+  const double xh  = std::min ( high , xmax () ) ;
+  //
+  const double zh  = ( xh - m_a ) / m_delta - 1 ; 
+  const double zl  = ( xl - m_a ) / m_delta - 1 ;
+  //
+  const double zh3 = std::pow ( zh , 3 ) ;
+  const double zl3 = std::pow ( zl , 3 ) ;
+  //
+  const double A   = m_cos2_phi - m_sin2_phi ;
+  //
+  return ( (   zh       - zl       )     
+           + ( zh  * zh - zl  * zl ) * A / 2 
+           - ( zh3      - zl3      )     / 3
+           - ( zh3 * zh - zl3 * zl ) * A / 4 ) * 0.75 ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::HILLdini::tag () const 
+{ 
+  static const std::string s_name = "HILLdini" ;
+  return std::hash_combine ( s_name , m_a , m_delta , m_phi ) ;
+}
+
+
 
 
 // ============================================================================

@@ -6,10 +6,15 @@
   1. make more active use of `Parameters`  
   1. add more `swap` functions 
   1. fix for `par/setPar` methods for OLD root Where using statement does not help 
- 
+  1. more polishing for reduconig of RooFit an Ostap objects 
+  1. Add `HORNSdini` and `HILLdini` functions/pdf 
+
+
 ## Backward incompatible:  
 
 ## Bug fixes:
+
+  1. fix incorrectness in `Sum1D/Sum2D/Sum3D` - `fractions` argument was not forwardef to `Fractions`
 
 
 # v1.9.0.0

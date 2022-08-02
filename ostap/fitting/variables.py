@@ -1414,9 +1414,13 @@ def _rcomb_reduce ( var ) :
     - see Ostap.MoreRooFit.Combination
     """
     return _r2v_factory , ( type ( var ) ,
-                           var.name , var.title ,
-                           var.x()  , var.y()   ,
-                           var.alpha() , var.beta() , var.gamma () )
+                            var.name     ,
+                            var.title    ,
+                            var.x()      ,
+                            var.y()      ,
+                            var.alpha () ,
+                            var.beta  () ,
+                            var.gamma () )
 
 # ===================================================================
 ## Reduce <code>Ostap::MoreFooFit::Asymmetry</code> objects
@@ -1757,6 +1761,25 @@ _new_methods_ += [
     ]
 
 # =============================================================================
+## reduce<code> RooGaussian</code>
+#  @see RooGaussian
+def _rgau_reduce_ ( pdf ) :
+    """Reduce `ROOT.RooGaussian`
+    - see `ROOT.RooGaussian`
+    """
+    return _r2v_factory , ( type( pdf )     ,
+                            pdf.name        ,
+                            pdf.title       ,
+                            pdf.getX     () ,
+                            pdf.getMean  () ,
+                            pdf.getSigma () )
+
+ROOT.RooGaussian.__reduce__ = _rgau_reduce_
+_new_methods_ += [
+    ROOT.RooGaussian.__reduce__ ,
+    ]
+
+# =============================================================================
 ## Unpickle RooAbsCollection object
 #  @see RooAbsCollectio
 def _rac_factory ( klass , *args ) :
@@ -1806,6 +1829,7 @@ _decorated_classes_ = (
     Ostap.Models.Uniform          ,
     ##
     ROOT.RooProdPdf               ,
+    ROOT.RooGaussian              ,
     ROOT.RooArgSet                ,
     ROOT.RooArgList               ,
 )

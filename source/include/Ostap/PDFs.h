@@ -6968,19 +6968,21 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      GenInvGauss ( const char*  name      , 
-                    const char*  title     , 
-                    RooAbsReal&  x         ,
-                    RooAbsReal&  theta     ,
-                    RooAbsReal&  eta       ,
-                    RooAbsReal&  p         ,
-                    RooAbsReal&  shift     ) ;
-      GenInvGauss ( const char*  name      , 
-                    const char*  title     , 
-                    RooAbsReal&  x         ,
-                    RooAbsReal&  theta     ,
-                    RooAbsReal&  eta       ,
-                    RooAbsReal&  p         ) ;
+      GenInvGauss
+      ( const char*  name      , 
+        const char*  title     , 
+        RooAbsReal&  x         ,
+        RooAbsReal&  theta     ,
+        RooAbsReal&  eta       ,
+        RooAbsReal&  p         ,
+        RooAbsReal&  shift     ) ;
+      GenInvGauss 
+      ( const char*  name      , 
+        const char*  title     , 
+        RooAbsReal&  x         ,
+        RooAbsReal&  theta     ,
+        RooAbsReal&  eta       ,
+        RooAbsReal&  p         ) ;
       /// copy constructor 
       GenInvGauss ( const GenInvGauss& right , const char* name = nullptr ) ;
       /// clone method
@@ -7031,6 +7033,172 @@ namespace Ostap
       // ======================================================================
       /// the actual function
       mutable Ostap::Math::GenInvGauss m_gig ;          // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class HORNSdini 
+     *  \f[ f(x;a,\delta, \phi) = 
+     *  \frac{3}{2\delta}\left( z \right)^2
+     *  \left( \cos^2( \phi + \frac{\pi}{4}) ( 1 + z ) +
+     *         \sin^2( \phi + \frac{\pi}{4}) ( 1 - z ) \right) \f]
+     *  where  \f$ z = \frac{ x - ( a - \delta ) } { \delta } \f$ 
+     *  for \f$ a \le x \le a + 2\delta\$ and zero otherwise 
+     *  
+     * The first factor accound for two-horn parabolic shape, 
+     * and the second factor accouns for the linear correction factor 
+     * ("efficiency")
+     *
+     *  - For the actual use it needs to be convoluted with resolution function 
+     *  @see Ostap::Math::HORNSdini 
+     */
+    class HORNSdini : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::HORNSdini, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      HORNSdini 
+      ( const char*  name  , 
+        const char*  title , 
+        RooAbsReal&  x     ,
+        RooAbsReal&  a     , 
+        RooAbsReal&  delta ,
+        RooAbsReal&  phi   ) ;
+      
+      /// copy constructor 
+      HORNSdini ( const HORNSdini & right , const char* name = nullptr ) ;
+      /// clone method 
+      HORNSdini* clone ( const char* name ) const override ;
+      // virtual destructor  
+      virtual ~HORNSdini() ;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      HORNSdini  () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::HORNSdini& function () const { return m_horns ; }
+      const Ostap::Math::HORNSdini& horns    () const { return m_horns ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy   m_x     {} ;
+      RooRealProxy   m_a     {} ;
+      RooRealProxy   m_delta {} ;
+      RooRealProxy   m_phi   {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::HORNSdini m_horns ;          // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class HILLdini 
+     *  \f[ f(x;a,\delta, \phi) = 
+     *  \frac{3}{2\delta}\left( 1 - z^2 \right)
+     *  \left( \cos^2( \phi + \frac{\pi}{4}) ( 1 + z ) +
+     *         \sin^2( \phi + \frac{\pi}{4}) ( 1 - z ) \right) \f]
+     *  where  \f$ z = \frac{ x - ( a - \delta ) } { \delta } \f$ 
+     *  for \f$ a \le x \le a + 2\delta\$ and zero otherwise 
+     *  
+     * The first factor accound for two-horn parabolic shape, 
+     * and the second factor accouns for the linear correction factor 
+     * ("efficiency")
+     *
+     *  - For the actual use it needs to be convoluted with resolution function 
+     *  @see Ostap::Math::HORNSdini 
+     */
+    class HILLdini : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::HILLdini, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      HILLdini 
+      ( const char*  name  , 
+        const char*  title , 
+        RooAbsReal&  x     ,
+        RooAbsReal&  a     , 
+        RooAbsReal&  delta ,
+        RooAbsReal&  phi   ) ;
+      
+      /// copy constructor 
+      HILLdini ( const HILLdini & right , const char* name = nullptr ) ;
+      /// clone method 
+      HILLdini* clone ( const char* name ) const override ;
+      // virtual destructor  
+      virtual ~HILLdini() ;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      HILLdini  () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::HILLdini& function () const { return m_hill ; }
+      const Ostap::Math::HILLdini& hill     () const { return m_hill ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy   m_x     {} ;
+      RooRealProxy   m_a     {} ;
+      RooRealProxy   m_delta {} ;
+      RooRealProxy   m_phi   {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::HILLdini m_hill ;          // the function
       // ======================================================================
     } ;
 

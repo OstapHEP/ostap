@@ -8303,7 +8303,7 @@ Double_t Ostap::Models::Rice::analyticalIntegral
 
 
 // ============================================================================
-// Rice distrbution
+// GIG distrbution
 // ============================================================================
 Ostap::Models::GenInvGauss::GenInvGauss
 ( const char*  name      , 
@@ -8394,6 +8394,168 @@ Double_t Ostap::Models::GenInvGauss::analyticalIntegral
   //
   setPars() ;
   return m_gig.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+// HORNSdini 
+// ============================================================================
+Ostap::Models::HORNSdini::HORNSdini
+( const char*  name      , 
+  const char*  title     , 
+  RooAbsReal&  x         ,
+  RooAbsReal&  a         ,
+  RooAbsReal&  delta     ,
+  RooAbsReal&  phi       )
+  : RooAbsPdf ( name , title ) 
+  , m_x       ( "!x"     , "x-observable" , this , x     )
+  , m_a       ( "!a"     , "left horn"    , this , a     )
+  , m_delta   ( "!delta" , "width"        , this , delta )
+  , m_phi     ( "!phi"   , "modification" , this , phi   )
+  , m_horns () 
+{
+  setPars() ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::HORNSdini::HORNSdini
+( const Ostap::Models::HORNSdini& right ,
+  const char*                     name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_a        ( "!a"      , this , right.m_a     ) 
+  , m_delta    ( "!delta"  , this , right.m_delta ) 
+  , m_phi      ( "!phi"    , this , right.m_phi   ) 
+  , m_horns      ( right.m_horns ) 
+{}  
+// ============================================================================
+// clone method
+// ============================================================================
+Ostap::Models::HORNSdini* 
+Ostap::Models::HORNSdini::clone ( const char* name ) const 
+{ return new Ostap::Models::HORNSdini( *this , name ) ; }
+// ============================================================================
+Ostap::Models::HORNSdini::~HORNSdini(){}
+// ============================================================================
+void Ostap::Models::HORNSdini::setPars () const 
+{
+  m_horns.setA     ( m_a     ) ;
+  m_horns.setDelta ( m_delta ) ;
+  m_horns.setPhi   ( m_phi   ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::HORNSdini::evaluate() const 
+{
+  setPars() ;
+  return m_horns( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::HORNSdini::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::HORNSdini::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  setPars() ;
+  //
+  return m_horns.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+// HILLdini 
+// ============================================================================
+Ostap::Models::HILLdini::HILLdini
+( const char*  name      , 
+  const char*  title     , 
+  RooAbsReal&  x         ,
+  RooAbsReal&  a         ,
+  RooAbsReal&  delta     ,
+  RooAbsReal&  phi       )
+  : RooAbsPdf ( name , title ) 
+  , m_x       ( "!x"     , "x-observable" , this , x     )
+  , m_a       ( "!a"     , "left horn"    , this , a     )
+  , m_delta   ( "!delta" , "width"        , this , delta )
+  , m_phi     ( "!phi"   , "modification" , this , phi   )
+  , m_hill () 
+{
+  setPars() ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::HILLdini::HILLdini
+( const Ostap::Models::HILLdini& right ,
+  const char*                     name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_a        ( "!a"      , this , right.m_a     ) 
+  , m_delta    ( "!delta"  , this , right.m_delta ) 
+  , m_phi      ( "!phi"    , this , right.m_phi   ) 
+  , m_hill     ( right.m_hill ) 
+{}  
+// ============================================================================
+// clone method
+// ============================================================================
+Ostap::Models::HILLdini* 
+Ostap::Models::HILLdini::clone ( const char* name ) const 
+{ return new Ostap::Models::HILLdini( *this , name ) ; }
+// ============================================================================
+Ostap::Models::HILLdini::~HILLdini(){}
+// ============================================================================
+void Ostap::Models::HILLdini::setPars () const 
+{
+  m_hill.setA     ( m_a     ) ;
+  m_hill.setDelta ( m_delta ) ;
+  m_hill.setPhi   ( m_phi   ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::HILLdini::evaluate() const 
+{
+  setPars() ;
+  return m_hill ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::HILLdini::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::HILLdini::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  setPars() ;
+  //
+  return m_hill.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
 
@@ -8489,6 +8651,8 @@ ClassImp(Ostap::Models::GenInvGauss        )
 ClassImp(Ostap::Models::ExGauss            )
 ClassImp(Ostap::Models::NormalLaplace      )
 ClassImp(Ostap::Models::PearsonIV          )
+ClassImp(Ostap::Models::HORNSdini          )
+ClassImp(Ostap::Models::HILLdini           )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

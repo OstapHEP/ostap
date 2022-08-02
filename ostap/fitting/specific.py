@@ -29,11 +29,16 @@ __all__     = (
     'Manca2_pdf' , ## Manca function to fit Y->mu mu spectrum  [Y(1S),Y(2S),Y(3S)]
     'MancaX_pdf' , ## associative production of Y+X 
     #
+    'HORNSdini_pdf' , ## HORNdini PDF (need to ve convolved!)
+    'HILLdini_pdf'  , ## HILLdini PDF (need to ve convolved!)
+    'HHdini_pdf'    , ## ready to use HORNSdini + HILLdini PDF
     )
 # =============================================================================
-from   ostap.core.core        import Ostap 
-from   ostap.fitting.pdfbasic import PDF1, PDF2 
-from   ostap.fitting.signals  import CB2_pdf, Needham_pdf, Bukin_pdf
+from   ostap.core.core           import Ostap 
+from   ostap.fitting.pdfbasic    import PDF1, PDF2 
+from   ostap.fitting.fit1d       import PEAK, Sum1D 
+from   ostap.fitting.signals     import CB2_pdf, Needham_pdf, Bukin_pdf
+from   ostap.fitting.convolution import Convolution_pdf 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger     import getLogger
@@ -1205,6 +1210,411 @@ class MancaX_pdf(PDF2) :
         return self.__charm
     
 models.append ( MancaX_pdf ) 
+
+
+# =============================================================================
+## @class HORNSdini_pdf
+#  \f[ f(x;a,\delta, \phi) = 
+#  \frac{3}{2\delta}\left( z \right)^2
+#  \left( \cos^2( \phi + \frac{\pi}{4}) ( 1 + z ) +
+#         \sin^2( \phi + \frac{\pi}{4}) ( 1 - z ) \right) \f]
+#  where  \f$ z = \frac{ x - ( a - \delta ) } { \delta } \f$ 
+#  for \f$ a \le x \le a + 2\delta\$ and zero otherwise 
+#  
+# The first factor accound for two-horn parabolic shape, 
+# and the second factor accouns for the linear correction factor 
+# ("efficiency")
+#
+#  @attention: For the actual use it needs to be convoluted with resolution function 
+#  @see Ostap::Math::HORNSdini
+#  @see Ostap::Modls::HORNSdini
+class HORNSdini_pdf(PEAK) :
+    """HORNSdini PDF
+    """
+    def __init__ ( self              ,
+                   name              ,
+                   xvar              ,   ## mass is mandatory here! 
+                   a                 , 
+                   delta             ,
+                   phi        = None ,
+                   resolution = None ,
+                   cnvpars    = {}   ) :
+
+
+        PEAK.__init__ ( self           ,
+                        name        = name   ,
+                        xvar        = xvar   ,
+                        mean        = a      ,
+                        sigma       = delta  ,
+                        mean_name   = 'a_%s'               % name ,
+                        mean_title  = 'a_{HORNS}(%s)'      % name ,
+                        sigma_name  = 'delta_%s'           % name ,
+                        sigma_title = '#delta_{HORNS}(%s)' % name )
+                        
+        self.__delta = self.sigma
+        self.__a     = self.mean
+        self.__phi   = self.make_var ( phi                           ,
+                                       'phi_%s'          % self.name ,
+                                       '#phi_{HORN}(%s)' % self.name ,
+                                       None , 0 , -12 , 12 )
+        
+        self.__horns = Ostap.Models.HORNSdini (
+            self.new_roo_name ( 'horns_' ) ,
+            "HORNSdini %s" % self.name     ,
+            self.xvar                      ,
+            self.a                         ,
+            self.delta                     ,
+            self.phi                       )
+
+
+        self.__resolution = None
+        self.__cnvpars    = {}
+        self.__cnvpars.update ( cnvpars )
+        
+        if resolution :
+
+            self.__resolution = resolution 
+            cname = self.generate_name ( prefix = self.name , suffix = 'cnv' )  
+            from ostap.fitting.convolution import Convolution_pdf 
+            self.__convolved = Convolution_pdf ( name       = cname       , 
+                                                 pdf        = self.horns  ,
+                                                 xvar       = self.xvar   ,
+                                                 resolution = resolution  ,
+                                                 **self.cnvpars           )
+            
+            ## save the resolution 
+            self.__resolution = self.__convolved.resolution
+            
+            ## finally get the convolved PDF 
+            self.pdf = self.__convolved.pdf
+            
+        else :
+            
+            self.pdf = self.horns
+            
+        
+        ## save configuration
+        self.config = {
+            'xvar'       : self.xvar       ,
+            'name'       : self.name       ,
+            'a'          : self.a          ,
+            'delta'      : self.delta      ,
+            'phi'        : self.phi        ,
+            'resolution' : self.resolution ,
+            'cnvpars'    : self.cnvpars    }
+
+    @property
+    def a ( self ) :
+        """'a' : position of the left horn  (same as 'mean')"""
+        return self.__a
+    @a.setter
+    def a ( self ) :
+        self.set_value ( self.__a , value )
+
+    @property
+    def delta ( self ) :
+        """'delta' : half-distance from the left to right horns (same as 'sigma')"""
+        return self.__delta
+    @delta.setter
+    def delta ( self ) :
+        self.set_value ( self.__delta , value )
+
+    @property
+    def phi ( self ) :
+        """'phi' : correction/modificaiton parameter"""
+        return self.__phi
+    @phi.setter
+    def phi ( self , value ) :
+        self.set_value ( self.__phi , value )
+
+    @property
+    def horns ( self )  :
+        """'horns' : get the HORNSdini PDF"""
+        return self.__horns
+
+    @property
+    def resolution ( self )  :
+        """'resolution' : the resolution function"""
+        return self.__resolution 
+
+    @property
+    def cnvpars ( self )  :
+        """'cnvpars' : parameters used for convolution"""
+        return self.__cnvpars 
+
+models.append ( HORNSdini_pdf ) 
+
+
+
+# =============================================================================
+## @class HILLdini_pdf
+#  \f[ f(x;a,\delta, \phi) = 
+#  \frac{3}{4\delta}\left( 1 - z^2 \right)
+#  \left( \cos^2( \phi + \frac{\pi}{4}) ( 1 + z ) +
+#         \sin^2( \phi + \frac{\pi}{4}) ( 1 - z ) \right) \f]
+#  where  \f$ z = \frac{ x - ( a - \delta ) } { \delta } \f$ 
+#  for \f$ a \le x \le a + 2\delta\$ and zero otherwise 
+#  
+# The first factor accound for two-horn parabolic shape, 
+# and the second factor accouns for the linear correction factor 
+# ("efficiency")
+#
+#  @attention: For the actual use it needs to be convoluted with resolution function 
+#  @see Ostap::Math::HILLdini
+#  @see Ostap::Modls::HILLdini
+class HILLdini_pdf(PEAK) :
+    """HORNSdini PDF
+    """
+    def __init__ ( self              ,
+                   name              ,
+                   xvar              ,   ## mass is mandatory here! 
+                   a                 , 
+                   delta             ,
+                   phi        = None ,
+                   resolution = None ,
+                   cnvpars    = {}   ) :
+
+
+        PEAK.__init__ ( self           ,
+                        name        = name   ,
+                        xvar        = xvar   ,
+                        mean        = a      ,
+                        sigma       = delta  ,
+                        mean_name   = 'a_%s'               % name ,
+                        mean_title  = 'a_{HILL}(%s)'       % name ,
+                        sigma_name  = 'delta_%s'           % name ,
+                        sigma_title = '#delta_{HILL}(%s)'  % name )
+                        
+        self.__delta = self.sigma
+        self.__a     = self.mean
+        self.__phi   = self.make_var ( phi                           ,
+                                       'phi_%s'          % self.name ,
+                                       '#phi_{HILL}(%s)' % self.name ,
+                                       None , 0 , -12 , 12 )
+        
+        self.__hill = Ostap.Models.HILLdini (
+            self.new_roo_name ( 'hill_' ) ,
+            "HILLdini %s" % self.name     ,
+            self.xvar                     ,
+            self.a                        ,
+            self.delta                    ,
+            self.phi                      )
+
+
+        self.__resolution = None
+        self.__cnvpars    = {}
+        self.__cnvpars.update ( cnvpars )
+        
+        if resolution :
+
+            self.__resolution = resolution 
+            cname = self.generate_name ( prefix = self.name , suffix = 'cnv' )  
+            from ostap.fitting.convolution import Convolution_pdf 
+            self.__convolved = Convolution_pdf ( name       = cname       , 
+                                                 pdf        = self.hill   ,
+                                                 xvar       = self.xvar   ,
+                                                 resolution = resolution  ,
+                                                 **self.cnvpars           )
+            
+            ## save the resolution 
+            self.__resolution = self.__convolved.resolution
+            
+            ## finally get the convolved PDF 
+            self.pdf = self.__convolved.pdf
+            
+        else :
+            
+            self.pdf = self.hill
+            
+        
+        ## save configuration
+        self.config = {
+            'xvar'       : self.xvar       ,
+            'name'       : self.name       ,
+            'a'          : self.a          ,
+            'delta'      : self.delta      ,
+            'phi'        : self.phi        ,
+            'resolution' : self.resolution ,
+            'cnvpars'    : self.cnvpars    }
+
+    @property
+    def a ( self ) :
+        """'a' : position of the left horn  (same as 'mean')"""
+        return self.__a
+    @a.setter
+    def a ( self ) :
+        self.set_value ( self.__a , value )
+
+    @property
+    def delta ( self ) :
+        """'delta' : half-distance from the left to right horns (same as 'sigma')"""
+        return self.__delta
+    @delta.setter
+    def delta ( self ) :
+        self.set_value ( self.__delta , value )
+
+    @property
+    def phi ( self ) :
+        """'phi' : correction/modificaiton parameter"""
+        return self.__phi
+    @phi.setter
+    def phi ( self , value ) :
+        self.set_value ( self.__phi , value )
+
+    @property
+    def hill ( self )  :
+        """'hill' : get the HILLdini PDF"""
+        return self.__hill
+
+    @property
+    def resolution ( self )  :
+        """'resolution' : the resolution function"""
+        return self.__resolution 
+
+    @property
+    def cnvpars ( self )  :
+        """'cnvpars' : parameters used for convolution"""
+        return self.__cnvpars 
+
+models.append ( HORNSdini_pdf ) 
+
+
+
+
+# =============================================================================
+## @class HHdini_pdf
+#  fL*HORNS + ( 1-fl) * HILL
+#  @see Ostap::Math::HORNSdini
+#  @see Ostap::Math::HILLdini
+#  @see Ostap::Modls::HORNSdini
+#  @see Ostap::Modls::HILLdini
+class HHdini_pdf(PEAK) :
+    """HHdini PDF: fl*HORNS+(1-f)*HILL
+    """
+    def __init__ ( self              ,
+                   name              ,
+                   xvar              ,   ## mass is mandatory here! 
+                   a                 , 
+                   delta             ,
+                   phi        = None ,
+                   fL         = None ,
+                   resolution = None ,
+                   cnvpars    = {}   ) :
+        
+        PEAK.__init__ ( self           ,
+                        name        = name   ,
+                        xvar        = xvar   ,
+                        mean        = a      ,
+                        sigma       = delta  ,
+                        mean_name   = 'a_%s'             % name ,
+                        mean_title  = 'a_{HH}(%s)'       % name ,
+                        sigma_name  = 'delta_%s'         % name ,
+                        sigma_title = '#delta_{HH}(%s)'  % name )
+                        
+        self.__delta = self.sigma
+        self.__a     = self.mean
+        self.__phi   = self.make_var ( phi                           ,
+                                       'phi_%s'          % self.name ,
+                                       '#phi_{HH}(%s)'   % self.name ,
+                                       None , 0 , -12 , 12 )
+
+        self.__fL = self.make_var    ( fL ,
+                                       'fL_%s'           % self.name ,
+                                       'f_{L}(%s)'       % self.name ,
+                                       None , 0.5 , 0 , 1 )
+        
+        
+        self.__horns = HORNSdini_pdf ( self.new_name ( 'HORNS' )          ,
+                                       xvar       = self.xvar             ,
+                                       a          = self.a                ,
+                                       delta      = self.delta            ,
+                                       phi        = self.phi              ,
+                                       resolution = resolution            ,
+                                       cnvpars    = cnvpars               )
+        
+        self.__hill  = HILLdini_pdf  ( self.new_name ( 'HILL'  )          ,
+                                       xvar       = self.horns.xvar       ,
+                                       a          = self.horns.a          ,
+                                       delta      = self.horns.delta      ,
+                                       phi        = self.horns.phi        ,
+                                       resolution = self.horns.resolution ,
+                                       cnvpars    = self.horns.cnvpars    )
+        
+        self.__sum = Sum1D ( ( self.horns , self.hill ) ,
+                             recursive = True           ,
+                             xvar      =   self.xvar    ,
+                             fractions = ( self.fL , )  )
+        
+        ## finally get the PDF
+        self.pdf = self.__sum.pdf
+
+        
+        ## save configuration
+        self.config = {
+            'xvar'       : self.xvar       ,
+            'name'       : self.name       ,
+            'a'          : self.a          ,
+            'delta'      : self.delta      ,
+            'fL'         : self.fL         ,
+            'phi'        : self.phi        ,
+            'resolution' : self.resolution ,
+            'cnvpars'    : self.cnvpars    }
+
+    @property
+    def a ( self ) :
+        """'a' : position of the left horn (same as 'mean')"""
+        return self.__a
+    @a.setter
+    def a ( self ) :
+        self.set_value ( self.__a , value )
+
+    @property
+    def delta ( self ) :
+        """'delta' : half-distance from the left to right horns (same as 'sigma')"""
+        return self.__delta
+    @delta.setter
+    def delta ( self ) :
+        self.set_value ( self.__delta , value )
+
+    @property
+    def fL ( self ) :
+        """'fL' : fraction of HORNS component"""
+        return self.__fL 
+    @fL.setter
+    def fL ( self , value ) :
+        self.set_value ( self.__fL , value )
+
+    @property
+    def phi ( self ) :
+        """'phi' : correction/modificaiton parameter"""
+        return self.__phi
+    @phi.setter
+    def phi ( self , value ) :
+        self.set_value ( self.__phi , value )
+
+    @property
+    def horns ( self )  :
+        """'horns' : get the HORNSdini PDF"""
+        return self.__horns
+
+    @property
+    def hill ( self )  :
+        """'hill' : get the HILLdini PDF"""
+        return self.__hill
+
+    @property
+    def resolution ( self )  :
+        """'resolution' : the resolution function"""
+        return self.horns.resolution 
+
+    @property
+    def cnvpars ( self )  :
+        """'cnvpars' : parameters used for convolution"""
+        return self.horns.cnvpars 
+
+models.append ( HHdini_pdf ) 
+
+
 
 # =============================================================================
 if '__main__' == __name__ :

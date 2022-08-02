@@ -53,8 +53,9 @@ namespace Ostap
        *  @param mu location, bias parameter 
        *  @param beta scale parameter 
        */
-      Gumbel ( const double mu   = 0 , 
-               const double beta = 1 );
+      Gumbel 
+      ( const double mu   = 0 , 
+        const double beta = 1 );
       // ======================================================================
     public: // primary getters 
       // ======================================================================
@@ -131,10 +132,11 @@ namespace Ostap
        *  @param kappa3 the standartized 3rd cumulant
        *  @param kappa4 the standartized 4th cumulant
        */
-      GramCharlierA  ( const double mean   = 0 ,
-                       const double sigma  = 1 ,
-                       const double kappa3 = 1 ,
-                       const double kappa4 = 1 ) ;
+      GramCharlierA  
+      ( const double mean   = 0 ,
+        const double sigma  = 1 ,
+        const double kappa3 = 1 ,
+        const double kappa4 = 1 ) ;
       /// destructor
       ~GramCharlierA () ;
       // ======================================================================
@@ -223,27 +225,30 @@ namespace Ostap
        *  @param n           total number of particles ( n>l!)
        *  @param N           degree of polynomial
        */
-      PhaseSpacePol ( const double         threshold_L =  0 ,
-                      const double         threshold_H = 10 ,
-                      const unsigned short l           =  2 ,
-                      const unsigned short n           =  3 ,
-                      const unsigned short N           =  1 ) ; // degree of polynomial
+      PhaseSpacePol
+        ( const double         threshold_L =  0 ,
+          const double         threshold_H = 10 ,
+          const unsigned short l           =  2 ,
+          const unsigned short n           =  3 ,
+          const unsigned short N           =  1 ) ; // degree of polynomial
       // =====================================================================
       /** constructor from phase space and polynomial degree
        *  @param ps          phase space factor
        *  @param N           degree of polynomial
        */
-      PhaseSpacePol ( const PhaseSpaceNL&  ps      ,
-                      const unsigned short N  =  1 ) ; // degree of polynomial
+      PhaseSpacePol 
+        ( const PhaseSpaceNL&  ps      ,
+          const unsigned short N  =  1 ) ; // degree of polynomial
       // ======================================================================
       /** constructor from phase space and polynomial degree
        *  @param ps          phase space factor
        *  @param N           degree of polynomial
        */
-      PhaseSpacePol ( const PhaseSpaceNL&  ps      ,
-                      const unsigned short N       ,
-                      const double         xlow    ,
-                      const double         xhigh   ) ;
+      PhaseSpacePol 
+        ( const PhaseSpaceNL&  ps      ,
+          const unsigned short N       ,
+          const double         xlow    ,
+          const double         xhigh   ) ;
       // ======================================================================
       /// destructor 
       ~PhaseSpacePol() ;
@@ -291,8 +296,9 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral 
+        ( const double low  ,
+          const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -346,11 +352,12 @@ namespace Ostap
        *  @param tau         the exponent 
        *  @param xhigh       the high edge 
        */
-      PhaseSpaceLeftExpoPol ( const double         threshold_L =  0 ,   // low threshold 
-                              const unsigned short l           =  2 ,   // number of particles 
-                              const unsigned short N           =  1 ,   // degree of polynomial
-                              const double         tau         =  0 ,   // the exponent 
-                              const double         xhigh       =  1 ) ; // high edge 
+      PhaseSpaceLeftExpoPol 
+        ( const double         threshold_L =  0 ,   // low threshold 
+          const unsigned short l           =  2 ,   // number of particles 
+          const unsigned short N           =  1 ,   // degree of polynomial
+          const double         tau         =  0 ,   // the exponent 
+          const double         xhigh       =  1 ) ; // high edge 
       // =====================================================================
       /** constructor from threshold and number of particles
        *  @param threshold_L the low-mass  threshold
@@ -360,12 +367,13 @@ namespace Ostap
        *  @param xlow        the low  edge 
        *  @param xhigh       the high edge 
        */
-      PhaseSpaceLeftExpoPol ( const double         threshold_L ,   // low threshold 
-                              const unsigned short l           ,   // number of particles 
-                              const unsigned short N           ,   // degree of polynomial
-                              const double         tau         ,   // the exponent 
-                              const double         xlow        ,   // low edge 
-                              const double         xhigh       ) ; // high edge 
+      PhaseSpaceLeftExpoPol
+        ( const double         threshold_L ,   // low threshold 
+          const unsigned short l           ,   // number of particles 
+          const unsigned short N           ,   // degree of polynomial
+          const double         tau         ,   // the exponent 
+          const double         xlow        ,   // low edge 
+          const double         xhigh       ) ; // high edge 
       // =====================================================================
       /** constructor from the phase space and polynomial degree
        *  @param ps          phase space factor
@@ -373,10 +381,11 @@ namespace Ostap
        *  @param tau         the exponent 
        *  @param xhigh       the high edge 
        */
-      PhaseSpaceLeftExpoPol ( const PhaseSpaceLeft& ps        ,
-                              const unsigned short  N     = 1 ,   // degree of polynomial
-                              const double          tau   = 0 ,   // the exponent 
-                              const double          xhigh = 1 ) ; // high edge 
+      PhaseSpaceLeftExpoPol
+        ( const PhaseSpaceLeft& ps        ,
+          const unsigned short  N     = 1 ,   // degree of polynomial
+          const double          tau   = 0 ,   // the exponent 
+          const double          xhigh = 1 ) ; // high edge 
       // =========================================================================
       /** constructor from the phase space and polynomial degree
        *  @param ps          phase space factor
@@ -385,11 +394,12 @@ namespace Ostap
        *  @param xlow        the low  edge 
        *  @param xhigh       the high edge 
        */
-      PhaseSpaceLeftExpoPol ( const PhaseSpaceLeft& ps    ,
-                              const unsigned short  N     ,   // degree of polynomial
-                              const double          tau   ,   // the exponent 
-                              const double          xlow  ,   // low edge 
-                              const double          xhigh ) ; // high edge
+      PhaseSpaceLeftExpoPol
+        ( const PhaseSpaceLeft& ps    ,
+          const unsigned short  N     ,   // degree of polynomial
+          const double          tau   ,   // the exponent 
+          const double          xlow  ,   // low edge 
+          const double          xhigh ) ; // high edge
       // ======================================================================
       /// destructor 
       ~PhaseSpaceLeftExpoPol() ;
@@ -447,8 +457,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+        ( const double low  ,
+          const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -475,9 +486,6 @@ namespace Ostap
     } ;
     // ========================================================================
 
-      
-    
-
     // ========================================================================
     /** @class GammaDist
      *  Gamma-distribution shape/scale parameters
@@ -493,8 +501,9 @@ namespace Ostap
        *  param k      \f$k\f$ parameter (shape)
        *  param theta  \f$\theta\f$ parameter (scale)
        */
-      GammaDist ( const double k     = 2 ,   // shape parameter
-                  const double theta = 1 ) ; // scale parameter
+      GammaDist 
+      ( const double k     = 2 ,   // shape parameter
+        const double theta = 1 ) ; // scale parameter
       /// desctructor
       ~GammaDist() ;  // destructor
       // ======================================================================
@@ -541,8 +550,9 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public: // quantiles
       // ======================================================================
@@ -582,8 +592,9 @@ namespace Ostap
        *  param k      \f$k\f$ parameter (shape)
        *  param theta  \f$\theta\f$ parameter (scale)
        */
-      LogGammaDist ( const double k     = 2 ,   // shape parameter
-                     const double theta = 1 ) ; // scale parameter
+      LogGammaDist
+      ( const double k     = 2 ,   // shape parameter
+        const double theta = 1 ) ; // scale parameter
       /// destructor
       virtual ~LogGammaDist() ;  // desctructor
       // ======================================================================
@@ -664,8 +675,9 @@ namespace Ostap
        *  param k      \f$k\f$ parameter (shape)
        *  param theta  \f$\theta\f$ parameter (scale)
        */
-      Log10GammaDist ( const double k     = 2 ,   // shape parameter
-                       const double theta = 1 ) ; // scale parameter
+      Log10GammaDist 
+      ( const double k     = 2 ,   // shape parameter
+        const double theta = 1 ) ; // scale parameter
       /// destructor
       virtual ~Log10GammaDist() ;  // destructor
       // ======================================================================
@@ -715,10 +727,11 @@ namespace Ostap
        *  param p     \f$p\f$ parameter
        *  param low   bias
        */
-      GenGammaDist ( const double k     = 2 ,
-                     const double theta = 1 ,
-                     const double p     = 1 , // 1 corresponds to gamma distribution
-                     const double low   = 0 ) ;
+      GenGammaDist
+      ( const double k     = 2 ,
+        const double theta = 1 ,
+        const double p     = 1 , // 1 corresponds to gamma distribution
+        const double low   = 0 ) ;
       /// desctructor
       ~GenGammaDist() ;  // desctructor
       // ======================================================================
@@ -763,8 +776,9 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -802,10 +816,11 @@ namespace Ostap
        *  param a     a-parameter
        *  Note that   \f$\alpha\beta\f$ is equal to k-parameter
        */
-      Amoroso ( const double theta = 1 ,
-                const double alpha = 1 ,
-                const double beta  = 1 ,
-                const double a     = 0 ) ;
+      Amoroso
+      ( const double theta = 1 ,
+        const double alpha = 1 ,
+        const double beta  = 1 ,
+        const double a     = 0 ) ;
       /// destructor
       ~Amoroso () ;  // desctructor
       // ======================================================================
@@ -854,8 +869,9 @@ namespace Ostap
       // ======================================================================
       double integral () const ;
       double cdf      ( const double x    ) const ;
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -894,9 +910,10 @@ namespace Ostap
        *  param lambda  \f$\lambda\f$ parameter
        *  param alpha   \f$\alpha\f$ parameter    (>0)
        */
-      LogGamma ( const double nu     = 0 ,   // shape parameter
-                 const double lambda = 1 ,   // scale parameter
-                 const double alpha  = 1 ) ; // scale parameter
+      LogGamma
+      ( const double nu     = 0 ,   // shape parameter
+        const double lambda = 1 ,   // scale parameter
+        const double alpha  = 1 ) ; // scale parameter
       /// destructor
       ~LogGamma () ;  // desctructor
       // ======================================================================
@@ -936,8 +953,9 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -967,10 +985,11 @@ namespace Ostap
        *  @param scale  scale-parameter
        *  @param shift  shift-parameter
        */
-      BetaPrime ( const double alpha = 3 ,
-                  const double beta  = 3 ,
-                  const double scale = 1 ,
-                  const double shift = 0 ) ;
+      BetaPrime
+      ( const double alpha = 3 ,
+        const double beta  = 3 ,
+        const double scale = 1 ,
+        const double shift = 0 ) ;
       /// destructor
       ~BetaPrime () ;
       // ======================================================================
@@ -1009,8 +1028,9 @@ namespace Ostap
       // ======================================================================
       double integral ()                    const ;
       double cdf      ( const double x    ) const ;
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1044,8 +1064,9 @@ namespace Ostap
        *  @param scale scale-parameter
        *  @param shift shift-parameter
        */
-      Landau ( const double scale = 1 ,
-               const double shift = 0 ) ;
+      Landau
+      ( const double scale = 1 ,
+        const double shift = 0 ) ;
       /// destructor
       ~Landau () ;
       // ======================================================================
@@ -1069,8 +1090,9 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       double cdf      ( const double x    ) const ;
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1100,9 +1122,10 @@ namespace Ostap
        *  @param shape the shape parameter "k"       >0
        *  @param shift the shift parameter "x0"
        */
-      Weibull ( const double scale = 1 ,  
-                const double shape = 1 ,  
-                const double shift = 0 ) ;
+      Weibull
+      ( const double scale = 1 ,  
+        const double shape = 1 ,  
+        const double shift = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1148,8 +1171,9 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       double cdf      ( const double x    ) const ;
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1177,17 +1201,18 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      ExpoPositive ( const unsigned short       N     =  0 ,
-                     const double               tau   =  0 , // exponent
-                     const double               xmin  =  0 ,
-                     const double               xmax  =  1 ) ;
+      ExpoPositive 
+      ( const unsigned short       N     =  0 ,
+        const double               tau   =  0 , // exponent
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ) ;
       // ======================================================================
       /// constructor from N phases
-      ExpoPositive ( const std::vector<double>& pars       ,
-                     const double               tau   =  0 , // exponent
-                     const double               xmin  =  0 ,
-                     const double               xmax  =  1 ) ;
-
+      ExpoPositive 
+      ( const std::vector<double>& pars       ,
+        const double               tau   =  0 , // exponent
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1238,8 +1263,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      double integral ( const double low , const double high ) const ;
       double integral () const { return integral ( xmin() , xmax() ) ; }
+      double integral ( const double low , 
+                        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1333,8 +1359,9 @@ namespace Ostap
       /// get the integral between xmin and xmax
       double integral   () const ;
       /// get the integral between low and high
-      double integral   ( const double low  ,
-                          const double high ) const ;
+      double integral  
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1366,9 +1393,10 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      TwoExpos ( const double alpha = 1 ,
-                 const double delta = 1 ,
-                 const double x0    = 0 ) ;
+      TwoExpos 
+      ( const double alpha = 1 ,
+        const double delta = 1 ,
+        const double x0    = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1421,15 +1449,20 @@ namespace Ostap
       /// get the integral between -inf and +inf
       double integral    () const ;
       /// get the integral between low and high
-      double integral    ( const double low  ,
-                           const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================      
       /// get the derivative at given value
       double derivative  ( const double x    ) const ;
       /// get the second at given value
       double derivative2 ( const double x    ) const ;
       /// get the Nth derivative at given value
-      double derivative  ( const double   x  ,
-                           const unsigned N  ) const ;
+      double derivative 
+      ( const double   x  ,
+        const unsigned N  ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2146,8 +2179,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the integral between low and high
-      double integral    ( const double low  ,
-                           const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2164,6 +2198,174 @@ namespace Ostap
       /// workspace
       Ostap::Math::WorkSpace m_workspace ; // workspace
       // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class HORNSdini 
+     *  \f[ f(x;a,\delta, \phi) = 
+     *  \frac{3}{2\delta}\left( z \right)^2
+     *  \left( \cos^2( \phi + \frac{\pi}{4}) ( 1 + z ) +
+     *         \sin^2( \phi + \frac{\pi}{4}) ( 1 - z ) \right) \f]
+     *  where  \f$ z = \frac{ x - ( a - \delta ) } { \delta } \f$ 
+     *  for \f$ a \le x \le a + 2\delta\$ and zero otherwise 
+     *  
+     * The first factor accound for two-horn parabolic shape, 
+     * and the second factor accouns for the linear correction factor 
+     * ("efficiency")
+     *
+     *  - For the actual use it needs to be convoluted with resolution function 
+     * @see 
+     */
+    class HORNSdini 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor fron all parameters
+       *  @param a position of th eleft paraboilic horn
+       *  @param delta distance fron left to right parabolic horn 
+       *  @param phi  correction parameter ("efficiency")
+       */
+      HORNSdini
+      ( const double a     = 0 , 
+        const double delta = 1 ,
+        const double phi   = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evalaute the function 
+      double evaluate ( const double x )  const ;
+      /// evalaute the function 
+      inline double operator () ( const double x )  const 
+      { return evaluate ( x ) ;  }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// left horn  
+      double a     () const { return m_a     ; }
+      /// right horn
+      double b     () const { return m_a + 2 * m_delta ; }
+      /// delta 
+      double delta () const { return m_delta ; }
+      /// phi 
+      double phi   () const { return m_phi  ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      double xmin () const { return a () ; }
+      double xmax () const { return b () ; }
+      // ======================================================================
+    public: // setters
+      // ======================================================================
+      bool setA      ( const double value ) ;
+      bool setDelta  ( const double value ) ;
+      bool setPhi    ( const double value ) ;
+      // ======================================================================      
+    public:
+      // ====================================================================== 
+      /// get the integral 
+      double integral  () const ;
+      /// get the integral between low and high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_a        { 0 } ;
+      double m_delta    { 1 } ;
+      double m_phi      { 0 } ;
+      double m_cos2_phi { 0 } ;
+      double m_sin2_phi { 0 } ;
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class HILLdini 
+     *  \f[ f(x;a,\delta, \phi) = 
+     *  \frac{3}{2\delta}\left( 1 - z \right)^2
+     *  \left( \cos^2( \phi + \frac{\pi}{4}) ( 1 + z ) +
+     *         \sin^2( \phi + \frac{\pi}{4}) ( 1 - z ) \right) \f]
+     *  where  \f$ z = \frac{ x - ( a - \delta ) } { \delta } \f$ 
+     *  for \f$ a \le x \le a + 2\delta\$ and zero otherwise 
+     *  
+     * The first factor accound for a parabolic shape, 
+     * and the second factor accouns for the linear correction factor 
+     * ("efficiency")
+     *
+     *  - For the actual use it needs to be convoluted with resolution function 
+     * @see 
+     */
+    class HILLdini 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor fron all parameters
+       *  @param a position of th eleft paraboilic horn
+       *  @param delta distance fron left to right parabolic horn 
+       *  @param phi  correction parameter ("efficiency")
+       */
+      HILLdini
+      ( const double a     = 0 , 
+        const double delta = 1 ,
+        const double phi   = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evalaute the function 
+      double evaluate ( const double x )  const ;
+      /// evalaute the function 
+      inline double operator () ( const double x )  const 
+      { return evaluate ( x ) ;  }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// left horn  
+      double a     () const { return m_a     ; }
+      /// right horn
+      double b     () const { return m_a + 2 * m_delta ; }
+      /// delta 
+      double delta () const { return m_delta ; }
+      /// phi 
+      double phi   () const { return m_phi  ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      double xmin () const { return a () ; }
+      double xmax () const { return b () ; }
+      // ======================================================================
+    public: // setters
+      // ======================================================================
+      bool setA      ( const double value ) ;
+      bool setDelta  ( const double value ) ;
+      bool setPhi    ( const double value ) ;
+      // ======================================================================      
+    public:
+      // ====================================================================== 
+      /// get the integral 
+      double integral  () const ;
+      /// get the integral between low and high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_a        { 0 } ;
+      double m_delta    { 1 } ;
+      double m_phi      { 0 } ;
+      double m_cos2_phi { 0 } ;
+      double m_sin2_phi { 0 } ;
+      // ======================================================================      
     } ;
     // ========================================================================
     /** @class CutOffGauss 
@@ -2184,9 +2386,10 @@ namespace Ostap
        *  @param x0    threshold value 
        *  @param sigma sigma  
        */
-      CutOffGauss ( const bool   right = true , 
-                    const double x0    = 0    , 
-                    const double sigma = 1    ) ;
+      CutOffGauss 
+      ( const bool   right = true , 
+        const double x0    = 0    , 
+        const double sigma = 1    ) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -2212,8 +2415,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the integral between low and high
-      double integral    ( const double low  ,
-                           const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2281,8 +2485,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the integral between low and high
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
