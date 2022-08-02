@@ -11,6 +11,10 @@
 #include <complex>
 #include <algorithm>
 // ============================================================================
+// ROOT 
+// ============================================================================
+#include "RVersion.h"
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Parameters.h"
@@ -82,36 +86,58 @@ namespace Ostap
       // ======================================================================
     public: // getters & setters 
       // ======================================================================
+#if ROOT_VERSION_CODE<ROOT_VERSION(6,22,0)
+      // ======================================================================
+      // old ROOT does not export in python the "using" methods 
+      // ======================================================================
+      /// get the parameter value
+      inline double  par          
+      ( const std::size_t k ) const
+      { return Ostap::Math::Parameters::par ( k ) ; }
+      /// set k-parameter
+      inline bool    setPar          
+      ( const std::size_t  k     , 
+        const double       value ) 
+      { return Ostap::Math::Parameters::setPar ( k , value ) ;}
+      // ======================================================================
+#else 
+      // ======================================================================
       using Ostap::Math::Parameters::par    ;
       using Ostap::Math::Parameters::setPar ;
+      // ======================================================================
+#endif 
       // ======================================================================      
       /// get (l,m)-parameter
-      double  par       
+      inline double  par       
       ( const unsigned short l ,
         const unsigned short m ) const 
-      { return l > m_nx ? 0 : m > m_ny ? 0 : par ( index ( l , m ) ) ; }
-      // ======================================================================
-      bool setPar   
-      ( const unsigned short l     ,
-        const unsigned short m     ,
-        const double         value ) 
-        
       { 
         return 
-          l > m_nx ? false :
-          m > m_ny ? false : setPar ( index ( l , m ) , value ) ; 
+          m_nx < l ? 0 :
+          m_ny < m ? 0 : Ostap::Math::Parameters::par ( index ( l , m ) ) ;
+      }
+      // ======================================================================
+      inline bool setPar   
+      ( const unsigned short l     ,
+        const unsigned short m     ,
+        const double         value )
+      { 
+        return 
+          m_nx < l ? false :
+          m_ny < m ? false : 
+          Ostap::Math::Parameters::setPar ( index ( l , m ) , value ) ; 
       }
       // ======================================================================
     public:
       // ======================================================================
       ///  convert (l,m)-index into single k-index
-      unsigned int index 
+      inline std::size_t index 
       ( const unsigned short l , 
         const unsigned short m ) const 
       {
         return
-          l > m_nx ? -1 :
-          m > m_ny ? -1 :
+          m_nx < l ? -1 :
+          m_ny < m ? -1 :
           1u * l * ( m_ny + 1 ) + m ;  
       }
       // ======================================================================
@@ -530,35 +556,55 @@ namespace Ostap
       double operator () ( const double x , const double y ) const 
       { return evaluate ( x , y ) ; }
       // ======================================================================
-    public:
+    public: 
+      // ======================================================================
+#if ROOT_VERSION_CODE<ROOT_VERSION(6,22,0)
+      // ======================================================================
+      // old ROOT does not export in python the "using" methods 
+      // ======================================================================
+      /// get the parameter value
+      inline double  par          
+      ( const std::size_t k ) const
+      { return Ostap::Math::Parameters::par ( k ) ; }
+      /// set k-parameter
+      inline bool    setPar          
+      ( const std::size_t  k     , 
+        const double       value ) 
+      { return Ostap::Math::Parameters::setPar ( k , value ) ;}
+      // ======================================================================
+#else 
       // ======================================================================
       using Ostap::Math::Parameters::par    ;
       using Ostap::Math::Parameters::setPar ;
       // ======================================================================
+#endif 
+      // ======================================================================      
       /// set (l,m)-parameter
-      bool setPar      
+      inline bool setPar      
       ( const unsigned short l     ,
         const unsigned short m     ,
         const double         value ) 
       {
         return
           l > m_n ? false : 
-          m > m_n ? false : setPar ( index ( l , m ) , value ) ;
+          m > m_n ? false : 
+          Ostap::Math::Parameters::setPar ( index ( l , m ) , value ) ;
       }
       /// get (l,m)-parameter
-      double  par       
+      inline double  par       
       ( const unsigned short l ,
         const unsigned short m ) const 
       {
         return 
           l > m_n ? 0 : 
-          m > m_n ? 0 : par ( index ( l , m ) ) ;
+          m > m_n ? 0 :
+          Ostap::Math::Parameters::par ( index ( l , m ) ) ;
       }
       // ======================================================================
     public:
       // ======================================================================
       ///  convert (l,m)-index into single k-index
-      unsigned int index 
+      std::size_t index 
       ( const unsigned short l , 
         const unsigned short m ) const 
       {

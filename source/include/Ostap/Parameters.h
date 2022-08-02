@@ -44,8 +44,14 @@ namespace Ostap
       // ======================================================================
       /// number of parameters 
       inline std::size_t npars  () const { return m_pars.size()     ; }
-      /// all parameters are zero ?
-      bool           zero   () const ;
+      // ======================================================================
+      /// get the parameter value
+      inline double  par          ( const std::size_t k ) const
+      { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
+      // ======================================================================
+      /// get all parameters:
+      const std::vector<double>& pars () const { return m_pars ; }
+      // ======================================================================
       /** set k-parameter
        *  @param k index
        *  @param value new value 
@@ -75,11 +81,8 @@ namespace Ostap
       inline bool setPars ( const std::vector<double>& pars ) 
       { return setPars ( pars.begin() , pars.end() ) ; }
       // ======================================================================
-      /// get the parameter value
-      inline double  par          ( const std::size_t k ) const
-      { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
-      /// get all parameters:
-      const std::vector<double>& pars () const { return m_pars ; }
+      /// all parameters are zero ?
+      bool           zero   () const ;
       // ======================================================================
     public: // simple  manipulations with parameters 
       // ======================================================================

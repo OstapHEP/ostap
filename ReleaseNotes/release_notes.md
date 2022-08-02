@@ -5,8 +5,8 @@
   1. reduce code duplication for variosu parameteric functions
   1. make more active use of `Parameters`  
   1. add more `swap` functions 
-
-
+  1. fix for `par/setPar` methods for OLD root Where using statement does not help 
+ 
 ## Backward incompatible:  
 
 ## Bug fixes:
