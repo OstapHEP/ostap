@@ -101,7 +101,11 @@ class Sum1D (PDF1,Fractions) :
         
         ## ininialize the base class
         PDF1.__init__ ( self , name , xvar ) 
-        Fractions.__init__ ( self , pdf_list , prefix = prefix , suffix = suffix , recursive = recursive ) 
+        Fractions.__init__ ( self , pdf_list       ,
+                             prefix    = prefix    ,
+                             suffix    = suffix    ,
+                             recursive = recursive ,
+                             fractions = fractions ) 
 
         for p in self.pdfs      : self.alist1.add ( p.pdf )
         for f in self.frac_list : self.alist2.add ( f     )
