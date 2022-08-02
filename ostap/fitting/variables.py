@@ -29,6 +29,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   builtins               import range
+from   ostap.math.base        import doubles 
 from   ostap.core.core        import VE, hID, Ostap
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
@@ -174,6 +175,12 @@ _new_methods_ += [
     ROOT.RooConstVar    .asVE     ,
     ROOT.RooFormulaVar  .asVE     ,
     #
+    ROOT.RooAbsReal        . minmax  , 
+    ROOT.RooAbsReal        .xminmax  , 
+    ROOT.RooAbsRealLValue  . xmin    ,
+    ROOT.RooAbsRealLValue  . xmax    ,
+    ROOT.RooAbsRealLValue  . minmax  ,
+    ROOT.RooAbsRealLValue  .xminmax  ,    
     ]
 
 
@@ -411,21 +418,21 @@ def _rrv_idiv_ ( s , o ) :
     return s
 
 # ============================================================================
-ROOT.RooRealVar . __add__   = _rrv_add_
-ROOT.RooRealVar . __sub__   = _rrv_sub_
-ROOT.RooRealVar . __div__   = _rrv_div_
-ROOT.RooRealVar . __mul__   = _rrv_mul_
-ROOT.RooRealVar . __pow__   = _rrv_pow_
+ROOT.RooRealVar . __add__     = _rrv_add_
+ROOT.RooRealVar . __sub__     = _rrv_sub_
+ROOT.RooRealVar . __div__     = _rrv_div_
+ROOT.RooRealVar . __mul__     = _rrv_mul_
+ROOT.RooRealVar . __pow__     = _rrv_pow_
 
-ROOT.RooRealVar . __radd__  = _rrv_radd_
-ROOT.RooRealVar . __rsub__  = _rrv_rsub_
-ROOT.RooRealVar . __rdiv__  = _rrv_rdiv_
-ROOT.RooRealVar . __rmul__  = _rrv_rmul_
-ROOT.RooRealVar . __rpow__  = _rrv_rpow_
+ROOT.RooRealVar . __radd__    = _rrv_radd_
+ROOT.RooRealVar . __rsub__    = _rrv_rsub_
+ROOT.RooRealVar . __rdiv__    = _rrv_rdiv_
+ROOT.RooRealVar . __rmul__    = _rrv_rmul_
+ROOT.RooRealVar . __rpow__    = _rrv_rpow_
 
-ROOT.RooRealVar . __iadd__  = _rrv_iadd_
-ROOT.RooRealVar . __isub__  = _rrv_isub_
-ROOT.RooRealVar . __idiv__  = _rrv_idiv_
+ROOT.RooRealVar . __iadd__    = _rrv_iadd_
+ROOT.RooRealVar . __isub__    = _rrv_isub_
+ROOT.RooRealVar . __idiv__    = _rrv_idiv_
 
 ROOT.RooRealVar . __truediv__ = ROOT.RooRealVar . __div__
 ROOT.RooRealVar .__rtruediv__ = ROOT.RooRealVar .__rdiv__
@@ -510,27 +517,6 @@ _new_methods_ += [
     ROOT.RooRealVar.__ge__  ,
     ]
 
-
-
-
-# =============================================================================
-## get min/max in one go 
-#  @see RooRealVar
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-07-14
-def _rrv_minmax_ ( s ) :
-    """Get min/max in one go
-
-    >>> var = ...
-    >>> mn,mx = var.minmax()
-    """
-    return s.getMin(),s.getMax()
-
-ROOT.RooRealVar   . minmax  = _rrv_minmax_
-
-_new_methods_ += [
-    ROOT.RooRealVar.minmax  ,
-    ]
 
 
 # =============================================================================
@@ -1067,6 +1053,10 @@ def _rub_str_ ( bins ) :
 ROOT.RooUniformBinning.__str__  = _rub_str_
 ROOT.RooUniformBinning.__repr__ = _rub_str_
 
+_new_methods_ += [
+    ROOT.RooUniformBinning.__str__  , 
+    ROOT.RooUniformBinning.__repr__ , 
+    ]
 # =============================================================================
 ## printout for RooRangeBinning
 def _rrb_str_ ( bins ) :
@@ -1077,6 +1067,12 @@ def _rrb_str_ ( bins ) :
     
 ROOT.RooRangeBinning.__str__  = _rrb_str_
 ROOT.RooRangeBinning.__repr__ = _rrb_str_
+
+_new_methods_ += [
+    ROOT.RooRangeBinning.__str__  ,
+    ROOT.RooRangeBinning.__repr__ ,
+    ]
+
 
 # =============================================================================
 ## Does  this variable depends on another one?
@@ -1114,6 +1110,10 @@ def depends_on ( fun , var ) :
     return False 
 
 ROOT.RooAbsReal.depends_on  = depends_on
+
+_new_methods_ += [
+    ROOT.RooAbsReal.depends_on ,
+    ]
 
 # =============================================================================
 ## Create <code>RooBinnig</code> object
@@ -1228,6 +1228,10 @@ def _rrv_reduce ( rrv ) :
 
 ROOT.RooRealVar.__reduce__ = _rrv_reduce
 
+_new_methods_ += [
+    ROOT.RooRealVar.__reduce__ ,
+    ]
+
 
 # =============================================================================
 ## factory for unpickling of <code>RooFormulaVar</code> and
@@ -1308,11 +1312,23 @@ if (6,22) <= root_info :
     ROOT.RooFormulaVar. __str__    = _rfv_str_
     ROOT.RooFormulaVar. __repr__   = _rfv_repr_
     ROOT.RooFormulaVar.__reduce__  = _rfv_reduce
+    _new_methods_ += [
+        ROOT.RooFormulaVar. expression , 
+        ROOT.RooFormulaVar. __str__    , 
+        ROOT.RooFormulaVar. __repr__   , 
+        ROOT.RooFormulaVar.__reduce__  ,
+        ]
 else :
     Ostap.FormulaVar.__reduce__    = _rfv_reduce
     Ostap.FormulaVar. __str__      = _rfv_str_
     Ostap.FormulaVar. __repr__     = _rfv_repr_
     Ostap.FormulaVar.__reduce__    = _rfv_reduce
+    _new_methods_ += [
+        Ostap.FormulaVar.__reduce__  ,
+        Ostap.FormulaVar. __str__    , 
+        Ostap.FormulaVar. __repr__   , 
+        Ostap.FormulaVar.__reduce__  , 
+        ]
 
 
 # =============================================================================
@@ -1335,6 +1351,10 @@ def _r2v_reduce ( var ) :
 
 Ostap.MoreRooFit.TwoVars.__reduce__  = _r2v_reduce
 
+_new_methods_ += [
+    Ostap.MoreRooFit.TwoVars.__reduce__
+    ]
+
 # ===================================================================
 ## Reduce <code>Ostap::MoreFooFit::Addition</code> objects
 #  @see Ostap::MoreRooFit.Addition
@@ -1353,7 +1373,20 @@ def _radd2_reduce ( var ) :
     - see Ostap.MoreRooFit.Addition2
     """
     content = type ( var ) , var.name , var.title , var.x () , var.y () , var.c1 () , var.c2 () 
-    return _r2v_factory , content 
+    return _r2v_factory , content
+
+# =============================================================================
+## reduce <code>Ostap::MoreRooFit::Id<code> object
+#  @see Ostap.MoreRooFit::Id
+def _rid_reduce ( var ) :
+    """Reduce `Ostap.MoreRooFit.Id` object
+    - see Ostap.MoreRooFit.Id
+    """
+    return _r2v_factory , ( type ( var ) ,
+                            var.name     ,
+                            var.title    ,
+                            var.x ()     )
+
 
 Ostap.MoreRooFit.Addition    .__reduce__  = _radd1_reduce
 Ostap.MoreRooFit.Addition2   .__reduce__  = _radd2_reduce
@@ -1361,6 +1394,17 @@ Ostap.MoreRooFit.Addition2   .__reduce__  = _radd2_reduce
 Ostap.MoreRooFit.Subtraction .__reduce__  = _r2v_reduce
 Ostap.MoreRooFit.Product     .__reduce__  = _r2v_reduce
 Ostap.MoreRooFit.ProductPdf  .__reduce__  = _r2v_reduce
+
+Ostap.MoreRooFit.Id          .__reduce__  = _rid_reduce
+
+_new_methods_ += [
+    Ostap.MoreRooFit.Addition    .__reduce__  , 
+    Ostap.MoreRooFit.Addition2   .__reduce__  , 
+    Ostap.MoreRooFit.Subtraction .__reduce__  , 
+    Ostap.MoreRooFit.Product     .__reduce__  , 
+    Ostap.MoreRooFit.ProductPdf  .__reduce__  , 
+    Ostap.MoreRooFit.Id          .__reduce__  ,
+]
 
 # ===================================================================
 ## Reduce <code>Ostap::MoreFooFit::Combination</code> objects
@@ -1389,8 +1433,10 @@ def _rasym_reduce ( var ) :
 Ostap.MoreRooFit.Combination.__reduce__  = _rcomb_reduce
 Ostap.MoreRooFit.Asymmetry.  __reduce__  = _rasym_reduce
 
-
-
+_new_methods_ += [
+    Ostap.MoreRooFit.Combination.__reduce__  , 
+    Ostap.MoreRooFit.Asymmetry.  __reduce__  ,
+    ]
 
 # =============================================================================
 ## Reduce <code>RooConstVar</code>
@@ -1400,11 +1446,15 @@ def _rconst_reduce ( var ) :
     - see ROOT.RooConstVar
     """
     return _r2v_factory , ( type ( var )  ,
-                           var.name      ,
-                           var.title     ,
-                           float ( var ) )  
+                            var.name      ,
+                            var.title     ,
+                            float ( var ) )  
 
 ROOT.RooConstVar.__reduce__ = _rconst_reduce 
+
+_new_methods_ += [
+    ROOT.RooConstVar.__reduce__ ,
+    ]
 
 # =============================================================================
 ## unpickle <code>Ostap::MoreFooFit::Constant</code> objects
@@ -1432,6 +1482,10 @@ def _rconst2_reduce ( var ) :
 
 Ostap.MoreRooFit.Constant.  __reduce__  = _rconst2_reduce
 
+_new_methods_ += [
+    Ostap.MoreRooFit.Constant.  __reduce__  ,
+    ]
+
 # =============================================================================
 ## unpickle <code>Ostap::MoreFooFit::Bernstein</code> objects
 #  @see Ostap::MoreRooFit::Bernstein
@@ -1448,7 +1502,7 @@ def _rpoly_factory ( klass , name , title , xvar , pars , *args ) :
 
 
 # =============================================================================
-## Reduce <coide>Ostap::MoreRooFit::Bernstein</code> object 
+## Reduce <code>Ostap::MoreRooFit::Bernstein</code> object 
 #  @see Ostap::MoreRooDit::Bernstein
 def _rbern_reduce ( var ) :
     """Reduce `Ostap.MoreRooFit.Bernstein` object 
@@ -1464,8 +1518,12 @@ def _rbern_reduce ( var ) :
 
 Ostap.MoreRooFit.Bernstein.  __reduce__  = _rbern_reduce
 
+_new_methods_ += [
+    Ostap.MoreRooFit.Bernstein.  __reduce__ ,
+    ]
+
 # =============================================================================
-## Reduce <coide>Ostap::MoreRooFit::Monotonic</code> object 
+## Reduce <code>Ostap::MoreRooFit::Monotonic</code> object 
 #  @see Ostap::MoreRooDit::Monotonic
 def _rmono_reduce ( var ) :
     """Reduce `Ostap.MoreRooFit.Monotonic` object 
@@ -1484,8 +1542,12 @@ def _rmono_reduce ( var ) :
 
 Ostap.MoreRooFit.Monotonic.  __reduce__  = _rmono_reduce
 
+_new_methods_ += [
+    Ostap.MoreRooFit.Monotonic.  __reduce__ , 
+    ]
+
 # =============================================================================
-## Reduce <coide>Ostap::MoreRooFit::Convex</code> object 
+## Reduce <code>Ostap::MoreRooFit::Convex</code> object 
 #  @see Ostap::MoreRooDit::Monotonic
 def _rconv1_reduce ( var ) :
     """Reduce `Ostap.MoreRooFit.Monotonic` object 
@@ -1505,8 +1567,12 @@ def _rconv1_reduce ( var ) :
 
 Ostap.MoreRooFit.Convex.  __reduce__  = _rconv1_reduce
 
+_new_methods_ += [
+    Ostap.MoreRooFit.Convex.  __reduce__ ,
+    ]
+
 # =============================================================================
-## Reduce <coide>Ostap::MoreRooFit::ConvexOnly</code> object 
+## Reduce <code>Ostap::MoreRooFit::ConvexOnly</code> object 
 #  @see Ostap::MoreRooDit::ConvexOnly
 def _rconv2_reduce ( var ) :
     """Reduce `Ostap.MoreRooFit.ConvexOnly` object 
@@ -1525,7 +1591,41 @@ def _rconv2_reduce ( var ) :
 
 Ostap.MoreRooFit.ConvexOnly.  __reduce__  = _rconv2_reduce
 
+_new_methods_ += [
+    Ostap.MoreRooFit.ConvexOnly.  __reduce__  ,
+    ]
 
+# =============================================================================
+## unpickle <code>Ostap::MoreFooFit::BSpline</code> objects
+#  @see Ostap::MoreRooFit::BSpline
+def _rbspl_factory ( klass , name , title , xvar , knots , pars ) :
+    """unpickle `Ostap.MoreFooFit.BSpline` objects
+    - see Ostap.MoreRooFit.BSpline
+    """
+    plst  = ROOT.RooArgList()
+    for v in pars : plst.add ( v )
+    knots = doubles ( knots ) 
+    return klass ( name , title , xvar , knots , pars )
+
+# =============================================================================
+## Reduce <code>Ostap::MoreRooFit::BSpline</code> object 
+#  @see Ostap::MoreRooDit::BSpline
+def _rbspl_reduce ( spl ) :
+    """Reduce `Ostap.MoreRooFit.BSpline` object 
+    - see Ostap.MoreRooDit.BSpline
+    """
+    return _rbspl_factory, ( type ( spl ) ,
+                             spl.name     ,
+                             spl.title    ,
+                             spl.xvar  () ,
+                             array.array( 'd' , spl.knots() ) ,
+                             tuple ( p for p in spl.pars()  ) )
+
+Ostap.MoreRooFit.BSpline.  __reduce__  = _rbspl_reduce
+
+_new_methods_ += [
+    Ostap.MoreRooFit.BSpline.  __reduce__  ,
+    ]
 
 # ============================================================================
 ## get variables from <code>Ostap::Models::Uniform<code> object
@@ -1544,7 +1644,7 @@ def _runi_vars_ ( u ) :
     ##
     if   1 == d : return uni.x() , 
     elif 2 == d : return uni.x() , uni.y()  
-    elif 3 == d : return uni.x() , uni.y() , unu.z()
+    elif 3 == d : return uni.x() , uni.y() , uni.z()
     ##
     return () 
 
@@ -1560,6 +1660,10 @@ def _runi_reduce_ ( uni ) :
                             uni.title    ) + uni.vars() 
 
 Ostap.Models.Uniform.__reduce__ = _runi_reduce_
+
+_new_methods_ += [
+    Ostap.Models.Uniform.__reduce__ ,
+    ]
 
 # =============================================================================
 ## unpickle RooUniformBinning object
@@ -1623,7 +1727,35 @@ def _rrb_reduce_ ( rrb ) :
 ROOT.RooBinning       .__reduce__ = _rb_reduce_
 ROOT.RooUniformBinning.__reduce__ = _rub_reduce_
 ROOT.RooRangeBinning  .__reduce__ = _rrb_reduce_
-        
+
+_new_methods_ += [
+    ROOT.RooBinning       .__reduce__ ,
+    ROOT.RooUniformBinning.__reduce__ , 
+    ROOT.RooRangeBinning  .__reduce__ , 
+    ]
+    
+# ============================================================================
+## unpickle RooProdPdf
+#  @see RooProdPdf
+def _rppdf_factory ( name , title , *pdflist ) :
+    """Unpickle `RooProdPdf`"""
+    lst = ROOT.RooArgList()
+    for p in pdflist : lst.add ( p )
+    return ROOT.RooProdPdf ( name , title , lst )
+# =============================================================================
+## reduce RooProdPdf object 
+def _rppdf_reduce_ ( pdf ) :
+    """Reduce `RooProdPdf` object"""
+    pdflist = tuple ( p for p in pdf.pdfList() )
+    content = ( pdf.GetName() , pdf.GetTtile() ) + pdflist 
+    return _rppdf_factory, content
+
+ROOT.RooProdPdf.__reduce__ = _rppdf_reduce_
+
+_new_methods_ += [
+    ROOT.RooProdPdf.__reduce__ ,
+    ]
+
 # =============================================================================
 ## Unpickle RooAbsCollection object
 #  @see RooAbsCollectio
@@ -1646,13 +1778,36 @@ ROOT.RooArgList .__reduce__ = _rac_reduce_
 
 
 _decorated_classes_ = (
-    ROOT.RooRealVar        ,
-    ROOT.RooConstVar       ,
-    ROOT.RooFormulaVar     ,
-    ROOT.RooAbsReal        ,
-    ROOT.RooAbsRealLValue  ,
-    ROOT.RooUniformBinning ,
-    ROOT.RooBinning        ,
+    ##
+    ROOT.RooRealVar               ,
+    ROOT.RooConstVar              ,
+    ROOT.RooFormulaVar            ,
+    ROOT.RooAbsReal               ,
+    ROOT.RooAbsRealLValue         ,
+    ROOT.RooUniformBinning        ,
+    ROOT.RooBinning               ,
+    ROOT.RooRangeBinning          ,
+    ##
+    Ostap.MoreRooFit.Id           ,
+    Ostap.MoreRooFit.TwoVars      ,
+    Ostap.MoreRooFit.Addition     ,
+    Ostap.MoreRooFit.Addition2    ,
+    Ostap.MoreRooFit.Subtraction  ,
+    Ostap.MoreRooFit.Product      ,
+    Ostap.MoreRooFit.ProductPdf   ,
+    Ostap.MoreRooFit.Combination  ,
+    Ostap.MoreRooFit.Asymmetry    ,
+    Ostap.MoreRooFit.Constant     ,
+    Ostap.MoreRooFit.Bernstein    ,
+    Ostap.MoreRooFit.Monotonic    ,
+    Ostap.MoreRooFit.Convex       ,
+    Ostap.MoreRooFit.ConvexOnly   ,
+    ##
+    Ostap.Models.Uniform          ,
+    ##
+    ROOT.RooProdPdf               ,
+    ROOT.RooArgSet                ,
+    ROOT.RooArgList               ,
 )
 
 _new_methods_ = tuple ( _new_methods_ ) 

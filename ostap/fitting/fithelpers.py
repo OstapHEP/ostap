@@ -377,7 +377,7 @@ class VarMaker (object) :
             len_vvars = len ( vvars )
             len_vargs = len ( vargs )
 
-            ## there shoduld be at least one ueeful number! 
+            ## there shoduld be at least one useful number! 
             assert 1<= len_vvars + len_vargs , "make_var: empty 'vvars' and 'vargs'!"
             
             if   0 == len_vvars and 1 == len_vargs :
@@ -388,20 +388,24 @@ class VarMaker (object) :
                 ## OK 
                 params = vargs + ( unit , )
 
-            elif 0 == len_vvars and 2 == len_vargs :
-                ## fix it...
-                params = min ( vargs ) , max( bvargs ) , unit 
+            elif 0 == len_vvars and 2 == len_vargs and vargs [ 0 ] <= vargs [ 1 ] :
+                ## OK 
+                params = min ( vargs ) , max( vargs ) , unit
+                
+            elif 0 == len_vvars and 2 == len_vargs and vargs [ 0 ] <= vargs [ 1 ] :
+                ## FIX IT! 
+                params = min ( vargs ) , max( vargs ) , unit
                 
             elif 0 == len_vvars and 3 == len_vargs and vargs [ 1 ] <= vargs [ 0 ] <= vargs [ 2 ] :
                 ## OK 
                 params = vargs + ( unit , )
 
             elif 0 == len_vvars and 3 == len_vargs :
-                ## fix it 
-                params = min ( vargs ) , max( bvargs ) , unit 
+                ## FIX IT!
+                params = min ( vargs ) , max( vargs ) , unit 
 
             elif 1 == len_vvars and 0 == len_vargs :
-                ## use only vvar 
+                ## OK: use only vvar 
                 params = vvars + ( unit , )
                 
             elif 1 == len_vvars and 2 == len_vargs and vargs [ 0 ] <= vvars [ 0 ] <= vargs [ 1 ] :
@@ -409,7 +413,7 @@ class VarMaker (object) :
                 params = vvars + vargs + ( unit , )
 
             elif 1 == len_vvars and 3 == len_vargs and vargs [ 1 ] <= vvars [ 0 ] <= vargs [ 2 ] :
-                ## 'value' from vargs is ignored 
+                ## FIX IT: 'value' from vargs is ignored 
                 params = vvars + vargs[1:] + ( unit , )
                 
             elif 1 == len_vvars :
@@ -417,7 +421,7 @@ class VarMaker (object) :
                 params = vvars + ( unit , )
                 
             elif 2 == len_vvars and 0 == len_vargs and vvars [ 0 ] < vvars [ 1 ] :
-                ## min/max specified via vvar
+                ## OK: min/max specified via vvar
                 params = vvar + vargs + ( unit , )
                 
             elif 2 == len_vvars and 1 == len_vargs and vvars [ 0 ] <= vargs [ 0 ] <= vvars [ 1 ] :

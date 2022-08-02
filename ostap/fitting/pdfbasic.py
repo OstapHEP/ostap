@@ -448,11 +448,11 @@ class APDF1 ( object ) :
         cov2_good = ( qual == 3 ) or ( dataset.isWeighted() and qual == -1 )
         
         if   result and 0 == result.status() and not silent :
-            logger.info     ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+            self.info      ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
         elif result and ( not cov2_good ) and not silent : 
-            logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+            self.warning   ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
         elif result and not silent :
-            logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
+            self.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
 
         frame = None
         
@@ -1055,11 +1055,11 @@ class APDF1 ( object ) :
                 vmn , vmx = var.minmax()
                 graph   = frame.getObject ( 0 )
                 if graph.remove ( remove = lambda x,y : not vmn <= x <= vmx ) :
-                    logger.debug ('draw_nll: remove drawing artefacts  at the first and the last points' ) 
+                    self.debug ('draw_nll: remove drawing artefacts  at the first and the last points' ) 
                                         
             ## scale it if needed
             if 1 != sf :
-                logger.info ('draw_nll: apply scale factor of %.4g due to dataset weights' % sf )
+                self.info ('draw_nll: apply scale factor of %.4g due to dataset weights' % sf )
                 graph  = frame.getObject ( 0 )
                 graph *= sf 
                 
@@ -1202,12 +1202,12 @@ class APDF1 ( object ) :
             
        ## subtract the minimum
         if subtract :
-            logger.info ( "graph_nll: minimal value of %.5g is subtracted" % ymin ) 
+            self.info ( "graph_nll: minimal value of %.5g is subtracted" % ymin ) 
             graph -= ymin 
 
         ## scale it if needed
         if 1 != sf :
-            logger.info ('graph_nll: apply scale factor of %.5g due to dataset weights' % sf )
+            self.info ('graph_nll: apply scale factor of %.5g due to dataset weights' % sf )
             graph *= sf 
             
         if draw : graph.draw ('ap')
@@ -1297,12 +1297,12 @@ class APDF1 ( object ) :
                     
         ## subtract the minimum
         if subtract :
-            logger.info ( "graph_profile: minimal value of %.5g is subtracted" % ymin ) 
+            self.info ( "graph_profile: minimal value of %.5g is subtracted" % ymin ) 
             graph -= ymin 
 
         ## scale it if needed
         if 1 != sf :
-            logger.info ('graph_profile: apply scale factor of %.5g due to dataset weights' % sf )
+            self.info ('graph_profile: apply scale factor of %.5g due to dataset weights' % sf )
             graph *= sf 
 
         if draw : graph.draw ('ap')
@@ -1398,7 +1398,7 @@ class APDF1 ( object ) :
                     dnll = VE ( dnll , 0.25 * (val_maxvp - val_maxvm )**2 )
                     
             ## apply scale factor
-            if 1 != sf :  logger.info ('Scale factor of %.4g is applied' % sf )
+            if 1 != sf :  self.info ('Scale factor of %.4g is applied' % sf )
             dnll *= sf            
                 
             ## convert the difference in likelihoods into sigmas 
@@ -1466,7 +1466,7 @@ class APDF1 ( object ) :
 
         del pars
 
-        logger.info ( "Wilks: fixed variables: %s" % [ f.GetName()  for f in fixed] )
+        self.info ( "Wilks: fixed variables: %s" % [ f.GetName()  for f in fixed] )
 
         ## unpack the range 
         minv , maxv = range        
@@ -1520,7 +1520,7 @@ class APDF1 ( object ) :
             dnll = nll_min - nll_max
 
             ## apply scale factor
-            if 1 != sf :  logger.info ('Scale factor of %.4g is applied' % sf )
+            if 1 != sf :  self.info ('Scale factor of %.4g is applied' % sf )
             dnll *= sf            
         
             ## convert the difference in likelihoods into sigmas/significance
@@ -1599,7 +1599,7 @@ class APDF1 ( object ) :
         if 1 != scale_errdef :
             old_errdef = nLL.defaultErrorLevel ()
             new_errdef = old_errdef / scale_errdef
-            logger.info ("minuit: Error Level is redefined from %.1f to %.4g" %  ( old_errdef ,
+            self.info ("minuit: Error Level is redefined from %.1f to %.4g" %  ( old_errdef ,
                                                                                    new_errdef ) )
             m.setErrorLevel ( new_errdef ) 
 
@@ -4246,13 +4246,13 @@ class APDF3 (APDF2) :
         if not x0 : x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax ) , 0.5 * ( zmin + zmax )
 
         if not xmin <= x0[0] <= xmax :
-            logger.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
+            self.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
 
         if not ymin <= x0[1] <= ymax : 
-            logger.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
+            self.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
         
         if not zmin <= x0[2] <= zmax : 
-            logger.error("Wrong zmin/x0[2]/zmax: %s/%s/%s"   % ( zmin , x0[2] , zmax ) )
+            self.error("Wrong zmin/x0[2]/zmax: %s/%s/%s"   % ( zmin , x0[2] , zmax ) )
 
         from ostap.math.minimize import sp_minimum_3D
         return sp_minimum_3D (  self ,
@@ -4297,13 +4297,13 @@ class APDF3 (APDF2) :
         if not x0 : x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax ) , 0.5 * ( zmin + zmax )
 
         if not xmin <= x0[0] <= xmax :
-            logger.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
+            self.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
 
         if not ymin <= x0[1] <= ymax : 
-            logger.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
+            self.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
         
         if not zmin <= x0[2] <= zmax : 
-            logger.error("Wrong zmin/x0[2]/zmax: %s/%s/%s"   % ( zmin , x0[2] , zmax ) )
+            self.error("Wrong zmin/x0[2]/zmax: %s/%s/%s"   % ( zmin , x0[2] , zmax ) )
 
         from ostap.math.minimize import sp_maximum_3D
         return sp_maximum_3D ( self ,

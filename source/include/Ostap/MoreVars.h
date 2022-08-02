@@ -445,6 +445,8 @@ namespace Ostap
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
       const RooArgList& params () const { return m_pars       ; }
+      /// get parameters 
+      const RooArgList& pars   () const { return m_pars       ; }
       /// vector of knots 
       const std::vector<double>& knots () const { return m_bspline.knots() ; }
       /// xmin

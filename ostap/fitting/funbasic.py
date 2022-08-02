@@ -4117,14 +4117,11 @@ class Fun3D ( FUN3 ) :
 
         FUN3.__init__ ( self , name , xvar = xvar , yvar = yvar , zvar = zvar , keep  = keep )
 
-        if not isinstance ( fun , ( ROOT.RooConstVar , Ostap.MoreRooFit.Id ) ) :
-            
+        if not isinstance ( fun , ( ROOT.RooConstVar , Ostap.MoreRooFit.Id ) ) :            
             if not self.xvar in fun.getParameters ( 0 ) and not self.xvar is fun :
-                self.warning ("Function does not depends on xvar=%s" % self.xvar.name )
-                
+                self.warning ("Function does not depends on xvar=%s" % self.xvar.name )                
             if not self.yvar in fun.getParameters ( 0 ) and not self.yvar is fun :
-                self.warning ("Function does not depends on yvar=%s" % self.yvar.name )
-                
+                self.warning ("Function does not depends on yvar=%s" % self.yvar.name )                
             if not self.zvar in fun.getParameters ( 0 ) and not self.zvar is fun :
                 self.warning ("Function does not depends on zvar=%s" % self.zvar.name ) 
 
