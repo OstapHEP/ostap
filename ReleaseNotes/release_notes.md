@@ -1,5 +1,8 @@
 ## New features: 
 
+  1. re-enable again `test_fitting_morphing` for new ROOT, 
+     see [ROOT/issues/#11061](https://github.com/root-project/root/issues/11061)
+
 ## Backward incompatible:  
 
 ## Bug fixes:
