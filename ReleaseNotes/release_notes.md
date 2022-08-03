@@ -1,3 +1,5 @@
+# v1.9.0.2
+
 ## New features: 
 
   1. add some finite functions: `hat` and `up` and correspoondg models/PDFs
@@ -14,8 +16,7 @@
 
 ## Bug fixes:
 
-  1. fix incorrectness in `Sum1D/Sum2D/Sum3D` - `fractions` argument was not forwardef to `Fractions`
-
+  1. fix incorrectness in `Sum1D/Sum2D/Sum3D` - `fractions` argument was not forwardef to `
 
 # v1.9.0.0
 
