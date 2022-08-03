@@ -2,7 +2,8 @@
 
   1. re-enable again `test_fitting_morphing` for new ROOT, 
      see [ROOT/issues/#11061](https://github.com/root-project/root/issues/11061)
-
+  1. add `MorphingN3_pdf` for morphing in 3 variables 
+`
 ## Backward incompatible:  
 
 ## Bug fixes:
