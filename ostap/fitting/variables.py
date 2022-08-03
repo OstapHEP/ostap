@@ -1472,7 +1472,7 @@ def _rconst2_reduce ( var ) :
                             var.name      ,
                             var.title     ,
                             float ( var ) ,
-                            var.vls()     )
+                            var.vlst()    )
 
 Ostap.MoreRooFit.Constant.  __reduce__  = _rconst2_reduce
 
