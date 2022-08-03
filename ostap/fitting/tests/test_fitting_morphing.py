@@ -73,12 +73,11 @@ def test_morphingL () :
         r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
 
-
 # ============================================================================
 def test_morphing1 () :
 
     logger = getLogger ('test_morphing1')    
-    if root_info < ( 6 , 23 ) or ( 6 , 27 ) <= root_info :
+    if root_info < ( 6 , 23 ) : 
         logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
         return
 
@@ -116,7 +115,7 @@ def test_morphing2 () :
     
     logger = getLogger ('test_morphing3')
     
-    if root_info < ( 6 , 23 )  or ( 6 , 27 ) <= root_info :
+    if root_info < ( 6 , 23 ) : 
         logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
         return
 
@@ -149,7 +148,7 @@ def test_morphing3 () :
     
     logger = getLogger ('test_morphing3')
     
-    if root_info < ( 6 , 23 )  or ( 6 , 27 ) <= root_info :
+    if root_info < ( 6 , 23 ) : 
         logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
         return
 
