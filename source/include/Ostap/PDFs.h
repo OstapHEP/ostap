@@ -188,6 +188,12 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      const RooAbsReal& x      () const { return m_x   .arg() ; }
+      const RooAbsReal& mass   () const { return m_mass.arg() ; }
+      const RooArgList& widths () const { return m_widths     ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the amplitude
       virtual std::complex<double> amplitude    () const  ;
       /// access to underlying function
@@ -228,7 +234,7 @@ namespace Ostap
         RooAbsReal&                       x         ,
         RooAbsReal&                       mass      , 
         RooArgList&                       widths    ,
-        const Ostap::Math::BreitWignerMC& bw ) ;
+        const Ostap::Math::BreitWignerMC& bw        ) ;
       /// "copy" constructor
       BreitWignerMC ( const BreitWignerMC& , const char* name = 0 ) ;
       /// virtual destructor
@@ -268,18 +274,20 @@ namespace Ostap
     public:
       // ======================================================================
       ///constructor from Breit-Wigner and backround 
-      BWI ( const char*                         name  , 
-            const Ostap::Models::BreitWigner&   bw    ,
-            RooAbsReal&                         b     , 
-            RooAbsReal&                         ab    , 
-            RooAbsReal&                         phib  ) ;
+      BWI
+        ( const char*                         name  , 
+          const Ostap::Models::BreitWigner&   bw    ,
+          RooAbsReal&                         b     , 
+          RooAbsReal&                         ab    , 
+          RooAbsReal&                         phib  ) ;
       ///constructor from Breit-Wigner and backround 
-      BWI ( const char*                         name  , 
-            const char*                         title , 
-            const Ostap::Models::BreitWigner&   bw    ,
-            RooAbsReal&                         b     , 
-            RooAbsReal&                         ab    , 
-            RooAbsReal&                         phib  ) ;
+      BWI 
+        ( const char*                         name  , 
+          const char*                         title , 
+          const Ostap::Models::BreitWigner&   bw    ,
+          RooAbsReal&                         b     , 
+          RooAbsReal&                         ab    , 
+          RooAbsReal&                         phib  ) ;
       /// "copy" constructor
       BWI ( const BWI& , const char* name = 0 ) ;
       /// virtual destructor
@@ -305,6 +313,12 @@ namespace Ostap
       ( RooArgSet&     allVars      ,
         RooArgSet&     analVars     ,
         const char* /* rangename */ ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& b      () const { return m_b    .arg() ; }
+      const RooAbsReal& ab     () const { return m_ab   .arg() ; }
+      const RooAbsReal& phib   () const { return m_phib .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -336,14 +350,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      Flatte ( const char*                name   ,
-               const char*                title  ,
-               RooAbsReal&                x      ,
-               RooAbsReal&                m0     ,
-               RooAbsReal&                g1     ,
-               RooAbsReal&                g2     ,
-               RooAbsReal&                g0     ,
-               const Ostap::Math::Flatte& flatte ) ;
+      Flatte 
+      ( const char*                name   ,
+        const char*                title  ,
+        RooAbsReal&                x      ,
+        RooAbsReal&                m0     ,
+        RooAbsReal&                g1     ,
+        RooAbsReal&                g2     ,
+        RooAbsReal&                g0     ,
+        const Ostap::Math::Flatte& flatte ) ;
       /// "copy" constructor
       Flatte ( const Flatte& , const char* name = 0 ) ;
       /// virtual destructor
@@ -379,15 +394,16 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      LASS ( const char*                name   ,
-             const char*                title  ,
-             RooAbsReal&                x      ,
-             RooAbsReal&                m0     ,
-             RooAbsReal&                g0     ,
-             RooAbsReal&                a      ,
-             RooAbsReal&                b      ,
-             RooAbsReal&                e      , 
-             const Ostap::Math::LASS&   lass   ) ;
+      LASS
+      ( const char*                name   ,
+        const char*                title  ,
+        RooAbsReal&                x      ,
+        RooAbsReal&                m0     ,
+        RooAbsReal&                g0     ,
+        RooAbsReal&                a      ,
+        RooAbsReal&                b      ,
+        RooAbsReal&                e      , 
+        const Ostap::Math::LASS&   lass   ) ;
       /// "copy" constructor
       LASS ( const LASS & , const char* name = 0 ) ;
       /// virtual destructor
@@ -409,6 +425,12 @@ namespace Ostap
       // ======================================================================
       /// set all parameters
       void setPars () const override ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& a () const { return m_a .arg() ; }
+      const RooAbsReal& b () const { return m_b .arg() ; }
+      const RooAbsReal& e () const { return m_e .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -435,21 +457,23 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      BWPS ( const char*                name   ,
-             const char*                title  ,
-             RooAbsReal&                x      ,
-             RooAbsReal&                m0     ,
-             RooAbsReal&                gamma  ,
-             RooArgList&                phis   , 
-             const Ostap::Math::BWPS&   bwps   ) ;
+      BWPS 
+      ( const char*                name   ,
+        const char*                title  ,
+        RooAbsReal&                x      ,
+        RooAbsReal&                m0     ,
+        RooAbsReal&                gamma  ,
+        RooArgList&                phis   , 
+        const Ostap::Math::BWPS&   bwps   ) ;
       /// constructor from all parameters
-      BWPS ( const char*                name   ,
-             const char*                title  ,
-             RooAbsReal&                x      ,
-             RooAbsReal&                m0     ,
-             RooArgList&                gamma  ,
-             RooArgList&                phis   , 
-             const Ostap::Math::BWPS&   bwps   ) ;
+      BWPS
+      ( const char*                name   ,
+        const char*                title  ,
+        RooAbsReal&                x      ,
+        RooAbsReal&                m0     ,
+        RooArgList&                gamma  ,
+        RooArgList&                phis   , 
+        const Ostap::Math::BWPS&   bwps   ) ;
       /// "copy" constructor 
       BWPS ( const BWPS& , const char* name = 0 ) ;
       /// virtual destructor 
@@ -490,6 +514,13 @@ namespace Ostap
       ( Int_t          code         ,
         const char*    rangeName    ) const override;
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& m0    () const { return m_m0    .arg() ; }
+      const RooArgList& gamma () const { return m_gamma        ; }
+      const RooArgList& phis  () const { return m_phis         ; }
+      // ======================================================================
     protected: 
       // ======================================================================
       /// the function  itself 
@@ -518,19 +549,21 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      BW3L ( const char*                name   ,
-             const char*                title  ,
-             RooAbsReal&                x      ,
-             RooAbsReal&                m0     ,
-             RooAbsReal&                gamma  ,
-             const Ostap::Math::BW3L&   bwps   ) ;
+      BW3L
+      ( const char*                name   ,
+        const char*                title  ,
+        RooAbsReal&                x      ,
+        RooAbsReal&                m0     ,
+        RooAbsReal&                gamma  ,
+        const Ostap::Math::BW3L&   bwps   ) ;
       /// constructor from all parameters
-      BW3L ( const char*                name   ,
-             const char*                title  ,
-             RooAbsReal&                x      ,
-             RooAbsReal&                m0     ,
-             RooArgList&                gamma  ,
-             const Ostap::Math::BW3L&   bwps   ) ;
+      BW3L
+      ( const char*                name   ,
+        const char*                title  ,
+        RooAbsReal&                x      ,
+        RooAbsReal&                m0     ,
+        RooArgList&                gamma  ,
+        const Ostap::Math::BW3L&   bwps   ) ;
       /// "copy" constructor 
       BW3L ( const BW3L& , const char* name = 0 ) ;
       /// virtual destructor 
@@ -571,6 +604,12 @@ namespace Ostap
       Double_t analyticalIntegral
       ( Int_t          code         ,
         const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& m0    () const { return m_m0    .arg() ; }
+      const RooArgList& gamma () const { return m_gamma        ; }
       // ======================================================================
     protected: 
       // ======================================================================
@@ -645,6 +684,13 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Voigt& function() const { return m_voigt ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& m0    () const { return m_m0    .arg() ; }
+      const RooAbsReal& gamma () const { return m_gamma .arg() ; }
+      const RooAbsReal& sigma () const { return m_sigma .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -718,6 +764,13 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::PseudoVoigt& function() const { return m_voigt ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& m0    () const { return m_m0    .arg() ; }
+      const RooAbsReal& gamma () const { return m_gamma .arg() ; }
+      const RooAbsReal& sigma () const { return m_sigma .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -883,6 +936,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::CrystalBall& function() const { return m_cb ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& m0    () const { return m_m0    .arg() ; }
+      const RooAbsReal& sigma () const { return m_sigma .arg() ; }
+      const RooAbsReal& alpha () const { return m_alpha .arg() ; }
+      const RooAbsReal& n     () const { return m_n     .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -958,6 +1019,14 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::CrystalBallRightSide& function() const { return m_cb ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& m0    () const { return m_m0    .arg() ; }
+      const RooAbsReal& sigma () const { return m_sigma .arg() ; }
+      const RooAbsReal& alpha () const { return m_alpha .arg() ; }
+      const RooAbsReal& n     () const { return m_n     .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -1037,6 +1106,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::CrystalBallDoubleSided& function() const
       { return m_cb2 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& m0     () const { return m_m0     .arg() ; }
+      const RooAbsReal& sigma  () const { return m_sigma  .arg() ; }
+      const RooAbsReal& alphaL () const { return m_alphaL .arg() ; }
+      const RooAbsReal& alphaR () const { return m_alphaR .arg() ; }
+      const RooAbsReal& nL     () const { return m_nL     .arg() ; }
+      const RooAbsReal& nR     () const { return m_nR     .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -1119,6 +1198,15 @@ namespace Ostap
       const Ostap::Math::Needham& function() const { return m_needham ; }
       /// get current alpha
       double                      alpha   () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& m0     () const { return m_m0     .arg() ; }
+      const RooAbsReal& sigma  () const { return m_sigma  .arg() ; }
+      const RooAbsReal& a0     () const { return m_a0     .arg() ; }
+      const RooAbsReal& a1     () const { return m_a1     .arg() ; }
+      const RooAbsReal& a2     () const { return m_a2     .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -1205,6 +1293,15 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Apollonios& function() const { return m_apo ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& m0     () const { return m_m0     .arg() ; }
+      const RooAbsReal& sigma  () const { return m_sigma  .arg() ; }
+      const RooAbsReal& alpha  () const { return m_alpha  .arg() ; }
+      const RooAbsReal& n      () const { return m_n      .arg() ; }
+      const RooAbsReal& b      () const { return m_b      .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -1285,6 +1382,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Apollonios2& function() const { return m_apo2 ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& m0     () const { return m_m0     .arg() ; }
+      const RooAbsReal& sigmaL () const { return m_sigmaL .arg() ; }
+      const RooAbsReal& sigmaR () const { return m_sigmaR .arg() ; }
+      const RooAbsReal& beta   () const { return m_beta   .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -1359,6 +1464,13 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::BifurcatedGauss& function() const { return m_bg ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& peak   () const { return m_peak   .arg() ; }
+      const RooAbsReal& sigmaL () const { return m_sigmaL .arg() ; }
+      const RooAbsReal& sigmaR () const { return m_sigmaR .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -1436,6 +1548,13 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::GenGaussV1& function() const { return m_ggv1 ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& mu     () const { return m_mu     .arg() ; }
+      const RooAbsReal& alpha  () const { return m_alpha  .arg() ; }
+      const RooAbsReal& beta   () const { return m_beta   .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -1512,6 +1631,13 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::GenGaussV2& function() const { return m_ggv2 ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& xi     () const { return m_xi     .arg() ; }
+      const RooAbsReal& alpha  () const { return m_alpha  .arg() ; }
+      const RooAbsReal& kappa  () const { return m_kappa  .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -1587,6 +1713,13 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::SkewGauss& function() const { return m_sg ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& xi     () const { return m_xi     .arg() ; }
+      const RooAbsReal& omega  () const { return m_omega  .arg() ; }
+      const RooAbsReal& alpha  () const { return m_alpha  .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -1684,6 +1817,13 @@ namespace Ostap
       const Ostap::Math::ExGauss& function () const { return m_eg ; }
       const Ostap::Math::ExGauss& exgauss  () const { return m_eg ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& mu       () const { return m_mu       .arg() ; }
+      const RooAbsReal& varsigma () const { return m_varsigma .arg() ; }
+      const RooAbsReal& k        () const { return m_k        .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        {} ;
@@ -1779,6 +1919,14 @@ namespace Ostap
       const Ostap::Math::NormalLaplace& function       () const { return m_nl ; }
       const Ostap::Math::NormalLaplace& normallaplace  () const { return m_nl ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& mu       () const { return m_mu       .arg() ; }
+      const RooAbsReal& varsigma () const { return m_varsigma .arg() ; }
+      const RooAbsReal& kL       () const { return m_kL       .arg() ; }
+      const RooAbsReal& kR       () const { return m_kR       .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        {} ;
@@ -1867,6 +2015,13 @@ namespace Ostap
       const Ostap::Math::Novosibirsk& function    () const { return m_novosibirsk ; }
       const Ostap::Math::Novosibirsk& novosibirsk () const { return m_novosibirsk ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& peak     () const { return m_peak     .arg() ; }
+      const RooAbsReal& sigma    () const { return m_sigma    .arg() ; }
+      const RooAbsReal& tau      () const { return m_tau      .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      {} ;
@@ -1946,6 +2101,15 @@ namespace Ostap
       const Ostap::Math::Bukin& function () const { return m_bukin ; }
       const Ostap::Math::Bukin& bukin    () const { return m_bukin ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& peak     () const { return m_peak     .arg() ; }
+      const RooAbsReal& sigma    () const { return m_sigma    .arg() ; }
+      const RooAbsReal& xi       () const { return m_xi       .arg() ; }
+      const RooAbsReal& rhoL     () const { return m_rhoL     .arg() ; }
+      const RooAbsReal& rhoR     () const { return m_rhoR     .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -1983,15 +2147,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      StudentT ( const char*          name      ,
-                 const char*          title     ,
-                 RooAbsReal&          x         ,
-                 RooAbsReal&          mu        ,
-                 RooAbsReal&          sigma     ,
-                 RooAbsReal&          n         ) ;
+      StudentT
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          sigma     ,
+        RooAbsReal&          n         ) ;
       /// "copy constructor"
-      StudentT ( const StudentT&      right     ,
-                 const char*          name  = 0 )  ;
+      StudentT
+      ( const StudentT&      right     ,
+        const char*          name  = 0 )  ;
       /// destructor
       virtual ~StudentT() ;
       /// clone
@@ -2026,6 +2192,13 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::StudentT& function() const { return m_stt ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x     .arg() ; }
+      const RooAbsReal& mu       () const { return m_mu    .arg() ; }
+      const RooAbsReal& sigma    () const { return m_sigma .arg() ; }
+      const RooAbsReal& n        () const { return m_n     .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -2101,6 +2274,15 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::BifurcatedStudentT& function() const { return m_stt ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x      .arg() ; }
+      const RooAbsReal& mu       () const { return m_mu     .arg() ; }
+      const RooAbsReal& sigmaL   () const { return m_sigmaL .arg() ; }
+      const RooAbsReal& sigmaR   () const { return m_sigmaR .arg() ; }
+      const RooAbsReal& nL       () const { return m_nL     .arg() ; }
+      const RooAbsReal& nR       () const { return m_nR     .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -2189,6 +2371,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::PearsonIV& pearsonIV () const { return m_p4 ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& mu       () const { return m_mu       .arg() ; }
+      const RooAbsReal& varsigma () const { return m_varsigma .arg() ; }
+      const RooAbsReal& n        () const { return m_n        .arg() ; }
+      const RooAbsReal& kappa    () const { return m_kappa    .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        {} ;
@@ -2266,6 +2456,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::GramCharlierA& function() const { return m_gca ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& m0       () const { return m_m0       .arg() ; }
+      const RooAbsReal& sigma    () const { return m_sigma    .arg() ; }
+      const RooAbsReal& kappa3   () const { return m_kappa3   .arg() ; }
+      const RooAbsReal& kappa4   () const { return m_kappa4   .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -2300,14 +2498,16 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      PhaseSpace2 ( const char*          name      ,
-                    const char*          title     ,
-                    RooAbsReal&          x         ,
-                    const double         m1        ,
-                    const double         m2        ) ;
+      PhaseSpace2 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        const double         m1        ,
+        const double         m2        ) ;
       /// "copy constructor"
-      PhaseSpace2 ( const PhaseSpace2& right     ,
-                    const char*        name  = 0 )  ;
+      PhaseSpace2 
+      ( const PhaseSpace2& right     ,
+        const char*        name  = 0 )  ;
       /// destructor
       virtual ~PhaseSpace2() ;
       /// clone
@@ -2338,6 +2538,12 @@ namespace Ostap
       /// access to underlying function       /// access to underlying function
       const Ostap::Math::PhaseSpace2& function() const { return m_ps2 ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x  () const { return m_x        .arg() ; }
+      double            m1 () const { return m_ps2.m1 () ; }
+      double            m2 () const { return m_ps2.m2 () ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x     ;
@@ -2363,72 +2569,80 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      PhaseSpaceLeft ( const char*          name      ,
-                       const char*          title     ,
-                       RooAbsReal&          x         ,
-                       RooAbsReal&          threshold ,
-                       RooAbsReal&          scale     ,
-                       const Ostap::Math::PhaseSpaceLeft& left ) ;
+      PhaseSpaceLeft 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        RooAbsReal&          scale     ,
+        const Ostap::Math::PhaseSpaceLeft& left ) ;
       /// constructor from all parameters
-      PhaseSpaceLeft ( const char*          name      ,
-                       const char*          title     ,
-                       RooAbsReal&          x         ,
-                       RooAbsReal&          threshold ,
-                       const Ostap::Math::PhaseSpaceLeft& left ) ;      
+      PhaseSpaceLeft
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        const Ostap::Math::PhaseSpaceLeft& left ) ;      
       /// constructor from all parameters
-      PhaseSpaceLeft ( const char*          name      ,
-                       const char*          title     ,
-                       RooAbsReal&          x         ,
-                       RooAbsReal&          threshold ,
-                       RooAbsReal&          scale     ,
-                       const Ostap::Math::PhaseSpace2& left ) ;
+      PhaseSpaceLeft
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        RooAbsReal&          scale     ,
+        const Ostap::Math::PhaseSpace2& left ) ;
       /// constructor from all parameters
-      PhaseSpaceLeft ( const char*          name      ,
-                       const char*          title     ,
-                       RooAbsReal&          x         ,
-                       RooAbsReal&          threshold ,
-                       const Ostap::Math::PhaseSpace2& left ) ;
+      PhaseSpaceLeft 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        const Ostap::Math::PhaseSpace2& left ) ;
       /// constructor from all parameters
-      PhaseSpaceLeft ( const char*          name      ,
-                       const char*          title     ,
-                       RooAbsReal&          x         ,
-                       RooAbsReal&          threshold ,
-                       RooAbsReal&          scale     ,
-                       const Ostap::Math::PhaseSpace3& left ) ;
+      PhaseSpaceLeft 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        RooAbsReal&          scale     ,
+        const Ostap::Math::PhaseSpace3& left ) ;
       /// constructor from all parameters
-      PhaseSpaceLeft ( const char*          name      ,
-                       const char*          title     ,
-                       RooAbsReal&          x         ,
-                       RooAbsReal&          threshold ,
-                       const Ostap::Math::PhaseSpace3& left ) ;
+      PhaseSpaceLeft 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        const Ostap::Math::PhaseSpace3& left ) ;
       /// constructor from all parameters
-      PhaseSpaceLeft ( const char*          name      ,
-                       const char*          title     ,
-                       RooAbsReal&          x         ,
-                       RooAbsReal&          threshold ,
-                       RooAbsReal&          scale     ,
-                       const Ostap::Math::PhaseSpace3s& left ) ;
+      PhaseSpaceLeft
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        RooAbsReal&          scale     ,
+        const Ostap::Math::PhaseSpace3s& left ) ;
       /// constructor from all parameters
-      PhaseSpaceLeft ( const char*          name      ,
-                       const char*          title     ,
-                       RooAbsReal&          x         ,
-                       RooAbsReal&          threshold ,
-                       const Ostap::Math::PhaseSpace3s& left ) ;
+      PhaseSpaceLeft 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        const Ostap::Math::PhaseSpace3s& left ) ;
       /// constructor from all parameters
-      PhaseSpaceLeft ( const char*          name      ,
-                       const char*          title     ,
-                       RooAbsReal&          x         ,
-                       RooAbsReal&          threshold ,
-                       RooAbsReal&          scale     ,
-                       const unsigned short N         ) ;
+      PhaseSpaceLeft
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        RooAbsReal&          scale     ,
+        const unsigned short N         ) ;
       /// constructor from all parameters
-      PhaseSpaceLeft ( const char*          name      ,
-                       const char*          title     ,
-                       RooAbsReal&          x         ,
-                       RooAbsReal&          threshold ,
-                       const unsigned short N         ) ;
-      
-
+      PhaseSpaceLeft 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        const unsigned short N         ) ;
       /// "copy constructor"
       PhaseSpaceLeft ( const PhaseSpaceLeft& right     ,
                        const char*           name  = 0 )  ;
@@ -2466,6 +2680,13 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::PhaseSpaceLeft& function() const { return m_left ; }
+      const Ostap::Math::PhaseSpaceLeft& left    () const { return m_left ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x         () const { return m_x         .arg() ; }
+      const RooAbsReal& threshold () const { return m_threshold .arg() ; }
+      const RooAbsReal& scale     () const { return m_scale     .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -2494,15 +2715,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      PhaseSpaceRight ( const char*          name      ,
-                        const char*          title     ,
-                        RooAbsReal&          x         ,
-                        RooAbsReal&          threshold ,
-                        const unsigned short L         ,
-                        const unsigned short N         ) ;
+      PhaseSpaceRight 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          threshold ,
+        const unsigned short L         ,
+        const unsigned short N         ) ;
       /// "copy constructor"
-      PhaseSpaceRight ( const PhaseSpaceRight& right     ,
-                        const char*            name  = 0 )  ;
+      PhaseSpaceRight 
+      ( const PhaseSpaceRight& right     ,
+        const char*            name  = 0 )  ;
       /// destructor
       virtual ~PhaseSpaceRight () ;
       /// clone
@@ -2538,6 +2761,13 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::PhaseSpaceRight& function() const { return m_right ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x         () const { return m_x         .arg() ; }
+      const RooAbsReal& threshold () const { return m_threshold .arg() ; }
+      unsigned short    L         () const { return m_right.L()        ; }
+      unsigned short    N         () const { return m_right.N()        ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x         ;
@@ -2567,13 +2797,14 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      PhaseSpaceNL ( const char*          name      ,
-                     const char*          title     ,
-                     RooAbsReal&          x         ,
-                     RooAbsReal&          low       ,
-                     RooAbsReal&          high      ,
-                     const unsigned short N         ,
-                     const unsigned short L         ) ;
+      PhaseSpaceNL 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          low       ,
+        RooAbsReal&          high      ,
+        const unsigned short N         ,
+        const unsigned short L         ) ;
       /// "copy" constructor
       PhaseSpaceNL ( const PhaseSpaceNL& , const char* name = 0 ) ;
       /// virtual destructor
@@ -2610,6 +2841,14 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::PhaseSpaceNL& function() const { return m_ps ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x         () const { return m_x         .arg() ; }
+      const RooAbsReal& low       () const { return m_low       .arg() ; }
+      const RooAbsReal& high      () const { return m_high      .arg() ; }
+      unsigned short    L         () const { return m_ps .L()        ; }
+      unsigned short    N         () const { return m_ps .N()        ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -2748,6 +2987,13 @@ namespace Ostap
     public:
       // ======================================================================
       const Ostap::Math::PhaseSpacePol& function() const { return m_ps ; }
+      const Ostap::Math::PhaseSpacePol& pspol   () const { return m_ps ; }
+      const Ostap::Math::PhaseSpaceNL&  psNL    () const { return m_ps.phasespace ()  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x         () const { return m_x   .arg() ; }
+      const RooArgList& phis      () const { return m_phis       ; }
       // ======================================================================
    private:
       // ======================================================================
@@ -2870,7 +3116,15 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const Ostap::Math::PhaseSpaceLeftExpoPol& function() const { return m_ps ; }
+      const Ostap::Math::PhaseSpaceLeftExpoPol& function () const { return m_ps              ; }
+      const Ostap::Math::PhaseSpaceLeft&        psleft   () const { return m_ps.phasespace() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x         () const { return m_x    .arg() ; }
+      const RooArgList& phis      () const { return m_phis        ; }
+      const RooAbsReal& tau       () const { return m_tau  .arg() ; }
+      const RooAbsReal& scale     () const { return m_scale.arg() ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -2953,6 +3207,10 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::PhaseSpace23L& function() const { return m_ps23L ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x         () const { return m_x    .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x     ;
@@ -3032,6 +3290,11 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Positive& function() const { return m_positive ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x    () const { return m_x    .arg() ; }
+      const RooArgList& phis () const { return m_phis        ; }
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -3105,6 +3368,11 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::PositiveEven& function() const { return m_even ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x    () const { return m_x    .arg() ; }
+      const RooArgList& phis () const { return m_phis        ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -3180,6 +3448,11 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Monotonic& function() const { return m_monotonic ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x    () const { return m_x    .arg() ; }
+      const RooArgList& phis () const { return m_phis        ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -3257,6 +3530,11 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Convex& function() const { return m_convex ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x    () const { return m_x    .arg() ; }
+      const RooArgList& phis () const { return m_phis        ; }
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -3332,6 +3610,11 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::ConvexOnly& function() const { return m_convex ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x    () const { return m_x    .arg() ; }
+      const RooArgList& phis () const { return m_phis        ; }
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -3406,6 +3689,15 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::ExpoPositive& function() const { return m_positive ; }
+      const Ostap::Math::ExpoPositive& expopol () const { return m_positive ; }
+      double xmin () const { return m_positive.xmin () ; }
+      double xmax () const { return m_positive.xmax () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x    () const { return m_x    .arg() ; }
+      const RooAbsReal& tau  () const { return m_tau  .arg() ; }
+      const RooArgList& phis () const { return m_phis        ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -3485,6 +3777,13 @@ namespace Ostap
       const Ostap::Math::Sigmoid& sigmoid () const { return m_sigmoid    ; }
       /// access to underlying function
       const Ostap::Math::Sigmoid& function() const { return   sigmoid () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooArgList& phis  () const { return m_phis         ; }
+      const RooAbsReal& alpha () const { return m_alpha .arg() ; }
+      const RooAbsReal& x0    () const { return m_x0    .arg() ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -3570,6 +3869,14 @@ namespace Ostap
       // ======================================================================
       const Ostap::Math::TwoExpoPositive& function() const { return m_2expopos ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& alpha () const { return m_alpha .arg() ; }
+      const RooAbsReal& delta () const { return m_delta .arg() ; }
+      const RooAbsReal& x0    () const { return m_x0    .arg() ; }
+      const RooArgList& phis  () const { return m_phis         ; }
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x     ;
@@ -3602,11 +3909,12 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      GammaDist ( const char*          name      ,
-                  const char*          title     ,
-                  RooAbsReal&          x         ,
-                  RooAbsReal&          k         ,
-                  RooAbsReal&          theta     ) ;
+      GammaDist 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          k         ,
+        RooAbsReal&          theta     ) ;
       /// "copy constructor"
       GammaDist ( const GammaDist&     right     ,
                   const char*          name  = 0 )  ;
@@ -3644,6 +3952,12 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::GammaDist& function() const { return m_gamma ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& k     () const { return m_k     .arg() ; }
+      const RooAbsReal& theta () const { return m_theta .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -3727,6 +4041,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::GenGammaDist& function() const { return m_ggamma ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& k     () const { return m_k     .arg() ; }
+      const RooAbsReal& theta () const { return m_theta .arg() ; }
+      const RooAbsReal& p     () const { return m_p     .arg() ; }
+      const RooAbsReal& low   () const { return m_low   .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -3804,6 +4126,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Amoroso& function() const { return m_amoroso ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& theta () const { return m_theta .arg() ; }
+      const RooAbsReal& alpha () const { return m_alpha .arg() ; }
+      const RooAbsReal& beta  () const { return m_beta  .arg() ; }
+      const RooAbsReal& a     () const { return m_a     .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -3880,6 +4210,12 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::LogGammaDist& function() const { return m_gamma ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& k     () const { return m_k     .arg() ; }
+      const RooAbsReal& theta () const { return m_theta .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -3954,6 +4290,12 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Log10GammaDist& function() const { return m_gamma ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& k     () const { return m_k     .arg() ; }
+      const RooAbsReal& theta () const { return m_theta .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -3992,12 +4334,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      LogGamma ( const char*          name      ,
-                 const char*          title     ,
-                 RooAbsReal&          x         ,
-                 RooAbsReal&          nu        ,
-                 RooAbsReal&          lambda    ,
-                 RooAbsReal&          alpha     ) ;
+      LogGamma
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          nu        ,
+        RooAbsReal&          lambda    ,
+        RooAbsReal&          alpha     ) ;
       /// "copy constructor"
       LogGamma ( const LogGamma&      right     ,
                  const char*          name  = 0 )  ;
@@ -4035,6 +4378,13 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::LogGamma& function() const { return m_lgamma ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooAbsReal& nu    () const { return m_nu     .arg() ; }
+      const RooAbsReal& lambd () const { return m_lambda .arg() ; }
+      const RooAbsReal& alpha () const { return m_alpha  .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -4113,6 +4463,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::BetaPrime& function() const { return m_betap ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooAbsReal& alpha () const { return m_alpha  .arg() ; }
+      const RooAbsReal& beta  () const { return m_beta   .arg() ; }
+      const RooAbsReal& scale () const { return m_scale  .arg() ; }
+      const RooAbsReal& shift () const { return m_shift  .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -4188,6 +4546,12 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Landau& function() const { return m_landau ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooAbsReal& scale () const { return m_scale  .arg() ; }
+      const RooAbsReal& shift () const { return m_shift  .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -4279,6 +4643,14 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::SinhAsinh& function() const { return m_sinhasinh ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x       .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu      .arg() ; }
+      const RooAbsReal& sigma   () const { return m_sigma   .arg() ; }
+      const RooAbsReal& epsilon () const { return m_epsilon .arg() ; }
+      const RooAbsReal& delta   () const { return m_delta   .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -4377,6 +4749,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::JohnsonSU& function() const { return m_johnsonSU ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x       .arg() ; }
+      const RooAbsReal& xi      () const { return m_xi      .arg() ; }
+      const RooAbsReal& lambd   () const { return m_lambda  .arg() ; }
+      const RooAbsReal& delta   () const { return m_delta   .arg() ; }
+      const RooAbsReal& gamma   () const { return m_gamma   .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -4455,6 +4835,12 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Atlas& function() const { return m_atlas ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x     .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu    .arg() ; }
+      const RooAbsReal& sigma   () const { return m_sigma .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -4547,6 +4933,12 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Sech& function() const { return m_sech ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x       .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu      .arg() ; }
+      const RooAbsReal& sigma   () const { return m_sigma   .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -4632,6 +5024,13 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Losev& function() const { return m_losev ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x       .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu      .arg() ; }
+      const RooAbsReal& alpha   () const { return m_alpha   .arg() ; }
+      const RooAbsReal& beta    () const { return m_beta    .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -4710,6 +5109,12 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Logistic& function() const { return m_logistic ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x       .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu      .arg() ; }
+      const RooAbsReal& sigma   () const { return m_sigma   .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -4793,6 +5198,13 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Argus& function () const { return m_argus ; }
       const Ostap::Math::Argus& argus    () const { return m_argus ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x       .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu      .arg() ; }
+      const RooAbsReal& c       () const { return m_c       .arg() ; }
+      const RooAbsReal& chi     () const { return m_chi     .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -4883,6 +5295,14 @@ namespace Ostap
       const Ostap::Math::GenArgus& function () const { return m_argus ; }
       const Ostap::Math::GenArgus& argus    () const { return m_argus ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x       .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu      .arg() ; }
+      const RooAbsReal& c       () const { return m_c       .arg() ; }
+      const RooAbsReal& chi     () const { return m_chi     .arg() ; }
+      const RooAbsReal& dp      () const { return m_dp      .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x   {} ;
@@ -4958,6 +5378,12 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Slash& function () const { return m_slash ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x       .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu      .arg() ; }
+      const RooAbsReal& scale   () const { return m_scale   .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x     ;
@@ -5029,6 +5455,13 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::AsymmetricLaplace& function () const { return m_laplace ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x       .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu      .arg() ; }
+      const RooAbsReal& lambdaL () const { return m_lambdaL .arg() ; }
+      const RooAbsReal& lambdaR () const { return m_lambdaR .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -5107,6 +5540,12 @@ namespace Ostap
       const Ostap::Math::Hat& function () const { return m_hat ; }
       const Ostap::Math::Hat& hat      () const { return m_hat ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x       .arg() ; }
+      const RooAbsReal& mu       () const { return m_mu      .arg() ; }
+      const RooAbsReal& varsigma () const { return m_varsigma.arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        {} ;
@@ -5183,6 +5622,12 @@ namespace Ostap
       const Ostap::Math::Up& function () const { return m_up ; }
       const Ostap::Math::Up& up       () const { return m_up ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& mu       () const { return m_mu       .arg() ; }
+      const RooAbsReal& varsigma () const { return m_varsigma .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        {} ;
@@ -5256,6 +5701,12 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::FupN& function () const { return m_fupN ; }
       const Ostap::Math::FupN& fupN     () const { return m_fupN ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& mu       () const { return m_mu       .arg() ; }
+      const RooAbsReal& varsigma () const { return m_varsigma .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -5345,6 +5796,13 @@ namespace Ostap
       const Ostap::Math::Tsallis& function () const { return m_tsallis ; }
       const Ostap::Math::Tsallis& tsallis  () const { return m_tsallis ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x    () const { return m_x        .arg() ; }
+      const RooAbsReal& n    () const { return m_n        .arg() ; }
+      const RooAbsReal& T    () const { return m_T        .arg() ; }
+      const RooAbsReal& mass () const { return m_mass     .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -5433,6 +5891,12 @@ namespace Ostap
       const Ostap::Math::QGSM& function() const { return m_qgsm ; }
       const Ostap::Math::QGSM& qgsm    () const { return m_qgsm ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x    () const { return m_x        .arg() ; }
+      const RooAbsReal& b    () const { return m_b        .arg() ; }
+      const RooAbsReal& mass () const { return m_mass     .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -5511,12 +5975,19 @@ namespace Ostap
       const Ostap::Math::TwoExpos& function() const { return m_2expos ; }
       const Ostap::Math::TwoExpos& twoexpos() const { return m_2expos ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& alpha () const { return m_alpha .arg() ; }
+      const RooAbsReal& delta () const { return m_delta .arg() ; }
+      const RooAbsReal& x0    () const { return m_x0    .arg() ; }
+      // ======================================================================
     protected:
       // ======================================================================
-      RooRealProxy m_x     ;
-      RooRealProxy m_alpha ;
-      RooRealProxy m_delta ;
-      RooRealProxy m_x0    ;
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_alpha {} ;
+      RooRealProxy m_delta {} ;
+      RooRealProxy m_x0    {} ;
       // ======================================================================
     private:
       // ======================================================================
@@ -5583,6 +6054,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::DoubleGauss& function () const { return m_2gauss ; }
       // =====================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& sigma    () const { return m_sigma    .arg() ; }
+      const RooAbsReal& fraction () const { return m_fraction .arg() ; }
+      const RooAbsReal& scale    () const { return m_scale    .arg() ; }
+      const RooAbsReal& mean     () const { return m_mean     .arg() ; }
+      // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x         ;
@@ -5667,6 +6146,12 @@ namespace Ostap
       const Ostap::Math::Gumbel& function () const { return m_gumbel ; }
       const Ostap::Math::Gumbel& gumbel   () const { return m_gumbel ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x    .arg() ; }
+      const RooAbsReal& mu    () const { return m_mu   .arg() ; }
+      const RooAbsReal& beta  () const { return m_beta .arg() ; }
+      // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x    ;
@@ -5744,6 +6229,13 @@ namespace Ostap
       const Ostap::Math::Weibull& function () const { return m_weibull ; }
       const Ostap::Math::Weibull& weibull  () const { return m_weibull ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& scale () const { return m_scale .arg() ; }
+      const RooAbsReal& shape () const { return m_shape .arg() ; }
+      const RooAbsReal& shift () const { return m_shift .arg() ; }
+      // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x     ;
@@ -5818,6 +6310,12 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::RaisingCosine& function () const { return m_rcos ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& mean  () const { return m_mean  .arg() ; }
+      const RooAbsReal& scale () const { return m_scale .arg() ; }
       // ======================================================================
     protected:
       // =====================================================================
@@ -5899,6 +6397,13 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::QGaussian& function () const { return m_qgauss ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& mean  () const { return m_mean  .arg() ; }
+      const RooAbsReal& q     () const { return m_q     .arg() ; }
+      const RooAbsReal& scale () const { return m_scale .arg() ; }
       // ======================================================================
     protected:
       // =====================================================================
@@ -6037,6 +6542,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Hyperbolic& function () const { return m_hyperbolic ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& mu    () const { return m_mu    .arg() ; }
+      const RooAbsReal& sigma () const { return m_sigma .arg() ; }
+      const RooAbsReal& zeta  () const { return m_zeta  .arg() ; }
+      const RooAbsReal& kappa () const { return m_kappa .arg() ; }
+      // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x     ;
@@ -6165,6 +6678,15 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::GenHyperbolic& function () const { return m_hyperbolic ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooAbsReal& mu    () const { return m_mu     .arg() ; }
+      const RooAbsReal& sigma () const { return m_sigma  .arg() ; }
+      const RooAbsReal& zeta  () const { return m_zeta   .arg() ; }
+      const RooAbsReal& kappa () const { return m_kappa  .arg() ; }
+      const RooAbsReal& lambd () const { return m_lambda .arg() ; }
+      // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x      ;
@@ -6273,6 +6795,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Das& function () const { return m_das ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooAbsReal& mu    () const { return m_mu     .arg() ; }
+      const RooAbsReal& sigma () const { return m_sigma  .arg() ; }
+      const RooAbsReal& kL    () const { return m_kL     .arg() ; }
+      const RooAbsReal& kR    () const { return m_kR     .arg() ; }
+      // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x      ;
@@ -6372,6 +6902,11 @@ namespace Ostap
       const Ostap::Math::PositiveSpline& function() const { return m_spline ; }
       const Ostap::Math::PositiveSpline& spline  () const { return m_spline ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooArgList& phis  () const { return m_phis          ; }
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -6453,6 +6988,11 @@ namespace Ostap
       const Ostap::Math::MonotonicSpline& function() const { return m_spline ; }
       const Ostap::Math::MonotonicSpline& spline  () const { return m_spline ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooArgList& phis  () const { return m_phis          ; }
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -6531,6 +7071,11 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::ConvexOnlySpline& function() const { return m_spline ; }
       const Ostap::Math::ConvexOnlySpline& spline  () const { return m_spline ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooArgList& phis  () const { return m_phis          ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -6611,6 +7156,11 @@ namespace Ostap
       const Ostap::Math::ConvexSpline& function() const { return m_spline ; }
       const Ostap::Math::ConvexSpline& spline  () const { return m_spline ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooArgList& phis  () const { return m_phis          ; }
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -6641,19 +7191,21 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      CutOffGauss ( const char* name  , 
-                    const char* title ,
-                    RooAbsReal& x     , // observable 
-                    const bool  right , 
-                    RooAbsReal& x0    , 
-                    RooAbsReal& sigma ) ;
+      CutOffGauss 
+      ( const char* name  , 
+        const char* title ,
+        RooAbsReal& x     , // observable 
+        const bool  right , 
+        RooAbsReal& x0    , 
+        RooAbsReal& sigma ) ;
       // ======================================================================
-      CutOffGauss ( const char* name  , 
-                    const char* title ,
-                    RooAbsReal& x     , // observable 
-                    RooAbsReal& x0    , 
-                    RooAbsReal& sigma , 
-                    const Ostap::Math::CutOffGauss& cutoff ) ;
+      CutOffGauss
+      ( const char* name  , 
+        const char* title ,
+        RooAbsReal& x     , // observable 
+        RooAbsReal& x0    , 
+        RooAbsReal& sigma , 
+        const Ostap::Math::CutOffGauss& cutoff ) ;
       // Copy
       CutOffGauss ( const CutOffGauss& right    , 
                     const char*        name = 0 ) ;
@@ -6693,6 +7245,12 @@ namespace Ostap
       const Ostap::Math::CutOffGauss& function() const { return m_cutoff ; }
       const Ostap::Math::CutOffGauss& cutoff  () const { return m_cutoff ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& x0    () const { return m_x0    .arg() ; }
+      const RooAbsReal& sigma () const { return m_sigma .arg() ; }
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x     ;
@@ -6724,21 +7282,23 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      CutOffStudent ( const char* name  , 
-                      const char* title ,
-                      RooAbsReal& x     , // observable 
-                      const bool  right , 
-                      RooAbsReal& x0    , 
-                      RooAbsReal& nu    , 
-                      RooAbsReal& sigma ) ;
+      CutOffStudent 
+      ( const char* name  , 
+        const char* title ,
+        RooAbsReal& x     , // observable 
+        const bool  right , 
+        RooAbsReal& x0    , 
+        RooAbsReal& nu    , 
+        RooAbsReal& sigma ) ;
       // ======================================================================
-      CutOffStudent ( const char* name  , 
-                      const char* title ,
-                      RooAbsReal& x     , // observable 
-                      RooAbsReal& x0    , 
-                      RooAbsReal& nu    , 
-                      RooAbsReal& sigma , 
-                      const Ostap::Math::CutOffStudent& cutoff ) ;
+      CutOffStudent
+      ( const char* name  , 
+        const char* title ,
+        RooAbsReal& x     , // observable 
+        RooAbsReal& x0    , 
+        RooAbsReal& nu    , 
+        RooAbsReal& sigma , 
+        const Ostap::Math::CutOffStudent& cutoff ) ;
       // Copy
       CutOffStudent ( const CutOffStudent& right    , 
                       const char*        name = 0 ) ;
@@ -6777,6 +7337,13 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::CutOffStudent& function() const { return m_cutoff ; }
       const Ostap::Math::CutOffStudent& cutoff  () const { return m_cutoff ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& x0    () const { return m_x0    .arg() ; }
+      const RooAbsReal& nu    () const { return m_nu    .arg() ; }
+      const RooAbsReal& sigma () const { return m_sigma .arg() ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -6855,17 +7422,17 @@ namespace Ostap
       // ======================================================================
       //  dimensionality of the PDF
       unsigned short    dim  () const { return m_dim      ; }      
-      const RooAbsReal& x    () const { return m_x.arg () ; }      
-      const RooAbsReal& y    () const { return m_y.arg () ; }      
-      const RooAbsReal& z    () const { return m_z.arg () ; }      
+      const RooAbsReal& x    () const { return m_x .arg() ; }
+      const RooAbsReal& y    () const { return m_y .arg() ; }
+      const RooAbsReal& z    () const { return m_z .arg() ; }
       // ======================================================================
     protected :
       // ======================================================================
-      /// variables 
-      unsigned  int m_dim { 0 } ;
-      RooRealProxy  m_x   {   } ;
-      RooRealProxy  m_y   {   } ;
-      RooRealProxy  m_z   {   } ;
+      /// variables/observables  
+      unsigned short m_dim { 0 } ;
+      RooRealProxy   m_x   {   } ;
+      RooRealProxy   m_y   {   } ;
+      RooRealProxy   m_z   {   } ;
       // ======================================================================
     };
     // ========================================================================
@@ -6889,17 +7456,19 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      Rice ( const char*  name      , 
-             const char*  title     , 
-             RooAbsReal&  x         ,
-             RooAbsReal&  nu        ,
-             RooAbsReal&  varsigma  ,
-             RooAbsReal&  shift     ) ;
-      Rice ( const char*  name      , 
-             const char*  title     , 
-             RooAbsReal&  x         ,
-             RooAbsReal&  nu        ,
-             RooAbsReal&  varsigma  ) ;
+      Rice
+      ( const char*  name      , 
+        const char*  title     , 
+        RooAbsReal&  x         ,
+        RooAbsReal&  nu        ,
+        RooAbsReal&  varsigma  ,
+        RooAbsReal&  shift     ) ;
+      Rice
+      ( const char*  name      , 
+        const char*  title     , 
+        RooAbsReal&  x         ,
+        RooAbsReal&  nu        ,
+        RooAbsReal&  varsigma  ) ;
       /// copy constructor 
       Rice ( const Rice& right , const char* name = nullptr ) ;
       /// clone method
@@ -6937,6 +7506,13 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Rice& function() const { return m_rice ; }
       const Ostap::Math::Rice& rice    () const { return m_rice ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& nu       () const { return m_nu       .arg() ; }
+      const RooAbsReal& varsigma () const { return m_varsigma .arg() ; }
+      const RooAbsReal& shift    () const { return m_shift    .arg() ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -7020,6 +7596,14 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::GenInvGauss& function() const { return m_gig ; }
       const Ostap::Math::GenInvGauss& gig     () const { return m_gig ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x     .arg() ; }
+      const RooAbsReal& theta   () const { return m_theta .arg() ; }
+      const RooAbsReal& eta     () const { return m_eta   .arg() ; }
+      const RooAbsReal& p       () const { return m_p     .arg() ; }
+      const RooAbsReal& shift   () const { return m_shift .arg() ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -7105,6 +7689,13 @@ namespace Ostap
       const Ostap::Math::HORNSdini& function () const { return m_horns ; }
       const Ostap::Math::HORNSdini& horns    () const { return m_horns ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x     .arg() ; }
+      const RooAbsReal& a       () const { return m_a     .arg() ; }
+      const RooAbsReal& delta   () const { return m_delta .arg() ; }
+      const RooAbsReal& phi     () const { return m_phi   .arg() ; }
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy   m_x     {} ;
@@ -7187,6 +7778,13 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::HILLdini& function () const { return m_hill ; }
       const Ostap::Math::HILLdini& hill     () const { return m_hill ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x     .arg() ; }
+      const RooAbsReal& a       () const { return m_a     .arg() ; }
+      const RooAbsReal& delta   () const { return m_delta .arg() ; }
+      const RooAbsReal& phi     () const { return m_phi   .arg() ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -7421,10 +8019,11 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor
-      Histo1D ( const char*                 name  , 
-                const char*                 title , 
-                RooAbsReal&                 x     ,
-                const Ostap::Math::Histo1D& histo ) ;
+      Histo1D 
+        ( const char*                 name  , 
+          const char*                 title , 
+          RooAbsReal&                 x     ,
+          const Ostap::Math::Histo1D& histo ) ;
       /// copy constructor 
       Histo1D ( const Histo1D& right , const char* name = nullptr ) ;
       /// clone method
@@ -7442,10 +8041,19 @@ namespace Ostap
       // ======================================================================        
     public:
       // ======================================================================
+      /// the function itself 
+      const Ostap::Math::Histo1D& histo () const { return   m_histo ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// evaluate the function
       double func  ( const double x ) const 
       { return std::max ( m_histo ( x ) , 0.0 ) ; }
       // ======================================================================        
+    public:
+      // ======================================================================
+      const RooAbsReal& x () const { return m_x     .arg() ; }
+      // ======================================================================
     private :
       // ======================================================================
       /// variable 
@@ -7488,12 +8096,22 @@ namespace Ostap
       Double_t evaluate () const override { return func ( m_x , m_y ) ; }
       // ======================================================================        
     public:
+      // ======================================================================        
+      /// the function itself 
+      const Ostap::Math::Histo2D& histo () const { return  m_histo ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// evaluate the function
       double func  ( const double x , 
                      const double y ) const 
       { return std::max ( m_histo ( x , y ) , 0.0 ) ; }
       // ======================================================================        
+    public:
+      // ======================================================================
+      const RooAbsReal& x () const { return m_x     .arg() ; }
+      const RooAbsReal& y () const { return m_y     .arg() ; }
+      // ======================================================================
     private :
       // ======================================================================
       /// x-variable 
@@ -7546,6 +8164,17 @@ namespace Ostap
                      const double z ) const 
       { return std::max ( m_histo ( x , y , z ) , 0.0 ) ; }
       // ======================================================================        
+    public:
+      // ======================================================================        
+      /// the function itself 
+      const Ostap::Math::Histo3D& histo () const { return  m_histo ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x () const { return m_x     .arg() ; }
+      const RooAbsReal& y () const { return m_y     .arg() ; }
+      const RooAbsReal& z () const { return m_z     .arg() ; }
+      // ======================================================================
     private :
       // ======================================================================
       /// x-variable 

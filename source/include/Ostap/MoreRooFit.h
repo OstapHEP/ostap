@@ -1425,35 +1425,40 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor with two variables 
-      LGamma  ( const std::string& name  , 
-                const std::string& title , 
-                RooAbsReal&        a     , 
-                RooAbsReal&        b     ) ;
+      LGamma  
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        a     , 
+          RooAbsReal&        b     ) ;
       /// constructor with two variables 
-      LGamma ( RooAbsReal&         a           , 
-               RooAbsReal&         b           ,
-               const std::string&  name  = ""  , 
-               const std::string&  title = ""  ) 
+      LGamma
+        ( RooAbsReal&         a           , 
+          RooAbsReal&         b           ,
+          const std::string&  name  = ""  , 
+          const std::string&  title = ""  ) 
         : LGamma ( name , title , a , b )
       {}
       /// constructor with two variables 
-      LGamma ( RooAbsReal&         a           , 
-               const double        b           ,
-               const std::string&  name  = ""  , 
-               const std::string&  title = ""  ) 
+      LGamma 
+        ( RooAbsReal&         a           , 
+          const double        b           ,
+          const std::string&  name  = ""  , 
+          const std::string&  title = ""  ) 
         : LGamma ( name , title , a , RooFit::RooConst ( b ) )
       {}
       /// constructor with two variables 
-      LGamma ( const double        a           ,
-               RooAbsReal&         b           , 
-               const std::string&  name  = ""  , 
-               const std::string&  title = ""  ) 
+      LGamma
+        ( const double        a           ,
+          RooAbsReal&         b           , 
+          const std::string&  name  = ""  , 
+          const std::string&  title = ""  ) 
         : LGamma ( name , title , RooFit::RooConst ( a ) , b )
       {}
       /// constructor with one variable
-      LGamma  ( const std::string& name  , 
-                const std::string& title , 
-                RooAbsReal&        a     ) 
+      LGamma
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        a     ) 
         : LGamma ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
       // ======================================================================

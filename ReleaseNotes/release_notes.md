@@ -66,9 +66,8 @@
      Tnanks to Ivan Polyakov for
      reporting a problmes and the fix 
   1. fix `Dalitz0::P_R12`, `Dalitz0::P_R23`, `Dalitz0::P_R31`. 
-     Thanksk to Ivan Polyakov for reporting the probles
+     Thanks to Ivan Polyakov for reporting the probles
  
-
 
 # v1.7.3.0
 

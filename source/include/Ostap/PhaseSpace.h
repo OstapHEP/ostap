@@ -715,9 +715,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from threshold and number of particles
-      PhaseSpaceRight ( const double         threshold = 10 ,
-                        const unsigned short l         = 2  ,
-                        const unsigned short n         = 3  ) ;
+      PhaseSpaceRight 
+      ( const double         threshold = 10 ,
+        const unsigned short l         = 2  ,
+        const unsigned short n         = 3  ) ;
       /// deststructor
       ~PhaseSpaceRight () ;                                     // deststructor
       // ======================================================================
@@ -738,6 +739,11 @@ namespace Ostap
       // ======================================================================
       /// get the tag  
       std::size_t tag () const ; // get the hash 
+      // ======================================================================
+    public:
+      // ======================================================================
+      unsigned short L () const { return m_L ; }
+      unsigned short N () const { return m_N ; }      
       // ======================================================================
     private:
       // ======================================================================

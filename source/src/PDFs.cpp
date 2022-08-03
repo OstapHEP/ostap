@@ -8059,12 +8059,6 @@ Double_t Ostap::Models::CutOffStudent::analyticalIntegral
 // ============================================================================
 
 
-
-
-
-
-
-
 // ============================================================================
 // Flat in 1D
 // ============================================================================
@@ -8073,8 +8067,8 @@ Ostap::Models::Uniform::Uniform
   const char*          title     ,
   RooAbsReal&          x         )
   : RooAbsPdf  ( name , title ) 
-  , m_dim ( 1 ) 
-  , m_x   ( "!x" , "x-observable" , this , x ) 
+  , m_dim      ( 1  ) 
+  , m_x        ( "!x"  , "Observable" , this , x ) 
 {}
 // ============================================================================
 // Flat in 2D
@@ -8085,9 +8079,9 @@ Ostap::Models::Uniform::Uniform
   RooAbsReal&          x         ,
   RooAbsReal&          y         )
   : RooAbsPdf  ( name , title ) 
-  , m_dim ( 2 ) 
-  , m_x   ( "!x" , "x-observable" , this , x ) 
-  , m_y   ( "!y" , "y-observable" , this , y ) 
+  , m_dim      ( 2  ) 
+  , m_x        ( "!x"  , "Observable" , this , x ) 
+  , m_y        ( "!y"  , "Observable" , this , y ) 
 {}
 // ============================================================================
 // Flat in 3D
@@ -8099,10 +8093,10 @@ Ostap::Models::Uniform::Uniform
   RooAbsReal&          y         ,
   RooAbsReal&          z         )
   : RooAbsPdf  ( name , title ) 
-  , m_dim ( 3 ) 
-  , m_x   ( "!x" , "x-observable" , this , x ) 
-  , m_y   ( "!y" , "y-observable" , this , y ) 
-  , m_z   ( "!z" , "z-observable" , this , z ) 
+  , m_dim      ( 3  ) 
+  , m_x        ( "!x"  , "x-observable" , this , x ) 
+  , m_y        ( "!y"  , "y-observable" , this , y ) 
+  , m_z        ( "!z"  , "bservable" , this , z ) 
 {}
 // ============================================================================
 // copy constructor
