@@ -119,31 +119,34 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      BreitWigner ( const char*            name      ,
-                    const char*            title     ,
-                    RooAbsReal&            x         ,
-                    RooAbsReal&            mass      ,
-                    RooAbsReal&            width     ,
-                    const double           m1        ,
-                    const double           m2        ,
-                    const unsigned short   L     = 0 ) ;
+      BreitWigner
+      ( const char*            name      ,
+        const char*            title     ,
+        RooAbsReal&            x         ,
+        RooAbsReal&            mass      ,
+        RooAbsReal&            width     ,
+        const double           m1        ,
+        const double           m2        ,
+        const unsigned short   L     = 0 ) ;
       /// constructor from all parameters
-      BreitWigner ( const char*            name      ,
-                    const char*            title     ,
-                    RooAbsReal&            x         ,
-                    RooAbsReal&            mass      ,
-                    RooAbsReal&            width     ,
-                    const double           m1        ,
-                    const double           m2        ,
-                    const unsigned short   L                         ,
-                    const Ostap::Math::FormFactors::JacksonRho rho ) ;
+      BreitWigner 
+      ( const char*            name      ,
+        const char*            title     ,
+        RooAbsReal&            x         ,
+        RooAbsReal&            mass      ,
+        RooAbsReal&            width     ,
+        const double           m1        ,
+        const double           m2        ,
+        const unsigned short   L                         ,
+        const Ostap::Math::FormFactors::JacksonRho rho ) ;
       /// constructor from main parameters and "shape"
-      BreitWigner ( const char*            name      ,
-                    const char*            title     ,
-                    RooAbsReal&            x         ,
-                    RooAbsReal&            mass      ,
-                    RooAbsReal&            width     ,
-                    const Ostap::Math::BW& bw ) ;
+      BreitWigner
+      ( const char*            name      ,
+        const char*            title     ,
+        RooAbsReal&            x         ,
+        RooAbsReal&            mass      ,
+        RooAbsReal&            width     ,
+        const Ostap::Math::BW& bw        ) ;
       /// "copy" constructor
       BreitWigner ( const BreitWigner& , const char* name = 0 ) ;
       /// virtual destructor
@@ -154,12 +157,13 @@ namespace Ostap
     protected: 
       // ======================================================================
       /// constructor from main parameters and "shape"
-      BreitWigner ( const char*            name      ,
-                    const char*            title     ,
-                    RooAbsReal&            x         ,
-                    RooAbsReal&            mass      ,
-                    RooArgList&            widths    ,
-                    const Ostap::Math::BW& bw        ) ;
+      BreitWigner 
+      ( const char*            name      ,
+        const char*            title     ,
+        RooAbsReal&            x         ,
+        RooAbsReal&            mass      ,
+        RooArgList&            widths    ,
+        const Ostap::Math::BW& bw        ) ;
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
@@ -2847,8 +2851,8 @@ namespace Ostap
       const RooAbsReal& x         () const { return m_x         .arg() ; }
       const RooAbsReal& low       () const { return m_low       .arg() ; }
       const RooAbsReal& high      () const { return m_high      .arg() ; }
-      unsigned short    L         () const { return m_ps .L()        ; }
       unsigned short    N         () const { return m_ps .N()        ; }
+      unsigned short    L         () const { return m_ps .L()        ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -3292,8 +3296,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const RooAbsReal& x    () const { return m_x    .arg() ; }
-      const RooArgList& phis () const { return m_phis        ; }
+      const RooAbsReal& x    () const { return m_x    .arg()      ; }
+      const RooArgList& phis () const { return m_phis             ; }
+      double            xmin () const { return m_positive.xmin () ; }
+      double            xmax () const { return m_positive.xmax () ; }    
       // ======================================================================
     protected :
       // ======================================================================
@@ -3373,6 +3379,8 @@ namespace Ostap
       // ======================================================================
       const RooAbsReal& x    () const { return m_x    .arg() ; }
       const RooArgList& phis () const { return m_phis        ; }
+      double            xmin () const { return m_even.xmin () ; }
+      double            xmax () const { return m_even.xmax () ; }    
       // ======================================================================
     protected :
       // ======================================================================
@@ -3453,6 +3461,9 @@ namespace Ostap
       // ======================================================================
       const RooAbsReal& x    () const { return m_x    .arg() ; }
       const RooArgList& phis () const { return m_phis        ; }
+      double            xmin () const { return m_monotonic.xmin () ; }
+      double            xmax () const { return m_monotonic.xmax () ; }    
+      bool        increasing () const { return m_monotonic.increasing () ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -3534,6 +3545,10 @@ namespace Ostap
       // ======================================================================
       const RooAbsReal& x    () const { return m_x    .arg() ; }
       const RooArgList& phis () const { return m_phis        ; }
+      double            xmin () const { return m_convex.xmin () ; }
+      double            xmax () const { return m_convex.xmax () ; }    
+      bool        increasing () const { return m_convex.increasing () ; }
+      bool        convex     () const { return m_convex.convex     () ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -3614,6 +3629,9 @@ namespace Ostap
       // ======================================================================
       const RooAbsReal& x    () const { return m_x    .arg() ; }
       const RooArgList& phis () const { return m_phis        ; }
+      double            xmin () const { return m_convex.xmin () ; }
+      double            xmax () const { return m_convex.xmax () ; }    
+      bool        convex     () const { return m_convex.convex     () ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -3780,10 +3798,12 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const RooAbsReal& x     () const { return m_x     .arg() ; }
-      const RooArgList& phis  () const { return m_phis         ; }
-      const RooAbsReal& alpha () const { return m_alpha .arg() ; }
-      const RooAbsReal& x0    () const { return m_x0    .arg() ; }
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooArgList& phis  () const { return m_phis          ; }
+      const RooAbsReal& alpha () const { return m_alpha  .arg() ; }
+      const RooAbsReal& x0    () const { return m_x0     .arg() ; }
+      double            xmin  () const { return m_sigmoid.xmin () ; }
+      double            xmax  () const { return m_sigmoid.xmax () ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -3876,6 +3896,8 @@ namespace Ostap
       const RooAbsReal& delta () const { return m_delta .arg() ; }
       const RooAbsReal& x0    () const { return m_x0    .arg() ; }
       const RooArgList& phis  () const { return m_phis         ; }
+      double            xmin  () const { return m_2expopos.xmin () ; }
+      double            xmax  () const { return m_2expopos.xmax () ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -3891,6 +3913,12 @@ namespace Ostap
       mutable Ostap::Math::TwoExpoPositive m_2expopos;         // the function
       // ======================================================================
     } ;
+    // ========================================================================
+
+    // ========================================================================
+    // Generic Math distributions 
+    // ========================================================================
+    
     // ========================================================================
     /** @class GammaDist
      *  Gamma-distribution shape/scale parameters
@@ -4167,11 +4195,12 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      LogGammaDist ( const char*          name      ,
-                     const char*          title     ,
-                     RooAbsReal&          x         ,
-                     RooAbsReal&          k         ,
-                     RooAbsReal&          theta     ) ;
+      LogGammaDist 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          k         ,
+        RooAbsReal&          theta     ) ;
       /// "copy constructor"
       LogGammaDist ( const LogGammaDist&  right     ,
                      const char*          name  = 0 )  ;
@@ -4247,11 +4276,12 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      Log10GammaDist ( const char*           name      ,
-                       const char*           title     ,
-                       RooAbsReal&           x         ,
-                       RooAbsReal&           k         ,
-                       RooAbsReal&           theta     ) ;
+      Log10GammaDist 
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           k         ,
+        RooAbsReal&           theta     ) ;
       /// "copy constructor"
       Log10GammaDist ( const Log10GammaDist& right     ,
                        const char*           name  = 0 )  ;
@@ -4897,7 +4927,7 @@ namespace Ostap
       /// "copy constructor"
       Sech
         ( const Sech&          right     ,
-          const char*           name  = 0 )  ;
+          const char*          name  = 0 )  ;
       /// destructor
       virtual ~Sech  () ;
       /// clone
@@ -5545,6 +5575,7 @@ namespace Ostap
       const RooAbsReal& x        () const { return m_x       .arg() ; }
       const RooAbsReal& mu       () const { return m_mu      .arg() ; }
       const RooAbsReal& varsigma () const { return m_varsigma.arg() ; }
+      const RooAbsReal& sigma    () const { return m_varsigma .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -5627,6 +5658,7 @@ namespace Ostap
       const RooAbsReal& x        () const { return m_x        .arg() ; }
       const RooAbsReal& mu       () const { return m_mu       .arg() ; }
       const RooAbsReal& varsigma () const { return m_varsigma .arg() ; }
+      const RooAbsReal& sigma    () const { return m_varsigma .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -5707,6 +5739,7 @@ namespace Ostap
       const RooAbsReal& x        () const { return m_x        .arg() ; }
       const RooAbsReal& mu       () const { return m_mu       .arg() ; }
       const RooAbsReal& varsigma () const { return m_varsigma .arg() ; }
+      unsigned short    N        () const { return m_fupN.N ()       ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -6816,13 +6849,6 @@ namespace Ostap
       mutable Ostap::Math::Das m_das ;
       // =====================================================================
     };
-
-
-
-
-
-
-
 
 
     // ========================================================================

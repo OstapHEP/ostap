@@ -19,6 +19,7 @@ import ostap.fitting.roofit
 import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.fitting.background import make_bkg 
+from   ostap.utils.timing       import timing
 from   ostap.core.meta_info     import root_info 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
@@ -32,6 +33,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+
+models = set()
 
 # =============================================================================
 def test_fitting_components_3D () :
@@ -237,12 +240,42 @@ def test_fitting_components_3D () :
         
     logger.info ( 'Model %s Fit result\n%s ' % ( model.name , r.table (prefix = '# ') ) ) 
 
-    
+
+    models.add  ( model ) 
+
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+
+    logger = getLogger ( 'test_db' ) 
+    logger.info ( 'Saving all objects into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        for m in models :
+            db['model:' + m.name ] = m
+            db['roo_tot:%s' % m.name ] = m.pdf
+            for i,s in enumerate ( m.signals ) :
+                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+            for i, b in enumerate ( m.backgrounds ) : 
+                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+            for a in m.alist1 : 
+                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
+        db['models'   ] = models
+        db.ls() 
+  
+   
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_fitting_components_3D () 
     
+    test_fitting_components_3D () 
+            
+    ## check finally that everything is serializeable:
+    with timing ('test_db'             , logger ) :
+        test_db ()
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

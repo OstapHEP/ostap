@@ -23,7 +23,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.core         import Ostap
-from   ostap.core.ostap_types  import string_types 
+from   ostap.core.ostap_types  import string_types , integer_types  
 import ostap.fitting.variables
 import ROOT, sys, random
 # =============================================================================
@@ -69,21 +69,34 @@ def _ral_contains_ ( self , i ) :
     ## return  0 <= self.index ( i )
 
 # =============================================================================
-##  get item form the list 
+##  get item from the list 
 def _ral_getitem_ ( self , index ) :
     """Get item from the list
     >>>  lst  = ...
     >>>  item = lst[3]
-    Slice notation is also supported (note that  retubned type is python tuple)
-    >>>  res = lst[3:5:2]
+    >>>  iast = lst[-1]
+    >>>  res  = lst[3:5:2]
     """
     if isinstance ( index , slice ) :
         l = len ( self )
         indices  = index.indices ( l )
-        return tuple ( [ self[i] for i in range( *indices ) ] )
+        
+        result   = ROOT.RooArgList ()
+        for i in range ( *indices  ) : result.add ( self [i] )
+        return result 
+        ## return tuple ( [ self[i] for i in range( *indices ) ] )
+
+    l = len ( self )
     
-    if not isinstance ( index , int ) or not index in self :
-        raise IndexError('List Index %s is out of the range [%d,%d)' % ( index , 0 , len(self) ) )
+    if not isinstance ( index , integer_types ) or l <= index :
+        raise IndexError('List Index %s is out of the range [%d,%d)' % ( index , 0 , l ) )
+    
+    ## allow slightly negative indices 
+    if index < 0 : index += l 
+    
+    if not 0 <= index < l :
+        raise IndexError('List Index %d is out of the range [%d,%d)' % ( index , 0 , l ) )
+    
     return self.at ( index  )
 
 # =============================================================================

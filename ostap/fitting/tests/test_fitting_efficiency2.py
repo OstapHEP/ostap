@@ -148,6 +148,7 @@ def test_formula () :
 
     with wait ( 2 ) , use_canvas ("test_formula") : 
         eff1.draw ( ds , nbins = 25 )
+
     
 # =============================================================================
 ## use PyVAR stuff
@@ -348,7 +349,6 @@ if '__main__' == __name__ :
     test_pyVAR   ()
     test_pyVAR2  ()
     test_pyVar   ()
-
 
 # =============================================================================
 ##                                                                      The END 

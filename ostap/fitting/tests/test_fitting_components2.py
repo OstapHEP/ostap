@@ -31,6 +31,8 @@ else :
 # =============================================================================
 
 
+models = set() 
+
 def test_components_2 () :
 
     logger = getLogger ( 'test_components_2' )
@@ -108,13 +110,43 @@ def test_components_2 () :
         r , f = model.fitTo ( dataset , silent = True , draw = True , nbins = 50 , minos = ('R','S1') )
         logger.info ( "Mass fit : fit results\n%s" % r.table ( title = 'Mass fit' , prefix = '# ' ) )
 
+    models.add ( signal1 )
+    models.add ( signal2 )
+    models.add ( model   )
+    
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+
+    logger = getLogger ( 'test_db' ) 
+    logger.info ( 'Saving all objects into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        for m in models :
+            db['model:' + m.name ] = m
+            db['roo_tot:%s' % m.name ] = m.pdf
+            for i,s in enumerate ( m.signals ) :
+                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+            for i, b in enumerate ( m.backgrounds ) : 
+                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+            for a in m.alist1 : 
+                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
+        db['models'   ] = models
+        db.ls() 
+
 # =============================================================================
 
 if '__main__' == __name__ :
 
     with timing ("Components2" , logger ) : 
         test_components_2   () 
-    
+
+    ## check finally that everything is serializeable:
+    with timing ('test_db'             , logger ) :
+        test_db ()
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

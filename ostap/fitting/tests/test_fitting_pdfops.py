@@ -153,7 +153,15 @@ def test_db() :
         db['xvar' ] = x 
         db['yvar' ] = y
         db['zvar' ] = z 
-        for f in pdfs : db['pdf:' + f.name ] = f
+        for m in pdfs :
+            db['model:' + m.name ] = m
+            db['roo_tot:%s' % m.name ] = m.pdf
+            for i,s in enumerate ( m.signals ) :
+                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+            for i, b in enumerate ( m.backgrounds ) : 
+                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+            for a in m.alist1 : 
+                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
         db['pdfs' ] = pdfs
         db.ls() 
 

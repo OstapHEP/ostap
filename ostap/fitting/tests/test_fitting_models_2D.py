@@ -355,6 +355,16 @@ def test_db() :
         db['vars'    ] = varset
         db['dataset' ] = dataset
         db['models'  ] = models
+        for m in models :
+            db['model:' + m.name ] = m
+            db['roo_tot:%s' % m.name ] = m.pdf
+            for i,s in enumerate ( m.signals ) :
+                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+            for i, b in enumerate ( m.backgrounds ) : 
+                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+            for a in m.alist1 : 
+                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
+
         db.ls() 
     
 # =============================================================================

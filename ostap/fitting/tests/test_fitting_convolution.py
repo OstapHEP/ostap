@@ -91,6 +91,7 @@ def test_db() :
     with timing('Save everything to DBASE', logger ), DBASE.tmpdb() as db :
         for  i , m in enumerate ( models ) :
             db['model/%-2d: %s' % ( i , m.name ) ] = m 
+            db['roo/%-2d: %s'   % ( i , m.name ) ] = m.pdf 
         db['models'   ] = models
         db.ls() 
 

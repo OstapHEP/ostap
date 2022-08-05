@@ -294,9 +294,10 @@ namespace Ostap
        *  @param m2 the mass of the second particle
        *  @param m3 the mass of the third  particle
        */
-      PhaseSpace3s ( const double         m1 = 0 ,
-                     const double         m2 = 0 ,
-                     const double         m3 = 0 ) ;
+      PhaseSpace3s 
+      ( const double         m1 = 0 ,
+        const double         m2 = 0 ,
+        const double         m3 = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -383,19 +384,21 @@ namespace Ostap
        *  @param l1 the angular momentum between 1st and 2nd particle
        *  @param l2 the angular momentum between the pair and 3rd particle
        */
-      PhaseSpace3 ( const double         m1 = 0 ,
-                    const double         m2 = 0 ,
-                    const double         m3 = 0 ,
-                    const unsigned short l1 = 0 ,
-                    const unsigned short l2 = 0 ) ;
+      PhaseSpace3
+      ( const double         m1 = 0 ,
+        const double         m2 = 0 ,
+        const double         m3 = 0 ,
+        const unsigned short l1 = 0 ,
+        const unsigned short l2 = 0 ) ;
       // ======================================================================
       /** constructor from three masses
        *  @param l1 the angular momentum between 1st and 2nd particle
        *  @param l2 the angular momentum between the pair and 3rd particle
        */
-      PhaseSpace3 ( const PhaseSpace3s&  ps3    , 
-                    const unsigned short l1 = 0 ,
-                    const unsigned short l2 = 0 ) ;
+      PhaseSpace3
+      ( const PhaseSpace3s&  ps3    , 
+        const unsigned short l1 = 0 ,
+        const unsigned short l2 = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -524,10 +527,11 @@ namespace Ostap
        *  @param l    how many particles we consider
        *  @param n    total number of particles ( N>L!)
        */
-      PhaseSpaceNL ( const double         low  =  0 ,
-                     const double         high = 10 ,
-                     const unsigned short l    =  2 ,
-                     const unsigned short n    =  3 ) ;
+      PhaseSpaceNL
+      ( const double         low  =  0 ,
+        const double         high = 10 ,
+        const unsigned short l    =  2 ,
+        const unsigned short n    =  3 ) ;
       /// destructor
       ~PhaseSpaceNL () ;                                     // destructor
       // ======================================================================
@@ -606,28 +610,36 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from threshold and number of particles and  scale
-      PhaseSpaceLeft ( const double                    threshold = 0 ,
-                       const unsigned short            num       = 2 , 
-                       const double                    scale     = 1 ) ;      
+      PhaseSpaceLeft 
+      ( const double                    threshold = 0 ,
+        const unsigned short            num       = 2 , 
+        const double                    scale     = 1 ) ;      
       /// constructor from the list of masses
-      PhaseSpaceLeft ( const std::vector<double>&      masses        , 
-                       const double                    scale     = 1 ) ;      
+      PhaseSpaceLeft 
+      ( const std::vector<double>&      masses        , 
+        const double                    scale     = 1 ) ;      
       /// special case: true 2-body phasespace 
-      PhaseSpaceLeft ( const PhaseSpace2&  ps2        , 
-                       const double        scale =  1 ) ;
+      PhaseSpaceLeft 
+      ( const PhaseSpace2&  ps2        , 
+        const double        scale =  1 ) ;
       /// special case: true 3-body phases pace 
-      PhaseSpaceLeft ( const PhaseSpace3&  ps2        , 
-                       const double        scale =  1 ) ;
+      PhaseSpaceLeft 
+      ( const PhaseSpace3&  ps2        , 
+        const double        scale =  1 ) ;
       /// special case: true 3-body phasespace 
-      PhaseSpaceLeft ( const PhaseSpace3s& ps3        , 
-                       const double        scale =  1 ) ;
+      PhaseSpaceLeft 
+      ( const PhaseSpace3s& ps3        , 
+        const double        scale =  1 ) ;
       /// special case: L from N phasespace 
-      PhaseSpaceLeft ( const PhaseSpaceNL& ps         , 
-                       const double        scale =  1 ) ;
+      PhaseSpaceLeft 
+      ( const PhaseSpaceNL& ps         , 
+        const double        scale =  1 ) ;
       /// copy contructor 
-      PhaseSpaceLeft ( const PhaseSpaceLeft&  right ) ;
+      PhaseSpaceLeft 
+      ( const PhaseSpaceLeft&  right ) ;
       /// move contructor 
-      PhaseSpaceLeft (       PhaseSpaceLeft&& right ) = default ;
+      PhaseSpaceLeft
+      (       PhaseSpaceLeft&& right ) = default ;
       /// destructor
       ~PhaseSpaceLeft () ;                                       // destructor
       // ======================================================================
@@ -742,8 +754,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      unsigned short L () const { return m_L ; }
-      unsigned short N () const { return m_N ; }      
+      double         threshold () const { return m_threshold ; }
+      unsigned short L         () const { return m_L         ; }
+      unsigned short N         () const { return m_N         ; }      
       // ======================================================================
     private:
       // ======================================================================

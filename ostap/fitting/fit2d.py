@@ -69,7 +69,7 @@ class Model2D(PDF2) :
         name  = name  if name  else self.generate_name ( '(%s)*(%s)'  % ( self.xmodel.name , self.ymodel.name ) )
         
         ## initialize the base 
-        PDF2.__init__ ( self , name , self.__xmodel.xvar , self.__ymodel.xvar ) 
+        PDF2.__init__ ( self , name , self.xmodel.xvar , self.ymodel.xvar ) 
 
         ## make pdf
         from ostap.fitting.pdf_ops import raw_product 
@@ -82,9 +82,43 @@ class Model2D(PDF2) :
             'ymodel' :  self.ymodel ,
             'xvar'   :  self.xvar   ,
             'yvar'   :  self.yvar   ,            
-            'title'  :  self.pdf.GetTitle() 
             }
+        
+    ## redefine the clone 
+    def clone ( self , **kwargs ) :
+        """ Redefine the clone
+        """
 
+        ## xm     = kwargs.pop ( 'xmodel' , None )
+        ## assert ( not xm ) or ( xm is self.xmodel ) , "Model2D.clone: invalid usage of 'xmodel'!"            
+        ## ym     = kwargs.pop ( 'ymodel' , None )
+        ## assert ( not ym ) or ( ym is self.ymodel ) , "Model2D.clone: invalid usage of 'ymodel'!"
+        
+        name   = kwargs.pop ( 'name' , self.name )        
+        xvar   = kwargs.pop ( 'xvar' , self.xvar )
+        yvar   = kwargs.pop ( 'yvar' , self.yvar )
+
+        ## transpose 
+        if  ( xvar is self.yvar ) and ( yvar is self.xvar ) :
+            
+            xmodel = self.ymodel 
+            ymodel = self.xmodel
+            
+        else :
+
+            if xvar is sef.xvar : xmodel = self.xmodel
+            else                : self.xmodel.clone ( xvar = xvar , **kwargs )
+
+            if yvar is sef.yvar : ymodel = self.ymodel
+            else                : self.ymodel.clone ( xvar = yvar , **kwargs )
+            
+        return PDF2.clone ( self ,
+                            name   = name   , 
+                            xmodel = xmodel ,
+                            ymodel = ymodel ,
+                            xvar   = xvar   ,
+                            yvar   = yvar   , **kwargs )
+    
     @property
     def xmodel ( self ) :
         """'x-model'' x-component of Model(x)*Model(y) PDF"""

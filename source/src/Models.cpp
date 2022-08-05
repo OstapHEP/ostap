@@ -475,8 +475,6 @@ std::size_t Ostap::Math::PhaseSpacePol::tag () const
 // ============================================================================
 
 
-
-
 // ============================================================================
 /* constructor from threshold and number of particles
  *  @param threshold_L the low-mass  threshold
@@ -526,7 +524,7 @@ Ostap::Math::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   const double         tau         ,   // the exponent 
   const double         xlow        ,   // low edge 
   const double         xhigh       )   // high edge 
-  : PhaseSpaceLeftExpoPol ( Ostap::Math::PhaseSpaceLeft ( threshold_L , l ) , 
+  : PhaseSpaceLeftExpoPol ( Ostap::Math::PhaseSpaceLeft ( threshold_L , l ) ,
                             N , tau , xlow , xhigh ) 
 {}
 // ============================================================================
@@ -548,13 +546,38 @@ Ostap::Math::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   , m_positive    ( N  ,
                     std::max ( ps.threshold () , std::min ( xlow , xhigh ) ) , 
                     std::max ( xlow , xhigh ) ) 
-  , m_tau         ( std::abs ( tau ) )
+  , m_tau         ( std::abs ( tau ) ) 
   , m_workspace   ( ) 
 {
   Ostap::Assert ( m_phasespace.threshold() <= m_positive.xmin () , 
                   "Invalid setting of threshold/xmin/xmax" ,
                   "Ostap::Math::PhaseSpaceLeftPol" ) ;  
 }
+// ============================================================================
+/*  constructor from the phase space and polynomial
+ *  @param ps          phase space factor
+ *  @param poly        polynomial
+ *  @param tau         the exponent 
+ */
+// ============================================================================
+Ostap::Math::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
+( const PhaseSpaceLeft&        ps  ,   // pjase space 
+  const Ostap::Math::Positive& pol ,   // polynomial 
+  const double                 tau )  // the exponent 
+  : m_phasespace  ( ps  ) 
+  , m_positive    ( pol ) 
+  , m_tau         ( std::abs ( tau ) )
+  , m_workspace   ( ) 
+{
+  Ostap::Assert ( m_phasespace.threshold() < m_positive.xmax () , 
+                  "Invalid setting of threshold/xmin/xmax" ,
+                  "Ostap::Math::PhaseSpaceLeftPol" ) ;  
+}
+// ======================================================================
+
+
+
+
 // ============================================================================
 // destructor 
 // ============================================================================

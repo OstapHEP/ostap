@@ -102,6 +102,10 @@ namespace Ostap
       const RooAbsReal& y    () const { return m_y  .arg() ; }
       const RooAbsReal& z    () const { return m_z  .arg() ; }
       const RooArgList& phis () const { return m_phis      ; }      
+      //
+      unsigned short    nX   () const { return m_positive.nX() ; }
+      unsigned short    nY   () const { return m_positive.nY() ; }
+      unsigned short    nZ   () const { return m_positive.nZ() ; }      
       // ======================================================================
     protected :
       // ======================================================================
@@ -193,6 +197,10 @@ namespace Ostap
       const RooAbsReal& y    () const { return m_y  .arg() ; }
       const RooAbsReal& z    () const { return m_z  .arg() ; }
       const RooArgList& phis () const { return m_phis      ; }      
+      // ======================================================================
+      unsigned short    nX   () const { return m_positive.nX() ; }
+      unsigned short    nY   () const { return m_positive.nY() ; }
+      unsigned short    nZ   () const { return m_positive.nZ() ; }      
       // ======================================================================
     protected :
       // ======================================================================
@@ -287,6 +295,10 @@ namespace Ostap
       const RooAbsReal& y    () const { return m_y  .arg() ; }
       const RooAbsReal& z    () const { return m_z  .arg() ; }
       const RooArgList& phis () const { return m_phis      ; }      
+      // ======================================================================
+      unsigned short    nX   () const { return m_positive.nX() ; }
+      unsigned short    nY   () const { return m_positive.nY() ; }
+      unsigned short    nZ   () const { return m_positive.nZ() ; }      
       // ======================================================================
     protected :
       // ======================================================================

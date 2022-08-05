@@ -241,7 +241,9 @@ def test_db() :
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         db['xvar' ] = x 
         db['yvar' ] = y 
-        for f in funs : db['fun:' + f.name ] = f
+        for f in funs :
+            db['fun:' + f.name ] = f
+            db['roo:' + f.name ] = f.fun 
         db['funs' ] = funs
         db.ls() 
 

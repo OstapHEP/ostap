@@ -1621,7 +1621,11 @@ def test_db() :
         db['mass'] = mass 
         db['vars'] = varset0 
         db['dataset'  ] = dataset0
-        for m in models : db['model:' + m.name ] = m
+        for m in models :
+            db['model:' + m.name ] = m
+            db['roo_tot:%s' % m.name ] = m.pdf
+            db['roo_sig:%s' % m.name ] = m.signal    .pdf
+            db['roo_bkg:%s' % m.name ] = m.background.pdf
         db['models'   ] = models
         db.ls() 
 
@@ -1790,9 +1794,9 @@ if '__main__' == __name__ :
     with timing ('test_genhyperbolic'     , logger ) :
         test_genhyperbolic     () 
         
-    ## Hypatia                                     + background 
-    with timing ('test_hypatia'           , logger ) :
-       test_hypatia           ()
+    ## ## Hypatia                                     + background 
+    ## with timing ('test_hypatia'           , logger ) :
+    ##    test_hypatia           ()
 
     ## Voigt profile                             + background
     with timing ('test_voigt'          , logger ) :

@@ -153,7 +153,15 @@ def test_db() :
         db['m_x'     ] = m_x
         db['m_y'     ] = m_y
         db['vars'    ] = varset
-        for m in models : db['model:' + m.name ] = m
+        for m in models :
+            db['model:' + m.name ] = m
+            db['roo_tot:%s' % m.name ] = m.pdf
+            for i,s in enumerate ( m.signals ) :
+                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+            for i, b in enumerate ( m.backgrounds ) : 
+                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+            for a in m.alist1 : 
+                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
         db['models'  ] = models
         db['dataset' ] = dataset
         db.ls()

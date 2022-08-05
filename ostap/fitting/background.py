@@ -2534,14 +2534,15 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
 
     ## some Ostap-based background model ?
     elif isinstance ( bkg , PDF1 ) : 
-        
+
         ## return the same model/PDF 
         if   xvar is bkg.xvar and not  kwargs :
             model = bkg  ##  use the same stuff 
             logger.debug ( 'make_bkg: %s model is copied to %s' % ( bkg , model ) )
+
         else :           ## make a clone : 
             model = bkg.clone ( name = name , xvar = xvar , **kwargs )
-            logger.debug ( 'make_bkg: %s model is cloned to %s' % ( bkg , model ) ) 
+            logger.debug ( 'make_bkg: %s model is cloned to %s' % ( bkg , model ) )
         
     ## interprete it as exponential slope for Bkg-pdf 
     elif isinstance ( bkg , ROOT.RooAbsReal ) \

@@ -3021,11 +3021,10 @@ class ShiftScalePoly ( Phases ) :
 
 # =============================================================================
 ## @class Fractions
-#  Helper MIXIN class for implementatiorn of CombineXD objects
+#  Helper MIXIN class for implementatiorn of SumXD objects
 class Fractions(object) :
-    """Helper MIXIN class for implementatiorn of CombineXD objects
+    """Helper MIXIN class for implementatiorn of SumXD objects
     """
-
     def __init__  ( self             ,
                     pdfs             , ## list of PDF objects 
                     prefix    = 'f'  ,                    
@@ -3039,8 +3038,8 @@ class Fractions(object) :
 
         ## check
         for i , p in enumerate ( self.pdfs )  :
-            if   p.pdf.mustBeExtended() : self.warning ("'pdf%f' must be extended!" % i ) 
-            elif p.pdf. canBeExtended() : self.warning ("'pdf%f' can  be extended!" % i ) 
+            if   p.pdf.mustBeExtended() : self.warning ("'pdf%f' is 'must be extended'!" % i ) 
+            elif p.pdf. canBeExtended() : self.warning ("'pdf%f' is 'can  be extended'!" % i ) 
                     
         while prefix.endswith  ('_') : prefix = prefix[:-1]
         while suffix.startswith('_') : suffix = suffix[1:]

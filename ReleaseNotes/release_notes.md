@@ -3,10 +3,17 @@
   1. re-enable again `test_fitting_morphing` for new ROOT, 
      see [ROOT/issues/#11061](https://github.com/root-project/root/issues/11061)
   1. add `MorphingN3_pdf` for morphing in 3 variables 
-`
+  1. more owrisk on easy serialization.  Now we can bypass standard serialization fro almost 
+     all important Ostap classes.    
+  1. make Model2D & Model3D PDFS more safe 
+
 ## Backward incompatible:  
 
 ## Bug fixes:
+
+  1. couple of (small) fixes in `variables.py` module 
+  1. several typos are fixed in construction of 3D-models 
+
 
 # v1.9.0.2
 

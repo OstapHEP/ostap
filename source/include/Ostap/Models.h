@@ -401,6 +401,18 @@ namespace Ostap
           const double          xlow  ,   // low edge 
           const double          xhigh ) ; // high edge
       // ======================================================================
+      /** constructor from the phase space and polynomial degree
+       *  @param ps          phase space factor
+       *  @param N           degree of polynomial
+       *  @param tau         the exponent 
+       *  @param xlow        the low  edge 
+       *  @param xhigh       the high edge 
+       */
+      PhaseSpaceLeftExpoPol
+        ( const PhaseSpaceLeft&        ps  ,   // pjase space 
+          const Ostap::Math::Positive& pol ,   // polynomial 
+          const double                 tau ) ; // the exponent 
+      // ======================================================================
       /// destructor 
       ~PhaseSpaceLeftExpoPol() ;
       // ======================================================================

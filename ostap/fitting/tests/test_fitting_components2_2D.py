@@ -113,6 +113,7 @@ sb_cmp=sb+bs
 bb_cmp=bkg_x*bkg_y
 
 
+models = set()
 
 # =============================================================================
 ## Test  multi-component  3d fit'
@@ -159,6 +160,33 @@ def test_components_2dSymfit () :
         
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
+
+    models.add ( model )
+    
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+
+    logger = getLogger ( 'test_db' ) 
+    logger.info ( 'Saving all objects into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        db['m_x,m_u'] = m_x, m_y 
+        db['vars'] = varset
+        db['dataset'  ] = dataset
+        for m in models :
+            db['model:' + m.name ] = m
+            db['roo_tot:%s' % m.name ] = m.pdf
+            for i,s in enumerate ( m.signals ) :
+                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+            for i, b in enumerate ( m.backgrounds ) : 
+                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+            for a in m.alist1 : 
+                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
+        db['models'   ] = models
+        db.ls() 
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -166,7 +194,11 @@ if '__main__' == __name__ :
 
     with  timing( "2dSym-fit" ,   logger ) : 
         test_components_2dSymfit    () 
-        
+
+    ## check finally that everything is serializeable:
+    with timing ('test_db'             , logger ) :
+        test_db ()
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

@@ -6,6 +6,8 @@
 #include "RVersion.h"
 #include "RooAbsPdf.h"
 #include "RooConstVar.h"
+#include "RooAddPdf.h"
+#include "RooRecursiveFraction.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -35,7 +37,95 @@ namespace
   const std::string s_v4          = "Ostap::MoreRooFit::ConvexOnly"    ;
   const std::string s_v5          = "Ostap::MoreRooFit::BSpline"       ;
   // ===========================================================================
-}
+  class FakeRecursiveFraction : public RooRecursiveFraction 
+  {
+  public:
+    // ========================================================================
+    /// constructor from RooRecuriveFraction object 
+    FakeRecursiveFraction 
+    ( const RooRecursiveFraction& right , const char* newname = 0 )
+      : RooRecursiveFraction ( right , newname ) 
+    {}
+    /// virtual desttructor 
+    virtual ~FakeRecursiveFraction () {}
+    // ========================================================================
+  public: 
+    // ========================================================================
+    /** get the original fractions form the <code>RooRecursiveFraction</code>
+     *  @see RooRecursiveFraction
+     */
+    RooArgList fractions () const 
+    {
+      RooArgList result {} ;
+      ::copy_real ( _list , result ) ;
+      return result ;
+    }
+    // ======================================================================
+  } ;
+  // ========================================================================
+  /** get the original fractions form the <code>RooRecursiveFraction</code>
+   *  @see RooRecursiveFraction
+   *  @attention the list has inverse order and the last efraction if
+   *  prepended with the constant 1 
+   */
+  RooArgList fractions
+  ( const RooRecursiveFraction& rf ) 
+  {
+    std::unique_ptr<::FakeRecursiveFraction> fake { new ::FakeRecursiveFraction ( rf ) } ;
+    return fake->fractions () ; 
+  }
+  // ==========================================================================
+  class FakeAddPdf : public RooAddPdf 
+  {
+  public: 
+    // ========================================================================
+    /// constructor from RooAddPdf object 
+    FakeAddPdf ( const RooAddPdf& right  , const char* newname = 0 )
+      : RooAddPdf ( right , newname ) 
+    {}
+    /// virtual desttructor 
+    virtual ~FakeAddPdf() {}
+    // ========================================================================
+  public: 
+    // ========================================================================
+    /// were recursive fractions used for creation ?
+    bool recursive () const { return _recursive ; }
+    /// get the original fractions 
+    RooArgList fractions ( bool& resursive )  const 
+    {
+      resursive = _recursive ;
+      if ( !_recursive || ::size( _coefList ) <= 1 ) { return _coefList ; }
+      //
+      RooArgList result {} ;
+      //
+      // get the last coefficienct 
+      //
+      const int index_last  = ::size ( _coefList ) - 1 ;
+      const RooAbsArg* last = _coefList.at ( index_last )  ;
+      Ostap::Assert  ( nullptr != last                , 
+                       "Invalid size of _coefList!"   , 
+                       "Ostap::MoreRooFit::fractions" ) ;
+      //
+      const RooRecursiveFraction* rf = 
+        dynamic_cast<const RooRecursiveFraction*>( last ) ;
+      Ostap::Assert  ( nullptr != rf                , 
+                       "Last fraction is not RooRecursiveFraction!"   , 
+                       "Ostap::MoreRooFit::fractions" ) ;
+      //
+      RooArgList tmp { ::fractions ( *rf ) } ;
+      Ostap::Assert  ( nullptr != rf                , 
+                       "Invalid size of fractions!"  , 
+                       "Ostap::MoreRooFit::fractions" ) ;
+      //
+      for  ( int i = index_last ; 1<= i ; --i ) 
+      { result.add ( *tmp.at ( i ) ) ; }
+      //
+      return result ;
+    }
+    // ========================================================================
+  } ;
+  // ==========================================================================
+} //                                             The end of anonymous namespace 
 // ============================================================================
 ClassImp ( Ostap::MoreRooFit::Bernstein  ) ;
 ClassImp ( Ostap::MoreRooFit::Monotonic  ) ;
@@ -551,6 +641,41 @@ Double_t Ostap::MoreRooFit::BSpline::analyticalIntegral
 
 
 
+// ============================================================================
+/*  Helper method to check if recursive fractions were 
+ *  used for creation of RooAddPdf object
+ *  @see RooAddPdf 
+ */
+// ============================================================================
+bool Ostap::MoreRooFit::recursive ( const RooAddPdf& pdf ) 
+{
+  std::unique_ptr<::FakeAddPdf> fake { new ::FakeAddPdf ( pdf ) } ;
+  return fake->recursive() ; 
+}
+// ============================================================================
+/*  get the original fractions from the <code>RooAddPdf</code>
+ *  @see RooAddPdf
+ */
+// ============================================================================
+RooArgList Ostap::MoreRooFit::fractions
+( const RooAddPdf& pdf       , 
+  bool&            recursive )
+{
+  std::unique_ptr<::FakeAddPdf> fake { new ::FakeAddPdf ( pdf ) } ;
+  return fake->fractions ( recursive ) ; 
+}
+// ============================================================================
+/*  get the original fractions from the <code>RooAddPdf</code>
+ *  @see RooAddPdf
+ */
+// ============================================================================
+RooArgList Ostap::MoreRooFit::fractions
+( const RooAddPdf& pdf ) 
+{
+  bool recursive ;
+  return fractions ( pdf , recursive ) ;
+}
+// ============================================================================
 
 // ============================================================================
 //                                                                      The END 

@@ -44,7 +44,8 @@ namespace
    */
   inline unsigned   int copy_real 
   ( const RooArgList&  from ,
-    RooListProxy&      to   , 
+    // RooListProxy&      to   , 
+    RooArgList&        to   , 
     const std::string& message = "Variable is not RooAbsReal!" ,
     const std::string& tag     = "Ostap::copy_real"            )
   {

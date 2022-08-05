@@ -1057,15 +1057,15 @@ class Fit1D (PDF1) :
         if self.__combined_signal : return self.__combined_signal
         assert self.signal_components, "signal: empty lst of 'signal'' components!"    
         if 1 != len ( self.signal_components ) :
-            logger.warning ("signal: get the 1st 'signal'' component")
+            self.warning ("signal: get the 1st 'signal'' component")
         return self.signal_components[0]
     @property
     def background ( self ) :
         """'background'' : get 'background'' PDF ('combined_background'' or the 1st from 'background_components'')"""
-        if self.combined_background : return selfcombined_background
+        if self.combined_background : return self.combined_background
         assert self.background_components, "background: empty lst of 'background'' components!"    
         if 1 != len ( self.background_components ) :
-            logger.warning ("background: get the 1st 'background'' component")
+            self.warning ("background: get the 1st 'background'' component")
         return self.background_components[0]
         
     @property

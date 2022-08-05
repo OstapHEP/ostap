@@ -86,6 +86,8 @@ class Convolution(object):
                    nbins    = 10000  ,   ## number of bins for FFT
                    buffer   = 0.25   ,   ## buffer fraction use for setBufferFraction
                    bufstrat = None   ,   ## "Buffer strategy" : (0,1,2)
+                   shift1   = 0      ,   ## shift1 parameter
+                   shift2   = 0      ,   ## shift2 parameter
                    nsigmas  = 6      ) : ## number of sigmas for setConvolutionWindow
 
         ## the axis 
@@ -123,6 +125,9 @@ class Convolution(object):
         self.__buffer   = buffer
         self.__bufstrat = bufstrat 
         self.__nsigmas  = nsigmas
+        self.__shift1   = float ( shift1 ) 
+        self.__shift2   = float ( shift2 ) 
+        
 
         name = name if name else PDF1.generate_name ( prefix = 'cnv_%s@%s' % ( pdf.name , self.resolution.name ) )
         
@@ -157,7 +162,10 @@ class Convolution(object):
             
             if isinstance ( self.bufstrat , int ) and 0 <= self.bufstrat <= 2 : 
                 self.__pdf.setBufferStrategy ( self.bufstrat )
-                
+
+            ## set shift-parameters 
+            self.__pdf.setShift ( self.shift1 , self.shift2 )
+            
         else :           ##  Use plain numerical integration (could be slow)
             
             assert isinstance ( nsigmas  , num_types ) and 2.5 <= nsigmas , \
@@ -215,6 +223,15 @@ class Convolution(object):
         - 'Mirror/2' means that the buffer is filled with a mirror image of the p.d.f. around the convolution observable boundary
         """
         return self.__bufstrat
+    @property
+    def shift1 ( self ) :
+        """''shift1' : parameter for RooFFTConvPdf"""
+        return self.__shift1
+    @property
+    def shift2 ( self ) :
+        """''shift2' : parameter for RooFFTConvPdf"""
+        return self.__shift2
+    
     @property
     def nsigmas ( self ) :
         """``nsigmas'' : convolution window for RooNumConvPdf"""

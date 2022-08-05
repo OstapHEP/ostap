@@ -17,6 +17,7 @@ Simultannepous fit of two 1D-distributions
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
+import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
 from   builtins                 import range 
@@ -80,7 +81,8 @@ for i in range (NB2 ) :
     if v2 in mass :
         mass.setVal ( v2 )
         dataset2.add ( varset2 )
-        
+
+models = set() 
 # =============================================================================
 def test_simfit1 () :
 
@@ -108,7 +110,6 @@ def test_simfit1 () :
     model2.S = NS2
     model2.B = NB2 
     
-
     with use_canvas ( 'test_simfit1' ) : 
         # =========================================================================
         ## fit 1
@@ -154,13 +155,45 @@ def test_simfit1 () :
         with wait ( 1 ) : 
             fB = model_sim.draw ( 'B' , dataset , nbins = 50 )            
 
+    models.add ( model1 )
+    models.add ( model2 )
+    
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+    
+    logger = getLogger ( 'test_db' ) 
+
+    logger.info('Saving all objects into DBASE')
+    with timing('Save everything to DBASE' , logger ), DBASE.tmpdb() as db : 
+        db['mass'     ] = mass
+        db['vars1'    ] = varset1
+        db['vars2'    ] = varset2
+        db['dataset1' ] = dataset1
+        db['dataset2' ] = dataset2
+        for m in models :
+            db['model:' + m.name ] = m
+            db['roo_tot:%s' % m.name ] = m.pdf
+            for i,s in enumerate ( m.signals ) :
+                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+            for i, b in enumerate ( m.backgrounds ) : 
+                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+            for a in m.alist1 : 
+                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
+        db['models'  ] = models
+        db.ls()
 
 # =============================================================================
 if '__main__' == __name__ :
 
     with timing( "simfit-1" ,   logger ) :  
-        test_simfit1 () 
-
+        test_simfit1 ()
+        
+    ## check finally that everything is serializeable:
+    with timing ('Save to DB:'     , logger ) :
+        test_db ()          
+ 
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

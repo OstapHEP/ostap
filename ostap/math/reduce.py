@@ -7,7 +7,9 @@
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-12-01"
-__all__     = ()
+__all__     = (
+    'root_factory' , ## a simple factory to generic deseroialisarion
+    )
 # =============================================================================
 from    ostap.math.base        import Ostap, doubles 
 from    ostap.core.ostap_types import sequence_types 
@@ -19,6 +21,11 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.reduce' )
 else                       : logger = getLogger ( __name__            )
 # =============================================================================
+## Trivial factory for deserialization of generic objects
+def root_factory ( klass , *params ) :
+    """Trivial factory for deserialization of generic bjects
+    """
+    return klass ( *params )
 
 # =============================================================================
 ## Simple (basic) polynomials 
@@ -377,14 +384,6 @@ Ostap.Math.FloaterHormann. __reduce__ = intfh_reduce
 ## Dalitz' objects 
 # =============================================================================   
 
-
-# =============================================================================   
-## Factory for deserialization of Dalitz' objects
-def dalitz_factory ( klass , *params ) :
-    """Factory for deserialization of `Dalitz` objects
-    """
-    return klass ( *params )
-
 # ============================================================================
 ## Serialise class <code>Ostap::Kinematics::Dalitz0</code>
 #  @see Ostap::Kinematcis.Dalitz0
@@ -392,10 +391,10 @@ def _dalitz0_reduce_ ( dalitz ) :
     """Serialise class `Ostap.Kinematics.Dalitz0`
     - see Ostap.Kinematics.Dalitz0
     """
-    return dalitz_factory , ( type ( dalitz ) ,
-                              dalitz.m1 () ,
-                              dalitz.m2 () ,
-                              dalitz.m3 () ) 
+    return root_factory , ( type ( dalitz ) ,
+                            dalitz.m1 () ,
+                            dalitz.m2 () ,
+                            dalitz.m3 () ) 
 
 # ============================================================================
 ## Serialise class <code>Ostap::Kinematics::Dalitz</code>
@@ -404,11 +403,11 @@ def _dalitzm_reduce_ ( dalitz ) :
     """Serialise class `Ostap.Kinematics.Dalitz`
     - see Ostap.Kinematics.Dalitz
     """
-    return dalitz_factory , ( type ( dalitz ) ,
-                              dalitz.M  () , 
-                              dalitz.m1 () ,
-                              dalitz.m2 () ,
-                              dalitz.m3 () ) 
+    return root_factory , ( type ( dalitz ) ,
+                            dalitz.M  () , 
+                            dalitz.m1 () ,
+                            dalitz.m2 () ,
+                            dalitz.m3 () ) 
 
 
 Ostap.Kinematics.Dalitz0. __reduce__ = _dalitz0_reduce_ 
@@ -473,6 +472,104 @@ for p in ( Ostap.Math.Polynomial    ,
 
 
 # =============================================================================
+## several Ostap::Math objects
+# =============================================================================
+## reduce CutOffGauss
+def _rm_cgau_reduce_ ( o )  :
+    return root_factory , ( type ( o ) , o.right() , o.x0() , o.sigma() )
+Ostap.Math.CutOffGauss.__reduce__ = _rm_cgau_reduce_
+# =============================================================================
+## reduce CutOffStudent
+def _rm_cstt_reduce_ ( o )  :
+    return root_factory , ( type ( o ) , o.right() , o.x0() , o.nu () , o.sigma() )
+Ostap.Math.CutOffStudent.__reduce__ = _rm_cstt_reduce_
+
+
+# =============================================================================
+## reduce PhaseSpace2
+def _rm_ps2_reduce_ ( o ) :
+    return root_factory , ( type ( o ) , o.m1 () , o.m2() )
+Ostap.Math.PhaseSpace2.__reduce__ = _rm_ps2_reduce_
+# =============================================================================
+## reduce PhaseSpace3
+def _rm_ps3_reduce_ ( o ) :
+    return root_factory , ( type ( o ) , o.m1 () , o.m2() , o.m3 () )
+Ostap.Math.PhaseSpace3 .__reduce__ = _rm_ps3_reduce_
+Ostap.Math.PhaseSpace3s.__reduce__ = _rm_ps3_reduce_
+# =============================================================================
+## reduce PhaseSpaceNL
+def _rm_psnl_reduce_ ( o ) :
+    return root_factory , ( type ( o ) , o.lowEdge() , o.highEdge() , o.L () , o.N () )
+Ostap.Math.PhaseSpaceNL .__reduce__ = _rm_psnl_reduce_
+# =======================================================================
+## reduce PhasSpaceRight 
+def _rm_psr_reduce_ ( o ) :
+    """Reduce PhasSpaceRight"""
+    return root_factory , ( type ( o ) , o.threshold () , o.L () , o.N () )
+Ostap.Math.PhaseSpaceRight .__reduce__ = _rm_psr_reduce_
+# ========================================================================
+## reduce PhasSpaceLeft 
+def _rm_psl_reduce_ ( o ) :
+    """Reduce PhasSpaceLeft"""
+    content = type ( o ) ,
+    c = o.ps_case()
+    if   o.TwoBody    == c : tail = o.ps2  () , o.scale() 
+    elif o.ThreeBody  == c : tail = o.ps3  () , o.scale() 
+    elif o.ThreeBodyS == c : tail = o.ps3s () , o.scale() 
+    else                   : tail = o.threshold () , o.N() , o.scale ()  
+    return root_factory , content + tail 
+Ostap.Math.PhaseSpaceLeft .__reduce__ = _rm_psl_reduce_
+# ========================================================================
+## reduce PSDalitz 
+def _rm_psd_reduce_ ( o ) :
+    """Reduce PSDalitz"""
+    return root_factory , ( type ( o )  , o.M() , o.m1() , o.m2() , o.m3() )
+Ostap.Math.PSDalitz.__reduce__ = _rm_psd_reduce_
+# ========================================================================
+## reduce PhaseSpace23L
+def _rm_ps23l_reduce_ ( o ) :
+    """Reduce PhaseSpace23L"""
+    return root_factory , ( type ( o )  ,
+                            o.m1() , o.m2() , o.m3() , o.m () , o.L() , o.l () )
+Ostap.Math.PSDalitz.__reduce__ = _rm_ps23l_reduce_
+# ========================================================================
+## reduce PhaseSpaceLeftExpoPol
+def _rm_pslep_reduce_ ( o ) :
+    """reduce PhaseSpaceLeftExpoPol"""
+    return root_factory , ( type ( o )      ,
+                            o.phasespace () ,
+                            o.polynom    () ,
+                            o.tau        () )  
+Ostap.Math.PhaseSpaceLeftExpoPol .__reduce__ = _rm_pslep_reduce_
+
+
+
+# =============================================================================
+## reduce Histo1D
+def _rm_h1d_reduce_ ( o ) :
+    """reduce Histo1D"""
+    return root_factory , ( type ( o ) , o.h () , o.t() ,
+                            o.edges () , o.extrapolate() , o.density () )
+# =============================================================================
+## reduce Histo2D
+def _rm_h2d_reduce_ ( o ) :
+    """reduce Histo2D"""
+    return root_factory , ( type ( o ) , o.h () , o.tx() , o.ty() ,
+                            o.edges () , o.extrapolate() , o.density () )
+# =============================================================================
+## reduce Histo3D
+def _rm_h3d_reduce_ ( o ) :
+    """reduce Histo3D"""
+    return root_factory , ( type ( o ) , o.h () , o.tx() , o.ty() , o.tz() ,
+                            o.edges () , o.extrapolate() , o.density () )
+# =============================================================================
+Ostap.Math.Histo1D.__reduce__ = _rm_h1d_reduce_ 
+Ostap.Math.Histo2D.__reduce__ = _rm_h2d_reduce_ 
+Ostap.Math.Histo3D.__reduce__ = _rm_h3d_reduce_ 
+# =============================================================================
+
+
+# =============================================================================
 ## decorated classes 
 _decorated_classes_  = (
     ## 
@@ -515,6 +612,18 @@ _decorated_classes_  = (
     ##
     Ostap.Kinematics.Dalitz0           , 
     Ostap.Kinematics.Dalitz            ,
+    ##
+    Ostap.Math.Histo1D ,
+    Ostap.Math.Histo2D ,
+    Ostap.Math.Histo3D ,
+    ##
+    Ostap.Math.CutOffGauss   , 
+    Ostap.Math.CutOffStudent ,
+    ##
+    Ostap.Math.PhaseSpace2   , 
+    Ostap.Math.PhaseSpace3   , 
+    Ostap.Math.PhaseSpace3s  , 
+    Ostap.Math.PhaseSpaceNL  , 
     )
 
 # =============================================================================
@@ -560,6 +669,18 @@ _new_methods_       = (
     ##
     Ostap.Kinematics.Dalitz0           . __reduce__  ,
     Ostap.Kinematics.Dalitz            . __reduce__  ,
+    ##
+    Ostap.Math.Histo1D                 . __reduce__  ,
+    Ostap.Math.Histo2D                 . __reduce__  ,
+    Ostap.Math.Histo3D                 . __reduce__  ,
+    ##
+    Ostap.Math.CutOffGauss             . __reduce__  , 
+    Ostap.Math.CutOffStudent           . __reduce__  ,
+    Ostap.Math.PhaseSpace2             . __reduce__  , 
+    Ostap.Math.PhaseSpace3             . __reduce__  , 
+    Ostap.Math.PhaseSpace3s            . __reduce__  , 
+    Ostap.Math.PhaseSpaceNL            . __reduce__  ,
+    ##
     )
 
 # =============================================================================

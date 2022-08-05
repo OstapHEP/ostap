@@ -2452,7 +2452,7 @@ class Generic1D_pdf(PDF1) :
         self.checked_keys.add  ( 'pdf'     )
         self.checked_keys.add  ( 'xvar'    )
         self.checked_keys.add  ( 'special' )
-        
+
     @property
     def add_to_signals ( self ) :
         """'add_to_signals' : should PDF be added into list of signal components?"""

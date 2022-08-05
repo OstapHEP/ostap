@@ -16,6 +16,11 @@
 #include  "Ostap/Bernstein1D.h"
 #include  "Ostap/BSpline.h"
 // ============================================================================
+/// froward declarations 
+// ============================================================================
+class RooAddPdf   ; // ROOT,RooFit 
+class RooProdPdf  ; // ROOT,RooFit 
+// ============================================================================
 namespace Ostap 
 {
   // ==========================================================================
@@ -70,7 +75,7 @@ namespace Ostap
       /// get the varibale 
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
-      const RooArgList& params () const { return m_pars       ; }
+      const RooArgList& pars   () const { return m_pars       ; }
       /// xmin for bernstein 
       double            xmin   () const { return m_bernstein.xmin() ; }
       /// xmax for bernstein 
@@ -168,7 +173,7 @@ namespace Ostap
       /// get the varibale 
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
-      const RooArgList& params () const { return m_pars       ; }
+      const RooArgList& pars   () const { return m_pars       ; }
       /// get the shift  
       const RooAbsReal& a      () const { return m_a.arg()    ; }
       /// get the scale   
@@ -265,7 +270,7 @@ namespace Ostap
       /// get the varibale 
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
-      const RooArgList& params () const { return m_pars       ; }
+      const RooArgList& pars   () const { return m_pars       ; }
       /// get the shift  
       const RooAbsReal& a      () const { return m_a.arg()    ; }
       /// get the scale   
@@ -368,7 +373,7 @@ namespace Ostap
       /// get the variable
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
-      const RooArgList& params () const { return m_pars       ; }
+      const RooArgList& pars   () const { return m_pars       ; }
       /// get the shift  
       const RooAbsReal& a      () const { return m_a.arg()    ; }
       /// get the scale   
@@ -444,8 +449,6 @@ namespace Ostap
       /// get the varibale 
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
-      const RooArgList& params () const { return m_pars       ; }
-      /// get parameters 
       const RooArgList& pars   () const { return m_pars       ; }
       /// vector of knots 
       const std::vector<double>& knots () const { return m_bspline.knots() ; }
@@ -476,6 +479,26 @@ namespace Ostap
       mutable Ostap::Math::BSpline  m_bspline {} ; 
       // ======================================================================
     } ; //                          The end of class Ostap::MoreRooFit::BSpline 
+    // ========================================================================
+    /** Helper method to check if recursive fractions were 
+     *  used for creation of RooAddPdf object
+     *  @see RooAddPdf 
+     */
+    bool       recursive 
+    ( const RooAddPdf& pdf ) ;
+    // ========================================================================
+    /** get the original fractions from the <code>RooAddPdf</code>
+     *  @see RooAddPdf
+     */
+    RooArgList fractions
+    ( const RooAddPdf& pdf       , 
+      bool&            recursive ) ;  
+    // ========================================================================
+    /** get the original fractions from the <code>RooAddPdf</code>
+     *  @see RooAddPdf
+     */
+    RooArgList fractions
+    ( const RooAddPdf& pdf       ) ;
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit
   // ==========================================================================

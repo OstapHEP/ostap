@@ -96,6 +96,8 @@ namespace Ostap
       const RooAbsReal& x    () const { return m_x  .arg() ; }
       const RooAbsReal& y    () const { return m_y  .arg() ; }
       const RooArgList& phis () const { return m_phis      ; }      
+      unsigned short    nX   () const { return m_positive.nX () ; }
+      unsigned short    nY   () const { return m_positive.nY () ; }      
       // ======================================================================
     protected :
       // ======================================================================
@@ -177,6 +179,9 @@ namespace Ostap
       const RooAbsReal& x    () const { return m_x  .arg() ; }
       const RooAbsReal& y    () const { return m_y  .arg() ; }
       const RooArgList& phis () const { return m_phis      ; }      
+      unsigned short    nX   () const { return m_positive.nX () ; }
+      unsigned short    nY   () const { return m_positive.nY () ; }      
+      unsigned short    n    () const { return m_positive.nY () ; }      
       // ======================================================================
     protected :
       // ======================================================================
@@ -277,6 +282,8 @@ namespace Ostap
       const Ostap::Math::PhaseSpaceNL& psY         () const { return m_function.phasespaceY() ; }
       const Ostap::Math::PhaseSpaceNL& phasespaceX () const { return psX () ; }
       const Ostap::Math::PhaseSpaceNL& phasespaceY () const { return psY () ; }
+      unsigned short    nX   () const { return m_function.nX () ; }
+      unsigned short    nY   () const { return m_function.nY () ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -386,6 +393,9 @@ namespace Ostap
       const Ostap::Math::PhaseSpaceNL&  psY         () const { return m_function.phasespaceY() ; }
       const Ostap::Math::PhaseSpaceNL&  phasespaceX () const { return psX () ; }
       const Ostap::Math::PhaseSpaceNL&  phasespaceY () const { return psY () ; }
+      unsigned short    nX () const { return m_function.nX () ; }
+      unsigned short    nY () const { return m_function.nY () ; }
+      unsigned short    n  () const { return m_function.nX () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -493,6 +503,9 @@ namespace Ostap
       const Ostap::Math::PhaseSpaceNL& psY         () const { return m_function.phasespaceY() ; }
       const Ostap::Math::PhaseSpaceNL& phasespaceX () const { return psX () ; }
       const Ostap::Math::PhaseSpaceNL& phasespaceY () const { return psY () ; }
+      unsigned short    nX   () const { return m_function.nX   () ; }
+      unsigned short    nY   () const { return m_function.nY   () ; }      
+      unsigned short    mmax () const { return m_function.mmax () ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -603,6 +616,9 @@ namespace Ostap
       const Ostap::Math::PhaseSpaceNL&  psY         () const { return m_function.phasespaceY() ; }
       const Ostap::Math::PhaseSpaceNL&  phasespaceX () const { return psX () ; }
       const Ostap::Math::PhaseSpaceNL&  phasespaceY () const { return psY () ; }
+      unsigned short    nX   () const { return m_function.nX   () ; }
+      unsigned short    nY   () const { return m_function.nY   () ; }      
+      unsigned short    mmax () const { return m_function.mmax () ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -708,6 +724,9 @@ namespace Ostap
       const Ostap::Math::PhaseSpacePol& psY         () const { return m_function.phasespaceY() ; }
       const Ostap::Math::PhaseSpacePol& phasespaceX () const { return psX () ; }
       const Ostap::Math::PhaseSpacePol& phasespaceY () const { return psY () ; }
+      unsigned short    nX   () const { return m_function.nX   () ; }
+      unsigned short    nY   () const { return m_function.nY   () ; }      
+      unsigned short    mmax () const { return m_function.mmax () ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -816,6 +835,9 @@ namespace Ostap
       const Ostap::Math::PhaseSpacePol& psY         () const { return m_function.phasespaceY() ; }
       const Ostap::Math::PhaseSpacePol& phasespaceX () const { return psX () ; }
       const Ostap::Math::PhaseSpacePol& phasespaceY () const { return psY () ; }
+      unsigned short    nX   () const { return m_function.nX   () ; }
+      unsigned short    nY   () const { return m_function.nY   () ; }      
+      unsigned short    mmax () const { return m_function.mmax () ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -915,6 +937,8 @@ namespace Ostap
       const Ostap::Math::Positive2D&   polynom     () const { return m_function.positive   () ; }
       const Ostap::Math::PhaseSpaceNL& psY         () const { return m_function.phasespaceY() ; }
       const Ostap::Math::PhaseSpaceNL& phasespaceY () const { return psY () ; }
+      unsigned short    nX   () const { return m_function.nX   () ; }
+      unsigned short    nY   () const { return m_function.nY   () ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -1013,6 +1037,8 @@ namespace Ostap
       const RooAbsReal& taux () const { return m_taux.arg() ; }
       const RooAbsReal& tauy () const { return m_tauy.arg() ; }
       const RooArgList& phis () const { return m_phis       ; }      
+      unsigned short    nX   () const { return m_function.nX   () ; }
+      unsigned short    nY   () const { return m_function.nY   () ; }      
       // ======================================================================
     protected :
       // ======================================================================
@@ -1102,6 +1128,9 @@ namespace Ostap
       const RooAbsReal& y    () const { return m_y   .arg() ; }
       const RooAbsReal& tau  () const { return m_tau .arg() ; }
       const RooArgList& phis () const { return m_phis       ; }      
+      unsigned short    nX   () const { return m_function.nX   () ; }
+      unsigned short    nY   () const { return m_function.nY   () ; }      
+      unsigned short    n    () const { return m_function.nX   () ; }      
       // ======================================================================
     protected :
       // ======================================================================

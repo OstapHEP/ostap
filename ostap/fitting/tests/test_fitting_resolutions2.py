@@ -474,7 +474,15 @@ def test_db() :
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         db['mass'] = mass
         db['dataset'  ] = dataset
-        for m in models : db['model %s' % m.name ] = m
+        for m in models :
+            db['model:' + m.name ] = m
+            db['roo_tot:%s' % m.name ] = m.pdf
+            for i,s in enumerate ( m.signals ) :
+                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+            for i, b in enumerate ( m.backgrounds ) : 
+                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+            for a in m.alist1 : 
+                db['cmp:%s/%s' % ( m.name , a.name ) ] = a        
         db['models'   ] = models
         db.ls() 
 

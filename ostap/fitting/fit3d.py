@@ -106,11 +106,11 @@ class Model3D(PDF3) :
                                                                                self.ymodel.name ,
                                                                                self.zmodel.name ) )
         ## initialize the base 
-        PDF3.__init__ (  self                      ,
-                         name = name               ,
-                         xvar = self.__xmodel.xvar ,
-                         yvar = self.__ymodel.xvar ,
-                         zvar = self.__zmodel.xvar ) 
+        PDF3.__init__ (  self                    ,
+                         name = name             ,
+                         xvar = self.xmodel.xvar ,
+                         yvar = self.ymodel.xvar ,
+                         zvar = self.zmodel.xvar ) 
         
         ## make pdf
         from ostap.fitting.pdf_ops import raw_product 
@@ -124,9 +124,32 @@ class Model3D(PDF3) :
             'zmodel' : self.zmodel ,
             'xvar'   : self.xvar   ,
             'yvar'   : self.yvar   ,            
-            'zvar'   : self.xvar   ,
-            'title'  : self.pdf.GetTitle() 
+            'zvar'   : self.zvar   ,
             }
+
+    ## redefine the clone 
+    def clone ( self , **kwargs ) :
+        """ Redefine the clone
+        """
+        
+        name   = kwargs.pop ( 'name' , self.name )        
+        xvar   = kwargs.pop ( 'xvar' , self.xvar )
+        yvar   = kwargs.pop ( 'yvar' , self.yvar )        
+        zvar   = kwargs.pop ( 'zvar' , self.zvar )
+        
+        xmodel = self.xmodel if self.xvar is xvar else self.xmodel.clone ( xvar = xvar , **kwargs )
+        ymodel = self.ymodel if self.yvar is yvar else self.ymodel.clone ( xvar = yvar , **kwargs )
+        zmodel = self.zmodel if self.zvar is zvar else self.zmodel.clone ( xvar = zvar , **kwargs )
+        
+        return PDF3.clone ( self ,
+                            name   = name   , 
+                            xmodel = xmodel ,
+                            ymodel = ymodel ,
+                            zmodel = zmodel ,
+                            xvar   = xvar   ,
+                            yvar   = yvar   , 
+                            zvar   = zvar   , **kwargs )
+  
 
     @property
     def xmodel ( self ) :
@@ -195,7 +218,6 @@ class Sum3D (PDF3,Fractions) :
         for f in self.frac_list : self.alist2.add ( f     )
         
         ## finally build PDF
-        pattern  =  '+'.join ( '(%s)' % p.name for p in self.pdfs )
         self.pdf = ROOT.RooAddPdf ( self.new_roo_name ( patname , suffix ) , 
                                     patname        ,
                                     self.alist1    ,
@@ -270,7 +292,7 @@ class Shape3D_pdf(PDF3) :
             'shape'   : self.shape   , 
             'xvar'    : self.xvar    , 
             'yvar'    : self.yvar    , 
-            'zvar'    : self.yvar    , 
+            'zvar'    : self.zvar    , 
             }
         
     @property
@@ -690,7 +712,7 @@ class Fit3D (PDF3) :
             from ostap.fitting.models_2d import make_B2D
             self.__bkg_2xy = make_B2D ( bkg2sy_name , self.xvar , self.yvar , *bkg_2xy )
         elif bkg_2xy :
-            self.__bkg_2xy = self.makePDF2 ( bkg_2xy , xvar = self.xvar , yvar = self.yvar , prefix = 'BKg2XY' , suffix = suffix ) 
+            self.__bkg_2xy = self.make_PDF2 ( bkg_2xy , xvar = self.xvar , yvar = self.yvar , prefix = 'BKg2XY' , suffix = suffix )  [ 0 ]
         else :
             if not self.__bkg_2x : self.__bkg_2x = self.make_bkg ( bkg_2x , self.new_name ( 'Bkg2X_S2B' , suffix ) , self.xvar )    
             if not self.__bkg_2y : self.__bkg_2y = self.make_bkg ( bkg_2y , self.new_name ( 'Bkg2Y_S2B' , suffix ) , self.yvar )                    
@@ -703,7 +725,7 @@ class Fit3D (PDF3) :
             from ostap.fitting.models_2d import make_B2D
             self.__bkg_2xz = make_B2D ( bkg_2xz_name , self.xvar , self.zvar , *bkg_2xz )
         elif bkg_2xz :
-            self.__bkg_2xz = self.makePDF2 ( bkg_2xz , xvar = self.xvar , yvar = self.zvar , prefix = 'BKg2XZ' , suffix = suffix ) [ 0 ]
+            self.__bkg_2xz = self.make_PDF2 ( bkg_2xz , xvar = self.xvar , yvar = self.zvar , prefix = 'BKg2XZ' , suffix = suffix ) [ 0 ]
         else :
             if not self.__bkg_2x : self.__bkg_2x = self.make_bkg ( bkg_2x , self.new_name ( 'Bkg2X_S2B' , suffix ) , self.xvar )    
             if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( bkg_2z , self.new_name ( 'Bkg2Z_S2B' , suffix ) , self.zvar )                                
@@ -716,7 +738,7 @@ class Fit3D (PDF3) :
             from ostap.fitting.models_2d import make_B2D
             self.__bkg_2yz = make_B2D ( bkg_2yz_name , self.yvar , self.zvar , *bkg_2yz )
         elif bkg_2yz :
-            self.__bkg_2yz = self.makePDF2 ( bkg_2yz , xvar = self.yvar , yvar = self.zvar , prefix = 'Bkg2YZ' , suffix = suffix ) [ 0 ] 
+            self.__bkg_2yz = self.make_PDF2 ( bkg_2yz , xvar = self.yvar , yvar = self.zvar , prefix = 'Bkg2YZ' , suffix = suffix ) [ 0 ] 
         else :            
             if not self.__bkg_2y : self.__bkg_2y = self.make_bkg ( bkg_2y , self.new_name ( 'Bkg2Y_S2B' , suffix ) , self.yvar )    
             if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( bkg_2z , self.new_name ( 'Bkg2Z_S2B' , suffix ) , self.zvar )                                
@@ -775,7 +797,7 @@ class Fit3D (PDF3) :
             from ostap.fitting.models_3d import make_B3D 
             self.__bbb_cmp = make_B3D ( bbb_name , self.xvar , self.yvar , self.zvar , *bkg_3D )
         elif bkg_3D :
-            self.__bbb_cmp = self.makePDF2 ( bkg_3D , xvar = self.xvar , yvar = self.yvar , zvar = zvar , prefix = 'BBB' , suffix = suffix )            
+            self.__bbb_cmp = self.make_PDF3 ( bkg_3D , xvar = self.xvar , yvar = self.yvar , zvar = zvar , prefix = 'BBB' , suffix = suffix ) [ 0 ]
         else :
             
             self.__bkg_3x = self.make_bkg ( bkg_3x , self.new_name ( 'Bkg3X_BBB' , suffix ) , self.xvar )
@@ -1424,20 +1446,14 @@ class Fit3DSym (PDF3) :
         self.__bkg_2z = None 
 
         if   bkg_2xy and isinstance ( bkg_2xy , PDF2 ) :
-            
+
+            print ( 'HERE/1' , bkg_2xy ) 
             self.__bkg_2xy = bkg_2xy
-            self.__bkg_2xz = bkg_2xy.clone ( xvar = self.xvar , yvar = self.zvar , name_prefix = 'Bkg2XZ_' , suffix = suffix ) 
-            self.__bkg_3yz = bkg_2xy.clone ( xvar = self.yvar , yvar = self.yvar , name_prefix = 'Bkg2YZ_' , suffix = suffix )
-            
-        elif bkg_2xy and isinstance ( bkg_2xy , ROOT.RooAbsPdf ) :
-            
-            self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar , self.new_name ( 'Bkg2XY' , suffix  ) )
-            self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.new_name ( 'Bkg2XZ' , suffix ) ,
-                                                    xvar = self.xvar             ,
-                                                    yvar = self.zvar             )
-            self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.new_name ( 'Bkg2YZ' , suffix ) ,
-                                                    xvar = self.yvar             ,
-                                                    yvar = self.zvar             )
+            print ( 'HERE/2' , bkg_2xy ) 
+            self.__bkg_2xz = bkg_2xy.clone ( xvar = self.xvar , yvar = self.zvar , name_prefix = 'Bkg2XZ_' , name_suffix = suffix )
+            print ( 'HERE/3' , self.__bkg_2xz  )             
+            self.__bkg_2yz = bkg_2xy.clone ( xvar = self.yvar , yvar = self.zvar , name_prefix = 'Bkg2YZ_' , name_suffix = suffix )
+            print ( 'HERE/3' , self.__bkg_2yz  )             
             
         elif bkg_2xy and isinstance ( bkg_2xy , ( tuple , list ) ) :
 
@@ -1446,14 +1462,14 @@ class Fit3DSym (PDF3) :
             self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.new_name ( 'Bkg2XZ' , suffix ) ,
                                                     xvar = self.xvar             ,
                                                     yvar = self.zvar             )
-            self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.new_name ( 'Bkg2YZ' , suffix ) ,
+            self.__bkg_2yz = self.__bkg_2xy.clone ( name = self.new_name ( 'Bkg2YZ' , suffix ) ,
                                                     xvar = self.yvar             ,
                                                     yvar = self.zvar             )              
         else :
 
-            self.__bkg_2x  = self.make_bkg (        bkg_2x , self.new_name ( 'Bkg2X_S2B' , suffix ) , self.xvar )        
-            self.__bkg_2y  = self.make_bkg ( self.__bkg_2x , self.new_name ( 'Bkg2Y_S2B' , suffix ) , self.yvar )        
-            self.__bkg_2z  = self.make_bkg ( self.__bkg_2x , self.new_name ( 'Bkg2Z_S2B' , suffix ) , self.zvar )
+            self.__bkg_2x  = self.make_bkg (        bkg_2x , self.new_name ( 'Bkg2X_S2B' , suffix ) , xvar = self.xvar )        
+            self.__bkg_2y  = self.make_bkg ( self.__bkg_2x , self.new_name ( 'Bkg2Y_S2B' , suffix ) , xvar = self.yvar )        
+            self.__bkg_2z  = self.make_bkg ( self.__bkg_2x , self.new_name ( 'Bkg2Z_S2B' , suffix ) , xvar = self.zvar )
             
             self.__bkg_2xy = Model2D ( self.new_name ( 'Bkg2XY' , suffix ) ,
                                        self.__bkg_2x     ,
@@ -2202,7 +2218,7 @@ class Fit3DMix (PDF3) :
 
 
         bkg_2yz_name = self.new_name ( 'Bkg2YZ' , suffix )
-        if bkg_2yz and isinstance ( bkh_2yz , (  tuple , list ) ) :
+        if bkg_2yz and isinstance ( bkg_2yz , (  tuple , list ) ) :
             from ostap.fitting.models_2d import make_B2Dsym
             self.__bkg_2yz = make_B2Dsym ( bkg_2yz_name , self.yvar , self.zvar , *bkg_2yz  )            
         elif bkg_2yz:
@@ -2236,19 +2252,16 @@ class Fit3DMix (PDF3) :
             self.__bkg_2xz = bkg_2xy.clone ( name = self.new_name ( 'Bkg2XZ' ,  suffix ) ,
                                              xvar = self.xvar             ,
                                              yvar = self.zvar             )            
-        elif bkg_2xy and isinstance ( bkg_2xy , ROOT.RooAbsPdf ) :            
-            self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar , self.new_name ( 'Bkg2XY' , suffix ) )
-            self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.new_name ( 'Bkg2XZ' , suffix  ) ,
-                                                    xvar = self.xvar         ,
-                                                    yvar = self.zvar         )  
+
         elif bkg_2xy and isinstance ( bkg_2xy ,  ( tuple , list )  ) :
+            
             from ostap.fitting.models_2d import make_B2D
             self.__bkg_2xy = make_B2D ( self.new_name ( 'Bkg2XY' , suffix  ) , self.xvar , self.yvar , *bkg_2xy  )
             self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.new_name ( 'Bkg2XZ' , suffix ) ,
                                                     xvar = self.xvar         ,
                                                     yvar = self.zvar         )          
         else :
-            
+
             if not self.__bkg_2x : self.__bkg_2x = self.make_bkg (        bkg_2x , self.new_name ( 'Bkg2X_S2B' , suffix ) , self.xvar )        
             if not self.__bkg_2y : self.__bkg_2y = self.make_bkg (        bkg_2y , self.new_name ( 'Bkg2Y_S2B' , suffix ) , self.yvar )        
             if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( self.__bkg_2y , self.new_name ( 'Bkg2Z_S2B' , suffix ) , self.zvar )
@@ -2315,11 +2328,11 @@ class Fit3DMix (PDF3) :
         self.__bkg_3yz = None 
 
         bbb_name = self.new_name ( 'BBB' , suffix ) 
-        if bkg_3D and isinstance ( bkg_2D ,  ( tuple , list )  ) :
+        if bkg_3D and isinstance ( bkg_3D ,  ( tuple , list )  ) :
             from ostap.fitting.models_2d import make_B2DmixYZ 
             self.__bbb_cmp = make_B2DmixYZ ( bbb_name , self.xvar , self.yvar , self.zvar , *bkg_3D )
         elif bkg_3D :
-            self__bbb_cmp  = self.make_PDF3 ( bkg_3D ,
+            self.__bbb_cmp = self.make_PDF3 ( bkg_3D ,
                                               xvar   = self.xvar ,
                                               yvar   = self.yvar ,
                                               zvar   = self.zvar ,
@@ -2371,6 +2384,7 @@ class Fit3DMix (PDF3) :
             self.__sbb_cmp.pdf ,
             self.__bbs_cmp.pdf ,
             self.__bbb_cmp.pdf )
+        
         self.alist2 = ROOT.RooArgList (
             self.__sss     ,
             self.__bss     ,
@@ -2433,7 +2447,7 @@ class Fit3DMix (PDF3) :
             ## SBB-terms 
             'bkg_2x'     : self.bkg_2x  ,
             'bkg_2y'     : self.bkg_2y  ,
-            'bkg_2xz'    : self.bkg_2xz ,
+            'bkg_2xy'    : self.bkg_2xy ,
             'bkg_2yz'    : self.bkg_2yz ,
             ## BBB-term
             'bkg_3x'     : self.bkg_3x  ,

@@ -33,6 +33,8 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 
+models = set()
+
 # =============================================================================
 def test_fitting_components2_3D () :
 
@@ -216,13 +218,47 @@ def test_fitting_components2_3D () :
     
     logger.info ( 'Model %s Fit result\n%s ' % ( model.name , r.table ( prefix = '# ' ) ) ) 
 
+
+    
+    models.add  ( sss_cmp )
+    models.add  ( ssb_cmp )
+    models.add  ( bbs_cmp )
+    models.add  ( model   )
+
+    
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+
+    logger = getLogger ( 'test_db' ) 
+    logger.info ( 'Saving all objects into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        for m in models :
+            db['model:' + m.name ] = m
+            db['roo_tot:%s' % m.name ] = m.pdf
+            for i,s in enumerate ( m.signals ) :
+                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+            for i, b in enumerate ( m.backgrounds ) : 
+                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+            for a in m.alist1 : 
+                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
+        db['models'   ] = models
+        db.ls() 
+  
     
 # =============================================================================
 if '__main__' == __name__ :
 
     with timing ( "3dSym-fit" , logger ) :
         test_fitting_components2_3D () 
-        
+
+    ## check finally that everything is serializeable:
+    with timing ('test_db'             , logger ) :
+        test_db ()
+      
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

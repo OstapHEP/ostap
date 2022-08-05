@@ -63,6 +63,9 @@ np     = 20
 dx     = (xmax-xmin)/np 
 points = [ dx * i for i in range ( np + 1 ) ]
 
+
+
+funs = set () 
 # =================================================================================
 ## make comparison table 
 def make_table ( func , title , prefix = "# ") :
@@ -81,7 +84,7 @@ def make_table ( func , title , prefix = "# ") :
         rows.append ( row )
     from ostap.logger.table import table
     return table ( rows , title = title , prefix = prefix ) 
-    
+
 
 # =============================================================================
 # use some PDF to parameterize efficienct
@@ -106,7 +109,11 @@ def test_pdf () :
     
     with wait ( 2 ) , use_canvas ( 'test_pdf' ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
-        
+
+
+    funs.add ( effPdf )
+    funs.add ( eff2   )
+    
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
@@ -140,7 +147,10 @@ def test_vars1 () :
     
     with wait ( 2 ) , use_canvas ( 'test_vars1' ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
-        
+
+    funs.add ( f    ) 
+    funs.add ( eff2 ) 
+
 # =============================================================================
 # use some functions  to parameterize efficiciency
 def test_vars2 () :
@@ -167,6 +177,8 @@ def test_vars2 () :
     with wait ( 2 ) , use_canvas ( 'test_vars2' ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
         
+    funs.add ( f    ) 
+    funs.add ( eff2 ) 
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
@@ -194,6 +206,8 @@ def test_vars3 () :
         with wait ( 2 ) , use_canvas ( 'test_var3_%s' % power  ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
         
+        funs.add ( f      )
+        funs.add ( eff2   )
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
@@ -223,29 +237,54 @@ def test_vars4 () :
     with wait ( 2 ) , use_canvas ( 'test_vars4' ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
     
-    
+    funs.add ( F    )
+    funs.add ( eff2 )
+
+
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+
+    logger = getLogger ( 'test_db' ) 
+    logger.info ( 'Saving all objects into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        db['x'        ] = x  
+        db['varset'   ] = varset
+        db['dataset'  ] = ds 
+        for m in funs :
+            db['funs:'     + m.name ] = m
+            if hasattr ( m , 'fun' ) :
+                db['fun/F:' + m.name ] = m.fun
+        db['funs'   ] = funs
+        db.ls() 
+
 # =============================================================================
 if '__main__' == __name__ :
 
 
     
-    ## with timing ("PDF"   , logger ) :  
-    ##     test_pdf   ()
+    with timing ("PDF"   , logger ) :  
+        test_pdf   ()
         
-    ## with timing ("Vars1" , logger ) :  
-    ##     test_vars1 ()
+    with timing ("Vars1" , logger ) :  
+        test_vars1 ()
         
-    ## with timing ("Vars2" , logger ) :        
-    ##     test_vars2 ()
+    with timing ("Vars2" , logger ) :        
+        test_vars2 ()
         
     with timing ("Vars3" , logger ) :        
         test_vars3 ()
 
-    ## with timing ("Vars4" , logger ) :        
-    ##    test_vars4 ()
+    with timing ("Vars4" , logger ) :        
+       test_vars4 ()
 
-    pass 
-     
+    ## check finally that everything is serializeable:
+    with timing ('test_db'             , logger ) :
+        test_db ()
+
 # =============================================================================
 ##                                                                      The END 
 # ============================================================================= 
