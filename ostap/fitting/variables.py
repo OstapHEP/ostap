@@ -1734,6 +1734,27 @@ _new_methods_ += [
     ROOT.RooArgList .__reduce__ ,
     ]
 
+if not hasattr ( ROOT.RooGaussian 'getX' ) :
+    def _rgau_x_ ( pdf ) :
+        """Get x-observable"""
+        return Ostap.MoreRooFit.getX ( pdf )
+    ROOT.RooGaussian.getX = _rgau_x_
+    _new_methods_ += [ ROOT.RooGaussian.getX ]
+
+if not hasattr ( ROOT.RooGaussian 'getMean' ) :
+    def _rgau_mean_ ( pdf ) :
+        """Get x-observable"""
+        return Ostap.MoreRooFit.getMean ( pdf )
+    ROOT.RooGaussian.getMean = _rgau_mean_
+    _new_methods_ += [ ROOT.RooGaussian.getMean ]
+
+if not hasattr ( ROOT.RooGaussian 'getSigma' ) :
+    def _rgau_sigma_ ( pdf ) :
+        """Get sigma"""
+        return Ostap.MoreRooFit.getSigma ( pdf )
+    ROOT.RooGaussian.getSigma = _rgau_sigma_
+    _new_methods_ += [ ROOT.RooGaussian.getSigma ]
+
 # ==========================================================================--
 ## reduce  RooGaussian object 
 def _rgau_reduce_ ( pdf ) :

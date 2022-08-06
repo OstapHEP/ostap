@@ -8,6 +8,7 @@
 #include "RooConstVar.h"
 #include "RooAddPdf.h"
 #include "RooRecursiveFraction.h"
+#include "RooGaussian.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -124,6 +125,24 @@ namespace
     }
     // ========================================================================
   } ;
+  // ========================================================================
+  class FakeGaussian : public RooGaussian 
+  {
+  public: 
+    // ======================================================================
+    FakeGaussian ( const RooGaussian& pdf , const char* newname = 0) 
+      : RooGaussian ( pdf , newname ) 
+    {}
+    /// virtual desttructor 
+    virtual ~FakeGaussian() {}
+    // ========================================================================
+  public: 
+    // ========================================================================
+    const RooAbsReal& get_x     () const { return x     .arg() ; }
+    const RooAbsReal& get_mean  () const { return mean  .arg() ; }
+    const RooAbsReal& get_sigma () const { return sigma .arg() ; }
+    // ========================================================================
+  } ;  
   // ==========================================================================
 } //                                             The end of anonymous namespace 
 // ============================================================================
@@ -676,6 +695,47 @@ RooArgList Ostap::MoreRooFit::fractions
   return fractions ( pdf , recursive ) ;
 }
 // ============================================================================
+/* get x-observable
+ *  @see RooGauissian
+ */
+// ============================================================================
+const RooAbsReal& Ostap::MoreRooFit::getX ( const RooGaussian& pdf ) 
+{
+#if ROOT_VERSION(6,26,0)<=ROOT_VERSION_CODE
+  return pdf.getX() ;
+#else 
+  std::unique_ptr<::FakeGaussian> fake { new ::FakeGaussian ( pdf ) } ;
+  return fake->get_x() ;
+#endif 
+}
+// ============================================================================
+/*  get mean value 
+ *  @see RooGauissian
+ */
+// ============================================================================
+const RooAbsReal& Ostap::MoreRooFit::getMean ( const RooGaussian& pdf ) 
+{
+#if ROOT_VERSION(6,26,0)<=ROOT_VERSION_CODE
+  return pdf.getMean() ;
+#else 
+  std::unique_ptr<::FakeGaussian> fake { new ::FakeGaussian ( pdf ) } ;
+  return fake->get_mean() ;
+#endif 
+}
+// ============================================================================
+/*  get sigma 
+ *  @see RooGauissian
+ */
+// ============================================================================
+const RooAbsReal& Ostap::MoreRooFit::getSigma ( const RooGaussian& pdf ) 
+{
+#if ROOT_VERSION(6,26,0)<=ROOT_VERSION_CODE
+  return pdf.getSigma() ;
+#else 
+  std::unique_ptr<::FakeGaussian> fake { new ::FakeGaussian ( pdf ) } ;
+  return fake->get_sigma() ;
+#endif 
+}
 
 // ============================================================================
 //                                                                      The END 

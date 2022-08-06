@@ -6,6 +6,7 @@
   1. more owrisk on easy serialization.  Now we can bypass standard serialization fro almost 
      all important Ostap classes.    
   1. make Model2D & Model3D PDFS more safe 
+  1. fix `RooGaussian` serialization fo rOLD version of ROOT 
 
 ## Backward incompatible:  
 

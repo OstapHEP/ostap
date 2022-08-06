@@ -20,6 +20,7 @@
 // ============================================================================
 class RooAddPdf   ; // ROOT,RooFit 
 class RooProdPdf  ; // ROOT,RooFit 
+class RooGaussian ; // ROOT,RooFit 
 // ============================================================================
 namespace Ostap 
 {
@@ -499,6 +500,21 @@ namespace Ostap
      */
     RooArgList fractions
     ( const RooAddPdf& pdf       ) ;
+    // ========================================================================
+    /** get x-observable
+     *  @see RooGauissian
+     */
+    const RooAbsReal& getX    ( const RooGaussian& pdf ) ;
+    // ========================================================================
+    /** get mean value 
+     *  @see RooGauissian
+     */
+    const RooAbsReal& getMean ( const RooGaussian& pdf ) ;
+    // ========================================================================
+    /** get sigma 
+     *  @see RooGauissian
+     */
+    const RooAbsReal& getSigma ( const RooGaussian& pdf ) ;
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit
   // ==========================================================================
