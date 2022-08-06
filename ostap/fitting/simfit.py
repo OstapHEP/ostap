@@ -27,54 +27,12 @@ from   ostap.fitting.fithelpers import VarMaker
 from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf , 
                                          PDF2 , Generic2D_pdf , 
                                          PDF3 , Generic3D_pdf )
+import ostap.fitting.variables 
 import ROOT, math,  random , warnings 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.simfit' )
 else                       : logger = getLogger ( __name__               )
-# =============================================================================
-## redefine ROOT.RooCategory constructor to define the categories
-#  @code
-#  sample = ROOT.RooCategory('sample','fitting sample', 'signal' , 'control' )
-#  @endcode
-def _rc_init_ ( self , name , title , *categories ) :
-    """Modified ROOT.RooCategory constructor to define the categories
-    >>> sample = ROOT.RooCategory('sample','fitting sample', 'signal' , 'control' )
-    """
-    ROOT.RooCategory._old_init_ ( self , name ,  title )
-    for c in categories : self.defineType ( c )
-
-if not hasattr ( ROOT.RooCategory , '_old_init_' ) :
-    ROOT.RooCategory._old_init_ = ROOT.RooCategory.__init__
-    ROOT.RooCategory.__init__   = _rc_init_     
-    
-# =============================================================================
-## Get the list/tuple of categories 
-#  @code
-#  cat = ....
-#  labels = cat.labels ()
-#  @endcode
-#  @see RooCategory
-def _rc_labels_ ( self ) :
-    """Get the list/tuple of categories
-    >>> cat = ....
-    >>> labels = cat.labels()
-    """
-    _iter = Ostap.Utils.Iterator ( self.typeIterator() )
-    _icat = _iter.Next()
-
-    labs = [] 
-    while _icat  :
-
-        labs.append ( _icat.GetName() )
-        _icat = _iter.Next() 
-        
-    del _iter
-
-    return tuple ( labs ) 
-
-    
-ROOT.RooCategory.labels = _rc_labels_
 
 # =============================================================================
 ## Create combined dataset for simultaneous fit
@@ -620,6 +578,8 @@ class SimFit (VarMaker) :
         >>> pdfB   = ... ## pdf for the sample 'B'
         >>> simfit = SimFit (  sample , { 'A' : pdfA , 'B' : pdfB } )
         """
+
+        self.__categories   = {}
         
         if isinstance ( sample , ( tuple , list ) ) :
             _cat = ROOT.RooCategory ( 'sample' , 'sample' )
@@ -637,7 +597,6 @@ class SimFit (VarMaker) :
         self.name = name
         
         self.__sample       = sample 
-        self.__categories   = {}
 
         # =====================================================================
         ## components
@@ -749,7 +708,12 @@ class SimFit (VarMaker) :
     def pdf     ( self ) :
         "'pdf'  : the actual PDF with RooSimultaneous "
         return self.__pdf
-    
+
+    @property
+    def simpdf  ( self ) :
+        """'simpdf' : the actual RooSimultaneous instance """
+        return self.__pdf.pdf 
+        
     @property
     def samples ( self ) :
         "'samples' : list/tuple of known categories"
@@ -790,14 +754,16 @@ class SimFit (VarMaker) :
         """
         return self.pdf.draw_option ( key , default , **kwargs ) 
 
-    # =========================================================================
-    ## delegate  attribute search to the components 
-    def __getattr__ ( self , attr ) :
-        """Delegate attribute search to the category components
-        """
-        if attr in self.samples : return self.components[attr]
+    ## # =========================================================================
+    ## ## delegate  attribute search to the components 
+    ## def __getattr__ ( self , attr ) :
+    ##     """Delegate attribute search to the category components
+    ##     """
+    ##     print ( 'CHECKIING', attr ) 
+    ##     if attr in self.__categories :
+    ##         return self.__categories[attr]
         
-        raise  AttributeError('Unknown attibute %s' % attr )
+    ##     raise  AttributeError('Unknown attibute %s' % attr )
 
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
@@ -1318,14 +1284,6 @@ class SimFit (VarMaker) :
         return self.pdf.graph_profile ( *args , **kwargs )
          
     
-# =============================================================================
-_decorated_classes_  = (
-    ROOT.RooCategory , 
-    )
-_new_methods_        = (
-    ROOT.RooCategory.__init__ ,
-    ROOT.RooCategory.labels   ,
-    )
 # =============================================================================
 if '__main__' == __name__ :
     

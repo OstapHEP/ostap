@@ -82,10 +82,13 @@ for i in range (NB2 ) :
         mass.setVal ( v2 )
         dataset2.add ( varset2 )
 
+sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
+
 models = set() 
 # =============================================================================
 def test_simfit1 () :
-
+## if 1 < 2 :
+    
     logger = getLogger( 'test_simfit1' )
     
     signal1  = Models.Gauss_pdf ( 'G1'                 ,
@@ -129,7 +132,6 @@ def test_simfit1 () :
     
     ## combine data
     
-    sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
     
     ## combine datasets
     from ostap.fitting.simfit import combined_data 
@@ -155,8 +157,14 @@ def test_simfit1 () :
         with wait ( 1 ) : 
             fB = model_sim.draw ( 'B' , dataset , nbins = 50 )            
 
-    models.add ( model1 )
-    models.add ( model2 )
+    models.add ( model1        )
+    models.add ( model2        )
+    models.add ( model_sim     )
+    models.add ( model_sim.pdf )
+    
+    for k in model_sim.categories : models.add ( model_sim.categories[k] )
+    for k in model_sim.drawpdfs   : models.add ( model_sim.drawpdfs  [k] )
+        
     
 # =============================================================================
 ## check that everything is serializable
@@ -172,20 +180,22 @@ def test_db() :
         db['vars2'    ] = varset2
         db['dataset1' ] = dataset1
         db['dataset2' ] = dataset2
+        db['sample'   ] = sample 
         for m in models :
-            db['model:' + m.name ] = m
+            db['model:'     + m.name ] = m
             db['roo_tot:%s' % m.name ] = m.pdf
-            for i,s in enumerate ( m.signals ) :
-                db['roo_sig%d:%s' % ( i , m.name ) ] = s
-            for i, b in enumerate ( m.backgrounds ) : 
-                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
-            for a in m.alist1 : 
-                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
+            ## for i,s in enumerate ( m.signals ) :
+            ##    db['roo_sig%d:%s' % ( i , m.name ) ] = s
+            ##for i, b in enumerate ( m.backgrounds ) : 
+            ##    db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+            ##for a in m.alist1 : 
+            ##    db['cmp:%s/%s' % ( m.name , a.name ) ] = a
         db['models'  ] = models
         db.ls()
 
 # =============================================================================
 if '__main__' == __name__ :
+
 
     with timing( "simfit-1" ,   logger ) :  
         test_simfit1 ()

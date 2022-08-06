@@ -59,6 +59,7 @@ def root_store_factory ( klass , *params ) :
     obj.__store = params    ## Attention - keep argumetns with newly crfeated object!
     return obj 
 
+
 # =============================================================================
 ## fix parameter at some value
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -698,6 +699,85 @@ def _rar_name_ ( vname ) :
     #
     return vname 
 
+# ==============================================================================
+##   Categories
+# ==============================================================================
+
+# =============================================================================
+## redefine ROOT.RooCategory constructor to define the categories
+#  @code
+#  sample = ROOT.RooCategory('sample','fitting sample', 'signal' , 'control' )
+#  @endcode
+def _rc_init_ ( self , name , title , *categories , **kwargs) :
+    """Modified ROOT.RooCategory constructor to define the categories
+    >>> sample = ROOT.RooCategory('sample','fitting sample', 'signal' , 'control' )
+    """
+    ROOT.RooCategory._old_init_ ( self , name ,  title )
+    for c in categories : self.defineType ( c )
+    for k in kwargs :
+        self.defineType ( k , kwargs[k] )
+        
+if not hasattr ( ROOT.RooCategory , '_old_init_' ) :
+    ROOT.RooCategory._old_init_ = ROOT.RooCategory.__init__
+    ROOT.RooCategory.__init__   = _rc_init_     
+
+# ==============================================================================
+## factory for RooCategory objects
+#  @see RooCategory
+def _rcat_factory_  ( klass , name , title , states ) :
+    """factory for `ROOT.RooCategory` objects
+    - see `ROOT.RooCategory`
+    """
+    cat = klass ( name , title )
+    for k,v in states : cat.defineType ( k , v )
+    return cat
+
+# =============================================================================
+## redcue RooCategory instance 
+#  @see RooCategory
+def _rcat_reduce_ ( cat ) :
+
+    states = []
+    for k , v in cat.states() : states.append ( ( k , v ) ) 
+    states = tuple ( states )
+    
+    return _rcat_factory_ , ( type ( cat ) , cat.GetName() , cat.GetTitle() , states ) 
+
+ROOT.RooCategory.__reduce__ = _rcat_reduce_ 
+
+
+# =============================================================================
+## Get the list/tuple of categories 
+#  @code
+#  cat = ....
+#  labels = cat.labels ()
+#  @endcode
+#  @see RooCategory
+def _rc_labels_ ( self ) :
+    """Get the list/tuple of categories
+    >>> cat = ....
+    >>> labels = cat.labels()
+    """
+    _iter = Ostap.Utils.Iterator ( self.typeIterator() )
+    _icat = _iter.Next()
+
+    labs = [] 
+    while _icat  :
+
+        labs.append ( _icat.GetName() )
+        _icat = _iter.Next() 
+        
+    del _iter
+
+    return tuple ( labs ) 
+    
+ROOT.RooCategory.labels = _rc_labels_
+
+_new_methods_       += [
+    ROOT.RooCategory.__init__   ,
+    ROOT.RooCategory.labels     ,
+    ROOT.RooCategory.__reduce__ ,
+    ]
 # ==============================================================================
 ## convert two yields into "total yield" and "ratio"
 #  @code
@@ -1875,6 +1955,36 @@ ROOT.RooFFTConvPdf.__reduce__ = _rfft_reduce_
 
 _new_methods_ += [
     ROOT.RooFFTConvPdf.__reduce__ 
+    ]
+
+# =============================================================================
+## Factory for RooSimultaneous
+#  @see RooSimultaneous 
+def _rsim_factory_ ( klass , args , catlst ) :
+    """Factory for `ROOT.RooSimultaneous` 
+    - see `ROOT.Simultaneous`
+    """
+    pdf = klass ( *args )
+    for l , p in catlst : pdf.addPdf ( p , l ) 
+    return pdf
+
+# ================================================================================
+## Reduce RooSimultaneous object
+#  @see RooSimultaneous 
+def _rsim_reduce_ ( pdf ) :
+    """Reduce RooSimultaneous object
+    -see RooSimultaneous 
+    """
+    cat    = pdf.indexCat()
+    labels = cat.labels()
+    catlst = tuple ( ( l , pdf.getPdf(l) ) for l in labels )
+    args   = pdf.name , pdf.title , cat 
+    return _rsim_factory_ , ( type ( pdf ) , args , catlst ) 
+
+ROOT.RooSimultaneous.__reduce__  = _rsim_reduce_ 
+
+_new_methods_ += [
+    ROOT.RooSimultaneous.__reduce__ 
     ]
 
 ## # =============================================================================
@@ -3246,6 +3356,8 @@ _decorated_classes_ = (
     ##
     ROOT.RooArgSet                ,
     ROOT.RooArgList               ,
+    ##
+    ROOT.RooCategory              ,
 )
 
 _new_methods_ = tuple ( _new_methods_ ) 

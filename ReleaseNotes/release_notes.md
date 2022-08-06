@@ -8,6 +8,7 @@
   1. make Model2D & Model3D PDFS more safe 
   1. fix `RooGaussian` serialization fo rOLD version of ROOT 
   1. add serialization for `RooFFTConvPdf` instances
+  1. add serialization for `RooSimultaneous` instances
 
 ## Backward incompatible:  
 
