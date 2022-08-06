@@ -18,9 +18,10 @@
 // ============================================================================
 /// froward declarations 
 // ============================================================================
-class RooAddPdf   ; // ROOT,RooFit 
-class RooProdPdf  ; // ROOT,RooFit 
-class RooGaussian ; // ROOT,RooFit 
+class RooAddPdf     ; // ROOT,RooFit 
+class RooProdPdf    ; // ROOT,RooFit 
+class RooGaussian   ; // ROOT,RooFit 
+class RooFFTConvPdf ; // ROOT,RooFit 
 // ============================================================================
 namespace Ostap 
 {
@@ -515,6 +516,14 @@ namespace Ostap
      *  @see RooGauissian
      */
     const RooAbsReal& getSigma ( const RooGaussian& pdf ) ;
+    // ========================================================================
+    /** get parameters from RooFFTConvPdf 
+     *  @see RooFFTConvPdf 
+     */
+    std::vector<const RooAbsReal*> get_pars 
+    ( const RooFFTConvPdf& pdf    , 
+      double&              shift1 ,
+      double&              shift2 ) ;
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit
   // ==========================================================================

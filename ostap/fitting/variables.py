@@ -1734,21 +1734,21 @@ _new_methods_ += [
     ROOT.RooArgList .__reduce__ ,
     ]
 
-if not hasattr ( ROOT.RooGaussian 'getX' ) :
+if not hasattr ( ROOT.RooGaussian , 'getX' ) :
     def _rgau_x_ ( pdf ) :
         """Get x-observable"""
         return Ostap.MoreRooFit.getX ( pdf )
     ROOT.RooGaussian.getX = _rgau_x_
     _new_methods_ += [ ROOT.RooGaussian.getX ]
 
-if not hasattr ( ROOT.RooGaussian 'getMean' ) :
+if not hasattr ( ROOT.RooGaussian , 'getMean' ) :
     def _rgau_mean_ ( pdf ) :
         """Get x-observable"""
         return Ostap.MoreRooFit.getMean ( pdf )
     ROOT.RooGaussian.getMean = _rgau_mean_
     _new_methods_ += [ ROOT.RooGaussian.getMean ]
 
-if not hasattr ( ROOT.RooGaussian 'getSigma' ) :
+if not hasattr ( ROOT.RooGaussian , 'getSigma' ) :
     def _rgau_sigma_ ( pdf ) :
         """Get sigma"""
         return Ostap.MoreRooFit.getSigma ( pdf )
@@ -1837,6 +1837,44 @@ _new_methods_ += [
     ROOT.RooAddPdf   . orig_fracs  ,
     ROOT.RooProdPdf  .__reduce__   ,
     ROOT.RooProdPdf  . conditional ,
+    ]
+
+# =============================================================================
+## Factory for RooFFTConfPdf 
+#  @see RooFFTConfPdf 
+def _rfft_factory_ ( klass , args , params ) :
+    """Factory for `ROOT.RooFFTConvPdf` 
+    - see `ROOT.RooFFTConvPdf`
+    """
+    pdf = klass ( *args )
+    bs , bf , s1 , s2 = params
+    pdf.setBufferStrategy ( bs )
+    pdf.setBufferFraction ( bf )
+    pdf.setShift ( s1 , s2 ) 
+    return pdf
+
+# =============================================================================
+## reduce RooFFTConvPdf
+#  @see RooFFTConvPdf 
+def _rfft_reduce_ ( pdf ) :
+
+    s1 = ctypes.c_double ( 0 )
+    s2 = ctypes.c_double ( 0 )
+
+    pars   = Ostap.MoreRooFit.get_pars ( pdf , s1 , s2 )
+    
+    args   = ( pdf.name , pdf.title )  + \
+             tuple ( p for p in pars ) + \
+             ( pdf.getInterpolationOrder() , ) 
+    
+    params =  pdf.bufferStrategy() , pdf.bufferFraction() , s1.value , s2.value
+
+    return _rfft_factory_ , ( type ( pdf ) , args , params )
+    
+ROOT.RooFFTConvPdf.__reduce__ = _rfft_reduce_ 
+
+_new_methods_ += [
+    ROOT.RooFFTConvPdf.__reduce__ 
     ]
 
 ## # =============================================================================

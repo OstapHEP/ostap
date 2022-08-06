@@ -7,6 +7,7 @@
      all important Ostap classes.    
   1. make Model2D & Model3D PDFS more safe 
   1. fix `RooGaussian` serialization fo rOLD version of ROOT 
+  1. add serialization for `RooFFTConvPdf` instances
 
 ## Backward incompatible:  
 
