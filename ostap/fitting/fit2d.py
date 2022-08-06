@@ -107,10 +107,10 @@ class Model2D(PDF2) :
         else :
 
             if xvar is self.xvar : xmodel = self.xmodel
-            else                 : self.xmodel.clone ( xvar = xvar , **kwargs )
+            else                 : xmodel = self.xmodel.clone ( xvar = xvar , **kwargs )
 
-            if yvar is sef.yvar : ymodel = self.ymodel
-            else                : self.ymodel.clone ( xvar = yvar , **kwargs )
+            if yvar is self.yvar : ymodel = self.ymodel
+            else                 : ymodel = self.ymodel.clone ( xvar = yvar , **kwargs )
             
         return PDF2.clone ( self ,
                             name   = name   , 
