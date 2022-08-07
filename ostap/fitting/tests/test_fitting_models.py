@@ -1794,9 +1794,9 @@ if '__main__' == __name__ :
     with timing ('test_genhyperbolic'     , logger ) :
         test_genhyperbolic     () 
         
-    ## ## Hypatia                                     + background 
-    ## with timing ('test_hypatia'           , logger ) :
-    ##    test_hypatia           ()
+    ## Hypatia                                     + background 
+    with timing ('test_hypatia'           , logger ) :
+        test_hypatia           ()
 
     ## Voigt profile                             + background
     with timing ('test_voigt'          , logger ) :

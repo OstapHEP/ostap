@@ -520,8 +520,9 @@ namespace Ostap
     /** get parameters from RooFFTConvPdf 
      *  @see RooFFTConvPdf 
      */
-    std::vector<const RooAbsReal*> get_pars 
-    ( const RooFFTConvPdf& pdf    , 
+    RooArgList 
+    fft_pars 
+    ( const RooFFTConvPdf& pdf    ,
       double&              shift1 ,
       double&              shift2 ) ;
     // ========================================================================

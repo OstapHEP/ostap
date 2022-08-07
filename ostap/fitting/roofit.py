@@ -24,11 +24,12 @@ __all__     = (
 from   ostap.core.core              import Ostap, VE
 from   ostap.fitting.variables      import SETVAR, FIXVAR  
 import ostap.fitting.roocollections
+import ostap.fitting.rooreduce 
 import ostap.fitting.roofitresult
 import ostap.fitting.printable
 import ostap.fitting.roocmdarg   
 from   ostap.fitting.dataset        import setStorage, useStorage
-from   ostap.core.ostap_types       import integer_types 
+from   ostap.core.ostap_types       import integer_types
 import ROOT, random, math 
 # =============================================================================
 # logging 

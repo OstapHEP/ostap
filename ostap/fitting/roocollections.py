@@ -502,7 +502,43 @@ class  KeepArgs(object) :
         for i in self.__content : self.__old_list.add ( i )
         ##
         self.__old_list = None 
-    
+
+
+
+# =============================================================================
+__item_store = set() 
+# =============================================================================
+## Unpickle RooArgList/RooArgSet
+#  @attention it stores the constructore arguments  in the local store 
+#  @see RooArgList
+def _rac_factory ( klass , *args ) :
+    """ Unpickle RooArgList/RooArgSet  instance
+    0 attention: it stores the constructore arguments  in the local store 
+    """
+    c = klass () 
+    for a in args : c.add ( a )
+    __item_store.add ( args ) 
+    return c
+# =============================================================================
+## reduce `RooArgList`
+def _ral_reduce_ ( rac ) :
+    """Reduce `RooArgList` instances"""    
+    return _rac_factory, ( ROOT.RooArgList, ) + tuple ( a for a in rac ) 
+
+# =============================================================================
+## reduce `RooArgSet`
+def _ras_reduce_ ( rac ) :
+    """Reduce `RooArgSet` instances"""    
+    return _rac_factory, ( ROOT.RooArgSet, ) + tuple ( a for a in rac )  
+
+ROOT.RooArgSet  .__reduce__ = _ras_reduce_
+ROOT.RooArgList .__reduce__ = _ral_reduce_
+
+_new_methods_ += [
+    ROOT.RooArgSet  .__reduce__ , 
+    ROOT.RooArgList .__reduce__ ,
+    ]
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooArgSet        , 

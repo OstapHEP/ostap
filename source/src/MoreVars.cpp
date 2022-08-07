@@ -10,6 +10,7 @@
 #include "RooRecursiveFraction.h"
 #include "RooGaussian.h"
 #include "RooFFTConvPdf.h"
+#include "RooArgList.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -157,21 +158,20 @@ namespace
     // ========================================================================
   public:
     // ========================================================================
-    std::vector<const RooAbsReal*> 
-    get_pars
+    RooArgList 
+    getpars
     ( double&              shift1 ,
       double&              shift2 ) const 
     {
       shift1 = _shift1 ;
       shift2 = _shift2 ;      
-      std::vector<const RooAbsReal*> result {} ;
-      if ( _xprime.absArg() ) { result.push_back ( &_xprime.arg () ) ; }
-      result.push_back ( &_x.arg      () ) ;
-      result.push_back ( &_pdf1.arg   () ) ;
-      result.push_back ( &_pdf2.arg   () ) ;
+      RooArgList result {} ;
+      if ( _xprime.absArg() ) { result.add ( _xprime.arg() ) ; }
+      result.add ( _x.arg      () ) ;
+      result.add ( _pdf1.arg   () ) ;
+      result.add ( _pdf2.arg   () ) ;
       return result ;
     }
-    
   } ;  
   // ==========================================================================
 } //                                             The end of anonymous namespace 
@@ -771,17 +771,15 @@ const RooAbsReal& Ostap::MoreRooFit::getSigma ( const RooGaussian& pdf )
  *  @see RooFFTConvPdf 
  */
 // ==========================================================================
-std::vector<const RooAbsReal*> 
-Ostap::MoreRooFit::get_pars 
+RooArgList 
+Ostap::MoreRooFit::fft_pars 
 ( const RooFFTConvPdf& pdf    , 
   double&              shift1 ,
   double&              shift2 ) 
 {
-  std::unique_ptr<::FakeFFTConvPdf> fake { new ::FakeFFTConvPdf ( pdf ) } ;
-  return fake->get_pars ( shift1 , shift2 ) ; 
+  std::unique_ptr<::FakeFFTConvPdf> fake { new ::FakeFFTConvPdf ( pdf , "QUQU") } ;
+  return fake->getpars ( shift1 , shift2 ) ; 
 }
-
-
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

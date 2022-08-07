@@ -9,7 +9,8 @@
   1. fix `RooGaussian` serialization fo rOLD version of ROOT 
   1. add serialization for `RooFFTConvPdf` instances
   1. add serialization for `RooSimultaneous` instances
-
+  1. make RooCategory more uniform "interface" for RooCategory 
+  1. split varibales.py into `variables`.py and `rooreduce.py` 
 ## Backward incompatible:  
 
 ## Bug fixes:

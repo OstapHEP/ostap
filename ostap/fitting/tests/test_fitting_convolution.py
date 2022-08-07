@@ -88,10 +88,15 @@ def test_db() :
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
+    print ( 'START/1')   
     with timing('Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        print ( 'START/2')   
         for  i , m in enumerate ( models ) :
+            print ( 'MODEL:i,m=', i , m )   
             db['model/%-2d: %s' % ( i , m.name ) ] = m 
-            db['roo/%-2d: %s'   % ( i , m.name ) ] = m.pdf 
+            print ( 'PDF:i,m=', i , m )   
+            db['roo/%-2d: %s'   % ( i , m.name ) ] = m.pdf
+        print ( 'AFTER' ) 
         db['models'   ] = models
         db.ls() 
 
