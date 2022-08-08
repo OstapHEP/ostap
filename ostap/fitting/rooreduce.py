@@ -558,6 +558,49 @@ def _reff_reduce_ ( pdf ) :
 
 ROOT.RooEfficiency.__reduce__  = _reff_reduce_ 
 
+
+# ================================================================================
+## deserialize RooFitResult
+#  @see RooFitResult
+#  @see Ostap::Utils::FitResults
+def _rrfr_factory_ ( klass , *args ) :
+    """Deserialize RooFitResult
+    - see `ROOT.RooFitResult`
+    - see `Ostap.Utils.FitResults`
+    """
+    ## create 
+    nr = klass ( *args [:-1] )
+    history = args[-1]
+    for label , code in history : nr.add_to_history ( label , code ) 
+    result = ROOT.RooFitResult ( nr )
+    result.__args = args 
+    return result 
+   
+# ================================================================================
+## Reduce RooFitResult
+#  @see RooFitResult
+def _rrfr_reduce_ ( res ) :
+    """ Reduce `RooFitResult`
+    - see `ROOT.RooFitResult`
+    """
+    nr      = Ostap.Utils.FitResults ( res )
+    content = type ( nr )     , res.name , res.title, \
+              res.constPars() , res.floatParsInit() , res.floatParsFinal()
+  
+    gcc = nr.global_cc()    
+    if 0 < len ( gcc ) : content += ( gcc , res.correlationMatrix() , res.covarianceMatrix () ) 
+    else               : content += ( res.covarianceMatrix (), )
+    
+    history = tuple ( ( nr.statusLabelHistory(i) ,nr.statusCodeHistory(i) ) \
+                      for i in range ( nr.numStatusHistory () ) )
+    
+    content += nr.status () , nr.covQual()        , nr.minNll() , \
+               nr.edm    () , nr.numInvalidNLL () , history 
+
+    return _rrfr_factory_ , content 
+
+ROOT.RooFitResult.__reduce__  = _rrfr_reduce_ 
+    
 ## # =============================================================================
 ## ## reduce BreitWigner
 ## def _rbw_reduce_ ( pdf ):
@@ -1871,6 +1914,7 @@ _decorated_classes_ = (
     ROOT.RooFFTConvPdf                 , 
     ROOT.RooSimultaneous               , 
     ROOT.RooEfficiency                 , 
+    ROOT.RooFitResult                  , 
     ## Ostap classes 
     Ostap.MoreRooFit.TwoVars           , 
     Ostap.MoreRooFit.Addition          , 

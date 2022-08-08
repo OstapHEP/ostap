@@ -90,7 +90,8 @@ S = model_gauss.S
 B = model_gauss.B
 
 
-stats = {} 
+stats   = {}
+results = [] 
 # =============================================================================
 def make_print ( pdf , fitresult , title , logger = logger ) :
 
@@ -179,6 +180,7 @@ def test_gauss() :
     make_print ( model , result , 'Simple Gaussian model' , logger )
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## CrystalBall PDF
@@ -212,6 +214,7 @@ def test_crystalball () :
     make_print ( model , result , 'Crystal Ball model' , logger )
                       
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## right side CrystalBall PDF
@@ -247,6 +250,7 @@ def test_crystalball_RS () :
     make_print ( model , result , '(Right-side) Crystal Ball model' , logger )
     
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## double sided CrystalBall PDF
@@ -283,6 +287,7 @@ def test_crystalball_DS () :
     make_print ( model, result , 'Double-sided Crystal Ball model' , logger )
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Needham PDF
@@ -311,6 +316,7 @@ def test_needham() :
     make_print ( model , result , 'Needham model' , logger )
 
     models.add ( model )
+    results.append ( result  )
 
 # ==========================================================================
 ## Apollonios
@@ -342,6 +348,7 @@ def test_apollonios () :
     make_print ( model , result , 'Apollonios model' , logger )
 
     models.add ( model )
+    results.append ( result  )
 
 # ==========================================================================
 ## Apollonios2
@@ -376,6 +383,7 @@ def test_apollonios2() :
     make_print ( model, result , 'Apollonios2 model' , logger )
         
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Bifurcated gauss PDF
@@ -407,6 +415,7 @@ def test_bifurcated () :
     make_print ( model , result , 'Bifurcated Gaussian model' , logger )
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Double gauss PDF
@@ -440,6 +449,7 @@ def test_2gauss () :
     make_print ( model , result , 'Double Gaussian model' , logger )
         
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## GenGaussV1
@@ -474,6 +484,7 @@ def test_gengauss_v1 () :
     make_print ( model , result , 'Generalized Gaussian V1 model' , logger )
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## GenGaussV2
@@ -507,6 +518,7 @@ def test_gengauss_v2 () :
     make_print ( model , result , 'Generalized Gaussian V2 model' , logger )
     
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## SkewGauss
@@ -536,6 +548,7 @@ def test_skewgauss() :
     make_print ( model , result , 'Skew  Gaussian model' , logger )
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## qGauss
@@ -572,6 +585,7 @@ def test_qgauss () :
     make_print ( model , result , 'q-Gaussian model' , logger )
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Novosibirs
@@ -607,6 +621,7 @@ def test_novosibirsk () :
     make_print ( model , result , 'Novisibirsk model' , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Bukin
@@ -648,6 +663,7 @@ def test_bukin() :
     make_print ( model , result , 'Bukin (modified Novosibirsk) model' , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## StudentT
@@ -678,6 +694,7 @@ def test_studentT () :
     make_print ( model , result , "Student's t-distribution" , logger )
     
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Bifurcated StudentT
@@ -712,6 +729,7 @@ def test_bifstudentT():
     make_print ( model , result , "Bifurcated Student's t-distribution" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # ==========================================================================
 ## PearsonIV 
@@ -753,6 +771,7 @@ def test_PearsonIV () :
     make_print ( model , result , "Pearson Type IV distribution" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Test  SinhAsinh-Distribution
@@ -792,6 +811,7 @@ def test_sinhasinh() :
     make_print ( model , result , "Sinh-asinh model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Test  JohnsonSU-Distribution
@@ -826,6 +846,7 @@ def test_johnsonSU () :
     make_print ( model, result , "Johnson's SU model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Test  ATLAS
@@ -859,6 +880,7 @@ def test_atlas () :
     make_print ( model , result , "ATLAS/ZEUS model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
        
 # ==========================================================================
 ## Das
@@ -896,6 +918,7 @@ def test_das_1 () :
     make_print ( model , result , "Das model (1) " , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # ==========================================================================
 ## Das
@@ -932,6 +955,7 @@ def test_das_2 () :
     make_print ( model , result , "Das model (2) " , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # ==========================================================================
 ## Hat
@@ -967,6 +991,7 @@ def test_hat  () :
     models.add ( model )
 
     signal.mean.release() 
+    results.append ( result  )
 
 # ==========================================================================
 ## Up
@@ -1004,6 +1029,7 @@ def test_up  () :
     models.add ( model )
 
     signal.mean.release() 
+    results.append ( result  )
 
 # ==========================================================================
 ## FupN
@@ -1043,6 +1069,7 @@ def test_fupn  () :
         
         models.add ( model )
         signal.mean.release() 
+        results.append ( result  )
 
 # =============================================================================
 ## Test  SECH
@@ -1074,6 +1101,7 @@ def test_sech() :
     make_print ( model , result , "Sech model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Test  LOGISTIC
@@ -1105,6 +1133,7 @@ def test_logistic () :
     make_print ( model , result , "Logistic  model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Test  LOSEV
@@ -1137,6 +1166,7 @@ def test_losev() :
     make_print ( model , result , "Losev  model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Slash
@@ -1170,6 +1200,7 @@ def test_slash():
     make_print ( model , result , "Slash model" , logger )
     
     models.add ( model )
+    results.append ( result  )
 
 
 # =============================================================================
@@ -1202,6 +1233,7 @@ def test_raisngcosine () :
     make_print ( model , result , "Rising Cosine model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Asymmetric Laplace 
@@ -1236,6 +1268,7 @@ def test_laplace():
     make_print ( model , result , "Laplace model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # ==========================================================================
 ## ExGauss
@@ -1271,6 +1304,7 @@ def test_exgauss () :
     make_print ( model , result , "ExGauss model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # ==========================================================================
 ## NormalLaplace 
@@ -1307,6 +1341,7 @@ def test_normlapl () :
     make_print ( model , result , "Normal Laplace model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
         
 # ==========================================================================
 ## Hyperbolic
@@ -1348,6 +1383,7 @@ def test_hyperbolic() :
     make_print ( model , result , "Hyperbolic model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # ==========================================================================
 ## Generalised Hyperbolic
@@ -1391,6 +1427,7 @@ def test_genhyperbolic() :
     make_print ( model , result , "Generalized Hyperbolic model" , logger )
     
     models.add ( model )
+    results.append ( result  )
 
 # ==========================================================================
 ## Hypatia 
@@ -1436,6 +1473,7 @@ def test_hypatia () :
     make_print ( model , result , "Hypatia model" , logger )        
     
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Voigt
@@ -1475,6 +1513,7 @@ def test_voigt () :
     make_print ( model , result , "Voigt model" , logger )        
     
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## PseudoVoigt
@@ -1513,6 +1552,7 @@ def test_pvoigt () :
     make_print ( model , result , "pseudo-Voigt model" , logger )        
 
     models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Breit-Wigner
@@ -1558,7 +1598,7 @@ def test_bw () :
     make_print ( model , result , "Breit-Wigner model" , logger )        
 
     models.add ( model )
-
+    results.append ( result  )
 
 ## # =============================================================================
 ## ## Breit-Wigner with interference
@@ -1627,6 +1667,9 @@ def test_db() :
             db['roo_sig:%s' % m.name ] = m.signal    .pdf
             db['roo_bkg:%s' % m.name ] = m.background.pdf
         db['models'   ] = models
+        for r in results :
+            db ['result:%s' % r.name ] = r
+        db['results'   ] = results 
         db.ls() 
 
 # ==============================================================================

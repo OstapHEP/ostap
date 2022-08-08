@@ -23,6 +23,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Error2Exception.cpp   
                          src/Exception.cpp
                          src/Faddeeva.cpp 
+                         src/FitResult.cpp 
                          src/Formula.cpp   
                          src/FormulaVar.cpp   
                          src/Fourier.cpp   

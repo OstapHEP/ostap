@@ -84,7 +84,8 @@ for i in range (NB2 ) :
 
 sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
 
-models = set() 
+models  = set()
+results = [] 
 # =============================================================================
 def test_simfit1 () :
 ## if 1 < 2 :
@@ -128,8 +129,6 @@ def test_simfit1 () :
             logger.info ( '%s\n%s' % ( title , r2.table ( title = title , prefix = '# ' ) ) )
         # =========================================================================
 
-
-    
     ## combine data
     
     
@@ -165,6 +164,10 @@ def test_simfit1 () :
     for k in model_sim.categories : models.add ( model_sim.categories[k] )
     for k in model_sim.drawpdfs   : models.add ( model_sim.drawpdfs  [k] )
         
+    results.append ( r1 ) 
+    results.append ( r2 ) 
+    results.append ( r  ) 
+    
     
 # =============================================================================
 ## check that everything is serializable
@@ -184,19 +187,16 @@ def test_db() :
         for m in models :
             db['model:'     + m.name ] = m
             db['roo_tot:%s' % m.name ] = m.pdf
-            ## for i,s in enumerate ( m.signals ) :
-            ##    db['roo_sig%d:%s' % ( i , m.name ) ] = s
-            ##for i, b in enumerate ( m.backgrounds ) : 
-            ##    db['roo_bkg%d:%s' % ( i , m.name ) ] = s
-            ##for a in m.alist1 : 
-            ##    db['cmp:%s/%s' % ( m.name , a.name ) ] = a
         db['models'  ] = models
+        for r in results : db['result' + r.name ] = r 
+        db['results' ] = results
         db.ls()
 
 # =============================================================================
 if '__main__' == __name__ :
 
 
+    
     with timing( "simfit-1" ,   logger ) :  
         test_simfit1 ()
         

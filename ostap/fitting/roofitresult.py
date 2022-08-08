@@ -782,7 +782,7 @@ def _rfr_print_ ( self , opts = 'v' ) :
 #  result.global_corr ( 'S' ) 
 #  @endcode 
 #  It should be accessible via <code>RooFitResult::globalCorr</code> method
-#  but it often results in segfault
+#  but often it results in segfault
 #  @see RooFitResult::globalCorr
 def _rfr_global_corr_ ( self , par ) :
     """ Get global correlation coefficient for the parameter
@@ -790,7 +790,7 @@ def _rfr_global_corr_ ( self , par ) :
     - where C is covariance  matrix and V is inverse
     
     It should be accessible via `RooFitResult.globalCorr`method
-    but it often results in segfauls
+    but often it results in segfauls
     - see `RooFitResult.globalCorr`
     """
     if  isinstance  ( par , string_types    ) :
@@ -807,7 +807,7 @@ def _rfr_global_corr_ ( self , par ) :
     v = self.covmatrix()
     if not v.InvertChol () : return -1   
 
-    ## get covariance matrix 
+    ## get the covariance matrix 
     c = self.covmatrix()
 
     cv = c ( index , index ) * v ( index , index )
