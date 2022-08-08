@@ -11,6 +11,7 @@
 #include "RooGaussian.h"
 #include "RooFFTConvPdf.h"
 #include "RooArgList.h"
+#include "RooEfficiency.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -172,6 +173,24 @@ namespace
       result.add ( _pdf2.arg   () ) ;
       return result ;
     }
+  } ;  
+  // ==========================================================================
+  class FakeEfficiency : public RooEfficiency 
+  {
+  public: 
+    // ========================================================================
+    FakeEfficiency ( const RooEfficiency& pdf , const char* newname = 0 ) 
+      : RooEfficiency( pdf , newname ) 
+    {}
+    // ========================================================================
+    virtual ~FakeEfficiency () {}
+    // ========================================================================
+  public:
+    // ========================================================================
+    const RooAbsReal&     get_eff () const { return _effFunc   .arg () ; }
+    const RooAbsCategory& get_cat () const { return _cat       .arg () ; }
+    std::string           get_acc () const { return _sigCatName.Data() ; }
+    // ========================================================================
   } ;  
   // ==========================================================================
 } //                                             The end of anonymous namespace 
@@ -766,11 +785,11 @@ const RooAbsReal& Ostap::MoreRooFit::getSigma ( const RooGaussian& pdf )
   return fake->get_sigma() ;
 #endif 
 }
-// ==========================================================================
+// ============================================================================
 /*  get parameters from RooFFTConvPdf 
  *  @see RooFFTConvPdf 
  */
-// ==========================================================================
+// ============================================================================
 RooArgList 
 Ostap::MoreRooFit::fft_pars 
 ( const RooFFTConvPdf& pdf    , 
@@ -780,6 +799,41 @@ Ostap::MoreRooFit::fft_pars
   std::unique_ptr<::FakeFFTConvPdf> fake { new ::FakeFFTConvPdf ( pdf , "QUQU") } ;
   return fake->getpars ( shift1 , shift2 ) ; 
 }
+// ============================================================================
+/*  get the efficiency function from the RooEfficiency object
+ *  @see RooEfficiency
+ */
+// ============================================================================
+const RooAbsReal&    
+Ostap::MoreRooFit::get_eff ( const RooEfficiency& pdf ) 
+{
+  std::unique_ptr<::FakeEfficiency> fake { new ::FakeEfficiency ( pdf ) } ;
+  return fake->get_eff() ;
+}
+// ============================================================================
+/*  get the category from the RooEfficiency object
+ *  @see RooEfficiency
+ */
+// ============================================================================
+const RooAbsCategory& 
+Ostap::MoreRooFit::get_cat ( const RooEfficiency& pdf ) 
+{
+  std::unique_ptr<::FakeEfficiency> fake { new ::FakeEfficiency ( pdf ) } ;
+  return fake->get_cat() ;
+}
+// ============================================================================
+/** get the name of the 'accept' category from RooEfficiency object
+ *  @see RooEfficiency
+ */
+// ============================================================================
+std::string          
+Ostap::MoreRooFit::get_acc ( const RooEfficiency& pdf ) 
+{
+  std::unique_ptr<::FakeEfficiency> fake { new ::FakeEfficiency ( pdf ) } ;
+  return fake->get_acc() ;  
+}
+// ============================================================================
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

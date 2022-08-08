@@ -92,7 +92,7 @@ def test_pdf () :
     
     logger = getLogger ( 'test_pdf' )
 
-    effPdf = Models.Monotonic_pdf ( 'P6' , xvar = x , power = 4 , increasing = True )
+    effPdf = Models.Monotonic_pdf ( 'P4' , xvar = x , power = 4 , increasing = True )
 
     maxe   = margin * effPdf ( xmax )
     
@@ -124,7 +124,7 @@ def test_vars1 () :
     logger = getLogger ( 'test_vars1' )
 
     power = 3 
-    f     = BP ( 'G'           ,
+    f     = BP ( 'B3'           ,
                  xvar  = x     ,
                  power = power ,
                  pars  = ( power + 1 ) * [ ( 0.2 , 0 , 1 ) ] )
@@ -159,7 +159,7 @@ def test_vars2 () :
 
     from ostap.fitting.roofuncs import MonotonicPoly as MP 
 
-    f      = MP ( 'G' , xvar = x , increasing = True , power = 4 )
+    f      = MP ( 'M4' , xvar = x , increasing = True , power = 4 )
     f.pars = 0.6 , 0.8 , -0.1 , -0.6
     f.a    = 0.06
     f.b    = 2.72
@@ -237,6 +237,7 @@ def test_vars4 () :
     with wait ( 2 ) , use_canvas ( 'test_vars4' ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
     
+    funs.add ( X    )
     funs.add ( F    )
     funs.add ( eff2 )
 
@@ -253,18 +254,23 @@ def test_db() :
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
         db['x'        ] = x  
         db['varset'   ] = varset
-        db['dataset'  ] = ds 
+        db['dataset'  ] = ds
+        print ('before loop' )
         for m in funs :
             db['funs:'     + m.name ] = m
             if hasattr ( m , 'fun' ) :
                 db['fun/F:' + m.name ] = m.fun
+            if hasattr ( m , 'pdf' ) :
+                db['pdf/F:' + m.name ] = m.pdf
+            if hasattr ( m , 'eff_fun' ) :
+                db['eff_fun/F:' + m.name ] = m.eff_fun
+            if hasattr ( m , 'eff_pdf' ) :
+                db['eff_pdf/F:' + m.name ] = m.eff_pdf
         db['funs'   ] = funs
         db.ls() 
 
 # =============================================================================
 if '__main__' == __name__ :
-
-
     
     with timing ("PDF"   , logger ) :  
         test_pdf   ()
@@ -284,6 +290,7 @@ if '__main__' == __name__ :
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()
+
 
 # =============================================================================
 ##                                                                      The END 

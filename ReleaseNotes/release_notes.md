@@ -10,7 +10,9 @@
   1. add serialization for `RooFFTConvPdf` instances
   1. add serialization for `RooSimultaneous` instances
   1. make RooCategory more uniform "interface" for RooCategory 
-  1. split varibales.py into `variables`.py and `rooreduce.py` 
+  1. split `variables.py` into `variables.py` and `rooreduce.py` 
+  1. add the proper reduction for the effciency objects
+  1. add serisalisation for `RooEfficiency` 
 
 ## Backward incompatible:  
 
@@ -18,6 +20,7 @@
 
   1. couple of (small) fixes in `variables.py` module 
   1. several typos are fixed in construction of 3D-models 
+  1. `funbasic` : fix typos 
 
 # v1.9.0.2
 

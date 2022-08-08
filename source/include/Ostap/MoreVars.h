@@ -22,6 +22,7 @@ class RooAddPdf     ; // ROOT,RooFit
 class RooProdPdf    ; // ROOT,RooFit 
 class RooGaussian   ; // ROOT,RooFit 
 class RooFFTConvPdf ; // ROOT,RooFit 
+class RooEfficiency ; // ROOT,RooFit 
 // ============================================================================
 namespace Ostap 
 {
@@ -525,6 +526,21 @@ namespace Ostap
     ( const RooFFTConvPdf& pdf    ,
       double&              shift1 ,
       double&              shift2 ) ;
+    // ========================================================================
+    /** get the efficiency function from the RooEfficiency object
+     *  @see RooEfficiency
+     */
+    const RooAbsReal&     get_eff ( const RooEfficiency& pdf ) ;
+    // ========================================================================
+    /** get the category from the RooEfficiency object
+     *  @see RooEfficiency
+     */
+    const RooAbsCategory& get_cat ( const RooEfficiency& pdf ) ;
+    // ========================================================================
+    /** get the name of the 'accept' category from RooEfficiency object
+     *  @see RooEfficiency
+     */
+    std::string           get_acc ( const RooEfficiency& pdf ) ;
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit
   // ==========================================================================

@@ -19,7 +19,8 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core        import Ostap, roo_silent  
-from   ostap.fitting.funbasic import FUN1 , FUN2 , FUN3 , Fun1D , Fun2D , Fun3D 
+from   ostap.fitting.funbasic import ( FUN1  , FUN2  , FUN3 , \
+                                       Fun1D , Fun2D , Fun3D , func_factory )  
 from   ostap.fitting.pdfbasic import ( PDF1 , Generic1D_pdf ,
                                        PDF2 , Generic2D_pdf ,
                                        PDF3 , Generic3D_pdf )
@@ -57,6 +58,9 @@ class Efficiency ( object ) :
         
         assert isinstance ( cut , ROOT.RooCategory ) , "'Cut' is not RooCategory!"
 
+        self.__arg_eff_pdf = eff_pdf
+        self.__arg_eff_fun = eff_fun
+
         self.__eff_pdf = eff_pdf
         self.__eff_fun = eff_fun
         self.__vars    = ROOT.RooArgSet( *vars )
@@ -81,7 +85,6 @@ class Efficiency ( object ) :
             _s             = self.scale.GetName()
             _p             = self.eff_pdf.pdf.GetName()
             
-            ## self.__eff_fun = Ostap.FormulaVar ( 'Eff_%s' % self.name , '%s*%s'  % ( _s , _p ) , self.__lst )
             self.__eff_fun = Ostap.MoreRooFit.Product ( 'Eff_%s'           % self.name    ,
                                                         'efficiency %s*%s' % ( _s , _p )  ,
                                                         self.__scale , self.__eff_pdf.pdf )  
@@ -142,8 +145,18 @@ class Efficiency ( object ) :
         else :
             raise AttributeError("Invalid length of vars: %s" % str( vars ) )
         
-        ## th fit results from the last fit
+        ## the fit results from the last fit
         self.__fit_result = None
+
+        self.config = {
+            'name'    : self.name          ,
+            'eff_pdf' : self.__arg_eff_pdf , 
+            'eff_fun' : self.__arg_eff_fun ,
+            'vars'    : self.vars          ,
+            'cut'     : self.cut           ,
+            'accept'  : self.accept        ,
+            'scale'   : self.scale         ,
+            }
         
     @property 
     def name ( self ) :
@@ -267,6 +280,12 @@ class Efficiency ( object ) :
                                     args   = args   , **kwargs )
     
 
+    # =========================================================================
+    ## reduce Efficieny instance 
+    def __reduce__ ( self ) :
+        """Reduce Efficiency instance"""
+        return func_factory , ( type ( self ) , self.config ) 
+
 # =============================================================================
 ## @class Efficiency1D
 #  Get the efficiency using unbinned fit and ROOT.RooEfficiency class
@@ -335,7 +354,16 @@ class Efficiency1D (Efficiency) :
 
         self.__xvar = xvar 
         Efficiency.__init__ ( self , name , eff_pdf , eff_fun ,  ( xvar,) , cut , accept , scale )
-    
+
+        self.config = {
+            'name'       : self.name   ,
+            'efficiency' : self.__eff  ,
+            'cut'        : self.cut    ,
+            'xvar'       : self.xvar   ,
+            'accept'     : self.accept ,
+            'scale'      : self.scale  ,
+            }
+
     @property 
     def xvar ( self ) :
         """'xvar': the x-variable """
@@ -396,6 +424,7 @@ class Efficiency1D (Efficiency) :
         logger.error ('Invalid efficiency, return -1 ') 
         return -1 
 
+        
 # =============================================================================
 ## @class Efficiency2D
 #  Get the efficiency using unbinned fit and ROOT.RooEfficiency class
@@ -442,6 +471,8 @@ class Efficiency2D (Efficiency) :
                     yvar   = None     ,
                     accept = 'accept' ) :
 
+        self.__eff = efficiency
+        
         if isinstance   ( efficiency , PDF2 ) :            
             eff_pdf = efficiency
             xvar    = efficiency.xvar
@@ -472,11 +503,21 @@ class Efficiency2D (Efficiency) :
         else :
             raise AttributeError('Invalid efficiency/xvar/yvat combination  %s/%s/%s/%s'  %
                                  ( efficiency ,  type(efficiency) , xvar , yvar ) )
-
         
         self.__xvar = xvar 
         self.__yvar = yvar 
         Efficiency.__init__ ( self , name , eff_pdf , eff_fun ,  ( xvar , yvar) , cut , accept )
+        
+        self.config = {
+            'name'       : self.name   ,
+            'efficiency' : self.__eff  ,
+            'cut'        : self.cut    ,
+            'xvar'       : self.xvar   ,
+            'yvar'       : self.yvar   ,
+            'accept'     : self.accept ,
+            'scale'      : self.scale  ,
+            }
+
 
     @property 
     def xvar ( self ) :
@@ -623,6 +664,8 @@ class Efficiency3D (Efficiency) :
                     zvar   = None     ,
                     accept = 'accept' ) :
 
+        self.__eff = efficiency
+        
         if isinstance   ( efficiency , PDF3 ) :            
             eff_pdf = efficiency
             xvar    = efficiency.xvar
@@ -653,11 +696,21 @@ class Efficiency3D (Efficiency) :
             raise AttributeError('Invalid efficiency/xvar/yvar/zvar combination  %s/%s/%s/%s/%s'  %
                                  ( efficiency ,  type(efficiency) , xvar , yvar ,  zvar ) )
         
-        
         self.__xvar = xvar 
         self.__yvar = yvar 
         self.__zvar = zvar 
         Efficiency.__init__ ( self , name , eff_pdf , eff_fun ,  ( xvar , yvar , zvar ) , cut , accept )
+        
+        self.config = {
+            'name'       : self.name   ,
+            'efficiency' : self.__eff  ,
+            'cut'        : self.cut    ,
+            'xvar'       : self.xvar   ,
+            'yvar'       : self.yvar   ,
+            'zvar'       : self.zvar   ,
+            'accept'     : self.accept ,
+            'scale'      : self.scale  ,
+            }
 
     @property 
     def xvar ( self ) :
@@ -671,6 +724,7 @@ class Efficiency3D (Efficiency) :
     def zvar ( self ) :
         """'zvar' : the z-variable """
         return self.__zvar
+
 
     # =========================================================================
     ## draw the efficiency (and the dataset)

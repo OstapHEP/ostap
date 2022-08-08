@@ -4186,7 +4186,7 @@ class Fun1op(FUN1) :
             }
         
     def __str__ ( self ) :
-        return selt.__strname if self.__strname else AFUN1.__str__ ( self ) 
+        return self.__strname if self.__strname else AFUN1.__str__ ( self ) 
     __repr__ = __str__
     
     @property
@@ -4253,7 +4253,7 @@ class Fun2op(FUN2) :
             'strname'   : self.strname   ,            
             }
         
-    def __str__ ( self ) : return selt.__strname if self.__strname else AFUN2.__str__ ( self ) 
+    def __str__ ( self ) : return self.__strname if self.__strname else AFUN2.__str__ ( self ) 
     __repr__ = __str__
     
     @property
@@ -4322,7 +4322,7 @@ class Fun3op(FUN3) :
             'strname'   : self.strname   ,            
             }
         
-    def __str__ ( self ) : return selt.__strname if self.__strname else AFUN3.__str__ ( self ) 
+    def __str__ ( self ) : return self.__strname if self.__strname else AFUN3.__str__ ( self ) 
     __repr__ = __str__
     
     @property

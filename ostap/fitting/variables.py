@@ -1619,26 +1619,6 @@ _decorated_classes_ = (
     ROOT.RooBinning               ,
     ROOT.RooRangeBinning          ,
     ##
-    Ostap.MoreRooFit.Id           ,
-    Ostap.MoreRooFit.TwoVars      ,
-    Ostap.MoreRooFit.Addition     ,
-    Ostap.MoreRooFit.Addition2    ,
-    Ostap.MoreRooFit.Subtraction  ,
-    Ostap.MoreRooFit.Product      ,
-    Ostap.MoreRooFit.ProductPdf   ,
-    Ostap.MoreRooFit.Combination  ,
-    Ostap.MoreRooFit.Asymmetry    ,
-    Ostap.MoreRooFit.Constant     ,
-    Ostap.MoreRooFit.Bernstein    ,
-    Ostap.MoreRooFit.Monotonic    ,
-    Ostap.MoreRooFit.Convex       ,
-    Ostap.MoreRooFit.ConvexOnly   ,
-    ##
-    Ostap.Models.Uniform          ,
-    ##
-    ROOT.RooArgSet                ,
-    ROOT.RooArgList               ,
-    ##
     ROOT.RooCategory              ,
 )
 

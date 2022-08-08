@@ -48,10 +48,10 @@ def root_store_factory ( klass , *params ) :
     return obj 
 
 # =============================================================================
-## Reduce <code>Ostap::MoreFooFit::TwoVars</code> objects
+## Reduce <code>Ostap::MoreRooFit::TwoVars</code> objects
 #  @see Ostap::MoreRooFit.TwoVars
 def _r2v_reduce ( var ) :
-    """Reduce `Ostap::MoreFooFit::TwoVars` objects
+    """Reduce `Ostap::MoreRooFit::TwoVars` objects
     - see Ostap.MoreRooFit.TwoVars
     """
     return root_store_factory , ( type ( var ) , var.name , var.title , var.x() , var.y() )
@@ -59,20 +59,20 @@ def _r2v_reduce ( var ) :
 Ostap.MoreRooFit.TwoVars.__reduce__  = _r2v_reduce
 
 # ===================================================================
-## Reduce <code>Ostap::MoreFooFit::Addition</code> objects
+## Reduce <code>Ostap::MoreRooFit::Addition</code> objects
 #  @see Ostap::MoreRooFit.Addition
 def _radd1_reduce ( var ) :
-    """Reduce `Ostap.MoreFooFit.Addition` objects
+    """Reduce `Ostap.MoreRooFit.Addition` objects
     - see Ostap.MoreRooFit.Addition
     """
     content = type ( var ) , var.name , var.title , var.x () , var.y ()
     return root_store_factory , content 
 
 # ===================================================================
-## Reduce <code>Ostap::MoreFooFit::Addition3</code> objects
+## Reduce <code>Ostap::MoreRooFit::Addition3</code> objects
 #  @see Ostap::MoreRooFit.Addition3
 def _radd2_reduce ( var ) :
-    """Reduce `Ostap.MoreFooFit.Addition` objects
+    """Reduce `Ostap.MoreRooFit.Addition` objects
     - see Ostap.MoreRooFit.Addition2
     """
     content = type ( var ) , var.name , var.title , var.x () , var.y () , var.c1 () , var.c2 () 
@@ -101,10 +101,10 @@ Ostap.MoreRooFit.ProductPdf  .__reduce__  = _r2v_reduce
 Ostap.MoreRooFit.Id          .__reduce__  = _rid_reduce
 
 # ===================================================================
-## Reduce <code>Ostap::MoreFooFit::Combination</code> objects
+## Reduce <code>Ostap::MoreRooFit::Combination</code> objects
 #  @see Ostap::MoreRooFit.Combination
 def _rcomb_reduce ( var ) :
-    """Reduce `Ostap.MoreFooFit.Combination` objects
+    """Reduce `Ostap.MoreRooFit.Combination` objects
     - see Ostap.MoreRooFit.Combination
     """
     return root_store_factory , ( type ( var ) ,
@@ -119,10 +119,10 @@ def _rcomb_reduce ( var ) :
 Ostap.MoreRooFit.Combination.__reduce__  = _rcomb_reduce
 
 # ===================================================================
-## Reduce <code>Ostap::MoreFooFit::Asymmetry</code> objects
+## Reduce <code>Ostap::MoreRooFit::Asymmetry</code> objects
 #  @see Ostap::MoreRooFit.Asymmetry
 def _rasym_reduce ( var ) :
-    """Reduce  `Ostap::MoreFooFit::Asymmetry` objects
+    """Reduce  `Ostap::MoreRooFit::Asymmetry` objects
     - see Ostap.MoreRooFit.Asymmetry
     """
     return root_store_factory , ( type ( var ) ,
@@ -224,10 +224,10 @@ def _rconv2_reduce ( var ) :
 Ostap.MoreRooFit.ConvexOnly.  __reduce__  = _rconv2_reduce
 
 # =============================================================================
-## unpickle <code>Ostap::MoreFooFit::BSpline</code> objects
+## unpickle <code>Ostap::MoreRooFit::BSpline</code> objects
 #  @see Ostap::MoreRooFit::BSpline
 def _rbspl_factory ( klass , name , title , xvar , knots , pars ) :
-    """unpickle `Ostap.MoreFooFit.BSpline` objects
+    """unpickle `Ostap.MoreRooFit.BSpline` objects
     - see Ostap.MoreRooFit.BSpline
     """
     plst  = ROOT.RooArgList()
@@ -497,6 +497,66 @@ def _rsim_reduce_ ( pdf ) :
     return _rsim_factory_ , ( type ( pdf ) , args , catlst ) 
 
 ROOT.RooSimultaneous.__reduce__  = _rsim_reduce_ 
+
+# =============================================================================
+## access to underlying efficiency function from RooEfficiency
+#  @see RooEfficiency 
+#  @see Ostap::MorERooFit::get_eff 
+def _reff_efficiency_  ( pdf )  :
+    """Access to underlying efficiency function from RooEfficiency
+    - see `ROOT.RooEfficiency`
+    - see `Ostap.MoreRooFit.get_eff`
+    """
+    return Ostap.MoreRooFit.get_eff ( pdf )
+
+# =============================================================================
+## access to underlying accept/reject category from RooEfficiency
+#  @see RooEfficiency 
+#  @see Ostap::MorERooFit::get_cat 
+def _reff_category_  ( pdf )  :
+    """Access to underlying accept/reject category from RooEfficiency
+    - see `ROOT.RooEfficiency`
+    - see `Ostap.MoreRooFit.get_cat`
+    """
+    return Ostap.MoreRooFit.get_cat ( pdf )
+
+# =============================================================================
+## access to accept category from RooEfficiency
+#  @see RooEfficiency 
+#  @see Ostap::MorERooFit::get_acc
+def _reff_accept_  ( pdf )  :
+    """Access to accept category from RooEfficiency
+    - see `ROOT.RooEfficiency`
+    - see `Ostap.MoreRooFit.get_acc`
+    """
+    return Ostap.MoreRooFit.get_acc ( pdf )
+
+ROOT.RooEfficiency. efficiency = _reff_efficiency_
+ROOT.RooEfficiency. category   = _reff_category_
+ROOT.RooEfficiency. accept     = _reff_accept_
+
+_new_methods_ += [
+    ROOT.RooEfficiency. efficiency , 
+    ROOT.RooEfficiency. category   , 
+    ROOT.RooEfficiency. accept     , 
+    ]
+
+# =============================================================================
+## reduce RooEfficiency
+#  @see RooEfficiency
+def _reff_reduce_ ( pdf ) :
+    """Reduce `ROOT.RooEfficiency`
+    - see `ROOT.RooEfficiency`
+    """
+    content = type ( pdf ) , pdf.name , pdf.title , pdf.efficiency() 
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.efficiency() , 
+                                  pdf.category  () , 
+                                  pdf.accept    () )
+
+ROOT.RooEfficiency.__reduce__  = _reff_reduce_ 
 
 ## # =============================================================================
 ## ## reduce BreitWigner
@@ -1810,6 +1870,7 @@ _decorated_classes_ = (
     ROOT.RooProdPdf                    , 
     ROOT.RooFFTConvPdf                 , 
     ROOT.RooSimultaneous               , 
+    ROOT.RooEfficiency                 , 
     ## Ostap classes 
     Ostap.MoreRooFit.TwoVars           , 
     Ostap.MoreRooFit.Addition          , 
