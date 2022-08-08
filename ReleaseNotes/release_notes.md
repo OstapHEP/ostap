@@ -19,7 +19,6 @@
   1. couple of (small) fixes in `variables.py` module 
   1. several typos are fixed in construction of 3D-models 
 
-
 # v1.9.0.2
 
 ## New features: 
