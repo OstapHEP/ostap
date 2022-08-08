@@ -14,7 +14,8 @@
   1. add the proper reduction for the effciency objects
   1. add serisalisation for `RooEfficiency` 
   1. add serisalisation for `RooFitResult` (the standard one often gives segfauts)
-
+  1. reduce verbosity for `make_var`
+  
 ## Backward incompatible:  
 
 ## Bug fixes:
