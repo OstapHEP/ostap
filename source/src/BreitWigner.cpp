@@ -1438,6 +1438,7 @@ Ostap::Math::Rho0::Rho0
                                pi_mass    ,
                                1          ,
                                Ostap::Math::FormFactors::Jackson_A7 )
+  , m_m1 ( std::abs ( pi_mass ) )  
 {}
 // ============================================================================
 // destructor
@@ -1458,6 +1459,8 @@ Ostap::Math::Kstar0::Kstar0
                                pi_mass    ,
                                1          ,
                                Ostap::Math::FormFactors::Jackson_A2 )
+  , m_m1 ( std::abs ( k_mass  ) )  
+  , m_m2 ( std::abs ( pi_mass ) )  
 {}
 // ============================================================================
 // destructor
@@ -1477,6 +1480,7 @@ Ostap::Math::Phi0::Phi0
                                k_mass     ,
                                1          ,
                                Ostap::Math::FormFactors::Jackson_A2 )
+  , m_m1 ( std::abs ( k_mass  ) )  
 {}
 // ============================================================================
 // destructor
@@ -1582,6 +1586,10 @@ Ostap::Math::Flatte::Flatte
   const double mB2   ,
   const double g0    )
   : BW ( m0 , ChannelFlatte ( 1 , mA1 , mA2 ) ) 
+  , m_A1 ( std::abs ( mA1 ) ) 
+  , m_A2 ( std::abs ( mA2 ) ) 
+  , m_B1 ( std::abs ( mB1 ) ) 
+  , m_B2 ( std::abs ( mB2 ) )
 {
   add ( ChannelFlatte ( 1  , mB1 , mB2 ) ) ;
   add ( ChannelCW     ( g0 , mA1 , mA1 ) ) ;
@@ -2610,7 +2618,8 @@ Ostap::Math::LASS::LASS
   , m_a   ( a  ) 
   , m_b   ( a  ) 
   , m_e   ( s_zero ( e ) ? 0.0 : s_equal ( e , 1 ) ? 1 : e ) 
-  , m_ps2 ( m1 , m2 ) 
+  , m_ps2 ( m1 , m2 )
+  , m_m3  ( std::abs ( m3 ) ) 
 {
   //
   Ostap::Assert ( 0 <= m_e  && m_e <= 1 , "Invalid elasticity!" , "LASS" ) ;

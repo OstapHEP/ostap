@@ -163,6 +163,28 @@ Ostap::Math::PS2DPol::PS2DPol
   , m_psy  ( psy   )
 {}
 // ===========================================================================
+Ostap::Math::PS2DPol::PS2DPol
+( const Ostap::Math::Positive2D& pol ,
+  const PhaseSpaceNL&            psx ,
+  const PhaseSpaceNL&            psy ) 
+  : m_positive ( pol ) 
+  , m_psx  ( psx   ) 
+  , m_psy  ( psy   )
+{
+  Ostap::Assert ( m_psx.lowEdge   () < m_positive.xmax () , 
+                  "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
+                  "Ostap::Math::PS2DPol" ) ;
+  Ostap::Assert ( m_positive.xmin () < m_psx.highEdge() , 
+                  "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
+                  "Ostap::Math::PS2DPol" ) ;
+  Ostap::Assert ( m_psy.lowEdge   () < m_positive.ymax () , 
+                  "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
+                  "Ostap::Math::PS2DPol" ) ;
+  Ostap::Assert ( m_positive.ymin () < m_psy.highEdge() , 
+                  "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
+                  "Ostap::Math::PS2DPol" ) ;
+}
+// ===========================================================================
 // get the value
 // ===========================================================================
 double Ostap::Math::PS2DPol::operator () 
@@ -341,6 +363,20 @@ Ostap::Math::PS2DPolSym::PS2DPolSym
   , m_ps   ( ps   ) 
 {}
 // ===========================================================================
+Ostap::Math::PS2DPolSym::PS2DPolSym
+( const Ostap::Math::Positive2DSym& pol ,
+  const PhaseSpaceNL&               ps  ) 
+  : m_positive ( pol ) 
+  , m_ps       ( ps   ) 
+{
+  Ostap::Assert ( m_ps.lowEdge    () < m_positive.xmax () , 
+                  "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
+                  "Ostap::Math::PS2DPolSym" ) ;
+  Ostap::Assert ( m_positive.xmin () < m_ps.highEdge   () , 
+                  "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
+                  "Ostap::Math::PS2DPolSym" ) ;
+}
+// ===========================================================================
 // get the value
 // ===========================================================================
 double Ostap::Math::PS2DPolSym::operator () 
@@ -504,6 +540,32 @@ Ostap::Math::PS2DPol2::PS2DPol2
   , m_psx_aux ( psx.lowEdge() , psx.highEdge() , psx.L () , psx.N () - 1 ) 
   , m_psy_aux ( psy.lowEdge() , psy.highEdge() , psy.L () , psy.N () - 1 ) 
 {}
+// ===========================================================================
+Ostap::Math::PS2DPol2::PS2DPol2
+( const Ostap::Math::Positive2D& pol  ,
+  const PhaseSpaceNL&            psx  ,
+  const PhaseSpaceNL&            psy  , 
+  const double                   mmax ) 
+  : m_positive ( pol ) 
+  , m_psx  ( psx   ) 
+  , m_psy  ( psy   )
+  , m_mmax ( psx.lowEdge() + psy.lowEdge() < mmax ? mmax : psx.highEdge() + psy.highEdge() )
+  , m_psx_aux ( psx.lowEdge() , psx.highEdge() , psx.L () , psx.N () - 1 ) 
+  , m_psy_aux ( psy.lowEdge() , psy.highEdge() , psy.L () , psy.N () - 1 ) 
+{
+  Ostap::Assert ( m_psx.lowEdge   () < m_positive.xmax () , 
+                  "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
+                  "Ostap::Math::PS2DPol2" ) ;
+  Ostap::Assert ( m_positive.xmin () < m_psx.highEdge() , 
+                  "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
+                  "Ostap::Math::PS2DPol2" ) ;
+  Ostap::Assert ( m_psy.lowEdge   () < m_positive.ymax () , 
+                  "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
+                  "Ostap::Math::PS2DPol2" ) ;
+  Ostap::Assert ( m_positive.ymin () < m_psy.highEdge() , 
+                  "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
+                  "Ostap::Math::PS2DPol2" ) ;
+}
 // ===========================================================================
 // get the value
 // ===========================================================================
@@ -685,6 +747,24 @@ Ostap::Math::PS2DPol2Sym::PS2DPol2Sym
   , m_psx_aux ( ps.lowEdge() , ps.highEdge() , ps.L () , ps.N () - 1 ) 
   , m_psy_aux ( ps.lowEdge() , ps.highEdge() , ps.L () , ps.N () - 1 ) 
 {}
+// ===========================================================================
+Ostap::Math::PS2DPol2Sym::PS2DPol2Sym
+( const Ostap::Math::Positive2DSym& pol ,
+  const PhaseSpaceNL&               ps  , 
+  const double                      mmax )
+  : m_positive ( pol ) 
+  , m_ps       ( ps   ) 
+  , m_mmax    ( 2 * ps.lowEdge() < mmax ? mmax : 2 * ps.highEdge()   )
+  , m_psx_aux ( ps.lowEdge() , ps.highEdge() , ps.L () , ps.N () - 1 ) 
+  , m_psy_aux ( ps.lowEdge() , ps.highEdge() , ps.L () , ps.N () - 1 ) 
+{
+  Ostap::Assert ( m_ps.lowEdge    () < m_positive.xmax () , 
+                  "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
+                  "Ostap::Math::PS2DPol2Sym" ) ;
+  Ostap::Assert ( m_positive.xmin () < m_ps.highEdge   () , 
+                  "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
+                  "Ostap::Math::PS2DPol2Sym" ) ;
+}
 // ===========================================================================
 // get the value
 // ===========================================================================
@@ -1209,6 +1289,24 @@ Ostap::Math::ExpoPS2DPol::ExpoPS2DPol
   , m_tau ( tau ) 
 {}
 // ============================================================================
+// constructor from components
+// ============================================================================
+Ostap::Math::ExpoPS2DPol::ExpoPS2DPol
+( const Ostap::Math::Positive2D&   pol , 
+  const Ostap::Math::PhaseSpaceNL& psy ,        
+  const double                     tau ) 
+  : m_positive ( pol ) 
+  , m_psy ( psy )
+  , m_tau ( tau ) 
+{
+  Ostap::Assert ( m_psy.lowEdge   () < m_positive.ymax () , 
+                  "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
+                  "Ostap::Math::ExpoPS2DPol" ) ;
+  Ostap::Assert ( m_positive.ymin () < m_psy.highEdge() , 
+                  "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
+                  "Ostap::Math::ExpoPS2DPol" ) ;
+}
+// ============================================================================
 // set tau-parameter
 // ============================================================================
 bool Ostap::Math::ExpoPS2DPol::setTau ( const double value )
@@ -1385,6 +1483,17 @@ Ostap::Math::Expo2DPol::Expo2DPol
                  std::min ( ymin , ymax ) , std::max ( ymin , ymax ) ) 
   , m_tauX ( taux ) 
   , m_tauY ( tauy )
+{}
+// ===========================================================================
+/// constructor from polynomial 
+// ===========================================================================
+Ostap::Math::Expo2DPol::Expo2DPol
+( const Ostap::Math::Positive2D& pol  , 
+  const double                   taux ,
+  const double                   tauy ) 
+  : m_positive ( pol  ) 
+  , m_tauX     ( taux ) 
+  , m_tauY     ( tauy )
 {}
 // ===========================================================================
 // set tau-parameter
@@ -1564,6 +1673,15 @@ Ostap::Math::Expo2DPolSym::Expo2DPolSym
   const double                       tau  )      
   : m_positive ( N , std::min ( xmin , xmax ) , std::max ( xmin , xmax ) )
   , m_tau ( tau ) 
+{}
+// ===========================================================================
+/// constructor from polynomial 
+// ===========================================================================
+Ostap::Math::Expo2DPolSym::Expo2DPolSym
+( const Ostap::Math::Positive2DSym& pol , 
+  const double                      tau ) 
+  : m_positive ( pol ) 
+  , m_tau      ( tau )
 {}
 // ===========================================================================
 // set tau-parameter

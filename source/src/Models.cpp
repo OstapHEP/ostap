@@ -388,6 +388,23 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
                    std::min ( ps.highEdge() , std::max ( xlow , xhigh ) ) )
   , m_workspace  ()
 {}
+// ======================================================================
+// constructor from phase space and polynomial
+// ======================================================================
+Ostap::Math::PhaseSpacePol::PhaseSpacePol 
+( const PhaseSpaceNL&          ps  ,
+  const Ostap::Math::Positive& pol ) 
+  : m_phasespace ( ps  ) 
+  , m_positive   ( pol ) 
+  , m_workspace  () 
+{
+  Ostap::Assert ( m_phasespace.lowEdge () < m_positive.xmax      () , 
+                  "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
+                  "Ostap::Math::PhaseSpacePol" ) ;
+  Ostap::Assert ( m_positive.xmin      () < m_phasespace.highEdge() , 
+                  "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
+                  "Ostap::Math::PhaseSpacePol" ) ;                 
+}
 // =====================================================================
 // evaluate N/L-body modulated phase space
 // =====================================================================
@@ -698,6 +715,15 @@ Ostap::Math::ExpoPositive::ExpoPositive
   const double               xmin ,
   const double               xmax )
   : m_positive  ( pars , xmin , xmax )
+  , m_tau       ( tau ) 
+{}
+// ======================================================================
+// constructor from polynom and exponential 
+// ======================================================================
+Ostap::Math::ExpoPositive::ExpoPositive
+( const Ostap::Math::Positive& pol , 
+  const double                 tau ) 
+  : m_positive  ( pol )
   , m_tau       ( tau ) 
 {}
 // ============================================================================

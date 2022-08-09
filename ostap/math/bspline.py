@@ -50,6 +50,7 @@ from    ostap.core.core        import Ostap, funID
 from    ostap.core.ostap_types import is_integer, integer_types
 from    ostap.math.base        import iszero, isequal, signum, doubles
 from    ostap.core.meta_info   import root_info
+import  ostap.math.reduce 
 import  ostap.math.bernstein 
 import  ostap.math.polynomials
 

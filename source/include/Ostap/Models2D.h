@@ -67,6 +67,12 @@ namespace Ostap
         const double          ymin       ,
         const double          ymax       ) ;
       // ======================================================================
+      /// constructor from the polynomial and phase spaces
+      PS2DPol 
+      ( const Ostap::Math::Positive2D& pol ,
+        const PhaseSpaceNL&            psx ,
+        const PhaseSpaceNL&            psy ) ;
+      // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -208,6 +214,11 @@ namespace Ostap
         const unsigned short  N          ,
         const double          xmin       ,
         const double          xmax       ) ;
+      // ======================================================================
+      /// constructor from the polynomial and phase spaces
+      PS2DPolSym 
+      ( const Ostap::Math::Positive2DSym& pol ,
+        const PhaseSpaceNL&               ps ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -358,6 +369,13 @@ namespace Ostap
         const double          ymin       ,
         const double          ymax       ) ;
       // ======================================================================
+      /// constructor from the polynomial and phase spaces
+      PS2DPol2
+      ( const Ostap::Math::Positive2D& pol  ,
+        const PhaseSpaceNL&            psx  ,
+        const PhaseSpaceNL&            psy  ,
+        const double                   mmax = -1 ) ;
+      // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -507,6 +525,12 @@ namespace Ostap
         const unsigned short  N          ,
         const double          xmin       ,
         const double          xmax       ) ;
+      // ======================================================================
+      /// constructor from the polynomial and phase spaces
+      PS2DPol2Sym 
+      ( const Ostap::Math::Positive2DSym& pol       ,
+        const PhaseSpaceNL&               ps        ,
+        const double                      mmax = -1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -776,7 +800,7 @@ namespace Ostap
       Ostap::Math::PhaseSpacePol m_psx      ;
       Ostap::Math::PhaseSpacePol m_psy      ;
       /// Max-mass 
-      double                    m_mmax     ;
+      double                     m_mmax     ;
       // ======================================================================
     private:
       // ======================================================================
@@ -977,6 +1001,11 @@ namespace Ostap
         const double          ymin     ,
         const double          ymax     ,
         const double          tau  = 0 ) ;
+      // constructor from components
+      ExpoPS2DPol 
+      ( const Ostap::Math::Positive2D& pol     , 
+        const PhaseSpaceNL&            ps      ,        
+        const double                   tau = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1107,6 +1136,11 @@ namespace Ostap
         const unsigned short  Ny   =  1 ,
         const double          taux =  0 ,
         const double          tauy =  0 ) ;            
+      /// constructor from polynomial 
+      Expo2DPol
+      ( const Ostap::Math::Positive2D& pol       , 
+        const double                   taux =  0 ,
+        const double                   tauy =  0 ) ;            
       // ======================================================================
     public:
       // ======================================================================
@@ -1227,6 +1261,11 @@ namespace Ostap
         const double          xmax = 1 ,
         const unsigned short  N    = 1 ,
         const double          tau  = 0 ) ;
+      // ======================================================================
+      /// constructor from polynomial 
+      Expo2DPolSym
+      ( const Ostap::Math::Positive2DSym& pol     , 
+        const double                      tau = 0 ) ;            
       // ======================================================================
     public:
       // ======================================================================

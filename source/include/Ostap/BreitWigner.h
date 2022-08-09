@@ -626,8 +626,17 @@ namespace Ostap
       // =======================================================================
       /// clone the channel 
       ChannelQ* clone () const override ;
-      // ======================================================================
+      // =======================================================================
     public:
+      // =======================================================================
+      /// get the mass of the 1st daughter 
+      double            m1         () const { return m_ps2.m1 ()         ; }
+      /// get the mass of the 2nd daughter  
+      double            m2         () const { return m_ps2.m2 ()         ; }
+      /// phase space function 
+      const Ostap::Math::PhaseSpace2& ps2 () const { return m_ps2 ; }
+      // =======================================================================
+    public: 
       // =======================================================================
       /** squared numerator for the amplitude 
        * \f[ N^2(s,m_0) = m_0 \Gamma0 q(s) \f] 
@@ -665,11 +674,6 @@ namespace Ostap
       /// describe the channel 
       std::string describe  () const override ;
       // =======================================================================
-    public :
-      // =======================================================================
-      /// get the phasespace 
-      const Ostap::Math::PhaseSpace2& ps2() const { return m_ps2 ; }
-      // =======================================================================
     private :
       // =======================================================================
       /// two  body phase space 
@@ -703,7 +707,7 @@ namespace Ostap
        *  @param gamma the width 
        *  @param m1    the mass of the 1st daughter
        *  @param m2    the mass of the 2nd daughter
-       *  @param L     the oribital momentum
+       *  @param L     the orbital momentum
        */
       Channel
       ( const double                  gamma = 0.150 , 
@@ -715,7 +719,7 @@ namespace Ostap
        *  @param gamma the width 
        *  @param m1    the mass of the 1st daughter
        *  @param m2    the mass of the 2nd daughter
-       *  @param L     the oribital momentum
+       *  @param L     the orbital momentum
        *  @param r     the Jackson's formfactor 
        */
       Channel
@@ -729,7 +733,7 @@ namespace Ostap
        *  @param gamma the width 
        *  @param m1    the mass of the 1st daughter
        *  @param m2    the mass of the 2nd daughter
-       *  @param L     the oribital momentum
+       *  @param L     the orbital momentum
        *  @param f     the formfactor 
        */
       Channel
@@ -1205,6 +1209,56 @@ namespace Ostap
       std::string                    m_description ; // description 
       // ======================================================================
     } ;    
+    // ========================================================================
+    /** @class  ChannelFlatte
+     *  Describe Flatte-like channel 
+     *  @see Ostap::Math::ChannelBW 
+     *  \f[ \begin{array}{ncl}
+     *  N^2(s,m_0)& = & m_0 * g * 16\pi \\ 
+     *  D  (s,m_0)& = & m_0 * g \frac{2q}{\sqrt{s}}  
+     *  \end{array} \f]
+     */
+    class ChannelFlatte : public ChannelCW
+    {
+    public :
+      // =====================================================================
+      /** constructor from all parameters 
+       *  @param g     the coupling constant  (dimensionless)
+       *  @param m1    the mass of the 1st daughter
+       *  @param m2    the mass of the 2nd daughter
+       */
+      ChannelFlatte ( const double g  = 0.1   , 
+                      const double m1 = 0.139 , 
+                      const double m2 = 0.139 );
+      /// clone method 
+      ChannelFlatte* clone() const override ;
+      // ======================================================================
+    public: // define/override base-class abstract methods 
+      // ======================================================================
+      /** the first main method: numerator
+       * \f[ N^2(s,m_0) = m_0 g \f] 
+       */
+      double               N2
+      ( const double s  , 
+        const double m0 ) const override ;
+      // ======================================================================
+      /** the second main method: term to the denominator 
+       *  \f[ D(s,m_0) =  m_0 g \frac{2q}{\sqrt{s}} \f], 
+       *  @attention it is purely imaginary below threshold!
+       */
+      std::complex<double> D   
+      ( const double s  , 
+        const double m0 ) const override ;
+      // =======================================================================
+    public:
+      // ======================================================================
+      // unique tag
+      std::size_t tag      () const override ; // unique tag
+      // ======================================================================
+      /// describe the channel 
+      std::string describe () const override ;
+      // ======================================================================
+    } ;    
 
 
     // ========================================================================
@@ -1483,6 +1537,15 @@ namespace Ostap
       /// clone method 
       Rho0* clone()   const override { return new Rho0 ( *this ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      double  m1 () const { return m_m1 ; }
+      double  m2 () const { return m_m1 ; }      
+      // ======================================================================
+    private: 
+      // ======================================================================
+      double m_m1 ;
+      // ======================================================================
     } ;
     // ========================================================================
     /** @class Kstar0
@@ -1510,6 +1573,16 @@ namespace Ostap
       /// clone method 
       Kstar0* clone()   const override { return new Kstar0 ( *this ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      double  m1 () const { return m_m1 ; }
+      double  m2 () const { return m_m2 ; }      
+      // ======================================================================
+    private: 
+      // ======================================================================
+      double m_m1 ;
+      double m_m2 ;
+      // ======================================================================
     } ;
     // ========================================================================
     /** @class Phi0
@@ -1535,6 +1608,15 @@ namespace Ostap
       // ======================================================================
       /// clone method 
       Phi0* clone()   const override { return new Phi0 ( *this ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      double  m1 () const { return m_m1 ; }
+      double  m2 () const { return m_m1 ; }      
+      // ======================================================================
+    private: 
+      // ======================================================================
+      double m_m1 ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -1576,6 +1658,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// add new channel 
+      void addChannel ( const ChannelBW& channel ) { this->add ( channel ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// template creator 
       template <typename... CHANNELS>
       static inline BreitWignerMC
@@ -1585,56 +1672,6 @@ namespace Ostap
       { return BreitWignerMC ( m0 , c1 , channels... ) ; }
       // ======================================================================
     } ;
-    // ========================================================================
-    /** @class  ChannelFlatte
-     *  Describe Flatte-like channel 
-     *  @see Ostap::Math::ChannelBW 
-     *  \f[ \begin{array}{ncl}
-     *  N^2(s,m_0)& = & m_0 * g * 16\pi \\ 
-     *  D  (s,m_0)& = & m_0 * g \frac{2q}{\sqrt{s}}  
-     *  \end{array} \f]
-     */
-    class ChannelFlatte : public ChannelCW
-    {
-    public :
-      // =====================================================================
-      /** constructor from all parameters 
-       *  @param g     the coupling constant  (dimensionless)
-       *  @param m1    the mass of the 1st daughter
-       *  @param m2    the mass of the 2nd daughter
-       */
-      ChannelFlatte ( const double g  = 0.1   , 
-                      const double m1 = 0.139 , 
-                      const double m2 = 0.139 );
-      /// clone method 
-      ChannelFlatte* clone() const override ;
-      // ======================================================================
-    public: // define/override base-class abstract methods 
-      // ======================================================================
-      /** the first main method: numerator
-       * \f[ N^2(s,m_0) = m_0 g \f] 
-       */
-      double               N2
-      ( const double s  , 
-        const double m0 ) const override ;
-      // ======================================================================
-      /** the second main method: term to the denominator 
-       *  \f[ D(s,m_0) =  m_0 g \frac{2q}{\sqrt{s}} \f], 
-       *  @attention it is purely imaginary below threshold!
-       */
-      std::complex<double> D   
-      ( const double s  , 
-        const double m0 ) const override ;
-      // =======================================================================
-    public:
-      // ======================================================================
-      // unique tag
-      std::size_t tag      () const override ; // unique tag
-      // ======================================================================
-      /// describe the channel 
-      std::string describe () const override ;
-      // ======================================================================
-    } ;    
     // ========================================================================
     /** @class Flatte
      *
@@ -1662,14 +1699,15 @@ namespace Ostap
        *  @param mB1   mass of B1
        *  @param mB2   mass of B2
        */
-      Flatte ( const double m0    = 980   ,
-               const double m0g1  = 165   ,
-               const double g2og1 = 4.21  ,   // dimensionless 
-               const double mA1   = 139.6 ,
-               const double mA2   = 139.6 ,
-               const double mB1   = 493.7 ,
-               const double mB2   = 493.7 , 
-               const double g0    = 0     ) ; // the constant width for "other" decays
+      Flatte 
+      ( const double m0    = 980   ,
+        const double m0g1  = 165   ,
+        const double g2og1 = 4.21  ,   // dimensionless 
+        const double mA1   = 139.6 ,
+        const double mA2   = 139.6 ,
+        const double mB1   = 493.7 ,
+        const double mB2   = 493.7 , 
+        const double g0    = 0     ) ; // the constant width for "other" decays
       /// copy constructor 
       Flatte ( const Flatte&  right ) ;
       /// move constructor 
@@ -1691,6 +1729,7 @@ namespace Ostap
       double g2    () const { return m_channels [ 1 ] -> gamma0 () ; }
       /// additional constant width for "extra-channels"
       double gam0  () const { return m_channels [ 2 ] -> gamma0 () ; }
+      double g0    () const { return gam0 () ; }
       // ======================================================================
     public :  /// derived quantities 
       // ======================================================================
@@ -1704,6 +1743,20 @@ namespace Ostap
       bool setG1   ( const double value ) { return m_channels[0] -> setGamma0 ( value ) ; }
       bool setG2   ( const double value ) { return m_channels[1] -> setGamma0 ( value ) ; }
       bool setGam0 ( const double value ) { return m_channels[2] -> setGamma0 ( value ) ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      double mA1 () const { return m_A1 ; }
+      double mA2 () const { return m_A2 ; }
+      double mB1 () const { return m_B1 ; }
+      double mB2 () const { return m_B2 ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_A1 {} ;
+      double m_A2 {} ;
+      double m_B1 {} ;
+      double m_B2 {} ;
       // ======================================================================
     } ;
     // ========================================================================  
@@ -1719,10 +1772,11 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
        */      
-      double jackson_0 ( double /* m  */ ,
-                         double /* m0 */ ,
-                         double /* m1 */ ,
-                         double /* m2 */ ) ;
+      double jackson_0 
+      ( double /* m  */ ,
+        double /* m0 */ ,
+        double /* m1 */ ,
+        double /* m2 */ ) ;
       // ======================================================================
       /** the simple function for \f$ 1^- \rightarrow 0^- 0^- \f$, l = 1
        *  \f$\rho(\omega)= \omega^{-1} \f$
@@ -1733,10 +1787,11 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
        */      
-      double jackson_A2 ( double    m     ,
-                          double /* m0 */ ,
-                          double /* m1 */ ,
-                          double /* m2 */ ) ;
+      double jackson_A2
+      ( double    m     ,
+        double /* m0 */ ,
+        double /* m1 */ ,
+        double /* m2 */ ) ;
       // ======================================================================
       /** the simple function for \f$ 1^- \rightarrow 0^- 1^- \f$, l = 1
        *  \f$\rho(\omega)= \omega \f$
@@ -1747,10 +1802,11 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
        */
-      double jackson_A3 ( double    m     ,
-                          double /* m0 */ ,
-                          double /* m1 */ ,
-                          double /* m2 */ ) ;
+      double jackson_A3 
+      ( double    m     ,
+        double /* m0 */ ,
+        double /* m1 */ ,
+        double /* m2 */ ) ;
       // ======================================================================
       /** the simple function for
        *  \f$ \frac{3}{2}^+ \rightarrow \frac{1}{2}^+ 0^- \f$, l = 1
@@ -1764,10 +1820,11 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
        */
-      double jackson_A4 ( double    m     ,
-                          double /* m0 */ ,
-                          double    m1    ,
-                          double    m2     ) ;
+      double jackson_A4 
+      ( double    m     ,
+        double /* m0 */ ,
+        double    m1    ,
+        double    m2     ) ;
       // ======================================================================
       /** the simple function for
        *  \f$ \frac{3}{2}^- \rightarrow \frac{1}{2}^+ 0^- \f$, l = 2
@@ -1781,10 +1838,11 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
        */      
-      double jackson_A5 ( double    m     ,
-                          double /* m0 */ ,
-                          double    m1    ,
-                          double    m2     ) ;
+      double jackson_A5
+      ( double    m     ,
+        double /* m0 */ ,
+        double    m1    ,
+        double    m2     ) ;
       // ======================================================================
       /** the simple function for \f$\rho^0 \rightarrow \pi^+ \pi^-\f$ and           
        *  \f$ 1- \rightarrow 0^- 0^- \f$, l = 1
@@ -1797,10 +1855,11 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
        *  @date 2011-11-30
        */
-      double jackson_A7 ( double    m     ,
-                          double    m0    ,
-                          double    m1    ,
-                          double    m2    ) ;
+      double jackson_A7 
+      ( double    m     ,
+        double    m0    ,
+        double    m1    ,
+        double    m2    ) ;
       // ======================================================================
     } //                                               end of namespace Jackson
     // ========================================================================
@@ -1843,8 +1902,9 @@ namespace Ostap
       public:
         // ====================================================================
         /// constructor from enum
-        Jackson ( const Ostap::Math::FormFactors::JacksonRho rho = 
-                  Ostap::Math::FormFactors::Jackson_0 ) ;
+        Jackson
+        ( const Ostap::Math::FormFactors::JacksonRho rho = 
+          Ostap::Math::FormFactors::Jackson_0 ) ;
         /// virtual destructor
         virtual ~Jackson  () ;
         /// clone method ("virtual constructor")
@@ -1853,14 +1913,22 @@ namespace Ostap
         /** the only important method the squared ratio 
          *  of formfactors \f$  \frac{F^2(m)}{F^2(m_0)} \$
          */
-      double operator() ( const double m  , const double m0 ,
-                          const double m1 , const double m2 ) const override;
-      // ====================================================================
+        double operator() 
+        ( const double m  , 
+          const double m0 ,
+          const double m1 , 
+          const double m2 ) const override;
+        // ====================================================================
         /// describe the formfactor 
         std::string describe () const override { return m_what ; }
         // ====================================================================
         // unique tag/label
         std::size_t tag      () const override ;
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// get the rho-index
+        Ostap::Math::FormFactors::JacksonRho rho () const { return m_rho ; }
         // ====================================================================
       private:
         // ====================================================================
@@ -1911,6 +1979,13 @@ namespace Ostap
         // ====================================================================
         // unique tag/label
         std::size_t tag      () const override ;
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// orbital momentum 
+        Case    L       () const { return m_L ; }
+        /// breakup 
+        double  breakup () const { return m_b ; }
         // ====================================================================
       protected:
         // ====================================================================
@@ -2371,8 +2446,9 @@ namespace Ostap
       /** get the phase space factor  \f$ \varrho \f$
        *  optionally normalized at point \f$ m_n \f$
        */
-      double rho_s ( const double s  , 
-                     const double mn ) const override ;
+      double rho_s
+      ( const double s  , 
+        const double mn ) const override ;
       // ======================================================================
       /// get the opening threshold \f$ s_{threshold} \$ for the channel 
       double s_threshold () const override 
@@ -2380,6 +2456,11 @@ namespace Ostap
         const double le = m_ps.lowEdge() ;
         return std::max ( m_channel->s_threshold() , le * le ) ;
       }
+      // =======================================================================
+    public: //  get thephase space
+      // ======================================================================= \
+      /// get the phase space factors 
+      const Ostap::Math::PhaseSpace23L& ps23L () const { return m_ps ; }
       // =======================================================================
     public: //  helper methods 
       // =======================================================================
@@ -2467,6 +2548,12 @@ namespace Ostap
       std::size_t tag       () const override ;
       /// describe the channel 
       std::string describe  () const override ;
+      // ======================================================================
+    public:
+      // =====================================================================
+      double m1 () const { return m_m1 ; }
+      double m2 () const { return m_m2 ; }
+      double m3 () const { return m_m3 ; }      
       // ======================================================================
     private: 
       // =====================================================================
@@ -2706,6 +2793,8 @@ namespace Ostap
       double h       ( const double s ) const ;
       /// derivative of h-function
       double h_prime ( const double s ) const ;
+      /// mpi
+      double mpi     () const { return m_mpi ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -2808,6 +2897,12 @@ namespace Ostap
       /// elasticity 
       double e () const { return m_e ; }
       // ======================================================================
+    public :
+      // ======================================================================
+      double m1 () const { return m_ps2.m1 () ; }
+      double m2 () const { return m_ps2.m2 () ; }
+      double m3 () const { return m_m3        ; }
+      // ======================================================================
     public : // setters 
       // ======================================================================
       /// a 
@@ -2824,9 +2919,11 @@ namespace Ostap
       /// b-parametter of LASS functuion 
       double                     m_b ;  // b-parametter of LASS functuion 
       /// elasticity parameter 
-      double                     m_e ;  // elasticity parameter 
+      double                     m_e ;  // elasticity parameter
       /// phase space 
       Ostap::Math::PhaseSpace2   m_ps2 ; // phase space
+      /// keep m3 for easy access 
+      double                     m_m3 ;
       // ======================================================================
     } ;  
     // ========================================================================
@@ -2863,10 +2960,11 @@ namespace Ostap
        *  @param use_rho  use rho-function from Breit-Wigner 
        *  @param use_N2   use N2-function from Breit-Wigner 
        */
-      BWPS ( const Ostap::Math::BW&            bw      , 
-             const Ostap::Math::PhaseSpacePol& ps      , 
-             const bool use_rho                = true  , 
-             const bool use_N2                 = true  ) ;
+      BWPS
+      ( const Ostap::Math::BW&            bw      , 
+        const Ostap::Math::PhaseSpacePol& ps      , 
+        const bool use_rho                = true  , 
+        const bool use_N2                 = true  ) ;
       // ======================================================================
       /** constructor from Breit-Wigner, phase-space and flags 
        *  @param bw Breit-Wigner shape 
@@ -2874,10 +2972,11 @@ namespace Ostap
        *  @param use_rho  use rho-function from Breit-Wigner 
        *  @param use_N2   use N2-function from Breit-Wigner 
        */
-      BWPS ( const Ostap::Math::BW&            bw      , 
-             const Ostap::Math::PhaseSpaceNL&  ps      , 
-             const bool use_rho                = true  , 
-             const bool use_N2                 = true  ) ;
+      BWPS
+      ( const Ostap::Math::BW&            bw      , 
+        const Ostap::Math::PhaseSpaceNL&  ps      , 
+        const bool use_rho                = true  , 
+        const bool use_N2                 = true  ) ;
       // ======================================================================
       /// copy constructor 
       BWPS ( const BWPS&  ) ;
@@ -3017,12 +3116,13 @@ namespace Ostap
        *  @param L  the orbital momentum between  
        *  system of 1st and 2nd particles and the 3rd particle
        */
-      BW3L ( const Ostap::Math::BW& bw , 
-             const double           M  ,   
-             const double           m1 ,         
-             const double           m2 ,       
-             const double           m3 ,       
-             const unsigned short   L  ) ;
+      BW3L
+      ( const Ostap::Math::BW& bw , 
+        const double           M  ,   
+        const double           m1 ,         
+        const double           m2 ,       
+        const double           m3 ,       
+        const unsigned short   L  ) ;
       // ======================================================================
       /// copy constructor 
       BW3L ( const BW3L&  ) ;
@@ -3134,7 +3234,7 @@ namespace Ostap
     {
     public :
       // ======================================================================
-      /// constructor from breit-wigner
+      /// constructor from the breit-wigner
       A2 ( const BW&    bw           ,
            const double scale = 1.0  ) ;
       // ======================================================================
@@ -3146,6 +3246,12 @@ namespace Ostap
     public:
       // ======================================================================
       double operator() ( const double s ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the breint wigner
+      const BW& bw    () const { return *m_bw.get() ; }
+      double    scale () const { return m_scale      ; }
       // ======================================================================
     private: 
       // ======================================================================

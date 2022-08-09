@@ -569,6 +569,9 @@ Ostap.Math.Histo3D.__reduce__ = _rm_h3d_reduce_
 # =============================================================================
 
 
+
+
+
 # =============================================================================
 ## decorated classes 
 _decorated_classes_  = (
@@ -613,17 +616,17 @@ _decorated_classes_  = (
     Ostap.Kinematics.Dalitz0           , 
     Ostap.Kinematics.Dalitz            ,
     ##
-    Ostap.Math.Histo1D ,
-    Ostap.Math.Histo2D ,
-    Ostap.Math.Histo3D ,
+    Ostap.Math.Histo1D                 ,
+    Ostap.Math.Histo2D                 ,
+    Ostap.Math.Histo3D                 ,
     ##
-    Ostap.Math.CutOffGauss   , 
-    Ostap.Math.CutOffStudent ,
+    Ostap.Math.CutOffGauss             , 
+    Ostap.Math.CutOffStudent           ,
     ##
-    Ostap.Math.PhaseSpace2   , 
-    Ostap.Math.PhaseSpace3   , 
-    Ostap.Math.PhaseSpace3s  , 
-    Ostap.Math.PhaseSpaceNL  , 
+    Ostap.Math.PhaseSpace2             , 
+    Ostap.Math.PhaseSpace3             , 
+    Ostap.Math.PhaseSpace3s            , 
+    Ostap.Math.PhaseSpaceNL            , 
     )
 
 # =============================================================================
@@ -682,6 +685,8 @@ _new_methods_       = (
     Ostap.Math.PhaseSpaceNL            . __reduce__  ,
     ##
     )
+
+import ostap.math.more_reduce
 
 # =============================================================================
 if '__main__' == __name__ :

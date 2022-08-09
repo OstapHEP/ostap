@@ -250,6 +250,11 @@ namespace Ostap
           const double         xlow    ,
           const double         xhigh   ) ;
       // ======================================================================
+      /// constructor from phase space and polynomial
+      PhaseSpacePol 
+        ( const PhaseSpaceNL&          ps  ,
+          const Ostap::Math::Positive& pol ) ;
+      // ======================================================================
       /// destructor 
       ~PhaseSpacePol() ;
       // ======================================================================
@@ -940,6 +945,7 @@ namespace Ostap
       // ======================================================================
       double nu         () const  { return m_nu     ; }
       double lambda     () const  { return m_lambda ; }
+      double lambd      () const  { return m_lambda ; }
       double alpha      () const  { return m_alpha  ; }
       // ======================================================================
     public: // general properties
@@ -1225,6 +1231,11 @@ namespace Ostap
         const double               tau   =  0 , // exponent
         const double               xmin  =  0 ,
         const double               xmax  =  1 ) ;
+      // ======================================================================
+      /// constructor from polynom and exponential 
+      ExpoPositive 
+      ( const Ostap::Math::Positive& pol        , 
+        const double                 tau   =  0 ) ;// exponent
       // ======================================================================
     public:
       // ======================================================================

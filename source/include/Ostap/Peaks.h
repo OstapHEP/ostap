@@ -224,11 +224,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// evaluate Bifurcated Gaussian
+      /// evaluate Gaussian
       double evaluate   ( const double x ) const ;
-      /// evaluate Bifurcated Gaussian
+      /// evaluate Gaussian
       double pdf        ( const double x ) const { return evaluate ( x ) ; }
-      /// evaluate Bifurcated Gaussian
+      /// evaluate Gaussian
       double operator() ( const double x ) const { return evaluate ( x ) ; }
       // ======================================================================
     public:
@@ -1649,11 +1649,12 @@ namespace Ostap
        *  @param nL     left n-parameter  ( actually  n=1+|N| )
        *  @param nR     right n-parameter  ( actually  n=1+|N| )
        */
-      BifurcatedStudentT ( const double mass   = 0 ,
-                           const double sigmaL = 1 ,
-                           const double sigmaR = 1 ,
-                           const double nL     = 2 ,
-                           const double nR     = 2 ) ;
+      BifurcatedStudentT
+      ( const double mass   = 0 ,
+        const double sigmaL = 1 ,
+        const double sigmaR = 1 ,
+        const double nL     = 2 ,
+        const double nR     = 2 ) ;
       /// destructor
       ~BifurcatedStudentT() ;
       // ======================================================================
@@ -1874,10 +1875,6 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ;
       // ======================================================================        
     } ;
-    
-      
-
-
 
     // ========================================================================
     /** @class SinhAsinh
@@ -2011,10 +2008,11 @@ namespace Ostap
        *  @param delta  \f$\delta\f$-parameter    \f$   0<\delta<+\infty\f$
        *  @param gamma  \f$\gamma\f$-parameter    \f$-\infty<\epsilon<+\infty\f$
        */
-      JohnsonSU  ( const double xi      = 0 ,   // related to location
-                   const double lambda  = 1 ,   // related to variance
-                   const double delta   = 1 ,   // shape
-                   const double gamma   = 0 ) ; // shape
+      JohnsonSU  
+      ( const double xi      = 0 ,   // related to location
+        const double lambda  = 1 ,   // related to variance
+        const double delta   = 1 ,   // shape
+        const double gamma   = 0 ) ; // shape
       /// destructor
       ~JohnsonSU () ;
       // ======================================================================
@@ -2030,6 +2028,7 @@ namespace Ostap
       double xi       () const { return m_xi       ; }
       double lam      () const { return m_lambda   ; }
       double lambda   () const { return m_lambda   ; }
+      double lambd    () const { return m_lambda   ; }
       double delta    () const { return m_delta    ; }
       double gamma    () const { return m_gamma    ; }
       // ======================================================================
@@ -2083,8 +2082,9 @@ namespace Ostap
        *  @param mean  \f$\mu\f$-parameter
        *  @param sigma \f$\sigma\f$-parameter
        */
-      Atlas   ( const double mean   = 0  ,
-                const double sigma  = 1  ) ;
+      Atlas   
+      ( const double mean   = 0  ,
+        const double sigma  = 1  ) ;
       /// destructor
       ~Atlas () ;
       // ======================================================================
@@ -2169,8 +2169,9 @@ namespace Ostap
        *  @param mean  \f$\mu\f$-parameter
        *  @param sigma \f$\sigma\f$-parameter
        */
-      Sech   ( const double mean   = 0  ,
-               const double sigma  = 1  ) ;
+      Sech 
+      ( const double mean   = 0  ,
+        const double sigma  = 1  ) ;
       /// destructor
       ~Sech () ;
       // ======================================================================
@@ -2252,8 +2253,9 @@ namespace Ostap
        *  @param mean  \f$\mu  \f$-parameter
        *  @param sigma \f$sigma\f$-parameter
        */
-      Logistic  ( const double mean  = 0  ,
-                  const double sigma = 1  ) ;
+      Logistic  
+      ( const double mean  = 0  ,
+        const double sigma = 1  ) ;
       /// destructor
       ~Logistic () ;
       // ======================================================================
@@ -2345,9 +2347,10 @@ namespace Ostap
        *  @param alpha \f$\alpha\f$-parameter 
        *  @param beta  \f$\beta\f$-parameter 
        */ 
-      Losev ( const double mu    = 0 , 
-              const double alpha = 1 , 
-              const double beta  = 1 ) ;        
+      Losev
+      ( const double mu    = 0 , 
+        const double alpha = 1 , 
+        const double beta  = 1 ) ;        
       // ======================================================================
     public:
       // ======================================================================
@@ -2425,8 +2428,9 @@ namespace Ostap
        *  @param mu location 
        *  @param scale the scale, scale>0
        */
-      Slash ( const double mu    = 0 ,   // location 
-              const double scale = 1 ) ; // scale ;      
+      Slash
+      ( const double mu    = 0 ,   // location 
+        const double scale = 1 ) ; // scale ;      
       /// destructor
       ~Slash() ;
       // ======================================================================
@@ -2495,9 +2499,10 @@ namespace Ostap
        *  @param lambdaL ``left''  exponential slope  (lambdaL>0)
        *  @param lambdaR ``right'' exponential slope  (lambdaR>0)
        */
-      AsymmetricLaplace ( const double mu      = 0 ,   // location 
-                          const double lambdaL = 1 ,   // left  exponential slope 
-                          const double lambdaR = 1 ) ; // right exponential slope 
+      AsymmetricLaplace 
+      ( const double mu      = 0 ,   // location 
+        const double lambdaL = 1 ,   // left  exponential slope 
+        const double lambdaR = 1 ) ; // right exponential slope 
       ///  destructor 
       ~AsymmetricLaplace() ;
       // ======================================================================
@@ -2525,6 +2530,7 @@ namespace Ostap
     public: // the standard parameterization (slopes are inverse)
       // ======================================================================
       double lambda   () const { return 1.0 / std::sqrt ( m_lambdaL * m_lambdaR ) ; }
+      double lambd    () const { return lambda ()  ; }
       /// get the ``asymmetry''   0<k<+inf 
       double k        () const { return       std::sqrt ( m_lambdaR / m_lambdaL ) ; }
       // ======================================================================
@@ -2577,8 +2583,9 @@ namespace Ostap
        *  @param mu  the mean/mode/median of the distribution
        *  @param s   the width-parameteter
        */
-      RaisingCosine ( const double mu = 0 , 
-                      const double s  = 1 ) ;
+      RaisingCosine
+      ( const double mu = 0 , 
+        const double s  = 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2665,9 +2672,10 @@ namespace Ostap
        *  @param q     q-value   (q<3, for q>3 q = 6-q)
        *  @param scale 
        */
-      QGaussian ( const double mean  = 0 ,   // mean/mode/location 
-                  const double q     = 1 ,   //  q-parameter 
-                  const double scale = 1 ) ; // scale/sigma
+      QGaussian 
+      ( const double mean  = 0 ,   // mean/mode/location 
+        const double q     = 1 ,   //  q-parameter 
+        const double scale = 1 ) ; // scale/sigma
       // ======================================================================
     public :
       // ======================================================================
@@ -2819,10 +2827,11 @@ namespace Ostap
        *  @param sigma related to width 
        *  @param zeta  related to what ?
        */
-      Hyperbolic ( const double mu     = 0 ,   // related to location 
-                   const double sigma  = 1 ,   // related to withs  
-                   const double zeta   = 1 ,   // related to shape 
-                   const double kappa  = 0 ) ; // related to asymmetry 
+      Hyperbolic 
+      ( const double mu     = 0 ,   // related to location 
+        const double sigma  = 1 ,   // related to withs  
+        const double zeta   = 1 ,   // related to shape 
+        const double kappa  = 0 ) ; // related to asymmetry 
       // ======================================================================
     public :
       // ======================================================================
