@@ -601,33 +601,47 @@ def _rrfr_reduce_ ( res ) :
 
 ROOT.RooFitResult.__reduce__  = _rrfr_reduce_ 
     
-## # =============================================================================
-## ## reduce BreitWigner
-## def _rbw_reduce_ ( pdf ):
-##     """Reduce BreitWigner"""
-##     return root_store_factory , ( type ( pdf )       ,
-##                             pdf.name           ,
-##                             pdf.title          ,
-##                             pdf.x      ()      , 
-##                             pdf.mass   ()      ,
-##                             pdf.widths ()[0]   ,
-##                             pdf.breit_wigner() ) 
+# =============================================================================
+## reduce BreitWigner
+def _rbw_reduce_ ( pdf ):
+    """Reduce BreitWigner"""
+    return root_store_factory , ( type ( pdf )       ,
+                                  pdf.name           ,
+                                  pdf.title          ,
+                                  pdf.x      ()      , 
+                                  pdf.mass   ()      ,
+                                  pdf.widths ()[0]   ,
+                                  pdf.breit_wigner() ) 
 
-## Ostap.Models.BreitWigner.__reduce__ = _rbw_reduce_ 
+Ostap.Models.BreitWigner.__reduce__ = _rbw_reduce_ 
 
-## # =============================================================================
-## ## reduce BreitWignerMC
-## def _rbwmc_reduce_ ( pdf ):
-##     """Reduce BreitWignerMC"""
-##     return root_store_factory , ( type ( pdf )          ,
-##                             pdf.name              ,
-##                             pdf.title             ,
-##                             pdf.x      ()         , 
-##                             pdf.mass   ()         ,
-##                             pdf.widths ()         ,
-##                             pdf.breit_wigner_MC() ) 
+# =============================================================================
+## reduce BreitWignerMC
+def _rbwmc_reduce_ ( pdf ):
+    """Reduce BreitWignerMC"""
+    return root_store_factory , ( type ( pdf )          ,
+                                  pdf.name              ,
+                                  pdf.title             ,
+                                  pdf.x      ()         , 
+                                  pdf.mass   ()         ,
+                                  pdf.widths ()         ,
+                                  pdf.breit_wigner_MC() ) 
 
-## Ostap.Models.BreitWignerMC.__reduce__ = _rbwmc_reduce_ 
+Ostap.Models.BreitWignerMC.__reduce__ = _rbwmc_reduce_ 
+
+# =============================================================================
+## reduce BWI
+def _rbwi_reduce_ ( pdf ):
+    """Reduce BWI"""
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.original () ,
+                                  pdf.b        () ,
+                                  pdf.ab       () ,
+                                  pdf.phib     () )
+
+Ostap.Models.BWI.__reduce__ = _rbwi_reduce_ 
 
 # =============================================================================
 ## reduce Flatte
@@ -644,6 +658,53 @@ def _rflatte_reduce_ ( pdf ):
                                   pdf.flatte  ()   ) 
 
 Ostap.Models.Flatte.__reduce__ = _rflatte_reduce_ 
+
+# =============================================================================
+## reduce LASS
+def _rlass_reduce_ ( pdf ):
+    """Reduce LASS"""
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.x      ()    , 
+                                  pdf.mass   ()    ,
+                                  pdf.widths ()[0] ,
+                                  pdf.a      ()    , 
+                                  pdf.b      ()    , 
+                                  pdf.e      ()    , 
+                                  pdf.lass   ()    )
+
+Ostap.Models.LASS.__reduce__ = _rlass_reduce_ 
+
+# =============================================================================
+## reduce BWPS
+def _rbwps_reduce_ ( pdf ):
+    """Reduce BWPS"""
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.x      ()    , 
+                                  pdf.mass   ()    ,
+                                  pdf.widths ()    ,
+                                  pdf.phis   ()    ,
+                                  pdf.bwps   ()    )
+
+Ostap.Models.BWPS.__reduce__ = _rbwps_reduce_ 
+
+# =============================================================================
+## reduce BW3L
+def _rbw3l_reduce_ ( pdf ):
+    """Reduce BW3L"""
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.x      ()    , 
+                                  pdf.mass   ()    ,
+                                  pdf.widths ()    ,
+                                  pdf.bw3l   ()    )
+
+Ostap.Models.BW3L.__reduce__ = _rbw3l_reduce_ 
+
 
 # =============================================================================
 ## reduce Voigt
@@ -1930,10 +1991,19 @@ _decorated_classes_ = (
     Ostap.MoreRooFit.Monotonic         , 
     Ostap.MoreRooFit.Convex            , 
     Ostap.MoreRooFit.ConvexOnly        , 
-    Ostap.MoreRooFit.BSpline           , 
+    Ostap.MoreRooFit.BSpline           ,
     ##
-    Ostap.Models.Uniform               , 
-    Ostap.Models.Flatte                , 
+    Ostap.Models.Uniform               ,
+    ## BW & friends 
+    Ostap.Models.BreitWigner           , 
+    Ostap.Models.BreitWignerMC         , 
+    Ostap.Models.BWI                   , 
+    Ostap.Models.Flatte                ,
+    Ostap.Models.LASS                  ,
+    Ostap.Models.BWPS                  ,
+    Ostap.Models.BW3L                  ,
+    ## others 
+    Ostap.Models.Uniform               ,
     Ostap.Models.Voigt                 , 
     Ostap.Models.PseudoVoigt           , 
     Ostap.Models.CrystalBall           , 

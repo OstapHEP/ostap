@@ -427,9 +427,11 @@ Ostap::Models::BWI::BWI
   RooAbsReal&                       ab    , 
   RooAbsReal&                       phib  ) 
   : BreitWigner ( bw , name ) 
-  , m_b     ( "b"     , "background"        , this , b    ) 
-  , m_ab    ( "ab"    , "background factor" , this , ab   ) 
-  , m_phib  ( "phib"  , "background phase"  , this , phib )
+  , m_b        ( "!b"     , "background"        , this , b    ) 
+  , m_ab       ( "!ab"    , "background factor" , this , ab   ) 
+  , m_phib     ( "!phib"  , "background phase"  , this , phib )
+    // clone the original 
+  , m_original ( bw.clone ( nullptr ) )
 {}
 // ============================================================================
 // constructor from Breit-Wigner and backround 
@@ -441,7 +443,7 @@ Ostap::Models::BWI::BWI
   RooAbsReal&                       b     , 
   RooAbsReal&                       ab    , 
   RooAbsReal&                       phib  ) 
-  : BWI ( name , bw , b , ab , phib ) 
+  : BWI ( name , bw , b , ab , phib )
 {
   SetTitle ( title ) ;  
 }
@@ -453,9 +455,11 @@ Ostap::Models::BWI::BWI
   const char*               name  ) 
   : BreitWigner ( right , name )
     //
-  , m_b      ( "b"    , this , right.m_b    ) 
-  , m_ab     ( "ab"   , this , right.m_ab   ) 
-  , m_phib   ( "phib" , this , right.m_phib )
+  , m_b        ( "!b"    , this , right.m_b    ) 
+  , m_ab       ( "!ab"   , this , right.m_ab   ) 
+  , m_phib     ( "!phib" , this , right.m_phib )
+    // clone the original 
+  , m_original ( right.m_original->clone( nullptr ) )
 {}
 // ============================================================================
 Ostap::Models::BWI::~BWI(){}

@@ -277,21 +277,19 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      ///constructor from Breit-Wigner and backround 
-      BWI
-        ( const char*                         name  , 
-          const Ostap::Models::BreitWigner&   bw    ,
-          RooAbsReal&                         b     , 
-          RooAbsReal&                         ab    , 
-          RooAbsReal&                         phib  ) ;
-      ///constructor from Breit-Wigner and backround 
-      BWI 
-        ( const char*                         name  , 
-          const char*                         title , 
-          const Ostap::Models::BreitWigner&   bw    ,
-          RooAbsReal&                         b     , 
-          RooAbsReal&                         ab    , 
-          RooAbsReal&                         phib  ) ;
+      /// constructor from the Breit-Wigner and backround 
+      BWI ( const char*                         name  , 
+            const Ostap::Models::BreitWigner&   bw    ,
+            RooAbsReal&                         b     , 
+            RooAbsReal&                         ab    , 
+            RooAbsReal&                         phib  ) ;
+      ///constructor from the Breit-Wigner and backround 
+      BWI ( const char*                         name  , 
+            const char*                         title , 
+            const Ostap::Models::BreitWigner&   bw    ,
+            RooAbsReal&                         b     , 
+            RooAbsReal&                         ab    , 
+            RooAbsReal&                         phib  ) ;
       /// "copy" constructor
       BWI ( const BWI& , const char* name = 0 ) ;
       /// virtual destructor
@@ -320,15 +318,26 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const RooAbsReal& b      () const { return m_b    .arg() ; }
-      const RooAbsReal& ab     () const { return m_ab   .arg() ; }
-      const RooAbsReal& phib   () const { return m_phib .arg() ; }
+      const RooAbsReal& b        () const { return m_b        .arg() ; }
+      const RooAbsReal& ab       () const { return m_ab       .arg() ; }
+      const RooAbsReal& phib     () const { return m_phib     .arg() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the original Breit-Wigner  
+      const Ostap::Models::BreitWigner& original() const { return *m_original.get() ; }
       // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_b    ;  // background shape 
       RooRealProxy m_ab   ;  // background factor  
       RooRealProxy m_phib ;  // background phase 
+      RooRealProxy m_orig ;  // keep the original BreitWigner 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// keep  the original Breit-Wigner 
+      std::unique_ptr<Ostap::Models::BreitWigner> m_original {} ;
       // ======================================================================
     };
     // ========================================================================
@@ -7766,7 +7775,6 @@ namespace Ostap
         RooAbsReal&  a     , 
         RooAbsReal&  delta ,
         RooAbsReal&  phi   ) ;
-      
       /// copy constructor 
       HILLdini ( const HILLdini & right , const char* name = nullptr ) ;
       /// clone method 

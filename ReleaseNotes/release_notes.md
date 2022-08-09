@@ -17,7 +17,9 @@
   1. reduce verbosity for `make_var`
   1. more polishing with verbosity for `make_var`
   1. more polishing for serialisation 
-  
+  1. add reduction for Breit-Wigner related PDFs 
+
+ 
 ## Backward incompatible:  
 
 ## Bug fixes:
@@ -38,7 +40,6 @@
   1. fix for `par/setPar` methods for OLD root Where using statement does not help 
   1. more polishing for reduconig of RooFit an Ostap objects 
   1. Add `HORNSdini` and `HILLdini` functions/pdf 
-
 
 ## Backward incompatible:  
 
