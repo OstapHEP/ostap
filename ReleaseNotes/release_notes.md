@@ -16,6 +16,7 @@
   1. add serisalisation for `RooFitResult` (the standard one often gives segfauts)
   1. reduce verbosity for `make_var`
   1. more polishing with verbosity for `make_var`
+  1. more polishing for serialisation 
   
 ## Backward incompatible:  
 
