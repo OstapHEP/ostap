@@ -377,33 +377,25 @@ class VarMaker (object) :
             len_vvars = len ( vvars )
             len_vargs = len ( vargs )
 
+            vvars_ = vvars
+            vargs_ = vargs
+            vvars  = tuple ( sorted ( vvars ) ) 
+            vargs  = tuple ( sorted ( vargs ) ) 
+            ## attention! for 3-tupel the order is (value, min, max)
+            if 3 == len ( vvars ) : vvars = vvars [ 1 ] , vvars [ 0 ] , vvars [ 2 ] 
+            if 3 == len ( vargs ) : vargs = vargs [ 1 ] , vargs [ 0 ] , vargs [ 2 ] 
+            if vvars != vvars_ : self.warning ("make_var('%s'):  %s -> %s " % ( name , str ( vvars_ ) , str ( vvars ) ) )  
+            if vargs != vargs_ : self.warning ("make_var('%s'):  %s -> %s " % ( name , str ( vargs_ ) , str ( vargs ) ) )  
+
             ## there should be at least one useful number! 
             assert 1<= len_vvars + len_vargs , "make_var: empty 'vvars' and 'vargs'!"
+
+            fixed = False
             
-            if   0 == len_vvars and 1 == len_vargs :
+            if   0 == len_vvars :
                 ## OK 
                 params = vargs + ( unit , )
                 
-            elif 0 == len_vvars and 2 == len_vargs and vargs [ 0 ] <  vargs [ 1 ] :
-                ## OK 
-                params = vargs + ( unit , )
-
-            elif 0 == len_vvars and 2 == len_vargs :
-                ## FIX 
-                params = min ( vargs ) , max( vargs ) , unit
-                self.warning ( "make_var:  %s + %s -> %s" % ( str ( vvars ) , str ( vargs ) , str ( params ) ) )
-
-            elif 0 == len_vvars and 3 == len_vargs and vargs [ 1 ] <= vargs [ 0 ] <= vargs [ 2 ] :
-                ## OK 
-                params = vargs + ( unit , )
-
-            elif 0 == len_vvars and 3 == len_vargs :
-                ## FIX IT!
-                vvv = list ( vargs )
-                vvv.sort() 
-                params = vvv[1] , vvv[0] , vvv[2] , unit 
-                self.warning ( "make_var:  %s + %s -> %s" % ( str ( vvars ) , str ( vargs ) , str ( params ) ) )
-
             elif 1 == len_vvars and 0 == len_vargs :
                 ## OK: use only vvar 
                 params = vvars + ( unit , )
@@ -414,30 +406,26 @@ class VarMaker (object) :
 
             elif 1 == len_vvars and 2 == len_vargs :
                 ## OK, get min/max from vargs 
-                params = vvars + ( min ( vvars[0] , *vargs ) , max ( vvars[0] , *vargs ) , unit ) 
-                self.warning ( "make_var:  %s + %s -> %s" % ( str ( vvars ) , str ( vargs ) , str ( params ) ) )
+                params = vvars + ( min ( vvars [ 0 ] , vargs [ 0 ] ) , max ( vvars[0] , vargs [ 1 ] ) , unit )
+                fixed = True 
 
             elif 1 == len_vvars and 3 == len_vargs and vargs [ 1 ] <= vvars [ 0 ] <= vargs [ 2 ] :
                 ## OK 
-                params = vvars + ( min ( vvars[0] , *vargs ) , max ( vvars[0] , *vargs ) , unit ) 
-    
+                params = vvars + ( min ( vvars [ 0 ] , vargs [ 1 ] ) , max ( vvars [ 0 ] , vargs [ 2 ]  ) , unit ) 
+                
             elif 1 == len_vvars and 3 == len_vargs :
                 ## FIX IT
-                params = vvars + ( min ( vvars[0] , *vargs ) , max ( vvars[0] , *vargs ) , unit ) 
-                self.warning ( "make_var:  %s + %s -> %s" % ( str ( vvars ) , str ( vargs ) , str ( params ) ) )
+                params = vvars + ( min ( vvars[0] , vargs [ 1 ] ) , max ( vvars[0] , vargs [ 2 ] ) , unit ) 
+                fixed  = True 
                 
             elif 1 == len_vvars :
                 ## 'vargs" are ignored 
                 params = vvars + ( unit , )
+                fixed  = True
                 
-            elif 2 == len_vvars and 0 == len_vargs and vvars [ 0 ] < vvars [ 1 ] :
-                ## OK: min/max specified via vvar
-                params = vvars + vargs + ( unit , )
-
             elif 2 == len_vvars and 0 == len_vargs :
                 ## OK: min/max specified via vvar
-                params = min ( vvars ) , max( vvars ) , unit 
-                self.warning ( "make_var:  %s + %s -> %s" % ( str ( vvars ) , str ( vargs ) , str ( params ) ) )
+                params = vvars  + (  unit , ) 
 
             elif 2 == len_vvars and 1 == len_vargs and vvars [ 0 ] <= vargs [ 0 ] <= vvars [ 1 ] :
                 ## get the value from vargs 
@@ -445,43 +433,36 @@ class VarMaker (object) :
 
             elif 2 == len_vvars and 1 == len_vargs :
                 ## get the value from vargs 
-                params = vvars + ( unit , ) 
-
-            elif 2 == len_vvars and 2 == len_vargs and vvars [ 0 ] <  vvars [ 1 ] :
-                ## ignore vargs 
-                params = vvars + ( unit , ) 
+                params = vvars + ( unit , )
+                fixed  = True 
 
             elif 2 == len_vvars and 2 == len_vargs :
                 ## igore vargs 
                 params = vvars + ( unit , ) 
-
+                
             elif 2 == len_vvars and 3 == len_vargs and vvars [ 0 ] <= vargs [ 0 ] <= vvars [ 1 ] :
                 ## get the value from vargs 
-                params = vargs[:1] + vvars + ( unit , ) ## ATTENTION!
-                
+                params = vargs[:1]  + vvars + ( unit , )
+            
             elif 2 == len_vvars :
                 ## 'vargs" are ignored
-                params = min ( vvars ) , max ( vvars ) , unit 
-                self.warning ( "make_var:  %s + %s -> %s" % ( str ( vvars ) , str ( vargs ) , str ( params ) ) )
-
-            elif 3 == len_vvars and vvars [ 1 ] <= vvars [ 0 ] <= vvars [ 1 ] :
-                ## ignore vargs 
                 params = vvars + ( unit , )
+                fixed  = True 
 
             elif 3 == len_vvars :
                 ## ignore vargs 
-                params = min ( vvars ) , max ( vvars ) , unit
-                self.warning ( "make_var:  %s + %s -> %s" % ( str ( vvars ) , str ( vargs ) , str ( params ) ) )
-                
+                params = vvars + ( unit , )
+
             else : 
                 
-                args = vvar + vargs
-                vmin = vmin ( *args )
-                vmax = vmax ( *args )
+                args   = vvar + vargs
+                vmin   = vmin ( *args )
+                vmax   = vmax ( *args )
                 params = vmin , vmax , unit
-                self.warning ( "make_var:  %s + %s -> %s" % ( str ( vvars ) , str ( vargs ) , str ( params ) ) )
-
-            self.debug ( "make_var:  %s + %s -> %s" % ( str ( vvars ) , str ( vargs ) , str ( params ) ) )
+                fixed  = True
+                
+            if fixed : self.warning ( "make_var('%s'):  %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
+            else     : self.debug   ( "make_var('%s'):  %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
             
             ## create the variable!
             var = ROOT.RooRealVar ( name , title , *params ) 
@@ -500,14 +481,12 @@ class VarMaker (object) :
             else :
                 self.warning ("make_var('%s'): ignore 'fix' of %s" % ( var.name , str ( fix ) ) )
                 
-            ## raise TypeError("make_var('%s'): Invalid 'var/fix' setting: %s/%s" % ( var.name , var , fix ) )
-                
+            ## raise TypeError("make_var('%s'): Invalid 'var/fix' setting: %s/%s" % ( var.name , var , fix ) )                
 
         ## var is either newly created or provided as RooAbsArg 
         assert isinstance ( var , ROOT.RooAbsArg ) , \
                "make_var: invalid 'var' type! %s/%s" % ( var , type ( var ) ) 
 
-        
         ## store the variable
         self.aux_keep.append ( var ) 
         
