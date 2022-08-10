@@ -46,7 +46,7 @@ from   ostap.fitting.utils      import ( RangeVar   , numcpu     ,
                                          make_name  , fit_status ,
                                          cov_qual   , get_i      )
 from   ostap.fitting.fithelpers import H1D_dset, H2D_dset, H3D_dset , SETPARS  
-from   ostap.fitting.funbasic   import FUN1, FUN2, FUN3
+from   ostap.fitting.funbasic   import FUN1, FUN2, FUN3, Fun1D , Fun2D , Fun3D 
 from   ostap.utils.cidict       import select_keys
 from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command  
 from   ostap.core.meta_info     import root_info
@@ -2379,6 +2379,22 @@ class PDF1(APDF1,FUN1) :
     __matmul__  = __mod__
     __rmatmul__ = __rmod__
 
+    # =========================================================================
+    ## Convert PDF into simple function
+    #  @code
+    #  pdf = ...
+    #  fun = pdf.as_FUN () 
+    #  @endcode
+    def as_FUN ( self , name = '' ) : 
+        """Convert PDF into simple function
+        >>> pdf = ...
+        >>> fun = pdf.as_FUN ()
+        """
+        return Fun1D ( self.pdf  ,
+                       xvar = self.xvar  ,
+                       name = name if name else self.new_name ( 'fun1' ) ) 
+    
+    
 # =============================================================================
 ## @class Generic1D_pdf
 #  "Wrapper" over generic RooFit (1D)-pdf
@@ -3564,6 +3580,22 @@ class PDF2(APDF2,FUN2) :
         from ostap.fitting.pdf_ops import pdf2_sum        
         return pdf2_sum ( self , other )
 
+    # =========================================================================
+    ## Convert PDF into simple function
+    #  @code
+    #  pdf = ...
+    #  fun = pdf.as_FUN () 
+    #  @endcode
+    def as_FUN ( self , name = '' ) : 
+        """Convert PDF into simple function
+        >>> pdf = ...
+        >>> fun = pdf.as_FUN () 
+        """
+        return Fun2D ( self.pdf  ,
+                       xvar = self.xvar  ,
+                       yvar = self.yvar  ,
+                       name = name if name else self.new_name ( 'fun2' ) ) 
+    
 
 # =============================================================================
 ## @class Generic2D_pdf
@@ -4809,6 +4841,23 @@ class PDF3(APDF3,FUN3) :
         from ostap.fitting.pdf_ops import pdf3_sum        
         return pdf3_sum ( self , other )
 
+    # =========================================================================
+    ## Convert PDF into simple function
+    #  @code
+    #  pdf = ...
+    #  fun = pdf.as_FUN () 
+    #  @endcode
+    def as_FUN ( self , name = '' ) : 
+        """Convert PDF into simple function
+        >>> pdf = ...
+        >>> fun = pdf.as_FUN () 
+        """
+        return Fun3D ( self.pdf  ,
+                       xvar = self.xvar  ,
+                       yvar = self.yvar  ,
+                       zvar = self.zvar  ,
+                       name = name if name else self.new_name ( 'fun3' ) ) 
+    
 
 # =============================================================================
 ## @class Generic3D_pdf

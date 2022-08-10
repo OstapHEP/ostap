@@ -633,13 +633,14 @@ Ostap.Models.BreitWignerMC.__reduce__ = _rbwmc_reduce_
 ## reduce BWI
 def _rbwi_reduce_ ( pdf ):
     """Reduce BWI"""
-    return root_store_factory , ( type ( pdf )    ,
-                                  pdf.name        ,
-                                  pdf.title       ,
-                                  pdf.original () ,
-                                  pdf.b        () ,
-                                  pdf.ab       () ,
-                                  pdf.phib     () )
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.original  () ,
+                                  pdf.magnitude () ,
+                                  pdf.phase     () ,
+                                  pdf.scale1    () ,
+                                  pdf.scale2    () )
 
 Ostap.Models.BWI.__reduce__ = _rbwi_reduce_ 
 

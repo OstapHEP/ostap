@@ -198,8 +198,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get the amplitude
-      virtual std::complex<double> amplitude    () const  ;
+      /// get the Breit Wigner amplitude
+      virtual std::complex<double> amplitude () const  ;
       /// access to underlying function
       const Ostap::Math::BW& function     () const { setPars () ; return *m_bw ; }
       /// access to underlying function
@@ -265,9 +265,15 @@ namespace Ostap
     // ========================================================================
     /** @class BWI 
      *  Breit-Wigner with some embedded interference: 
-     *  \f[ f(x) = \left| \upalpha b(x) + A(x)_{\mathrm{BW}} \right|^2 \f], 
-     *  where \f$b(x)\f$ - any smooth function and 
-     *  \f$ A(x)_{\mathrm{BW}} \f$ is Breit-Wigner amplitude 
+     *  \f[ A^{\prime}(x) = b (x) s_1(x) \mathrm{e}^{i s_2(x)\theta(x)}
+     *                    + A(x)_{\mathrm{BW}} \f], 
+     *  where 
+     *  - \f$b(x)\f$ smooth function describing the magnitude 
+     *               of the coherent background 
+     *  - \f$ s_1(x)\f$ optional scale factor/function  
+     *  - \f$ s_2(x)\f$ optional scale factor/function  
+     *  - \f$ \theta(x)\f$ the phase of the corerent background 
+     *  - \f$ A(x)_{\mathrm{BW}} \f$ is Breit-Wigner amplitude 
      */
     class BWI final : public BreitWigner
     {
@@ -277,19 +283,27 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// constructor from the Breit-Wigner and backround 
-      BWI ( const char*                         name  , 
-            const Ostap::Models::BreitWigner&   bw    ,
-            RooAbsReal&                         b     , 
-            RooAbsReal&                         ab    , 
-            RooAbsReal&                         phib  ) ;
-      ///constructor from the Breit-Wigner and backround 
-      BWI ( const char*                         name  , 
-            const char*                         title , 
-            const Ostap::Models::BreitWigner&   bw    ,
-            RooAbsReal&                         b     , 
-            RooAbsReal&                         ab    , 
-            RooAbsReal&                         phib  ) ;
+      /// constructor from the Breit-Wigner
+      BWI ( const char*                         name      , 
+            const char*                         title     , 
+            const Ostap::Models::BreitWigner&   bw        ,
+            RooAbsReal&                         magnitude ,  
+            RooAbsReal&                         phase     ,
+            RooAbsReal&                         scale1    ,
+            RooAbsReal&                         scale2    ) ;
+      /// constructor from the Breit-Wigner
+      BWI ( const char*                         name      , 
+            const char*                         title     , 
+            const Ostap::Models::BreitWigner&   bw        ,
+            RooAbsReal&                         magnitude ,  
+            RooAbsReal&                         phase     ,
+            RooAbsReal&                         scale1    ) ;
+      /// constructor from the Breit-Wigner
+      BWI ( const char*                         name      , 
+            const char*                         title     , 
+            const Ostap::Models::BreitWigner&   bw        ,
+            RooAbsReal&                         magnitude ,  
+            RooAbsReal&                         phase     ) ;
       /// "copy" constructor
       BWI ( const BWI& , const char* name = 0 ) ;
       /// virtual destructor
@@ -318,21 +332,22 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const RooAbsReal& b        () const { return m_b        .arg() ; }
-      const RooAbsReal& ab       () const { return m_ab       .arg() ; }
-      const RooAbsReal& phib     () const { return m_phib     .arg() ; }
+      const RooAbsReal& magnitude () const { return m_magnitude .arg() ; }
+      const RooAbsReal& phase     () const { return m_phase     .arg() ; }
+      const RooAbsReal& scale1    () const { return m_scale1    .arg() ; }
+      const RooAbsReal& scale2    () const { return m_scale2    .arg() ; }
       // ======================================================================
     public:
       // ======================================================================
-      /// get the original Breit-Wigner  
+      /// get the original (cloned) Breit-Wigner function  
       const Ostap::Models::BreitWigner& original() const { return *m_original.get() ; }
       // ======================================================================
     protected:
       // ======================================================================
-      RooRealProxy m_b    ;  // background shape 
-      RooRealProxy m_ab   ;  // background factor  
-      RooRealProxy m_phib ;  // background phase 
-      RooRealProxy m_orig ;  // keep the original BreitWigner 
+      RooRealProxy m_magnitude ;  // background magnitude  
+      RooRealProxy m_phase     ;  // background phase 
+      RooRealProxy m_scale1    ;  // background factor  
+      RooRealProxy m_scale2    ;  // background factor  
       // ======================================================================
     private:
       // ======================================================================

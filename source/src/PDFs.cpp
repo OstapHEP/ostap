@@ -418,35 +418,51 @@ Ostap::Models::BreitWignerMC::breit_wigner_MC () const
 // ============================================================================
 /// Breit-wigner with interference 
 // ============================================================================
-// constructor from Breit-Wigner and backround 
+// constructor from Breit-Wigner and background 
 // ============================================================================
 Ostap::Models::BWI::BWI 
-( const char*                       name  , 
-  const Ostap::Models::BreitWigner& bw    ,
-  RooAbsReal&                       b     , 
-  RooAbsReal&                       ab    , 
-  RooAbsReal&                       phib  ) 
+( const char*                       name      , 
+  const char*                       title     , 
+  const Ostap::Models::BreitWigner& bw        ,  
+  RooAbsReal&                       magnitude , 
+  RooAbsReal&                       phase     , 
+  RooAbsReal&                       scale1    , 
+  RooAbsReal&                       scale2    ) 
   : BreitWigner ( bw , name ) 
-  , m_b        ( "!b"     , "background"        , this , b    ) 
-  , m_ab       ( "!ab"    , "background factor" , this , ab   ) 
-  , m_phib     ( "!phib"  , "background phase"  , this , phib )
-    // clone the original 
+  , m_magnitude ( "!magnitude" , "background magnitude" , this , magnitude ) 
+  , m_phase     ( "!phib"      , "background phase"     , this , phase     )
+  , m_scale1    ( "!scale1"    , "background scale1"    , this , scale1    ) 
+  , m_scale2    ( "!scale1"    , "background scale2"    , this , scale2    ) 
+  // clone the original 
   , m_original ( bw.clone ( nullptr ) )
-{}
-// ============================================================================
-// constructor from Breit-Wigner and backround 
-// ============================================================================
-Ostap::Models::BWI::BWI 
-( const char*                       name  , 
-  const char*                       title , 
-  const Ostap::Models::BreitWigner& bw    ,
-  RooAbsReal&                       b     , 
-  RooAbsReal&                       ab    , 
-  RooAbsReal&                       phib  ) 
-  : BWI ( name , bw , b , ab , phib )
 {
   SetTitle ( title ) ;  
 }
+// ============================================================================
+// constructor from Breit-Wigner and background 
+// ============================================================================
+Ostap::Models::BWI::BWI 
+( const char*                       name      , 
+  const char*                       title     , 
+  const Ostap::Models::BreitWigner& bw        ,
+  RooAbsReal&                       magnitude , 
+  RooAbsReal&                       phase     , 
+  RooAbsReal&                       scale1    ) 
+  : BWI ( name , title , bw , magnitude , phase , 
+          scale1 , RooFit::RooConst ( 1 ) )
+{}
+// ============================================================================
+// constructor from the Breit-Wigner and background 
+// ============================================================================
+Ostap::Models::BWI::BWI 
+( const char*                       name      , 
+  const char*                       title     , 
+  const Ostap::Models::BreitWigner& bw        ,
+  RooAbsReal&                       magnitude , 
+  RooAbsReal&                       phase     ) 
+  : BWI ( name , title , bw , magnitude , phase , 
+          RooFit::RooConst ( 1 ) , RooFit::RooConst ( 1 ) ) 
+{}
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
@@ -455,9 +471,10 @@ Ostap::Models::BWI::BWI
   const char*               name  ) 
   : BreitWigner ( right , name )
     //
-  , m_b        ( "!b"    , this , right.m_b    ) 
-  , m_ab       ( "!ab"   , this , right.m_ab   ) 
-  , m_phib     ( "!phib" , this , right.m_phib )
+  , m_magnitude ( "!magnitude" , this , right.m_magnitude ) 
+  , m_phase     ( "!phase"     , this , right.m_phase     )
+  , m_scale1    ( "!scale1"    , this , right.m_scale1    ) 
+  , m_scale2    ( "!scale2"    , this , right.m_scale2    ) 
     // clone the original 
   , m_original ( right.m_original->clone( nullptr ) )
 {}
@@ -472,20 +489,26 @@ Ostap::Models::BWI::clone ( const char* name ) const
 // ============================================================================
 // get the amplitude
 // ============================================================================
+#include <iostream> 
 std::complex<double> Ostap::Models::BWI::amplitude () const
 {
-  setPars () ;
+  // setPars () ;
   //
-  const double x    = m_x ;
+  const double x         = m_x ;
   //
-  const double b    = m_b    ;
-  const double ab   = m_ab   ;
-  const double phib = m_phib ;
+  const double magnitude = m_magnitude ; // background magnitude 
+  const double phase     = m_phase     ; // background phase 
+  const double scale1    = m_scale1    ; // background magnitude scale1 
+  const double scale2    = m_scale2    ; // background phase     scale2 
+  //
+  const double b         = magnitude * scale1 ;
+  const double phi       = phase     * scale2 ;
   //
   const std::complex<double> ib  = 
-    ab * std::complex<double> ( std::cos (  phib ) , std::sin ( phib ) ) ;
+    std::complex<double> ( std::cos ( phi ) , std::sin ( phi ) ) ;
   //
-  const std::complex<double> amp = amplitude() + b * ib ;
+  const std::complex<double> amp = b * ib + 
+    Ostap::Models::BreitWigner::amplitude() ;
   //
   return amp ;
 }
@@ -494,7 +517,7 @@ std::complex<double> Ostap::Models::BWI::amplitude () const
 // ============================================================================
 Double_t Ostap::Models::BWI::evaluate () const 
 {
-  const std::complex<double> amp = amplitude() ;
+  const std::complex<double> amp = this->amplitude() ;
   return m_bw->breit_wigner ( m_x , amp ) ;
 }
 // ============================================================================

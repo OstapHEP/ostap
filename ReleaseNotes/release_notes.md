@@ -18,7 +18,8 @@
   1. more polishing with verbosity for `make_var`
   1. more polishing for serialisation 
   1. add reduction for Breit-Wigner related PDFs 
- 
+  1. improve BWI model and pdf, add dedicated test  
+
 ## Backward incompatible:  
 
 ## Bug fixes:

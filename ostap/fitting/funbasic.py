@@ -2045,7 +2045,7 @@ class Fun1D ( FUN1 ) :
 
         if isinstance ( fun , ( ROOT.RooConstVar , Ostap.MoreRooFit.Id ) ) : pass 
         elif not self.xvar in fun.getParameters ( 0 ) and not self.xvar is fun : 
-            self.warning ("Function does not depends on xvar=%s" % self.xvar.name )
+            self.warning ("Function does not depend on xvar=%s" % self.xvar.name )
             
         self.fun = fun
         

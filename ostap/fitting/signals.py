@@ -137,6 +137,7 @@ __all__ = (
 # =============================================================================
 from   ostap.core.core          import Ostap
 from   ostap.core.ostap_types   import integer_types 
+from   ostap.fitting.funbasic   import FUN1 , Fun1D 
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
 from   ostap.fitting.fithelpers import Phases
@@ -4312,67 +4313,139 @@ class BWI_pdf (BreitWigner_pdf) :
     Breit-Wigner with some embedded interference
     - see Ostap.Models.BWI
     """
-    def __init__ ( self         ,
-                   name         ,
-                   breitwigner  ,
-                   xvar         ,
-                   m0    = None ,
-                   gamma = None ,
-                   bkg   = -1   ,   ## background function 
-                   a     = None ,   ## background scale 
-                   phi   = 0    ) : ## bakcgrouns phase 
+    def __init__ ( self             ,
+                   name             ,
+                   breitwigner      ,   ## Breit-Wigner function 
+                   xvar             ,   ## observable 
+                   m0        = None ,   ## m0-parameter
+                   gamma     = None ,   ## gamma-parameter(s)  
+                   magnitude = -1   ,   ## background magnitude 
+                   phase     = -1   ,   ## background phase 
+                   scale1    = None ,   ## background magnitide scale (if/when needed)
+                   scale2    = None ) : ## background phase scale (if/when needed)
         
         ## initialize the base 
         BreitWigner_pdf.__init__ ( self , name , breitwigner , xvar , m0 , gamma )
 
+        ## save the constructed PDF  (we'll need it)
         self.__bw = self.pdf
-
-        if   isinstance ( bkg , PDF1            ) :             ## PDF ? 
-            ## PDF?
-            self.__bkg = bkg
-            self.__b   = self.__bkg.pdf
-        elif isinstance ( bkg , ROOT.RooAbsPdf  ) :              ## PDF? 
-            ## PDF? 
-            from ostap.fitting.basic import Generic1D_pdf as G1D 
-            self.__bkg = G1D ( bkg , self.xvar ) 
-            self.__b   = self.__bkg.pdf
-        elif isinstance ( bkg , ROOT.RooRealVar ) or isinstance ( bkg , ROOT.RooConstVar ) :
-            ## constant?
-            self.__bkg = bkg
-            self.__b   = self.make_var ( bkg              ,
-                                         "bkg_%s"  % name ,
-                                         "bkg(%s)" % name , None )
-        elif isinstance ( bkg , ROOT.RooAbsReal ) :               ## function ?
-            ## function? 
-            from ostap.fitting.basic import Generic1D_pdf as G1D 
-            self.__bkg = G1D ( bkg , self.xvar , special = True ) 
-            self.__b   = self.__bkg.pdf
-        else :                                                    ## function?
-            ## function ? 
-            from ostap.fitting.background import make_bkg as MKB
-            self.__bkg = MKB ( bkg , 'B_4'+ self.name , self.xvar )
-            self.__b   = self.__bkg.pdf 
-            
-        ## create background magnitude 
-        self.__a  = self.make_var  ( a              ,
-                                     "a_%s"    % name ,
-                                     "a(%s)"   % name ,
-                                     None , 0 , 1.e+5 )
         
-        ## create background phase 
-        self.__phi = self.make_var ( phi              ,
-                                     "phi_%s"  % name ,
-                                     "phi(%s)" % name ,
-                                     None , -12 , 12  )
+        self.__scale1 = ROOT.RooFit.RooConst ( 1 )
+        self.__scale2 = ROOT.RooFit.RooConst ( 1 )
+        # =====================================================================
+        ## take care on background and scale 
+        # =====================================================================
+
+        if   isinstance ( magnitude , FUN1 ) and self.xvar is magnitude.xvar :
+            
+            ## ideal case
+            self.__magnitude     =      magnitude
+            self.__magnitude_tot = self.magnitude
+            
+        elif isinstance ( magnitude , PDF1 ) and self.xvar is magnitude.xvar :
+            
+            ## almost ideal case , but the scale factor is needed 
+            self.__magnitude     = magnitude
+            self.__scale1        = self.make_var ( scale1 ,
+                                                   "scale1_%s"  % name ,
+                                                   "scale1(%s)" % name ,
+                                                   False , 1 , 1e-6 , 1e+6 )
+            self.__magnitude_tot = self.magnitude.as_FUN() * self.scale1 
+            
+        elif isinstance ( magnitude  , ROOT.RooRealVar ) :
+            
+            ## simple case: background is a kind of a simple variable 
+            self.__magnitude     = Fun1D ( magnitude , xvar = self.xvar , name = self.new_name ( 'magnitude' ) ) 
+            self.__magnitude_tot = self.magnitude
+
+        elif isinstance ( magnitude , ROOT.RooAbsPdf ) :
+            
+            ## simple case: background is RooAbsPdf, scale factor is needed
+            self.__magnitude    = Fun1D ( magnitude , xvar = self.xvar , name = self.new_name ( 'bkg' ) ) 
+            self.__scale1       = self.make_var ( scale1 ,
+                                                  "scale1_%s"  % name ,
+                                                  "scale1(%s)" % name ,
+                                                  False , 1 , 1e-6 , 1e+6 )
+            self.__magnitude_tot = self.magnitude * self.scale1 
+
+        elif isinstance ( magnitude , ROOT.RooAbsReal ) :
+            
+            ## simple case: background is RooAbsReal, scale factor is NOT needed 
+            self.__magnitude     = Fun1D ( magnitude , xvar = self.xvar , name = self.new_name ( 'bkg' ) ) 
+            self.__magnitude_tot = self.magnitude
+
+        else :
+            
+            ## use the predefined backgrond shapes (PDFs), scale factor is needed  
+            from ostap.fitting.background import make_bkg as MKB
+            self.__magnitude = MKB ( magnitude ,  name = 'B4'+ self.name , xvar  = self.xvar )
+            self.__scale1    = self.make_var ( scale1 ,
+                                               "scale1_%s"  % name ,
+                                               "scale1(%s)" % name ,
+                                               False , 1 , 1e-6 , 1e+6 )            
+            self.__magnitude_tot = self.magnitude.as_FUN() * self.scale1 
+            
+        # =====================================================================
+        ## now take care on the phase
+        # =====================================================================
+
+        if   isinstance ( phase , FUN1 ) and self.xvar is phase.xvar :
+            
+            ## the ideal case 
+            self.__phase     =      phase 
+            self.__phase_tot = self.phase 
+            
+        elif isinstance ( phase , PDF1 ) and self.xvar is phase.xvar :
+            ## almost ideal case , but the scale factor is needed 
+            self.__phase     = phase 
+            self.__scale2    = self.make_var ( scale2 ,
+                                               "scale2_%s"  % name ,
+                                              "scale3(%s)" % name ,
+                                              False , 1 , 1e-6 , 1e+6 )
+            self.__phase_tot = self.phase.as_FUN () * self.scale2
+            
+        elif isinstance ( phase , ROOT.RooRealVar ) :
+            
+            ## simple case: phase is a kind of a simple constant/variable
+            self.__phase     = Fun1D ( phase , name = self.new_name ( 'phase' ) ) 
+            self.__phase_tot = self.phase 
+            
+        elif isinstance ( phase , ROOT.RooAbsPdf ) :
+            
+            ## simple case: phase is RooAbsPdf, scale factor is needed
+            self.__phase     = Fun1D ( phase , name = self.new_name ( 'phase' ) ) 
+            self.__scale2    = self.make_var ( scale2 ,
+                                               "scale2_%s"  % name ,
+                                               "scale2(%s)" % name ,
+                                               False , 1 , 1e-6 , 1e+6 )
+            self.__phase_tot = self.phase * self.scale2 
+            
+        elif isinstance ( phase , ROOT.RooAbsReal ) :
+            
+            ## simple case: phase is a kind of a simple constant/variable
+            self.__phase     = Fun1D ( phase , name = self.new_name ( 'phase' ) ) 
+            self.__phase_tot = self.phase 
+            
+        else :
+
+            ## use the predefined background shapes (PDFs), scale factor is needed  
+            from ostap.fitting.background import make_bkg as MKB
+            self.__phase     = MKB ( phase ,  name = 'P4'+ self.name , xvar  = self.xvar )
+            self.__scale2    = self.make_var ( scale2 ,
+                                               "scale2_%s"  % name ,
+                                               "scale2(%s)" % name ,
+                                               False , 1 , 1e-6 , 1e+6 )
+            self.__phase_tot = self.phase.as_FUN () * self.scale2
 
         ## finally create PDF
         self.pdf = Ostap.Models.BWI (
             self.roo_name ( 'bwi_' ) ,
             "Breit-Wigner with interference %s" % self.name  ,
-            self.bw                  ,
-            self.b                   ,
-            self.a                   ,
-            self.phi                 ) 
+            self.bw            ,
+            self.magnitude.fun ,
+            self.phase    .fun ,
+            self.scale1        ,
+            self.scale2        )
 
         ## save configuration
         self.config = {
@@ -4381,40 +4454,52 @@ class BWI_pdf (BreitWigner_pdf) :
             'breitwigner' : self.breitwigner , 
             'm0'          : self.m0          ,
             'gamma'       : self.gamma       ,
-            'bkg'         : self.bkg         ,
-            'a'           : self.a           , 
-            'phi'         : self.phi         } 
-                        
-    @property
-    def m0 ( self ) :
-        """'m0' : m_0 parameter for Breit-Wigner function (alias for 'mean')"""
-        return self.mean
-    @m0.setter
-    def m0 ( self , value ) :
-        self.mean = value 
-
+            'magnitude'   : self.magnitude   ,
+            'phase'       : self.phase       ,
+            'scale1'      : self.scale1      , 
+            'scale2'      : self.scale2      } 
 
     @property
-    def bw          ( self ) :
-        """The Breit-Wigner PDF itself"""
+    def bw     ( self ) :
+        """'bw' : original BreitWigner PDF (no interference)"""
         return self.__bw
+    
     @property
-    def bkg          ( self ) :
-        """The background"""
-        return self.__bkg
-    @property
-    def b           ( self ) :
-        """The background"""
-        return self.__b
-    @property
-    def a           ( self ) :
-        """The background factor"""
-        return self.__a
-    @property
-    def phi         ( self ) :
-        """The background phase"""
-        return self.__phi
+    def magnitude ( self ) :
+        """The magnitude of the coherent background"""
+        return self.__magnitude
 
+    @property
+    def phase ( self ) :
+        """The phase of the coherent background"""
+        return self.__phase
+    
+    @property
+    def magnitude_total ( self ) :
+        """The total magnitude of the coherent background : magnitide * scale1 """
+        return self.__magnitude_tot 
+
+    @property
+    def phase_total  ( self ) :
+        """The total phase of the coherent background: phase * scale2 """
+        return self.__phase_tot 
+    
+    @property
+    def scale1 ( self ) :
+        """The scale-factor for the coherent background"""
+        return self.__scale1
+    @scale1.setter
+    def scale1 ( self , value ) :
+        self.set_value ( self.__scale1 , value ) 
+
+    @property
+    def scale2 ( self ) :
+        """The scale-factor for the coherent background"""
+        return self.__scale2
+    @scale2.setter
+    def scale2 ( self , value ) :
+        self.set_value ( self.__scale2 , value ) 
+        
 # =============================================================================
 ## @class BWPS
 #  Breit-Wigner function modulated with extra phase-space and polynomial factors

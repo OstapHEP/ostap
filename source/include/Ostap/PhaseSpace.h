@@ -36,8 +36,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from two masses
-      PhaseSpace2 ( const double m1 = 0 ,
-                    const double m2 = 1 ) ;
+      PhaseSpace2 
+      ( const double m1 = 0 ,
+        const double m2 = 1 ) ;
       /// destructor
       ~PhaseSpace2 () ;                                         // deststructor
       // ======================================================================
