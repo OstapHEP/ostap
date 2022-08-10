@@ -960,8 +960,10 @@ if not hasattr ( ROOT.RooMinimizer , '_old_contour_' ) :
 
 # =============================================================================
 ## some decoration over RooFitResult
-ROOT.RooFitResult . __repr__        = _rfr_print_
-ROOT.RooFitResult . __str__         = _rfr_print_
+## ROOT.RooFitResult . __repr__        = _rfr_print_
+## ROOT.RooFitResult . __str__         = _rfr_print_
+ROOT.RooFitResult . __repr__        = _rfr_table_
+ROOT.RooFitResult . __str__         = _rfr_table_
 ROOT.RooFitResult . __call__        = _rfr_param_
 ROOT.RooFitResult . __getattr__     = _rfr_getattr_ 
 ROOT.RooFitResult . __getitem__     = _rfr_getitem_ 

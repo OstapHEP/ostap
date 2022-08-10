@@ -2242,9 +2242,9 @@ class PSSmear2_pdf ( PDF1 ) :
 
     
 # ==============================================================================
-##  @class RooPoly
+##  @class RooPolyBase
 #   helper base class to implement various polynomial-like shapes
-class RooPoly(PDF1,ParamsPoly) :
+class RooPolyBase(PDF1,ParamsPoly) :
     """Helper base class to implement various polynomial-like shapes
     """
     def __init__ ( self , name , xvar , power = 1 , pars = None ) :
@@ -2263,7 +2263,7 @@ class RooPoly(PDF1,ParamsPoly) :
 #  @see RooPolynomial 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-04-27
-class RooPoly_pdf(RooPoly) :
+class RooPoly_pdf(RooPolyBase) :
     """Trivial Ostap wrapper for the native RooPolynomial PDF from RooFit
     - see ROOT.RooPolynomial
     >>> xvar = ...
@@ -2278,7 +2278,7 @@ class RooPoly_pdf(RooPoly) :
                    pars  = [] ) : ## the list of coefficients 
         
         ## initialize the base class 
-        RooPoly.__init__ (  self , name , xvar = xvar , power = power , npars = pars )
+        RooPolyBase.__init__ (  self , name , xvar = xvar , power = power , npars = pars )
 
         ## create PDF
         self.pdf = ROOT.RooPolynomial (
@@ -2305,7 +2305,7 @@ class RooPoly_pdf(RooPoly) :
 #  @see RooChebyshev
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-04-27
-class RooCheb_pdf(RooPoly) :
+class RooCheb_pdf(RooPolyBase) :
     """Trivial Ostap wrapper for the native RooChebyshev PDF from RooFit
     - see ROOT.RooChebushev 
     >>> xvar = ...
@@ -2320,7 +2320,7 @@ class RooCheb_pdf(RooPoly) :
                    coefficients = [] ) : ## the list of coefficients 
         
         ## initialize the base class 
-        RooPoly.__init__ (  sels , name , xvar , power ,  coefficients )
+        RooPolyBase.__init__ ( sels , name , xvar , power ,  coefficients )
 
         ## create PDF 
         self.pdf = ROOT.RooChebyshev (
@@ -2611,23 +2611,23 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
             bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = False )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
 
-        decr = re.search ( r'(roopoly|rp)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
-        if decr :
-            degree = int ( decr.group ( 'degree' ) )
-            bkg    = RooPoly_pdf ( name , xvar , power = degree )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
-        
         decr = re.search ( r'(roochebyshev|roocheb|chebyshev|cheb|rc)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = RooCheb_pdf ( name , xvar , power = degree )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
-
+        
+        decr = re.search ( r'(roopoly|rp|r)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        if decr :
+            degree = int ( decr.group ( 'degree' ) )
+            bkg    = RooPoly_pdf ( name , xvar , power = degree )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+        
     if model :
         logger.debug ( 'make_bkg: created model is %s' % model ) 
         return model
 
-    raise  TypeError("Wrong type of bkg object: %s/%s " % ( bkg , type ( bkg ) ) ) 
+    raise  TypeError("make_bkg: Wrong type of 'bkg' object: %s/%s " % ( bkg , type ( bkg ) ) ) 
 
 
 # =============================================================================

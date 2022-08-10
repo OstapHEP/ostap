@@ -12,6 +12,8 @@
 #include "RooFFTConvPdf.h"
 #include "RooArgList.h"
 #include "RooEfficiency.h"
+#include "RooPolyVar.h"
+#include "RooPolynomial.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -192,6 +194,38 @@ namespace
     std::string           get_acc () const { return _sigCatName.Data() ; }
     // ========================================================================
   } ;  
+  // ==========================================================================
+  class FakePolyVar : public RooPolyVar
+  {
+  public: 
+    // ========================================================================
+    FakePolyVar ( const RooPolyVar& var , const char* newname = 0 ) 
+      : RooPolyVar ( var , newname ) 
+    {}
+    // ========================================================================
+    virtual ~FakePolyVar () {}
+    // ========================================================================
+  public:
+    // ========================================================================
+    const RooArgList& coefficients () const { return _coefList ; }
+    // ========================================================================
+  } ;    
+  // ==========================================================================
+  class FakePolynomial : public RooPolynomial
+  {
+  public: 
+    // ========================================================================
+    FakePolynomial ( const RooPolynomial& var , const char* newname = 0 ) 
+      : RooPolynomial ( var , newname ) 
+    {}
+    // ========================================================================
+    virtual ~FakePolynomial () {}
+    // ========================================================================
+  public:
+    // ========================================================================
+    const RooArgList& coefficients () const { return _coefList ; }
+    // ========================================================================
+  } ;    
   // ==========================================================================
 } //                                             The end of anonymous namespace 
 // ============================================================================
@@ -833,6 +867,30 @@ Ostap::MoreRooFit::get_acc ( const RooEfficiency& pdf )
   return fake->get_acc() ;  
 }
 // ============================================================================
+/*  get the coefficiencts from the <code>RooPolyVar</code>
+ *  @see RooPolyVar 
+ */
+// ============================================================================
+RooArgList Ostap::MoreRooFit::coefficients 
+( const RooPolyVar& var      )
+{
+  std::unique_ptr<::FakePolyVar> fake { new ::FakePolyVar( var ) } ;
+  return fake->coefficients () ;  
+}
+// ============================================================================
+/*  get the coefficiencts from the <code>RooPolynomial</code>
+ *  @see RooPolynomial 
+ */
+// ============================================================================
+RooArgList Ostap::MoreRooFit::coefficients 
+( const RooPolynomial& var      )
+{
+  std::unique_ptr<::FakePolynomial> fake { new ::FakePolynomial( var ) } ;
+  return fake->coefficients () ;  
+}
+// ============================================================================
+
+
 
 // ============================================================================
 //                                                                      The END 

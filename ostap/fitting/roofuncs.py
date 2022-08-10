@@ -18,6 +18,7 @@ __all__     = (
     'MonotonicPoly'  , ## monotonic polynomial                     (RooAbsReal)
     'ConvexPoly'     , ## monotonic convex/concave polynomial      (RooAbsReal)
     'ConvexOnlyPoly' , ## convex/concave polynomial                (RooAbsReal)
+    'RooPoly'        , ## simple wrapper for RooPolyVar            (RooAbsReal)
     'ScaleAndShift'  , ## scale and shift                          (RooAbsReal)
     'BSplineFun'     , ## BSpline                                  (RooAbsReal)
     ##
@@ -424,6 +425,50 @@ class ScaleAndShift (FUN1) :
     def c ( self , value ) :
         self.set_value ( self.__c , value )
 
+
+
+# ============================================================================
+## @class RooPoly
+#  Simple wrapper for class RooPolyVar
+#  @see RoPolyVar
+#  @code
+#  p1 =  RooPoly ( 'P1' , xvar = (0,1) , power = 3 ) 
+#  p2 =  RooPoly ( 'P2' , xvar = (0,1) , pars  = ... ) 
+#  @endcode 
+#  @see RooPolyVar 
+class RooPoly(FUN1,ParamsPoly) :
+    """ Simple wrapper for class RooPolyVar
+    >>> p1 =  RooPoly ( 'P1' , xvar = (0,1) , power = 3 ) 
+    >>> p2 =  RooPoly ( 'P2' , xvar = (0,1) , pars  = ... ) 
+    - see `ROOT.RooPolyVar`
+    """
+    def __init__ ( self , name , xvar , power = 1 , pars = None ) :
+        
+        ## initialize the base class 
+        FUN1      .__init__ ( self  , name  , xvar = xvar )
+        ParamsPoly.__init__ ( self              ,
+                              npars = power + 1 ,
+                              pars  = pars      )
+
+        assert 1 <= self.npars , 'Invalid number of parameters! '
+        
+        xmin , xmax = self.xminmax ()
+        
+        ## create the function
+        self.fun    = ROOT.RooPolyVar (
+            self.roo_name ( 'rpol_' )   ,
+            'RooPoly %s' % self.name    ,
+            self.xvar                   ,
+            self.pars_lst               ) 
+        
+        self.tricks = True 
+        self.config = {
+            'name'  : self.name      ,
+            'xvar'  : self.xvar      ,
+            'pars'  : self.pars      ,
+            'power' : self.npars - 1  
+            }
+        
 # =============================================================================
 ## @class BSplineFun 
 #  BSpline as RooAbsReal

@@ -4426,7 +4426,7 @@ class BWI_pdf (BreitWigner_pdf) :
             self.__phase     = Fun1D ( phase , name = self.new_name ( 'phase' ) ) 
             self.__phase_tot = self.phase 
             
-        else :
+        else :  
 
             ## use the predefined background shapes (PDFs), scale factor is needed  
             from ostap.fitting.background import make_bkg as MKB

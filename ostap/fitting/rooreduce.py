@@ -548,7 +548,6 @@ def _reff_reduce_ ( pdf ) :
     """Reduce `ROOT.RooEfficiency`
     - see `ROOT.RooEfficiency`
     """
-    content = type ( pdf ) , pdf.name , pdf.title , pdf.efficiency() 
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
@@ -558,6 +557,38 @@ def _reff_reduce_ ( pdf ) :
 
 ROOT.RooEfficiency.__reduce__  = _reff_reduce_ 
 
+# ================================================================================
+## get the list of coefficients from <code>RooPolyVar</code>
+#  @see RooPolyVar
+def _rpv_coefficients_ ( var ) :
+    """Get the list of coefficients from `ROOT.RooPolyVar`
+    -see `ROOT.RooPolyVar`
+    """
+    return Ostap.MoreRooFit.coefficients ( var ) 
+
+ROOT.RooPolyVar   . coefficients = _rpv_coefficients_
+ROOT.RooPolynomial. coefficients = _rpv_coefficients_
+
+_new_methods_ += [
+    ROOT.RooPolyVar   . coefficients  ,
+    ROOT.RooPolynomial. coefficients  ,
+    ]
+
+
+# =============================================================================
+## reduce RooPolyVar
+#  @see RooPolyVar
+def _rpv_reduce_ ( var ) :
+    """Reduce `ROOT.RooPolyVar`
+    - see `ROOT.RooPolyVar`
+    """
+    return root_store_factory , ( type ( pdf )        ,
+                                  pdf.name            ,
+                                  pdf.title           ,
+                                  pdf.coefficients () )
+
+ROOT.RooPolyVar   . __reduce__  = _rpv_reduce_
+ROOT.RooPolynomial. __reduce__  = _rpv_reduce_
 
 # ================================================================================
 ## deserialize RooFitResult
@@ -1976,7 +2007,9 @@ _decorated_classes_ = (
     ROOT.RooFFTConvPdf                 , 
     ROOT.RooSimultaneous               , 
     ROOT.RooEfficiency                 , 
-    ROOT.RooFitResult                  , 
+    ROOT.RooPolyVar                    , 
+    ROOT.RooPolynomial                 , 
+    ROOT.RooFitResult                  ,
     ## Ostap classes 
     Ostap.MoreRooFit.TwoVars           , 
     Ostap.MoreRooFit.Addition          , 

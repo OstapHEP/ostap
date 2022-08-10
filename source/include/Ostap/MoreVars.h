@@ -23,6 +23,8 @@ class RooProdPdf    ; // ROOT,RooFit
 class RooGaussian   ; // ROOT,RooFit 
 class RooFFTConvPdf ; // ROOT,RooFit 
 class RooEfficiency ; // ROOT,RooFit 
+class RooPolyVar    ; // ROOT,RooFit 
+class RooPolynomial ; // ROOT,RooFit 
 // ============================================================================
 namespace Ostap 
 {
@@ -55,8 +57,9 @@ namespace Ostap
         const double       xmax  ) ;
       // ======================================================================
       /// copy constructor 
-      Bernstein ( const Bernstein& right , 
-                  const char*      name = nullptr ) ;
+      Bernstein 
+      ( const Bernstein& right , 
+        const char*      name = nullptr ) ;
       // ======================================================================
       Bernstein () ;
       virtual ~Bernstein() ;
@@ -494,14 +497,14 @@ namespace Ostap
      *  @see RooAddPdf
      */
     RooArgList fractions
-    ( const RooAddPdf& pdf       , 
-      bool&            recursive ) ;  
+    ( const RooAddPdf&  pdf       , 
+      bool&             recursive ) ;  
     // ========================================================================
     /** get the original fractions from the <code>RooAddPdf</code>
      *  @see RooAddPdf
      */
     RooArgList fractions
-    ( const RooAddPdf& pdf       ) ;
+    ( const RooAddPdf&  pdf       ) ;
     // ========================================================================
     /** get x-observable
      *  @see RooGauissian
@@ -541,6 +544,18 @@ namespace Ostap
      *  @see RooEfficiency
      */
     std::string           get_acc ( const RooEfficiency& pdf ) ;
+    // ========================================================================
+    /** get the coefficients from the <code>RooPolyVar</code>
+     *  @see RooPolyVar
+     */
+    RooArgList coefficients 
+    ( const RooPolyVar&  var       ) ;
+    // ========================================================================
+    /** get the coefficients from the <code>RooPolynomial</code>
+     *  @see RooPolynomial
+     */
+    RooArgList coefficients 
+    ( const RooPolynomial&  var    ) ;
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit
   // ==========================================================================

@@ -23,13 +23,13 @@ __all__     = (
     'Fun2D'             , ## wrapper for 2D-function
     'Fun3D'             , ## wrapper for 3D-function
     'Id'                , ## the most trivial function 
-    'make_fun'          , ## helper functno to reate FUN-objects
+    'make_fun1'         , ## reate popular FUN1 objects from the short description 
     )
 # =============================================================================
 from   sys                           import version_info as python_version 
-from   ostap.core.ostap_types        import ( integer_types  , num_types   ,
-                                              dictlike_types , list_types  ,
-                                              is_good_number )
+from   ostap.core.ostap_types        import ( integer_types  , num_types    ,
+                                              dictlike_types , list_types   ,
+                                              is_good_number , string_types )
 from   ostap.core.core               import ( Ostap         ,
                                               valid_pointer ,
                                               roo_silent    ,
@@ -4343,21 +4343,6 @@ class Fun3op(FUN3) :
         return self.__strname
 
 # =============================================================================
-## Helper function to create the function
-def make_fun ( fun , args , name ) :
-    """Helper function to create the function
-    """
-    
-    assert fun and isinstance ( fun , ROOT.RooAbsReal ), 'make_fun: Invalid type %s' % type ( fun ) 
-    
-    num = len ( args )
-    if   1 == num : return Fun1D ( fun , name = name , *args )
-    elif 2 == num : return Fun2D ( fun , name = name , *args )
-    elif 3 == num : return Fun3D ( fun , name = name , *args )
-    
-    raise TypeError ( "Invalid length of arguments %s " % num ) 
-
-# =============================================================================
 ## check cache binnig scheme
 def check_bins ( var , *args ) :
     """Check cache bining scheme
@@ -4377,15 +4362,114 @@ def check_bins ( var , *args ) :
 
     raise TypeError ("Invalid binning %s/%s" % ( bins , type ( bins ) ) ) 
 
-        
 
+# =============================================================================
+## make some popular special function from (presumably) 'short' description
+#  @param fun  the type of background function/PDF
+#  @param name the name of background function/PDF
+#  @param xvar the observable
+#  Possible values for <code>fun</code>:
+#  - any Ostap/PDF      : PDF will be copied or cloned  
+#  - any RooAbsReal     : <code>Fun1D</code> 
+#  - 'pN', 'polN' , 'polyN'               : <code>BernsteinPoly(power=N)</code>
+#  - 'iN', 'incN' , 'incrN','increasingN' : <code>MonotonicPoly(power=N,increasing=True)</code>
+#  - 'dN', 'decN' , 'decrN','decreasingN' : <code>MonotonicPoly(power=N,increasing=False)</code>
+#  - 'cxN' , 'convexN'                    : <code>ConvexOnlyPoly(power=N,convex=True)</code>
+#  - 'cvN' , 'concaveN'                   : <code> ConvexOnlyPoly(power=N,convex=False)</code>
+#  - 'roopolyN','rpN'                     : <code>RooPoly(power=N)</code>> 
+def make_fun1 ( fun , name , xvar , logger = None , **kwargs ) :
+    """Make some popular special function from presumably 'short' description
+    Possible values for <code>fun</code>:
+    - any Ostap/PDF      : PDF will be copied or cloned  
+    - any RooAbsReal     : `Fun1D` 
+    - 'bN' , 'pN', 'polN' , 'polyN'        : `BernsteinPoly(power=N)`
+    - 'iN', 'incN' , 'incrN','increasingN' : `MonotonicPoly(power=N,increasing=True)`
+    - 'dN', 'decN' , 'decrN','decreasingN' : `MonotonicPoly(power=N,increasing=False)`
+    - 'cxN' , 'convexN'                    : `ConvexOnlyPoly(power=N,convex=True)`
+    - 'cvN' , 'concaveN'                   : `ConvexOnlyPoly(power=N,convex=False)`
+    - 'roopolyN','rpN', 'rN'               : `RooPoly(power=N)`
+    """
+
+    if not logger : logger = globals()['logger'] 
+
+    prefix = kwargs.pop ( 'prefix' , '' )
+    suffix = kwargs.pop ( 'suffix' , '' )
+
+    from ostap.fitting.utils import make_name 
+    name   = make_name  ( prefix , name , suffix )
+
+    result = None
+
+    ## some Ostap-based functions ?
+    if   isinstance ( fun , AFUN1 ) : 
+        
+        ## return the same model
+        if   xvar is bkg.xvar and not  kwargs :
+            result = fun 
+            logger.debug ( 'make_fun1: %s model is copied to %s' % ( bkg , model ) )
+        else :           ## make a clone : 
+            result = fun.clone ( name = name , xvar = xvar , **kwargs )
+            logger.debug ( 'make_fun1: %s model is cloned to %s' % ( bkg , model ) )
+
+    elif isinstance ( fun , ROOT.RooAbsReal ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :
+        result = Fun1D ( fun , xvar = xvar , name = name )
+
+    elif isinstance ( fun , string_types ) :
+
+        sfun = fun.strip().lower() 
+
+        import re        
+        ok = re.search ( r'(poly|pol|p|b)(( *)|(_*))(?P<degree>\d)' , sfun , re.IGNORECASE )
+        if ok :
+            degree = int ( ok.group ( 'degree' ) ) 
+            from ostap.fitting.roofuncs import BernsteinPoly as BP 
+            result =  BP ( name , xvar = xvar , power = degree )
+
+        ok = re.search ( r'(increasing|increase|incr|inc|i)(( *)|(_*))(?P<degree>\d)' , sfun , re.IGNORECASE )
+        if ok : 
+            degree = int ( ok.group ( 'degree' ) )
+            from ostap.fitting.roofuncs import MonotonicPoly as MP 
+            result = MP ( name , xvar = xvar , power = degree , increasing = True )
+
+        ok = re.search ( r'(decreasing|decrease|decr|dec|d)(( *)|(_*))(?P<degree>\d)' , sfun, re.IGNORECASE )
+        if ok : 
+            degree = int ( ok.group ( 'degree' ) )
+            from ostap.fitting.roofuncs import MonotonicPoly as MP 
+            result = MP ( name , xvar = xvar , power = degree , increasing = False )
+
+        ok = re.search ( r'(convex|cx)(( *)|(_*))(?P<degree>\d)' , sfun  , re.IGNORECASE )
+        if ok :
+            degree = int ( ok.group ( 'degree' ) )
+            from ostap.fitting.roofuncs import ConvexOnlyPoly as CO 
+            result = CO ( name , xvar = xvar , power = degree , convex = True  )
+
+        ok = re.search ( r'(concave|cv)(( *)|(_*))(?P<degree>\d)' , sfun, re.IGNORECASE )
+        if ok :
+            degree = int ( ok.group ( 'degree' ) )
+            from ostap.fitting.roofuncs import ConvexOnlyPoly as CO 
+            result = CO ( name , xvar = xvar , power = degree , convex = False  )
+        
+        ok = re.search ( r'(roopoly|rp|r)(( *)|(_*))(?P<degree>\d)' , sfun, re.IGNORECASE )
+        if ok :
+            degree = int ( ok.group ( 'degree' ) )
+            from ostap.fitting.roofuncs import RooPoly as RP
+            result = RP ( name , xvar = xvar , power = degree )
+
+    if result :
+        logger.debug ( 'make_fun1: created functiob is %s' % result  ) 
+        return result 
+
+    raise  TypeError("make_fun1: Wrong type of 'fun' object: %s/%s " % ( fun , type ( fun ) ) ) 
+
+
+    
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
-
+    
+    
 # =============================================================================
 #                                                                       The END 
 # =============================================================================
