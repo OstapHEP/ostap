@@ -376,8 +376,7 @@ class RESOLUTION(PEAK) :
                    sigma_title = ''   ) :
         
         ## mean-value
-        if mean is None :
-            mean = ROOT.RooRealConstant.value ( 0 ) 
+        if mean is None : mean = ROOT.RooFit.RooConst ( 0 ) 
             
         with CheckMean ( False ) :
             super(RESOLUTION,self).__init__ ( name        = name        ,

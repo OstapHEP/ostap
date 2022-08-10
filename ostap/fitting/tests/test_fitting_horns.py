@@ -34,7 +34,7 @@ x = ROOT.RooRealVar( 'x' , 'x-observable' , 0 , 12 )
 models = set()
 
 def test_horns_1 () :
-
+    
     logger = getLogger( "test_horns_1" ) 
     
     horns  = Models.Fit1D (
@@ -167,6 +167,7 @@ if '__main__' == __name__ :
     with timing (  "Save to DB"     , logger ) : 
         test_db           ()          
         
+    pass
 
 # =============================================================================
 ##                                                                      The END

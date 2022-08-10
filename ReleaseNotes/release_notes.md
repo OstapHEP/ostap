@@ -18,7 +18,6 @@
   1. more polishing with verbosity for `make_var`
   1. more polishing for serialisation 
   1. add reduction for Breit-Wigner related PDFs 
-
  
 ## Backward incompatible:  
 
@@ -27,6 +26,7 @@
   1. couple of (small) fixes in `variables.py` module 
   1. several typos are fixed in construction of 3D-models 
   1. `funbasic` : fix typos 
+  1. fix the treatment of shifts in `Convolution` 
 
 # v1.9.0.2
 

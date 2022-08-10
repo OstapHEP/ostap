@@ -86,8 +86,8 @@ class Convolution(object):
                    nbins    = 10000  ,   ## number of bins for FFT
                    buffer   = 0.25   ,   ## buffer fraction use for setBufferFraction
                    bufstrat = None   ,   ## "Buffer strategy" : (0,1,2)
-                   shift1   = 0      ,   ## shift1 parameter
-                   shift2   = 0      ,   ## shift2 parameter
+                   shift1   = None   ,   ## shift1 parameter
+                   shift2   = None   ,   ## shift2 parameter
                    nsigmas  = 6      ) : ## number of sigmas for setConvolutionWindow
 
         ## the axis 
@@ -119,15 +119,13 @@ class Convolution(object):
             rname  = self.old_pdf.generate_name ( prefix = rname )            
             self.__resolution = OFR.ResoGauss ( rname              ,
                                                 self.__xvar        ,
-                                                sigma = resolution ,
-                                                mean  = None       )
+                                                sigma = resolution )
         self.__nbins    = nbins
         self.__buffer   = buffer
         self.__bufstrat = bufstrat 
         self.__nsigmas  = nsigmas
-        self.__shift1   = float ( shift1 ) 
-        self.__shift2   = float ( shift2 ) 
-        
+        self.__shift1   = shift1 
+        self.__shift2   = shift2
 
         name = name if name else PDF1.generate_name ( prefix = 'cnv_%s@%s' % ( pdf.name , self.resolution.name ) )
         
@@ -163,8 +161,9 @@ class Convolution(object):
             if isinstance ( self.bufstrat , int ) and 0 <= self.bufstrat <= 2 : 
                 self.__pdf.setBufferStrategy ( self.bufstrat )
 
-            ## set shift-parameters 
-            self.__pdf.setShift ( self.shift1 , self.shift2 )
+            ## set shift-parameters
+            if ( not self.shift1 is None ) and ( not self.shift2 is None ) :             
+                self.__pdf.setShift ( self.shift1 , self.shift2 )
             
         else :           ##  Use plain numerical integration (could be slow)
             
