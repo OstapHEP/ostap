@@ -7,9 +7,10 @@
 
 ## Bug fixes:
 
-  1. Fix sa bit strange problem/feature appearing at 2022/08/11 in dev3 slot: drawing of 
+  1. Fix a bit strange problem/feature appearing at 2022/08/11 in dev3 slot: drawing of 
      `Addition` objects with `RooAbsRealLValue` fails.  Fix is done using `FunNop`
-  
+  1. fix old typos in `_h3_integrate_` method (thanks to Ivan Polyakov for tproblme report and the fix)  
+
 # v1.9.1.0
 
 ## New features: 

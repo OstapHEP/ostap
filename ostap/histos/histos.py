@@ -5433,15 +5433,15 @@ def _h3_integrate_ ( h                         ,
     ##
     for i in h.items() :
 
-        ibinx = i[0]
-        ibiny = i[1]
-        ibinz = i[2]
+        ibinx = i [ 0 ]
+        ibiny = i [ 1 ]
+        ibinz = i [ 2 ]
         
         if lowx <= ibinx < highx and lowy <= ibiny < highy and lowz <= ibinz < highz :
         
-            x    = i[3]
-            y    = i[4]
-            z    = i[5]
+            x    = i [ 3 ]
+            y    = i [ 4 ]
+            z    = i [ 5 ]
             
             xval = x.value()
             dx   = x.error()
@@ -5450,7 +5450,7 @@ def _h3_integrate_ ( h                         ,
             dy   = y.error()
 
             zval = z.value()
-            zy   = z.error()
+            dz   = z.error()
             
             xl   = max ( xmin , xval - dx )
             xh   = min ( xmax , xval + dx )
@@ -5464,17 +5464,15 @@ def _h3_integrate_ ( h                         ,
 
             vol *= yh - yl
             
-            zl   = max ( zmin , zval - zy )
-            zh   = min ( zmax , zval + zy )
-            if yh <= yl : continue
+            zl   = max ( zmin , zval - dz )
+            zh   = min ( zmax , zval + dz )
+            if zh <= zl : continue
             
             vol *= zh - zl
 
             if cut ( i ) : result = func ( result , i[-1] * vol )
                 
     return result 
-
-
 
 
 ROOT.TH1F .   shift     = _h1_shift_
