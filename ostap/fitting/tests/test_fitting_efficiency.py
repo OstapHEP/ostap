@@ -212,7 +212,7 @@ def test_vars3 () :
 # =============================================================================
 # use some functions  to parameterize efficiciency
 def test_vars4 () :
-
+    
     logger = getLogger ( 'test_vars4' )
 
     a  = ROOT.RooRealVar  ( 'A', 'a' , 0.05  ,   0   , 1   )
@@ -223,7 +223,7 @@ def test_vars4 () :
     from   ostap.fitting.funbasic import Fun1D 
     X   = Fun1D ( x , xvar = x , name = 'X' )
     
-    F   = a +  b * X + c * X**2
+    F      = a + b * X + c * X**2
     
     eff2   = Efficiency1D ( 'E5' , F , cut = acc  , xvar = x )
     
@@ -290,6 +290,8 @@ if '__main__' == __name__ :
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()
+
+    pass
 
 
 # =============================================================================

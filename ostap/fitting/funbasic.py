@@ -67,7 +67,7 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
     """Helper base class for implementation of various (Roo)Function-wrappers
     """
         
-    def __init__ ( self , name , xvar , tricks = True , keep = () , **kwargs ) :
+    def __init__ ( self , name , xvar , tricks = True , **kwargs ) :
 
         ## name is defined via the base class VarMaker 
         self.name  = name ## name is defined via the base class VarMaker 
@@ -87,8 +87,7 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         self.__draw_options = cidict ( transform = key_transform )
         
         self.__checked_keys = set()
-        
-        
+                
         self.vars.add         ( self.xvar )
         self.variables.append ( self.xvar )
 
@@ -102,9 +101,6 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         dropts = draw_options ( **kwargs )
         self.__draw_options.update ( dropts )
 
-        ## objects to be kept 
-        for o in keep : self.aux_keep.append ( o )
-        
         ## check for extra arguments 
         extra  = {}
         for k in kwargs :
@@ -708,7 +704,7 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
-        
+
         return what.plotOn ( frame , cmd  )
 
         ## ## merge arguments to get shorter list        
@@ -724,7 +720,6 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
 
         ## self.debug ( 'plotOn: merged options: %s' % str ( new_options ) ) 
         ## return self.plotOn ( what , frame , *new_options ) 
-
 
 # =============================================================================
 ## @class F1AUX
@@ -1283,9 +1278,9 @@ class F1AUX(object) :
 class FUN1(AFUN1,F1AUX) :
     """Helper base class for implementation of various 1D (Roo)Function-wrappers
     """
-    def __init__ ( self , name , xvar , tricks = True , keep = () , **kwargs ) :
+    def __init__ ( self , name , xvar , tricks = True , **kwargs ) :
         
-        AFUN1 .__init__ ( self , name = name , xvar = xvar , tricks = tricks , keep = keep , **kwargs )
+        AFUN1 .__init__ ( self , name = name , xvar = xvar , tricks = tricks , **kwargs )
 
         ## save the configuration
         self.config = {
@@ -2024,7 +2019,7 @@ class Fun1D ( FUN1 ) :
     >>> xvar = ...
     >>> f1d  = Fun1D ( func , xvar = xvar ) 
     """
-    def __init__ ( self ,  fun , xvar , name = '' , keep = () ) :
+    def __init__ ( self ,  fun , xvar , name = '' ) :
 
         self.__argfun = fun 
         if   isinstance ( fun , num_types ) :
@@ -2041,7 +2036,7 @@ class Fun1D ( FUN1 ) :
             
         if not name : name = 'Fun1D_%s' % fun.GetName() 
 
-        FUN1.__init__ ( self , name , xvar = xvar  , keep = keep )
+        FUN1.__init__ ( self , name , xvar = xvar )
 
         if isinstance ( fun , ( ROOT.RooConstVar , Ostap.MoreRooFit.Id ) ) : pass 
         elif not self.xvar in fun.getParameters ( 0 ) and not self.xvar is fun : 
@@ -2086,9 +2081,9 @@ class Id ( FUN1 ) :
 class AFUN2(AFUN1,YVar) :
     """Base class for 2D-function
     """
-    def __init__ ( self , name , xvar , yvar , tricks = True , keep = () , **kwargs ) :
+    def __init__ ( self , name , xvar , yvar , tricks = True , **kwargs ) :
 
-        AFUN1 .__init__ ( self , name , xvar , tricks = tricks , keep = keep , **kwargs )
+        AFUN1 .__init__ ( self , name , xvar , tricks = tricks , **kwargs )
         YVar  .__init__ ( self , yvar )
         
         
@@ -2223,9 +2218,9 @@ class AFUN2(AFUN1,YVar) :
 class FUN2(AFUN2) :
     """Base class for 2D-function
     """
-    def __init__ ( self , name , xvar , yvar , tricks = True , keep = () , **kwargs ) :
+    def __init__ ( self , name , xvar , yvar , tricks = True , **kwargs ) :
 
-        AFUN2 .__init__ ( self , name , xvar , yvar , tricks = tricks , keep = keep , **kwargs )
+        AFUN2 .__init__ ( self , name , xvar , yvar , tricks = tricks , **kwargs )
         ## save the configuration
         self.config = {
             'name'   : self.name   ,
@@ -3017,7 +3012,7 @@ class Fun2D ( FUN2 ) :
     >>> yvar = ...
     >>> f2d  = Fun2D ( func , xvar = xvar , yvar = yvar ) 
     """
-    def __init__ ( self ,  fun , xvar , yvar , name = '' , keep = () ) :
+    def __init__ ( self ,  fun , xvar , yvar , name = '' ) :
         
         self.__argfun = fun 
         if   isinstance ( fun , num_types ) :
@@ -3038,7 +3033,7 @@ class Fun2D ( FUN2 ) :
 
         if not name : name = 'Fun2D_%s' % fun.GetName() 
 
-        FUN2.__init__ ( self , name , xvar = xvar , yvar = yvar , keep = keep )
+        FUN2.__init__ ( self , name , xvar = xvar , yvar = yvar )
         
         if not isinstance ( fun , ( ROOT.RooConstVar , Ostap.MoreRooFit.Id ) ) : 
             if not self.xvar in fun.getParameters ( 0 ) and not self.xvar is fun :
@@ -3067,9 +3062,9 @@ class AFUN3(AFUN2,ZVar) :
     """Base class for 3D-function
     """
 
-    def __init__ ( self , name , xvar , yvar , zvar , tricks = True , keep = () , **kwargs ) :
+    def __init__ ( self , name , xvar , yvar , zvar , tricks = True , **kwargs ) :
 
-        AFUN2.__init__ ( self , name , xvar , yvar , tricks = tricks , keep = keep , **kwargs )
+        AFUN2.__init__ ( self , name , xvar , yvar , tricks = tricks , **kwargs )
         ZVar .__init__ ( self , zvar )
 
                 
@@ -3243,9 +3238,9 @@ class AFUN3(AFUN2,ZVar) :
 class FUN3(AFUN3) :
     """Base class for 3D-function
     """
-    def __init__ ( self , name , xvar , yvar , zvar , tricks = True , keep = () , **kwargs ) :
+    def __init__ ( self , name , xvar , yvar , zvar , tricks = True , **kwargs ) :
 
-        AFUN3.__init__ ( self , name , xvar , yvar , zvar , tricks = tricks , keep = keep , **kwargs )
+        AFUN3.__init__ ( self , name , xvar , yvar , zvar , tricks = tricks , **kwargs )
         
         self.vars     .add    ( self.zvar )
         self.variables.append ( self.zvar )
@@ -4090,7 +4085,7 @@ class Fun3D ( FUN3 ) :
     >>> zvar = ...
     >>> f3d  = Fun3D ( func , xvar = xvar , yvar = yvar , zvar = zvar ) 
     """
-    def __init__ ( self , fun , xvar , yvar , zvar , name = '' , keep = () ) :
+    def __init__ ( self , fun , xvar , yvar , zvar , name = '' ) :
 
         self.__argfun == fun        
         if   isinstance ( fun , num_types ) :
@@ -4115,7 +4110,7 @@ class Fun3D ( FUN3 ) :
         
         if not name : name = 'Fun3D_%s' % fun.GetName() 
 
-        FUN3.__init__ ( self , name , xvar = xvar , yvar = yvar , zvar = zvar , keep  = keep )
+        FUN3.__init__ ( self , name , xvar = xvar , yvar = yvar , zvar = zvar )
 
         if not isinstance ( fun , ( ROOT.RooConstVar , Ostap.MoreRooFit.Id ) ) :            
             if not self.xvar in fun.getParameters ( 0 ) and not self.xvar is fun :
@@ -4159,22 +4154,29 @@ class Fun1op(FUN1) :
         
         self.__fun1 = fun1
         self.__fun2 = fun2
-        
-        if   isinstance ( self.fun1 , AFUN1           ) : self.__raw1  = self.fun1.fun
-        elif isinstance ( self.fun1 , ROOT.RooAbsReal ) : self.__raw1  = self.fun1
-        elif isinstance ( self.fun1 , constant_types  ) : self.__raw1  = ROOT.RooConst ( float ( self.fun1 ) )
+
+        ## Fix for new problem/feature appearing in dev3 at 20221/08/11 
+        if operation is Ostap.MoreRooFit.Addition :
+            if isinstance ( fun1 , ROOT.RooAbsRealLValue ) :
+                fun1 = Ostap.MoreRooFit.Id ( self.new_roo_name ( 'Id_' + fun1.name ) , fun1 )
+            if isinstance ( fun2 , ROOT.RooAbsRealLValue ) :
+                fun2 = Ostap.MoreRooFit.Id ( self.new_roo_name ( 'Id_' + fun2.name ) , fun2 )
+                
+        if   isinstance ( fun1 , AFUN1           ) : self.__raw1  = fun1.fun
+        elif isinstance ( fun1 , ROOT.RooAbsReal ) : self.__raw1  = fun1
+        elif isinstance ( fun1 , constant_types  ) : self.__raw1  = ROOT.RooConst ( float ( fun1 ) )
         else : raise TypeError ( "Invalid 'fun1': %s/%s" % ( self.fun1 , type ( self.fun1 ) ) )
         
-        if   isinstance ( self.fun2 , AFUN1           ) : self.__raw2  = self.fun2.fun
-        elif isinstance ( self.fun2 , ROOT.RooAbsReal ) : self.__raw2  = self.fun2
-        elif isinstance ( self.fun2 , constant_types  ) : self.__raw2  = ROOT.RooConst ( float ( self.fun2 ) )
+        if   isinstance ( fun2 , AFUN1           ) : self.__raw2  = fun2.fun
+        elif isinstance ( fun2 , ROOT.RooAbsReal ) : self.__raw2  = fun2
+        elif isinstance ( fun2 , constant_types  ) : self.__raw2  = ROOT.RooConst ( float ( fun2 ) )
         else : raise TypeError ( "Invalid 'fun2': %s/%s" % ( self.fun2 , type ( self.fun2 ) ) )
         
         self.__strname   = strname 
         self.__operation = operation
 
         ## create the actual function 
-        self.fun         = operation ( self.__raw1 , self.__raw2 ) 
+        self.fun         = operation ( self.raw1 , self.raw2 ) 
             
         self.config = {
             'fun1'      : self.fun1      ,
@@ -4197,6 +4199,16 @@ class Fun1op(FUN1) :
     def fun2 ( self ) :
         """'fun2' : the second argument"""
         return self.__fun2
+
+    @property
+    def raw1 ( self ) :
+        """'raw1' : true 'raw' object for the first argument"""
+        return self.__raw1
+    @property
+    def raw2 ( self ) :
+        """'raw2' : true 'raw' object for the second argument"""
+        return self.__raw2
+    
     @property
     def operation ( self ) :
         """'operation' : the actual operation"""
@@ -4227,21 +4239,28 @@ class Fun2op(FUN2) :
         self.__fun1 = fun1
         self.__fun2 = fun2
         
-        if   isinstance ( self.fun1 , AFUN1           ) : self.__raw1  = self.fun1.fun
-        elif isinstance ( self.fun1 , ROOT.RooAbsReal ) : self.__raw1  = self.fun1
-        elif isinstance ( self.fun1 , constant_types  ) : self.__raw1  = ROOT.RooConst ( float ( self.fun1 ) )
+        ## Fix for new problem/feature appearing in dev3 at 20221/08/11 
+        if operation is Ostap.MoreRooFit.Addition :
+            if isinstance ( fun1 , ROOT.RooAbsRealLValue ) :
+                fun1 = Ostap.MoreRooFit.Id ( self.new_roo_name ( 'Id_' + fun1.name ) , fun1 )
+            if isinstance ( fun2 , ROOT.RooAbsRealLValue ) :
+                fun2 = Ostap.MoreRooFit.Id ( self.new_roo_name ( 'Id_' + fun2.name ) , fun2 )
+                
+        if   isinstance ( fun1 , AFUN1           ) : self.__raw1  = fun1.fun
+        elif isinstance ( fun1 , ROOT.RooAbsReal ) : self.__raw1  = fun1
+        elif isinstance ( fun1 , constant_types  ) : self.__raw1  = ROOT.RooConst ( float ( fun1 ) )
         else : raise TypeError ( "Invalid 'fun1': %s/%s" % ( self.fun1 , type ( self.fun1 ) ) )
         
-        if   isinstance ( self.fun2 , AFUN1           ) : self.__raw2  = self.fun2.fun
-        elif isinstance ( self.fun2 , ROOT.RooAbsReal ) : self.__raw2  = self.fun2
-        elif isinstance ( self.fun2 , constant_types  ) : self.__raw2  = ROOT.RooConst ( float ( self.fun2 ) )
+        if   isinstance ( fun2 , AFUN1           ) : self.__raw2  = fun2.fun
+        elif isinstance ( fun2 , ROOT.RooAbsReal ) : self.__raw2  = fun2
+        elif isinstance ( fun2 , constant_types  ) : self.__raw2  = ROOT.RooConst ( float ( fun2 ) )
         else : raise TypeError ( "Invalid 'fun2': %s/%s" % ( self.fun2 , type ( self.fun2 ) ) )
         
         self.__strname   = strname 
         self.__operation = operation
 
         ## create the actual function 
-        self.fun         = operation ( self.__raw1 , self.__raw2 ) 
+        self.fun         = operation ( self.raw1 , self.raw2 ) 
             
         self.config = {
             'fun1'      : self.fun1      ,
@@ -4264,6 +4283,16 @@ class Fun2op(FUN2) :
     def fun2 ( self ) :
         """'fun2' : the second argument"""
         return self.__fun2
+
+    @property
+    def raw1 ( self ) :
+        """'raw1' : true 'raw' object for the first argument"""
+        return self.__raw1
+    @property
+    def raw2 ( self ) :
+        """'raw2' : true 'raw' object for the second argument"""
+        return self.__raw2
+        
     @property
     def operation ( self ) :
         """'operation' : the actual operation"""
@@ -4295,21 +4324,28 @@ class Fun3op(FUN3) :
         self.__fun1 = fun1
         self.__fun2 = fun2
         
-        if   isinstance ( self.fun1 , AFUN1           ) : self.__raw1  = self.fun1.fun
-        elif isinstance ( self.fun1 , ROOT.RooAbsReal ) : self.__raw1  = self.fun1
-        elif isinstance ( self.fun1 , constant_types  ) : self.__raw1  = ROOT.RooConst ( float ( self.fun1 ) )
+        ## Fix for new problem/feature appearing in dev3 at 20221/08/11 
+        if operation is Ostap.MoreRooFit.Addition :
+            if isinstance ( fun1 , ROOT.RooAbsRealLValue ) :
+                fun1 = Ostap.MoreRooFit.Id ( self.new_roo_name ( 'Id_' + fun1.name ) , fun1 )
+            if isinstance ( fun2 , ROOT.RooAbsRealLValue ) :
+                fun2 = Ostap.MoreRooFit.Id ( self.new_roo_name ( 'Id_' + fun2.name ) , fun2 )
+
+        if   isinstance ( fun1 , AFUN1           ) : self.__raw1  = fun1.fun
+        elif isinstance ( fun1 , ROOT.RooAbsReal ) : self.__raw1  = fun1
+        elif isinstance ( fun1 , constant_types  ) : self.__raw1  = ROOT.RooConst ( float ( fun1 ) )
         else : raise TypeError ( "Invalid 'fun1': %s/%s" % ( self.fun1 , type ( self.fun1 ) ) )
         
-        if   isinstance ( self.fun2 , AFUN1           ) : self.__raw2  = self.fun2.fun
-        elif isinstance ( self.fun2 , ROOT.RooAbsReal ) : self.__raw2  = self.fun2
-        elif isinstance ( self.fun2 , constant_types  ) : self.__raw2  = ROOT.RooConst ( float ( self.fun2 ) )
+        if   isinstance ( fun2 , AFUN1           ) : self.__raw2  = fun2.fun
+        elif isinstance ( fun2 , ROOT.RooAbsReal ) : self.__raw2  = fun2
+        elif isinstance ( fun2 , constant_types  ) : self.__raw2  = ROOT.RooConst ( float ( fun2 ) )
         else : raise TypeError ( "Invalid 'fun2': %s/%s" % ( self.fun2 , type ( self.fun2 ) ) )
         
         self.__strname   = strname 
         self.__operation = operation
 
         ## create the actual function 
-        self.fun         = operation ( self.__raw1 , self.__raw2 ) 
+        self.fun         = operation ( self.raw1 , self.raw2 ) 
             
         self.config = {
             'fun1'      : self.fun1      ,
@@ -4333,6 +4369,16 @@ class Fun3op(FUN3) :
     def fun2 ( self ) :
         """'fun2' : the second argument"""
         return self.__fun2
+    @property
+    
+    def raw1 ( self ) :
+        """'raw1' : true 'raw' object for the first argument"""
+        return self.__raw1
+    @property
+    def raw2 ( self ) :
+        """'raw2' : true 'raw' object for the second argument"""
+        return self.__raw2
+
     @property
     def operation ( self ) :
         """'operation' : the actual operation"""

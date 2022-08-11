@@ -2,9 +2,13 @@
 
 \## Backward incompatible:  
 
+  1. remove `keep` argument for fun/pdf objects. Hopefully it was nnever used by the users  
+
 ## Bug fixes:
 
-
+  1. Fix sa bit strange problem/feature appearing at 2022/08/11 in dev3 slot: drawing of 
+     `Addition` objects with `RooAbsRealLValue` fails.  Fix is done using `FunNop`
+  
 # v1.9.1.0
 
 ## New features: 

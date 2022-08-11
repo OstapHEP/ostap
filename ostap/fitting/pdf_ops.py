@@ -60,8 +60,7 @@ class Prod1D_pdf(PDF1) :
     def __init__ ( self       ,
                    pdfs       ,
                    xvar       ,
-                   name  = '' ,
-                   keep  = () ) :
+                   name  = '' ) :
 
         assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , \
                "Invalid type of 'xvar' %s/%s" % ( xvar , type ( xvar ) )
@@ -76,7 +75,7 @@ class Prod1D_pdf(PDF1) :
         name    = name if name else self.new_name ( patname ) 
         
         ## initialize the base class
-        PDF1.__init__ ( self , name , xvar = xvar , keep = keep )
+        PDF1.__init__ ( self , name , xvar = xvar )
         
         self.__pdfs = tuple ( pdfs )
         
@@ -134,8 +133,7 @@ class Prod2D_pdf(PDF2) :
                    pdfs       ,
                    xvar       ,
                    yvar       ,
-                   name  = '' ,
-                   keep  = () ) : 
+                   name  = '' ) : 
         
         assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , \
                "Invalid type of 'xvar' %s/%s" % ( xvar , type ( xvar ) )
@@ -151,7 +149,7 @@ class Prod2D_pdf(PDF2) :
         name    = name if name else self.new_name ( patname ) 
         
         ## initialize the base class
-        PDF2.__init__ ( self , name , xvar = xvar , yvar = yvar , keep = keep )
+        PDF2.__init__ ( self , name , xvar = xvar , yvar = yvar )
         
         ## the actual product of PDFs
         self.pdf = self.raw_product ( *self.pdfs )
@@ -209,8 +207,7 @@ class Prod3D_pdf(PDF3) :
                    xvar       ,
                    yvar       ,
                    zvar       ,
-                   name  = '' ,
-                   keep  = () ) :
+                   name  = '' ) :
     
         assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , \
                "Invalid type of 'xvar' %s/%s" % ( xvar , type ( xvar ) )
@@ -229,7 +226,7 @@ class Prod3D_pdf(PDF3) :
         name    = name if name else self.new_name ( patname ) 
         
         ## initialize the base class
-        PDF3.__init__ ( self , name , xvar = xvar , yvar = yvar , zvar = zvar , keep = keep )
+        PDF3.__init__ ( self , name , xvar = xvar , yvar = yvar , zvar = zvar )
         
         ## the actual product of PDFs
         self.pdf = self.raw_product ( *self.pdfs )

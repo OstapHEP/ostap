@@ -101,7 +101,7 @@ namespace
   }  
   // ==========================================================================
   inline std::string  title2_ ( const std::string& title , 
-                               const std::string&  oper  , 
+                                const std::string&  oper  , 
                                 const TNamed&        b    )
   { return 
     title.empty () ? oper + "(" + b.GetName() + ")" : title  ; }
@@ -867,6 +867,14 @@ Ostap::MoreRooFit::Id::Id
   : OneVar 
     ( name2_  ( name  , "Id" , v ) ,
       title2_ ( title , "Id" , v ) , v ) 
+{}
+// ============================================================================
+Ostap::MoreRooFit::Id::Id
+( const std::string& name  , 
+  RooAbsReal&        v     ) 
+  : OneVar 
+    ( name2_  ( name , "Id" , v ) ,
+      title2_ ( name , "Id" , v ) , v ) 
 {}
 // ============================================================================
 // copy constructor 

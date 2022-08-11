@@ -2174,9 +2174,12 @@ namespace Ostap
     public:
       // ========================================================================
       Id () = default ;
-      /// constructor with a variable
+      /// constructor with the name, title and variable 
       Id ( const std::string& name  , 
            const std::string& title , 
+           RooAbsReal&        a     ) ;
+      /// constructor with the name and variable 
+      Id ( const std::string& name  , 
            RooAbsReal&        a     ) ;
       /// copy 
       Id ( const Id&   right       , 

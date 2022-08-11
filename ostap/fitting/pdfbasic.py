@@ -2127,9 +2127,9 @@ class APDF1 ( object ) :
 class PDF1(APDF1,FUN1) :
     """The main helper base class for implementation of various 1D PDF-wrappers
     """
-    def __init__ ( self , name ,  xvar , special = False , tricks = True , keep = () , **kwargs ) :
+    def __init__ ( self , name ,  xvar , special = False , tricks = True , **kwargs ) :
 
-        FUN1  .__init__ ( self , name = name , xvar = xvar , tricks = tricks , keep = keep , **kwargs )
+        FUN1  .__init__ ( self , name = name , xvar = xvar , tricks = tricks , **kwargs )
         APDF1 .__init__ ( self , special = special )
         
         self.config   = { 'name'    : self.name    ,
@@ -2420,8 +2420,7 @@ class Generic1D_pdf(PDF1) :
                    special        = False ,
                    add_to_signals = True  ,
                    prefix         = ''    ,
-                   suffix         = ''    ,
-                   keep           = ()    ) :
+                   suffix         = ''    ) :
         """Wrapper for generic RooFit pdf        
         >>> raw_pdf = RooGaussian   ( ...     )
         >>> pdf     = Generic1D_pdf ( raw_pdf , xvar = x )
@@ -2435,7 +2434,7 @@ class Generic1D_pdf(PDF1) :
                else self.generate_name ( prefix = prefix , suffix = suffix , name = pdf.GetName() )
         
         ## initialize the base 
-        PDF1 . __init__ ( self , name , xvar , special = special , keep = keep )
+        PDF1 . __init__ ( self , name , xvar , special = special )
         ##
 
         ## Does PDF depends on XVAR ?
@@ -3390,9 +3389,9 @@ class APDF2 (APDF1) :
 class PDF2(APDF2,FUN2) :
     """The main helper base class for implementation of various 1D PDF-wrappers
     """
-    def __init__ ( self , name ,  xvar , yvar , special = False , tricks = True , keep = () , **kwargs ) :
+    def __init__ ( self , name ,  xvar , yvar , special = False , tricks = True , **kwargs ) :
         
-        FUN2  .__init__ ( self , name = name , xvar = xvar , yvar = yvar , tricks = tricks , keep = keep , **kwargs )
+        FUN2  .__init__ ( self , name = name , xvar = xvar , yvar = yvar , tricks = tricks , **kwargs )
         APDF2 .__init__ ( self , special = special )
         
         self.config   = { 'name'    : self.name    ,
@@ -3622,15 +3621,14 @@ class Generic2D_pdf(PDF2) :
                    special        = False   ,                  
                    add_to_signals = True    ,
                    prefix         = ''      ,
-                   suffix         = ''      ,
-                   keep           = ()      ) :
+                   suffix         = ''      ) :
 
         assert isinstance ( xvar , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
         assert isinstance ( yvar , ROOT.RooAbsReal ) , "'yvar' must be ROOT.RooAbsReal"        
         assert isinstance ( pdf  , ROOT.RooAbsReal ) , "'pdf' must be ROOT.RooAbsReal"
         
         name = name if name else self.generate_name ( prefix = prefix + '%s_' % pdf.GetName() , suffix = suffix ) 
-        PDF2  . __init__ ( self , name , xvar , yvar , special = special , keep = keep )
+        PDF2  . __init__ ( self , name , xvar , yvar , special = special )
 
         if not self.special : 
             assert isinstance ( pdf  , ROOT.RooAbsPdf  ) , "'pdf' must be ROOT.RooAbsPdf"
@@ -4634,15 +4632,14 @@ class APDF3 (APDF2) :
 class PDF3(APDF3,FUN3) :
     """The main helper base class for implementation of various 1D PDF-wrappers
     """
-    def __init__ ( self , name , xvar , yvar , zvar , special = False , tricks = True , keep = () , **kwargs ) :
+    def __init__ ( self , name , xvar , yvar , zvar , special = False , tricks = True , **kwargs ) :
 
         FUN3  .__init__ ( self            ,
                           name   = name   ,
                           xvar   = xvar   ,
                           yvar   = yvar   ,
                           zvar   = zvar   ,
-                          tricks = tricks ,
-                          keep   = keep   , **kwargs )
+                          tricks = tricks , **kwargs )
         APDF3 .__init__ ( self , special = special )
         
         self.config   = { 'name'    : self.name    ,
@@ -4887,8 +4884,7 @@ class Generic3D_pdf(PDF3) :
                    special        = False   ,
                    add_to_signals = True    ,
                    prefix         = ''      ,
-                   suffix         = ''      ,
-                   keep           = ()      ) :
+                   suffix         = ''      ) :
         
         assert isinstance ( xvar , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
         assert isinstance ( yvar , ROOT.RooAbsReal ) , "'yvar' must be ROOT.RooAbsReal"
@@ -4897,7 +4893,7 @@ class Generic3D_pdf(PDF3) :
 
         name = name if name else self.generate_name ( prefix , suffix , pdf.GetName() )
         
-        PDF3  . __init__ ( self , name , xvar , yvar , zvar , special = special , keep = keep )
+        PDF3  . __init__ ( self , name , xvar , yvar , zvar , special = special )
 
         if not self.special : 
             assert isinstance ( pdf  , ROOT.RooAbsPdf  ) , "'pdf' must be ROOT.RooAbsPdf"
