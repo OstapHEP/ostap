@@ -35,6 +35,7 @@ from   ostap.core.core               import ( Ostap         ,
                                               roo_silent    ,
                                               rootWarning   )   
 from   ostap.math.base               import iszero , isequal  
+from   ostap.fitting.utils           import make_name 
 from   ostap.fitting.variables       import SETVAR
 from   ostap.fitting.roofit          import PDF_fun 
 from   ostap.fitting.fithelpers      import ( VarMaker , FitHelper ,
@@ -79,7 +80,10 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
 
         self.__config       = {}
         self.__fun          = None
-        
+
+        ## attention here, allow to define the fun-object from the arguments  
+        self.fun            = kwargs.pop ( 'fun' , None )  ## atttention here 
+
         self.__tricks       = True if tricks else False 
         
         self.__draw_var     = None
@@ -91,7 +95,6 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         self.vars.add         ( self.xvar )
         self.variables.append ( self.xvar )
 
-        self.config = { 'name' : self.name , 'xvar' : self.xvar  }
         self.__func_init = True  
 
         ## derived functions/objects
@@ -106,7 +109,12 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         for k in kwargs :
             if not k in dropts : extra [ k ] = kwargs [ k ] 
         if extra : self.error ("Unknown arguments %s" % extra )
-
+        
+        self.config = { 'name'   : self.name   ,
+                        'xvar'   : self.xvar   ,
+                        'tricks' : self.tricks ,
+                        'fun'    : self.fun    }
+        
     ## pickling via reduce 
     def __reduce__ ( self ) :
         if py2 : return func_factory , ( type ( self ) , self.config, )
@@ -145,11 +153,10 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         return self.__fun
     @fun.setter
     def fun  ( self , value ) :
-        if value is None :
+        if value is None : self.__fun = value
+        else : 
+            assert value and isinstance ( value , ROOT.RooAbsReal ) , "'pdf/fun' is not ROOT.RooAbsReal"
             self.__fun = value
-            return        
-        assert isinstance ( value , ROOT.RooAbsReal ) , "'pdf/fun' is not ROOT.RooAbsReal"
-        self.__fun = value
 
     @property
     def fun_name ( self ) :
@@ -177,8 +184,8 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         val = True if value else False 
         if val and not self.__tricks :
             raise ValueError("Can't allow tricks&shortcuts!")
-        self.__tricks = val
-
+        self.__tricks = value
+        
     # =========================================================================
     ##  Does this function depend on this variable,
     #   @code
@@ -567,18 +574,25 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
                 if not hasattr ( self , k ) or getattr ( self, k ) != kwargs [ k ] :
                     raise AttributeError ("Class %s cannot be cloned with '%s' key" % ( self.__class__.__name__ , k ) )
 
+        ## two very special keys:
+        if   'fun' in self.config                              : self.config.update ( { 'fun' : self.fun } ) 
+        elif 'pdf' in self.config and hasattr ( self , 'pdf' ) : self.config.update ( { 'pdf' : self.pdf } ) 
+        
+        ## get the default clone configuration 
         conf.update ( self.config ) 
 
+        prefix = kwargs.pop ( 'name_prefix' , '' )
+        suffix = kwargs.pop ( 'name_suffix' , '' )
+        
         ## modify the name if the name is in config  
         if 'name' in conf :
-            name_prefix = kwargs.pop ( 'name_prefix' , '' )
-            name_suffix = kwargs.pop ( 'name_suffix' , '' )
-            if name_prefix or name_suffix :
-                conf['name']  = name_prefix + conf [ 'name' ] + name_suffix
-            else :
-                conf['name'] += '_copy'
-                
-        ## update (if needed)
+            cname = conf [ 'name' ] 
+            if   prefix or suffix   :
+                conf['name']  = self.generate_name ( prefix = prefix , suffix = suffix , name = cname ) 
+            elif cname == self.name : 
+                conf['name']  = self.new_name      ( suffix = 'copy' ) 
+
+        ## update it 
         conf.update ( kwargs )
 
         ## KLASS = self.__class__
@@ -1286,7 +1300,8 @@ class FUN1(AFUN1,F1AUX) :
         self.config = {
             'name'   : self.name   ,
             'xvar'   : self.xvar   ,
-            'tricks' : self.tricks , 
+            'tricks' : self.tricks ,
+            'fun'    : self.fun    , 
             }
         self.config.update ( kwargs )
         
@@ -2085,19 +2100,19 @@ class AFUN2(AFUN1,YVar) :
 
         AFUN1 .__init__ ( self , name , xvar , tricks = tricks , **kwargs )
         YVar  .__init__ ( self , yvar )
-        
-        
+                
         self.vars     .add    ( self.yvar )
         self.variables.append ( self.yvar )
         
         ## save the configuration
         self.config = {
-            'name' : self.name ,
-            'xvar' : self.xvar ,
-            'yvar' : self.yvar ,            
+            'name'   : self.name   ,
+            'xvar'   : self.xvar   ,
+            'yvar'   : self.yvar   ,            
+            'tricks' : self.tricks ,            
+            'fun'    : self.fun    ,            
             }
-
-
+        
     ## conversion to string 
     def __str__ (  self ) :
         return '%s(%s,xvar=%s,yvar=%s)' % ( self.__class__.__name__ ,
@@ -2227,6 +2242,7 @@ class FUN2(AFUN2) :
             'xvar'   : self.xvar   ,
             'yvar'   : self.yvar   ,
             'tricks' : self.tricks , 
+            'fun'    : self.fun    , 
             }
         self.config.update ( kwargs )
         
@@ -3073,10 +3089,12 @@ class AFUN3(AFUN2,ZVar) :
         
         ## save the configuration
         self.config = {
-            'name' : self.name ,
-            'xvar' : self.xvar ,
-            'yvar' : self.yvar ,            
-            'zvar' : self.zvar ,            
+            'name'   : self.name   ,
+            'xvar'   : self.xvar   ,
+            'yvar'   : self.yvar   ,            
+            'zvar'   : self.zvar   ,            
+            'tricks' : self.tricks ,            
+            'fun'    : self.fun    ,            
             }
         self.config.update ( kwargs )
         
@@ -3251,8 +3269,10 @@ class FUN3(AFUN3) :
             'xvar'   : self.xvar   ,
             'yvar'   : self.yvar   ,            
             'zvar'   : self.zvar   ,            
-            'tricks' : self.tricks ,            
+            'tricks' : self.tricks ,
+            'fun'    : self.fun    ,            
             }
+        self.config.update ( kwargs )
         
         self.__call_OK = isinstance ( self.xvar , ROOT.RooAbsRealLValue ) and \
                          isinstance ( self.yvar , ROOT.RooAbsRealLValue ) and \
@@ -4441,7 +4461,6 @@ def make_fun1 ( fun , name , xvar , logger = None , **kwargs ) :
     prefix = kwargs.pop ( 'prefix' , '' )
     suffix = kwargs.pop ( 'suffix' , '' )
 
-    from ostap.fitting.utils import make_name 
     name   = make_name  ( prefix , name , suffix )
 
     result = None

@@ -2,7 +2,8 @@
 
 \## Backward incompatible:  
 
-  1. remove `keep` argument for fun/pdf objects. Hopefully it was nnever used by the users  
+  1. remove `keep`    argument for fun/pdf objects. Hopefully it was nnever used by the users.  
+  1. remove `special` argument for fun/pdf objects. Hopefully it was nnever used by the users.  
 
 ## Bug fixes:
 

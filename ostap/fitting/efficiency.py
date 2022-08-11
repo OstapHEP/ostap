@@ -97,51 +97,36 @@ class Efficiency ( object ) :
             self.cut                      ,
             self.accept                   )
 
-        if 3 == len ( vars ) : 
-            ## pdf-object for fit 
-            self.__pdf_fit = Generic3D_pdf ( pdf   = self.pdf ,
-                                             xvar  = vars[0]  ,
-                                             yvar  = vars[1]  ,
-                                             zvar  = vars[2]  ,
-                                             name  = PDF1.generate_name ( 'eff_fit_%s'   % self.name ) ,
-                                             special        = True  ,
-                                             add_to_signals = False )
+        if 3 == len ( vars ) :            
+            ## pdf-object for fit
+            self.__pdf_fit      = PDF3 ( name = PDF1.generate_name ( 'eff_fit_%s' % self.name ) ,
+                                         xvar = vars [ 0 ] , yvar = vars [ 1 ] , zvar = vars [ 2 ] )            
+            self.__pdf_fit.fun  = self.pdf
             ## pdf-object for drawing
-            self.__pdf_draw = Generic3D_pdf ( pdf   = self.eff_fun   ,
-                                              xvar  = vars[0]        ,
-                                              yvar  = vars[1]        ,
-                                              zvar  = vars[2]        ,
-                                              name  = PDF1.generate_name ( 'eff_draw_%s'  % self.name ) ,
-                                              special        = True  ,
-                                              add_to_signals = False )
-        elif 2 == len (  vars ) :
+            self.__pdf_draw     = PDF3 ( name = PDF1.generate_name ( 'eff_draw_%s' % self.name ) ,
+                                         xvar = vars [ 0 ] , yvar = vars [ 1 ] , zvar = vars [ 2 ] )
+            self.__pdf_draw.fun = self.eff_fun
+
+        elif 2 == len (  vars ) :            
             ## pdf-object for fit 
-            self.__pdf_fit  = Generic2D_pdf ( pdf   = self.pdf ,
-                                              xvar  = vars[0]  ,
-                                              yvar  = vars[1]  ,
-                                              name  = PDF1.generate_name ( 'eff_fit_%s'   % self.name ) ,
-                                              special        = True  ,
-                                              add_to_signals = False )
+            self.__pdf_fit      = PDF2 ( name = PDF1.generate_name ( 'eff_fit_%s' % self.name ) ,
+                                         xvar = vars [ 0 ] , yvar = vars [ 1 ] )
+            self.__pdf_fit.fun  = self.pdf            
             ## pdf-object for drawing
-            self.__pdf_draw = Generic2D_pdf ( pdf   = self.eff_fun   ,
-                                              xvar  = vars[0]        ,
-                                              yvar  = vars[1]        ,
-                                              name  = PDF1.generate_name ( 'eff_draw_%s'  % self.name ) ,
-                                              special        = True  ,
-                                              add_to_signals = False )
+            self.__pdf_draw     = PDF2 ( name = PDF1.generate_name ( 'eff_draw_%s' % self.name ) ,
+                                         xvar = vars [ 0 ] , yvar = vars [ 1 ] )   
+            self.__pdf_draw.fun = self.eff_fun
+
         elif 1 == len (  vars ) :
             ## pdf-object for fit 
-            self.__pdf_fit  = Generic1D_pdf ( pdf   = self.pdf ,
-                                              xvar  = vars[0]  ,
-                                              name  = PDF1.generate_name ( 'eff_fit_%s'   % self.name ) ,
-                                              special        = True  ,
-                                              add_to_signals = False )
+            self.__pdf_fit      = PDF1 ( name = PDF1.generate_name ( 'eff_fit_%s' % self.name ) ,
+                                         xvar = vars [ 0 ] )
+            self.__pdf_fit.fun  = self.pdf            
             ## pdf-object for drawing
-            self.__pdf_draw = Generic1D_pdf ( pdf   = self.eff_fun   ,
-                                              xvar  = vars[0]        ,
-                                              name  = PDF1.generate_name ( 'eff_draw_%s'  % self.name ) ,
-                                              special        = True  ,
-                                              add_to_signals = False )
+            self.__pdf_draw     = PDF1 ( name = PDF1.generate_name ( 'eff_draw_%s' % self.name ) ,
+                                         xvar = vars [ 0 ] )   
+            self.__pdf_draw.fun = self.eff_fun
+            
         else :
             raise AttributeError("Invalid length of vars: %s" % str( vars ) )
         
@@ -345,7 +330,7 @@ class Efficiency1D (Efficiency) :
         elif isinstance ( efficiency , ROOT.RooAbsPdf   ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :
             eff_pdf = Generic1D_pdf ( efficiency , xvar )                
             eff_fun = None 
-        elif isinstance ( efficiency , ROOT.RooAbsReal  ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :            
+        elif isinstance ( efficiency , ROOT.RooAbsReal  ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :
             eff_pdf = Fun1D        ( efficiency , xvar =  xvar )                
             eff_fun = efficiency            
         else :
@@ -481,18 +466,12 @@ class Efficiency2D (Efficiency) :
             eff_fun = efficiency.fun 
             xvar    = efficiency.xvar
             yvar    = efficiency.yvar
-            eff_pdf = None  
-        elif isinstance ( efficiency , ROOT.RooAbsReal  ) :            
-            okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
-            oky = yvar and isinstance ( yvar , ROOT.RooAbsReal )
-            assert oix and oky, 'Invalid efficiency/xvar/yvar setting!'            
-            eff_pdf = Generic2D_pdf ( efficiency , xvar , yvar , special = True )                
-            eff_fun = None  if isinstance ( efficiency , ROOT.RooAbsPdf ) else efficiency            
+            eff_pdf = None            
         elif isinstance ( efficiency , ROOT.RooAbsPdf   ) :            
             okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
             oky = yvar and isinstance ( yvar , ROOT.RooAbsReal )
             assert oix and oky, 'Invalid efficiency/xvar/yvar setting!'            
-            eff_pdf = Generic2D_pdf ( efficiency , xvar , yvar , special = True )                
+            eff_pdf = Generic2D_pdf ( efficiency , xvar , yvar  )                
             eff_fun = None       
         elif isinstance ( efficiency , ROOT.RooAbsReal  ) :            
             okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
@@ -683,7 +662,7 @@ class Efficiency3D (Efficiency) :
             oky = yvar and isinstance ( yvar , ROOT.RooAbsReal )
             okz = zvar and isinstance ( zvar , ROOT.RooAbsReal )
             assert oix and oky and okz, 'Invalid efficiency/xvar/yvar/zvar setting!'            
-            eff_pdf = Generic3D_pdf ( efficiency , xvar , yvar , zvar , special = True )
+            eff_pdf = Generic3D_pdf ( efficiency , xvar , yvar , zvar )
             eff_fun = None  
         elif isinstance ( efficiency , ROOT.RooAbsReal  ) :            
             okx = xvar and isinstance ( xvar , ROOT.RooAbsReal )
