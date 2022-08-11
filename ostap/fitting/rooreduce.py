@@ -90,6 +90,20 @@ def _rid_reduce ( var ) :
                                   var.title    ,
                                   var.x ()     )
 
+# =============================================================================
+## reduce <code>Ostap::MoreRooFit::AddDeps<code> object
+#  @see Ostap.MoreRooFit::AddDeps
+def _radddep_reduce ( var ) :
+    """Reduce `Ostap.MoreRooFit.AddDeps` object
+    - see Ostap.MoreRooFit.AddDeps
+    """
+    return root_store_factory , ( type ( var ) ,
+                                  var.name     ,
+                                  var.title    ,
+                                  var.x ()     ,
+                                  var.vlst()   )
+
+
 
 Ostap.MoreRooFit.Addition    .__reduce__  = _radd1_reduce
 Ostap.MoreRooFit.Addition2   .__reduce__  = _radd2_reduce
@@ -99,6 +113,7 @@ Ostap.MoreRooFit.Product     .__reduce__  = _r2v_reduce
 Ostap.MoreRooFit.ProductPdf  .__reduce__  = _r2v_reduce
 
 Ostap.MoreRooFit.Id          .__reduce__  = _rid_reduce
+Ostap.MoreRooFit.AddDeps     .__reduce__  = _radddep_reduce
 
 # ===================================================================
 ## Reduce <code>Ostap::MoreRooFit::Combination</code> objects
@@ -2018,6 +2033,7 @@ _decorated_classes_ = (
     Ostap.MoreRooFit.Product           , 
     Ostap.MoreRooFit.ProductPdf        , 
     Ostap.MoreRooFit.Id                , 
+    Ostap.MoreRooFit.AddDeps           , 
     Ostap.MoreRooFit.Combination       , 
     Ostap.MoreRooFit.Asymmetry         , 
     Ostap.MoreRooFit.Constant          , 

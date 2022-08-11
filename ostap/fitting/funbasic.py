@@ -2034,35 +2034,45 @@ class Fun1D ( FUN1 ) :
     >>> xvar = ...
     >>> f1d  = Fun1D ( func , xvar = xvar ) 
     """
-    def __init__ ( self ,  fun , xvar , name = '' ) :
+    def __init__ ( self ,  fun , xvar , name = '' , fixdeps = False ) :
 
-        self.__argfun = fun 
-        if   isinstance ( fun , num_types ) :
+        assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
+
+        self.__argfun = fun
+        
+        if   isinstance ( fun , constant_types ) :
+            
             value = float ( fun ) 
             vname = 'C(%s,%s)' %  ( value , xvar.name ) 
             fun   = Ostap.MoreRooFit.Constant ( self.generate_name ( vname , name ) , 'constant %s' % value , value , xvar ) 
             
-        elif isinstance ( fun , AFUN1     ) : fun = fun.fun
+        elif isinstance ( fun , AFUN1 )  : fun  = fun.fun
         
-        assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
         assert fun  and isinstance ( fun  , ROOT.RooAbsReal ) , "'fun'  must be ROOT.RooAbsReal"
 
-        if fun is xvar : fun = Ostap.MoreRooFit.Id ( "Id_%s" % xvar.name , "Id:%s" % xvar.title , xvar )            
-            
         if not name : name = 'Fun1D_%s' % fun.GetName() 
 
         FUN1.__init__ ( self , name , xvar = xvar )
 
-        if isinstance ( fun , ( ROOT.RooConstVar , Ostap.MoreRooFit.Id ) ) : pass 
-        elif not self.xvar in fun.getParameters ( 0 ) and not self.xvar is fun : 
-            self.warning ("Function does not depend on xvar=%s" % self.xvar.name )
-            
+        if fun is xvar :
+            fun = Ostap.MoreRooFit.Id ( "Id_%s" % xvar.name , "Id:%s" % xvar.title , xvar )            
+
+        self.__aux = fun 
+        if not fun.depends_on ( xvar ) :
+            if not fixdeps : self.warning ("Function does not depend on xvar=%s" % self.xvar.name )
+            else :
+                vname  = self.new_roo_name ( fun.name , '_deps' )
+                vtitle = 'AddDeps: %s%s' % ( fun.name , [ v.name for v in self.vars ] )                
+                fun    = Ostap.MoreRooFit.AddDeps ( vname , vtitle , fun , self.vars ) 
+                
+        ## finally set the function 
         self.fun = fun
         
         self.config = {
-            'fun'  : self.fun  ,
-            'xvar' : self.xvar ,
-            'name' : self.name ,            
+            'fun'     : self.fun  ,
+            'xvar'    : self.xvar ,
+            'name'    : self.name ,
+            'fixdeps' : fixdeps   ,
             }
         
         self.checked_keys.add  ( 'fun'  ) 
@@ -3028,42 +3038,56 @@ class Fun2D ( FUN2 ) :
     >>> yvar = ...
     >>> f2d  = Fun2D ( func , xvar = xvar , yvar = yvar ) 
     """
-    def __init__ ( self ,  fun , xvar , yvar , name = '' ) :
+    def __init__ ( self ,  fun , xvar , yvar , name = '' , fixdeps = False ) :
         
+        assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
+        assert yvar and isinstance ( yvar , ROOT.RooAbsReal ) , "'yvar' must be ROOT.RooAbsReal"
+        assert not xvar is yvar, "xvar and yvar must be different!"
+
         self.__argfun = fun 
-        if   isinstance ( fun , num_types ) :
+        if   isinstance ( fun , constant_types ) :
+            
             value = float ( fun ) 
             vname = 'C(%s,%s,%s)' %  ( value , xvar.name , yvar.name ) 
             fun   = Ostap.MoreRooFit.Constant ( self.generate_name ( vname , name ) , 'constant' , value , xvar , yvar ) 
             
-        elif isinstance ( fun , AFUN1     ) : fun = fun.fun
+        elif isinstance ( fun , AFUN2     ) : fun = fun.fun
             
-        assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
-        assert yvar and isinstance ( yvar , ROOT.RooAbsReal ) , "'yvar' must be ROOT.RooAbsReal"
         assert fun  and isinstance ( fun  , ROOT.RooAbsReal ) , "'fun'  must be ROOT.RooAbsReal"
 
-        assert not xvar is yvar, "xvar and yvar must be different!"
-
-        if fun is xvar : fun = Ostap.MoreRooFit.Id ( "Id_%s" % xvar.name , "Id:%s" % xvar.title , xvar )            
-        if fun is yvar : fun = Ostap.MoreRooFit.Id ( "Id_%s" % yvar.name , "Id:%s" % yvar.title , yvar )            
-
+        
         if not name : name = 'Fun2D_%s' % fun.GetName() 
 
         FUN2.__init__ ( self , name , xvar = xvar , yvar = yvar )
-        
-        if not isinstance ( fun , ( ROOT.RooConstVar , Ostap.MoreRooFit.Id ) ) : 
-            if not self.xvar in fun.getParameters ( 0 ) and not self.xvar is fun :
-                self.warning ("Function does not depends on xvar=%s" % self.xvar.name ) 
-            if not self.yvar in fun.getParameters ( 0 ) and not self.yvar is fun :
-                self.warning ("Function does not depends on yvar=%s" % self.yvar.name ) 
-                    
+
+        self.__aux1 = fun 
+        if ( fun is self.xvar ) or ( fun is self.yvar ) :
+            vname  = self.new_roo_name ( fun.name , '_deps' )
+            vtitle = 'AddDeps: %s%s'  % ( fun.name , [ v.name for v in self.vars ] )                
+            fun    = Ostap.MoreRooFit.AddDeps ( vname , vtitle , fun , self.vars ) 
+
+        self.__aux2 = fun
+        depx = fun.depends_on ( self.xvar )
+        depy = fun.depends_on ( self.yvar )        
+        if ( not depx ) or ( not depy ) :
+            if not fixdeps :
+                if not depx : self.warning ("Function does not depend on xvar '%s'" % self.xvar.name )
+                if not depy : self.warning ("Function does not depend on yvar '%s'" % self.yvar.name )                
+            else :
+                ## add a formal dependency on x&y
+                vname  = self.new_roo_name ( fun.name , '_deps' )
+                vtitle = 'AddDeps: %s%s'  % ( fun.name , [ v.name for v in self.vars ] )                
+                fun    = Ostap.MoreRooFit.AddDeps ( vname , vtitle , fun , self.vars ) 
+
+        ## finally set the function 
         self.fun = fun
         
         self.config = {
-            'fun'  : self.fun  ,
-            'xvar' : self.xvar ,
-            'yvar' : self.yvar ,
-            'name' : self.name ,            
+            'fun'     : self.fun  ,
+            'xvar'    : self.xvar ,
+            'yvar'    : self.yvar ,
+            'name'    : self.name ,            
+            'fixdeps' : fixdeps   ,            
             }
 
         self.checked_keys.add  ( 'fun'  )        
@@ -4105,49 +4129,61 @@ class Fun3D ( FUN3 ) :
     >>> zvar = ...
     >>> f3d  = Fun3D ( func , xvar = xvar , yvar = yvar , zvar = zvar ) 
     """
-    def __init__ ( self , fun , xvar , yvar , zvar , name = '' ) :
+    def __init__ ( self , fun , xvar , yvar , zvar , name = '' , fixdeps = False ) :
+
+        assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
+        assert yvar and isinstance ( yvar , ROOT.RooAbsReal ) , "'yvar' must be ROOT.RooAbsReal"
+        assert zvar and isinstance ( zvar , ROOT.RooAbsReal ) , "'zvar' must be ROOT.RooAbsReal"
+        assert not xvar is yvar, "xvar and yvar must be different!"
+        assert not xvar is zvar, "xvar and zvar must be different!"
+        assert not yvar is zvar, "yvar and zvar must be different!"
 
         self.__argfun == fun        
-        if   isinstance ( fun , num_types ) :
+        if   isinstance ( fun , constant_types ) :
             value = float ( fun ) 
             vname = 'C(%s,%s,%s)' %  ( value , xvar.name , yvar.name , zvar.name ) 
             fun   = Ostap.MoreRooFit.Constant ( self.generate_name ( vname , name ) , 'constant' , value , xvar , yvar , zvar ) 
             
         elif isinstance ( fun , AFUN1     ) : fun = fun.fun
             
-        assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
-        assert yvar and isinstance ( yvar , ROOT.RooAbsReal ) , "'yvar' must be ROOT.RooAbsReal"
-        assert zvar and isinstance ( zvar , ROOT.RooAbsReal ) , "'zvar' must be ROOT.RooAbsReal"
         assert fun  and isinstance ( fun  , ROOT.RooAbsReal ) , "'fun'  must be ROOT.RooAbsReal"
 
-        assert not xvar is yvar, "xvar and yvar must be different!"
-        assert not xvar is zvar, "xvar and zvar must be different!"
-        assert not yvar is zvar, "yvar and zvar must be different!"
-        
-        if fun is xvar : fun = Ostap.MoreRooFit.Id ( "Id_%s" % xvar.name , "Id:%s" % xvar.title , xvar )            
-        if fun is yvar : fun = Ostap.MoreRooFit.Id ( "Id_%s" % yvar.name , "Id:%s" % yvar.title , yvar )            
-        if fun is zvar : fun = Ostap.MoreRooFit.Id ( "Id_%s" % zvar.name , "Id:%s" % zvar.title , zvar )            
-        
+
         if not name : name = 'Fun3D_%s' % fun.GetName() 
 
         FUN3.__init__ ( self , name , xvar = xvar , yvar = yvar , zvar = zvar )
 
-        if not isinstance ( fun , ( ROOT.RooConstVar , Ostap.MoreRooFit.Id ) ) :            
-            if not self.xvar in fun.getParameters ( 0 ) and not self.xvar is fun :
-                self.warning ("Function does not depends on xvar=%s" % self.xvar.name )                
-            if not self.yvar in fun.getParameters ( 0 ) and not self.yvar is fun :
-                self.warning ("Function does not depends on yvar=%s" % self.yvar.name )                
-            if not self.zvar in fun.getParameters ( 0 ) and not self.zvar is fun :
-                self.warning ("Function does not depends on zvar=%s" % self.zvar.name ) 
+        self.__aux1 = fun 
+        if ( fun is self.xvar ) or ( fun is self.yvar ) or ( fun is self.zvar ) :
+            vname  = self.new_roo_name ( fun.name , '_deps' )
+            vtitle = 'AddDeps: %s%s' % ( fun.name , [ v.name for v in self.vars ] )                
+            fun    = Ostap.MoreRooFit.AddDeps ( vname , vtitle , fun , self.vars ) 
 
+        self.__aux2 = fun
+        depx = fun.depends_on ( self.xvar )
+        depy = fun.depends_on ( self.yvar )        
+        depz = fun.depends_on ( self.zvar )        
+        if ( not depx ) or ( not depy ) or ( not depz ) :
+            if not fixdeps :
+                if not depx : self.warning ("Function does not depend on xvar '%s'" % self.xvar.name )
+                if not depy : self.warning ("Function does not depend on yvar '%s'" % self.yvar.name )                
+                if not depz : self.warning ("Function does not depend on zvar '%s'" % self.zvar.name )                
+            else :
+                ## add a formal dependency on x,y&z
+                vname  = self.new_roo_name ( fun.name , '_deps' )
+                vtitle = 'AddDeps: %s%s'  % ( fun.name , [ v.name for v in self.vars ] )                
+                fun    = Ostap.MoreRooFit.AddDeps ( vname , vtitle , fun , self.vars ) 
+        
+        ## finally set the function 
         self.fun = fun
 
         self.config = {
-            'fun'  : self.fun   ,
-            'xvar' : self.xvar  ,
-            'yvar' : self.yvar  ,
-            'zvar' : self.zvar  ,
-            'name' : self.name  ,            
+            'fun'     : self.fun   ,
+            'xvar'    : self.xvar  ,
+            'yvar'    : self.yvar  ,
+            'zvar'    : self.zvar  ,
+            'name'    : self.name  ,
+            'fixdeps' : fixdeps    ,                        
             }
         
         self.checked_keys.add  ( 'fun'  )        

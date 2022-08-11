@@ -61,7 +61,8 @@ ClassImp(Ostap::MoreRooFit::TwoVars       )
 ClassImp(Ostap::MoreRooFit::FunOneVar     )
 ClassImp(Ostap::MoreRooFit::FunTwoVars    )
 ClassImp(Ostap::MoreRooFit::ProductPdf    )
-ClassImp(Ostap::MoreRooFit::WrapPdf    )
+ClassImp(Ostap::MoreRooFit::WrapPdf       )
+ClassImp(Ostap::MoreRooFit::AddDeps       )
 // ============================================================================
 namespace 
 {
@@ -215,7 +216,7 @@ void Ostap::MoreRooFit::Constant::writeToStream(std::ostream& os, bool compact) 
 { os << m_value ; }
 // ============================================================================
 // the actual evaluation of the result 
-// ============================================================================
+// ================m============================================================
 Double_t Ostap::MoreRooFit::Constant::evaluate () const
 { return m_value ; } 
 // ============================================================================
@@ -895,14 +896,6 @@ Ostap::MoreRooFit::Id*
 Ostap::MoreRooFit::Id::clone ( const char* newname ) const 
 { return new Id ( *this , newname ) ; }
 // ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Id::evaluate () const 
-{
-  const double v = m_x ;
-  return v ;
-}
-// ============================================================================
 Double_t Ostap::MoreRooFit::Id::analyticalIntegral
 ( Int_t            code     ,
   const char*      range    ) const
@@ -927,8 +920,6 @@ Int_t    Ostap::MoreRooFit::Id::getAnalyticalIntegralWN
   const char*      range    ) const
 { return m_x.arg().getAnalyticalIntegralWN ( allVars , analVars , normset , range ) ; }
 // ============================================================================
-
-
 
 // ============================================================================
 /* constructor from name, title and two pdfs
@@ -1059,8 +1050,47 @@ std::list<double>* Ostap::MoreRooFit::WrapPdf::plotSamplingHint
   double            xlo , 
   double            xhi ) const 
 { return m_func.arg().plotSamplingHint ( obs , xlo , xhi ) ; }
+// ============================================================================
 
 
+
+// ============================================================================
+// constructor with list of variables 
+// ============================================================================
+Ostap::MoreRooFit::AddDeps::AddDeps
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        x     ,
+  const RooArgList&  v     ) 
+  : OneVar ( name , title , x ) 
+  , m_vlst ( "!vlst" , "variables" , this )
+{
+  ::copy_real ( v , m_vlst , 
+                "Invalid var parameter" , 
+                "Ostap::MoreRooFit::AddDeps!" ) ;  
+}
+// ============================================================================
+// copy 
+// ============================================================================
+Ostap::MoreRooFit::AddDeps::AddDeps
+( const AddDeps& right   , 
+  const char*    newname ) 
+  : OneVar ( right , newname ) 
+  , m_vlst     ( "!vlst" , this , right.m_vlst )
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::AddDeps::~AddDeps(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::MoreRooFit::AddDeps*
+Ostap::MoreRooFit::AddDeps::clone ( const char* newname ) const 
+{ return new Ostap::MoreRooFit::AddDeps( *this , newname ) ; }
+// ============================================================================
+
+    
 // ============================================================================
 //                                                                      The END
 // ============================================================================
