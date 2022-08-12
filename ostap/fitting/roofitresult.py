@@ -238,26 +238,22 @@ def _rfr_results_( self , *vars ) :
     >>> print res, res.cov2() 
     """
 
-
     if not vars :
         pars = self.floatParsFinal()
         vars = [ p.name  for p in pars ]
-        logger.info ( 'Use parameters %s' % vars )
+        logger.debug ( 'Use parameters %s' % vars )
 
     if not vars :
         return None
     
+
     elif 1 == len ( vars ) :
         return self.param ( vars [0]) [0] 
         
-    ## if isinstance ( var1 , str ) : var1 = self.param ( var1 ) [1] 
-    ## if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]
-    
     args = ROOT.RooArgList ()
     for v in vars :
         if isinstance ( v , str ) : v = self.param ( v ) [1] 
         args.add ( v ) 
-
         
     cm = self.reducedCovarianceMatrix (  args )
     N  = cm.GetNrows()
@@ -277,6 +273,12 @@ def _rfr_results_( self , *vars ) :
             c2 [ i , j ] = cm ( i , j )
 
     return v
+
+
+
+
+
+
     
 # ==============================================================================
 ## Get vector of eigenvalues for the covariance matrix
@@ -818,6 +820,52 @@ def _rfr_global_corr_ ( self , par ) :
     return  math.sqrt ( rho2 )
 
 # =============================================================================
+## 
+
+# =============================================================================
+## Symmetrized Kullback-Leibler divergency between two RooFitResult objects
+#  @code
+#  r1 = ...
+#  r2 = ...
+#  r1.kullback( r2 )
+#  @endcode
+def _rfr_kullback_ ( r1 , r2 ) :
+    """Symmetrized Kullback-Leibler divergency between two RooFitResult objects
+    >>> r1 = ...
+    >>> r2 = ...
+    >>> r1.kullback( r2 )
+    """    
+    result = -999.0  
+    
+    ## 1. check structure: constant parameters  
+    s1 = set ( p.name for p in r1.constPars() )
+    s2 = set ( p.name for p in r2.constPars() )
+    if s1 != s2 :
+        logger.error ("Constant parameters are different!")
+        return result 
+
+    ## 2. check structure: floating parameters  
+    s1 = set ( p.name for p in r1.floatParsFinal() )
+    s2 = set ( p.name for p in r2.floatParsFinal() )
+    if s1 != s2 :
+        logger.error ("Floating parameters are different!") 
+        return result 
+
+    ## list of parameter names 
+    vars = tuple ( sorted ( s1 ) ) 
+
+    ## 3. get the results
+    results1 = r1.results ( *vars )
+    results2 = r2.results ( *vars )
+
+    ## 4. calculate the divergency
+    result = results1.kullback_leibler ( results2 )
+    if result <= -999  :
+        logger.error ("Error from SVectorWithError::kullack_leibler")
+
+    return result 
+    
+# =============================================================================
 ## Run MIGRAD for RooMinimizer object
 #  @code
 #  pdf = ...
@@ -962,42 +1010,44 @@ if not hasattr ( ROOT.RooMinimizer , '_old_contour_' ) :
 ## some decoration over RooFitResult
 ## ROOT.RooFitResult . __repr__        = _rfr_print_
 ## ROOT.RooFitResult . __str__         = _rfr_print_
-ROOT.RooFitResult . __repr__        = _rfr_table_
-ROOT.RooFitResult . __str__         = _rfr_table_
-ROOT.RooFitResult . __call__        = _rfr_param_
-ROOT.RooFitResult . __getattr__     = _rfr_getattr_ 
-ROOT.RooFitResult . __getitem__     = _rfr_getitem_ 
-ROOT.RooFitResult . __iter__        = _rfr_iter_
-ROOT.RooFitResult . __contains__    = _rfr_contains_
-ROOT.RooFitResult . iteritems       = _rfr_iteritems_
-ROOT.RooFitResult . dct_params      = _rfr_dct_params_
-ROOT.RooFitResult . parameters      = _rfr_params_
-ROOT.RooFitResult . params          = _rfr_params_
-ROOT.RooFitResult . param           = _rfr_param_
-ROOT.RooFitResult . parameter       = _rfr_param_
-ROOT.RooFitResult . corr            = _rfr_corr_
-ROOT.RooFitResult . cor             = _rfr_corr_
-ROOT.RooFitResult . max_cor         = _rfr_max_cor_
-ROOT.RooFitResult . max_corr        = _rfr_max_cor_
-ROOT.RooFitResult . cov             = _rfr_cov_
-ROOT.RooFitResult . covariance      = _rfr_cov_
-ROOT.RooFitResult . cov_matrix      = _rfr_cov_matrix_
-ROOT.RooFitResult . covmatrix       = _rfr_covmatrix_ 
-ROOT.RooFitResult . parValue        = lambda s,n : s.parameter(n)[0]
-ROOT.RooFitResult . sum             = _rfr_sum_
-ROOT.RooFitResult . plus            = _rfr_sum_
-ROOT.RooFitResult . multiply        = _rfr_multiply_
-ROOT.RooFitResult . product         = _rfr_multiply_
-ROOT.RooFitResult . subtract        = _rfr_subtract_
-ROOT.RooFitResult . minus           = _rfr_subtract_
-ROOT.RooFitResult . divide          = _rfr_divide_
-ROOT.RooFitResult . ratio           = _rfr_divide_
-ROOT.RooFitResult . fraction        = _rfr_fraction_
-ROOT.RooFitResult . results         = _rfr_results_
-ROOT.RooFitResult . evaluate        = _rfr_evaluate_ 
-ROOT.RooFitResult . cov_eigenvalues = _rfr_eigenvalues_
-ROOT.RooFitResult . table           = _rfr_table_
-ROOT.RooFitResult . global_corr     = _rfr_global_corr_
+ROOT.RooFitResult . __repr__         = _rfr_table_
+ROOT.RooFitResult . __str__          = _rfr_table_
+ROOT.RooFitResult . __call__         = _rfr_param_
+ROOT.RooFitResult . __getattr__      = _rfr_getattr_ 
+ROOT.RooFitResult . __getitem__      = _rfr_getitem_ 
+ROOT.RooFitResult . __iter__         = _rfr_iter_
+ROOT.RooFitResult . __contains__     = _rfr_contains_
+ROOT.RooFitResult . iteritems        = _rfr_iteritems_
+ROOT.RooFitResult . dct_params       = _rfr_dct_params_
+ROOT.RooFitResult . parameters       = _rfr_params_
+ROOT.RooFitResult . params           = _rfr_params_
+ROOT.RooFitResult . param            = _rfr_param_
+ROOT.RooFitResult . parameter        = _rfr_param_
+ROOT.RooFitResult . corr             = _rfr_corr_
+ROOT.RooFitResult . cor              = _rfr_corr_
+ROOT.RooFitResult . max_cor          = _rfr_max_cor_
+ROOT.RooFitResult . max_corr         = _rfr_max_cor_
+ROOT.RooFitResult . cov              = _rfr_cov_
+ROOT.RooFitResult . covariance       = _rfr_cov_
+ROOT.RooFitResult . cov_matrix       = _rfr_cov_matrix_
+ROOT.RooFitResult . covmatrix        = _rfr_covmatrix_ 
+ROOT.RooFitResult . parValue         = lambda s,n : s.parameter(n)[0]
+ROOT.RooFitResult . sum              = _rfr_sum_
+ROOT.RooFitResult . plus             = _rfr_sum_
+ROOT.RooFitResult . multiply         = _rfr_multiply_
+ROOT.RooFitResult . product          = _rfr_multiply_
+ROOT.RooFitResult . subtract         = _rfr_subtract_
+ROOT.RooFitResult . minus            = _rfr_subtract_
+ROOT.RooFitResult . divide           = _rfr_divide_
+ROOT.RooFitResult . ratio            = _rfr_divide_
+ROOT.RooFitResult . fraction         = _rfr_fraction_
+ROOT.RooFitResult . results          = _rfr_results_
+ROOT.RooFitResult . evaluate         = _rfr_evaluate_ 
+ROOT.RooFitResult . cov_eigenvalues  = _rfr_eigenvalues_
+ROOT.RooFitResult . table            = _rfr_table_
+ROOT.RooFitResult . global_corr      = _rfr_global_corr_
+ROOT.RooFitResult . kullback         = _rfr_kullback_
+ROOT.RooFitResult . kullback_leibler = _rfr_kullback_
 
 _new_methods_ += [
     ROOT.RooFitResult . __repr__         ,
@@ -1032,6 +1082,9 @@ _new_methods_ += [
     ROOT.RooFitResult . table            ,
     ROOT.RooFitResult . cov_eigenvalues  ,
     ROOT.RooFitResult . covmatrix        ,
+    ROOT.RooFitResult . global_corr      ,
+    ROOT.RooFitResult . kullback         , 
+    ROOT.RooFitResult . kullback_leibler ,
     ]
 
 # =============================================================================

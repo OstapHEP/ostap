@@ -3,6 +3,8 @@
   1. add `fixdeps` argument for `Fun1D/Fun2D/Fun3D` objects to fix missiing dependencies (or, to add some fictive depebndencies) 
   1. reenable `linalgt` test with `numpy` objects 
   1. add one more test into `linalgt`  
+  1. add methos `kullback_leibler` and `asymmetric_kullback_leibkler` into namespace `Ostap::Math`
+  1. add method `kullback` to `FitResult`
 
 \## Backward incompatible:  
 

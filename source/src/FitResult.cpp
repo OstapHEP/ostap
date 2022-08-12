@@ -43,12 +43,12 @@ Ostap::Utils::FitResults::FitResults
   const RooArgList&                        constvars , // setConstParList 
   const RooArgList&                        initvars  , // setInitParLits 
   const RooArgList&                        finalvars , // setFinalParList 
-  const TMatrixDSym&                       v         , // setCovarianceMatrix 
   const int                                status    , // setStatus 
   const int                                covqual   , // setCovQual 
   const double                             minnll    , // setMinNLL     
   const double                             edm       , // setEDM 
   const int                                numinvnll , // setNumInvalidNLL
+  const TMatrixDSym&                       v         , // setCovarianceMatrix 
   const Ostap::Utils::FitResults::History& history   ) // setStatusHistory 
 : RooFitResult ( name.c_str() , title.c_str() ) 
 {
@@ -71,14 +71,14 @@ Ostap::Utils::FitResults::FitResults
   const RooArgList&                        constvars , // setConstParList 
   const RooArgList&                        initvars  , // setInitParLits 
   const RooArgList&                        finalvars , // setFinalParList 
-  const std::vector<double>&               globalcc  , // fillCorrMatrix 
-  const TMatrixDSym&                       corrs     , // fillCorrMatrix 
-  const TMatrixDSym&                       covs      , // fillCorrMatrix 
   const int                                status    , // setStatus 
   const int                                covqual   , // setCovQual 
   const double                             minnll    , // setMinNLL     
   const double                             edm       , // setEDM 
   const int                                numinvnll , // setNumInvalidNLL
+  const std::vector<double>&               globalcc  , // fillCorrMatrix 
+  const TMatrixDSym&                       corrs     , // fillCorrMatrix 
+  const TMatrixDSym&                       covs      , // fillCorrMatrix 
   const Ostap::Utils::FitResults::History& history   ) // setStatusHistory 
 {
   setConstParList     ( constvars ) ;

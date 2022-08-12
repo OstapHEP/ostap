@@ -1721,137 +1721,137 @@ if '__main__' == __name__ :
     with timing ('test_apolloniois2'   , logger ) :
         test_apollonios2    () 
 
-    ## bifurcated Gaussian function              + background
-    with timing ('test_bifurcated'     , logger ) :
-        test_bifurcated     () 
+    ## ## bifurcated Gaussian function              + background
+    ## with timing ('test_bifurcated'     , logger ) :
+    ##     test_bifurcated     () 
 
-    ## double     Gaussian function              + background
-    with timing ('test_2gauss'         , logger ) :
-        test_2gauss         () 
+    ## ## double     Gaussian function              + background
+    ## with timing ('test_2gauss'         , logger ) :
+    ##     test_2gauss         () 
 
-    ## generalized Gaussian function V1          + background
-    with timing ('test_gengauss_v1'    , logger ) :
-        test_gengauss_v1    () 
+    ## ## generalized Gaussian function V1          + background
+    ## with timing ('test_gengauss_v1'    , logger ) :
+    ##     test_gengauss_v1    () 
         
-    ## generalized Gaussian function V2          + background
-    with timing ('test_gengauss_v2'    , logger ) :
-        test_gengauss_v2    () 
+    ## ## generalized Gaussian function V2          + background
+    ## with timing ('test_gengauss_v2'    , logger ) :
+    ##     test_gengauss_v2    () 
     
-    ## skew gaussian                             + background
-    with timing ('test_skewgauss'      , logger ) :
-        test_skewgauss      () 
+    ## ## skew gaussian                             + background
+    ## with timing ('test_skewgauss'      , logger ) :
+    ##     test_skewgauss      () 
         
-    ## q-Gaussian function                       + background
-    with timing ('test_qgauss'         , logger ) :
-        test_qgauss         () 
+    ## ## q-Gaussian function                       + background
+    ## with timing ('test_qgauss'         , logger ) :
+    ##     test_qgauss         () 
 
-    ## Novisibirsk + background
-    with timing ('test_novosibirsk'          , logger ) :
-        test_novosibirsk     ()
+    ## ## Novisibirsk + background
+    ## with timing ('test_novosibirsk'          , logger ) :
+    ##     test_novosibirsk     ()
 
-    ## Bukin - skew Gaussian core with exponential tails  + background         
-    with timing ('test_bukun'          , logger ) :
-        test_bukin          ()
+    ## ## Bukin - skew Gaussian core with exponential tails  + background         
+    ## with timing ('test_bukun'          , logger ) :
+    ##     test_bukin          ()
 
-    ## Student-t shape                           + background 
-    with timing ('test_studentT'       , logger ) :
-        test_studentT       () 
+    ## ## Student-t shape                           + background 
+    ## with timing ('test_studentT'       , logger ) :
+    ##     test_studentT       () 
     
-    ## Bifurcated Student-t shape                + background
-    with timing ('test_bifstudentT'    , logger ) :
-        test_bifstudentT    ()
+    ## ## Bifurcated Student-t shape                + background
+    ## with timing ('test_bifstudentT'    , logger ) :
+    ##     test_bifstudentT    ()
         
-    ## PearsonIV                                      + background
-    with timing ('test_PearsonIV'          , logger ) :
-        test_PearsonIV () 
+    ## ## PearsonIV                                      + background
+    ## with timing ('test_PearsonIV'          , logger ) :
+    ##     test_PearsonIV () 
 
-    ## Sinh-Asinh distribution                   + background
-    with timing ('test_sinhasinh'      , logger ) :
-        test_sinhasinh      () 
+    ## ## Sinh-Asinh distribution                   + background
+    ## with timing ('test_sinhasinh'      , logger ) :
+    ##     test_sinhasinh      () 
     
-    ## Johnson-SU distribution                   + background 
-    with timing ('test_johnsonSU'      , logger ) :
-        test_johnsonSU      () 
+    ## ## Johnson-SU distribution                   + background 
+    ## with timing ('test_johnsonSU'      , logger ) :
+    ##     test_johnsonSU      () 
 
-    ## Modified Gaussian used by ATLAS/Zeus      + background 
-    with timing ('test_atlas'          , logger ) :
-        test_atlas          () 
+    ## ## Modified Gaussian used by ATLAS/Zeus      + background 
+    ## with timing ('test_atlas'          , logger ) :
+    ##     test_atlas          () 
         
-    ## Das/1                                       + background 
-    with timing ('test_das_1'             , logger ) :
-        test_das_1            () 
+    ## ## Das/1                                       + background 
+    ## with timing ('test_das_1'             , logger ) :
+    ##     test_das_1            () 
 
-    ## Das/2                                       + background 
-    with timing ('test_das_2'             , logger ) :
-        test_das_2            () 
+    ## ## Das/2                                       + background 
+    ## with timing ('test_das_2'             , logger ) :
+    ##     test_das_2            () 
 
-    ## Hat                                       + background 
-    with timing ('test_hat'             , logger ) :
-        test_hat            () 
+    ## ## Hat                                       + background 
+    ## with timing ('test_hat'             , logger ) :
+    ##     test_hat            () 
 
-    ## Up                                       + background 
-    with timing ('test_up'             , logger ) :
-        test_up            () 
+    ## ## Up                                       + background 
+    ## with timing ('test_up'             , logger ) :
+    ##     test_up            () 
 
-    ## FupN                                       + background 
-    with timing ('test_fupN'             , logger ) :
-        test_fupn          () 
+    ## ## FupN                                       + background 
+    ## with timing ('test_fupN'             , logger ) :
+    ##     test_fupn          () 
 
-    ## Sech (1/cosh)  distribution               + background    
-    with timing ('test_sech'           , logger )  : 
-        test_sech           ()
+    ## ## Sech (1/cosh)  distribution               + background    
+    ## with timing ('test_sech'           , logger )  : 
+    ##     test_sech           ()
 
-    ## Logistic distribution                     + background 
-    with timing ('test_logistic'       , logger ) :
-        test_logistic       () 
+    ## ## Logistic distribution                     + background 
+    ## with timing ('test_logistic'       , logger ) :
+    ##     test_logistic       () 
 
-    ## Asymmetric hyperbilic secant distribution + background         
-    with timing ('test_losev'          , logger ) :
-        test_losev          () 
+    ## ## Asymmetric hyperbilic secant distribution + background         
+    ## with timing ('test_losev'          , logger ) :
+    ##     test_losev          () 
 
-    ## Slash-function                            + background 
-    with timing ('test_slash'          , logger ) :
-        test_slash          () 
+    ## ## Slash-function                            + background 
+    ## with timing ('test_slash'          , logger ) :
+    ##     test_slash          () 
 
-    ## Raising Cosine                            + background 
-    with timing ('test_raisngcosine'   , logger ) :
-        test_raisngcosine   () 
+    ## ## Raising Cosine                            + background 
+    ## with timing ('test_raisngcosine'   , logger ) :
+    ##     test_raisngcosine   () 
 
-    ## Laplace-function                            + background 
-    with timing ('test_laplace'        , logger ) :
-        test_laplace        () 
+    ## ## Laplace-function                            + background 
+    ## with timing ('test_laplace'        , logger ) :
+    ##     test_laplace        () 
 
-    ## ExGauss                                       + background 
-    with timing ('test_ExGauss'             , logger ) :
-        test_exgauss            () 
+    ## ## ExGauss                                       + background 
+    ## with timing ('test_ExGauss'             , logger ) :
+    ##     test_exgauss            () 
 
-    ## Normal Laplace                                       + background
-    with timing ('test_NormalLaplas'        , logger ) :
-        test_normlapl           () 
+    ## ## Normal Laplace                                       + background
+    ## with timing ('test_NormalLaplas'        , logger ) :
+    ##     test_normlapl           () 
 
-    ## Hyperbolic                                 + background 
-    with timing ('test_hyperbolic'     , logger ) :
-        test_hyperbolic        () 
+    ## ## Hyperbolic                                 + background 
+    ## with timing ('test_hyperbolic'     , logger ) :
+    ##     test_hyperbolic        () 
         
-    ## Generalised Hyperbolic                      + background 
-    with timing ('test_genhyperbolic'     , logger ) :
-        test_genhyperbolic     () 
+    ## ## Generalised Hyperbolic                      + background 
+    ## with timing ('test_genhyperbolic'     , logger ) :
+    ##     test_genhyperbolic     () 
         
-    ## Hypatia                                     + background 
-    with timing ('test_hypatia'           , logger ) :
-        test_hypatia           ()
+    ## ## Hypatia                                     + background 
+    ## with timing ('test_hypatia'           , logger ) :
+    ##     test_hypatia           ()
 
-    ## Voigt profile                             + background
-    with timing ('test_voigt'          , logger ) :
-        test_voigt          () 
+    ## ## Voigt profile                             + background
+    ## with timing ('test_voigt'          , logger ) :
+    ##     test_voigt          () 
     
-    ## Pseudo-Voigt(approximation to Voigt)      + background
-    with timing ('test_pvoigt'         , logger ) :
-        test_pvoigt         () 
+    ## ## Pseudo-Voigt(approximation to Voigt)      + background
+    ## with timing ('test_pvoigt'         , logger ) :
+    ##     test_pvoigt         () 
         
-    ## Breit-Wigner(+resolution)                 + background 
-    with timing ('test_bw'             , logger ) :
-        test_bw             () 
+    ## ## Breit-Wigner(+resolution)                 + background 
+    ## with timing ('test_bw'             , logger ) :
+    ##     test_bw             () 
 
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :

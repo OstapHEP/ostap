@@ -343,6 +343,15 @@ Ostap::Math::Vector3DWithError::asVector () const
   return data ;
 }
 // ============================================================================
+Ostap::Math::Vector3DWithError::Vector
+Ostap::Math::Vector3DWithError::asVector3 () const 
+{
+  Ostap::Math::Vector3DWithError::Vector data ;
+  Ostap::Math::geo2LA ( vector3d() , data ) ; 
+  return data ;
+}
+// ============================================================================
+
 
 // ========================================================================
 Ostap::Math::Vector3DWithError operator- 
@@ -401,9 +410,36 @@ Ostap::Math::Vector3DWithError::mean
 ( const Ostap::Math::Vector3DWithError::VectorE& right ) const 
 { return asVector ().mean ( right            ) ; }
 // ============================================================================
-
+/* Get symmetrized Kullback-Leibler divergency for two objects 
+ *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *  @see Ostap::Math::kullback_leibler 
+ */
+// ============================================================================
+double Ostap::Math::kullback_leibler 
+( const Ostap::Math::Vector3DWithError& a , 
+  const Ostap::Math::Vector3DWithError& b ) 
+{
+  return Ostap::Math::kullback_leibler 
+    ( a.asVector3() , a.covariance () , 
+      b.asVector3() , b.covariance () ) ;
+}
+// ============================================================================
+/* Get asymmetric Kullback-Leibler divergency for two objects 
+ *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *  @see Ostap::Math::asymmetric_kullback_leibler 
+ */
+// ============================================================================
+double Ostap::Math::asymmetric_kullback_leibler 
+( const Ostap::Math::Vector3DWithError& a , 
+  const Ostap::Math::Vector3DWithError& b ) 
+{
+  return Ostap::Math::asymmetric_kullback_leibler 
+    ( a.asVector3() , a.covariance () , 
+      b.asVector3() , b.covariance () ) ;
+}
+// ============================================================================
 
 // ============================================================================
-// The END 
+//                                                                     The END 
 // ============================================================================
 

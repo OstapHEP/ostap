@@ -129,11 +129,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// get generic vector 
-      void    asVector ( Vector&  data ) const ;
+      void    asVector  ( Vector&  data ) const ;
       /// get generic vector 
-      void    asVector ( VectorE& data ) const ;
+      void    asVector  ( VectorE& data ) const ;
       /// convert to generic vector with errors:
-      VectorE asVector () const ;
+      VectorE asVector  () const ;
+      /// convert to generic vector
+      Vector  asVector3 () const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -243,6 +245,22 @@ namespace Ostap
     inline Point3DWithError mean 
     ( const Point3DWithError& p1 , 
       const Point3DWithError& p2 ) { return p1.mean ( p2 ) ; }
+    // ========================================================================
+    /** Get symmetrized Kullback-Leibler divergency for two objects 
+     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+     *  @see Ostap::Math::kullback_leibler 
+     */
+    double kullback_leibler 
+    ( const Point3DWithError& a , 
+      const Point3DWithError& b ) ;
+    // ========================================================================
+    /** Get asymmetric Kullback-Leibler divergency for two objects 
+     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+     *  @see Ostap::Math::asymmetric_kullback_leibler 
+     */
+    double asymmetric_kullback_leibler 
+    ( const Point3DWithError& a , 
+      const Point3DWithError& b ) ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================

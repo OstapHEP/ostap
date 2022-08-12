@@ -208,7 +208,37 @@ Ostap::Math::SVectorWithError<N,SCALAR>::mean
   return Self ( c * ( ic1 * value() + ic2 * right.value() ) , c ) ;
 }
 // ============================================================================
-// The END 
+/*  Get symmetrized Kullback-Leibler divergency for two objects 
+ *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *  @see Ostap::Math::kullback_leibler 
+ */
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::kullback_leibler 
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
+{
+  return Ostap::Math::kullback_leibler 
+    ( value () , cov2 () , right.value () , right.cov2 () ) ; 
+}
+// ============================================================================
+/*  Get asymmetric Kullback-Leibler divergency for two objects 
+ *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *  @see Ostap::Math::kullback_leibler 
+ */
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::asymmetric_kullback_leibler 
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
+{
+  return Ostap::Math::asymmetric_kullback_leibler 
+    ( value () , cov2 () , right.value () , right.cov2 () ) ; 
+}
+// ============================================================================
+//                                                                     The END 
 // ============================================================================
 #endif // OSTAP_SVECTORWITHERROR_ICPP 
 // ============================================================================

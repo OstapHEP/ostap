@@ -48,13 +48,13 @@ namespace Ostap
         const std::string&         title     ,
         const RooArgList&          constvars , // setConstParList 
         const RooArgList&          initvars  , // setInitParLits 
-        const RooArgList&          finalvars , // setFinalParList 
-        const TMatrixDSym&         v         , // setCovarianceMatrix 
+        const RooArgList&          finalvars , // setFinalParList
         const int                  status    , // setStatus 
         const int                  covqual   , // setCovQual 
         const double               minnll    , // setMinNLL     
         const double               edm       , // setEDM 
         const int                  numinvnll , // setNumInvalidNLL
+        const TMatrixDSym&         v         , // setCovarianceMatrix
         const History&             history   = History () ) ; // setStatusHistory 
       // ======================================================================
       /// full constructor #2
@@ -64,14 +64,14 @@ namespace Ostap
         const RooArgList&          constvars , // setConstParList 
         const RooArgList&          initvars  , // setInitParLits 
         const RooArgList&          finalvars , // setFinalParList 
-        const std::vector<double>& globalcc  , // fillCorrMatrix 
-        const TMatrixDSym&         corrs     , // fillCorrMatrix 
-        const TMatrixDSym&         covs      , // fillCorrMatrix 
         const int                  status    , // setStatus 
         const int                  covqual   , // setCovQual 
         const double               minnll    , // setMinNLL     
         const double               edm       , // setEDM 
         const int                  numinvnll , // setNumInvalidNLL
+        const std::vector<double>& globalcc  , // fillCorrMatrix 
+        const TMatrixDSym&         corrs     , // fillCorrMatrix 
+        const TMatrixDSym&         covs      , // fillCorrMatrix
         const History&             history   = History () ) ; // setStatusHistory 
       /// copy constructor
       FitResults ( const FitResults& right ) ;

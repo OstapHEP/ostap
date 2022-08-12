@@ -770,8 +770,34 @@ Ostap::Math::LorentzVectorWithError::mean
 ( const Ostap::Math::LorentzVectorWithError::VectorE& right ) const 
 { return asVector ().mean ( right            ) ; }
 // ============================================================================
-
+/* Get symmetrized Kullback-Leibler divergency for two objects 
+ *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *  @see Ostap::Math::kullback_leibler 
+ */
 // ============================================================================
-// The END 
+double Ostap::Math::kullback_leibler 
+( const Ostap::Math::LorentzVectorWithError& a , 
+  const Ostap::Math::LorentzVectorWithError& b ) 
+{
+  return Ostap::Math::kullback_leibler 
+    ( a.asVector4() , a.covariance () , 
+      b.asVector4() , b.covariance () ) ;
+}
+// ============================================================================
+/* Get asymmetric Kullback-Leibler divergency for two objects 
+ *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *  @see Ostap::Math::asymmetric_kullback_leibler 
+ */
+// ============================================================================
+double Ostap::Math::asymmetric_kullback_leibler 
+( const Ostap::Math::LorentzVectorWithError& a , 
+  const Ostap::Math::LorentzVectorWithError& b ) 
+{
+  return Ostap::Math::asymmetric_kullback_leibler 
+    ( a.asVector4() , a.covariance () , 
+      b.asVector4() , b.covariance () ) ;
+}
+// ============================================================================
+//                                                                      The END 
 // ============================================================================
 

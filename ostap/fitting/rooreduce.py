@@ -23,7 +23,7 @@ from   ostap.core.core             import Ostap
 from   ostap.math.reduce           import root_factory
 import ostap.fitting.variables
 import ostap.fitting.roocollections  
-import ROOT, random, array, ctypes  
+import ROOT, random, array, ctypes, math   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -614,12 +614,47 @@ def _rrfr_factory_ ( klass , *args ) :
     - see `ROOT.RooFitResult`
     - see `Ostap.Utils.FitResults`
     """
-    ## create 
-    nr = klass ( *args [:-1] )
-    history = args[-1]
-    for label , code in history : nr.add_to_history ( label , code ) 
-    result = ROOT.RooFitResult ( nr )
-    result.__args = args 
+    ## create
+
+    newargs = args [ : 10 ] 
+    covargs = args [ 10 ] ## covariance related arguments 
+    history = args [ 11 ] ## the last argument, history 
+
+    import pickle
+
+    if 3 == len ( covargs ) :
+        
+        gcc , corm , covm = covargs 
+        D    = len ( gcc )
+        if D * D  != len ( corm ) or  D * D != len ( covm ) :
+            raise pickle.UnpicklingError("FitResult: cannot reconstruct matrices")
+
+        gcc      = doubles ( gcc ) 
+        corm     = ROOT.TMatrixDSym ( D , corm )
+        covm     = ROOT.TMatrixDSym ( D , covm )
+        
+        newargs +=  gcc , corm , covm
+        
+    else :
+        
+        covm = covargs 
+        
+        l2 = len ( covm )
+        D  = int ( math.sqrt ( l2 ) ) 
+        if D * D != l2 :
+            raise pickle.UnpicklingError("FitResult: cannot reconstruct matrix")
+        covm = ROOT.TMatrixDSym ( D , covm )
+
+        newargs += covm ,
+        
+    
+    tmpres = klass ( *newargs )
+    
+    for label , code in history : tmpres.add_to_history ( label , code )
+    
+    result = ROOT.RooFitResult ( tmpres )
+    result.__args = args
+    
     return result 
    
 # ================================================================================
@@ -630,19 +665,24 @@ def _rrfr_reduce_ ( res ) :
     - see `ROOT.RooFitResult`
     """
     nr      = Ostap.Utils.FitResults ( res )
-    content = type ( nr )     , res.name , res.title, \
-              res.constPars() , res.floatParsInit() , res.floatParsFinal()
-  
+    content = type ( nr )      , res.name , res.title , \
+              res.constPars () , res.floatParsInit()  , res.floatParsFinal() , \
+              nr.status     () , nr.covQual()         , nr.minNll()          , \
+               nr.edm       () , nr.numInvalidNLL ()
+
     gcc = nr.global_cc()    
-    if 0 < len ( gcc ) : content += ( gcc , res.correlationMatrix() , res.covarianceMatrix () ) 
-    else               : content += ( res.covarianceMatrix (), )
-    
+    if gcc :
+        covargs = ( array.array ( 'd' , gcc                     ) ,
+                    array.array ( 'd' , res.correlationMatrix() ) ,
+                    array.array ( 'd' , res.covarianceMatrix () ) )
+    else    :
+        covargs = array.array ( 'd' , res.covarianceMatrix () )  
+        
     history = tuple ( ( nr.statusLabelHistory(i) ,nr.statusCodeHistory(i) ) \
                       for i in range ( nr.numStatusHistory () ) )
     
-    content += nr.status () , nr.covQual()        , nr.minNll() , \
-               nr.edm    () , nr.numInvalidNLL () , history 
-
+    content += covargs , history 
+  
     return _rrfr_factory_ , content 
 
 ROOT.RooFitResult.__reduce__  = _rrfr_reduce_ 

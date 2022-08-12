@@ -202,6 +202,20 @@ namespace Ostap
       /// calculate the weighted average for two vectors 
       inline Self average ( const Self& right ) const { return mean ( right ) ; }
       // ======================================================================
+      /** Get symmetrized Kullback-Leibler divergency for two objects 
+       *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+       *  @see Ostap::Math::kullback_leibler 
+       */
+      double kullback_leibler 
+      ( const SVectorWithError& a ) const ;
+      // ========================================================================
+      /** Get asymmetric Kullback-Leibler divergency for two objects 
+       *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+       *  @see Ostap::Math::asymmetric_kullback_leibler 
+       */
+      double asymmetric_kullback_leibler 
+      ( const SVectorWithError& a ) const ;
+      // ========================================================================
     public: //  helper functions for pythonizations
       // ======================================================================
       Self  __add__     ( const Self&  right ) const ;
@@ -519,6 +533,28 @@ namespace Ostap
     ( const SVectorWithError<N,SCALAR>& v1 , 
       const SVectorWithError<N,SCALAR>& v2 ) { return v1.mean ( v2 ) ; }
     // ========================================================================
+    /** Get symmetrized Kullback-Leibler divergency for two objects 
+     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+     *  @see Ostap::Math::kullback_leibler 
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    kullback_leibler 
+    ( const SVectorWithError<N,SCALAR>& v1 , 
+      const SVectorWithError<N,SCALAR>& v2 ) 
+    { return v1.kullback_leibler  ( v2 ) ; }
+    // ========================================================================
+    /** Get asymmetric Kullback-Leibler divergency for two objects 
+     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+     *  @see Ostap::Math::asymmetric_kullback_leibler 
+     */
+    template <unsigned int N, class SCALAR>
+    inline double 
+    asymmetric_kullback_leibler 
+    ( const SVectorWithError<N,SCALAR>& v1 , 
+      const SVectorWithError<N,SCALAR>& v2 ) 
+    { return v1.asymmetric_kullback_leibler  ( v2 ) ; }
+    // ======================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap 
