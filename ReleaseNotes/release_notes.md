@@ -1,5 +1,6 @@
 ## New features: 
-  1. add `fixdeps` argumeb for `Fun1D/Fun2D/Fun3D` object to fix missiing dependencies (or, to add some fictive depebndencies) 
+
+  1. add `fixdeps` argument for `Fun1D/Fun2D/Fun3D` objects to fix missiing dependencies (or, to add some fictive depebndencies) 
   1. reenable `linalgt` test with `numpy` objects 
   1. add one more test into `linalgt`  
 
@@ -14,8 +15,6 @@
      `Addition` objects with `RooAbsRealLValue` fails.  Fix is done using `FunNop`
   1. fix old typos in `_h3_integrate_` method (thanks to Ivan Polyakov for tproblme report and the fix)  
   1. fix bug in `MatrixUtilsT.h`
-  
-
 
 # v1.9.1.0
 
