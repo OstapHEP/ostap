@@ -158,7 +158,7 @@ def test_linalgt() :
     s22 -= s22*1
     
     ## DISABLE!!!
-    if np and False :
+    if np : ## and False :
 
         logger.info ( 'Operations with numpy objects')
         

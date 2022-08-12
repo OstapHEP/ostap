@@ -677,7 +677,7 @@ class LinAlg(object) :
             
             return a * LinAlg.toSObject ( b )
         
-        
+
         oper , check  = LinAlg.methods_MUL ( a , b )
 
         if oper and check and check.ok ( a, b ) :

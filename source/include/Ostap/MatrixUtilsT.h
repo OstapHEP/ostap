@@ -250,9 +250,6 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-
-
-
     
     // ========================================================================    
     namespace  Ops
@@ -265,7 +262,6 @@ namespace Ostap
       template <class M>
       struct SM ;
 
-      
       // ======================================================================
       //  S --> T 
       // ======================================================================
@@ -377,8 +373,6 @@ namespace Ostap
         }
       } ;
       // ======================================================================
-      
-
 
       // ======================================================================
       // CHECKERS 
@@ -668,7 +662,6 @@ namespace Ostap
         { return m2.IsValid() &&  D == m2.GetNrows() ; }
       } ;
 
-      
       // ======================================================================
       template <class T,unsigned int D1, unsigned int D2, class R1>
       struct CanMul<TMatrixT<T>,
@@ -677,7 +670,7 @@ namespace Ostap
         static bool ok
         ( const TMatrixT<T>&                         m2    ,
           const ROOT::Math::SMatrix<T,D1,D2,R1>& /*  m1 */ )
-        { return m2.IsValid() &&  m2.GetNcols == D1  ; }
+        { return m2.IsValid() &&  m2.GetNcols () == D1  ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D1, unsigned int D2, class R1>
@@ -687,7 +680,7 @@ namespace Ostap
         static bool ok
         ( const TMatrixTSym<T>&                      m2    ,
           const ROOT::Math::SMatrix<T,D1,D2,R1>& /*  m1 */ )
-        { return m2.IsValid() &&  m2.GetNcols == D1  ; }
+        { return m2.IsValid() &&  m2.GetNcols () == D1  ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D1, unsigned int D2, class R1>
@@ -697,7 +690,7 @@ namespace Ostap
         static bool ok
         ( const TVectorT<T>&                         m2    ,
           const ROOT::Math::SMatrix<T,D1,D2,R1>& /*  m1 */ )
-        { return m2.IsValid() &&  m2.GetNrows == D1  ; }
+        { return m2.IsValid() &&  m2.GetNrows () == D1  ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -707,7 +700,7 @@ namespace Ostap
         static bool ok
         ( const TVectorT<T>&                  m2 , 
           const ROOT::Math::SVector<T,D>& /*  m1 */ ) 
-        { return m2.IsValid() &&  m2.GetNrows() == D ; }
+        { return m2.IsValid() &&  m2.GetNrows () == D ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -717,7 +710,7 @@ namespace Ostap
         static bool ok
         ( const TMatrixT<T>&                  m2    ,
           const ROOT::Math::SVector<T,D>& /*  m1 */ )
-        { return m2.IsValid() && m2.GetNcols() == D ; }
+        { return m2.IsValid() && m2.GetNcols () == D ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -727,12 +720,9 @@ namespace Ostap
         static bool ok
         ( const TMatrixTSym<T>&               m2    , 
           const ROOT::Math::SVector<T,D>& /*  m1 */ )
-        { return m2.IsValid() && m2.GetNcols() == D ; }
+        { return m2.IsValid() && m2.GetNcols () == D ; }
       } ;
 
-      
-      
-      
       // ======================================================================
       template <class T>
       struct CanIMul<TMatrixT<T>, TMatrixT<T> >
@@ -1526,6 +1516,45 @@ namespace Ostap
         { return M::mul ( m2 , C::transform ( m1 ) ) ; }
       } ;
       // ======================================================================
+
+      /// new (1)
+      template <class T, unsigned int D>
+      struct Mul<ROOT::Math::SVector<T,D> ,
+                 TVectorT<T> > 
+      {
+        typedef ROOT::Math::SVector<T,D>   M1 ;
+        typedef TVectorT<T>                M2 ;
+        typedef SM<M1>                     C  ;
+        typedef typename C::R              NM ;
+        typedef Mul<M1,NM>                 M  ;
+        typedef typename M::R              R  ;
+        //
+        static  R mul
+        ( const M1& m1 , 
+          const M2& m2 )
+        { return M::mul ( m1 , C::transform ( m2 ) ) ; }
+      } ;
+      // ======================================================================
+
+      /// new (2)
+      template <class T, unsigned int D>
+      struct Mul< TVectorT<T> ,
+                  ROOT::Math::SVector<T,D> >
+      {
+        typedef TVectorT<T>                M1 ;
+        typedef ROOT::Math::SVector<T,D>   M2 ;
+        typedef SM<M2>                     C  ;
+        typedef typename C::R              NM ;
+        typedef Mul<NM,M2>                 M  ;
+        typedef typename M::R              R  ;
+        //
+        static  R mul
+        ( const M1& m1 , 
+          const M2& m2 )
+        { return M::mul ( C::transform ( m1 ) , m2) ; }
+      } ;
+      // ======================================================================
+
       
       // ======================================================================      
       template <class T>
@@ -1542,6 +1571,7 @@ namespace Ostap
       } ;
       // ======================================================================
       
+
 
       // ======================================================================
       template <class T>
