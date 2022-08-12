@@ -14,6 +14,7 @@ from   sys                  import version_info as python_version
 import ostap.math.linalg
 from   ostap.core.core      import Ostap
 from   ostap.core.meta_info import root_version_int 
+import ROOT, array, random   
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -32,6 +33,8 @@ except ImportError :
 def test_linalgt() :
     """The main function to test linear algebra
     """
+
+    logger = getLogger( 'test_linangt')
     
     logger.info('Test Linear Algebra: ')
 
@@ -154,17 +157,14 @@ def test_linalgt() :
     s22 += s22*2
     s22 -= s22*1
     
-
     ## DISABLE!!!
     if np and False :
-        
+
         logger.info ( 'Operations with numpy objects')
         
         v2 = np.array ( [1.0,2.0]      )
         v3 = np.array ( [1.0,2.0,3.0 ] )
 
-        print ('v1,l2:', v2 , l2 )
-        
         logger.info ( 'v2  * l2  : %s' % ( v2  * l2  ) )
         logger.info ( 'l3  * v3  : %s' % ( l3  * v3  ) )
         logger.info ( 's22 * v2  : %s' % ( s22 * v2  ) )
@@ -185,10 +185,67 @@ def test_linalgt() :
             logger.info ( 'l2   * m22(np) :\n%s' % ( l2  * m22.to_numpy() ) )
 
 
+
+# ==============================================================================
+## test to check TMatrix <-> array interplay 
+def test_linalgt_2 () :
+    """Test to check TMatrix <-> array interplay"""
+    
+
+    logger = getLogger( 'test_linangt_2')
+
+    M = ROOT.TMatrixD
+    
+    for k in range ( 1 , 11  ) :
+        for n in range ( 1 , 11  ) :
+
+            m = M ( k , n )
+
+            for r in range ( m.GetNrows() ) :
+                for c in range ( m.GetNcols () ) :
+                    m [ r , c ] = random.uniform ( -10 , 10 )
+
+            ## create the array from matrix 
+            a = array.array ( 'd' , m )
+            assert len(a) == m.GetNoElements() , \
+                   'Invalid array is created!'
+
+            ## recteare it from the array 
+            m2 = M ( k , n , a )
+            
+            assert m == m2 , 'Matrix is nor recreated!'
+
+            logger.info ('Test with TMatrixD(%2d,%2d) is %s' % ( k , n , m == m2 ) ) 
+            
+    MS = ROOT.TMatrixDSym
+
+    for k in range ( 1 , 11  ) :
+
+        m = MS ( k)
+
+        for r in range ( m.GetNrows() ) :
+            for c in range ( m.GetNcols () ) :
+                m [ r , c ] = random.uniform ( -10 , 10 )
+                
+        ## create the array from matrix 
+        a = array.array ( 'd' , m )
+        assert len ( a ) == m.GetNoElements () , 'Invalid array is created!'
+    
+        ## recreate it from the array 
+        m2 = MS ( k , a )
+
+        assert m == m2 , 'Matrix is nor recreated!'
+
+        logger.info ('Test with TMatrixDSym(%2d) is %s' % ( k , m == m2 ) ) 
+
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_linalgt ()
+    test_linalgt   ()
+
+    test_linalgt_2 ()
+
+
     
 # =============================================================================
 ##                                                                      The END 

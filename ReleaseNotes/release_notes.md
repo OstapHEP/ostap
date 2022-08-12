@@ -1,4 +1,5 @@
 ## New features: 
+  1. add `fixdeps` argumeb for `Fun1D/Fun2D/Fun3D` object to fix missiing dependencies (or, to add some fictive depebndencies) 
 
 \## Backward incompatible:  
 
