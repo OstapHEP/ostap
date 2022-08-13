@@ -147,9 +147,10 @@ class Method(object) :
             
             if mm :
                 self.__methods[ targs ] = mm 
-            
-        return mm
-   
+
+        return mm.operation if mm else None 
+
+    
     def __call__ ( self , a  , b = None ) :
         return self.method ( a , b )
 
@@ -186,18 +187,14 @@ class Method2(object) :
     ## get the method
     def methods ( self , a , b = None ) :
 
-        oper  = self.__method1 ( a , b )
+        operation = self.__method1 ( a , b )        
+        checker   = self.__method2 ( a , b ) if operation else None 
         
-        if not oper : return None, None
-        
-        check = self.__method2 ( a , b  )
-        
-        return oper, check 
+        return operation, checker  
 
     def __call__ ( self , a  , b = None ) :
-
         return self.methods ( a , b )
-    
+
     def __nonzero__  ( self ) : return bool ( self.__method1 ) or bool ( self.__method2 ) 
     def __bool__     ( self ) : return bool ( self.__method1 ) or bool ( self.__method2 ) 
     def clear        ( self ) :
@@ -520,10 +517,10 @@ class LinAlg(object) :
 
             return a + LinAlg.toSObject ( b ) 
                 
-        oper , check  = LinAlg.methods_ADD ( a , b )
+        operation , check  = LinAlg.methods_ADD ( a , b )
         
-        if oper and check and check.ok ( a, b ) :
-            result = oper.add ( a, b )
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
             return result
         
         return NotImplemented
@@ -541,10 +538,10 @@ class LinAlg(object) :
 
         if isinstance ( b , num_types ) : b = float( b )
         
-        oper , check  = LinAlg.methods_IADD ( a , b )
+        operation , check  = LinAlg.methods_IADD ( a , b )
 
-        if oper and check and check.ok ( a, b ) :
-            oper.iadd ( a, b )
+        if operation and check and check ( a, b ) :
+            r = operation ( a, b )
             return a 
 
         return NotImplemented 
@@ -569,10 +566,10 @@ class LinAlg(object) :
 
             return LinAlg.toSObject ( b ) + a 
         
-        oper , check  = LinAlg.methods_RADD ( a , b )
+        operation , check  = LinAlg.methods_RADD ( a , b )
         
-        if oper and check and check.ok ( a, b ) :
-            result = oper.radd ( a, b )
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
             return result
         
         return NotImplemented 
@@ -598,10 +595,10 @@ class LinAlg(object) :
 
             return a - LinAlg.toSObject ( b ) 
         
-        oper , check  = LinAlg.methods_SUB ( a , b )
+        operation , check  = LinAlg.methods_SUB ( a , b )
         
-        if oper and check and check.ok ( a, b ) :
-            result = oper.sub ( a, b )
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
             return result
         
         return NotImplemented 
@@ -619,10 +616,10 @@ class LinAlg(object) :
                 
         if isinstance ( b , num_types ) : b = float( b )
         
-        oper , check  = LinAlg.methods_ISUB ( a , b )
+        operation , check  = LinAlg.methods_ISUB ( a , b )
         
-        if oper and check and check.ok ( a, b ) :
-            oper.isub ( a, b )
+        if operation and check and check ( a, b ) :
+            r = operation ( a, b )
             return a 
         
         return NotImplemented 
@@ -647,10 +644,10 @@ class LinAlg(object) :
             
             return LinAlg.toSObject ( b ) - a
         
-        oper , check  = LinAlg.methods_RSUB ( a , b )
+        operation , check  = LinAlg.methods_RSUB ( a , b )
         
-        if oper and check and check.ok ( a, b ) :
-            result = oper.rsub ( a, b )
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
             return result
         
         return NotImplemented 
@@ -678,10 +675,10 @@ class LinAlg(object) :
             return a * LinAlg.toSObject ( b )
         
 
-        oper , check  = LinAlg.methods_MUL ( a , b )
+        operation , check  = LinAlg.methods_MUL ( a , b )
 
-        if oper and check and check.ok ( a, b ) :
-            result = oper.mul ( a, b )
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
             return result
         
         return NotImplemented 
@@ -699,10 +696,10 @@ class LinAlg(object) :
         
         if isinstance ( b , num_types ) : b = float( b )
         
-        oper , check  = LinAlg.methods_IMUL ( a , b )
+        operation , check  = LinAlg.methods_IMUL ( a , b )
 
-        if oper and check and check.ok ( a, b ) :
-            oper.imul ( a, b )
+        if operation and check and check ( a, b ) :
+            r = operation ( a, b )
             return a 
         
         return NotImplemented 
@@ -728,10 +725,9 @@ class LinAlg(object) :
 
             return LinAlg.toSObject ( b ) * a 
 
-        oper , check  = LinAlg.methods_RMUL ( a , b )
-        
-        if oper and check and check.ok ( a, b ) :
-            result = oper.rmul ( a, b )
+        operation , check  = LinAlg.methods_RMUL ( a , b )        
+        if operation and check and check ( a, b ) :
+            result = operation  ( a, b )
             return result
         
         return NotImplemented 
@@ -749,10 +745,9 @@ class LinAlg(object) :
         
         if isinstance ( b , num_types ) : b = float( b )
         
-        oper , check  = LinAlg.methods_DIV ( a , b )
-        
-        if oper and check and check.ok ( a, b ) :
-            result = oper.div ( a, b )
+        operation ,  check  = LinAlg.methods_DIV ( a , b )        
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
             return result
         
         return NotImplemented 
@@ -770,10 +765,9 @@ class LinAlg(object) :
         
         if isinstance ( b , num_types ) : b = float( b )
         
-        oper , check  = LinAlg.methods_IDIV ( a , b )
-        
-        if oper and check and check.ok ( a, b ) :
-            oper.idiv ( a, b )
+        operation , check  = LinAlg.methods_IDIV ( a , b )        
+        if operation and check and check ( a, b ) :
+            r = operation ( a, b )
             return a 
         
         return NotImplemented 
@@ -795,12 +789,10 @@ class LinAlg(object) :
             if s1 != s2 : return False 
             return np.array_equal ( a.to_numpy() , b )
 
-        oper = LinAlg.method_EQ ( a , b )
-        if not oper : return NotImplemented
+        operation = LinAlg.method_EQ ( a , b )
+        if not operation : return NotImplemented
         
-        result = oper.eq ( a, b )
-        
-        return result
+        return operation ( a, b )
 
     # =========================================================================
     ## Non-equality for matrix/vector objects
@@ -814,9 +806,9 @@ class LinAlg(object) :
         """
 
         result = LinAlg.EQ ( a , b )
-        if result is NotImplemented : return NotImplemented
-            
-        return not result
+
+        return result if result is NotImplemented else not result 
+
 
     # =========================================================================
     ## Dot-product (scalar) of two vectors 
@@ -839,10 +831,9 @@ class LinAlg(object) :
         
         if isinstance ( b , num_types ) : b = float( b )
         
-        oper , check  = LinAlg.methods_DOT ( a , b )
-        
-        if oper and check and check.ok ( a, b ) :
-            result = oper.dot ( a, b )
+        operation , check  = LinAlg.methods_DOT ( a , b )        
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
             return result
         
         raise NotImplementedError ( "No DOT for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
@@ -865,15 +856,12 @@ class LinAlg(object) :
                 raise NotImplementedError ( "No CROSS for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
             return np.tensordot ( a.to_numpy() , b )
             
-        oper , check  = LinAlg.methods_CROSS ( a , b )
-        
-        if oper and check and check.ok ( a, b ) :
-            result = oper.cross ( a, b )
+        operation , check  = LinAlg.methods_CROSS ( a , b )
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
             return result
         
         raise NotImplementedError ( "No CROSS for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
-
-
 
     # =========================================================================
     ## Similarity  operation \f$ C = B A B^T \f$ 
@@ -894,10 +882,9 @@ class LinAlg(object) :
 
         if isinstance ( b , num_types ) : b = float( b )
         
-        oper , check  = LinAlg.methods_SIM ( a , b )
-        
-        if oper and check and check.ok ( a, b ) :
-            result = oper.sim ( a, b )
+        operation , check  = LinAlg.methods_SIM ( a , b )        
+        if operation  and check and check ( a, b ) :
+            result = operation ( a, b )
             return result
         
         raise NotImplementedError ( "No SIM for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
@@ -921,10 +908,9 @@ class LinAlg(object) :
 
         if isinstance ( b , num_types ) : b = float( b )
         
-        oper , check  = LinAlg.methods_SIMT ( a , b )
-        
-        if oper and check and check.ok ( a, b ) :
-            result = oper.simt ( a, b )
+        operation , check  = LinAlg.methods_SIMT ( a , b )
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
             return result
         
         raise NotImplementedError ( "No SIMT for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
@@ -948,12 +934,12 @@ class LinAlg(object) :
             return LinAlg.M_INVERSE ( a )
         
         else  :
+            
             return NotImplemented
 
-        oper , check  = LinAlg.methods_POW ( a  )
-        
-        if oper and check and check.ok ( a ) :
-            result = oper.pow ( a , n )
+        operation , check  = LinAlg.methods_POW ( a  )
+        if operation and check and check ( a ) :
+            result = operation ( a , n )
             return result
         
         return NotImplemented 
@@ -969,10 +955,9 @@ class LinAlg(object) :
         >>>  C = A.sym() 
         """
         
-        oper , check  = LinAlg.methods_SYM ( a  )
-        
-        if oper and check and check.ok ( a ) :
-            result = oper.sym ( a )
+        operation , check  = LinAlg.methods_SYM ( a  )
+        if operation and check and check ( a ) :
+            result = operation ( a )
             return result
         
         raise NotImplementedError ( "Cannot symmetrise %s/%s" % ( a , type(a) ) )
@@ -990,10 +975,9 @@ class LinAlg(object) :
         >>>  C = A.skew() 
         """
         
-        oper , check  = LinAlg.methods_ASYM ( a  )
-        
-        if oper and check and check.ok ( a ) :
-            result = oper.asym ( a  )
+        operation , check  = LinAlg.methods_ASYM ( a  )
+        if operation and check and check ( a ) :
+            result = operation ( a  )
             return result
         
         raise NotImplementedError ( "Cannot anti-symmetrise %s/%s" % ( a , type(a) ) )
@@ -2118,6 +2102,66 @@ if np :
 import atexit
 atexit.register ( LinAlg.CLEANUP ) 
 
+
+# =============================================================================
+## check what LinAlg operations are defined for these two objects
+#  @code
+#  obj1 = ...
+#  obj2 = ...
+#  check_ops ( obj1 , obj2 ) 
+#  @encode 
+def check_ops ( a , b ) :
+    """check what LinAlg operations are defined for these two objects    
+    >>> obj1 = ...
+    >>> obj2 = ...
+    >>> check_ops ( obj1 , obj2 ) 
+    """
+
+    rows = [ ( 'Method' , 'checker' , 'operation' , 'ok' , 'result' ) ]
+    
+    
+    for symbol , method in (
+        ##
+        ( '+'     , LinAlg.methods_ADD   ) ,
+        ( '+/r'   , LinAlg.methods_RADD  ) ,
+        ( '+='    , LinAlg.methods_IADD  ) ,
+        ##
+        ( '-'     , LinAlg.methods_SUB   ) ,
+        ( '-/r'   , LinAlg.methods_RSUB  ) ,
+        ( '-='    , LinAlg.methods_ISUB  ) ,
+        ##
+        ( '*'     , LinAlg.methods_MUL   ) ,
+        ( '*/r'   , LinAlg.methods_RMUL  ) ,
+        ( '*='    , LinAlg.methods_IMUL  ) ,
+        ##
+        ( '/'     , LinAlg.methods_DIV   ) ,
+        ( '/='    , LinAlg.methods_IDIV  ) ,
+        ##
+        ( 'dot'   , LinAlg.methods_DOT   ) ,
+        ( 'cross' , LinAlg.methods_CROSS ) ,
+        ##
+        ( 'sim'   , LinAlg.methods_SIM   ) ,
+        ( 'simt'  , LinAlg.methods_SIMT  )
+        ) :
+        
+        operation , checker = method ( a , b )  
+        
+        result = ''
+        ok     = True if checker and checker ( a, b ) else False        
+        result = '%s' % type ( operation ( a , b ) ).__name__ if operation and ok else '' 
+        
+        row = ( symbol                       ,
+                'ok' if operation else '---' ,
+                'ok' if checker   else '---' ,
+                '%s' % ok ,
+                result )
+        rows.append ( row ) 
+        
+    import ostap.logger.table as T
+    title = 'Allowed binary operations'
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcccl' )
+    logger.info ( '%s for %s  and %s:\n%s' % ( title , type ( a ) , type ( b ) , table ) ) 
+                      
 # =============================================================================
 if '__main__' == __name__ :
         
