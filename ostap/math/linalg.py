@@ -14,7 +14,8 @@ __date__    = "2009-09-12"
 __version__ = ""
 # =============================================================================
 __all__     = (
-    'mgetter'  , ## get  (i,j) element from matrix-like object 
+    'mgetter'  , ## get  (i,j) element from matrix-like object
+    'checkops' , ## check the allowed operations  
     )
 # =============================================================================
 import ROOT 
@@ -25,7 +26,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg2' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-from   ostap.math.linalg2 import mgetter  
+from   ostap.math.linalg2 import mgetter, checkops  
 import ostap.math.linalgt
 
 # =============================================================================

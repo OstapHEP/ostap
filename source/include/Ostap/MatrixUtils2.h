@@ -64,11 +64,15 @@ namespace Ostap
       template <class M1, class M2>
       struct CanSimT  { static bool operation ( const M1& /* m1 */ , const M2& /* m2 */ ) { return false ; } } ;
 
-      template <class M1>
-      struct CanPow   { static bool operation ( const M1& /* m1 */ ) { return false ; } } ;
+      template <class M1, class M2>
+      struct CanEq    { static bool operation ( const M1& /* m1 */ , const M2& /* m2 */ ) { return false ; } } ;
       
       template <class M1>
+      struct CanPow   { static bool operation ( const M1& /* m1 */ , const double /* p */ ) { return false ; } } ;
+
+      template <class M1>
       struct CanSym   { static bool operation ( const M1& /* m1 */ ) { return false ; } } ;
+
       template <class M1>
       struct CanASym  { static bool operation ( const M1& /* m1 */ ) { return false ; } } ;
       
@@ -80,17 +84,65 @@ namespace Ostap
       // partial specializations with scalar/double 
       // ======================================================================
       template <class M1>
-      struct CanMul<M1,double>  { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;
+      struct CanMul<M1,double>  
+      { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;
       template <class M1>
-      struct CanMul<double,M1>  { static bool operation ( const double /* m2 */ , const M1&    /* m1 */ ) { return true ; } } ;
+      struct CanMul<double,M1> 
+      { static bool operation ( const double /* m2 */ , const M1&    /* m1 */ ) { return true ; } } ;
       template <class M1>
-      struct CanRMul<M1,double> { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;
+      struct CanRMul<M1,double> 
+      { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;
       template <class M1>
-      struct CanIMul<M1,double> { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;      
+      struct CanIMul<M1,double> 
+      { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;      
       template <class M1>
-      struct CanDiv<M1,double>  { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;
+      struct CanDiv<M1,double> 
+      { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;
       template <class M1>
-      struct CanIDiv<M1,double> { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;
+      struct CanIDiv<M1,double> 
+      { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;
+
+      
+      // ======================================================================
+      // new cases  with "almost" scalar
+      // ======================================================================      
+      template <class M1, class T, class R1>
+      struct CanMul<M1, ROOT::Math::SMatrix<T,1,1,R1> > 
+      {
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M2 ;
+        static bool operation ( const M1& /* m1 */ , const M2& /* m2 */ ) { return true ; } 
+      } ;
+      // ======================================================================
+      template <class M1, class T, class R1>
+      struct CanRMul<M1, ROOT::Math::SMatrix<T,1,1,R1> > 
+      {
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M2 ;
+        static bool operation ( const M1& /* m1 */ , const M2& /* m2 */ ) { return true ; } 
+      } ;
+      // ======================================================================
+      template <class M1, class T, class R1>
+      struct CanIMul<M1, ROOT::Math::SMatrix<T,1,1,R1> > 
+      {
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M2 ;
+        static bool operation ( const M1& /* m1 */ , const M2& /* m2 */ ) { return true ; } 
+      } ;
+      // ======================================================================
+      template <class M1, class T, class R1>
+      struct CanMul<ROOT::Math::SMatrix<T,1,1,R1> , M1 > 
+      {
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M2 ;
+        static bool operation ( const M2& /* m1 */ , 
+                                const M1& /* m2 */ ) { return true ; } 
+      } ;      
+      // ======================================================================
+      template <class M1, class T, class R1>
+      struct CanRMul<ROOT::Math::SMatrix<T,1,1,R1> , M1 > 
+      {
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M2 ;
+        static bool operation ( const M2& /* m1 */ , const M1& /* m2 */ ) { return true ; } 
+      } ;
+      // ======================================================================
+
       
       // ======================================================================
       // Can be added 
@@ -115,6 +167,17 @@ namespace Ostap
           const ROOT::Math::SVector<T,D>& /* m2 */ ) { return true ; }  
       } ;
       // ======================================================================
+      template <class T,unsigned int D,class R1>
+      struct CanAdd<ROOT::Math::SMatrix<T,D,D,R1> , double>
+      {
+        static bool operation
+        ( const ROOT::Math::SMatrix<T,D,D,R1>& /* m1 */ , 
+          const double                         /* m2 */ ) { return true ; }  
+      } ;
+      
+      
+
+
       
       // ======================================================================
       // Can be multiplied
@@ -239,11 +302,27 @@ namespace Ostap
         static bool operation ( const M1& /* m1 */ , const M2& /* m2 */ ) { return true ; }
       } ;
       // ======================================================================
-
+      
       template <class T, unsigned int D, class R1>
       struct CanPow<ROOT::Math::SMatrix<T,D,D,R1> >
-      { static bool operation ( const ROOT::Math::SMatrix<T,D,D,R1>& /* m1 */ ) { return true ; } } ;
-      
+      { 
+        static bool operation 
+        ( const ROOT::Math::SMatrix<T,D,D,R1>& /* m1 */ ,
+          const unsigned short                 /* p  */ ) { return true ; } 
+      } ; 
+      //
+      template <class T,class R1>
+      struct CanPow<ROOT::Math::SMatrix<T,1,1,R1> >
+      { 
+        static bool operation 
+        ( const ROOT::Math::SMatrix<T,1,1,R1>& m1 ,
+          const double                         p  ) 
+        { return Ostap::Math::isint ( p ) || 0 <= m1 ( 0 , 0 ) ; } 
+        static bool operation 
+        ( const ROOT::Math::SMatrix<T,1,1,R1>& m1 ,
+          const int                            p  ) { return true ; } 
+      } ;
+
       template <class T, unsigned int D, class R1>
       struct CanSym<ROOT::Math::SMatrix<T,D,D,R1> >
       { static bool operation ( const ROOT::Math::SMatrix<T,D,D,R1>& /* m1 */ ) { return true ; } } ;
@@ -287,7 +366,8 @@ namespace Ostap
       struct Sim   ;
       template <class T1,class T2>
       struct SimT  ;
-      
+
+
       template <class T1,class T2>
       struct Eq ;
 
@@ -332,11 +412,13 @@ namespace Ostap
       // ======================================================================
       template <class M1>
       struct IMul<M1,double>
-      { static void operation ( M1& m1 , const double m2 ) {  m1 *= m2 ; } } ;
+      { static void operation ( M1& m1 , const double m2 ) 
+        {  m1 *= m2 ; } } ;
       // ======================================================================
       template <class M1>
       struct IDiv<M1,double>
-      { static void operation ( M1& m1 , const double m2 ) { IMul<M1,double>::operation ( m1 , 1 / m2 ) ; } } ;
+      { static void operation ( M1& m1 , const double m2 )
+        { IMul<M1,double>::operation ( m1 , 1 / m2 ) ; } } ;
       // ======================================================================
       template <class M1>
       struct Mul<M1,double>
@@ -349,15 +431,21 @@ namespace Ostap
       struct RMul<M1,double>
       {
         typedef M1 R ;
-        static R operation ( const M1& m1 , const double m2 ) { return Mul<M1,double>::operation ( m1 , m2 ) ; }
+        static R operation ( const M1& m1 , const double m2 ) 
+        { return Mul<M1,double>::operation ( m1 , m2 ) ; }
       } ;
       // ======================================================================
       template <class M1>
       struct Div<M1,double>
       {
         typedef M1 R ;
-        static R operation ( const M1& m1 , const double m2 ) { return Mul<M1,double>::operation ( m1 , 1 / m2 ) ; }
+        static R operation ( const M1& m1 , const double m2 )
+        { return Mul<M1,double>::operation ( m1 , 1 / m2 ) ; }
       } ;
+      // ======================================================================
+
+      // ======================================================================
+      // Trivia 
       // ======================================================================
       template <class M>
       struct IAdd<M,M>     
@@ -367,6 +455,63 @@ namespace Ostap
       struct ISub<M,M>
       { static void operation ( M& m1 , const M& m2 ) { m1 -= m2 ; } } ;
       
+
+      // ======================================================================
+      /// "almost constants"
+      // ======================================================================
+      template <class M1, class T, class R1>
+      struct Mul<M1, ROOT::Math::SMatrix<T,1,1,R1> > 
+      {
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M2 ;
+        typedef Mul<M1,double>                O  ;
+        typedef typename O::R                 R  ;
+        //
+        static R operation ( const M1& m1 , const M2& m2 )   
+        { return O::operation (  m1 , m2 ( 0 , 0 ) ) ; }
+      } ;
+      // ======================================================================
+      template <class M1, class T, class R1>
+      struct RMul<M1, ROOT::Math::SMatrix<T,1,1,R1> > 
+      {
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M2 ;
+        typedef Mul<M1,double>                O  ;
+        typedef typename O::R                 R  ;
+        //
+        static R operation ( const M1& m1 , const M2& m2 )
+        { return O::operation ( m1 , m2 ( 0 , 0 ) ) ; }
+      } ;      
+      // ======================================================================
+      template <class M1, class T, class R1>
+      struct IMul<M1, ROOT::Math::SMatrix<T,1,1,R1> > 
+      {
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M2 ;
+        typedef IMul<M1,double>               O  ;
+        static void operation ( M1& m1 , const M2& m2 ) { O::operation ( m1 , m2 ( 0 , 0 ) ) ; }
+      } ;
+      // ======================================================================
+      template <class M1, class T, class R1>
+      struct Mul<ROOT::Math::SMatrix<T,1,1,R1>, M1 > 
+      {
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M2 ;
+        typedef Mul<M1,double>                O  ;
+        typedef typename O::R                 R  ;
+        //
+        static R operation ( const M2& m2 , const M1& m1 ) 
+        { return O::operation ( m1 , m2 ( 0 , 0 ) ) ; } 
+      } ;
+      // ======================================================================
+      template <class M1, class T, class R1>
+      struct RMul<ROOT::Math::SMatrix<T,1,1,R1>, M1> 
+      {
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M2 ;
+        typedef RMul<M1,double>               O  ;
+        typedef typename O::R                 R  ;
+        //
+        static R operation ( const M2& m2 , const M1& m1 ) 
+        { return O::operation ( m1 , m2 ( 0 , 0 ) ) ; } 
+      } ;
+      // ======================================================================
+
       // ======================================================================
       template <class T,unsigned int D1,unsigned int D2>
       struct IAdd<ROOT::Math::SMatrix<T,D1,D2> ,
@@ -453,8 +598,25 @@ namespace Ostap
         static R operation ( const M1 & m1 , const M2 & m2 ) { return m1 + m2 ; }
       } ;
       // ======================================================================
+      template <class T,unsigned int D,class R1>
+      struct Add<ROOT::Math::SMatrix<T,D,D,R1>, double> 
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,R1> M1 ;
+        typedef double                        M2 ;
+        typedef ROOT::Math::SMatrix<T,D,D,R1> R  ;
+        // addition
+        static R operation ( const M1& m1 , const double m2 ) 
+        { 
+          R result  { m1 } ;
+          for  ( unsigned int i = 0 ; i < D ; ++i ) { result ( i , i )  += m2 ; }
+          return result ; 
+        }
+      } ;
+      // ======================================================================
+      template <class T,unsigned int D,class R1>
+      struct RAdd<ROOT::Math::SMatrix<T,D,D,R1>, double> 
+        : public Add<ROOT::Math::SMatrix<T,D,D,R1>, double> {} ;
       
-
 
       // ======================================================================
       // IADD
@@ -468,8 +630,7 @@ namespace Ostap
         // addition
         static void operation ( M1 & m1 , const M2 & m2 ) { m1 += m2 ; }
       } ;
-      // ======================================================================
-      
+      // ======================================================================      
       template <class T,unsigned int D>
       struct IAdd<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > ,
                  ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > >
@@ -479,7 +640,17 @@ namespace Ostap
        // addition
         static void operation ( M1 & m1 , const M2 & m2 ) { m1 += m2 ; }
       } ;
-      // ======================================================================
+      // ======================================================================      
+      template <class T,unsigned int D,class R1>
+      struct IAdd<ROOT::Math::SMatrix<T,D,D,R1> , double> 
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,R1> M1 ;
+        typedef double                        M2 ;
+        // addition
+        static void operation ( M1& m1 , const double m2 ) 
+        { for  ( unsigned int i = 0 ; i < D ; ++i ) { m1 ( i , i )  += m2 ; } }
+      } ;
+
       
       // ======================================================================
       // SUB
@@ -518,6 +689,35 @@ namespace Ostap
         static R operation ( const M1 & m1 , const M2 & m2 ) { return m1 - m2 ; }
       } ;
       // ======================================================================
+      template <class T,unsigned int D,class R1>
+      struct Sub<ROOT::Math::SMatrix<T,D,D,R1> , double> 
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,R1> M1 ;
+        typedef double                        M2 ;
+        typedef ROOT::Math::SMatrix<T,D,D,R1> R  ;
+        // addition
+        static R operation ( const M1& m1 , const double m2 ) 
+        { 
+          R result  { m1 } ;
+          for  ( unsigned int i = 0 ; i < D ; ++i ) { result ( i , i ) -= m2 ; }
+          return result ; 
+        }
+      } ;
+      // ======================================================================
+      template <class T,unsigned int D,class R1>
+      struct RSub<ROOT::Math::SMatrix<T,D,D,R1> , double> 
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,R1> M1 ;
+        typedef double                        M2 ;
+        typedef ROOT::Math::SMatrix<T,D,D,R1> R  ;
+        // addition
+        static R operation ( const M1& m1 , const double m2 ) 
+        { 
+          R result  { m1 } ; result *= -1 ; // ATTENTION! 
+          for  ( unsigned int i = 0 ; i < D ; ++i ) { result ( i , i ) += m2 ; }
+          return result ; 
+        }
+      } ;
       
       // ======================================================================
       // ISUB
@@ -543,6 +743,16 @@ namespace Ostap
         static void operation ( M1 & m1 , const M2 & m2 ) { m1 -= m2 ; }
       } ;
       // ======================================================================
+      template <class T,unsigned int D,class R1>
+      struct ISub<ROOT::Math::SMatrix<T,D,D,R1> , double> 
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,R1> M1 ;
+        typedef double                        M2 ;
+        // addition
+        static void operation ( M1& m1 , const double m2 ) 
+        { for  ( unsigned int i = 0 ; i < D ; ++i ) { m1 ( i , i ) -= m2 ; } }
+      } ;
+
       
       // ======================================================================
       // MUL 
@@ -646,43 +856,6 @@ namespace Ostap
       } ;
       // ======================================================================
 
-      
-      // ======================================================================
-      // Equality
-      // ======================================================================
-      template <class T1,unsigned int D1,unsigned int D2,class R1,
-                class T2, class R2>
-      struct Eq<ROOT::Math::SMatrix<T1,D1,D2,R1> ,
-                ROOT::Math::SMatrix<T2,D1,D2,R2> >
-      {
-        typedef ROOT::Math::SMatrix<T1,D1,D2,R1> M1 ;
-        typedef ROOT::Math::SMatrix<T2,D1,D2,R2> M2 ;
-        typedef bool                      R  ;
-        // addition
-        static R operation ( const M1& m1 , const M2& m2 )
-        {
-          static const Ostap::Math::Equal_To<M1> s_cmp ;
-          return s_cmp ( m1 ,  m2 ) ;
-        }
-      } ;
-      // ======================================================================
-      template <class T1,unsigned int D,
-                class T2>
-      struct Eq<ROOT::Math::SVector<T1,D> ,
-                ROOT::Math::SVector<T2,D> >
-      {
-        typedef ROOT::Math::SVector<T1,D> M1 ;
-        typedef ROOT::Math::SVector<T2,D> M2 ;
-        typedef bool                      R  ;
-        // addition
-        static R operation ( const M1& m1 , const M2& m2 )
-        {
-          static const Ostap::Math::Equal_To<M1> s_cmp ;
-          return s_cmp ( m1 ,  m2 ) ;
-        }
-      } ;
-      // ======================================================================
-      
 
       // ======================================================================
       // DOT
@@ -782,6 +955,106 @@ namespace Ostap
       } ;
       // ======================================================================
 
+      
+      // ======================================================================
+      /// can be compared ?
+      // ======================================================================
+      template <class T1, unsigned D, class T2> 
+      struct CanEq < ROOT::Math::SVector<T1,D> , 
+                     ROOT::Math::SVector<T2,D> >
+      {
+        typedef ROOT::Math::SVector<T1,D> M1 ;
+        typedef ROOT::Math::SVector<T2,D> M2 ;
+        // equality 
+        static bool operation 
+        ( const M1& /* m1 */ , 
+          const M2& /* m2 */ ) { return true ; }
+      } ;
+      // ======================================================================
+      template <class T, unsigned D> 
+      struct CanEq < ROOT::Math::SVector<T,D> , 
+                     ROOT::Math::SVector<T,D> >
+      {
+        typedef ROOT::Math::SVector<T,D> M1 ;
+        typedef ROOT::Math::SVector<T,D> M2 ;
+        // equality 
+        static bool operation 
+        ( const M1& /* m1 */ , 
+          const M2& /* m2 */ ) { return true ; }
+      } ;
+      // ======================================================================
+      template <class T, unsigned D1, unsigned D2, class R1> 
+      struct CanEq < ROOT::Math::SMatrix<T,D1,D2,R1> , 
+                     ROOT::Math::SMatrix<T,D1,D2,R1> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1> M1 ;
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1> M2 ;
+        // equality 
+        static bool operation 
+        ( const M1& /* m1 */ , 
+          const M2& /* m2 */ ) { return true ; }
+      } ;
+      // ======================================================================
+      template <class T, unsigned D1, unsigned D2, class R1, class R2> 
+      struct CanEq < ROOT::Math::SMatrix<T,D1,D2,R1> , 
+                     ROOT::Math::SMatrix<T,D1,D2,R2> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1> M1 ;
+        typedef ROOT::Math::SMatrix<T,D1,D2,R2> M2 ;
+        // equality 
+        static bool operation 
+        ( const M1& /* m1 */ , 
+          const M2& /* m2 */ ) { return true ; }
+      } ;
+      // ======================================================================
+      template <class T1, unsigned D1, unsigned D2, class R1, class T2, class R2> 
+      struct CanEq < ROOT::Math::SMatrix<T1,D1,D2,R1> , 
+                     ROOT::Math::SMatrix<T2,D1,D2,R2> >
+      {
+        typedef ROOT::Math::SMatrix<T1,D1,D2,R1> M1 ;
+        typedef ROOT::Math::SMatrix<T2,D1,D2,R2> M2 ;
+        // equality 
+        static bool operation 
+        ( const M1& /* m1 */ , 
+          const M2& /* m2 */ ) { return true ; }
+      } ;
+      // ======================================================================
+
+      // ======================================================================
+      // Equality
+      // ======================================================================
+      template <class T1,unsigned int D1,unsigned int D2,class R1,
+                class T2, class R2>
+      struct Eq<ROOT::Math::SMatrix<T1,D1,D2,R1> ,
+                ROOT::Math::SMatrix<T2,D1,D2,R2> >
+      {
+        typedef ROOT::Math::SMatrix<T1,D1,D2,R1> M1 ;
+        typedef ROOT::Math::SMatrix<T2,D1,D2,R2> M2 ;
+        typedef bool                      R  ;
+        // addition
+        static R operation ( const M1& m1 , const M2& m2 )
+        {
+          static const Ostap::Math::Equal_To<M1> s_cmp ;
+          return s_cmp ( m1 ,  m2 ) ;
+        }
+      } ;
+      // ======================================================================
+      template <class T1,unsigned int D,
+                class T2>
+      struct Eq<ROOT::Math::SVector<T1,D> ,
+                ROOT::Math::SVector<T2,D> >
+      {
+        typedef ROOT::Math::SVector<T1,D> M1 ;
+        typedef ROOT::Math::SVector<T2,D> M2 ;
+        typedef bool                      R  ;
+        // addition
+        static R operation ( const M1& m1 , const M2& m2 )
+        {
+          static const Ostap::Math::Equal_To<M1> s_cmp ;
+          return s_cmp ( m1 ,  m2 ) ;
+        }
+      } ;
+      // ======================================================================
 
       // =======================================================================
       // EXTRA
@@ -832,7 +1105,23 @@ namespace Ostap
           return r * r * m ;
         }
       } ;
-
+      // ======================================================================
+      template <class T, class R1>
+      struct Pow<ROOT::Math::SMatrix<T,1,1,R1> >
+      {
+        //
+        typedef ROOT::Math::SMatrix<T,1,1,R1> M ;
+        typedef double   R ;
+        //
+        static R operation ( const M& m , const int    n )
+        { return 0 == n ? 1.0 : std::pow ( m ( 0 , 0 )  , n ) ; }
+        static R operation ( const M& m , const double p )
+        { 
+          return 
+            Ostap::Math::isint ( p ) ?  
+            std::pow ( m ( 0 , 0 ) , Ostap::Math::round ( p  ) ) :
+            std::pow ( m ( 0 , 0 ) , p ) ; }
+      } ;
 
       // ======================================================================
       template <class T, unsigned int D>

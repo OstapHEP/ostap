@@ -17,6 +17,7 @@ __version__ = ""
 # =============================================================================
 __all__     = (
     'mgetter'     , ## get i,j-element                  from matrix-like object
+    'checkops'    , ## check the allowed operations  
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
@@ -243,8 +244,13 @@ class LinAlg(object) :
     
     method_EIGEN  = Method  ( Ostap.Math.Ops.Eigen  )
     method_TM     = Method  ( Ostap.Math.Ops.TM     )
-    method_EQ     = Method  ( Ostap.Math.Ops.Eq     )
 
+
+    methods_EQ    = Method2 ( Ostap.Math.Ops.Eq     , Ostap.Math.Ops.CanEq    )
+
+    ## method_EQ     = Method  ( Ostap.Math.Ops.Eq     )
+
+    
     known_ssymmatrices = {}
     known_smatrices    = {}
     known_svectors     = {}
@@ -252,6 +258,7 @@ class LinAlg(object) :
     
     decorated_matrices = set ()
     decorated_vectors  = set ()
+
 
     # =========================================================================
     ## Backup useful attributes
@@ -416,9 +423,9 @@ class LinAlg(object) :
             LinAlg.method_TM     . clear ()
             LinAlg.method_TM     = None 
 
-        if LinAlg.method_EQ      : 
-            LinAlg.method_EQ     . clear ()
-            LinAlg.method_EQ     = None 
+        if LinAlg.methods_EQ      : 
+            LinAlg.methods_EQ     . clear ()
+            LinAlg.methods_EQ     = None 
 
         return
 
@@ -547,7 +554,7 @@ class LinAlg(object) :
         return NotImplemented 
                 
     # =========================================================================
-    ## Right-additon of matrix/vector objects
+    ## Right-addition of matrix/vector objects
     #  @code
     #  C = B + A  
     #  @endcode 
@@ -556,7 +563,7 @@ class LinAlg(object) :
         """ Right-addition of vector/,atrix objects:
         >>> C = B + A
         """
-        if isinstance ( b , num_types ) : b = float( b )
+        if   isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
             
             s1 = a.shape
@@ -585,7 +592,7 @@ class LinAlg(object) :
         >>>  C = A - B
         """
         
-        if isinstance ( b , num_types ) : b = float( b )
+        if   isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
             
             s1 = a.shape
@@ -634,7 +641,7 @@ class LinAlg(object) :
         """ Right-subtraction of vector/matrix objects:
         >>> C = B - A
         """                
-        if isinstance ( b , num_types ) : b = float( b )
+        if   isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
 
             s1 = a.shape
@@ -663,7 +670,7 @@ class LinAlg(object) :
         >>>  C = A * B
         """
         
-        if isinstance ( b , num_types ) : b = float( b )
+        if   isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
 
             sa = a.shape            
@@ -715,7 +722,7 @@ class LinAlg(object) :
         >>> C = B * A 
         """
 
-        if isinstance ( b , num_types ) : b = float( b )
+        if   isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
             
             sa = a.shape            
@@ -789,10 +796,17 @@ class LinAlg(object) :
             if s1 != s2 : return False 
             return np.array_equal ( a.to_numpy() , b )
 
-        operation = LinAlg.method_EQ ( a , b )
-        if not operation : return NotImplemented
+        operation , check  = LinAlg.methods_EQ ( a , b )        
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
+            return result
         
-        return operation ( a, b )
+        operation , check  = LinAlg.methods_EQ ( b , a )        
+        if operation and check and check ( b , a ) :
+            result = operation ( b , a )
+            return result
+
+        return NotImplemented 
 
     # =========================================================================
     ## Non-equality for matrix/vector objects
@@ -807,7 +821,7 @@ class LinAlg(object) :
 
         result = LinAlg.EQ ( a , b )
 
-        return result if result is NotImplemented else not result 
+        return result if ( result is NotImplemented ) else not result 
 
 
     # =========================================================================
@@ -938,7 +952,7 @@ class LinAlg(object) :
             return NotImplemented
 
         operation , check  = LinAlg.methods_POW ( a  )
-        if operation and check and check ( a ) :
+        if operation and check and check ( a , n ) :
             result = operation ( a , n )
             return result
         
@@ -1672,6 +1686,10 @@ class LinAlg(object) :
         if m.kRows == m.kCols :
             m.inverse   = LinAlg.M_INVERSE            
 
+        ## conversion to float 
+        if 1 == m.kRows and 1 == m.kCols :
+            m.__float__ = lambda s : s ( 0 , 0 )
+
         ## should be class property!! 
         m.shape         = property ( LinAlg.M_SHAPE , None , None )
 
@@ -2102,26 +2120,23 @@ if np :
 import atexit
 atexit.register ( LinAlg.CLEANUP ) 
 
-
 # =============================================================================
 ## check what LinAlg operations are defined for these two objects
 #  @code
 #  obj1 = ...
 #  obj2 = ...
-#  check_ops ( obj1 , obj2 ) 
+#  checkops ( obj1 , obj2 ) 
 #  @encode 
-def check_ops ( a , b ) :
+def checkops ( a , b ) :
     """check what LinAlg operations are defined for these two objects    
     >>> obj1 = ...
     >>> obj2 = ...
-    >>> check_ops ( obj1 , obj2 ) 
+    >>> checkops ( obj1 , obj2 ) 
     """
 
     rows = [ ( 'Method' , 'checker' , 'operation' , 'ok' , 'result' ) ]
-    
-    
-    for symbol , method in (
-        ##
+
+    methods1 = ( 
         ( '+'     , LinAlg.methods_ADD   ) ,
         ( '+/r'   , LinAlg.methods_RADD  ) ,
         ( '+='    , LinAlg.methods_IADD  ) ,
@@ -2137,17 +2152,22 @@ def check_ops ( a , b ) :
         ( '/'     , LinAlg.methods_DIV   ) ,
         ( '/='    , LinAlg.methods_IDIV  ) ,
         ##
+        ( '=='    , LinAlg.methods_EQ    ) ,
+        ## 
         ( 'dot'   , LinAlg.methods_DOT   ) ,
         ( 'cross' , LinAlg.methods_CROSS ) ,
         ##
         ( 'sim'   , LinAlg.methods_SIM   ) ,
-        ( 'simt'  , LinAlg.methods_SIMT  )
-        ) :
+        ( 'simt'  , LinAlg.methods_SIMT  ) )
+
+    
+    for symbol , method in methods :
         
         operation , checker = method ( a , b )  
         
         result = ''
-        ok     = True if checker and checker ( a, b ) else False        
+        if checker : ok = True if checker ( a, b ) else False
+        else       : ok = ''
         result = '%s' % type ( operation ( a , b ) ).__name__ if operation and ok else '' 
         
         row = ( symbol                       ,
@@ -2155,8 +2175,19 @@ def check_ops ( a , b ) :
                 'ok' if checker   else '---' ,
                 '%s' % ok ,
                 result )
-        rows.append ( row ) 
+        rows.append ( row )
         
+    methods2 = ( 
+        ( '**'   , LinAlg.methods_POW   ) ,
+        )
+
+    methods3 = ( 
+        ( 'sym'  , LinAlg.methods_SYM   ) ,
+        ( 'ssym' , LinAlg.methods_ASYM  ) ,
+        )
+    
+    
+    
     import ostap.logger.table as T
     title = 'Allowed binary operations'
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcccl' )

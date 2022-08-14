@@ -28,7 +28,6 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  */
 // ============================================================================
-
 namespace Ostap
 {
   // ==========================================================================
@@ -58,9 +57,9 @@ namespace Ostap
                          v2.GetMatrixArray () , m_cmp ) ) ;                 
       }
       /// compare with another vector type (e.g. double and float)
-      template <class T2>
+      template <class T1, class T2>
       inline bool operator()
-      ( const TVectorT<T>&  v1 , 
+      ( const TVectorT<T1>&  v1 , 
         const TVectorT<T2>& v2 ) const
       {
         return ( v1.IsValid  () && v2.IsValid  () &&
@@ -68,25 +67,20 @@ namespace Ostap
                  std::equal ( v1.GetMatrixArray () , v1.GetMatrixArray () + v1.GetNrows() ,
                               v2.GetMatrixArray () , m_cmp ) ) ;                 
       }
-      /// compare with another vector type (e.g. double and float)
-      template <class T2>
-      inline bool operator()
-      ( const TVectorT<T2>& v1 , 
-        const TVectorT<T>&  v2 ) const { return (*this)( v2  , v1 ) ; }
       // ======================================================================
-      template <class T2, unsigned int D>
+      template <class T1, class T2, unsigned int D>
       inline bool operator ()
-      ( const TVectorT<T>&               v1 ,
-        const ROOT::Math::SVector<T,D>&  v2 ) const
+      ( const TVectorT<T1>&               v1 ,
+        const ROOT::Math::SVector<T2,D>&  v2 ) const
       {
         return v1.IsValid() && D == v1.GetNrows() &&
           std::equal ( v2.begin() , v2.end()  , v1.GetMatrixArray () , m_cmp );
       }
       // ======================================================================
-      template <class T2, unsigned int D>
+      template <class T1, class T2, unsigned int D>
       inline bool operator ()
-      ( const ROOT::Math::SVector<T,D>&  v1 , 
-        const TVectorT<T>&               v2 ) const
+      ( const ROOT::Math::SVector<T2,D>& v1 , 
+        const TVectorT<T1>&              v2 ) const
       { return (*this)( v2 , v1 ) ; }
       // ======================================================================
     private:
@@ -121,10 +115,25 @@ namespace Ostap
                          v2.GetMatrixArray () , m_cmp ) ) ;                 
       }
       // ======================================================================
-      /// compare with another matrix type (e.g. double and float)
+      /// compare with another matrix type 
+      template <class T1, class T2> 
       inline bool operator()
-      ( const TMatrixT<T>&    v1 , 
-        const TMatrixTSym<T>& v2 ) const
+      ( const TMatrixT<T1>& v1 , 
+        const TMatrixT<T2>& v2 ) const  
+      {
+        return ( v1.IsValid  () && v2.IsValid  () &&
+                 v1.GetNrows () == v2.GetNrows () && 
+                 v1.GetNcols () == v2.GetNcols () &&
+                 std::equal ( v1.GetMatrixArray () ,
+                              v1.GetMatrixArray () + v1.GetNrows()* v1.GetNcols()  ,
+                              v2.GetMatrixArray () , m_cmp ) ) ;                 
+      }
+      // ======================================================================
+      /// compare with another matrix type 
+      template <class T1, class T2>
+      inline bool operator()
+      ( const TMatrixT<T1>&    v1 , 
+        const TMatrixTSym<T2>& v2 ) const
       {
         if ( !v1.IsValid  () || !v2.IsValid  () ) { return false ; }
         if (  v1.GetNrows () !=  v2.GetNrows () ) { return false ; }
@@ -137,18 +146,21 @@ namespace Ostap
         { for ( unsigned long j = 0 ; j < nc ; ++j )
           { if ( !m_cmp ( v1 ( i , j ) , v2 ( i , j ) ) )
             { return false ; } } }
-        //
         return true ;
       }
-      /// compare with another matrix type (e.g. double and float)
-      inline bool operator()
-      ( const TMatrixTSym<T>&  v1 , 
-        const TMatrixT<T>&     v2 ) const { return  (*this) ( v2 , v1 ) ; }
       // ======================================================================
-      template <unsigned int D1 , unsigned int D2, class R1>
+      /// compare with another matrix type 
+      template <class T1, class T2>      
       inline bool operator()
-      ( const TMatrixT<T>&                     v1 , 
-        const ROOT::Math::SMatrix<T,D1,D2,R1>& v2 ) const
+      ( const TMatrixTSym<T2>&  v1 , 
+        const TMatrixT<T1>&     v2 ) const
+      { return  (*this) ( v2 , v1 ) ; }
+      // ======================================================================
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D1 , unsigned int D2, class R1>
+      inline bool operator()
+      ( const TMatrixT<T1>&                     v1 , 
+        const ROOT::Math::SMatrix<T2,D1,D2,R1>& v2 ) const
       {
         if ( !v1.IsValid() || v1.GetNrows() != D1 || v1.GetNcols() != D2 ) 
         { return false ; }
@@ -159,10 +171,12 @@ namespace Ostap
         //
         return true ;
       }
-      template <unsigned int D1 , unsigned int D2, class R1>
+      // ======================================================================
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D1 , unsigned int D2, class R1>
       inline bool operator()
-      ( const ROOT::Math::SMatrix<T,D1,D2,R1>& v1 , 
-        const TMatrixT<T>&                     v2 ) const
+      ( const ROOT::Math::SMatrix<T2,D1,D2,R1>& v1 , 
+        const TMatrixT<T1>&                     v2 ) const 
       { return  (*this) ( v2 , v1 ) ; }
       // ======================================================================
     private:
@@ -188,23 +202,42 @@ namespace Ostap
       ( const TMatrixTSym<T>& v1 , 
         const TMatrixTSym<T>& v2 ) const  
       {
+        if ( &v1             ==  &v2            ) { return true  ; }
         if ( !v1.IsValid  () || !v2.IsValid  () ) { return false ; }
         if (  v1.GetNrows () !=  v2.GetNrows () ) { return false ; }
-        if (  v1.GetNcols () !=  v2.GetNcols () ) { return false ; }
         //
         const unsigned long nc = v1.GetNcols () ;
-        const unsigned long nr = v1.GetNrows () ;
         //
-        for ( unsigned long i = 0 ; i < nr ; ++i )
-        { for ( unsigned long j = 0 ; j < nc ; ++j )
+        for ( unsigned long i = 0 ; i < nc ; ++i )
+        { for ( unsigned long j = i ; j < nc ; ++j ) // ATTENTION!!!
           { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
         //
         return true ;
       }
-      /// compare with another matrix type (e.g. double and float)
+      // ======================================================================
+      /// compare with another matrix type (e.g. double and float
+      template <class T1, class T2>
       inline bool operator()
-      ( const TMatrixTSym<T>& v1 , 
-        const TMatrixT<T>&    v2 ) const
+      ( const TMatrixTSym<T1>& v1 , 
+        const TMatrixTSym<T2>& v2 ) const  
+      {
+        if ( !v1.IsValid  () || !v2.IsValid  () ) { return false ; }
+        if (  v1.GetNrows () !=  v2.GetNrows () ) { return false ; }
+        //
+        const unsigned long nc = v1.GetNcols () ;
+        //
+        for ( unsigned long i = 0 ; i < nc ; ++i )
+        { for ( unsigned long j = i ; j < nc ; ++j ) // ATTENTION!!!
+          { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
+        //
+        return true ;
+      }
+      // ======================================================================
+      /// compare with another matrix type
+      template <class T1, class T2>
+      inline bool operator()
+      ( const TMatrixTSym<T1>& v1 , 
+        const TMatrixT<T2>&    v2 ) const
       {
         if ( !v1.IsValid  () || !v2.IsValid  () ) { return false ; }
         if (  v1.GetNrows () !=  v2.GetNrows () ) { return false ; }
@@ -219,29 +252,63 @@ namespace Ostap
         //
         return true ;
       }
-      /// compare with another matrix type (e.g. double and float)
-      inline bool operator()
-      ( const TMatrixT<T>&    v1 , 
-        const TMatrixTSym<T>& v2 ) const { return (*this)( v2  , v1 ) ; }
       // ======================================================================
-      template <unsigned int D1 , unsigned int D2, class R1>
+      /// compare with another matrix type
+      template <class T1, class T2>
       inline bool operator()
-      ( const TMatrixTSym<T>&                  v1 , 
-        const ROOT::Math::SMatrix<T,D1,D2,R1>& v2 ) const
+      ( const TMatrixT<T2>&    v1 ,
+        const TMatrixTSym<T1>& v2 ) const  
       {
-        if ( !v1.IsValid() || v1.GetNrows() != D1 || v1.GetNcols() != D2 ) { return false ; }
+        if ( !v1.IsValid  () || !v2.IsValid  () ) { return false ; }
+        if (  v1.GetNrows () !=  v2.GetNrows () ) { return false ; }
+        if (  v1.GetNcols () !=  v2.GetNcols () ) { return false ; }
         //
-        for ( unsigned long i = 0 ; i < D1 ; ++i )
-        { for ( unsigned long j = 0 ; j < D2 ; ++j )
+        const unsigned long nc = v1.GetNcols () ;
+        const unsigned long nr = v1.GetNrows () ;
+        //
+        for ( unsigned long i = 0 ; i < nr ; ++i )
+        { for ( unsigned long j = 0 ; j < nc ; ++j )
           { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
         //
         return true ;
       }
       // ======================================================================
-      template <unsigned int D1 , unsigned int D2, class R1>
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D, class R1>
       inline bool operator()
-      ( const ROOT::Math::SMatrix<T,D1,D2,R1>& v1 , 
-        const TMatrixTSym<T>&                  v2 ) const { return  (*this) ( v2 , v1 ) ; }
+      ( const TMatrixTSym<T1>&                v1 , 
+        const ROOT::Math::SMatrix<T2,D,D,R1>& v2 ) const
+      {
+        if ( !v1.IsValid() || v1.GetNrows() != D || v1.GetNcols() != D ) { return false ; }
+        //
+        for ( unsigned long i = 0 ; i < D ; ++i )
+        { for ( unsigned long j = 0 ; j < D ; ++j )
+          { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
+        //
+        return true ;
+      }
+      // ==========================================================================
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D>
+      inline bool operator()
+      ( const TMatrixTSym<T1>&                                          v1 , 
+        const ROOT::Math::SMatrix<T2,D,D,ROOT::Math::MatRepSym<T2,D> >& v2 ) const
+      {
+        if ( !v1.IsValid() || v1.GetNrows() != D || v1.GetNcols() != D ) { return false ; }
+        //
+        for ( unsigned long i = 0 ; i < D ; ++i )
+        { for ( unsigned long j = i  ; j < D ; ++j ) // ATTENTION HERE 
+          { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
+        //
+        return true ;
+      }
+      // ======================================================================
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D, class R1>
+      inline bool operator()
+      ( const ROOT::Math::SMatrix<T2,D,D,R1>& v1 , 
+        const TMatrixTSym<T1>&                v2 ) const 
+      { return  (*this) ( v2 , v1 ) ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -511,8 +578,6 @@ namespace Ostap
         { return m2.IsValid () && D == m2.GetNrows () ; }
       };
       // ======================================================================
-
-
       
       // ======================================================================
       template <class T>
@@ -770,17 +835,208 @@ namespace Ostap
         { return m1.IsValid() && D2 == m1.GetNrows () ; }
       } ;
       // ======================================================================
+
+      
+      // add diagonal matrix 
+      template <class T>
+      struct CanAdd<TMatrixT<T> , double>
+      {
+        static bool operation
+        ( const TMatrixT<T>&    m1    , 
+          const double       /* m2 */ ) 
+        { return m1.IsValid() && m1.GetNrows () == m1.GetNcols() ; }  
+      } ;
+
+
+      // ======================================================================
+      template <class T>
+      struct Add<TMatrixT<T> , double>
+      {
+        typedef TMatrixT<T>  M1 ;
+        typedef TMatrixT<T>  R  ;
+        //
+        static R operation
+        ( const M1& m1 , const double m2 ) 
+        { 
+          const Int_t D = m1.GetNrows() ;
+          R result { D , D } ;
+          for  ( unsigned int i = 0 ; i < D ; ++i ) { result ( i , i ) += m2 ; } 
+          return result ;
+        }
+      } ;
+      // =====================================================================
+      template <class T>
+      struct RAdd<TMatrixT<T>,double> 
+        : public Add<TMatrixT<T> , double> {} ;      
+      // ======================================================================      
+      template <class T>
+      struct IAdd<TMatrixT<T> , double>
+      {
+        typedef TMatrixT<T>  M1 ;
+        static void operation
+        ( M1& m1 , const double m2 ) 
+        { 
+          const Int_t D = m1.GetNrows() ;
+          for  ( unsigned int i = 0 ; i < D ; ++i ) { m1 ( i , i ) += m2 ; } 
+        }
+      } ;
+      // ======================================================================
+      template <class T>
+      struct Sub<TMatrixT<T> , double>
+      {
+        typedef TMatrixT<T>  M1 ;
+        typedef TMatrixT<T>  R  ;
+        //
+        static R operation
+        ( const M1& m1 , const double m2 ) 
+        { 
+          const Int_t D = m1.GetNrows() ;
+          R result { D , D } ;
+          for  ( Int_t i = 0 ; i < D ; ++i ) { result ( i , i ) -= m2 ; } 
+          return result ;
+        }
+      } ;
+      // =====================================================================
+      template <class T>
+      struct RSub<TMatrixT<T> , double>
+      {
+        typedef TMatrixT<T>  M1 ;
+        typedef TMatrixT<T>  R  ;
+        //
+        static R operation
+        ( const M1& m1 , const double m2 ) 
+        { 
+          const Int_t D = m1.GetNrows() ;
+          R result { D , D } ; result *= -1 ;   // ATTENTION!!! 
+          for  ( Int_t i = 0 ; i < D ; ++i ) { result ( i , i ) += m2 ; } 
+          return result ;
+        }
+      } ;
+      // ======================================================================
+      template <class T>
+      struct ISub<TMatrixT<T> , double>
+      {
+        typedef TMatrixT<T>  M1 ;
+        static void operation
+        ( M1& m1 , const double m2 ) 
+        { 
+          const Int_t D = m1.GetNrows() ;
+          for  ( Int_t i = 0 ; i < D ; ++i ) { m1 ( i , i ) -= m2 ; } 
+        }
+      } ;
+
+
+      // add diagonal matrix 
+      template <class T>
+      struct CanAdd<TMatrixTSym<T> , double>
+      {
+        static bool operation
+        ( const TMatrixTSym<T>&    m1    , 
+          const double          /* m2 */ ) { return m1.IsValid() ; }  
+      } ;
+
+      // ======================================================================
+      template <class T>
+      struct Add<TMatrixTSym<T> , double>
+      {
+        typedef TMatrixTSym<T>  M1 ;
+        typedef TMatrixTSym<T>  R  ;
+        //
+        static R operation
+        ( const M1& m1 , const double m2 ) 
+        { 
+          const Int_t D = m1.GetNrows() ;
+          R result { D } ;
+          for  ( Int_t i = 0 ; i < D ; ++i ) { result ( i , i ) += m2 ; } 
+          return result ;
+        }
+      } ;
+      // =====================================================================
+      template <class T>
+      struct RAdd<TMatrixTSym<T>,double> 
+        : public Add<TMatrixTSym<T> , double> {} ;      
+      // ======================================================================      
+      template <class T>
+      struct IAdd<TMatrixTSym<T> , double>
+      {
+        typedef TMatrixTSym<T>  M1 ;
+        static void operation
+        ( M1& m1 , const double m2 ) 
+        { 
+          const Int_t D = m1.GetNrows() ;
+          for  ( Int_t  i = 0 ; i < D ; ++i ) { m1 ( i , i ) += m2 ; } 
+        }
+      } ;
+      // ======================================================================
+      template <class T>
+      struct Sub<TMatrixTSym<T> , double>
+      {
+        typedef TMatrixTSym<T>  M1 ;
+        typedef TMatrixTSym<T>  R  ;
+        //
+        static R operation
+        ( const M1& m1 , const double m2 ) 
+        { 
+          const Int_t D = m1.GetNrows() ;
+          R result { D } ;
+          for  ( Int_t i = 0 ; i < D ; ++i ) { result ( i , i ) -= m2 ; } 
+          return result ;
+        }
+      } ;
+      // =====================================================================
+      template <class T>
+      struct RSub<TMatrixTSym<T> , double>
+      {
+        typedef TMatrixTSym<T>  M1 ;
+        typedef TMatrixTSym<T>  R  ;
+        //
+        static R operation
+        ( const M1& m1 , const double m2 ) 
+        { 
+          const Int_t D = m1.GetNrows() ;
+          R result { D } ; result *= -1 ;   // ATTENTION!!! 
+          for  ( Int_t i = 0 ; i < D ; ++i ) { result ( i , i ) += m2 ; } 
+          return result ;
+        }
+      } ;
+      // ======================================================================
+      template <class T>
+      struct ISub<TMatrixTSym<T> , double>
+      {
+        typedef TMatrixTSym<T>  M1 ;
+        static void operation
+        ( M1& m1 , const double m2 ) 
+        { 
+          const Int_t D = m1.GetNrows() ;
+          for  ( Int_t i = 0 ; i < D ; ++i ) { m1 ( i , i ) -= m2 ; } 
+        }
+      } ;
+
+
+
+
+      // =========================================================================
       
 
+      
       template <class T>
       struct CanPow<TMatrixT<T> >
-      { static bool operation ( const TMatrixT<T>& m1 )
-        { return m1.IsValid () && m1.GetNrows () == m1.GetNcols () ; } } ;
-      
+      { 
+        static bool operation 
+        ( const TMatrixT<T>&      m1   ,
+          const unsigned short /* n */ )
+        { return m1.IsValid () && m1.GetNrows () == m1.GetNcols () ; } 
+      } ; 
       
       template <class T>
       struct CanPow<TMatrixTSym<T> >
-      { static bool operation ( const TMatrixTSym<T>& m1 ) { return m1.IsValid () ; } } ;
+      { 
+        static bool operation 
+        ( const TMatrixTSym<T>&   m1   ,
+          const unsigned short /* n */ )
+        { return m1.IsValid () ; } 
+      } ; 
+      
 
       template <class T>
       struct CanSym<TMatrixT<T> >
@@ -1669,6 +1925,47 @@ namespace Ostap
       } ;
       // ======================================================================
       
+      
+      // ======================================================================
+      /// can they be compared ?
+      // ======================================================================
+      template <class T1, class T2> 
+      struct CanEq < TVectorT<T1> , 
+                     TVectorT<T2> >
+      {
+        typedef TVectorT<T1> M1 ;
+        typedef TVectorT<T2> M2 ;
+        // equality 
+        static bool operation ( const M1& m1 , 
+                                const M2& m2 ) 
+        { return m1.IsValid() && m2.IsValid() && m1.GetNrows() == m2.GetNrows() ; }
+      } ;
+      // =========================================================================
+      template <class T1, unsigned int D, class T2> 
+      struct CanEq < ROOT::Math::SVector<T1,D> , 
+                     TVectorT<T2>              >
+      {
+        typedef ROOT::Math::SVector<T1,D> M1 ;
+        typedef TVectorT<T2>              M2 ;
+        // equality 
+        static bool operation ( const M1& m1 , 
+                                const M2& m2 ) 
+        { return m2.IsValid() && D == m2.GetNrows() ; }
+      } ;
+      
+      // =========================================================================
+      template <class T1, unsigned int D, class T2> 
+      struct CanEq < TVectorT<T2>              ,
+                     ROOT::Math::SVector<T1,D> >
+      {
+        typedef TVectorT<T2>              M1 ;
+        typedef ROOT::Math::SVector<T1,D> M2 ;
+        // equality 
+        static bool operation ( const M1& m1 , 
+                                const M2& m2 ) 
+        { return m1.IsValid() && D == m1.GetNrows() ; }
+      } ;
+
       // ======================================================================
       // EQUALITY
       // ======================================================================
@@ -1717,13 +2014,77 @@ namespace Ostap
         }
       };
       // ============================================================================
-      template <class T>
-      struct Eq <TMatrixT<T> ,
-                 TMatrixT<T> >
+
+      
+      // ======================================================================
+      /// can they be compared ?
+      // ======================================================================
+      template <class T1, class T2> 
+      struct CanEq < TMatrixT<T1> , 
+                     TMatrixT<T2> >
       {
-        typedef TMatrixT<T>  M1 ;
-        typedef TMatrixT<T>  M2 ;
-        typedef bool         R  ;
+        typedef TMatrixT<T1> M1 ;
+        typedef TMatrixT<T2> M2 ;
+        // equality 
+        static bool operation 
+        ( const M1& m1 , 
+          const M2& m2 ) 
+        { return m1.IsValid() && m2.IsValid() 
+            && m1.GetNrows() == m2.GetNrows() 
+            && m1.GetNcols() == m2.GetNcols() ; }
+      } ;
+      // ======================================================================
+      template <class T1, class T2> 
+      struct CanEq < TMatrixT<T1>    , 
+                     TMatrixTSym<T2> >
+      {
+        typedef TMatrixT<T1>    M1 ;
+        typedef TMatrixTSym<T2> M2 ;
+        // equality 
+        static bool operation 
+        ( const M1& m1 , 
+          const M2& m2 ) 
+        { return m1.IsValid() && m2.IsValid() 
+            && m1.GetNrows() == m2.GetNrows() 
+            && m1.GetNcols() == m2.GetNcols() ; }
+      } ;
+      // ======================================================================
+      template <class T1, class T2> 
+      struct CanEq < TMatrixTSym<T1>    , 
+                     TMatrixT<T2>       >
+      {
+        typedef TMatrixTSym<T1> M1 ;
+        typedef TMatrixT<T2>    M2 ;
+        // equality 
+        static bool operation ( const M1& m1 , 
+                                const M2& m2 ) 
+        { return m1.IsValid() && m2.IsValid() 
+            && m1.GetNrows() == m2.GetNrows() 
+            && m1.GetNcols() == m2.GetNcols() ; }
+      } ;
+      // ======================================================================
+      template <class T1, class T2> 
+      struct CanEq < TMatrixTSym<T1>    , 
+                     TMatrixTSym<T2> >
+      {
+        typedef TMatrixTSym<T1> M1 ;
+        typedef TMatrixTSym<T2> M2 ;
+        // equality 
+        static bool operation ( const M1& m1 , 
+                                const M2& m2 ) 
+        { return m1.IsValid() && m2.IsValid() 
+            && m1.GetNrows() == m2.GetNrows() 
+            && m1.GetNcols() == m2.GetNcols() ; }
+      } ;
+      // ======================================================================
+
+      template <class T1, class T2>
+      struct Eq <TMatrixT<T1> ,
+                 TMatrixT<T2> >
+      {
+        typedef TMatrixT<T1>  M1 ;
+        typedef TMatrixT<T2>  M2 ;
+        typedef bool          R  ;
         // addition
         static R operation ( const M1& m1 , const M2& m2 )
         {
@@ -1732,12 +2093,12 @@ namespace Ostap
         }
       };
       // ======================================================================
-      template <class T>
-      struct Eq <TMatrixT<T>    ,
-                 TMatrixTSym<T> >
+      template <class T1, class T2>
+      struct Eq <TMatrixT<T1>    ,
+                 TMatrixTSym<T2> >
       {
-        typedef TMatrixT<T>     M1 ;
-        typedef TMatrixTSym<T>  M2 ;
+        typedef TMatrixT<T1>     M1 ;
+        typedef TMatrixTSym<T2>  M2 ;
         typedef bool             R  ;
         // addition
         static R operation ( const M1& m1 , const M2& m2 )
@@ -1747,12 +2108,12 @@ namespace Ostap
         }
       };
       // ======================================================================      
-      template <class T>
-      struct Eq <TMatrixTSym<T> ,
-                 TMatrixT<T>    >
+      template <class T1, class T2>
+      struct Eq <TMatrixTSym<T1> ,
+                 TMatrixT<T2>    >
       {
-        typedef TMatrixTSym<T>  M1 ;
-        typedef TMatrixT<T>     M2 ;
+        typedef TMatrixTSym<T1>  M1 ;
+        typedef TMatrixT<T2>     M2 ;
         typedef bool             R  ;
         // addition
         static R operation ( const M1& m1 , const M2& m2 )
@@ -1762,12 +2123,12 @@ namespace Ostap
         }
       };
       // ======================================================================
-      template <class T>
-      struct Eq <TMatrixTSym<T> ,
-                 TMatrixTSym<T> >
+      template <class T1, class T2>
+      struct Eq <TMatrixTSym<T1> ,
+                 TMatrixTSym<T2> >
       {
-        typedef TMatrixTSym<T>  M1 ;
-        typedef TMatrixTSym<T>  M2 ;
+        typedef TMatrixTSym<T1>  M1 ;
+        typedef TMatrixTSym<T2>  M2 ;
         typedef bool             R  ;
         // addition
         static R operation ( const M1& m1 , const M2& m2 )
@@ -1777,65 +2138,120 @@ namespace Ostap
         }
       };
       // ======================================================================
-      template <class T, unsigned int D1, unsigned int D2, class R1>
-      struct Eq <ROOT::Math::SMatrix<T,D1,D2,R1>,TMatrixT<T> >
-      {
-        typedef ROOT::Math::SMatrix<T,D1,D2,R1>  M1 ;
-        typedef TMatrixT<T>                      M2 ;
-        typedef bool                             R  ;
-        // addition
-        static R operation ( const M1& m1 , const M2& m2 )
-        {
-          static const Ostap::Math::Equal_To<M2> s_cmp ;
-          return s_cmp ( m2 , m1 ) ;
-        }
-      };
-      // ======================================================================
-      template <class T, unsigned int D, class R1>
-      struct Eq <ROOT::Math::SMatrix<T,D,D,R1>,TMatrixTSym<T> >
-      {
-        typedef ROOT::Math::SMatrix<T,D,D,R1>  M1 ;
-        typedef TMatrixTSym<T>                 M2 ;
-        typedef bool                           R  ;
-        // addition
-        static R operation ( const M1& m1 , const M2& m2 )
-        {
-          static const Ostap::Math::Equal_To<M2> s_cmp ;
-          return s_cmp ( m2 , m1 ) ;
-        }
-      };
-      // ======================================================================
-      template <class T, unsigned int D1, unsigned int D2, class R1>
-      struct Eq <TMatrixT<T> ,
-                 ROOT::Math::SMatrix<T,D1,D2,R1> >
-      {
-        typedef ROOT::Math::SMatrix<T,D1,D2,R1>  M2 ;
-        typedef TMatrixT<T>                      M1 ;
-        typedef bool                             R  ;
-        // addition
-        static R operation ( const M1& m1 , const M2& m2 )
-        {
-          static const Ostap::Math::Equal_To<M1> s_cmp ;
-          return s_cmp ( m1 , m2 ) ;
-        }
-      };
-      // ======================================================================
-      template <class T, unsigned int D, class R1>
-      struct Eq <TMatrixTSym<T>,
-                 ROOT::Math::SMatrix<T,D,D,R1> >
-      {
-        typedef ROOT::Math::SMatrix<T,D,D,R1>  M2 ;
-        typedef TMatrixTSym<T>                 M1 ;
-        typedef bool                           R  ;
-        // addition
-        static R operation ( const M1& m1 , const M2& m2 )
-        {
-          static const Ostap::Math::Equal_To<M1> s_cmp ;
-          return s_cmp ( m1 , m2 ) ;
-        }
-      };
-      // ======================================================================
 
+      
+      // ======================================================================
+      template <class T1, class T2, unsigned int D1, unsigned int D2, class R1>
+      struct CanEq < ROOT::Math::SMatrix<T1,D1,D2,R1>, 
+                     TMatrixT<T2>  >
+      {
+        typedef ROOT::Math::SMatrix<T1,D1,D2,R1>  M1 ;
+        typedef TMatrixT<T2>                      M2 ;
+        //
+        static bool operation ( const M1& /* m1 */ , 
+                                const M2&    m2    ) 
+        { return m2.IsValid() && m2.GetNrows() == D1 && m2.GetNcols() == D2 ; }
+      } ;
+      //  =====================================================================
+      template <class T1, class T2, unsigned int D1, unsigned int D2, class R1>
+      struct CanEq < TMatrixT<T2>  , 
+                     ROOT::Math::SMatrix<T1,D1,D2,R1> >
+      {
+        typedef ROOT::Math::SMatrix<T1,D1,D2,R1>  M1 ;
+        typedef TMatrixT<T2>                      M2 ;
+        //
+        static bool operation 
+          ( const M2&    m2    , 
+            const M1& /* m1 */  ) 
+        { return m2.IsValid() && m2.GetNrows() == D1 && m2.GetNcols() == D2 ; }
+      } ;
+      //  =====================================================================
+      template <class T1, class T2, unsigned int D, class R1>
+      struct CanEq < ROOT::Math::SMatrix<T1,D,D,R1>, 
+                     TMatrixTSym<T2>  >
+      {
+        typedef ROOT::Math::SMatrix<T1,D,D,R1>  M1 ;
+        typedef TMatrixTSym<T2>                   M2 ;
+        static bool operation ( const M1& /* m1 */ , 
+                                const M2&    m2    ) 
+        { return m2.IsValid() && m2.GetNrows() == D  ; }
+      } ;
+      //  =====================================================================
+      template <class T1, class T2, unsigned int D, class R1>
+      struct CanEq < TMatrixTSym<T2> , 
+                     ROOT::Math::SMatrix<T1,D,D,R1> >
+      {
+        typedef ROOT::Math::SMatrix<T1,D,D,R1>  M1 ;
+        typedef TMatrixTSym<T2>                   M2 ;
+        static bool operation 
+        ( const M2&    m2    , 
+          const M1& /* m1 */ ) 
+        { return m2.IsValid() && m2.GetNrows() == D  ; }
+      } ;
+      
+      
+      // ======================================================================
+      template <class T1, class T2, unsigned int D1, unsigned int D2, class R1>
+      struct Eq <ROOT::Math::SMatrix<T1,D1,D2,R1>,
+                 TMatrixT<T2> >
+      {
+        typedef ROOT::Math::SMatrix<T1,D1,D2,R1>  M1 ;
+        typedef TMatrixT<T2>                      M2 ;
+        typedef bool                              R  ;
+        // addition
+        static R operation ( const M1& m1 , const M2& m2 )
+        {
+          static const Ostap::Math::Equal_To<M2> s_cmp ;
+          return s_cmp ( m2 , m1 ) ;
+        }
+      };
+      // ======================================================================
+      template <class T1 , class T2, unsigned int D, class R1>
+      struct Eq <ROOT::Math::SMatrix<T1,D,D,R1>,
+                 TMatrixTSym<T2> >
+      {
+        typedef ROOT::Math::SMatrix<T1,D,D,R1>  M1 ;
+        typedef TMatrixTSym<T2>                 M2 ;
+        typedef bool                            R  ;
+        // addition
+        static R operation ( const M1& m1 , const M2& m2 )
+        {
+          static const Ostap::Math::Equal_To<M2> s_cmp ;
+          return s_cmp ( m2 , m1 ) ;
+        }
+      };
+      // ======================================================================
+      template <class T1, class T2, unsigned int D1, unsigned int D2, class R1>
+      struct Eq <TMatrixT<T2> ,
+                 ROOT::Math::SMatrix<T1,D1,D2,R1> >
+      {
+        typedef ROOT::Math::SMatrix<T2,D1,D2,R1>  M2 ;
+        typedef TMatrixT<T2>                      M1 ;
+        typedef bool                              R  ;
+        // addition
+        static R operation ( const M1& m1 , const M2& m2 )
+        {
+          static const Ostap::Math::Equal_To<M1> s_cmp ;
+          return s_cmp ( m1 , m2 ) ;
+        }
+      };
+      // ======================================================================
+      template <class T1, class T2, unsigned int D, class R1>
+      struct Eq <TMatrixTSym<T2>,
+                 ROOT::Math::SMatrix<T1,D,D,R1> >
+      {
+        typedef ROOT::Math::SMatrix<T1,D,D,R1>  M2 ;
+        typedef TMatrixTSym<T2>                 M1 ;
+        typedef bool                            R  ;
+        // addition
+        static R operation ( const M1& m1 , const M2& m2 )
+        {
+          static const Ostap::Math::Equal_To<M1> s_cmp ;
+          return s_cmp ( m1 , m2 ) ;
+        }
+      };
+      // ======================================================================
+      
       
       // ======================================================================
       template <class T>
@@ -1858,6 +2274,7 @@ namespace Ostap
           //
           return r * r * m ;
         }
+        // 
       } ;
 
 

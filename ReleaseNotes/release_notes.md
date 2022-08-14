@@ -5,6 +5,7 @@
   1. add one more test into `linalgt`  
   1. add methos `kullback_leibler` and `asymmetric_kullback_leibkler` into namespace `Ostap::Math`
   1. add method `kullback` to `FitResult`
+  1. extend linalg2/t modules 
 
 \## Backward incompatible:  
 
