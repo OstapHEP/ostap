@@ -21,10 +21,9 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-import ROOT, re, ctypes 
+import ROOT, re, ctypes, array  
 from   sys       import version_info as python_version
 from   builtins  import range
-from   array     import array 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -32,7 +31,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg2' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-from ostap.math.base        import isequal   , iszero, std , Ostap
+from ostap.math.base        import isequal   , iszero, std , Ostap, typename 
 from ostap.core.ostap_types import num_types , integer_types
 from ostap.utils.clsgetter  import classgetter 
 # =============================================================================
@@ -216,37 +215,38 @@ class LinAlg(object) :
 
     with_numpy    = np
 
-    methods_ADD   = Method2 ( Ostap.Math.Ops.Add    , Ostap.Math.Ops.CanAdd   ) 
-    methods_RADD  = Method2 ( Ostap.Math.Ops.RAdd   , Ostap.Math.Ops.CanAdd   )
-    methods_IADD  = Method2 ( Ostap.Math.Ops.IAdd   , Ostap.Math.Ops.CanAdd   )
+    methods_ADD   = Method2 ( Ostap.Math.Ops.Add    , Ostap.Math.Ops.CanAdd     ) 
+    methods_RADD  = Method2 ( Ostap.Math.Ops.RAdd   , Ostap.Math.Ops.CanAdd     )
+    methods_IADD  = Method2 ( Ostap.Math.Ops.IAdd   , Ostap.Math.Ops.CanAdd     )
 
-    methods_SUB   = Method2 ( Ostap.Math.Ops.Sub    , Ostap.Math.Ops.CanAdd   ) 
-    methods_RSUB  = Method2 ( Ostap.Math.Ops.RSub   , Ostap.Math.Ops.CanAdd   )
-    methods_ISUB  = Method2 ( Ostap.Math.Ops.ISub   , Ostap.Math.Ops.CanAdd   )
+    methods_SUB   = Method2 ( Ostap.Math.Ops.Sub    , Ostap.Math.Ops.CanAdd     )   
+    methods_RSUB  = Method2 ( Ostap.Math.Ops.RSub   , Ostap.Math.Ops.CanAdd     )
+    methods_ISUB  = Method2 ( Ostap.Math.Ops.ISub   , Ostap.Math.Ops.CanAdd     )
 
-    methods_MUL   = Method2 ( Ostap.Math.Ops.Mul    , Ostap.Math.Ops.CanMul   )
-    methods_RMUL  = Method2 ( Ostap.Math.Ops.RMul   , Ostap.Math.Ops.CanRMul  )
-    methods_IMUL  = Method2 ( Ostap.Math.Ops.IMul   , Ostap.Math.Ops.CanIMul  )
+    methods_MUL   = Method2 ( Ostap.Math.Ops.Mul    , Ostap.Math.Ops.CanMul     )
+    methods_RMUL  = Method2 ( Ostap.Math.Ops.RMul   , Ostap.Math.Ops.CanRMul    )
+    methods_IMUL  = Method2 ( Ostap.Math.Ops.IMul   , Ostap.Math.Ops.CanIMul    )
 
-    methods_DIV   = Method2 ( Ostap.Math.Ops.Div    , Ostap.Math.Ops.CanDiv   )
-    methods_IDIV  = Method2 ( Ostap.Math.Ops.IDiv   , Ostap.Math.Ops.CanIDiv  )
+    methods_DIV   = Method2 ( Ostap.Math.Ops.Div    , Ostap.Math.Ops.CanDiv     )
+    methods_IDIV  = Method2 ( Ostap.Math.Ops.IDiv   , Ostap.Math.Ops.CanIDiv    )
 
     
-    methods_DOT   = Method2 ( Ostap.Math.Ops.Dot    , Ostap.Math.Ops.CanDot   )
-    methods_CROSS = Method2 ( Ostap.Math.Ops.Cross  , Ostap.Math.Ops.CanDot   )
+    methods_DOT   = Method2 ( Ostap.Math.Ops.Dot    , Ostap.Math.Ops.CanDot     )
+    methods_CROSS = Method2 ( Ostap.Math.Ops.Cross  , Ostap.Math.Ops.CanDot     )
 
-    methods_SIM   = Method2 ( Ostap.Math.Ops.Sim    , Ostap.Math.Ops.CanSim   )
-    methods_SIMT  = Method2 ( Ostap.Math.Ops.SimT   , Ostap.Math.Ops.CanSimT  )
+    methods_SIM   = Method2 ( Ostap.Math.Ops.Sim    , Ostap.Math.Ops.CanSim     )
+    methods_SIMT  = Method2 ( Ostap.Math.Ops.SimT   , Ostap.Math.Ops.CanSimT    )
     
-    methods_POW   = Method2 ( Ostap.Math.Ops.Pow    , Ostap.Math.Ops.CanPow   )
-    methods_SYM   = Method2 ( Ostap.Math.Ops.Sym    , Ostap.Math.Ops.CanPow   )
-    methods_ASYM  = Method2 ( Ostap.Math.Ops.ASym   , Ostap.Math.Ops.CanPow   )
+    methods_POW   = Method2 ( Ostap.Math.Ops.Pow    , Ostap.Math.Ops.CanPow     )
+    methods_SYM   = Method2 ( Ostap.Math.Ops.Sym    , Ostap.Math.Ops.CanSym     )
+    methods_ASYM  = Method2 ( Ostap.Math.Ops.ASym   , Ostap.Math.Ops.CanASym    )
+    
+    methods_EQ    = Method2 ( Ostap.Math.Ops.Eq     , Ostap.Math.Ops.CanEq      )
+    methods_INV   = Method2 ( Ostap.Math.Ops.Invert , Ostap.Math.Ops.CanInvert  )
     
     method_EIGEN  = Method  ( Ostap.Math.Ops.Eigen  )
     method_TM     = Method  ( Ostap.Math.Ops.TM     )
 
-
-    methods_EQ    = Method2 ( Ostap.Math.Ops.Eq     , Ostap.Math.Ops.CanEq    )
 
     ## method_EQ     = Method  ( Ostap.Math.Ops.Eq     )
 
@@ -425,7 +425,11 @@ class LinAlg(object) :
 
         if LinAlg.methods_EQ      : 
             LinAlg.methods_EQ     . clear ()
-            LinAlg.methods_EQ     = None 
+            LinAlg.methods_EQ     = None
+            
+        if LinAlg.methods_INV     : 
+            LinAlg.methods_INV    . clear ()
+            LinAlg.methods_INV    = None 
 
         return
 
@@ -516,16 +520,12 @@ class LinAlg(object) :
         
         if isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
-
-            s1 = a.shape
-            s2 = b.shape
-
-            if s1 != s2 : return NotImplemented
-
-            return a + LinAlg.toSObject ( b ) 
+            sa = a.shape
+            sb = b.shape
+            if sa != sb : raise NotImplementedError ( "Cannot  add %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
+            return LinAlg.ADD ( a , LinAlg.toSObject ( b ) ) 
                 
-        operation , check  = LinAlg.methods_ADD ( a , b )
-        
+        operation , check  = LinAlg.methods_ADD ( a , b )        
         if operation and check and check ( a, b ) :
             result = operation ( a, b )
             return result
@@ -544,9 +544,13 @@ class LinAlg(object) :
         """
 
         if isinstance ( b , num_types ) : b = float( b )
-        
-        operation , check  = LinAlg.methods_IADD ( a , b )
+        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+            sa = a.shape
+            sb = b.shape
+            if sa != sb : raise NotImplementedError ( "Cannot iadd %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
+            return LinAlg.IADD ( a , LinAlg.toSObject ( b ) ) 
 
+        operation , check  = LinAlg.methods_IADD ( a , b )
         if operation and check and check ( a, b ) :
             r = operation ( a, b )
             return a 
@@ -564,17 +568,17 @@ class LinAlg(object) :
         >>> C = B + A
         """
         if   isinstance ( b , num_types ) : b = float( b )
+
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
             
-            s1 = a.shape
-            s2 = b.shape
-            
-            if s1 != s2 : return NotImplemented
-
-            return LinAlg.toSObject ( b ) + a 
+            return NotImplemented
         
-        operation , check  = LinAlg.methods_RADD ( a , b )
+            ## s1 = a.shape
+            ## s2 = b.shape            
+            ## if s1 != s2 : return NotImplemented
+            ## return LinAlg.toSObject ( b ) + a 
         
+        operation , check  = LinAlg.methods_RADD ( a , b )        
         if operation and check and check ( a, b ) :
             result = operation ( a, b )
             return result
@@ -593,17 +597,13 @@ class LinAlg(object) :
         """
         
         if   isinstance ( b , num_types ) : b = float( b )
-        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
-            
-            s1 = a.shape
-            s2 = b.shape
-            
-            if s1 != s2 : return NotImplemented
-
-            return a - LinAlg.toSObject ( b ) 
+        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :            
+            sa = a.shape
+            sb = b.shape
+            if sa != sb : raise NotImplementedError ( "Cannot  sub %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
+            return LinAlg.SUB ( a , LinAlg.toSObject ( b ) ) 
         
-        operation , check  = LinAlg.methods_SUB ( a , b )
-        
+        operation , check  = LinAlg.methods_SUB ( a , b )        
         if operation and check and check ( a, b ) :
             result = operation ( a, b )
             return result
@@ -621,10 +621,14 @@ class LinAlg(object) :
         >>> A -= B  
         """
                 
-        if isinstance ( b , num_types ) : b = float( b )
-        
-        operation , check  = LinAlg.methods_ISUB ( a , b )
-        
+        if   isinstance ( b , num_types ) : b = float( b )
+        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :            
+            sa = a.shape
+            sb = b.shape
+            if sa != sb : raise NotImplementedError ( "Cannot isub %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
+            return LinAlg.ISUB ( a , LinAlg.toSObject ( b ) )
+
+        operation , check  = LinAlg.methods_ISUB ( a , b )        
         if operation and check and check ( a, b ) :
             r = operation ( a, b )
             return a 
@@ -642,17 +646,17 @@ class LinAlg(object) :
         >>> C = B - A
         """                
         if   isinstance ( b , num_types ) : b = float( b )
+
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
 
-            s1 = a.shape
-            s2 = b.shape
-            
-            if s1 != s2 : return NotImplemented
-            
-            return LinAlg.toSObject ( b ) - a
-        
-        operation , check  = LinAlg.methods_RSUB ( a , b )
-        
+            return NotImplemented
+
+            ## s1 = a.shape
+            ## s2 = b.shape
+            ## if s1 != s2 : return NotImplemented            
+            ## return LinAlg.toSObject ( b ) - a
+
+        operation , check  = LinAlg.methods_RSUB ( a , b )        
         if operation and check and check ( a, b ) :
             result = operation ( a, b )
             return result
@@ -672,18 +676,13 @@ class LinAlg(object) :
         
         if   isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
-
-            sa = a.shape            
+            sa = a.shape
             sb = b.shape
-
-            if sa [ -1 ] != sb [ 0 ] :                
-                raise NotImplementedError ( "Cannot multiply %s/%s with %s" % ( type(a), sa , sb ) )
-            
-            return a * LinAlg.toSObject ( b )
+            if sa [ -1 ] != sb [ 0 ]:
+                raise NotImplementedError ( "Cannot  mul %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
+            return LinAlg.MUL ( a , LinAlg.toSObject ( b ) )
         
-
         operation , check  = LinAlg.methods_MUL ( a , b )
-
         if operation and check and check ( a, b ) :
             result = operation ( a, b )
             return result
@@ -701,10 +700,15 @@ class LinAlg(object) :
         >>> A *= B  
         """
         
-        if isinstance ( b , num_types ) : b = float( b )
-        
-        operation , check  = LinAlg.methods_IMUL ( a , b )
+        if   isinstance ( b , num_types ) : b = float( b )        
+        elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+            sa = a.shape
+            sb = b.shape
+            if sa [ -1 ] != sb [ 0 ] or 2 != len ( sb ) or sb [ 0 ] != sb [ 1 ] :
+                raise NotImplementedError ( "Cannot imul %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
+            return LinAlg.IMUL ( a , LinAlg.toSObject ( b ) )
 
+        operation , check  = LinAlg.methods_IMUL ( a , b )
         if operation and check and check ( a, b ) :
             r = operation ( a, b )
             return a 
@@ -725,12 +729,13 @@ class LinAlg(object) :
         if   isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
             
-            sa = a.shape            
-            sb = b.shape
-            if sb [ -1 ] != sa[0] :
-                raise NotImplementedError ( "Cannot multiply %s/%s with %s" % ( type(a), sa , sb ) )
+            return NotImplemented
 
-            return LinAlg.toSObject ( b ) * a 
+            ## sa = a.shape            
+            ## sb = b.shape
+            ## if sb [ -1 ] != sa[0] :
+            ##     raise NotImplementedError ( "Cannot multiply %s/%s with %s" % ( typename ( a ), sa , sb ) )            
+            ## return LinAlg.toSObject ( b ) * a 
 
         operation , check  = LinAlg.methods_RMUL ( a , b )        
         if operation and check and check ( a, b ) :
@@ -790,18 +795,29 @@ class LinAlg(object) :
         >>> A == B  
         """
 
+        if isinstance ( b , num_types ) : b = float( b )
+
+        ## numpy 
         if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
             s1 = a.shape            
             s2 = b.shape
-            if s1 != s2 : return False 
+            if s1 != s2 : return NotImplemented 
             return np.array_equal ( a.to_numpy() , b )
 
-        operation , check  = LinAlg.methods_EQ ( a , b )        
+        ## vector-like stuff 
+        if isinstance ( b , ( list , tuple , array.array ) ) and 1 == len ( a.shape ) : 
+            if len ( a ) != len ( b )   : return NotImplemented 
+            for i , j in zip ( a , b )  :
+                if i == j or isequal ( i , j ) : continue 
+                return False
+            return True 
+
+        operation , check  = LinAlg.methods_EQ ( a , b )
         if operation and check and check ( a, b ) :
             result = operation ( a, b )
             return result
         
-        operation , check  = LinAlg.methods_EQ ( b , a )        
+        operation , check  = LinAlg.methods_EQ ( b , a )
         if operation and check and check ( b , a ) :
             result = operation ( b , a )
             return result
@@ -819,10 +835,33 @@ class LinAlg(object) :
         >>> A != B  
         """
 
-        result = LinAlg.EQ ( a , b )
+        if isinstance ( b , num_types ) : b = float( b )
 
-        return result if ( result is NotImplemented ) else not result 
+        ## numpy 
+        if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+            s1 = a.shape            
+            s2 = b.shape
+            if s1 != s2 : return NotImplemented 
+            return not np.array_equal ( a.to_numpy() , b )
 
+        ## vector-like stuff 
+        if isinstance ( b , ( list , tuple , array.array ) ) and 1 == len ( a.shape ) : 
+            if len ( a ) != len ( b )   : return NotImplemented
+            for i , j in zip ( a , b )  :
+                if i != j or not isequal ( i , j ) : return True 
+            return False 
+        
+        operation , check  = LinAlg.methods_EQ ( a , b )
+        if operation and check and check ( a, b ) :
+            result = operation ( a, b )
+            return not result
+        
+        operation , check  = LinAlg.methods_EQ ( b , a )
+        if operation and check and check ( b , a ) :
+            result = operation ( b , a )
+            return not result
+
+        return NotImplemented 
 
     # =========================================================================
     ## Dot-product (scalar) of two vectors 
@@ -839,18 +878,17 @@ class LinAlg(object) :
             s1 = a.shape            
             s2 = b.shape
             if s1 != s2  or 1 != len ( s1 ) :
-                raise NotImplementedError ( "No DOT for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
+                raise NotImplementedError ( "No DOT for %s/%s and %s/%s" % ( a , typename  ( a ), b , typename  ( b ) ) )
             return np.dot ( a.to_numpy() , b )
             
         
-        if isinstance ( b , num_types ) : b = float( b )
-        
+        if isinstance ( b , num_types ) : b = float( b )        
         operation , check  = LinAlg.methods_DOT ( a , b )        
         if operation and check and check ( a, b ) :
             result = operation ( a, b )
             return result
         
-        raise NotImplementedError ( "No DOT for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
+        raise NotImplementedError ( "No DOT for %s/%s and %s/%s" % ( a , typename ( a ) , b , typename ( b ) ) )
 
     # =========================================================================
     ## Cross-product (D1xD2 matrix) of two vectors 
@@ -866,16 +904,16 @@ class LinAlg(object) :
         if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
             s1 = a.shape            
             s2 = b.shape
-            if s1 != s2  or 1 != len ( s1 ) :
-                raise NotImplementedError ( "No CROSS for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
-            return np.tensordot ( a.to_numpy() , b )
+            if 1 != len ( s1 ) or 1 != len ( s1 ) :
+                raise NotImplementedError ( "No CROSS for %s/%s and %s/%s" % ( a , typename ( a ) , b , typename ( b ) ) )
+            return LinAlg.CROSS ( a ,  LinAlg.toSVector ( b ) ) 
             
         operation , check  = LinAlg.methods_CROSS ( a , b )
         if operation and check and check ( a, b ) :
             result = operation ( a, b )
             return result
         
-        raise NotImplementedError ( "No CROSS for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
+        raise NotImplementedError ( "No CROSS for %s/%s and %s/%s" % ( a , typename ( a ) , b , typename ( b ) ) )
 
     # =========================================================================
     ## Similarity  operation \f$ C = B A B^T \f$ 
@@ -894,6 +932,19 @@ class LinAlg(object) :
         >>> C = A.sim ( B ) ## ditto
         """
 
+        if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+            sa = a.shape            
+            sb = b.shape
+            ## square matrix
+            if 2 == len ( sa ) and sa[0] == sa [1] :
+                if 1   == len ( sb ) and sb [ 0 ] == sa [ 0 ] :
+                    bb = LinAlg.toSVector ( b )
+                    return LinAlg.SIM ( a , bb )  
+                elif 2 == len ( sb ) and sb [ 1 ] == sa [ 0 ] :  
+                    bb = LinAlg.toSMatrix ( b )
+                    return LinAlg.SIM ( a , bb )  
+            raise NotImplementedError ( "Cannot  sim %s/%s with %s" % ( typename  ( a ) , sa , sb ) )            
+        
         if isinstance ( b , num_types ) : b = float( b )
         
         operation , check  = LinAlg.methods_SIM ( a , b )        
@@ -901,7 +952,7 @@ class LinAlg(object) :
             result = operation ( a, b )
             return result
         
-        raise NotImplementedError ( "No SIM for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
+        raise NotImplementedError ( "No SIM for %s/%s and %s/%s" % ( a , typename ( a ) , b , typename ( b ) ) )
 
     # =========================================================================
     ## Similarity  operation \f$ C = B^T A B  \f$ 
@@ -920,6 +971,16 @@ class LinAlg(object) :
         >>> C = A.simT ( B ) ## ditto 
         """
 
+        if LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+            sa = a.shape            
+            sb = b.shape
+            ## square matrix
+            if 2 == len ( sa ) and sa [ 0 ] == sa [1] :
+                if 2 == len ( sb ) and sb [ 0 ] == sa [ 0 ] :  
+                    bb = LinAlg.toSMatrix ( b )
+                    return LinAlg.SIMT ( a , bb )      
+            raise NotImplementedError ( "Cannot simT %s/%s with %s" % ( typename  ( a ) , sa , sb ) )
+        
         if isinstance ( b , num_types ) : b = float( b )
         
         operation , check  = LinAlg.methods_SIMT ( a , b )
@@ -927,7 +988,7 @@ class LinAlg(object) :
             result = operation ( a, b )
             return result
         
-        raise NotImplementedError ( "No SIMT for %s/%s and %s/%s" % ( a , type ( a ) , b , type ( b ) ) )
+        raise NotImplementedError ( "No SIMT for %s/%s and %s/%s" % ( a , typename ( a ) , b , typename ( b ) ) )
 
 
     # =========================================================================
@@ -937,20 +998,36 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def M_POW ( a  , n ) :
-        """ Power function for square matrices  
+        """ Power function for the square matrices  
         >>>  C = A ** 6 
         """
 
-        if    isinstance ( n , integer_types ) and 0 <= n : pass
-        
-        elif  a.kRows == a.kCols and isinstance ( n , integer_types ) and -1 == n :
-            
-            return LinAlg.M_INVERSE ( a )
-        
-        else  :
-            
-            return NotImplemented
+        if   isinstance ( n , integer_types ) : pass 
+        elif isinstance ( n , num_types     ) :
+            n = float ( n )
+            if Ostap.Math.isint ( n ) : n = int ( n ) 
+        else :
+            return NotImplemented 
 
+        ##  square matrix ?
+        square = a.kRows == a.kCols
+        if not square : return NotImplemented
+        
+        ## 1.  1x1 matrix : exponent can be not onl integer 
+        if   1 == a.kRows                         : return pow ( a ( 0 , 0 ) , n )
+        ## 2.  non-integer exponent?
+        elif not isinstance ( n , integer_types ) : return NotImplemented
+        
+        ## 3 negative integer exponent : first invert and then pow  
+        if n < 0 :
+            try : 
+                a_inv = LinAlg.M_INVERSE ( a )
+            except ValueError : ## matrix cannot be inverted
+                return NotImplemented
+            if -1 == n : return a_inv 
+            return LinAlg.M_POW ( a_inv , abs ( n ) )
+
+        ## 4. regular case: square matrix and non-negative integer exponent 
         operation , check  = LinAlg.methods_POW ( a  )
         if operation and check and check ( a , n ) :
             result = operation ( a , n )
@@ -974,7 +1051,7 @@ class LinAlg(object) :
             result = operation ( a )
             return result
         
-        raise NotImplementedError ( "Cannot symmetrise %s/%s" % ( a , type(a) ) )
+        raise NotImplementedError ( "Cannot symmetrise %s/%s" % ( a , typename ( a ) ) )
     
     # =========================================================================
     ## Antisymmetric/skew part of square marix
@@ -994,7 +1071,7 @@ class LinAlg(object) :
             result = operation ( a  )
             return result
         
-        raise NotImplementedError ( "Cannot anti-symmetrise %s/%s" % ( a , type(a) ) )
+        raise NotImplementedError ( "Cannot anti-symmetrise %s/%s" % ( a , typename ( a ) ) )
     
     
     # =============================================================================
@@ -1179,7 +1256,6 @@ class LinAlg(object) :
         >>> vct = ...
         >>> na  = vct.to_array() 
         """
-        import array
         return array.array( 'd', vct  )
 
 
@@ -1343,16 +1419,22 @@ class LinAlg(object) :
         >>> m_inv = m.inverse () 
         """
 
-        if mtrx.kRows != mtrx.kCols :
+        square = mtrx.kRows == mtrx.kCols 
+        
+        if not square :
             raise NotImplementedError ('Inversion is defined only for square matrices!') 
-        
-        flag   = ctypes.c_int(0)
-        result = mtrx.Inverse ( flag )
-        
-        if 0 != flag.value :
-            raise ValueError('Matrix cannot be inverted!')
-        
-        return  result
+
+        ## regular case: square matrix and non-negative integer exponent 
+        operation , check  = LinAlg.methods_INV ( mtrx )
+        if operation and check and check ( mtrx ) :
+            flag   = ctypes.c_int(0)
+            result = operation ( mtrx , flag )
+            if 0  != flag.value :
+                raise ValueError('Matrix cannot be inverted %s (invalid/degenerated,...)' % typename ( mtrx ) )
+            return result
+    
+        raise NotImplementedError ('Matrix inversion is not possible here %s' % typename ( mtrx ) ) 
+
         
     # =========================================================================
     ## get row from the matrix
@@ -1439,17 +1521,14 @@ class LinAlg(object) :
         >>> values = mtrx.eigenValues ( sorted = True )
         """
         
-        eigen = LinAlg.method_EIGEN ( mtrx  )
-
-        if not eigen :
-            raise NotImplementedError ("EigenValues: not implemented for %s" % type ( mtrx ) )
+        operation  = LinAlg.method_EIGEN ( mtrx  )
+        if not operation  : raise NotImplementedError ("EigenValues: not implemented for %s" % typename ( mtrx ) )
         
-        vct    = LinAlg.Vector ( mtrx.kRows )()
-
-        st = eigen.values ( mtrx  , vct , sorted )
+        values = LinAlg.Vector ( mtrx.kRows )()
+        st     = operation ( mtrx  , values , sorted )
         assert st.isSuccess () , "Eigen-values: status code %s" % st
-
-        return vct 
+        ##
+        return values 
 
     # =========================================================================
     ## get the eigenvalues and eigen vectors for symmetric matrix
@@ -1466,49 +1545,47 @@ class LinAlg(object) :
         >>> vectors = [ vectors.column{i) for i in range ( mtrx.rCols ) ] 
         """
         
-        eigen = LinAlg.method_EIGEN ( mtrx )
-        if not eigen :
-            raise NotImplementedError ("EigenVectors: not implemented for %s" % type ( mtrx ) )
-
-        krows = mtrx.kRows
-        kcols = mtrx.kCols
+        operation = LinAlg.method_EIGEN ( mtrx )
+        if not operation :
+            raise NotImplementedError ("EigenVectors: not implemented for %s" % typename ( mtrx ) )
         
+        krows   = mtrx.kRows
+        kcols   = mtrx.kCols        
         values  = LinAlg.Vector ( krows        ) ()
         vectors = LinAlg.Matrix ( krows, kcols ) () 
-        
-        st = eigen.vectors ( mtrx  , values , vectors , sorted )
+        st      = operation ( mtrx  , values , vectors , sorted )
         assert st.isSuccess () , "Eigen-vectors: status code %s" % st
-
+        ## 
         return values, vectors  
 
     # =========================================================================
     ## reduce SVector
     @staticmethod
     def V_REDUCE ( vct ) :
-        """REduce SVector"""
-        return svct_factory, ( array ( 'd' , vct ) , )
+        """Reduce SVector"""
+        return svct_factory, ( array.array ( 'd' , vct ) , )
 
     # =========================================================================
     ## reduce SMatrix 
     @staticmethod
     def M_REDUCE ( mtrx ) :
-        """Reduce SMatrix"""
-        
-        NR = mtrx.rep_size
-        a  = mtrx.Array() 
-        data = array ( 'd' , ( a[i] for i in range ( NR ) ) ) 
+        """Reduce SMatrix
+        """
+        NR   = mtrx.rep_size
+        a    = mtrx.Array() 
+        data = array.array ( 'd' , ( a[i] for i in range ( NR ) ) ) 
         return smtrx_factory, ( mtrx.kRows, mtrx.kCols , data ) 
 
     # =========================================================================
     ## reduce symmetric SMatrix 
     @staticmethod
     def MS_REDUCE ( mtrx ) :
-        """Reduce symmetric SMatrix"""
-        
+        """Reduce symmetric SMatrix
+        """
         NR   = mtrx.rep_size 
         a    = mtrx.Array() 
-        data = array ( 'd' , ( a[i] for i in range ( NR ) ) ) 
-        return  symmm_factory, ( mtrx.kRows , data ) 
+        data = array.array ( 'd' , ( a[i] for i in range ( NR ) ) ) 
+        return symmm_factory, ( mtrx.kRows , data ) 
 
     # =========================================================================
     ## reduce SVectorWithErrors 
@@ -1535,14 +1612,12 @@ class LinAlg(object) :
         >>> vector = ...
         >>> tv =   = vector.tvector() 
         """
+        operation = LinAlg.method_TM ( sobj )
+        if not operation : raise NotImplementedError ("SMatrix->TMatrix/SVector->TVector: not implemented for %s" % typename ( sobj ) )
         
-        cnv = LinAlg.method_TM ( sobj )
-        if not cnv :
-            raise NotImplementedError ("SMatrix->TMatrix/SVector->TVector: not implemented for %s" % type ( sobj ) )
-
-        tobj = cnv.transform ( sobj ) 
+        tobj = operation ( sobj ) 
         assert tobj.IsValid() , "Smatrix->TMatrix/SVector->TVector: invaild TMatrix/TVector!" 
-
+        
         return tobj
 
     # =========================================================================
@@ -1786,7 +1861,7 @@ class LinAlg(object) :
         >>> vct  = V3 ()
         """
         assert isinstance  ( n , integer_types ) and 0 <= n,\
-               'Invalid length of the vector %s/%s' % ( n , type ( l ) )
+               'Invalid length of the vector %s/%s' % ( n , typename ( l ) )
 
         tt = n , t 
         v  = LinAlg.known_svectors.get ( tt , None )
@@ -1820,9 +1895,9 @@ class LinAlg(object) :
         >>> matrix = M3x4 ()    
         """
         assert isinstance  ( k , integer_types ) and 0 <= k ,\
-               'Invalid matrix dimension %s/%s' % ( k , type ( k ) )
+               'Invalid matrix dimension %s/%s' % ( k , typename ( k ) )
         assert isinstance  ( n , integer_types ) and 0 <= n ,\
-               'Invalid matrix dimension %s/%s' % ( n , type ( n ) )
+               'Invalid matrix dimension %s/%s' % ( n , typename ( n ) )
 
         tt = k , n , t
         m = LinAlg.known_smatrices.get ( tt , None )
@@ -1873,7 +1948,7 @@ class LinAlg(object) :
         >>> matrix = SymM3 ()
         """
         assert isinstance  ( n , integer_types ) and 0 <= n ,\
-               'Invalid matrix dimension %s/%s' % ( n , type ( n ) )
+               'Invalid matrix dimension %s/%s' % ( n , typename ( n ) )
 
         tt = n , t
         m = LinAlg.known_ssymmatrices.get ( tt , None )
@@ -1917,7 +1992,7 @@ class LinAlg(object) :
         >>> vctE = VE3 ()
         """
         assert isinstance  ( n , integer_types ) and 0 <= n,\
-               'Invalid length of the vector %s/%s' % ( n , type ( l ) )
+               'Invalid length of the vector %s/%s' % ( n , typename ( l ) )
 
         tt = n , t
         v = LinAlg.known_svectorse.get ( tt , None )
@@ -2007,11 +2082,13 @@ if np :
         if not length is None :
             assert shape == a.shape, 'toMatrix: Invalid shape/size of input array'
 
-        vct  = LinAlg.Vector ( *a.shape ) () 
-        N = a.shape[0]
+        N   = a.shape[0]
+        vct = LinAlg.Vector ( N ) () 
         for i in range ( N ) :
             vct [ i ] = a [ i ]
-                
+
+        ## vct = LinAlg.Vector ( a.shape [ 0 ] ) ( *tuple ( a  ) )
+            
         return vct
 
     # =========================================================================
@@ -2127,7 +2204,7 @@ atexit.register ( LinAlg.CLEANUP )
 #  obj2 = ...
 #  checkops ( obj1 , obj2 ) 
 #  @encode 
-def checkops ( a , b ) :
+def checkops ( a , b , logger = logger ) :
     """check what LinAlg operations are defined for these two objects    
     >>> obj1 = ...
     >>> obj2 = ...
@@ -2136,7 +2213,7 @@ def checkops ( a , b ) :
 
     rows = [ ( 'Method' , 'checker' , 'operation' , 'ok' , 'result' ) ]
 
-    methods1 = ( 
+    methods = ( 
         ( '+'     , LinAlg.methods_ADD   ) ,
         ( '+/r'   , LinAlg.methods_RADD  ) ,
         ( '+='    , LinAlg.methods_IADD  ) ,
@@ -2191,7 +2268,7 @@ def checkops ( a , b ) :
     import ostap.logger.table as T
     title = 'Allowed binary operations'
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcccl' )
-    logger.info ( '%s for %s  and %s:\n%s' % ( title , type ( a ) , type ( b ) , table ) ) 
+    logger.info ( "%s for '%s' and '%s':\n%s" % ( title , type ( a ).__name__ , type ( b ).__name__ , table ) ) 
                       
 # =============================================================================
 if '__main__' == __name__ :

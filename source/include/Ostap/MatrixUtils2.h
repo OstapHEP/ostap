@@ -75,7 +75,10 @@ namespace Ostap
 
       template <class M1>
       struct CanASym  { static bool operation ( const M1& /* m1 */ ) { return false ; } } ;
-      
+
+      template <class M1>
+      struct CanInvert { static bool operation ( const M1& /* m1 */ ) { return false ; } } ;
+
       template <class M1, class M2>
       struct CanRMul
       { static bool operation ( const M1& m1 , const M2& m2 ) { return CanMul<M2,M1>::operation ( m2 , m1 ) ; } } ;
@@ -101,7 +104,17 @@ namespace Ostap
       template <class M1>
       struct CanIDiv<M1,double> 
       { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;
-
+      
+      
+      template <class T, unsigned int D, class R1>
+      struct CanInvert< ROOT::Math::SMatrix<T,D,D,R1> > 
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,R1> M1 ;
+        typedef bool                          R  ;
+        //
+        static R operation ( const M1& /* m1 */ ) { return true ; } 
+      } ;
+      
       
       // ======================================================================
       // new cases  with "almost" scalar
@@ -310,18 +323,6 @@ namespace Ostap
         ( const ROOT::Math::SMatrix<T,D,D,R1>& /* m1 */ ,
           const unsigned short                 /* p  */ ) { return true ; } 
       } ; 
-      //
-      template <class T,class R1>
-      struct CanPow<ROOT::Math::SMatrix<T,1,1,R1> >
-      { 
-        static bool operation 
-        ( const ROOT::Math::SMatrix<T,1,1,R1>& m1 ,
-          const double                         p  ) 
-        { return Ostap::Math::isint ( p ) || 0 <= m1 ( 0 , 0 ) ; } 
-        static bool operation 
-        ( const ROOT::Math::SMatrix<T,1,1,R1>& m1 ,
-          const int                            p  ) { return true ; } 
-      } ;
 
       template <class T, unsigned int D, class R1>
       struct CanSym<ROOT::Math::SMatrix<T,D,D,R1> >
@@ -379,6 +380,9 @@ namespace Ostap
       
       template <class T1>
       struct ASym ;
+
+      template <class T1>
+      struct Invert ;
 
       // ======================================================================
       // "Right" operations
@@ -957,6 +961,18 @@ namespace Ostap
 
       
       // ======================================================================
+      template <class T, unsigned int D, class R1>
+      struct Invert<ROOT::Math::SMatrix<T,D,D,R1> > 
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,R1> M1 ;
+        typedef ROOT::Math::SMatrix<T,D,D,R1> R  ;
+        //
+        static R operation ( const M1& m1 , int& flag  )
+        { return m1.Inverse ( flag ) ; }
+      } ;      
+      // ======================================================================
+      
+      // ======================================================================
       /// can be compared ?
       // ======================================================================
       template <class T1, unsigned D, class T2> 
@@ -1019,6 +1035,25 @@ namespace Ostap
           const M2& /* m2 */ ) { return true ; }
       } ;
       // ======================================================================
+      template <class T,unsigned int D,class R1>
+      struct CanEq<ROOT::Math::SMatrix<T,D,D,R1> , double >
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,R1> M1 ;
+        typedef double                        M2 ;
+        typedef bool                          R  ;
+        // 
+        static R operation ( const M1& /* m1 */ , const M2 /* m2 */ ) { return true ; }
+      } ;
+      // ======================================================================
+      template <class T,unsigned int D>
+      struct CanEq<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > , double >
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >  M1 ;
+        typedef double                                                  M2 ;
+        typedef bool                                                    R  ;
+        // 
+        static R operation ( const M1& m1 , const M2 m2 ) { return true ; }
+      } ;
 
       // ======================================================================
       // Equality
@@ -1056,6 +1091,53 @@ namespace Ostap
       } ;
       // ======================================================================
 
+      
+      template <class T,unsigned int D,class R1>
+      struct Eq<ROOT::Math::SMatrix<T,D,D,R1> , double >
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,R1> M1 ;
+        typedef double                        M2 ;
+        typedef bool                          R  ;
+        // 
+        static R operation ( const M1& m1 , const M2 m2 )
+        {
+          static const Ostap::Math::Equal_To<T>  s_cmp  ;
+          static const Ostap::Math::Zero<T>      s_zero ;
+          for ( unsigned int i = 0 ; i < D ; ++i ) 
+          {
+            if ( !s_cmp  ( m1 ( i , i ) , m2 )        ) { return false ; }            
+            for ( unsigned int j = 0 ; j < D ; ++j ) 
+            { 
+              if ( i != j && !s_zero ( m1 ( i , j ) ) ) { return false ; }
+            }
+          }
+          return true ;
+        }
+      } ;
+      // ======================================================================
+      template <class T,unsigned int D>
+      struct Eq<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > , double >
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
+        typedef double                                                 M2 ;
+        typedef bool                                                   R  ;
+        //
+        static R operation ( const M1& m1 , const M2 m2 )
+        {
+          static const Ostap::Math::Equal_To<T>  s_cmp  ;
+          static const Ostap::Math::Zero<T>      s_zero ;
+          for ( unsigned int i = 0 ; i < D ; ++i ) 
+          {
+            if ( !s_cmp  ( m1 ( i , i ) , m2 )   ) { return false ; }            
+            for ( unsigned int j = i +1  ; j < D ; ++j ) 
+            {
+              if ( !s_zero ( m1 ( i , j )      ) ) { return false ; }
+            }
+          }
+          return true ;
+        }
+      } ;
+
       // =======================================================================
       // EXTRA
       // =======================================================================
@@ -1069,17 +1151,22 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
         typedef ROOT::Math::SVector<T,D>                               M2 ;
         typedef ROOT::Math::SMatrix<T,D,D>                             M3 ;
-        // eigen values 
-        static Ostap::StatusCode values  ( const M1& m , M2& v  , const bool sorted = true )
+        // get eigen values 
+        static Ostap::StatusCode operation 
+        ( const M1& m       , 
+          M2&       values  , const bool sorted = true )
         {
           Ostap::Math::GSL::EigenSystem eigen {} ;
-          return eigen.eigenValues  ( m , v      , sorted ) ;
+          return eigen.eigenValues  ( m , values , sorted ) ;
         }
-        // eigen vectors 
-        static Ostap::StatusCode vectors ( const M1& m , M2& v  , M3& vs , const bool sorted = true )
+        // get eigen values and eigenvectors 
+        static Ostap::StatusCode operation 
+        ( const M1& m       , 
+          M2&       values  , 
+          M3&       vectors , const bool sorted = true )
         {
           Ostap::Math::GSL::EigenSystem eigen {} ;
-          return eigen.eigenVectors ( m , v , vs , sorted ) ;
+          return eigen.eigenVectors ( m , values , vectors , sorted ) ;
         }
       } ;
       
@@ -1115,14 +1202,7 @@ namespace Ostap
         //
         static R operation ( const M& m , const int    n )
         { return 0 == n ? 1.0 : std::pow ( m ( 0 , 0 )  , n ) ; }
-        static R operation ( const M& m , const double p )
-        { 
-          return 
-            Ostap::Math::isint ( p ) ?  
-            std::pow ( m ( 0 , 0 ) , Ostap::Math::round ( p  ) ) :
-            std::pow ( m ( 0 , 0 ) , p ) ; }
       } ;
-
       // ======================================================================
       template <class T, unsigned int D>
       struct Sym<ROOT::Math::SMatrix<T,D,D> >

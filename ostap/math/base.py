@@ -103,6 +103,8 @@ __all__     = (
     'lcm'            , ## lcm-function
     ##
     'ROOTIgnore'     , ## control ROOT verbosity, suppress ROOT errors
+    ##
+    'typename'       , ## get typename for the instance 
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import root_version_int 
@@ -117,12 +119,10 @@ else                       : logger = getLogger ( __name__          )
 if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Iterable
 else                              : from collections     import Iterable
 # =============================================================================
-
 if ( 3 , 5 ) > sys.version_info  :
     import math
     math.inf = float('inf' )
     math.nan = float('nan' )
-    
     
 ## get global C++ namespace
 cpp = cppyy.gbl
@@ -130,6 +130,19 @@ cpp = cppyy.gbl
 std = cpp.std
 ## C++ namespace Ostap
 Ostap = cpp.Ostap 
+
+# =============================================================================
+## Get the type name
+#  @code
+#  obj = ...
+#  print ( 'Obnject type name is %s' % typename ( obj ) ) 
+#  @endcode 
+def typename ( o ) :
+    """Get the type name
+    >>> obj = ...
+    >>> print ( 'Obnject type name is %s' % typename ( obj ) )
+    """
+    return type ( o ) .__name__
 
 # =============================================================================
 ## Very simple context manager to suppress ROOT printout

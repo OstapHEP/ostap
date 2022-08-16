@@ -337,7 +337,7 @@ namespace Ostap
       {
         typedef TMatrixT<T>  R ;
         // 
-        static R transform 
+        static R operation  
         ( const ROOT::Math::SMatrix<T,D1,D2>& m )
         {
           R result ( D1 , D2 ) ;
@@ -353,7 +353,7 @@ namespace Ostap
       {
         typedef TMatrixTSym<T>  R ;
         //
-        static R transform
+        static R operation
         ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& m )
         {
           R result ( D ) ;
@@ -368,7 +368,9 @@ namespace Ostap
       struct TM<ROOT::Math::SVector<T,D> >
       {
         typedef TVectorT<T>  R ;
-        static R transform ( const ROOT::Math::SVector<T,D>& m )
+        //
+        static R operation 
+        ( const ROOT::Math::SVector<T,D>& m )
         { return R ( D , m.begin() ) ; }
       } ;
       // ======================================================================
@@ -381,7 +383,8 @@ namespace Ostap
       {
         typedef ROOT::Math::SMatrix<T,D1,D2> R ;
         //
-        static R transform ( const TMatrixT<T>& m )
+        static R operation 
+        ( const TMatrixT<T>& m )
         {
           const T* start = m.GetMatrixArray() ;
           return R ( start , start + D1 * D2 ) ;
@@ -393,7 +396,8 @@ namespace Ostap
       {
         typedef ROOT::Math::SMatrix<T,D,D> R ;
         //
-        static R transform ( const TMatrixTSym<T>& m )
+        static R operation 
+        ( const TMatrixTSym<T>& m )
         {
           R result ;
           for ( unsigned int i = 0 ; i < D ; ++i  )
@@ -401,7 +405,8 @@ namespace Ostap
             { result ( i , j ) = m ( i , j ) ; } }
           return result ;
         } 
-        static R transform ( const TMatrixT<T>& m )
+        static R operation 
+        ( const TMatrixT<T>& m )
         {
           const T* start = m.GetMatrixArray() ;
           return R ( start , start + D * D ) ;
@@ -413,7 +418,8 @@ namespace Ostap
       {
         typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > R ;
         //
-        static R transform ( const TMatrixTSym<T>& m )
+        static R operation 
+          ( const TMatrixTSym<T>& m )
         {
           R result ;
           for ( unsigned int i = 0 ; i < D ; ++i  )
@@ -428,7 +434,8 @@ namespace Ostap
       {
         typedef ROOT::Math::SVector<T,D> R ;
         //
-        static R transform ( const TVectorT<T>& m )
+        static R operation
+        ( const TVectorT<T>& m )
         {
           const T* start = m.GetMatrixArray() ;
           return R ( start , start + D ) ;
@@ -1015,10 +1022,7 @@ namespace Ostap
 
 
 
-      // =========================================================================
-      
-
-      
+      // =========================================================================      
       template <class T>
       struct CanPow<TMatrixT<T> >
       { 
@@ -1035,8 +1039,7 @@ namespace Ostap
         ( const TMatrixTSym<T>&   m1   ,
           const unsigned short /* n */ )
         { return m1.IsValid () ; } 
-      } ; 
-      
+      } ;
 
       template <class T>
       struct CanSym<TMatrixT<T> >
@@ -1059,44 +1062,51 @@ namespace Ostap
       
       
       // ======================================================================
-      // add
+      // add T + T 
       // ======================================================================
       template <class T>
       struct Add<TMatrixT<T>,TMatrixT<T> >
       {
         typedef TMatrixT<T> R ;
+        //
         static  R operation 
         ( const TMatrixT<T>& m1 , 
-          const TMatrixT<T>& m2 ) { return m1 + m2 ; }
+          const TMatrixT<T>& m2 ) { return R ( m1 , R::kPlus ,  m2 ) ; }
       } ;
       // ======================================================================
       template <class T>
       struct Add<TMatrixT<T>,TMatrixTSym<T> >
       {
         typedef TMatrixT<T> R ;
+        //
         static  R operation
         ( const TMatrixT<T>&    m1 , 
-          const TMatrixTSym<T>& m2 ) { return m1 + m2 ; }
+          const TMatrixTSym<T>& m2 ) { return R ( m1 , R::kPlus ,  m2 ) ; }
       } ;
       // ======================================================================
       template <class T>
       struct Add<TMatrixTSym<T>,TMatrixT<T> >
       {
         typedef TMatrixT<T> R ;
+        //
         static  R operation 
         ( const TMatrixTSym<T>& m1 , 
-          const TMatrixT<T>&   m2 ) { return m1 + m2 ; }
+          const TMatrixT<T>&    m2 ) { return R ( m2 , R::kPlus ,  m1 ) ; }
       } ;
       // ======================================================================
       template <class T>
       struct Add<TMatrixTSym<T>,TMatrixTSym<T> >
       {
         typedef TMatrixTSym<T> R ;
+        //
         static  R operation 
         ( const TMatrixTSym<T>& m1 , 
           const TMatrixTSym<T>& m2 )
-        { return TMatrixTSym<T> ( m1 , TMatrixTSym<T>::kPlus , m2 ); }
+        { return R ( m1 , R::kPlus , m2 ); }
       } ;
+      // ======================================================================
+
+
       // ======================================================================
       template <class T,unsigned int D1, unsigned int D2, class R1>
       struct Add<ROOT::Math::SMatrix<T,D1,D2,R1>,TMatrixT<T> >
@@ -1107,7 +1117,7 @@ namespace Ostap
         typedef SM<R>                           C1 ;
         //
         static R operation ( const M1& m1 , const M2& m2 )
-        { return Add<M1,R>::operation ( m1 , C1::transform ( m2 ) ) ; }
+        { return Add<M1,R>::operation ( m1 , C1::operation ( m2 ) ) ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D1, unsigned int D2, class R1>
@@ -1119,7 +1129,31 @@ namespace Ostap
         typedef SM<R>                           C1 ;
         //
         static R operation ( const M2& m2 , const M1& m1 )
-        { return Add<M1,R>::operation ( m1  , C1::transform ( m2 ) ) ; }
+        { return Add<M1,R>::operation ( m1  , C1::operation ( m2 ) ) ; }
+      } ;
+      // ======================================================================
+      template <class T,unsigned int D1, unsigned int D2, class R1>
+      struct Add<ROOT::Math::SMatrix<T,D1,D2,R1>,TMatrixTSym<T> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1> M1 ;
+        typedef TMatrixTSym<T>                  M2 ;
+        typedef ROOT::Math::SMatrix<T,D1,D2>    R  ;
+        typedef SM<R>                           C1 ;
+        //
+        static R operation ( const M1& m1 , const M2& m2 )
+        { return Add<M1,R>::operation ( m1 , C1::operation ( m2 ) ) ; }
+      } ;
+      // ======================================================================
+      template <class T,unsigned int D1, unsigned int D2, class R1>
+      struct Add<TMatrixTSym<T>,ROOT::Math::SMatrix<T,D1,D2,R1> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1> M1 ;
+        typedef TMatrixTSym<T>                  M2 ;
+        typedef ROOT::Math::SMatrix<T,D1,D2>    R  ;
+        typedef SM<R>                           C1 ;
+        //
+        static R operation ( const M2& m2 , const M1& m1 )
+        { return Add<M1,R>::operation ( m1  , C1::operation ( m2 ) ) ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -1132,7 +1166,7 @@ namespace Ostap
         typedef SM<R>                                                  C1 ;
         //
         static M1 operation ( const M1& m1 , const M2& m2 )
-        { return Add<M1,M1>::operation ( m1 , C1::transform ( m2 ) ) ; }
+        { return Add<M1,M1>::operation ( m1 , C1::operation ( m2 ) ) ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -1144,8 +1178,10 @@ namespace Ostap
         typedef SM<R>                                                    C1 ;
         //
         static M1 operation ( const M2& m2 , const M1& m1 )
-        { return Add<M1,M1>::operation ( m1 , C1::transform ( m2 ) ) ; }
+        { return Add<M1,M1>::operation ( m1 , C1::operation ( m2 ) ) ; }
       } ;
+      // ======================================================================
+
       // ======================================================================      
       template <class T>
       struct Add<TVectorT<T>, TVectorT<T> > 
@@ -1163,7 +1199,7 @@ namespace Ostap
         typedef M1                         R  ;
         //
         static R operation ( const M1& m1 , const M2& m2 )
-        { return Add<M1,M1>::operation ( m1 , C1::transform ( m2 ) ) ; }
+        { return Add<M1,M1>::operation ( m1 , C1::operation ( m2 ) ) ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -1175,7 +1211,7 @@ namespace Ostap
         typedef M1                           R  ;
         //
         static R operation ( const M2& m2 , const M1& m1 )
-        { return Add<M1,M1>::operation ( C1::transform ( m2 ) , m1 ) ; }
+        { return Add<M1,M1>::operation ( C1::operation ( m2 ) , m1 ) ; }
       } ;
       // ======================================================================
       
@@ -1316,34 +1352,41 @@ namespace Ostap
       template <class T>
       struct Sub<TMatrixT<T>,TMatrixT<T> >
       {
-        static TMatrixT<T> operation 
+        typedef TMatrixT<T>  R ;
+        //
+        static R operation 
         ( const TMatrixT<T>& m1 , 
-          const TMatrixT<T>& m2 ) { return m1 - m2 ; }
+          const TMatrixT<T>& m2 ) { return R ( m1 , R::kMinus ,  m2 ) ; }
       } ;
       // ======================================================================
       template <class T>
       struct Sub<TMatrixT<T>,TMatrixTSym<T> >
       {
-        static TMatrixT<T> operation  
+        typedef TMatrixT<T>  R ;
+        //
+        static R operation  
         ( const TMatrixT<T>&    m1 , 
-          const TMatrixTSym<T>& m2 ) { return m1 - m2 ; }
+          const TMatrixTSym<T>& m2 ) { return R ( m1 , R::kMinus ,  m2 )  ; }
       } ;
       // ======================================================================
       template <class T>
       struct Sub<TMatrixTSym<T>,TMatrixT<T> >
       {
-        static TMatrixT<T> operation
+        typedef TMatrixT<T>  R ;
+        //
+        static R operation
         ( const TMatrixTSym<T>& m1 , 
-          const TMatrixT<T>&    m2 ) { return m1 - m2 ; }
+          const TMatrixT<T>&    m2 ) { return R ( m1 , R::kMinus ,  m2 )  ; }
       } ;
       // ======================================================================
       template <class T>
       struct Sub<TMatrixTSym<T>,TMatrixTSym<T> >
       {
-        static TMatrixTSym<T> operation 
+        typedef TMatrixTSym<T>  R ;
+        //        
+        static R operation 
         ( const TMatrixTSym<T>& m1 , 
-          const TMatrixTSym<T>& m2 )
-        { return TMatrixTSym<T> ( m1 , TMatrixTSym<T>::kMinus , m2 ); }
+          const TMatrixTSym<T>& m2 ) { return R ( m1 , R::kMinus , m2 ); }
       } ;
       // ======================================================================
       template <class T,unsigned int D1, unsigned int D2, class R1>
@@ -1355,7 +1398,7 @@ namespace Ostap
         typedef SM<R>                           C1 ;
         //
         static R operation ( const M1& m1 , const M2& m2 )
-        { return Sub<M1,R>::operation ( m1 , C1::transform ( m2 ) ) ; }
+        { return Sub<M1,R>::operation ( m1 , C1::operation ( m2 ) ) ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D1, unsigned int D2, class R1>
@@ -1367,7 +1410,31 @@ namespace Ostap
         typedef SM<R>                           C1 ;
         //
         static R operation ( const M2& m2 , const M1& m1 )
-        { return Sub<R,M1>::operation ( C1::transform ( m2 ) , m1 ) ; }
+        { return Sub<R,M1>::operation ( C1::operation ( m2 ) , m1 ) ; }
+      } ;
+      // ======================================================================
+      template <class T,unsigned int D1, unsigned int D2, class R1>
+      struct Sub<ROOT::Math::SMatrix<T,D1,D2,R1>,TMatrixTSym<T> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1> M1 ;
+        typedef TMatrixTSym<T>                  M2 ;
+        typedef ROOT::Math::SMatrix<T,D1,D2>    R  ;
+        typedef SM<R>                           C1 ;
+        //
+        static R operation ( const M1& m1 , const M2& m2 )
+        { return Sub<M1,R>::operation ( m1 , C1::operation ( m2 ) ) ; }
+      } ;
+      // ======================================================================
+      template <class T,unsigned int D1, unsigned int D2, class R1>
+      struct Sub<TMatrixTSym<T>,ROOT::Math::SMatrix<T,D1,D2,R1> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1> M1 ;
+        typedef TMatrixTSym<T>                  M2 ;
+        typedef ROOT::Math::SMatrix<T,D1,D2>    R  ;
+        typedef SM<R>                           C1 ;
+        //
+        static R operation ( const M2& m2 , const M1& m1 )
+        { return Sub<R,M1>::operation ( C1::operation ( m2 ) , m1 ) ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -1380,7 +1447,7 @@ namespace Ostap
         typedef SM<R>                                                  C1 ;
         //
         static M1 operation ( const M1& m1 , const M2& m2 )
-        { return Sub<M1,R>::operation ( m1 , C1::transform ( m2 ) ) ; }
+        { return Sub<M1,R>::operation ( m1 , C1::operation ( m2 ) ) ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -1392,7 +1459,7 @@ namespace Ostap
         typedef SM<R>                                                  C1 ;
         //
         static M1 operation ( const M2& m2 , const M1& m1 )
-        { return Sub<R,M1>::operation ( C1::transform ( m2 ) , m1 ) ; }
+        { return Sub<R,M1>::operation ( C1::operation ( m2 ) , m1 ) ; }
       } ;
       // ======================================================================      
       template <class T>
@@ -1414,7 +1481,7 @@ namespace Ostap
         typedef M1                          R  ;
         //
         static R operation ( const M1& m1 , const M2& m2 )
-        { return Sub<M1,M1>::operation ( m1 , C1::transform ( m2 ) ) ; }
+        { return Sub<M1,M1>::operation ( m1 , C1::operation ( m2 ) ) ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -1426,7 +1493,7 @@ namespace Ostap
         typedef M1                           R  ;
         //
         static R operation  ( const M2& m2 , const M1& m1 )
-        { return Sub<M1,M1>::operation ( C1::transform ( m2 ) , m1 ) ; }
+        { return Sub<M1,M1>::operation ( C1::operation ( m2 ) , m1 ) ; }
       } ;
       // ======================================================================      
       
@@ -1653,7 +1720,7 @@ namespace Ostap
         static  R operation 
         ( const M1& m1 , 
           const M2& m2 )
-        { return M::operation ( C::transform ( m1 )  , m2 ) ; }
+        { return M::operation ( C::operation ( m1 )  , m2 ) ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D1, unsigned int D2, class R1>
@@ -1670,8 +1737,31 @@ namespace Ostap
         static  R operation 
         ( const M1& m1 , 
           const M2& m2 )
-        { return M::operation ( C::transform ( m1 )  , m2 ) ; }
+        { return M::operation ( C::operation ( m1 )  , m2 ) ; }
       } ;
+      // ======================================================================
+      template <class T, unsigned int D1, unsigned int D2, class R1>
+      struct Mul<ROOT::Math::SMatrix<T,D1,D2,R1> , 
+                 TVectorT<T> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1>   M1 ;
+        typedef TVectorT<T>                       M2 ;
+        typedef ROOT::Math::SVector<T,D2>         M3 ;
+        typedef SM<M3>                            C  ;
+        typedef typename C::R                     NM ;
+        typedef Mul<M1,NM>                        M  ;
+        typedef typename M::R                     R  ;
+        //
+        static  R operation 
+        ( const M1& m1 , 
+          const M2& m2 )
+        { return M::operation ( m1 , C::operation ( m2 ) ) ; }
+      } ;
+      // ======================================================================
+
+
+
+
       // ======================================================================
       template <class T, unsigned int D1, unsigned int D2, class R1>
       struct Mul<TMatrixT<T>,
@@ -1687,7 +1777,7 @@ namespace Ostap
         static  R operation
         ( const M2& m2 , 
           const M1& m1 )
-        { return M::operation ( m2 , C::transform ( m1 ) ) ; }
+        { return M::operation ( m2 , C::operation ( m1 ) ) ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D1, unsigned int D2, class R1>
@@ -1704,7 +1794,7 @@ namespace Ostap
         static  R operation 
         ( const M2& m2 , 
           const M1& m1 )
-        { return M::operation ( m2 , C::transform ( m1 ) ) ; }
+        { return M::operation ( m2 , C::operation ( m1 ) ) ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D>
@@ -1721,7 +1811,7 @@ namespace Ostap
         static  R operation
         ( const M2& m2 , 
           const M1& m1 )
-        { return M::operation ( m2 , C::transform ( m1 ) ) ; }
+        { return M::operation ( m2 , C::operation ( m1 ) ) ; }
       } ;
 
       // ======================================================================
@@ -1739,7 +1829,7 @@ namespace Ostap
         static  R operation
         ( const M2& m2 , 
           const M1& m1 )
-        { return M::operation ( m2 , C::transform ( m1 ) ) ; }
+        { return M::operation ( m2 , C::operation ( m1 ) ) ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D>
@@ -1756,7 +1846,7 @@ namespace Ostap
         static  R operation 
         ( const M1& m2 , 
           const M2& m1 )
-        { return M::operation ( m2 , C::transform ( m1 ) ) ; }
+        { return M::operation ( C::operation ( m2 ) , m1 ) ; }
       } ;
       // ======================================================================      
       template <class T, unsigned int D>
@@ -1773,7 +1863,7 @@ namespace Ostap
         static  R operation
         ( const M1& m2 , 
           const M2& m1 )
-        { return M::operation ( m2 , C::transform ( m1 ) ) ; }
+        { return M::operation ( C::operation ( m2 ) , m1 ) ; }
       } ;
       // ======================================================================
 
@@ -1792,7 +1882,7 @@ namespace Ostap
         static  R operation
         ( const M1& m1 , 
           const M2& m2 )
-        { return M::operation ( m1 , C::transform ( m2 ) ) ; }
+        { return M::operation ( m1 , C::operation ( m2 ) ) ; }
       } ;
       // ======================================================================
 
@@ -1811,7 +1901,7 @@ namespace Ostap
         static  R operation
         ( const M1& m1 , 
           const M2& m2 )
-        { return M::operation ( C::transform ( m1 ) , m2) ; }
+        { return M::operation ( C::operation ( m1 ) , m2) ; }
       } ;
       // ======================================================================
 
@@ -1830,7 +1920,7 @@ namespace Ostap
         static  R operation
         ( const M1& m1 , 
           const M2& m2 )
-        { return M::operation ( C::transform ( m2 ) , m1 ) ; }
+        { return M::operation ( C::operation ( m2 ) , m1 ) ; }
       } ;
       // ======================================================================
 
@@ -1850,9 +1940,12 @@ namespace Ostap
         static  R operation
         ( const M1& m1 , 
           const M2& m2 )
-        { return M::operation ( C::transform ( m2 ) , m1 ) ; }
+        { return M::operation ( C::operation ( m2 ) , m1 ) ; }
       } ;
       // ======================================================================
+
+
+
 
       // ======================================================================      
       template <class T>
@@ -1897,7 +1990,7 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D,D,R1> M2 ;
         typedef TM<M2>                        C  ;
         //
-        static void operation ( M1& m1 , const M2& m2 ) { m1 *= C::transform ( m2 ) ; }
+        static void operation ( M1& m1 , const M2& m2 ) { m1 *= C::operation ( m2 ) ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D1, unsigned D2>
@@ -1909,7 +2002,7 @@ namespace Ostap
         typedef TMatrixT<T>                  M2 ;
         typedef SM<M1>                        C  ;
         //
-        static void operation ( M1& m1 , const M2& m2 ) { m1 *= C::transform ( m2 ) ; }
+        static void operation ( M1& m1 , const M2& m2 ) { m1 *= C::operation ( m2 ) ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D1, unsigned D2>
@@ -1921,7 +2014,7 @@ namespace Ostap
         typedef TMatrixTSym<T>               M2 ;
         typedef SM<M1>                        C  ;
         //
-        static void operation ( M1& m1 , const M2& m2 ) { m1 *= C::transform ( m2 ) ; }
+        static void operation ( M1& m1 , const M2& m2 ) { m1 *= C::operation ( m2 ) ; }
       } ;
       // ======================================================================
       
@@ -2251,6 +2344,87 @@ namespace Ostap
         }
       };
       // ======================================================================
+
+
+      
+      // ======================================================================
+      template <class T>
+      struct CanEq < TMatrixT<T> , double>
+      {
+        typedef TMatrixT<T>     M1 ;
+        typedef double          M2 ;
+        static bool operation 
+        ( const M1&    m1    , 
+          const M2  /* m2 */ ) 
+        { return m1.IsValid() && m1.GetNrows() == m1.GetNcols (); }
+      } ;
+      // ======================================================================
+      template <class T>
+      struct CanEq < TMatrixTSym<T> , double>
+      {
+        typedef TMatrixTSym<T>  M1 ;
+        typedef double          M2 ;
+        static bool operation 
+        ( const M1&    m1    , 
+          const M2  /* m2 */ ) 
+        { return m1.IsValid() ; }
+      } ;
+
+
+      // ======================================================================
+      template <class T>
+      struct Eq <TMatrixT<T>, double>
+      {
+        typedef TMatrixT<T>     M1 ;
+        typedef double          M2 ;
+        //
+        static bool operation 
+        ( const M1&    m1    , 
+          const M2     m2    ) 
+        { 
+          //
+          static const Ostap::Math::Equal_To<T>  s_cmp  ;
+          static const Ostap::Math::Zero<T>      s_zero ;
+          //
+          const Int_t D = m1.GetNrows() ;
+          for ( Int_t i = 0 ; i < D ; ++i ) 
+          {
+            if ( !s_cmp  ( m1 ( i , i ) , m2 )        ) { return false ; }            
+            for ( Int_t j = 0 ; j < D ;  ++j ) 
+            { 
+              if ( i != j && !s_zero ( m1 ( i , j ) ) ) { return false ; }
+            }
+          }
+          return true ;
+        }
+      } ;
+      // =================================================
+      template <class T>
+      struct Eq <TMatrixTSym<T>, double>
+      {
+        typedef TMatrixTSym<T>  M1 ;
+        typedef double          M2 ;
+        //
+        static bool operation 
+        ( const M1&    m1    , 
+          const M2     m2    ) 
+        { 
+          //
+          static const Ostap::Math::Equal_To<T>  s_cmp  ;
+          static const Ostap::Math::Zero<T>      s_zero ;
+          //
+          const Int_t D = m1.GetNrows() ;
+          for ( Int_t i = 0 ; i < D ; ++i ) 
+          {
+            if ( !s_cmp  ( m1 ( i , i ) , m2 )  ) { return false ; }            
+            for ( Int_t j = i + 1 ; j < D ; ++j ) 
+            { 
+              if ( !s_zero ( m1 ( i , j )    )  ) { return false ; }
+            }
+          }
+          return true ;
+        }
+      } ;
       
       
       // ======================================================================
@@ -2276,8 +2450,6 @@ namespace Ostap
         }
         // 
       } ;
-
-
       // ======================================================================
       template <class T>
       struct Pow<TMatrixTSym<T> >
@@ -2300,6 +2472,64 @@ namespace Ostap
           return r * r * m ;
         }
       } ;
+
+      // ======================================================================
+      template <class T>
+      struct CanInvert< TMatrixT<T> >  
+      {
+        typedef TMatrixT<T>     M1 ;
+        typedef bool            R  ;
+        //
+        static R operation ( const M1& m1 ) 
+        { return m1.IsValid() && m1.GetNrows() == m1.GetNcols() ; } 
+      } ;
+      // ======================================================================
+      template <class T>
+      struct CanInvert< TMatrixTSym<T> >  
+      {
+        typedef TMatrixTSym<T>  M1 ;
+        typedef bool            R  ;
+        //
+        static R operation ( const M1& m1 ) { return m1.IsValid() ; } 
+      } ;
+      
+      // ======================================================================
+      template <class T>
+      struct Invert< TMatrixT<T> >  
+      {
+        typedef TMatrixT<T>     M1 ;
+        typedef TMatrixT<T>     R  ;
+        //
+        static R operation ( const M1& m1 , int& flag  )
+        { 
+          if ( !m1.IsValid() ) { flag  = 1 ; return m1 ; }
+          //
+          M1 result { m1 } ;
+          Double_t det = 1 ;
+          result.Invert ( &det ) ;
+          flag = ( 0 == det ) ;
+          return result ;
+        }
+      } ;      
+      // ======================================================================
+      template <class T>
+      struct Invert< TMatrixTSym<T> >  
+      {
+        typedef TMatrixTSym<T>  M1 ;
+        typedef TMatrixTSym<T>  R  ;
+        //
+        static R operation ( const M1& m1 , int& flag  )
+        { 
+          if ( !m1.IsValid() ) { flag  = 1 ; return m1 ; }
+          //
+          M1 result { m1 } ;
+          Double_t det = 1 ;
+          result.Invert ( &det ) ;
+          flag = ( 0 == det ) ;
+          return result ;
+        }
+      } ;      
+      // ======================================================================
 
       // ======================================================================
       template <class T1,unsigned int D, class T2>
@@ -2446,7 +2676,7 @@ namespace Ostap
         static  R operation
         ( const M1& m1 , 
           const M2& m2 )
-        { return M::operation ( C::transform ( m1 ) , m2  ) ; }
+        { return M::operation ( C::operation ( m1 ) , m2  ) ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D>
@@ -2463,7 +2693,7 @@ namespace Ostap
         static  R operation
         ( const M2& m2 , 
           const M1& m1 )
-        { return M::operation ( m2 , C::transform ( m1 ) ) ; }
+        { return M::operation ( m2 , C::operation ( m1 ) ) ; }
       } ;
       // ======================================================================
 
@@ -2514,7 +2744,7 @@ namespace Ostap
         // check 
         static bool operation 
         ( const M1& m1 , const M2& m2 ) 
-        { return m1.IsValid() && m2.IsValid() && m1.GetNCols() == m2.GetNrows() ; }
+        { return m1.IsValid() && m2.IsValid() && m1.GetNcols() == m2.GetNrows() ; }
       } ;
       // ======================================================================
       template <class T>
@@ -2526,7 +2756,7 @@ namespace Ostap
         // check 
         static bool operation 
         ( const M1& m1 , const M2& m2 ) 
-        { return m1.IsValid() && m2.IsValid() && m1.GetNCols() == m2.GetCols() ; }
+        { return m1.IsValid() && m2.IsValid() && m1.GetNcols() == m2.GetNcols() ; }
       } ;
       // ======================================================================
       template <class T>
@@ -2538,7 +2768,7 @@ namespace Ostap
         // check 
         static bool operation 
         ( const M1& m1 , const M2& m2 ) 
-        { return m1.IsValid() && m2.IsValid() && m1.GetNCols() == m2.GetCols() ; }
+        { return m1.IsValid() && m2.IsValid() && m1.GetNcols() == m2.GetNcols() ; }
       } ;
       // ======================================================================
 
@@ -2554,7 +2784,7 @@ namespace Ostap
         // check 
         static bool operation 
         ( const M1&  m1 , const M2& /* m2 */ ) 
-        { return m1.IsValid() && D == m1.GetCols() ; }
+        { return m1.IsValid() && D == m1.GetNcols() ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D1, unsigned int D2, class R1>
@@ -2566,7 +2796,7 @@ namespace Ostap
         // check 
         static bool operation 
         ( const M1&  m1 , const M2& /* m2 */ ) 
-        { return m1.IsValid() && D2 == m1.GetCols() ; }
+        { return m1.IsValid() && D2 == m1.GetNcols() ; }
       } ;
       // ======================================================================
       
@@ -2586,7 +2816,7 @@ namespace Ostap
         // operation 
         static R operation 
         ( const M1&  m1 , const M2& m2 ) 
-        { return O::operation ( C::transform ( m1 ) , m2 ) ; }
+        { return O::operation ( C::operation ( m1 ) , m2 ) ; }
       } ;
       
       // ======================================================================
@@ -2604,7 +2834,7 @@ namespace Ostap
         // operation 
         static R operation 
         ( const M1&  m1 , const M2& m2 ) 
-        { return O::operation ( C::transform ( m1 ) , m2 ) ; }
+        { return O::operation ( C::operation ( m1 ) , m2 ) ; }
       } ;
 
       // ======================================================================
@@ -2614,11 +2844,10 @@ namespace Ostap
       {
         typedef TMatrixTSym<T>  M1 ;
         typedef TVectorT<T>     M2 ;
-        typedef TMatrixTSym<T>  R  ;
+        typedef double          R  ;
         // operation 
         static R operation 
-        ( const M1& m1 , const M2& m2 ) 
-        { M1 res { m1 } ; res.Similarity ( m2 ) ; return res ; }
+        ( const M1& m1 , const M2& m2 ) { return m1.Similarity ( m2 ) ; }
       } ;
       // ======================================================================
       template <class T>
@@ -2648,8 +2877,7 @@ namespace Ostap
           const M2& m2 ) 
         { M1 res { m1 } ; res.Similarity ( m2 ) ; return res ; }
       } ;
-      
-      
+
       // =====================================================================
       template <class T,unsigned int D> 
       struct Sim<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > ,
@@ -2657,13 +2885,13 @@ namespace Ostap
       {
         typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
         typedef TVectorT<T>                                            M2 ;
-        typedef ROOT::Math::SMatrix<T,D>                               M3 ;
+        typedef ROOT::Math::SVector<T,D>                               M3 ;
         typedef SM<M3>                                                 C  ;
         typedef Sim<M1,M3>                                             O  ;
         typedef typename O::R                                          R  ;
         // similarity 
         static R operation ( const M1& m1 , const M2& m2 )
-        { return O::operation ( m1 , C::transform ( m2 ) ) ; }
+        { return O::operation ( m1 , C::operation ( m2 ) ) ; }
       } ;
       // ======================================================================      
       template <class T,unsigned int D> 
@@ -2678,7 +2906,7 @@ namespace Ostap
         typedef typename O::R                                          R  ;
         // similarity 
         static R operation ( const M1& m1 , const M2& m2 )
-        { return O::operation ( m1 , C::transform ( m2 ) ) ; }
+        { return O::operation ( m1 , C::operation ( m2 ) ) ; }
       } ;
       
       // ======================================================================      
@@ -2694,19 +2922,157 @@ namespace Ostap
         typedef typename O::R                                          R  ;
         // similarity 
         static R operation ( const M1& m1 , const M2& m2 )
-        { return O::operation ( m1 , C::transform ( m2 ) ) ; }
+        { return O::operation ( C::operation ( m1 ) , m2 ) ; }
+      } ;
+
+
+
+      // ======================================================================
+      template <class T> 
+      struct CanSimT< TMatrixTSym<T> , 
+                      TMatrixT<T>    > 
+      {
+        typedef TMatrixTSym<T>   M1 ;
+        typedef TMatrixT<T>      M2 ;
+        // check 
+        static bool operation 
+        ( const M1& m1  , const M2& m2 ) 
+        { return m1.IsValid() && m2.IsValid() && m1.GetNrows() == m2.GetNrows() ; }
+      } ;
+      // ======================================================================
+      template <class T>
+      struct CanSimT< TMatrixTSym<T> , 
+                      TMatrixTSym<T> > 
+      {
+        typedef TMatrixTSym<T>   M1 ;
+        typedef TMatrixTSym<T>   M2 ;
+        // check 
+        static bool operation 
+        ( const M1& m1  , const M2& m2 ) 
+        { return m1.IsValid() && m2.IsValid() && m1.GetNrows() == m2.GetNrows() ; }
+      } ;
+      
+      
+      
+      // ======================================================================
+      template <class T>
+      struct SimT< TMatrixTSym<T> , 
+                   TMatrixT<T>    > 
+      {
+        typedef TMatrixTSym<T>   M1 ;
+        typedef TMatrixT<T>      M2 ;
+        typedef TMatrixTSym<T>   R  ;
+        // check 
+        static R operation 
+        ( const M1& m1  , const M2& m2 ) 
+        { M1 result { m1 } ; result.SimilarityT ( m2 ) ; return result ; }
+      } ;      
+      // ======================================================================
+      template <class T>
+      struct SimT< TMatrixTSym<T> , 
+                   TMatrixTSym<T> > 
+      {
+        typedef TMatrixTSym<T>   M1 ;
+        typedef TMatrixTSym<T>   M2 ;
+        typedef TMatrixTSym<T>   R  ;
+        // check 
+        static R operation 
+        ( const M1& m1  , const M2& m2 ) 
+        { M1 result { m1 } ; result.Similarity ( m2 ) ; return result ; }
+      } ;
+      
+      // ==================================================================
+      template <class T,unsigned int D>
+      struct CanSimT<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > ,
+                     TMatrixT<T>  >
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
+        typedef TMatrixT<T>                                            M2 ;
+        // check 
+        static bool operation 
+        ( const M1& /* m1 */ , const M2& m2 ) 
+        { return m2.IsValid() && D == m2.GetNrows() ; }
+      } ;
+      // ======================================================================
+      template <class T,unsigned int D>
+      struct CanSimT<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D>> ,
+                     TMatrixTSym<T>  >
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
+        typedef TMatrixTSym<T>                                         M2 ;
+        // check 
+        static bool operation 
+        ( const M1& /* m1 */ , const M2& m2 ) 
+        { return m2.IsValid() && D == m2.GetNrows() ; }
+      } ;
+
+
+      // ===================================================================
+      template <class T,unsigned int D> 
+      struct SimT<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > ,
+                  TMatrixT<T> >
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
+        typedef TMatrixT<T>                                            M2 ;
+        typedef TMatrixTSym<T>                                         M3 ;
+        typedef TM<M1>                                                 C  ;
+        typedef SimT<M3,M2>                                            O  ;
+        typedef typename O::R                                          R  ;
+        // similarity 
+        static R operation ( const M1& m1 , const M2& m2 )
+        { return O::operation ( C::operation ( m1 ) , m2 ) ; }
+      } ;
+      // =====================================================================
+      template <class T,unsigned int D> 
+      struct SimT<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > ,
+                  TMatrixTSym<T> >
+      {
+        typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
+        typedef TMatrixTSym<T>                                         M2 ;
+        typedef TMatrixTSym<T>                                         M3 ;
+        typedef TM<M1>                                                 C  ;
+        typedef SimT<M3,M2>                                            O  ;
+        typedef typename O::R                                          R  ;
+        // similarity 
+        static R operation ( const M1& m1 , const M2& m2 )
+        { return O::operation ( C::operation ( m1 ) , m2 ) ; }
+      } ;
+
+      
+      // ======================================================================
+      template <class T , unsigned int D1, unsigned int D2, class R1>
+      struct CanSimT< TMatrixTSym<T> , 
+                      ROOT::Math::SMatrix<T,D1,D2,R1> >
+      {
+        typedef TMatrixTSym<T>                  M1 ;
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1> M2 ;
+        // check 
+        static bool operation 
+        ( const M1& m1  , const M2& /* m2 */ ) 
+        { return m1.IsValid() && D1 == m1.GetNrows() ; }
+      } ;
+
+      
+      // ======================================================================
+      template <class T , unsigned int D1, unsigned int D2, class R1>
+      struct SimT< TMatrixTSym<T> , 
+                   ROOT::Math::SMatrix<T,D1,D2,R1> >
+      {
+        typedef TMatrixTSym<T>                                            M1 ;
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1>                           M2 ;
+        typedef ROOT::Math::SMatrix<T,D1,D1,ROOT::Math::MatRepSym<T,D1> > M3 ;
+        typedef SM<M3>                                                    C  ;
+        typedef SimT<M3,M2>                                               O  ;
+        typedef typename O::R                                             R  ;
+        // 
+        static R operation 
+        ( const M1& m1  , const M2& m2 ) 
+        { return O::operation ( C::operation ( m1 ) , m2 ) ; }
       } ;
       
       
       
       
-      
-
-
-
-      
-
-
       // ======================================================================
       template <class T>
       struct Sym<TMatrixT<T> >

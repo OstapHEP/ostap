@@ -38,13 +38,13 @@ revct = re.compile ( r'TVector<(?P<TYPE>[^,>]+)'      )
 remtx = re.compile ( r'TMatrix[^<]*<(?P<TYPE>[^,>]+)' )
 # =============================================================================
 
+
 # =============================================================================
 ## @class LinAlgT
 #  Collection of operations with TMatrixT/TVectorT
 class LinAlgT(LA.LinAlg) :
     """Collection of operations with TMatrixT/TVectorT
     """
-
     # ========================================================================
     ## get number of rows for TMatrix
     #  @code
@@ -310,7 +310,9 @@ class LinAlgT(LA.LinAlg) :
         
         m.__pow__       = LinAlgT.M_POW 
         m.sym           = LinAlgT.M_SYM
-        m.asym          = LinAlgT.M_ASYM 
+        m.asym          = LinAlgT.M_ASYM
+        
+        m.inverse       = LinAlgT.M_INVERSE            
 
         if LinAlgT.with_numpy : 
             m.to_numpy  = LinAlgT.M_NUMPY ## numpy array
@@ -324,7 +326,7 @@ class LinAlgT(LA.LinAlg) :
 
             ## add vector type 
             m.Vector = ROOT.TVectorT ( m.Element ) 
-        
+
         return m
 
     
@@ -340,6 +342,11 @@ class LinAlgT(LA.LinAlg) :
         
         ## m.__str__       = LinAlgT.TS_STR
         ## m.__repr__      = LinAlgT.TS_STR
+
+        m.Sim            = LinAlgT.SIM
+        m.sim            = LinAlgT.SIM
+        m.SimT           = LinAlgT.SIMT
+        m.simT           = LinAlgT.SIMT
 
         m._old_call_    = m.__call__
         m._old_setitem_ = m.__setitem__
@@ -363,7 +370,7 @@ Ostap.Math.TMatrixSymD = ROOT.TMatrixTSym ( 'double'  )
 
 
 ##  for t in ( 'float' , 'double' , 'long double' ) :
-for t in ( 'double' ,) :
+for t in ( 'double' , ) :
 
     m1 = ROOT.TMatrixT      ( t  )
     LinAlgT.deco_tmatrix    ( m1 ) 
