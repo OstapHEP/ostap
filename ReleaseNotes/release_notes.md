@@ -25,7 +25,7 @@
   1. fix typo in `MatrixUtilsT.h`
   1. fix minor bug in `useStyle` 
   1. fix compilation error for gcc12 
-
+  1. fix few typos in `frames.py`
  
 # v1.9.1.0
 

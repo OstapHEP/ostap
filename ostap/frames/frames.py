@@ -18,7 +18,6 @@ __all__     = (
     'report_as_table'      , ## print the report
     'frame_progress'       , ## progress bar for frame
     ##
-    'frame_table'          , ## print data frame as table 
     'frame_project'        , ## project data frame to the (1D/2D/3D) histogram
     'frame_print'          , ## print frame
     'frame_draw'           , ## draw variable from the frame  
@@ -1080,7 +1079,7 @@ def frame_draw ( frame , *args , **kwargs ) :
     """Draw function for tehe frames
     """
     node = as_rnode ( frame )
-    return _ds_draw ( node , *args , *kwargs ) 
+    return _ds_draw ( node , *args , **kwargs ) 
 
 # ==============================================================================
 # decorate 
