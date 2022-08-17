@@ -63,43 +63,40 @@ def test_frame0 () :
     frame = DataFrame ( tname        , fname        )
     tree  = Tree      ( name = tname , file = fname ).chain
     
-    for mt in  ( False , True ) :
-        
-        with implicitMT ( mt ) :
-
-            logger.info ( 80*'*' ) 
-            logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
-            
-            logger.info ( 'Tree  :\n%s' % tree  ) 
-            logger.info ( 'Frame :\n%s' % frame )
-            
-            logger.info ( 'Len:                          %30s vs %-30s '  % ( len ( frame )         , len ( tree ) )        )
-            logger.info ( 'Branches:                     %30s vs %-30s '  % ( frame.branches()      , tree.branches() )     ) 
-            logger.info ( 'nEff:                         %30s vs %-30s '  % ( frame.nEff    ()      , tree.nEff    () )     )
-            logger.info ( 'nEff(b1):                     %30s vs %-30s '  % ( frame.nEff    ('b1')  , tree.nEff    ('b1') ) )
-            logger.info ( "m(5,50,'b1','b1/(b2+1'):      %30s vs %-30s "  % ( frame.get_moment ( 5 , 50 ,  'b1' , 'b1/(b2+1)' ) ,
-                                                                              tree .get_moment ( 5 , 50 ,  'b1' , 'b1/(b2+1)' ) ) ) 
-            logger.info ( "m(5,'b1','b1/(b2+1'):         %30s vs %-30s "  % ( frame.moment ( 5 , 'b1' , 'b1/(b2+1)' ) ,
-                                                                              tree .moment ( 5 , 'b1' , 'b1/(b2+1)' ) ) ) 
-            logger.info ( "cm(5,'b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.central_moment ( 2 , 'b1' , 'b1/(b2+1)' ) ,
-                                                                              tree .central_moment ( 2 , 'b1' , 'b1/(b2+1)' ) ) ) 
-            logger.info ( "mean('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.mean ( 'b1' , 'b1/(b2+1)' ) ,
-                                                                              tree .mean ( 'b1' , 'b1/(b2+1)' ) ) ) 
-            logger.info ( "rms ('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.rms  ( 'b1' , 'b1/(b2+1)' ) ,
-                                                                              tree .rms  ( 'b1' , 'b1/(b2+1)' ) ) ) 
-            logger.info ( "skew('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.skewness ( 'b1' , 'b1/(b2+1)' ) ,
-                                                                              tree .skewness ( 'b1' , 'b1/(b2+1)' ) ) )
-            logger.info ( "kurt('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.kurtosis ( 'b1' , 'b1/(b2+1)' ) ,
-                                                                              tree .kurtosis ( 'b1' , 'b1/(b2+1)' ) ) ) 
-            logger.info ( "quantile(0.3, 'b1','b1<500'): %30s vs %-30s "  % ( frame.quantile ( 0.3 , 'b1' , 'b1/(b2+1)' ) ,
-                                                                              tree .quantile ( 0.3 , 'b1' , 'b1/(b2+1)' ) ) )
-            logger.info ( "median(0.3, 'b1','b1<500'):   %30s vs %-30s "  % ( frame.median   (       'b1' , 'b1/(b2+1)' ) ,
-                                                                              tree .median   (       'b1' , 'b1/(b2+1)' ) ) )
-            logger.info ( "terciles('b1','b1<500'):      %30s vs %-30s "  % ( frame.terciles (       'b1' , 'b1/(b2+1)' ) ,
-                                                                              tree .terciles (       'b1' , 'b1/(b2+1)' ) ) )
-
-            
-
+    
+    logger.info ( 80*'*' ) 
+    logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
+    
+    logger.info ( 'Tree  :\n%s' % tree  ) 
+    logger.info ( 'Frame :\n%s' % frame )
+    
+    logger.info ( 'Len:                          %30s vs %-30s '  % ( len ( frame )         , len ( tree ) )        )
+    logger.info ( 'Branches:                     %30s vs %-30s '  % ( frame.branches()      , tree.branches() )     ) 
+    logger.info ( 'nEff:                         %30s vs %-30s '  % ( frame.nEff    ()      , tree.nEff    () )     )
+    logger.info ( 'nEff(b1):                     %30s vs %-30s '  % ( frame.nEff    ('b1')  , tree.nEff    ('b1') ) )
+    logger.info ( "m(5,50,'b1','b1/(b2+1'):      %30s vs %-30s "  % ( frame.get_moment ( 5 , 50 ,  'b1' , 'b1/(b2+1)' ) ,
+                                                                      tree .get_moment ( 5 , 50 ,  'b1' , 'b1/(b2+1)' ) ) ) 
+    logger.info ( "m(5,'b1','b1/(b2+1'):         %30s vs %-30s "  % ( frame.moment ( 5 , 'b1' , 'b1/(b2+1)' ) ,
+                                                                      tree .moment ( 5 , 'b1' , 'b1/(b2+1)' ) ) ) 
+    logger.info ( "cm(5,'b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.central_moment ( 2 , 'b1' , 'b1/(b2+1)' ) ,
+                                                                      tree .central_moment ( 2 , 'b1' , 'b1/(b2+1)' ) ) ) 
+    logger.info ( "mean('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.mean ( 'b1' , 'b1/(b2+1)' ) ,
+                                                                      tree .mean ( 'b1' , 'b1/(b2+1)' ) ) ) 
+    logger.info ( "rms ('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.rms  ( 'b1' , 'b1/(b2+1)' ) ,
+                                                                      tree .rms  ( 'b1' , 'b1/(b2+1)' ) ) ) 
+    logger.info ( "skew('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.skewness ( 'b1' , 'b1/(b2+1)' ) ,
+                                                                      tree .skewness ( 'b1' , 'b1/(b2+1)' ) ) )
+    logger.info ( "kurt('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.kurtosis ( 'b1' , 'b1/(b2+1)' ) ,
+                                                                      tree .kurtosis ( 'b1' , 'b1/(b2+1)' ) ) ) 
+    logger.info ( "quantile(0.3, 'b1','b1<500'): %30s vs %-30s "  % ( frame.quantile ( 0.3 , 'b1' , 'b1/(b2+1)' ) ,
+                                                                      tree .quantile ( 0.3 , 'b1' , 'b1/(b2+1)' ) ) )
+    logger.info ( "median(0.3, 'b1','b1<500'):   %30s vs %-30s "  % ( frame.median   (       'b1' , 'b1/(b2+1)' ) ,
+                                                                      tree .median   (       'b1' , 'b1/(b2+1)' ) ) )
+    logger.info ( "terciles('b1','b1<500'):      %30s vs %-30s "  % ( frame.terciles (       'b1' , 'b1/(b2+1)' ) ,
+                                                                      tree .terciles (       'b1' , 'b1/(b2+1)' ) ) )
+    
+    
+    
 
 # =============================================================================
 def test_frame1 ( ) :
@@ -119,7 +116,7 @@ def test_frame1 ( ) :
     h2 = ROOT.TH1D( hID() , '' , 100 , 0 , 1000 )
 
     tree.project  ( h1    , 'b1' , '1.0/b1' )
-    frame_project ( tree  , h2 , 'b1' , '2.0/b1' )
+    frame_project ( frame , h2 , 'b1' , '2.0/b1' )
     
     with wait ( 3 ), use_canvas ( 'test_frame1' ) : 
         h1.red  ()
@@ -129,17 +126,17 @@ def test_frame1 ( ) :
 
 # =============================================================================
 def test_frame2 ( ) :
-
+ 
     logger = getLogger ( 'test_frame2' ) 
     if root_info <  ( 6 , 16 ) : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
     
-    frame = DataFrame ( tname        , fname        )
-    tree  = Tree      ( name = tname , file = fname ).chain
+    frame = DataFrame     ( tname        , fname        )
+    tree  = Tree          ( name = tname , file = fname ).chain
 
-    s1 = tree.statVar  (        'b1' , '1/b1' )
-    s2 = frame_statVar ( tree , 'b1' , '1/b1' )
+    s1    = tree.statVar  (         'b1' , '1/b1' )
+    s2    = frame_statVar ( frame , 'b1' , '1/b1' )
     
     logger.info ('StatTree  :%s' % s1 ) 
     logger.info ('StatFrame :%s' % s2 ) 
@@ -156,20 +153,32 @@ def test_frame3 () :
 
     for i in range ( 5 ) :
         
-        frame = DataFrame ( tname        , fname        )
-        pb    = frame_progress ( frame , len ( tree ) )
+        frame = DataFrame ( tname       , fname        )
+        pb    = frame_progress ( frame  , len ( tree ) )
         logger.info ( 'Value: %d %s' % ( i , pb.GetValue() ) ) 
         
         
+        
+## frame = DataFrame     ( tname        , fname        )
+## tree  = Tree          ( name = tname , file = fname ).chain
+
+## s1    = tree.statVar  (        'b1' , '1/b1' )
+## s2    = frame_statVar ( tree , 'b1' , '1/b1' )
+
+## logger.info ('StatTree  :%s' % s1 ) 
+## logger.info ('StatFrame :%s' % s2 ) 
 
     
 # =============================================================================
 if '__main__' == __name__ :
-    
-    ## test_frame0 () 
-    ## test_frame1 ()
-    ## test_frame2 ()
+
+    ## pass
+
+    test_frame0 () 
+    test_frame1 ()
+    test_frame2 ()
     test_frame3 ()
+
 
 # =============================================================================
 ##                                                                      The END 

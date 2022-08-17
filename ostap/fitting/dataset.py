@@ -930,17 +930,19 @@ _new_methods_ += [
     ]
 
 # =============================================================================
-## find sutable range for drawing a variable 
+## find sutable range for drawing a variable
+#  @code
+#  data      = ...
+#  min . max = ds_var_range ( data , 'variname' , cuts = ... ) 
+#  @encode
 def ds_var_range ( dataset , var , cuts = '' ) :
     """Find suitable range for drawing a variable
+    >>> data      = ...
+    >>> min , max = ds_var_range ( data , 'variname' , cuts = ... ) 
     """
-
     ## min/max values
-    
     mn , mx = ds_var_minmax ( dataset , var , cuts )
-
-    from ostap.math.base import axis_range
-    
+    from ostap.math.base import axis_range    
     return axis_range ( mn , mx , delta = 0.05 )
     
 # =============================================================================

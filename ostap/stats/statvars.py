@@ -461,7 +461,11 @@ data_quantile        .__doc__ += '\n' + StatVar.quantile       .__doc__
 data_quantiles       .__doc__ += '\n' + StatVar.quantiles      .__doc__ 
 data_interval        .__doc__ += '\n' + StatVar.interval       .__doc__ 
 
+# =============================================================================
+## decorate certain class with some useful  methods 
 def data_decorate ( klass ) :
+    """Decorate certain class with some useful  methods
+    """
     
     if hasattr ( klass , 'get_moment'     ) : klass.orig_get_moment     = klass.get_moment
     if hasattr ( klass , 'moment'         ) : klass.orig_moment         = klass.moment
@@ -502,6 +506,23 @@ def data_decorate ( klass ) :
     klass.quintiles       = data_quintiles
     klass.deciles         = data_deciles
 
+    return ( klass.get_moment      , 
+             klass.moment          , 
+             klass.central_moment  , 
+             klass.mean            , 
+             klass.variance        , 
+             klass.dispersion      , 
+             klass.rms             , 
+             klass.skewness        , 
+             klass.kurtosis        ,              
+             klass.quantile        , 
+             klass.quantiles       , 
+             klass.interval        , 
+             klass.median          , 
+             klass.terciles        , 
+             klass.quartiles       , 
+             klass.quintiles       , 
+             klass.deciles         ) 
 
 # =============================================================================
 

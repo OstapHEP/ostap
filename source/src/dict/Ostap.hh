@@ -325,9 +325,9 @@ namespace
     Ostap::Math::LessOrEqual<double>     __eq_7 ;
     Ostap::Math::GreaterOrEqual<double>  __eq_8 ;
     //
-    std::function<std::complex<double>(double)>               __ff0 ;
-    std::function<std::complex<double>(double,double)>        __ff1 ;
-    std::function<std::complex<double>(double,double,double)> __ff2 ;
+    // std::function<std::complex<double>(double)>               __ff0 ;
+    // std::function<std::complex<double>(double,double)>        __ff1 ;
+    // std::function<std::complex<double>(double,double,double)> __ff2 ;
     
   };
   // ==========================================================================

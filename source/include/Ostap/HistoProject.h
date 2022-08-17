@@ -25,12 +25,6 @@ class RooAbsReal ; // RooFit
 namespace Ostap
 {  
   // ==========================================================================
-  #if ROOT_VERSION_CODE< ROOT_VERSION(6,14,4)
-    typedef ROOT::Experimental::TDataFrame DataFrame ;
-  #else
-    typedef ROOT::RDataFrame DataFrame ;
-  #endif
-  // ==========================================================================
   /** @class HistoProject Ostap/HistoProject.h
    *  Helper class to project Dataset/DataFrame to histogram 
    *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -159,7 +153,7 @@ namespace Ostap
      *  @param selection  (INPUT) selection criteria/weight 
      */
     static Ostap::StatusCode project
-    ( DataFrame           data            , 
+    ( FrameNode           data            , 
       TH1*                histo           ,
       const std::string&  expression      ,
       const std::string&  selection  = "" ) ;
@@ -172,7 +166,7 @@ namespace Ostap
      *  @param selection  (INPUT) selection criteria/weight 
      */
     static Ostap::StatusCode project2
-    ( DataFrame           data            , 
+    ( FrameNode           data            , 
       TH2*                histo           ,
       const std::string&  xexpression     ,
       const std::string&  yexpression     ,
@@ -187,7 +181,7 @@ namespace Ostap
      *  @param selection   (INPUT)  selection criteria/weight 
      */
     static Ostap::StatusCode project3
-    ( DataFrame           data            , 
+    ( FrameNode           data            , 
       TH3*                histo           ,
       const std::string&  xexpression     ,
       const std::string&  yexpression     ,

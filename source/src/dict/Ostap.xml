@@ -23,11 +23,12 @@
 
   <function name    = "Ostap::TMVA::addResponse"  />
   
-  <class name = "std::unary_function&lt;double,double&gt;" />
-  <class name = "std::binary_function&lt;double,double,double&gt;" />
+  <!--
+  <class name       = "std::unary_function&lt;double,double&gt;" />
+  <class name       = "std::binary_function&lt;double,double,double&gt;" />
+   -->
 
-
-  <class name = "std::function&lt;double(double,double,double,double)&gt;" />
+  <class name    = "std::function&lt;double(double,double,double,double)&gt;" />
   <class pattern = "std::function&lt;double(*)&gt;" />
 
 

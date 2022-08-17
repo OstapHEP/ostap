@@ -495,7 +495,7 @@ Ostap::HistoProject::project3
  */
 // ============================================================================
 Ostap::StatusCode Ostap::HistoProject::project
-( DataFrame           data       , 
+( Ostap::FrameNode    data       , 
   TH1*                histo      ,
   const std::string&  expression ,
   const std::string&  selection  ) 
@@ -531,7 +531,7 @@ Ostap::StatusCode Ostap::HistoProject::project
  */
 // ========================================================================
 Ostap::StatusCode Ostap::HistoProject::project2
-( DataFrame           data        , 
+( Ostap::FrameNode    data        , 
   TH2*                histo       ,
   const std::string&  xexpression ,
   const std::string&  yexpression ,
@@ -571,7 +571,7 @@ Ostap::StatusCode Ostap::HistoProject::project2
  */
 // ========================================================================
 Ostap::StatusCode Ostap::HistoProject::project3
-( DataFrame           data        , 
+( Ostap::FrameNode    data        , 
   TH3*                histo       ,
   const std::string&  xexpression ,
   const std::string&  yexpression ,
@@ -603,6 +603,7 @@ Ostap::StatusCode Ostap::HistoProject::project3
   //
   return Ostap::StatusCode::SUCCESS ;
 }
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

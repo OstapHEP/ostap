@@ -12,17 +12,42 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'DataFrame'          , ## RDataFrame object
-    'report_print'       , ## print the report 
-    'report_print_table' , ## print the report 
-    'report_as_table'    , ## print the report
-    'frame_progress'     , ## progress bar for frame 
-    'frame_table'        , ## print data frame as table 
-    'frame_project'      , ## project data frame to the (1D/2D/3D) histogram
-    'frame_print'        , ## print frame
-    'frame_nEff'         , ## nEff function for frames
-    'frame_statVar'      , ## stat var for frame 
-    'frame_statCov'      , ## sta tcov for frame 
+    'DataFrame'            , ## RDataFrame object
+    'report_print'         , ## print the report 
+    'report_print_table'   , ## print the report 
+    'report_as_table'      , ## print the report
+    'frame_progress'       , ## progress bar for frame
+    ##
+    'frame_table'          , ## print data frame as table 
+    'frame_project'        , ## project data frame to the (1D/2D/3D) histogram
+    'frame_print'          , ## print frame
+    'frame_draw'           , ## draw variable from the frame  
+    'frame_project'        , ## project variables to histogram 
+    'frame_columns'        , ## defined columns  
+    ##
+    'frame_nEff'           , ## nEff function for frames
+    'frame_statVar'        , ## stat var for frame 
+    'frame_statCov'        , ## sta tcov for frame
+    ## 
+    'frame_mean'           , ## mean value for the variable 
+    'frame_rms'            , ## RMS for the variable 
+    'frame_variance'       , ## variance for the variable 
+    'frame_dispersion'     , ## dispersion for the variable
+    'frame_skewness'       , ## skewness for the variable 
+    'frame_kurtosis'       , ## kurtosos for the variable 
+    'frame_get_moment'     , ## get the moment 
+    'frame_moment'         , ## momnt relative to zero 
+    'frame_central_moment' , ## central moment 
+    ## 
+    'frame_quantile'       , ## quantile 
+    'frame_interval'       , ## quantile interval 
+    'frame_median'         , ## median 
+    'frame_quantiles'      , ## quantiles 
+    'frame_terciles'       , ## terciles 
+    'frame_quartiles'      , ## quartiles 
+    'frame_quintiles'      , ## quintiles 
+    'frame_deciles'        , ## deciles 
+    ## 
     ) 
 # =============================================================================
 from   ostap.core.core        import cpp, Ostap, strings, split_string
@@ -31,6 +56,7 @@ from   ostap.core.ostap_types import integer_types, string_types
 from   ostap.logger.utils     import multicolumn
 from   ostap.utils.basic      import terminal_size, isatty
 from   ostap.logger.colorized import allright
+import ostap.stats.statvars   as     SV 
 import ostap.histos.histos
 import ROOT, math
 # =============================================================================
@@ -45,12 +71,35 @@ logger.debug ( 'Some useful decorations for ROOT::RDataFrame objects')
 try : 
     DataFrame = ROOT.ROOT.RDataFrame
 except AttributeError :
-    DataFrame = ROOT.ROOT.Experimental.TDataFrame 
+    DataFrame = ROOT.ROOT.Experimental.TDataFrame
 # =============================================================================
-Ostap.DataFrame    = DataFrame 
+try : 
+    FrameNode = ROOT.ROOT.RDF.RNode 
+except AttributeError :
+    FrameNode = DataFrame 
+    
+# =============================================================================
+if not hasattr ( Ostap ,'DataFrame' ) :  Ostap.DataFrame = DataFrame
+if not hasattr ( Ostap ,'FrameNode' ) :  Ostap.FrameNode = FrameNode 
+
 CNT                = DataFrame.ColumnNames_t 
 
-# =========================================================================
+# =============================================================================
+if   ( 6 , 18 ) <= root_info :
+    # =========================================================================
+    ## get frame-like stuff  as rnode 
+    def as_rnode ( frame ) :
+        """get frame-like stuff  as rnode"""
+        return ROOT.RDF.AsRNode ( frame ) 
+else :
+    # =========================================================================
+    ## get frame-like stuff  as rnode  
+    def as_rnode ( frame ) :
+        """get frame-like stuff  as rnode"""
+        return FrameNode  ( frame ) 
+# =============================================================================
+
+# =============================================================================
 ## get all column names
 #  @code
 #  cols = colums ( frame ) 
@@ -65,9 +114,6 @@ def columns ( frame ) :
     return tuple ( sorted ( set ( names ) ) )    
     
 frame_columns      = columns
-
-DataFrame.columns  = frame_columns 
-DataFrame.branches = frame_columns 
 
 # ==============================================================================
 ## generate new, unique name for the variable 
@@ -105,7 +151,7 @@ def _fr_new_init_ ( self , name , *args , **kwargs ) :
         logger.debug ( 'DataFrame:ImplicitMT is %s' % ( 'Enabled' if ROOT.ROOT.IsImplicitMTEnabled() else 'Disabled' ) )
     elif not mt and     ROOT.ROOT.IsImplicitMTEnabled() :
         ROOT.ROOT.DisableImplicitMT ()
-        logger.info  ( 'DataFrame: ImplicitMT is %s' % ( 'Enabled' if ROOT.ROOT.IsImplicitMTEnabled() else 'Disabled' ) ) 
+        logger.info  ( 'DataFrame:ImplicitMT is %s' % ( 'Enabled' if ROOT.ROOT.IsImplicitMTEnabled() else 'Disabled' ) ) 
         
     self._fr_old_init_ ( name , *args , **kwargs ) 
 
@@ -119,13 +165,13 @@ if not hasattr ( DataFrame , '_fr_old_init_' ) :
 #  frame = ...
 #  print len(frame)
 #  @endcode 
-def _fr_len_ ( f ) :
+def _fr_len_ ( frame ) :
     """Get the length/size of the data frame
     >>> frame = ...
     >>> print len(frame)
     """
-    cpf = Ostap.DataFrame ( f )   ## make independent loop?
-    return cpf.Count().GetValue() 
+    node = as_rnode ( frame )
+    return node.Count().GetValue() 
 
 # =============================================================================
 ## Draw (lazy) progress bar for the    DataFrame:
@@ -136,7 +182,7 @@ def _fr_len_ ( f ) :
 
 #  ....
 #  @endcode 
-def frame_progress ( self          , 
+def frame_progress ( frame         , 
                      length        ,
                      width  = None ,
                      symbol = "#"  ) :
@@ -146,14 +192,14 @@ def frame_progress ( self          ,
     >>> ....
     """
     
-    cnt = self.Count () 
-    if not isatty() : return cnt
+    cnt = frame.Count () 
+    if not isatty () : return cnt
 
     left    = "[ "
     right   = " ]"
     
     minw    = len ( left ) + len ( right ) + 3 + 1 + 1 + 1 
-    length  = length if isinstance ( length , integer_types ) and         0 < length else len ( self )
+    length  = length if isinstance ( length , integer_types ) and         0 < length else len ( frame )
     width   = width  if isinstance ( width  , integer_types ) and 10 + minw <= width else terminal_size()[1]
     
     width   = max ( 10 , width - minw ) 
@@ -163,7 +209,6 @@ def frame_progress ( self          ,
     if rr : nchunks += 1 
     
     symbol = allright ( symbol )
-
 
     fun = Ostap.Utils.frame_progress ( nchunks , width , symbol , ' ' , left , right )
     cnt.OnPartialResultSlot  ( csize , fun )
@@ -176,13 +221,13 @@ def frame_progress ( self          ,
 #  data = ...
 #  neff = data.nEff('b1*b1')
 #  @endcode
-def frame_nEff ( self , cuts = '' ) :
+def frame_nEff ( frame , cuts = '' ) :
     """Get the effective entries in data frame 
     >>> data = ...
     >>> neff = data.nEff('b1*b1')
     """
-    frame = DataFrame ( self ) 
-    return Ostap.StatVar.nEff ( frame , cuts )
+    node  = as_rnode ( frame ) 
+    return Ostap.StatVar.nEff ( node , cuts )
 
 # =============================================================================
 ## Get statistics for the  given expression in data frame
@@ -191,15 +236,14 @@ def frame_nEff ( self , cuts = '' ) :
 #  c1 = data.statVar( 'S_sw' , 'pt>10' ) 
 #  c2 = data.statVar( 'S_sw' , 'pt>0'  )
 #  @endcode
-def frame_statVar ( self , expression ,  cuts = '' ) :
+def frame_statVar ( frame , expression ,  cuts = '' ) :
     """Get statistics for the  given expression in data frame
     >>> data = ...
     >>> c1 = data.statVar( 'S_sw' , 'pt>10' ) 
     >>> c2 = data.statVar( 'S_sw' )
     """
-    frame = DataFrame ( self ) 
-    return Ostap.StatVar.statVar ( frame , str ( expression ) , str ( cuts )  )
-
+    node  = as_rnode ( frame ) 
+    return Ostap.StatVar.statVar ( node , str ( expression ) , str ( cuts )  )
 
 # =============================================================================
 ## get the statistic for pair of expressions in DataFrame
@@ -211,7 +255,7 @@ def frame_statVar ( self , expression ,  cuts = '' ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-06-18
-def frame_statCov ( self        ,
+def frame_statCov ( frame       ,
                     expression1 ,
                     expression2 ,
                     cuts = ''   ) :
@@ -229,8 +273,8 @@ def frame_statCov ( self        ,
     stat2  = Ostap.WStatEntity       ()
     cov2   = Ostap.Math.SymMatrix(2) ()
 
-    frame  = DataFrame ( self ) 
-    length = Ostap.StatVar.statCov ( frame       ,
+    node   = as_rnode ( frame ) 
+    length = Ostap.StatVar.statCov ( node        ,
                                      expression1 ,
                                      expression2 ,
                                      cuts        ,    
@@ -240,7 +284,6 @@ def frame_statCov ( self        ,
         
     return stat1 , stat2 , cov2 , length
 
-
 # ==================================================================================
 ## get statistics of variable(s)
 #  @code
@@ -248,11 +291,17 @@ def frame_statCov ( self        ,
 #  stat  = frame.statVar ( 'pt'           , lazy = True )
 #  stat  = frame.statVar ( 'pt' , 'eta>0' , lazy = True )
 #  @endcode
-def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
+def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
     """Get statistics of variable(s)
+    >>> frame = ....
+    >>> stat  = frame.statVar ( 'pt'           , lazy = True )
+    >>> stat  = frame.statVar ( 'pt' , 'eta>0' , lazy = True )
     """
-
-    frame  = DataFrame ( self ) 
+    
+    if isinstance ( frame , ROOT.TTree ) :
+        frame = DataFrame ( frame )
+    
+    node = as_rnode ( frame ) 
 
     input_string = False 
     if isinstance ( expressions , string_types ) :
@@ -260,12 +309,12 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
         expressions = [ expressions ]
     
     ## get the list of currently known names
-    vars     = frame_columns ( frame ) 
+    vars     = frame_columns ( node ) 
     all_vars = set ( vars ) 
     
     names   = {}
 
-    current = frame    
+    current = node  
     for e in expressions :
 
         e = str ( e )
@@ -297,7 +346,6 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
         else :
             results [ e ] = current.Book( ROOT.std.move ( Ostap.Actions. StatVar() ) , CNT ( 1 , names[e] ) ) 
 
-
     if not lazy :
         for e in results :
             r = results [ e ]
@@ -309,24 +357,24 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
     
     return results 
 
-
 # =============================================================================
 ## Simplified print out for the  frame 
 #  @code 
 #  frame = ...
 #  print frame
 #  @endcode 
-def frame_print ( t ) :
+def frame_print ( frame ) :
     """Simplified print out for the  frame 
     
     >>> frame = ...
     >>> print frame
     """
     ##
-    res = "DataFrame Enries/#%d" %  len ( t )  
+    node = as_rnode ( frame ) 
+    res  = "DataFrame Enries/#%d" %  len ( frame )  
     ##
-    cols = frame_columns ( t ) 
-    res        += "\nColumns:\n%s" % multicolumn ( cols , indent = 2 , pad = 1 )
+    cols = frame_columns ( node ) 
+    res += "\nColumns:\n%s" % multicolumn ( cols , indent = 2 , pad = 1 )
     return res
 
 
@@ -337,14 +385,15 @@ def frame_print ( t ) :
 #  table = frame_table ( frame , '.*PT.*' , cuts = ... , more_vars = [ 'x*x/y' , 'y+z'] )
 #  print ( table ) 
 #  @endcode 
-def frame_table ( self , pattern = None ,  cuts = '' , more_vars = () , prefix = '' ) :
+def _fr_table_ ( frame , pattern = None ,  cuts = '' , more_vars = () , prefix = '' ) :
     """Data frame as table
     >>> frame = ...
     >>> table = frame_table ( frame , '.*PT.*' , cuts = ... , more_vars = [ 'x*x/y' , 'y+z'] )
     >>> print ( table )
     """
 
-    frame = DataFrame ( self )
+    frame = as_rnode ( frame )
+    
     def col_type ( var ) :
         
         if var in cols : t = frame.GetColumnType ( var )
@@ -374,8 +423,8 @@ def frame_table ( self , pattern = None ,  cuts = '' , more_vars = () , prefix =
         cpat  = re.compile ( pattern )
         vcols = tuple ( [ v for v in vcols if cpat.match ( v ) ] ) 
 
-    svars = vcols + tuple ( more_vars ) 
-    stats = fr_statVars ( frame , svars , cuts = cuts , lazy = False ) 
+    svars = vcols + tuple  ( more_vars ) 
+    stats = frame_statVars ( frame , svars , cuts = cuts , lazy = False ) 
     
     if   len ( vcols ) < 10    : ifmt = '%1d.'
     elif len ( vcols ) < 100   : ifmt = '%2d.'
@@ -505,8 +554,7 @@ def report_as_table ( report ) :
 def report_print ( report , title  = '' , prefix = '' , more_rows = [] ) :
     """Print the data frame report
     """
-    table = report_as_table ( report )
-    
+    table = report_as_table ( report )    
     return report_print_table ( table , title, prefix , more_rows )
 
 
@@ -579,7 +627,6 @@ ROOT.TH3 .model = _th3_model
         
     
     
-
 # ==============================================================================
 ## 'Lazy' project of the frame
 #  @code
@@ -614,8 +661,41 @@ ROOT.TH3 .model = _th3_model
 #    <code>ROOT::RDF::TH2DModel</code> or <code>ROOT::RDF::TH3DModel</code> objects 
 # 
 def frame_project ( frame , model , *what ) :
+    """ 'Lazy' project of the frame
+    >>> frame    = ...
+    >>> h1_model = ...
+    >>> h1       = frame_project ( frame , h1_model , 'pt' )
+    >>> h2_model = ...
+    >>> h2       = frame_project ( frame , h2_model , 'pt' , 'x' )
+    >>> h3_model = ...
+    >>> h3       = frame_project ( frame , h3_model , 'pt' , 'x'  , 'y' )
+    >>> ...
+    
+    - Cuts/weigth are also can be specified
+    
+    >>> frame    = ...
+    >>> h1_model = ...
+    >>> h1       = frame_project ( frame , h1_model , 'pt' , 'w')
+    >>> h2_model = ...
+    >>> h2       = frame_project ( frame , h2_model , 'pt' , 'x' , 'w')
+    >>> h3_model = ...
+    >>> h3       = frame_project ( frame , h3_model , 'pt' , 'x'  , 'y' , 'w' )
+    >>>...
+    
+    - If model is a real 1D/2D/3D-hstogram, action is *not* lazy, otherwise action *is* lazy
 
-    frame  = DataFrame ( frame )
+    Model can be a real histogram or 
+    - `ROOT.RDF.TH1DModel`
+    - `ROOT.RDF.TH2DModel`
+    - `ROOT.RDF.TH3DModel`
+    - anything that can be converted to `ROOT.RDF.TH1DModel`, 
+    `ROOT.RDF.TH2DModel` or `ROOT.RDF.TH3DModel` objects 
+    """
+
+    if isinstance ( frame , ROOT.TTree ) :
+        frame = DataFrame ( frame )
+    else : 
+        frame = as_rnode  ( frame )
     
     if 1 <= len ( what ) <= 2 :
         ww = split_string ( what[0] , ' ,:;' )
@@ -705,77 +785,429 @@ def frame_project ( frame , model , *what ) :
     histo += action.GetValue() 
     
     return histo 
-    
+
+# ==============================================================================
+## Get the moment  for the frame object
+#  @code
+#  frame = ...
+#  value = frame_get_moment ( 3 , 1.234 , 'b1*b2' , 'b3>0' )
+#  @endcode
+#  @see Ostap::StatVar::get_moment 
+def frame_get_moment ( frame , order , center , expression , cuts = '' ) :
+    """ Get the moment  for the frame object
+    >>> frame = ...
+    >>> value = frame_get_moment ( 3 , 1.234 , 'b1*b2' , 'b3>0' )
+    - see `Ostap.StatVar.get_moment` 
+    """
+    node = as_rnode ( frame )
+    return SV.data_get_moment ( node , order = order , center = center , expression = expression , cuts = cuts )
+
+# ==============================================================================
+## Get the moment  for the frame object
+#  @code
+#  frame = ...
+#  value = frame_moment ( 3 , 'b1*b2' , 'b3>0' )
+#  @endcode
+#  @see Ostap::StatVar::moment 
+def frame_moment ( frame , order , expression , cuts = '' ) :
+    """ Get the moment  for the frame object
+    >>> frame = ...
+    >>> value = frame_moment ( 3 , 'b1*b2' , 'b3>0' )
+    - see `Ostap.StatVar.moment` 
+    """
+    node = as_rnode ( frame )
+    return SV.data_moment ( node , order = order , expression = expression , cuts = cuts )
+
+# ==============================================================================
+## Get the central moment  for the frame object
+#  @code
+#  frame = ...
+#  value = frame_central_moment ( 3 , 'b1*b2' , 'b3>0' )
+#  @endcode
+#  @see Ostap::StatVar::central_moment 
+def frame_central_moment ( frame , order , expression , cuts = '' ) :
+    """ Get the central_moment  for the frame object
+    >>> frame = ...
+    >>> value = frame_central_moment ( 3 , 'b1*b2' , 'b3>0' )
+    - see `Ostap.StatVar.central_moment` 
+    """
+    node = as_rnode ( frame )
+    return SV.data_central_moment ( node , order = order , expression = expression , cuts = cuts )
+
+# ==============================================================================
+## Get the skewness for the frame object
+#  @code
+#  frame = ...
+#  value = frame_skewness ( 'b1*b2' , 'b3>0' )
+#  @endcode
+#  @see Ostap::StatVar::skewness 
+def frame_skewness ( frame , expression , cuts = '' ) :
+    """ Get the skewness for the frame object
+    >>> frame = ...
+    >>> value = frame_skeness ( 'b1*b2' , 'b3>0' )
+    - see `Ostap.StatVar.skewness`
+    """
+    node = as_rnode ( frame )
+    return SV.data_skewness ( node , expression = expression , cuts = cuts )
+
+# ==============================================================================
+## Get the kurtosis for the frame object
+#  @code
+#  frame = ...
+#  value = frame_kurtosis ( 'b1*b2' , 'b3>0' )
+#  @endcode
+#  @see Ostap::StatVar::kurtosis 
+def frame_kurtosis ( frame , expression , cuts = '' ) :
+    """ Get the skewness for the frame object
+    >>> frame = ...
+    >>> value = frame_kurtosis ( 'b1*b2' , 'b3>0' )
+    - see `Ostap.StatVar.skewness`
+    """
+    node = as_rnode ( frame )
+    return SV.data_kurtosis ( node , expression = expression , cuts = cuts )
+
+
+# ==============================================================================
+## Get the quantile for the frame object
+#  @code
+#  frame = ...
+#  value = frame_quantile (  0.3 , 'b1*b2' , 'b3>0' , exact = True )
+#  value = frame_quantile (  0.3 , 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
+#  @endcode
+#  @see Ostap::StatVar::quantile
+#  @see Ostap::StatVar::p2quantile
+def frame_quantile ( frame , q , expression , cuts = '' , exact = True ) :
+    """ Get the quantile for the frame object
+    >>> frame = ...
+    >>> value = frame_quantile ( 0.3 , 'b1*b2' , 'b3>0' , exact = True  )
+    >>> value = frame_quantile ( 0.3 , 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
+    - see `Ostap.StatVar.quantile`
+    - see `Ostap.StatVar.p2quantile`
+    """
+    node = as_rnode ( frame )
+    return SV.data_quantile ( node , q = q , expression = expression , cuts = cuts , exact = exact  )
+
+
+# ==============================================================================
+## Get the interval  for the frame object
+#  @code
+#  frame = ...
+#  value = frame_interval (  0.1 , 0.9 , 'b1*b2' , 'b3>0' )
+#  @endcode
+#  @see Ostap::StatVar::interval
+#  @see Ostap::StatVar::p2interval 
+def frame_interval ( frame , qmin , qmax  , expression , cuts = '' , exact = True ) :
+    """ Get the approximarte quantile for the frame object usnig P2-algorithm
+    >>> frame = ...
+    >>> value = frame_p2quantile ( 0.3 , 'b1*b2' , 'b3>0' )
+    - see `Ostap.StatVar.p2quantile`
+    """
+    node = as_rnode ( frame )
+    return SV.data_interval ( node , qmin = qmin , qmax = qmax  ,
+                              expression = expression , cuts = cuts , exact = exact )
+
+
+# ==============================================================================
+## Get the median
+#  @code
+#  frame = ...
+#  value = frame_median ( 'b1*b2' , 'b3>0' , exact = True )
+#  value = frame_median ( 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
+#  @endcode
+#  @see Ostap::StatVar::quantile
+#  @see Ostap::StatVar::p2quantile
+def frame_median ( frame , expression , cuts = '' , exact = True ) :
+    """ Get the quantile for the frame object
+    >>> frame = ...
+    >>> value = frame_quantile ( 0.3 , 'b1*b2' , 'b3>0' , exact = True  )
+    >>> value = frame_quantile ( 0.3 , 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
+    - see `Ostap.StatVar.quantile`
+    - see `Ostap.StatVar.p2quantile`
+    """
+    return frame_quantile ( frame , q = 0.5 , expression = expression , cuts = cuts , exact = exact  )
+
+# ==============================================================================
+## Get the quantiles for the frame object
+#  @code
+#  frame = ...
+#  value = frame_quantiles (  ( 0.1 , 0.2 , 0.3 ) , 'b1*b2' , 'b3>0' , exact = True )
+#  value = frame_quantiles (  ( 0.1 , 0.2 , 0.3 ) , 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
+#  @endcode
+#  @see Ostap::StatVar::quantiles
+#  @see Ostap::StatVar::p2quantiles
+def frame_quantiles ( frame , quantiles , expression , cuts = '' , exact = True ) :
+    """ Get the quantile for the frame object
+    >>> frame = ...
+    >>> value = frame_quantiles ( (0.1,0.2,0.3) , 'b1*b2' , 'b3>0' , exact = True  )
+    >>> value = frame_quantiles ( (0.1,0.2 0.3) , 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
+    - see `Ostap.StatVar.quantiles`
+    - see `Ostap.StatVar.p2quantiles`
+    """
+    node = as_rnode ( frame )
+    return SV.data_quantiles ( node , quantiles = quantiles , expression = expression , cuts = cuts , exact = exact  )
+
+# ==============================================================================
+## Get the terciles for the frame object
+#  @code
+#  frame = ...
+#  value = frame_terciles ( 'b1*b2' , 'b3>0' , exact = True )
+#  value = frame_terciles ( 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
+#  @endcode
+#  @see Ostap::StatVar::quantiles
+#  @see Ostap::StatVar::p2quantiles
+def frame_terciles ( frame , expression , cuts = '' , exact = True ) :
+    """ Get the quantile for the frame object
+    >>> frame = ...
+    >>> value = frame_terciles ( 'b1*b2' , 'b3>0' , exact = True  )
+    >>> value = frame_terciles ( 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
+    - see `Ostap.StatVar.quantiles`
+    - see `Ostap.StatVar.p2quantiles`
+    """
+    return frame_quantiles ( frame , quantiles = 3 , expression = expression , cuts = cuts , exact = exact  )
+
+# ==============================================================================
+## Get the quartiles for the frame object
+#  @code
+#  frame = ...
+#  value = frame_quartiles ( 'b1*b2' , 'b3>0' , exact = True )
+#  value = frame_quartiles ( 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
+#  @endcode
+#  @see Ostap::StatVar::quantiles
+#  @see Ostap::StatVar::p2quantiles
+def frame_quartiles ( frame , expression , cuts = '' , exact = True ) :
+    """ Get the quantile for the frame object
+    >>> frame = ...
+    >>> value = frame_quartiles ( 'b1*b2' , 'b3>0' , exact = True  )
+    >>> value = frame_quartiles ( 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
+    - see `Ostap.StatVar.quantiles`
+    - see `Ostap.StatVar.p2quantiles`
+    """
+    return frame_quantiles ( frame , quantiles = 4 , expression = expression , cuts = cuts , exact = exact  )
+
+# ==============================================================================
+## Get the quintiles for the frame object
+#  @code
+#  frame = ...
+#  value = frame_quintiles ( 'b1*b2' , 'b3>0' , exact = True )
+#  value = frame_quintiles ( 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
+#  @endcode
+#  @see Ostap::StatVar::quantiles
+#  @see Ostap::StatVar::p2quantiles
+def frame_quintiles  ( frame , expression , cuts = '' , exact = True ) :
+    """ Get the quintiles for the frame object
+    >>> frame = ...
+    >>> value = frame_quintiles ( 'b1*b2' , 'b3>0' , exact = True  )
+    >>> value = frame_quintiles ( 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
+    - see `Ostap.StatVar.quantiles`
+    - see `Ostap.StatVar.p2quantiles`
+    """
+    return frame_quantiles ( frame , quantiles = 5 , expression = expression , cuts = cuts , exact = exact  )
+
+# ==============================================================================
+## Get the deciles for the frame object
+#  @code
+#  frame = ...
+#  value = frame_deciles ( 'b1*b2' , 'b3>0' , exact = True )
+#  value = frame_deciles ( 'b1*b2' , 'b3>0' , exact = False  ) ## use P2 algorithm 
+#  @endcode
+#  @see Ostap::StatVar::quantiles
+#  @see Ostap::StatVar::p2quantiles
+def frame_deciles  ( frame , expression , cuts = '' , exact = True ) :
+    """ Get the quintiles for the frame object
+    >>> frame = ...
+    >>> value = frame_deciles ( 'b1*b2' , 'b3>0' , exact = True  )
+    >>> value = frame_deciles ( 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
+    - see `Ostap.StatVar.quantiles`
+    - see `Ostap.StatVar.p2quantiles`
+    """
+    return frame_quantiles ( frame , quantiles = 10 , expression = expression , cuts = cuts , exact = exact  )
+
+# ==============================================================================
+## Get the mean for the frame object
+#  @code
+#  frame = ...
+#  value = frame_mean ( 'b1*b2' , 'b3>0' )
+#  @endcode
+#  @see Ostap::StatVar::moment
+def frame_mean ( frame , expression , cuts = '' ) :
+    """ Get the mean for the frame object
+    >>> frame = ...
+    >>> value = frame_mean ( 'b1*b2' , 'b3>0' )
+    - see `Ostap.StatVar.moment`
+    """    
+    return frame_moment ( frame , order = 1 , expression = expression , cuts = cuts )
+
+# ==============================================================================
+## Get the variance for the frame object
+#  @code
+#  frame = ...
+#  value = frame_variance   ( 'b1*b2' , 'b3>0' , exact = True )
+#  value = frame_dispersion ( 'b1*b2' , 'b3>0' , exact = True ) ## ditto
+#  @endcode
+#  @see Ostap::StatVar::central_moment 
+def frame_variance ( frame , expression , cuts = '' ) :
+    """ Get the variance for the frame object
+    >>> frame = ...
+    >>> value = frame_variance   ( 'b1*b2' , 'b3>0' )
+    >>> value = frame_dispersion ( 'b1*b2' , 'b3>0' ) ## ditto
+    - see `Ostap.StatVar.moment`
+    """    
+    return frame_central_moment ( frame , order = 2 , expression = expression , cuts = cuts )
+
+frame_dispersion = frame_variance
+
+# ==============================================================================
+## Get the RMS for the frame object
+#  @code
+#  frame = ...
+#  value = frame_rms ( 'b1*b2' , 'b3>0' , exact = True )
+#  @endcode
+#  @see Ostap::StatVar::central_moment 
+def frame_rms ( frame , expression , cuts = '' ) :
+    """ Get the RMS for the frame object
+    >>> frame = ...
+    >>> value = frame_mean ( 'b1*b2' , 'b3>0' , exact = True  )
+    >>> value = frame_mean ( 'b1*b2' , 'b3>0' , exact = False ) ## use P2 algorithm 
+    - see `Ostap.StatVar.moment`
+    """    
+    return frame_central_moment ( frame , order = 2 , expression = expression , cuts = cuts )
+
+
+from ostap.fitting.dataset import ds_draw as _ds_draw
+# ==============================================================================
+## draw for frame 
+def frame_draw ( frame , *args , **kwargs ) :
+    """Draw function for tehe frames
+    """
+    node = as_rnode ( frame )
+    return _ds_draw ( node , *args , *kwargs ) 
 
 # ==============================================================================
 # decorate 
 # ==============================================================================
-if not hasattr ( DataFrame , '__len__') : DataFrame.__len__ = _fr_len_
-DataFrame .__str__     = frame_print
-DataFrame .__repr__    = frame_print
+_new_methods_ = [
+    frame_nEff           , 
+    frame_statVar        , 
+    frame_statCov        , 
+    frame_progress       , 
+    frame_draw           , 
+    frame_project        , 
+    frame_columns        , 
+    frame_columns        , 
+    ##
+    frame_mean           , 
+    frame_rms            , 
+    frame_variance       , 
+    frame_dispersion     , 
+    frame_skewness       , 
+    frame_kurtosis       , 
+    frame_get_moment     , 
+    frame_moment         , 
+    frame_central_moment , 
+    ## 
+    frame_quantile       ,
+    frame_interval       ,
+    frame_median         ,
+    frame_quantiles      ,
+    frame_terciles       ,
+    frame_quartiles      ,
+    frame_quintiles      ,
+    frame_deciles        ,
+    ## 
+    ] 
 
-DataFrame .nEff        = frame_nEff
-DataFrame .statVar     = frame_statVar
-DataFrame .statCov     = frame_statCov
-DataFrame .ProgressBar = frame_progress
-DataFrame .progress    = frame_progress
+# ==============================================================================
+if FrameNode is DataFrame : frames = DataFrame ,
+else                      : frames = DataFrame , FrameNode
 
-
-from ostap.stats.statvars import  data_decorate 
-data_decorate ( DataFrame )
-del data_decorate
-
-from ostap.fitting.dataset import ds_draw , ds_project
-DataFrame.draw    = ds_draw
-DataFrame.project = ds_project
-
-
-_decorated_classes_ = (
-    DataFrame   ,
-    )
-
-_new_methods_       = (
-    DataFrame.__len__          ,
-    DataFrame.__repr__         ,
-    DataFrame.__str__          ,
-    DataFrame.columns          , 
-    DataFrame.branches         ,
-    #
-    DataFrame.ProgressBar      ,
-    DataFrame.progress         ,
-    #
-    DataFrame.draw             , 
-    DataFrame.project          ,
-    #
-    DataFrame.nEff             ,
-    DataFrame.statVar          ,
-    DataFrame.statCov          ,
-    DataFrame.nEff             ,
-    #
-    DataFrame.get_moment       , 
-    DataFrame.central_moment   , 
-    DataFrame.mean             ,
-    DataFrame.rms              ,
-    DataFrame.skewness         ,
-    DataFrame.kurtosis         ,
-    DataFrame.quantile         ,
-    DataFrame.median           ,
-    DataFrame.quantiles        ,
-    DataFrame.interval         ,
-    DataFrame.terciles         ,
-    DataFrame.quartiles        ,
-    DataFrame.quintiles        ,
-    DataFrame.deciles          ,
-    )
-
-
-# =============================================================================
 if ( 6 , 25 ) <= root_info :
     frame_statVar       = _fr_statVar_new_
     frame_statVars      = _fr_statVar_new_
-    DataFrame.statVars  = _fr_statVar_new_
-    __all__ = __all__ + ( 'frame_statVars' , ) 
-    _new_methods_      = _new_methods_ + ( DataFrame.statVars , ) 
+    frame_table         = _fr_table_ 
+    for f in frames : 
+        f.statVars  = frame_statVars  
+        f.statVars  = frame_statVars  
+        _new_methods_ .append ( f.statVars )
+        f.table     = frame_table   
+        _new_methods_ .append ( f.table    )
+    _new_methods_ .append ( frame_statVars ) 
+    _new_methods_ .append ( frame_table    ) 
+    __all__ = __all__ + ( 'frame_statVars' ,  'frame_table' ) 
+
+for f in frames :
+    
+    if not hasattr ( f , '__len__') :
+        f.__len__ = _fr_len_
+        _new_methods_ .append ( f.__len__   )
+    
+    f.__str__        = frame_print
+    f.__repr__       = frame_print
+
+    f.nEff           = frame_nEff
+    f.statVar        = frame_statVar
+    f.statCov        = frame_statCov
+    f.ProgressBar    = frame_progress
+    f.progress       = frame_progress
+    
+    f.columns        = frame_columns
+    f.branches       = frame_columns
+
+    f.mean           = frame_mean    
+    f.rms            = frame_rms     
+    f.variance       = frame_variance
+    f.dispersion     = frame_dispersion 
+    f.skewness       = frame_skewness 
+    f.kurtosis       = frame_kurtosis
+    f.get_moment     = frame_get_moment 
+    f.moment         = frame_moment 
+    f.central_moment = frame_central_moment 
+
+    f.quantile       = frame_quantile       
+    f.interval       = frame_interval       
+    f.median         = frame_median         
+    f.quantiles      = frame_quantiles      
+    f.terciles       = frame_terciles      
+    f.quartiles      = frame_quartiles     
+    f.quintiles      = frame_quintiles      
+    f.deciles        = frame_deciles
+    
+    _new_methods_ .append ( f.__str__        )
+    _new_methods_ .append ( f.__repr__       )
+    _new_methods_ .append ( f. nEff          )
+    _new_methods_ .append ( f. statVar       )
+    _new_methods_ .append ( f. ProgressBar   )
+    _new_methods_ .append ( f. progress      )
+    _new_methods_ .append ( f. columns       )
+    _new_methods_ .append ( f. branches      )
+    
+    _new_methods_ .append ( f.mean           )
+    _new_methods_ .append ( f.rms            ) 
+    _new_methods_ .append ( f.variance       ) 
+    _new_methods_ .append ( f.dispersion     ) 
+    _new_methods_ .append ( f.skewness       ) 
+    _new_methods_ .append ( f.kurtosis       ) 
+    _new_methods_ .append ( f.get_moment     ) 
+    _new_methods_ .append ( f.moment         ) 
+    _new_methods_ .append ( f.central_moment )
+
+    _new_methods_ .append ( f.quantile       )
+    _new_methods_ .append ( f.interval       )
+    _new_methods_ .append ( f.median         )
+    _new_methods_ .append ( f.quantiles      ) 
+    _new_methods_ .append ( f.terciles       )
+    _new_methods_ .append ( f.quartiles      )
+    _new_methods_ .append ( f.quintiles      )
+    _new_methods_ .append ( f.deciles        )
+
+    f.draw       = frame_draw
+    
+    _new_methods_ .append ( f. draw       )
+    
+
+_decorated_classes_ = frames
+_new_methods_       = tuple ( _new_methods_ ) 
+
+# =============================================================================
     
 # =============================================================================
 if '__main__' == __name__ :

@@ -562,7 +562,7 @@ namespace Ostap
      *  @date   2018-06-18
      */
     static Statistic statVar 
-    ( DataFrame           frame           , 
+    ( FrameNode           frame           , 
       const std::string&  expression      , 
       const std::string&  cuts       = "" ) ;
     // ========================================================================
@@ -703,7 +703,7 @@ namespace Ostap
      *  @date   2018-06-18
      */
     static unsigned long statCov
-    ( DataFrame            data             , 
+    ( FrameNode            data             , 
       const std::string&   exp1             , 
       const std::string&   exp2             , 
       Statistic&           stat1            ,  
@@ -724,7 +724,7 @@ namespace Ostap
      *  @date   2018-06-18
      */
     static unsigned long statCov
-    ( DataFrame            data             , 
+    ( FrameNode            data             , 
       const std::string&   exp1             , 
       const std::string&   exp2             , 
       const std::string&   cuts             , 
@@ -773,7 +773,7 @@ namespace Ostap
      *  @return number of equivalent entries 
      */
     static double nEff 
-    ( DataFrame            frame            ,
+    ( FrameNode            frame            ,
       const std::string&   cuts      = ""   ) ;
     // ========================================================================
   public:
@@ -829,7 +829,7 @@ namespace Ostap
      *  @return the moment 
      */
     static double get_moment 
-    ( DataFrame            frame       ,  
+    ( FrameNode            frame       ,  
       const unsigned short order       , 
       const std::string&   expr        , 
       const double         center      ,    
@@ -883,7 +883,7 @@ namespace Ostap
      *  @return the moment 
      */ 
     static Ostap::Math::ValueWithError moment
-    ( DataFrame            frame      ,  
+    ( FrameNode            frame      ,  
       const unsigned short order      ,
       const std::string&   expr       , 
       const std::string&   cuts  = "" ) ;
@@ -936,7 +936,7 @@ namespace Ostap
      *  @return the moment 
      */ 
     static Ostap::Math::ValueWithError central_moment 
-    ( DataFrame            frame    ,  
+    ( FrameNode            frame    ,  
       const unsigned short order    ,
       const std::string&   expr     , 
       const std::string&   cuts     )  ;
@@ -984,7 +984,7 @@ namespace Ostap
      *  @return the skewness 
      */
     static Ostap::Math::ValueWithError skewness 
-    ( DataFrame            frame        ,  
+    ( FrameNode            frame        ,  
       const std::string&   expr         , 
       const std::string&   cuts  = ""   ) ;
     // ========================================================================    
@@ -1033,7 +1033,7 @@ namespace Ostap
      *  @return the (excess) kurtosis
      */
     static Ostap::Math::ValueWithError kurtosis
-    ( DataFrame            frame        ,  
+    ( FrameNode            frame        ,  
       const std::string&   expr         , 
       const std::string&   cuts  = ""   );
     // ========================================================================    
@@ -1123,7 +1123,7 @@ namespace Ostap
      *   @return the quantile value 
      */
     static Quantile quantile
-    ( DataFrame           frame            ,
+    ( FrameNode           frame            ,
       const double        q                , //  0<q<1 
       const std::string&  expr             , 
       const std::string&  cuts      = ""   ) ;
@@ -1136,7 +1136,7 @@ namespace Ostap
      *   @return the quantile value 
      */
     static Quantile p2quantile
-    ( DataFrame           frame            ,
+    ( FrameNode           frame            ,
       const double        q                , //  0<q<1 
       const std::string&  expr             , 
       const std::string&  cuts      = ""   ) ;
@@ -1225,7 +1225,7 @@ namespace Ostap
      *   @return the quantile value 
      */
     static Quantiles quantiles
-    ( DataFrame                  frame            ,
+    ( FrameNode                  frame            ,
       const std::vector<double>& quantiles        , 
       const std::string&         expr             , 
       const std::string&         cuts      = ""   ) ;
@@ -1240,7 +1240,7 @@ namespace Ostap
      *   @return the quantile value 
      */
     static Quantiles p2quantiles
-    ( DataFrame                  frame            ,
+    ( FrameNode                  frame            ,
       const std::vector<double>& quantiles        , 
       const std::string&         expr             , 
       const std::string&         cuts      = ""   ) ;
@@ -1363,7 +1363,7 @@ namespace Ostap
      *   @endcode 
      */
     static QInterval interval 
-    ( DataFrame           frame        ,
+    ( FrameNode           frame        ,
       const double        q1           , //  0<q1<1 
       const double        q2           , //  0<q2<1 
       const std::string&  expr         , 
@@ -1385,7 +1385,7 @@ namespace Ostap
      *   @endcode 
      */
     static QInterval p2interval 
-    ( DataFrame           frame        ,
+    ( FrameNode           frame        ,
       const double        q1           , //  0<q1<1 
       const double        q2           , //  0<q2<1 
       const std::string&  expr         , 

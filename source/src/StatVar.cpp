@@ -3226,7 +3226,7 @@ Ostap::StatVar::p2quantiles
  */
 // ============================================================================
 double Ostap::StatVar::nEff 
-( Ostap::DataFrame     frame ,
+( Ostap::FrameNode     frame ,
   const std::string&   cuts  )
 {
   //
@@ -3270,7 +3270,7 @@ double Ostap::StatVar::nEff
 // ============================================================================
 Ostap::StatVar::Statistic 
 Ostap::StatVar::statVar 
-( Ostap::DataFrame    frame      , 
+( Ostap::FrameNode    frame      , 
   const std::string&  expression , 
   const std::string&  cuts       ) 
 {
@@ -3319,7 +3319,7 @@ Ostap::StatVar::statVar
  */
 // ============================================================================
 unsigned long Ostap::StatVar::statCov
-( Ostap::DataFrame     frame  , 
+( Ostap::FrameNode     frame  , 
   const std::string&   exp1   , 
   const std::string&   exp2   , 
   Statistic&           stat1  ,  
@@ -3342,7 +3342,7 @@ unsigned long Ostap::StatVar::statCov
  */
 // ============================================================================
 unsigned long Ostap::StatVar::statCov
-( Ostap::DataFrame     frame , 
+( Ostap::FrameNode     frame , 
   const std::string&   exp1  , 
   const std::string&   exp2  , 
   const std::string&   cuts  , 
@@ -3416,7 +3416,7 @@ unsigned long Ostap::StatVar::statCov
  */
 // ============================================================================
 double Ostap::StatVar::get_moment 
-( Ostap::DataFrame     frame  ,  
+( Ostap::FrameNode     frame  ,  
   const unsigned short order  , 
   const std::string&   expr   , 
   const double         center ,    
@@ -3463,7 +3463,7 @@ double Ostap::StatVar::get_moment
  */ 
 // ============================================================================
 Ostap::Math::ValueWithError Ostap::StatVar::moment
-( Ostap::DataFrame     frame  ,  
+( Ostap::FrameNode     frame  ,  
   const unsigned short order  ,
   const std::string&   expr   , 
   const std::string&   cuts   ) 
@@ -3533,7 +3533,7 @@ Ostap::Math::ValueWithError Ostap::StatVar::moment
 // ============================================================================
 Ostap::Math::ValueWithError 
 Ostap::StatVar::central_moment 
-( DataFrame            frame ,  
+( Ostap::FrameNode     frame ,  
   const unsigned short order ,
   const std::string&   expr  , 
   const std::string&   cuts  ) 
@@ -3656,7 +3656,7 @@ Ostap::StatVar::central_moment
  */
 // ============================================================================
 Ostap::Math::ValueWithError Ostap::StatVar::skewness 
-( DataFrame            frame ,  
+( Ostap::FrameNode     frame ,  
   const std::string&   expr  , 
   const std::string&   cuts  ) 
 {
@@ -3735,7 +3735,7 @@ Ostap::Math::ValueWithError Ostap::StatVar::skewness
  */
 // ============================================================================
 Ostap::Math::ValueWithError Ostap::StatVar::kurtosis
-( DataFrame            frame ,  
+( Ostap::FrameNode     frame ,  
   const std::string&   expr  , 
   const std::string&   cuts  )
 {
@@ -3813,7 +3813,7 @@ namespace
   // ==========================================================================
   /// get quantiles
   Ostap::StatVar::Quantiles _quantiles_ 
-  ( Ostap::DataFrame        frame , 
+  ( Ostap::FrameNode        frame , 
     const std::set<double>& qs    , 
     const std::string&      expr  , 
     const std::string&      cuts  ) 
@@ -3849,7 +3849,7 @@ namespace
   /// get approximate  quantiles using P^2 algorithm  
   Ostap::StatVar::Quantiles
   _p2quantiles_ 
-  ( Ostap::DataFrame        frame     , 
+  ( Ostap::FrameNode        frame     , 
     const std::set<double>& quantiles , 
     const std::string&      expr      , 
     const std::string&      cuts      ) 
@@ -3883,7 +3883,7 @@ namespace
 // ============================================================================
 Ostap::StatVar::Quantile
 Ostap::StatVar::quantile
-( Ostap::DataFrame    frame  ,
+( Ostap::FrameNode    frame  ,
   const double        q      , //  0<q<1 
   const std::string&  expr   , 
   const std::string&  cuts   ) 
@@ -3908,7 +3908,7 @@ Ostap::StatVar::quantile
 // ============================================================================
 Ostap::StatVar::Quantile
 Ostap::StatVar::p2quantile
-( Ostap::DataFrame    frame  ,
+( Ostap::FrameNode    frame  ,
   const double        q      , //  0<q<1 
   const std::string&  expr   , 
   const std::string&  cuts   ) 
@@ -3933,7 +3933,7 @@ Ostap::StatVar::p2quantile
 // ========================================================================    
 Ostap::StatVar::Quantiles
 Ostap::StatVar::quantiles
-( Ostap::DataFrame           frame     ,
+( Ostap::FrameNode           frame     ,
   const std::vector<double>& quantiles , 
   const std::string&         expr      , 
   const std::string&         cuts      ) 
@@ -3966,7 +3966,7 @@ Ostap::StatVar::quantiles
 // ========================================================================    
 Ostap::StatVar::Quantiles
 Ostap::StatVar::p2quantiles
-( Ostap::DataFrame           frame     ,
+( Ostap::FrameNode           frame     ,
   const std::vector<double>& quantiles , 
   const std::string&         expr      , 
   const std::string&         cuts      ) 
@@ -4005,7 +4005,7 @@ Ostap::StatVar::p2quantiles
 // ============================================================================
 Ostap::StatVar::QInterval 
 Ostap::StatVar::interval 
-( Ostap::DataFrame    frame ,
+( Ostap::FrameNode    frame ,
   const double        q1    , //  0<q1<1 
   const double        q2    , //  0<q2<1 
   const std::string&  expr  , 
@@ -4042,7 +4042,7 @@ Ostap::StatVar::interval
 // =======================x=====================================================
 Ostap::StatVar::QInterval 
 Ostap::StatVar::p2interval 
-( Ostap::DataFrame    frame ,
+( Ostap::FrameNode    frame ,
   const double        q1    , //  0<q1<1 
   const double        q2    , //  0<q2<1 
   const std::string&  expr  , 

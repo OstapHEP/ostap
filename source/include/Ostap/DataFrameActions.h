@@ -9,7 +9,7 @@
 #include "RVersion.h"   // ROOT 
 #include "RtypesCore.h" // ROOT 
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,14,0)
+#if ROOT_VERSION(6,14,0) <= ROOT_VERSION_CODE 
 #include "ROOT/RDataFrame.hxx"  // ROOT 
 #else 
 #include "ROOT/TDataFrame.hxx"  // ROOT
@@ -22,7 +22,8 @@
 #include "Ostap/WStatEntity.h"
 // ============================================================================
 /// ONLY starting from ROOT 6.16
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,16,0)
+// ============================================================================
+#if ROOT_VERSION(6,16,0) <= ROOT_VERSION_CODE
 // ============================================================================
 namespace ROOT 
 {
@@ -72,7 +73,7 @@ namespace ROOT
         { m_slots [ slot % m_N ] += value ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
 #else 
         template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
@@ -138,7 +139,7 @@ namespace ROOT
         { m_slots [ slot % m_N ].add ( value , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of values        
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
 #else 
         template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
@@ -149,7 +150,7 @@ namespace ROOT
         }
         // ===============================================================================
         /// The basic method: increment the counter for the vector-like column of weight 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
 #else 
         template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
