@@ -10,6 +10,7 @@
 import ostap.plotting.color
 from   ostap.utils.cidict import cidict
 from   ostap.core.core    import cidict_fun
+from   ostap.utils.utils  import classprop 
 import ROOT, ctypes 
 # =============================================================================
 __all__ = (
@@ -109,7 +110,7 @@ class StyleStore(object) :
     """Store for all created/cofigures styles
     """
     __styles = {}
-    @classmethod
+    @classprop 
     def styles ( kls ) :
         return kls.__styles 
     
@@ -561,9 +562,9 @@ def make_styles ( config = None ) :
             logger.info ( 'Create Generic style  %s/%s' % ( name , description ) )             
             style       = ROOT.TStyle ( name , description )
             set_style ( style , section )
-            if name in StyleStore.styles() :
+            if name in StyleStore.styles :
                 logger.warning ( "The configuration %s replaced" % name  ) 
-            StyleStore.styles().update ( { name : style } ) 
+            StyleStore.styles.update ( { name : style } ) 
             
 # ==============================================================================
 def get_float ( config , name , default ) :
@@ -864,15 +865,15 @@ def make_ostap_style ( name                           ,
     set_style    ( style , conf ) 
     logger.debug ('Create Ostap   style %s' % style.GetName() )
 
-    if name in StyleStore.styles() :
+    if name in StyleStore.styles :
         logger.info ( "The configuration %s replaced" % name  ) 
-    StyleStore.styles().update ( { name : style } ) 
+    StyleStore.styles.update ( { name : style } ) 
 
     if  name.startswith('Style')  :
         nname  = name[5:]
-        if nname in StyleStore.styles() :
+        if nname in StyleStore.styles :
             logger.info ( "The configuration %s replaced" % nname  ) 
-        StyleStore.styles().update ( { nname : style } )
+        StyleStore.styles.update ( { nname : style } )
         
     return style
 

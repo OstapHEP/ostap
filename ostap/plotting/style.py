@@ -169,7 +169,7 @@ class UseStyle(object):
             
         if isinstance ( style , str ):
             
-            import ostap.plotting.makestyles as MS
+            import ostap.plotting.makestyles as MS            
             if   style in MS.StyleStore.styles : style = MC.StyleStore.styles [ style ] 
             elif style.upper() in ( '' , '0' , '1' )    : style = Style 
             elif '2'  == style                          : style = Style2
