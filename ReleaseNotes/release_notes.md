@@ -8,13 +8,12 @@
   1. extend linalg2/t modules 
   1. more polishing of the linear algebra 
   1. extend tests for Linear Algebra operations 
-  1. make `styles` to be a class property imnstead of class methdod for class `StyleStore`
-
+  1. make `styles` to be the class property instead of the class methdod for class `StyleStore`
 
 ## Backward incompatible:  
 
-  1. remove `keep`    argument for fun/pdf objects. Hopefully it was nnever used by the users.  
-  1. remove `special` argument for fun/pdf objects. Hopefully it was nnever used by the users.  
+  1. remove `keep`    argument for fun/pdf objects. Hopefully it was never used by the users.  
+  1. remove `special` argument for fun/pdf objects. Hopefully it was never used by the users.  
 
 ## Bug fixes:
 
@@ -23,8 +22,10 @@
   1. fix old typos in `_h3_integrate_` method (thanks to Ivan Polyakov for tproblme report and the fix)  
   1. fix bug  in `MatrixUtilsT.h`
   1. fix typo in `MatrixUtilsT.h`
-  1. fix minot bug in `useStyle` 
-   
+  1. fix minor bug in `useStyle` 
+  1. fix compilation error for gcc12 
+
+ 
 # v1.9.1.0
 
 ## New features: 
