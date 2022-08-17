@@ -72,7 +72,14 @@ namespace Ostap
                 typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
       inline bool setPars 
       ( ITERATOR begin  , 
-        ITERATOR end    ) ;
+        ITERATOR end    ) 
+      {
+        bool update = false ;
+        const unsigned int   N = m_pars.size()  ;
+        for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
+        { update = this->_setPar ( k  , *begin ) ? true : update ; }
+        return update ;
+      }
       // ======================================================================
       /** set several/all parameters at once 
        *  @param pars (NIPUT) vector of parameters 
@@ -121,24 +128,6 @@ namespace Ostap
       std::vector<double> m_pars ; //  vector of parameters 
       // ======================================================================
     } ;
-    // ========================================================================
-    /** set several/all parameters at once 
-     *  @param pars (NIPUT) vector of parameters 
-     *  @return true if at least one parameter is actually changed 
-     */
-    template <class ITERATOR,
-              typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-              typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
-    inline bool Parameters::setPars 
-    ( ITERATOR begin  , 
-      ITERATOR end    ) 
-    {
-      bool update = false ;
-      const unsigned int   N = m_pars.size()  ;
-      for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
-      { update = _setPar ( k  , *begin ) ? true : update ; }
-      return update ;
-    }
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================
