@@ -654,8 +654,8 @@ namespace Ostap
       struct CanMul<TVectorT<T>,TMatrixTSym<T>>
       {
         static bool operation
-        ( const TVectorT<T>& m1 ,
-          const TMatrixT<T>& m2 )
+        ( const TVectorT<T>&    m1 ,
+          const TMatrixTSym<T>& m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNrows () == m2.GetNrows() ; }
       };
       // ======================================================================

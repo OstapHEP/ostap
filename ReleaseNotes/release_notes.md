@@ -7,6 +7,7 @@
   1. add method `kullback` to `FitResult`
   1. extend linalg2/t modules 
   1. more polishing of the linear algebra 
+  1. extend tests for Linear Algebra operations 
 
 \## Backward incompatible:  
 
@@ -18,8 +19,9 @@
   1. Fix a bit strange problem/feature appearing at 2022/08/11 in dev3 slot: drawing of 
      `Addition` objects with `RooAbsRealLValue` fails.  Fix is done using `FunNop`
   1. fix old typos in `_h3_integrate_` method (thanks to Ivan Polyakov for tproblme report and the fix)  
-  1. fix bug in `MatrixUtilsT.h`
-
+  1. fix bug  in `MatrixUtilsT.h`
+  1. fix typo in `MatrixUtilsT.h`
+   
 # v1.9.1.0
 
 ## New features: 
