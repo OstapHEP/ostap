@@ -241,6 +241,7 @@ def frame_statVar ( frame , expression ,  cuts = '' ) :
     >>> c1 = data.statVar( 'S_sw' , 'pt>10' ) 
     >>> c2 = data.statVar( 'S_sw' )
     """
+    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
     node  = as_rnode ( frame ) 
     return Ostap.StatVar.statVar ( node , str ( expression ) , str ( cuts )  )
 
@@ -271,7 +272,8 @@ def frame_statCov ( frame       ,
     stat1  = Ostap.WStatEntity       ()
     stat2  = Ostap.WStatEntity       ()
     cov2   = Ostap.Math.SymMatrix(2) ()
-
+    
+    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
     node   = as_rnode ( frame ) 
     length = Ostap.StatVar.statCov ( node        ,
                                      expression1 ,
@@ -297,9 +299,8 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
     >>> stat  = frame.statVar ( 'pt' , 'eta>0' , lazy = True )
     """
     
-    if isinstance ( frame , ROOT.TTree ) :
-        frame = DataFrame ( frame )
-    
+    if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )
+        
     node = as_rnode ( frame ) 
 
     input_string = False 
@@ -368,7 +369,9 @@ def frame_print ( frame ) :
     >>> frame = ...
     >>> print frame
     """
-    ##
+    ## 
+    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame )
+    ## 
     node = as_rnode ( frame ) 
     res  = "DataFrame Enries/#%d" %  len ( frame )  
     ##
@@ -390,7 +393,8 @@ def _fr_table_ ( frame , pattern = None ,  cuts = '' , more_vars = () , prefix =
     >>> table = frame_table ( frame , '.*PT.*' , cuts = ... , more_vars = [ 'x*x/y' , 'y+z'] )
     >>> print ( table )
     """
-
+    
+    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
     frame = as_rnode ( frame )
     
     def col_type ( var ) :
@@ -691,10 +695,9 @@ def frame_project ( frame , model , *what ) :
     `ROOT.RDF.TH2DModel` or `ROOT.RDF.TH3DModel` objects 
     """
 
-    if isinstance ( frame , ROOT.TTree ) :
-        frame = DataFrame ( frame )
-    else : 
-        frame = as_rnode  ( frame )
+    if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )
+    
+    frame = as_rnode  ( frame )
     
     if 1 <= len ( what ) <= 2 :
         ww = split_string ( what[0] , ' ,:;' )
