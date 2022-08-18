@@ -67,15 +67,20 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for ROOT::RDataFrame objects')
 # =============================================================================
-try : 
-    DataFrame = ROOT.ROOT.RDataFrame
-except AttributeError :
-    DataFrame = ROOT.ROOT.Experimental.TDataFrame
-# =============================================================================
-try : 
-    FrameNode = ROOT.ROOT.RDF.RNode 
-except AttributeError :
-    FrameNode = DataFrame 
+## @see Ostap/DataFrame.h 
+DataFrame = Ostap.DataFrame
+## @see Ostap/DataFrame.h 
+FrameNode = Ostap.FrameNode 
+
+## try : 
+##     DataFrame = ROOT.ROOT.RDataFrame
+## except AttributeError :
+##     DataFrame = ROOT.ROOT.Experimental.TDataFrame
+## # =============================================================================
+## try : 
+##     FrameNode = ROOT.ROOT.RDF.RNode 
+## except AttributeError :
+##     FrameNode = DataFrame 
     
 # =============================================================================
 if not hasattr ( Ostap ,'DataFrame' ) :  Ostap.DataFrame = DataFrame

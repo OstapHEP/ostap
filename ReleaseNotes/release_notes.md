@@ -9,7 +9,9 @@
   1. more polishing of the linear algebra 
   1. extend tests for Linear Algebra operations 
   1. make `styles` to be the class property instead of the class methdod for class `StyleStore`
-  1. imporve tretament of the DataFrame/RNode stuff  
+  1. imporve treatment of the DataFrame/RNode 
+  1. more imporve treatment of the DataFrame/RNode 
+
 
 ## Backward incompatible:  
 
