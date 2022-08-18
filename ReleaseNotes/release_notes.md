@@ -1,3 +1,9 @@
+## New features: 
+
+## Backward incompatible:  
+
+## Bug fixes:
+
 # v1.9.2.0
 
 ## New features: 
@@ -13,7 +19,6 @@
   1. make `styles` to be the class property instead of the class methdod for class `StyleStore`
   1. imporve treatment of the DataFrame/RNode 
   1. more imporve treatment of the DataFrame/RNode 
-
 
 ## Backward incompatible:  
 
@@ -32,7 +37,6 @@
   1. fix few typos in `frames.py`
  
 # v1.9.1.0
-
 
 ## New features: 
 
