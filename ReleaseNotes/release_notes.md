@@ -1,3 +1,5 @@
+# v1.9.2.0
+
 ## New features: 
 
   1. add `fixdeps` argument for `Fun1D/Fun2D/Fun3D` objects to fix missiing dependencies (or, to add some fictive depebndencies) 
@@ -30,6 +32,7 @@
   1. fix few typos in `frames.py`
  
 # v1.9.1.0
+
 
 ## New features: 
 

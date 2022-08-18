@@ -247,7 +247,7 @@ def frame_statVar ( frame , expression ,  cuts = '' ) :
     >>> c2 = data.statVar( 'S_sw' )
     """
     if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
-    node  = as_rnode ( frame ) 
+    node = as_rnode ( frame ) 
     return Ostap.StatVar.statVar ( node , str ( expression ) , str ( cuts )  )
 
 # =============================================================================
@@ -565,7 +565,6 @@ def report_print ( report , title  = '' , prefix = '' , more_rows = [] ) :
     table = report_as_table ( report )    
     return report_print_table ( table , title, prefix , more_rows )
 
-
 # ==============================================================================
 ## get 1D histogram model from the actual  1D histogram
 #  @code
@@ -625,16 +624,6 @@ ROOT.TH2 .model = _th2_model
 ROOT.TH3 .model = _th3_model
 
 
-## def model_1D ( model ) :
-
-##     if   isinstance ( model , ROOT.RDF.TH1Dmodel )            : return model
-##     elif isinstance ( model , ROOT.TH1 ) and 1 == model.dim() : return model.model() 
-
-##     try :
-##         if len ( model )
-        
-    
-    
 # ==============================================================================
 ## 'Lazy' project of the frame
 #  @code
@@ -913,7 +902,6 @@ def frame_interval ( frame , qmin , qmax  , expression , cuts = '' , exact = Tru
     return SV.data_interval ( node , qmin = qmin , qmax = qmax  ,
                               expression = expression , cuts = cuts , exact = exact )
 
-
 # ==============================================================================
 ## Get the median
 #  @code
@@ -1078,7 +1066,6 @@ def frame_rms ( frame , expression , cuts = '' ) :
     - see `Ostap.StatVar.moment`
     """    
     return frame_central_moment ( frame , order = 2 , expression = expression , cuts = cuts )
-
 
 from ostap.fitting.dataset import ds_draw as _ds_draw
 # ==============================================================================
