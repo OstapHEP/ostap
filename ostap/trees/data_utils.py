@@ -93,6 +93,26 @@ class DataProcessor (object) :
         data = self.data.clone() 
         data.add_files ( items )
         return data
+
+from ostap.parallel.task import   Task
+
+# =============================================================================
+## @class DataTask
+class DataTask(Task) : 
+    def __init__ ( self , data ) :
+        self.__data  = data.clone ( files = [] ) 
+    def initialize_local  ( self              ) : pass 
+    def initialize_remote ( self , jobid = -1 ) : pass
+    ## actgual processing  
+    def process ( self , jobid , files ) :
+        """Actual processing"""
+        for f in files :  self.__data.treatFile ( f ) 
+        return self.__data 
+    ## get the results 
+    def results (  self ) : return self.__data 
+    ## merge the results 
+    def merge_results  ( self , results , jobid = -1 ) :    
+        self.__data = self.__data + results
         
 # =============================================================================
 ## @class Files
@@ -105,15 +125,15 @@ class Files(object):
     >>> data  = Files( '*.root' )
     >>> files = data.files
     """
-    def __init__( self                  ,
-                  files                 ,
-                  description = ""      ,
-                  maxfiles    = -1      ,
-                  silent      = False   ) :
+    def __init__( self                ,
+                  files               ,
+                  description = ""    ,
+                  maxfiles    = -1    ,
+                  silent      = False ,
+                  parallel    = False ) :
         #
         if   isinstance ( files , str   ) : files = [ files ]
         elif isinstance ( files , Files ) : files = files.files   
-        #
         #
         
         self.__description  = description
@@ -122,6 +142,9 @@ class Files(object):
         from copy import deepcopy
         self.__patterns     = tuple ( sorted ( set ( files ) ) ) 
         
+        assert isinstance ( maxfiles , int ) , "Invalid type for 'maxfiles'!"
+        
+        self.__maxfiles     = maxfiles 
         self.__files        = []        
 
         # =====================================================================
@@ -133,17 +156,42 @@ class Files(object):
         if not self.silent :
             logger.info ('Loading: %s  #patterns/files: %s/%d' % ( self.description   ,
                                                                    len(self.patterns) , 
-                                                                   len( _files )    ) )            
-        self.add_files ( _files , maxfiles )
-        
-        if not self.silent :
-            logger.info ('Loaded: %s' % self )
+                                                                   len( _files )    ) )
+            
+        ## can use parallel processing here
+        nfiles = len ( _files )
 
+        chunk_size = min ( 20 , nfiles // 3 )         
+        if parallel and chunk_size < nfiles and ( maxfiles < 0 or nfiles <= maxfiles ) :
+            
+            jobs = []
+            from   ostap.utils.utils import chunked 
+            for chunk in chunked ( _files , chunk_size ) : jobs.append ( chunk )
+                
+            psilent = self.silent
+            self.silent = True 
+            
+            task = DataTask ( self )
+            from ostap.parallel.parallel import WorkManager 
+            wmgr = WorkManager ( silent = True , progress = not self.silent )
+
+            wmgr.process ( task , jobs )
+
+            results      = task.results()            
+            self        += results             
+            self.silent  = psilent
+            
+        else : 
+
+            self.__add_files ( _files , maxfiles )
+        
+        if not self.silent : logger.info ('Loaded: %s' % self )
+            
     @property 
     def files     ( self ) :
         """``files'' : the list of files"""
         return tuple ( self.__files )
-
+    
     @property
     def description ( self ) :
         """``description'': description of this collection"""
@@ -172,7 +220,12 @@ class Files(object):
     @verbose.setter 
     def verbose ( self , value ) :
         self.__silent = False if value else True 
-        
+
+    @property
+    def maxfiles ( self ) :
+        """`maxfiles' : maximal number of files to collect"""
+        return self.__maxfiles
+    
     # =========================================================================
     ## check if the file is a part of collection
     #  @code
@@ -212,7 +265,7 @@ class Files(object):
 
     # =========================================================================
     ## add files 
-    def add_files ( self , files , max_files = -1 ) :
+    def __add_files ( self , files , max_files = -1 ) :
         """ Add files/patterns to data collector
         """
         
@@ -236,25 +289,24 @@ class Files(object):
             
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
-        if not the_file in self.__files : self.__files.append ( the_file )
-        
+        if not the_file in self.__files :
+            self.__files = tuple ( self.__files ) + ( the_file , )
+
+    # ===============================================================================
     ## clone it! 
     def  clone ( self               ,
                  files       = None ,
-                 description = None ,
-                 patterns    = None ) :
+                 description = None ) :
         """ Clone the object
         """
         import copy
         result = copy.copy ( self )
         if not files       is None :
             if isinstance ( files , str ) : files = files , 
-            result.__files        = tuple ( files )
+            result.__files        =  [ f for f in files ] 
             result.__patterns     = () 
         if not description is None :
-            result.__descrfiption = str   ( description )
-        if not patterns    is None :
-            result.__patterns     = tuple ( patterns    )
+            result.descrpiption = str ( description )
             
         return result
     
@@ -295,7 +347,7 @@ class Files(object):
         files       = self.files + tuple ( f for f in other.files if not f in self.files ) 
         description = "|".join ( "(%s)" for s in ( self.description , other.description ) )
         
-        return self.clone ( files = files , description = description , patterns = () )
+        return self.clone ( files = files , description = description )
 
     ## get an intersection of two datasets 
     def __and__ (  self , other ) :
@@ -310,9 +362,9 @@ class Files(object):
         files       = tuple ( f for f in self.files if f in other.files )
         description = "&".join ( "(%s)" for s in ( self.description , other.description ) )
         
-        return self.clone ( files = files , description = description , patterns = () )
+        return self.clone ( files = files , description = description )
 
-    ## get an exclusive OR for  two datasets 
+    ## get an exclusive OR for two datasets 
     def __xor__ (  self , other ) :
         """ get an exclusive OR for  two sets
         >>> ds1 = ...
@@ -327,11 +379,30 @@ class Files(object):
         
         description = "^".join ( "(%s)" for s in ( self.description , other.description ) )
         
-        return self.clone ( files = files , description = description , patterns = () )
-
+        return self.clone ( files = files , description = description )
 
     __add__  = __or__    
     __mul__  = __and__
+
+
+    ## append with another dataset
+    def __ior__ ( self , other ) :
+        """ Append with another dataset 
+        >>> ds1 = ...
+        >>> ds2 = ...
+        >>> ds  |= ds2 
+        >>> ds  += ds2 ## ditto
+        """
+        if not self.check_ops ( other ) : return NotImplemented
+
+        files       = self.files + tuple ( f for f in other.files if not f in self.files )
+        
+        self.__files       = list ( files ) 
+        self.__description = "|".join ( "(%s)" for s in ( self.description , other.description ) )
+        
+        return self
+
+    __iadd__  = __ior__    
 
     
     ## get union of two datasets 
@@ -366,14 +437,30 @@ class Files(object):
         files       = tuple ( f for f in self.files if not f in other.files )
         description = "-".join ( "(%s)" for s in ( self.description , other.description ) ) 
 
-        return self.clone ( files = files , description = description , patterns = () )
+        return self.clone ( files = files , description = description )
+
+    ## remove the files from  another dataset 
+    def __isub__ (  self , other ) :
+        """ Remove file forom anothere dataset 
+        >>> ds1 = ...
+        >>> ds2 = ...
+        >>> ds1 -= ds2 ## get subtraction 
+        """
+        if not isinstance ( other , Files ) : return NotImplemented
+
+        files       = tuple ( f for f in self.files if not f in other.files )
+
+        self.__files       = list ( files ) 
+        self.__description = "-".join ( "(%s)" for s in ( self.description , other.description ) )
+        
+        return self
+
     
     # =========================================================================
     ## get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
     def sample_files ( self ,  n , sort ) :
         """get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
         """
-        
         if   isinstance ( n , int   ) and 1 <= n <= len ( self.files ) :
             files = random.sample ( self.files , n )
             if sort : files.sort()
@@ -422,7 +509,7 @@ class Files(object):
         else :
             description = "%s: %s" % ( item , self.description )
         
-        return self.clone ( files = files , description = description , patterns = () )
+        return self.clone ( files = files , description = description  )
         
     ## printout 
     def __str__(self):
@@ -583,7 +670,7 @@ class Files(object):
                 copied.append ( result )
                 
         copied = tuple ( copied )
-        return self.clone ( files = copied , patterns = () ) 
+        return self.clone ( files = copied ) 
     
 # =============================================================================
 ## @class Data
@@ -603,7 +690,8 @@ class Data(Files):
                   description  = ''    , 
                   maxfiles     = -1    ,
                   check        = True  , 
-                  silent       = False ) : 
+                  silent       = False ,
+                  parallel     = False ) : 
 
         ## we will need Ostap machinery for trees&chains here
         import ostap.trees.trees 
@@ -623,7 +711,7 @@ class Data(Files):
         if not description : description = "ROOT.TChain(%s)" % self.chain_name 
         
         ## initialize the  base class 
-        Files.__init__( self , files , description  , maxfiles , silent = silent )
+        Files.__init__( self , files , description  , maxfiles , silent = silent , parallel = parallel )
 
     @property
     def validate ( self ) :
@@ -686,7 +774,7 @@ class Data(Files):
         ## suppress Warning/Error messages from ROOT 
         with rootError() :
 
-            ## new temporary chani/tree 
+            ## new temporary chain/tree for this file 
             tree  = ROOT.TChain ( self.chain_name )
             tree.Add ( the_file )
 
@@ -760,7 +848,8 @@ class Data2(Data):
                   description = ''    ,
                   maxfiles    = -1    ,
                   check       = True  , 
-                  silent      = False ) :
+                  silent      = False ,
+                  parallel    = False ) :
 
         ## decorate files 
         if isinstance ( files , str ) : files = [ files ]
@@ -777,12 +866,14 @@ class Data2(Data):
             description = "%s&%s" % ( description , self.chain2.GetName() )
 
         Data.__init__( self                      ,
-                       chain        = chain1      ,
+                       chain       = chain1      ,
                        files       = files       ,
                        description = description ,
                        maxfiles    = maxfiles    ,
                        check       = check       ,
-                       silent      = silent      )
+                       silent      = silent      ,
+                       parallel    = parallel    ) 
+        
         
     @property 
     def files1    ( self ) :

@@ -1,4 +1,7 @@
+# v1.9.2.2
+
 ## New features: 
+  1. add option `parallel` for `Data` and similar classes  
 
 ## Backward incompatible:  
 

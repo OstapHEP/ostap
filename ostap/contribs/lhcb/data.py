@@ -84,7 +84,8 @@ class DataAndLumi(Data2):
                   lumi_chain  = 'GetIntegratedLuminosity/LumiTuple' , 
                   maxfiles    = 100000 ,
                   check       = True   ,
-                  silent      = False  ) :  
+                  silent      = False  ,
+                  parallel    = False  ) :  
 
         chain      =      chain if isinstance (      chain , str ) else      chain.name
         lumi_chain = lumi_chain if isinstance ( lumi_chain , str ) else lumi_chain.name
@@ -99,7 +100,8 @@ class DataAndLumi(Data2):
                          description = description ,
                          maxfiles    = maxfiles    ,
                          check       = check       , 
-                         silent      = silent      ) 
+                         silent      = silent      ,
+                         parallel    = parallel    ) 
 
     # =========================================================================
     @property
