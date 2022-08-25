@@ -22,12 +22,14 @@ __all__     = (
     'combined_hdata' , ## prepare combined binned dataset for the simultaneous fit
     )
 # =============================================================================
-from   ostap.core.core          import std , Ostap , dsID , items_loop 
+from   ostap.core.core          import std , Ostap , dsID , items_loop
+from   ostap.utils.utils        import chunked 
 from   ostap.fitting.fithelpers import VarMaker
 from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf , 
                                          PDF2 , Generic2D_pdf , 
                                          PDF3 , Generic3D_pdf )
 import ostap.fitting.variables 
+import ostap.fitting.roocmdarg
 import ROOT, math,  random , warnings 
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -76,10 +78,12 @@ def combined_data ( sample          ,
     
     largs   = [ ROOT.RooFit.Index ( sample ) ] 
 
-
     weights = set() 
     ds_keep = []
     
+    store_error      = False 
+    store_asym_error = False 
+
     for label in labels :
 
         dset = None 
@@ -99,12 +103,15 @@ def combined_data ( sample          ,
         if not dset.isWeighted () :
             largs.append (  ROOT.RooFit.Import ( label , dset ) )
         else :
+            store_error      = dset.store_error      () 
+            store_asym_error = dset.store_asym_error ()            
             uwdset , wnam = dset.unWeighted ()
             assert uwdset and wnam, "Cannot 'unweight' dataset!"
             largs.append (  ROOT.RooFit.Import ( label , uwdset ) )
             ds_keep.append ( uwdset ) 
             weights.add    ( wnam   )
 
+    ## we can do with only one weight variable!
     assert len ( weights ) < 2 , 'Invalid number of weights %s' % list ( weights )
 
     weight = weights.pop() if weights else None 
@@ -119,26 +126,45 @@ def combined_data ( sample          ,
     elif isinstance ( varset , ROOT.RooAbsReal ) : vars.add ( varset )
     else :
         for v in varset : vars.add ( v )
-        
+
+    wset = ROOT.RooArgSet() 
     if weight :
         args = args + ( ROOT.RooFit.WeightVar ( weight ) , )
         if not weight in vars : 
-            wvar = ROOT.RooRealVar ( weight , 'weigth variable' , 1 , -1.e+100 , 1.e+100 ) 
+            wvar = ROOT.RooRealVar ( weight , 'weight variable' , 1 , -1.e+100 , 1.e+100 ) 
             vars.add ( wvar ) 
+        wvar = vars [ weight ]
+        wset.add ( wvar ) 
+        if   store_asym_error : args = args + ( ROOT.RooFit.StoreAsymError ( wset ) , )
+        elif store_error      : args = args + ( ROOT.RooFit.StoreError     ( wset ) , )
 
-    ds = ROOT.RooDataSet ( name , title , vars , *args )
+    NARGS = 8
+    if len ( args ) < NARGS :  
+        ds = ROOT.RooDataSet ( name , title , vars , *args )
+    else :
+        keep  = set()
+        for a in args : keep.add ( a )
+        cargs = tuple ( a for a in args )
+        while NARGS <= len ( cargs )  :
+            keep.add ( cargs )
+            nargs  = []
+            for chunk in chunked ( cargs , min ( 5 , NARGS ) ) :
+                newarg = ROOT.RooFit.MultiArg ( *chunk )
+                nargs.append ( newarg )
+            cargs = tuple ( nargs )
+        ds = ROOT.RooDataSet ( name , title , vars , *cargs )
 
+    ## delete helper intermediate datasets 
     while ds_keep :
         d = ds_keep.pop()
         d.reset()
         del d
-        
-    
+            
     return ds
 
 
 # =============================================================================
-## create combined binned dataset for simultaneous fit
+## create combined binned dataset for simultaneous fit as RooDataHist 
 #  - combine 2D histograms:
 #  @code
 #  sample = ROOT.RooCategory ( 'sample' , 'fitting sample' , 'A' , 'B' )
@@ -166,6 +192,8 @@ def combined_data ( sample          ,
 #  zvar = ROOT.RooRealVar ( ... )
 #  ds   = combined_hdata ( sample , (xvar, yvar, zvar) , { 'A' : hA , 'B' : hB } )  
 #  @endcode
+#  Since the output is <code>RooDataHist</code> the specifications for
+#  the individual historgams must be the same  
 def combined_hdata ( sample        ,
                      varset        ,
                      histograms    ,
@@ -198,6 +226,8 @@ def combined_hdata ( sample        ,
     >>> yvar = ROOT.RooRealVar ( ... )
     >>> zvar = ROOT.RooRealVar ( ... )
     >>> ds   = combined_hdata ( sample , (xvar, yvar, zvar) , { 'A' : hA , 'B' : hB } )  
+
+    - Since the output is `RooDataHist` the specifications for the individual historgams must be the same  
     """
 
     MAP  = std.map  ( 'std::string'       , 'TH1*' )

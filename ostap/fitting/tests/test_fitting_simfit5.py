@@ -126,7 +126,7 @@ logger.info ( 'Combined dataset/1:\n%s' % cdataset1.table ( prefix = '# ' ) )
 
 
 # ======================================================================
-## make try to use binned daatset  (as weighted datasets)
+## make try to use binned dataset  (as weighted datasets)
 # ======================================================================
 
 dsdm1  = H1D_dset ( hdm1 , xaxis = dm1 , weighted = True , skip_zero = True )
@@ -136,22 +136,24 @@ dsdm3  = H1D_dset ( hdm3 , xaxis = dm3 , weighted = True , skip_zero = True )
 dataset.addVar( 'h1weight' , '1.0' ) 
 cdataset2 = combined_data ( category ,
                             vars     ,  
-                            datasets = { 'data' : dataset.makeWeighted ( 'h1weight' ) ,
+                            datasets = { 'data' : dataset, ## dataset.makeWeighted ( 'h1weight' ) ,
                                          'dm1'  : dsdm1.dset ,
                                          'dm2'  : dsdm2.dset ,
-                                         'dm3'  : dsdm3.dset } ,
-                            args = ( ROOT.RooFit.WeightVar( dsdm1.wname ) , ) )
+                                         'dm3'  : dsdm3.dset } )
+                            ## args = ( ROOT.RooFit.WeightVar( dsdm1.wname ) , ) )
+                            
 
 logger.info ( 'Combined dataset/2:\n%s' % cdataset2.table ( prefix = '# ' ) )                            
 
 
 # =============================================================================
-def test_simfit5() : 
-
+## def test_simfit5() : 
+if 1 < 2 :
+    
     logger = getLogger ( 'test_simfit5' )
 
     # =========================================================================
-    ## resoltuion for the left peak 
+    ## resolution for the left peak 
     # =========================================================================
     reso1 = Models.ResoGauss ( 'RG1'       ,
                                xvar  = dm1 ,
@@ -159,11 +161,11 @@ def test_simfit5() :
                                mean  = ( 0 , -1 , 1 ) )
     
     # fit DM1 dataset for resolution 
-    r1 , f1 = reso1.fitTo ( dset1 , silent = True )
-    r1 , f1 = reso1.fitTo ( dset1 , silent = True , draw = True , nbins = 100 )
-
+    r1  , f1  = reso1.fitTo ( dset1 , silent = True )
+    r1  , f1  = reso1.fitTo ( dset1 , silent = True , draw = True , nbins = 100 )
+    
     # =========================================================================
-    ## resoltuion for the central peak 
+    ## resolution for the central peak 
     # =========================================================================
     reso2 = Models.ResoGauss ( 'RG2'       ,
                                xvar  = dm2 ,
@@ -175,7 +177,7 @@ def test_simfit5() :
     r2 , f2 = reso2.fitTo ( dset2 , silent = True , draw = True , nbins = 100 )
 
     # =========================================================================
-    ## resoltuion for the right peak 
+    ## resolution for the right peak 
     # =========================================================================
     reso3 = Models.ResoGauss ( 'RG3'       ,
                                xvar  = dm3 ,
@@ -217,7 +219,6 @@ def test_simfit5() :
 
     logger.info ( 'Fit result (only data):\n%s' % r0.table ( prefix = "# " ) )
     
-    
     ## combine PDFs
     model_sim  = Models.SimFit (
         category , { 'data' : model ,
@@ -233,7 +234,7 @@ def test_simfit5() :
 
     logger.info ( 'Simultaneous fit result (unbinned reso):\n%s' % r_1.table ( prefix = "# " ) )
     
-    with use_canvas ( 'test_simfit5' ) , wait ( 1 ) :
+    with use_canvas ( 'test_simfit5: unbinned resolutions' ) , wait ( 1 ) :
         with wait ( 1 ) : fdm1 = model_sim.draw ( 'dm1'  , cdataset1 , nbins = 100 )
         with wait ( 1 ) : fdm2 = model_sim.draw ( 'dm2'  , cdataset1 , nbins = 100 )
         with wait ( 1 ) : fdm3 = model_sim.draw ( 'dm3'  , cdataset1 , nbins = 100 )
@@ -248,7 +249,7 @@ def test_simfit5() :
 
     logger.info ( 'Simultaneous fit result (binned reso):\n%s' % r_2.table ( prefix = "# " ) )
     
-    with use_canvas ( 'test_simfit5' ) , wait ( 1 ) :
+    with use_canvas ( 'test_simfit5: binned resolutions' ) , wait ( 1 ) :
         with wait ( 1 ) : fdm1 = model_sim.draw ( 'dm1'  , cdataset2 , nbins = 100 )
         with wait ( 1 ) : fdm2 = model_sim.draw ( 'dm2'  , cdataset2 , nbins = 100 )
         with wait ( 1 ) : fdm3 = model_sim.draw ( 'dm3'  , cdataset2 , nbins = 100 )
@@ -259,8 +260,10 @@ def test_simfit5() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ("simfit-5", logger ) :
-        test_simfit5 () 
+    ## with timing ("simfit-5", logger ) :
+    ##    test_simfit5 () 
+    pass
+
 
 # =============================================================================
 ##                                                                      The END 
