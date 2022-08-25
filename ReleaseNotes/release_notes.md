@@ -1,8 +1,12 @@
+# v1.9.2.4
+
 ## New features: 
 
 ## Backward incompatible:  
 
 ## Bug fixes:
+
+ 1. fix newly introduced typo in drawing for simulltaneous pdf. Thanks to Dima Pereima for reporitng a problem! 
 
 # v1.9.2.2
 

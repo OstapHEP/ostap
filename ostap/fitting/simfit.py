@@ -590,8 +590,6 @@ class SimFit (VarMaker) :
                'Invalid type for "sample":' % ( sample ,  type ( sample ) )
         
         name = name if name else self.generate_name ( 'simfit' , '' , sample.GetName() )
-
-
         
         ## propagate the name 
         self.name = name
@@ -837,6 +835,7 @@ class SimFit (VarMaker) :
         >>> pdf.fitTo ( dataset )
         >>> pf.draw ( 'signal' , dataset , nbins = 100 ) 
         """
+
         dvar = None
         if   isinstance ( category , ( tuple , list ) ) and 2 == len ( category ) :
             category , dvar = category 
@@ -913,7 +912,7 @@ class SimFit (VarMaker) :
                     return None
                 
             elif isinstance ( draw_pdf , PDF2 ) :
-
+                
                 if   2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) :
                     return draw_pdf.draw2 ( dataset = dataset ,
                                             nbins   = nbins   ,
@@ -928,12 +927,14 @@ class SimFit (VarMaker) :
                     self.error("Unknown 'dvar' for 2D-draw pdf! %s" %  dvar )
                     return None 
 
-            elif isinstance ( draw_pdf , PDF3 ) :
-                
+            elif isinstance ( draw_pdf , PDF1 ) :                
                 return draw_pdf.draw ( dataset = dataset ,
                                        nbins   = nbins   ,
                                        silent  = silent  ,
                                        args    = args    , **kwargs )
+
+            self.error ("draw: inconsistent combination of draw_pdf '%s' and dvar '%s'" % (
+                type ( draw_pdf ) , dvar ) )
             
     # =========================================================================
     ## create NLL
