@@ -25,6 +25,7 @@
 - Weibull_pdf        : Weibull distributions
 - Tsallis_pdf        : Tsallis PDF 
 - QGSM_pdf           : QGSM PDF 
+- Tsallis2_pdf       : 2D Tsallis PDF 
 
 """
 # =============================================================================
@@ -49,10 +50,11 @@ __all__     = (
     'Weibull_pdf'        , ## Weibull distributions
     'Tsallis_pdf'        , ## Tsallis PDF 
     'QGSM_pdf'           , ## QGSM PDF 
+    'Tsallis2_pdf'       , ## 2D Tsallis PDF 
     )
 # =============================================================================
 from   ostap.core.core        import Ostap, VE 
-from   ostap.fitting.pdfbasic import PDF1
+from   ostap.fitting.pdfbasic import PDF1, PDF2 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -1625,6 +1627,136 @@ class QGSM_pdf(PDF1) :
        
 
 models.append ( QGSM_pdf )
+
+
+
+# =============================================================================
+## @class Tsallis2_pdf
+#  Useful function to describe pT and saidity -spectra of particles 
+#
+#  2D particle density distribution as function of pt and rapidity 
+#  @see L. Marques, J. Cleymans, A. Deppman, 
+#       "Description of High-Energy pp Collisions 
+#        Using Tsallis Thermodynamics: 
+#        Transverse Momentum and Rapidity Distributions", 
+#        Phys. Rev. D 91, 054025, 	arXiv:1501.00953 
+#  @see https://arxiv.org/abs/1501.00953
+#  @see https://doi.org/10.1103/PhysRevD.91.054025
+#  @see Ostap::Models::Tsallis2
+#  @see Ostap::Models::Tsallis
+#  @see Ostap::Math::Tsallis2
+#  @see Ostap::Math::Tsallis
+class Tsallis2_pdf(PDF2) :
+    """ 2D particle density distribution as function of pt and rapidity 
+    @see L. Marques, J. Cleymans, A. Deppman, 
+    ``Description of High-Energy pp Collisions 
+    Using Tsallis Thermodynamics: 
+    Transverse Momentum and Rapidity Distributions'', 
+    Phys. Rev. D 91, 054025, 	arXiv:1501.00953 
+    - see https://arxiv.org/abs/1501.00953
+    - see https://doi.org/10.1103/PhysRevD.91.054025
+    - see `Ostap.Models.Tsallis2`
+    - see `Ostap.Models.Tsallis`
+    - see `Ostap.Math.Tsallis2`
+    - see `Ostap.Math.Tsallis`
+    """
+    def __init__ ( self                   ,
+                   xvar                   ,   ## pT-observable )
+                   yvar                   ,   ## rapidity observable
+                   m0        = 1          ,   ## partile mass (presumably constant) 
+                   T         = None       ,   ## temperature parameter
+                   q         = 1.1        ,   ## q-parameter
+                   mu        = 0          ,   ## chemical potential                    
+                   name      = ''         ) :
+        
+        ## initialize the base 
+        PDF2.__init__  ( self , name = name , xvar = xvar , yvar =  yvar )
+        
+        self.__m0   = self.make_var ( m0              ,
+                                      'm0_%s'  % name , 
+                                      'm0(%s)' % name ,
+                                      True , 0     , 1e+6 )
+        
+        self.__q    = self.make_var ( q               ,
+                                      'q_%s'   % name , 
+                                      'q(%s) ' % name ,
+                                      None , 1.1 , 1.e-6, 10 )  
+        
+        self.__T    = self.make_var ( T               ,
+                                      'T_%s'   % name , 
+                                      'T(%s) ' % name ,
+                                      None , 1 , 1.e-4 , 1e+6 )
+        
+        self.__mu   = self.make_var ( mu               ,
+                                      'mu_%s'   % name , 
+                                      '#mu(%s) '% name ,
+                                      True  , 0 , 0 , 100 )
+        
+        self.pdf  = Ostap.Models.Tsallis2 (
+            self.roo_name ( 'tsallis2_' )   ,
+            'Tsallis2 %s' % self.name  , 
+            self.pt               ,
+            self.y                ,
+            self.m0               ,
+            self.T                ,
+            self.q                ,
+            self.mu               )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'yvar'  : self.yvar  ,
+            'm0'    : self.m0    ,            
+            'q'     : self.q     ,            
+            'T'     : self.T     ,            
+            'mu'    : self.mu    ,            
+            }
+        
+    @property
+    def pt ( self ) :
+        """'pt'-observable (transverse momentum) for Tsallis distribution (the same as 'xvar')"""
+        return self.xvar
+    
+    @property
+    def y ( self ) :
+        """'y'-observable (rapidity) for Tsallis distribution (the same as 'yvar')"""
+        return self.yvar
+
+    @property
+    def m0 ( self ) :
+        """'m0'-parameter (particle mass) of Tsallis' function"""
+        return self.__m0
+    @m0.setter
+    def m0 ( self , value ) :
+        self.set_value ( self.__m0 , value )
+
+    @property
+    def q ( self ) :
+        """'q'-parameter (shape) of Tsallis' function"""
+        return self.__q
+    @q.setter
+    def q ( self , value ) :
+        self.set_value ( self.__q , value )
+
+    @property
+    def T ( self ) :
+        """'T'-parameter (temperature) of Tsallis' function"""
+        return self.__T
+    @T.setter
+    def T ( self , value ) :
+        self.set_value ( self.__T , value )
+
+    @property
+    def mu ( self ) :
+        """'mu'-parameter (chemical potential) of Tsallis' function"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :
+        self.set_value ( self.__mu , value )
+ 
+        
+models.append ( Tsallis2_pdf ) 
 
 # =============================================================================
 if '__main__' == __name__ : 

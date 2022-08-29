@@ -2669,13 +2669,13 @@ namespace Ostap
       // ======================================================================
       /** constructor from all arguments            
        *  @param mean  the mean/mode/location of the peak 
-       *  @param q     q-value   (q<3, for q>3 q = 6-q)
-       *  @param scale 
+       *  @param scale scale parmaeter/sigma 
+       *  @param q     q-value   (q<3, for q>3 q is set to be  6-q)
        */
       QGaussian 
       ( const double mean  = 0 ,   // mean/mode/location 
-        const double q     = 1 ,   //  q-parameter 
-        const double scale = 1 ) ; // scale/sigma
+        const double scale = 1 ,   // scale/sigma
+        const double q     = 1 );  // q-parameter/shape 
       // ======================================================================
     public :
       // ======================================================================
@@ -2687,8 +2687,8 @@ namespace Ostap
     public : // primary getters 
       // ======================================================================
       double mean   () const { return  m_mean  ; }
-      double q      () const { return  m_q     ; }
       double scale  () const { return  m_scale ; }
+      double q      () const { return  m_q     ; }
       // ======================================================================
     public : // derived getters 
       // ======================================================================
@@ -2721,8 +2721,9 @@ namespace Ostap
       /// get the integral 
       double integral () const { return 1 ; }
       /// get the integral 
-      double integral ( const double low  , 
-                        const double high ) const ;      
+      double integral 
+      ( const double low  , 
+        const double high ) const ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -2733,10 +2734,10 @@ namespace Ostap
       // ======================================================================
       /// mean/mode/location 
       double m_mean  ; // mean/mode/location 
-      /// q-value 
-      double m_q     ; // q-value 
       /// scale/sigma 
       double m_scale ; // scale/sigma
+      /// q-value 
+      double m_q     ; // q-value 
       // ======================================================================
     private:
       // ======================================================================

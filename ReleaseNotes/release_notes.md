@@ -1,4 +1,8 @@
 ## New features: 
+    1. change order of arguments for constructor of `Ostap::Math::QGaussian` and `Ostap::Models::QGaussian`
+    1. add set of helpful fnuctions into `Ostap/QMath.h`
+    1. improve QGaussiang model 
+    1. add 2D Tsallis distribution for pt versus rapidity 
 
 ## Backward incompatible:  
 

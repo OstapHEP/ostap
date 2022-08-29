@@ -112,6 +112,7 @@
 #include "Ostap/TreeGetter.h"
 #include "Ostap/TypeWrapper.h"
 #include "Ostap/Tmva.h"
+#include "Ostap/qMath.h"
 #include "Ostap/Valid.h"
 #include "Ostap/ValueWithError.h"
 #include "Ostap/Vector3DTypes.h"

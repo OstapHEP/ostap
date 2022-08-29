@@ -322,24 +322,34 @@ def f2_draw ( self , opts ='' , **kwargs ) :
     >>> fun = ...
     >>> fun.draw()    
     """
-        
+    
+    if hasattr ( self , '_tf2' ) and 'xmin'     in kwargs :        
+        xmin    = kwargs.get ( 'xmin'    , None )
+        if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf2.GetXmin () : del self._tf2 
+
+    if hasattr ( self , '_tf2' ) and 'xmax'     in kwargs :        
+        xmax    = kwargs.get ( 'xmax'    , None )
+        if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf2.GetXmax () : del self._tf2 
+
+    if hasattr ( self , '_tf2' ) and 'ymin'     in kwargs :        
+        ymin    = kwargs.get ( 'ymin'    , None )
+        if isinstance ( ymin    , num_types     ) and float ( ymin ) != self._tf2.GetYmin () : del self._tf2 
+
+    if hasattr ( self , '_tf2' ) and 'ymax'     in kwargs :        
+        ymax    = kwargs.get ( 'ymax'    , None )
+        if isinstance ( ymax    , num_types     ) and float ( ymax ) != self._tf2.GetYmax () : del self._tf2 
+
     if not hasattr ( self , '_tf2'  ) :
 
-        xmin  = kwargs.pop ( 'xmin' , neg_infinity )
-        xmax  = kwargs.pop ( 'xmax' , pos_infinity )
-        ymin  = kwargs.pop ( 'ymin' , neg_infinity )
-        ymax  = kwargs.pop ( 'ymax' , pos_infinity )
-        npars = kwargs.pop ( 'npars' , 0  ) 
-        args  = kwargs.pop ( 'args' , () )
-
-        self._tf2        =  tf2 ( self ,
-                                  xmin  = xmin  ,
-                                  xmax  = xmax  ,
-                                  ymin  = ymin  ,
-                                  ymax  = ymax  ,
-                                  npars = npars , 
-                                  args  = args  )
+        self._tf2        =  tf2 ( self , **kwargs )
         
+    xmin  = kwargs.pop ( 'xmin'  , neg_infinity )
+    xmax  = kwargs.pop ( 'xmax'  , pos_infinity )
+    ymin  = kwargs.pop ( 'ymin'  , neg_infinity )
+    ymax  = kwargs.pop ( 'ymax'  , pos_infinity )
+    npars = kwargs.pop ( 'npars' , 0  ) 
+    args  = kwargs.pop ( 'args'  , () )
+    
     return self._tf2.draw ( opts , **kwargs )
 
 # =============================================================================
@@ -349,27 +359,45 @@ def f3_draw ( self , opts ='' , **kwargs ) :
     >>> fun = ...
     >>> fun.draw()    
     """
+    
+    if hasattr ( self , '_tf3' ) and 'xmin'     in kwargs :        
+        xmin    = kwargs.get ( 'xmin'    , None )
+        if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf3.GetXmin () : del self._tf3 
+
+    if hasattr ( self , '_tf3' ) and 'xmax'     in kwargs :        
+        xmax    = kwargs.get ( 'xmax'    , None )
+        if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf3.GetXmax () : del self._tf3 
+
+    if hasattr ( self , '_tf3' ) and 'ymin'     in kwargs :        
+        ymin    = kwargs.get ( 'ymin'    , None )
+        if isinstance ( ymin    , num_types     ) and float ( ymin ) != self._tf3.GetYmin () : del self._tf3 
+
+    if hasattr ( self , '_tf3' ) and 'ymax'     in kwargs :        
+        ymax    = kwargs.get ( 'ymax'    , None )
+        if isinstance ( ymax    , num_types     ) and float ( ymax ) != self._tf3.GetYmax () : del self._tf3 
+
+    if hasattr ( self , '_tf3' ) and 'zmin'     in kwargs :        
+        zmin    = kwargs.get ( 'zmin'    , None )
+        if isinstance ( zmin    , num_types     ) and float ( zmin ) != self._tf3.GetZmin () : del self._tf3 
+
+    if hasattr ( self , '_tf3' ) and 'ymax'     in kwargs :        
+        zmax    = kwargs.get ( 'zmax'    , None )
+        if isinstance ( zmax    , num_types     ) and float ( zmax ) != self._tf3.GetZmax () : del self._tf3 
+
+
     if not hasattr ( self , '_tf3'  ) :
 
-        xmin  = kwargs.pop ( 'xmin' , neg_infinity )
-        xmax  = kwargs.pop ( 'xmax' , pos_infinity )
-        ymin  = kwargs.pop ( 'ymin' , neg_infinity )
-        ymax  = kwargs.pop ( 'ymax' , pos_infinity )
-        zmin  = kwargs.pop ( 'zmin' , neg_infinity )
-        zmax  = kwargs.pop ( 'zmax' , pos_infinity )
-        npars = kwargs.pop ( 'npars' , 0  ) 
-        args  = kwargs.pop ( 'args' , () )
-
-        self._tf3        = tf3 ( self ,
-                                 xmin  = xmin  ,
-                                 xmax  = xmax  ,
-                                 ymin  = ymin  ,
-                                 ymax  = ymax  ,
-                                 zmin  = zmin  ,
-                                 zmax  = zmax  ,
-                                 npars = npars , 
-                                 args  = args  )
-        
+        self._tf3        = tf3 ( self , **kwargs )
+    
+    xmin  = kwargs.pop ( 'xmin' , neg_infinity )
+    xmax  = kwargs.pop ( 'xmax' , pos_infinity )
+    ymin  = kwargs.pop ( 'ymin' , neg_infinity )
+    ymax  = kwargs.pop ( 'ymax' , pos_infinity )
+    zmin  = kwargs.pop ( 'zmin' , neg_infinity )
+    zmax  = kwargs.pop ( 'zmax' , pos_infinity )
+    npars = kwargs.pop ( 'npars' , 0  ) 
+    args  = kwargs.pop ( 'args' , () )
+    
     return self._tf3.draw ( opts , **kwargs )
 
 # =============================================================================

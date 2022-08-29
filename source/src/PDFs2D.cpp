@@ -16,6 +16,7 @@
 #include "RVersion.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
+#include "RooConstVar.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -1677,8 +1678,187 @@ Double_t Ostap::Models::Gauss2D::analyticalIntegral
 // ============================================================================
 
 
+
+// ============================================================================
+// 2D Tsallis2
+// ============================================================================
+/*  constructor
+ *  @param name the name 
+ *  @param title the title 
+ *  @param mass particle mass (usually constant) 
+ *  @param T    temperature 
+ *  @param q    q-parameter
+ *  @param mu   chemical potential 
+ */
+// ============================================================================
+Ostap::Models::Tsallis2::Tsallis2
+( const char* name    , 
+  const char* title   ,
+  RooAbsReal& pt      ,
+  RooAbsReal& y       ,
+  RooAbsReal& mass    ,
+  RooAbsReal& T       ,
+  RooAbsReal& q       ,
+  RooAbsReal& mu      )
+  : RooAbsPdf  ( name    , title ) 
+  , m_pt       ( "pt"    , "Observable-Pt"      , this , pt   ) 
+  , m_y        ( "y"     , "Observable-Y"       , this , y    ) 
+  , m_mass     ( "mass"  , "partiel mass "      , this , mass ) 
+  , m_T        ( "T"     , "tempeorature"       , this , T    ) 
+  , m_q        ( "q"     , "q-parameter"        , this , q    ) 
+  , m_mu       ( "mu"    , "chemical potential" , this , mu   ) 
+  , m_tsallis2 ()
+{
+  setPars () ;
+}
+// ============================================================================
+/*  constructor
+ *  @param name the name 
+ *  @param title the title 
+ *  @param mass particle mass (usually constant) 
+ *  @param T    temperature 
+ *  @param q    q-parameter
+ *  @param mu   chemical potential 
+ */
+// ============================================================================
+Ostap::Models::Tsallis2::Tsallis2
+( const char*  name  , 
+  const char*  title , 
+  RooAbsReal&  pt    , 
+  RooAbsReal&  y     , 
+  const double mass  , 
+  RooAbsReal&  T     , 
+  RooAbsReal&  q     , 
+  RooAbsReal&  mu    ) 
+  : Tsallis2 ( name , title , pt , y , 
+               RooFit::RooConst ( std::abs ( mass ) ) , T , q , mu ) 
+{}
+// ============================================================================
+/* constructor
+ *  @param name the name 
+ *  @param title the title 
+ *  @param mass particle mass (usually constant) 
+ *  @param T    tempoerature 
+ *  @param q    q-parameter
+ *  @param mu   chemical potential 
+ */
+// ============================================================================
+Ostap::Models::Tsallis2::Tsallis2
+( const char*  name   , 
+  const char*  title  , 
+  RooAbsReal&  pt     , 
+  RooAbsReal&  y      , 
+  RooAbsReal&  mass   , 
+  RooAbsReal&  T      , 
+  RooAbsReal&  q      , 
+  const double mu     ) 
+  : Tsallis2 ( name , title , pt , y , mass , T , q , RooFit::RooConst ( mu ) ) 
+{}
+// ============================================================================
+/*  constructor
+ *  @param name the name 
+ *  @param title the title 
+ *  @param mass particle mass (usually constant) 
+ *  @param T    tempoerature 
+ *  @param q    q-parameter
+ *  @param mu   chemical potential 
+ */
+// ============================================================================
+Ostap::Models::Tsallis2::Tsallis2
+( const char*  name   , 
+  const char*  title  , 
+  RooAbsReal&  pt     , 
+  RooAbsReal&  y      , 
+  const double mass   , 
+  RooAbsReal&  T      , 
+  RooAbsReal&  q      , 
+  const double mu     ) 
+  : Tsallis2 ( name , title , pt , y , 
+               RooFit::RooConst ( std::abs ( mass ) ) , T , q , 
+               RooFit::RooConst ( mu ) ) 
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Tsallis2::Tsallis2
+( const Ostap::Models::Tsallis2&  right ,      
+  const char*                              name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_pt       ( "!pt"   , this , right.m_pt   ) 
+  , m_y        ( "!y"    , this , right.m_y    ) 
+  , m_mass     ( "!mass" , this , right.m_mass ) 
+  , m_T        ( "!T"    , this , right.m_T    ) 
+  , m_q        ( "!q"    , this , right.m_q    ) 
+  , m_mu       ( "!mu"   , this , right.m_mu   ) 
+    //
+  , m_tsallis2  ( right.m_tsallis2 ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::Tsallis2::~Tsallis2(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Tsallis2*
+Ostap::Models::Tsallis2::clone( const char* name ) const 
+{ return new Ostap::Models::Tsallis2(*this,name) ; }
+// ============================================================================
+void Ostap::Models::Tsallis2::setPars () const 
+{ 
+  m_tsallis2.setMass ( m_mass ) ;
+  m_tsallis2.setT    ( m_T    ) ;
+  m_tsallis2.setQ    ( m_q    ) ;
+  m_tsallis2.setMu   ( m_mu   ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Tsallis2::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_tsallis2 ( m_pt , m_y ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::Tsallis2::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if      ( matchArgs ( allVars , analVars , m_pt , m_y ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_pt       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars        , m_y ) ) { return 3 ; }
+  //
+  return 0 ;
+}
+//_____________________________________________________________________________
+Double_t Ostap::Models::Tsallis2::analyticalIntegral 
+( Int_t       code       , 
+  const char* rangeName  ) const 
+{
+  //
+  assert ( 1 == code || 2 == code || 3 == code ) ;
+  //
+  setPars () ;
+  //
+  return 
+    1 == code ? m_tsallis2.integral     (        m_pt.min(rangeName) , m_pt.max(rangeName) , 
+                                                 m_y .min(rangeName) , m_y .max(rangeName) ) : 
+    2 == code ? m_tsallis2.integrate_pt ( m_y  , m_pt.min(rangeName) , m_pt.max(rangeName) ) : 
+    3 == code ? m_tsallis2.integrate_y  ( m_pt , m_y .min(rangeName) , m_y .max(rangeName) ) : 0.0 ;  
+}
+// ============================================================================
+
+
+
 // ============================================================================
 ClassImp(Ostap::Models::Gauss2D              ) 
+ClassImp(Ostap::Models::Tsallis2             ) 
 ClassImp(Ostap::Models::Poly2DPositive       ) 
 ClassImp(Ostap::Models::Poly2DSymPositive    )
 ClassImp(Ostap::Models::PS2DPol              )

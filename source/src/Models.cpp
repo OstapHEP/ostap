@@ -2365,7 +2365,7 @@ bool Ostap::Math::Tsallis::setT ( const double value )
 // ============================================================================
 //  get Tsallis PDF  
 // ============================================================================
-double Ostap::Math::Tsallis::pdf ( const double x ) const 
+double Ostap::Math::Tsallis::evaluate ( const double x ) const 
 { return x <= 0 ? 0.0 : x * std::pow ( 1.0 + eTkin ( x ) / ( m_T * m_n ) , -m_n ) ; }
 // ============================================================================
 //  get Tsallis integrals  
@@ -2425,6 +2425,9 @@ std::size_t Ostap::Math::Tsallis::tag () const
   return std::hash_combine ( s_name , m_mass , m_n , m_T ) ; 
 }
 // ============================================================================
+
+
+
 
 
 

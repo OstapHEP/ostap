@@ -1487,6 +1487,121 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Tsallis2 
+     *  2D particle density distribution as function of pt and rapidity 
+     *  @see L. Marques, J. Cleymans, A. Deppman, 
+     *       "Description of High-Energy pp Collisions 
+     *        Using Tsallis Thermodynamics: 
+     *        Transverse Momentum and Rapidity Distributions", 
+     *        Phys. Rev. D 91, 054025, 	arXiv:1501.00953 
+     *  @see https://arxiv.org/abs/1501.00953
+     *  @see https://doi.org/10.1103/PhysRevD.91.054025
+     *  @see Ostap::Math::Tsallis
+     */ 
+    class Tsallis2 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters 
+       *  @param mass particle mass (needed to calculate transverse mass)
+       *  @param q    q-parameter of Tsallis  (q=1 corresponds to Boltzman statistics)
+       *  @param T    the temperature
+       *  @param mu   chemical potential 
+       */
+      Tsallis2 
+      ( const double mass = 1     ,   // mass
+        const double T    = 0.050 ,   // temperature
+        const double q    = 1.1   ,   // q=1 -> Boltzman statistics 
+        const double mu   = 0     ) ; // chemical potential 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** evaluate Tsallis function
+       *  @param pt transverse momentum of the particle 
+       *  @param y  rapidity of the particle 
+       */
+      double evaluate 
+      ( const double pt , const double y  ) const ;
+      /** evaluate Tsallis functuon
+       *  @param pt transverse momentum of the particle 
+       *  @param y  rapidity of the particle 
+       */
+      double operator() 
+      ( const double pt , const double y  ) const 
+      { return evaluate ( pt , y ) ; }
+      // ======================================================================
+     public:
+      // ======================================================================
+      /// particle mass 
+      double mass () const { return m_mass ; }
+      /// q-parameter  
+      double q    () const { return m_q    ; }
+      /// temperature 
+      double T    () const { return m_T    ; }
+      /// chemical potential 
+      double mu   () const { return m_mu   ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// update mass-parameter
+      bool setMass ( const double value ) ; // update mass-parameter
+      bool setM    ( const double value ) { return setMass ( value ) ; }
+      /// update q-parameter
+      bool setQ    ( const double value ) ; // update q-parameter
+      /// update temperature 
+      bool setT    ( const double value ) ; // update temperature 
+      /// update chemiclas potyential 
+      bool setMu   ( const double value ) ; // update chemical potential 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the transverse mass for the given pt 
+      inline double mT   ( const double pt  ) const
+      { return std::hypot ( pt , m_mass  ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral between ptlow-pthigh and ylow-yhigh
+      double integral 
+      ( const double ptlow  ,
+        const double pthigh , 
+        const double ylow   , 
+        const double yhigh  ) const ;
+      /// get the integral between ylow-yhigh for given pt 
+      double integrate_y  
+      ( const double pt ,
+        const double ylow   , 
+        const double yhigh  ) const ;
+      /// get the integral between ptlow-pthigh for given rapidity 
+      double integrate_pt  
+      ( const double y      , 
+        const double ptlow  ,
+        const double pthigh ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// mass of the particle 
+      double m_mass  { 1.0   } ; // mass of the particle 
+      /// temperature 
+      double m_T     { 0.050 } ; // temperature
+      /// q-parameter 
+      double m_q     { 1.1   } ; // q-parameter 
+      /// chemical potential 
+      double m_mu    { 0     } ; // chemical potential
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// workspace
+      Ostap::Math::WorkSpace m_workspace {} ; // workspace
+      // ======================================================================
+    } ;
+    // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

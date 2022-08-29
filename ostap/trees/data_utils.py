@@ -779,16 +779,20 @@ class Data(Files):
             tree.Add ( the_file )
 
             ok = len ( tree ) 
-            if  ok :
+            if ok and 0 < len ( tree.branches () ) :
                 
-                if self.check and self.files :
-                    chain = self.chain 
-                    self.check_trees ( chain , tree , the_file )
-                    del chain
-                    
-                Files.treatFile  ( self  ,        the_file )
+                if self.check:
+                    files = self.files 
+                    if files :
+                        chain = ROOT.TChain ( self.chain_name )
+                        chain.Add ( files[0] ) 
+                        self.check_trees ( chain , tree , the_file )
+                        del chain
+                        
+                Files.treatFile ( self , the_file )
                 
-            else : 
+            else :
+                
                 self.__bad_files.add ( the_file )
                 if not self.silent : 
                     logger.warning ( "No/empty chain  '%s' in file '%s'" % ( self.chain_name , the_file ) )

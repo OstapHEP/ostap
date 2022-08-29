@@ -7518,13 +7518,13 @@ Ostap::Models::QGaussian::QGaussian
   const char*          title     ,
   RooAbsReal&          x         , // observable 
   RooAbsReal&          mean      , // mean
-  RooAbsReal&          q         , // q
-  RooAbsReal&          scale     ) // scale
+  RooAbsReal&          scale     , // scale
+  RooAbsReal&          q         ) // q
   : RooAbsPdf  ( name , title ) 
   , m_x        ( "x"      , "Observable"               , this , x     ) 
   , m_mean     ( "mean"   , "Mean/location parameter"  , this , mean  ) 
-  , m_q        ( "q"      , "Q-parameter"              , this , q     ) 
   , m_scale    ( "scale"  , "Scale parameter"          , this , scale ) 
+  , m_q        ( "q"      , "Q-parameter"              , this , q     ) 
   , m_qgauss   ()  
 {
   setPars () ;  
@@ -7537,10 +7537,10 @@ Ostap::Models::QGaussian::QGaussian
   const char*                     name  ) 
   : RooAbsPdf  ( right , name ) 
     //
-  , m_x        ( "x"     , this , right.m_x     ) 
-  , m_mean     ( "mean"  , this , right.m_mean  ) 
-  , m_q        ( "q"     , this , right.m_q     ) 
-  , m_scale    ( "scale" , this , right.m_scale ) 
+  , m_x        ( "!x"     , this , right.m_x     ) 
+  , m_mean     ( "!mean"  , this , right.m_mean  ) 
+  , m_scale    ( "!scale" , this , right.m_scale ) 
+  , m_q        ( "!q"     , this , right.m_q     ) 
   , m_qgauss   ( right.m_qgauss ) 
 {
   setPars () ;  

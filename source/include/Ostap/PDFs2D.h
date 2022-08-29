@@ -1403,6 +1403,160 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Tsallis2 
+     *  2D particle density distribution as function of pt and rapidity 
+     *  @see L. Marques, J. Cleymans, A. Deppman, 
+     *       "Description of High-Energy pp Collisions 
+     *        Using Tsallis Thermodynamics: 
+     *        Transverse Momentum and Rapidity Distributions", 
+     *        Phys. Rev. D 91, 054025, 	arXiv:1501.00953 
+     *  @see Ostap::Math::Tsallis2
+     *  @see Ostap::Math::Tsallis
+     *  @see https://arxiv.org/abs/1501.00953
+     *  @see https://doi.org/10.1103/PhysRevD.91.054025
+     */ 
+    class Tsallis2 : public RooAbsPdf 
+    {
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Tsallis2, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** full constructor
+       *  @param name the name 
+       *  @param title the title 
+       *  @param mass particle mass (usually constant) 
+       *  @param T    temperature 
+       *  @param q    q-parameter
+       *  @param mu   chemical potential 
+       */
+      Tsallis2
+      ( const char* name  , 
+        const char* title , 
+        RooAbsReal& pt    , 
+        RooAbsReal& y     , 
+        RooAbsReal& mass  , 
+        RooAbsReal& T     , 
+        RooAbsReal& q     , 
+        RooAbsReal& mu    ) ;           
+      /** constructor
+       *  @param name the name 
+       *  @param title the title 
+       *  @param mass particle mass (usually constant) 
+       *  @param q    q-parameter
+       *  @param T    temperature 
+       *  @param mu   chemical potential 
+       */
+      Tsallis2
+      ( const char*  name  , 
+        const char*  title , 
+        RooAbsReal&  pt    , 
+        RooAbsReal&  y     , 
+        const double mass  , 
+        RooAbsReal&  T     , 
+        RooAbsReal&  q     , 
+        RooAbsReal&  mu    ) ;           
+      /** constructor
+       *  @param name the name 
+       *  @param title the title 
+       *  @param mass particle mass (usually constant) 
+       *  @param T    temperature 
+       *  @param q    q-parameter
+       *  @param mu   chemical potential 
+       */
+      Tsallis2
+      ( const char* name    , 
+        const char*  title  , 
+        RooAbsReal&  pt     , 
+        RooAbsReal&  y      , 
+        RooAbsReal&  mass   , 
+        RooAbsReal&  T      , 
+        RooAbsReal&  q      , 
+        const double mu = 0 ) ;
+      /** constructor
+       *  @param name the name 
+       *  @param title the title 
+       *  @param mass particle mass (usually constant) 
+       *  @param T    tempoerature 
+       *  @param q    q-parameter
+       *  @param mu   chemical potential 
+       */
+      Tsallis2
+      ( const char* name    , 
+        const char*  title  , 
+        RooAbsReal&  pt     , 
+        RooAbsReal&  y      , 
+        const double mass   , 
+        RooAbsReal&  T      , 
+        RooAbsReal&  q      , 
+        const double mu = 0 ) ;
+      /// copy
+      Tsallis2
+      ( const Tsallis2&      right     ,
+        const char*          name = 0  ) ;
+        /// destructor
+      virtual ~Tsallis2 () ;
+      /// clone
+      Tsallis2* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Tsallis2 () {} ;
+      // ======================================================================
+         public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Tsallis2& function () const { return m_tsallis2 ; }
+      /// access to underlying function
+      const Ostap::Math::Tsallis2& tsallis2 () const { return m_tsallis2 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& pt   () const { return m_pt   .arg () ; }
+      const RooAbsReal& y    () const { return m_y    .arg () ; }
+      const RooAbsReal& mass () const { return m_mass .arg () ; }
+      const RooAbsReal& T    () const { return m_T    .arg () ; }      
+      const RooAbsReal& q    () const { return m_q    .arg () ; }
+      const RooAbsReal& mu   () const { return m_mu   .arg () ; }      
+      // ======================================================================
+     protected :
+      // ======================================================================
+      RooRealProxy m_pt   {} ;
+      RooRealProxy m_y    {} ;
+      RooRealProxy m_mass {} ;
+      RooRealProxy m_T    {} ;
+      RooRealProxy m_q    {} ;
+      RooRealProxy m_mu   {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Tsallis2 m_tsallis2 ;           // the function
+      // ======================================================================
+     };
+    // ========================================================================
   } //                                      The end of  namespace Ostap::Models    
   // ==========================================================================
 } //                                              The end of namespace Analysis 

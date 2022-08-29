@@ -2022,9 +2022,10 @@ namespace Ostap
      *
      *  \f[ \frac{d\sigma}{dp_T} \propto
      *    p_T\times \left( 1 + \frac{E_{kin}}{Tn}\right)^{-n}\f],
-     *  where \f$E_{kin} = \sqrt{p_T^2-M^2}-M\f$
+     *  where \f$E_{kin} = \sqrt{p_T^2+M^2}-M\f$
      *  is transverse kinetic energy
-     *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
+     *  @see Ostap::Math::Tsallis2 
+     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2015-07-11
      */
     class  Tsallis 
@@ -2037,7 +2038,7 @@ namespace Ostap
        *  @param T    T-parameter    (T>0)
        */
       Tsallis
-      ( const double mass         = 0   ,
+      ( const double mass         = 1   ,
         const double n            = 10  ,
         const double T            = 1.1 ) ;
       /// destructor
@@ -2045,10 +2046,14 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get Tsallis PDF
-      double pdf ( const double x ) const ;
-      /// get Tsallis PDF
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      /** evaluate Tsallis functuon
+       *  @param pt transverse momentum of the particle 
+       */
+      double evaluate   ( const double pt ) const ;
+      /** evaluate Tsallis functuon
+       *  @param pt transverse momentum of the particle 
+       */
+      double operator() ( const double pt ) const { return evaluate ( pt ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2070,6 +2075,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// q-parameter for Tsallis enthropy 
+      double q    () const { return m_n / ( m_n - 1 ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// update mass-parameter
       bool setMass ( const double value ) ; // update mass-parameter
       bool setM    ( const double value ) { return setMass ( value ) ; }
@@ -2086,18 +2096,19 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the transverse kinetic energy
-      inline double eTkin ( const double x ) const
-      { return std::sqrt ( x * x + m_mass * m_mass ) - m_mass ; }
+      inline double eTkin ( const double pt ) const
+      { return mT ( pt )  - m_mass ; }
       // ======================================================================
       /// get the transverse mass
-      inline double mT   ( const double x ) const
-      { return std::sqrt ( x * x + m_mass * m_mass ) ; }
+      inline double mT   ( const double pt ) const
+      { return std::hypot ( pt ,  m_mass ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the integral between low and high
-      double integral    ( const double low  ,
-                           const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2192,12 +2203,12 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the transverse kinetic energy
-      inline double eTkin ( const double x ) const
-      { return mT( x ) - m_mass ; }
+      inline double eTkin ( const double pt ) const
+      { return mT ( pt ) - m_mass ; }
       // ======================================================================
       /// get the transverse mass
-      inline double mT   ( const double x ) const
-      { return std::sqrt ( x * x + m_mass * m_mass ) ; }
+      inline double mT   ( const double pt ) const
+      { return std::hypot ( pt ,  m_mass  ) ; }
       // ======================================================================
     public:
       // ======================================================================

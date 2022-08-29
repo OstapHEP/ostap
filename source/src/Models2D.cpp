@@ -21,6 +21,7 @@
 // ============================================================================
 #include "Ostap/Math.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/qMath.h"
 #include "Ostap/Power.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Models2D.h"
@@ -51,8 +52,9 @@ namespace
   {
   public:
     // ========================================================================
-    PSBERN ( const Ostap::Math::PhaseSpaceNL* ps        , 
-             const Ostap::Math::Bernstein*    bp        )
+    PSBERN
+    ( const Ostap::Math::PhaseSpaceNL* ps        , 
+      const Ostap::Math::Bernstein*    bp        )
       : m_ps   ( ps   ) 
       , m_bp   ( bp   ) 
     {}
@@ -2153,6 +2155,205 @@ std::size_t Ostap::Math::Gauss2D::tag () const
                              m_sigmaY , 
                              m_theta  ) ; }
 // ============================================================================
+
+
+// ============================================================================
+/*  constructor from all parameters 
+ *  @param mass particle mass (needed to calculate transverse mass)
+ *  @param q    q-parameter of Tsallis  (q=1 corresponds to Boltzman statistics)
+ *  @param T    the temperature
+ *  @param mu   chemical potential 
+ */
+// ============================================================================
+Ostap::Math::Tsallis2::Tsallis2 
+( const double mass ,   // mass 
+  const double T    ,   // temperature 
+  const double q    ,   // q=1 -> Boltzman statistics 
+  const double mu   )   // chemical potential 
+  : m_mass ( std::abs ( mass ) ) 
+  , m_T    ( std::abs ( T ) ) 
+  , m_q    ( std::abs ( q ) ) 
+  , m_mu   ( mu ) 
+  , m_workspace () 
+{}
+// ============================================================================
+/*  evaluate Tsallis function
+ *  @param pt transverse momentum of the particle 
+ *  @param y  rapidity of the particle 
+ */
+// ============================================================================
+double Ostap::Math::Tsallis2::evaluate 
+( const double pt ,
+  const double y  ) const 
+{
+  if ( pt <= 0 ) { return 0 ; }
+  //
+  const double mtcy = mT ( pt ) * std::cosh ( y ) ;
+  //
+  const double f    = pt * mtcy ;
+  const double arg  = ( mtcy - m_mu ) / m_T ;
+  ///
+  const double texp = Ostap::Math::tsallis_qexp ( -arg , m_q ) ;
+  ///
+  return texp <= 0 ? 0 : f * std::pow ( texp , m_q ) ;
+}
+// ============================================================================
+// set new value for mass
+// ============================================================================
+bool Ostap::Math::Tsallis2::setMass ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_mass , avalue ) ) { return false ; }
+  m_mass = avalue ;
+  return true ;
+}
+// ============================================================================
+// set new value for n-parameter
+// ============================================================================
+bool Ostap::Math::Tsallis2::setQ ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_q , avalue ) ) { return false ; }
+  m_q = avalue ;
+  return true ;
+}
+// ============================================================================
+// set new value for T-parameter
+// ============================================================================
+bool Ostap::Math::Tsallis2::setT ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_T , avalue ) ) { return false ; }
+  m_T = avalue ;
+  return true ;
+}
+// ============================================================================
+// set new value for mu-parameter
+// ============================================================================
+bool Ostap::Math::Tsallis2::setMu ( const double value )
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+//  get Tsallis integrals  
+// ============================================================================
+double Ostap::Math::Tsallis2::integral 
+( const double ptlow  ,
+  const double pthigh , 
+  const double ylow   , 
+  const double yhigh  ) const 
+{
+  if      ( s_equal ( ptlow  , pthigh ) ) { return 0 ; }
+  else if ( s_equal ( ylow   , yhigh  ) ) { return 0 ; }
+  else if (           pthigh < ptlow    ) { return - integral ( pthigh , ptlow  , ylow  , yhigh ) ; }
+  else if (           yhigh  < ylow     ) { return - integral ( ptlow  , pthigh , yhigh , ylow  ) ; }
+  else if ( pthigh <= 0                 ) { return 0 ; }
+  //
+  const double pt_min = std::max ( ptlow , 0.0 ) ;
+  const double pt_max = pthigh ;
+  const double y_min  = ylow   ;
+  const double y_max  = yhigh  ;
+  //
+  // use cubature   
+  static const Ostap::Math::GSL::Integrator2D<Tsallis2> s_cubature{} ;
+  static const char s_message[] = "Integral(Tsallis2)" ;
+  const auto F = s_cubature.make_function ( this , pt_min , pt_max , y_min , y_max ) ;
+  //
+  int    ierror  =  0 ;
+  double  result =  1 ;
+  double  error  = -1 ;
+  std::tie ( ierror , result , error ) = s_cubature.cubature
+    ( tag () , &F , 20000 , s_APRECISION , s_RPRECISION , s_message , __FILE__ , __LINE__ ) ;
+  // ==========================================================================
+  return result ;
+}
+// ============================================================================
+//  get the integral between ylow-yhigh for given pt 
+// ============================================================================
+double Ostap::Math::Tsallis2::integrate_y  
+( const double pt     ,
+  const double ylow   , 
+  const double yhigh  ) const 
+{
+  //
+  if      ( pt <= 0                  ) { return 0 ; }
+  else if ( s_equal ( ylow , yhigh ) ) { return 0 ; }
+  else if (           yhigh < ylow   ) { return -integrate_y ( pt , yhigh , ylow ) ; }
+  //
+  typedef Ostap::Math::IntegrateY2<Tsallis2> IY ;
+  static const Ostap::Math::GSL::Integrator1D<IY> s_integrator ;
+  static const char message[] = "IntegrateY(Tsallis2)" ;
+  //
+  const IY fy { this , pt } ;
+  const auto F = s_integrator.make_function ( &fy ) ;
+  //  
+  int    ierror    =  0   ;
+  double result    =  1.0 ;
+  double error     = -1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( std::hash_combine ( tag() , 'P' , pt )                   , 
+      &F                        ,   // the function
+      ylow    , yhigh           ,   // low & high edges
+      workspace ( m_workspace ) ,   // workspace
+      s_APRECISION              ,   // absolute precision
+      s_RPRECISION              ,   // relative precision
+      m_workspace.size()        ,   // maximum number of subintervals
+      message                   ,   // message 
+      __FILE__  , __LINE__      ) ; // filename & line number 
+  //
+  return result ;
+}
+// ============================================================================
+// get the integral between ptlow-pthigh for given rapidity 
+// ============================================================================
+double Ostap::Math::Tsallis2::integrate_pt
+( const double y      , 
+  const double ptlow  ,
+  const double pthigh ) const 
+{
+  //
+  if      ( s_equal ( ptlow  , pthigh ) ) { return 0 ; }
+  else if (           pthigh < ptlow    ) { return -integrate_pt ( y , pthigh , ptlow ) ; }
+  else if ( pthigh <= 0                 ) { return 0 ; }
+  //
+  const double pt_min = std::max ( ptlow , 0.0 ) ;
+  const double pt_max = pthigh ;
+  //
+  typedef Ostap::Math::IntegrateX2<Tsallis2> IPT ;
+  static const Ostap::Math::GSL::Integrator1D<IPT> s_integrator ;
+  static const char message[] = "IntegratePT(Tsallis2)" ;
+  //
+  const IPT fpt { this , y } ;
+  const auto F = s_integrator.make_function ( &fpt ) ;
+  //  
+  int    ierror    =  0   ;
+  double result    =  1.0 ;
+  double error     = -1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( std::hash_combine ( tag() , 'Y' , y )                   , 
+      &F                        ,   // the function
+      pt_min , pt_max           ,   // low & high edges
+      workspace ( m_workspace ) ,   // workspace
+      s_APRECISION              ,   // absolute precision
+      s_RPRECISION              ,   // relative precision
+      m_workspace.size()        ,   // maximum number of subintervals
+      message                   ,   // message 
+      __FILE__  , __LINE__      ) ; // filename & line number 
+  //
+  return result ; 
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Tsallis2::tag () const 
+{ 
+  static const std::string s_name = "Tsallis2" ;
+  return std::hash_combine ( s_name , m_mass , m_q , m_T , m_mu ) ; 
+}
+// ============================================================================
+
 
 // ============================================================================
 //                                                                      The END 

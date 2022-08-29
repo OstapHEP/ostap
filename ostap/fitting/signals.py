@@ -2617,9 +2617,9 @@ class QGaussian_pdf(PEAK) :
     def __init__ ( self             ,
                    name             ,
                    xvar             ,
-                   mean      = None ,   ## related to mean 
-                   q         = 1    ,   ## q-value 
-                   scale     = 1    ) : ## related to sigma 
+                   mean      = None ,    ## related to mean 
+                   scale     = None ,    ## related to sigma 
+                   q         = 1    ) :  ## q-parameter/shape 
 
         #
         ## initialize the base
@@ -2646,16 +2646,16 @@ class QGaussian_pdf(PEAK) :
             "q-Gaussian %s" % self.name ,
             self.xvar      ,
             self.mean      ,
-            self.q         ,
-            self.scale     ) 
+            self.scale     ,
+            self.q         )
         
         ## save the configuration
         self.config = {
             'name'      : self.name  ,
             'xvar'      : self.xvar  ,
             'mean'      : self.mean  ,
-            'q'         : self.q     ,
             'scale'     : self.scale ,
+            'q'         : self.q     ,
             }
         
     @property
@@ -2668,7 +2668,7 @@ class QGaussian_pdf(PEAK) :
         
     @property
     def q ( self ) :
-        """'q'-parameter"""
+        """'q'-parameter/shape"""
         return self.__q
     @q.setter
     def q ( self, value ) :

@@ -5856,6 +5856,7 @@ namespace Ostap
     public:
       // ======================================================================
       const RooAbsReal& x    () const { return m_x        .arg() ; }
+      const RooAbsReal& pt   () const { return m_x        .arg() ; }
       const RooAbsReal& n    () const { return m_n        .arg() ; }
       const RooAbsReal& T    () const { return m_T        .arg() ; }
       const RooAbsReal& mass () const { return m_mass     .arg() ; }
@@ -6395,6 +6396,7 @@ namespace Ostap
      *  If is equal to 
      *  - scaled version of Student' t-distribution for 1<q<3
      *  - Gaussian distribution for q = 1 
+     *  - Cauchy   distribution for q = 2 
      *  - has finite  support for q<1 
      *  @see Ostap::Math::QGaussian
      *  Here we use \f$ \beta = \frac{1}{2\sigma^2}\f$
@@ -6410,16 +6412,16 @@ namespace Ostap
       /** constructor from all parameters
        *  @param  x      the variable 
        *  @param  mean   the mean/mode/median/location 
-       *  @param  q      the q-value 
        *  @param  scale  the scale parameter 
+       *  @param  q      the q-value 
        */
       QGaussian
       ( const char*          name      , 
         const char*          title     ,
         RooAbsReal&          x         ,   // observable 
         RooAbsReal&          mean      ,   // mean/mode/location
-        RooAbsReal&          q         ,   // q-value
-        RooAbsReal&          scale     ) ; // scale parameter 
+        RooAbsReal&          scale     ,   // scale parameter/sigma  
+        RooAbsReal&          q         ) ; // q-parameter/shape 
       /// "copy" constructor 
       QGaussian ( const QGaussian& , const char* name = 0 ) ;
       /// clone 
@@ -6459,15 +6461,15 @@ namespace Ostap
       // ======================================================================
       const RooAbsReal& x     () const { return m_x     .arg() ; }
       const RooAbsReal& mean  () const { return m_mean  .arg() ; }
-      const RooAbsReal& q     () const { return m_q     .arg() ; }
       const RooAbsReal& scale () const { return m_scale .arg() ; }
+      const RooAbsReal& q     () const { return m_q     .arg() ; }
       // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x     ;
       RooRealProxy m_mean  ;
-      RooRealProxy m_q     ;
       RooRealProxy m_scale ;
+      RooRealProxy m_q     ;
       // =====================================================================
     protected : // the function itself 
       // =====================================================================

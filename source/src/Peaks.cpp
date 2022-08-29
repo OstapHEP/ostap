@@ -18,6 +18,7 @@
 // ============================================================================
 #include "Ostap/Peaks.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/qMath.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/ToStream.h"
@@ -4126,40 +4127,32 @@ std::size_t Ostap::Math::AsymmetricLaplace::tag () const
  */
 // ============================================================================
 Ostap::Math::QGaussian::QGaussian 
-( const double mean  ,   // mean/mode/location 
-  const double q     ,   //  q-parameter 
-  const double scale )   // scale/sigma
+( const double mean  ,  // mean/mode/location 
+  const double scale ,  // scale/sigma
+  const double q     )  // q-parameter (shape)  
   : m_mean  ( mean               )
-  , m_q     ( 1                  ) 
   , m_scale ( std::abs ( scale ) )
+  , m_q     ( 1                  )
+  , m_cq    ( s_SQRTPI           ) 
 {
   setQ ( q ) ; 
 }
 // ============================================================================
 // evaluate  pdf  for q-Gaussian distribution
 // ============================================================================
-namespace 
-{
-  // 
-  inline double q_exp ( const long double x , const long double q ) 
-  { return std::pow ( 1 + ( 1 - q ) * x , 1 / ( 1 - q ) ) ; }
-  //
-}
-// ============================================================================
 // evaluate PDF of q-Gaussian distribution 
 // ============================================================================
 double Ostap::Math::QGaussian::pdf ( const  double x ) const 
 {
   //
-  if ( s_equal ( m_q , 1 ) ) { return gauss_pdf ( x , m_mean , m_scale ) ; }
+  if ( 1 == m_q || s_equal ( m_q , 1 ) ) { return gauss_pdf ( x , m_mean , m_scale ) ; }
   //
-  const long double dx  =   ( x - m_mean ) / m_scale ;
+  const double dx  = ( x - m_mean ) / m_scale ;
   //
   static const double s_sq2 = std::sqrt ( 2.0 ) ;
   //
-  return
-    ( m_q < 1 && s_sq2 <= std::abs ( dx ) * std::sqrt ( 1 - m_q ) ) ? 0.0 :  
-    q_exp ( - 0.5 * dx * dx , m_q ) / ( s_sq2 * m_scale * m_cq ) ;  
+  return Ostap::Math::tsallis_qexp ( -0.5 * dx * dx , m_q ) / 
+    ( s_sq2 * m_scale * m_cq ) ;  
 }
 // ============================================================================
 // set mean 
@@ -4181,24 +4174,23 @@ bool Ostap::Math::QGaussian::setQ ( const double value )
   //
   m_q  = value ;
   //
-  static const double s_sqpi = std::sqrt ( M_PI ) ;
-  m_cq = s_sqpi ; 
+  m_cq = s_SQRTPI ; 
+  //
   if      ( 1 > m_q ) 
   {
-    const long double q  =  m_q ;
-    const long double g1 = std::lgamma ( 1.0             / ( 1 - q ) ) ;
-    const long double g2 = std::lgamma ( 0.5 * ( 3 - q ) / ( 1 - q ) ) ;
-    //
-    m_cq = 2 * s_sqpi * std::exp ( g1  - std::log ( 3 - q ) - 
-                                   0.5 * std::log ( 1 - q ) - g2 ) ;
+    const long double q  = m_q ;
+    const long double g1 = std::lgamma ( 1.0             / ( 1.0L - q ) ) ;
+    const long double g2 = std::lgamma ( 0.5 * ( 3 - q ) / ( 1.0L - q ) ) ;
+    m_cq *= 2 * std::exp ( g1  - std::log ( 3.0L - q ) - 
+                           0.5 * std::log ( 1.0L - q ) - g2 ) ;
   }
   else if ( 1 < m_q )
   {
-    const long double q  =  m_q ;
-    const long double g1 = std::lgamma ( 1.0             / ( q - 1 ) ) ;
-    const long double g2 = std::lgamma ( 0.5 * ( 3 - q ) / ( q - 1 ) ) ;
+    const long double q  = m_q ;
+    const long double g1 = std::lgamma ( 1.0                / ( q - 1.0L ) ) ;
+    const long double g2 = std::lgamma ( 0.5 * ( 3.0L - q ) / ( q - 1.0L ) ) ;
+    m_cq *=     std::exp ( g2 - 0.5 * std::log ( q - 1.0L ) - g1 ) ;
     //
-    m_cq = s_sqpi * std::exp ( g2 - 0.5 * std::log ( q - 1 ) - g1 ) ;
   }
   //
   return true ;
@@ -4216,14 +4208,15 @@ bool Ostap::Math::QGaussian::setScale ( const double value )
 // ============================================================================
 // get the integral 
 // ============================================================================
-double Ostap::Math::QGaussian::integral ( const double low  , 
-                                          const double high ) const 
+double Ostap::Math::QGaussian::integral
+( const double low  , 
+  const double high ) const 
 {
   ///
   if      ( s_equal ( low , high ) ) { return 0 ; }
   else if (           low > high   ) {  return -integral ( high , low ) ; }
   ///
-  if ( s_equal ( m_q , 1 ) ) 
+  if ( 1 == m_q || s_equal ( m_q , 1 ) ) 
   {
     return 
       gauss_cdf  ( high , m_mean , m_scale ) - 
@@ -4255,7 +4248,7 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
   if ( m_q < 1 ) 
   {
     static const double s_sq2 = std::sqrt ( 2.0 ) ;
-    const double win  = s_sq2 * m_scale / ( 1 - m_q ) ;
+    const double win  = s_sq2 * m_scale / std::sqrt ( 1.0L - m_q ) ;
     const double xmin = m_mean - win ;
     const double xmax = m_mean + win ;
     if ( high <= xmin || low >= xmax ) { return 0 ; } // RETURN
@@ -4264,7 +4257,7 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
   }
   //  are we already in the tail? 
   const bool in_tail = 
-    std::min ( std::abs ( xhigh - m_mean ) , std::abs ( m_mean - xlow ) )  > 5 * m_scale ;   
+    std::min ( std::abs ( xhigh - m_mean ) , std::abs ( m_mean - xlow ) )  > 8 * m_scale ;   
   //
   //
   // use GSL to evaluate the integral

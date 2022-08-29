@@ -1504,7 +1504,7 @@ def _rtsal_reduce_ ( pdf ):
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
-                                  pdf.x        () ,                            
+                                  pdf.pt       () ,                            
                                   pdf.N        () ,                            
                                   pdf.T        () ,
                                   pdf.mass     () )
@@ -1523,6 +1523,22 @@ def _rqgsm_reduce_ ( pdf ):
                                   pdf.mass     () )
 
 Ostap.Models.QGSM.__reduce__ = _rqgsm_reduce_ 
+
+# =============================================================================
+## reduce Tsallis2
+def _rtsal2_reduce_ ( pdf ):
+    """Reduce Tsallis2"""
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.pt       () ,                            
+                                  pdf.y        () ,                            
+                                  pdf.mass     () ,                            
+                                  pdf.T        () ,
+                                  pdf.q        () ,
+                                  pdf.mu       () )
+
+Ostap.Models.Tsallis2.__reduce__ = _rtsal2_reduce_ 
 
 # =============================================================================
 ## reduce TwoExpos
@@ -1616,8 +1632,8 @@ def _rqgau_reduce_ ( pdf ):
                                   pdf.title       ,
                                   pdf.x        () ,                            
                                   pdf.mean     () ,                            
-                                  pdf.q        () ,
-                                  pdf.scale    () )
+                                  pdf.scale    () ,
+                                  pdf.q        () )
 
 Ostap.Models.QGaussian.__reduce__ = _rqgau_reduce_ 
 
@@ -2186,6 +2202,7 @@ _decorated_classes_ = (
     Ostap.Models.ExpoPS2DPol           , 
     Ostap.Models.Spline2DSym           , 
     Ostap.Models.Gauss2D               , 
+    Ostap.Models.Tsallis2              , 
     ## 3D models 
     Ostap.Models.Poly3DPositive        , 
     Ostap.Models.Poly3DSymPositive     , 
