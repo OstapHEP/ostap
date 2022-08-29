@@ -85,6 +85,7 @@ class DataAndLumi(Data2):
                   maxfiles    = 100000 ,
                   check       = True   ,
                   silent      = False  ,
+                  sort        = True   , 
                   parallel    = False  ) :  
 
         chain      =      chain if isinstance (      chain , str ) else      chain.name
@@ -101,6 +102,7 @@ class DataAndLumi(Data2):
                          maxfiles    = maxfiles    ,
                          check       = check       , 
                          silent      = silent      ,
+                         sort        = sort        , 
                          parallel    = parallel    ) 
 
     # =========================================================================

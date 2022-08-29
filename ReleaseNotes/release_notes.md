@@ -3,6 +3,7 @@
     1. add set of helpful fnuctions into `Ostap/QMath.h`
     1. improve QGaussiang model 
     1. add 2D Tsallis distribution for pt versus rapidity 
+    1. add option to sourt ( defautl is True ) for Data-like objects 
 
 ## Backward incompatible:  
 

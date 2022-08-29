@@ -112,7 +112,7 @@ class DataTask(Task) :
     def results (  self ) : return self.__data 
     ## merge the results 
     def merge_results  ( self , results , jobid = -1 ) :    
-        self.__data = self.__data + results
+        self.__data += results
         
 # =============================================================================
 ## @class Files
@@ -130,7 +130,8 @@ class Files(object):
                   description = ""    ,
                   maxfiles    = -1    ,
                   silent      = False ,
-                  parallel    = False ) :
+                  sort        = False ,    ## sort the list of files  ? 
+                  parallel    = False ) :  ## collect them in parallel?
         #
         if   isinstance ( files , str   ) : files = [ files ]
         elif isinstance ( files , Files ) : files = files.files   
@@ -144,9 +145,11 @@ class Files(object):
         
         assert isinstance ( maxfiles , int ) , "Invalid type for 'maxfiles'!"
         
-        self.__maxfiles     = maxfiles 
+        self.__maxfiles     = maxfiles
+        self.__sort         = True if sort else False 
         self.__files        = []        
-
+        self.__bad_files    = set()
+        
         # =====================================================================
         # convert list of patterns into the list of files 
         # =====================================================================
@@ -161,7 +164,7 @@ class Files(object):
         ## can use parallel processing here
         nfiles = len ( _files )
 
-        chunk_size = min ( 20 , nfiles // 3 )         
+        chunk_size = min ( 20 , max ( nfiles // 3 , 2 ) )         
         if parallel and chunk_size < nfiles and ( maxfiles < 0 or nfiles <= maxfiles ) :
             
             jobs = []
@@ -189,12 +192,12 @@ class Files(object):
             
     @property 
     def files     ( self ) :
-        """``files'' : the list of files"""
+        """'files' : the list(tuple) of files"""
         return tuple ( self.__files )
     
     @property
     def description ( self ) :
-        """``description'': description of this collection"""
+        """'description': description of this collection"""
         return self.__description
     @description.setter
     def description ( self , value ) :
@@ -202,12 +205,12 @@ class Files(object):
         
     @property
     def patterns  ( self ) :
-        """``patterns'' : the list of patterns"""
+        """'patterns' : the list of patterns"""
         return tuple ( self.__patterns )
     
     @property
     def silent    ( self ) :
-        """``silent'' : silent processing?"""
+        """'silent' : silent processing?"""
         return self.__silent
     @silent.setter
     def silent    ( self , value ) :
@@ -215,7 +218,7 @@ class Files(object):
 
     @property
     def verbose ( self ) :
-        """``verbose'' : verbose processing?"""
+        """'verbose' : verbose processing?"""
         return not self.silent
     @verbose.setter 
     def verbose ( self , value ) :
@@ -223,9 +226,19 @@ class Files(object):
 
     @property
     def maxfiles ( self ) :
-        """`maxfiles' : maximal number of files to collect"""
+        """'maxfiles' : maximal number of files to collect"""
         return self.__maxfiles
     
+    @property
+    def sort ( self ) :
+        """'sort' : keep the list of files sorted?"""
+        return self.__sort
+
+    @property
+    def bad_files ( self ) :
+        """'bad_files' : collection of bad/problematic files """
+        return self.__bad_files 
+
     # =========================================================================
     ## check if the file is a part of collection
     #  @code
@@ -284,13 +297,15 @@ class Files(object):
                 logger.debug ('Max-files limit is reached %s ' % max_files )
                 break
 
-            ## treat the file 
+            ## treat the file
             self.treatFile ( f )
-            
+
+        if self.sort : self.__files.sort () 
+
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
         if not the_file in self.__files :
-            self.__files = tuple ( self.__files ) + ( the_file , )
+            self.__files.append ( the_file )
 
     # ===============================================================================
     ## clone it! 
@@ -301,10 +316,12 @@ class Files(object):
         """
         import copy
         result = copy.copy ( self )
+        
         if not files       is None :
             if isinstance ( files , str ) : files = files , 
             result.__files        =  [ f for f in files ] 
-            result.__patterns     = () 
+            result.__patterns     = ()            
+            if result.sort : result.__files.sort()            
         if not description is None :
             result.descrpiption = str ( description )
             
@@ -347,8 +364,10 @@ class Files(object):
         files       = self.files + tuple ( f for f in other.files if not f in self.files ) 
         description = "|".join ( "(%s)" for s in ( self.description , other.description ) )
         
-        return self.clone ( files = files , description = description )
-
+        result = self.clone ( files = files , description = description )        
+        for f in other.bad_files : result.bad_files.add ( f )
+        return result 
+    
     ## get an intersection of two datasets 
     def __and__ (  self , other ) :
         """ get intersection of two sets
@@ -362,7 +381,9 @@ class Files(object):
         files       = tuple ( f for f in self.files if f in other.files )
         description = "&".join ( "(%s)" for s in ( self.description , other.description ) )
         
-        return self.clone ( files = files , description = description )
+        result = self.clone ( files = files , description = description )        
+        for f in other.bad_files : result.bad_files.add ( f )
+        return result 
 
     ## get an exclusive OR for two datasets 
     def __xor__ (  self , other ) :
@@ -379,11 +400,12 @@ class Files(object):
         
         description = "^".join ( "(%s)" for s in ( self.description , other.description ) )
         
-        return self.clone ( files = files , description = description )
+        result = self.clone ( files = files , description = description )        
+        for f in other.bad_files : result.bad_files.add ( f )
+        return result 
 
     __add__  = __or__    
     __mul__  = __and__
-
 
     ## append with another dataset
     def __ior__ ( self , other ) :
@@ -399,11 +421,11 @@ class Files(object):
         
         self.__files       = list ( files ) 
         self.__description = "|".join ( "(%s)" for s in ( self.description , other.description ) )
-        
+
+        for f in other.bad_files : self.bad_files.add ( f )        
         return self
 
     __iadd__  = __ior__    
-
     
     ## get union of two datasets 
     def union ( self , other ) :
@@ -453,9 +475,9 @@ class Files(object):
         self.__files       = list ( files ) 
         self.__description = "-".join ( "(%s)" for s in ( self.description , other.description ) )
         
+        for f in other.bad_files : self.bad_files.add ( f )        
         return self
 
-    
     # =========================================================================
     ## get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
     def sample_files ( self ,  n , sort ) :
@@ -691,6 +713,7 @@ class Data(Files):
                   maxfiles     = -1    ,
                   check        = True  , 
                   silent       = False ,
+                  sort         = True  , 
                   parallel     = False ) : 
 
         ## we will need Ostap machinery for trees&chains here
@@ -704,14 +727,11 @@ class Data(Files):
         ## chain name 
         self.__chain_name = chain if isinstance ( chain , str ) else chain.name 
 
-        ## list of problematic files 
-        self.__bad_files  = set()
-
         ## update description
         if not description : description = "ROOT.TChain(%s)" % self.chain_name 
         
         ## initialize the  base class 
-        Files.__init__( self , files , description  , maxfiles , silent = silent , parallel = parallel )
+        Files.__init__( self , files , description  , maxfiles , silent = silent , sort = sort , parallel = parallel )
 
     @property
     def validate ( self ) :
@@ -731,11 +751,6 @@ class Data(Files):
         ch = ROOT.TChain( self.chain_name )
         for f in self.files : ch.Add ( f )
         return ch
-    
-    @property
-    def bad_files ( self ) :
-        """``bad_files'' : list of bad files"""
-        return self.__bad_files 
     
     @property
     def check ( self ) :
@@ -793,7 +808,7 @@ class Data(Files):
                 
             else :
                 
-                self.__bad_files.add ( the_file )
+                self.bad_files.add ( the_file )
                 if not self.silent : 
                     logger.warning ( "No/empty chain  '%s' in file '%s'" % ( self.chain_name , the_file ) )
                     
@@ -853,6 +868,7 @@ class Data2(Data):
                   maxfiles    = -1    ,
                   check       = True  , 
                   silent      = False ,
+                  sort        = True  , 
                   parallel    = False ) :
 
         ## decorate files 
@@ -861,9 +877,6 @@ class Data2(Data):
 
         ## chain name 
         self.__chain2_name = chain2 if isinstance ( chain2 , str ) else chain2.name 
-
-        ## list of problematic files 
-        self.__bad_files2  = set()
 
         if not description :
             description = chain1.GetName() if hasattr ( chain1 , 'GetName' ) else str(chain1)
@@ -876,6 +889,7 @@ class Data2(Data):
                        maxfiles    = maxfiles    ,
                        check       = check       ,
                        silent      = silent      ,
+                       sort        = sort        , 
                        parallel    = parallel    ) 
         
         
@@ -915,19 +929,6 @@ class Data2(Data):
         for f in self.files2 : ch.Add ( f )
         return ch
     
-    @property
-    def bad_files1 ( self ) :
-        """``bad_files1'' : list of bad files for the frist chain (same as ``bad_files'')
-        """
-        return self.bad_files
-    
-    @property
-    def bad_files2 ( self ) :
-        """``bad_files2'' : list of bad files fro the second chain
-        """
-        return self.__bad_files2
-    
-    
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
         """Add the file to TChain
@@ -960,20 +961,19 @@ class Data2(Data):
                 
             elif ok2 :
                 
-                self.bad_files1.add ( the_file  )
+                self.bad_files.add ( the_file  )
                 if not self.silent : 
                     logger.warning ( "No/empty chain1 '%s'      in file '%s'" % ( self.chain1_name , the_file ) )
 
             elif ok1 :
                 
-                self.bad_files2.add ( the_file )
+                self.bad_files.add ( the_file )
                 if not self.silent : 
                     logger.warning ( "No/empty chain2 '%s'      in file '%s'" % ( self.chain2_name , the_file ) ) 
 
             else :
                 
-                self.bad_files1.add ( the_file )
-                self.bad_files2.add ( the_file )
+                self.bad_files.add ( the_file )
                 if not self.silent :                 
                     logger.warning ( "No/empty chains '%s'/'%s' in file '%s'" % ( self.chain1_name ,
                                                                                   self.chain2_name , the_file ) )
@@ -999,16 +999,15 @@ class Data2(Data):
                 del  chain2
                 
             ne  = len ( self.bad_files1 )
-            ne2 = len ( self.bad_files2 )
             
-        sf  =  set(self.files) == set(self.files2)
+        sf  =  set ( self.files ) == set ( self.files2 )
         
-        if not self.bad_files1 and not self.bad_files2 :
+        if not self.bad_files :
             return "<#files: {}; Entries: {}/{}>"   .format ( nf, nc , nc2 ) if sf else \
                    "<#files: {}/{}; Entries: {}/{}>".format ( nf , nf2 , nc , nc2 )
         else :
-            return "<#files: {}; Entries: {}/{}; No/empty :{}/{}>"   .format ( nf , nc , nc2 , ne , ne2 ) if sf else \
-                   "<#files: {}/{}; Entries: {}/{}; No/empty :{}/{}>".format ( nf , nf2 , nc , nc2 , ne , ne2 )
+            return "<#files: {}; Entries: {}/{}; No/empty :{}>"   .format ( nf , nc , nc2 , ne ) if sf else \
+                   "<#files: {}/{}; Entries: {}/{}; No/empty :{}>".format ( nf , nf2 , nc , nc2 , ne )
         
 
     def __nonzero__ ( self )  :
