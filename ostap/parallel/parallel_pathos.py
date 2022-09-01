@@ -254,12 +254,12 @@ class WorkManager (TaskManager) :
         sys.stdout .flush ()
         sys.stderr .flush ()
 
-    def __del__(self):
-        self.__exit__ ()
+    ## def __del__(self):
+    ##     self.__exit__ ()
         
-        del self.__pool
-        del self.__ppservers 
-        del self.__locals         
+    ##     del self.__pool
+    ##     del self.__ppservers 
+    ##     del self.__locals         
 
     # =========================================================================
     ## process the bare <code>executor</code> function

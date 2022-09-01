@@ -773,12 +773,14 @@ class Data(Files):
             if branches1 != branches2 :
                 missing = list ( sorted ( branches1 - branches2 ) ) 
                 extra   = list ( sorted ( branches2 - branches1 ) ) 
-                logger.warning ( "Tree('%s'): missing/extra branches %s/%s in %s" %  ( tree1.GetName() , missing , extra , the_file ) )
+                if missing : logger.warning ( "Tree('%s'): %3d missing branches: %s in %s" %  ( tree1.GetName() , len ( missing ) , missing , the_file ) )
+                if extra   : logger.warning ( "Tree('%s'): %3d extra   branches: %s in %s" %  ( tree1.GetName() , len ( extra   ) , extra   , the_file ) )
                 
             if ( ( branches1 != leaves1 ) or ( branches2 != leaves2 ) ) and leaves1 != leaves2 :
                 missing = list ( sorted ( leaves1 - leaves2 ) )
                 extra   = list ( sorted ( leaves2 - leaves1 ) ) 
-                logger.warning ( "Tree('%s'): missing/extra leaves   %s/%s in %s" %  ( tree1.GetName() , missing , extra , the_file ) )
+                if missing : logger.warning ( "Tree('%s'): %3d missing leaves:   %s in %s" %  ( tree1.GetName() , len ( missing ) , missing , the_file ) )
+                if extra   : logger.warning ( "Tree('%s'): %3d extra   leaves:   %s in %s" %  ( tree1.GetName() , len ( extra   ) , extra   , the_file ) )
 
                 
     ## the specific action for each file 
@@ -793,15 +795,14 @@ class Data(Files):
             tree  = ROOT.TChain ( self.chain_name )
             tree.Add ( the_file )
 
-            ok = len ( tree ) 
-            if ok and 0 < len ( tree.branches () ) :
+            if 1 <= len ( tree ) and 1 <= len ( tree.branches () ) :
                 
                 if self.check:
                     files = self.files 
                     if files :
                         chain = ROOT.TChain ( self.chain_name )
-                        chain.Add ( files[0] ) 
-                        self.check_trees ( chain , tree , the_file )
+                        chain.Add ( files [ 0 ] ) 
+                        self.check_trees ( tree , chain , the_file )
                         del chain
                         
                 Files.treatFile ( self , the_file )
@@ -943,18 +944,24 @@ class Data2(Data):
             tree2 = ROOT.TChain ( self.chain2_name  )
             tree2.Add ( the_file )
 
-            ok1 = len ( tree1 )
-            if self.check and self.files1 and ok1 :
-                chain1 = self.chain1 
-                self.check_trees ( tree1 , chain1 , the_file )
-                del chain1
+            ok1 = 1 <= len ( tree1 ) and 1 <= len ( tree1.branches () ) 
+            if self.check and ok1 :
+                files = self.files
+                if files :                    
+                    ch1 = ROOT.TChain( self.chain1_name )
+                    ch1.Add ( files [ 0 ] ) 
+                    self.check_trees ( tree1 , ch1 , the_file )
+                    del ch1
                 
-            ok2 = len ( tree2 )            
-            if self.check and self.files2 and ok2 :
-                chain2 = self.chain2 
-                self.check_trees ( tree2 , chain2 , the_file )
-                del chain2
-                
+            ok2 = 1 <= len ( tree2 ) and 1 <= len ( tree2.branches () )
+            if self.check and ok2 :
+                files = self.files
+                if files :                    
+                    ch2 = ROOT.TChain( self.chain2_name )
+                    ch2.Add ( files [ 0 ] ) 
+                    self.check_trees ( tree2 , ch2 , the_file )
+                    del ch2
+
             if  ok1 and ok2      :
                 
                 Files.treatFile ( self , the_file ) 

@@ -535,7 +535,7 @@ def parallel_toys ( pdf                       ,
 #  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
 #  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
 #  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
-def parallel_toys2(
+def parallel_toys2 (
     gen_pdf                   , ## PDF to generate toys 
     fit_pdf                   , ## PDF to generate toys 
     nToys                     , ## total number of toys 
@@ -616,10 +616,10 @@ def parallel_toys2(
            'Number of events per toy must be specified via "gen_config" %s' % gen_config
     
     assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
-               'Jobid %s: Invalid "nToys"  argument %s/%s' % ( jobid , nToys  , type ( nToys  ) )
+               'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
 
     assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
-               'Jobid %s: Invalid "nSplit" argument %s/%s' % ( jobid , nSplit , type ( nSplit ) )
+               'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
 
     import ostap.fitting.toys as Toys
     if 1 == nSplit :

@@ -4,10 +4,14 @@
     1. improve QGaussiang model 
     1. add 2D Tsallis distribution for pt versus rapidity 
     1. add option to sourt ( defautl is True ) for Data-like objects 
+    1. remove unnesessary ~__del__` method for `WorkManager` 
 
 ## Backward incompatible:  
 
 ## Bug fixes:
+
+   1. fix typo in `parallel_toys` - Thanks Dima Pereima for reporting the problem
+
 
 # v1.9.2.4
 
