@@ -135,8 +135,7 @@ class DataAndLumi(Data2):
         nf  = len ( self.files      )
         nf2 = len ( self.files2     )
         nc  = len ( self.chain      )
-        ne  = len ( self.bad_files1 )
-        ne2 = len ( self.bad_files2 )
+        ne  = len ( self.bad_files  )
         
         sf  = set ( self.files ) == set ( self.files2 )
         
@@ -144,8 +143,8 @@ class DataAndLumi(Data2):
       #      return "<Luminosity: {}pb-1; #files: {}; Entries: {};>"   .format ( l , nf ,       nc ) if sf else \
       #             "<Luminosity: {}pb-1; #files: {}/{}; Entries: {};>".format ( l , nf , nf2 , nc )
       #  else :            
-        return "<Luminosity: {}pb-1; #files: {}; Entries: {}; No/empty: {}/{}>"   .format( l , nf ,       nc , ne , ne2 ) if sf else \
-                   "<Luminosity: {}pb-1; #files: {}/{}; Entries: {}; No/empty: {}/{}>".format( l , nf , nf2 , nc , ne , ne2 )
+        return "<Luminosity: {}pb-1; #files: {}; Entries: {}; No/empty: {}>"   .format( l , nf ,       nc , ne ) if sf else \
+                   "<Luminosity: {}pb-1; #files: {}/{}; Entries: {}; No/empty: {}>".format( l , nf , nf2 , nc , ne )
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -5,6 +5,7 @@
     1. add 2D Tsallis distribution for pt versus rapidity 
     1. add option to sourt ( defautl is True ) for Data-like objects 
     1. remove unnesessary ~__del__` method for `WorkManager` 
+    1. add trivial filter `frame_prescale`
 
 ## Backward incompatible:  
 

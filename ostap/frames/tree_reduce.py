@@ -113,6 +113,9 @@ class ReduceTree(CleanUp):
         elif selection :
              raise TypeError('Invalid  selection type %s/%s' %  ( selection , type ( selection ) ) )
 
+        if output and os.path.exists ( output ) and os.path.isfile ( output ) and not silent :
+            logger.warning ("Existing file %s will be overwritten!" % output  )
+            
         if not output : 
             output = self.tempfile ( prefix = 'ostap-frame-' , suffix = '.root' )
             ## logger.debug ( 'ReduceTree: output file is %s' % output )  
@@ -157,8 +160,8 @@ class ReduceTree(CleanUp):
             all_vars = _strings ( all_vars  ) 
             snapshot = frame.Snapshot ( name , output , all_vars )
 
-        assert os.path.exists ( output ) and\
-               os.path.isfile ( output ) , 'Invalid file %s' % fname
+        assert os.path.exists ( output ) and os.path.isfile ( output ) , \
+               'Invalid file %s' % output 
 
         self.__chain = ROOT.TChain ( name )
         self.__chain.Add ( output ) 

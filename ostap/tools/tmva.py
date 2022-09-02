@@ -37,6 +37,7 @@ __all__     = (
 from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning 
 from   ostap.core.ostap_types  import num_types, string_types
 from   ostap.core.meta_info    import root_version_int, root_info  
+import ostap.io.root_file 
 import ROOT, os, math, tarfile, shutil 
 # =============================================================================
 # logging 
@@ -846,7 +847,6 @@ class Trainer(object):
         ## ROOT 6/18 crashes here...
         ## if root_version_int < 61800 : 
         ##    ROOT.TMVA.Tools.Instance()
-
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
 
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )

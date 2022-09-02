@@ -1794,7 +1794,7 @@ class APDF1 ( object ) :
                                   histo = histo )
 
         hh = self.pdf.createHistogram (
-            hID()     ,
+            hID ()    ,
             self.xvar ,
             self.binning ( histo.GetXaxis() , 'histo1x' ) ,
             ROOT.RooFit.Extended ( False ) ,

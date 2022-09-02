@@ -155,7 +155,7 @@ class ProjectTask(Task) :
 def  cproject ( chain                ,
                 histo                ,
                 what                 ,
-                cuts                 ,
+                cuts       = ''      ,
                 nentries   = -1      ,
                 first      =  0      ,
                 chunk_size = -1      ,

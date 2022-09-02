@@ -107,9 +107,14 @@ class sPlot1D(object) :
             vars   = pdf.pdf.getParameters ( dataset )
 
             ## make a proper (re)fit fixing everything  but yields
-            with FIXVAR ( [ v  for v in vars if not v in cmps ] ) :
-                logger.info ('Refit with the fixed parameters') 
+            to_fix =  [ v  for v in vars if not v in cmps ]
+            with FIXVAR ( to_fix ) :
+                logger.info ('Refit with the fixed parameters %s' % [ v.name for v in to_fix ] )
+                
                 fitresult , f = pdf.fitTo ( dataset , silent = True , draw = False , **fitopts )
+                ## fitresult , f = pdf.fitTo ( dataset , silent = True , draw = True , **fitopts )
+                
+
                 
         elif fitresult :
             

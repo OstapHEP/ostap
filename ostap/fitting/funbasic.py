@@ -30,7 +30,7 @@ from   sys                           import version_info as python_version
 from   ostap.core.ostap_types        import ( integer_types  , num_types    ,
                                               dictlike_types , list_types   ,
                                               is_good_number , string_types )
-from   ostap.core.core               import ( Ostap         ,
+from   ostap.core.core               import ( Ostap         , hID , 
                                               valid_pointer ,
                                               roo_silent    ,
                                               rootWarning   )   
@@ -1992,7 +1992,7 @@ class FUN1(AFUN1,F1AUX) :
         # explicit construction from (#bins,min,max)-triplet  
         else :
             
-            assert is_integer ( nbins ) and 0 < nbins, \
+            assert isinstance ( nbins , integer_types ) and 0 < nbins, \
                    "Wrong 'nbins'-argument %s" % nbins 
             if xmin == None and self.xminmax() : xmin = self.xminmax()[0]
             if xmax == None and self.xminmax() : xmax = self.xminmax()[1]

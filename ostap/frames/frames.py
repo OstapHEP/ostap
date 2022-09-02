@@ -17,6 +17,7 @@ __all__     = (
     'report_print_table'   , ## print the report 
     'report_as_table'      , ## print the report
     'frame_progress'       , ## progress bar for frame
+    'frame_prescale'       , ## prescale frame (trivial filter)
     ##
     'frame_project'        , ## project data frame to the (1D/2D/3D) histogram
     'frame_print'          , ## print frame
@@ -208,7 +209,7 @@ def frame_progress ( frame         ,
     
     width   = max ( 10 , width - minw ) 
     
-    nchunks = max ( 250 , width + 1 ) 
+    nchunks = max ( 500 , width + 1 ) 
     csize , rr = divmod ( length , nchunks ) 
     if rr : nchunks += 1 
     
@@ -783,6 +784,41 @@ def frame_project ( frame , model , *what ) :
     return histo 
 
 # ==============================================================================
+## Prescale the frame
+#  @code
+#  frame = ...
+#  prescaled1 = frame_prescale ( frame , 0.15 ) ##  0.0 < prescale < 1.0
+#  prescaled2 = frame_prescale ( frame , 20   ) ##  1   < prescale 
+#  @endcode 
+def frame_prescale ( frame , prescale , name = '' ) :
+    """Prescale the frame
+    >>> frame = ...
+    >>> prescaled1 = frame_prescale ( frame , 0.15 ) ##  0.0 < prescale < 1.0
+    >>> prescaled2 = frame_prescale ( frame , 20   ) ##  1   < prescale 
+    """
+    node = as_rnode ( frame )
+    
+    if isinstance ( prescale , integer_type ) and 1 < prescale :
+
+        name = name if name else 'PRESCALE_#%d' % prescale
+        
+        code = '0 == ( rdfentry_ + rdfslot_ ) %% %d ' \
+               if ( 6 , 16 ) < root_info else         \
+               '0 == ( tdfentry_ + tdfslot_ ) %% %d '
+        
+        code = code % prescale        
+        return node.Filter ( code , name ) 
+        
+    elif isinstance ( prescale , float_type   ) and 0 < prescale < 1 :
+
+        name = name if name else 'PRESCALE_%.6g' % prescale        
+        code = 'gRandom()->Rndm() <= %.10g'      % prescale
+        return node.Filter ( code , name ) 
+        
+    raise TypeError ( "Invalid type/valeu for 'prescale' %s/%s" %( prescale , type ( prescale ) ) )
+        
+    
+# ==============================================================================
 ## Get the moment  for the frame object
 #  @code
 #  frame = ...
@@ -1087,7 +1123,6 @@ _new_methods_ = [
     frame_draw           , 
     frame_project        , 
     frame_columns        , 
-    frame_columns        , 
     ##
     frame_mean           , 
     frame_rms            , 
@@ -1142,6 +1177,7 @@ for f in frames :
     f.statCov        = frame_statCov
     f.ProgressBar    = frame_progress
     f.progress       = frame_progress
+    f.prescale       = frame_prescale 
     
     f.columns        = frame_columns
     f.branches       = frame_columns
