@@ -58,10 +58,11 @@ class ReduceTree(CleanUp):
                    output     = ''    ,   ## output file name
                    name       = ''    ,   ## the name 
                    addselvars = False ,   ## add varibles from selections?
-                   tmp_keep   = False ,   ## keep the temporary file 
+                   prescale   = 1     ,   ## prescale if needed 
+                   tmp_keep   = False ,   ## keep the temporary file
                    silent     = False ):  ## silent processing 
         
-        from   ostap.frames.frames import DataFrame
+        from   ostap.frames.frames import DataFrame, frame_prescale 
         frame  = DataFrame ( chain )
         report = None
         
@@ -76,6 +77,10 @@ class ReduceTree(CleanUp):
             frame = frame.Define ( nv , new_vars [ nv] )
             nvars.append ( nv )
 
+        ## add overall prescale 
+        if 1 != prescale :
+            frame = frame_prescale ( frame , prescale )
+            
         from ostap.core.ostap_types import  ( string_types   ,
                                               listlike_types ,
                                               dictlike_types )
@@ -251,6 +256,7 @@ def reduce  ( tree               ,
               output     = ''    ,
               name       = ''    , 
               addselvars = False ,
+              prescale   = 1     , ## prescale factor
               silent     = False ) :
     
     """ Powerful method to reduce/tranform the tree/chain.
@@ -279,7 +285,8 @@ def reduce  ( tree               ,
                            output     = output     ,
                            name       = name       , 
                            addselvars = addselvars ,
-                           tmp_keep   = True       , 
+                           prescale   = prescale   , 
+                           tmp_keep   = True       ,
                            silent     = silent     )
 
     from ostap.trees.trees import Chain

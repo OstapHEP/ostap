@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+3#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ==========================================================================================
 ## @file ostap/tools/tmva.py
@@ -35,7 +35,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning 
-from   ostap.core.ostap_types  import num_types, string_types
+from   ostap.core.ostap_types  import num_types, string_types, integer_types 
 from   ostap.core.meta_info    import root_version_int, root_info  
 import ostap.io.root_file 
 import ROOT, os, math, tarfile, shutil 
@@ -251,32 +251,34 @@ class Trainer(object):
     #  @endcode 
     #  For more detailes
     #  @see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
-    def __init__(  self                       ,
-                   methods                    ,
-                   variables                  ,  # list of variables 
-                   signal                     ,  # signal sample/tree
-                   background                 ,  # background sample/tree 
-                   signal_cuts       = ''     ,  # signal cuts 
-                   background_cuts   = ''     ,  # background cuts                   
-                   spectators        = []     ,
-                   bookingoptions    = "Transformations=I;D;P;G,D" , 
-                   configuration     = "SplitMode=Random:NormMode=NumEvents" ,
-                   signal_weight     = None   ,                
-                   background_weight = None   ,
-                   prefilter         = ''     ,  ## prefilter cuts before TMVA data loader 
+    def __init__(  self                           ,
+                   methods                        ,
+                   variables                      ,   # list of variables 
+                   signal                         ,  # signal sample/tree
+                   background                     ,  # background sample/tree 
+                   signal_cuts          = ''      ,  # signal cuts 
+                   background_cuts      = ''      ,  # background cuts                   
+                   spectators           = []      ,
+                   bookingoptions       = "Transformations=I;D;P;G,D" , 
+                   configuration        = "SplitMode=Random:NormMode=NumEvents" ,
+                   signal_weight        = None    ,                
+                   background_weight    = None    ,
+                   prefilter            = ''      ,  ## prefilter cuts before TMVA data loader 
                    ##
                    signal_train_fraction     = -1 , ## fraction of signal events used for training     : 0<=f<1 
                    background_train_fraction = -1 , ## fraction of background events used for training : 0<=f<1
                    ##
-                   output_file       = ''     ,  ## the name of output file
-                   verbose           = True   ,
-                   logging           = True   ,
-                   name              = 'TMVA' ,
-                   make_plots        = True   ,
-                   workdir           = ''     , 
-                   category          = -1     ,
-                   multithread       = False  ,
-                   logger            = None   ) :
+                   prescale_signal      = 1       , ## prescale factor for signal 
+                   prescale_background  = 1       , ## prescale factor for signal 
+                   output_file          = ''      ,   ## the name of output file
+                   verbose              = True    ,
+                   logging              = True    ,
+                   name                 = 'TMVA'  ,
+                   make_plots           = True    ,
+                   workdir              = ''      , 
+                   category             = -1      ,
+                   multithread          = False   ,
+                   logger               = None    ) :
         
         """Constructor with list of methods
         
@@ -311,11 +313,21 @@ class Trainer(object):
         variables                = list  ( variables  ) ; variables.sort()
         self.__variables         = tuple ( variables  )
 
-        self.__configuration    = configuration
+        self.__configuration     = configuration
         
         self.__signal_train_fraction     = signal_train_fraction     if 0 <= signal_train_fraction     < 1 else -1.0 
         self.__background_train_fraction = background_train_fraction if 0 <= background_train_fraction < 1 else -1.0 
 
+        assert ( isinstance ( prescale_signal     , integer_types ) and 1 <= prescale_signal         ) or \
+               ( isinstance ( prescale_signal     , float         ) and 0 <  prescale_signal     < 1 )  , \
+               "Invalid 'prescale_signal'"
+        assert ( isinstance ( prescale_background , integer_types ) and 1 <= prescale_background     ) or \
+               ( isinstance ( prescale_background , floa          ) and 0 <  prescale_background < 1 )  , \
+               "Invalid 'prescale_background'"
+        
+        self.__prescale_signal     = prescale_signal
+        self.__prescale_background = prescale_background
+        
         from ostap.trees.trees import Chain
         
         if   isinstance ( signal     , Chain           ) : pass 
@@ -481,6 +493,10 @@ class Trainer(object):
             if 0 < self.signal_train_fraction < 1 :
                 row = 'Signal train fraction' , '%.1f%%' % ( 100 *  self.signal_train_fraction ) 
                 rows.append ( row )
+
+            if 1 != self.prescale_signal :
+                row = 'Signal prescale'       , '%s' % self.prescale_signal 
+                rows.append ( row )
                 
             if self.background_cuts : 
                 row = 'Background cuts' , str ( self.background_cuts ) 
@@ -492,6 +508,10 @@ class Trainer(object):
 
             if 0 < self.background_train_fraction < 1 :
                 row = 'Backgroundtrain fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
+                rows.append ( row )
+
+            if 1 != self.prescale_background:
+                row = 'Backgronud prescale'      , '%s' % self.prescale_background
                 rows.append ( row )
 
             ms  = [ m[1] for m in self.methods ]
@@ -596,6 +616,16 @@ class Trainer(object):
     def background_train_fraction ( self ) :
         """``background_train_fraction'': if non-negative, fraction of background events used for training"""
         return self.__background_train_fraction
+
+    @property
+    def prescale_signal ( self ) :
+        """``prescale_signal'': prescale the signal sample"""
+        return self.__prescale_signal
+
+    @property
+    def prescale_background ( self ) :
+        """``prescale_background'': prescale the background sample"""
+        return self.__prescale_background
 
     @property
     def verbose ( self ) :
@@ -868,10 +898,10 @@ class Trainer(object):
             # =================================================================
 
 
-            if self.prefilter :
+            if self.prefilter or 1 != self.prescale_signal or 1 != self.prescale_background :
                 
-                if self.verbose : self.logger.info ( 'Start data pre-filtering before TMVA processing' )
-                all_vars.append   ( self.prefilter )
+                if self.verbose   : self.logger.info ( 'Start data pre-filtering before TMVA processing' )
+                if self.prefilter : all_vars.append   ( self.prefilter )
                 
                 if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
                 if self.signal_weight     : all_vars.append ( self.signal_weight     )
@@ -896,9 +926,17 @@ class Trainer(object):
                 
                 silent = not self.verbose or not self.category in ( 0, -1 )
                 self.logger.info ( 'Pre-filter Signal     before processing' )
-                self.__SigTR = TR.reduce ( self.signal     , selection = scuts , save_vars = avars , silent = silent )
+                self.__SigTR = TR.reduce ( self.signal        ,
+                                           selection = scuts  ,
+                                           save_vars = avars  ,
+                                           prescale  = self.prescale_signal    ,  
+                                           silent    = silent )
                 self.logger.info ( 'Pre-filter Background before processing' )
-                self.__BkgTR = RT.reduce ( self.background , selection = bcuts , save_vars = avars , silent = silent )
+                self.__BkgTR = RT.reduce ( self.background    ,
+                                           selection = bcuts  ,
+                                           save_vars = avars  ,
+                                           prescale  = self.prescale_background ,  
+                                           silent    = silent )
                 
                 self.__signal     = self.__SigTR
                 self.__background = self.__BkgTR
