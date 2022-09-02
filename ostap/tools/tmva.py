@@ -38,7 +38,7 @@ from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
 from   ostap.core.meta_info    import root_version_int, root_info  
 import ostap.io.root_file 
-import ROOT, os, math, tarfile, shutil 
+import ROOT, os, math, tarfile, shutil, itertools  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -899,8 +899,14 @@ class Trainer(object):
 
 
             if self.prefilter or 1 != self.prescale_signal or 1 != self.prescale_background :
+
+                all_vars = [] 
+                for v in itertools.chain ( self.variables , self.spectators ) : 
+                    vv = v
+                    if isinstance ( vv , str ) : vv = ( vv , 'F' )
+                    all_vars.append ( vv[0] ) 
                 
-                if self.verbose   : self.logger.info ( 'Start data pre-filtering before TMVA processing' )
+                if self.verbose  : self.logger.info ( 'Start data pre-filtering before TMVA processing' )
                 if self.prefilter : all_vars.append   ( self.prefilter )
                 
                 if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
@@ -910,11 +916,16 @@ class Trainer(object):
                 
                 import ostap.trees.trees
                 avars = self.signal.the_variables ( all_vars )
+
+                import ostap.trees.cuts
                 
-                import ostap.trees.cuts 
-                cuts  = ROOT.TCut ( self.prefilter )
-                scuts = { 'PreSelect' : cuts }
-                bcuts = { 'PreSelect' : cuts } 
+                scuts = {}
+                bcuts = {}
+                if self.prefilter : 
+                    cuts  = ROOT.TCut ( self.prefilter )
+                    scuts.update ( { 'PreSelect' : cuts } ) 
+                    bcuts.update ( { 'PreSelect' : cuts } )
+                    
                 if self.signal_cuts     : scuts.update ( { 'Signal'     : self.signal_cuts     } ) 
                 if self.background_cuts : bcuts.update ( { 'Background' : self.background_cuts } )
                 
@@ -932,7 +943,7 @@ class Trainer(object):
                                            prescale  = self.prescale_signal    ,  
                                            silent    = silent )
                 self.logger.info ( 'Pre-filter Background before processing' )
-                self.__BkgTR = RT.reduce ( self.background    ,
+                self.__BkgTR = TR.reduce ( self.background    ,
                                            selection = bcuts  ,
                                            save_vars = avars  ,
                                            prescale  = self.prescale_background ,  

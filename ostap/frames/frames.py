@@ -800,15 +800,14 @@ def frame_prescale ( frame , prescale , name = '' ) :
     
     if isinstance ( prescale , integer_types ) and 1 < prescale :
 
-        name = name if name else 'PRESCALE_#%d' % prescale
-
-        code = '0 == ( rdfentry_ + %d * rdfslot_ ) %% %d ' \
+        name = name if name else 'PRESCALE_%d' % prescale
+        
+        code = '( 0 == ( ( rdfentry_ + %d * rdfslot_ ) %% %d ) )' \
                if ( 6 , 16 ) < root_info else              \
-               '0 == ( tdfentry_ + %d * tdfslot_ ) %% %d '
+               '( 0 == ( ( tdfentry_ + %d * tdfslot_ ) %% %d ) ) '
         
         ## 16777213 and 16777199 are just large prime numbers 
         code = code % ( 16777213 , prescale )
-        print ('CODE' , code ) 
         return node.Filter ( code , name ) 
         
     elif isinstance ( prescale , float ) and 0 < prescale < 1 :

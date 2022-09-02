@@ -95,7 +95,7 @@ class ReduceTree(CleanUp):
             if len ( ss )  < Lmax : filter_name = ss          
             else                  : filter_name = 'SELECTION'
             frame = frame.Filter ( ss  , filter_name )
-            selections.append ( ss ) 
+            selections.append ( ss )            
         elif selection and isinstance ( selection , dictlike_types  ) :
             for filter_name in selection :
                 s = selection [ filter_name ]
@@ -116,9 +116,9 @@ class ReduceTree(CleanUp):
                 frame = frame.Filter ( ss , filter_name )
                 selections.append ( ss ) 
         elif selection :
-             raise TypeError('Invalid  selection type %s/%s' %  ( selection , type ( selection ) ) )
-
-        if output and os.path.exists ( output ) and os.path.isfile ( output ) and not silent :
+            raise TypeError('Invalid  selection type %s/%s' %  ( selection , type ( selection ) ) )
+        
+        if not silent and output and os.path.exists ( output ) and os.path.isfile ( output ) :
             logger.warning ("Existing file %s will be overwritten!" % output  )
             
         if not output : 
@@ -155,14 +155,14 @@ class ReduceTree(CleanUp):
             _ , _ , name = name.rpartition ( '/' )                
             
         self.__name = name
-                
+
         if not save_vars : 
             snapshot = frame.Snapshot ( name , output )
         else :
             bvars    = chain.the_variables ( *save_vars )
             all_vars = list ( bvars ) + [ v for v in nvars if not v in bvars ]
             from ostap.core.core import strings as _strings
-            all_vars = _strings ( all_vars  ) 
+            all_vars = _strings ( all_vars  )
             snapshot = frame.Snapshot ( name , output , all_vars )
 
         assert os.path.exists ( output ) and os.path.isfile ( output ) , \
