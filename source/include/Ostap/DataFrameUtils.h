@@ -19,6 +19,9 @@ namespace Ostap
   namespace Utils 
   {
     // =======================================================================
+    /// forward declaration 
+    class ProgressConf ; // forward declaration 
+    // =======================================================================
     /** helper function to create callable  for drawing of progress bar to the frame 
      *  @param  nchunks total number of chunks 
      *  @param  width   effective bar width (no left, rigtht & percentage)
@@ -39,6 +42,17 @@ namespace Ostap
       const std::string&   blank   = " "  ,
       const std::string&   left    = "[ " ,
       const std::string&   right   = " ]" ) ;
+    // ========================================================================
+    /** helper function to create callable  for drawing of progress bar to the frame 
+     *  @param  nchunks  total number of chunks 
+     *  @param  progress progress bar  configuration 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2019-11-08
+     */
+    std::function<void(unsigned int,ULong64_t&)>
+    frame_progress
+    ( const unsigned short nchunks        , 
+      const ProgressConf&  progress       ) ;
     // ========================================================================
   } //                                        The end of namespace Ostap::Utils 
   // ==========================================================================

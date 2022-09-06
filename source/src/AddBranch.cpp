@@ -18,6 +18,7 @@
 #include "Ostap/AddBranch.h"
 #include "Ostap/Funcs.h"
 #include "Ostap/Notifier.h"
+#include "Ostap/ProgressBar.h"
 // ============================================================================
 /** @file
  *  Implementation file for function Ostap::Trees::add_branch 
@@ -44,6 +45,7 @@ namespace
 /* add new branch with name <code>name</code> to the tree
  * the value of the branch is taken from  function <code>func</code>
  * @param tree    input tree 
+ * @param progress configurtaion of the progress bar
  * @param name    the name for new branch 
  * @param func    the function to be used to fill the branch 
  * @return status code 
@@ -53,9 +55,10 @@ namespace
 // ============================================================================
 Ostap::StatusCode 
 Ostap::Trees::add_branch 
-( TTree*                  tree ,  
-  const std::string&      name , 
-  const Ostap::IFuncTree& func ) 
+( TTree*                            tree     ,  
+  const Ostap::Utils::ProgressConf& progress , 
+  const std::string&                name     , 
+  const Ostap::IFuncTree&           func     ) 
 {
   if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
   //
@@ -72,7 +75,8 @@ Ostap::Trees::add_branch
   notifier.Notify() ;
   //
   const Long64_t nentries = tree->GetEntries(); 
-  for ( Long64_t i = 0 ; i < nentries ; ++i )
+  Ostap::Utils::ProgressBar bar ( nentries , progress  ) ;
+  for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar )
   {
     if ( tree->GetEntry ( i ) < 0 ) { break ; };
     //
@@ -82,6 +86,56 @@ Ostap::Trees::add_branch
   }
   //
   return Ostap::StatusCode::SUCCESS ;  
+}
+// ============================================================================
+/* add new branch with name <code>name</code> to the tree
+ * the value of the branch is taken from  function <code>func</code>
+ * @param tree    input tree 
+ * @param name    the name for new branch 
+ * @param func    the function to be used to fill the branch 
+ * @return status code 
+ * @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ * @date 2019-05-14
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                  tree ,  
+  const std::string&      name , 
+  const Ostap::IFuncTree& func ) 
+{
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another mehtod 
+  return add_branch ( tree , progress , name , func ) ;
+}
+// =============================================================================
+/*   add new branch with name <code>name</code> to the tree
+ *   the value of the branch is taken from the function <code>func</code>
+ *   @param tree    input tree 
+ *   @param progress configurtaion of the progress bar
+ *   @param name    the name for new branch 
+ *   @param formula the fomula use to calculate new  branch
+ *   @return status code 
+ *   @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *   @date 2019-05-14
+ */
+// =============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                            tree    ,  
+  const Ostap::Utils::ProgressConf& progress , 
+  const std::string&                name    , 
+  const std::string&                formula ) 
+{
+  if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
+  //
+  auto func = std::make_unique<Ostap::Functions::FuncFormula>( formula ,  tree ) ;
+  if ( !func ) { return Ostap::StatusCode ( CANNOT_CREATE_FORMULA ) ; }
+  //
+  Ostap::Utils::Notifier notifier ( tree , func.get () ) ;
+  //
+  return add_branch ( tree , progress , name , *func ) ;
 }
 // =============================================================================
 /*   add new branch with name <code>name</code> to the tree
@@ -100,19 +154,16 @@ Ostap::Trees::add_branch
   const std::string& name    , 
   const std::string& formula ) 
 {
-  if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
-  //
-  auto func = std::make_unique<Ostap::Functions::FuncFormula>( formula ,  tree ) ;
-  if ( !func ) { return Ostap::StatusCode ( CANNOT_CREATE_FORMULA ) ; }
-  //
-  Ostap::Utils::Notifier notifier ( tree , func.get () ) ;
-  //
-  return add_branch ( tree , name , *func ) ;
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another mehtod 
+  return add_branch ( tree , progress , name , formula ) ;
 }
 // ============================================================================
 /*  add new branches to the tree
  *  the value of the branch each  is taken from <code>branches</code>
  *  @param tree     input tree 
+ *  @param progress configuration of the progress bar
  *  @param name     the name for new branch 
  *  @param branches the map name->formula use to calculate newbranch
  *  @return status code 
@@ -123,6 +174,7 @@ Ostap::Trees::add_branch
 Ostap::StatusCode 
 Ostap::Trees::add_branch 
 ( TTree*                                   tree     ,  
+  const Ostap::Utils::ProgressConf&        progress , 
   const std::map<std::string,std::string>& branches ) 
 {
   //
@@ -154,13 +206,34 @@ Ostap::Trees::add_branch
   // - otherwise crash could happen causes crash..
   notifier.Notify() ;
   //
-  return add_branch ( tree , map ) ;
+  return add_branch ( tree , progress , map ) ;
 }
 // ============================================================================
 /*  add new branches to the tree
  *  the value of the branch each  is taken from <code>branches</code>
  *  @param tree     input tree 
  *  @param name     the name for new branch 
+ *  @param branches the map name->formula use to calculate newbranch
+ *  @return status code 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2019-05-14
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                                   tree     ,  
+  const std::map<std::string,std::string>& branches ) 
+{
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another mehtod 
+  return add_branch ( tree , progress , branches ) ;
+}
+// ============================================================================
+/*  add new branches to the tree
+ *  the value of the branch each  is taken from <code>branches</code>
+ *  @param tree     input tree 
+ *  @param progress configuration of the progress bar
  *  @param branches the map name->function use to calculate new branch
  *  @return status code 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -169,8 +242,9 @@ Ostap::Trees::add_branch
 // ============================================================================
 Ostap::StatusCode 
 Ostap::Trees::add_branch 
-( TTree*                           tree     ,  
-  const Ostap::Trees::FUNCTREEMAP& branches ) 
+( TTree*                            tree     ,  
+  const Ostap::Utils::ProgressConf& progress , 
+  const Ostap::Trees::FUNCTREEMAP&  branches ) 
 {
   // 
   if      ( !tree            ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
@@ -214,7 +288,8 @@ Ostap::Trees::add_branch
   notifier.Notify() ;
   //
   const Long64_t nentries = tree->GetEntries(); 
-  for ( Long64_t i = 0 ; i < nentries ; ++i )
+  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar  )
   {
     if ( tree->GetEntry ( i ) < 0 ) { break ; };
     //
@@ -225,6 +300,70 @@ Ostap::Trees::add_branch
   }
   //
   return Ostap::StatusCode::SUCCESS ; 
+}
+// ============================================================================
+/*  add new branches to the tree
+ *  the value of the branch each  is taken from <code>branches</code>
+ *  @param tree     input tree 
+ *  @param name     the name for new branch 
+ *  @param branches the map name->function use to calculate new branch
+ *  @return status code 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2019-05-14
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                           tree     ,  
+  const Ostap::Trees::FUNCTREEMAP& branches ) 
+{
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another mehtod 
+  return add_branch ( tree , progress , branches ) ;
+}
+
+
+
+// ============================================================================
+/*  add new branch to TTree, sampling it from   the 1D-histogram
+ *  @param tree (UPFATE) input tree 
+ *  @param progress configuration of the progress bar
+ *  @param name   name of the new branch 
+ *  @param histo  the historgam to be  sampled
+ *  @return status code 
+ *  @see TH1::GetRandom 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                            tree     , 
+  const Ostap::Utils::ProgressConf& progress , 
+  const std::string&                name     , 
+  const TH1&                        histo    )
+{
+  if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
+  //
+  const TH1* h1 = &histo ;
+  if ( nullptr != dynamic_cast<const TH2*>( h1 ) ) 
+  { return Ostap::StatusCode ( INVALID_TH1 ) ; }
+  //
+  Double_t value    = 0  ;
+  TBranch* branch   = tree->Branch( name.c_str() , &value , (name + "/D").c_str() );
+  if ( !branch ) { return Ostap::StatusCode ( CANNOT_CREATE_BRANCH ) ; }
+  //
+  const Long64_t nentries = tree->GetEntries(); 
+  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar )
+  {
+    if ( tree->GetEntry ( i ) < 0 ) { break ; };
+    //
+    value = histo.GetRandom() ;
+    //
+    branch -> Fill (       ) ;
+  }
+  //
+  return Ostap::StatusCode::SUCCESS ;  
 }
 // ============================================================================
 /*  add new branch to TTree, sampling it from   the 1D-histogram
@@ -241,30 +380,13 @@ Ostap::Trees::add_branch
   const std::string&   name  , 
   const TH1&           histo )
 {
-  if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
-  //
-  const TH1* h1 = &histo ;
-  if ( nullptr != dynamic_cast<const TH2*>( h1 ) ) 
-  { return Ostap::StatusCode ( INVALID_TH1 ) ; }
-  //
-  Double_t value    = 0  ;
-  TBranch* branch   = tree->Branch( name.c_str() , &value , (name + "/D").c_str() );
-  if ( !branch ) { return Ostap::StatusCode ( CANNOT_CREATE_BRANCH ) ; }
-  //
-  const Long64_t nentries = tree->GetEntries(); 
-  for ( Long64_t i = 0 ; i < nentries ; ++i )
-  {
-    if ( tree->GetEntry ( i ) < 0 ) { break ; };
-    //
-    value = histo.GetRandom() ;
-    //
-    branch -> Fill (       ) ;
-  }
-  //
-  return Ostap::StatusCode::SUCCESS ;  
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another mehtod 
+  return add_branch ( tree , progress , name , histo ) ;
 }
 // ============================================================================
-/** add new branch to TTree, sampling it from   the 1D-histogram
+/** add new branch to TTree, sampling it from   the 2D-histogram
  *  @param tree (UPFATE) input tree 
  *  @param namex  name of the new branch 
  *  @param namey  name of the new branch 
@@ -275,10 +397,11 @@ Ostap::Trees::add_branch
 // ============================================================================
 Ostap::StatusCode 
 Ostap::Trees::add_branch 
-( TTree*               tree  , 
-  const std::string&   namex , 
-  const std::string&   namey , 
-  const TH2&           histo )
+( TTree*                            tree     , 
+  const Ostap::Utils::ProgressConf& progress , 
+  const std::string&                namex    , 
+  const std::string&                namey    , 
+  const TH2&                        histo    )
 {
   if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
   //
@@ -297,7 +420,8 @@ Ostap::Trees::add_branch
   TH2& h = const_cast<TH2&> ( histo ) ;
   //
   const Long64_t nentries = tree->GetEntries(); 
-  for ( Long64_t i = 0 ; i < nentries ; ++i )
+  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  for ( Long64_t i = 0 ; i < nentries ; ++i, ++bar )
   {
     if ( tree->GetEntry ( i ) < 0 ) { break ; };
     //
@@ -310,8 +434,31 @@ Ostap::Trees::add_branch
   return Ostap::StatusCode::SUCCESS ;  
 }
 // ============================================================================
-/** add new branch to TTree, sampling it from   the 1D-histogram
+/** add new branch to TTree, sampling it from   the 2D-histogram
  *  @param tree (UPFATE) input tree 
+ *  @param namex  name of the new branch 
+ *  @param namey  name of the new branch 
+ *  @param histo  the historgam to be  sampled
+ *  @return status code 
+ *  @see TH2::GetRandom2 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const std::string&   namex , 
+  const std::string&   namey , 
+  const TH2&           histo )
+{
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another mehtod 
+  return add_branch ( tree , progress , namex , namey  , histo ) ;
+}
+// ============================================================================
+/** add new branch to TTree, sampling it from   the 3D-histogram
+ *  @param tree (UPFATE) input tree 
+ *  @param progress configuration of the progress bar
  *  @param namex  name of the new branch 
  *  @param namey  name of the new branch 
  *  @param namez  name of the new branch 
@@ -323,6 +470,7 @@ Ostap::Trees::add_branch
 Ostap::StatusCode 
 Ostap::Trees::add_branch 
 ( TTree*               tree  , 
+  const Ostap::Utils::ProgressConf& progress , 
   const std::string&   namex , 
   const std::string&   namey , 
   const std::string&   namez , 
@@ -345,7 +493,8 @@ Ostap::Trees::add_branch
   TH3& h = const_cast<TH3&> ( histo ) ;
   //
   const Long64_t nentries = tree->GetEntries(); 
-  for ( Long64_t i = 0 ; i < nentries ; ++i )
+  Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar )
   {
     if ( tree->GetEntry ( i ) < 0 ) { break ; };
     //
@@ -359,17 +508,43 @@ Ostap::Trees::add_branch
   return Ostap::StatusCode::SUCCESS ;  
 }
 // ============================================================================
+/** add new branch to TTree, sampling it from   the 3D-histogram
+ *  @param tree (UPFATE) input tree 
+ *  @param namex  name of the new branch 
+ *  @param namey  name of the new branch 
+ *  @param namez  name of the new branch 
+ *  @param histo  the historgam to be  sampled
+ *  @return status code 
+ *  @see TH2::GetRandom2 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const std::string&   namex , 
+  const std::string&   namey , 
+  const std::string&   namez , 
+  const TH3&           histo )
+{
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another mehtod 
+  return add_branch ( tree , progress , namex , namey , namez , histo ) ;
+}
+// ============================================================================
 namespace 
 {
   // ==========================================================================
   template <class DATA>
   inline Ostap::StatusCode 
-  _add_branch_ ( TTree*               tree  , 
-                 const std::string&   vname ,                
-                 const std::string&   vtype , 
-                 const DATA*          data  ,
-                 const unsigned long  size  , 
-                 const DATA           value ) 
+  _add_branch_ 
+  ( TTree*                            tree     , 
+    const Ostap::Utils::ProgressConf& progress , 
+    const std::string&                vname    ,                
+    const std::string&                vtype    , 
+    const DATA*                       data     ,
+    const unsigned long               size     , 
+    const DATA                        value    ) 
   {
     //
     if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE   ) ; }
@@ -387,13 +562,30 @@ namespace
       branch->Fill() ;
     }
     //
-    for ( Long64_t i = nentries ; i < total  ; ++i ) 
+    Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+    for ( Long64_t i = nentries ; i < total  ; ++i , ++bar ) 
     {
       bvalue = value ;
       branch->Fill() ;
     }
     //
     return Ostap::StatusCode::SUCCESS ;  
+  }
+  // ==========================================================================
+  template <class DATA>
+  inline Ostap::StatusCode 
+  _add_branch_ 
+  ( TTree*                            tree     , 
+    const std::string&                vname    ,                
+    const std::string&                vtype    , 
+    const DATA*                       data     ,
+    const unsigned long               size     , 
+    const DATA                        value    ) 
+  {
+    /// create fake progress bar
+    Ostap::Utils::ProgressConf progress { 0 } ;
+    /// delegate to another mehtod 
+    return _add_branch_ ( tree , progress , vname , vtype , data , size , value ) ;
   }
   // ==========================================================================
 }
@@ -417,6 +609,16 @@ Ostap::Trees::add_branch
   const double         value ) 
 { return _add_branch_ ( tree , vname , "/D" , data , size , value ) ; }
 // ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*                            tree      , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&                vname     ,  
+  const double*                     data      , 
+  const unsigned long               size      , 
+  const double                      value     ) 
+{ return _add_branch_ ( tree , progress , vname , "/D" , data , size , value ) ; }
+// ============================================================================
 /*  copy data from buffer into new branch 
  *  @param tree   The tree 
  *  @param data   input data fuffer 
@@ -433,6 +635,16 @@ Ostap::Trees::add_branch
   const unsigned long  size  , 
   const float          value ) 
 { return _add_branch_ ( tree , vname , "/F" , data , size , value ) ; }
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&   vname ,  
+  const float*         data  , 
+  const unsigned long  size  , 
+  const float          value ) 
+{ return _add_branch_ ( tree , progress , vname , "/F" , data , size , value ) ; }
 // ========================================================================
 /*  copy data from buffer into new branch 
  *  @param tree   The tree 
@@ -451,6 +663,16 @@ Ostap::Trees::add_branch
   const short          value ) 
 { return _add_branch_ ( tree , vname , "/S" , data , size , value ) ; }
 // ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&   vname ,  
+  const short*         data  , 
+  const unsigned long  size  , 
+  const short          value ) 
+{ return _add_branch_ ( tree , progress , vname , "/S" , data , size , value ) ; }
+// ============================================================================
 /*  copy data from buffer into new branch 
  *  @param tree   The tree 
  *  @param data   input data fuffer 
@@ -467,6 +689,17 @@ Ostap::Trees::add_branch
   const unsigned long   size  , 
   const unsigned short  value ) 
 { return _add_branch_ ( tree , vname , "/s" , data , size , value ) ; }
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*                tree  , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&    vname ,  
+  const unsigned short* data  , 
+  const unsigned long   size  , 
+  const unsigned short  value ) 
+{ return _add_branch_ ( tree , vname , "/s" , data , size , value ) ; }
+
 // ============================================================================
 /*  copy data from buffer into new branch 
  *  @param tree   The tree 
@@ -485,6 +718,16 @@ Ostap::Trees::add_branch
   const int            value ) 
 { return _add_branch_ ( tree , vname , "/I" , data , size , value ) ; }
 // ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&   vname ,  
+  const int*           data  , 
+  const unsigned long  size  , 
+  const int            value ) 
+{ return _add_branch_ ( tree , progress , vname , "/I" , data , size , value ) ; }
+// ============================================================================
 /*  copy data from buffer into new branch 
  *  @param tree   The tree 
  *  @param data   input data fuffer 
@@ -502,6 +745,16 @@ Ostap::Trees::add_branch
   const unsigned int   value ) 
 { return _add_branch_ ( tree , vname , "/i" , data , size , value ) ; }
 // ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&   vname ,  
+  const unsigned int*  data  , 
+  const unsigned long  size  , 
+  const unsigned int   value ) 
+{ return _add_branch_ ( tree , progress , vname , "/i" , data , size , value ) ; }
+// ============================================================================
 /*  copy data from buffer into new branch 
  *  @param tree   The tree 
  *  @param data   input data fuffer 
@@ -513,11 +766,21 @@ Ostap::Trees::add_branch
 Ostap::StatusCode
 Ostap::Trees::add_branch 
 ( TTree*               tree  ,
-    const std::string&   vname ,
-    const long*          data  , 
-    const unsigned long  size  , 
-    const long           value ) 
+  const std::string&   vname ,
+  const long*          data  , 
+  const unsigned long  size  , 
+  const long           value ) 
 { return _add_branch_ ( tree , vname , "/L" , data , size , value ) ; }
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  ,
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&   vname ,
+  const long*          data  , 
+  const unsigned long  size  , 
+  const long           value ) 
+{ return _add_branch_ ( tree , progress , vname , "/L" , data , size , value ) ; }
 // ============================================================================
 /*  copy data from buffer into new branch 
  *  @param tree   The tree 
@@ -530,11 +793,21 @@ Ostap::Trees::add_branch
 Ostap::StatusCode
 Ostap::Trees::add_branch 
 ( TTree*               tree  , 
-    const std::string&   vname ,  
-    const unsigned long* data  , 
-    const unsigned long  size  , 
-    const unsigned long value ) 
+  const std::string&   vname ,  
+  const unsigned long* data  , 
+  const unsigned long  size  , 
+  const unsigned long value ) 
 { return _add_branch_ ( tree , vname , "/l" , data , size , value ) ; }
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&   vname ,  
+  const unsigned long* data  , 
+  const unsigned long  size  , 
+  const unsigned long value ) 
+{ return _add_branch_ ( tree , progress , vname , "/l" , data , size , value ) ; }
 // ============================================================================
 #endif
 // ============================================================================
@@ -552,6 +825,14 @@ Ostap::Trees::add_branch
   const double         value       ) 
 { return _add_branch_ ( tree , vname , "/D" , &value , 1 , value ) ; }
 // ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree        , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&   vname       ,  
+  const double         value       ) 
+{ return _add_branch_ ( tree , progress , vname , "/D" , &value , 1 , value ) ; }
+// ============================================================================
 /** copy data from buffer into new branch 
  *  @param tree    The tree 
  *  @param namex   name of the new branch 
@@ -565,8 +846,14 @@ Ostap::Trees::add_branch
   const std::string&   vname       ,  
   const int            value       ) 
 { return _add_branch_ ( tree , vname , "/I" , &value , 1 , value ) ; }
-
-
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree        , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&   vname       ,  
+  const int            value       ) 
+{ return _add_branch_ ( tree , progress , vname , "/I" , &value , 1 , value ) ; }
 
 // ============================================================================
 //                                                                      The END 

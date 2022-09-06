@@ -54,6 +54,11 @@ namespace Ostap
     // ========================================================================
   public:
     // ========================================================================
+    /// validity check 
+    bool operator!() const { return !ok() ; }
+    // ========================================================================
+  public:
+    // ========================================================================
     /// evaluate the formula 
     double evaluate () ;       // evaluate the formula 
     /// evaluate the specified instance of the formula 

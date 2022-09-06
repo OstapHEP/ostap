@@ -14,6 +14,7 @@
 // ============================================================================
 #include "Ostap/DataFrame.h"
 #include "Ostap/DataFrameUtils.h"
+#include "Ostap/ProgressBar.h"
 // ============================================================================
 // local 
 // ============================================================================
@@ -35,7 +36,7 @@ namespace
   /** @class DataFrameProgress 
    *  Helper class to show th eprogree bar for data frame 
    */
-  class DataFrameProgress
+  class DataFrameProgress : public Ostap::Utils::ProgressConf 
   {
   public:
     // ========================================================================
@@ -48,20 +49,14 @@ namespace
      *  @param  right   suffix 
      */
     DataFrameProgress
-    ( const unsigned short nchunks        , 
-      const unsigned short width          , 
-      const std::string&   symbol  = "#"  , 
-      const std::string&   blank   = " "  ,
-      const std::string&   left    = "[ " ,
-      const std::string&   right   = " ]" ) 
-      : m_nchunks ( nchunks ) 
-      , m_width   ( width < 10u  ? 10u : width ) 
-      , m_symbol  ( symbol  ) 
-      , m_blank   ( blank   ) 
-      , m_left    ( left    ) 
-      , m_right   ( right   ) 
-      , m_chunks  ( 0       )
-    {}
+    ( const unsigned short               nchunks  , 
+      const Ostap::Utils::ProgressConf & progress )
+      : ProgressConf ( progress ) 
+      , m_nchunks    ( nchunks ) 
+      , m_chunks     ( 0       )
+    {
+      if ( !m_nchunks ) { setWidth ( 0 ) ; }   // DISBALE IT!
+    }
     // ========================================================================
     /// default move constructor
     DataFrameProgress (       DataFrameProgress&& ) = default ;
@@ -79,21 +74,23 @@ namespace
       /// increment number of processed chunks 
       ++m_chunks ; // increment number of processed chunks
       ///
-      const double done = 
-        m_nchunks <= m_chunks ? 100  : double ( m_chunks * 100 ) / m_nchunks  ;
+      const unsigned int w  = width () ;
+      if ( !w || !m_nchunks ) { return ; } // DISABLED! 
       //
-      const unsigned short ns =
-        m_nchunks <= m_chunks ? m_width :
-        int ( std::floor ( 0.01 * done * m_width ) ) ;  
+      const double done     = m_nchunks <= m_chunks ? 100 : double ( m_chunks * 100 ) / m_nchunks  ;
+      const unsigned int ns = m_nchunks <= m_chunks ? w   : int ( std::floor ( 0.01 * done * w ) ) ;  
+      //
+      const std::string& s1 = symbol () ;
+      const std::string& s2 = empty  () ;
       //
       if ( m_chunks <= m_nchunks ) 
       {
         std::string bar      ;
         bar.reserve ( 1024 ) ;
-        bar += m_left ;
-        for ( unsigned short i = 0  ; i < ns       ; ++i ) { bar += m_symbol ; }
-        for ( unsigned short i = ns ; i < m_width  ; ++i ) { bar += m_blank  ; }
-        bar += m_right ;
+        bar += left () ;
+        for ( unsigned int i = 0  ; i < ns ; ++i ) { bar += s1 ; }
+        for ( unsigned int i = ns ; i < w  ; ++i ) { bar += s2 ; }
+        bar += right ();
         //
         std::cout << bar << ' ' << std::floor ( done ) <<  "%" ;
         if ( m_chunks < m_nchunks ) { std::cout << '\r'                    ; }
@@ -105,18 +102,6 @@ namespace
     // ========================================================================
     /// number of currrently processes chunks       
     unsigned int   m_nchunks         ; // number of chunks 
-    /// bar width 
-      unsigned short m_width           ; // bar width 
-    /// symbol 
-    std::string    m_symbol { "#"  } ; // the symbol 
-    /// blank symbol
-    std::string    m_blank  { " "  } ; // blank symbol
-    // left edge 
-    std::string    m_left   { "[ " } ; // left edge 
-    // right edge 
-    std::string    m_right  { " ]" } ; // right edge 
-    // ========================================================================
-  private :
     // ========================================================================
     /// number of processed chunks 
     unsigned int m_chunks { 0 }   ; // number of currently processed chunks 
@@ -125,7 +110,7 @@ namespace
   // ==========================================================================
 } //                                     The end of local anonymous namespace 
 // ============================================================================
-/* helper function to create callable  for drawing of progress bar to the frame 
+/*  helper function to create callable  for drawing of progress bar to the frame 
  *  @param  nchunks total number of chunks 
  *  @param  width   effective bar width (no left, rigtht & percentage) 
  *  @param  symbol symbol to use as progress 
@@ -148,14 +133,28 @@ Ostap::Utils::frame_progress
   const std::string&   right   )
 {
   //
-  return DataFrameProgress ( nchunks , 
-                             width   , 
-                             symbol  , 
-                             blank   , 
-                             left    , 
-                             right   ) ;
+  return DataFrameProgress 
+    ( nchunks ,
+      Ostap::Utils::ProgressConf ( width   , 
+                                   symbol  , 
+                                   blank   , 
+                                   left    , 
+                                   right   ) ) ; 
 }
-
+// ===========================================================================
+/*  helper function to create callable  for drawing of progress bar to the frame 
+ *  @param  nchunks  total number of chunks 
+ *  @param  progress progress bar  configuration 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2019-11-08
+ */
+// ============================================================================
+std::function<void(unsigned int,ULong64_t&)>
+Ostap::Utils::frame_progress
+( const unsigned short               nchunks  , 
+  const Ostap::Utils::ProgressConf&  progress ) 
+{ return DataFrameProgress ( nchunks , progress ) ; }
+// ============================================================================
 
 // ============================================================================
 //                                                                      The END 

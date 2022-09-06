@@ -16,17 +16,23 @@ __all__     = (
     'Chain'           , ## helper class , needed for multiprocessing 
     'Tree'            , ## helper class , needed for multiprocessing
     'ActiveBranches'  , ## context manager to activate certain branches 
-    'active_branches' , ## context manager to activate certain branches 
+    'active_branches' , ## context manager to activate certain branches
+    'progress_conf'   , ## default configuration for C++ progress bar 
   ) 
 # =============================================================================
-from   ostap.core.meta_info   import root_info
-from   ostap.core.core        import ( std , Ostap , VE  , WSE , hID ,
-                                       ROOTCWD , strings  , split_string ) 
-from   ostap.core.ostap_types import ( integer_types  , long_type      ,
-                                       string_types   , sequence_types ,
-                                       sized_types    , num_types      ,
-                                       dictlike_types                  )
-from   ostap.utils.utils      import chunked 
+from   ostap.core.meta_info      import root_info
+from   ostap.core.core           import ( std , Ostap , VE  , WSE , hID ,
+                                          ROOTCWD , strings  , split_string ,
+                                          valid_pointer           ) 
+from   ostap.core.ostap_types    import ( integer_types  , long_type      ,
+                                          string_types   , sequence_types ,
+                                          sized_types    , num_types      ,
+                                          dictlike_types , list_types     )
+from   ostap.utils.utils         import chunked
+from   ostap.utils.progress_conf import progress_conf
+from   ostap.utils.basic         import isatty, terminal_size, NoContext 
+from   ostap.utils.scp_copy      import scp_copy 
+from   ostap.utils.progress_bar  import progress_bar
 import ostap.histos.histos
 import ostap.trees.param
 import ROOT, os, math, array 
@@ -43,8 +49,8 @@ import ostap.trees.cuts
 # =============================================================================
 _large = ROOT.TVirtualTreePlayer.kMaxEntries
 # =============================================================================
-from ostap.core.core      import valid_pointer
-from ostap.utils.scp_copy import scp_copy 
+
+
 # =============================================================================
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
@@ -52,7 +58,7 @@ def _tt_nonzero_ ( tree ) :
     """Check validity/emptiness  of TTree/TChain
     - require non-zero poniter and non-empty Tree/Chain
     """
-    return valid_pointer ( tree ) and 0 < len ( tree )
+    return valid_pointer ( tree ) and 0 < tree.GetEntries() 
 
 ROOT.TTree .__nonzero__ = _tt_nonzero_
 ROOT.TChain.__nonzero__ = _tt_nonzero_
@@ -80,7 +86,7 @@ ROOT.TChain.__bool__    = _tt_nonzero_
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
-def _iter_cuts_ ( self , cuts = '' , first = 0 , last = _large , progress = False , active = () ) :
+def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = _large , progress = False , active = () ) :
     """Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
@@ -99,58 +105,39 @@ def _iter_cuts_ ( self , cuts = '' , first = 0 , last = _large , progress = Fals
     >>> for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
     """
     #
-    last  = min ( last , len ( self ) )
+    last  = min ( last , len ( tree ) )
     first = max ( 0    , first        ) 
     #
     if not cuts : cuts = '1'
-    # 
-    pit = Ostap.PyIterator ( self , cuts , first , last )
-    if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
     #
-
     if active :
-        abrs = set ( active )
-        cvar = self.the_variables ( cuts )
-        for v in  cvar : abrs.add ( v    )
-        abrs = tuple ( abrs ) 
-        context = ActiveBranches ( self , *abrs )
-    else :
-        from ostap.utils.basic import NoContext 
-        context = NoContext () 
-    
-    from ostap.utils.progress_bar import ProgressBar 
-    with ProgressBar ( min_value = first        ,
-                       max_value = last         ,
-                       silent    = not progress ) as bar , context as cntx :
         
-        step = 13.0 * max ( bar.width , 101 ) / ( last - first ) 
+        cvar    = tree.the_variables ( cuts , *active )
+        abrs    = tuple ( set ( [ c for c in cvar ] ) ) 
+        context = ActiveBranches  ( tree , *abrs )
         
-        _t = pit.tree()
-        _o = _t 
-        while valid_pointer ( _t ) :
+    else : context = NoContext () 
 
-            yield _t
-            _t      = pit.next()             ## advance to the next entry  
+    with context :
+        
+        if progress : pit = Ostap.PyIterator ( tree , progress_conf , cuts , first , last )
+        else        : pit = Ostap.PyIterator ( tree ,                 cuts , first , last )
+        ##
+        if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
+        
+        ## the tree is advanced 
+        mytree = pit.tree()
+        while valid_pointer ( mytree ) :
+            yield mytree
+            mytree = pit.next()
+            
+        del pit
 
-            if progress : 
-                current = pit.current() - 1  ## get the current entry index 
-                if not _t                          \
-                       or  _t != _o                \
-                       or current - first   < 120  \
-                       or last    - current < 120  \
-                       or 0 == current % 100000    \
-                       or 0 == int ( step * ( current - first ) ) % 5  :
-                    
-                    ## show progress bar 
-                    bar.update_amount( current )
-                    _o = _t
-                    
-        if progress : bar.update_amount( last ) 
+    ## set the tree at the initial position 
+    ievt = tree.GetEntryNumber ( 0 )
+    if 0 <= ievt : tree.GetEntry ( ievt )
 
-    del pit
-    self.GetEntry(0)
     
-
 ROOT.TTree .withCuts  = _iter_cuts_ 
 ROOT.TChain.withCuts  = _iter_cuts_ 
 
@@ -167,7 +154,7 @@ ROOT.TTree. __len__   = lambda s : s.GetEntries()
 #  @see Ostap::Formula
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
-def _tc_call_ ( self , first = 0 , last = -1  , cuts = None , progress = False ) :
+def _tc_call_ ( tree , first = 0 , last = -1  , cuts = None , progress = False , active = () ) :
     """Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
@@ -177,63 +164,58 @@ def _tc_call_ ( self , first = 0 , last = -1  , cuts = None , progress = False )
     #
     if last < 0 : last = _large
     
-    last  = min ( last , len ( self ) )
+    last  = min ( last , len ( tree ) )
     first = max ( 0    , first        ) 
-
-    from ostap.utils.progress_bar import ProgressBar 
-    with ProgressBar ( min_value = first        ,
-                       max_value = last         ,
-                       silent    = not progress ) as bar :
+    
+    if active :
         
-        step = 13.0 * max ( bar.width , 101 ) / ( last - first ) 
+        cvar    = tree.the_variables ( cuts , *active )
+        abrs    = tuple ( set ( [ c for c in cvar ] ) ) 
+        context = ActiveBranches  ( tree , *abrs )
+        
+    else :
+        
+        from ostap.utils.basic import NoContext 
+        context = NoContext () 
 
-        pit = 1 
-        if cuts :
+    with context : 
+        
+        if cuts : ## use Ostap.PyIterator 
             
-            pit = Ostap.PyIterator ( self , cuts , first , last )
+            if progress : pit = Ostap.PyIterator ( tree , progress_conf , cuts , first , last )
+            else        : pit = Ostap.PyIterator ( tree ,                 cuts , first , last )
+            
             if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
-            #
             
-            _t = pit.tree()
-            _o = _t 
-            while valid_pointer ( _t ) :
+            mytree = pit.tree()
+            while valid_pointer ( mytree ) :                
+                yield mytree                    ## YIELD HERE                  
+                mytree = pit.next()             ## advance to the next entry  
                 
-                yield _t                         ## YIELD 
-                _t      = pit.next()             ## advance to the next entry  
-                
-                if progress : 
-                    current = pit.current() - 1  ## get the current entry index 
-                    if not _t                          \
-                           or  _t != _o                \
-                           or current - first   < 120  \
-                           or last    - current < 120  \
-                           or 0 == current % 100000    \
-                           or 0 == int ( step * ( current - first ) ) % 5  :
-                        
-                    ## show progress bar 
-                        bar.update_amount( current )
-                        _o = _t
-        else :
+            del pit
             
-            ## just explicit loop 
-            for current in range ( first , last + 1 ) :
-                
-                if progress :
-                    if     current - first   < 120  \
-                           or last - current < 120  \
-                           or 0 == current % 100000 \
-                           or 0 == int ( step * ( current - first ) ) % 5  :
-                        
-                        bar.update_amount( current )
-                        
-                if 0 >= self.GetEntry ( current ) : break
-                yield self                         ## YIELD! 
-                
-                    
-        if progress : bar.update_amount( last ) 
+        else : ## trivial loop 
 
-    del pit
-    self.GetEntry(0)
+            ## explicit loop over entries 
+            for entry in progress_bar ( range ( firts , last ) , silent = not progress )  :
+                
+                ievt = tree.GetEntryNumber ( entry  )
+                
+                if ievt < 0 :
+                    logger.error ( "Invald entry/1 %s< skip it!" % entry )
+                    continue
+                
+                ievt = tree.GetEntry ( ievt )            
+                if ievt < 0 :
+                    logger.error ( "Invald entry/2 %s< skip it!" % entry )
+                    continue
+                
+                yield tree                     ## YIELD HERE 
+
+            
+    ## set the tree at the initial position 
+    ievt = tree.GetEntryNumber ( 0 )
+    if 0 <= ievt : tree.GetEntry ( ievt )
     
 
 ROOT.TTree .__call__  = _tc_call_ 
@@ -256,7 +238,7 @@ except ImportError :
 #   for row in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
 #      print ( row ) 
 #   @code 
-def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 ) :
+def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 , progress = False , active = () ) :
     """Iterate over tree entries and get a row/array of values for each good entry
     >>> tree = ...
     >>> for row in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
@@ -271,67 +253,234 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 ) :
     vars = []
     for v in variables :
         vars += split_string ( v , ' ,;:' )
-    vars = strings ( vars ) 
 
-    getter = Ostap.Trees.Getter ( tree , vars ) 
-    result = std.vector('double')()
-
-    pit = None 
-    if cuts :
+    if active :
         
-        pit = Ostap.PyIterator ( self , cuts , first , last )
-        assert pit and pit.ok() , 'Invalid formula %s' % cuts  
-
-        _t = pit.tree() 
-        while valid_pointer ( _t ) :
-
-            current = pit.current() - 1
-            tt      = getter.tree()
-            ievent  = tt.GetEntryNumber ( current )
-            if ievent < 0 :
-                logger.error('Cannot read entry %s' % current ) 
-                break
-            ientry  = tt.LoadTree ( ievent )
-            if ientry < 0 :
-                logger.error('Cannot load tree  %s' % ievent ) 
-                break 
-            
-            sc = getter.eval ( result )
-            if sc.isFailure () :
-                logger.error('Error status %s' % sc  ) 
-                break
-
-            yield get_result ( result )                 
-            _t = pit.next()
-
+        cvar    = tree.the_variables ( cuts , vars ,  *active )
+        abrs    = tuple ( set ( [ c for c in cvar ] ) ) 
+        context = ActiveBranches  ( tree , *abrs )
         
     else :
+        
+        from ostap.utils.basic import NoContext 
+        context = NoContext () 
+        
+    vars = strings ( vars ) 
 
-        for current in range  ( first , last  ) :
-            tt      = getter.tree()
-            ievent  = tt.GetEntryNumber ( current )
-            if ievent < 0 :
-                logger.error('Cannot read entry %s' % current ) 
-                break
-            ientry  = tt.LoadTree ( ievent )
-            if ientry < 0 :
-                logger.error('Cannot load tree  %s' % ievent ) 
-                break 
+    with context :
+        
+        getter = Ostap.Trees.Getter ( tree , vars ) 
+        result = std.vector('double')()
+        
+        if cuts : ## more efficient loop using Ostap.PyIterator 
             
-            sc = getter.eval ( result )
-            if sc.isFailure () :
-                logger.error('Error status %s' % sc  ) 
-                break
+            if progress : pit = Ostap.PyIterator ( self , progress_conf , cuts , first , last )
+            else        : pit = Ostap.PyIterator ( self ,                 cuts , first , last )
             
-            yield get_result ( result )                 
+            assert pit and pit.ok() , 'ROWS: Invalid formula %s' % cuts  
+            
+            mytree = pit.tree() 
+            while valid_pointer ( mytree ) :
+                
+                sc = getter.eval ( result )
+                if sc.isFailure () :
+                    logger.error('ROWS: Error status from getter %s' % sc  ) 
+                    break
+                
+                yield get_result ( result )                 
+                mytree = pit.next()
+                
+            del pit
+        
+        else : ## trivial loop
+        
+            for event in progress_bar ( range ( first , last ) , silent = not progress ) :
+                
+                tt      = getter.tree()
+                
+                ievent  = tt.GetEntryNumber ( event  )
+                if ievent < 0 :
+                    logger.error('ROWS: Cannot read entry %s' % event ) 
+                    break
+                
+                ientry  = tt.GetEntry ( ievent )
+                if ientry < 0 :
+                    logger.error('ROWS: Cannot get entry  %s' % event ) 
+                    break
+                
+                sc = getter.eval ( result )
+                if sc.isFailure () :
+                    logger.error('ROWS: Error status from getter %s' % sc  ) 
+                    break 
+                
+                yield get_result ( result )                 
 
+    del getter
+    
+    ## set the tree at the initial position 
+    ievt = tree.GetEntryNumber ( 0 )
+    if 0 <= ievt : tree.GetEntry ( ievt )
 
-    del pit
-    del getter 
-    tree.GetEntry(0)
             
 ROOT.TTree .rows  = _tt_rows_ 
 
+# =============================================================================
+## help project method for ROOT-trees and chains 
+#
+#  @code 
+#    >>> h1   = ROOT.TH1D(... )
+#    >>> tree.Project ( h1.GetName() , 'm', 'chi2<10' ) ## standart ROOT 
+#    
+#    >>> h1   = ROOT.TH1D(... )
+#    >>> tree.project ( h1.GetName() , 'm', 'chi2<10' ) ## ditto 
+#    
+#    >>> h1   = ROOT.TH1D(... )
+#    >>> tree.project ( h1           , 'm', 'chi2<10' ) ## use histo
+# 
+#  @endcode
+#  @attention For 2D&3D cases if variables specifed as singel string, the order is Z,Y,X,
+#             Otherwide the natural order is used.
+#  @param tree       (INPUT) the tree
+#  @param histo      (INPUT/UPDATE) the histogram or histogram name 
+#  @param what       (INPUT) variable/expression to be projected.
+#                            It could be a list/tuple of variables/expressions
+#                            or just a comma or semicolumn-separated expression
+#  @param cuts       (INPUT) expression for cuts/weights
+#  @param options    (INPUT) options to be propagated to <code>TTree.Project</code>
+#  @param first      (INPUT) first entry to process
+#  @param last       (INPUT) last entry to process
+#  @param use_frame  (INPUT) use DataFrame for processing?
+#  @param silent     (INPUT) silent processing?
+#  @see TTree::Project
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-07-06
+def tree_project ( tree               ,
+                   histo              ,
+                   what               ,
+                   cuts       = ''    ,
+                   first      =  0    , 
+                   last       = -1    , 
+                   use_frame  = False , ## use DataFrame ? 
+                   progress   = False ) :
+    """Helper project method
+    
+    >>> tree = ...
+    
+    >>> h1   = ROOT.TH1D(... )
+    >>> tree.Project ( h1.GetName() , 'm', 'chi2<10' ) ## standart ROOT 
+    
+    >>> h1   = ROOT.TH1D(... )
+    >>> tree.project ( h1.GetName() , 'm', 'chi2<10' ) ## ditto 
+    
+    >>> h1   = ROOT.TH1D(... )
+    >>> tree.project ( h1           ,  'm', 'chi2<10' ) ## use histo
+
+    - histo : the histogram (or histogram name)
+    - what  : variable/expression to project. It can be expression or list/tuple of expression or comma (or semicolumn) separated expression
+    - cuts  : selection criteria/weights
+    
+    - For 2D&3D cases if variables specifed as singel string, the order is Z,Y,X,
+    - Otherwide the natural order is used.
+
+    """
+    #
+    print ( 'HERE' , histo , what , cuts , first , last , use_frame , progress ) 
+    
+    assert isinstance ( histo , ROOT.TH1 ) , "Invalid type of 'histo' %s" % type ( histo )
+    histo.Reset()
+    
+    assert not cuts or \
+           isinstance ( cuts , string_types    ) or \
+           isinstance ( cuts , ROOT.TCut       ) ,  \
+           "Invalid 'cuts' %s" % type ( cuts ) 
+    
+    first   = max ( first , 0 )
+
+    ## chain helper object?
+    if   isinstance ( tree , Chain           ) : tree = tree.chain 
+    elif isinstance ( tree , ROOT.RooAbsData ) :
+        from ostap.fitting.dataset import ds_project as _ds_project_
+        result = _ds_project_ ( tree , histo , what , cuts , first , last , progress )
+        return result.nEntries () , result 
+    
+    nevents = len ( tree )
+    last    = nevents if last < 0 else min ( nevents , last )
+
+    if isinstance ( cuts , ROOT.TCut ) : cuts = str ( cuts )
+    elif not cuts                      : cuts = ''
+    
+    tail = first , last , use_frame , progress
+    
+    if isinstance ( what , string_types ) :
+        
+        ## ATTENTION reverse here! 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;,' ) ] ) ) 
+        return tree_project ( tree , histo , what , cuts , *tail )
+
+    assert isinstance ( what , list_types ) , "tree_project: invalid 'what' %s" % what 
+
+    hdim = histo.dim()
+    assert len ( what ) == hdim  or ( 1 == hdim and hdim < len ( what ) ) , \
+           "tree_project: invalid 'what' %s" % what 
+    
+    ## special treatment for 1D histograms: several variables are summed/projected togather 
+    if 1 == hdim and hdim < len ( what ) :
+        htmp  = histo.clone()
+        total = 0 
+        for w in what :
+            n   , htmp = tree_project ( dataset , htmp , w , cuts , *tail )
+            total += n
+            histo += htmp 
+        del htmp
+        return total , histo 
+
+    ## use frame if requested and if/when possible 
+    if use_frame and isinstance ( tree , ROOT.TTree ) and 0 == first and len ( tree ) <= last :
+        import ostap.frames.frames as F 
+        frame   = F.DataFrame ( tree )
+        if progress : counter = F.frame_progress ( frame , len ( tree ) )
+        else        : counter = frame.Count()
+        fargs   = what + ( cuts , ) 
+        hh      = F.frame_project ( frame , histo , *fargs )
+        return counter.GetValue () , hh 
+
+    ## use 'old' method since it is slightly more efficient 
+    if not progress and isinstance ( tree , ROOT.TTree ) : 
+        hname = histo.GetName() 
+        what  = ' : '.join ( reversed ( what ) )
+        num   = tree.Project ( hname , what , '' , '' , last - first , first )
+        return num , histo 
+        
+    active = tree.the_variables ( cuts , *what )    
+    with ActiveBranches  ( tree , *active ) :    
+        
+        args = ( histo ,) + what + ( cuts , first , last ) 
+        if   3 == hdim :
+            if progress : sc = Ostap.HistoProject.project3 ( tree , progress_conf , *args )
+            else        : sc = Ostap.HistoProject.project3 ( tree ,                 *args )
+            if not sc.isSuccess () :
+                logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
+                return 0 , None
+            return histo.nEntrie () , histo
+        elif 2 == hdim :
+            if progress : sc = Ostap.HistoProject.project2 ( tree , progress_conf , *args )
+            else        : sc = Ostap.HistoProject.project2 ( tree ,                 *args )
+            if not sc.isSuccess() :
+                logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
+                return 0 , None
+            return histo.nEntries () , histo 
+        elif 1 == hdim :
+            if progress : sc = Ostap.HistoProject.project  ( tree , progress_conf , *args )
+            else        : sc = Ostap.HistoProject.project  ( tree ,                 *args )
+            if not sc.isSuccess() :
+                logger.error ( "Error from Ostap.HistoProject.project1 %s" % sc )
+                return 0 , None
+            return histo.nEntries() , histo
+        
+    raise TypeError ( 'tree_project, invalid case' )
+
+ROOT.TTree .project = tree_project
+ROOT.TChain.project = tree_project
 
 
 # =============================================================================
@@ -363,15 +512,15 @@ ROOT.TTree .rows  = _tt_rows_
 #  @see TTree::Project
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def _tt_project_ ( tree               ,
-                   histo              ,
-                   what               ,
-                   cuts       = ''    ,
-                   options    = ''    ,
-                   nentries   = -1    ,
-                   firstentry =  0    ,
-                   use_frame  = False , ## use DataFrame ? 
-                   silent     = False ) :
+def tree_project_old ( tree               ,
+                       histo              ,
+                       what               ,
+                       cuts       = ''    ,
+                       options    = ''    ,
+                       nentries   = -1    ,
+                       firstentry =  0    ,
+                       use_frame  = False , ## use DataFrame ? 
+                       silent     = False ) :
     """Helper project method
     
     >>> tree = ...
@@ -434,7 +583,7 @@ def _tt_project_ ( tree               ,
         nr = 0
         hh = histo.clone() 
         for i , w in enumerate ( what ) : 
-            n , h = _tt_project_ ( tree , hh , w , cuts , *args , use_frame = use_frame , silent = silent )
+            n , h = tree_project_old ( tree , hh , w , cuts , *args , use_frame = use_frame , silent = silent )
             histo += h
             nr    += n 
         del hh
@@ -505,8 +654,9 @@ def _tt_project_ ( tree               ,
             
     return result, histo
 
-ROOT.TTree .project = _tt_project_
-ROOT.TChain.project = _tt_project_
+ROOT.TTree .project_old = tree_project_old
+ROOT.TChain.project_old = tree_project_old 
+
 
 # =============================================================================
 ## check if object is in tree/chain  :
@@ -1736,37 +1886,33 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0
 
     if   isinstance ( name  ,  dictlike_types ) and function is None : pass    
     elif isinstance ( function , addbranch_types )                   : pass 
-    elif btypes_array  ( function ) :    
+    elif btypes_array ( function ) :    
         return _chain_add_new_branch_array ( chain                ,
                                              name      = name     ,
                                              the_array = function ,
                                              verbose   = verbose  ,
                                              value     = value    ) 
 
-
-
-    
     files = chain.files   ()
     cname = chain.GetName () 
     
 
-    from ostap.utils.progress_bar import progress_bar
+    tree_verbose  = verbose and      len ( files ) < 5
+    chain_verbose = verbose and 5 <= len ( files )
 
-    verbose = verbose and 1 < len ( files )
-    
     import ostap.io.root_file
-    for fname in progress_bar ( files , len ( files ) , silent = not verbose ) :
+    for fname in progress_bar ( files , len ( files ) , silent = not chain_verbose ) :
         
         logger.debug ('Add_new_branch: processing file %s' % fname )
         with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
             ## get the tree 
             ttree = rfile.Get ( cname )
             ## treat the tree 
-            add_new_branch    ( ttree               ,
-                                name     = name     ,
-                                function = function ,
-                                verbose  = verbose  ,
-                                value    = value    )
+            add_new_branch    ( ttree                   ,
+                                name     = name         ,
+                                function = function     ,
+                                verbose  = tree_verbose ,
+                                value    = value        )
             
     ## recollect the chain 
     newc = ROOT.TChain ( cname )
@@ -1810,7 +1956,10 @@ def _chain_add_new_branch_array ( chain           ,
 
     start = 0
     
-    for i , fname in enumerate ( progress_bar ( files , len ( files ) , silent = not verbose ) ) :
+    tree_verbose  = verbose and      len ( files ) < 5
+    chain_verbose = verbose and 5 <= len ( files )
+
+    for i , fname in enumerate ( progress_bar ( files , len ( files ) , silent = not chain_verbose  ) ) :
         
         logger.debug ('Add_new_branch: processing file %s' % fname )
         with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
@@ -1824,11 +1973,11 @@ def _chain_add_new_branch_array ( chain           ,
             elif end <= start : what = ()
             else              : what = the_array [ start : end ]
             
-            add_new_branch    ( ttree              ,
-                                name     = name    ,
-                                function = what    ,
-                                verbose  = verbose ,
-                                value    = value   ) 
+            add_new_branch    ( ttree                   ,
+                                name     = name         ,
+                                function = what         ,
+                                verbose  = tree_verbose ,
+                                value    = value        ) 
             start += size
 
     ## recollect the chain 
@@ -2007,14 +2156,13 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
 
 
     ## efficient case with array 
-    elif (6,24) <= root_info                       and \
+    elif ( 6 , 24 ) <= root_info                   and \
              isinstance ( function , array.array ) and \
              function.typecode in ( 'f' , 'd' , 'h' , 'i' , 'l' , 'H' , 'I' , 'L' ) :
         
         data = function 
-        args = tuple ( [n  for n in names ] + [ data , len ( data ) , value ] )
+        args = tuple ( [ n  for n in names ] + [ data , len ( data ) , value ] )
         
-
     ## efficient case with array 
     elif numpy and (6,24) <= root_info            and \
          isinstance ( function , numpy.ndarray )  and \
@@ -2030,7 +2178,7 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
         dt   = data.dtype 
         ct   = numpy.ctypeslib._ctype_from_dtype( dt )
         buff = data.ctypes.data_as ( ctypes.POINTER( ct ) )  
-        args = tuple ( [n  for n in names ] + [ buff , len ( data ) , value ] )
+        args = tuple ( [ n  for n in names ] + [ buff , len ( data ) , value ] )
         
     ## generic case with array-like structure 
     elif isinstance ( function , sized_types    ) and \
@@ -2062,10 +2210,13 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
         
         tfile.cd() 
         ttree = tfile.Get ( tpath )
-        sc    = Ostap.Trees.add_branch ( ttree , *args )
-        if   sc.isFailure () :
-            logger.error ( "Error from Ostap::Trees::add_branch %s" % sc )
-        elif tfile.IsWritable() :
+
+        ## add progress bar 
+        if verbose : sc    = Ostap.Trees.add_branch ( ttree , progress_conf , *args )
+        else       : sc    = Ostap.Trees.add_branch ( ttree ,                 *args )
+        
+        if   sc.isFailure     () : logger.error ( "Error from Ostap::Trees::add_branch %s" % sc )
+        elif tfile.IsWritable () :
             tfile.Write( "" , ROOT.TObject.kOverwrite )
             logger.debug ('Write back TTree %s to %s' % ( tpath , tfile ) )            
         else :
@@ -2083,7 +2234,7 @@ ROOT.TTree.add_new_branch = add_new_branch
 #  tree = ...
 #  tree.add_reweighting ( w ) 
 #  @endcode 
-def add_reweighting ( tree , weighter , name = 'weight' ) :
+def add_reweighting ( tree , weighter , name = 'weight' , verbose = False ) :
     """Add specific re-weighting information into ROOT.TTree
     
     >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
@@ -2098,10 +2249,10 @@ def add_reweighting ( tree , weighter , name = 'weight' ) :
     
     assert isinstance ( weighter , W.Weight ), "Invalid type of ``weighting''!"
     
-    ## create the weigthting function 
+    ## create the weighting function 
     wfun = W.W2Tree ( weighter )
     
-    return tree.add_new_branch (  name , wfun ) 
+    return tree.add_new_branch (  name , wfun , verbose = verbose ) 
 
 ROOT.TTree.add_reweighting = add_reweighting
     
@@ -2153,7 +2304,9 @@ def the_variables ( tree , expression , *args ) :
 
     vars = set() 
     for e in exprs :
-            
+
+        if not e : continue
+        
         tf = Ostap.Formula ( fID() , str ( e ) , tree )
         if not tf.ok()  :
             logger.error ('the_variables: Invalid formula "%s"' % e )
@@ -2331,7 +2484,7 @@ class ActiveBranches(object) :
         self.__tree.SetBranchStatus ( '*' , 0 )     ## deactivate *ALL* branches
         for var in self.__vars :
             ##  activate certain branches 
-            self.__tree.SetBranchStatus( var , 1 )  ## activate only certain branches
+            self.__tree.SetBranchStatus ( var , 1 )  ## activate only certain branches
             
         return self.__tree 
     
@@ -2400,11 +2553,6 @@ class Chain(CleanUp) :
                  'files'    : file_infos     ,
                  'host'     : self.__host    }
 
-    ## def __del__ ( self ) :
-    ##     if self.trash :
-    ##         print 'I am deleting ', self.trash
-    ##     CleanUp.__del__ ( self ) 
-        
     def __setstate__  ( self , state ) :
         
         self.__name    = state [ 'name'    ]

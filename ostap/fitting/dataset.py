@@ -24,12 +24,13 @@ __all__     = (
     'ds_combine' , ## combine two datasets with weights 
     )
 # =============================================================================
-from   builtins                 import range
-from   ostap.core.core          import ( Ostap, VE, hID, dsID , strings , 
-                                         valid_pointer , split_string   , ROOTCWD )
-from   ostap.core.ostap_types   import integer_types, string_types  
-from   ostap.math.base          import islong
-from   ostap.utils.progress_bar import progress_bar 
+from   builtins                  import range
+from   ostap.core.core           import ( Ostap, VE, hID, dsID , strings , 
+                                          valid_pointer , split_string   , ROOTCWD )
+from   ostap.core.ostap_types    import integer_types, string_types, list_types   
+from   ostap.math.base           import islong
+from   ostap.utils.progress_bar  import progress_bar 
+from   ostap.utils.progress_conf import progress_conf
 import ostap.trees.cuts     
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
@@ -628,11 +629,12 @@ _new_methods_ += [
 #    >>> dataset.project ( h1           , 'm', 'chi2<10' ) ## use histo
 #
 #  @endcode
-#
+#  @attention For 2D&3D cases if varibales specifed as singel string, the order is Z,Y,X,
+#             Otherwide the natural order is used.
 #  @see RooDataSet 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
+def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , progress = False ) :
     """Helper project method for RooDataSet/DataFrame/... and similar objects 
     
     >>> h1   = ROOT.TH1D(... )
@@ -640,124 +642,115 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
     
     >>> h1   = ROOT.TH1D(... )
     >>> dataset.project ( h1           , 'm', 'chi2<10' ) ## use histo
-    
+
+    - For 2D&3D cases if variables specifed as singel string, the order is Z,Y,X,
+    - Otherwide the natural order is used.
     """
-    if isinstance ( cuts , ROOT.TCut ) : cuts = str ( cuts ).strip()  
-    if isinstance ( what , str       ) : what = what.strip()
-    if isinstance ( cuts , str       ) : cuts = cuts.strip()
     
-    ## ## native RooFit...  I have some suspicion that it does not work properly
-    ## if isinstance ( what  , ROOT.RooArgList ) and \
-    ##    isinstance ( histo , ROOT.TH1        ) and \
-    ##    hasattr ( dataset , 'fillHistogram'  ) :
-    ##     histo.Reset() 
-    ##     return dataset.fillHistogram  ( histo , what , cuts , *args )
+    assert isinstance ( histo , ROOT.TH1 ) , "Invalid type of 'histo' %s" % type ( histo )
+
+    assert not cuts or \
+           isinstance ( cuts , string_types    ) or \
+           isinstance ( cuts , ROOT.RooAbsReal ) or \
+           isinstance ( cuts , ROOT.TCut       ) ,  \
+           "Invalid 'cuts' %s" % type ( cuts ) 
     
-    ## delegate to TTree (only for non-weighted dataset with TTree-based storage type) 
-    if hasattr ( dataset , 'isWeighted') and not dataset.isWeighted() \
-       and isinstance ( what , str ) \
-       and isinstance ( cuts , str ) :
-        if hasattr ( dataset , 'store' ) : 
-            store = dataset.store()
-            if store :
-                tree = store.tree()
-                if tree : return tree.project ( histo , what , cuts , *args ) 
-            
-    if   isinstance ( what , ROOT.RooFormulaVar ) : 
-        return ds_project ( dataset , histo , what.GetTitle () , cuts , *args )
+    histo.Reset()
     
-    if   isinstance ( what , ROOT.RooAbsReal ) : 
-        return ds_project ( dataset , histo , what.GetName  () , cuts , *args ) 
-    
-    if isinstance ( what , str ) : 
-        vars  = [ v.strip() for v in what.split(':') ]
-        return ds_project ( dataset , histo , vars , cuts , *args ) 
-    
-    if isinstance ( what , ( tuple , list ) ) :
-        vars = []
-        for w in what :
-            if isinstance ( w , str ) : vars.append ( w.strip() )
-            else                      : vars.append ( w ) 
-        ##return ds_project ( dataset , histo , vars , cuts , *args ) 
-
-    ## what is it ? 
-    if isinstance ( what , ROOT.RooArgList ) :
-        vars  = [ w for w in what ]
-        cuts0 = cuts 
-        if ''   == cuts : cuts0 = 0
-        elif isinstance ( cuts , str ) :
-            cuts0 = Ostap.FormulaVar ( cuts , cuts , dataset.varlist() , False )            
-            assert cuts0.ok() , 'ds_project: invalid formula %s' % cuts
-            del cuts0
-            used  = Ostap.usedVariables ( cuts , dataset.varlist() )            
-            cuts0 = Ostap.FormulaVar    ( cuts , cuts , used , True )
-
-        return ds_project ( dataset , histo , vars , cuts0 , *args ) 
-            
-    if isinstance ( histo , str ) :
-
-        groot = ROOT.ROOT.GetROOT() 
-        obj   = groot     .FindObject    ( histo )
-        if isinstance ( obj  , ROOT.TH1 ) :
-            return ds_project ( dataset , obj , what , cuts , *args )
-        obj   = groot     .FindObjectAny ( histo )
-        if isinstance ( obj  , ROOT.TH1 ) :
-            return ds_project ( dataset , obj , what , cuts , *args )
-
-        gdir = ROOT.directory.CurrentDirectory()
-        if gdir : 
-            obj  = gdir.FindObject    ( histo )
-            if isinstance ( obj  , ROOT.TH1 ) :
-                return ds_project ( dataset , obj , what , cuts , *args )
-            obj  = gdir.FindObjectAny ( histo )
-            if isinstance ( obj  , ROOT.TH1 ) :
-                return ds_project ( dataset , obj , what , cuts , *args )
-
-    ## what it is ????
-    if  1 <= len ( what ) \
-           and isinstance ( what[0] , ROOT.RooAbsReal ) \
-           and isinstance ( cuts , str ) :
+    if isinstance ( dataset , ROOT.RooAbsData ) :
         
-        if   '' == cuts : cuts0 = 0 
-        elif isinstance ( cuts , str ) :
-            cuts0 = Ostap.FormulaVar ( cuts , cuts , dataset.varlist() , False )
-            assert cuts0.ok() , 'ds_project: invalid formula %s' % cuts
-            del cuts0            
-            used  = Ostap.usedVariables ( cuts , dataset.varlist() )            
-            cuts0 = Ostap.FormulaVar   ( cuts , cuts , used , True )
-            
-        return ds_project ( dataset , histo , what , cuts0 , *args )
+        first   = max ( first , 0 )
+        nevents = len ( dataset   )
+        last    = nevents if last < 0 else min ( nevents , last )
+        
+        # NO ACTION ?
+        if last <= first or nevents <= first : return histo ## NO ACTION
+        events = first , last
+        
+    else :
+        
+        if 0 != first or 0 < last :
+            logger.warning ( "ds_project: 'first' and 'last' arguments (%s/%s) are ognored " % ( first , last ) )
+        events = () 
+                             
+    if isinstance ( cuts , str ) : cuts = cuts.strip()
+    if isinstance ( what , str ) : what = what.strip()
+    
+    tail = first , last , progress 
+    
+    if isinstance ( what , string_types ) :
 
-    if   isinstance ( histo , ROOT.TH3 ) and 3 == len ( what )  :
-        sc = Ostap.HistoProject.project3 ( dataset ,
-                                           histo   , 
-                                           what[2] ,
-                                           what[1] ,
-                                           what[0] , cuts , *args)
+        ## ATTENTION reverse here! 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;,' ) ] ) ) 
+        return ds_project ( dataset , histo , what , cuts , *events , progress = progress  )
+    
+    elif isinstance ( what , ROOT.RooArgList ) and isinstance ( dataset , ROOT.RooAbsData ) :
+        
+        what = tuple ( v for v in what ) 
+        return ds_project ( dataset , histo , what , cuts , *events , progress = progress )
+
+    assert isinstance ( what , list_types ) and what , "ds_project: invalid 'what' %s" % what 
+
+    hdim = histo.dim()
+    assert len ( what ) == hdim  or ( 1 == hdim and hdim < len ( what ) ) , \
+           "ds_project: invalid 'what' %s" % what 
+
+    ok1 = all ( isinstance ( v , string_types    ) for v in what )
+    ok2 = all ( isinstance ( v , ROOT.RooAbsReal ) for v in what )
+
+    assert ok1 or ok2 , "ds_project: Invalid 'what': %s/%s " % ( type ( what ) , what )
+    
+    what = tuple ( what )
+    
+    if ok2 : ## need to have RooFit version of cuts 
+        if  not cuts                               : vcuts = ROOT.nullptr
+        elif isinstance ( cuts , ROOT.RoOAbsReal ) : vcuts = cuts 
+        else :
+            cuts_ = Ostap.FormulaVar ( cuts , cuts , dataset.varlist() , False )            
+            assert cuts_.ok() , 'ds_project: invalid formula %s' % cuts
+            del cuts_ 
+            used  = Ostap.usedVariables ( cuts , dataset.varlist()  )            
+            vcuts = Ostap.FormulaVar    ( cuts , cuts , used , True )
+        cuts = vcuts 
+
+    ## special treatment for 1D histograms: several variables are summed/projected togather 
+    if 1 == hdim and hdim < len ( what ) :
+        htmp  = histo.clone()
+        total = 0 
+        for w in what :
+            n , htmp = ds_project ( dataset , htmp , w , cuts , *events , progres = progress )
+            total += n
+            histo += htmp 
+        del htmp
+        return total , histo 
+
+
+    args = ( histo , ) + what  + ( cuts , ) + events
+ 
+    ## finally fill the historgams 
+    if   3 == hdim :
+        if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf , *args )
+        else        : sc = Ostap.HistoProject.project3 ( dataset ,                 *args )
         if not sc.isSuccess() :
             logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
-            return None
-        return histo
-    elif isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim() and 2 == len ( what )  :
-        sc = Ostap.HistoProject.project2 ( dataset ,
-                                           histo   , 
-                                           what[1] ,
-                                           what[0] , cuts , *args )
+            return 0 , None
+        return histo.nEntries () , histo
+    elif 2 == hdim :
+        if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf , *args )
+        else        : sc = Ostap.HistoProject.project2 ( dataset ,                 *args )
         if not sc.isSuccess() :
-            logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
-            return None
-        return histo
-    elif isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() and 1 == len ( what )  :
-        sc = Ostap.HistoProject.project  ( dataset ,
-                                           histo   , 
-                                           what[0] , cuts , *args )
-        if not sc.isSuccess() :
-            logger.error ( "Error from Ostap.HistoProject.project  %s" % sc )
-            return None
-        return histo
-    
-    raise AttributeError ( 'DataSet::project, invalid case' )
-
+            logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
+            return 0 , None
+        return histo.nEntries () , histo
+    elif 1 == hdim :        
+        if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf , *args )
+        else        : sc = Ostap.HistoProject.project  ( dataset ,                 *args )
+        if not sc.isSuccess() : 
+            logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
+            return 0 , None
+        return histo.nEntries () , histo
+     
+    raise TypeError ( 'ds_project, invalid case' )
 
 # =============================================================================
 ## Helper draw method for RooDataSet
@@ -798,56 +791,65 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
             if store : 
                 tree = store.tree()
                 if tree : return tree.Draw( what , cuts , opts  , *args )
+                
+    if isinstance ( what , string_types ) :
         
-    if   isinstance ( what , str ) : 
-        vars  = [ v.strip() for v in what.split(':') ]
-        return ds_draw ( dataset , vars , cuts , opts , *args ) 
-    
-    if   isinstance ( what , ROOT.RooFormulaVar ) : 
-        return ds_draw ( dataset , what.GetTitle () , cuts , opts , *args )
-    
-    if   isinstance ( what , ROOT.RooAbsReal ) : 
-        return ds_draw ( dataset , what.GetName  () , cuts , opts , *args ) 
-    
-    if not 1 <= len ( what ) <= 3 :
-        raise AttributeError ( 'DataSet::draw, invalid length %s' % what  )
-    
-    if 1 == len ( what )  :
-        w1        = what[0] 
-        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
-        histo = ROOT.TH1F ( hID() , w1 , 200 , mn1 , mx1 )  ; histo.Sumw2()
-        ds_project ( dataset , histo , what , cuts , *args  )
-        histo.Draw( opts )
-        return histo
+        ## ATTENTION reverse here! 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;,' ) ] ) ) 
+        return ds_draw ( dataset , what , cuts , opts , *args )
 
-    if 2 == len ( what )  :
-        w1        = what[0] 
-        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
-        w2        = what[1] 
-        mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
-        histo = ROOT.TH2F ( hID() , "%s:%s" % ( w1 , w2 ) ,
-                            50 , mn2 , mx2 ,
-                            50 , mn1 , mx1 )  ; histo.Sumw2()
-        ds_project ( dataset , histo , what , cuts , *args  )
-        histo.Draw( opts )
-        return histo
+    elif isinstance ( what , ROOT.RooArgList ) :
+        
+        what = tuple ( v for v in what ) 
+        return ds_draw ( dataset , what , cuts , opts ,  *args  )
 
+    assert isinstance ( what , list_types ) and 1 <= len ( what ) <=3 , \
+           "ds_draw: invalid 'what' %s" % what 
+    
+    if not args            : first, last = 0 , -1
+    elif  2<=  len ( args ) :
+        nentries , first  = args[0] , args[1] 
+        last = first + nentries if 0 < nentries  else len ( dataset )
+    elif  1<=  len ( args ) :
+        nentries = args[0]
+        last     = nentries if 0 < nentries else len ( dataset )
+        
     if 3 == len ( what )  :
-        w1        = what[0] 
+        w1        = what [ 0 ] 
         mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
-        w2        = what[1] 
+        w2        = what [ 1 ] 
         mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
-        w3        = what[2] 
+        w3        = what [ 2 ] 
         mn3 , mx3 = ds_var_range ( dataset , w3 , cuts )
-        histo = ROOT.TH3F ( hID() , "%s:%s:%s" % ( w1 , w2 , w3 ) ,
-                            20 , mn3 , mx3 ,
+        histo = ROOT.TH3F ( hID() , "%s:%s:%s" % ( w3 , w2 , w1 ) ,
+                            20 , mn1 , mx1 ,
                             20 , mn2 , mx2 ,
-                            20 , mn1 , mx1 )  ; histo.Sumw2()
-        ds_project ( dataset , histo , what , cuts , *args  )
+                            20 , mn3 , mx3 )  ; histo.Sumw2()
+        
+        ds_project ( dataset , histo , what , cuts , first , last  )
+        histo.Draw( opts )
+        return histo
+    elif 2 == len ( what )  :
+        w1        = what [ 0 ] 
+        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
+        w2        = what [ 1 ] 
+        mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
+        histo = ROOT.TH2F ( hID() , "%s:%s" % ( w2 , w1 ) ,
+                            20 , mn1 , mx1 ,
+                            20 , mn2 , mx2 )  ; histo.Sumw2()        
+        ds_project ( dataset , histo , what , cuts , first , last  )
+        histo.Draw( opts )
+        return histo
+    elif 1 == len ( what )  :
+        w1        = what [ 0 ] 
+        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
+        histo = ROOT.TH1F ( hID() , "%s" % ( w1 ) ,
+                            20 , mn1 , mx1 )  ; histo.Sumw2()        
+        ds_project ( dataset , histo , what , cuts , first , last  )
         histo.Draw( opts )
         return histo
 
-    raise AttributeError ( 'DataSet::draw, invalid case' )
+    raise TypeError ( 'ds_draw, invalid case' )
 
 # =============================================================================
 ## get the attibute for RooDataSet
@@ -868,7 +870,7 @@ def get_var( self, aname ) :
     return getattr ( _vars , aname )  
 
 # =============================================================================
-## Get min/max for the certain variable in dataset
+## Get min/max for the certain variable/expression in dataset
 #  @code  
 #  data = ...
 #  mn,mx = data.vminmax('pt')

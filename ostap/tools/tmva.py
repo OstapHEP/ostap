@@ -37,6 +37,7 @@ __all__     = (
 from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning 
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
 from   ostap.core.meta_info    import root_version_int, root_info  
+from   ostap.trees.trees       import progress_conf
 import ostap.io.root_file 
 import ROOT, os, math, tarfile, shutil, itertools  
 # =============================================================================
@@ -68,9 +69,9 @@ good_for_negative = (
 # =============================================================================
 def dir_name ( name ) :
     name = str( name )
-    for s in ' %!><\n?(){}[]+:.,;-^&|$#@="\'' :
+    for s in ' %!><\n?(){}[]+:.,;-^&|$#@="\'/' :
         while s in name : name = name.replace ( ' ' , '_' )
-    while 0 <= name.find ('__') : name = name.replace ('__','_')
+    while '__' in name : name = name.replace ('__','_')
     return  name 
 # =============================================================================
 ## @class WeightFiles
@@ -86,7 +87,7 @@ class WeightsFiles(CleanUp) :
         if isinstance ( weights_files , str  ) :
             
             assert os.path.exists  ( weights_files ) , \
-                   "Non-existing ``weights_file''  %s"   %  weights_files 
+                   "Non-existing `weights_file'  %s"   %  weights_files 
             
             if tarfile.is_tarfile ( weights_files ) :
                 def xml_files ( archive ) :
@@ -131,7 +132,7 @@ class WeightsFiles(CleanUp) :
 
         ## dictionary
         assert isinstance ( weights_files , dict  ), \
-               "Invalid type of ``weight_files''  %s "    % weights_files
+               "Invalid type of 'weight_files'  %s "    % weights_files
 
         for method , xml in items_loop ( weights_files ) :            
             assert os.path.exists ( xml ) and os.path.isfile ( xml ), \
@@ -143,11 +144,11 @@ class WeightsFiles(CleanUp) :
 
     @property
     def methods ( self ) :
-        "``methods'': the known methods from weights-file"
+        "'methods': the known methods from weights-file"
         return self.__methods
     @property
     def files   ( self ) :
-        "``files'': the weights file"
+        "'files': the weights file"
         import copy
         return copy.deepcopy ( self.__weights_files )
 
@@ -179,8 +180,8 @@ def opts_replace ( opts , expr , direct = True ) :
 #  ...                'MLP',
 #  ...                'H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator' ) ] , 
 #  ...   variables = [ 'dtfchi2' , 'ctau', 'ptb' , 'vchi2' ] , ## list  of variables 
-#  ...   signal          = treeSignal            ,  ## TTree for ``signal'' sample  
-#  ...   background      = treeBackgrund         ,  ## TTree for ``background''  sample 
+#  ...   signal          = treeSignal            ,  ## TTree for 'signal' sample  
+#  ...   background      = treeBackgrund         ,  ## TTree for 'background'  sample 
 #  ...   signal_cuts     = cuts_for_signal       ,
 #  ...   background_cuts = cuts_for_background   )
 #  @endcode 
@@ -214,8 +215,8 @@ class Trainer(object):
     ...                'MLP',
     ...                'H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator' ) ] , 
     ...   variables = [ 'dtfchi2' , 'ctau', 'ptb' , 'vchi2' ] , ## list  of variables 
-    ...   signal          = treeSignal            ,  ## TTree for ``signal'' sample  
-    ...   background      = treeBackgrund         ,  ## TTree for ``background''  sample 
+    ...   signal          = treeSignal            ,  ## TTree for 'signal' sample  
+    ...   background      = treeBackgrund         ,  ## TTree for 'background'  sample 
     ...   signal_cuts     = cuts_for_signal       ,
     ...   background_cuts = cuts_for_background   )
 
@@ -244,8 +245,8 @@ class Trainer(object):
     #  ...                'MLP',
     #  ...                'H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator' ) ] , 
     #  ...   variables = [ 'dtfchi2' , 'ctau', 'ptb' , 'vchi2' ] , ## list  of variables 
-    #  ...   signal          = treeSignal            ,  ## TTree for ``signal'' sample  
-    #  ...   background      = treeBackgrund         ,  ## TTree for ``background''  sample 
+    #  ...   signal          = treeSignal            ,  ## TTree for 'signal' sample  
+    #  ...   background      = treeBackgrund         ,  ## TTree for 'background'  sample 
     #  ...   signal_cuts     = cuts_for_signal       ,
     #  ...   background_cuts = cuts_for_background   )
     #  @endcode 
@@ -289,8 +290,8 @@ class Trainer(object):
         ...                'MLP',
         ...                'H:!V:EstimatorType=CE:VarTransform=N:NCycles=600:HiddenLayers=N+7:TestRate=5:!UseRegulator' ) ] , 
         ...   variables = [ 'dtfchi2' , 'ctau', 'ptb' , 'vchi2' ] , ## list  of variables 
-        ...   signal          = treeSignal            ,  ## TTree for ``signal'' sample  
-        ...   background      = treeBackgrund         ,  ## TTree for ``background''  sample 
+        ...   signal          = treeSignal            ,  ## TTree for 'signal' sample  
+        ...   background      = treeBackgrund         ,  ## TTree for 'background'  sample 
         ...   signal_cuts     = cuts_for_signal       ,
         ...   background_cuts = cuts_for_background   )        
         - For more detailes
@@ -534,169 +535,169 @@ class Trainer(object):
 
     @property
     def name    ( self ) :
-        """``name''    : the name of TMVA trainer"""
+        """'name'    : the name of TMVA trainer"""
         return self.__name
     
     @property
     def methods ( self ) :
-        """``methods'' : the list of TMVA methods to be used"""
+        """'methods' : the list of TMVA methods to be used"""
         return tuple(self.__methods)
 
     @property
     def method_names ( self ) :
-        """``method_names'' : tuple of method names"""
+        """'method_names' : tuple of method names"""
         return tuple ( m[1] for m in self.__methods ) 
         
     @property
     def logger ( self ) :
-        """``logger'' : the logger instace for this Trainer"""
+        """'logger' : the logger instace for this Trainer"""
         return self.__logger
     
     @property
     def variables ( self ) :
-        """``variables'' : the list of variables  to be used for training"""
+        """'variables' : the list of variables  to be used for training"""
         return tuple(self.__variables)
 
     @property
     def spectators ( self ) :
-        """``spectators'' : the list of spectators to be used"""
+        """'spectators' : the list of spectators to be used"""
         return tuple(self.__spectators)
 
     @property
     def signal ( self ) :
-        """``signal'' :  TTree for signal events"""
+        """'signal' :  TTree for signal events"""
         return self.__signal.chain 
     
     @property
     def signal_cuts ( self ) :
-        """``signal_cuts'' :  cuts to be applied for ``signal'' sample"""
+        """'signal_cuts' :  cuts to be applied for 'signal' sample"""
         return str(self.__signal_cuts)
 
     @property
     def signal_weight ( self ) :
-        """``signal_weight'' : weight to be applied for ``signal'' sample"""
+        """'signal_weight' : weight to be applied for 'signal' sample"""
         return self.__signal_weight
     
     @property
     def background ( self ) :
-        """``background'' :  TTree for background events"""
+        """'background' :  TTree for background events"""
         return self.__background.chain
     
     @property
     def background_cuts ( self ) :
-        """``background_cuts'' :  cuts to be applied for ``backgroud'' sample """
+        """'background_cuts' :  cuts to be applied for 'backgroud' sample """
         return str(self.__background_cuts)
 
     @property
     def background_weight ( self ) :
-        """``background_weight'' : weight to be applied for ``background'' sample"""
+        """'background_weight' : weight to be applied for 'background' sample"""
         return self.__background_weight
 
     @property
     def prefilter ( self ) :
-        """``prefilter'' : cuts ot be applied/prefilter before processing"""
+        """'prefilter' : cuts ot be applied/prefilter before processing"""
         return self.__prefilter
     
     @property
     def bookingoptions ( self ) :
-        """``bookingoptions'' : options used to book TMVA::Factory"""
+        """'bookingoptions' : options used to book TMVA::Factory"""
         return str(self.__bookingoptions)
 
     @property
     def configuration ( self ) :
-        """``configuration'' : options used to book TMVA"""
+        """'configuration' : options used to book TMVA"""
         return str(self.__configuration)
 
     @property
     def signal_train_fraction ( self ) :
-        """``signal_train_fraction'': if non-negative, fraction of signal events used for training"""
+        """'signal_train_fraction': if non-negative, fraction of signal events used for training"""
         return self.__signal_train_fraction
 
     @property
     def background_train_fraction ( self ) :
-        """``background_train_fraction'': if non-negative, fraction of background events used for training"""
+        """'background_train_fraction': if non-negative, fraction of background events used for training"""
         return self.__background_train_fraction
 
     @property
     def prescale_signal ( self ) :
-        """``prescale_signal'': prescale the signal sample"""
+        """'prescale_signal': prescale the signal sample"""
         return self.__prescale_signal
 
     @property
     def prescale_background ( self ) :
-        """``prescale_background'': prescale the background sample"""
+        """'prescale_background': prescale the background sample"""
         return self.__prescale_background
 
     @property
     def verbose ( self ) :
-        """``verbose'' : verbosity  flag"""
+        """'verbose' : verbosity  flag"""
         return self.__verbose
 
     @property
     def silent ( self ) :
-        """``silent'' : verbosity flag"""
+        """'silent' : verbosity flag"""
         return not self.verbose
     
     @property
     def logging ( self ) :
-        """``logging'' : logging flag : produce log-file?"""
+        """'logging' : logging flag : produce log-file?"""
         return self.__logging
 
     @property
     def make_plots ( self ) :
-        """``make_plots'' : make standard TMVA plots?"""
+        """'make_plots' : make standard TMVA plots?"""
         return self.__make_plots
     
     @property
     def dirname  ( self ) :
-        """``dirname''  : the output directiory name"""
+        """'dirname'  : the output directiory name"""
         return str(self.__dirname) 
 
     @property
     def weights_files ( self ) :
-        """``weights_files'' : the list/tuple of final files with TMVA weights"""
+        """'weights_files' : the list/tuple of final files with TMVA weights"""
         return tuple(self.__weights_files)
     @property
     def class_files ( self ) :
-        """``class_files'' : the list/tuple of final files with TMVA classes"""
+        """'class_files' : the list/tuple of final files with TMVA classes"""
         return tuple(self.__class_files)
     @property
     def output_file ( self ) :
-        """``output_file''  : the output file (if any)"""
+        """'output_file'  : the output file (if any)"""
         return str(self.__output_file) if  self.__output_file else None
     
     @property
     def tar_file ( self ) :
-        """``tar_file''  : the compressed (gz) tar file with results"""
+        """'tar_file'  : the compressed (gz) tar file with results"""
         return str(self.__tar_file) if self.__tar_file else None 
     @property
     def log_file ( self ) :
-        """``log_file''  : the name of log-file """
+        """'log_file'  : the name of log-file """
         return str(self.__log_file) if self.__log_file else None 
 
     @property
     def category    ( self ) :
-        """``category''  : chopping category"""
+        """'category'  : chopping category"""
         return self.__category
 
     @property 
     def multithread ( self ) :
-        """``multithread'' : make try to use multithreading in TMVA"""
+        """'multithread' : make try to use multithreading in TMVA"""
         return self.__multithread
     
     @property
     def workdir ( self ) :
-        """``workdir'' : working directory"""
+        """'workdir' : working directory"""
         return self.__workdir
 
     @property
     def plots ( self ) :
-        """``plots'': list of produced plots"""
+        """'plots': list of produced plots"""
         return self.__plots
 
     @property
     def show_plots ( self ) :
-        """``show_plots'': show plots?"""
+        """'show_plots': show plots?"""
         return self.verbose and ( self.category in ( 0 , -1 ) )
         
     # =========================================================================
@@ -753,7 +754,7 @@ class Trainer(object):
         with context , context2 :
             
             result = self.__train ()
-            
+
             ## Training outputs
                     
             rows = [ ( 'Item' , 'Value' ) ]
@@ -967,7 +968,7 @@ class Trainer(object):
                 ## there are negative weights :
                     for m in self.methods :
                         if not m[0] in good_for_negative :
-                            self.logger.error ( 'Method ``%s'' does not support negative (signal) weights' % m[1] )
+                            self.logger.error ( "Method '%s' does not support negative (signal) weights" % m[1] )
                             
             # =================================================================
             ## check for background weigths
@@ -984,7 +985,7 @@ class Trainer(object):
                 ## there are negative weights :
                     for m in self.methods :
                         if not m[0] in good_for_negative :
-                            self.logger.error ( 'Method ``%s'' does not support negative (background) weights' % m[1] )
+                            self.logger.error ( "Method '%s' does not support negative (background) weights" % m[1] )
                             
                             
             NS = -1
@@ -1022,7 +1023,7 @@ class Trainer(object):
                     bo = [ b for b in bo if not b.startswith('nTest_Signal' ) ]
                     nt =  'nTrain_Signal=%s' % nt
                     self.__configuration = ':'.join ( [ nt ] + bo ) 
-                    self.logger.info ( "Extend TMVA configuration for ``%s''" % nt ) 
+                    self.logger.info ( "Extend TMVA configuration for '%s'" % nt ) 
                     
                 if 0 < self.background_train_fraction < 1 :
                     nt = math.ceil ( NB * self.background_train_fraction )
@@ -1031,7 +1032,7 @@ class Trainer(object):
                     bo = [ b for b in bo if not b.startswith('nTest_Background' ) ]
                     nt =  'nTrain_Background=%s' % nt
                     self.__configuration = ':'.join ( [ nt ] + bo ) 
-                    self.logger.info ( "Extend TMVA configuration for ``%s''" % nt ) 
+                    self.logger.info ( "Extend TMVA configuration for '%s'" % nt ) 
 
             # =================================================================
             # The table
@@ -1146,20 +1147,20 @@ class Trainer(object):
                 dataloader.AddSpectator ( *vv )
                 #
 
-            if self.verbose : self.logger.info ( "Loading ``Signal''     sample" ) 
+            if self.verbose : self.logger.info ( "Loading 'Signal'     sample" ) 
             dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
             
-            if self.verbose : self.logger.info ( "Loading ``Background'' sample" )             
+            if self.verbose : self.logger.info ( "Loading 'Background' sample" )             
             dataloader.AddTree ( self.background , 'Background' , 1.0 , ROOT.TCut ( self.background_cuts ) )
             #
             if self.signal_weight :
                 dataloader.SetSignalWeightExpression     ( self.signal_weight     )
-                self.logger.info ( "Signal     weight:``%s''" % ( attention ( self.signal_weight     ) ) )
+                self.logger.info ( "Signal     weight: '%s'" % ( attention ( self.signal_weight     ) ) )
             if self.background_weight :
                 dataloader.SetBackgroundWeightExpression ( self.background_weight )
-                self.logger.info ( "Background weight:``%s''" % ( attention ( self.background_weight ) ) )
+                self.logger.info ( "Background weight: '%s'" % ( attention ( self.background_weight ) ) )
                 
-            self.logger.info     ( "Configuration    :``%s''" % str ( self.configuration ) )
+            self.logger.info     ( "Configuration    : '%s'" % str ( self.configuration ) )
             dataloader.PrepareTrainingAndTestTree(
                 ROOT.TCut ( self.signal_cuts     ) ,
                 ROOT.TCut ( self.background_cuts ) ,
@@ -1240,7 +1241,7 @@ class Trainer(object):
 
         if  self.make_plots :
             if ( 6 , 24 ) <= root_info : 
-                self.logger.warning ( "``makePlots'' is temporary disabled, call this function offline: ``trainer.makePlots()'' ")
+                self.logger.warning ( "'makePlots' is temporary (?) disabled, call this function offline: 'trainer.makePlots()' ")
             else : 
                 self.makePlots ()
 
@@ -1308,7 +1309,7 @@ class Trainer(object):
         self.logger.info ('Making the standard TMVA plots') 
         from ostap.utils.utils import batch , cmd_exists, keepCanvas  
         with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , keepCanvas() : ##  , rootWarning ()  :
-            
+
             if hasattr ( ROOT.TMVA , 'variables'    ) :
                 if self.verbose : self.logger.info ( "Execute macro ROOT.TMVA.variables")
                 ROOT.TMVA.variables    ( name , output ) 
@@ -1328,10 +1329,10 @@ class Trainer(object):
                     ROOT.TMVA.mvaeffs  ( name , output )
                 elif self.verbose :
                     self.logger.warning ( "Skip    macro ROOT.TMVA.mvaeffs")
-                                    
+                    
             if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
                 if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.efficiencies(...,2)")
-                ROOT.TMVA.efficiencies  ( self.name , output , 2 )
+                ROOT.TMVA.efficiencies  ( name , output , 2 )
                 
             if hasattr ( ROOT.TMVA , 'paracoor' ) :
                 if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.paracoor")
@@ -1365,7 +1366,91 @@ class Trainer(object):
                 if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) :
                     if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BoostControlPlots")
                     ROOT.TMVA.BoostControlPlots  ( name , output )
+
+
+
                     
+# =============================================================================
+## make selected standard TMVA plots 
+def make_Plots ( name , output , show_plots = True ) :
+    """Make selected standard TMVA plots"""
+    
+    if not output :
+        self.logger.warning ('No output file is specified!')
+        return 
+    if not os.path.exists ( output ) or not os.path.isfile ( output ) :
+        self.logger.error   ('No output file %s is found !' % output )
+        return
+    
+    try :
+        import ostap.io.root_file
+        with ROOT.TFile.Open ( output , 'READ' , exception = True ) as o :
+            pass   
+    except IOError :
+        self.logger.error ("Output file %s can't be opened!"   % output )
+        return
+    
+    
+    #
+    ## make the plots in TMVA  style
+    #
+    logger.info ('Making the standard TMVA plots') 
+    from ostap.utils.utils import batch , cmd_exists, keepCanvas  
+    with batch ( ROOT.ROOT.GetROOT().IsBatch () or not show_plots ) , keepCanvas() : ##  , rootWarning ()  :
+        
+        if hasattr ( ROOT.TMVA , 'variables'    ) :
+            logger.info ( "Execute macro ROOT.TMVA.variables")
+            ROOT.TMVA.variables    ( name , output ) 
+            
+        if hasattr ( ROOT.TMVA , 'correlations' ) :
+            logger.info  ( "Execute macro ROOT.TMVA.correlations")
+            ROOT.TMVA.correlations ( name , output )
+            
+        if hasattr ( ROOT.TMVA , 'mvas'    ) : 
+            for i in ( 0 , 3 ) :
+                logger.info  ( "Execute macro ROOT.TMVA.mvas(...,%s)" % i)
+                ROOT.TMVA.mvas ( name , output , i )
+                
+        if hasattr ( ROOT.TMVA , 'mvaeffs' ) :
+            if ( 6 , 24 ) <= root_info : 
+                logger.info  ( "Execute macro ROOT.TMVA.mvaeffs")
+                ROOT.TMVA.mvaeffs  ( name , output )
+            else : 
+                logger.warning ( "Skip    macro ROOT.TMVA.mvaeffs")
+                
+        if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
+            logger.info  ( "Execute macro ROOT.TMVA.efficiencies(...,2)")
+            ROOT.TMVA.efficiencies  ( name , output , 2 )
+            
+        if hasattr ( ROOT.TMVA , 'paracoor' ) :
+            logger.info  ( "Execute macro ROOT.TMVA.paracoor")
+            ROOT.TMVA.paracoor           ( name , output )
+            
+        ## if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kLikelihood ) ] : 
+        logger.info  ( "Execute macro ROOT.TMVA.likelihoodrefs")
+        ROOT.TMVA.likelihoodrefs     ( name , output )
+            
+        if hasattr ( ROOT.TMVA , 'network'             ) :
+            logger.info  ( "Execute macro ROOT.TMVA.network")
+            ROOT.TMVA.network            ( name , output )
+        if hasattr ( ROOT.TMVA , 'nannconvergencetest' ) :
+            logger.info  ( "Execute macro ROOT.TMVA.annconvergencetest")
+            ROOT.TMVA.annconvergencetest ( name , output )
+            
+        if hasattr ( ROOT.TMVA , 'BDT' ) : 
+            if ( 6 , 24 ) <= root_info :
+                logger.info  ( "Execute macro ROOT.TMVA.BDT")
+                ROOT.TMVA.BDT                ( name , output )
+                ##if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) :
+                ##    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDTControlPlots")
+                ##    ROOT.TMVA.BDTControlPlots    ( name , output )
+            else : 
+                logger.warning ( "Skip    macro ROOT.TMVA.BDT")
+                            
+            if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) :
+                logger.info  ( "Execute macro ROOT.TMVA.BoostControlPlots")
+                ROOT.TMVA.BoostControlPlots  ( name , output )
+
 # =============================================================================
 ## @class Reader
 #  Rather generic python interface to TMVA-reader
@@ -1435,10 +1520,10 @@ class Reader(object)  :
     - attention: It is *not* CPU-efficient:
     Ugly tricks with arrays are required to bypass some technical limitations
 
-    ``weights_files'' can be :
+    'weights_files' can be :
     - single xml-file with weights for the given method
-    - single tar/tgz/tar.gz-file with weights files  (output of ``Trainer.tar_file'')
-    - list of xml-files with weights                 (output of ``Trainer.weights_files'')
+    - single tar/tgz/tar.gz-file with weights files  (output of 'Trainer.tar_file')
+    - list of xml-files with weights                 (output of 'Trainer.weights_files')
 
     If the xml-filenames follow TMVA Trainer convention, the training method will be
     extracted from the file name, otherwise it needs to be specified as dictionary
@@ -1546,7 +1631,7 @@ class Reader(object)  :
 
         ##  book the variables:
         #   dirty trick with arrays is needed due to a bit strange reader interface.
-        #   [TMVA reader needs the address of ``float''(in C++ sense) variable]
+        #   [TMVA reader needs the address of 'float' (in C++ sense) variable]
         from array import array
 
         self.__variables = []
@@ -1595,32 +1680,32 @@ class Reader(object)  :
 
     @property
     def name ( self ) :
-        """``name'' - the name of the reader"""
+        """'name' - the name of the reader"""
         return self.__name
 
     @property
     def logger ( self ) :
-        """``logger'' : the logger instace for this Trainer"""
+        """'logger' : the logger instace for this Trainer"""
         return self.__logger
     
     @property
     def reader ( self ) :
-        """``reader'' - the  actual TMVA.Reader object"""
+        """'reader' - the  actual TMVA.Reader object"""
         return self.__reader
 
     @property
     def weights ( self ) :
-        """``weigths'' : weights-files """
+        """'weigths' : weights-files """
         return self.__weights 
         
     @property
     def methods ( self ) :
-        """``methods'' - the  list/tuple of booked TMVA methods"""
+        """'methods' - the  list/tuple of booked TMVA methods"""
         return tuple (self.__methods)
 
     @property
     def variables ( self ) :
-        """``variables'' - helper structure to access TMVA variables
+        """'variables' - helper structure to access TMVA variables
         >>> variables = [ ## name      accessor  
         ...              ( 'pt'   , lambda s : s.pt ) ,
         ...              ( 'ip'   , lambda s : s.ip ) ,
@@ -1649,15 +1734,15 @@ class Reader(object)  :
         # =====================================================================
         @property
         def nvars ( self ) :
-            """``nvars'' : number of TMVA variables"""
+            """'nvars' : number of TMVA variables"""
             return self.__nvars
         @property
         def reader ( self ) :
-            """``reader'' : TMVA reader """
+            """'reader' : TMVA reader """
             return self.__reader
         @property
         def method ( self ) :
-            """``method'' : TMVA method name"""
+            """'method' : TMVA method name"""
             return self.__method
         # =====================================================================
         ## the main method 
@@ -1782,7 +1867,7 @@ class Reader(object)  :
     #  @endcode 
     #  @attention it is *not* CPU efficient
     #  Ugly trick with arrays is needed due to some technical problems
-    #  (actually TMVA reader needs the address of ``float''(in C++ sense) variable
+    #  (actually TMVA reader needs the address of 'float' (in C++ sense) variable
     def __call__ ( self , method , entry , cut_efficiency = 0.90 ) :
         """Evaluate TMVA
         - Use the reader
@@ -1793,7 +1878,7 @@ class Reader(object)  :
         ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
         - It is not CPU efficient :-( 
         - Ugly trick with arrays is needed due to some pure technical problem
-        [actually TMVA reader needs the address of ``float''(in C++ sense) variable]
+        [actually TMVA reader needs the address of 'float' (in C++ sense) variable]
         """
         
         ## loop over all variables 
@@ -1900,7 +1985,7 @@ def _weights2map_ ( weights ) :
     return _map , weights  
 
 # =============================================================================
-def _add_response_tree  ( tree  , *args ) :
+def _add_response_tree  ( tree , verbose , *args ) :
     """Specific action to ROOT.TChain
     """
             
@@ -1912,8 +1997,11 @@ def _add_response_tree  ( tree  , *args ) :
     with ROOTCWD () , REOPEN ( tdir ) as tfile : 
         
         tdir.cd()
+
+        ## add the progress bar 
+        if verbose : sc = Ostap.TMVA.addResponse ( tree , progress_conf , *args )
+        else       : sc = Ostap.TMVA.addResponse ( tree ,                 *args )
         
-        sc = Ostap.TMVA.addResponse ( tree , *args  )
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
         
         if tfile.IsWritable() :
@@ -1925,7 +2013,7 @@ def _add_response_tree  ( tree  , *args ) :
         return sc , tree 
 
 # =============================================================================
-def _add_response_chain ( chain , *args ) :
+def _add_response_chain ( chain , verbose , *args ) :
     """Specific action to ROOT.TChain
     """
     
@@ -1939,16 +2027,18 @@ def _add_response_chain ( chain , *args ) :
         return Ostap.StatusCode ( 900 ) , chain 
 
     status = None 
+
+    tree_verbose  = verbose and       len ( files ) < 10
+    chain_verbose = verbose and 10 <= len ( files )
     
-    verbose = True and 1 < len ( files )
     from ostap.utils.progress_bar import progress_bar
-    for f in progress_bar ( files , len ( files ) , silent = not verbose ) :
+    for f in progress_bar ( files , len ( files ) , silent = not chain_verbose  ) :
         
         with ROOT.TFile.Open ( f , 'UPDATE' ,  exception = True ) as rfile :
             ## get the tree
             tt =   rfile.Get ( cname )
             ## treat the tree
-            sc , nt = _add_response_tree ( tt  , *args )
+            sc , nt = _add_response_tree ( tt  , tree_verbose , *args )
             if status is None or sc.isFailure() : status = sc
             
     newc = ROOT.TChain ( cname )
@@ -2003,16 +2093,24 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     from ostap.utils.basic import isatty
     options = opts_replace ( options , 'Color:'  , verbose and isatty() )
     
-    args = dataset , _inputs, _map, options, prefix , suffix , aux
+    args = _inputs, _map, options, prefix , suffix , aux
     
     if   isinstance ( dataset , ROOT.TChain     ) :
-        sc , newdata = _add_response_chain ( *args )
+        sc , newdata = _add_response_chain ( dataset , verbose , *args )
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
+        return newdata
+    
     elif isinstance ( dataset , ROOT.TTree      ) :
-        sc , newdata = _add_response_tree  ( *args )
-        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )        
-    else                                          :
-        sc = Ostap.TMVA.addResponse  ( *args )  
+        
+        sc , newdata = _add_response_tree  ( dataset , verbose , *args )
+        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
+        
+    else :
+
+        ## add progress bar 
+        if verbose :  sc = Ostap.TMVA.addResponse  ( dataset , progress_conf , *args )
+        else       :  sc = Ostap.TMVA.addResponse  ( dataset                 , *args )
+        
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )        
         newdata = dataset
 
@@ -2024,7 +2122,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
 
     
 # =============================================================================

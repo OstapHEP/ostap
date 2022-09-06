@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # ==========================================================================================
 ## @file ostap/parallel/parallel_tmva.py
-#  Add (some) parallelisation  for TMVA treatment
+#   (some) parallelisation  for TMVA treatment
 #  - adding of TMVA response to looong ROOT.TChain
 #  @see ostap.tools.tmva 
 #  @date   2019-05-18

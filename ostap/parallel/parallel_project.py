@@ -20,6 +20,7 @@ __all__     = (
 from   ostap.parallel.parallel import Task, WorkManager
 import ostap.core.pyrouts 
 import ostap.trees.trees
+import ostap.trees.cuts 
 import ROOT
 # =============================================================================
 # logging 
@@ -86,9 +87,9 @@ class ProjectTask(Task) :
         - number of entries to process
         """
         
-        import ROOT
         from ostap.logger.utils import logWarning
         with logWarning() :
+            import ROOT
             import ostap.core.pyrouts        
             import ostap.trees.trees 
             import ostap.histos.histos
@@ -104,23 +105,33 @@ class ProjectTask(Task) :
         first    = input.first
         nevents  = input.nevents
         
-        ## use the regular projection  
-        from ostap.trees.trees import _tt_project_
-        
         ## Create the output histogram  NB! (why here???)
         from ostap.core.core import ROOTCWD
 
         with ROOTCWD() :
             
-            ROOT.gROOT.cd() 
-            histo    =  self.histo.Clone ()
-            self.__output = 0 , histo
+            ROOT.gROOT.cd()
 
-            from ostap.trees.trees import _tt_project_            
-            self.__output = _tt_project_ ( tree     = chain      , histo = histo      ,
-                                           what     = self.what  , cuts  = self.cuts  ,
-                                           options  = ''         ,
-                                           nentries = nevents    , firstentry = first )            
+            histo = self.histo.Clone ()
+            self.__output = histo 
+
+            ## from ostap.trees.trees import tree_project_old
+            ## self.__output = tree_project_old (
+            ##     tree     = chain      , histo = histo      ,
+            ##     what     = self.what  , cuts  = self.cuts  ,
+            ##     options  = ''         ,
+            ##     nentries = nevents    , firstentry = first )            
+            
+            
+            from ostap.trees.trees import tree_project
+            self.__output = tree_project (
+                tree  = chain      ,
+                histo = histo      ,
+                what  = self.what  ,
+                cuts  = self.cuts  ,
+                first = first      ,
+                last  = -1 if nevents < 0 else first + nevents )
+            
         return self.__output 
         
     ## merge results 
@@ -133,8 +144,6 @@ class ProjectTask(Task) :
             self.__output[1].Add ( result[1] )
             self.__output = filtered, self.__output[1]
 
-        ## result[1].Delete () 
-            
     ## get the results 
     def results (  self ) :
         return self.__output 
@@ -243,12 +252,11 @@ def  tproject ( tree                 ,   ## the tree
     wmgr.process ( task, ch.split  ( chunk_size = chunk_size ) )
     
     ## unpack results 
-    _f , _h = task.results ()
-    filtered   = _f
+    _h = task.results ()
     histo     += _h
     del _h 
     
-    return filtered , histo 
+    return histo 
 
 ROOT.TTree.tproject = tproject
 ROOT.TTree.pproject = tproject

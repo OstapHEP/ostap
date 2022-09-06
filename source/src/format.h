@@ -18,6 +18,9 @@ namespace Ostap
   /// format single number ..
   std::string format ( const std::string& fmt    ,
                        double             value  ) ;
+  /// format single number ..
+  std::string format ( const std::string& fmt    ,
+                       long               value  ) ;
   /// format two numbers
   std::string format ( const std::string& fmt    , 
                        double             value1 ,
@@ -46,3 +49,4 @@ namespace Ostap
 //                                                                      The END 
 // ============================================================================
 #endif // OSTAP_FORMAT_H
+// ============================================================================

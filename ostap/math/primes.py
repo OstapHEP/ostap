@@ -60,7 +60,7 @@ try :
     #  nums = primes  ( 1000) 
     #  @endcode
     #  @param n the upper edge
-    #  @return the array o fprime numbers that do not exceed  <code>n</code>
+    #  @return the array of prime numbers that do not exceed  <code>n</code>
     #  @see https://stackoverflow.com/questions/2068372/fastest-way-to-list-all-primes-below-n/3035188#3035188
     def primes ( n ):
         """ Get the array of prime numbers that do not exceed n

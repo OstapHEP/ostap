@@ -6,13 +6,20 @@
     1. add option to sourt ( defautl is True ) for Data-like objects 
     1. remove unnesessary ~__del__` method for `WorkManager` 
     1. add trivial filter `frame_prescale`
+    1. add options `prescale_signal` and `prescale_background` for TMVA and chopping 
+    1. add C++ progress bar 
+    1. improve tree_project and ds_project methods 
+    1. improve frame progress 
+    1. improve frame project  
+    1. add progress bar to `Ostap::Trees::add_branch` and `Ostap::HistoProject::projectX`
+    1. add progress bar to `Ostap::PyIterator`
 
 ## Backward incompatible:  
 
 ## Bug fixes:
 
    1. fix typo in `parallel_toys` - Thanks Dima Pereima for reporting the problem
-
+   1. set of minor fixes 
 
 # v1.9.2.4
 

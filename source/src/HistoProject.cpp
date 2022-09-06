@@ -7,6 +7,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "TTree.h"
 // ============================================================================
 // Local: 
 // ============================================================================
@@ -15,6 +16,8 @@
 #include "Ostap/FormulaVar.h"
 #include "Ostap/HistoProject.h"
 #include "Ostap/Iterator.h"
+#include "Ostap/ProgressBar.h"
+#include "Ostap/Notifier.h"
 // ============================================================================
 #include "OstapDataFrame.h"
 #include "local_math.h"
@@ -44,20 +47,24 @@ namespace
 }
 // ============================================================================
 /** make a projection of RooDataSet into the histogram 
- *  @param data  (INPUT)  input data 
- *  @param histo (UPDATE) histogram 
+ *  @param data       (INPUT)  input data
+ *  @param progress   (INPUT)  configuration of progres bar 
+ *  @param histo      (UPDATE) histogram 
  *  @param expression (INPUT) expression
  *  @param selection  (INPUT) selection criteria/weight 
+ *  @param first      (INPUT) the first event to process 
+ *  @param last       (INPUT) the last event to process 
  */
 // ============================================================================
 Ostap::StatusCode 
 Ostap::HistoProject::project
-( const RooAbsData*   data       , 
-  TH1*                histo      ,
-  const RooAbsReal&   expression ,
-  const RooAbsReal*   selection  ,
-  const unsigned long first      ,
-  const unsigned long last       ) 
+( const RooAbsData*                 data       , 
+  const Ostap::Utils::ProgressConf& progress   ,
+  TH1*                              histo      ,
+  const RooAbsReal&                 expression ,
+  const RooAbsReal*                 selection  ,
+  const unsigned long               first      ,
+  const unsigned long               last       ) 
 {
   //
   if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
@@ -73,7 +80,8 @@ Ostap::HistoProject::project
   const double xmin = histo->GetXaxis()->GetXmin () ;
   const double xmax = histo->GetXaxis()->GetXmax () ;
   //
-  for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
+  Ostap::Utils::ProgressBar bar ( nEntries - first , progress ) ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )   
   {
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
@@ -117,22 +125,55 @@ Ostap::HistoProject::project
 }
 // ============================================================================
 /*  make a projection of RooDataSet into the histogram 
- *  @param data  (INPUT)  input data 
- *  @param histo (UPDATE) histogram 
+ *  @param data       (INPUT)  input data 
+ *  @param histo      (UPDATE) histogram 
+ *  @param expression (INPUT) expression
+ *  @param selection  (INPUT) selection criteria/weight 
+ *  @param first      (INPUT) the first event to process 
+ *  @param last       (INPUT) the last event to process 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::HistoProject::project
+( const RooAbsData*   data       , 
+  TH1*                histo      ,
+  const RooAbsReal&   expression ,
+  const RooAbsReal*   selection  ,
+  const unsigned long first      ,
+  const unsigned long last       ) 
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project ( data       , 
+                   progress   , 
+                   histo      , 
+                   expression , 
+                   selection  , 
+                   first      ,
+                   last       ) ;
+}
+// ============================================================================
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
  *  @param xexpression (INPUT) expression for x-axis 
  *  @param yexpression (INPUT) expression for y-axis 
- *  @param selection  (INPUT) selection criteria/weight 
+ *  @param selection   (INPUT) selection criteria/weight 
+ *  @param first       (INPUT) the first event to process 
+ *  @param last        (INPUT) the last event to process 
  */
 // ============================================================================
 Ostap::StatusCode
 Ostap::HistoProject::project2
-( const RooAbsData*   data        , 
-  TH2*                histo       ,
-  const RooAbsReal&   xexpression ,
-  const RooAbsReal&   yexpression ,
-  const RooAbsReal*   selection   ,
-  const unsigned long first       ,
-  const unsigned long last        ) 
+( const RooAbsData*                 data        , 
+  const Ostap::Utils::ProgressConf& progress    ,
+  TH2*                              histo       ,
+  const RooAbsReal&                 xexpression ,
+  const RooAbsReal&                 yexpression ,
+  const RooAbsReal*                 selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
 {
   //
   if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
@@ -150,7 +191,8 @@ Ostap::HistoProject::project2
   const double ymin = histo -> GetYaxis () -> GetXmin () ;
   const double ymax = histo -> GetYaxis () -> GetXmax () ;
   //
-  for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
+  Ostap::Utils::ProgressBar bar ( nEntries - first , progress ) ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )   
   {
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
@@ -197,24 +239,60 @@ Ostap::HistoProject::project2
 }
 // ============================================================================
 /*  make a projection of RooDataSet into the histogram 
- *  @param data  (INPUT)  input data 
- *  @param histo (UPDATE) histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT) expression for x-axis 
+ *  @param yexpression (INPUT) expression for y-axis 
+ *  @param selection   (INPUT) selection criteria/weight 
+ *  @param first       (INPUT) the first event to process 
+ *  @param last        (INPUT) the last event to process 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::HistoProject::project2
+( const RooAbsData*                 data        , 
+  TH2*                              histo       ,
+  const RooAbsReal&                 xexpression ,
+  const RooAbsReal&                 yexpression ,
+  const RooAbsReal*                 selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project2 ( data        , 
+                    progress    , 
+                    histo       , 
+                    xexpression , 
+                    yexpression , 
+                    selection   , 
+                    first       ,
+                    last        ) ;
+}
+// ============================================================================
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
  *  @param xexpression (INPUT) expression for x-axis 
  *  @param yexpression (INPUT) expression for y-axis 
  *  @param zexpression (INPUT) expression for z-axis 
- *  @param selection  (INPUT) selection criteria/weight 
+ *  @param selection   (INPUT) selection criteria/weight 
+ *  @param first       (INPUT) the first event to process 
+ *  @param last        (INPUT) the last event to process 
  */
 // ============================================================================
 Ostap::StatusCode
 Ostap::HistoProject::project3
-( const RooAbsData*   data        , 
-  TH3*                histo       ,
-  const RooAbsReal&   xexpression ,
-  const RooAbsReal&   yexpression ,
-  const RooAbsReal&   zexpression ,
-  const RooAbsReal*   selection   ,
-  const unsigned long first       ,
-  const unsigned long last        ) 
+( const RooAbsData*                 data        , 
+  const Ostap::Utils::ProgressConf& progress    ,
+  TH3*                              histo       ,
+  const RooAbsReal&                 xexpression ,
+  const RooAbsReal&                 yexpression ,
+  const RooAbsReal&                 zexpression ,
+  const RooAbsReal*                 selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
 {
   //
   if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
@@ -234,7 +312,8 @@ Ostap::HistoProject::project3
   const double zmin = histo -> GetZaxis () -> GetXmin () ;
   const double zmax = histo -> GetZaxis () -> GetXmax () ;
   //
-  for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
+  Ostap::Utils::ProgressBar bar ( nEntries - first , progress ) ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )   
   {
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
@@ -281,21 +360,61 @@ Ostap::HistoProject::project3
   return StatusCode::SUCCESS ;  
 }
 // ============================================================================
-/* make a projection of RooDataSet into the histogram 
- * @param data  (INPUT)  input data 
- * @param histo (UPDATE) histogram 
- * @param expression (INPUT) expression
- * @param selection  (INPUT) selection criteria/weight 
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT) expression for x-axis 
+ *  @param yexpression (INPUT) expression for y-axis 
+ *  @param zexpression (INPUT) expression for z-axis 
+ *  @param selection   (INPUT) selection criteria/weight 
+ *  @param first       (INPUT) the first event to process 
+ *  @param last        (INPUT) the last event to process 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::HistoProject::project3
+( const RooAbsData*                 data        , 
+  TH3*                              histo       ,
+  const RooAbsReal&                 xexpression ,
+  const RooAbsReal&                 yexpression ,
+  const RooAbsReal&                 zexpression ,
+  const RooAbsReal*                 selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project3 ( data        , 
+                    progress    , 
+                    histo       , 
+                    xexpression , 
+                    yexpression , 
+                    zexpression , 
+                    selection   , 
+                    first       ,
+                    last        ) ;
+}
+
+// ============================================================================
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
+ *  @param expression  (INPUT)  expression
+ *  @param selection   (INPUT)  selection criteria/weight 
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
  */
 // ============================================================================
 Ostap::StatusCode 
 Ostap::HistoProject::project
-( const RooAbsData*   data       , 
-  TH1*                histo      ,
-  const std::string&  expression ,
-  const std::string&  selection  ,
-  const unsigned long first      ,                                          
-  const unsigned long last       ) 
+( const RooAbsData*                 data       , 
+  const Ostap::Utils::ProgressConf& progress   ,
+  TH1*                              histo      ,
+  const std::string&                expression ,
+  const std::string&                selection  ,
+  const unsigned long               first      ,                                          
+  const unsigned long               last       ) 
 {
   //
   if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
@@ -333,28 +452,62 @@ Ostap::HistoProject::project
   }
   //
   return project ( data                                   , 
+                   progress                               ,
                    histo                                  , 
                    0 !=   x_var ?   *x_var : *xwhat       , 
                    0 != cut_var ?  cut_var :   cuts.get() , first , last ) ;
 }
 // ============================================================================
-/*  make a projection of RooDataSet into 2D-histogram 
- *  @param data  (INPUT)  input data 
- *  @param histo (UPDATE) histogram 
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) histogram 
+ *  @param expression  (INPUT)  expression
+ *  @param selection   (INPUT)  selection criteria/weight 
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::HistoProject::project
+( const RooAbsData*                 data       , 
+  TH1*                              histo      ,
+  const std::string&                expression ,
+  const std::string&                selection  ,
+  const unsigned long               first      ,                                          
+  const unsigned long               last       ) 
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project ( data        , 
+                   progress    , 
+                   histo       , 
+                   expression  , 
+                   selection   , 
+                   first       ,
+                   last        ) ;
+}
+// ============================================================================
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
  *  @param xexpression (INPUT) expression for x-axis 
  *  @param yexpression (INPUT) expression for y-axis 
- *  @param selection  (INPUT) selection criteria/weight 
+ *  @param selection   (INPUT) selection criteria/weight 
+ *  @param first       (INPUT) the first event to process 
+ *  @param last        (INPUT) the last event to process 
  */
 // ============================================================================
 Ostap::StatusCode
 Ostap::HistoProject::project2
-( const RooAbsData*   data        , 
-  TH2*                histo       ,
-  const std::string&  xexpression ,
-  const std::string&  yexpression ,
-  const std::string&  selection   ,
-  const unsigned long first       ,
-  const unsigned long last        ) 
+( const RooAbsData*                 data        , 
+  const Ostap::Utils::ProgressConf& progress    ,
+  TH2*                              histo       ,
+  const std::string&                xexpression ,
+  const std::string&                yexpression ,
+  const std::string&                selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
 {
   //
   if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
@@ -401,6 +554,7 @@ Ostap::HistoProject::project2
   }
   //
   return project2 ( data                                   , 
+                    progress                               ,
                     histo                                  , 
                     0 !=   x_var ?   *x_var : *xwhat       , 
                     0 !=   y_var ?   *y_var : *ywhat       , 
@@ -408,24 +562,60 @@ Ostap::HistoProject::project2
 }
 // ============================================================================
 /*  make a projection of RooDataSet into the histogram 
- *  @param data  (INPUT)  input data 
- *  @param histo (UPDATE) histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) histogram 
  *  @param xexpression (INPUT) expression for x-axis 
  *  @param yexpression (INPUT) expression for y-axis 
- *  @param zexpression (INPUT) expression for z-axis 
- *  @param selection  (INPUT) selection criteria/weight 
+ *  @param selection   (INPUT) selection criteria/weight 
+ *  @param first       (INPUT) the first event to process 
+ *  @param last        (INPUT) the last event to process 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::HistoProject::project2
+( const RooAbsData*                 data        , 
+  TH2*                              histo       ,
+  const std::string&                xexpression ,
+  const std::string&                yexpression ,
+  const std::string&                selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project2 ( data        , 
+                    progress    , 
+                    histo       , 
+                    xexpression , 
+                    yexpression , 
+                    selection   , 
+                    first       ,
+                    last        ) ;
+}
+// ============================================================================
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT)  expression for x-axis 
+ *  @param yexpression (INPUT)  expression for y-axis 
+ *  @param zexpression (INPUT)  expression for z-axis 
+ *  @param selection   (INPUT)  selection criteria/weight 
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
  */
 // ============================================================================
 Ostap::StatusCode 
 Ostap::HistoProject::project3
-( const RooAbsData*   data        , 
-  TH3*                histo       ,
-  const std::string&  xexpression ,
-  const std::string&  yexpression ,
-  const std::string&  zexpression ,
-  const std::string&  selection   ,
-  const unsigned long first       ,
-  const unsigned long last        ) 
+( const RooAbsData*                 data        , 
+  const Ostap::Utils::ProgressConf& progress    ,
+  TH3*                              histo       ,
+  const std::string&                xexpression ,
+  const std::string&                yexpression ,
+  const std::string&                zexpression ,
+  const std::string&                selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
 {
   //
   if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
@@ -480,12 +670,65 @@ Ostap::HistoProject::project3
   }
   //
   return project3 ( data                                   , 
+                    progress                               , 
                     histo                                  , 
                     0 !=   x_var ?   *x_var : *xwhat       , 
                     0 !=   y_var ?   *y_var : *ywhat       , 
                     0 !=   z_var ?   *z_var : *zwhat       , 
                     0 != cut_var ?  cut_var :   cuts.get() , first , last ) ;
 }
+// ============================================================================
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT)  expression for x-axis 
+ *  @param yexpression (INPUT)  expression for y-axis 
+ *  @param zexpression (INPUT)  expression for z-axis 
+ *  @param selection   (INPUT)  selection criteria/weight 
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::HistoProject::project3
+( const RooAbsData*                 data        , 
+  TH3*                              histo       ,
+  const std::string&                xexpression ,
+  const std::string&                yexpression ,
+  const std::string&                zexpression ,
+  const std::string&                selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project3 ( data        , 
+                    progress    , 
+                    histo       , 
+                    xexpression , 
+                    yexpression , 
+                    zexpression , 
+                    selection   , 
+                    first       ,
+                    last        ) ;
+}
+// ============================================================================
+/*  make a projection of DataFrame into the histogram 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) histogram 
+ *  @param expression  (INPUT)  expression
+ *  @param selection   (INPUT)  selection criteria/weight 
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::HistoProject::project
+( Ostap::FrameNode                     data        , 
+  const Ostap::Utils::ProgressConf& /* progress */ ,
+  TH1*                                 histo       ,
+  const std::string&                   expression  ,
+  const std::string&                   selection   ) 
+{ return project ( data , histo , expression , selection ) ; }
 // ============================================================================
 /*  make a projection of DataFrame into the histogram 
  *  @param data  (INPUT)  input data 
@@ -521,6 +764,24 @@ Ostap::StatusCode Ostap::HistoProject::project
   //
   return Ostap::StatusCode::SUCCESS ;
 }
+// ========================================================================
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT)  expression for x-axis 
+ *  @param yexpression (INPUT)  expression for y-axis 
+ *  @param selection   (INPUT)  selection criteria/weight 
+ */
+// ========================================================================
+Ostap::StatusCode Ostap::HistoProject::project2
+( Ostap::FrameNode                     data        , 
+  const Ostap::Utils::ProgressConf& /* progress */ ,
+  TH2*                                 histo       ,
+  const std::string&                   xexpression ,
+  const std::string&                   yexpression ,
+  const std::string&                   selection   )
+{ return project2 ( data , histo , xexpression , yexpression , selection ) ; }
 // ========================================================================
 /*  make a projection of RooDataSet into the histogram 
  *  @param data  (INPUT)  input data 
@@ -560,6 +821,26 @@ Ostap::StatusCode Ostap::HistoProject::project2
   //
   return Ostap::StatusCode::SUCCESS ;
 }
+// ========================================================================
+/*  make a projection of RooDataSet into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT)  expression for x-axis 
+ *  @param yexpression (INPUT)  expression for y-axis 
+ *  @param zexpression (INPUT)  expression for z-axis 
+ *  @param selection   (INPUT)  selection criteria/weight 
+ */
+// ========================================================================
+Ostap::StatusCode Ostap::HistoProject::project3
+( Ostap::FrameNode                     data        , 
+  const Ostap::Utils::ProgressConf& /* progress */ ,
+  TH3*                                 histo       ,
+  const std::string&                   xexpression ,
+  const std::string&                   yexpression ,
+  const std::string&                   zexpression ,
+  const std::string&                   selection   )
+{ return project3 ( data , histo , xexpression , yexpression , zexpression , selection ) ; }
 // ========================================================================
 /*  make a projection of RooDataSet into the histogram 
  *  @param data        (INPUT)  input data 
@@ -603,7 +884,301 @@ Ostap::StatusCode Ostap::HistoProject::project3
   //
   return Ostap::StatusCode::SUCCESS ;
 }
+// ============================================================================
 
+
+// ============================================================================
+//  TTree
+// ============================================================================
+
+// ============================================================================
+/*  make a projection of TTree into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
+ *  @param expression  (INPUT)  expression
+ *  @param selection   (INPUT)  selection criteria/weight 
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::HistoProject::project
+( TTree*                            data       , 
+  const Ostap::Utils::ProgressConf& progress   ,
+  TH1*                              histo      ,
+  const std::string&                expression ,
+  const std::string&                selection  ,
+  const unsigned long               first      ,
+  const unsigned long               last       ) 
+{
+  if ( 0 == histo     ) { return Ostap::StatusCode ( 301 ) ; }
+  else { histo->Reset() ; } // reset the historgam 
+  if ( 0 == data      ) { return Ostap::StatusCode ( 300 ) ; }
+  //
+  const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
+  if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; }
+  //
+  Ostap::Formula xvar ( expression , data ) ;
+  if ( !xvar || !xvar.ok() ) { return Ostap::StatusCode ( 303 ) ; }  // RETURN 
+  //
+  std::unique_ptr<Ostap::Formula> cut { nullptr } ;
+  if  ( !selection.empty() ) 
+  { 
+    cut = std::make_unique<Ostap::Formula>( selection , data ) ; 
+    if ( !cut || !cut->ok () ) { return Ostap::StatusCode ( 303 ) ; }  // RETURN
+  }
+  //
+  Ostap::Utils::Notifier notify ( data , &xvar , cut.get() ) ;
+  std::vector<double> results {} ;
+  /// make an explicit  loop 
+  Ostap::Utils::ProgressBar bar (  nEntries - first , progress ) ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
+  {
+    long ievent = data->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { return Ostap::StatusCode ( 400 ) ; } // RETURN 
+    //
+    ievent      = data->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { return Ostap::StatusCode ( 401 ) ; } // RETURN 
+    //
+    const double weight = cut ? cut -> evaluate() : 1.0 ;
+    if ( !weight    ) { continue ;}
+    //
+    xvar.evaluate ( results ) ;
+    for ( double x : results ) { histo -> Fill ( x , weight ) ; }
+  }
+  return StatusCode::SUCCESS ;
+}
+// ========================================================================
+/** make a projection of DataFrame into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) histogram 
+ *  @param expression  (INPUT)  expression
+ *  @param selection   (INPUT)  selection criteria/weight 
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::HistoProject::project
+( TTree*                            data       , 
+  TH1*                              histo      ,
+  const std::string&                expression ,
+  const std::string&                selection  ,
+  const unsigned long               first      ,
+  const unsigned long               last       ) 
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project ( data        , 
+                   progress    , 
+                   histo       ,
+                   expression , 
+                   selection   , 
+                   first       ,
+                   last        ) ;
+}
+// ============================================================================
+/*  make a projection of TTree into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT)  x-expression
+ *  @param yexpression (INPUT)  y-expression
+ *  @param selection   (INPUT)  selection criteria/weight 
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::HistoProject::project2
+( TTree*                            data        , 
+  const Ostap::Utils::ProgressConf& progress    ,
+  TH2*                              histo       ,
+  const std::string&                xexpression ,
+  const std::string&                yexpression ,
+  const std::string&                selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
+{
+  if ( 0 == histo     ) { return Ostap::StatusCode ( 301 ) ; }
+  else { histo->Reset() ; } // reset the historgam 
+  if ( 0 == data      ) { return Ostap::StatusCode ( 300 ) ; }
+  //
+  const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
+  if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; }
+  //
+  Ostap::Formula xvar ( xexpression , data ) ;
+  if ( !xvar || !xvar.ok() ) { return Ostap::StatusCode ( 303 ) ; }  // RETURN 
+  //
+  Ostap::Formula yvar ( yexpression , data ) ;
+  if ( !yvar || !yvar.ok() ) { return Ostap::StatusCode ( 304 ) ; }  // RETURN 
+  //
+  std::unique_ptr<Ostap::Formula> cut { nullptr } ;
+  if  ( !selection.empty() ) 
+  { 
+    cut = std::make_unique<Ostap::Formula>( selection , data ) ; 
+    if ( !cut || !cut->ok () ) { return Ostap::StatusCode ( 302 ) ; }  // RETURN
+  }
+  // 
+  Ostap::Utils::Notifier notify ( data , &xvar , &yvar , cut.get() ) ;
+  std::vector<double> xresults {} ;
+  std::vector<double> yresults {} ;
+  /// make an explicit  loop 
+  Ostap::Utils::ProgressBar bar (  nEntries - first , progress ) ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
+  {
+    long ievent = data->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { return Ostap::StatusCode ( 400 ) ; } // RETURN 
+    //
+    ievent      = data->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { return Ostap::StatusCode ( 401 ) ; } // RETURN 
+    //
+    const double weight = cut ? cut -> evaluate() : 1.0 ;
+    if ( !weight    ) { continue ;}
+    //
+    xvar.evaluate ( xresults ) ;
+    yvar.evaluate ( yresults ) ;
+    for ( double x : xresults )
+    { for ( double y : yresults )
+      { histo -> Fill ( x , y , weight ) ; } }
+  }
+  return StatusCode::SUCCESS ;
+}
+// ========================================================================
+/*  make a projection of TTree into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT)  x-expression
+ *  @param yexpression (INPUT)  y-expression
+ *  @param selection   (INPUT)  selection criteria/weight 
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+ // ============================================================================
+ Ostap::StatusCode Ostap::HistoProject::project2
+( TTree*                            data       , 
+  TH2*                              histo       ,
+  const std::string&                xexpression ,
+  const std::string&                yexpression ,
+  const std::string&                selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project2 ( data        , 
+                    progress    , 
+                    histo       ,
+                    xexpression ,
+                    yexpression , 
+                    selection   , 
+                    first       ,
+                    last        ) ;
+}
+// ============================================================================
+/*  make a projection of TTree into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param progress    (INPUT)  configuration of progres bar 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT)  x-expression
+ *  @param yexpression (INPUT)  y-expression
+ *  @param zexpression (INPUT)  z-expression
+ *  @param selection   (INPUT)  selection criteria/weight 
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::HistoProject::project3
+( TTree*                            data        , 
+  const Ostap::Utils::ProgressConf& progress    ,
+  TH3*                              histo       ,
+  const std::string&                xexpression ,
+  const std::string&                yexpression ,
+  const std::string&                zexpression ,
+  const std::string&                selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
+{
+  if ( 0 == histo     ) { return Ostap::StatusCode ( 301 ) ; }
+  else { histo->Reset() ; } // reset the historgam 
+  if ( 0 == data      ) { return Ostap::StatusCode ( 300 ) ; }
+  //
+  const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
+  if ( nEntries <= first  ) { return Ostap::StatusCode::RECOVERABLE ; }
+  //
+  Ostap::Formula xvar ( xexpression , data ) ;
+  if ( !xvar || !xvar.ok() ) { return Ostap::StatusCode ( 303 ) ; }  // RETURN 
+  //
+  Ostap::Formula yvar ( yexpression , data ) ;
+  if ( !yvar || !yvar.ok() ) { return Ostap::StatusCode ( 304 ) ; }  // RETURN 
+  //
+  Ostap::Formula zvar ( zexpression , data ) ;
+  if ( !zvar || !zvar.ok() ) { return Ostap::StatusCode ( 305 ) ; }  // RETURN 
+  //
+  std::unique_ptr<Ostap::Formula> cut { nullptr } ;
+  if  ( !selection.empty() ) 
+  { 
+    cut = std::make_unique<Ostap::Formula>( selection , data) ; 
+    if ( !cut || !cut->ok () ) { return Ostap::StatusCode ( 302 ) ; }  // RETURN
+  }
+  //
+  Ostap::Utils::Notifier notify ( data , &xvar , &yvar , &zvar , cut.get() ) ;
+  std::vector<double> xresults {} ;
+  std::vector<double> yresults {} ;
+  std::vector<double> zresults {} ;
+  /// make an explicit  loop 
+  Ostap::Utils::ProgressBar bar (  nEntries - first , progress ) ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
+  {
+    long ievent = data->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { return Ostap::StatusCode ( 400 ) ; } // RETURN 
+    //
+    ievent      = data->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { return Ostap::StatusCode ( 401 ) ; } // RETURN 
+    //
+    const double weight = cut ? cut -> evaluate() : 1.0 ;
+    if ( !weight    ) { continue ;}
+    //
+    xvar.evaluate ( xresults ) ;
+    yvar.evaluate ( yresults ) ;
+    yvar.evaluate ( zresults ) ;
+    for ( double x : xresults )
+    { for ( double y : yresults )
+      { for ( double z : zresults )
+        { histo -> Fill ( x , y , z , weight ) ; } } }
+  }
+  return StatusCode::SUCCESS ;
+}
+// ========================================================================
+/*  make a projection of TTree into the histogram 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) histogram 
+ *  @param xexpression (INPUT)  x-expression
+ *  @param yexpression (INPUT)  y-expression
+ *  @param zexpression (INPUT)  z-expression
+ *  @param selection   (INPUT)  selection criteria/weight 
+ *  @param first       (INPUT)  the first event to process 
+ *  @param last        (INPUT)  the last event to process 
+ */
+ // ============================================================================
+ Ostap::StatusCode Ostap::HistoProject::project3
+( TTree*                            data       , 
+  TH3*                              histo       ,
+  const std::string&                xexpression ,
+  const std::string&                yexpression ,
+  const std::string&                zexpression ,
+  const std::string&                selection   ,
+  const unsigned long               first       ,
+  const unsigned long               last        ) 
+{
+  /// make a fake progress bar 
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  return project3 ( data        , 
+                    progress    , 
+                    histo       ,
+                    xexpression ,
+                    yexpression , 
+                    zexpression , 
+                    selection   , 
+                    first       ,
+                    last        ) ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

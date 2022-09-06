@@ -42,7 +42,8 @@ from   ostap.core.core import ( cpp      , Ostap     ,
                                 natural_number       )
 from   ostap.math.base          import frexp10 
 from   ostap.core.ostap_types   import integer_types, num_types , long_type, sequence_types
-from   ostap.utils.progress_bar import progress_bar 
+from   ostap.utils.progress_bar import progress_bar
+from   ostap.core.meta_info     import root_info 
 import ostap.plotting.draw_attributes 
 import ROOT, sys, math, ctypes, array 
 # =============================================================================
@@ -7531,6 +7532,36 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
 
 
 # =============================================================================
+if root_info < ( 3 , 0 ) : 
+    ## Number of enbtries (as int)
+    #  @code
+    #  histo
+    #  n = histo.nEntries() 
+    #  @encode
+    #  @see TH1::GetEntries 
+    def _h1_nEntries_ ( histo ) :
+        """Number of enbtries (as int)
+        >>> histo = ..
+        >>> n = histo.nEntries() 
+        """
+        return long ( histo.GetEntries() )
+else :
+    ## Number of enbtries (as int)
+    #  @code
+    #  histo
+    #  n = histo.nEntries() 
+    #  @encode
+    #  @see TH1::GetEntries 
+    def _h1_nEntries_ ( histo ) :
+        """Number of enbtries (as int)
+        >>> histo = ..
+        >>> n = histo.nEntries() 
+        """
+        return int ( histo.GetEntries() )
+    
+ROOT.TH1.nEntries = _h1_nEntries_
+
+# =============================================================================
 _decorated_classes_ = (
     ROOT.TH1   ,
     #
@@ -8103,6 +8134,8 @@ _new_methods_   = (
     
     ROOT.TH1F  . split       ,
     ROOT.TH1F  . split_bins  ,
+    #
+    ROOT.TH1   . nEntries 
     )
 
 # =============================================================================

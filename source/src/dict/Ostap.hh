@@ -98,6 +98,7 @@
 #include "Ostap/PyVar.h"     
 #include "Ostap/PyBLOB.h"
 #include "Ostap/Polarization.h"
+#include "Ostap/ProgressBar.h"
 #include "Ostap/RootID.h"
 #include "Ostap/SFactor.h"
 #include "Ostap/StatEntity.h"

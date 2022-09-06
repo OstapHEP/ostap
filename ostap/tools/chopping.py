@@ -89,7 +89,8 @@ __all__     = (
 # =============================================================================
 from   ostap.tools.tmva       import Trainer as TMVATrainer
 from   ostap.tools.tmva       import Reader  as TMVAReader
-from   ostap.tools.tmva       import dir_name, good_for_negative, trivial_opts   
+from   ostap.tools.tmva       import ( dir_name     , good_for_negative,
+                                       trivial_opts , progress_conf ) 
 from   ostap.core.core        import WSE 
 from   ostap.core.pyrouts     import hID, h1_axis, Ostap 
 from   ostap.core.ostap_types import integer_types 
@@ -198,6 +199,9 @@ class Trainer(object) :
                    signal_train_fraction     = -1 , ## fraction of signal events used for training     : 0<=f<1 
                    background_train_fraction = -1 , ## fraction of background events used for training : 0<=f<1
                    ##
+                   prescale_signal      = 1       , ## prescale factor for signal 
+                   prescale_background  = 1       , ## prescale factor for signal 
+                   ##
                    name              = 'TMVAChopper'         ,   # the name 
                    verbose           = False                 ,   # verbose ? 
                    chop_signal       = False                 ,   # chop the signal     ?
@@ -245,6 +249,16 @@ class Trainer(object) :
 
         self.__signal_train_fraction     = signal_train_fraction     if 0 <= signal_train_fraction     < 1 else -1.0 
         self.__background_train_fraction = background_train_fraction if 0 <= background_train_fraction < 1 else -1.0 
+
+        assert ( isinstance ( prescale_signal     , integer_types ) and 1 <= prescale_signal         ) or \
+               ( isinstance ( prescale_signal     , float         ) and 0 <  prescale_signal     < 1 )  , \
+               "Invalid 'prescale_signal'"
+        assert ( isinstance ( prescale_background , integer_types ) and 1 <= prescale_background     ) or \
+               ( isinstance ( prescale_background , floa          ) and 0 <  prescale_background < 1 )  , \
+               "Invalid 'prescale_background'"
+        
+        self.__prescale_signal     = prescale_signal
+        self.__prescale_background = prescale_background
         
         if self.parallel :
             from ostap.parallel.parallel import DILL_PY3_issue
@@ -519,6 +533,10 @@ class Trainer(object) :
                 row = 'Signal train fraction' , '%.1f%%' % ( 100 *  self.signal_train_fraction ) 
                 rows.append ( row )
                 
+            if 1 != self.prescale_signal :
+                row = 'Signal prescale'       , '%s' % self.prescale_signal 
+                rows.append ( row )
+  
             if self.background_cuts : 
                 row = 'Background cuts' , str ( self.background_cuts )
                 rows.append ( row )
@@ -531,6 +549,10 @@ class Trainer(object) :
                 row = 'Backgroundtrain fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
                 rows.append ( row )
                 
+            if 1 != self.prescale_background:
+                row = 'Backgronud prescale'      , '%s' % self.prescale_background
+                rows.append ( row )
+
             ms  = [ m[1] for m in self.methods ]
             row = 'Methods' , ' '.join ( ms ) 
             rows.append ( row )
@@ -592,10 +614,12 @@ class Trainer(object) :
                            ##
                            signal_train_fraction     = self.signal_train_fraction     ,  
                            background_train_fraction = self.background_train_fraction ,
+                           ##
+                           prescale_signal      = self.prescale_signal     , ## prescale factor for signal 
+                           prescale_background  = self.prescale_background , ## prescale factor for signal 
                            ##                           
                            output_file       = ''                     , 
-                           ##
-                           
+                           ##                           
                            signal_cuts       = scuts                  , 
                            background_cuts   = bcuts                  ,
                            ##
@@ -758,6 +782,16 @@ class Trainer(object) :
     def background_train_fraction ( self ) :
         """``background_train_fraction'': if non-negative, fraction of background events used for training"""
         return self.__background_train_fraction
+    
+    @property
+    def prescale_signal ( self ) :
+        """``prescale_signal'': prescale the signal sample"""
+        return self.__prescale_signal
+    
+    @property
+    def prescale_background ( self ) :
+        """``prescale_background'': prescale the background sample"""
+        return self.__prescale_background
 
     @property
     def background_categories ( self ) :
@@ -1562,7 +1596,7 @@ class Reader(object) :
 
 
 # =============================================================================
-def _add_response_tree ( tree , *args ) :
+def _add_response_tree ( tree , verbose , *args ) :
     """Specific action to ROOT.TTree
     """
     
@@ -1574,10 +1608,12 @@ def _add_response_tree ( tree , *args ) :
     with ROOTCWD () , REOPEN ( tdir )  as tfile  : 
         
         tdir.cd()
+
+        ## add progress bar 
+        if verbose : sc = Ostap.TMVA.addChoppingResponse ( tree , progress_conf , *args  )
+        else       : sc = Ostap.TMVA.addChoppingResponse ( tree ,                 *args  )
         
-        sc = Ostap.TMVA.addChoppingResponse ( tree , *args  )
-        if sc.isFailure() :
-            logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
+        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
             
         if tfile.IsWritable() :
             tfile.Write( "" , ROOT.TFile.kOverwrite )
@@ -1588,7 +1624,7 @@ def _add_response_tree ( tree , *args ) :
         return sc , tree                               ## RETURN
 
 # =============================================================================
-def _add_response_chain ( chain , *args ) :
+def _add_response_chain ( chain , verbose , *args ) :
     """Specific action to ROOT.TChain
     """
     
@@ -1602,16 +1638,19 @@ def _add_response_chain ( chain , *args ) :
         return Ostap.StatusCode ( 900 ) , chain 
 
     status  = None 
-    
+
+    tree_verbose  = verbose and       len ( files ) < 10
+    chain_verbose = verbose and 10 <= len ( files )
+ 
     verbose = 1 < len ( files )
     from ostap.utils.progress_bar import progress_bar
-    for f in progress_bar ( files , len ( files ) , silent = not verbose ) :
+    for f in progress_bar ( files , len ( files ) , silent = not chain_verbose ) :
 
         with  ROOT.TFile.Open ( f , 'UPDATE' ) as ff  :
             ## get the tree 
             tt      = ff.Get(cname)
             ## treat the tree 
-            sc , nt = _add_response_tree ( tt , *args )
+            sc , nt = _add_response_tree ( tt , verbose = tree_verbose , *args )
             if status is None or sc.isFailure() : status = sc 
             
     newc = ROOT.TChain ( cname )
@@ -1685,23 +1724,26 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     from ostap.utils.basic import isatty
     options = opts_replace ( options , 'Color:'  , verbose and isatty() )
 
+    args = chopper , category_name , N , _inputs , _maps , options , prefix , suffix , aux
+    
     if   isinstance ( dataset , ROOT.TChain  ) :
-        sc , newdata = _add_response_chain ( dataset , chopper ,  category_name , N ,
-                                        _inputs , _maps , options , prefix , suffix , aux )
+        
+        sc , newdata = _add_response_chain ( dataset , verbose , *args ) 
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
-        return newdata 
+        return newdata
+    
     elif isinstance ( dataset , ROOT.TTree   ) :
-        sc , newdata = _add_response_tree  ( dataset , chopper ,  category_name , N ,
-                                        _inputs , _maps , options , prefix , suffix , aux )
+        
+        sc , newdata = _add_response_tree  ( dataset , verbose , *args )
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
+        
         return newdata 
-                                        
+
+    ## here we deal with RooAbsData
+    
     if isinstance ( chopper , str ) :
         
-        if chopper in dataset :
-            
-            chopper = getattr ( dataset , chopper )
-            
+        if chopper in dataset : chopper = getattr ( dataset , chopper )            
         else :
             
             varset  = dataset.get()
@@ -1714,11 +1756,12 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
             used    = Ostap.usedVariables ( chopper    , varlist  )            
             chopper = Ostap.FormulaVar    ( 'chopping' , chopper  , used    ,  True )
 
+
     assert isinstance ( chopper , ROOT.RooAbsReal ), 'Invalid chopper type %s' % chopper 
         
     category = ROOT.RooCategory ( category_name ,
                                   'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) ) 
-    for i in range(N) :
+    for i in range ( N ) :
         ##
         if   N <    10 : cn = category_name + '_%d'    % i
         if   N <   100 : cn = category_name + '_%02d'  % i
@@ -1728,17 +1771,11 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
         ##
         category.defineType ( cn , i )
 
+    args = chopper , category , N , _inputs , _maps , options , prefix , suffix , aux
     
-    sc = Ostap.TMVA.addChoppingResponse ( dataset  ,
-                                          chopper  ,
-                                          category , 
-                                          N        ,
-                                          _inputs  ,
-                                          _maps    ,
-                                          options  ,
-                                          prefix   ,
-                                          suffix   ,
-                                          aux      )
+    ## add progress bar 
+    if verbose : sc = Ostap.TMVA.addChoppingResponse ( dataset , progress_conf , *args )
+    else       : sc = Ostap.TMVA.addChoppingResponse ( dataset ,                 *args )
 
     if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
         

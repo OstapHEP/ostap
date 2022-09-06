@@ -50,13 +50,13 @@ __all__     = (
     ## 
     ) 
 # =============================================================================
-from   ostap.core.core        import cpp, Ostap, strings, split_string
-from   ostap.core.meta_info   import root_info 
-from   ostap.core.ostap_types import integer_types, string_types  
-from   ostap.logger.utils     import multicolumn
-from   ostap.utils.basic      import terminal_size, isatty
-from   ostap.logger.colorized import allright
-import ostap.stats.statvars   as     SV 
+from   ostap.core.core           import cpp, Ostap, strings, split_string
+from   ostap.core.meta_info      import root_info 
+from   ostap.core.ostap_types    import integer_types, string_types, sequence_types   
+from   ostap.logger.utils        import multicolumn
+from   ostap.utils.progress_conf import progress_conf 
+from   ostap.utils.basic         import isatty
+import ostap.stats.statvars      as     SV 
 import ostap.histos.histos
 import ROOT, math
 # =============================================================================
@@ -187,10 +187,8 @@ def _fr_len_ ( frame ) :
 
 #  ....
 #  @endcode 
-def frame_progress ( frame         , 
-                     length        ,
-                     width  = None ,
-                     symbol = "#"  ) :
+def frame_progress ( frame  ,
+                     length ) :
     """ Draw (lazy) progress bar for the    DataFrame:
     >>> f = DataFrame ( ... )
     >>> p = f.ProgressBar  ( 1000 ) ## number of elements!
@@ -200,24 +198,18 @@ def frame_progress ( frame         ,
     cnt = frame.Count () 
     if not isatty () : return cnt
 
-    left    = "[ "
-    right   = " ]"
+    if not length : lenth = len ( frame )
     
-    minw    = len ( left ) + len ( right ) + 3 + 1 + 1 + 1 
-    length  = length if isinstance ( length , integer_types ) and         0 < length else len ( frame )
-    width   = width  if isinstance ( width  , integer_types ) and 10 + minw <= width else terminal_size()[1]
+    if   1000 < lenth  : nchunks = 512
+    elif 120  < lenth  : nchunks = 100 
+    else               : return cnt     ## no progress bar for short frames 
     
-    width   = max ( 10 , width - minw ) 
-    
-    nchunks = max ( 500 , width + 1 ) 
     csize , rr = divmod ( length , nchunks ) 
     if rr : nchunks += 1 
     
-    symbol = allright ( symbol )
-
-    fun = Ostap.Utils.frame_progress ( nchunks , width , symbol , ' ' , left , right )
+    fun = Ostap.Utils.frame_progress ( nchunks , progress_conf )
     cnt.OnPartialResultSlot  ( csize , fun )
-
+    
     return cnt
 
 # =============================================================================
@@ -690,16 +682,26 @@ def frame_project ( frame , model , *what ) :
     `ROOT.RDF.TH2DModel` or `ROOT.RDF.TH3DModel` objects 
     """
 
+    print ( 'FRAMES/1' , type( frame) , type (model) , what ) 
+            
     if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )
     
     frame = as_rnode  ( frame )
     
     if 1 <= len ( what ) <= 2 :
-        ww = split_string ( what[0] , ' ,:;' )
-        if 1 < len ( ww ) :
-            ww.reverse() 
-            what = tuple ( ww ) + tuple ( what [1:] ) 
-        
+        if   isinstance  ( what [0 ] , string_types ) :
+            ww = split_string ( what [ 0 ] , ',:;' )
+            if 1 < len ( ww ) : ww.reverse() 
+            what = tuple ( ww ) + what [1:]                                              
+        elif isinstance ( what [ 0 ] , sequence_types ) :
+            what = tuple ( w for w in what [ 0 ] ) + what [1:] 
+
+    ## strip blanks 
+    what = tuple ( w.strip() for w in what )
+    
+    ## cuts are empty 
+    if 1 < len ( what ) and not what[-1] : what = what [:-1]
+
     histo = None
 
     if   isinstance ( model , ROOT.TH3 ) and 3 == model.dim () : 
@@ -746,6 +748,9 @@ def frame_project ( frame , model , *what ) :
         logger.error ('ERROR HERE!') 
         
     if histo : histo.Reset()
+
+
+    print ( 'FRAMES/2' , type( frame) , type (model) , what ) 
     
     ## get the list of currently known names
     vars = frame_columns ( frame )  

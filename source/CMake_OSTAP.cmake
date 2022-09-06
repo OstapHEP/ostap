@@ -77,6 +77,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Polarization.cpp
                          src/Primitives.cpp
                          src/Printable.cpp
+                         src/ProgressBar.cpp
                          src/PyBLOB.cpp
                          src/PyCallable.cpp 
                          src/PyFuncs.cpp 

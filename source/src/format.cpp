@@ -18,11 +18,25 @@
 std::string Ostap::format ( const std::string& fmt    ,
                             double             value1 ) 
 {
-  const unsigned int  s_LEN = 128 ;
+  const unsigned int  s_LEN = 256 ;
   static char s_buffer[ s_LEN ] ;
   const int result = snprintf ( s_buffer , s_LEN , fmt.c_str() , value1 ) ;
   return 
     0 <= result && (unsigned int) result < s_LEN ?  
+    std::string ( s_buffer , s_buffer + result ) : 
+    fmt + std::to_string ( value1 ) ;
+}
+// ============================================================================
+// format single number ..
+// ============================================================================
+std::string Ostap::format ( const std::string& fmt    ,
+                            long               value1 ) 
+{
+  const unsigned int  s_LEN = 256 ;
+  static char s_buffer[ s_LEN ] ;
+  const int result = snprintf ( s_buffer , s_LEN , fmt.c_str() , value1 ) ;
+  return 
+    0 <= result && (unsigned int) result < s_LEN ?
     std::string ( s_buffer , s_buffer + result ) : 
     fmt + std::to_string ( value1 ) ;
 }

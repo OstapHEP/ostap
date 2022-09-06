@@ -30,7 +30,7 @@ else                       : logger = getLogger ( __name__ )
 # ==============================================================================
 
 
-# def test_tmva () :
+##def test_tmva () :
 if 1 < 2 :   
     from ostap.utils.cleanup import CleanUp
     data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva-' )
@@ -106,17 +106,17 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         name    = 'TestTMVA' ,   
         methods = [ # type               name   configuration
         ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
-        ( ROOT.TMVA.Types.kMLP        , "MLPT"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5,N:TestRate=5:!UseRegulator:VarTransform=G,D" ) ,
-        ( ROOT.TMVA.Types.kBDT        , "BDTG0"       , "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
-        ( ROOT.TMVA.Types.kBDT        , "BDTGT"       , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4:VarTransform=G,D" ) , 
-        ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4" ) , 
-        ( ROOT.TMVA.Types.kBDT        , "BDTB"        , "H:!V:NTrees=200:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" )  , 
-        ( ROOT.TMVA.Types.kBDT        , "BDTD"        , "H:!V:NTrees=200:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" ) ,        
-        ( ROOT.TMVA.Types.kCuts       , "Cuts"        , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
-        ( ROOT.TMVA.Types.kFisher     , "Fisher"      , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
-        ( ROOT.TMVA.Types.kFisher     , "FisherG"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10:VarTransform=G,D" ),
-        ( ROOT.TMVA.Types.kSVM        , "SVM"         , "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
-        ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=30:NSmoothBkg[0]=30:NSmoothBkg[1]=30:NSmooth=1:NAvEvtPerBin=50:VarTransform=G,D" ) ,
+        ## ( ROOT.TMVA.Types.kMLP        , "MLPT"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5,N:TestRate=5:!UseRegulator:VarTransform=G,D" ) ,
+        ## ( ROOT.TMVA.Types.kBDT        , "BDTG0"       , "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
+        ## ( ROOT.TMVA.Types.kBDT        , "BDTGT"       , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4:VarTransform=G,D" ) , 
+        ## ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4" ) , 
+        ## ( ROOT.TMVA.Types.kBDT        , "BDTB"        , "H:!V:NTrees=200:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" )  , 
+        ## ( ROOT.TMVA.Types.kBDT        , "BDTD"        , "H:!V:NTrees=200:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" ) ,        
+        ## ( ROOT.TMVA.Types.kCuts       , "Cuts"        , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
+        ## ( ROOT.TMVA.Types.kFisher     , "Fisher"      , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
+        ## ( ROOT.TMVA.Types.kFisher     , "FisherG"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10:VarTransform=G,D" ),
+        ## ( ROOT.TMVA.Types.kSVM        , "SVM"         , "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
+        ## ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=30:NSmoothBkg[0]=30:NSmoothBkg[1]=30:NSmooth=1:NAvEvtPerBin=50:VarTransform=G,D" ) ,
         ##
         ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS'        , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
         ## ( ROOT.TMVA.Types.kKNN        , 'KNN'          , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
@@ -134,6 +134,11 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     with timing ( 'for TMVA training' , logger ) : 
         weights_files = trainer.train ()
         tar_file      = trainer.tar_file
+        ## name   = trainer.name
+        ## output = trainer.output_file 
+        
+## from ostap.tools.tmva import make_Plots
+## make_Plots  ( name , output ) 
 
 # =============================================================================
 ## if os.path.exists ( trainer.output_file ) :
@@ -159,7 +164,7 @@ variables = [
 
 ## 2) create TMVA reader
 from ostap.tools.tmva import Reader
-reader = Reader( 'MyMLP' ,
+reader = Reader ( 'MyMLP' ,
                  variables     = [ ('var1' , lambda s : s.var1 )   ,
                                    ('var2' , lambda s : s.var2 )   ,
                                    ('var3' , lambda s : s.var3 ) ] ,
@@ -169,7 +174,7 @@ methods = reader.methods[:]
 
 ## # =============================================================================
 ## ## A: Use TMVA  reader
-## #  - It can be slow, but it allows on-flight varibales transformation
+## #  - It can be slow, but it allows on-flight variables transformation
 ## #  - much more efficient alternativeis <code>addTMVAResponse</code> function
 ## # =============================================================================
 
@@ -220,7 +225,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     ## B: addTMVAResponse
     #  Much better alternative to TMVA.Reader:
     #  - it has much better performance  :-) 
-    #  - but it is less flexible with  repsect to varibale  transformation :-(
+    #  - but it is less flexible with respect to varibale  transformation :-(
     # =========================================================================
     
     from ostap.tools.tmva import addTMVAResponse
