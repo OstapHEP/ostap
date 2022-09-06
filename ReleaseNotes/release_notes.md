@@ -2,8 +2,8 @@
     1. change order of arguments for constructor of `Ostap::Math::QGaussian` and `Ostap::Models::QGaussian`
     1. add set of helpful fnuctions into `Ostap/QMath.h`
     1. improve QGaussiang model 
-    1. add 2D Tsallis distribution for pt versus rapidity 
-    1. add option to sourt ( defautl is True ) for Data-like objects 
+    1. add 2D Tsallis distribution for pt versus rapidity (to be validated!)
+    1. add option to sort (default is True ) for Data-like objects 
     1. remove unnesessary ~__del__` method for `WorkManager` 
     1. add trivial filter `frame_prescale`
     1. add options `prescale_signal` and `prescale_background` for TMVA and chopping 

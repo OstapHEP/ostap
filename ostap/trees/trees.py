@@ -360,7 +360,7 @@ def tree_project ( tree               ,
                    cuts       = ''    ,
                    first      =  0    , 
                    last       = -1    , 
-                   use_frame  = False , ## use DataFrame ? 
+                   use_frame  = True  , ## use DataFrame ? 
                    progress   = False ) :
     """Helper project method
     
@@ -384,8 +384,6 @@ def tree_project ( tree               ,
 
     """
     #
-    print ( 'HERE' , histo , what , cuts , first , last , use_frame , progress ) 
-    
     assert isinstance ( histo , ROOT.TH1 ) , "Invalid type of 'histo' %s" % type ( histo )
     histo.Reset()
     
