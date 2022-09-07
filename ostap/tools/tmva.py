@@ -1989,9 +1989,9 @@ def _add_response_tree  ( tree , verbose , *args ) :
     """
             
     import ostap.trees.trees
-    from   ostap.core.core          import Ostap, ROOTCWD
-    from   ostap.io.root_file       import REOPEN
-    from   ostap.utils.proress_conf import progress_conf
+    from   ostap.core.core           import Ostap, ROOTCWD
+    from   ostap.io.root_file        import REOPEN
+    from   ostap.utils.progress_conf import progress_conf
 
     tdir  = tree.GetDirectory()
     with ROOTCWD () , REOPEN ( tdir ) as tfile : 
@@ -2081,8 +2081,8 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     assert dataset and isinstance ( dataset , ( ROOT.TTree , ROOT.RooAbsData ) ),\
            'Invalid dataset type!'
     
-    from ostap.core.core          import cpp, std, Ostap
-    from ostap.utils.proress_conf import progress_conf
+    from ostap.core.core           import cpp, std, Ostap
+    from ostap.utils.progress_conf import progress_conf
 
     _inputs       = _inputs2map_  ( inputs        )
     

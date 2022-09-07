@@ -1601,9 +1601,9 @@ def _add_response_tree ( tree , verbose , *args ) :
     """
     
     import ostap.trees.trees
-    from   ostap.core.core          import Ostap, ROOTCWD
-    from   ostap.io.root_file       import REOPEN
-    from   ostap.utils.proress_conf import progress_conf
+    from   ostap.core.core           import Ostap, ROOTCWD
+    from   ostap.io.root_file        import REOPEN
+    from   ostap.utils.progress_conf import progress_conf
 
     tdir  = tree.GetDirectory()    
     with ROOTCWD () , REOPEN ( tdir )  as tfile  : 
@@ -1775,7 +1775,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
 
     args = chopper , category , N , _inputs , _maps , options , prefix , suffix , aux
     
-    from   ostap.utils.proress_conf import progress_conf
+    from   ostap.utils.progress_conf import progress_conf
     ## add progress bar 
     if verbose : sc = Ostap.TMVA.addChoppingResponse ( dataset , progress_conf , *args )
     else       : sc = Ostap.TMVA.addChoppingResponse ( dataset ,                 *args )
