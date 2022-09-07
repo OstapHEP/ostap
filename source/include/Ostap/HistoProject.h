@@ -15,10 +15,12 @@
 // ============================================================================
 // Forward declarations 
 // =============================================================================
-class TH1       ;  // ROOT 
-class TH2       ;  // ROOT 
-class TH3       ;  // ROOT 
-class TTree     ;  // ROOT 
+class TH1        ;  // ROOT 
+class TH2        ;  // ROOT 
+class TH3        ;  // ROOT 
+class TProfile   ;  // ROOT 
+class TProfile2D ;  // ROOT 
+class TTree      ;  // ROOT 
 // =============================================================================
 class RooAbsData ; // RooFit 
 class RooAbsReal ; // RooFit 
@@ -194,8 +196,6 @@ namespace Ostap
       const unsigned long               first      = 0                                         ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
-
-
     /** make a projection of RooDataSet into the histogram 
      *  @param data        (INPUT)  input data 
      *  @param histo       (UPDATE) histogram 
@@ -214,7 +214,6 @@ namespace Ostap
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
-
     /** make a projection of RooDataSet into the histogram 
      *  @param data        (INPUT)  input data 
      *  @param progress    (INPUT)  configuration of progres bar 

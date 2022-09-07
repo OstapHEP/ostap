@@ -558,64 +558,102 @@ def report_print ( report , title  = '' , prefix = '' , more_rows = [] ) :
     table = report_as_table ( report )    
     return report_print_table ( table , title, prefix , more_rows )
 
-# ==============================================================================
-## get 1D histogram model from the actual  1D histogram
-#  @code
-#  histo = ...
-#  model = histo.model() 
-#  @endcode 
-def _th1_model ( histo ) :
-    """Get 1D histogram model from the actual  1D histogram
-    >>> histo = ...
-    >>> model = histo.model() 
-    """
-    htmp = histo 
-    if not isinstance ( histo , ROOT.TH1D ) :
-        htmp = ROOT.TH1D ()
-        histo.Copy ( htmp ) 
+
+if   ( 6 , 14 ) <= root_info :
     
-    return ROOT.RDF.TH1DModel ( htmp )
+    DF_H1Model = ROOT.ROOT.RDF.TH1DModel 
+    DF_H1Type  = ROOT.TH1D
+    DF_H2Model = ROOT.ROOT.RDF.TH2DModel 
+    DF_H2Type  = ROOT.TH2D
+    DF_H3Model = ROOT.ROOT.RDF.TH3DModel 
+    DF_H3Type  = ROOT.TH3D
 
-# ==============================================================================
-## get 2D histogram model from the actual  2D histogram
-#  @code
-#  histo = ...
-#  model = histo.model() 
-#  @endcode 
-def _th2_model ( histo ) :
-    """Get 2D histogram model from the actual 2D histogram
-    >>> histo = ...
-    >>> model = histo.model() 
-    """
-    htmp = histo 
-    if not isinstance ( histo , ROOT.TH2D ) :
-        htmp = ROOT.TH2D ()
-        histo.Copy ( htmp ) 
+    DF_P1Model = ROOT.ROOT.RDF.TProfile1DModel 
+    DF_P1Type  = ROOT.TProfile
     
-    return ROOT.RDF.TH2DModel ( htmp )
+    DF_P2Model = ROOT.ROOT.RDF.TProfile2DModel
+    DF_P2Type  = ROOT.TProfile2D
 
-# ==============================================================================
-## get 3D histogram model from the actual 3D histogram
-#  @code
-#  histo = ...
-#  model = histo.model() 
-#  @endcode 
-def _th3_model ( histo ) :
-    """Get 3D histogram model from the actual 3D histogram
-    >>> histo = ...
-    >>> model = histo.model() 
-    """
-    htmp = histo 
-    if not isinstance ( histo , ROOT.TH3D ) :
-        htmp = ROOT.TH3D ()
-        histo.Copy ( htmp ) 
+elif ( 6, 12 ) <= root_info :
+
+    DF_H1Model = ROOT.ROOT.Experimental.TDF.TH1DModel 
+    DF_H1Type  = ROOT.TH1D
+    DF_H2Model = ROOT.ROOT.Experimental.TDF.TH2DModel 
+    DF_H2Type  = ROOT.TH2D
+    DF_H3Model = ROOT.ROOT.Experimental.TDF.TH3DModel 
+    DF_H3Type  = ROOT.TH3D
+
+    DF_P1Model = ROOT.ROOT.Experimental.TDF.TProfile1DModel 
+    DF_P1Type  = ROOT.TProfile
     
-    return ROOT.RDF.TH3DModel ( htmp )
+    DF_P2Model = ROOT.ROOT.Experimental.TDF.TProfile2DModel
+    DF_P2Type  = ROOT.TProfile2D
 
-ROOT.TH1 .model = _th1_model
-ROOT.TH2 .model = _th2_model
-ROOT.TH3 .model = _th3_model
+else :
 
+    DF_H1Model = ROOT.TH1F
+    DF_H1Type  = ROOT.TH1F
+    DF_H2Model = ROOT.TH2F
+    DF_H2Type  = ROOT.TH2F
+    DF_H3Model = ROOT.TH3F 
+    DF_H3Type  = ROOT.TH3F
+    DF_P1Model = ROOT.TProfile
+    DF_P1Type  = ROOT.TProfile    
+    DF_P2Model = ROOT.TProfile
+    DF_P2Type  = ROOT.TProfile2D
+
+# =============================================================================
+## convert 1D-histogram to "model" for usage with DataFrames 
+def _h1_model_ ( histo ) :
+    """Convert 1D-histogram to 'model' for usage with DataFrames """
+    model = histo 
+    if not isinstance ( model , DF_H1Type ) :
+        model = DF_H1Type()
+        histo.Copy ( model )
+    return DF_H1Model ( model ) 
+# =============================================================================
+## convert 2D-histogram to "model" for usage with DataFrames 
+def _h2_model_ ( histo ) :
+    """Convert 2D-histogram to 'model' for usage with DataFrames """
+    model = histo 
+    if not isinstance ( model , DF_H2Type ) :
+        model = DF_H2Type()
+        histo.Copy ( model )
+    return DF_H2Model ( model ) 
+# =============================================================================
+## convert 3D-histogram to "model" for usage with DataFrames 
+def _h3_model_ ( histo ) :
+    """Convert 3D-histogram to 'model' for usage with DataFrames """
+    model = histo 
+    if not isinstance ( model , DF_H3Type ) :
+        model = DF_H3Type()
+        histo.Copy ( model )
+    return DF_H3Model ( model ) 
+# =============================================================================
+## convert 1D-profile to "model" for usage with DataFrames 
+def _p1_model_ ( histo ) :
+    """Convert 1D-profile to 'model' for usage with DataFrames """
+    model = histo 
+    if not isinstance ( model , DF_P1Type ) :
+        model = DF_P1Type()
+        histo.Copy ( model )
+    return DF_P1Model ( model ) 
+# =============================================================================
+## convert 2D-profile to "model" for usage with DataFrames 
+def _p2_model_ ( histo ) :
+    """Convert 2D-profile to 'model' for usage with DataFrames """
+    model = histo 
+    if not isinstance ( model , DF_P2Type ) :
+        model = DF_P2Type()
+        histo.Copy ( model )
+    return P2Model ( model ) 
+
+ROOT.TH1.model        = _h1_model_
+ROOT.TH2.model        = _h2_model_
+ROOT.TH3.model        = _h3_model_
+ROOT.TProfile  .model = _p1_model_
+ROOT.TProfile2D.model = _p1_model_
+    
 
 # ==============================================================================
 ## 'Lazy' project of the frame
@@ -675,11 +713,11 @@ def frame_project ( frame , model , *what ) :
     - If model is a real 1D/2D/3D-hstogram, action is *not* lazy, otherwise action *is* lazy
 
     Model can be a real histogram or 
-    - `ROOT.RDF.TH1DModel`
-    - `ROOT.RDF.TH2DModel`
-    - `ROOT.RDF.TH3DModel`
-    - anything that can be converted to `ROOT.RDF.TH1DModel`, 
-    `ROOT.RDF.TH2DModel` or `ROOT.RDF.TH3DModel` objects 
+    - `ROOT.ROOT.RDF.TH1DModel`
+    - `ROOT.ROOT.RDF.TH2DModel`
+    - `ROOT.ROOT.RDF.TH3DModel`
+    - anything that can be converted to `ROOT.ROOT.RDF.TH1DModel`, 
+    `ROOT.ROOT.RDF.TH2DModel` or `ROOT.ROOT.RDF.TH3DModel` objects 
     """
 
     print ( 'FRAMES/1' , type( frame) , type (model) , what ) 
@@ -689,101 +727,82 @@ def frame_project ( frame , model , *what ) :
     frame = as_rnode  ( frame )
     
     if 1 <= len ( what ) <= 2 :
-        if   isinstance  ( what [0 ] , string_types ) :
+        if   isinstance  ( what [ 0 ] , string_types ) :
             ww = split_string ( what [ 0 ] , ',:;' )
-            if 1 < len ( ww ) : ww.reverse() 
+            if 1 < len ( ww ) : ww.reverse()                ## ATTENTION HERE: REVERSE!! 
             what = tuple ( ww ) + what [1:]                                              
         elif isinstance ( what [ 0 ] , sequence_types ) :
             what = tuple ( w for w in what [ 0 ] ) + what [1:] 
 
-    ## strip blanks 
+    ## strip blanks
     what = tuple ( w.strip() for w in what )
     
     ## cuts are empty 
-    if 1 < len ( what ) and not what[-1] : what = what [:-1]
+    if 1 < len ( what ) and not what [ -1 ] : what = what [ :-1 ]
 
     histo = None
 
-    if   isinstance ( model , ROOT.TH3 ) and 3 == model.dim () : 
-        assert 3 <= len ( what ) <= 4, 'Invalid number of parameters %s' % str ( what )
-        
-        m = model.model () 
-        
+    #
+    ## convert historgam-like objects into 'models'
+    #
+    
+    if   isinstance ( model , ROOT.TProfile2D ) :        
         histo = model
-        if not isinstance ( model , ROOT.TH3D ) :
-            tmp  = ROOT.TH3D ()
-            model.Copy ( tmp )
-            model = tmp 
-        model = ROOT.RDF.TH3DModel ( model )
-                
+        model = model.model ()        
+    elif isinstance ( model , ROOT.TProfile   ) :        
+        histo = model
+        model = model.model ()        
+    elif isinstance ( model , ROOT.TH3 ) and 3 == model.dim () :        
+        histo = model
+        model = model.model ()                
     elif isinstance ( model , ROOT.TH2 ) and 2 == model.dim () :
-        assert 2 <= len ( what ) <= 3, 'Invalid number of parameters %s' % str ( what )
-        histo = model        
-        if not isinstance ( model , ROOT.TH2D ) :
-            tmp   = ROOT.TH2D ()
-            model.Copy ( tmp )
-            model = tmp 
-        model = ROOT.RDF.TH3DModel ( model )
-
-    elif isinstance ( model , ROOT.TH1 ) and 1 == model.dim () : 
-        assert 1 <= len ( what ) <= 2, 'Invalid number of parameters %s' % str ( what )
-        histo = model 
-        if not isinstance ( model , ROOT.TH1D ) :
-            tmp   = ROOT.TH1D ()
-            model.Copy ( tmp )
-            model = tmp 
-        model = ROOT.RDF.TH1DModel ( histo ) 
-
-    elif  isinstance ( model , ROOT.RDF.TH3DModel ) :
-        assert 3 <= len ( what ) <= 4 , 'Invalid number of parameters %s' % str ( what )
-
-    elif  isinstance ( model , ROOT.RDF.TH2DModel ) :
-        assert 2 <= len ( what ) <= 3 , 'Invalid number of parameters %s' % str ( what )
+        histo = model
+        model = model.model ()
+    elif isinstance ( model , ROOT.TH1 ) and 1 == model.dim () :
+        histo = model
+        model = model.model ()
         
-    elif  isinstance ( model , ROOT.RDF.TH1DModel ) :
-        assert 1 <= len ( what ) <= 2 , 'Invalid number of parameters %s' % str ( what )
-
-    else :
-
-        logger.error ('ERROR HERE!') 
-        
+            
     if histo : histo.Reset()
 
-
-    print ( 'FRAMES/2' , type( frame) , type (model) , what ) 
-    
     ## get the list of currently known names
-    vars = frame_columns ( frame )  
-
-    nvars = []
-
+    vars = frame_columns ( frame )
+    
+    pvars    = [] 
     current  = frame 
-    added    = False
     all_vars = set ( vars )     
     for ww in what :
 
         w = ww
         if isinstance ( ww , ROOT.TCut ) : w = str ( ww )
+
+        if not w : continue
         
-        if   w in  vars : nvars.append ( w )
-        elif w in nvars : nvars.append ( w )
+        if   w in  vars : pvars.append ( w )
+        elif w in pvars : pvars.append ( w )
         else :
             used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
-            ww      = var_name ( 'var_' , used , *what )
-            all_vars.add ( ww ) 
-            current = current.Define ( ww , w )
-            nvars.append ( ww )
-            all_vars.add ( ww ) 
-            added = True 
+            vname   = var_name ( 'var_' , used , *what )
+            current = current.Define ( vname , w )
+            all_vars.add ( vname ) 
+            pvars.append ( vname )
 
-    if   isinstance ( model , ROOT.RDF.TH3DModel ) : action = current.Histo3D ( model , *nvars )
-    elif isinstance ( model , ROOT.RDF.TH2DModel ) : action = current.Histo2D ( model , *nvars )
-    elif isinstance ( model , ROOT.RDF.TH1DModel ) : action = current.Histo1D ( model , *nvars )
+            
+    numvars = len ( pvars ) 
+            
+    if   isinstance ( model , DF_P2Model ) and 3 <= numvars <= 4 : action = current.Profile2D ( model , *pvars )
+    elif isinstance ( model , DF_P1Model ) and 2 <= numvars <= 3 : action = current.Profiel1D ( model , *pvars )
+    elif isinstance ( model , DF_H3Model ) and 3 <= numbers <= 4 : action = current.Histo3D   ( model , *pvars )
+    elif isinstance ( model , DF_H2Model ) and 2 <= numvars <= 3 : action = current.Histo2D   ( model , *pvars )
+    elif isinstance ( model , DF_H1Model ) and 1 <= numvars <= 2 : action = current.Histo1D   ( model , *pvars )
+    else :
+        raise TypeError ('Invalid model/what objects %s %s ' % ( type ( model ) , what ) ) 
 
-
+    ## ATTENTION! lazy action!
     if not histo :
         return action
 
+    ## make a loop! 
     histo += action.GetValue() 
     
     return histo 
@@ -1241,6 +1260,15 @@ for f in frames :
     
 
 _decorated_classes_ = frames
+
+_new_methods_ += [ 
+    ROOT.TH1.model        , 
+    ROOT.TH2.model        , 
+    ROOT.TH3.model        , 
+    ROOT.TProfile  .model , 
+    ROOT.TProfile2D.model ,
+    ]
+    
 _new_methods_       = tuple ( _new_methods_ ) 
 
 # =============================================================================

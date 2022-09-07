@@ -7561,6 +7561,85 @@ else :
     
 ROOT.TH1.nEntries = _h1_nEntries_
 
+
+if   ( 6 , 14 ) <= root_info :
+    
+    H1Model = ROOT.ROOT.RDF.TH1DModel 
+    H1Type  = ROOT.TH1D
+    H2Model = ROOT.ROOT.RDF.TH2DModel 
+    H2Type  = ROOT.TH2D
+    H3Model = ROOT.ROOT.RDF.TH3DModel 
+    H3Type  = ROOT.TH3D
+
+    P1Model = ROOT.ROOT.RDF.TProfile1DModel 
+    P1Type  = ROOT.TProfile
+    
+    P2Model = ROOT.ROOT.RDF.TProfile2DModel
+    P2Type  = ROOT.TProfile2D
+
+elif ( 6, 12 ) <= root_info :
+
+    H1Model = ROOT.ROOT.Experimental.TDF.TH1DModel 
+    H1Type  = ROOT.TH1D
+    H2Model = ROOT.ROOT.Experimental.TDF.TH2DModel 
+    H2Type  = ROOT.TH2D
+    H3Model = ROOT.ROOT.Experimental.TDF.TH3DModel 
+    H3Type  = ROOT.TH3D
+
+    P1Model = ROOT.ROOT.Experimental.TDF.TProfile1DModel 
+    P1Type  = ROOT.TProfile
+    
+    P2Model = ROOT.ROOT.Experimental.TDF.TProfile2DModel
+    P2Type  = ROOT.TProfile2D
+
+else :
+
+    H1Model = ROOT.TH1F
+    H1Type  = ROOT.TH1F
+    H2Model = ROOT.TH2F
+    H2Type  = ROOT.TH2F
+    H3Model = ROOT.TH3F 
+    H3Type  = ROOT.TH3F
+    P1Model = ROOT.TProfile
+    P1Type  = ROOT.TProfile    
+    P2Model = ROOT.TProfile
+    P2Type  = ROOT.TProfile2D
+
+
+# =============================================================================
+## convert 1D-histogram to "model" for usage with DataFrames 
+def _h1_model_ ( histo ) :
+    """Convert 1D-histogram to 'model' for usage with DataFrames """
+    model = histo 
+    if not isinstance ( model , H1Type ) :
+        model = H1Type()
+        histo.Copy ( model )
+    return H1Model ( model ) 
+# =============================================================================
+## convert 2D-histogram to "model" for usage with DataFrames 
+def _h2_model_ ( histo ) :
+    """Convert 2D-histogram to 'model' for usage with DataFrames """
+    model = histo 
+    if not isinstance ( model , H2Type ) :
+        model = H2Type()
+        histo.Copy ( model )
+    return H2Model ( model ) 
+# =============================================================================
+## convert 3D-histogram to "model" for usage with DataFrames 
+def _h3_model_ ( histo ) :
+    """Convert 3D-histogram to 'model' for usage with DataFrames """
+    model = histo 
+    if not isinstance ( model , H3Type ) :
+        model = H3Type()
+        histo.Copy ( model )
+    return H3Model ( model ) 
+    
+    
+    
+    
+    
+
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1   ,

@@ -748,7 +748,15 @@ Ostap::StatusCode Ostap::HistoProject::project
   else if ( dynamic_cast<TH2*>( histo ) ) { return Ostap::StatusCode ( 301 ) ; }  
   else { histo->Reset() ; } // reset the histogram 
   //
+#if   ROOT_VERSION(6,12,0) <= ROOT_VERSION_CODE
+  //
   TH1D model {} ; histo->Copy ( model ) ;
+  //
+#else
+  //
+  TH1F model {} ; histo->Copy ( model ) ;
+  //  
+#endif
   //
   const bool no_cuts = trivial ( selection ) ;
   //
@@ -809,7 +817,15 @@ Ostap::StatusCode Ostap::HistoProject::project2
   const std::string yvar   = Ostap::tmp_name ( "vy_" , yexpression ) ;
   const std::string weight = Ostap::tmp_name ( "w_"  , selection   ) ;
   //
+#if   ROOT_VERSION(6,12,0) <= ROOT_VERSION_CODE
+  //
   TH2D model {} ; histo->Copy ( model ) ;
+  //
+#else
+  //
+  TH2F model {} ; histo->Copy ( model ) ;
+  //  
+#endif
   //
   auto h = data
     .Define  ( xvar   ,                   "1.0*(" + xexpression + ")" )
@@ -870,8 +886,15 @@ Ostap::StatusCode Ostap::HistoProject::project3
   const std::string zvar   = Ostap::tmp_name ( "vz_" , yexpression ) ;
   const std::string weight = Ostap::tmp_name ( "w_"  , selection   ) ;
   //
+#if   ROOT_VERSION(6,12,0) <= ROOT_VERSION_CODE
   //
   TH3D model {} ; histo->Copy ( model ) ;
+  //
+#else
+  //
+  TH3F model {} ; histo->Copy ( model ) ;
+  //  
+#endif
   //
   auto h = data
     .Define  ( xvar   ,                   "1.0*(" + xexpression + ")" )

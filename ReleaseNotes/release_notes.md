@@ -13,6 +13,7 @@
     1. improve frame project  
     1. add progress bar to `Ostap::Trees::add_branch` and `Ostap::HistoProject::projectX`
     1. add progress bar to `Ostap::PyIterator`
+    1. tuning `frame_project`
 
 ## Backward incompatible:  
 

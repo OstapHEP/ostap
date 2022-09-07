@@ -649,13 +649,21 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
     
     assert isinstance ( histo , ROOT.TH1 ) , "Invalid type of 'histo' %s" % type ( histo )
 
+    histo.Reset()
+    
+    if   isinstance ( histo , ROOT.TProfile2D ) :
+        histo.Reset() 
+        logger.errort ('ds_project: TProfile2D is not (yet) supported')
+        return 0 , histo 
+    elif isinstance ( histo , ROOT.TProfile  ) :
+        logger.errort ('ds_project: TProfile   is not (yet) supported')
+        return 0 , histo 
+    
     assert not cuts or \
            isinstance ( cuts , string_types    ) or \
            isinstance ( cuts , ROOT.RooAbsReal ) or \
            isinstance ( cuts , ROOT.TCut       ) ,  \
            "Invalid 'cuts' %s" % type ( cuts ) 
-    
-    histo.Reset()
     
     if isinstance ( dataset , ROOT.RooAbsData ) :
         
