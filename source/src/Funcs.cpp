@@ -1037,6 +1037,7 @@ Ostap::Functions::FuncRooTH1::FuncRooTH1
   const std::string&          xvar  , 
   const RooAbsData*           data  )
   : FuncRoo1D ( histo , xvar , data )
+  , m_histo   ( histo )
 {}
 // ============================================================================
 /*  constructor from the histogram 
@@ -1078,6 +1079,7 @@ Ostap::Functions::FuncRooTH2::FuncRooTH2
   const std::string&          yvar  , 
   const RooAbsData*           data  )
   : FuncRoo2D ( histo , xvar , yvar , data )
+  , m_histo   ( histo )
 {}
 // ======================================================================
 /*  constructor from the histogram 
@@ -1124,6 +1126,7 @@ Ostap::Functions::FuncRooTH3::FuncRooTH3
   const std::string&          zvar  , 
   const RooAbsData*           data  )
   : FuncRoo3D ( histo , xvar , yvar , zvar , data )
+  , m_histo   ( histo )
 {}
 // ============================================================================
 //                                                                      The END 

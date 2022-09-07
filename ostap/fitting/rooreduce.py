@@ -2063,6 +2063,46 @@ def _rgauss3d_reduce_ ( pdf ):
 
 Ostap.Models.Gauss3D.__reduce__ = _rgauss3d_reduce_ 
 
+
+
+# =============================================================================
+## reduce Ostap::Functions::FuncRooTH1 
+def _rfth1_reduce_ ( fun ):
+    """Reduce Ostap.Functions.FuncTH1"""
+    return root_factory , ( type ( fun ) ,
+                            fun.histo () ,
+                            fun.x     () )
+# =============================================================================
+## reduce Ostap::Functions::FuncRooTH3 
+def _rfth2_reduce_ ( fun ):
+    """Reduce Ostap.Functions.FuncRooTH2"""
+    return root_factory , ( type ( fun ) ,
+                            fun.histo () ,
+                            fun.x     () , 
+                            fun.y     () )
+# =============================================================================
+## reduce Ostap::Functions::FuncRooTH3
+def _rfth3_reduce_ ( fun ):
+    """Reduce Ostap.Functions.FuncRooTH3"""
+    return root_factory , ( type ( fun ) ,
+                            fun.histo () ,
+                            fun.x     () ,
+                            fun.y     () ,
+                            fun.z     () )
+# =============================================================================
+## reduce Ostap::Functions::FuncRooFormula
+def _rfff_reduce_ ( fun ):
+    """Reduce Ostap.Functions.FuncRooFormula"""
+    return root_factory , ( type ( fun ) , fun.expression() )
+
+Ostap.Functions.FuncRooTH1     . __reduce__ = _rfth1_reduce_
+Ostap.Functions.FuncRooTH2     . __reduce__ = _rfth2_reduce_
+Ostap.Functions.FuncRooTH3     . __reduce__ = _rfth3_reduce_
+Ostap.Functions.FuncRooFormula . __reduce__ =  _rfff_reduce_
+
+
+
+
 # =============================================================================
 
 _decorated_classes_ = (
@@ -2207,7 +2247,12 @@ _decorated_classes_ = (
     Ostap.Models.Poly3DPositive        , 
     Ostap.Models.Poly3DSymPositive     , 
     Ostap.Models.Poly3DMixPositive     , 
-    Ostap.Models.Gauss3D               , 
+    Ostap.Models.Gauss3D               ,
+    ##     
+    Ostap.Functions.FuncRooTH1         , 
+    Ostap.Functions.FuncRooTH2         , 
+    Ostap.Functions.FuncRooTH3         , 
+    Ostap.Functions.FuncRooFormula     ,  
     )
 
 for t in _decorated_classes_ :
