@@ -123,7 +123,6 @@ class  ToysTask(Task) :
         random_random ( jobid )
         
         return self.initialize_local() 
-    
         
     ## get the results 
     def results ( self ) :
@@ -159,9 +158,8 @@ class  ToysTask(Task) :
                                            silent     = self.silent     ,
                                            progress   = self.progress   )
         
-        
         self.the_output = results , stats
-        
+
         return self.results() 
 
     
@@ -459,7 +457,7 @@ def parallel_toys ( pdf                       ,
 
     data  = nSplit * [ nToy ]
     if nRest : data.append ( nRest )
-    
+
     wmgr.process( task , data )
 
     results , stats = task.results () 
@@ -681,6 +679,7 @@ def parallel_toys2 (
                           accept_fun = accept_fun     , 
                           silent     = silent         ,
                           progress   = progress       )
+
 
     wmgr  = WorkManager ( silent = False , **kwargs )
 

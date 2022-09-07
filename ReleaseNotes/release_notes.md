@@ -14,6 +14,7 @@
     1. add progress bar to `Ostap::Trees::add_branch` and `Ostap::HistoProject::projectX`
     1. add progress bar to `Ostap::PyIterator`
     1. tuning `frame_project`
+    1. tweak parallel_test_toys 
 
 ## Backward incompatible:  
 

@@ -109,6 +109,7 @@ class MuteC(object):
 
 with MuteC ( True , True ) : 
     import ROOT
+    ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 # =============================================================================
 # Include path for ACLiC:

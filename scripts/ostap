@@ -30,12 +30,13 @@ The project has been designed with the kind help from Pere MATO and Andrey TSARE
 And it is based on the LoKi project: ``C++ ToolKit for Smart and Friendly Physics Analysis''
 """
 # =============================================================================
-import ROOT 
-ROOT.PyConfig.IgnoreCommandLineOptions = True
-# =============================================================================
-
+##
+import ostap.fixes.fixes
 ## perform the actual start of ostap 
 from ostap.core.run_ostap import *
+
+# =============================================================================
+
 
 # =============================================================================
 if with_ipython () :

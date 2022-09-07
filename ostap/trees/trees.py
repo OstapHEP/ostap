@@ -17,7 +17,6 @@ __all__     = (
     'Tree'            , ## helper class , needed for multiprocessing
     'ActiveBranches'  , ## context manager to activate certain branches 
     'active_branches' , ## context manager to activate certain branches
-    'progress_conf'   , ## default configuration for C++ progress bar 
   ) 
 # =============================================================================
 from   ostap.core.meta_info      import root_info
@@ -29,7 +28,6 @@ from   ostap.core.ostap_types    import ( integer_types  , long_type      ,
                                           sized_types    , num_types      ,
                                           dictlike_types , list_types     )
 from   ostap.utils.utils         import chunked
-from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.basic         import isatty, terminal_size, NoContext 
 from   ostap.utils.scp_copy      import scp_copy 
 from   ostap.utils.progress_bar  import progress_bar
@@ -118,6 +116,7 @@ def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = _large , progress = Fals
         
     else : context = NoContext () 
 
+    from   ostap.utils.progress_conf import progress_conf
     with context :
         
         if progress : pit = Ostap.PyIterator ( tree , progress_conf , cuts , first , last )
@@ -178,6 +177,7 @@ def _tc_call_ ( tree , first = 0 , last = -1  , cuts = None , progress = False ,
         from ostap.utils.basic import NoContext 
         context = NoContext () 
 
+    from   ostap.utils.progress_conf import progress_conf
     with context : 
         
         if cuts : ## use Ostap.PyIterator 
@@ -267,6 +267,7 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 , progress 
         
     vars = strings ( vars ) 
 
+    from   ostap.utils.progress_conf import progress_conf
     with context :
         
         getter = Ostap.Trees.Getter ( tree , vars ) 
@@ -449,7 +450,8 @@ def tree_project ( tree               ,
         num   = tree.Project ( hname , what , '' , '' , last - first , first )
         return num , histo 
         
-    active = tree.the_variables ( cuts , *what )    
+    active = tree.the_variables ( cuts , *what )
+    from   ostap.utils.progress_conf import progress_conf
     with ActiveBranches  ( tree , *active ) :    
         
         args = ( histo ,) + what + ( cuts , first , last ) 
@@ -2203,7 +2205,8 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     tdir  = tree.GetDirectory ()
     tpath = tree.path
 
-    from ostap.io.root_file import REOPEN 
+    from ostap.io.root_file        import REOPEN 
+    from ostap.utils.progress_conf import progress_conf
     with ROOTCWD() , REOPEN ( tdir ) as tfile :
         
         tfile.cd() 

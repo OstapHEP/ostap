@@ -19,10 +19,9 @@ import ostap.fitting.roofit
 import ostap.fitting.models         as     Models 
 from   ostap.core.core              import cpp, VE, dsID, hID, rooSilent
 import ostap.fitting.models         as     Models
-import ostap.parallel.parallel_toys as     Toys
 from   ostap.plotting.canvas        import use_canvas
 from   ostap.utils.utils            import wait 
-import ROOT, random
+import ROOT, os, random, time 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -32,8 +31,16 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-import ROOT, time 
-from   ostap.core.pyrouts           import hID 
+try :
+    import os, dill
+    if dill.__version__ < '0.3' :
+        os.environ['OSTAP_PARALLEL'] = 'GAUDIMP'
+        logger.warning ( "Redefined os.environ['OSTAP_PARALLEL']='%s'" % os.environ.get('OSTAP_PARALLEL','' ) ) 
+except :
+    pass
+
+import ostap.parallel.parallel_toys as     Toys
+
 
 mass      = ROOT.RooRealVar ( 'mass' , '', 0 , 1 )  
 gen_gauss = Models.Gauss_pdf ( 'GG' , xvar = mass )
@@ -157,7 +164,6 @@ def test_parallel_significance_toys ( ) :
 
     signal.mean .fix ( 0.4 ) 
     signal.sigma.fix ( 0.1 ) 
-
 
     ## signal + background hypothesis
     model    = Models.Fit1D      ( signal = signal , background = 1 )

@@ -29,8 +29,6 @@ from   ostap.core.core           import ( Ostap, VE, hID, dsID , strings ,
                                           valid_pointer , split_string   , ROOTCWD )
 from   ostap.core.ostap_types    import integer_types, string_types, list_types   
 from   ostap.math.base           import islong
-from   ostap.utils.progress_bar  import progress_bar 
-from   ostap.utils.progress_conf import progress_conf
 import ostap.trees.cuts     
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
@@ -734,7 +732,9 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
 
 
     args = ( histo , ) + what  + ( cuts , ) + events
- 
+
+    from   ostap.utils.progress_conf import progress_conf
+
     ## finally fill the historgams 
     if   3 == hdim :
         if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf , *args )
@@ -2098,6 +2098,7 @@ def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' ,
     elif weighted         : vnames += [ weight_var ]
 
     import csv
+    from   ostap.utils.progress_bar  import progress_bar 
 
     with f_open ( fname , mode , newline = '' ) as csv_file :
         writer = csv.writer ( csv_file , **kwargs )
