@@ -558,7 +558,8 @@ Ostap::Functions::FuncTH1::FuncTH1
 ( const Ostap::Math::Histo1D& histo , 
   const std::string&          xvar  , 
   const TTree*                tree  ) 
-  : Func1D ( histo , xvar , tree ) 
+  : Func1D  ( histo , xvar , tree ) 
+  , m_histo ( histo ) 
 {}
 // ============================================================================
 // copy constructor 
@@ -614,6 +615,7 @@ Ostap::Functions::FuncTH2::FuncTH2
   const std::string&          yvar  , 
   const TTree*                tree  ) 
   : Func2D ( histo , xvar , yvar , tree )
+  , m_histo ( histo ) 
 {}
 // ============================================================================
 // copy constructor 
@@ -674,6 +676,7 @@ Ostap::Functions::FuncTH3::FuncTH3
   const std::string&          zvar  , 
   const TTree*                tree  )
   : Func3D ( histo , xvar , yvar , zvar , tree )
+  , m_histo ( histo ) 
 {}
 // ============================================================================
 // copy constructor 

@@ -107,9 +107,11 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import ( cpp  , Ostap , items_loop ,
                                          dsID , valid_pointer , binomEff ) 
 from   ostap.core.ostap_types   import num_types, string_types, integer_types
-from   ostap.core.meta_info     import old_PyROOT 
+from   ostap.core.meta_info     import old_PyROOT
 import ostap.fitting.roofit 
 from   ostap.utils.progress_bar import ProgressBar
+from   ostap.math.reduce        import root_factory 
+from   ostap.trees.trees        import Chain 
 import ROOT, cppyy, math, sys
 # =============================================================================
 # logging 
@@ -134,6 +136,7 @@ class Selector ( Ostap.Selector ) :
     ## constructor 
     def __init__ ( self , tree = None , silence = False  ) :
 
+        if isinstance ( tree , Chain ) : tree = tree.chain 
         if tree is None : tree = ROOT.nullptr
         
         if old_PyROOT : super (Selector, self).__init__ ( self , tree ) 
@@ -154,7 +157,10 @@ class Selector ( Ostap.Selector ) :
         """
         raise NotImplementedError ("Selector: process_entry is not implemented!")
         return True
-    
+
+    def __reduce__ ( self ) :
+        return root_factory , ( type ( self ) , Chain ( self.tree ) ) 
+        
 # =============================================================================
 if old_PyROOT :
 
@@ -264,12 +270,15 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
                    logger  = logger ) :
         """ Standart constructor
         """
-        if tree is None : tree = ROOT.nullptr 
+        if   isinstance ( tree , Chain ) : tree = tree.chain 
+        elif tree is None : tree = ROOT.nullptr
+        
         self.__silence = silence
         self.__logger  = logger
         
         ## initialize the base
         self.__selection = str ( selection ).strip()
+        
         
         if   old_PyROOT : super ( SelectorWithCuts , self ).__init__ ( self , self.selection , tree )
         else            : super ( SelectorWithCuts , self ).__init__ (        self.selection , tree )
@@ -309,6 +318,12 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         raise NotImplementedError ("SelectorWithCuts: process_entry is not implemented!")
         return True
 
+    ## picklin of the object 
+    def __reduce__ ( self ) :
+        return root_factory , ( type ( self )       ,
+                                self.selection      ,
+                                self.silence        ,                                
+                                Chain ( self.tree ) )
 # =============================================================================
 if old_PyROOT :
 
@@ -486,6 +501,13 @@ class Variable(object) :
         """
         return self.__checked
 
+    def __reduce__ ( self ) :
+        return root_factory , ( type ( self )    ,
+                                self.var         ,
+                                self.description , 
+                                self.vmin        ,
+                                self.vmax        ,
+                                self.accessor    )
 
 # =============================================================================
 ## @class Variables
@@ -583,7 +605,9 @@ class Variables(object) :
         
         return False
     
-        
+    def __reduce__ ( self ) :
+        return root_factory , ( type ( self ) , self.variables  ) 
+  
 # =============================================================================
 ## Is this expression corresponds to a valid RooFit formula?
 def valid_formula ( expression , varset ) :
@@ -781,9 +805,9 @@ class SelectorWithVars(SelectorWithCuts) :
                    silence       = False           ,
                    tree          = ROOT.nullptr    ,
                    logger        = logger          ) :
+
         
-        if not name :
-            name = dsID ()
+        if not name : name = dsID ()
             
         if not fullname : fullname = name 
 
@@ -1408,7 +1432,19 @@ class SelectorWithVars(SelectorWithCuts) :
         if self.__notifier :
             self.__notifier.exit()
             self.__notifier = None  
-            
+
+    ## pickling of the object 
+    def __reduce__ ( self ) :
+        return root_factory , ( type ( self )          ,
+                                self.variables         ,
+                                self.selection         ,                                
+                                self.cuts              ,
+                                self.roo_cuts          ,
+                                self.name              ,
+                                self.fullname          ,
+                                self.silence           ,
+                                OT.Chain ( self.tree ) )
+    
 # =============================================================================
 import os
 from   ostap.core.workdir import workdir

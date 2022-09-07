@@ -29,8 +29,10 @@ from   ostap.core.ostap_types    import ( integer_types  , long_type      ,
                                           dictlike_types , list_types     )
 from   ostap.utils.utils         import chunked
 from   ostap.utils.basic         import isatty, terminal_size, NoContext 
-from   ostap.utils.scp_copy      import scp_copy 
+from   ostap.utils.scp_copy      import scp_copy
+from   ostap.math.reduce         import root_factory
 from   ostap.utils.progress_bar  import progress_bar
+import ostap.trees.treereduce 
 import ostap.histos.histos
 import ostap.trees.param
 import ROOT, os, math, array 
@@ -2569,7 +2571,6 @@ class Chain(CleanUp) :
         ##
         same_host      = origin == self.__host
         files_         = []
-
         self.__lens    = ()
         self.__chain   = None
         
@@ -2639,10 +2640,9 @@ class Chain(CleanUp) :
         
         >>> ch = Chain ( name = 'n', files = [ ... ] )
         """
-        assert ( name and files                  ) or \
-               ( name and files and tree is True ) or \
-               isinstance ( tree , Chain         ) or \
-               ( isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree  ) ) ,\
+        assert   isinstance ( tree , Chain       ) or \
+               ( name and files                  ) or \
+               ( isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree  ) )   ,\
                "Invalid tree/name/files combination: %s/%s%s" % ( tree , name , files    )
         
         assert isinstance ( first , int ) and  0 <= first     , \
@@ -2656,8 +2656,8 @@ class Chain(CleanUp) :
         import socket 
         self.__host    = socket.getfqdn ().lower()
 
-        ## copy-like 
-        if isinstance  ( tree , Chain ) :
+        ## copy-like, ignore other arguments  
+        if isinstance  ( tree , Chain ) : 
             name    = tree.name 
             files   = tree.files
             first   = tree.first
@@ -2671,7 +2671,7 @@ class Chain(CleanUp) :
             self.__name  = name
             self.__files = files
 
-            if tree is True : 
+            if isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) : 
                 chain = self.__create_chain() 
                 assert valid_pointer ( chain ), 'Invalid TChain!'
                 assert len ( files ) == len ( chain.files() ) , 'Invalid length of files'
@@ -2852,7 +2852,7 @@ class Chain(CleanUp) :
         return len ( self.__chain )
     
     def __create_chain ( self ) :
-        """``chain'' : get the underlying tree/chain"""
+        """'chain' : get the underlying tree/chain"""
         import ROOT 
         c = ROOT.TChain ( self.name )
         for f in self.__files  : c.Add ( f )

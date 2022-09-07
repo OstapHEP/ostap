@@ -33,7 +33,6 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-07-15"
 __version__ = "$Revision$"
 __all__ = (
-    'frexp10'     , ## similar to math.frexp but with radix=10
     'round_N'     , ## round floating value to N-significant digits
     'pdg_round'   , ## round value,error-pair according to PDG prescription
     'pdg_format'  , ## format value&error according to PDF prescription
@@ -41,10 +40,10 @@ __all__ = (
     'pdg_format3' , ## format value+3errors according to PDG
     )
 # ===============================================================================
-import ROOT,  math, sys, enum  
 from   ostap.math.ve          import VE
 from   ostap.math.base        import frexp10, isfinite, isclose  
 from   ostap.core.ostap_types import integer_types, string_types 
+import ROOT,  math, sys, enum  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -79,10 +78,11 @@ def ref_error ( mode , error , *errors ) :
     if isinstance ( mode , string_types ) :
         
         umode = model.upper()
-        if   umode                                     : umode = ErrMode.TOTAL  .name 
-        elif umode in ( 'MIMIMAL' , 'MINIMUM' , 'MN' ) : umode = ErrMode.MIN    .name 
-        elif umode in ( 'MAXIMAL' , 'MAXIMUM' , 'MX' ) : umode = ErrMode.MAX    .name 
-        elif umode in ( 'A' , 'AV', 'AVE'            ) : umode = ErrMode.AVERAGE.name 
+        
+        if   umode in ( 'MIMIMAL' , 'MINIMUM' , 'MIN' , 'MN' ) : umode = ErrMode.MIN    .name 
+        elif umode in ( 'MAXIMAL' , 'MAXIMUM' , 'MAX' , 'MX' ) : umode = ErrMode.MAX    .name 
+        elif umode in ( 'A' , 'AV', 'AVE' , 'MEAN'           ) : umode = ErrMode.AVERAGE.name 
+        elif umode                                             : umode = ErrMode.TOTAL  .name 
         
         assert umode in ErrMode.__members__ ,\
                'ref_error: Unknown string mode: %s' % mode 
@@ -525,7 +525,7 @@ def pdg_format ( value , error , latex = False ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
-def pdg_format2( value , error1 , error2  , latex = False , mode = ErrMode.TOTAL ) :
+def pdg_format2( value , error1 , error2  , latex = False , mode = 'min' ) :
     """Round value/error accoridng to PDG prescription and format it for print
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
@@ -655,7 +655,7 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = ErrMode.TOTAL
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
-def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'total' ) :
+def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'min' ) :
     """Round value/error accoridng to PDG prescription and format it for print
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001

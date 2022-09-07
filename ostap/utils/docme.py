@@ -23,7 +23,7 @@ if python_version.major > 2 :
     primitive =  int        , float , bool , str , bytes   , list , dict , set
 else :
     primitive =  int , long , float , bool , str , unicode , list , dict , set
-    
+
 # =============================================================================
 ## simple function to allow coherent self-print for all ostap modules
 #  @code
@@ -91,16 +91,17 @@ def docme( module , symbols = {} , logger = None ) :
         for key in _all_ :
             sym = getattr ( module , key )            
             if isinstance ( sym , primitive ) : continue
-            if isinstance ( sym , (tuple, list, set) ) :
+            if isinstance ( sym , ( tuple , list, set ) ) :
                 logger.info ( "Symbol ``%s''\n# - %s" % ( key , str ( sym ) ) )                
             elif hasattr ( sym , '__doc__' ) and sym.__doc__ :
                 d = sym.__doc__.replace( '\n' , '\n#' )
                 logger.info ( "Symbol ``%s''\n# - %s" % ( key , d ) )
             else : 
-                logger.info ( "``%s''" %        key ) 
+                logger.info ( "``%s''" %        key )
+
             _done_.add ( sym ) 
         logger.info ( 80*'*' )
-
+        
     _klasses_  = getattr ( module , '_decorated_classes_' , () )
     _klasses_  = set ( _klasses_ ) 
     if _klasses_ :

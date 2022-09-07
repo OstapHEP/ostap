@@ -90,7 +90,7 @@ __all__     = (
 from   ostap.tools.tmva       import Trainer as TMVATrainer
 from   ostap.tools.tmva       import Reader  as TMVAReader
 from   ostap.tools.tmva       import ( dir_name     , good_for_negative,
-                                       trivial_opts , progress_conf ) 
+                                       trivial_opts ) 
 from   ostap.core.core        import WSE 
 from   ostap.core.pyrouts     import hID, h1_axis, Ostap 
 from   ostap.core.ostap_types import integer_types 
@@ -1601,9 +1601,10 @@ def _add_response_tree ( tree , verbose , *args ) :
     """
     
     import ostap.trees.trees
-    from   ostap.core.core    import Ostap, ROOTCWD
-    from   ostap.io.root_file import REOPEN
-    
+    from   ostap.core.core          import Ostap, ROOTCWD
+    from   ostap.io.root_file       import REOPEN
+    from   ostap.utils.proress_conf import progress_conf
+
     tdir  = tree.GetDirectory()    
     with ROOTCWD () , REOPEN ( tdir )  as tfile  : 
         
@@ -1758,7 +1759,8 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
 
 
     assert isinstance ( chopper , ROOT.RooAbsReal ), 'Invalid chopper type %s' % chopper 
-        
+
+
     category = ROOT.RooCategory ( category_name ,
                                   'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) ) 
     for i in range ( N ) :
@@ -1773,6 +1775,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
 
     args = chopper , category , N , _inputs , _maps , options , prefix , suffix , aux
     
+    from   ostap.utils.proress_conf import progress_conf
     ## add progress bar 
     if verbose : sc = Ostap.TMVA.addChoppingResponse ( dataset , progress_conf , *args )
     else       : sc = Ostap.TMVA.addChoppingResponse ( dataset ,                 *args )

@@ -36,7 +36,7 @@ namespace Ostap
     {
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Functions::FuncFormula,1) ;
+      ClassDefOverride(Ostap::Functions::FuncFormula,2) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -45,9 +45,10 @@ namespace Ostap
        *  @param tree       the tree 
        *  @param name       the name for the formula 
        */
-      FuncFormula ( const std::string& expression            , 
-                    const TTree*       tree       =  nullptr ,
-                    const std::string& name       = ""       ) ;
+      FuncFormula 
+      ( const std::string& expression            , 
+        const TTree*       tree       =  nullptr ,
+        const std::string& name       = ""       ) ;
       // ======================================================================
       /// copy constructor 
       FuncFormula ( const  FuncFormula& right )  ;
@@ -65,6 +66,11 @@ namespace Ostap
       // ======================================================================
       ///  evaluate the formula for  TTree
       double operator() ( const TTree* tree ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the expressoon
+      const std::string& expression() const { return m_expression ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -94,7 +100,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Functions::Func1D,1) ;
+      ClassDefOverride(Ostap::Functions::Func1D,2) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -135,6 +141,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      const std::string& x() const { return m_xvar_exp ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       Bool_t Notify   () override ; 
       // ======================================================================
     private:
@@ -167,7 +177,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Functions::Func2D,1) ;
+      ClassDefOverride(Ostap::Functions::Func2D,2) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -212,6 +222,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      const std::string& x () const { return m_xvar_exp ; }
+      const std::string& y () const { return m_yvar_exp ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       Bool_t Notify   () override ; 
       // ======================================================================
     private:
@@ -251,7 +266,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Functions::Func3D,1) ;
+      ClassDefOverride(Ostap::Functions::Func3D,2) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -297,6 +312,12 @@ namespace Ostap
       // ======================================================================
       ///  evaluate the function for TTree
       double operator () ( const TTree* tree ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      const std::string& x () const { return m_xvar_exp ; }
+      const std::string& y () const { return m_yvar_exp ; }
+      const std::string& z () const { return m_zvar_exp ; }
       // ======================================================================
     public:
       // ======================================================================

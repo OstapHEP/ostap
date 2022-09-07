@@ -37,7 +37,6 @@ __all__     = (
 from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning 
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
 from   ostap.core.meta_info    import root_version_int, root_info  
-from   ostap.trees.trees       import progress_conf
 import ostap.io.root_file 
 import ROOT, os, math, tarfile, shutil, itertools  
 # =============================================================================
@@ -1990,13 +1989,15 @@ def _add_response_tree  ( tree , verbose , *args ) :
     """
             
     import ostap.trees.trees
-    from   ostap.core.core       import Ostap, ROOTCWD
-    from   ostap.io.root_file    import REOPEN
+    from   ostap.core.core          import Ostap, ROOTCWD
+    from   ostap.io.root_file       import REOPEN
+    from   ostap.utils.proress_conf import progress_conf
 
     tdir  = tree.GetDirectory()
     with ROOTCWD () , REOPEN ( tdir ) as tfile : 
         
         tdir.cd()
+
 
         ## add the progress bar 
         if verbose : sc = Ostap.TMVA.addResponse ( tree , progress_conf , *args )
@@ -2080,7 +2081,8 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     assert dataset and isinstance ( dataset , ( ROOT.TTree , ROOT.RooAbsData ) ),\
            'Invalid dataset type!'
     
-    from ostap.core.core import cpp, std, Ostap
+    from ostap.core.core          import cpp, std, Ostap
+    from ostap.utils.proress_conf import progress_conf
 
     _inputs       = _inputs2map_  ( inputs        )
     
