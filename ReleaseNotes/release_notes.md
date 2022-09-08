@@ -15,6 +15,7 @@
     1. add progress bar to `Ostap::PyIterator`
     1. tuning `frame_project`
     1. tweak parallel_test_toys 
+    1. issue warning message for `AsymptorocError=True` for ROOT<(6,27), see [ROOT-PR-11282](https://github.com/root-project/root/pull/11282)
 
 ## Backward incompatible:  
 
@@ -22,6 +23,7 @@
 
    1. fix typo in `parallel_toys` - Thanks Dima Pereima for reporting the problem
    1. set of minor fixes 
+   1. fix recenly intorduced bug in pyselectors 
 
 # v1.9.2.4
 

@@ -157,9 +157,13 @@ class Selector ( Ostap.Selector ) :
         """
         raise NotImplementedError ("Selector: process_entry is not implemented!")
         return True
-
+    
+    ## reduce the object 
     def __reduce__ ( self ) :
-        return root_factory , ( type ( self ) , Chain ( self.tree ) ) 
+        """Reduce the object"""
+        tree = self.tree 
+        if tree : return root_factory , ( type ( self ) , Chain ( tree ) ) 
+        else    : return root_factory , ( type ( self ) , ) 
         
 # =============================================================================
 if old_PyROOT :
@@ -318,12 +322,18 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         raise NotImplementedError ("SelectorWithCuts: process_entry is not implemented!")
         return True
 
-    ## picklin of the object 
+    ## reduce of the object 
     def __reduce__ ( self ) :
-        return root_factory , ( type ( self )       ,
-                                self.selection      ,
-                                self.silence        ,                                
-                                Chain ( self.tree ) )
+        """Reduce the object"""
+        tree = self.tree
+        if tree : return root_factory , ( type ( self )  ,
+                                          self.selection ,
+                                          self.silence   ,                                
+                                          Chain ( tree ) )
+        else    : return root_factory , ( type ( self )  ,
+                                          self.selection ,
+                                          self.silence   ) 
+            
 # =============================================================================
 if old_PyROOT :
 
@@ -399,9 +409,6 @@ class Variable(object) :
         assert accessor is None or callable ( accessor ) or isinstance ( accessor , str )  , \
                "Variable: illegal type for 'accessor' %s/%s"  % ( accessor    , type ( accessor    ) )
 
-        self.__vmin = None
-        self.__vmax = None
-        
         if isinstance ( var , str ) :
 
             var = var.strip() 
@@ -421,15 +428,17 @@ class Variable(object) :
             description = description.replace('\n',' ')
 
             ## create the variable
-            self.__vmin = vmin 
-            self.__vmax = vmax 
-            var = ROOT.RooRealVar ( var , description , vmin , vmax ) 
-
-        if accessor is None :
-            varname  = var.GetName()
-            accessor = varname
+            var = ROOT.RooRealVar ( var , description , vmin , vmax )
             
+        ## redefine min/max  
+        self.__vmin , self.__vmax = var.minmax()                    
+        
         self.__formula = None
+        if accessor is None :
+            varname        = var.GetName()
+            accessor       = varname
+            self.__formula = varname 
+            
         if isinstance  ( accessor , str ) :
             accessor = accessor.strip() 
             if accessor  : 
@@ -501,13 +510,15 @@ class Variable(object) :
         """
         return self.__checked
 
+    ## reduce the object
     def __reduce__ ( self ) :
+        """Reduce the object"""
         return root_factory , ( type ( self )    ,
-                                self.var         ,
+                                self.var.name    ,
                                 self.description , 
                                 self.vmin        ,
                                 self.vmax        ,
-                                self.accessor    )
+                                self.formula if self.formula else self.accessor )
 
 # =============================================================================
 ## @class Variables
@@ -604,8 +615,10 @@ class Variables(object) :
             return item in self.__varset
         
         return False
-    
+
+    ## reduce the object 
     def __reduce__ ( self ) :
+        ## redcue the object 
         return root_factory , ( type ( self ) , self.variables  ) 
   
 # =============================================================================
@@ -636,9 +649,7 @@ def valid_formula ( expression , varset ) :
     from ostap.logger.utils import mute 
     with mute ( True , True ) :
         return Ostap.validFormula ( expression , varset )
-        
-
-    
+            
 # ==============================================================================
 ## @class SelStat
 #  Helper class to keep the statististics for SelectorWithVars 
@@ -689,6 +700,14 @@ class SelStat(object) :
                                                                self.__processed ,
                                                                self.__skipped   )
     __repr__ = __str__
+
+    ## reduce the object 
+    def __reduce__ ( self ) :
+        """Reduce the object"""
+        return root_factory , ( type ( self )   ,
+                                self.total      ,
+                                self.processed  ,
+                                self.skipped    )
     
 # ==============================================================================
 ## Define generic selector to fill RooDataSet from TChain
@@ -1433,17 +1452,28 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__notifier.exit()
             self.__notifier = None  
 
-    ## pickling of the object 
+    # =========================================================================
+    ## reduce the object 
     def __reduce__ ( self ) :
-        return root_factory , ( type ( self )          ,
-                                self.variables         ,
-                                self.selection         ,                                
-                                self.cuts              ,
-                                self.roo_cuts          ,
-                                self.name              ,
-                                self.fullname          ,
-                                self.silence           ,
-                                OT.Chain ( self.tree ) )
+        """Reduce the object"""
+        tree = self.tree
+        if tree : return root_factory , ( type ( self )  ,
+                                          self.variables ,
+                                          self.selection ,                                
+                                          self.cuts      ,
+                                          self.roo_cuts  ,
+                                          self.name      ,
+                                          self.fullname  ,
+                                          self.silence   ,
+                                          Chain ( tree ) )
+        else    : return root_factory , ( type ( self )  ,
+                                          self.variables ,
+                                          self.selection ,                                
+                                          self.cuts      ,
+                                          self.roo_cuts  ,
+                                          self.name      ,
+                                          self.fullname  ,
+                                          self.silence   )
     
 # =============================================================================
 import os
@@ -1467,7 +1497,9 @@ class SelectorWithVarsCached(SelectorWithVars) :
                    cuts         = None            ,  ## Tree-based cuts 
                    roo_cuts     = ''              ,  ## RooFit-based cuts 
                    name         = ''              ,
-                   fullname     = ''              ) : 
+                   fullname     = ''              ,
+                   tree         = ROOT.nullptr    ,
+                   logger       = logger          ) : 
 
         SelectorWithVars.__init__( self ,
                                    variables = variables ,
@@ -1475,11 +1507,14 @@ class SelectorWithVarsCached(SelectorWithVars) :
                                    cuts      = cuts      ,
                                    roo_cuts  = roo_cuts  ,
                                    name      = name      ,
-                                   fullname  = fullname  )
+                                   fullname  = fullname  ,
+                                   silence   = silence   ,
+                                   tree      = tree      ,
+                                   logger    = logger    )
 
         # Try load from cache
         self._loaded_from_cache = False
-        self._cachepath = self._compute_cache_name()
+        self._cachepath         = self._compute_cache_name()
 
         if self._loadcache():
             self.Process = lambda entry: 1
@@ -1547,9 +1582,8 @@ class SelectorWithVarsCached(SelectorWithVars) :
 
         return 1
 
-
 # =============================================================================
-## Is new efficienct fill machinery activated? 
+## Is new (very efficient) fill machinery activated? 
 DataSet_NEW_FILL = ( 6 , 26 ) <= root_info 
 
 # =============================================================================
@@ -1834,7 +1868,7 @@ def make_dataset ( tree              ,
     import ostap.trees.cuts
     import ostap.fitting.roofit
 
-    from ostap.frames.frames import DataFrame, report_print  
+    from ostap.frames.frames import DataFrame, report_print, frame_columns   
     frame = DataFrame ( tree )
 
     total = len ( tree )
@@ -1867,6 +1901,8 @@ def make_dataset ( tree              ,
         ## define new variable 
         frame = frame.Define ( v.name , v.formula )
 
+        columns |= set ( frame_columns ( frame  ) )
+        
     ## define 'range/limit' cuts: 
     for c , f in limits :
         frame = frame.Filter ( c , f )

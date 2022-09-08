@@ -1447,13 +1447,9 @@ class Fit3DSym (PDF3) :
 
         if   bkg_2xy and isinstance ( bkg_2xy , PDF2 ) :
 
-            print ( 'HERE/1' , bkg_2xy ) 
             self.__bkg_2xy = bkg_2xy
-            print ( 'HERE/2' , bkg_2xy ) 
             self.__bkg_2xz = bkg_2xy.clone ( xvar = self.xvar , yvar = self.zvar , name_prefix = 'Bkg2XZ_' , name_suffix = suffix )
-            print ( 'HERE/3' , self.__bkg_2xz  )             
             self.__bkg_2yz = bkg_2xy.clone ( xvar = self.yvar , yvar = self.zvar , name_prefix = 'Bkg2YZ_' , name_suffix = suffix )
-            print ( 'HERE/3' , self.__bkg_2yz  )             
             
         elif bkg_2xy and isinstance ( bkg_2xy , ( tuple , list ) ) :
 

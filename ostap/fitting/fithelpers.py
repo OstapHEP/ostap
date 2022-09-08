@@ -670,8 +670,10 @@ class FitHelper(VarMaker) :
                 elif       dataset and     dataset.isWeighted() and not a :
                     self.warning ('parse_args: AsymptoticError-flag is False for     weighted dataset')                    
 
+                if a and root_info <  ( 6 , 27 ) :
+                    self.warning ("'AsymptoticError=True' is buggy for this version of ROOT, (ROOT-PR-11282)")
                 if a and root_info <= ( 6 , 26 ) :
-                    self.warning ("'Asymptotic=True' will crash if Title!=Name (ROOT-10668)")
+                    self.warning ("'AsymptoticError=True' will crash if Title!=Name (ROOT-10668)")
                     
                 _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
                     

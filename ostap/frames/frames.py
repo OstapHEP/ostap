@@ -720,8 +720,6 @@ def frame_project ( frame , model , *what ) :
     `ROOT.ROOT.RDF.TH2DModel` or `ROOT.ROOT.RDF.TH3DModel` objects 
     """
 
-    print ( 'FRAMES/1' , type( frame) , type (model) , what ) 
-            
     if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )
     
     frame = as_rnode  ( frame )

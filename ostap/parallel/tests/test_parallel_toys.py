@@ -31,13 +31,13 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-try :
-    import os, dill
-    if dill.__version__ < '0.3' :
-        os.environ['OSTAP_PARALLEL'] = 'GAUDIMP'
-        logger.warning ( "Redefined os.environ['OSTAP_PARALLEL']='%s'" % os.environ.get('OSTAP_PARALLEL','' ) ) 
-except :
-    pass
+## try :
+##     import os, dill
+##     if dill.__version__ < '0.3' :
+##         os.environ['OSTAP_PARALLEL'] = 'GAUDIMP'
+##         logger.warning ( "Redefined os.environ['OSTAP_PARALLEL']='%s'" % os.environ.get('OSTAP_PARALLEL','' ) ) 
+## except :
+##     pass
 
 import ostap.parallel.parallel_toys as     Toys
 
