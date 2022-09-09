@@ -14,7 +14,7 @@
     1. improve frame progress 
     1. improve frame project  
     1. add progress bar to `Ostap::Trees::add_branch` and `Ostap::HistoProject::projectX`
-    1. add progress bar to `Ostap::PyIterator`
+    1. add progress bar to `Ostap::PyIterator` 
     1. tuning `frame_project`
     1. tweak parallel_test_toys 
     1. issue warning message for `AsymptorocError=True` for ROOT<(6,27), see [ROOT-PR-11282](https://github.com/root-project/root/pull/11282)
