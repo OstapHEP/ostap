@@ -1942,7 +1942,7 @@ def tmvaGUI ( filename , new_canvas = True ) :
 def _inputs2map_ ( inputs ) :
     """Convert input structure to Ostap.TMVA.MAPS
     """
-    from ostap.core.core import cpp, std, Ostap
+    from ostap.core.core import cpp, std, Ostap 
     MAP     = std.map ( 'std::string', 'std::string' )
     
     _inputs = MAP()
@@ -1950,7 +1950,7 @@ def _inputs2map_ ( inputs ) :
            'Invalid type of "inputs": %s' % inputs
     
     if   isinstance ( inputs , dict  ) :
-        for k , v  in inputs.itertems() : _inputs[k] = v
+        for k , v  in items_loop ( inputs ) : _inputs[k] = v
     elif isinstance ( inputs , ( tuple , list ) ) :
         for i in inputs :
             if isinstance ( i , str ) : k , v = i , i

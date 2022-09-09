@@ -29,6 +29,8 @@ __all__     = (
     'HepData'      , ## HepDATA record 
     ) 
 # =============================================================================
+import ostap.histos.histos 
+import ostap.histos.graphs 
 import ROOT
 # =============================================================================
 # logging 
@@ -40,8 +42,6 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'HepDATA format and conversion routines')
 # =============================================================================
 from sys import version_info as python_version
-if python_version.major > 2 : items_loop = lambda d : d.    items () 
-else                        : items_loop = lambda d : d.iteritems () 
     
 # =============================================================================
 ## fields required for each dataset
@@ -81,7 +81,8 @@ class HepDataBase(object) :
         ##
         from copy import deepcopy 
         self.meta = deepcopy(metainfo)
-        for k , v in items_loop ( kwargs ) :
+        for k , v in kwargs :
+            v = kwargs [ k ] 
             if isinstance ( v , (list,tuple) ) :
                 for i in v :
                     if not i in self.meta[k] : self.meta[k].append ( i )
@@ -291,7 +292,7 @@ def _h1_hepdata_ ( histo      ,
     
     index = 0 
 
-    for item in iteritems( histo ) :
+    for item in histo.items () :
         
         i = item[0] ## bin-number 
         x = item[1] ## x
@@ -362,7 +363,7 @@ def _tgae_hepdata_ ( graph      ,
     lines = [ '*data: x : y ' ]
 
     index = 0 
-    for item in items_loop ( graph ) :
+    for item in graph.items () :
         
         i   = item[0] ## bin-number 
         x   = item[1] ## x

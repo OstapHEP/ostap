@@ -1,3 +1,5 @@
+# v1.9.2.6
+
 ## New features: 
     1. change order of arguments for constructor of `Ostap::Math::QGaussian` and `Ostap::Models::QGaussian`
     1. add set of helpful fnuctions into `Ostap/QMath.h`
@@ -24,6 +26,7 @@
    1. fix typo in `parallel_toys` - Thanks Dima Pereima for reporting the problem
    1. set of minor fixes 
    1. fix recenly intorduced bug in pyselectors 
+   1. fix a typo in `tmva.py`
 
 # v1.9.2.4
 

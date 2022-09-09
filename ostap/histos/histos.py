@@ -2460,7 +2460,6 @@ def _h1_oper_ ( h1 , h2 , oper ) :
     result.ResetStats() 
     return result
 
-
 # =============================================================================
 ## operation with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
