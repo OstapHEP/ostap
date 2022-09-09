@@ -21,7 +21,7 @@ from   ostap.core.core              import cpp, VE, dsID, hID, rooSilent
 import ostap.fitting.models         as     Models
 from   ostap.plotting.canvas        import use_canvas
 from   ostap.utils.utils            import wait 
-import ROOT, os, random, time 
+import ROOT, sys, os, random, time 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -31,13 +31,16 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-## try :
-##     import os, dill
-##     if dill.__version__ < '0.3' :
-##         os.environ['OSTAP_PARALLEL'] = 'GAUDIMP'
-##         logger.warning ( "Redefined os.environ['OSTAP_PARALLEL']='%s'" % os.environ.get('OSTAP_PARALLEL','' ) ) 
-## except :
-##     pass
+try :
+    if sys.version_info < ( 3, 0 ) :
+        from ostap.core.meta_info import root_info
+        if ( 6 , 18 ) <= root_info < ( 6 , 20 ) : 
+            import dill
+            if dill.__version__ < '0.3' :
+                os.environ['OSTAP_PARALLEL'] = 'GAUDIMP'
+                logger.warning ( "Redefined os.environ['OSTAP_PARALLEL']='%s'" % os.environ.get('OSTAP_PARALLEL','' ) ) 
+except :
+    pass
 
 import ostap.parallel.parallel_toys as     Toys
 

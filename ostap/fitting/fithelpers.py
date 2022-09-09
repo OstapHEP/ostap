@@ -2390,7 +2390,7 @@ class H1D_dset(XVar,VarMaker) :
         assert histo and isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim () , "'histo' is not ROOT.TH1"
 
         ## set the base from VarMaker 
-        self.name = 'H1D_dset(%s)' % histo.GetName ()
+        self.name = self.new_name ( 'H1D_dset(%s)' % histo.GetName() )
         
         if not xaxis : xaxis = histo.xminmax() 
 
@@ -2504,7 +2504,7 @@ class H2D_dset(XVar,YVar,VarMaker) :
         assert histo and isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim() , "'histo' is not ROOT.TH2"
 
         ## set the base from VarMaker 
-        self.name = 'H2D_dset(%s)' % histo.GetName ()
+        self.name = self.new_name ( 'H2D_dset(%s)' % histo.GetName() )
 
         if not xaxis : xaxis = histo.xminmax() 
         if not yaxis : yaxis = histo.yminmax() 
@@ -2626,8 +2626,7 @@ class H3D_dset(XVar,YVar,ZVar,VarMaker) :
         assert histo and isinstance ( histo , ROOT.TH3 ) and 3 == histo.dim () , "'histo' is not ROOT.TH3"
 
         ## set the base from VarMaker 
-        self.name = 'H3D_dset(%s)' % histo.GetName ()
-
+        self.name = self.new_name ( 'H3D_dset(%s)' % histo.GetName() )
 
         if not xaxis : xaxis = histo.xminmax()
         if not yaxis : yaxis = histo.yminmax()

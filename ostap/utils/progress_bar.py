@@ -400,12 +400,12 @@ class RunningBar(object):
     ...    do something here
     
     """
-    def __init__(self, *args ,**kwargs ) :
+    def __init__ ( self, *fargs , **kwargs ) :
         
         self.silent   = kwargs.get( 'silent' , False ) or not isatty() 
 
         self.amount   = 0 
-        self.freq     = int ( kwargs.get( 'frequence' , 100 ) )
+        self.freq     = int ( kwargs.get ( 'frequence' , 100 ) )
         self.prefix   = kwargs.get ( 'description' , ''     ) 
         self.update_amount() 
         

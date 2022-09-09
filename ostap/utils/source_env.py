@@ -87,9 +87,8 @@ def source_env ( scripts , silent = False , lmax1 = 65 , lmax2 = 55 ) :
             logger.error ( "Invalid script '%s' for sourcing! skip it!" % script )
             
         command = 'sh -c "source %s && env"' % script 
-        args    = shlex.split ( command )
-        proc    = subprocess.Popen ( args                     ,
-                                     stdout = subprocess.PIPE ) 
+        pargs   = shlex.split ( command )
+        proc    = subprocess.Popen ( pargs , stdout = subprocess.PIPE ) 
     ## stderr = subprocess.PIPE )
     ## error = False 
     ## for line in proc.stderr :

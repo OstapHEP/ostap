@@ -225,7 +225,7 @@ class TakeIt(object):
         ROOT.SetOwnership ( self.other , True )
         return self.other
     
-    def __exit__  ( self , *args ) :
+    def __exit__  ( self , *_ ) :
 
         o = self.other
 
@@ -646,9 +646,9 @@ def counted ( f ):
     >>> @counted
     >>> def fun2 ( ...  ) : return ...
     """
-    def wrapped ( *args, **kwargs ):
+    def wrapped ( *fargs, **kwargs ):
         wrapped.calls += 1
-        return f( *args , **kwargs )
+        return f( *fargs , **kwargs )
     wrapped.calls = 0
     return wrapped
 
@@ -1142,21 +1142,16 @@ except ImportError :
         return ret
 
 # =============================================================================
-if ( 3 , 0 ) <= python_version :
-    
-    from itertools import zip_longest
-    
-else :
-    
-    from itertools import izip_longest as zip_longest
+if ( 3 , 0 ) <= python_version : from itertools import zip_longest
+else                           : from itertools import izip_longest as zip_longest
 
 # =============================================================================
 ## Collect data into fixed-length chunks or blocks"
 def grouper ( iterable , n , fillvalue = None ):
     "Collect data into fixed-length chunks or blocks"
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
-    args = [iter(iterable)] * n
-    return zip_longest(*args, fillvalue=fillvalue)
+    nargs =  [ iter ( iterable ) ]  * n
+    return zip_longest ( *nargs , fillvalue = fillvalue )
 
 # =============================================================================
 ## Create (infinite or finite) iterable from other iterable or non-iterable
@@ -1414,9 +1409,9 @@ class NumCalls (object):
         self.__func  = func
         self.__count = 0
         functools.update_wrapper ( self, func ) 
-    def __call__ ( self, *args , **kwargs ) :
+    def __call__ ( self, *cargs , **kwargs ) :
         self.__count +=1
-        return self.__func ( *args , **kwargs )
+        return self.__func ( *cargs , **kwargs )
     @property
     def count ( self ) :
         """``count'': number of times the function was invoked"""
@@ -1540,8 +1535,8 @@ def hadd ( self , files , output = None , opts = "-ff" ) :
         import glob
         files = [ f for f in glob.iglob ( files ) ] 
                     
-    args    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in files ]
-    subprocess.check_call ( args )
+    cargs    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in files ]
+    subprocess.check_call ( cargs )
     
     if os.path.exists ( output ) and os.path.isfile ( output ) :
         return output 

@@ -229,9 +229,9 @@ class HepData(HepDataBase) :
     ## the most important line: the proper delegation
     def formatData ( self , the_lines ) :
         """The most important line: the proper delegation"""
-        args       = (self.syst1,self.syst2,self.syst3)
+        fargs      = self.syst1 , self.syst2 , self.syst3 
         ## delegate to the specific method of the histogram/graph
-        result     = self.histo.toHepDATA ( *args )      ## invoke the specific method 
+        result     = self.histo.toHepDATA ( *fargs )      ## invoke the specific method 
         the_lines += result.split('\n')
 
 # ==============================================
