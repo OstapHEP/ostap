@@ -130,7 +130,7 @@ class Files(object):
                   description = ""    ,
                   maxfiles    = -1    ,
                   silent      = False ,
-                  sort        = False ,    ## sort the list of files  ? 
+                  sorted      = False ,    ## sort the list of files  ? 
                   parallel    = False ) :  ## collect them in parallel?
         #
         if   isinstance ( files , str   ) : files = [ files ]
@@ -140,17 +140,18 @@ class Files(object):
         self.__description  = description
         self.__silent       = silent 
 
-        from copy import deepcopy
-        self.__patterns     = tuple ( sorted ( set ( files ) ) ) 
-        
-        assert isinstance ( maxfiles , int ) , "Invalid type for 'maxfiles'!"
-        
+        pats = list ( set ( f for f in files ) )
+        pats.sort() 
+        self.__patterns     = tuple ( pats ) 
+                
         self.__maxfiles     = maxfiles
-        self.__sort         = True if sort else False 
+        self.__sorted       = True if sorted else False 
         self.__files        = []        
         self.__bad_files    = set()
+ 
+        assert isinstance ( maxfiles , int ) , "Invalid type for 'maxfiles'!"
         
-        # =====================================================================
+        #  =====================================================================
         # convert list of patterns into the list of files 
         # =====================================================================
         
@@ -159,8 +160,7 @@ class Files(object):
         if not self.silent :
             logger.info ('Loading: %s  #patterns/files: %s/%d' % ( self.description   ,
                                                                    len(self.patterns) , 
-                                                                   len( _files )    ) )
-            
+                                                                   len( _files )    ) )            
         ## can use parallel processing here
         nfiles = len ( _files )
 
@@ -230,9 +230,9 @@ class Files(object):
         return self.__maxfiles
     
     @property
-    def sort ( self ) :
-        """'sort' : keep the list of files sorted?"""
-        return self.__sort
+    def sorted ( self ) :
+        """'sorted' : keep the list of files sorted?"""
+        return self.__sorted
 
     @property
     def bad_files ( self ) :
@@ -300,7 +300,8 @@ class Files(object):
             ## treat the file
             self.treatFile ( f )
 
-        if self.sort : self.__files.sort () 
+        if self.sorted :
+            self.__files.sort () 
 
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
@@ -320,8 +321,8 @@ class Files(object):
         if not files       is None :
             if isinstance ( files , str ) : files = files , 
             result.__files        =  [ f for f in files ] 
-            result.__patterns     = ()            
-            if result.sort : result.__files.sort()            
+            result.__patterns     = ()
+            if result.sorted : result.__files.sort()            
         if not description is None :
             result.descrpiption = str ( description )
             
@@ -713,7 +714,7 @@ class Data(Files):
                   maxfiles     = -1    ,
                   check        = True  , 
                   silent       = False ,
-                  sort         = True  , 
+                  sorted       = True  , 
                   parallel     = False ) : 
 
         ## we will need Ostap machinery for trees&chains here
@@ -731,7 +732,7 @@ class Data(Files):
         if not description : description = "ROOT.TChain(%s)" % self.chain_name 
         
         ## initialize the  base class 
-        Files.__init__( self , files , description  , maxfiles , silent = silent , sort = sort , parallel = parallel )
+        Files.__init__( self , files , description  , maxfiles , silent = silent , sorted = sorted , parallel = parallel )
 
     @property
     def validate ( self ) :
@@ -869,7 +870,7 @@ class Data2(Data):
                   maxfiles    = -1    ,
                   check       = True  , 
                   silent      = False ,
-                  sort        = True  , 
+                  sorted      = True  , 
                   parallel    = False ) :
 
         ## decorate files 
@@ -890,9 +891,8 @@ class Data2(Data):
                        maxfiles    = maxfiles    ,
                        check       = check       ,
                        silent      = silent      ,
-                       sort        = sort        , 
+                       sorted      = sorted      , 
                        parallel    = parallel    ) 
-        
         
     @property 
     def files1    ( self ) :

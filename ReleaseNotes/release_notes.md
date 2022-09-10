@@ -1,4 +1,5 @@
 ## New features: 
+  1. rename argument `sort` to `sorted` for `Data`-like objects 
 
 ## Backward incompatible:  
 

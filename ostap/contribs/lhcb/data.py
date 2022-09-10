@@ -85,10 +85,11 @@ class DataAndLumi(Data2):
                   maxfiles    = 100000 ,
                   check       = True   ,
                   silent      = False  ,
-                  sort        = True   , 
+                  sorted      = True   , 
                   parallel    = False  ) :  
 
         chain      =      chain if isinstance (      chain , str ) else      chain.name
+
         lumi_chain = lumi_chain if isinstance ( lumi_chain , str ) else lumi_chain.name
         
         if not description :
@@ -102,9 +103,9 @@ class DataAndLumi(Data2):
                          maxfiles    = maxfiles    ,
                          check       = check       , 
                          silent      = silent      ,
-                         sort        = sort        , 
-                         parallel    = parallel    ) 
-
+                         sorted      = sorted      , 
+                         parallel    = parallel    )
+        
     # =========================================================================
     @property
     def lumi ( self ) :
