@@ -2,8 +2,8 @@
 
   1. rename argument `sort` to `sorted` for `Data`-like objects 
   1. add smooth transition functions 
-  1. add fnuctoons for Kanaidakis statistics 
-  1. add KGAuissian function and correspondig PDF 
+  1. add functions for Kanaidakis statistics 
+  1. add KGaussian function and correspondig PDF 
 
 ## Backward incompatible:  
 
