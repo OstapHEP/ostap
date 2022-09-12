@@ -6478,6 +6478,92 @@ namespace Ostap
     } ;
     // ========================================================================
 
+
+
+    // ========================================================================
+    /** @class KGaussian
+     *  k-Gaussian distribution:
+     *  @see Ostap::Math::KGaussian
+     *  @see https://en.wikipedia.org/wiki/Kaniadakis_Gaussian_distribution
+     *  Here we use \f$ k = \tanh {\kappa} \f$
+     */
+    class KGaussian: public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::KGaussian, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param  x      the variable 
+       *  @param  mean   the mean/mode/median/location 
+       *  @param  scale  the scale parameter 
+       *  @param  kappa  kappa parameter \f$ k = \tanh \kappa \f$
+       */
+      KGaussian
+      ( const char*          name      , 
+        const char*          title     ,
+        RooAbsReal&          x         ,   // observable 
+        RooAbsReal&          mean      ,   // mean/mode/location
+        RooAbsReal&          scale     ,   // scale parameter/sigma  
+        RooAbsReal&          kappa     ) ; // kappa-parameter/shape 
+      /// "copy" constructor 
+      KGaussian ( const KGaussian& , const char* name = 0 ) ;
+      /// clone 
+      KGaussian* clone ( const char* name ) const override ; 
+      // =====================================================================
+    public: // some fake functionality
+      // =====================================================================
+      // fake default contructor, needed just for proper (de)serialization 
+      KGaussian () {} ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      Int_t    getAnalyticalIntegral 
+        ( RooArgSet&  allVars       , 
+          RooArgSet&  analVars      , 
+          const char* rangeName = 0 ) const override ;
+      Double_t analyticalIntegral
+        ( Int_t       code          , 
+          const char* rangeName = 0 ) const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // =====================================================================
+      // the actual evaluation of function 
+      Double_t evaluate() const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::KGaussian& function () const { return m_kgauss ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x     .arg() ; }
+      const RooAbsReal& mean  () const { return m_mean  .arg() ; }
+      const RooAbsReal& scale () const { return m_scale .arg() ; }
+      const RooAbsReal& kappa () const { return m_kappa .arg() ; }
+      // ======================================================================
+    protected:
+      // =====================================================================
+      RooRealProxy m_x     ;
+      RooRealProxy m_mean  ;
+      RooRealProxy m_scale ;
+      RooRealProxy m_kappa ;
+      // =====================================================================
+    protected : // the function itself 
+      // =====================================================================
+      mutable Ostap::Math::KGaussian m_kgauss ;
+      // =====================================================================
+    } ;
+    // ========================================================================
+
     // ========================================================================
     /** @class Hyperbolic 
      *  Hyperbolic disribtion

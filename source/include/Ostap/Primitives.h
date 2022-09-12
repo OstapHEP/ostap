@@ -166,12 +166,66 @@ namespace  Ostap
     {
     public :
       // ======================================================================
-      /** constructor from two functions and two scale factors 
+      /** constructor from two functions and two scale factors of 1  
        *   \f[ f(x) =  c_1 f_1(x) + c_2 * f_2 ( x  ) \f] 
        *  @param f1  the first function 
        *  @param f2  the secons function 
+       */
+      Linear
+      ( std::function<double(double)> f1 , 
+        std::function<double(double)> f2 )
+        : F2   ( f1 , f2 ) 
+        , m_c1 ( 1  ) 
+        , m_c2 ( 1  ) 
+      {}
+      // ======================================================================
+      /** constructor from two functions and two scale factors 
+       *  \f[ f(x) =  c_1 f_1(x) + c_2 * f_2 ( x  ) \f] 
+       *  @param f1 the first function 
        *  @param c1 the first   scale parameter
+       *  @param f2 the second function 
        *  @param c2 the second  scale parameter
+       */
+      Linear
+      ( std::function<double(double)> f1 , 
+        const double                  c1 ,
+        std::function<double(double)> f2 , 
+        const double                  c2 )
+        : F2   ( f1 , f2 ) 
+        , m_c1 ( c1 ) 
+        , m_c2 ( c2 ) 
+      {}
+      // ======================================================================
+      /** constructor for linear function
+       *  \f[ f(x) =  ax + b  +\f] 
+       *  @param a    \f$ a\f$  coefficient
+       *  @param b    \f$ b\f$ coefficient 
+       */
+      Linear
+      ( const double  a , 
+        const double  b ) 
+        : Linear ( Id() , a , Const(1) , b )
+      {}
+      // ======================================================================
+      /** constructor for linear function passing points 
+       *  \f$ (x_1,y_1) \f$ and \f$ (x_2,y_2) \f$
+       *  @param x1    \f$ x_1\f$ 
+       *  @param y1    \f$ y_1\f$ 
+       *  @param x2    \f$ x_2\f$ 
+       *  @param y2    \f$ y_2\f$ 
+       */
+      Linear
+      ( const double x1 ,
+        const double y1 ,               
+        const double x2 ,  
+        const double y2 )
+        : Linear ( ( y2 - y1 ) / ( x2 - x1 ) , ( x2 * y1 - y2 * x1 ) / ( x2 - x1 ) )
+      {}
+      // ======================================================================
+      /** constructor from two functions and two scale factors of 1  
+       *   \f[ f(x) =  c_1 f_1(x) + c_2 * f_2 ( x  ) \f] 
+       *  @param f1  the first function 
+       *  @param f2  the secons function 
        */
       template <class FUNCTION1, class FUNCTION2>
       Linear
@@ -190,10 +244,11 @@ namespace  Ostap
        *  @param c2 the second  scale parameter
        */
       template <class FUNCTION1, class FUNCTION2>
-      Linear ( FUNCTION1    f1 ,
-               const double c1 ,
-               FUNCTION2    f2 ,
-               const double c2 )
+      Linear
+      ( FUNCTION1    f1 ,
+        const double c1 ,
+        FUNCTION2    f2 ,
+        const double c2 )
         : F2   ( f1 , f2 ) 
         , m_c1 ( c1 ) 
         , m_c2 ( c2 ) 
@@ -210,36 +265,13 @@ namespace  Ostap
       template <class FUNCTION1, 
                 class FUNCTION2, 
                 typename ... ARGS>
-      Linear ( FUNCTION1    f1   ,
-               const double c1   ,
-               FUNCTION2    f2   ,
-               const double c2   , 
-               ARGS...      args )
+      Linear
+      ( FUNCTION1    f1   ,
+        const double c1   ,
+        FUNCTION2    f2   ,
+        const double c2   , 
+        ARGS...      args )
         : Linear ( Linear ( f1 , c1 , f2 , c2 ) , 1.0 , args... )
-      {}
-      // ======================================================================
-      /** constructor for linear function
-       *  \f[ f(x) =  ax + b  +\f] 
-       *  @param a    \f$ a\f$  coefficient
-       *  @param b    \f$ b\f$ coefficient 
-       */
-      Linear ( const double  a , 
-               const double  b ) 
-        : Linear ( Id() , a , Const(1) , b )
-      {}
-      // ======================================================================
-      /** constructor for linear function passing points 
-       *  \f$ (x_1,y_1) \f$ and \f$ (x_2,y_2) \f$
-       *  @param x1    \f$ x_1\f$ 
-       *  @param y1    \f$ y_1\f$ 
-       *  @param x2    \f$ x_2\f$ 
-       *  @param y2    \f$ y_2\f$ 
-       */
-      Linear ( const double x1 ,
-               const double y1 ,               
-               const double x2 ,  
-               const double y2 )
-        : Linear ( ( y2 - y1 ) / ( x2 - x1 ) , ( x2 * y1 - y2 * x1 ) / ( x2 - x1 ) )
       {}
       // ======================================================================
     public:
@@ -270,6 +302,16 @@ namespace  Ostap
     class Compose : public F2 
     {
     public :
+      // ======================================================================
+      Compose
+      ( std::function<double(double)> f1     , 
+        std::function<double(double)> f2     ,
+        const double                  c1 = 1 ,
+        const double                  c2 = 1 )
+        : F2   ( f1 , f2 ) 
+        , m_c1 ( c1 ) 
+        , m_c2 ( c2 ) 
+      {}
       // ======================================================================
       template <class FUNCTION1, class FUNCTION2>
       Compose
@@ -303,11 +345,17 @@ namespace  Ostap
     // ========================================================================
     /** @class Multiply 
      *  Multiplication of two functions 
-     *   \f[ f(x) =  c f_1(x) f_2 ( x  ) \f] 
+     *   \f[ f(x) =  f_1(x) \times f_2 ( x  ) \f] 
      */
     class Multiply : public F2 
     {
     public :
+      // ======================================================================
+      Multiply
+      ( std::function<double(double)> f1 , 
+        std::function<double(double)> f2 )
+        : F2  ( f1 , f2 ) 
+      {}
       // ======================================================================
       template <class FUNCTION1, 
                 class FUNCTION2>
@@ -340,11 +388,17 @@ namespace  Ostap
     // ========================================================================
     /** @class Divide 
      *  Division of two functions 
-     *   \f[ f(x) =  c \frac{ f_1(x)}{ f_2 ( x ) }  \f] 
+     *   \f[ f(x) =  \frac{ f_1(x)}{ f_2 ( x ) }  \f] 
      */
     class Divide : public F2  
     {
     public :
+      // ======================================================================
+      Divide
+      ( std::function<double(double)> f1 , 
+        std::function<double(double)> f2 )
+        : F2 ( f1 , f2 ) 
+      {}
       // ======================================================================
       template <class FUNCTION1, class FUNCTION2>
       Divide
@@ -380,6 +434,17 @@ namespace  Ostap
     class Sum : public F2 
     {
     public :
+      // ======================================================================
+      /** constructor from two functions
+       *   \f[ f(x) =  f_1(x) + f_2 ( x  ) \f] 
+       *  @param f1 the first  function 
+       *  @param f1 the second function 
+       */
+      Sum
+      ( std::function<double(double)> f1 , 
+        std::function<double(double)> f2 )
+        : F2 ( f1 , f2 ) 
+      {}
       // ======================================================================
       /** constructor from two functions
        *   \f[ f(x) =  f_1(x) + f_2 ( x  ) \f] 
@@ -424,6 +489,17 @@ namespace  Ostap
     class Subtract: public F2 
     {
     public :
+      // ======================================================================
+      /** constructor from two functions
+       *   \f[ f(x) =  f_1(x) - f_2 ( x  ) \f] 
+       *  @param f1 the first  function 
+       *  @param f1 the second function 
+       */
+      Subtract
+      ( std::function<double(double)> f1 , 
+        std::function<double(double)> f2 )
+        : F2 ( f1 , f2 ) 
+      {}
       // ======================================================================
       /** constructor from two functions
        *   \f[ f(x) =  f_1(x) - f_2 ( x  ) \f] 
@@ -536,7 +612,18 @@ namespace  Ostap
     {
     public :
       // ======================================================================
-      /** constructor from two functions and two scale factors 
+      /** constructor from two functions 
+       *   \f[ f(x) =  max  ( f_1(x) , f_2(x) )\f] 
+       *  @param f1  the first  function 
+       *  @param f2  the second function 
+       */
+      Max
+      ( std::function<double(double)> f1 , 
+        std::function<double(double)> f2 )
+        : F2 ( f1 , f2 ) 
+      {}
+      // ======================================================================
+      /** constructor from two functions 
        *   \f[ f(x) =  max  ( f_1(x) , f_2(x) )\f] 
        *  @param f1  the first  function 
        *  @param f2  the second function 
@@ -546,6 +633,30 @@ namespace  Ostap
       ( FUNCTION1    f1 , 
         FUNCTION2    f2 )
         : F2 ( f1 , f2 ) 
+      {}
+      // ======================================================================
+      /** constructor from two functions 
+       *   \f[ f(x) =  max  ( f_1(x) , f_2(x) )\f] 
+       *  @param f1  the first  function 
+       *  @param f2  the second function 
+       */
+      template <class FUNCTION1>
+      Max
+      ( FUNCTION1    f1 , 
+        const double f2 )
+        : F2 ( f1 , Const ( f2 ) ) 
+      {}
+      // ======================================================================
+      /** constructor from two functions 
+       *   \f[ f(x) =  max  ( f_1(x) , f_2(x) )\f] 
+       *  @param f1  the first  function 
+       *  @param f2  the second function 
+       */
+      template <class FUNCTION2>
+      Max
+      ( const double f1 , 
+        FUNCTION2    f2 ) 
+        : F2 ( Const ( f1 ) , f2 ) 
       {}
       // ======================================================================
       /// Constructor with several functions
@@ -584,10 +695,46 @@ namespace  Ostap
        *  @param f1  the first function 
        *  @param f1  the secons function 
        */
-      template <class FUNCTION1, class FUNCTION2>
-      Min ( FUNCTION1    f1 , 
-            FUNCTION2    f2 )
+      Min 
+      ( std::function<double(double)> f1 , 
+        std::function<double(double)> f2 )
         : F2 ( f1  , f2 ) 
+      {}
+      // ======================================================================
+      /** constructor from two functions 
+       *   \f[ f(x) =  min  ( f_1(x) , f_2(x) )\f] 
+       *  @param f1  the first function 
+       *  @param f1  the secons function 
+       */
+      template <class FUNCTION1, class FUNCTION2>
+      Min
+      ( FUNCTION1    f1 , 
+        FUNCTION2    f2 )
+        : F2 ( f1  , f2 ) 
+      {}
+      // ======================================================================
+      /** constructor from two functions 
+       *   \f[ f(x) =  min  ( f_1(x) , f_2(x) )\f] 
+       *  @param f1  the first function 
+       *  @param f1  the secons function 
+       */
+      template <class FUNCTION1>
+      Min
+      ( FUNCTION1    f1 ,
+        const double f2 )
+        : F2 ( f1  , Const ( f2 ) ) 
+      {}
+      // ======================================================================
+      /** constructor from two functions 
+       *   \f[ f(x) =  min  ( f_1(x) , f_2(x) )\f] 
+       *  @param f1  the first function 
+       *  @param f1  the secons function 
+       */
+      template <class FUNCTION2>
+      Min
+      ( const double f1 , 
+        FUNCTION2    f2 )
+        : F2 ( Const ( f1 ) , f2 ) 
       {}
       // ======================================================================
       /// Constructor with several functions
@@ -619,6 +766,12 @@ namespace  Ostap
     class Apply : public F1 
     {
     public:
+      // ======================================================================
+      /// constructor  from the function 
+      Apply
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       /// constrtuctor  from the function 
       template <class FUNCTION>
@@ -654,12 +807,17 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      Abs 
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================      
       template <class FUNCTION>
       Abs ( FUNCTION f )
         : F1 ( f  )
       {}
       // ======================================================================
-      /// default contsructor 
+      /// default constructor 
       Abs () : Abs ( Id () ) {}
       // ======================================================================
     public:
@@ -682,6 +840,11 @@ namespace  Ostap
     class Sqrt : public F1 
     {
     public:
+      // ======================================================================
+      Sqrt 
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       Sqrt ( FUNCTION f )
@@ -711,6 +874,11 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      Cbrt 
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
       template <class FUNCTION>
       Cbrt ( FUNCTION f )
         : F1 ( f  )
@@ -738,6 +906,11 @@ namespace  Ostap
     class Exp : public F1 
     {
     public:
+      // ======================================================================
+      Exp
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       Exp ( FUNCTION f )
@@ -767,6 +940,11 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      Log
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
       template <class FUNCTION>
       Log ( FUNCTION f )
         : F1 ( f  )
@@ -794,6 +972,11 @@ namespace  Ostap
     class Log10 : public F1 
     {
     public:
+      // ======================================================================
+      Log10
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       Log10 ( FUNCTION f )
@@ -823,6 +1006,11 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      Erf
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
       template <class FUNCTION>
       Erf ( FUNCTION f )
         : F1 ( f  )
@@ -850,6 +1038,11 @@ namespace  Ostap
     class Erfc : public F1 
     {
     public:
+      // ======================================================================
+      Erfc
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       Erfc ( FUNCTION f )
@@ -880,6 +1073,11 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      TGamma
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
       template <class FUNCTION>
       TGamma ( FUNCTION f )
         : F1 ( f  )
@@ -908,6 +1106,11 @@ namespace  Ostap
     class LGamma : public F1 
     {
     public:
+      // ======================================================================
+      LGamma
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       LGamma ( FUNCTION f )
@@ -939,6 +1142,11 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      Sin
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
       template <class FUNCTION>
       Sin ( FUNCTION f )
         : F1 ( f  )
@@ -967,6 +1175,11 @@ namespace  Ostap
     class Cos : public F1 
     {
     public:
+      // ======================================================================
+      Cos
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       Cos ( FUNCTION f )
@@ -997,6 +1210,11 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      Tan
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
       template <class FUNCTION>
       Tan ( FUNCTION f )
         : F1 ( f  )
@@ -1025,6 +1243,11 @@ namespace  Ostap
     class ASin : public F1 
     {
     public:
+      // ======================================================================
+      ASin
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       ASin ( FUNCTION f )
@@ -1055,6 +1278,11 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      ACos
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
       template <class FUNCTION>
       ACos ( FUNCTION f )
         : F1 ( f  )
@@ -1083,6 +1311,11 @@ namespace  Ostap
     class ATan : public F1 
     {
     public:
+      // ======================================================================
+      ATan
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       ATan ( FUNCTION f )
@@ -1114,6 +1347,11 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      Sinh
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
       template <class FUNCTION>
       Sinh ( FUNCTION f )
         : F1 ( f  )
@@ -1142,6 +1380,11 @@ namespace  Ostap
     class Cosh : public F1 
     {
     public:
+      // ======================================================================
+      Cosh
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       Cosh ( FUNCTION f )
@@ -1172,6 +1415,11 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      Tanh
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
       template <class FUNCTION>
       Tanh ( FUNCTION f )
         : F1 ( f  )
@@ -1201,12 +1449,17 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      ASinh
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
       template <class FUNCTION>
       ASinh ( FUNCTION f )
         : F1 ( f  )
       {}
       // ======================================================================
-      /// default contsructor 
+      /// default constructor 
       ASinh () : ASinh ( Id () ) {}
       // ======================================================================
     public:
@@ -1229,6 +1482,11 @@ namespace  Ostap
     class ACosh : public F1 
     {
     public:
+      // ======================================================================
+      ACosh
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       ACosh ( FUNCTION f )
@@ -1258,6 +1516,11 @@ namespace  Ostap
     class ATanh : public F1 
     {
     public:
+      // ======================================================================
+      ATanh
+      ( std::function<double(double)> f )
+        : F1 ( f  )
+      {}
       // ======================================================================
       template <class FUNCTION>
       ATanh ( FUNCTION f )
@@ -1296,9 +1559,38 @@ namespace  Ostap
     public:
       // ======================================================================
       /// constructor  from the function and degree 
+      Pow
+      ( std::function<double(double)> f     , 
+        const double                  order ) 
+        : F2 ( f , Const ( order ) ) 
+        , m_iorder ( 0      )
+        , m_dorder ( order  )
+        , m_type   ( Double ) 
+      {}      
+      /// constructor  from the function and degree 
+      Pow
+      ( std::function<double(double)> f     , 
+        const int                     order ) 
+        : F2 ( f , Const ( 1.0 * order ) ) 
+        , m_iorder ( order   )
+        , m_dorder ( order   )
+        , m_type   ( Integer ) 
+      {}
+      /// constructor  from two functions
+      Pow 
+      ( std::function<double(double)> f1 , 
+        std::function<double(double)> f2 ) 
+        : F2 ( f1 , f2   ) 
+        , m_iorder ( 0        )
+        , m_dorder ( 0        )
+        , m_type   ( Function ) 
+      {}
+      // =======================================================================
+      /// constructor  from the function and degree 
       template <class FUNCTION>
-      Pow ( FUNCTION     f     ,
-            const double order ) 
+      Pow 
+      ( FUNCTION     f     ,
+        const double order ) 
         : F2 ( f , Const ( order ) ) 
         , m_iorder ( 0      )
         , m_dorder ( order  )
@@ -1306,23 +1598,27 @@ namespace  Ostap
       {}
       /// constructor  from the function and degree 
       template <class FUNCTION>
-      Pow ( FUNCTION     f     ,
-            const int    order ) 
+      Pow
+      ( FUNCTION     f     ,
+        const int    order ) 
         : F2 ( f , Const ( 1.0 * order ) ) 
         , m_iorder ( order   )
         , m_dorder ( order   )
         , m_type   ( Integer ) 
       {}
+      
       /// constructor  from two functions
       template <class FUNCTION1,
                 class FUNCTION2>
-      Pow ( FUNCTION1    f1    ,
-            FUNCTION2    f2    ) 
+      Pow 
+      ( FUNCTION1    f1    ,
+        FUNCTION2    f2    ) 
         : F2 ( f1 , f2   ) 
         , m_iorder ( 0        )
         , m_dorder ( 0        )
         , m_type   ( Function ) 
       {}
+
       /// constructor  from degree 
       Pow ( const double order ) 
         : Pow ( Id () ,  order )
@@ -1376,6 +1672,99 @@ namespace  Ostap
       double                         m_dorder { 0       } ; // non-integer order
       /// type 
       Type                           m_type   { Integer } ; // type 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class SmoothTransition
+     *  smooth transition between two functions 
+     *  @see Ostap::Math::smoooth_transition 
+     */
+    class SmoothTransition : public F2 
+    {
+    public:
+      // ======================================================================
+      /// constructor from two functions
+      SmoothTransition
+      ( std::function<double(double)> f1    , 
+        std::function<double(double)> f2    ,
+        const double                  a = 0 , 
+        const double                  b = 1 ) 
+        : F2 ( f1 , f2 ) 
+        , m_a   ( std::min ( a , b ) ) 
+        , m_b   ( std::max ( a , b ) ) 
+      {}
+      /// constructor  from two functions 
+      template <class FUNCTION1, 
+                class FUNCTION2>
+      SmoothTransition
+      ( FUNCTION1 f1       ,
+        FUNCTION2 f2       ,
+        const double a = 0 , 
+        const double b = 1 ) 
+        : F2 ( f1 , f2 ) 
+        , m_a   ( std::min ( a , b ) ) 
+        , m_b   ( std::max ( a , b ) ) 
+      {}
+      /// copy constructor 
+      SmoothTransition ( const SmoothTransition&  ) = default ;
+      /// move constructor
+      SmoothTransition (       SmoothTransition&& ) = default ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      template <class FUNCTION1,
+                class FUNCTION2>
+      static inline SmoothTransition
+      create
+      ( FUNCTION1    f1    ,
+        FUNCTION2    f2    ,
+        const double a = 0 , 
+        const double b = 1 )
+      { return SmoothTransition ( f1 , f2 , a , b ) ; }
+      // ======================================================================      
+    public: // transition function 
+      // ======================================================================
+      inline double transition 
+      ( const double x ) const  
+      {
+        if      ( x <= m_a ) { return 0 ; }
+        else if ( x >= m_b ) { return 1 ; }
+        return phi ( ( x - m_a ) / ( m_b - m_a ) ) ;
+      }          
+      // ======================================================================
+    private:
+      // ======================================================================
+      inline double psi 
+      ( const double t )  const  
+      { return t <= 0 ? 0.0 : std::exp ( -1/t ) ;}
+      // ======================================================================
+      inline double phi 
+      ( const double t )  const  
+      {
+        const double p1 = psi (     t ) ;
+        const double p2 = psi ( 1 - t ) ;
+        return p1 / ( p1 + p2 ) ;
+      }
+      // ======================================================================      
+    public:
+      // ======================================================================
+      /// the only one important  method 
+      inline double operator() 
+      ( const double x ) const
+      {
+        if       ( x <= m_a ) { return m_fun1 ( x ) ; }
+        else if  ( x >= m_b ) { return m_fun2 ( x ) ; }
+        //
+        const double p = transition ( x ) ;
+        return p * m_fun2 ( x ) + ( 1 - p ) * m_fun1 ( x ) ;
+      }
+      // ======================================================================        
+    private :
+      // ======================================================================     
+      /// low x  
+      double m_a { 0 } ; // low x 
+      /// high x  
+      double m_b { 1 } ; // high x 
       // ======================================================================
     } ;
     // ========================================================================

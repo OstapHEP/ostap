@@ -4294,6 +4294,186 @@ std::size_t Ostap::Math::QGaussian::tag () const
 
 
 
+
+
+// ============================================================================
+/*  constructor from all arguments            
+ *  @param mean  the mean/mode/location of the peak 
+ *  @param kappa  kappa-value 
+ *  @param scale 
+ */
+// ============================================================================
+Ostap::Math::KGaussian::KGaussian 
+( const double mean  ,  // mean/mode/location 
+  const double scale ,  // scale/sigma
+  const double kappa )  // kappa-parameter (shape)  
+  : m_mean  ( mean               )
+  , m_scale ( std::abs ( scale ) )
+  , m_k     ( 100   )
+  , m_kappa ( kappa )
+{
+  setKappa ( kappa ) ; 
+}
+// ============================================================================
+// evaluate  pdf  for k-Gaussian distribution
+// ============================================================================
+double Ostap::Math::KGaussian::pdf ( const  double x ) const 
+{
+  //
+  if ( 0 == m_k || s_zero ( m_k ) ) { return gauss_pdf ( x , m_mean , m_scale ) ; }
+  //
+  const double dx  = ( x - m_mean ) / m_scale ;
+  //
+  return m_Zk / m_scale * Ostap::Math::kaniadakis_kexp ( -0.5 * dx * dx , m_k ) ;
+}
+// ============================================================================
+// set mean 
+// ============================================================================
+bool Ostap::Math::KGaussian::setMean ( const double value ) 
+{
+  if ( s_equal ( value , m_mean ) ) { return false ; }
+  m_mean = value ;
+  return true ;
+}
+// ============================================================================
+// set kappa 
+// ============================================================================
+bool Ostap::Math::KGaussian::setKappa ( const double value ) 
+{
+  //
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_kappa ) && std::abs ( m_k ) <= 1 ) { return false ; }
+  //
+  m_kappa = avalue                ;
+  m_k     = std::tanh ( m_kappa ) ;
+  //
+  if ( s_zero ( m_k ) ) { m_Zk = s_SQRT2PIi ; }
+  else 
+  {
+    m_Zk = std::sqrt ( m_k / M_PI ) 
+      * ( 1 + 0.5 * m_k ) 
+      * std::exp ( std::lgamma ( 0.5/m_k + 0.25 ) - std::lgamma ( 0.5/m_k - 0.25 ) ) ;  
+  }
+  //
+  return true ;
+}
+// ============================================================================
+// set scale
+// ============================================================================
+bool Ostap::Math::KGaussian::setScale ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_scale ) ) { return false ; }
+  m_scale = v ;
+  return true ;
+}
+// ============================================================================
+// get variance 
+// ============================================================================
+double Ostap::Math::KGaussian::variance   () const 
+{
+  if ( 0 == m_k || s_zero ( m_k ) ) { return m_scale * m_scale ; }
+  
+  const double f1 = std::exp ( std::lgamma ( 0.5/m_k + 0.25 ) - 
+                               std::lgamma ( 0.5/m_k - 0.25 ) ) ;
+  const double f2 = 4 * m_k * ( 2 + m_k ) / ( ( 2 - m_k ) * ( 4 - 9 * m_k * m_k ) ) ;
+  return 2 * m_scale * m_scale * f2 * f1 * f1 ;  
+}
+// ============================================================================
+// get RMS
+// ============================================================================
+double Ostap::Math::KGaussian::rms () const 
+{ return std::sqrt ( variance () ) ; }  
+// ============================================================================
+// get the integral 
+// ============================================================================
+double Ostap::Math::KGaussian::integral
+( const double low  , 
+  const double high ) const 
+{
+  ///
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if (           low > high   ) {  return -integral ( high , low ) ; }
+  ///
+  if ( 0 == m_k || s_zero ( m_k ) ) 
+  {
+    return 
+      gauss_cdf  ( high , m_mean , m_scale ) - 
+      gauss_cdf  (  low , m_mean , m_scale ) ;
+  }
+  //
+  // split into some "reasonable" intervals 
+  if ( low <  m_mean  && m_mean < high ) 
+  { return integral ( low , m_mean ) + integral ( m_mean , high ) ; }
+  //
+  { 
+    const double x1 = m_mean + 3 * m_scale ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_mean - 3 * m_scale ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }    
+  }
+  //
+  { 
+    const double x1 = m_mean + 5 * m_scale ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_mean - 5 * m_scale ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }    
+  }
+  //
+  { 
+    const double x1 = m_mean + 10 * m_scale ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_mean - 10 * m_scale ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }    
+  }
+  //
+  { 
+    const double x1 = m_mean + 15 * m_scale ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_mean - 15 * m_scale ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+    
+  }
+  //
+  const double x_low  = m_mean - 15 * m_scale  ;
+  const double x_high = m_mean + 15 * m_scale  ;
+  //
+  const bool in_tail = high <= x_low || x_high <= low ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<KGaussian> s_integrator {} ;
+  static char s_message[] = "Integral(KGaussian)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag () , 
+      &F     , 
+      low    , high  ,               // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
+      m_workspace.size()   ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::KGaussian::tag () const 
+{ 
+  static const std::string s_name = "KGaussian" ;
+  return std::hash_combine ( s_name , m_mean , m_kappa , m_scale ) ; 
+}
+// ============================================================================
+
+
+
 namespace 
 {
   // ==========================================================================

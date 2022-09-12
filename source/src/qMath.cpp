@@ -8,6 +8,7 @@
 // Ostap 
 // ============================================================================
 #include "Ostap/qMath.h"
+#include "Ostap/MoreMath.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -26,6 +27,12 @@
  *  @date 2022-08-28 
  *  @author anya Belyaev Ivan/Belyaev@itep.ru
  */
+// ============================================================================
+
+// ============================================================================
+// Tsallis algebra
+// ============================================================================ \
+
 // ============================================================================
 /*  q-sum of two variables in Tsallis statistics 
  *  \f$ x + \oplus_q y = x + y + (1-q)xy\f$ 
@@ -184,6 +191,98 @@ double Ostap::Math::tsallis_qgaussian
   const double q     ) 
 { return tsallis_qgaussian ( ( x - mu ) / sigma , 0.5 , q ) / std::abs ( sigma ) ; }
 // ============================================================================
+
+
+// ============================================================================
+// Kaniadakis algebra
+// ============================================================================
+
+// ============================================================================
+/* Kaniadakis sum 
+ *  \f$ x \oplu_k y = x \sqrt{ 1 + \kappa^2y^2} + 
+ *     y \sqrt{ 1 + \kappa^2x^2} \f$ 
+ */
+// ============================================================================
+double Ostap::Math::kaniadakis_ksum
+( const double x , 
+  const double y , 
+  const double k ) 
+{
+  //
+  if ( 0 == k || s_zero ( k ) ) { return x + y ; }
+  else if ( s_zero ( x )      ) { return y     ; }
+  else if ( s_zero ( y )      ) { return x     ; }
+  //
+  return
+    x * std::hypot ( 1.0 , k * y ) +
+    y * std::hypot ( 1.0 , k * x ) ;
+}
+// ============================================================================
+/** product of two varibales in Kaniadakis algebra
+ *  \f$ x \otimes_k y = \frac{1}{k}               \
+ *  \sinh { \frac{1}{k} \asinh {kx} \asinh{ky} }
+ *  \f$ 
+ */
+// ============================================================================
+double Ostap::Math::kaniadakis_kproduct 
+( const double x , 
+  const double y , 
+  const double k ) 
+{
+  //
+  if      ( 0 == k || s_zero ( k ) ) { return x + y ; }
+  else if ( s_zero ( x )           ) { return 0     ; }
+  else if ( s_zero ( y )           ) { return 0     ; }
+  //
+  const double fx = Ostap::Math::asinh_x ( k * x ) ;
+  const double fy = Ostap::Math::asinh_x ( k * y ) ;
+  const double ff = x * y * fx * fy ;
+  //
+  return ff * Ostap::Math::sinh_x ( k * ff ) ;
+}
+// ============================================================================
+/*  k-exponent in Kaniadakis statistics 
+ *  \f$ \exp_k(x) =
+ *   \left\{  \begin{array}{ll}
+ *   \left( \sqrt{1+k^2x^2}+kx\right)^{\frac{1}{k}}  & k \ne 0 \\ 
+ *   \exp {x}   &  k = 0 
+ *   \end{array}\right. 
+ *  \f$ 
+ */
+// ============================================================================
+double Ostap::Math::kaniadakis_kexp
+( const double x ,
+  const double k ) 
+{
+  if      ( 0 == k || s_zero ( k ) ) { return std::exp ( x ) ; }
+  const double fx = Ostap::Math::asinh_x ( k * x ) ;
+  return std::exp ( x * fx ) ;
+}
+// ============================================================================
+
+// ============================================================================
+/*  k-logarithm in Kaniadakis statistics 
+ *  \f$ \log_k(x) =
+ *   \left\{  \begin{array}{ll}
+ *    \frac{x^k- x^{-k}}{2k} & k \ne 0 \        \
+ *    \log {x}               & k =   0     
+ *   \end{array}\right. 
+ *  \f$ 
+ */
+// ============================================================================
+double Ostap::Math::kaniadakis_klog  
+( const double x ,
+  const double k ) 
+{
+  //
+  if      ( 0 == k || s_zero ( k ) ) { return std::log ( x ) ; }
+  //
+  const double lnx = std::log ( x ) ;
+  //
+  return lnx * Ostap::Math::sinh_x ( k * lnx ) ;
+}
+// ======================================================================== 
+
 
 // ============================================================================
 //                                                                      The END 

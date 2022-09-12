@@ -21,6 +21,10 @@ namespace Ostap
   // ==========================================================================
   namespace Math 
   {
+    // ========================================================================
+    // Tsallis algebra
+    // ========================================================================
+
     // ======================================================================== 
     /** q-sum of two variables in Tsallis statistics 
      *  \f$ x + \oplus_q y = x + y + (1-q)xy\f$ 
@@ -112,6 +116,78 @@ namespace Ostap
       const double mu    , 
       const double sigma , 
       const double q     ) ;
+    // ========================================================================
+
+    // ========================================================================
+    // Kaniadakis algebra
+    // ========================================================================
+    
+    // ========================================================================
+    /** sum of two variables in Kanadakis algebra
+     *  \f$ x \oplus_k y = x \sqrt{ 1 + \kappa^2y^2} + 
+     *     y \sqrt{ 1 + \kappa^2x^2} \f$ 
+     */
+    double kaniadakis_ksum
+    ( const double x     , 
+      const double y     , 
+      const double k = 0 ) ;
+    // ========================================================================
+    /** subtaction of two variables  in Kanadakis algebra
+     *  \f$ x \ominus_k y = x \oplus_k -y \f$ 
+     */
+    inline double kaniadakis_ksubtraction 
+    ( const double x     , 
+      const double y     , 
+      const double k = 0 ) 
+    { return kaniadakis_ksum ( x , -y , k ) ; }
+    // ========================================================================
+    
+    // ========================================================================
+    /** product of two varibales in Kaniadakis algebra
+     *  \f$ x \otimes_k y = \frac{1}{k}              
+     *  \sinh { \frac{1}{k} \asinh {kx} \asinh{ky} }
+     *  \f$ 
+     */
+    double kaniadakis_kproduct 
+    ( const double x     , 
+      const double y     , 
+      const double k = 0 ) ;
+    // ========================================================================
+    
+    // ========================================================================
+    /** k-exponent in Kaniadakis statistics 
+     *  \f$ \exp_k(x) =
+     *   \left\{  \begin{array}{ll}
+     *   \left( \sqrt{1+k^2x^2}+kx\right)^{\frac{1}{k}}  & k \ne 0 \\ 
+     *   \exp {x}   &  k = 0 
+     *   \end{array}\right. 
+     *  \f$ 
+     *  Also it can be written as 
+     *   \f$ \exp { \frac{1}{k} \asinh {kx} }\f$ 
+     */
+    double kaniadakis_kexp
+    ( const double x     ,
+      const double k = 0 ) ;
+    // ========================================================================
+
+
+    // ========================================================================
+    /** k-logarithm in Kaniadakis statistics 
+     *  \f$ \log_k(x) =
+     *   \left\{  \begin{array}{ll}
+     *    \frac{x^k- x^{-k}}{2k} & k \ne 0 \\
+     *    \log {x}               & k =   0     
+     *   \end{array}\right. 
+     *  \f$ 
+     */
+    double kaniadakis_klog  
+    ( const double x     ,
+      const double k = 0 ) ;
+    // ======================================================================== 
+
+  
+    
+
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

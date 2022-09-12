@@ -7592,6 +7592,93 @@ Double_t Ostap::Models::QGaussian::analyticalIntegral
 // ============================================================================
 
 
+// ============================================================================
+/*  constructor from all parameters
+ *  @param  x      the variable 
+ *  @param  mean   the mean/mode/median/location 
+ *  @param  kappa  the kappa-value 
+ *  @param  scale  the scale parameter 
+ */
+// ============================================================================
+Ostap::Models::KGaussian::KGaussian
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         , // observable 
+  RooAbsReal&          mean      , // mean
+  RooAbsReal&          scale     , // scale
+  RooAbsReal&          kappa     ) // kappa
+  : RooAbsPdf  ( name , title ) 
+  , m_x        ( "!x"      , "Observable"               , this , x     ) 
+  , m_mean     ( "!mean"   , "Mean/location parameter"  , this , mean  ) 
+  , m_scale    ( "!scale"  , "Scale parameter"          , this , scale ) 
+  , m_kappa    ( "!kappa"  , "kappa-parameter"          , this , kappa ) 
+  , m_kgauss   ()  
+{
+  setPars () ;  
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::KGaussian::KGaussian
+( const Ostap::Models::KGaussian& right ,
+  const char*                     name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "!x"     , this , right.m_x     ) 
+  , m_mean     ( "!mean"  , this , right.m_mean  ) 
+  , m_scale    ( "!scale" , this , right.m_scale ) 
+  , m_kappa    ( "!kappa" , this , right.m_kappa ) 
+  , m_kgauss   ( right.m_kgauss ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::KGaussian*
+Ostap::Models::KGaussian::clone( const char* name ) const 
+{ return new Ostap::Models::KGaussian(*this,name) ; }
+// ============================================================================
+void Ostap::Models::KGaussian::setPars () const 
+{
+  m_kgauss.setMean  ( m_mean  ) ;
+  m_kgauss.setKappa ( m_kappa ) ;
+  m_kgauss.setScale ( m_scale ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::KGaussian::evaluate() const 
+{
+  setPars() ;
+  return m_kgauss ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::KGaussian::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::KGaussian::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_kgauss.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+
+
 
 // ============================================================================
 /*  constructor from all parameters
@@ -8658,6 +8745,7 @@ ClassImp(Ostap::Models::Gumbel             )
 ClassImp(Ostap::Models::Weibull            )
 ClassImp(Ostap::Models::RaisingCosine      )
 ClassImp(Ostap::Models::QGaussian          )
+ClassImp(Ostap::Models::KGaussian          )
 ClassImp(Ostap::Models::Hyperbolic         )
 ClassImp(Ostap::Models::GenHyperbolic      )
 ClassImp(Ostap::Models::Das                )

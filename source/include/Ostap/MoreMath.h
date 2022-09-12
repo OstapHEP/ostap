@@ -858,6 +858,11 @@ namespace Ostap
      *  precise for small x 
      */
     double sinh_x  ( const double x ) ;
+    // =======================================================================
+    /** \f$ f(x) = \frac{ \asinh x }{x}  \f$ 
+     *  precise for small x 
+     */
+    double asinh_x ( const double x ) ;
     // ========================================================================
     /** \f$ f(x) = \frac{ \log ( 1 + x ) }{x}  \f$ 
      *  precise for small x 
@@ -894,7 +899,21 @@ namespace Ostap
     ( const unsigned short N , 
       const double         p ) ;
     // ========================================================================
-
+    
+    // ========================================================================
+    /** smooth transition function 
+     *   \f[ \phix() = left\{ 
+     *   \begin{array}{ll}
+     *     0 &  x\le b \                        \
+     *     1 &  x\ge b \\ 
+     *    smooth & 
+     *    \end{array} \rigth. \f] 
+     */
+    double smooth_transtion 
+    ( const double x     , 
+      const double a = 0 ,
+      const double b = 1 ) ;
+    // ========================================================================
 
     // ========================================================================
     /** Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile

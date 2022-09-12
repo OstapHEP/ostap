@@ -47,6 +47,7 @@ Empricial PDFs to describe narrow peaks
   - Logistic_pdf   
   - RaisingCosine_pdf
   - QGaussian_pdf
+  - KGaussian_pdf
   - Hyperbolic_pdf
   - GenHyperbolic_pdf
   - Das_pdf
@@ -103,7 +104,8 @@ __all__ = (
     'Atlas_pdf'              , ## modified gaussian with exponenital tails 
     'Slash_pdf'              , ## symmetric peakk wot very heavy tails 
     'RaisingCosine_pdf'      , ## Raising  Cosine distribution
-    'QGaussian_pdf'          , ## Q-gaussian distribution
+    'QGaussian_pdf'          , ## q-Gaussian (Tsallsi) distribution
+    'KGaussian_pdf'          , ## k-Gaussian (Kaniadakis) distribution
     'Hyperbolic_pdf'         , ## Hyperbolic distribution
     'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
     'Das_pdf'                , ## Das: Gaussian with exponentrial tails 
@@ -140,6 +142,7 @@ from   ostap.core.ostap_types   import integer_types
 from   ostap.fitting.funbasic   import FUN1 , Fun1D 
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
+import ostap.fitting.roofuncs   as     RF 
 from   ostap.fitting.fithelpers import Phases
 import ostap.math.dalitz 
 import ROOT, math
@@ -2677,6 +2680,93 @@ class QGaussian_pdf(PEAK) :
 models.append ( QGaussian_pdf )      
 
 
+# =============================================================================
+## @class KGaussian_pdf 
+#  k-Gaussian distribution:
+#  @see Ostap::Math::KGaussian
+#  @see Ostap::Models::KGaussian
+#  Here we use \f$ k = \tanh {\kappa} \f$
+#  @see https://en.wikipedia.org/wiki/Kaniadakis_Gaussian_distribution
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-02-27
+class KGaussian_pdf(PEAK) :
+    r"""k-Gaussian distribution:
+    k-Gaussian distribution:
+    - see Ostap::Math::KGaussian
+    - see Ostap::Models::KGaussian
+    Here we use \f$ k = \tanh {\kappa} \f$
+    - see https://en.wikipedia.org/wiki/Kaniadakis_Gaussian_distribution
+    """
+    def __init__ ( self          ,
+                   name          ,
+                   xvar          ,
+                   mean   = None ,    ## related to mean 
+                   scale  = None ,    ## related to sigma 
+                   kappa  = 1    ) :  ## kappa-parameter/shape 
+
+        #
+        ## initialize the base
+        #        
+        PEAK.__init__  ( self , name , xvar  , 
+                              mean        = mean  ,
+                              sigma       = scale,
+                              sigma_name  = 'scale_%s'  % name ,
+                              sigma_title = 'scale(%s)' % name )
+        
+
+        self.__scale = self.sigma
+        
+        ## kappa 
+        self.__kappa = self.make_var ( kappa                ,
+                                       'kappa_%s'   % name  ,
+                                       '#kappa(%s)' % name  ,
+                                       False , 0 , -10 , 10 )
+        
+        ## k-parameter ( k = tanh(kappa)
+        self.__k = RF.var_tanh ( self.kappa , 1 ,
+                                 name  = self.new_roo_name ( 'k' ) ,   
+                                 title = '#kappa(%s)' % name ) 
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.KGaussian (
+            self.roo_name ( 'kgauss_' ) , 
+            "k-Gaussian %s" % self.name ,
+            self.xvar      ,
+            self.mean      ,
+            self.scale     ,
+            self.kappa     )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'scale'     : self.scale ,
+            'kappa'     : self.kappa ,
+            }
+        
+    @property
+    def scale ( self ) :
+        """'scale'-parameter, the same as 'sigma'"""
+        return self.__scale
+    @scale.setter
+    def scale ( self, value ) :
+        self.set_value ( self.__scale , value ) 
+        
+    @property
+    def kappa ( self ) :
+        """'kappa'-parameter/shape [k=tanh(kappa)]"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self, value ) :
+        self.set_value ( self.__kappa , value ) 
+    @property
+    def k ( self ) :
+        """'k'-parameter/shape [k=tanh(kappa)]"""
+        return self.__k
+
+models.append ( KGaussian_pdf )      
 
 # =============================================================================
 ## @class Hyperbolic_pdf 

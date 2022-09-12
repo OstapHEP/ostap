@@ -2927,6 +2927,7 @@ double Ostap::Math::sinc ( const double x )
   //
   return result ;
 }
+
 // ========================================================================
 /*  \f$ f(x) = \frac{ \sin x }{x}  \f$ 
  *  @see https://en.wikipedia.org/wiki/Sinc_function
@@ -2936,7 +2937,6 @@ double Ostap::Math::sin_x  ( const double x )
 { return Ostap::Math::sinc ( x ) ; }
 // ========================================================================
 /*  \f$ f(x) = \frac{ \sinh x }{x}  \f$ 
- *  @see https://en.wikipedia.org/wiki/Sinc_function
  */
 // ========================================================================
 double Ostap::Math::sinh_x ( const double x ) 
@@ -2954,6 +2954,31 @@ double Ostap::Math::sinh_x ( const double x )
   {
     result += term ;
     term   *= x2 / ( ( k + 1 ) * ( k + 2 ) ) ;
+    k      += 2 ;
+  }
+  //
+  return result ;
+}
+
+// ============================================================================
+/*  \f$ f(x) = \frac{ \asinh x }{x}  \f$ 
+ */
+// ========================================================================
+double Ostap::Math::asinh_x ( const double x ) 
+{
+  const double absx = std::abs ( x ) ;
+  if ( 1.e-3 < absx ) { return std::asinh ( absx ) / absx ; } 
+  //
+  const long double x2     = absx * absx ;
+  //
+  long double       term   = - x2 / 2 ;
+  long double       result =    1 ;
+  unsigned long     k      =    3 ;
+  //
+  while ( std::abs ( term ) > 0.5 * s_EPSILON  ) 
+  {
+    result += term / k             ;
+    term   *= - x2 * k / ( k + 1 ) ;
     k      += 2 ;
   }
   //
@@ -3057,9 +3082,48 @@ double Ostap::Math::fupN_F
   }
   return result ;
 }
-// ========================================================================
+// ============================================================================
 
- 
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  inline double  _smooth_psi_
+  ( const double x )
+  { return x <= 0 || s_zero ( x ) ? 0.0 : std::exp ( -1 / x ) ; }
+  // ==========================================================================
+  inline double  _smooth_phi_
+  ( const double x ) 
+  {
+    const double psi1 = _smooth_psi_ (     x ) ;
+    const double psi2 = _smooth_psi_ ( 1 - x ) ;
+    return psi1 / ( psi1 + psi2 ) ;
+  }
+  // ==========================================================================
+}  
+// ========================================================================
+/*  smooth transition function 
+ *   \f[ \phix() = left\{ 
+ *   \begin{array}{ll}
+ *     0 &  x\le b \                            \
+ *     1 &  x\ge b \\ 
+ *    smooth & 
+ *    \end{array} \rigth. \f] 
+ */
+// ========================================================================
+double Ostap::Math::smooth_transtion 
+( const double x , 
+  const double a ,
+  const double b ) 
+{
+  const double xmin = std::min ( a , b ) ;
+  const double xmax = std::max ( a , b ) ;
+  //
+  return
+    x <= xmin ? 0.0 :
+    x >= xmax ? 1.0 :
+    ::_smooth_phi_ ( ( x - xmin ) / ( xmax - xmin ) ) ;
+}
 
 // ============================================================================
 //                                                                      The END 

@@ -2653,7 +2653,7 @@ namespace Ostap
     } ;
     // ========================================================================    
     /** @class QGaussian  
-     *  q-Gaussian distribution:
+     *  q-Gaussian (Tsallis) distribution:
      *  \f$ f(x) = \frac{ \sqrt{\beta}}{C_q} e_q (-\beta (x-\mu)^2)  \f$, 
      *  where  \f$ e_q (x) = \left( 1 + (1-q)x\right)^{\frac{1}{1-q}}\f$ 
      *  @see https://en.wikipedia.org/wiki/Q-Gaussian_distribution
@@ -2743,6 +2743,109 @@ namespace Ostap
       // ======================================================================
       /// get C_q constant 
       double m_cq ; // get C_q constant 
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace ;
+      // ======================================================================
+    } ;     
+    // ========================================================================    
+    /** @class KGaussian  
+     *  k-Gaussiand (Kaniadakis) distribution:
+     *  @see https://en.wikipedia.org/wiki/Kaniadakis_Gaussian_distribution
+     *  Here we use \f$ k = \tanh { \kappa } \f$
+     */
+    class KGaussian  
+    {
+    public:
+      // ======================================================================
+      /** constructor from all arguments            
+       *  @param mean  the mean/mode/location of the peak 
+       *  @param scale scale parmaeter/sigma 
+       *  @param k     k-value
+       */
+      KGaussian 
+      ( const double mean  = 0 ,   // mean/mode/location 
+        const double scale = 1 ,   // scale/sigma
+        const double kappa = 0 );  // kappa-parameter/shape 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// evaluate  pdf  for k-Gaussian distribution
+      double pdf ( const  double x ) const ;
+      /// evaluate  pdf  for k-Gaussian distribution
+      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      // ======================================================================
+    public : // primary getters 
+      // ======================================================================
+      double mean   () const { return  m_mean  ; }
+      double scale  () const { return  m_scale ; }
+      double k      () const { return  m_k     ; }
+      double kappa  () const { return  m_kappa ; }
+      // ======================================================================
+    public : // derived getters 
+      // ======================================================================
+      double peak     () const { return mean  () ; }
+      double mu       () const { return mean  () ; }
+      double mode     () const { return mean  () ; }
+      double median   () const { return mean  () ; }
+      double location () const { return mean  () ; }
+      double sigma    () const { return scale () ; }
+      /// get the original beta 
+      double beta     () const { return 0.5 / ( m_scale * m_scale ) ; }
+      // ======================================================================
+    public : // primay getters 
+      // ======================================================================
+      // set mean 
+      bool setMean  ( const double value ) ;
+      // set kappa 
+      bool setKappa ( const double value ) ;
+      // set scale
+      bool setScale ( const double value ) ;
+      // ======================================================================
+    public : // derived setters 
+      // ======================================================================
+      bool setMu       ( const double value ) { return setMean  ( value )  ; }
+      bool setLocation ( const double value ) { return setMean  ( value )  ; }
+      bool setSigma    ( const double value ) { return setScale ( value )  ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get variance 
+      double variance   () const ;
+      /// get dispersion 
+      double dispersion () const { return variance   () ; }
+      /// get RMS 
+      double  rms       () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      double integral () const { return 1 ; }
+      /// get the integral 
+      double integral 
+      ( const double low  , 
+        const double high ) const ;      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// mean/mode/location 
+      double m_mean  ; // mean/mode/location 
+      /// scale/sigma 
+      double m_scale ; // scale/sigma
+      /// k-value 
+      double m_k     ; // k-value 
+      /// kappa-value 
+      double m_kappa ; // kappa-value 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// get Z_k constant 
+      double m_Zk ; // get Z_k constant 
       // ======================================================================
       /// integration workspace
       Ostap::Math::WorkSpace m_workspace ;
