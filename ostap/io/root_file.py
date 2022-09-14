@@ -1107,7 +1107,7 @@ def copy_file ( source , destination , progress = True ) :
     with rf : rf.Cp ( destination , True ) 
     
     assert os.path.exists ( destination ) and os.path.isfile ( destination ) , \
-           "Misisng destination %s file!" % destination 
+           "Missing destination %s file!" % destination 
     return destination
 
 # =============================================================================
