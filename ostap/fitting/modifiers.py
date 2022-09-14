@@ -106,7 +106,7 @@ class Product1D_pdf(PDF1) :
         name = name if name else self.generate_name ( prefix = "product_%s_%s_"  % ( self.pdf1.name , self.pdf2.name ) )
 
         ## initialize the base class
-        PDF.__init__ ( self , name , xvar =  xvar )
+        PDF1.__init__ ( self , name , xvar =  xvar )
 
         em1 = self.pdf1.pdf.extendMode()
         em2 = self.pdf2.pdf.extendMode()

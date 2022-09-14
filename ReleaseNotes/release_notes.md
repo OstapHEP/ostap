@@ -1,6 +1,7 @@
 ## New features: 
 
  1. tiny tweak in `addChoppingResponse` 
+ 1. add separate `Lumi` object for `Data`-like set of classes 
 
 ## Backward incompatible:  
 
@@ -9,6 +10,7 @@
  1. fix a typo in `frame_progress`
  1. fix a typo in `root_file`
  1. fix a typo in `add_branch` 
+ 1. fix a typo in `modifiers.py`
 
 # v1.9.2.8
 
