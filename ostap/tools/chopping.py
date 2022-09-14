@@ -1640,8 +1640,8 @@ def _add_response_chain ( chain , verbose , *args ) :
 
     status  = None 
 
-    tree_verbose  = verbose and       len ( files ) < 10
-    chain_verbose = verbose and 10 <= len ( files )
+    tree_verbose  = verbose and      len ( files ) < 5
+    chain_verbose = verbose and 5 <= len ( files )
  
     verbose = 1 < len ( files )
     from ostap.utils.progress_bar import progress_bar
@@ -1651,7 +1651,7 @@ def _add_response_chain ( chain , verbose , *args ) :
             ## get the tree 
             tt      = ff.Get(cname)
             ## treat the tree 
-            sc , nt = _add_response_tree ( tt , verbose = tree_verbose , *args )
+            sc , nt = _add_response_tree ( tt , tree_verbose , *args )
             if status is None or sc.isFailure() : status = sc 
             
     newc = ROOT.TChain ( cname )

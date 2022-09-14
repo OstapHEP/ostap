@@ -1870,7 +1870,7 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0
     if len ( chain.files() ) <= 1 :
         return add_new_branch ( chain               ,
                                 name     = name     ,
-                                function = fnuction , 
+                                function = function , 
                                 verbose  = verbose  ,
                                 value    = value    ) 
     

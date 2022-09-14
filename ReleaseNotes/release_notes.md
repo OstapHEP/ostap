@@ -1,11 +1,15 @@
 ## New features: 
 
+ 1. tiny tweak in `addChoppingResponse` 
+
 ## Backward incompatible:  
 
 ## Bug fixes:
 
  1. fix a typo in `frame_progress`
-`
+ 1. fix a typo in `root_file`
+ 1. fix a typo in `add_branch` 
+
 # v1.9.2.8
 
 ## New features: 

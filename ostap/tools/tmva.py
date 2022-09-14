@@ -2029,8 +2029,8 @@ def _add_response_chain ( chain , verbose , *args ) :
 
     status = None 
 
-    tree_verbose  = verbose and       len ( files ) < 10
-    chain_verbose = verbose and 10 <= len ( files )
+    tree_verbose  = verbose and      len ( files ) < 5
+    chain_verbose = verbose and 5 <= len ( files )
     
     from ostap.utils.progress_bar import progress_bar
     for f in progress_bar ( files , len ( files ) , silent = not chain_verbose  ) :
