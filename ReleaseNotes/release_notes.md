@@ -4,6 +4,8 @@
 
 ## Bug fixes:
 
+ 1. fix a typo in `frame_progress`
+`
 # v1.9.2.8
 
 ## New features: 

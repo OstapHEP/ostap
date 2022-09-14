@@ -198,11 +198,11 @@ def frame_progress ( frame  ,
     cnt = frame.Count () 
     if not isatty () : return cnt
 
-    if not length : lenth = len ( frame )
+    if not length : length = len ( frame )
     
-    if   1000 < lenth  : nchunks = 512
-    elif 120  < lenth  : nchunks = 100 
-    else               : return cnt     ## no progress bar for short frames 
+    if   1000 < length  : nchunks = 512
+    elif 120  < length  : nchunks = 100 
+    else                : return cnt     ## no progress bar for short frames 
     
     csize , rr = divmod ( length , nchunks ) 
     if rr : nchunks += 1 
