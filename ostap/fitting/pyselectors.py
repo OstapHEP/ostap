@@ -413,13 +413,13 @@ class Variable(object) :
 
             var = var.strip() 
             assert isinstance ( description , str ) , \
-                   "Variable: illegal type for 'description'"     % ( description , type ( description ) ) 
+                   "Variable: illegal type for 'description' %s/%s" % ( description , type ( description ) ) 
             assert isinstance ( vmin , num_types ) , \
-                   "Variable: illegal type for 'vmin' %s/%s"      % ( vmin        , type ( vmin        ) )
+                   "Variable: illegal type for 'vmin' %s/%s"        % ( vmin        , type ( vmin        ) )
             assert isinstance ( vmax , num_types ) , \
-                   "Variable: illegal type for 'vmax' %s/%s"      % ( vmax        , type ( vmax        ) )
+                   "Variable: illegal type for 'vmax' %s/%s"        % ( vmax        , type ( vmax        ) )
             assert vmin < vmax, \
-                   "Variable: invalid 'minmax' range (%g,%g)"     % ( vmin , vmax ) 
+                   "Variable: invalid 'minmax' range (%g,%g)"       % ( vmin , vmax ) 
 
             if    description                   : pass
             elif  isinstance ( accessor , str ) : description = accessor
