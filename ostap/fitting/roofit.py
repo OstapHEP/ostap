@@ -226,7 +226,31 @@ def _rp_iter_  ( plot ) :
         yield plot.getObject ( i ) 
 
 ROOT.RooPlot.__iter__  =  _rp_iter_
-    
+
+# =============================================================================
+## Iterator over <code>RooPlot</code> items 
+#  @code
+#  frame = ...
+#  for (obj,options,inviisble) in frame.items()  : ...
+#  for (obj,options,invisible) in frame.otemitems()  : ... ## ditto 
+#  @endcode
+def _rp_items_  ( plot ) :
+    """Iterator over <code>RooPlot</code> items  
+    >>> frame = ...
+    >>> for (obj,options,inviisble) in frame.items()  : ...
+    >>> for (obj,options,invisible) in frame.otemitems()  : ... ## ditto 
+    """
+    n = len ( plot ) 
+    for i in range ( n ) :
+        obj       = plot.getObject      ( i )
+        name      = plot.nameOf         ( i )  
+        options   = plot.getDrawOptions ( name )
+        invisible = plot.getInvisible   ( name ) 
+        yield obj , str ( options ) , invisible
+
+ROOT.RooPlot.items      =  _rp_items_
+ROOT.RooPlot.iteritems  =  _rp_items_
+  
 # =============================================================================
 ## format <code>RooPlot</code> as a table
 #  @code
@@ -252,8 +276,10 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
     
     for index , obj in enumerate ( plot )  :
         
-        name = plot.nameOf ( index ) 
-        row  = '%2d' % index , _name ( obj ) , plot.getDrawOptions ( name ) , name  
+        name    = plot.nameOf ( index )
+        options = str ( plot.getDrawOptions ( name ) )
+        if plot.getInvisible ( name ) : options = options + ":I"
+        row  = '%2d' % index , _name ( obj ) , options , name  
 
         table.append ( row )
 
@@ -273,6 +299,8 @@ _new_methods_ += [
     ROOT.RooPlot.__str__      ,
     ROOT.RooPlot.__repr__     ,
     ROOT.RooPlot.table        ,    
+    ROOT.RooPlot.items        , 
+    ROOT.RooPlot.iteritems    , 
     ]
 
 # =============================================================================

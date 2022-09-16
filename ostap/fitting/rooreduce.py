@@ -250,7 +250,7 @@ def _rbspl_factory ( klass , name , title , xvar , knots , pars ) :
     knots = doubles ( knots )
     #
     obj        = klass ( name , title , xvar , knots , pars )
-    obj.__args = pars
+    obj.__args = pars ## ATTENTION HERE! keep the args! 
     return obj 
 
 # =============================================================================
@@ -686,7 +686,39 @@ def _rrfr_reduce_ ( res ) :
     return _rrfr_factory_ , content 
 
 ROOT.RooFitResult.__reduce__  = _rrfr_reduce_ 
+
+# =============================================================================
+## reconstruct/deserialize <code>RooPlot</code> object
+def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items )  :
+    """Reconstruct/deserialize `ROOT.RooPlot` object
+    """
+    plot = klass  ( xmin , xmax , ymin , ymax )
     
+    for ( obj , options , invisible ) in items :
+        if   isinstance ( obj  , ROOT.RooPlotable ) :            
+            plot.addPlotable ( obj , options , invisible )
+        elif isinstance ( obj  , ROOT.TH1 ) and 1 == obj.GetDimension() :
+            plot.addTH1      ( obj , options , invisible )
+        else :
+            plot.addObject   ( obj , options , invisible )
+            
+    plot.__store = items  ## ATTENTION!! keep the items! 
+    return plot 
+                
+
+# =============================================================================
+## reduce RooPlot object
+def _rplot_reduce_ ( plot ) :
+    """Reduce `ROOT.RooPlot` object"""
+    return _rplot_factory_ , ( type ( plot )   ,
+                               plot.GetXaxis().GetXmin() ,
+                               plot.GetXaxis().GetXmax() ,
+                               plot.GetMinimum () ,
+                               plot.GetMaximum () ,
+                               tuple ( i for i in plot.items() ) ) 
+
+ROOT.RooPlot.__reduce__  = _rplot_reduce_ 
+
 # =============================================================================
 ## reduce BreitWigner
 def _rbw_reduce_ ( pdf ):
@@ -2121,6 +2153,7 @@ _decorated_classes_ = (
     ROOT.RooPolyVar                    , 
     ROOT.RooPolynomial                 , 
     ROOT.RooFitResult                  ,
+    ROOT.RooPlot                       ,
     ## Ostap classes 
     Ostap.MoreRooFit.TwoVars           , 
     Ostap.MoreRooFit.Addition          , 

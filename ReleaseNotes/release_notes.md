@@ -1,3 +1,12 @@
+## New features: 
+
+   1. add reduction&deserialisation for `RooPlot` objects (it works better than defautl one) 
+   1. add `items/iteritems` methods for `RooPlot`
+
+## Backward incompatible:  
+
+## Bug fixes:
+
 # v1.9.3.0
 
 ## New features: 
