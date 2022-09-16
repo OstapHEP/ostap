@@ -166,7 +166,7 @@ class RootOnlyShelf(shelve.Shelf):
     #  @attention it depends on proper TFile-decorations in ostap.io.root_file module
     def __init__( self                  ,
                   filename              ,
-                  mode                  ,
+                  mode        = 'c'     ,
                   writeback   = False   ,
                   args        = ()      ) :
         """ Create Root-only database 
@@ -289,11 +289,11 @@ class RootOnlyShelf(shelve.Shelf):
         if self.writeback : self.cache [ key ] = value
         self.dict [ key ] = value 
 
-    ## close the database 
-    def close ( self ) :
-        """Close the database
-        """
-        shelve.Shelf.close ( self )
+    ## ## close the database 
+    ## def close ( self ) :
+    ##     """Close the database
+    ##     """
+    ##    shelve.Shelf.close ( self )
         
     # =========================================================================
     ## list the available keys 
