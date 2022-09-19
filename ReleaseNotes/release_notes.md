@@ -1,3 +1,5 @@
+# v1.9.3.2
+
 ## New features: 
 
    1. add reduction&deserialisation for `RooPlot` objects (it works better than defautl one) 
