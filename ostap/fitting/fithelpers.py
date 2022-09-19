@@ -1999,8 +1999,8 @@ class FitHelper(VarMaker) :
             else                         : vmax = vmx
 
         assert is_good_number ( vmin ), "Invalid type of 'min' %s/%s" % ( vmin , type ( vmin ) )
-        assert is_good_number ( vmax ), "Invalid type of 'max' %s/%s" % ( vmin , type ( vmin ) )
-        assert vmin < vmax, 'Invalid min/max range: %s/%s' % ( vmin , vmax )
+        assert is_good_number ( vmax ), "Invalid type of 'max' %s/%s" % ( vmax , type ( vmax ) )
+        assert vmin < vmax, 'Invalid min/max range for %s: %s/%s' % ( var.name  , vmin , vmax )
         
         return vmin , vmax
 

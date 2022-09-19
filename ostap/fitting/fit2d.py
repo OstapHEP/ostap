@@ -603,7 +603,7 @@ class Fit2D (PDF2) :
         bb_name = self.new_name ( "BB" , suffix  )
         if bkg_2D and isinstance ( bkg_2D , ( tuple , list ) ) :
             from ostap.fitting.models_2d import make_B2D
-            return make_B2D ( xvar = self.xvar , yvar = self.yvar , *bkg_2D , name = bb_name )
+            self.__bb_cmp = make_B2D ( bb_name , self.xvar , self.yvar , *bkg_2D )
         else      : 
             self.__bkg_2x = self.make_bkg ( bkg_2x , self.new_name ( 'Bkg2X_BB' , suffix ) , self.xvar )
             self.__bkg_2y = self.make_bkg ( bkg_2y , self.new_name ( 'Bkg2Y_BB' , suffix ) , self.yvar )            

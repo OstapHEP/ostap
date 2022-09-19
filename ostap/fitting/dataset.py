@@ -1900,7 +1900,7 @@ def _ds_symmetrize_ ( ds , var1 , var2 , *vars ) :
     mnv = min ( [ v.getMin () for v in nvars if hasattr ( v , 'getMin' ) ] ) 
     mxv = max ( [ v.getMax () for v in nvars if hasattr ( v , 'getMax' ) ] ) 
 
-    names   = [ v.name for v in nvars ]
+    names   = tuple ( v.name for v in nvars )
 
     nds     = ds.emptyClone ()
     nvarset = nds.varset    ()
@@ -1913,12 +1913,12 @@ def _ds_symmetrize_ ( ds , var1 , var2 , *vars ) :
     ## loop over the data set 
     for entry in ds :
 
-        values = [ v.getVal() for v in entry if v in varset ]
+        values = [ v.getVal() for v in entry if v.name in names ]        
         random.shuffle ( values )
-
+        
         for v in nvarset :
             n = v.name 
-            if not n in names : v.setVal ( entry[n].value )                
+            if not n in names : v.setVal ( entry [ n ] .value )                
             else              : v.setVal ( values.pop()   )
 
         nds.add ( nvarset )

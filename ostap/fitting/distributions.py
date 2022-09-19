@@ -38,7 +38,7 @@ __all__     = (
     'Amoroso_pdf'        , ## another view of generalized Gamma distribution
     'LogGammaDist_pdf'   , ## Gamma-distributuon in shape/scale parameterization
     'Log10GammaDist_pdf' , ## Gamma-distributuon in shape/scale parameterization
-    'LogGamma_pdf'       , ## 
+    'LogGamma_pdf'       , ## Log-Gamma distribution 
     'BetaPrime_pdf'      , ## Beta-prime distribution 
     'Landau_pdf'         , ## Landau distribution 
     'Argus_pdf'          , ## ARGUS distribution 
@@ -46,7 +46,7 @@ __all__     = (
     'TwoExpos_pdf'       , ## difference of two exponents
     'Gumbel_pdf'         , ## Gumbel distributions
     'Rice_pdf'           , ## Rice distribution 
-    'GenInvGauss_pdf'    , ## Rice distribution 
+    'GenInvGauss_pdf'    , ## Generalized Inverse Gaussian distribution
     'Weibull_pdf'        , ## Weibull distributions
     'Tsallis_pdf'        , ## Tsallis PDF 
     'QGSM_pdf'           , ## QGSM PDF 

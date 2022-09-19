@@ -7,6 +7,10 @@
 
 ## Bug fixes:
 
+   1. fix small typo in `dataset.symmetrise`
+   1. fix small typo  In `Fit2D` constructor 
+   1. fix some other typos 
+
 # v1.9.3.0
 
 ## New features: 
