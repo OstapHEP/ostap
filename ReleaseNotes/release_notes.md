@@ -1,3 +1,14 @@
+## New features: 
+
+  1. make `sPlot1D` serializeable 
+  1  add new test for local sPlotting 
+
+## Backward incompatible:  
+
+## Bug fixes:
+
+  1. fix serialisation for `Ostap::Functions::FuncTHND` and `Ostap::Functions::FuncRooTHND` objects 
+
 # v1.9.3.2
 
 ## New features: 

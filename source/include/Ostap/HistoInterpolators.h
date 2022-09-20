@@ -70,7 +70,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-11-16
      */
-    class Histo1D : HistoInterpolator 
+    class Histo1D : public HistoInterpolator 
     {
     public:
       // ======================================================================
@@ -120,7 +120,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-11-16
      */
-    class Histo2D : HistoInterpolator 
+    class Histo2D : public HistoInterpolator 
     {
     public:
       // ======================================================================
@@ -176,7 +176,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-11-16
      */
-    class Histo3D : HistoInterpolator 
+    class Histo3D : public HistoInterpolator 
     {
     public:
       // ======================================================================
@@ -230,7 +230,6 @@ namespace Ostap
       Ostap::Math::HistoInterpolation::Type m_tz { Ostap::Math::HistoInterpolation::Default };
       // ======================================================================
     };
-
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

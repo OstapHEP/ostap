@@ -113,9 +113,7 @@ class sPlot1D(object) :
                 
                 fitresult , f = pdf.fitTo ( dataset , silent = True , draw = False , **fitopts )
                 ## fitresult , f = pdf.fitTo ( dataset , silent = True , draw = True , **fitopts )
-                
-
-                
+                                
         elif fitresult :
             
             pars   = fitresult.floatParsFinal()
@@ -124,7 +122,7 @@ class sPlot1D(object) :
             if set ( names )  != pnames :
                 raise RuntimeError("Rerun fit with with only %s floating " % names )
 
-        ## temlate historgam 
+        ## template histogram 
         template = pdf.make_histo ( nbins )
 
         ## dictionary of components 
@@ -173,27 +171,61 @@ class sPlot1D(object) :
         self.__components  =  components 
         self.__hweights    = hweights 
         self.__weights     =  weights         
-                
+        self.__access      =  access
+
     @property
     def components  ( self ) :
-        """``components''  :  get fit components (as functions)"""
-        return self.__components
+        """'components'  :  get fit components (as 1D-functions)"""
+        return self.__components 
 
     @property
     def hcomponents ( self ) :
-        """``hcomponents'' : get fit components  (as histograms)"""
+        """'hcomponents' : get fit components  (as 1D-histograms)"""
         return self.__hcomponents
         
     @property
     def weights     ( self ) :
-        """``weights''     : get sWeights (as functions)"""
+        """'weights'     : get sWeights (as 1D-functions)"""
         return self.__weights
     
     @property
     def hweights    ( self ) :
-        """``hweights''    : get sWeights (as histograms)"""
+        """'hweights'    : get sWeights (as 1D-histograms)"""
         return self.__hweights
-    
+
+    @property
+    def access ( self ) :
+        """'access' : parameters for histogram->function transition"""
+        return self.__access
+
+    ## serialisation/pickling 
+    def __getstate__  ( self ) :
+        """Serializarion/pickling
+        """
+        return { 'hcomponents' : self.hcomponents ,
+                 'hweights'    : self.hweights    ,
+                 'access'      : self.access      } 
+                 
+    ## deserialisation/unpickling
+    def __setstate__  ( self , state ) :
+        """Deserialisation/unpickling
+        """
+
+        self.__hcomponents = {}
+        self.__hweights    = {}
+        self.__access      = {}
+
+        self.__hcomponents.update ( state.get ( 'hcomponents' , {} ) )
+        self.__hweights   .update ( state.get ( 'hweights'    , {} ) )
+        self.__access     .update ( state.get ( 'access'      , {} ) )
+        
+        self.__components = {}
+        for k in self.__hcomponents :
+            self.__components [k] = Histo1DFun ( self.__hcomponents [k] , **self.__access )
+        
+        self.__weights    = {} 
+        for k in self.__hweights    :
+            self.__weights    [k] = Histo1DFun ( self.__hweights    [k] , **self.__access )  
 
 ## =============================================================================
 if '__main__' == __name__ :

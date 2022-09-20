@@ -33,8 +33,8 @@ import ROOT, math, random, array
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_trees_cuts' )
-else                       : logger = getLogger ( __name__           )
+if '__main__' ==  __name__ : logger = getLogger ( 'test_trees_addbranch' )
+else                       : logger = getLogger ( __name__               )
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :

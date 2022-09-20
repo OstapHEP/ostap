@@ -51,23 +51,25 @@ namespace Ostap
        *  @param extrapolate   (INPUT) use extrapolation?
        *  @param density       (INPUT) use  density?
        */
-      FuncTH1 ( const TH1&           histo                     , 
-                const std::string&   xvar                      , 
-                const TTree*         tree          =  nullptr  ,
-                const Ostap::Math::HistoInterpolation::Type tx = 
-                Ostap::Math::HistoInterpolation::Default       ,
-                const bool           edges         = true      ,
-                const bool           extrapolate   = false     , 
-                const bool           density       = false     ) ;
+      FuncTH1
+      ( const TH1&           histo                     , 
+        const std::string&   xvar                      , 
+        const TTree*         tree          =  nullptr  ,
+        const Ostap::Math::HistoInterpolation::Type tx = 
+        Ostap::Math::HistoInterpolation::Default       ,
+        const bool           edges         = true      ,
+        const bool           extrapolate   = false     , 
+        const bool           density       = false     ) ;
       // ======================================================================
       /** constructor from the histogram 
        *  @param histo         (INPUT) the historgam 
        *  @param xvar          (INPUT) the expression/variable 
        *  @param tree          (INPUT) the tree 
        */
-      FuncTH1 ( const Ostap::Math::Histo1D& histo            , 
-                const std::string&          xvar             , 
-                const TTree*                tree  =  nullptr ) ;
+      FuncTH1
+      ( const Ostap::Math::Histo1D& histo            , 
+        const std::string&          xvar             , 
+        const TTree*                tree  =  nullptr ) ;
       // ======================================================================
       // copy constructor
       FuncTH1 ( const FuncTH1& right ) ;
@@ -78,7 +80,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the histo
-      const  Ostap::Math::Histo1D& histo() const ;
+      const  Ostap::Math::Histo1D& histo() const { return m_histo ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -113,17 +115,18 @@ namespace Ostap
        *  @param extrapolate   (INPUT) use extrapolation?
        *  @param density       (INPUT) use  density?
        */
-      FuncTH2 ( const TH2&           histo                     , 
-                const std::string&   xvar                      , 
-                const std::string&   yvar                      , 
-                const TTree*         tree           =  nullptr ,
-                const Ostap::Math::HistoInterpolation::Type tx = 
-                Ostap::Math::HistoInterpolation::Default       ,
-                const Ostap::Math::HistoInterpolation::Type ty = 
-                Ostap::Math::HistoInterpolation::Default       , 
-                const bool           edges          = true     ,
-                const bool           extrapolate    = false    , 
-                const bool           density        = false    );
+      FuncTH2
+      ( const TH2&           histo                     , 
+        const std::string&   xvar                      , 
+        const std::string&   yvar                      , 
+        const TTree*         tree           =  nullptr ,
+        const Ostap::Math::HistoInterpolation::Type tx = 
+        Ostap::Math::HistoInterpolation::Default       ,
+        const Ostap::Math::HistoInterpolation::Type ty = 
+        Ostap::Math::HistoInterpolation::Default       , 
+        const bool           edges          = true     ,
+        const bool           extrapolate    = false    , 
+        const bool           density        = false    );
       // ======================================================================
       /** constructor from the histogram 
        *  @param histo         (INPUT) the historgam 
@@ -131,10 +134,11 @@ namespace Ostap
        *  @param yvar          (INPUT) the expression/variable 
        *  @param tree          (INPUT) the tree 
        */
-      FuncTH2 ( const Ostap::Math::Histo2D& histo            , 
-                const std::string&          xvar             , 
-                const std::string&          yvar             , 
-                const TTree*                tree  =  nullptr ) ;
+      FuncTH2 
+      ( const Ostap::Math::Histo2D& histo            , 
+        const std::string&          xvar             , 
+        const std::string&          yvar             , 
+        const TTree*                tree  =  nullptr ) ;
       // ======================================================================
       // copy constructor
       FuncTH2 ( const FuncTH2& right ) ;
@@ -145,7 +149,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the histo
-      const Ostap::Math::Histo2D& histo() const ;
+      const Ostap::Math::Histo2D& histo() const { return m_histo ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -182,20 +186,21 @@ namespace Ostap
        *  @param extrapolate   (INPUT) use extrapolation?
        *  @param density       (INPUT) use  density?
        */
-      FuncTH3 ( const TH3&           histo                     , 
-                const std::string&   xvar                      , 
-                const std::string&   yvar                      , 
-                const std::string&   zvar                      , 
-                const TTree*         tree           =  nullptr ,
-                const Ostap::Math::HistoInterpolation::Type tx = 
-                Ostap::Math::HistoInterpolation::Default       ,
-                const Ostap::Math::HistoInterpolation::Type ty = 
-                Ostap::Math::HistoInterpolation::Default       , 
-                const Ostap::Math::HistoInterpolation::Type tz =
-                Ostap::Math::HistoInterpolation::Default       , 
-                const bool           edges          = true     ,
-                const bool           extrapolate    = false    , 
-                const bool           density        = false    );
+      FuncTH3 
+      ( const TH3&           histo                     , 
+        const std::string&   xvar                      , 
+        const std::string&   yvar                      , 
+        const std::string&   zvar                      , 
+        const TTree*         tree           =  nullptr ,
+        const Ostap::Math::HistoInterpolation::Type tx = 
+        Ostap::Math::HistoInterpolation::Default       ,
+        const Ostap::Math::HistoInterpolation::Type ty = 
+        Ostap::Math::HistoInterpolation::Default       , 
+        const Ostap::Math::HistoInterpolation::Type tz =
+        Ostap::Math::HistoInterpolation::Default       , 
+        const bool           edges          = true     ,
+        const bool           extrapolate    = false    , 
+        const bool           density        = false    );
       // ======================================================================
       /** constructor from the histogram 
        *  @param histo         (INPUT) the historgam 
@@ -204,11 +209,12 @@ namespace Ostap
        *  @param zvar          (INPUT) the expression/variable 
        *  @param tree          (INPUT) the tree 
        */
-      FuncTH3 ( const Ostap::Math::Histo3D& histo            , 
-                const std::string&          xvar             , 
-                const std::string&          yvar             , 
-                const std::string&          zvar             , 
-                const TTree*                tree  =  nullptr ) ;
+      FuncTH3
+      ( const Ostap::Math::Histo3D& histo            , 
+        const std::string&          xvar             , 
+        const std::string&          yvar             , 
+        const std::string&          zvar             , 
+        const TTree*                tree  =  nullptr ) ;
       // ======================================================================
       // copy contructor
       // ======================================================================
@@ -218,7 +224,7 @@ namespace Ostap
       FuncTH3 () = default ;
       // ======================================================================
       /// get the histo
-      const Ostap::Math::Histo3D& histo() const ;
+      const Ostap::Math::Histo3D& histo() const { return m_histo ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -249,23 +255,25 @@ namespace Ostap
        *  @param extrapolate   (INPUT) use extrapolation?
        *  @param density       (INPUT) use  density?
        */
-      FuncRooTH1 ( const TH1&           histo                     , 
-                   const std::string&   xvar                      , 
-                   const RooAbsData*    data       =  nullptr     ,
-                   const Ostap::Math::HistoInterpolation::Type tx = 
-                   Ostap::Math::HistoInterpolation::Default       ,
-                   const bool           edges         = true      ,
-                   const bool           extrapolate   = false     , 
-                   const bool           density       = false     ) ;
+      FuncRooTH1
+      ( const TH1&           histo                     , 
+        const std::string&   xvar                      , 
+        const RooAbsData*    data       =  nullptr     ,
+        const Ostap::Math::HistoInterpolation::Type tx = 
+        Ostap::Math::HistoInterpolation::Default       ,
+        const bool           edges         = true      ,
+        const bool           extrapolate   = false     , 
+        const bool           density       = false     ) ;
       // ======================================================================
       /** constructor from the histogram 
        *  @param histo         (INPUT) the historgam 
        *  @param xvar          (INPUT) the expression/variable 
        *  @param tree          (INPUT) the tree 
        */
-      FuncRooTH1 ( const Ostap::Math::Histo1D& histo            , 
-                   const std::string&          xvar             , 
-                   const RooAbsData*           data  =  nullptr ) ;
+      FuncRooTH1
+      ( const Ostap::Math::Histo1D& histo            , 
+        const std::string&          xvar             , 
+        const RooAbsData*           data  =  nullptr ) ;
       // ======================================================================
       /// default constructor, needed for serialization 
       FuncRooTH1 () = default ;
@@ -273,7 +281,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the histo
-      const Ostap::Math::Histo1D& histo() const ;
+      const Ostap::Math::Histo1D& histo() const { return m_histo ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -300,17 +308,18 @@ namespace Ostap
        *  @param extrapolate   (INPUT) use extrapolation?
        *  @param density       (INPUT) use  density?
        */
-      FuncRooTH2 ( const TH2&           histo                     , 
-                   const std::string&   xvar                      , 
-                   const std::string&   yvar                      , 
-                   const RooAbsData*    data       =  nullptr     ,
-                   const Ostap::Math::HistoInterpolation::Type tx = 
-                   Ostap::Math::HistoInterpolation::Default       ,
-                   const Ostap::Math::HistoInterpolation::Type ty = 
-                   Ostap::Math::HistoInterpolation::Default       ,
-                   const bool           edges         = true      ,
-                   const bool           extrapolate   = false     , 
-                   const bool           density       = false     ) ;
+      FuncRooTH2 
+      ( const TH2&           histo                     , 
+        const std::string&   xvar                      , 
+        const std::string&   yvar                      , 
+        const RooAbsData*    data       =  nullptr     ,
+        const Ostap::Math::HistoInterpolation::Type tx = 
+        Ostap::Math::HistoInterpolation::Default       ,
+        const Ostap::Math::HistoInterpolation::Type ty = 
+        Ostap::Math::HistoInterpolation::Default       ,
+        const bool           edges         = true      ,
+        const bool           extrapolate   = false     , 
+        const bool           density       = false     ) ;
       // ======================================================================
       /** constructor from the histogram 
        *  @param histo         (INPUT) the historgam 
@@ -318,10 +327,11 @@ namespace Ostap
        *  @param yvar          (INPUT) the expression/variable 
        *  @param data          (INPUT) data
        */
-      FuncRooTH2 ( const Ostap::Math::Histo2D& histo            , 
-                   const std::string&          xvar             , 
-                   const std::string&          yvar             , 
-                   const RooAbsData*           data  =  nullptr ) ;
+      FuncRooTH2
+      ( const Ostap::Math::Histo2D& histo            , 
+        const std::string&          xvar             , 
+        const std::string&          yvar             , 
+        const RooAbsData*           data  =  nullptr ) ;
       // ======================================================================
       /// default constructor, needed for serialization 
       FuncRooTH2 () = default ;
@@ -329,7 +339,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the histo
-      const Ostap::Math::Histo2D& histo() const ;
+      const Ostap::Math::Histo2D& histo() const { return m_histo ; } 
       // ======================================================================
     private:
       // ======================================================================
@@ -358,20 +368,21 @@ namespace Ostap
        *  @param extrapolate   (INPUT) use extrapolation?
        *  @param density       (INPUT) use  density?
        */
-      FuncRooTH3 ( const TH3&           histo                     , 
-                   const std::string&   xvar                      , 
-                   const std::string&   yvar                      , 
-                   const std::string&   zvar                      , 
-                   const RooAbsData*    data       =  nullptr     ,
-                   const Ostap::Math::HistoInterpolation::Type tx = 
-                   Ostap::Math::HistoInterpolation::Default       ,
-                   const Ostap::Math::HistoInterpolation::Type ty = 
-                   Ostap::Math::HistoInterpolation::Default       ,
-                   const Ostap::Math::HistoInterpolation::Type tz = 
-                   Ostap::Math::HistoInterpolation::Default       ,
-                   const bool           edges         = true      ,
-                   const bool           extrapolate   = false     , 
-                   const bool           density       = false     ) ;
+      FuncRooTH3
+      ( const TH3&           histo                     , 
+        const std::string&   xvar                      , 
+        const std::string&   yvar                      , 
+        const std::string&   zvar                      , 
+        const RooAbsData*    data       =  nullptr     ,
+        const Ostap::Math::HistoInterpolation::Type tx = 
+        Ostap::Math::HistoInterpolation::Default       ,
+        const Ostap::Math::HistoInterpolation::Type ty = 
+        Ostap::Math::HistoInterpolation::Default       ,
+        const Ostap::Math::HistoInterpolation::Type tz = 
+        Ostap::Math::HistoInterpolation::Default       ,
+        const bool           edges         = true      ,
+        const bool           extrapolate   = false     , 
+        const bool           density       = false     ) ;
       // ======================================================================
       /** constructor from the histogram 
        *  @param histo         (INPUT) the historgam 
@@ -380,17 +391,18 @@ namespace Ostap
        *  @param zvar          (INPUT) the expression/variable 
        *  @param data          (INPUT) data
        */
-      FuncRooTH3 ( const Ostap::Math::Histo3D& histo            , 
-                   const std::string&          xvar             , 
-                   const std::string&          yvar             , 
-                   const std::string&          zvar             , 
-                   const RooAbsData*           data  =  nullptr ) ;
+      FuncRooTH3
+      ( const Ostap::Math::Histo3D& histo            , 
+        const std::string&          xvar             , 
+        const std::string&          yvar             , 
+        const std::string&          zvar             , 
+        const RooAbsData*           data  =  nullptr ) ;
       // ======================================================================
       /// default constructor, needed for serialization 
       FuncRooTH3 () = default ;
       // ======================================================================
       /// get the histo
-      const Ostap::Math::Histo3D& histo() const ;
+      const Ostap::Math::Histo3D& histo() const { return m_histo ; }
       // ======================================================================
     private:
       // ======================================================================
