@@ -1,7 +1,7 @@
 ## New features: 
 
   1. make `sPlot1D` serializeable 
-  1  add new test for local sPlotting 
+  1. add new test for local sPlotting 
 
 ## Backward incompatible:  
 
