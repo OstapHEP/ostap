@@ -1,3 +1,5 @@
+# v1.9.3.4
+
 ## New features: 
 
   1. make `sPlot1D` serializeable 
@@ -73,7 +75,7 @@
     1. add progress bar to `Ostap::PyIterator` 
     1. tuning `frame_project`
     1. tweak parallel_test_toys 
-    1. issue warning message for `AsymptorocError=True` for ROOT<(6,27), see [ROOT-PR-11282](https://github.com/root-project/root/pull/11282)
+    1. issue warning message for `AsymptoticcError=True` for ROOT<(6,27), see [ROOT-PR-11282](https://github.com/root-project/root/pull/11282)
 
 ## Backward incompatible:  
 

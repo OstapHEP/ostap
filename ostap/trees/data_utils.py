@@ -611,7 +611,7 @@ class Files(object):
     #  - protocols are ignored 
     @property 
     def commonpath ( self ) :
-        """``commonpath'': common path (prefix) for all files in collection
+        """'commonpath': common path (prefix) for all files in collection
         - protocols are ignored 
         """
         from ostap.utils.basic import commonpath 
@@ -736,26 +736,26 @@ class Data(Files):
 
     @property
     def validate ( self ) :
-        """``check'' : make check for `TTree`/`TChain` structures
+        """'check' : make check for `TTree`/`TChain` structures
         """
         return self.__check
     
     @property
     def chain_name ( self ) :
-        """``chain_name'' : the name of TTree/TChain object
+        """'chain_name' : the name of TTree/TChain object
         """
         return self.__chain_name
     
     @property
     def chain ( self ) :
-        """``chain'' : (re)built and return `TChain` object"""
+        """'chain' : (re)built and return `TChain` object"""
         ch = ROOT.TChain( self.chain_name )
         for f in self.files : ch.Add ( f )
         return ch
     
     @property
     def check ( self ) :
-        """``check'' : make check for `TTree`/`TChain` structures
+        """'check' : make check for `TTree`/`TChain` structures
         """
         return self.__check
 
@@ -842,7 +842,7 @@ class Data(Files):
     #  @see ROOT::RDataFrame
     @property
     def frame ( self ) :
-        """Get the DataFrame for the chain"""
+        """'frame': get the DataFrame for the chain"""
         from   ostap.frames.frames import DataFrame, frame_progress 
         f = DataFrame ( self.chain )
         if not self.filent:
@@ -896,35 +896,35 @@ class Data2(Data):
         
     @property 
     def files1    ( self ) :
-        """``files1'' : the list of files fore the first chain (same as ``files'') """
+        """'files1' : the list of files fore the first chain (same as 'files') """
         return self.files 
 
     @property 
     def files2    ( self ) :
-        """``files2'' : the list of files for the second chain (the same)"""
-        return self.files1
+        """'files2' : the list of files for the second chain (the same)"""
+        return self.files
 
     @property
     def chain1_name ( self ) :
-        """``chain1_name'' : the name of the first TTree/TChain object (same as ``chain_name'')
+        """'chain1_name' : the name of the first TTree/TChain object (same as 'chain_name')
         """
         return self.chain_name
 
     @property
     def chain2_name ( self ) :
-        """``chain2_name'' : the name of the second TTree/TChain object
+        """'chain2_name' : the name of the second TTree/TChain object
         """
         return self.__chain2_name
 
     @property
     def chain1 ( self ) :
-        """``chain1'' : (re)built and return the first `TChain` object (same as ``chain'')
+        """'chain1' : (re)built and return the first `TChain` object (same as `chain')
         """
         return self.chain
     
     @property
     def chain2 ( self ) :
-        """``chain2'' : (re)built and return the second `TChain` object (same as ``chain'')
+        """'chain2' : (re)built and return the second `TChain` object
         """
         ch = ROOT.TChain( self.chain2_name )
         for f in self.files2 : ch.Add ( f )
@@ -934,7 +934,6 @@ class Data2(Data):
     def treatFile ( self, the_file ) :
         """Add the file to TChain
         """
-        
         ## suppress Warning/Error messages from ROOT 
         with rootError() :
             
@@ -1035,7 +1034,7 @@ class Data2(Data):
     #  @see ROOT::RDataFrame
     @property
     def frame1 ( self ) :
-        """``frame1'': Get the DataFrame for the chain (same as ``frame'')
+        """'frame1': Get the DataFrame for the chain (same as 'frame')
         """
         return self.frame
     
@@ -1044,7 +1043,7 @@ class Data2(Data):
     #  @see ROOT::RDataFrame
     @property
     def frame2 ( self ) :
-        """``frame2'': Get the DataFrame for the second chain"""
+        """'frame2': Get the DataFrame for the second chain"""
         from   ostap.frames.frames import DataFrame, frame_progress 
         f = DataFrame ( self.chain2  )
         if not self.silent :
