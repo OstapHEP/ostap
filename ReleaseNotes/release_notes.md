@@ -11,6 +11,7 @@
 
   1. fix serialisation for `Ostap::Functions::FuncTHND` and `Ostap::Functions::FuncRooTHND` objects 
 
+
 # v1.9.3.2
 
 ## New features: 
