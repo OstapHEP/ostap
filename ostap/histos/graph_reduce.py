@@ -15,6 +15,7 @@ __date__    = "2011-06-07"
 __all__     = (
     ) 
 # =============================================================================
+from   ostap.core.meta_info           import root_info 
 from   ostap.math.reduce              import root_factory
 from   ostap.core.ostap_types         import num_types, integer_types  
 from   ostap.plotting.draw_attributes import copy_graph_attributes  
@@ -117,11 +118,10 @@ def graph_errors_factory  ( klass     ,
     """Reconstruct/deserialize/unpickle `ROOT.TGraphErrors` object
     -see `ROOT.TGraphErrors`
     """
-    graph = graph_factory ( klass , name , title , minmax , attloine , attfill , attmarker , xvalues , yvalues )
+    graph = graph_factory ( klass , name , title , minmax , attline , attfill , attmarker , xvalues , yvalues )
     ##
     for i, ex, ey in zip ( range ( graph.GetN()  ) , xerrors , yerrors ) : 
-        graph.SetPointErrorX ( i , ex )
-        graph.SetPointErrorY ( i , ey )
+        graph.SetPointError ( i , ex , ey )
     ##
     return graph
 
@@ -196,6 +196,106 @@ def graph_asymerrors_reduce ( graph ) :
                                                   yherrors )
 
 ROOT.TGraphAsymmErrors.__reduce__ = graph_asymerrors_reduce
+
+
+if (6,20) <= root_info : 
+    # =========================================================================
+    ## reconstruct/deserialize/unpickle <code>TGraphMultiErrors</code> object
+    #  @see TGraphMultiErrors
+    def graph_multierrors_factory  ( klass     ,
+                                     name      ,
+                                     title     ,
+                                     minmax    ,
+                                     attline   ,
+                                     attfill   ,
+                                     attmarker , 
+                                     xvalues   ,
+                                     yvalues   ,
+                                     mode      , 
+                                     xlerrors  ,
+                                     xherrors  ,
+                                     ylerrors  ,
+                                     yherrors  ,
+                                     attsline  ,
+                                     attsfill  ) :
+        """Reconstruct/deserialize/unpickle `ROOT.TGraphAsymmErrors` object
+        -see `ROOT.TGraphAsymmErrors`
+        """
+        graph = graph_factory ( klass , name , title , minmax , attline , attfill , attmarker , xvalues , yvalues )
+        ##
+        graph.graph.SetSumErrorsMode( mode ) 
+        NE = len ( ylerrors ) 
+        for i, exl, exh , eyl , eyh  in zip ( range ( graph.GetN() ) , xlerrors , xherrors ) :
+            graph.SetPointEXlow  ( i , exl )
+            graph.SetPointEXhigh ( i , exh )
+            for e , yle , yhe in zip ( range ( NE ) , xlerrors , yherrors ) :
+                graph.SetPointEY ( i , e , eyl [ i ] , eyh [ i ] )
+                
+        ## line attributes 
+        for e , aline in zip ( range ( NE ) , attsline ) :
+            la = ROOT.TAttLine ( *aline )
+            al = graph.GetAttLine ( e )
+            if al : la.Copy ( al )
+            
+        ## fill attributes 
+        for e , afill in zip ( range ( NE ) , attsfill ) :
+            fa = ROOT.TAttFill ( *afill )
+            af = graph.GetAttFill ( e )
+            if af : fa.Copy ( af )  
+        ##    
+        return graph
+
+
+    # =========================================================================
+    ## Reduce/serialize/pickle  simple <code>TGraphMultiErrors</code> object
+    #  @see ROOT.TGraphMultiErorrs
+    def graph_multierrors_reduce ( graph ) :
+        """Reduce/serialize/pickle simple `ROOT.TGraphMultiErrors` object
+        - see `ROOT.TGraphMultiErrors`
+        """
+        ##
+        _ , content = graph_reduce ( graph )
+        ## 
+        N  = graph.GetN        ()
+        xlerrors = array.array ( 'd' , ( graph.GetErrorXlow  ( i ) for i in range ( N ) ) )
+        xherrors = array.array ( 'd' , ( graph.GetErrorXhigh ( i ) for i in range ( N ) ) )
+        ##
+        NE = graph.GetNYErrors ()
+        ylerrors = []
+        yherrors = []
+        attsline = []
+        attsfill = []
+        for e in range ( NE ) :  
+            ylerrors.append ( array.array ( 'd' , ( graph.GetErrorYlow  ( i , e ) for i in range ( N ) ) ) )
+            yherrors.append ( array.array ( 'd' , ( graph.GetErrorYhigh ( i , e ) for i in range ( N ) ) ) )
+            ## line attributes 
+            aline = graph.GetAttLine ( e )
+            if aline : attl = aline.GetLineColor () , aline.GetLineStyle (), aline.GetLineWidth ()
+            else     : attl = 1 , 1 , 1 
+            attsline.append ( attl )
+            ## fill attribtes 
+            afill = graph.GetAttFill ( e )
+            if afill : attf = afill.GetFillColor () , afill.GetFillStyle ()
+            else     : attf = 1 , 1000 
+            attsfill.append ( attf )
+
+        ##
+        ylerrors = tuple ( ylerrors )
+        yherrors = tuple ( yherrors )
+        attsline = tuple ( attsline )
+        attsfill = tuple ( attsfill )
+        
+        ##
+        return graph_multierrors_factory , content + ( graph.GetSumErrorsMode() ,
+                                                       xlerrors ,
+                                                       xherrors ,
+                                                       ylerrors ,
+                                                       yherrors ,
+                                                       attsline ,
+                                                       attsfill )
+    
+    
+    ROOT.TGraphMultiErrors.__reduce__ = graph_multierrors_reduce
 
 # =============================================================================
 
