@@ -3035,7 +3035,6 @@ def fill_area ( fun1                     ,
         
     graph.SetFillStyle(3013) 
     return graph 
-
 # ==============================================================================
 ##  transpose the arrow
 #   @code

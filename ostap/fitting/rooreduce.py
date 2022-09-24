@@ -18,12 +18,14 @@ __all__     = (
     ) 
 # =============================================================================
 from   builtins                    import range
+from   ostap.core.meta_info        import root_info 
 from   ostap.math.base             import doubles
 from   ostap.core.core             import Ostap
 from   ostap.math.reduce           import root_factory
 import ostap.fitting.variables
-import ostap.fitting.roocollections  
-import ROOT, random, array, ctypes, math   
+import ostap.fitting.roocollections
+import ostap.histos.graph_reduce   as     GR 
+import ROOT, random, array, ctypes, math, itertools    
 # =============================================================================
 # logging 
 # =============================================================================
@@ -46,6 +48,701 @@ def root_store_factory ( klass , *params ) :
     ## keep argumets with the newly created obnject  
     obj.__store = params    ## Attention - keep argumetns with newly crfeated object!
     return obj 
+
+
+# =============================================================================
+## Some native ROOT/RooFit objects 
+# =============================================================================
+
+    
+# =============================================================================
+## Dedicated unpickling factory for RooRealVar
+def _rrv_factory ( args , errors , binnings , fixed , *attrs ) :
+    """ Dedicated unpickling factory for `ROOT.RooRealVar`
+    """
+
+    ## create it
+    rrv = ROOT.RooRealVar ( *args )
+
+    ## set errors if needed 
+    if   errors and  2 == len ( errors ) : rrv.setAsymError ( *errors ) 
+    elif errors and  1 == len ( errors ) : rrv.setError     ( *errors )
+
+    for b in binnings :
+        if b : rrv.setBinning ( b , b.GetName ()) 
+
+    rrv.setConstant ( fixed )
+    
+    if attrs :
+        battrs = attrs[0] 
+        for n , a in battrs : rrv.setAttribute          ( n , a )
+        if 1 < len ( attrs ) :
+            sattrs = attrs[1] 
+            for n , a in sattrs : rrv.setStringAttribute    ( n , a )
+            if 2 < len ( attrs ) :
+                tattrs = attrs[2]             
+                for n , a in tattrs : rrv.setTransientAttribute ( n , a ) 
+    
+    return rrv
+
+# =============================================================================
+## Reducing of <code>RooRealVar</code> for pickling/unpickling 
+#  @see RooRooRealVar 
+def _rrv_reduce ( rrv ) :
+    """ Reducing of `ROOT.RooRealVar` for pickling 
+    - see ROOT.RooRooRealVar 
+    """
+    name    = rrv.name 
+    title   = rrv.title
+    value   = rrv.getVal () 
+
+    has_min = rrv.hasMin ()
+    has_max = rrv.hasMax ()
+
+    ## constructor arguments 
+    if has_min and has_max :
+        args = name , title , value ,  rrv.getMin () , rrv.getMax ()              , rrv.getUnit ()
+    elif has_min : 
+        args = name , title , value ,  rrv.getMin () , ROOT.RooNumber.infinity () , rrv.getUnit () 
+    elif has_max : 
+        args = name , title , value , -ROOT.RooNumber.infinity () , rrv.getMax () , rrv.getUnit () 
+    else :
+        args = name , title , value ,  rrv.getUnit () 
+
+    ## errors 
+    if   rrv.hasAsymError () :
+        errors = rrv.getAsymErrorLo () , rrv.getAsymErrorHi ()
+    elif rrv.hasError   () :
+        errors = rrv.getError() ,
+    else :
+        errors = () 
+
+    ## binings 
+        
+    binnings = tuple (   rrv.getBinning ( n , False )       for n in rrv.getBinningNames     () )
+
+    ## attributes:
+    
+    battrs   = tuple ( ( n , rrv.getAttribute          ( n ) ) for   n       in rrv.attributes          () ) 
+    sattrs   = tuple ( ( n , a                               ) for ( n , a ) in rrv.stringAttributes    () ) 
+    tattrs   = tuple ( ( n , rrv.getTransientAttribute ( n ) ) for   n       in rrv.transientAttributes () ) 
+
+    ## fixed ? 
+    fixed = True if rrv.isConstant() else False 
+
+    if tattrs : 
+        content = args , errors , binnings , fixed , battrs , sattrs , tattrs
+    elif sattrs :
+        content = args , errors , binnings , fixed , battrs , sattrs
+    elif battrs : 
+        content = args , errors , binnings , fixed , battrs 
+    else :        
+        content = args , errors , binnings , fixed 
+    
+    return _rrv_factory , content 
+
+ROOT.RooRealVar.__reduce__ = _rrv_reduce
+
+
+
+
+# =============================================================================
+## Reduce <code>RooConstVar</code>
+#  @see RooConstVar 
+def _rconst_reduce ( var ) :
+    """ Reduce `ROOT.RooConstVar`
+    - see ROOT.RooConstVar
+    """
+    return root_factory , ( type ( var )  ,
+                            var.name      ,
+                            var.title     ,
+                            float ( var ) )  
+
+ROOT.RooConstVar.__reduce__ = _rconst_reduce 
+
+# ==============================================================================
+## factory for RooCategory objects
+#  @see RooCategory
+def _rcat_factory_  ( klass , name , title , index  , items ) :
+    """factory for `ROOT.RooCategory` objects
+    - see `ROOT.RooCategory`
+    """
+    cat = klass ( name , title )
+    for label , index  in items : cat.defineType ( label , index )
+    cat.setIndex ( index ) 
+    return cat
+
+# =============================================================================
+## reduce RooCategory instance 
+#  @see RooCategory
+def _rcat_reduce_ ( cat ) :
+    """reduce RooCategory instance 
+    - see `ROOT.RooCategory`
+    """
+    items = tuple ( (l,i) for (l,i) in cat.items() )
+    return _rcat_factory_ , ( type ( cat ) , cat.GetName() , cat.GetTitle() , cat.getIndex() , items ) 
+
+ROOT.RooCategory   .__reduce__    = _rcat_reduce_ 
+
+# =============================================================================
+## factory for unpickling of <code>RooFormulaVar</code> and
+#  <code>Ostap::FormulaVar</code>
+#  @see RooFormualVar 
+#  @see Ostap::FormualVar 
+def _rfv_factory ( klass , args , vars ) :
+    """Factory for unpickling of `RooFormulaVar` and `Ostap.FormulaVar`
+    - see ROOT.RooFormulaVar 
+    - see Ostap.FormualVar 
+    """
+
+    lst = ROOT.RooArgList ()
+    for v in vars : lst.add ( v ) 
+
+    margs = list  ( args  )
+    margs.append  ( lst   )
+    margs = tuple ( margs ) 
+    
+    rfv = klass   ( *margs )
+    
+    rfv.__args = args, vars, lst
+
+    return rfv
+    
+# =============================================================================
+## Reduce <code>RooFormulaVar</code> and <code>Ostap::FormulaVar</code> for pickling
+#  @see RooFormulaVar 
+#  @see Ostap::FormulaVar 
+def _rfv_reduce ( rfv ) : 
+    """Reduce `RooFormulaVar` and `Ostap::FormulaVar` for pickling
+    - see RooFormulaVar 
+    - see Ostap.FormulaVar 
+    """
+
+    name       = rfv.GetName     ()
+    title      = rfv.GetTitle    ()
+    
+    rform      = rfv.formula     ()    
+    expression = rform.GetTitle  () 
+
+    vars       = tuple ( d for d in rform.actualDependents() ) 
+    args       = name , title , expression
+    
+    return _rfv_factory , ( type ( rfv ) , args , vars ) 
+
+
+if (6,22) <= root_info : ROOT.RooFormulaVar.__reduce__  = _rfv_reduce
+else                   : Ostap.FormulaVar.__reduce__    = _rfv_reduce
+
+# =============================================================================
+## unpickle RooUniformBinning object
+#  @see RooUniformBinnig  
+def _rub_factory ( *args ) :
+    """unpickle RooUniformBinning object
+    -see ROOT.RooUniformBinnig
+    """
+    return ROOT.RooUniformBinning ( *args )
+
+# =============================================================================
+## reduce uniform binning scheme
+#  @see RoUniformBinnig 
+def _rub_reduce_ ( rub ) :
+    """Reduce RooUniformBininkg Object
+    - see ROOT.RooUniformBinning
+    """
+    nbins = rub.numBoundaries()
+    if nbins : nbins -= 1
+    content = rub.lowBound () , rub.highBound(), nbins , rub.GetName()
+    
+    return _rub_factory, content
+
+# =============================================================================
+## unpickle RooBinning object
+#  @see RooBinnig  
+def _rb_factory ( data , name  ) :
+    """unpickle RooBinning object
+    -see ROOT.RooUniformBinnig
+    """
+    return ROOT.RooBinning ( len ( data ) - 1 , data [ 0 ] , name )
+# =============================================================================
+## reduce RooBinning object
+#  @see RooBinning 
+def _rb_reduce_ ( rb  )  :
+    """Reduce RooBinning object
+    - see ROOT.RooBinning 
+    """
+    if rb.isUniform() : return _rub_reduce_ ( rb )
+
+    nb    = rb.numBoundaries() 
+    ab    = rb.array ()
+    data  = array.array ( 'd' , [ 1.0 * ab[i] for i in range ( nb ) ] )
+
+    content = data, rb.GetName()  
+    return _rb_factory, content
+
+# ==========================================================================
+## unpickle RooRangeBinning object
+#  @see RooRangeBinnig 
+def _rrb_factory ( low , high , name ) :
+    """unpickle RooRangeBinning object"""
+    return ROOT.RooRangeBinning( low , high , name )
+# ============================================================================
+## reduce RooRangeBinnig object
+#  @see RooRangeBinnig 
+def _rrb_reduce_ ( rrb ) :
+    """Reduce RooRangeBinnig object"""
+    return _rrb_factory ,  ( rrb.lowBound() , rrb.highBound() , rrb.GetName() ) 
+
+ROOT.RooBinning       .__reduce__ = _rb_reduce_
+ROOT.RooUniformBinning.__reduce__ = _rub_reduce_
+ROOT.RooRangeBinning  .__reduce__ = _rrb_reduce_
+    
+if not hasattr ( ROOT.RooGaussian , 'getX' ) :
+    def _rgau_x_ ( pdf ) :
+        """Get x-observable"""
+        return Ostap.MoreRooFit.getX ( pdf )
+    ROOT.RooGaussian.getX = _rgau_x_
+    _new_methods_ += [ ROOT.RooGaussian.getX ]
+
+if not hasattr ( ROOT.RooGaussian , 'getMean' ) :
+    def _rgau_mean_ ( pdf ) :
+        """Get x-observable"""
+        return Ostap.MoreRooFit.getMean ( pdf )
+    ROOT.RooGaussian.getMean = _rgau_mean_
+    _new_methods_ += [ ROOT.RooGaussian.getMean ]
+
+if not hasattr ( ROOT.RooGaussian , 'getSigma' ) :
+    def _rgau_sigma_ ( pdf ) :
+        """Get sigma"""
+        return Ostap.MoreRooFit.getSigma ( pdf )
+    ROOT.RooGaussian.getSigma = _rgau_sigma_
+    _new_methods_ += [ ROOT.RooGaussian.getSigma ]
+
+# ==========================================================================--
+## reduce  RooGaussian object 
+def _rgau_reduce_ ( pdf ) :
+    """Reduce `RooGaussian` object"""
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.getX     () ,
+                                  pdf.getMean  () , 
+                                  pdf.getSigma () )
+
+ROOT.RooGaussian.__reduce__ = _rgau_reduce_ 
+
+
+
+
+# ==========================================================================--
+## Get the original fractions from the <code>RooAddPdf</code>
+#  @code
+#  addpdf = ...
+#  fractions , recursive = addpdf.orig_fracs() 
+#  @endcode 
+#  @see RooAddPdf 
+def _raddpdf_fractions ( radd ) :
+    """ Get the original fractions from the <code>RooAddPdf</code>
+    >>> addpdf = ...
+    >>> fractions , recursive = addpdf.orig_fracs() 
+    """
+    rec   = ctypes.c_bool ()
+    fracs = Ostap.MoreRooFit.fractions ( radd , rec )
+    return fracs, rec.value
+    
+# ==========================================================================--
+ROOT.RooAddPdf  .orig_fracs = _raddpdf_fractions
+
+_new_methods_ += [ ROOT.RooAddPdf  .orig_fracs ] 
+
+# ==========================================================================--
+## reduce  RooAddPdf object 
+def _raddpdf_reduce_ ( pdf ) :
+    """Reduce `RooAddPdf` object"""
+    content = type ( pdf ) , pdf.name , pdf.title , pdf.pdfList()
+    pars    = pdf.coefList ()
+    if 1 <= len ( pars ) :
+        content   = content + pdf.orig_fracs () 
+    return root_store_factory , content
+
+ROOT.RooAddPdf.__reduce__ = _raddpdf_reduce_ 
+
+# =============================================================================
+## Is this <code>RooProdPdf</code> object conditional ?
+#  @see RooProdPdf 
+def _rprodpdf_cond_ ( pdf ) :
+    """Is this `RooProdPdf` object conditional ?
+    - see `ROOT.RooProdPdf` 
+    """
+    for p in pdf.pdfList() :
+        vset = pdf.findPdfNSet ( p )
+        if not set             : continue
+        elif 1 <= len ( vset ) : return True 
+    return False
+
+ROOT.RooProdPdf.conditional = _rprodpdf_cond_ 
+_new_methods_ += [ ROOT.RooProdPdf.conditional ]
+
+# =============================================================================
+## reduce RooProdPdf 
+#  @see RooProdPdf
+def _rprodpdf_reduce_ ( pdf ) :
+    """Reduce `ROOT.RooProdPdf`
+    - see `ROOT.RooProdPdf`
+    """
+    if pdf.conditional () :
+        import pickle
+        raise pickle.PicklingError("RooProdPdf is conditional (cannot be picked)")
+    
+    content = type ( pdf ) , pdf.name , pdf.title , pdf.pdfList()
+    return root_store_factory , content
+
+ROOT.RooProdPdf.__reduce__ = _rprodpdf_reduce_ 
+
+# =============================================================================
+## Factory for RooFFTConfPdf 
+#  @see RooFFTConfPdf 
+def _rfft_factory_ ( klass , args , params ) :
+    """Factory for `ROOT.RooFFTConvPdf` 
+    - see `ROOT.RooFFTConvPdf`
+    """
+    pdf = klass ( *args )
+    pdf.__args = args 
+    bs , bf , s1 , s2 = params
+    pdf.setBufferStrategy ( bs )
+    pdf.setBufferFraction ( bf )
+    pdf.setShift ( s1 , s2 ) 
+    return pdf
+
+# =============================================================================
+## reduce RooFFTConvPdf
+#  @see RooFFTConvPdf 
+def _rfft_reduce_ ( pdf ) :
+
+    s1 = ctypes.c_double ( 0 )
+    s2 = ctypes.c_double ( 0 )
+
+    pars   = Ostap.MoreRooFit.fft_pars ( pdf , s1 , s2 )
+    args   = ( pdf.name , pdf.title )  + \
+             tuple ( p for p in pars ) + \
+             ( pdf.getInterpolationOrder() , ) 
+    
+    params =  pdf.bufferStrategy() , pdf.bufferFraction() , s1.value , s2.value
+
+    return _rfft_factory_ , ( type ( pdf ) , args , params )
+    
+ROOT.RooFFTConvPdf.__reduce__ = _rfft_reduce_ 
+
+# =============================================================================
+## Factory for RooSimultaneous
+#  @see RooSimultaneous 
+def _rsim_factory_ ( klass , args , catlst ) :
+    """Factory for `ROOT.RooSimultaneous` 
+    - see `ROOT.Simultaneous`
+    """
+    pdf = klass ( *args )
+    for l , p in catlst : pdf.addPdf ( p , l )
+    pdf.__catlst = catlst 
+    return pdf
+
+# ================================================================================
+## Reduce RooSimultaneous object
+#  @see RooSimultaneous 
+def _rsim_reduce_ ( pdf ) :
+    """Reduce RooSimultaneous object
+    -see RooSimultaneous 
+    """
+    cat    = pdf.indexCat()
+    labels = cat.labels()
+    catlst = tuple ( ( l , pdf.getPdf(l) ) for l in labels )
+    args   = pdf.name , pdf.title , cat 
+    return _rsim_factory_ , ( type ( pdf ) , args , catlst ) 
+
+ROOT.RooSimultaneous.__reduce__  = _rsim_reduce_ 
+
+# =============================================================================
+## access to underlying efficiency function from RooEfficiency
+#  @see RooEfficiency 
+#  @see Ostap::MorERooFit::get_eff 
+def _reff_efficiency_  ( pdf )  :
+    """Access to underlying efficiency function from RooEfficiency
+    - see `ROOT.RooEfficiency`
+    - see `Ostap.MoreRooFit.get_eff`
+    """
+    return Ostap.MoreRooFit.get_eff ( pdf )
+
+# =============================================================================
+## access to underlying accept/reject category from RooEfficiency
+#  @see RooEfficiency 
+#  @see Ostap::MorERooFit::get_cat 
+def _reff_category_  ( pdf )  :
+    """Access to underlying accept/reject category from RooEfficiency
+    - see `ROOT.RooEfficiency`
+    - see `Ostap.MoreRooFit.get_cat`
+    """
+    return Ostap.MoreRooFit.get_cat ( pdf )
+
+# =============================================================================
+## access to accept category from RooEfficiency
+#  @see RooEfficiency 
+#  @see Ostap::MorERooFit::get_acc
+def _reff_accept_  ( pdf )  :
+    """Access to accept category from RooEfficiency
+    - see `ROOT.RooEfficiency`
+    - see `Ostap.MoreRooFit.get_acc`
+    """
+    return Ostap.MoreRooFit.get_acc ( pdf )
+
+ROOT.RooEfficiency. efficiency = _reff_efficiency_
+ROOT.RooEfficiency. category   = _reff_category_
+ROOT.RooEfficiency. accept     = _reff_accept_
+
+_new_methods_ += [
+    ROOT.RooEfficiency. efficiency , 
+    ROOT.RooEfficiency. category   , 
+    ROOT.RooEfficiency. accept     , 
+    ]
+
+# =============================================================================
+## reduce RooEfficiency
+#  @see RooEfficiency
+def _reff_reduce_ ( pdf ) :
+    """Reduce `ROOT.RooEfficiency`
+    - see `ROOT.RooEfficiency`
+    """
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.efficiency() , 
+                                  pdf.category  () , 
+                                  pdf.accept    () )
+
+ROOT.RooEfficiency.__reduce__  = _reff_reduce_ 
+
+# ================================================================================
+## get the list of coefficients from <code>RooPolyVar</code>
+#  @see RooPolyVar
+def _rpv_coefficients_ ( var ) :
+    """Get the list of coefficients from `ROOT.RooPolyVar`
+    -see `ROOT.RooPolyVar`
+    """
+    return Ostap.MoreRooFit.coefficients ( var ) 
+
+ROOT.RooPolyVar   . coefficients = _rpv_coefficients_
+ROOT.RooPolynomial. coefficients = _rpv_coefficients_
+
+_new_methods_ += [
+    ROOT.RooPolyVar   . coefficients  ,
+    ROOT.RooPolynomial. coefficients  ,
+    ]
+
+
+# =============================================================================
+## reduce RooPolyVar
+#  @see RooPolyVar
+def _rpv_reduce_ ( var ) :
+    """Reduce `ROOT.RooPolyVar`
+    - see `ROOT.RooPolyVar`
+    """
+    return root_store_factory , ( type ( pdf )        ,
+                                  pdf.name            ,
+                                  pdf.title           ,
+                                  pdf.coefficients () )
+
+ROOT.RooPolyVar   . __reduce__  = _rpv_reduce_
+ROOT.RooPolynomial. __reduce__  = _rpv_reduce_
+
+
+
+
+
+# ================================================================================
+## deserialize RooFitResult
+#  @see RooFitResult
+#  @see Ostap::Utils::FitResults
+def _rrfr_factory_ ( klass , *args ) :
+    """Deserialize RooFitResult
+    - see `ROOT.RooFitResult`
+    - see `Ostap.Utils.FitResults`
+    """
+    ## create
+
+    newargs = args [ : 10 ] 
+    covargs = args [ 10 ] ## covariance related arguments 
+    history = args [ 11 ] ## the last argument, history 
+
+    import pickle
+
+    if 3 == len ( covargs ) :
+        
+        gcc , corm , covm = covargs 
+        D    = len ( gcc )
+        if D * D  != len ( corm ) or  D * D != len ( covm ) :
+            raise pickle.UnpicklingError("FitResult: cannot reconstruct matrices")
+
+        gcc      = doubles ( gcc ) 
+        corm     = ROOT.TMatrixDSym ( D , corm )
+        covm     = ROOT.TMatrixDSym ( D , covm )
+        
+        newargs +=  gcc , corm , covm
+        
+    else :
+        
+        covm = covargs 
+        
+        l2 = len ( covm )
+        D  = int ( math.sqrt ( l2 ) ) 
+        if D * D != l2 :
+            raise pickle.UnpicklingError("FitResult: cannot reconstruct matrix")
+        covm = ROOT.TMatrixDSym ( D , covm )
+
+        newargs += covm ,
+        
+    
+    tmpres = klass ( *newargs )
+    
+    for label , code in history : tmpres.add_to_history ( label , code )
+    
+    result = ROOT.RooFitResult ( tmpres )
+    result.__args = args
+    
+    return result 
+   
+# ================================================================================
+## Reduce RooFitResult
+#  @see RooFitResult
+def _rrfr_reduce_ ( res ) :
+    """ Reduce `RooFitResult`
+    - see `ROOT.RooFitResult`
+    """
+    nr      = Ostap.Utils.FitResults ( res )
+    content = type ( nr )      , res.name , res.title , \
+              res.constPars () , res.floatParsInit()  , res.floatParsFinal() , \
+              nr.status     () , nr.covQual()         , nr.minNll()          , \
+               nr.edm       () , nr.numInvalidNLL ()
+
+    gcc = nr.global_cc()    
+    if gcc :
+        covargs = ( array.array ( 'd' , gcc                     ) ,
+                    array.array ( 'd' , res.correlationMatrix() ) ,
+                    array.array ( 'd' , res.covarianceMatrix () ) )
+    else    :
+        covargs = array.array ( 'd' , res.covarianceMatrix () )  
+        
+    history = tuple ( ( nr.statusLabelHistory(i) ,nr.statusCodeHistory(i) ) \
+                      for i in range ( nr.numStatusHistory () ) )
+    
+    content += covargs , history 
+  
+    return _rrfr_factory_ , content 
+
+ROOT.RooFitResult.__reduce__  = _rrfr_reduce_ 
+
+# =============================================================================
+## reconstruct/deserialize <code>RooPlot</code> object
+def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items )  :
+    """Reconstruct/deserialize `ROOT.RooPlot` object
+    """
+    plot = klass  ( xmin , xmax , ymin , ymax )
+    ##
+    for ( obj , options , invisible ) in items :
+        if   isinstance ( obj  , ROOT.RooPlotable ) :            
+            plot.addPlotable ( obj , options , invisible )
+        elif isinstance ( obj  , ROOT.TH1 ) and 1 == obj.GetDimension() :
+            plot.addTH1      ( obj , options , invisible )
+        else :
+            plot.addObject   ( obj , options , invisible )            
+    ## 
+    plot.__store = items  ## ATTENTION!! keep the items! 
+    return plot 
+                
+
+# =============================================================================
+## reduce RooPlot object
+def _rplot_reduce_ ( plot ) :
+    """Reduce `ROOT.RooPlot` object"""
+    return _rplot_factory_ , ( type ( plot )   ,
+                               plot.GetXaxis().GetXmin() ,
+                               plot.GetXaxis().GetXmax() ,
+                               plot.GetMinimum () ,
+                               plot.GetMaximum () ,
+                               tuple ( i for i in plot.items() ) )
+
+ROOT.RooPlot.__reduce__  = _rplot_reduce_ 
+
+# ===============================================================================
+## reconstruct/deserialize/unpickle <code>TGraph</code> object
+#  @see RooCurve
+#  @see RooPlotable
+#  @see TGraph
+def _rcurv_factory_ ( klass , *args ) : 
+    """Reconstruct/deserialize/unpickle `ROOT.RooCurve` object
+    -see `ROOT.RooCurve`
+    -see `ROOT.RooPlotable`
+    -see `ROOT.TGraph`
+    """
+    graph     = GR.graph_factory ( klass , *args [:-1] )
+    ## 
+    rplotatts = args[-1]
+    graph.setYAxisLabel  (  rplotatts [0 ] )
+    graph.setYAxisLimits ( *rplotatts [1:] )
+    ## 
+    return graph 
+
+# =============================================================================
+## Reduce/serialize/pickle  simple <code>TGraph</code> object
+#  @see ROOT.TGraph
+def _rcurv_reduce_ ( graph ) :
+    """Reduce/serialize/pickle simple `ROOT.RooCurve` object\
+    - see `ROOT.RooCurve`
+    - see `ROOT.RooEllipse`
+    - see `ROOT.RooPlotable`
+    - see `ROOT.TGraph`
+    """
+    _ , content = GR.graph_reduce ( graph )
+    rplotatts   = graph.getYAxisLabel () , graph.getYAxisMin (), graph.getYAxisMax ()
+    return _rcurv_factory_ , content + ( rplotatts , ) 
+
+ROOT.RooCurve  .__reduce__ = _rcurv_reduce_
+ROOT.RooEllipse.__reduce__ = _rcurv_reduce_
+
+# ===============================================================================
+## reconstruct/deserialize/unpickle <code>RooHist</code> object
+#  @see RooHist
+#  @see RooPlotable
+#  @see TGraphAsymmErrors
+def _rhist_factory_ ( klass , *args ) :
+    """Reconstruct/deserialize/unpickle `ROOT.RooHist` object
+    -see `ROOT.RooHist`
+    -see `ROOT.RooPlotable`
+    -see `ROOT.TGraphAsymmErrors`
+    """
+    graph     = GR.graph_asymerrors_factory ( klass , *args [:-1] )
+    rplotatts = args[-1]
+    graph.setYAxisLabel  (  rplotatts [0 ] )
+    graph.setYAxisLimits ( *rplotatts [1:] )
+    ## 
+    return graph 
+
+# =============================================================================
+## Reduce/serialize/pickle  simple <code>RooHist</code> object
+#  @see ROOT.RooHist
+#  @see ROOT.TGraphAsymmErorrs
+def _rhist_reduce_ ( graph ) :
+    """Reduce/serialize/pickle simple `ROOT.RooHist` object
+    - see `ROOT.RooHist`
+    - see `ROOT.TGraphAsymmErrors`
+    """
+    _ , content = GR.graph_asymerrors_reduce ( graph )
+    rplotatts   = graph.getYAxisLabel (), graph.getYAxisMin (), graph.getYAxisMax () 
+    return _rhist_factory_ , content + ( rplotatts , ) 
+
+ROOT.RooHist.__reduce__ = _rhist_reduce_
+
+
+
+
+
+
 
 # =============================================================================
 ## Reduce <code>Ostap::MoreRooFit::TwoVars</code> objects
@@ -290,434 +987,6 @@ def _runi_reduce_ ( uni ) :
 Ostap.Models.Uniform.__reduce__ = _runi_reduce_
 
 
-# =============================================================================
-## unpickle RooUniformBinning object
-#  @see RooUniformBinnig  
-def _rub_factory ( *args ) :
-    """unpickle RooUniformBinning object
-    -see ROOT.RooUniformBinnig
-    """
-    return ROOT.RooUniformBinning ( *args )
-
-# =============================================================================
-## reduce uniform binning scheme
-#  @see RoUniformBinnig 
-def _rub_reduce_ ( rub ) :
-    """Reduce RooUniformBininkg Object
-    - see ROOT.RooUniformBinning
-    """
-    nbins = rub.numBoundaries()
-    if nbins : nbins -= 1
-    content = rub.lowBound () , rub.highBound(), nbins , rub.GetName()
-    
-    return _rub_factory, content
-
-# =============================================================================
-## unpickle RooBinning object
-#  @see RooBinnig  
-def _rb_factory ( data , name  ) :
-    """unpickle RooBinning object
-    -see ROOT.RooUniformBinnig
-    """
-    return ROOT.RooBinning ( len ( data ) - 1 , data [ 0 ] , name )
-# =============================================================================
-## reduce RooBinning object
-#  @see RooBinning 
-def _rb_reduce_ ( rb  )  :
-    """Reduce RooBinning object
-    - see ROOT.RooBinning 
-    """
-    if rb.isUniform() : return _rub_reduce_ ( rb )
-
-    nb    = rb.numBoundaries() 
-    ab    = rb.array ()
-    data  = array.array ( 'd' , [ 1.0 * ab[i] for i in range ( nb ) ] )
-
-    content = data, rb.GetName()  
-    return _rb_factory, content
-
-# ==========================================================================
-## unpickle RooRangeBinning object
-#  @see RooRangeBinnig 
-def _rrb_factory ( low , high , name ) :
-    """unpickle RooRangeBinning object"""
-    return ROOT.RooRangeBinning( low , high , name )
-# ============================================================================
-## reduce RooRangeBinnig object
-#  @see RooRangeBinnig 
-def _rrb_reduce_ ( rrb ) :
-    """Reduce RooRangeBinnig object"""
-    return _rrb_factory ,  ( rrb.lowBound() , rrb.highBound() , rrb.GetName() ) 
-
-ROOT.RooBinning       .__reduce__ = _rb_reduce_
-ROOT.RooUniformBinning.__reduce__ = _rub_reduce_
-ROOT.RooRangeBinning  .__reduce__ = _rrb_reduce_
-    
-if not hasattr ( ROOT.RooGaussian , 'getX' ) :
-    def _rgau_x_ ( pdf ) :
-        """Get x-observable"""
-        return Ostap.MoreRooFit.getX ( pdf )
-    ROOT.RooGaussian.getX = _rgau_x_
-    _new_methods_ += [ ROOT.RooGaussian.getX ]
-
-if not hasattr ( ROOT.RooGaussian , 'getMean' ) :
-    def _rgau_mean_ ( pdf ) :
-        """Get x-observable"""
-        return Ostap.MoreRooFit.getMean ( pdf )
-    ROOT.RooGaussian.getMean = _rgau_mean_
-    _new_methods_ += [ ROOT.RooGaussian.getMean ]
-
-if not hasattr ( ROOT.RooGaussian , 'getSigma' ) :
-    def _rgau_sigma_ ( pdf ) :
-        """Get sigma"""
-        return Ostap.MoreRooFit.getSigma ( pdf )
-    ROOT.RooGaussian.getSigma = _rgau_sigma_
-    _new_methods_ += [ ROOT.RooGaussian.getSigma ]
-
-# ==========================================================================--
-## reduce  RooGaussian object 
-def _rgau_reduce_ ( pdf ) :
-    """Reduce `RooGaussian` object"""
-    return root_store_factory , ( type ( pdf )    ,
-                                  pdf.name        ,
-                                  pdf.title       ,
-                                  pdf.getX     () ,
-                                  pdf.getMean  () , 
-                                  pdf.getSigma () )
-
-ROOT.RooGaussian.__reduce__ = _rgau_reduce_ 
-
-# ==========================================================================--
-## Get the original fractions from the <code>RooAddPdf</code>
-#  @code
-#  addpdf = ...
-#  fractions , recursive = addpdf.orig_fracs() 
-#  @endcode 
-#  @see RooAddPdf 
-def _raddpdf_fractions ( radd ) :
-    """ Get the original fractions from the <code>RooAddPdf</code>
-    >>> addpdf = ...
-    >>> fractions , recursive = addpdf.orig_fracs() 
-    """
-    rec   = ctypes.c_bool ()
-    fracs = Ostap.MoreRooFit.fractions ( radd , rec )
-    return fracs, rec.value
-    
-# ==========================================================================--
-ROOT.RooAddPdf  .orig_fracs = _raddpdf_fractions
-
-_new_methods_ += [ ROOT.RooAddPdf  .orig_fracs ] 
-
-# ==========================================================================--
-## reduce  RooAddPdf object 
-def _raddpdf_reduce_ ( pdf ) :
-    """Reduce `RooAddPdf` object"""
-    content = type ( pdf ) , pdf.name , pdf.title , pdf.pdfList()
-    pars    = pdf.coefList ()
-    if 1 <= len ( pars ) :
-        content   = content + pdf.orig_fracs () 
-    return root_store_factory , content
-
-ROOT.RooAddPdf.__reduce__ = _raddpdf_reduce_ 
-
-# =============================================================================
-## Is this <code>RooProdPdf</code> object conditional ?
-#  @see RooProdPdf 
-def _rprodpdf_cond_ ( pdf ) :
-    """Is this `RooProdPdf` object conditional ?
-    - see `ROOT.RooProdPdf` 
-    """
-    for p in pdf.pdfList() :
-        vset = pdf.findPdfNSet ( p )
-        if not set             : continue
-        elif 1 <= len ( vset ) : return True 
-    return False
-
-ROOT.RooProdPdf.conditional = _rprodpdf_cond_ 
-_new_methods_ += [ ROOT.RooProdPdf.conditional ]
-
-# =============================================================================
-## reduce RooProdPdf 
-#  @see RooProdPdf
-def _rprodpdf_reduce_ ( pdf ) :
-    """Reduce `ROOT.RooProdPdf`
-    - see `ROOT.RooProdPdf`
-    """
-    if pdf.conditional () :
-        import pickle
-        raise pickle.PicklingError("RooProdPdf is conditional (cannot be picked)")
-    
-    content = type ( pdf ) , pdf.name , pdf.title , pdf.pdfList()
-    return root_store_factory , content
-
-ROOT.RooProdPdf.__reduce__ = _rprodpdf_reduce_ 
-
-# =============================================================================
-## Factory for RooFFTConfPdf 
-#  @see RooFFTConfPdf 
-def _rfft_factory_ ( klass , args , params ) :
-    """Factory for `ROOT.RooFFTConvPdf` 
-    - see `ROOT.RooFFTConvPdf`
-    """
-    pdf = klass ( *args )
-    pdf.__args = args 
-    bs , bf , s1 , s2 = params
-    pdf.setBufferStrategy ( bs )
-    pdf.setBufferFraction ( bf )
-    pdf.setShift ( s1 , s2 ) 
-    return pdf
-
-# =============================================================================
-## reduce RooFFTConvPdf
-#  @see RooFFTConvPdf 
-def _rfft_reduce_ ( pdf ) :
-
-    s1 = ctypes.c_double ( 0 )
-    s2 = ctypes.c_double ( 0 )
-
-    pars   = Ostap.MoreRooFit.fft_pars ( pdf , s1 , s2 )
-    args   = ( pdf.name , pdf.title )  + \
-             tuple ( p for p in pars ) + \
-             ( pdf.getInterpolationOrder() , ) 
-    
-    params =  pdf.bufferStrategy() , pdf.bufferFraction() , s1.value , s2.value
-
-    return _rfft_factory_ , ( type ( pdf ) , args , params )
-    
-ROOT.RooFFTConvPdf.__reduce__ = _rfft_reduce_ 
-
-# =============================================================================
-## Factory for RooSimultaneous
-#  @see RooSimultaneous 
-def _rsim_factory_ ( klass , args , catlst ) :
-    """Factory for `ROOT.RooSimultaneous` 
-    - see `ROOT.Simultaneous`
-    """
-    pdf = klass ( *args )
-    for l , p in catlst : pdf.addPdf ( p , l )
-    pdf.__catlst = catlst 
-    return pdf
-
-# ================================================================================
-## Reduce RooSimultaneous object
-#  @see RooSimultaneous 
-def _rsim_reduce_ ( pdf ) :
-    """Reduce RooSimultaneous object
-    -see RooSimultaneous 
-    """
-    cat    = pdf.indexCat()
-    labels = cat.labels()
-    catlst = tuple ( ( l , pdf.getPdf(l) ) for l in labels )
-    args   = pdf.name , pdf.title , cat 
-    return _rsim_factory_ , ( type ( pdf ) , args , catlst ) 
-
-ROOT.RooSimultaneous.__reduce__  = _rsim_reduce_ 
-
-# =============================================================================
-## access to underlying efficiency function from RooEfficiency
-#  @see RooEfficiency 
-#  @see Ostap::MorERooFit::get_eff 
-def _reff_efficiency_  ( pdf )  :
-    """Access to underlying efficiency function from RooEfficiency
-    - see `ROOT.RooEfficiency`
-    - see `Ostap.MoreRooFit.get_eff`
-    """
-    return Ostap.MoreRooFit.get_eff ( pdf )
-
-# =============================================================================
-## access to underlying accept/reject category from RooEfficiency
-#  @see RooEfficiency 
-#  @see Ostap::MorERooFit::get_cat 
-def _reff_category_  ( pdf )  :
-    """Access to underlying accept/reject category from RooEfficiency
-    - see `ROOT.RooEfficiency`
-    - see `Ostap.MoreRooFit.get_cat`
-    """
-    return Ostap.MoreRooFit.get_cat ( pdf )
-
-# =============================================================================
-## access to accept category from RooEfficiency
-#  @see RooEfficiency 
-#  @see Ostap::MorERooFit::get_acc
-def _reff_accept_  ( pdf )  :
-    """Access to accept category from RooEfficiency
-    - see `ROOT.RooEfficiency`
-    - see `Ostap.MoreRooFit.get_acc`
-    """
-    return Ostap.MoreRooFit.get_acc ( pdf )
-
-ROOT.RooEfficiency. efficiency = _reff_efficiency_
-ROOT.RooEfficiency. category   = _reff_category_
-ROOT.RooEfficiency. accept     = _reff_accept_
-
-_new_methods_ += [
-    ROOT.RooEfficiency. efficiency , 
-    ROOT.RooEfficiency. category   , 
-    ROOT.RooEfficiency. accept     , 
-    ]
-
-# =============================================================================
-## reduce RooEfficiency
-#  @see RooEfficiency
-def _reff_reduce_ ( pdf ) :
-    """Reduce `ROOT.RooEfficiency`
-    - see `ROOT.RooEfficiency`
-    """
-    return root_store_factory , ( type ( pdf )     ,
-                                  pdf.name         ,
-                                  pdf.title        ,
-                                  pdf.efficiency() , 
-                                  pdf.category  () , 
-                                  pdf.accept    () )
-
-ROOT.RooEfficiency.__reduce__  = _reff_reduce_ 
-
-# ================================================================================
-## get the list of coefficients from <code>RooPolyVar</code>
-#  @see RooPolyVar
-def _rpv_coefficients_ ( var ) :
-    """Get the list of coefficients from `ROOT.RooPolyVar`
-    -see `ROOT.RooPolyVar`
-    """
-    return Ostap.MoreRooFit.coefficients ( var ) 
-
-ROOT.RooPolyVar   . coefficients = _rpv_coefficients_
-ROOT.RooPolynomial. coefficients = _rpv_coefficients_
-
-_new_methods_ += [
-    ROOT.RooPolyVar   . coefficients  ,
-    ROOT.RooPolynomial. coefficients  ,
-    ]
-
-
-# =============================================================================
-## reduce RooPolyVar
-#  @see RooPolyVar
-def _rpv_reduce_ ( var ) :
-    """Reduce `ROOT.RooPolyVar`
-    - see `ROOT.RooPolyVar`
-    """
-    return root_store_factory , ( type ( pdf )        ,
-                                  pdf.name            ,
-                                  pdf.title           ,
-                                  pdf.coefficients () )
-
-ROOT.RooPolyVar   . __reduce__  = _rpv_reduce_
-ROOT.RooPolynomial. __reduce__  = _rpv_reduce_
-
-# ================================================================================
-## deserialize RooFitResult
-#  @see RooFitResult
-#  @see Ostap::Utils::FitResults
-def _rrfr_factory_ ( klass , *args ) :
-    """Deserialize RooFitResult
-    - see `ROOT.RooFitResult`
-    - see `Ostap.Utils.FitResults`
-    """
-    ## create
-
-    newargs = args [ : 10 ] 
-    covargs = args [ 10 ] ## covariance related arguments 
-    history = args [ 11 ] ## the last argument, history 
-
-    import pickle
-
-    if 3 == len ( covargs ) :
-        
-        gcc , corm , covm = covargs 
-        D    = len ( gcc )
-        if D * D  != len ( corm ) or  D * D != len ( covm ) :
-            raise pickle.UnpicklingError("FitResult: cannot reconstruct matrices")
-
-        gcc      = doubles ( gcc ) 
-        corm     = ROOT.TMatrixDSym ( D , corm )
-        covm     = ROOT.TMatrixDSym ( D , covm )
-        
-        newargs +=  gcc , corm , covm
-        
-    else :
-        
-        covm = covargs 
-        
-        l2 = len ( covm )
-        D  = int ( math.sqrt ( l2 ) ) 
-        if D * D != l2 :
-            raise pickle.UnpicklingError("FitResult: cannot reconstruct matrix")
-        covm = ROOT.TMatrixDSym ( D , covm )
-
-        newargs += covm ,
-        
-    
-    tmpres = klass ( *newargs )
-    
-    for label , code in history : tmpres.add_to_history ( label , code )
-    
-    result = ROOT.RooFitResult ( tmpres )
-    result.__args = args
-    
-    return result 
-   
-# ================================================================================
-## Reduce RooFitResult
-#  @see RooFitResult
-def _rrfr_reduce_ ( res ) :
-    """ Reduce `RooFitResult`
-    - see `ROOT.RooFitResult`
-    """
-    nr      = Ostap.Utils.FitResults ( res )
-    content = type ( nr )      , res.name , res.title , \
-              res.constPars () , res.floatParsInit()  , res.floatParsFinal() , \
-              nr.status     () , nr.covQual()         , nr.minNll()          , \
-               nr.edm       () , nr.numInvalidNLL ()
-
-    gcc = nr.global_cc()    
-    if gcc :
-        covargs = ( array.array ( 'd' , gcc                     ) ,
-                    array.array ( 'd' , res.correlationMatrix() ) ,
-                    array.array ( 'd' , res.covarianceMatrix () ) )
-    else    :
-        covargs = array.array ( 'd' , res.covarianceMatrix () )  
-        
-    history = tuple ( ( nr.statusLabelHistory(i) ,nr.statusCodeHistory(i) ) \
-                      for i in range ( nr.numStatusHistory () ) )
-    
-    content += covargs , history 
-  
-    return _rrfr_factory_ , content 
-
-ROOT.RooFitResult.__reduce__  = _rrfr_reduce_ 
-
-# =============================================================================
-## reconstruct/deserialize <code>RooPlot</code> object
-def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items )  :
-    """Reconstruct/deserialize `ROOT.RooPlot` object
-    """
-    plot = klass  ( xmin , xmax , ymin , ymax )
-    
-    for ( obj , options , invisible ) in items :
-        if   isinstance ( obj  , ROOT.RooPlotable ) :            
-            plot.addPlotable ( obj , options , invisible )
-        elif isinstance ( obj  , ROOT.TH1 ) and 1 == obj.GetDimension() :
-            plot.addTH1      ( obj , options , invisible )
-        else :
-            plot.addObject   ( obj , options , invisible )
-            
-    plot.__store = items  ## ATTENTION!! keep the items! 
-    return plot 
-                
-
-# =============================================================================
-## reduce RooPlot object
-def _rplot_reduce_ ( plot ) :
-    """Reduce `ROOT.RooPlot` object"""
-    return _rplot_factory_ , ( type ( plot )   ,
-                               plot.GetXaxis().GetXmin() ,
-                               plot.GetXaxis().GetXmax() ,
-                               plot.GetMinimum () ,
-                               plot.GetMaximum () ,
-                               tuple ( i for i in plot.items() ) ) 
-
-ROOT.RooPlot.__reduce__  = _rplot_reduce_ 
 
 # =============================================================================
 ## reduce BreitWigner
@@ -2096,7 +2365,6 @@ def _rgauss3d_reduce_ ( pdf ):
 Ostap.Models.Gauss3D.__reduce__ = _rgauss3d_reduce_ 
 
 
-
 # =============================================================================
 ## reduce Ostap::Functions::FuncRooTH1 
 def _rfth1_reduce_ ( fun ):
@@ -2154,6 +2422,9 @@ _decorated_classes_ = (
     ROOT.RooPolynomial                 , 
     ROOT.RooFitResult                  ,
     ROOT.RooPlot                       ,
+    ROOT.RooCurve                      ,
+    ROOT.RooEllipse                    ,
+    ROOT.RooHist                       ,
     ## Ostap classes 
     Ostap.MoreRooFit.TwoVars           , 
     Ostap.MoreRooFit.Addition          , 

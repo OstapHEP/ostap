@@ -148,7 +148,7 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
 
 
 models = set() 
-
+plots  = set() 
 
 # =============================================================================
 ## Single gauss
@@ -173,7 +173,8 @@ def test_gauss () :
     else :
         make_print ( reso , result , 'Gaussian', logger )
 
-    models.add ( reso )
+    models.add ( reso  )
+    plots .add ( frame )
     
 # =============================================================================
 ## Double gauss
@@ -200,7 +201,8 @@ def test_2gauss () :
     else :     
         make_print ( reso , result , 'Double Gaussian', logger )
         
-    models.add ( reso)
+    models.add ( reso  )
+    plots .add ( frame ) 
 
         
 # =============================================================================
@@ -227,8 +229,8 @@ def test_apo2 () :
     else :     
         make_print ( reso , result , 'Symmetric Apollonious/2', logger )
     
-    models.add ( reso )
-
+    models.add ( reso  )
+    plots .add ( frame ) 
         
 # =============================================================================
 ## Symmetric double-sided Crystal Ball 
@@ -255,8 +257,8 @@ def test_cb2 () :
     else :     
         make_print ( reso , result , 'Symmetric Crystal Ball/2', logger )
  
-    models.add ( reso)
-
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # =============================================================================
 ## Hyperbolic secant 
@@ -280,7 +282,8 @@ def test_sech () :
     else :     
         make_print ( reso , result , 'Hyperbolic secant', logger )
  
-    models.add ( reso)
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 
 # =============================================================================
@@ -305,8 +308,8 @@ def test_logistic () :
     else :     
         make_print ( reso , result , 'Logistic', logger )
  
-    models.add ( reso)
-
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # =============================================================================
 ## symmetric Bukin
@@ -333,9 +336,8 @@ def test_bukin () :
     else :     
         make_print ( reso , result , 'Symmetric Bukin', logger )
  
-    models.add ( reso)
-
-
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # =============================================================================
 ## symmetric Johnson's SU 
@@ -359,8 +361,8 @@ def test_johnsonSU () :
     else :     
         make_print ( reso , result , 'Symmetric Jonhson-SU', logger )
  
-    models.add ( reso)
-
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # =============================================================================
 ## Sinh-Asinh
@@ -391,8 +393,8 @@ def test_sinhasinh () :
     else :     
         make_print ( reso , result , 'Symmetric SinhAsinh', logger )
  
-    models.add ( reso)
-
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # =============================================================================
 ## Hyperbolic 
@@ -418,8 +420,8 @@ def test_hyperbolic () :
     else :     
         make_print ( reso , result , 'Symmetric Hyperbolic', logger )
  
-    models.add ( reso)
-
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # =============================================================================
 ## Generalized Hyperbolic 
@@ -446,7 +448,8 @@ def test_genhyperbolic () :
     else :     
         make_print ( reso , result , 'Symmetric GenHyperbolic', logger )
  
-    models.add ( reso)
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # =============================================================================
 ## Hypatia
@@ -475,8 +478,8 @@ def test_hypatia () :
     else :     
         make_print ( reso , result , 'Symmetric Hypatia', logger )
  
-    models.add ( reso)
-
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # =============================================================================
 ## Generalized Gauss v1 
@@ -509,8 +512,8 @@ def test_gengaussv1  () :
     else :     
         make_print ( reso , result , 'Symmetric GenGaussv1', logger )
  
-    models.add ( reso)
-
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # =============================================================================
 ## Das 
@@ -536,7 +539,8 @@ def test_das () :
     else :     
         make_print ( reso , result , 'Symmetric Das', logger )
  
-    models.add ( reso)
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # =============================================================================
 ## Normal Laplace 
@@ -562,7 +566,8 @@ def test_normlapl () :
     else :     
         make_print ( reso , result , 'Symmetric Normal Laplace', logger )
  
-    models.add ( reso)
+    models.add ( reso  )
+    plots .add ( frame ) 
 
 # ==============================================================================
 ## dump all models
@@ -608,8 +613,11 @@ def test_db() :
             for i, b in enumerate ( m.backgrounds ) : 
                 db['roo_bkg%d:%s' % ( i , m.name ) ] = s
             for a in m.alist1 : 
-                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
-        db['models'   ] = models
+                db['cmp:%s_%s' % ( m.name , a.name ) ] = a
+        db[ 'models' ] = models
+        for i , p in enumerate ( plots ) :
+            db [ ' plot:%s_%s' % ( i , p.name ) ] = p            
+        db[ 'plots'  ] = plots 
         db.ls() 
         
 # =============================================================================
@@ -648,8 +656,8 @@ if '__main__' == __name__ :
     with timing ("GenHyperbolic" , logger ) :  
         test_genhyperbolic  () ## generalised Hyperbolic resolution model
 
-    ## with timing ("Hypatia" , logger ) :  
-    ##     test_hypatia        () ## generalised Hyperbolic resolution model
+    with timing ("Hypatia" , logger ) :  
+        test_hypatia        () ## generalised Hyperbolic resolution model
 
     with timing ("GenGaussV1" , logger ) :  
         test_gengaussv1     ()   ## Das resolution model

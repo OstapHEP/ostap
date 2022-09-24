@@ -142,8 +142,8 @@ from   ostap.core.ostap_types   import integer_types
 from   ostap.fitting.funbasic   import FUN1 , Fun1D 
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
-import ostap.fitting.roofuncs   as     RF 
 from   ostap.fitting.fithelpers import Phases
+from   ostap.fitting.variables  import var_tanh
 import ostap.math.dalitz 
 import ROOT, math
 # =============================================================================
@@ -2723,9 +2723,9 @@ class KGaussian_pdf(PEAK) :
                                        False , 0 , -10 , 10 )
         
         ## k-parameter ( k = tanh(kappa)
-        self.__k = RF.var_tanh ( self.kappa , 1 ,
-                                 name  = self.new_roo_name ( 'k' ) ,   
-                                 title = '#kappa(%s)' % name ) 
+        self.__k = var_tanh ( self.kappa , 1 ,
+                              name  = self.new_roo_name ( 'k' ) ,   
+                              title = '#kappa(%s)' % name ) 
         #
         ## finally build pdf
         # 

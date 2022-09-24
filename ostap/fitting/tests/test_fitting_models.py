@@ -91,7 +91,8 @@ B = model_gauss.B
 
 
 stats   = {}
-results = [] 
+results = []
+plots   = {}
 # =============================================================================
 def make_print ( pdf , fitresult , title , logger = logger ) :
 
@@ -153,8 +154,8 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
     stats [ model.name ] = row
 
     with wait ( 1 ), use_canvas ( title ) : 
-        pdf.draw (  dataset0 )
-    
+        plots [ model.name ] = pdf.draw (  dataset0 )
+        
 # =============================================================================
 ## gauss PDF
 # =============================================================================
@@ -179,9 +180,9 @@ def test_gauss() :
         
     make_print ( model , result , 'Simple Gaussian model' , logger )
 
-    models.add ( model )
+    models.add     ( model   )
     results.append ( result  )
-
+    
 # =============================================================================
 ## CrystalBall PDF
 # =============================================================================
@@ -213,8 +214,8 @@ def test_crystalball () :
         
     make_print ( model , result , 'Crystal Ball model' , logger )
                       
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## right side CrystalBall PDF
@@ -249,8 +250,8 @@ def test_crystalball_RS () :
         
     make_print ( model , result , '(Right-side) Crystal Ball model' , logger )
     
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## double sided CrystalBall PDF
@@ -315,7 +316,7 @@ def test_needham() :
 
     make_print ( model , result , 'Needham model' , logger )
 
-    models.add ( model )
+    models.add     ( model   )
     results.append ( result  )
 
 # ==========================================================================
@@ -347,7 +348,7 @@ def test_apollonios () :
         
     make_print ( model , result , 'Apollonios model' , logger )
 
-    models.add ( model )
+    models.add     ( model   )
     results.append ( result  )
 
 # ==========================================================================
@@ -382,7 +383,7 @@ def test_apollonios2() :
         
     make_print ( model, result , 'Apollonios2 model' , logger )
         
-    models.add ( model )
+    models.add     ( model   )
     results.append ( result  )
 
 # =============================================================================
@@ -414,7 +415,7 @@ def test_bifurcated () :
         
     make_print ( model , result , 'Bifurcated Gaussian model' , logger )
 
-    models.add ( model )
+    models.add     ( model   )
     results.append ( result  )
 
 # =============================================================================
@@ -448,7 +449,7 @@ def test_2gauss () :
         
     make_print ( model , result , 'Double Gaussian model' , logger )
         
-    models.add ( model )
+    models.add     ( model   )
     results.append ( result  )
 
 # =============================================================================
@@ -517,7 +518,7 @@ def test_gengauss_v2 () :
 
     make_print ( model , result , 'Generalized Gaussian V2 model' , logger )
     
-    models.add ( model )
+    models.add     ( model   )
     results.append ( result  )
 
 # =============================================================================
@@ -584,9 +585,8 @@ def test_qgauss () :
         
     make_print ( model , result , 'q-Gaussian model' , logger )
 
-    models.add ( model )
+    models.add     ( model   )
     results.append ( result  )
-
 
 # =============================================================================
 ## kGauss
@@ -622,7 +622,7 @@ def test_kgauss () :
         
     make_print ( model , result , 'k-Gaussian model' , logger )
 
-    models.add ( model )
+    models.add     ( model   )
     results.append ( result  )
 
 # =============================================================================
@@ -654,12 +654,12 @@ def test_novosibirsk () :
         model.signal.mean .release() 
         model.signal.sigma.release() 
         result , frame = model. fitTo ( dataset0 , silent = True )
-        result, frame = model. fitTo ( dataset0 , silent = True )
+        result , frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , 'Novisibirsk model' , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## Bukin
@@ -700,8 +700,8 @@ def test_bukin() :
 
     make_print ( model , result , 'Bukin (modified Novosibirsk) model' , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## StudentT
@@ -731,8 +731,8 @@ def test_studentT () :
         
     make_print ( model , result , "Student's t-distribution" , logger )
     
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## Bifurcated StudentT
@@ -839,17 +839,17 @@ def test_sinhasinh() :
     signal.delta   = 1.0   
 
     with rooSilent() : 
-        result,f  = model.fitTo ( dataset0 , silent = True )  
-        result,f  = model.fitTo ( dataset0 , silent = True )  
+        result , frame  = model.fitTo ( dataset0 , silent = True )  
+        result , frame  = model.fitTo ( dataset0 , silent = True )  
         signal.delta.release()
-        result,f  = model.fitTo ( dataset0 , silent = True )  
+        result , frame  = model.fitTo ( dataset0 , silent = True )  
         signal.epsilon.release()
-        result,f  = model.fitTo ( dataset0 , silent = True )
+        result , frame  = model.fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Sinh-asinh model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## Test  JohnsonSU-Distribution
@@ -873,18 +873,18 @@ def test_johnsonSU () :
     model.B = NB
     
     with rooSilent() : 
-        result,f  = model.fitTo ( dataset0 , silent = True )  
+        result , frame = model.fitTo ( dataset0 , silent = True )  
         signal.lambd .release()
         signal.delta.release()
-        result,f  = model.fitTo ( dataset0 , silent = True )  
+        result , frame = model.fitTo ( dataset0 , silent = True )  
         signal.gamma.release()
         signal.mean .release()
-        result,f  = model.fitTo ( dataset0 , silent = True )
+        result , frame  = model.fitTo ( dataset0 , silent = True )
         
     make_print ( model, result , "Johnson's SU model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## Test  ATLAS
@@ -909,11 +909,11 @@ def test_atlas () :
     model.B = NB
     
     with rooSilent() : 
-        result,f  = model.fitTo ( dataset0 , silent = True )  
-        result,f  = model.fitTo ( dataset0 , silent = True )  
+        result , frame = model.fitTo ( dataset0 , silent = True )  
+        result , frame = model.fitTo ( dataset0 , silent = True )  
         signal.mean  .release()
         signal.sigma .release()
-        result,f  = model.fitTo ( dataset0 , silent = True )
+        result , frame  = model.fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "ATLAS/ZEUS model" , logger )        
 
@@ -955,8 +955,8 @@ def test_das_1 () :
         
     make_print ( model , result , "Das model (1) " , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # ==========================================================================
 ## Das
@@ -992,8 +992,8 @@ def test_das_2 () :
         
     make_print ( model , result , "Das model (2) " , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # ==========================================================================
 ## Hat
@@ -1026,10 +1026,11 @@ def test_hat  () :
         
     make_print ( model , result , "Hat model" , logger )        
 
-    models.add ( model )
 
-    signal.mean.release() 
-    results.append ( result  )
+    signal.mean.release()
+    
+    models.add     ( model  )
+    results.append ( result )
 
 # ==========================================================================
 ## Up
@@ -1064,10 +1065,10 @@ def test_up  () :
         
     make_print ( model , result , "Up model" , logger )        
 
-    models.add ( model )
-
     signal.mean.release() 
-    results.append ( result  )
+
+    models.add     ( model  )
+    results.append ( result )
 
 # ==========================================================================
 ## FupN
@@ -1105,9 +1106,10 @@ def test_fupn  () :
             
         make_print ( model , result , "Fup%d model" % N  , logger )        
         
-        models.add ( model )
         signal.mean.release() 
-        results.append ( result  )
+        
+        models.add     ( model  )
+        results.append ( result )
 
 # =============================================================================
 ## Test  SECH
@@ -1130,11 +1132,11 @@ def test_sech() :
     model.B = NB
     
     with rooSilent() : 
-        result,f  = model.fitTo ( dataset0 , silent = True )  
-        result,f  = model.fitTo ( dataset0 , silent = True )  
+        result, frame = model.fitTo ( dataset0 , silent = True )  
+        result, frame = model.fitTo ( dataset0 , silent = True )  
         signal.mean  .release()
         signal.sigma .release()
-        result,f  = model.fitTo ( dataset0 , silent = True )
+        result, frame = model.fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Sech model" , logger )        
 
@@ -1162,16 +1164,16 @@ def test_logistic () :
     model.B = NB
     
     with rooSilent() : 
-        result,f  = model.fitTo ( dataset0 , silent = True )  
-        result,f  = model.fitTo ( dataset0 , silent = True )  
+        result, frame = model.fitTo ( dataset0 , silent = True )  
+        result, frame = model.fitTo ( dataset0 , silent = True )  
         signal.mean  .release()
         signal.sigma .release()
-        result,f  = model.fitTo ( dataset0 , silent = True )
+        result, frame = model.fitTo ( dataset0 , silent = True )
 
     make_print ( model , result , "Logistic  model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## Test  LOSEV
@@ -1194,17 +1196,17 @@ def test_losev() :
     model.B = NB
     
     with rooSilent() : 
-        result,f  = model.fitTo ( dataset0 , silent = True )  
-        result,f  = model.fitTo ( dataset0 , silent = True )  
+        result, frame  = model.fitTo ( dataset0 , silent = True )  
+        result, frame  = model.fitTo ( dataset0 , silent = True )  
         signal.mean  .release()
         signal.alpha .release()
         signal.beta  .release()
-        result,f  = model.fitTo ( dataset0 , silent = True )
+        result, frame  = model.fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Losev  model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## Slash
@@ -1237,9 +1239,8 @@ def test_slash():
         
     make_print ( model , result , "Slash model" , logger )
     
-    models.add ( model )
-    results.append ( result  )
-
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## Test Rasing cosine 
@@ -1262,16 +1263,16 @@ def test_raisngcosine () :
     model.B = NB
     
     with rooSilent() : 
-        result,f  = model.fitTo ( dataset0 , silent = True )  
-        result,f  = model.fitTo ( dataset0 , silent = True )  
+        result, frame = model.fitTo ( dataset0 , silent = True )  
+        result, frame = model.fitTo ( dataset0 , silent = True )  
         signal.mean  .release()
         signal.scale .release()
-        result,f  = model.fitTo ( dataset0 , silent = True )
+        result, frame = model.fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Rising Cosine model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## Asymmetric Laplace 
@@ -1305,8 +1306,8 @@ def test_laplace():
         
     make_print ( model , result , "Laplace model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # ==========================================================================
 ## ExGauss
@@ -1341,8 +1342,8 @@ def test_exgauss () :
         
     make_print ( model , result , "ExGauss model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # ==========================================================================
 ## NormalLaplace 
@@ -1378,8 +1379,8 @@ def test_normlapl () :
         
     make_print ( model , result , "Normal Laplace model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
         
 # ==========================================================================
 ## Hyperbolic
@@ -1420,8 +1421,8 @@ def test_hyperbolic() :
         
     make_print ( model , result , "Hyperbolic model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # ==========================================================================
 ## Generalised Hyperbolic
@@ -1464,8 +1465,8 @@ def test_genhyperbolic() :
         
     make_print ( model , result , "Generalized Hyperbolic model" , logger )
     
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # ==========================================================================
 ## Hypatia 
@@ -1510,8 +1511,8 @@ def test_hypatia () :
         
     make_print ( model , result , "Hypatia model" , logger )        
     
-    models.add ( model )
-    results.append ( result  )
+    ## models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## Voigt
@@ -1550,8 +1551,8 @@ def test_voigt () :
         
     make_print ( model , result , "Voigt model" , logger )        
     
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## PseudoVoigt
@@ -1589,8 +1590,8 @@ def test_pvoigt () :
         
     make_print ( model , result , "pseudo-Voigt model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 # =============================================================================
 ## Breit-Wigner
@@ -1635,8 +1636,8 @@ def test_bw () :
         
     make_print ( model , result , "Breit-Wigner model" , logger )        
 
-    models.add ( model )
-    results.append ( result  )
+    models.add     ( model  )
+    results.append ( result )
 
 ## # =============================================================================
 ## ## Breit-Wigner with interference
@@ -1696,8 +1697,8 @@ def test_db() :
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
-        db['mass'] = mass 
-        db['vars'] = varset0 
+        db['mass'     ] = mass 
+        db['vars'     ] = varset0 
         db['dataset'  ] = dataset0
         for m in models :
             db['model:' + m.name ] = m
@@ -1707,7 +1708,10 @@ def test_db() :
         db['models'   ] = models
         for r in results :
             db ['result:%s' % r.name ] = r
-        db['results'   ] = results 
+        db['results'   ] = results
+        for t in plots :
+            db [ ' plot:%s' % t ] = plots [ t ] 
+        db['plots'     ] = plots 
         db.ls() 
 
 # ==============================================================================

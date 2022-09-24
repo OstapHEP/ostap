@@ -19,12 +19,12 @@ __all__     = (
     )
 # =============================================================================
 import ostap.fitting.roofit
-from   ostap.fitting.roofuncs import var_mul  
-from   ostap.fitting.funbasic import AFUN1 
-from   ostap.fitting.pdfbasic import PDF1, make_pdf 
+from   ostap.fitting.variables import var_mul  
+from   ostap.fitting.funbasic  import AFUN1 
+from   ostap.fitting.pdfbasic  import PDF1, make_pdf 
 import ROOT
 # =============================================================================
-from   ostap.logger.logger import getLogger
+from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.transform_pdf' )
 else                       : logger = getLogger ( __name__                      )
 # =============================================================================

@@ -25,11 +25,44 @@ __all__     = (
     'total_ratio'     , ## converter : A,B ->  (T,F) == ( A+B , A/(A+B) ) 
     'two_yields'      , ## converter : T,F ->  (A,B) == ( R*F , T*(1-F) )
     'depends_on'      , ## Is this "RooFit" function depends on the variable?
-    'binning'         , ## create RooBinning object 
+    'binning'         , ## create RooBinning object
+    ##
+    'var_sum'        , ## sum                          for RooAbsReal objects           
+    'var_mul'        , ## product                      for RooAbsReal objects           
+    'var_sub'        , ## subtraction                  for RooAbsReal objects           
+    'var_div'        , ## division                     for RooAbsReal objects           
+    'var_fraction'   , ## fraction                     for RooAbsReal objects           
+    'var_asymmetry'  , ## asymmetry                    for RooAbsReal objects
+    'var_pow'        , ## pow                 function for RooAbsReal objects           
+    'var_abs'        , ## absolutevalue       function for RooAbsReal objects           
+    'var_exp'        , ## exponent            function for RooAbsReal objects           
+    'var_log'        , ## logarithm           function for RooAbsReal objects           
+    'var_log10'      , ## logarithm           function for RooAbsReal objects           
+    'var_erf'        , ## error               function for RooAbsReal objects           
+    'var_sin'        , ## sine                function for RooAbsReal objects           
+    'var_cos'        , ## cosine              function for RooAbsReal objects           
+    'var_tan'        , ## tangent             function for RooAbsReal objects           
+    'var_tanh'       , ## hyperbolic tangent  function for RooAbsReal objects           
+    'var_sech'       , ## hyperbolic secant   function for RooAbsReal objects           
+    'var_atan2'      , ## inverse tangent     function for RooAbsReal objects           
+    'var_min'        , ## minimal             function for RooAbsReal objects           
+    'var_max'        , ## minimal             function for RooAbsReal objects           
+    'var_gamma'      , ## gamma               function for RooAbsReal objects           
+    'var_lgamma'     , ## logarithm of gamma  function for RooAbsReal objects           
+    'var_igamma'     , ## 1/gamma             function for RooAbsReal objects
+    ##
+    'scale_var'      , ## var_mul
+    'add_var'        , ## var_sum
+    'sum_var'        , ## var_sum
+    'ratio_var'      , ## var_div
+    'fraction_var'   , ## var_fraction
+    'asymmetry_var'  , ## var_asymmetry
+    ##
     ) 
 # =============================================================================
 from   builtins                 import range
-from   ostap.math.base          import doubles
+from   ostap.math.base          import doubles, iszero, isequal 
+
 from   ostap.core.core          import VE, hID, Ostap
 from   ostap.math.reduce        import root_factory 
 from   ostap.core.meta_info     import root_info 
@@ -46,6 +79,9 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.variables' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug( 'Some useful decorations for RooFit variables')
+# =============================================================================
+## is value equal to 1?
+isone = lambda x : isequal ( float ( x ) , 1 )
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
@@ -880,26 +916,6 @@ def _rcat_setitem_ ( cat , label , value ) :
         
     raise TypeError ("Invalid type for label/index %s/%s" %  ( label , value ) )
 
-# ==============================================================================
-## factory for RooCategory objects
-#  @see RooCategory
-def _rcat_factory_  ( klass , name , title , items ) :
-    """factory for `ROOT.RooCategory` objects
-    - see `ROOT.RooCategory`
-    """
-    cat = klass ( name , title )
-    for label , index  in items : cat.defineType ( label , index )
-    return cat
-
-# =============================================================================
-## reduce RooCategory instance 
-#  @see RooCategory
-def _rcat_reduce_ ( cat ) :
-    """reduce RooCategory instance 
-    - see `ROOT.RooCategory`
-    """
-    items = tuple ( (l,i) for (l,i) in cat.items() )
-    return _rcat_factory_ , ( type ( cat ) , cat.GetName() , cat.GetTitle() , items ) 
 
 # =============================================================================
 ## Get the list/tuple of categories 
@@ -930,7 +946,6 @@ ROOT.RooAbsCategory.iteritems     = _racat_items_
 ROOT.RooAbsCategory.__contains__  = _racat_contains_
 ROOT.RooAbsCategory.__getitem__   = _racat_getitem_
 ROOT.RooCategory   .__setitem__   = _rcat_setitem_
-ROOT.RooCategory   .__reduce__    = _rcat_reduce_ 
 ROOT.RooAbsCategory.labels        = _racat_labels_
 ROOT.RooAbsCategory.names         = _racat_labels_
 ROOT.RooAbsCategory.keys          = _racat_labels_
@@ -947,7 +962,6 @@ _new_methods_       += [
     ROOT.RooAbsCategory.names         ,
     ROOT.RooAbsCategory.keys          ,
     ROOT.RooCategory   .__setitem__   ,
-    ROOT.RooCategory   .__reduce__    ,
     ]
 
 
@@ -1404,143 +1418,6 @@ def binning ( edges , nbins = 0 , name = '' ) :
     return ROOT.RooBinning ( nb - 1 , buffer , name ) 
 
 
-    
-# =============================================================================
-## Dedicated unpickling factory for RooRealVar
-def _rrv_factory ( args , errors , binnings , fixed , *attrs ) :
-    """ Dedicated unpickling factory for `ROOT.RooRealVar`
-    """
-
-    ## create it
-    rrv = ROOT.RooRealVar ( *args )
-
-    ## set errors if needed 
-    if   errors and  2 == len ( errors ) : rrv.setAsymError ( *errors ) 
-    elif errors and  1 == len ( errors ) : rrv.setError     ( *errors )
-
-    for b in binnings :
-        if b : rrv.setBinning ( b , b.GetName ()) 
-
-    rrv.setConstant ( fixed )
-    
-    if attrs :
-        battrs = attrs[0] 
-        for n , a in battrs : rrv.setAttribute          ( n , a )
-        if 1 < len ( attrs ) :
-            sattrs = attrs[1] 
-            for n , a in sattrs : rrv.setStringAttribute    ( n , a )
-            if 2 < len ( attrs ) :
-                tattrs = attrs[2]             
-                for n , a in tattrs : rrv.setTransientAttribute ( n , a ) 
-    
-    return rrv
-
-# =============================================================================
-## Reducing of <code>RooRealVar</code> for pickling/unpickling 
-#  @see RooRooRealVar 
-def _rrv_reduce ( rrv ) :
-    """ Reducing of `ROOT.RooRealVar` for pickling 
-    - see ROOT.RooRooRealVar 
-    """
-    name    = rrv.name 
-    title   = rrv.title
-    value   = rrv.getVal () 
-
-    has_min = rrv.hasMin ()
-    has_max = rrv.hasMax ()
-
-    ## constructor arguments 
-    if has_min and has_max :
-        args = name , title , value ,  rrv.getMin () , rrv.getMax ()              , rrv.getUnit ()
-    elif has_min : 
-        args = name , title , value ,  rrv.getMin () , ROOT.RooNumber.infinity () , rrv.getUnit () 
-    elif has_max : 
-        args = name , title , value , -ROOT.RooNumber.infinity () , rrv.getMax () , rrv.getUnit () 
-    else :
-        args = name , title , value ,  rrv.getUnit () 
-
-    ## errors 
-    if   rrv.hasAsymError () :
-        errors = rrv.getAsymErrorLo () , rrv.getAsymErrorHi ()
-    elif rrv.hasError   () :
-        errors = rrv.getError() ,
-    else :
-        errors = () 
-
-    ## binings 
-        
-    binnings = tuple (   rrv.getBinning ( n , False )       for n in rrv.getBinningNames     () )
-
-    ## attributes:
-    
-    battrs   = tuple ( ( n , rrv.getAttribute          ( n ) ) for   n       in rrv.attributes          () ) 
-    sattrs   = tuple ( ( n , a                               ) for ( n , a ) in rrv.stringAttributes    () ) 
-    tattrs   = tuple ( ( n , rrv.getTransientAttribute ( n ) ) for   n       in rrv.transientAttributes () ) 
-
-    ## fixed ? 
-    fixed = True if rrv.isConstant() else False 
-
-    if tattrs : 
-        content = args , errors , binnings , fixed , battrs , sattrs , tattrs
-    elif sattrs :
-        content = args , errors , binnings , fixed , battrs , sattrs
-    elif battrs : 
-        content = args , errors , binnings , fixed , battrs 
-    else :        
-        content = args , errors , binnings , fixed 
-    
-    return _rrv_factory , content 
-
-
-ROOT.RooRealVar.__reduce__ = _rrv_reduce
-
-_new_methods_ += [
-    ROOT.RooRealVar.__reduce__ ,
-    ]
-
-
-# =============================================================================
-## factory for unpickling of <code>RooFormulaVar</code> and
-#  <code>Ostap::FormulaVar</code>
-def _rfv_factory ( klass , args , vars ) :
-    """Factory for unpickling of `RooFormulaVar` and `Ostap.FormulaVar`
-    """
-
-    lst = ROOT.RooArgList ()
-    for v in vars : lst.add ( v ) 
-
-    margs = list  ( args  )
-    margs.append  ( lst   )
-    margs = tuple ( margs ) 
-    
-    rfv = klass   ( *margs )
-    
-    rfv.__args = args, vars, lst
-
-    return rfv
-    
-# =============================================================================
-## Reduce <code>RooFormulaVar</code> and <code>Ostap::FormulaVar</code> for pickling
-#  @see RooFormulaVar 
-#  @see Ostap::FormulaVar 
-def _rfv_reduce ( rfv ) : 
-    """Reduce `RooFormulaVar` and `Ostap::FormulaVar` for pickling
-    - see RooFormulaVar 
-    - see Ostap.FormulaVar 
-    """
-
-    name       = rfv.GetName     ()
-    title      = rfv.GetTitle    ()
-    
-    rform      = rfv.formula     ()    
-    expression = rform.GetTitle  () 
-
-    vars       = tuple ( d for d in rform.actualDependents() ) 
-    args       = name , title , expression
-    
-    return _rfv_factory , ( type ( rfv ) , args , vars ) 
-
-
 # =============================================================================
 ## get the actual expression from <code>RooFormualVar</code>
 #  @code
@@ -1564,7 +1441,7 @@ def _rfv_str_ ( var ) :
 # ==============================================================================
 ## string representaion of the RooFormulaVar
 def _rfv_repr_ ( var ) :
-    """String representaion of the RooFormulaVar
+    """String representation of the RooFormulaVar
     """
     return '%s : %s' % ( var.expression() , var.getVal() ) 
 
@@ -1572,41 +1449,596 @@ if (6,22) <= root_info :
     ROOT.RooFormulaVar. expression = _rfv_expr_
     ROOT.RooFormulaVar. __str__    = _rfv_str_
     ROOT.RooFormulaVar. __repr__   = _rfv_repr_
-    ROOT.RooFormulaVar.__reduce__  = _rfv_reduce
     _new_methods_ += [
         ROOT.RooFormulaVar. expression , 
         ROOT.RooFormulaVar. __str__    , 
         ROOT.RooFormulaVar. __repr__   , 
-        ROOT.RooFormulaVar.__reduce__  ,
         ]
 else :
-    Ostap.FormulaVar.__reduce__    = _rfv_reduce
     Ostap.FormulaVar. __str__      = _rfv_str_
     Ostap.FormulaVar. __repr__     = _rfv_repr_
-    Ostap.FormulaVar.__reduce__    = _rfv_reduce
     _new_methods_ += [
-        Ostap.FormulaVar.__reduce__  ,
         Ostap.FormulaVar. __str__    , 
         Ostap.FormulaVar. __repr__   , 
-        Ostap.FormulaVar.__reduce__  , 
         ]
+
+# =============================================================================
+
+
+
+# ==============================================================================
+# primitive functions for RooAbsReal objects 
+# ==============================================================================
+
+# ==============================================================================
+## absolute value   \f$ f = abs{ab} \f$
+#  @code
+#  var = ...
+#  e   = var_abs ( var ) 
+#  @endcode 
+def var_abs ( a , b = 1 , name = '' , title = '' ) :
+    """Absolute value: f(x) = abs(ab)
+    >>> var = ...
+    >>> e   = var_abs ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.abs ( float ( a ) * float ( b ) )
+        return ROOT.RooFit.RooConst ( ab )     
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    #
+    return Ostap.MoreRooFit.Abs( a, b , name , title )
+    #
+# ==============================================================================
+## exponent  \f$ f = \mathrm{e}^{ab}\f$
+#  @code
+#  var = ...
+#  e   = var_exp ( var ) 
+#  @endcode 
+def var_exp ( a , b = 1 , name = '' , title = '' ) :
+    """Exponent: f(x) = exp(ab)
+    >>> var = ...
+    >>> e   = var_exp ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.exp ( float ( a ) * float ( b ) )
+        return ROOT.RooFit.RooConst ( ab )          ## RETURN
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 1 ) 
+    #
+    return Ostap.MoreRooFit.Exp ( a, b , name , title )
+
+# ==============================================================================
+## logarithm  \f$ f = \log ab \f$
+#  @code
+#  var = ...
+#  e   = var_log ( var ) 
+#  @endcode 
+def var_log ( a , b = 1 , name = '' , title = '' ) :
+    """logarithm f(x) = log(ab)
+    >>> var = ...
+    >>> e   = var_log ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.log ( float ( a ) * float ( b ) )       ## RETURN
+        return ROOT.RooFit.RooConst ( ab )
+    #
+    return Ostap.MoreRooFit.Log ( a, b , name , title ) 
+
+# ==============================================================================
+## logarithm  \f$ f = \log10 ab \f$
+#  @code
+#  var = ...
+#  e   = var_log10 ( var ) 
+#  @endcode 
+def var_log10 ( a , b = 1 , name = '' , title = '' ) :
+    """logarithm f(x) = log10(ab)
+    >>> var = ...
+    >>> e   = var_log10 ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.log10 ( float ( a ) * float ( b ) )       ## RETURN
+        return ROOT.RooFit.RooConst ( ab )
+    #
+    return Ostap.MoreRooFit.Log10 ( a, b , name , title ) 
+
+
+# ==============================================================================
+## error function \f$ f = erf ( ab) \f$
+#  @code
+#  var = ...
+#  e   = var_erf ( var ) 
+#  @endcode 
+def var_erf ( a , b = 1 , name = '' , title = '' ) :
+    """Error function f(x) = erf(ab)
+    >>> var = ...
+    >>> e   = var_erf ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.erf ( float ( a ) * float ( b ) )
+        return ROOT.RooFit.RooConst ( ab )          ## RETURN
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    #
+    return Ostap.MoreRooFit.Erf ( a, b , name , title ) 
+
+# ==============================================================================
+## complementary error function \f$ f = erfc ( ab) \f$
+#  @code
+#  var = ...
+#  e   = var_erfc ( var ) 
+#  @endcode 
+def var_erfc ( a , b = 1 , name = '' , title = '' ) :
+    """Error function f(x) = erfc(ab)
+    >>> var = ...
+    >>> e   = var_erfc ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.erfc ( float ( a ) * float ( b ) )
+        return ROOT.RooFit.RooConst ( ab )          ## RETURN
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 1 ) 
+    #
+    return Ostap.MoreRooFit.Erf ( a, b , name , title ) 
+
+
+# ==============================================================================
+## Sine \f$ f = \sin ab\f$
+#  @code
+#  var = ...
+#  e   = var_sin ( var ) 
+#  @endcode 
+def var_sin ( a , b = 1 , name = '' , title = '' ) :
+    """Sine  f(x) = sin(ab)
+    >>> var = ...
+    >>> e   = var_sin ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.sin ( float ( a ) * float ( b ) )
+        return ROOT.RooFit.RooConst ( ab )          ## RETURN 
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    #
+    return Ostap.MoreRooFit.Sin ( a, b , name , title ) 
+    
+# ==============================================================================
+## Cosine \f$ f = \cos ab\f$
+#  @code
+#  var = ...
+#  e   = var_cos ( var ) 
+#  @endcode 
+def var_cos ( a , b = 1 , name = '' , title = '' ) :
+    """Cosine  f(x) = cos(ab)
+    >>> var = ...
+    >>> e   = var_cos ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.cos ( float ( a ) * float ( b ) )
+        return ROOT.RooFit.RooConst ( ab )       ## RETURN
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 1 ) 
+    #
+    return Ostap.MoreRooFit.Cos ( a, b , name , title )
+
+
+# ==============================================================================
+## Tangent\f$ f = \tan ab\f$
+#  @code
+#  var = ...
+#  e   = var_tan ( var ) 
+#  @endcode 
+def var_tan ( a , b = 1 , name = '' , title = '' ) :
+    """Tangent  f(x) = tan(ab)
+    >>> var = ...
+    >>> e   = var_tan ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.tan ( float ( a ) * float ( b ) )   ##  RETURN
+        return ROOT.RooFit.RooConst ( ab )
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    #
+    return Ostap.MoreRooFit.Tan ( a, b , name , title )
+
+
+# ==============================================================================
+## Hyprbolic sine \f$ f = \sinh ab\f$
+#  @code
+#  var = ...
+#  e   = var_sinh ( var ) 
+#  @endcode 
+def var_sinh ( a , b = 1 , name = '' , title = '' ) :
+    """Hyperbolic sine  f(x) = sinh(ab)
+    >>> var = ...
+    >>> e   = var_sinh ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.sinh ( float ( a ) * float ( b ) )
+        return ROOT.RooFit.RooConst ( ab )          ## RETURN 
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    #
+    return Ostap.MoreRooFit.Sinh ( a, b , name , title ) 
+    
+
+# ==============================================================================
+## Hyperbolic cosine \f$ f = \cosh ab\f$
+#  @code
+#  var = ...
+#  e   = var_cosh ( var ) 
+#  @endcode 
+def var_cosh ( a , b = 1 , name = '' , title = '' ) :
+    """Hyperbolic cosine  f(x) = cos(ab)
+    >>> var = ...
+    >>> e   = var_cosh ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.cosh ( float ( a ) * float ( b ) )
+        return ROOT.RooFit.RooConst ( ab )       ## RETURN
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 1 ) 
+    #
+    return Ostap.MoreRooFit.Cosh ( a, b , name , title )
+
+# ==============================================================================
+## Hyperboilic tangent\f$ f = \tanh ab\f$
+#  @code
+#  var = ...
+#  e   = var_tanh ( var ) 
+#  @endcode 
+def var_tanh ( a , b = 1 , name = '' , title = '' ) :
+    """Hyperbolic tangent  f(x) = tanh(ab)
+    >>> var = ...
+    >>> e   = var_tanh ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :        
+        ab = math.tanh ( float ( a ) * float ( b ) ) 
+        return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    #
+    return Ostap.MoreRooFit.Tanh ( a, b , name , title )
+
+# ==============================================================================
+## Hyperboilic secant \f$ f = \sech ab\f$
+#  @code
+#  var = ...
+#  e   = var_sech ( var ) 
+#  @endcode 
+def var_sech ( a , b = 1 , name = '' , title = '' ) :
+    """Hyperbolic tangent  f(x) = tanh(ab)
+    >>> var = ...
+    >>> e   = var_tanh ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :        
+        ab = Ostap.Math.sech ( float ( a ) * float ( b ) ) 
+        return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 1 ) 
+    #
+    return Ostap.MoreRooFit.Sech ( a, b , name , title )
+
+# ==============================================================================
+## arctangent \f$ f = atan2 (a,b)\f$
+#  @code
+#  var = ...
+#  e   = var_atan2 ( var ) 
+#  @endcode 
+def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
+    """Inverse tangent  f(x) = atan2(a,b)
+    >>> var = ...
+    >>> e   = var_atan2 ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.atan2 ( float ( a ) , float ( b ) ) 
+        return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    return Ostap.MoreRooFit.Atan2 ( a, b , name , title )
+
+
+# ==============================================================================
+## maximal \f$ f = max (a,b)\f$
+#  @code
+#  var1 = ...
+#  var2 = ...
+#  var  = var_max ( var1 , var2 ) 
+#  @endcode 
+def var_max ( a , b = 1 , name = '' , title = '' ) :
+    """Maximal from two fnuctions f(x) = max(a,b)
+    >>> var = ...
+    >>> e   = var_max ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = max ( float ( a ) , float ( b ) ) 
+        return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    return Ostap.MoreRooFit.MaxV ( a, b , name , title )
+
+
+# ==============================================================================
+## minimal \f$ f = min (a,b)\f$
+#  @code
+#  var1 = ...
+#  var2 = ...
+#  var  = var_min ( var1 , var2 ) 
+#  @endcode 
+def var_min ( a , b = 1 , name = '' , title = '' ) :
+    """Minimal from two fnuctions f(x) = min(a,b)
+    >>> var = ...
+    >>> e   = var_min ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = min ( float ( a ) , float ( b ) ) 
+        return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    return Ostap.MoreRooFit.MinV ( a, b , name , title )
+
+
+
+# ==============================================================================
+## Gamma function \f$ f =    \Gamma(ab) \f$
+#  @code
+#  a = ...
+#  e = var_gamma ( a ) 
+#  @endcode 
+def var_gamma ( a , b = 1 , name = '' , title = '' ) :
+    """Gamma function  f = Gamma(ab)
+    >>> a = ...
+    >>> e = var_gamma ( a ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.gamma ( float ( a ) * float ( b ) )      
+        return ROOT.RooFit.RooConst ( ab )           ## RETURN 
+    #
+    return Ostap.MoreRooFit.Gamma ( a, b , name , title ) 
+
+# ==============================================================================
+## logarithm of Gamma function \f$ f = \log \Gamma(ab) \f$
+#  @code
+#  a = ...
+#  e = var_lgamma ( a ) 
+#  @endcode 
+def var_lgamma ( a , b = 1 , name = '' , title = '' ) :
+    """logarithm of Gamma function  f = log Gamma(ab)
+    >>> a = ...
+    >>> e = var_lgamma ( a ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.lgamma ( float ( a ) * float ( b ) )      
+        return ROOT.RooFit.RooConst ( ab )           ## RETURN 
+    #
+    return Ostap.MoreRooFit.LGamma ( a, b , name , title ) 
+
+# ==============================================================================
+## 1/Gamma function \f$ f = \frac{1}{\Gamma(ab)} \f$
+#  @code
+#  a = ...
+#  e = var_igamma ( a ) 
+#  @endcode 
+def var_igamma ( a , b = 1 , name = '' , title = '' ) :
+    """1/Gamma  f = 1/Gamma(ab)
+    >>> a = ...
+    >>> e = var_igamma ( a ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = Ostap.Math.igamma ( float ( a ) * float ( b ) )
+        return ROOT.RooFit.RooConst ( ab )              ## RETURN 
+    #
+    return Ostap.MoreRooFit.IGamma ( a, b , name , title ) 
 
 
 # =============================================================================
-## Reduce <code>RooConstVar</code>
-#  @see RooConstVar 
-def _rconst_reduce ( var ) :
-    """ Reduce `ROOT.RooConstVar`
-    - see ROOT.RooConstVar
+## Sum of two RooAbsReal objects
+#  @code
+#  v1 = ...
+#  v2 = ...
+#  v  = var_sum ( v1 ,  v2 )
+#  @endcode
+def var_sum ( v1 , v2 , name = '' , title = '' ) :
+    """Sum of two RooAbsReal objects
+    >>> v1 = ...
+    >>> v2 = ...
+    >>> v  = var_sum ( v1 , v2 )
     """
-    return root_factory , ( type ( var )  ,
-                            var.name      ,
-                            var.title     ,
-                            float ( var ) )  
+    f1 = isinstance ( v1 , num_types )
+    f2 = isinstance ( v2 , num_types )
+    
+    if f1 and f2 :
+        r = float ( v1 ) + float ( v2 ) 
+        return ROOT.RooFit.RooConst ( r )                 ## RETURN    
+    elif f1 and iszero ( v1 ) : return v2
+    elif f2 and iszero ( v2 ) : return v1
+    #
+    return Ostap.MoreRooFit.Addition ( v1 , v2 , name , title )
 
-ROOT.RooConstVar.__reduce__ = _rconst_reduce 
 
 
+
+# =============================================================================
+## Subtraction of two RooAbsReal objects
+#  @code
+#  v1 = ...
+#  v2 = ...
+#  v  = var_sub ( v1 , v2 )
+#  @endcode
+def var_sub ( v1 , v2 , name = '' , title = '' ) :
+    """Subraction of two RooAbsReal objects
+    >>> v1 = ...
+    >>> v2 = ...
+    >>> v  = var_sub ( v1 , v2 )  
+    """
+    f1 = isinstance ( v1 , num_types )
+    f2 = isinstance ( v2 , num_types )    
+    if f1 and f2 :
+        r = float ( v1 ) - float ( v2 ) 
+        return ROOT.RooFit.RooConst ( r )                 ## RETURN    
+    elif f1 and iszero ( v1 ) : return var_mul ( v2 , -1 , name , title ) 
+    elif f2 and iszero ( v2 ) : return v1 
+    # 
+    return Ostap.MoreRooFit.Subtraction ( v1 , v2 , name , title ) 
+
+
+# =============================================================================
+## Product of two RooAbsReal objects
+#  @code
+#  v1 = ...
+#  v2 = ...
+#  v  = var_mul ( v1 ,  v2 )
+#  @endcode
+def var_mul ( v1 , v2 , name = '' , title = '' ) :
+    """Product of two RooAbsReal objects
+    >>> v1 = ...
+    >>> v2 = ...
+    >>> v  = var_mul ( v1 ,  v2 )
+    """
+    f1 = isinstance ( v1 , num_types )
+    f2 = isinstance ( v2 , num_types )    
+    if f1 and f2 :
+        r = float ( v1 ) * float ( v2 ) 
+        return ROOT.RooFit.RooConst ( r )                 ## RETURN
+    elif f1 and iszero ( v1 ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif f2 and iszero ( v2 ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif f1 and isone  ( v1 ) : return v2 
+    elif f2 and iseone ( v2 ) : return v1 
+    #
+    return Ostap.MoreRooFit.Product ( v1 , v2 , name , title ) 
+
+# =============================================================================
+## Division of two RooAbsReal objects
+#  @code
+#  v1 = ...
+#  v2 = ...
+#  v  = var_div ( v1 , v2 )
+#  @endcode
+def var_div ( v1 , v2 , name = '' , title = '' ) :
+    """Division of two RooAbsReal objects
+    >>> v1 = ...
+    >>> v2 = ...
+    >>> v  = var_div ( v1 , v2 )  
+    """
+    f1 = isinstance ( v1 , num_types )
+    f2 = isinstance ( v2 , num_types )    
+    if f1 and f2 :
+        r = float ( v1 ) / float ( v2 ) 
+        return ROOT.RooFit.RooConst ( r )                 ## RETURN
+    elif f1 and iszero ( v1 ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif f2 and isone  ( v2 ) : return v1
+    #
+    return Ostap.MoreRooFit.Division ( v1 , v2 , name , title ) 
+
+# =============================================================================
+## pow for two RooAbsReal objects
+#  @code
+#  v1 = ...
+#  v2 = ...
+#  v  = var_pow ( v1 , v2 )
+#  @endcode
+def var_pow ( v1 , v2 , name = '' , title = '' ) :
+    """pow for two RooAbsReal objects
+    >>> v1 = ...
+    >>> v2 = ...
+    >>> v  = var_pow ( v1 ,  v2 ) 
+    """
+    f1 = isinstance ( v1 , num_types )
+    f2 = isinstance ( v2 , num_types )    
+    if f1 and f2 :
+        r = float ( v1 ) ** float ( v2 ) 
+        return ROOT.RooFit.RooConst ( r )                 ## RETURN    
+    elif f2 and iszero  ( v2 ) : return ROOT.RooFit.RooConst ( 1 )
+    elif f2 and isone   ( v2 ) : return v1 
+    elif f1 and iszero  ( v1 ) : return ROOT.RooFit.RooConst ( 0 )
+    elif f1 and isone   ( v1 ) : return ROOT.RooFit.RooConst ( 1 )
+    #
+    return Ostap.MoreRooFit.Power ( v1 , v2 , name , title ) 
+
+# ==============================================================================
+## "Fraction" of two RooAbsReal objects: f = a/(a+b)
+#  @code
+#  a = ...
+#  b = ...
+#  e   = var_fraction ( a , b ) 
+#  @endcode 
+def var_fraction ( a , b , name = '' , title = '' ) :
+    """'Fraction'  f(x) = a/(a+b)
+    >>> a = ...
+    >>> b = ...
+    >>> e = var_fraction ( a , b  ) 
+    """
+    f1 = isinstance ( v1 , num_types )
+    f2 = isinstance ( v2 , num_types )    
+    if f1 and f2 :
+        r = float ( v1) / ( float ( v1 ) + float ( v1 ) )  
+        return ROOT.RooFit.RooConst ( r )                 ## RETURN    
+    elif f1 and iszero  ( v1 ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif f2 and iszero  ( v2 ) : return ROOT.RooFit.RooConst ( 1 ) 
+    #
+    return Ostap.MoreRooFit.Fraction ( v1 , v2 , name , title ) 
+
+
+# ==============================================================================
+## "Asymmetry" of two RooAbsReal objects: f = (a-b)/(a+b)
+#  @code
+#  a = ...
+#  b = ...
+#  e = var_asymmetry ( a , b ) 
+#  @endcode 
+def var_asymmetry ( a , b , name = '' , title = '' ) :
+    """'Asymmetry'  f(x) = (a-b)/(a+b)
+    >>> a = ...
+    >>> b = ...
+    >>> e = var_asymmetry ( a , b  ) 
+    """
+    f1 = isinstance ( v1 , num_types )
+    f2 = isinstance ( v2 , num_types )    
+    if f1 and f2 :
+        r = ( float ( v1 ) - float ( v2 ) ) / ( float ( v1 ) + float ( v2 ) )  ## 
+        return ROOT.RooFit.RooConst ( r )                                ## RETURN    
+    elif f1 and iszero  ( v1 ) : return ROOT.RooFit.RooConst ( -1 ) 
+    elif f2 and iszero  ( v2 ) : return ROOT.RooFit.RooConst (  1 ) 
+    #
+    return Ostap.MoreRooFit.Asymmetry ( v1 , v2 , name , title ) 
+
+scale_var     = var_mul
+add_var       = var_sum
+sum_var       = var_sum
+ratio_var     = var_div
+fraction_var  = var_fraction
+asymmetry_var = var_asymmetry
 
 _decorated_classes_ = (
     ##
@@ -1623,6 +2055,7 @@ _decorated_classes_ = (
 )
 
 _new_methods_ = tuple ( _new_methods_ ) 
+
 
 # =============================================================================
 if '__main__' == __name__ :
