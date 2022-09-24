@@ -29,7 +29,6 @@ else                       : logger = getLogger( __name__                    )
 logger.debug ( 'redcue (T)Graph-like classes')
 # =============================================================================
 
-
 # ===============================================================================
 ## reconstruct/deserialize/unpickle <code>TGraph</code> object
 #  @see TGraph
