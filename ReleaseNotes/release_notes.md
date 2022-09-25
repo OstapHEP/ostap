@@ -2,12 +2,13 @@
 
   1. reshuffel soem code between `ostap.fitting.variables` and `ostap.fitting.roofuncs`
   1. reshuffel soem code between `ostap.fitting.variables` and `ostap.fitting.rooreduce`
-  1. add seriazation/reducing for the graph-like objects
+  1. add serialization/reducing for the graph-like objects
+  1. fix exampels 
+  1. disable python warning from `scipy.signal` 
 
 ## Backward incompatible:  
 
 ## Bug fixes:
-
 
 # v1.9.3.4
 

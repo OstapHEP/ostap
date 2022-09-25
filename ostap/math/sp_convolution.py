@@ -18,6 +18,7 @@ __all__     = ()
 ##    'Convolution'      , ## SciPy' FFT-based convolution for functions 
 ##    )
 # =============================================================================
+import warnings 
 from   ostap.math.operations import Function
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -27,7 +28,9 @@ else                       : logger = getLogger ( __name__                    )
 
 try :
     # =========================================================================
-    import scipy.signal as SS
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")        
+        import scipy.signal as SS
     import numpy        as np
     
     # =========================================================================
@@ -241,7 +244,7 @@ try :
         )
     
 except ImportError :
-    logger.warning ("No numpy/scipy is abailable: convolution is disabled")
+    logger.warning ("No numpy/scipy is available: convolution is disabled")
     
 # =============================================================================
 if '__main__' == __name__ :

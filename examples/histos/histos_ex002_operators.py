@@ -10,8 +10,8 @@
 """
 # =============================================================================
 from   __future__ import print_function
+from   ostap.histos.histos import VE 
 import ROOT,random 
-from   ostap.histos import VE 
 
 h1 = ROOT.TH1F('h1','title',50,0,20)
 h2 = ROOT.TH1F('h2','title',50,0,20)
@@ -79,5 +79,5 @@ print ( 'log (H2) %s ' % log(h2).dump(50,20)   )
 
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

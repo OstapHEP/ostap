@@ -10,8 +10,8 @@
 """
 # =============================================================================
 from   __future__ import print_function
+from   ostap.histos.histos import VE
 import ROOT
-from   ostap.histos import VE
 
 h1 = ROOT.TH1F('h1','title',20,0,1)
 
@@ -38,5 +38,5 @@ print ( 'YMIN/YMAX         %s' % list ( h1.yminmax() ) )
 print ( '#BINS             %d' % len ( h1 )            )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -9,9 +9,9 @@
 """Simple example of 1D-histogram local interpolation
 """
 # =============================================================================
-from   __future__ import print_function
+from   __future__          import print_function
+from   ostap.histos.histos import VE 
 import ROOT,random 
-from   ostap.histos import VE 
 
 h1 = ROOT.TH1F ( 'h1' , 'title' , 10 , 0 , 10 )
 
@@ -35,5 +35,5 @@ for i in range(10) :
     print ( 'x=%s \tv=%s \tv0/v1/v2/v3=%s/%s/%s/%s ' % ( x , v , v0 , v1 , v2 , v3 ) )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
