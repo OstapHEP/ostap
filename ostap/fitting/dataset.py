@@ -719,12 +719,12 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
             vcuts = Ostap.FormulaVar    ( cuts , cuts , used , True )
         cuts = vcuts 
 
-    ## special treatment for 1D histograms: several variables are summed/projected togather 
+    ## special treatment for 1D histograms: several variables are summed/projected together 
     if 1 == hdim and hdim < len ( what ) :
         htmp  = histo.clone()
         total = 0 
         for w in what :
-            n , htmp = ds_project ( dataset , htmp , w , cuts , *events , progres = progress )
+            n , htmp = ds_project ( dataset , htmp , w , cuts , *events , progress = progress )
             total += n
             histo += htmp 
         del htmp

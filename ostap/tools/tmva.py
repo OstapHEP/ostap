@@ -268,9 +268,10 @@ class Trainer(object):
                    signal_train_fraction     = -1 , ## fraction of signal events used for training     : 0<=f<1 
                    background_train_fraction = -1 , ## fraction of background events used for training : 0<=f<1
                    ##
-                   prescale_signal      = 1       , ## prescale factor for signal 
-                   prescale_background  = 1       , ## prescale factor for signal 
-                   output_file          = ''      ,   ## the name of output file
+                   prescale_signal      = 1       , ## prescale factor for the signal 
+                   prescale_background  = 1       , ## prescale factor for the background
+                   ## 
+                   output_file          = ''      , ## the name of output file
                    verbose              = True    ,
                    logging              = True    ,
                    name                 = 'TMVA'  ,

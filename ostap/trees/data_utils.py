@@ -629,7 +629,7 @@ class Files(object):
     ## copy all the files to new directory
     #  - new directory will be created (if needed)
     #  - common path (prefix) for all files will be replaced by new directory
-    def copy_files ( self , new_dir , parallel = False ) :
+    def copy_files ( self , new_dir , parallel = False , also_bad = False ) :
         """copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
@@ -650,12 +650,15 @@ class Files(object):
         
         cp = self.commonpath
 
-        
+        files_to_copy = set ( self.__files )
+        if also_bad and self.bad_files :
+            files_to_copy |= set ( self.bad_files )
+            
         if parallel :
 
             regular_files  = [] 
             root_files     = [] 
-            for f in self.__files :
+            for f in files_to_copy :
                 fs = os.path.normpath ( strip_protocol ( f ) ) 
                 nf = fs.replace ( cp , nd ) 
                 nf = os.path.normpath ( nf )
@@ -678,8 +681,8 @@ class Files(object):
             
             copied = []
             from ostap.utils.progress_bar import progress_bar
-            nf = len ( self.__files ) 
-            for f in progress_bar ( self.__files , silent = self.silent or nf <=1 ) :
+            nf = len ( files_to_copy ) 
+            for f in progress_bar ( files_to_copy , silent = self.silent or nf <=1 ) :
                 
                 fs = os.path.normpath ( strip_protocol ( f ) ) 
                 nf = fs.replace ( cp , nd ) 

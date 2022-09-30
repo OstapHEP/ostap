@@ -836,9 +836,13 @@ def frame_prescale ( frame , prescale , name = '' ) :
 
         name = name if name else 'PRESCALE_%.6g' % prescale        
         code = 'gRandom->Rndm() <= %.12g'        % prescale
-        return node.Filter ( code , name ) 
+        return node.Filter ( code , name )
+    
+    elif 1 == prescale :
+        ## no action
+        return node 
         
-    raise TypeError ( "Invalid type/valeu for 'prescale' %s/%s" %( prescale , type ( prescale ) ) )
+    raise TypeError ( "Invalid type/value for 'prescale' %s/%s" %( prescale , type ( prescale ) ) )
         
     
 # ==============================================================================

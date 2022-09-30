@@ -1066,8 +1066,8 @@ class GenGaussV1_pdf(PEAK) :
         
         self.__beta  = self.make_var ( beta ,
                                        'beta_%s'        % name  ,
-                                       '#beta_{v1}(%s)' % name  , beta , 
-                                       2 , 1.e-4  , 1.e+6 ) 
+                                       '#beta_{v1}(%s)' % name  ,
+                                       None , 2 , 1.e-4  , 1.e+6 ) 
         #
         ## finally build PDF
         #

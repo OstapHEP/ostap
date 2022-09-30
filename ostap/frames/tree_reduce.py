@@ -71,19 +71,19 @@ class ReduceTree(CleanUp):
         if not  silent :
             pbar = frame.ProgressBar ( len (  chain ) )
             
-        nvars = [] 
-        ## new variables 
-        for nv in new_vars :
-            frame = frame.Define ( nv , new_vars [ nv] )
-            nvars.append ( nv )
-
-        ## add overall prescale 
+        ## add overall prescale (if requested)  
         if 1 != prescale :
             frame = frame_prescale ( frame , prescale )
             
-        from ostap.core.ostap_types import  ( string_types   ,
-                                              listlike_types ,
-                                              dictlike_types )
+        nvars = [] 
+        ## new variables 
+        for nv in new_vars :
+            frame = frame.Define ( nv , new_vars [ nv ] )
+            nvars.append ( nv )
+
+        from ostap.core.ostap_types import ( string_types   ,
+                                             listlike_types ,
+                                             dictlike_types )
         
         cut_types = string_types + ( ROOT.TCut , )
         
@@ -126,8 +126,6 @@ class ReduceTree(CleanUp):
             ## logger.debug ( 'ReduceTree: output file is %s' % output )  
             if not tmp_keep : self.trash.add ( output  )
 
-        ## if  selections : report = frame.Report()
-            
         if selections and addselvars :
             bvars     = chain.the_variables ( selections )
             save_vars = list  ( bvars ) + [ v for v in save_vars if not v in bvars ]
@@ -165,6 +163,9 @@ class ReduceTree(CleanUp):
             all_vars = _strings ( all_vars  )
             snapshot = frame.Snapshot ( name , output , all_vars )
 
+        ## if  selections or 1 != prescale :
+        ##    report = snapshot.Report()
+        
         assert os.path.exists ( output ) and os.path.isfile ( output ) , \
                'Invalid file %s' % output 
 
