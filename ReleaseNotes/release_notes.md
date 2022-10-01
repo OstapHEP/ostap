@@ -9,7 +9,9 @@
 ## Backward incompatible:  
 
 ## Bug fixes:
+
  1. fix typo in `dataset.py`. Thanks Dmitry Pereima for reporting the problem 
+ 1. fix typo in `tmva.py` 
 
 # v1.9.3.4
 
