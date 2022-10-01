@@ -737,22 +737,22 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
 
     ## finally fill the historgams 
     if   3 == hdim :
-        if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf , *args )
-        else        : sc = Ostap.HistoProject.project3 ( dataset ,                 *args )
+        if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *args )
+        else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *args )
         if not sc.isSuccess() :
             logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
             return 0 , None
         return histo.nEntries () , histo
     elif 2 == hdim :
-        if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf , *args )
-        else        : sc = Ostap.HistoProject.project2 ( dataset ,                 *args )
+        if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf () , *args )
+        else        : sc = Ostap.HistoProject.project2 ( dataset ,                    *args )
         if not sc.isSuccess() :
             logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
             return 0 , None
         return histo.nEntries () , histo
     elif 1 == hdim :        
-        if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf , *args )
-        else        : sc = Ostap.HistoProject.project  ( dataset ,                 *args )
+        if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *args )
+        else        : sc = Ostap.HistoProject.project  ( dataset ,                    *args )
         if not sc.isSuccess() : 
             logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
             return 0 , None

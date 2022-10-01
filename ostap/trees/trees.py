@@ -121,8 +121,8 @@ def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = _large , progress = Fals
     from   ostap.utils.progress_conf import progress_conf
     with context :
         
-        if progress : pit = Ostap.PyIterator ( tree , progress_conf , cuts , first , last )
-        else        : pit = Ostap.PyIterator ( tree ,                 cuts , first , last )
+        if progress : pit = Ostap.PyIterator ( tree , progress_conf () , cuts , first , last )
+        else        : pit = Ostap.PyIterator ( tree ,                    cuts , first , last )
         ##
         if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
         
@@ -184,8 +184,8 @@ def _tc_call_ ( tree , first = 0 , last = -1  , cuts = None , progress = False ,
         
         if cuts : ## use Ostap.PyIterator 
             
-            if progress : pit = Ostap.PyIterator ( tree , progress_conf , cuts , first , last )
-            else        : pit = Ostap.PyIterator ( tree ,                 cuts , first , last )
+            if progress : pit = Ostap.PyIterator ( tree , progress_conf () , cuts , first , last )
+            else        : pit = Ostap.PyIterator ( tree ,                    cuts , first , last )
             
             if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
             
@@ -277,8 +277,8 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 , progress 
         
         if cuts : ## more efficient loop using Ostap.PyIterator 
             
-            if progress : pit = Ostap.PyIterator ( self , progress_conf , cuts , first , last )
-            else        : pit = Ostap.PyIterator ( self ,                 cuts , first , last )
+            if progress : pit = Ostap.PyIterator ( self , progress_conf () , cuts , first , last )
+            else        : pit = Ostap.PyIterator ( self ,                    cuts , first , last )
             
             assert pit and pit.ok() , 'ROWS: Invalid formula %s' % cuts  
             
@@ -458,22 +458,22 @@ def tree_project ( tree               ,
         
         args = ( histo ,) + what + ( cuts , first , last ) 
         if   3 == hdim :
-            if progress : sc = Ostap.HistoProject.project3 ( tree , progress_conf , *args )
-            else        : sc = Ostap.HistoProject.project3 ( tree ,                 *args )
+            if progress : sc = Ostap.HistoProject.project3 ( tree , progress_conf () , *args )
+            else        : sc = Ostap.HistoProject.project3 ( tree ,                    *args )
             if not sc.isSuccess () :
                 logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
                 return 0 , None
             return histo.nEntrie () , histo
         elif 2 == hdim :
-            if progress : sc = Ostap.HistoProject.project2 ( tree , progress_conf , *args )
-            else        : sc = Ostap.HistoProject.project2 ( tree ,                 *args )
+            if progress : sc = Ostap.HistoProject.project2 ( tree , progress_conf () , *args )
+            else        : sc = Ostap.HistoProject.project2 ( tree ,                    *args )
             if not sc.isSuccess() :
                 logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
                 return 0 , None
             return histo.nEntries () , histo 
         elif 1 == hdim :
-            if progress : sc = Ostap.HistoProject.project  ( tree , progress_conf , *args )
-            else        : sc = Ostap.HistoProject.project  ( tree ,                 *args )
+            if progress : sc = Ostap.HistoProject.project  ( tree , progress_conf () , *args )
+            else        : sc = Ostap.HistoProject.project  ( tree ,                    *args )
             if not sc.isSuccess() :
                 logger.error ( "Error from Ostap.HistoProject.project1 %s" % sc )
                 return 0 , None
@@ -2215,8 +2215,8 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
         ttree = tfile.Get ( tpath )
 
         ## add progress bar 
-        if verbose : sc    = Ostap.Trees.add_branch ( ttree , progress_conf , *args )
-        else       : sc    = Ostap.Trees.add_branch ( ttree ,                 *args )
+        if verbose : sc    = Ostap.Trees.add_branch ( ttree , progress_conf () , *args )
+        else       : sc    = Ostap.Trees.add_branch ( ttree ,                    *args )
         
         if   sc.isFailure     () : logger.error ( "Error from Ostap::Trees::add_branch %s" % sc )
         elif tfile.IsWritable () :

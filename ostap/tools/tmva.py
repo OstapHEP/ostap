@@ -1999,10 +1999,9 @@ def _add_response_tree  ( tree , verbose , *args ) :
         
         tdir.cd()
 
-
         ## add the progress bar 
-        if verbose : sc = Ostap.TMVA.addResponse ( tree , progress_conf , *args )
-        else       : sc = Ostap.TMVA.addResponse ( tree ,                 *args )
+        if verbose : sc = Ostap.TMVA.addResponse ( tree , progress_conf () , *args )
+        else       : sc = Ostap.TMVA.addResponse ( tree ,                    *args )
         
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
         
@@ -2111,8 +2110,8 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     else :
 
         ## add progress bar 
-        if verbose :  sc = Ostap.TMVA.addResponse  ( dataset , progress_conf , *args )
-        else       :  sc = Ostap.TMVA.addResponse  ( dataset                 , *args )
+        if verbose :  sc = Ostap.TMVA.addResponse  ( dataset , progress_conf () , *args )
+        else       :  sc = Ostap.TMVA.addResponse  ( dataset                    , *args )
         
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )        
         newdata = dataset

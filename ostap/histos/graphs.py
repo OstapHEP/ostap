@@ -37,7 +37,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.core                import cpp, VE, grID
-from   ostap.core.ostap_types         import num_types, integer_types  
+from   ostap.core.ostap_types         import num_types, integer_types, sized_types   
 from   builtins                       import range
 from   ostap.plotting.draw_attributes import copy_graph_attributes  
 import ROOT, ctypes        
@@ -748,8 +748,8 @@ def _gr_setitem_ ( graph , ipoint , point )  :
     if not ipoint in graph : raise IndexError 
     #
     
-    x = float ( point[0] )
-    y = float ( point[1] )
+    x = float ( point [ 0 ] )
+    y = float ( point [ 1 ] )
     
     graph.SetPoint      ( ipoint , x , y )
 
@@ -854,8 +854,8 @@ def _gre_setitem_ ( graph , ipoint , point )  :
     if not 2 == len ( point ) :
         raise AttributeError("Invalid dimension of 'point'")
     
-    x = VE ( point[0] ) 
-    v = VE ( point[1] ) 
+    x = VE ( point [ 0 ] ) 
+    v = VE ( point [ 1 ] ) 
 
     graph.SetPoint      ( ipoint , x . value () , v . value () )
     graph.SetPointError ( ipoint , x . error () , v . error () )
@@ -897,12 +897,16 @@ def _gre_iteritems_ ( graph ) :
 
 # =============================================================================
 ## iterate over points in TGraphAsymmErrors
+#  @code
+#  grae = ...
+#  x, xl, xh, y, yl, yh = grae[ 1 ]
+#  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _grae_getitem_ ( graph , ipoint ) :
     """ Get the point from the graph 
     >>> grae = ...
-    >>> x,xl,xh,y,yl,yh = grae[ 1 ]
+    >>> x, xl, xh, y, yl, yh = grae [ 1 ]
     """
     
     if isinstance ( ipoint , slice ) :
@@ -910,7 +914,6 @@ def _grae_getitem_ ( graph , ipoint ) :
             raise IndexError ("Step must be +1!")
         return _gr2_getslice_ ( graph , ipoint.start , ipoint.stop ) 
     
-
     
     if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
@@ -927,28 +930,128 @@ def _grae_getitem_ ( graph , ipoint ) :
 
 # =============================================================================
 ## iterate over points in TGraphAsymmErrors
+#  @code
+#  grae[1] = x,xl,xh,y,yl,yh
+#  grae[1] = x,xl,xh,(y,yl,yh)
+#  grae[1] = (x,xl,xh),y,yl,yh
+#  grae[1] = (x,xl,xh),(y,yl,yh)
+#  grae[1] = (x,xl,xh),y,(yl,yh)
+#  grae[1] =  x,(xl,xh),(y,yl,yh)    
+#  grae[1] = x,(xl,xh),y,(yl,yh)
+#  xve = VE ( ... ) 
+#  grae[1] = xve,y,yl,yh   
+#  grae[1] = xve,y,(yl,yh) 
+#  grae[1] = xve,(y,yl,yh) 
+#  yve = VE ( ... ) 
+#  grae[1] = x,xl,xh,yve
+#  grae[1] = (x,xl,xh),yve
+#  grae[1] = (x,xl,xh),yve
+#  grae[1] = x,(xl,xh),yve    
+#  grae[1] = xve,yve  
+#  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _grae_setitem_ ( graph , ipoint , point ) :
     """Set graph point
-    
     >>> grae = ...
     >>> grae[1] = x,xl,xh,y,yl,yh
+    >>> grae[1] = x,xl,xh,(y,yl,yh)
+    >>> grae[1] = (x,xl,xh),y,yl,yh
+    >>> grae[1] = (x,xl,xh),(y,yl,yh)
+    >>> grae[1] = (x,xl,xh),y,(yl,yh)
+    >>> grae[1] =  x,(xl,xh),(y,yl,yh)    
+    >>> grae[1] = x,(xl,xh),y,(yl,yh)  ## ditto
+    >>> xve = VE ( ... ) 
+    >>> grae[1] = xve,y,yl,yh   
+    >>> grae[1] = xve,y,(yl,yh) 
+    >>> grae[1] = xve,(y,yl,yh) 
+    >>> yve = VE ( ... ) 
+    >>> grae[1] = x,xl,xh,yve
+    >>> grae[1] = (x,xl,xh),yve
+    >>> grae[1] = (x,xl,xh),yve
+    >>> grae[1] = x,(xl,xh),yve    
+    >>> grae[1] = xve,yve  
     
     """
     if not ipoint in graph : raise IndexError
-    if 6 != len(point)     : raise AttributeError("Invalid lenght of 'point'")
-    # 
-    x   =       point[0]
-    exl = abs ( point[1] )  ## allow them to be negative, to improve input format 
-    exh =       point[2]
-    y   =       point[3]
-    eyl = abs ( point[4] )  ## allow them to be  negative to improve input format
-    eyh =       point[5] 
-    
-    graph.SetPoint      ( ipoint , x   , y )
-    graph.SetPointError ( ipoint , exl , exh , eyl , eyh )
+    #
 
+    n = len ( point)
+    assert 2 <= n <= 6 , "Invalid lenght of 'point' object"
+
+
+    pars = point
+    
+    if n < 6 :
+                
+        pars  = []
+        
+        nve   = 0  ## up to two VE objects 
+        nerr2 = 0  ## up to two (el,eh) pairs 
+        nerr3 = 0  ## up to two (x,el,eh) pairs 
+        
+        for p in point :
+            
+            np = len ( pars ) 
+            if instance ( p , VE ) and nve < 2 and np < 6 :
+                
+                v = float ( p )
+                if 0 <= i.cov2() : e = p.error()
+                else             : e = 0.0
+                
+                pars += [ v , -e , e ]
+                nve  +=1
+            
+            elif isinstance ( p , sized_types ) and 2 == len ( p ) and nerr2 < 2 and np < 6 :
+                
+                e1 = float ( p [ 0 ] ) 
+                e2 = float ( p [ 1 ] ) 
+                
+                if   e1 <= 0 <= e2        : el, eh =  e1 , e2
+                elif e2 <= 0 <= e1        : el, eh =  e2 , e1
+                elif 0  <= e1 and 0 <= e2 : el, eh = -e1 , e2
+                else :
+                    raise TypeError("Invalid 'point' structure: %s" % str ( point ) )
+                
+                pars  += [ el , eh ] 
+                nerr2 += 1 
+
+            elif isinstance ( p , sized_types ) and 3 == len ( p ) and nerr3 < 2 and np < 6 :
+
+                v  = float ( p [ 0 ] )
+                e1 = float ( p [ 1 ] ) 
+                e2 = float ( p [ 2 ] ) 
+                
+                if   e1 <= 0 <= e2        : el, eh =  e1 , e2
+                elif e2 <= 0 <= e1        : el, eh =  e2 , e1
+                elif 0  <= e1 and 0 <= e2 : el, eh = -e1 , e2
+                else :
+                    raise TypeError("Invalid 'point' structure: %s" % str ( point ) )
+                
+                pars  += [ v , el , eh ] 
+                nerr3 += 1 
+
+            elif isistance ( p , num_types ) and np < 6 :
+                
+                pars.append ( float ( p ) )
+                
+            else :
+                
+                raise TypeError("Invalid 'point' structure: %s" % str ( point ) )
+            
+
+    ## decode pars
+    assert 6 == len ( pars ) and all ( isinstance ( i , num_types ) for i in pars ) , \
+           "Invalid 'point' structure: %s" % str ( point )
+    
+    x, exl , exh , y , eyl, eyh = pars
+    
+    assert 0 <= exh , '+x error must be non-negative!'
+    assert 0 <= eyh , '+y error must be non-negative!'
+    
+    ##
+    graph.SetPoint      ( ipoint , x   , y )
+    graph.SetPointError ( ipoint , abs ( exl ) , exh , abs ( eyl ) , eyh )
 
 # =============================================================================
 ## iterate over points in TGraphAsymmErrors
@@ -963,7 +1066,7 @@ def _grae_iteritems_ ( graph ) :
     
     """
     for ip in graph :
-        vars = graph[ip]        
+        vars = graph [ ip ]        
         yield (ip,) + vars
 
 # =============================================================================

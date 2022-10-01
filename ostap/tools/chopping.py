@@ -1611,8 +1611,8 @@ def _add_response_tree ( tree , verbose , *args ) :
         tdir.cd()
 
         ## add progress bar 
-        if verbose : sc = Ostap.TMVA.addChoppingResponse ( tree , progress_conf , *args  )
-        else       : sc = Ostap.TMVA.addChoppingResponse ( tree ,                 *args  )
+        if verbose : sc = Ostap.TMVA.addChoppingResponse ( tree , progress_conf () , *args  )
+        else       : sc = Ostap.TMVA.addChoppingResponse ( tree ,                    *args  )
         
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
             
@@ -1777,8 +1777,8 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     
     from   ostap.utils.progress_conf import progress_conf
     ## add progress bar 
-    if verbose : sc = Ostap.TMVA.addChoppingResponse ( dataset , progress_conf , *args )
-    else       : sc = Ostap.TMVA.addChoppingResponse ( dataset ,                 *args )
+    if verbose : sc = Ostap.TMVA.addChoppingResponse ( dataset , progress_conf () , *args )
+    else       : sc = Ostap.TMVA.addChoppingResponse ( dataset ,                    *args )
 
     if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
         

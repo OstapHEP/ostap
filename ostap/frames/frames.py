@@ -207,7 +207,7 @@ def frame_progress ( frame  ,
     csize , rr = divmod ( length , nchunks ) 
     if rr : nchunks += 1 
     
-    fun = Ostap.Utils.frame_progress ( nchunks , progress_conf )
+    fun = Ostap.Utils.frame_progress ( nchunks , progress_conf () )
     cnt.OnPartialResultSlot  ( csize , fun )
     
     return cnt

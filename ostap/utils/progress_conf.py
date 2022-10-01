@@ -17,12 +17,12 @@ __version__ = "$Revision:$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2022-09-06"
 __all__     = (
-    'progress_conf', ## defautl configuration of the C++ progrees bar 
+    'progress_conf', ## default configuration of the C++ progrees bar 
     )
 # =============================================================================
-from   ostap.core.core   import Ostap
-from   ostap.utils.basic import isatty, terminal_size
-from   ostap.logger.colorized   import allright
+from ostap.core.core        import Ostap
+from ostap.utils.basic      import isatty, terminal_size
+from ostap.logger.colorized import allright
 # =============================================================================
 # logging 
 # =============================================================================
@@ -30,16 +30,20 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.progress_conf')
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-## configuration of the progress bar 
-twidth        = terminal_size () [ 1 ] if isatty () else 110 
-progress_conf = Ostap.Utils.ProgressConf (
-    twidth - 15 if 25 < twidth else 0 , ## silent if is termnal is too narrow
-    allright ( '#'   )                , ## 'done' symbol 
-    ' '                               , ## 'not-yet' symbol 
-    allright ( ' [ ' )                , ## left 
-    allright ( '] '  )                , ## right 
-    True                              ) ## use the timer 
-
+## configuration of the progress bar
+#  @see Ostap::Utils::Pr
+def progress_conf() :
+    """configuration of the progress bar"""
+    tty = isatty () 
+    twidth        = terminal_size () [ 1 ] if tty else 110 
+    return Ostap.Utils.ProgressConf (
+        twidth - 15 if 25 < twidth else 0     , ## silent if is terminal is too narrow
+        allright ( '#'   ) if tty else '#'    , ## 'done' symbol 
+        ' '                                   , ## 'not-yet' symbol 
+        allright ( ' [ ' ) if tty else ' { '  , ## left 
+        allright ( '] '  ) if tty else '] '   , ## right 
+        True                                  ) ## use the timer 
+        
 # =============================================================================
 if '__main__' == __name__ :
     
