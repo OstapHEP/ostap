@@ -43,7 +43,7 @@ def graph_factory ( klass     ,
                     xvalues   ,
                     yvalues   ) :
     """Reconstruct/deserialize/unpickle `ROOT.TGraph` object
-    -see `ROOT.`TGraph`
+    -see `ROOT.TGraph`
     """
     graph = klass ()
     ## TNamed
@@ -223,13 +223,19 @@ if (6,20) <= root_info :
         """
         graph = graph_factory ( klass , name , title , minmax , attline , attfill , attmarker , xvalues , yvalues )
         ##
-        graph.graph.SetSumErrorsMode( mode ) 
-        NE = len ( ylerrors ) 
-        for i, exl, exh , eyl , eyh  in zip ( range ( graph.GetN() ) , xlerrors , xherrors ) :
+        graph.SetSumErrorsMode( mode ) 
+        N  = graph.GetN()
+        ## adjust number of Y-errors 
+        NE = len ( ylerrors )
+        za = array.array ( 'd' , N * [ 0.0 ] )
+        while graph.GetNYErrors() < NE : graph.AddYError( N , za , za )
+        ## 
+        for i, exl, exh  in zip ( range ( N ) , xlerrors , xherrors ) :
             graph.SetPointEXlow  ( i , exl )
             graph.SetPointEXhigh ( i , exh )
-            for e , yle , yhe in zip ( range ( NE ) , xlerrors , yherrors ) :
-                graph.SetPointEY ( i , e , eyl [ i ] , eyh [ i ] )
+            for e, yle , yhe in zip ( range ( NE ) , xlerrors , yherrors ) :
+                graph.SetPointEYlow  ( i , e , eyl [ i ] )
+                graph.SetPointEYhigh ( i , e , eyh [ i ] )
                 
         ## line attributes 
         for e , aline in zip ( range ( NE ) , attsline ) :

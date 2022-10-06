@@ -37,10 +37,14 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.core                import cpp, VE, grID
+from   ostap.core.meta_info           import root_info
 from   ostap.core.ostap_types         import num_types, integer_types, sized_types   
 from   builtins                       import range
-from   ostap.plotting.draw_attributes import copy_graph_attributes  
-import ROOT, ctypes        
+from   ostap.plotting.draw_attributes import copy_graph_attributes
+from   ostap.utils.valerrors          import ( AsymErrors         ,
+                                               ValWithErrors      ,
+                                               ValWithMultiErrors ) 
+import ROOT, ctypes, array        
 # =============================================================================
 # logging 
 # =============================================================================
@@ -49,6 +53,8 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.graphs' )
 else                       : logger = getLogger( __name__              )
 # =============================================================================
 logger.debug ( '(T)Graph-related decorations')
+_new_methods_       = () 
+_decorated_classes_ = ()
 # =============================================================================
 pos_infinity = float('+inf')
 neg_infinity = float('-inf')
@@ -645,12 +651,12 @@ def _gr_point_ ( graph , point ) :
     
     raise IndexError ( "Invalid index %s" % point ) 
     
-
 ROOT.TGraph.    point = _gr_point_
 ROOT.TGraph.get_point = _gr_point_
 
+    
 # =============================================================================
-## use graph as function 
+## use graph as a function 
 #  @code
 #  graph = ...
 #  y     = graph ( 0.2 )
@@ -722,11 +728,18 @@ def _gr_getitem_ ( graph , ipoint )  :
     """
     
     if isinstance ( ipoint , slice ) :
-        if ipoint.step and 1 != ipoint.step :
-            raise IndexError ("Step must be +1!")
-        return _gr0_getslice_ ( graph , ipoint.start , ipoint.stop ) 
+        points = []
+        N      = len ( graph ) 
+        for point in range ( *slice.indices ( N ) ) :
+            points.append ( graph [ point ] )
+        klass = type ( graph ) 
+        new_graph = klass ()
+        new_graph.Set ( len ( points ) ) 
+        for i , point in enumerate ( points ) : new_graph [ i ] = point
+        copy_graph_attributes ( graph , new_graph )
+        return new_graph
     
-    if ipoint < 0 : ipoint += len(graph) 
+    if ipoint < 0 : ipoint += len ( graph ) 
     if not ipoint in graph : raise IndexError 
     #
     return graph.point ( ipoint )
@@ -768,20 +781,11 @@ def _gr_delitem_ ( graph, ipoint ) :
     """
     #
     if isinstance ( ipoint , slice ) :
-        old_len   = len ( graph ) 
-        istart , istop , istep = ipoint.indices ( old_len  )
-        idel = 0
-        np   = 0
-        for i in  range ( istart , istop , istep ) :
-            np += 1 
-            d = graph.RemovePoint ( i - idel )
-            if 0 <= d : idel += 1
-        new_len = len ( graph ) 
-        return newlen + np == old_len
+        points = sorted ( ( i for i in range ( *ipoint.indices ( len ( graph ) ) ) ) , reverse = True ) 
+        while points : graph.RemovePoint ( points.pop () )
     elif not ipoint in graph : raise IndexError 
     #
     d = graph.RemovePoint ( ipoint )
-    return  0 <= d
 
 # =============================================================================
 ## iterate over the points in TGraph
@@ -802,7 +806,6 @@ def _gr_iteritems_ ( graph ) :
         x , y = graph[ ip ] 
         yield ip , x , y 
         
-        
 # =============================================================================
 ## get the point in TGraphErrors
 #  @code
@@ -818,9 +821,16 @@ def _gre_getitem_ ( graph , ipoint )  :
     """
     
     if isinstance ( ipoint , slice ) :
-        if ipoint.step and 1 != ipoint.step :
-            raise IndexError ("Step must be +1!")
-        return _gr1_getslice_ ( graph , ipoint.start , ipoint.stop ) 
+        points = []
+        N      = len ( graph ) 
+        for point in range ( *slice.indices ( N ) ) :
+            points.append ( graph [ point ] )
+        klass = type ( graph )
+        new_graph = klass ()
+        new_graph.Set ( len ( points ) ) 
+        for i , point in enumerate ( points ) : new_graph [ i ] = point
+        copy_graph_attributes ( graph , new_graph )
+        return new_graph
 
     if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
@@ -896,40 +906,51 @@ def _gre_iteritems_ ( graph ) :
         yield ip , x , y 
 
 # =============================================================================
-## iterate over points in TGraphAsymmErrors
+## get the point in TGraphAsymmErrors
 #  @code
-#  grae = ...
-#  x, xl, xh, y, yl, yh = grae[ 1 ]
+#  grmae = ...
+#  X , Y = = grae[ 1 ]
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _grae_getitem_ ( graph , ipoint ) :
     """ Get the point from the graph 
     >>> grae = ...
-    >>> x, xl, xh, y, yl, yh = grae [ 1 ]
+    >>> X , Y = grae [ 1 ] 
     """
     
     if isinstance ( ipoint , slice ) :
-        if ipoint.step and 1 != ipoint.step :
-            raise IndexError ("Step must be +1!")
-        return _gr2_getslice_ ( graph , ipoint.start , ipoint.stop ) 
+        points = []
+        N      = len ( graph ) 
+        for point in range ( *slice.indices ( N ) ) :
+            points.append ( graph [ point ] )
+        klass = type ( graph )
+        new_graph = klass ()
+        new_graph.Set ( len ( points ) ) 
+        for i , point in enumerate ( points ) : new_graph [ i ] = point
+        copy_graph_attributes ( graph , new_graph )
+        return new_graph
     
-    
-    if ipoint < 0 : ipoint += len(graph) 
+    if ipoint < 0 : ipoint += len ( graph ) 
     if not ipoint in graph : raise IndexError 
     #
     
-    x_ , v_ = graph.get_point ( ipoint )
+    x , y = graph.get_point ( ipoint )
     
     exl = graph.GetErrorXlow  ( ipoint )
     exh = graph.GetErrorXhigh ( ipoint )
     eyl = graph.GetErrorYlow  ( ipoint )
     eyh = graph.GetErrorYhigh ( ipoint )
+
+    xv = ValWithErrors ( x , ( -exl , exh ) ) 
+    yv = ValWithErrors ( y , ( -eyl , eyh ) )
     
-    return float( x_ ) , -exl , exh , float( v_ ) , -eyl , eyh 
+    return xv, yv
+    
+    ## return float( x ) , -exl , exh , float( y ) , -eyl , eyh 
 
 # =============================================================================
-## iterate over points in TGraphAsymmErrors
+## Set the point content for TGraphAsymmErrors
 #  @code
 #  grae[1] = x,xl,xh,y,yl,yh
 #  grae[1] = x,xl,xh,(y,yl,yh)
@@ -954,6 +975,7 @@ def _grae_getitem_ ( graph , ipoint ) :
 def _grae_setitem_ ( graph , ipoint , point ) :
     """Set graph point
     >>> grae = ...
+    >>> grae[1] = ValWithErrors ( .. ) , ValWithErrors ( ... ) 
     >>> grae[1] = x,xl,xh,y,yl,yh
     >>> grae[1] = x,xl,xh,(y,yl,yh)
     >>> grae[1] = (x,xl,xh),y,yl,yh
@@ -979,80 +1001,61 @@ def _grae_setitem_ ( graph , ipoint , point ) :
     n = len ( point)
     assert 2 <= n <= 6 , "Invalid lenght of 'point' object"
 
-
     pars = point
     
-    if n < 6 :
-                
-        pars  = []
-        
-        nve   = 0  ## up to two VE objects 
-        nerr2 = 0  ## up to two (el,eh) pairs 
-        nerr3 = 0  ## up to two (x,el,eh) pairs 
-        
-        for p in point :
-            
-            np = len ( pars ) 
-            if instance ( p , VE ) and nve < 2 and np < 6 :
-                
-                v = float ( p )
-                if 0 <= i.cov2() : e = p.error()
-                else             : e = 0.0
-                
-                pars += [ v , -e , e ]
-                nve  +=1
-            
-            elif isinstance ( p , sized_types ) and 2 == len ( p ) and nerr2 < 2 and np < 6 :
-                
-                e1 = float ( p [ 0 ] ) 
-                e2 = float ( p [ 1 ] ) 
-                
-                if   e1 <= 0 <= e2        : el, eh =  e1 , e2
-                elif e2 <= 0 <= e1        : el, eh =  e2 , e1
-                elif 0  <= e1 and 0 <= e2 : el, eh = -e1 , e2
-                else :
-                    raise TypeError("Invalid 'point' structure: %s" % str ( point ) )
-                
-                pars  += [ el , eh ] 
-                nerr2 += 1 
-
-            elif isinstance ( p , sized_types ) and 3 == len ( p ) and nerr3 < 2 and np < 6 :
-
-                v  = float ( p [ 0 ] )
-                e1 = float ( p [ 1 ] ) 
-                e2 = float ( p [ 2 ] ) 
-                
-                if   e1 <= 0 <= e2        : el, eh =  e1 , e2
-                elif e2 <= 0 <= e1        : el, eh =  e2 , e1
-                elif 0  <= e1 and 0 <= e2 : el, eh = -e1 , e2
-                else :
-                    raise TypeError("Invalid 'point' structure: %s" % str ( point ) )
-                
-                pars  += [ v , el , eh ] 
-                nerr3 += 1 
-
-            elif isistance ( p , num_types ) and np < 6 :
-                
-                pars.append ( float ( p ) )
-                
-            else :
-                
-                raise TypeError("Invalid 'point' structure: %s" % str ( point ) )
-            
-
-    ## decode pars
-    assert 6 == len ( pars ) and all ( isinstance ( i , num_types ) for i in pars ) , \
-           "Invalid 'point' structure: %s" % str ( point )
     
-    x, exl , exh , y , eyl, eyh = pars
+    ## extract X
+    p0 = pars [ 0 ]
+    ## "ready-to-use" 
+    if   isinstance ( p0 , ( ValWithMultiErrors , ValWithErrors , VE ) ) :
+        X    = ValWithErrors ( p0 )
+        pars = pars [ 1 : ]
+    ## (value,error1,error2)
+    elif isinstance ( p0 , sized_types )           and \
+             3 == len ( p0 )                       and \
+             all ( isinstance ( v  , num_types ) for v in p0 ) :            
+        X = ValWithErrors ( p0 )
+        pars = pars [ 1 : ]            
+    ## (value,(error1,error2))
+    elif isinstance ( p0 , sized_types )        and \
+             2 == len ( p0 )                    and \
+             isinstance ( p0[0] , num_types   ) and \
+             isinstance ( p0[1] , sized_types ) and \
+             2 == len ( p0[1] )                 and \
+             all ( isinstance ( v  , num_types ) for v in p0[1] ) :
+        X = ValWithErrors ( p0 )
+        pars = pars [ 1 : ]                        
+    ##  value,AsymErrors 
+    elif isinstance ( p0 , num_types ) and isinstance ( pars [ 1 ] , AsymErrors ) :
+        p0   = float ( p0 )
+        X    = ValWithErrors ( p0 , pars [1] ) 
+        pars = pars [ 2 : ]  
+    ##  value,(error1,error2) 
+    elif isinstance ( p0 , num_types ) and isinstance ( pars [ 1 ] , sized_types ) and 2 == len ( pars [ 1 ] ) :
+        p0   = float ( p0 )
+        errs = AsymErrors ( *point[ 1 ] )
+        X    = ValWithErrors ( p0 , errs ) 
+        pars = pars [ 2 : ]
+    ##  value,error1,error2
+    elif 4 <= len ( pars ) and all ( isinstance ( p , num_types ) for p in pars [:3] ) :        
+        p0   = float ( p0 )
+        errs = float ( pars [1] ) , float (  pars[2] ) 
+        X    = ValWithErrors ( p0 , errs ) 
+        pars = pars [ 3 : ]  
+    else :
+        raise TypeError("Invalid 'point' structure: %s" % str ( point ) )
     
-    assert 0 <= exh , '+x error must be non-negative!'
-    assert 0 <= eyh , '+y error must be non-negative!'
+    assert pars , "Invalid 'point' structure: %s" % str ( point ) 
     
-    ##
-    graph.SetPoint      ( ipoint , x   , y )
-    graph.SetPointError ( ipoint , abs ( exl ) , exh , abs ( eyl ) , eyh )
+    ## extract Y
+    Y = ValWithErrors ( *pars )
 
+    ## fill ROOT structure 
+    graph.SetPoint      ( ipoint , X.value    , Y.value )
+    graph.SetPointError ( ipoint ,
+                          abs ( X.neg_error ) , X.pos_error ,
+                          abs ( Y.neg_error ) , Y.pos_error )
+    
 # =============================================================================
 ## iterate over points in TGraphAsymmErrors
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1061,13 +1064,204 @@ def _grae_iteritems_ ( graph ) :
     """Iterate over graph points 
     
     >>> grae = ...
-    >>> for i,x,xl,xh,y,yl,yh in grae.    items(): ...
-    >>> for i,x,xl,xh,y,yl,yh in grae.iteritems(): ... ##   ditto
+    >>> for i,X,Y in grae.    items(): ...
+    >>> for i,X,Y in grae.iteritems(): ... ##   ditto
     
     """
     for ip in graph :
-        vars = graph [ ip ]        
-        yield (ip,) + vars
+        X , Y = graph [ ip ]        
+        yield ip, X , Y 
+
+# =============================================================================
+
+
+if (6,20) <= root_info : 
+    # =============================================================================
+    ## iterate over points in TGraphMultiErrors
+    #  @code
+    #  gre = ...
+    #  for i,x,v in gre.    items(): ...
+    #  for i,x,v in gre.iteritems(): ... ## ditto
+    #  @endcode
+    #  @see TGraphMultiErrors
+    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+    #  @date   2011-06-07
+    def _grme_iteritems_ ( graph ) :
+        """ Iterate over graph points 
+        >>> gre = ...
+        >>> for i,x,v in gre.    items(): ...
+        >>> for i,x,v in gre.iteritems(): ... ## ditto
+        """
+        for ip in graph :        
+            x , y = graph [ ip ]
+            yield ip , x , y 
+            
+    # =============================================================================
+    ## get the point in TGraph MultiErrors
+    #  @code
+    #  grme = ...
+    #  X , Y = = grme[ 1 ]
+    #  @endcode 
+    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+    #  @date   2011-06-07
+    def _grme_getitem_ ( graph , ipoint ) :
+        """ Get the point from the graph 
+        >>> grme = ...
+        >>> X , Y = grme [ 1 ] 
+        """
+        
+        if isinstance ( ipoint , slice ) :
+            points = []
+            N      = len ( graph ) 
+            for point in range ( *slice.indices ( N ) ) :
+                points.append ( graph [ point ] )
+                klass = type ( graph )
+                new_graph = klass ()
+                new_graph.Set ( len ( points ) ) 
+                for i , point in enumerate ( points ) : new_graph [ i ] = point
+                copy_graph_attributes ( graph , new_graph )
+                return new_graph
+            
+        if ipoint < 0 : ipoint += len ( graph ) 
+        if not ipoint in graph : raise IndexError 
+        #
+        
+        x , y = graph.get_point ( ipoint )
+        
+        exl = graph.GetErrorXlow  ( ipoint )
+        exh = graph.GetErrorXhigh ( ipoint )
+        
+        ne  = graph.GetNYErrors()
+        
+        errors = ( (-graph.GetErrorYlow  ( ipoint , e ) ,
+                    +graph.GetErrorYhigh ( ipoint , e ) ) for e in range ( ne ) ) 
+        
+        X  = ValWithErrors      ( x , ( -exl , exh ) )
+        Y  = ValWithMultiErrors ( y , errors )
+        
+        return X , Y 
+
+    # =============================================================================
+    ## set the point content for the TGraphMultiErrors
+    #  @cdoe
+    #  @endcode     
+    #  @see TGraphMultiErrors
+    def _grme_setitem_ ( graph , ipoint , point ) :
+        """Set graph point
+        """
+        if not ipoint in graph : raise IndexError
+        #
+        
+        n = len ( point)
+        assert 2 <= n , "Invalid lenght of 'point' object"
+        
+        pars  = point
+        
+        ## extract X
+        p0 = pars [ 0 ]
+        ## "ready-to-use" 
+        if   isinstance ( p0 , ( ValWithMultiErrors , ValWithErrors , VE ) ) :
+            X    = ValWithErrors ( p0 )
+            pars = pars [ 1 : ]
+        ## (value,error1,error2)
+        elif isinstance ( p0 , sized_types )           and \
+                 3 == len ( p0 )                       and \
+                 all ( isinstance ( v  , num_types ) for v in p0 ) :            
+            X = ValWithErrors ( p0 )
+            pars = pars [ 1 : ]            
+        ## (value,(error1,error2))
+        elif isinstance ( p0 , sized_types )        and \
+                 2 == len ( p0 )                    and \
+                 isinstance ( p0[0] , num_types   ) and \
+                 isinstance ( p0[1] , sized_types ) and \
+                 2 == len ( p0[1] )                 and \
+                 all ( isinstance ( v  , num_types ) for v in p0[1] ) :
+            X = ValWithErrors ( p0 )
+            pars = pars [ 1 : ]                        
+        ##  value,AsymErrors 
+        elif isinstance ( p0 , num_types ) and isinstance ( pars [ 1 ] , AsymErrors ) :
+            p0   = float ( p0 )
+            X    = ValWithErrors ( p0 , pars [1] ) 
+            pars = pars [ 2 : ]  
+        ##  value,(error1,error2) 
+        elif isinstance ( p0 , num_types ) and isinstance ( pars [ 1 ] , sized_types ) and 2 == len ( pars [ 1 ] ) :
+            p0   = float ( p0 )
+            errs = AsymErrors ( *point[ 1 ] )
+            X    = ValWithErrors ( p0 , errs ) 
+            pars = pars [ 2 : ]
+        ##  value,error1,error2
+        elif 4 <= len ( pars ) and all ( isinstance ( p , num_types ) for p in pars [:3] ) :        
+            p0   = float ( p0 )
+            errs = float ( pars [1] ) , float (  pars[2] ) 
+            X    = ValWithErrors ( p0 , errs ) 
+            pars = pars [ 3 : ]  
+        else :
+            raise TypeError("Invalid 'point' structure: %s" % str ( point ) )
+        
+        assert pars , "Invalid 'point' structure: %s" % str ( point ) 
+        ## extract Y
+        Y = ValWithMultiErrors ( *pars )
+
+        assert Y.nerrors <= graph.GetNYErrors() , 'Invalid number of errors is specified!' 
+        
+        graph.SetPoint ( ipoint , X.value , Y.value )    
+        graph.SetPointEXlow  ( ipoint , abs ( X.neg_error ) )
+        graph.SetPointEXhigh ( ipoint ,       X.pos_error   )
+        for i, e in enumerate ( Y.errors ) :
+            graph.SetPointEYlow  ( ipoint , i , abs ( e.negative ) )
+            graph.SetPointEYhigh ( ipoint , i ,       e.positive   )
+        
+    # =============================================================================
+    ## iterate over points in TGraphMultiErrors
+    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+    #  @date   2011-06-07
+    def _grme_iteritems_ ( graph ) :
+        """Iterate over graph points 
+        
+        >>> grme = ...
+        >>> for i,X,Y in grme.    items(): ...
+        >>> for i,X,Y in grme.iteritems(): ... ##   ditto
+        
+        """
+        for ip in graph :
+            X , Y = graph [ ip ]        
+            yield ip, X , Y
+
+    # =========================================================================
+    ## add missing <code>SetNYErrors</code> method to <code>TGraphMultiErrors</code>
+    #  @see TGraphMultiErrors
+    #  @see TGraphMultiErrors::GetNYErrors     
+    def _grme_setnyerrors_ ( graph , N ) :
+        """Add missing `SetNYErrors` method to `ROOT.TGraphMultiErrors`
+        - see `ROOT.TGraphMultiErrors`
+        - see `ROOT.TGraphMultiErrors::GetNYErrors`
+        """
+        n  = graph.GetN() 
+        ne = graph.GetNYErrors() 
+        za = array.array ( 'd' , n * [ 0.0 ] )
+        while graph.GetNYErrors() < N : graph.AddYError( n , za , za )
+
+    if not hasattr ( ROOT.TGraphMultiErrors , 'SetNYErrors' ) :
+        ROOT.TGraphMultiErrors.  setNYErrors  = _grme_setnyerrors_ 
+        ROOT.TGraphMultiErrors.  SetNYErrors  = _grme_setnyerrors_ 
+        _new_methods_ += (
+            ROOT.TGraphMultiErrors.  setNYErrors  ,
+            ROOT.TGraphMultiErrors.  SetNYErrors  , 
+            )
+        
+    ROOT.TGraphMultiErrors.     items     = _grme_iteritems_
+    ROOT.TGraphMultiErrors. iteritems     = _grme_iteritems_
+    ROOT.TGraphMultiErrors. __getitem__   = _grme_getitem_ 
+    ROOT.TGraphMultiErrors. __setitem__   = _grme_setitem_
+
+    _new_methods_ += (
+        ROOT.TGraphMultiErrors.     items     , 
+        ROOT.TGraphMultiErrors. iteritems     ,
+        ROOT.TGraphMultiErrors. __getitem__   ,
+        ROOT.TGraphMultiErrors. __setitem__   ,
+        )
+    _decorated_classes_ += ( ROOT.TGraphMultiErrors , )
+# =============================================================================
 
 # =============================================================================
 ## get minimal-x 
@@ -1162,7 +1356,6 @@ def _gr_yminmax_ ( graph ) :
     _ , _ , ymin , ymax = graph.bb()
     return ymin , ymax
 
-
 # =============================================================================
 ## Get a "bounding box" for the graph
 #  @code
@@ -1250,7 +1443,15 @@ def _grae_bb_ ( graph , more = 0.0 ) :
     ymin = pos_infinity
     ymax = neg_infinity
 
-    for i , xv, enx , epx , yv , eny , epy in graph.iteritems() :
+    for i , X , Y in graph.iteritems() :
+
+        xv  = X.value
+        enx = X.neg_error
+        epx = X.pos_error
+
+        yv  = Y.value
+        eny = Y.neg_error
+        epy = Y.pos_error
 
         xmin = min ( xmin , xv , xv + abs ( epx ) , xv - abs ( enx ) )
         xmax = max ( xmax , xv , xv + abs ( epx ) , xv - abs ( enx ) )
@@ -1271,7 +1472,7 @@ def _grae_bb_ ( graph , more = 0.0 ) :
     return xmin , xmax , ymin , ymax
 
 # =============================================================================
-## Get a "bounding box" for the graph
+## Get a "bounding box" for the multigraph graph
 #  @code
 #  xmin, xmax , ymin , ymax = graph.bb() 
 #  @endcode 
@@ -1302,102 +1503,7 @@ ROOT.TGraphErrors.bb      =  _gre_bb_
 ROOT.TGraphAsymmErrors.bb = _grae_bb_ 
 ROOT.TMultiGraph.bb       =   _mg_bb_ 
     
-# =============================================================================
-## get "slice" for graph 
-#  @code     
-#    >>> graph = ...
-#    >>> gr1   = graph[2:10] 
-#  @endcode     
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2016-03-28 
-def _gr0_getslice_ ( graph , i , j ) :
-    """Get the ``slice'' for TGraph:
-    >>> graph = ...
-    >>> gr1   = graph[2:10]
-    """
-    np = len ( graph ) 
 
-    if i is None : i = 0
-    if j is None : j = np 
-    
-    while i < 0 : i += np
-    while j < 0 : j += np
-
-    new_graph = ROOT.TGraph( j - i ) if  i < j else  ROOT.TGraph()
-    copy_graph_attributes ( graph , new_graph )
-
-    ii = 0 
-    while i < j :
-        new_graph[ ii ] = graph[i]
-        ii += 1 
-        i  += 1 
-        
-    return new_graph 
-
-# =============================================================================
-## get "slice" for graph 
-#  @code     
-#    >>> graph = ...
-#    >>> gr1   = graph[2:10] 
-#  @endcode     
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2016-03-28 
-def _gr1_getslice_ ( graph , i , j ) :
-    """Get the ``slice'' for TGraphErrors:
-    >>> graph = ...
-    >>> gr1   = graph[2:10]
-    """
-    np = len ( graph ) 
-
-    if i is None : i = 0
-    if j is None : j = np 
-    
-    while i < 0 : i += np
-    while j < 0 : j += np
-    
-    new_graph = ROOT.TGraphErrors( j - i ) if  i < j else  ROOT.TGraphErrors ()
-    copy_graph_attributes ( graph , new_graph )
-    
-    ii = 0 
-    while i < j :
-        new_graph[ ii ] = graph[i]
-        ii += 1
-        i  += 1 
-        
-    return new_graph 
-
-
-# =============================================================================
-## get "slice" for graph 
-#  @code     
-#    >>> graph = ...
-#    >>> gr1   = graph[2:10] 
-#  @endcode     
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2016-03-28 
-def _gr2_getslice_ ( graph , i , j ) :
-    """Get the ``slice'' for TGraphAsymmErrors:
-    >>> graph = ...
-    >>> gr1   = graph[2:10]
-    """
-    np = len ( graph ) 
-    
-    if i is None : i = 0
-    if j is None : j = np 
-    
-    while i < 0 : i += np
-    while j < 0 : j += np
-    
-    new_graph = ROOT.TGraphAsymmErrors( j - i ) if  i < j else  ROOT.TGraphAsymmErrors ()
-    copy_graph_attributes ( graph , new_graph )
-    
-    ii = 0 
-    while i < j :
-        new_graph[ ii ] = graph[i]
-        ii += 1
-        i  += 1 
-        
-    return new_graph 
 
 # ============================================================================
 ## make sorted graph
@@ -1442,14 +1548,10 @@ def _gr_remove_ ( graph , remove ) :
     for point in graph :
         if remove ( *graph [ point ] ) :
             removed.append ( point )
-        
-    ir = 0 
-    for i in  removed :
-        d = graph.RemovePoint ( i - ir ) 
-        if 0 <= d : ir += 1
-
-    return len ( graph ) - old_len 
-
+            
+    removed = sorted ( removed , reverse = True )
+    while removed : graph.RemovePoint ( removed.pop () ) 
+    
 # =============================================================================
 ## create new graph, that contais only "good/filtered" points
 #  @code
@@ -1463,11 +1565,10 @@ def _gr_filter_ ( graph , accept , name = '' ) :
     """
 
     if not name : name = graph.GetName() + '_filter'
+    
     new_graph = graph.Clone ( name )
     copy_graph_attributes ( graph , new_graph )
-    
     new_graph.remove ( lambda *s : not accept ( *s ) )
-    
     return new_graph
 
 
@@ -1588,11 +1689,6 @@ ROOT.TGraphAsymmErrors . transform   = _grae_transform_
 
 ROOT.TGraph       . integral         = _gr_integral_
 ROOT.TGraph       . asTF1            = _gr_as_TF1_
-
-
-ROOT.TGraph            .__getslice__  = _gr0_getslice_
-ROOT.TGraphErrors      .__getslice__  = _gr1_getslice_
-ROOT.TGraphAsymmErrors .__getslice__  = _gr2_getslice_
 
 ROOT.TGraph            .sorted        = _gr_sorted_
 
@@ -2593,9 +2689,11 @@ def _grae_transpose_ ( self ) :
     >>> graph_T = graph.T() ## ditto 
     """
     new_graph = ROOT.TGraphAsymmErrors ( len ( self ) )
-    for item in self.iteritems() :
-        ip, x , exl , exh , y , eyl , eyh =  item 
-        new_graph [ ip ] = y , eyl , eyh , x , exl , exh
+    
+    for ip, X , Y  in self.iteritems() :
+
+        ## ip, x , exl , exh , y , eyl , eyh =  item 
+        new_graph [ ip ] = Y , X 
         
     copy_graph_attributes ( self , new_graph ) 
     return new_graph 
@@ -3269,7 +3367,7 @@ ROOT.TSpline. __call__  = _spl_call_
 
 
 # =============================================================================
-_decorated_classes_ = (
+_decorated_classes_ += (
     ROOT.TH1F              ,
     ROOT.TH1D              ,
     ROOT.TGraph            , 
@@ -3283,7 +3381,7 @@ _decorated_classes_ = (
     )
 
 
-_new_methods_      = (
+_new_methods_     += (
     #
     ROOT.TGraph       . __len__       ,
     ROOT.TGraph       . __contains__  ,
@@ -3458,10 +3556,6 @@ _new_methods_      = (
     ROOT.TGraph       . integral          ,
     ROOT.TGraph       . asTF1             ,
     # 
-    ROOT.TGraph            .__getslice__  ,
-    ROOT.TGraphErrors      .__getslice__  ,
-    ROOT.TGraphAsymmErrors .__getslice__  ,
-    #
     ROOT.TGraph            .sorted        ,
     #
     ROOT.TGraph            .filter        ,

@@ -5,13 +5,16 @@
   1. add serialization/reducing for the graph-like objects
   1. fix exampels 
   1. disable python warning from `scipy.signal` 
-
+  1. add decorations for `TGraphMultiError` type 
+  1. add helper module `valerrors`  
+ 
 ## Backward incompatible:  
 
 ## Bug fixes:
 
  1. fix typo in `dataset.py`. Thanks Dmitry Pereima for reporting the problem 
  1. fix typo in `tmva.py` 
+ 1. fix serialization for `TGraphMultiError` type 
 
 # v1.9.3.4
 
