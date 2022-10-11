@@ -50,9 +50,9 @@ __all__     = (
     'binomEff_h3'     , ## calculate binomial efficiency for 3D-ihstos
     #
     'makeGraph'       , ## make ROOT Graph from input data
-    'hToGraph'        , ## convert historgam to graph
-    'hToGraph2'       , ## convert historgam to graph
-    'hToGraph3'       , ## convert historgam to graph
+    'hToGraph'        , ## convert histogram to graph
+    'hToGraph2'       , ## convert histogram to graph
+    'hToGraph3'       , ## convert histogram to graph
     'lw_graph'        , ## make Lafferty-Wyatt's graph from the histo 
     'h1_axis'         , ## book 1D-histogram from axis 
     'h2_axes'         , ## book 2D-histogram from axes

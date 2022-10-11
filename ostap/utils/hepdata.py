@@ -179,7 +179,7 @@ class HepDataFile(HepDataBase) :
         return result + '\n*e'
     
 # =============================================================================
-## Convert simple object (presumably historgam or graph) to HepDATA format
+## Convert simple object (presumably histogram or graph) to HepDATA format
 #  @code
 #  histo    = ...
 #  metadata = { ... }
@@ -194,7 +194,7 @@ class HepDataFile(HepDataBase) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 class HepData(HepDataBase) :
-    """ Convert simple object (presumably historgam or graph) to HepDATA format
+    """ Convert simple object (presumably histogram or graph) to HepDATA format
     >>> histo    = ...
     >>> metadata = { ... }
     >>> ds = HepData ( histo , **metadata )

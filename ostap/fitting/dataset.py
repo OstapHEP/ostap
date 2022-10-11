@@ -735,7 +735,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
 
     from   ostap.utils.progress_conf import progress_conf
 
-    ## finally fill the historgams 
+    ## finally fill the histograms 
     if   3 == hdim :
         if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *args )
         else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *args )
@@ -1166,7 +1166,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 #  func = ...  ## Ostap.IFuncData object 
 #  dataset.add_new_var ( 'value' ,   func )
 #  @endcode
-#  - Sample from 1D-historgam
+#  - Sample from 1D-histogram
 #  @code
 #  h1 = ...## 1D histogram
 #  dataset.add_new_var ( 'nTracks' , h1 ) ## sample from 1D histogram

@@ -49,7 +49,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.splot' )
 else                       : logger = getLogger ( __name__            )
 # =============================================================================
 #  @class sPlot1D
-#  Helper class to get <code>sWeigts</code> in a form of a historgams  or function objects.
+#  Helper class to get <code>sWeigts</code> in a form of a histograms  or function objects.
 #  It is often useful to avoid the direct usage of ROOT.RooStat.SPlot 
 #  @see RooStat::SPlot
 #  @see M.Pivk, F.R. Le Deberder,
@@ -68,7 +68,7 @@ else                       : logger = getLogger ( __name__            )
 #  @endcode
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 class sPlot1D(object) :
-    """ Helper class to get sWeigtts in form of historgams/function objects.
+    """ Helper class to get sWeigtts in form of histograms/function objects.
     It is often useful to avoid the direct usage of ROOT.RooStat.SPlot 
     - see ROOT.RooStat.SPlot
     - see M.Pivk, F.R. Le Deberder,

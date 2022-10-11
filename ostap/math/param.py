@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/math/param.py
-#  Module with utilities for parameterization of functions/historgams 
+#  Module with utilities for parameterization of functions/histograms 
 #
 ## (1) using histogram data only:
 # 
@@ -35,7 +35,7 @@
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2011-06-07
 # =============================================================================
-"""Module with utilities for parameterization of historgams
+"""Module with utilities for parameterization of histograms
 
 ## (1) using histogram data only:
 

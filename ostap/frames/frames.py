@@ -741,7 +741,7 @@ def frame_project ( frame , model , *what ) :
     histo = None
 
     #
-    ## convert historgam-like objects into 'models'
+    ## convert histogram-like objects into 'models'
     #
     
     if   isinstance ( model , ROOT.TProfile2D ) :        

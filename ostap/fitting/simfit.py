@@ -193,7 +193,7 @@ def combined_data ( sample          ,
 #  ds   = combined_hdata ( sample , (xvar, yvar, zvar) , { 'A' : hA , 'B' : hB } )  
 #  @endcode
 #  Since the output is <code>RooDataHist</code> the specifications for
-#  the individual historgams must be the same  
+#  the individual histograms must be the same  
 def combined_hdata ( sample        ,
                      varset        ,
                      histograms    ,
@@ -227,7 +227,7 @@ def combined_hdata ( sample        ,
     >>> zvar = ROOT.RooRealVar ( ... )
     >>> ds   = combined_hdata ( sample , (xvar, yvar, zvar) , { 'A' : hA , 'B' : hB } )  
 
-    - Since the output is `RooDataHist` the specifications for the individual historgams must be the same  
+    - Since the output is `RooDataHist` the specifications for the individual histograms must be the same  
     """
 
     MAP  = std.map  ( 'std::string'       , 'TH1*' )

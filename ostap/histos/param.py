@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file
-#  Module with utilities for parameterization of historgams 
+#  Module with utilities for parameterization of histograms 
 #
 ## (1) using fit of histograms (ROOT::TF1::Fit)
 # 
@@ -28,7 +28,7 @@
 # 
 # Typical usage:
 # @code
-# histo = ...                ## the historgam
+# histo = ...                ## the histogram
 # b = histo.bernstein ( 5 )  ## make a fit... 
 # 
 # tf1        = b[0]    ## TF1 object
@@ -66,7 +66,7 @@
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2011-06-07  
 # =============================================================================
-"""Module with utilities for parameterization of historgams
+"""Module with utilities for parameterization of histograms
 
 ## (1) using fit of histograms (ROOT::TF1::Fit)
 
@@ -92,7 +92,7 @@ where possible, fit starts from reasonable approximatuion, taken from (1)
 
 Typical usage:
 
->>> histo = ...                ## the historgam
+>>> histo = ...                ## the histogram
 >>> b = histo.bernstein ( 5 )  ## make a fit... 
 
 >>> tf1        = b[0]    ## TF1 object
@@ -119,7 +119,7 @@ Typical usage:
 
 Typical usage:
 
->>> histo = ...                   ## the historgam
+>>> histo = ...                   ## the histogram
 >>> b = histo.pdf_positive ( 5 )  ## make a fit... 
 
 >>> result = b[0]  ## RooFit result
@@ -158,7 +158,7 @@ _new_methods_ = []
 inf_pos =  float('inf') ## positive infinity
 inf_neg = -float('inf') ## negative infinity
 # =============================================================================
-## result of the historgam  parameterisation based on TH1::Fit 
+## result of the histogram  parameterisation based on TH1::Fit 
 ParamFITInfo = namedtuple ( 'ParamFITInfo' , ( 'tf1'       ,   ## ROOT TF1 object 
                                                'fitobject' ,   ## Fittting object 
                                                'funobject' ,   ## original function object 
@@ -166,7 +166,7 @@ ParamFITInfo = namedtuple ( 'ParamFITInfo' , ( 'tf1'       ,   ## ROOT TF1 objec
                                                'norm'      ,   ## normalization factor
                                                'nfits'     ) ) ## number of refits 
 # =============================================================================
-## result of the historgam  parameterisation based on RooFit
+## result of the histogram  parameterisation based on RooFit
 ParamPDFInfo = namedtuple ( 'ParamPDFInfo' , ( 'fitresult' ,   ## RooFitResult
                                                'pdf'       ,   ## Fit PDF 
                                                'funobject' ,   ## the function object 
@@ -307,7 +307,7 @@ def _h1_param_sum_ ( h1               ,
 # =============================================================================
 ## represent 1D-histo as Bernstein polynomial
 #  @code
-#  h = ...                   ## the historgam
+#  h = ...                   ## the histogram
 #  b = h.bernstein ( 5 )     ## make a fit... 
 # 
 #  tf1        = b[0]         ## TF1 object
@@ -331,7 +331,7 @@ def _h1_bernstein_ ( h1               ,
                      refit  = 1       ) :
     """Represent histo as Bernstein polynomial
     
-    >>> h = ...                # the historgam
+    >>> h = ...                # the histogram
     >>> b = h.bernstein ( 5 )  ## make a fit... 
     
     >>> tf1        = b[0]    ## TF1 object
@@ -365,7 +365,7 @@ def _h1_bernstein_ ( h1               ,
 # =============================================================================
 ## represent 1D-histo as even Bernstein polynomial
 #  @code
-#  h = ...                   ## the historgam
+#  h = ...                   ## the histogram
 #  b = h.bernsteineven ( 3 ) ## make a fit... 
 # 
 #  tf1        = b[0]         ## TF1 object
@@ -389,7 +389,7 @@ def _h1_bernsteineven_ ( h1               ,
                          refit  = 1       ) :
     """Represent histo as even Bernstein polynomial
     
-    >>> h = ...                    ## the historgam
+    >>> h = ...                    ## the histogram
     >>> b = h.bernsteineven ( 3 )  ## make a fit... 
     
     >>> tf1        = b[0]    ## TF1 object
@@ -425,7 +425,7 @@ def _h1_bernsteineven_ ( h1               ,
 # =============================================================================
 ## represent 1D-histo as Chebyshev polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.chebyshev ( 5 )     ## make a fit... 
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -2380,7 +2380,7 @@ def _h1_bezier_sum_ ( h1 , N , **kwargs ) :
 #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
 #  @endcode 
 #  @see Ostap::Math::BernsteinEven
-#  @param h1 the historgram
+#  @param h1 the histogram
 #  @param N  the degree of polynomial 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2015-07-26

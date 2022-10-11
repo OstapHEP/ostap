@@ -413,8 +413,8 @@ class Weight(object) :
 ## default function to make MC projection
 #  @param daatset dataset MC  dataset (typically TTree)
 #  @param histo   histogram template
-#  @param what    historgam varibales
-#  @param how     historgam template 
+#  @param what    histogram varibales
+#  @param how     histogram template 
 def mc_data_projector  ( dataset , histo , what , how ) :
     """Default function to make MC projection
     """
@@ -449,7 +449,7 @@ class WeightingPlot(object) :
     - ``data'' : the ``data'' object, or  the ``target'' for the reweighting procedure
     Typically it is a histogram. But it could be any kind of callable 
     
-    - ``mchisto'' : template/shape for the mc-historgam, to be used for reweighting.
+    - ``mchisto'' : template/shape for the mc-histogram, to be used for reweighting.
     It is used as the  first argument of ``dataset.project'' method
     
     >>> dataset.project ( MCHISTO , what , how , ... )             
@@ -485,7 +485,7 @@ class WeightingPlot(object) :
         - ``data'' : the ``data'' object, or  the ``target'' for the reweighting procedure
         Typically it is a histotgram. But it could be any kind of callable 
         
-        - ``mc_histo'' : template/shape for the mc-historgam, to be used for reweighting.
+        - ``mc_histo'' : template/shape for the mc-histogram, to be used for reweighting.
         It is used as the  first argument of ``dataset.project'' method
         
         >>> dataset.project ( MCHISTO , what , how , ... )         

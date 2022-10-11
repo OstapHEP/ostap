@@ -1709,7 +1709,7 @@ class APDF1 ( object ) :
     #  pdf = ...
     #  h1  = pdf.histo ( 100 , -1 , 10 ) ## specify histogram parameters
     #  histo_template = ...
-    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+    #  h2  = pdf.histo ( histo = histo_template ) ## use histogram template
     #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
     #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
     #  @endcode
@@ -1726,7 +1726,7 @@ class APDF1 ( object ) :
         >>> pdf = ...
         >>> h1  = pdf.histo ( 100 , 0. , 10. ) ## specify histogram parameters
         >>> histo_template = ...
-        >>> h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+        >>> h2  = pdf.histo ( histo = histo_template ) ## use histogram template
         >>> h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
         >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
         """
@@ -1737,7 +1737,7 @@ class APDF1 ( object ) :
                                   hpars = hpars ,
                                   histo = histo )
 
-        # loop over the historgam bins 
+        # loop over the histogram bins 
         for i , x , y in histo.items() :
 
             xv , xe = x.value() , x.error()
@@ -1767,7 +1767,7 @@ class APDF1 ( object ) :
     #  pdf = ...
     #  h1  = pdf.roo_histo ( 100 , -1 , 10 ) ## specify histogram parameters
     #  histo_template = ...
-    #  h2  = pdf.roo_histo ( histo = histo_template ) ## use historgam template
+    #  h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
     #  @endcode
     #  @see RooAbsPdf::createHistogram
     #  @see RooAbsPdf::fillHistogram
@@ -3195,7 +3195,7 @@ class APDF2 (APDF1) :
     #  pdf = ...
     #  h1  = pdf.histo ( 100 , 0. , 10. , 20 , 0. , 10 ) ## specify histogram parameters
     #  histo_template = ...
-    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+    #  h2  = pdf.histo ( histo = histo_template ) ## use histogram template
     #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
     #  h4  = pdf.histo ( ... , density  = True  ) ## convert to "density" histogram 
     #  @endcode
@@ -3211,7 +3211,7 @@ class APDF2 (APDF1) :
         >>> pdf = ...
         >>> h1  = pdf.histo ( 100 , 0. , 10. , 20 , 0. , 10 ) ## specify histogram parameters
         >>> histo_template = ...
-        >>> h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+        >>> h2  = pdf.histo ( histo = histo_template ) ## use histogram template
         >>> h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
         >>> h4  = pdf.histo ( ... , density  = True  ) ## convert to 'density' histogram 
         """
@@ -3222,7 +3222,7 @@ class APDF2 (APDF1) :
                                    hpars = hpars ,
                                    histo = histo )
 
-        # loop over the historgam bins 
+        # loop over the histogram bins 
         for ix,iy,x,y,z in histo.items() :
 
             xv , xe = x.value() , x.error()
@@ -3245,7 +3245,7 @@ class APDF2 (APDF1) :
                     
             histo[ix,iy] = v 
 
-        ## coovert to density historgam, if requested 
+        ## coovert to density histogram, if requested 
         if density : histo =  histo.density()
         
         return histo
@@ -3257,7 +3257,7 @@ class APDF2 (APDF1) :
     #  pdf = ...
     #  h1  = pdf.roo_histo ( 100 , 0. , 10. , 20 , 0. , 10 ) 
     #  histo_template = ...
-    #  h2  = pdf.roo_histo ( histo = histo_template ) ## use historgam template
+    #  h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
     #  h3  = pdf.roo_histo ( ... , density  = True  ) ## convert to "density" histogram 
     #  @endcode
     def roo_histo ( self             ,
@@ -3270,7 +3270,7 @@ class APDF2 (APDF1) :
         >>> pdf = ...
         >>> h1  = pdf.as_histo ( 100 , 0. , 10. , 20 , 0. , 10 ) 
         >>> histo_template = ...
-        >>> h2  = pdf.as_histo ( histo = histo_template ) ## use historgam template
+        >>> h2  = pdf.as_histo ( histo = histo_template ) ## use histogram template
         >>> h3  = pdf.as_histo ( ... , density  = True  ) ## convert to 'density' histogram 
         """
         
@@ -4432,7 +4432,7 @@ class APDF3 (APDF2) :
     #  pdf = ...
     #  h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
     #  histo_template = ...
-    #  h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+    #  h2  = pdf.histo ( histo = histo_template ) ## use histogram template
     #  h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
     #  @endcode
     def histo ( self             ,
@@ -4447,7 +4447,7 @@ class APDF3 (APDF2) :
         >>> pdf = ...
         >>> h1  = pdf.histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) ## specify histogram parameters
         >>> histo_template = ...
-        >>> h2  = pdf.histo ( histo = histo_template ) ## use historgam template
+        >>> h2  = pdf.histo ( histo = histo_template ) ## use histogram template
         >>> h3  = pdf.histo ( ... , integral = True  ) ## use PDF integral within the bin  
         """
 
@@ -4459,7 +4459,7 @@ class APDF3 (APDF2) :
                                   histo = histo )
         
         
-        # loop over the historgam bins 
+        # loop over the histogram bins 
         for ix , iy , iz , x , y , z , w in histo.items() :
 
             xv , xe = x.value() , x.error()
@@ -4493,7 +4493,7 @@ class APDF3 (APDF2) :
     #  pdf = ...
     #  h1  = pdf.roo_histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 ) 
     #  histo_template = ...
-    #  h2  = pdf.roo_histo ( histo = histo_template ) ## use historgam template
+    #  h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
     #  @endcode
     def roo_histo ( self            ,
                    xbins    = 10    , xmin = None , xmax = None ,
@@ -4506,7 +4506,7 @@ class APDF3 (APDF2) :
         >>> pdf = ...
         >>> h1  = pdf.roo_histo ( 10 , 0. , 10. , 10 , 0. , 4. , 10 , 0. , 3 )
         >>> histo_template = ...
-        >>> h2  = pdf.roo_histo ( histo = histo_template ) ## use historgam template
+        >>> h2  = pdf.roo_histo ( histo = histo_template ) ## use histogram template
         """
         
         histo = self.make_histo ( xbins = xbins , xmin = xmin , xmax = xmax ,

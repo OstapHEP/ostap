@@ -355,13 +355,13 @@ ROOT.TH1D.chi2_cmp = _h1_chi2_cmp_
 ROOT.TH1F.chi2_cmp = _h1_chi2_cmp_ 
 
 # =============================================================================
-## compare the 1D-historgams (as functions)
+## compare the 1D-histograms (as functions)
 #  - calculate the scalar product and get cos(theta) from it 
 # \f$cos \theta = \frac{ f_1 \cdot f_2 } { \left|f_1\right|\left|f_2\right| }\f$
 def _h1_cmp_costheta_ ( h1              ,
                         h2              ,
                         density = False ) :  
-    """Compare the 1D-historgams (as functions)
+    """Compare the 1D-histograms (as functions)
     Calculate the scalar product and get ``cos(theta)'' from it
     
     >>> h1 = ... ## the first histo
@@ -402,14 +402,14 @@ ROOT.TH1F.cmp_cos = _h1_cmp_costheta_
 
 
 # =============================================================================
-## compare the 2D-historgams (as functions)
+## compare the 2D-histograms (as functions)
 #  - calculate the scalar product and get cos(theta) from it 
 # \f$cos \theta = \frac{ f_1 \cdot f_2 } { \left|f_1\right|\left|f_2\right| }\f$
 # @attention It could be rather slow    
 def _h2_cmp_costheta_ ( h1              ,
                         h2              ,
                         density = False ) :  
-    """Compare the 2D-historgams (as functions)
+    """Compare the 2D-histograms (as functions)
     Calculate the scalar product and get ``cos(theta)'' from it
     
     >>> h1 = ... ## the first histo
@@ -450,14 +450,14 @@ ROOT.TH2F.cmp_cos = _h2_cmp_costheta_
 ROOT.TH2D.cmp_cos = _h2_cmp_costheta_
 
 # =============================================================================
-## compare the 3D-historgams (as functions)
+## compare the 3D-histograms (as functions)
 #  - calculate the scalar product and get cos(theta) from it 
 # \f$cos \theta = \frac{ f_1 \cdot f_2 } { \left|f_1\right|\left|f_2\right| }\f$
 # @attention It could be rather slow    
 def _h3_cmp_costheta_ ( h1              ,
                         h2              ,
                         density = False ) :  
-    """Compare the 3D-historgams (as functions)
+    """Compare the 3D-histograms (as functions)
     Calculate the scalar product and get ``cos(theta)'' from it
     
     >>> h1 = ... ## the first histo
@@ -504,7 +504,7 @@ ROOT.TH3D.cmp_cos = _h3_cmp_costheta_
 def _h1_cmp_dcostheta_ ( h1              ,
                          h2              ,
                          density = False ) :  
-    """Compare the 1D-historgams (as functions)
+    """Compare the 1D-histograms (as functions)
     Calculate discrete scalar product and get ``the angle'' from it
     
     >>> h1 = ... ## the first histo
@@ -1091,7 +1091,7 @@ ROOT.TH1F.cmp_minmax = _h1_cmp_minmax_
 
 
 # =============================================================================
-## compare two historgams and find the largest difference
+## compare two histograms and find the largest difference
 #  @code
 #  h1 = ...
 #  h2 = ...
@@ -1101,7 +1101,7 @@ def _h2_cmp_minmax_ ( h1                         ,
                       h2                         ,
                       density = False            ,
                       diff    = lambda a,b : b-a , **kwargs ) :
-    """Compare two historgams and find the largest difference
+    """Compare two histograms and find the largest difference
     >>> h1 = ...
     >>> h2 = ...
     >>> (x_min,y_min,v_min),(x_max,y_max,v_max) = h1.cmp_minmax ( h2 )
@@ -1166,7 +1166,7 @@ ROOT.TH2D.cmp_minmax = _h2_cmp_minmax_
 
 
 # =============================================================================
-## compare two historgams and find the largest difference
+## compare two histograms and find the largest difference
 #  @code
 #  h1 = ...
 #  h2 = ...
@@ -1176,7 +1176,7 @@ def _h3_cmp_minmax_ ( h1                         ,
                       h2                         ,
                       density = False            ,
                       diff    = lambda a,b : b-a , **kwargs ) :
-    """Compare two historgams and find the largest difference
+    """Compare two histograms and find the largest difference
     >>> h1 = ...
     >>> h2 = ...
     >>> (x_min,y_min,z_min,v_min),(x_max,y_max,z_max,v_max) = h1.cmp_minmax ( h2 )
