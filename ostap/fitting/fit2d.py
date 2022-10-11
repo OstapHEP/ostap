@@ -604,6 +604,11 @@ class Fit2D (PDF2) :
         if bkg_2D and isinstance ( bkg_2D , ( tuple , list ) ) :
             from ostap.fitting.models_2d import make_B2D
             self.__bb_cmp = make_B2D ( bb_name , self.xvar , self.yvar , *bkg_2D )
+        elif bkg_2D  :            
+            self.__bb_cmp = self.make_PDF2 ( bkg_2D           ,
+                                             xvar = self.xvar ,
+                                             yvar = self.yvar ,
+                                             name = bb_name   )[0]
         else      : 
             self.__bkg_2x = self.make_bkg ( bkg_2x , self.new_name ( 'Bkg2X_BB' , suffix ) , self.xvar )
             self.__bkg_2y = self.make_bkg ( bkg_2y , self.new_name ( 'Bkg2Y_BB' , suffix ) , self.yvar )            
@@ -1044,15 +1049,11 @@ class Fit2DSym (PDF2) :
         self.__bkg_2x = None
         self.__bkg_2y = None
 
-        bb_name = self.generate_name ( 'BB_' + self.name )
-        
-        if  isinstance  ( bkg_2D , int ) :
-            
+        bb_name = self.generate_name ( 'BB_' + self.name )        
+        if  isinstance  ( bkg_2D , int ) :            
             from ostap.fitting.models_2d import make_B2Dsym
-            self.__bb_cmp = make_B2Dsym ( bb_name , self.xvar , self.yvar , bkg_2D )
-            
-        elif bkg_2D  :
-            
+            self.__bb_cmp = make_B2Dsym ( bb_name , self.xvar , self.yvar , bkg_2D )            
+        elif bkg_2D  :            
             self.__bb_cmp = self.make_PDF2 ( bkg_2D           ,
                                              xvar = self.xvar ,
                                              yvar = self.yvar ,
