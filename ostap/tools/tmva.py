@@ -2078,9 +2078,9 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     >>> inputs = [ 'var1' , 'var2' , 'var2' ]
     >>> dataset.addTMVAResponse (  inputs , tar_file , prefix = 'tmva_' )
     """
-    assert dataset and isinstance ( dataset , ( ROOT.TTree , ROOT.RooAbsData ) ),\
+    assert isinstance ( dataset , ( ROOT.TTree , ROOT.RooAbsData ) ),\
            'Invalid dataset type!'
-    
+
     from ostap.core.core           import cpp, std, Ostap
     from ostap.utils.progress_conf import progress_conf
 

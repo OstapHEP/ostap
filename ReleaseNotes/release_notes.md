@@ -1,3 +1,5 @@
+# v1.9.3.6
+
 ## New features: 
 
   1. reshuffle some code between `ostap.fitting.variables` and `ostap.fitting.roofuncs`
