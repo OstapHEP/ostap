@@ -429,7 +429,7 @@ def tree_project ( tree               ,
         htmp  = histo.clone()
         total = 0 
         for w in what :
-            n   , htmp = tree_project ( dataset , htmp , w , cuts , *tail )
+            n   , htmp = tree_project ( tree , htmp , w , cuts , *tail )
             total += n
             histo += htmp 
         del htmp

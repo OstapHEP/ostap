@@ -676,7 +676,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
     else :
         
         if 0 != first or 0 < last :
-            logger.warning ( "ds_project: 'first' and 'last' arguments (%s/%s) are ognored " % ( first , last ) )
+            logger.warning ( "ds_project: 'first' and 'last' arguments (%s/%s) are ignored " % ( first , last ) )
         events = () 
                              
     if isinstance ( cuts , str ) : cuts = cuts.strip()
@@ -724,7 +724,13 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
         htmp  = histo.clone()
         total = 0 
         for w in what :
-            n , htmp = ds_project ( dataset , htmp , w , cuts , *events , progress = progress )
+            n , htmp = ds_project ( dataset             ,
+                                    histo    = htmp     ,
+                                    what     = w        ,
+                                    cuts     = cuts     ,
+                                    first    = first    ,
+                                    lasrt    = last     , 
+                                    progress = progress )
             total += n
             histo += htmp 
         del htmp
@@ -772,7 +778,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
 #  @see RooDataSet 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
+def ds_draw ( dataset , what , cuts = '' , opts = '' , *args , **kwargs ) :
     """Helper draw method for drawing of RooDataSet
     >>> dataset.draw ( 'm', 'chi2<10'                 )
     ## cuts & weight 
@@ -804,12 +810,12 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
         
         ## ATTENTION reverse here! 
         what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;,' ) ] ) ) 
-        return ds_draw ( dataset , what , cuts , opts , *args )
+        return ds_draw ( dataset , what , cuts , opts , *args , **kwargs )
 
     elif isinstance ( what , ROOT.RooArgList ) :
         
         what = tuple ( v for v in what ) 
-        return ds_draw ( dataset , what , cuts , opts ,  *args  )
+        return ds_draw ( dataset , what , cuts , opts , *args , **kwargs )
 
     assert isinstance ( what , list_types ) and 1 <= len ( what ) <=3 , \
            "ds_draw: invalid 'what' %s" % what 
@@ -829,32 +835,40 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
         mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
         w3        = what [ 2 ] 
         mn3 , mx3 = ds_var_range ( dataset , w3 , cuts )
-        histo = ROOT.TH3F ( hID() , "%s:%s:%s" % ( w3 , w2 , w1 ) ,
-                            20 , mn1 , mx1 ,
-                            20 , mn2 , mx2 ,
-                            20 , mn3 , mx3 )  ; histo.Sumw2()
+        nbinsx    = kwargs.pop ( 'nbinsx' , 20 )
+        nbinsy    = kwargs.pop ( 'nbinsy' , 20 )
+        nbinsz    = kwargs.pop ( 'nbinsz' , 20 )        
+        histo     = ROOT.TH3F  ( hID()  , "%s:%s:%s" % ( w3 , w2 , w1 ) ,
+                                 nbinsx , mn1 , mx1 ,
+                                 nbinsy , mn2 , mx2 ,
+                                 nbinsz , mn3 , mx3 )  ; histo.Sumw2()
         
         ds_project ( dataset , histo , what , cuts , first , last  )
-        histo.Draw( opts )
+        histo.draw ( opts , **kwargs )
         return histo
+    
     elif 2 == len ( what )  :
         w1        = what [ 0 ] 
         mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
         w2        = what [ 1 ] 
         mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
-        histo = ROOT.TH2F ( hID() , "%s:%s" % ( w2 , w1 ) ,
-                            20 , mn1 , mx1 ,
-                            20 , mn2 , mx2 )  ; histo.Sumw2()        
+        nbinsx    = kwargs.pop ( 'nbinsx' , 20 )
+        nbinsy    = kwargs.pop ( 'nbinsy' , 20 )
+        histo     = ROOT.TH2F  ( hID()  , "%s:%s" % ( w2 , w1 ) ,
+                                 nbinsx , mn1 , mx1 ,
+                                 nbinsy , mn2 , mx2 )  ; histo.Sumw2()        
         ds_project ( dataset , histo , what , cuts , first , last  )
-        histo.Draw( opts )
+        histo.draw ( opts , **kwargs )
         return histo
+    
     elif 1 == len ( what )  :
         w1        = what [ 0 ] 
         mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
-        histo = ROOT.TH1F ( hID() , "%s" % ( w1 ) ,
-                            20 , mn1 , mx1 )  ; histo.Sumw2()        
+        nbinsx    = kwargs.pop ( 'nbinsx' , 100 )
+        histo     = ROOT.TH1F  ( hID()  , "%s" % ( w1 ) ,
+                                 nbinsx , mn1 , mx1 )  ; histo.Sumw2()        
         ds_project ( dataset , histo , what , cuts , first , last  )
-        histo.Draw( opts )
+        histo.draw ( opts , **kwargs )
         return histo
 
     raise TypeError ( 'ds_draw, invalid case' )

@@ -7152,17 +7152,23 @@ ROOT.TH1.uniform      = _uniform_bins_
 
 # =============================================================================
 ## same dims?
+#  @see TH1::GetDimension 
 def _h_same_dims_ ( histo , another ) :
+    """Two histograms with the same dimension?
+    - see `ROOT.TH1.GetDimension`
+    """
+    
+    return histo.GetDimension() == another.GetDimension()
 
-    if   isinstance ( histo , ROOT.TH3 ) :
-        return isinstance ( another , ROOT.TH3 )
-    elif isinstance ( histo , ROOT.TH2 ) :
-        return isinstance ( another , ROOT.TH2 ) \
-               and not isinstance ( another , ROOT.TH3 )
-    elif isinstance ( histo , ROOT.TH1 ) :
-        return isinstance ( another , ROOT.TH1 ) \
-               and not isinstance ( another , ( ROOT.TH2 , ROOT.TH3 ) ) 
-    return False 
+    ## if   isinstance ( histo , ROOT.TH3 ) :
+    ##     return isinstance ( another , ROOT.TH3 )
+    ## elif isinstance ( histo , ROOT.TH2 ) :
+    ##     return isinstance ( another , ROOT.TH2 ) \
+    ##            and not isinstance ( another , ROOT.TH3 )
+    ## elif isinstance ( histo , ROOT.TH1 ) :
+    ##     return isinstance ( another , ROOT.TH1 ) \
+    ##            and not isinstance ( another , ( ROOT.TH2 , ROOT.TH3 ) ) 
+    ## return False 
 
 ROOT.TH1. same_dims = _h_same_dims_
 
@@ -7217,11 +7223,12 @@ def _h_dim_ ( self  ) :
     >>> histo = ...
     >>> d     =  histo.dim() 
     """
-    if   isinstance ( self , ROOT.TH3 ) : return 3
-    elif isinstance ( self , ROOT.TH2 ) : return 2
+    ## if   isinstance ( self , ROOT.TH3 ) : return 3
+    ## elif isinstance ( self , ROOT.TH2 ) : return 2
+    ## return 1
+    #
+    return self.GetDimension()
     
-    return 1 
-
 ROOT.TH1 .dim = _h_dim_
 
 # =============================================================================
