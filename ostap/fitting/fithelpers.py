@@ -35,10 +35,10 @@ __all__     = (
 from   ostap.core.meta_info    import root_info 
 from   ostap.core.core         import ( Ostap, rootID, VE,
                                         items_loop, isequal , roo_silent ) 
-from   ostap.core.ostap_types  import ( string_types   , num_types      ,
-                                        integer_types  , list_types     , 
-                                        is_good_number , is_integer     ,
-                                        sequence_types )
+from   ostap.core.ostap_types  import ( string_types   , num_types   ,
+                                        integer_types  , list_types  , 
+                                        is_good_number , is_integer  ,
+                                        sequence_types , sized_types )
 from   ostap.utils.utils       import make_iterable
 from   ostap.fitting.variables import SETVAR 
 from   ostap.fitting.utils     import make_name, numcpu, ncpu, get_i  
@@ -1727,7 +1727,7 @@ class FitHelper(VarMaker) :
         """Prepare 'soft' asymetric Gaussian constraint for the variable
         -  consraint is prepared but not applied!
         >>> sigma      = ...
-        >>> constraint = pdf.make_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
+        >>> constraint = pdf.make_constraint2 ( sigma , 0.15 , -0.01 , +0.05 ) 
         """
         
         assert isinstance ( var   , ROOT.RooAbsReal ) ,\
@@ -1761,10 +1761,119 @@ class FitHelper(VarMaker) :
         self.aux_keep.append ( negerr )
         self.aux_keep.append ( agauss )
         
-        self.info ('Constraint is created %s: %.g+%.g-%.g' % ( var.name , value , pos_error , neg_error ) )
-        
+        self.info ('Constraint is created %s: %.g+%.g-%.g' % ( var.name , value , pos_error , neg_error ) )        
         return agauss 
 
+    # ==========================================================================
+    ## Create multivariate Gaussian constraint
+    #  @attention the constraint is prepared, but not applied!
+    #  - use fit result 
+    #  @code
+    #  vars       = ...
+    #  fit_result = ...
+    #  constraint = pdf.soft_multivar_constraint ( vars , fitresult , True )
+    #  @endcode
+    #  - use valees and covariance matrix 
+    #  @code
+    #  vars       = ...
+    #  values     = ...
+    #  cov2       = ... 
+    #  constraint = pdf.soft_multivar_constraint ( vars , values , cov2 )    
+    #  @see RooMultiVarGaussian 
+    def soft_multivar_constraint ( self , vars , config , name = '' , title = '' ) :
+        """Create multivariate Gaussian constraint
+        - attention the constraint is prepared, but not applied!
+        
+        - use fit result:
+        
+        >>> vars       = ...
+        >>> fit_result = ...
+        >>> constraint = pdf.soft_multivar_constraint ( vars , fitresult )
+
+        
+        - use values and covariance matrix 
+        >>> vars       = ...
+        >>> values     = ...
+        >>> cov2       = ... 
+        >>> constraint = pdf.soft_multivar_constraint ( vars , ( values , cov2 ) )    
+        
+        - see `ROOT.RooMultiVarGaussian`
+        """
+
+        if isinstance ( config , ROOT.RooFitResult ) :
+            return self.soft_multivar_constraint ( vars , ( config , True ) , name , title )
+
+        variables = []
+        for i, v in enumerate ( vars ) :
+            assert v in self, 'Invalid/unknown parameter #%d %s/%s' % ( i , v , type(v) ) 
+            variables.append ( self.parameter ( v ) )
+        variables = tuple ( variables )
+
+
+        vlist = ROOT.RooArgList()
+        for v in variables : vlist.add ( v )
+        
+        name  = name  if name  else self.roo_name ( 'MVGauss' ) 
+        title = title if title else 'MVGaussian Constraint(%s,%s) ' % ( self.name , self.name  )
+
+        N = len ( vlist )
+
+        import ostap.math.linalg
+
+        if isinstance ( config , ROOT.RooFitResult ) :
+            first , second = config , True
+        elif isinstance ( config , Ostap.Math.VectorE ( N ) ) :
+            first , second = config.value() , config.cov2() 
+        elif isinstance ( config , sequence_types ) and \
+             isinstance ( config , sized_types    ) and 2 == len ( config ) :            
+            first , second = config
+        else :
+            "Invalid type of 'config' %s" % str ( config )
+
+        if   isinstance ( first  , ROOT.RooFitResult          ) : pass 
+        elif isinstance ( first  , ROOT.TVectorD              ) : pass 
+        elif isinstance ( first  , Ostap.Math.Vector    ( N ) ) : first  = first .tvector()
+        elif isinstance ( first  , sequence_types             ) and \
+             isinstance ( first  , sized_types                ) and N == len ( first ) :
+            vct = ROOT.TVectorD ( N ) 
+            for i , v in enumerate ( first ) : vct [ i ] = float ( v )
+            first = vct 
+
+        if   isinstance ( second , Ostap.Math.SymMatrix ( N ) ) : second = second.tmatrix() 
+
+        ## 1) most iseful case : values and covariances are provdeid throught RooFitResult obkect
+        if isinstance ( first , ROOT.RooFitResult ) :
+            
+            fitres     = first 
+            float_pars = fitres.floatParsFinal()
+            for v in variables :
+                assert v in float_pars , \
+                       'FitResult object does not depend on parameter %s/%s' % ( v , type ( v ) )
+
+        ## 2) values and covarinaces are provided explicitely 
+        elif isinstance ( first , ROOT.TVectorD ) and isinstance ( second , ROOT.TMatrixDSym ) :
+
+            vals = first
+            cov2 = second 
+            assert vals.IsValid() and cov2.IsValid()             , 'Invalid values/covariances'
+            assert vals.GetNrows() == N and cov2.GetNrows() == N , 'Invalid seze for values/covariances'
+
+        else :
+            
+            raise TypeError ( "Invalid 'config' (%s,%s)/(%s,%s)" % (
+                first , second , type ( first ) , type ( second ) ) )
+         
+        ## create multivariate gaussian constraint  
+        mgauss = ROOT.RooMultiVarGaussian ( name , title , vlist , first , second )
+        
+        self.aux_keep.append ( vlist  )
+        self.aux_keep.append ( mgauss )
+        
+        self.info ('Multivariate (%s) constraint is created %s' % ( [ v.name for v in variables ] , mgauss ) ) 
+        return mgauss 
+            
+            
+            
     # ==========================================================================
     ## Helper function to  create soft Gaussian constraint
     #  to the ratio of <code>a</code> and <code>b</code>

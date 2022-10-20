@@ -203,14 +203,21 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         """
         if not self.fun : return False
         ##
-        if var and isinstance ( var , ROOT.RooAbsReal ) :
-            return self.fun.depends_on ( var ) 
-
         ## 
-        if isinstance ( var , AFUN1 ) :
+        if var and isinstance ( var , AFUN1 ) :
+            
             if self.fun.depends_on ( var.fun  ) : return True
             if self.fun.depends_on ( var.vars ) : return True
-                
+
+        elif var and isinstance ( var , ROOT.RooAbsArg ) :
+            
+            return self.fun.depends_on ( var )
+        
+        elif var and isinstance ( var , string_types ) :
+            
+            pars = self.fun.getParameters ( 0 )
+            return var in pars 
+            
         return False 
             
     @property
@@ -286,11 +293,15 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         ## get the list of the actual parameters 
         pars = self.params ( dataset )
 
+        ## 
+        if isinstance ( param , ROOT.RooAbsArg ) and param in pars :
+            return param 
+        
         for p in pars :
             if p.name == param : return p
             
         self.error ( "No parameter %s defined" % param )
-        raise KeyError ( "No parameter %s defined" % param )
+        raise KeyError ( "No parameter %s/%s defined" % ( param , type ( param ) ) ) 
 
     # =========================================================================
     ## get all parameters/variables in form of dictionary

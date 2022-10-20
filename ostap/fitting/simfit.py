@@ -90,11 +90,11 @@ def combined_data ( sample          ,
         if isinstance ( datasets , dict ) : dset = datasets[label]
         else :
             for ds in datasets :
-                if label == ds[0] :
-                    dset =  ds[1]
+                if label == ds [ 0 ] :
+                    dset =  ds [ 1 ]
                     break
                 
-        assert isinstance ( dset , ROOT.RooAbsData ),\
+        assert dset and isinstance ( dset , ROOT.RooAbsData ),\
                'Invalid data set for label %s' % label
 
         ##assert not dset.isNonPoissonWeighted () ,\
@@ -105,12 +105,12 @@ def combined_data ( sample          ,
         else :
             store_error      = dset.store_error      () 
             store_asym_error = dset.store_asym_error ()            
-            uwdset , wnam = dset.unWeighted ()
+            uwdset , wnam    = dset.unWeighted ()
             assert uwdset and wnam, "Cannot 'unweight' dataset!"
-            largs.append (  ROOT.RooFit.Import ( label , uwdset ) )
+            largs.append   ( ROOT.RooFit.Import ( label , uwdset ) )
             ds_keep.append ( uwdset ) 
             weights.add    ( wnam   )
-
+            
     ## we can do with only one weight variable!
     assert len ( weights ) < 2 , 'Invalid number of weights %s' % list ( weights )
 
@@ -122,19 +122,24 @@ def combined_data ( sample          ,
     args = args + tuple ( largs )
         
     vars = ROOT.RooArgSet()
-    if   isinstance ( varset , ROOT.RooArgSet  ) : vars = varset
-    elif isinstance ( varset , ROOT.RooAbsReal ) : vars.add ( varset )
+    if    isinstance ( varset , ROOT.RooAbsReal     ) : vars.add ( varset )
+    elif  isinstance ( varset , ROOT.RooAbsCategory ) : vars.add ( varset )
     else :
-        for v in varset : vars.add ( v )
+        for i , v in enumerate ( varset ) :
+            assert isinstance ( v , ( ROOT.RooAbsReal , ROOT.RooAbsCategory ) ) , \
+                   'Invalid variable type [%d] %s/%s' % ( i , v , type ( v ) )
+            vars.add ( v )
 
     wset = ROOT.RooArgSet() 
     if weight :
         args = args + ( ROOT.RooFit.WeightVar ( weight ) , )
         if not weight in vars : 
             wvar = ROOT.RooRealVar ( weight , 'weight variable' , 1 , -1.e+100 , 1.e+100 ) 
-            vars.add ( wvar ) 
+            vars.add ( wvar )
+
         wvar = vars [ weight ]
-        wset.add ( wvar ) 
+        wset.add ( wvar )
+
         if   store_asym_error : args = args + ( ROOT.RooFit.StoreAsymError ( wset ) , )
         elif store_error      : args = args + ( ROOT.RooFit.StoreError     ( wset ) , )
 

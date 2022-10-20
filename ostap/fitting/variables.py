@@ -1379,13 +1379,14 @@ def depends_on ( fun , var ) :
     fpars = fun.getParameters ( 0 )
     
     ## direct dependency?
-    if var  in fpars : return True
-        
-    ## check indirect dependency
-    vvars = var.getParameters ( 0 )
-    for v in vvars :
-        if v in fpars : return True
+    if var in fpars : return True
 
+    ## check indirect dependency
+    if var and isinstance ( var , ROOT.RooAbsArg ) : 
+        vvars = var.getParameters ( 0 )
+        for v in vvars :
+            if v in fpars : return True
+            
     ##
     return False 
 

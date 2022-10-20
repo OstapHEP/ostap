@@ -1,7 +1,10 @@
 ## New features: 
   1. add `nbinsx/nbinsy/nbinsz` keyword argyments for `ROOT.RooAbdData.draw` method 
   1. allow additional keywords arguments for `ROOT.RooAbsData.draw` method, further forwardded to `ROOT.TH1.draw` method 
-  
+  1. add function `soft_multivar_constraint` to `ostap.fitting.fithelpers.FitHelper` for creation of 
+     the multivariate Gaussian constraints.
+  1. add example/test for using of the multivariate Gaussian constarines instead of simultaneous fit.
+
 ## Backward incompatible:  
 
 ## Bug fixes:

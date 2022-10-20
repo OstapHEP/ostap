@@ -147,8 +147,7 @@ logger.info ( 'Combined dataset/2:\n%s' % cdataset2.table ( prefix = '# ' ) )
 
 
 # =============================================================================
-## def test_simfit5() : 
-if 1 < 2 :
+def test_simfit5() : 
     
     logger = getLogger ( 'test_simfit5' )
 
@@ -260,10 +259,10 @@ if 1 < 2 :
 # =============================================================================
 if '__main__' == __name__ :
 
-    ## with timing ("simfit-5", logger ) :
-    ##    test_simfit5 () 
-    pass
-
+    with timing ("simfit-5", logger ) :
+        test_simfit5 () 
+        pass
+    
 
 # =============================================================================
 ##                                                                      The END 
