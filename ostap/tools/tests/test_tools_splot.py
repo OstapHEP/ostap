@@ -133,53 +133,83 @@ def test_splotting  () :
     title = "Fit results for" 
     logger.info ('%s:\n%s' % ( title  , r.table ( title = title , prefix = '# ') ) ) 
   
-    ds  = model.histo_data.dset 
-    sp  = sPlot1D ( model , ds  , nbins = 100 , fast = True ) ## SPLOT IT! 
-    sph = sp.hweights['S']
-    
-    with use_canvas ( 'test_tools_splot: sPlot') :
-        sph.draw ()
-        if 0 > float ( sph ( r.mean_G * 1 ) ) :
-            logger.error ( "Something totally wrong here!" ) 
-            
-    fnsp = Ostap.Functions.FuncTH1 ( sph , 'mass' )
-    
+    ds  = model.histo_data.dset
+
     with DBASE.tmpdb()  as db :
-        db ['histo'   ] = histo 
-        db ['splot'   ] = sp
-        db ['splot,h' ] = sph 
-        db ['splot,f' ] = fnsp
-        db.ls()
-        
-    with timing ( "Adding sPlot results to TTree" , logger = logger ) : 
-        chain.add_new_branch ( 'sw_S' , fnsp ) 
-
+        for fast in ( True , False ) :
+            
+            sp  = sPlot1D ( model , ds  , nbins = 100 , fast = fast ) ## SPLOT IT! 
+            sph = sp.hweights['S']
+            
+            with use_canvas ( 'test_tools_splot: sPlot') :
+                sph .draw ()
+                value =  float ( sph ( r.mean_G * 1 ) ) 
+                assert 0.7 < value < 1.5 , "Something totally wrong here, fast=%s!" % fast 
+                
+            fnsp = Ostap.Functions.FuncTH1 ( sph , 'mass' )
+            
+        for fast in ( True , False ) :
+            
+            db ['histo;fast=%s'   % fast ] = histo 
+            db ['splot;fast=%s'   % fast ] = sp    
+            db ['splot,h;fast=%s' % fast ] = sph   
+            db ['splot,f;fast=%s' % fast ] = fnsp  
+            db.ls()
+            
+            with timing ( "Adding sPlot results to TTree" , logger = logger ) :
+                chain = data.chain
+                if fast : chain.add_new_branch ( 'sw_Sf' , fnsp  )
+                else    : chain.add_new_branch ( 'sw_St' , fnsp  )
+                
     chain = data.chain 
-    logger.info ( 'Updated Tree/Chain:\n%s' % chain.table ( prefix = '# ' ) )
+    cntt  = chain.statVar ( 'sw_St' )
+    cntf  = chain.statVar ( 'sw_Sf' )
+    diff  = chain.statVar ( 'sw_St-sw_Sf' )
     
-    hs = ROOT.TH1D( hID() , 'ctau for signal'     , 200 , 0 , 5 )
-    hb = ROOT.TH1D( hID() , 'ctau for background' , 200 , 0 , 5 )
-    chain.project ( hs , 'ctau' , 'sw_S'   )
-    chain.project ( hb , 'ctau' , '1-sw_S' )
+    logger.info ( 'sw_St: %s' % cntt )
+    logger.info ( 'sw_Sf: %s' % cntf )
+    logger.info ( 'diff : %s' % diff )
 
-    
-    with wait ( 3 ) , use_canvas ( 'test_tools_splot: c*tau') :
-        hs.red ()
-        hb.blue()
-        hb.draw()
-        hs.draw('same')
+    for fast in ( True , False ) :
+        
+        chain = data.chain 
+        logger.info ( 'Updated Tree/Chain:\n%s' % chain.table ( prefix = '# ' ) )
+        
+        hs = ROOT.TH1D( hID() , 'ctau for signal'     , 200 , 0 , 5 )
+        hb = ROOT.TH1D( hID() , 'ctau for background' , 200 , 0 , 5 )
 
-        cnts = chain.statVar ('ctau' , 'sw_S'   )
-        cntb = chain.statVar ('ctau' , '1-sw_S' )
-        logger.info ( 'ctau S:%s' % cnts.mean() )
-        logger.info ( 'ctau B:%s' % cntb.mean() )
+        if fast : 
+            chain.project ( hs , 'ctau' , 'sw_St'   )
+            chain.project ( hb , 'ctau' , '1-sw_St' )
+        else    :
+            chain.project ( hs , 'ctau' , 'sw_Sf'   )
+            chain.project ( hb , 'ctau' , '1-sw_Sf' )
 
+        
+        with wait ( 3 ) , use_canvas ( 'test_tools_splot: c*tau, fast=%s' % fast ) :
+            
+            hs.red ()
+            hb.blue()
+            hb.draw()
+            hs.draw('same')
+
+            if fast : 
+               cnts = chain.statVar ('ctau' , 'sw_St'   )
+               cntb = chain.statVar ('ctau' , '1-sw_St' )
+            else :
+               cnts = chain.statVar ('ctau' , 'sw_Sf'   )
+               cntb = chain.statVar ('ctau' , '1-sw_Sf' )
+                
+            logger.info ( 'ctau S:%s' % cnts.mean() )
+            logger.info ( 'ctau B:%s' % cntb.mean() )
+            
         
     
 # =============================================================================
 if '__main__' ==  __name__  :
 
-    test_splotting ()
+    with timing ( "test_splotting" , logger = logger ) : 
+        test_splotting ()
     
 # =============================================================================
 ##                                                                      The END 

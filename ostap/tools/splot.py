@@ -134,7 +134,7 @@ class sPlot1D(object) :
         for p , n in zip  ( cpdfs , names ) :
             
             if fast  : hc = p.roo_histo ( histo = template , events = False )
-            else     : hc = p.    histo ( histo = template , events = False )
+            else     : hc = p.    histo ( histo = template , events = False , errors = False )
             
             hcomponents [ n ] = hc
 
