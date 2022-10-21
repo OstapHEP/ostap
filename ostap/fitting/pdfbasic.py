@@ -1720,6 +1720,7 @@ class APDF1 ( object ) :
                 hpars    = ()    , 
                 histo    = None  ,
                 integral = True  ,
+                events   = True  , 
                 errors   = False ) :
         """Convert PDF to the 1D-histogram in correct way
         - Unlike  `PDF.roo_histo` method, PDF is integrated within the bin
@@ -1746,19 +1747,23 @@ class APDF1 ( object ) :
             c = self ( xv , error = errors ) 
 
             if not integral : 
-                histo[i] = c
+                histo [ i ] = c
                 continue
 
             # integral over the bin 
-            v  = self.integral( xv - xe , xv + xe )
+            v       = self.integral( xv - xe , xv + xe , nevents = events )
+
+            # scale it by the bin volume 
+            volume  = 2 * x.error() 
+            v      /= volume
             
             if errors :
                 if    0 == c.cov2 () : pass
                 elif  0 != c.value() and 0 != v : 
                     v = c * ( v / c.value() )
                     
-            histo[i] = v 
-
+            histo [ i ] = v
+                    
         return histo
 
     # ==========================================================================
@@ -3205,7 +3210,8 @@ class APDF2 (APDF1) :
                 hpars    = ()    , 
                 histo    = None  ,
                 integral = False ,
-                errors   = False , 
+                errors   = False ,
+                events   = True  , 
                 density  = False ) :
         """Convert PDF to the 2D-histogram
         >>> pdf = ...
@@ -3236,8 +3242,12 @@ class APDF2 (APDF1) :
                 continue
 
             # integral over the bin 
-            v  = self.integral( xv - xe , xv + xe , yv - ye , yv + ye )
-            
+            v  = self.integral( xv - xe , xv + xe , yv - ye , yv + ye , nevents = events )
+
+            # scale it by the bin volume 
+            volume  = 4 * x.error() * y.error() 
+            v      /= volume
+
             if errors :
                 if    0 == c.cov2 () : pass
                 elif  0 != c.value() and 0 != v : 
@@ -4442,6 +4452,7 @@ class APDF3 (APDF2) :
                 hpars    = ()    , 
                 histo    = None  ,
                 intergal = True  ,
+                events   = True  , 
                 errors   = False ) :
         """Convert PDF to the 3D-histogram in correct way
         >>> pdf = ...
@@ -4476,8 +4487,12 @@ class APDF3 (APDF2) :
             # integral over the bin 
             v  = self.integral( xv - xe , xv + xe ,
                                 yv - ye , yv + ye ,
-                                zv - ze , zv + ze )
-            
+                                zv - ze , zv + ze , nevents = events )
+
+            # scale it by the bin volume 
+            volume  = 8 * x.error() * y.error() * z.error() 
+            v      /= volume
+
             if errors :
                 if    0 == c.cov2 () : pass
                 elif  0 != c.value() and 0 != v : 
