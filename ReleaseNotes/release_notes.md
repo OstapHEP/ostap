@@ -4,6 +4,7 @@
   1. add function `soft_multivar_constraint` to `ostap.fitting.fithelpers.FitHelper` for creation of 
      the multivariate Gaussian constraints.
   1. add example/test for using of the multivariate Gaussian constarines instead of simultaneous fit.
+  1. add reduction for `RooMultiVarGaussian` class 
 
 ## Backward incompatible:  
 

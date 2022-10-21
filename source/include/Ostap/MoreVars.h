@@ -4,6 +4,10 @@
 // ============================================================================
 // Include  files 
 // ============================================================================
+// ROOT
+// ============================================================================
+#include "TVectorDfwd.h"
+// ============================================================================
 // ROOT/RooFit 
 // ============================================================================
 #include "RooAbsReal.h"
@@ -12,19 +16,20 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include  "Ostap/Bernstein.h"
-#include  "Ostap/Bernstein1D.h"
-#include  "Ostap/BSpline.h"
+#include "Ostap/Bernstein.h"
+#include "Ostap/Bernstein1D.h"
+#include "Ostap/BSpline.h"
 // ============================================================================
 /// froward declarations 
 // ============================================================================
-class RooAddPdf     ; // ROOT,RooFit 
-class RooProdPdf    ; // ROOT,RooFit 
-class RooGaussian   ; // ROOT,RooFit 
-class RooFFTConvPdf ; // ROOT,RooFit 
-class RooEfficiency ; // ROOT,RooFit 
-class RooPolyVar    ; // ROOT,RooFit 
-class RooPolynomial ; // ROOT,RooFit 
+class RooAddPdf           ; // ROOT,RooFit 
+class RooProdPdf          ; // ROOT,RooFit 
+class RooGaussian         ; // ROOT,RooFit 
+class RooFFTConvPdf       ; // ROOT,RooFit 
+class RooEfficiency       ; // ROOT,RooFit 
+class RooPolyVar          ; // ROOT,RooFit 
+class RooPolynomial       ; // ROOT,RooFit 
+class RooMultiVarGaussian ; // ROOT,RooFit 
 // ============================================================================
 namespace Ostap 
 {
@@ -556,6 +561,18 @@ namespace Ostap
      */
     RooArgList coefficients 
     ( const RooPolynomial&  var    ) ;
+    // ========================================================================
+    /** get the observables from <code>RooMultiVarGaussian</code>
+     *  @see RooMultiVarGaussian
+     */
+    RooArgList observables 
+    ( const RooMultiVarGaussian& pdf ) ;
+    // ========================================================================
+    /** get vectro of mu-values from <code>RooMultiVarGaussian</code>
+     *  @see RooMultiVarGaussian
+     */
+    TVectorD mu_vec
+    ( const RooMultiVarGaussian& pdf ) ;
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit
   // ==========================================================================

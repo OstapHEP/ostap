@@ -14,6 +14,7 @@
 #include "RooEfficiency.h"
 #include "RooPolyVar.h"
 #include "RooPolynomial.h"
+#include "RooMultiVarGaussian.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -224,6 +225,25 @@ namespace
   public:
     // ========================================================================
     const RooArgList& coefficients () const { return _coefList ; }
+    // ========================================================================
+  } ;    
+  // ==========================================================================
+  class FakeMultiVarGaussian : public RooMultiVarGaussian
+  {
+  public: 
+    // ========================================================================
+    FakeMultiVarGaussian 
+    ( const RooMultiVarGaussian& var , const char* newname = 0 ) 
+      : RooMultiVarGaussian ( var , newname ) 
+    {}
+    // ========================================================================
+    virtual ~FakeMultiVarGaussian () {}
+    // ========================================================================
+  public:
+    // ========================================================================
+    const RooArgList& observables () const { return _x ; }
+    TVectorD          mu_vec      () const 
+    { syncMuVec() ; return _muVec ; }
     // ========================================================================
   } ;    
   // ==========================================================================
@@ -889,6 +909,29 @@ RooArgList Ostap::MoreRooFit::coefficients
   return fake->coefficients () ;  
 }
 // ============================================================================
+/*  get the observables from <code>RooMultiVarGaussian</code>
+ *  @see RooMultiVarGaussian
+ */
+// ============================================================================
+RooArgList Ostap::MoreRooFit::observables 
+( const RooMultiVarGaussian& pdf ) 
+{
+  std::unique_ptr<::FakeMultiVarGaussian> fake { new ::FakeMultiVarGaussian ( pdf ) } ;
+  return fake->observables () ;  
+}
+// ============================================================================
+/*  get vectro of mu-values from <code>RooMultiVarGaussian</code>
+ *  @see RooMultiVarGaussian
+ */
+// ============================================================================
+TVectorD Ostap::MoreRooFit::mu_vec
+( const RooMultiVarGaussian& pdf ) 
+{
+  std::unique_ptr<::FakeMultiVarGaussian> fake { new ::FakeMultiVarGaussian ( pdf ) } ;
+  return fake->mu_vec () ;  
+}
+// ========================================================================
+
 
 
 

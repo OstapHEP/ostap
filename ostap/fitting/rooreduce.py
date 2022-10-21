@@ -331,6 +331,33 @@ def _rgau_reduce_ ( pdf ) :
 ROOT.RooGaussian.__reduce__ = _rgau_reduce_ 
 
 
+if not hasattr ( ROOT.RooMultiVarGaussian , 'observables' ) :
+    def _rmvgau_observables_ ( pdf ) :
+        """Get observables"""
+        return Ostap.MoreRooFit.observables( pdf )
+    ROOT.RooMultiVarGaussian.observables = _rmvgau_observables_
+    _new_methods_ += [ ROOT.RooMultiVarGaussian.observables ]
+
+if not hasattr ( ROOT.RooMultiVarGaussian , 'mu_vec' ) :
+    def _rmvgau_mu_vec_ ( pdf ) :
+        """Get mu-vec"""
+        return Ostap.MoreRooFit.mu_vec ( pdf )
+    ROOT.RooMultiVarGaussian.mu_vec = _rmvgau_mu_vec_
+    _new_methods_ += [ ROOT.RooMultiVarGaussian.mu_vec ]
+
+
+# ==========================================================================--
+## reduce  RooMultiVarGaussian object 
+def _rmvgau_reduce_ ( pdf ) :
+    """Reduce `RooMultiVarGaussian` object"""
+    return root_store_factory , ( type ( pdf )            ,
+                                  pdf.name                ,
+                                  pdf.title               ,
+                                  pdf.observables      () ,
+                                  pdf.mu_vec           () , 
+                                  pdf.covarianceMatrix () )
+
+ROOT.RooMultiVarGaussian.__reduce__ = _rmvgau_reduce_ 
 
 
 # ==========================================================================--
@@ -2413,6 +2440,7 @@ _decorated_classes_ = (
     ROOT.RooArgSet                     , 
     ROOT.RooArgList                    , 
     ROOT.RooGaussian                   , 
+    ROOT.RooMultiVarGaussian           , 
     ROOT.RooAddPdf                     , 
     ROOT.RooProdPdf                    , 
     ROOT.RooFFTConvPdf                 , 

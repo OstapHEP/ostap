@@ -168,8 +168,7 @@ def test_simfit1 () :
     results.append ( r1 ) 
     results.append ( r2 ) 
     results.append ( r  ) 
-    
-    
+        
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================
