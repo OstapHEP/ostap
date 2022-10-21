@@ -22,7 +22,8 @@ from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
 from   ostap.fitting.simfit     import combined_data
-from   ostap.fitting.fithelpers import H1D_dset 
+from   ostap.fitting.fithelpers import H1D_dset
+import ostap.io.zipshelve       as     DBASE
 import ROOT, random
 # =============================================================================
 # logging 
@@ -253,9 +254,40 @@ def test_simfit5() :
         with wait ( 1 ) : fdm2 = model_sim.draw ( 'dm2'  , cdataset2 , nbins = 100 )
         with wait ( 1 ) : fdm3 = model_sim.draw ( 'dm3'  , cdataset2 , nbins = 100 )
         with wait ( 1 ) : fd   = model_sim.draw ( 'data' , cdataset2 , nbins = 100 )
-        
 
-    
+    ## tru to serialize everything
+    logger.info('Saving all objects into DBASE')
+    with timing ('Save everything to DBASE' , logger ), DBASE.tmpdb() as db : 
+
+        db ['reso1'  ] = reso1
+        db ['signal1'] = signal1
+        db ['signal2'] = signal2 
+        db ['signal3'] = signal3 
+        db ['model'  ] = model 
+        
+        db ['r1']    = r1
+        db ['f1']    = f1
+
+        db ['r2']    = r2
+        db ['f2']    = f2
+
+        db ['r3']    = r3
+        db ['f3']    = f3
+        
+        db ['r0']    = r0
+        db ['f0']    = f0
+        
+        db ['r_1']   = r_1
+        db ['f_1']   = f_1
+        
+        db ['r_2']   = r_2
+        db ['f_2']   = f_2
+        
+        db ['fdm1']  = fdm1
+        db ['fdm2']  = fdm2
+        db ['fdm3']  = fdm3
+        db ['fd']    = fd
+
 # =============================================================================
 if '__main__' == __name__ :
 

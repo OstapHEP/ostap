@@ -345,17 +345,38 @@ if not hasattr ( ROOT.RooMultiVarGaussian , 'mu_vec' ) :
     ROOT.RooMultiVarGaussian.mu_vec = _rmvgau_mu_vec_
     _new_methods_ += [ ROOT.RooMultiVarGaussian.mu_vec ]
 
+# ================================================================================
+## deserialize RooMultiVarGaussian object
+#  @see RooMultiVarGaussian
+def _rmvgau_factory_ ( klass , *args ) :
+    """Deserialize `ROOT.RooMultiVarGaussian` 
+    - see `ROOT.RooMultiVarGaussian`
+    """
 
+    if 5 != len ( args ) : raise pickle.UnpicklingError("RooMultiVarGaussian: ivalid record length!")
+
+    muvec  = args [3]
+    covm   = args [4]
+
+    N = len ( muvec )
+    if N * N != len ( covm ) : raise pickle.UnpicklingError("RooMultiVarGaussian: cannot reconstruct covmatrix")
+    
+    muvec = ROOT.TVectorD    ( N , muvec )
+    covm  = ROOT.TMatrixDSym ( N , covm  )
+    
+    newargs = args [:3]  + ( muvec, covm ) 
+    return root_store_factory ( klass , *newargs )  
+    
 # ==========================================================================--
 ## reduce  RooMultiVarGaussian object 
 def _rmvgau_reduce_ ( pdf ) :
     """Reduce `RooMultiVarGaussian` object"""
-    return root_store_factory , ( type ( pdf )            ,
-                                  pdf.name                ,
-                                  pdf.title               ,
-                                  pdf.observables      () ,
-                                  pdf.mu_vec           () , 
-                                  pdf.covarianceMatrix () )
+    return _rmvgau_factory_ , ( type ( pdf )                                  ,
+                                pdf.name                                      ,
+                                pdf.title                                     ,
+                                pdf.observables      ()                       ,
+                                array.array ( 'd' , pdf.mu_vec ()           ) , 
+                                array.array ( 'd' , pdf.covarianceMatrix () ) )
 
 ROOT.RooMultiVarGaussian.__reduce__ = _rmvgau_reduce_ 
 
@@ -594,8 +615,8 @@ def _rrfr_factory_ ( klass , *args ) :
     ## create
 
     newargs = args [ : 10 ] 
-    covargs = args [ 10 ] ## covariance related arguments 
-    history = args [ 11 ] ## the last argument, history 
+    covargs = args [   10 ] ## covariance related arguments 
+    history = args [   11 ] ## the last argument, history 
 
     import pickle
 
@@ -603,8 +624,9 @@ def _rrfr_factory_ ( klass , *args ) :
         
         gcc , corm , covm = covargs 
         D    = len ( gcc )
-        if D * D  != len ( corm ) or  D * D != len ( covm ) :
-            raise pickle.UnpicklingError("FitResult: cannot reconstruct matrices")
+        
+        if D * D != len ( corm ) : raise pickle.UnpicklingError("FitResult(1): cannot reconstruct cormatrix")
+        if D * D != len ( covm ) : raise pickle.UnpicklingError("FitResult(1): cannot reconstruct covmatrix")
 
         gcc      = doubles ( gcc ) 
         corm     = ROOT.TMatrixDSym ( D , corm )
@@ -619,12 +641,11 @@ def _rrfr_factory_ ( klass , *args ) :
         l2 = len ( covm )
         D  = int ( math.sqrt ( l2 ) ) 
         if D * D != l2 :
-            raise pickle.UnpicklingError("FitResult: cannot reconstruct matrix")
+            raise pickle.UnpicklingError("FitResult(2): cannot reconstruct covmatrix")
         covm = ROOT.TMatrixDSym ( D , covm )
 
         newargs += covm ,
-        
-    
+            
     tmpres = klass ( *newargs )
     
     for label , code in history : tmpres.add_to_history ( label , code )
@@ -647,13 +668,16 @@ def _rrfr_reduce_ ( res ) :
               nr.status     () , nr.covQual()         , nr.minNll()          , \
                nr.edm       () , nr.numInvalidNLL ()
 
-    gcc = nr.global_cc()    
-    if gcc :
-        covargs = ( array.array ( 'd' , gcc                     ) ,
-                    array.array ( 'd' , res.correlationMatrix() ) ,
-                    array.array ( 'd' , res.covarianceMatrix () ) )
-    else    :
-        covargs = array.array ( 'd' , res.covarianceMatrix () )  
+    gcc  = nr.global_cc()
+    N    = len ( gcc )
+    covm = res.covarianceMatrix  ()
+    corm = res.correlationMatrix ()
+    if gcc and 1 <= N and covm.IsValid() and corm.IsValid() and N == covm.GetNrows() and N == corm.GetNrows() : 
+        covargs = ( array.array ( 'd' , gcc  ) ,
+                    array.array ( 'd' , corm ) ,
+                    array.array ( 'd' , covm ) )
+    else :
+        covargs = array.array ( 'd' , covm )  
         
     history = tuple ( ( nr.statusLabelHistory(i) ,nr.statusCodeHistory(i) ) \
                       for i in range ( nr.numStatusHistory () ) )

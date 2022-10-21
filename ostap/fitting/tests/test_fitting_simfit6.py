@@ -119,7 +119,7 @@ def test_simfit6() :
     
     signal_cmp.fitTo ( dsw , silent = True , sumw2 = True )
     r1 , f1 = signal_cmp.fitTo ( dsw , silent = True , sumw2 = True , draw = True , nbins = 100 )
-    title   = 'Fit for backgound subtracted dataset'
+    title   = 'Fit for background subtracted dataset'
     logger.info ( '%s:\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
     
     ## make a first histogram  (weighted) 

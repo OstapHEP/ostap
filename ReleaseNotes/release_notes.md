@@ -6,13 +6,13 @@
   1. add example/test for using of the multivariate Gaussian constarines instead of simultaneous fit.
   1. add reduction for `RooMultiVarGaussian` class 
   1. fix `PDF.histo` methods
-
+  
 
 ## Backward incompatible:  
 
 ## Bug fixes:
   1. fix `tree_project` for the case of multiple projected variables into 1D histogram 
-
+  1. fix deserialization of `ROOT.RooFitResult` objects
 
 # v1.9.3.6
 
