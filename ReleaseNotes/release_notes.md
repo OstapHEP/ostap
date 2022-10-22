@@ -8,7 +8,6 @@
   1. add example/test for using of the multivariate Gaussian constarines instead of simultaneous fit.
   1. add reduction for `RooMultiVarGaussian` class 
   1. fix `PDF.histo` methods
-  
 
 ## Backward incompatible:  
 
