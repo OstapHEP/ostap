@@ -1,3 +1,9 @@
+## New features: 
+
+## Backward incompatible:  
+
+## Bug fixes:
+
 # v1.9.3.8
 
 ## New features: 
@@ -12,6 +18,7 @@
 ## Backward incompatible:  
 
 ## Bug fixes:
+
   1. fix `tree_project` for the case of multiple projected variables into 1D histogram 
   1. fix deserialization of `ROOT.RooFitResult` objects
 
