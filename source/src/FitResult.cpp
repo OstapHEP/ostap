@@ -61,6 +61,10 @@ Ostap::Utils::FitResults::FitResults
   setFinalParList     ( finalvars ) ;
   setCovarianceMatrix ( const_cast<TMatrixDSym&> ( v ) ) ;
   setStatusHistory    ( const_cast<History&> ( history ) ) ;
+  //
+  _GC = new TVectorD ( _CM->GetNcols() ) ;
+  fillLegacyCorrMatrix() ;
+  //
 }
 // ============================================================================
 // full constructor #2
