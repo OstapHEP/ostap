@@ -3421,8 +3421,6 @@ def _rplot_add_ ( plot1 , plot2 ) :
             errors = ROOT.RooAbsData.Poisson if ( ints1 and ints1 ) else ROOT.RooAbsData.SumW2 
             plot   = ROOT.RooHist ( obj1 , obj2 , 1.0 , 1.0 , errors )
             result.addPlotable ( plot , options1 , invisible1 )  
-
-            print ( 'hist is added!', invisible1 , invisible2  )
             
         elif isinstance ( obj1 , ROOT.RooCurve ) and isinstance ( obj2 , ROOT.RooCurve ) :
             
@@ -3433,8 +3431,6 @@ def _rplot_add_ ( plot1 , plot2 ) :
 
             result.addPlotable ( plot , options1 , invisible1 )
             
-            print ( 'curve is added!', invisible1)
-
         else :
             
             return NotImplemented
