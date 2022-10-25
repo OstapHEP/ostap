@@ -37,6 +37,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.core                import cpp, VE, grID
+from   ostap.math.base                import isint 
 from   ostap.core.meta_info           import root_info
 from   ostap.core.ostap_types         import num_types, integer_types, sized_types   
 from   builtins                       import range
@@ -44,7 +45,7 @@ from   ostap.plotting.draw_attributes import copy_graph_attributes
 from   ostap.utils.valerrors          import ( AsymErrors         ,
                                                ValWithErrors      ,
                                                ValWithMultiErrors ) 
-import ROOT, ctypes, array        
+import ROOT, ctypes, array 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -3367,6 +3368,88 @@ ROOT.TSpline. __call__  = _spl_call_
 
 
 # =============================================================================
+## Add two <code>RooPlot</code> objects
+#  @attention: they musyhave the same structure!
+#  @code
+#  plot1 = ...
+#  plot2 = ...
+#  plot  = plot1 + plot2 
+#  @endcode
+def _rplot_add_ ( plot1 , plot2 ) :
+    """Add two <code>RooPlot</code> objects
+    - attention: they musyhave the same structure!
+    
+    >>> plot1 = ...
+    >>> plot2 = ...
+    >>>> plot  = plot1 + plot2 
+    """
+
+    if not isinstance ( plot1 , ROOT.RooPlot ) : return NotImplemented
+    if not isinstance ( plot2 , ROOT.RooPlot ) : return NotImplemented
+    
+    if len ( plot1 ) !=  len ( plot2 ) : return NotImplemented
+
+    result = ROOT.RooPlot (
+        plot1.GetXaxis().GetXmin()                ,
+        plot1.GetXaxis().GetXmax()                ,
+        plot1.GetMinimum () + plot2.GetMinimum () , 
+        plot1.GetMaximum () + plot2.GetMaximum () ,        
+        )
+
+    def all_ints ( item ) :
+        
+        for i,X,Y in item.items() :
+            y = Y.value 
+            if y < 0           : return False 
+            if not isint ( y ) : return False
+            
+        return True
+        
+
+    
+    for item1,item2 in zip ( plot1.items() , plot2.items() ) : 
+
+        obj1 , options1 , invisible1 = item1
+        obj2 , options2 , invisible2 = item2
+
+    
+        if isinstance ( obj1 , ROOT.RooHist ) and isinstance ( obj2 , ROOT.RooHist ) :
+            
+            if not obj1.hasIdenticalBinning ( obj2 ) : return NotImplemented
+            ints1  = all_ints ( obj1 )
+            ints2  = all_ints ( obj2 )
+            errors = ROOT.RooAbsData.Poisson if ( ints1 and ints1 ) else ROOT.RooAbsData.SumW2 
+            plot   = ROOT.RooHist ( obj1 , obj2 , 1.0 , 1.0 , errors )
+            result.addPlotable ( plot , options1 , invisible1 )  
+
+            print ( 'hist is added!', invisible1 , invisible2  )
+            
+        elif isinstance ( obj1 , ROOT.RooCurve ) and isinstance ( obj2 , ROOT.RooCurve ) :
+            
+            plot = ROOT.RooCurve ( obj2 )
+            
+            for i, X, Y in plot.items() :
+                plot[i] = X , Y + obj1 ( X ) 
+
+            result.addPlotable ( plot , options1 , invisible1 )
+            
+            print ( 'curve is added!', invisible1)
+
+        else :
+            
+            return NotImplemented
+
+
+    return result
+
+        
+ROOT.RooPlot.__add__ = _rplot_add_
+
+# =============================================================================
+
+
+
+# =============================================================================
 _decorated_classes_ += (
     ROOT.TH1F              ,
     ROOT.TH1D              ,
@@ -3377,7 +3460,8 @@ _decorated_classes_ += (
     ROOT.TBox              ,
     ROOT.TLine             , 
     ROOT.TText             ,
-    ROOT.TSpline 
+    ROOT.TSpline           ,
+    ROOT.RooPlot           ,    
     )
 
 
@@ -3608,6 +3692,8 @@ _new_methods_     += (
     ROOT.TLine.T               ,
     ROOT.TText.transpose       ,
     ROOT.TText.T               ,
+    #
+    ROOT.RooPlot.__add__           
     )
 
 # =============================================================================
