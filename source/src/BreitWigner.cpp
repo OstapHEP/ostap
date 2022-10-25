@@ -1543,7 +1543,9 @@ Ostap::Math::ChannelFlatte::D
 ( const double s  , 
   const double m0 ) const 
 {
-  return m0 * g2 () * ps2().q1_s ( s )  ;
+  // return m0 * g2 () * ps2().q1_s ( s )  ;
+  const double sqs = std::sqrt ( s ) ;
+  return m0 * g2 () * ( 2 / sqs ) * ps2().q1_s ( s ) ;
 }
 // ============================================================================
 // get unique tag/label 
@@ -1565,6 +1567,79 @@ std::string Ostap::Math::ChannelFlatte::describe() const
 // ============================================================================
 
 
+// ============================================================================
+// Channel-Flatte
+// ============================================================================
+/** constructor from all parameters 
+ *  @param g2    thew squared coupling constantt  
+ *  @param m1    the mass of the 1st daughter
+ *  @param m2    the mass of the 2nd daughter
+ */
+// ============================================================================
+Ostap::Math::ChannelFlatteBugg::ChannelFlatteBugg
+( const double g        , 
+  const double mcharged ,   // GeV/c2  
+  const double mneutral ,   // GeV/c2 
+  const double mK       ,   // GeV/c2 
+  const double alpha    ,   // GeV^{-2} form-factor 
+  const double fc       ,   // isospin factor  
+  const double fn       )   // isospin factor  
+  : ChannelFlatte ( g , mcharged , mcharged ) 
+  , m_alpha    ( std::abs ( alpha    ) )
+  , m_fc       ( std::abs ( fc ) ) 
+  , m_fn       ( std::abs ( fn ) )
+  , m_ps2n     ( mneutral , mneutral ) 
+  , m_ps2k     ( mK       , mK       )
+{}
+// ============================================================================
+// clone it!
+// ============================================================================
+Ostap::Math::ChannelFlatteBugg*
+Ostap::Math::ChannelFlatteBugg::clone() const 
+{ return new Ostap::Math::ChannelFlatteBugg ( *this ) ; }
+// ============================================================================
+// the second main method: term to the denominator 
+// ============================================================================
+std::complex<double> 
+Ostap::Math::ChannelFlatteBugg::D   
+( const double s  , 
+  const double m0 ) const 
+{
+  const double sqs = std::sqrt ( std::abs ( s ) ) ;
+  return 
+    //                    charged                    neutral  
+    m0 * g2 () * 2.0 * ( m_fc * ps2().q1_s  ( s ) + m_fn * m_ps2n.q1_s ( s ) ) / sqs
+    * std::exp ( -2 * m_alpha * m_ps2k.q_s ( s ) ) ;  
+}
+// ============================================================================
+// get unique tag/label 
+// ============================================================================
+std::size_t Ostap::Math::ChannelFlatteBugg::tag() const
+{ 
+  static const std::string s_name = "ChannelFlatteBugg" ;
+  return std::hash_combine ( s_name ,
+                             Ostap::Math::ChannelFlatte::tag () , 
+                             m_ps2n.tag() ,
+                             m_ps2k.tag() ,
+                             m_alpha      , 
+                             m_fc         , 
+                             m_fn         ) ;
+}
+// ============================================================================
+// describe the channel 
+// ============================================================================
+std::string Ostap::Math::ChannelFlatteBugg::describe() const 
+{
+  return 
+    "ChannelFlatteBugg(" + std::to_string ( gamma0 () ) + 
+    ","          + std::to_string ( m1        () ) + 
+    ","          + std::to_string ( mneutral  () ) + 
+    ","          + std::to_string ( m_ps2k.m1 () ) + 
+    ","          + std::to_string ( m_alpha      ) + 
+    ","          + std::to_string ( m_fc         ) + 
+    ","          + std::to_string ( m_fn         ) + ")" ;
+}
+// ============================================================================
 
 
 // ============================================================================
@@ -1624,6 +1699,75 @@ std::size_t Ostap::Math::Flatte::tag () const
   static const std::string s_name = "Flatte" ;
   return std::hash_combine ( s_name , Ostap::Math::BW::tag () ) ; 
 }
+
+
+
+// ============================================================================
+/*  constructor from all parameters
+ *  \f$ f \rightarrow A_1 + A_2\f$
+ *  @param m0      the mass
+ *  @param g1      parameter \f$ g_1    \f$
+ *  @param g2og1   parameter \f$ g2/g_1 \f$
+ *  @param alpha   parameter alpha (formfactor) 
+ *  @param mpiplus mass of the charged pion 
+ *  @param mpizero mass of the neutral pion 
+ *  @param mKplus  mass of the charged kaon 
+ *  @param mKzero  mass of the neutral kaon 
+ *  @aram  g0      constant with for "other" decays
+ */
+// ============================================================================
+Ostap::Math::FlatteBugg::FlatteBugg
+( const double m0      , // GeV/c2
+  const double g1      , // GeV/c2 
+  const double g2og1   , // dimensionless  
+  const double alpha   , // GeV^-2 
+  const double mpiplus , // pi+ mass in GeV 
+  const double mpizero , // pi0 mass in GeV 
+  const double mKplus  , // K+ mass in GeV 
+  const double mKzero  , // K0 mass in GeV 
+  const double g0      ) // the constant width for "other" decays
+  : BW ( m0 , ChannelFlatteBugg ( g1 , mpiplus , mpizero , mKplus , 0.0 , 2.0/3.0 , 1.0/3.0 ) ) 
+  , m_alpha   ( std::abs ( alpha ) )
+  , m_mpiplus ( std::abs ( mpiplus ) ) 
+  , m_mpizero ( std::abs ( mpizero ) ) 
+  , m_mKplus  ( std::abs ( mKplus  ) ) 
+  , m_mKzero  ( std::abs ( mKzero  ) )
+{
+  const double g2 = std::abs ( g2og1 ) * std::abs ( g1 ) ;
+  //
+  add ( ChannelFlatteBugg ( g2 , mKplus  , mKzero , mKplus , alpha , 0.5 , 0.5 ) ) ;
+  add ( ChannelCW         ( g0 , mpiplus , mpiplus ) ) ;
+  //
+  //
+  Ostap::Assert ( 3 ==   nChannels()                , 
+                  "Invalid number of channels!"     , 
+                  "Ostap:Math::Flatte::FlatteBugg"  ) ;
+  //
+  m_channels[0] -> setGamma0 ( g1 ) ;
+  m_channels[1] -> setGamma0 ( g2 ) ;
+  m_channels[2] -> setGamma0 ( g0 ) ;
+  //
+}
+// ============================================================================
+// copy contructor
+// ============================================================================
+Ostap::Math::FlatteBugg::FlatteBugg 
+( const Ostap::Math::FlatteBugg& fl ) 
+  : BW ( fl ) 
+{}
+// ============================================================================
+Ostap::Math::FlatteBugg*
+Ostap::Math::FlatteBugg::clone() const 
+{ return new Ostap::Math::FlatteBugg ( *this ) ; }
+// ============================================================================
+// unique tag
+// ============================================================================
+std::size_t Ostap::Math::FlatteBugg::tag () const
+{ 
+  static const std::string s_name = "FlatteBugg" ;
+  return std::hash_combine ( s_name , Ostap::Math::BW::tag () ) ; 
+}
+
 
 
 

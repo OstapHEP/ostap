@@ -72,6 +72,21 @@ Ostap.Math.ChannelCW     . __reduce__ = _omccw_reduce_
 Ostap.Math.ChannelQ      . __reduce__ = _omccw_reduce_
 Ostap.Math.ChannelFlatte . __reduce__ = _omccw_reduce_
 
+# =============================================================================
+## Reduce Ostap::Math::ChannelFlatteBugg
+#  @see Ostap::Math::ChannelFlatteBugg
+def _omcfb_reduce_ ( ch ) :
+    """Reduce `Ostap.Math.ChannelFlatteBugg`
+    - see `Ostap.Math.ChannelFlatteBugg`
+    """
+    return root_factory , ( type ( ch )    ,
+                            ch.gamma0   () ,
+                            ch.mcharged () ,
+                            ch.mneutral () ,                            
+                            ch.alpha    () ,
+                            ch.fc       () , 
+                            ch.fn       () )
+Ostap.Math.ChannelFlatteBugg . __reduce__ = _omcfb_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::Channel
@@ -202,6 +217,27 @@ def _omflt_reduce_ ( bw ) :
                             bw.mB1 ()   ,  bw.mB2()  , bw.g0 () ) 
                             
 Ostap.Math.Flatte. __reduce__ = _omflt_reduce_
+
+
+# =============================================================================
+## Reduce Ostap::Math::FlatteBugg
+#  @see Ostap::Math::FlatteBugg
+def _omfltb_reduce_ ( bw ) :
+    """Reduce `Ostap.Math.FlatteBugg`
+    - see `Ostap.Math.FlatteBugg`
+    """
+    return root_factory , ( type ( bw ) ,
+                            bw.m0      () ,
+                            bw.g1      () ,
+                            bw.g2og1   () ,
+                            bw.alpha   () ,
+                            bw.mpiplus () ,
+                            bw.mpizero () ,
+                            bw.mKplus  () ,
+                            bw.mKzero  () ,
+                            bw.g0      () )
+
+Ostap.Math.FlatteBugg. __reduce__ = _omfltb_reduce_
 
 
 # =============================================================================

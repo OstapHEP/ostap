@@ -587,6 +587,75 @@ Ostap::Models::Flatte::flatte    () const
 }
 // ============================================================================
 
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::FlatteBugg::FlatteBugg 
+( const char*                name   , 
+  const char*                title  ,
+  RooAbsReal&                x      ,
+  RooAbsReal&                m0     ,
+  RooAbsReal&                g1     ,
+  RooAbsReal&                g2     ,
+  RooAbsReal&                g0     ,
+  const Ostap::Math::FlatteBugg& flatte ) 
+  : BreitWigner ( name ,  title , x , m0 , g1 , flatte ) 
+{
+  m_widths.add ( g2 ) ;
+  m_widths.add ( g0 ) ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::FlatteBugg::FlatteBugg 
+( const Ostap::Models::FlatteBugg& right , 
+  const char*                     name  ) 
+  : BreitWigner ( right , name ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::FlatteBugg::~FlatteBugg (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::FlatteBugg*
+Ostap::Models::FlatteBugg::clone( const char* name ) const 
+{ return new Ostap::Models::FlatteBugg(*this,name) ; }
+// ============================================================================
+void Ostap::Models::FlatteBugg::setPars () const 
+{
+  //
+  Ostap::Math::FlatteBugg* flatte = (Ostap::Math::FlatteBugg*) m_bw.get() ;
+  //
+  flatte -> setM0   ( m_mass      ) ;
+  flatte -> setG1   ( ::get_par ( 0 , m_widths ) ) ;
+  flatte -> setG2   ( ::get_par ( 1 , m_widths ) ) ;
+  flatte -> setGam0 ( ::get_par ( 2 , m_widths ) ) ;
+}
+// ============================================================================
+// access to underlying function
+// ============================================================================
+const Ostap::Math::FlatteBugg& 
+Ostap::Models::FlatteBugg::flatte_bugg    () const 
+{
+  setPars () ;
+  const Ostap::Math::FlatteBugg* flatte = 
+    (const Ostap::Math::FlatteBugg*) m_bw.get() ;
+  return *flatte ;
+}
+// ============================================================================
+
+
+
+
+
+
+
+
+
+
+
 
 // ============================================================================
 // constructor from all parameters
@@ -8682,6 +8751,7 @@ ClassImp(Ostap::Models::BWI                )
 ClassImp(Ostap::Models::BWPS               ) 
 ClassImp(Ostap::Models::BW3L               ) 
 ClassImp(Ostap::Models::Flatte             ) 
+ClassImp(Ostap::Models::FlatteBugg         ) 
 ClassImp(Ostap::Models::LASS               ) 
 ClassImp(Ostap::Models::Voigt              ) 
 ClassImp(Ostap::Models::PseudoVoigt        ) 

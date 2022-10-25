@@ -1227,9 +1227,10 @@ namespace Ostap
        *  @param m1    the mass of the 1st daughter
        *  @param m2    the mass of the 2nd daughter
        */
-      ChannelFlatte ( const double g  = 0.1   , 
-                      const double m1 = 0.139 , 
-                      const double m2 = 0.139 );
+      ChannelFlatte 
+      ( const double g  = 0.1     , 
+        const double m1 = 0.13957 ,   // GeV/c2 
+        const double m2 = 0.13957 );  // GeV/c2
       /// clone method 
       ChannelFlatte* clone() const override ;
       // ======================================================================
@@ -1258,8 +1259,96 @@ namespace Ostap
       /// describe the channel 
       std::string describe () const override ;
       // ======================================================================
-    } ;    
-
+    } ;
+    // ========================================================================
+    /** @class  ChannelFlatteBugg
+     *  Bugg's modification of Flatte channel 
+     *  @see D.V. Bugg, "Re-analysis of data on a(0)(1450) and a(0)(980)"
+     *           Phys.Rev.D 78 (2008) 074023
+     *  @see https://doi.org/10.1103/PhysRevD.78.074023
+     *  @see https://arxiv.org/abs/0808.2706
+     *
+     *  Describe Flatte-like channel  for \f$ f_0(980)\f$ 
+     *  @see Ostap::Math::ChannelFlatte 
+     *  @see Ostap::Math::ChannelBW 
+     *  \f[ \begin{array}{ncl}
+     *  N^2(s,m_0)& = & m_0 * g * 16\pi ) \\ 
+     *  D  (s,m_0)& = & m_0 * g \varrho  F^2(-alpha  k_{KK}^2)
+     *  \end{array} \f]
+     *  where 
+     *  \f$ \varrho(s) = f_c \frac{2q_c}{s} + f_n \frac{2q_n}{s} \f$ 
+     */
+    class ChannelFlatteBugg : public ChannelFlatte 
+    {
+    public :
+      // =====================================================================
+      /** constructor from all parameters 
+       *  @param g        the coupling constant  (dimensionless)
+       *  @param mcharged the mass of the (charged) daughters 
+       *  @param mneutral the mass of the neutral daughters 
+       *  @param mK       the mass of the charged kaon 
+       *  @param alpha    formfactor 
+       *  @param fc       the first  isospin factor  
+       *  @param fn       the second isospin factor  
+       */
+      ChannelFlatteBugg 
+      ( const double g        = 0.1     , 
+        const double mcharged = 0.13957 ,   // GeV/c2  
+        const double mneutral = 0.13498 ,   // GeV/c2 
+        const double mK       = 0.49368 ,   // GeV/c2 
+        const double alpha    = 2.0     ,   // GeV^{-2} form-factor 
+        const double fc       = 2.0/3.0 ,   // isospin factor  
+        const double fn       = 1.0/3.0 ) ; // isospin factor  
+      /// clone method 
+      ChannelFlatteBugg* clone() const override ;
+      // ======================================================================
+    public: // define/override base-class abstract methods 
+      // ======================================================================
+      /** the second main method: term to the denominator 
+       *  \f[ D(s,m_0) =  m_0 g \frac{2q}{\sqrt{s}} \f], 
+       *  @attention it is purely imaginary below threshold!
+       */
+      std::complex<double> D   
+      ( const double s  , 
+        const double m0 ) const override ;
+      // =======================================================================
+    public:
+      // =====================================================================
+      /// mass of charged mode 
+      double mcharged () const { return m1()        ; }
+      /// mass of neutral mode 
+      double mneutral () const { return m_ps2n.m1() ; }
+      /// mass of kaon 
+      double mK       () const { return m_ps2k.m1() ; }
+      /// formfactor 
+      double alpha    () const { return m_alpha     ; }
+      /// isospin factor for charged mode 
+      double fc       () const { return m_fc        ; }
+      /// isospin factor for neuyral mode 
+      double fn       () const { return m_fn        ; }
+      // =======================================================================
+    public:
+      // ======================================================================
+      // unique tag
+      std::size_t tag      () const override ; // unique tag
+      // ======================================================================
+      /// describe the channel 
+      std::string describe () const override ;
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      /// formfactor 
+      double                    m_alpha ; // formfactor 
+      /// isospin factor for charged mode 
+      double                    m_fc    ; // isospin factor for charged mode 
+      /// isospin factor for neutral mode 
+      double                    m_fn    ; // isospin factor for neutral mode 
+      /// two body phase space for neutral mode
+      Ostap::Math::PhaseSpace2  m_ps2n  ; // two body phase space 
+      /// two body phase space for kaon mode 
+      Ostap::Math::PhaseSpace2  m_ps2k  ; // two body phase space 
+      // ======================================================================
+    } ;
 
     // ========================================================================
     /** @class BW
@@ -1700,13 +1789,13 @@ namespace Ostap
        *  @param mB2   mass of B2
        */
       Flatte 
-      ( const double m0    = 980   ,
-        const double m0g1  = 165   ,
-        const double g2og1 = 4.21  ,   // dimensionless 
-        const double mA1   = 139.6 ,
-        const double mA2   = 139.6 ,
-        const double mB1   = 493.7 ,
-        const double mB2   = 493.7 , 
+      ( const double m0    = 980    ,
+        const double m0g1  = 165    ,
+        const double g2og1 = 4.21   ,   // dimensionless 
+        const double mA1   = 139.57 ,
+        const double mA2   = 139.57 ,
+        const double mB1   = 493.68 ,
+        const double mB2   = 493.68 , 
         const double g0    = 0     ) ; // the constant width for "other" decays
       /// copy constructor 
       Flatte ( const Flatte&  right ) ;
@@ -1759,6 +1848,96 @@ namespace Ostap
       double m_B2 {} ;
       // ======================================================================
     } ;
+    // ========================================================================  
+    /** @class FlatteBugg 
+     *  Bugg's modification of Flatte channel 
+     *  @see D.V. Bugg, "Re-analysis of data on a(0)(1450) and a(0)(980)"
+     *           Phys.Rev.D 78 (2008) 074023
+     *  @see https://doi.org/10.1103/PhysRevD.78.074023
+     *  @see https://arxiv.org/abs/0808.2706
+     *  Describe Flatte-like channel  for \f$ f_0(980)\f$ 
+     *  @see Ostap::Math::ChannelFlatteBugg 
+     */
+    class  FlatteBugg : public BW 
+    {
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  \f$ f \rightarrow A_1 + A_2\f$
+       *  @param m0      the mass
+       *  @param g1      parameter \f$ g_1    \f$
+       *  @param g2og1   parameter \f$ g2/g_1 \f$
+       *  @param alpha   parameter alpha (formfactor) 
+       *  @param mpiplus mass of the charged pion 
+       *  @param mpizero mass of the neutral pion 
+       *  @param mKplus  mass of the charged kaon 
+       *  @param mKzero  mass of the neutral kaon 
+       *  @aram  g0      constant with for "other" decays
+       */
+      FlatteBugg
+      ( const double m0       = 0.980   , // GeV/c2
+        const double g1       = 0.165   , // GeV/c2 
+        const double g2og1    = 4.21    , // dimensionless  
+        const double alpha    = 2.0     , // GeV^-2 
+        const double mpiplus  = 0.13957 , // pi+ mass in GeV 
+        const double mpizero  = 0.13498 , // pi0 mass in GeV 
+        const double mKplus   = 0.49368 , // K+ mass in GeV 
+        const double mKzero   = 0.49761 , // K0 mass in GeV 
+        const double g0       = 0     ) ; // the constant width for "other" decays
+      /// copy constructor 
+      FlatteBugg ( const FlatteBugg&  right ) ;
+      /// move constructor 
+      FlatteBugg (       FlatteBugg&& right ) = default ;
+      // ======================================================================
+      /// clone it!
+      FlatteBugg* clone() const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// unique tag
+      std::size_t tag() const override ; // unique tag
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// coupling constant for the main channel 
+      double g1    () const { return m_channels [ 0 ] -> gamma0 () ; }
+      /// coupling coinstant for the coupled channel 
+      double g2    () const { return m_channels [ 1 ] -> gamma0 () ; }
+      /// additional constant width for "extra-channels"
+      double gam0  () const { return m_channels [ 2 ] -> gamma0 () ; }
+      double g0    () const { return gam0 () ; }
+      // ======================================================================
+    public :  /// derived quantities 
+      // ======================================================================
+      /// m  * g1 
+      double m0g1  () const { return m0 () * g1 () ; }
+      /// g2 / g1 
+      double g2og1 () const { return g2 () / g1 () ; }
+      // ======================================================================
+    public :  /// other quantities 
+      // ======================================================================
+      double alpha   () const { return m_alpha    ; }
+      double mpiplus () const { return m_mpiplus  ; }
+      double mpizero () const { return m_mpizero  ; }
+      double mKplus  () const { return m_mKplus   ; }
+      double mKzero  () const { return m_mKzero   ; }      
+      // ======================================================================
+    public :  /// setters 
+      // ======================================================================
+      bool setG1   ( const double value ) { return m_channels[0] -> setGamma0 ( value ) ; }
+      bool setG2   ( const double value ) { return m_channels[1] -> setGamma0 ( value ) ; }
+      bool setGam0 ( const double value ) { return m_channels[2] -> setGamma0 ( value ) ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_alpha   {} ;
+      double m_mpiplus {} ;
+      double m_mpizero {} ;
+      double m_mKplus  {} ;
+      double m_mKzero  {} ;
+      // ======================================================================
+    } ;
+
     // ========================================================================  
     /** @namespace Ostap::Math::Jackson
      *   - Jackson's form-factors 

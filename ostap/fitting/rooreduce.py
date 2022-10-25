@@ -1099,6 +1099,22 @@ def _rflatte_reduce_ ( pdf ):
 Ostap.Models.Flatte.__reduce__ = _rflatte_reduce_ 
 
 # =============================================================================
+## reduce FlatteBugg
+def _rflattebugg_reduce_ ( pdf ):
+    """Reduce FlatteBugg"""
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.x      ()    , 
+                                  pdf.mass   ()    ,
+                                  pdf.widths ()[0] ,
+                                  pdf.widths ()[1] ,
+                                  pdf.widths ()[2] ,
+                                  pdf.flatte_bugg () ) 
+
+Ostap.Models.FlatteBugg.__reduce__ = _rflattebugg_reduce_ 
+
+# =============================================================================
 ## reduce LASS
 def _rlass_reduce_ ( pdf ):
     """Reduce LASS"""

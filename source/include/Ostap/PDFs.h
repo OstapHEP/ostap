@@ -411,6 +411,60 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class FlatteBugg
+     * Bugg's modification of Flatte channel 
+     * @see D.V. Bugg, "Re-analysis of data on a(0)(1450) and a(0)(980)"
+     *           Phys.Rev.D 78 (2008) 074023
+     *  @see https://doi.org/10.1103/PhysRevD.78.074023
+     *  @see https://arxiv.org/abs/0808.2706
+     *  Well suitable for \f$f_0(980)\rightarrow \pi^+ \pi^-\f$
+     *  \f$\pi\pi\f$-channel
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2011-11-30
+     */
+    class  FlatteBugg : public BreitWigner 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::FlatteBugg, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      FlatteBugg 
+      ( const char*                    name   ,
+        const char*                    title  ,
+        RooAbsReal&                    x      ,
+        RooAbsReal&                    m0     ,
+        RooAbsReal&                    g1     ,
+        RooAbsReal&                    g2     ,
+        RooAbsReal&                    g0     ,
+        const Ostap::Math::FlatteBugg& flatte ) ;
+      /// "copy" constructor
+      FlatteBugg ( const FlatteBugg& , const char* name = 0 ) ;
+      /// virtual destructor
+      virtual ~FlatteBugg () ;
+      /// clone
+      FlatteBugg* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      FlatteBugg () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::FlatteBugg& flatte_bugg    () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const override ; // set all parameters
+      // ======================================================================
+    } ;
+
+    // ========================================================================
     /** @class LASS 
      */
     class LASS : public BreitWigner 

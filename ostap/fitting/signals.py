@@ -125,6 +125,7 @@ __all__ = (
     'BreitWigner_pdf'        , ## (relativistic) 2-body Breit-Wigner
     'BWI_pdf'                , ## (relativistic) Breit-Wigner with interference 
     'Flatte_pdf'             , ## Flatte-function  (pipi/KK)
+    'FlatteBugg_pdf'         , ## Flatte-function  (pipi)
     'LASS_pdf'               , ## kappa-pole
     'Bugg_pdf'               , ## sigma-pole
     ##
@@ -4822,7 +4823,7 @@ class Flatte_pdf(PEAKMEAN) :
         self.__gamma0 = self.make_var  ( gamma0                  ,
                                          'gamma0_%s'      % name ,
                                          '#Gamma_{0}(%s)' % name ,
-                                         None   , 0 , gamma0 )
+                                         True    , 0 , 10  )
         if  1 == self.case : 
             
             self.__m0g1 = self.make_var  ( m0g1                     ,
@@ -4843,11 +4844,11 @@ class Flatte_pdf(PEAKMEAN) :
             self.__g1 =  self.make_var  ( g1                 ,
                                           'g1_%s'     % name ,
                                           'g_{1}(%s)' % name ,
-                                          g1                 , None  )
+                                          None )
             self.__g2 =  self.make_var  ( g2                 ,
                                           'g2_%s'     % name ,
                                           'g_{2}(%s)' % name ,
-                                          g2                 , None )
+                                          None )
             
             self.__m0g1  = self.vars_multiply ( self.m0 , self.g1 , name = 'm0g1_%s'  % name , title = "m_0g_1(%s)"  % name )
             self.__g2og1 = self.vars_divide   ( self.g2 , self.g1 , name = 'g2og1_%s' % name , title = "g_2/g_1(%s)" % name )
@@ -5083,6 +5084,167 @@ class FlattePS_pdf(Flatte_pdf,Phases) :
         return self.__g_list
 
 models.append ( FlattePS_pdf )
+
+
+
+# =============================================================================
+## @class FlatteBugg_pdf
+#  Bugg's modification of Flatte channel 
+#  @see D.V. Bugg, "Re-analysis of data on a(0)(1450) and a(0)(980)"
+#           Phys.Rev.D 78 (2008) 074023
+#  @see https://doi.org/10.1103/PhysRevD.78.074023
+#  @see https://arxiv.org/abs/0808.2706
+#  Well suitable for \f$f_0(980)\rightarrow \pi^+ \pi^-\f$
+#  @see Ostap::Models::FlatteBugg
+#  @see Ostap::Math::FlatteBugg
+#  @see Ostap::Math::Flatte
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-01-18
+class FlatteBugg_pdf(PEAKMEAN) :
+    """Bugg's modification of Flatte channel 
+    - see D.V. Bugg, "Re-analysis of data on a(0)(1450) and a(0)(980)"
+    Phys.Rev.D 78 (2008) 074023
+    - see https://doi.org/10.1103/PhysRevD.78.074023
+    - see https://arxiv.org/abs/0808.2706
+    
+    Typical case:    f0(980) -> pi+ pi- & K+ K- shapes 
+    """            
+    def __init__ ( self              ,
+                   name              ,
+                   flatte            ,    ## Ostap::Math::FlatteBugg
+                   xvar              ,
+                   m0       = None   ,    ## the pole 
+                   g1       = None   ,    ## g1 
+                   g2og1    = None   ,    ## g2/g1 
+                   gamma0   = None   ) :  ## gamma0 
+
+        assert isinstance ( flatte , Ostap.Math.FlatteBugg ), \
+               'Invalid type for flatte %s' %  type ( flatte )
+
+        ## initialize the base
+        with CheckMean ( False ) :
+            # for Flatte-function m0 can be outside the interesting interval 
+            PEAKMEAN.__init__  ( self , name , xvar ,
+                                 mean       = m0  ,
+                                 mean_name  = 'm0_%s'      % name ,
+                                 mean_title = '#m_{0}(%s)' % name )
+            
+        self.__flatte = flatte
+            
+        self.__gamma0 = self.make_var  ( gamma0                  ,
+                                         'gamma0_%s'      % name ,
+                                         '#Gamma_{0}(%s)' % name ,
+                                         True  )
+        
+        self.__g1     = self.make_var  ( g1                     ,
+                                         'g1_%s'          % name ,
+                                         '#g_{1}(%s)'     % name ,
+                                         None  )
+        self.__g2og1  = self.make_var  ( g2og1 ,
+                                       'g2og1_%s'          % name ,
+                                         '#g_{2}/#g_{1}(%s)' % name ,
+                                         None , 0.001 , 200  ) 
+        self.__g2     = self.vars_multiply ( self.g2og1 , self.g1 , name = 'g2_%s' % name , title = "g_2(%s)" % name )
+        
+
+        ## create PDF 
+        self.pdf = Ostap.Models.FlatteBugg (
+            self.roo_name ( 'fb_' ) ,
+            "FlatteBugg %s" % self.name  ,
+            self.xvar    ,
+            self.m0      ,
+            self.g1      ,
+            self.g2      ,
+            self.gamma0  ,
+            self.flatte  )
+
+        ## save the configuration
+        self.config = {
+            'name'        : self.name    ,
+            'flatte'      : self.flatte  ,
+            'xvar'        : self.xvar    ,
+            'm0'          : self.m0      ,
+            'g1'          : self.g1      ,
+            'g2og1'       : self.g2og1   , 
+            'gamma0'      : self.gamma0  ,
+            }
+        
+    @property
+    def case  (self ) :
+        """'case' : How the input argument are  specified: 1: (m0g1,g2og1) vs 2: (g1,g2) """
+        return self.__my_case
+    
+    @property
+    def m0 ( self ) :
+        """'m0'-parameter for Flatte-function (same as 'mean')"""
+        return self.mean 
+    @m0.setter
+    def m0  ( self, value ) :
+        self.set_value ( self.__mean , value ) 
+
+    @property
+    def g1 ( self ) :
+        """'g1'-parameter for Flatte-function"""
+        return self.__g1
+    @g1.setter
+    def g1 ( self, value ) :
+        self.set_value ( self.__g1, value ) 
+
+    @property
+    def g2 ( self ) :
+        """'g2'-parameter for Flatte-function"""
+        return self.__g2
+
+    @property
+    def g2og1 ( self ) :
+        """'g2/g1'-parameter for Flatte-function"""
+        return self.__g2og1
+    @g2og1.setter
+    def g2og1 ( self, value ) :
+        self.set_value ( self.__g2og1, value ) 
+
+    @property
+    def gamma0 ( self ) :
+        "'gamma0'-parameter for Flatte-function"
+        return self.__gamma0
+    @gamma0.setter
+    def gamma0 ( self , value ) :
+        self.set_value ( self.__gamma0, value ) 
+
+    @property
+    def flatte ( self ) :
+        """The FlatteBugg function itself"""
+        return self.__flatte
+
+    # =========================================================================
+    ## prepare Argand plot as <code>TGraph</code>
+    #  @code
+    #  bw = ...
+    #  argand = bw.argand ( npx = 1000 )
+    #  argand.draw ( 'al')  
+    #  @endcode
+    #  @see  TGraph 
+    def argand ( self , x_min =  None , x_max = None , npx = 1000 ) :
+        """ prepare Argand plot as `TGraph`
+        >>> bw = ...
+        >>> argand = bw.argand ( npx = 1000 )
+        >>> argand.draw ( 'al')  
+        """
+        bw    = self.pdf.function()
+        xmnmx = self.xminmax() 
+        if x_min is None and xmnmx : x_min = xmnmx [ 0 ] 
+        if x_max is None and xmnmx : x_max = xmnmx [ 1 ] 
+        ## make Argand plot 
+        return bw.argand ( xmin = x_min , xmax = x_max , npx = npx ) 
+
+
+models.append ( FlatteBugg_pdf )                          
+
+
+
+
+
+
 
 # =============================================================================
 ## @class LASS_pdf

@@ -1,5 +1,7 @@
 ## New features: 
 
+ 1. Add `Ostap::Math::FlatteBugg` , `Ostap::Models::FlatteBugg` and `FlatteBugg_pdf` 
+
 ## Backward incompatible:  
 
 ## Bug fixes:

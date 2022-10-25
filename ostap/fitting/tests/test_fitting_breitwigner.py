@@ -148,6 +148,7 @@ def test_breitwigner_phi () :
     
     time.sleep ( 2 ) 
 
+
 # =============================================================================
 ## Phi  shapes woth    phase space   corrections 
 def test_breitwigner_phi_ps () : 
@@ -258,6 +259,7 @@ def test_breitwigner_phi_ps () :
     models.add ( f0_ps  )
 
     time.sleep ( 2 ) 
+    
 
 # =============================================================================
 ## Rho0 shape from eta'  decays
@@ -294,6 +296,65 @@ def test_breitwigner_rho_more () :
 
     time.sleep ( 2 ) 
 
+
+# =============================================================================
+## f0(980)->pipi  shapes 
+def test_breitwigner_f0_980() :
+    """f0(980)->pi+pi- shapes  
+    """
+    
+    logger  = getLogger ( "test_breitwigner_f0_980" )
+    logger.info ( "f0(980)->pi+pi- shapes" )
+
+    GeV      = 1.0
+    MeV      = GeV / 1000
+
+    
+    m_piplus = 0.13957 * GeV 
+    m_pizero = 0.13957 * GeV
+    m_Kplus  = 0.49367 * GeV
+    m_Kzero  = 0.49761 * GeV
+
+    m0       = 980  * MeV
+    g1       = 165  * MeV
+    g2       = 3.47 * g1
+    g0       = 0 
+    alpha    = 2    / GeV**2
+    
+    
+    flatte      = Ostap.Math.Flatte     ( m0 , m0 * g1 , g2 / g1 ,         m_piplus , m_piplus , m_Kplus , m_Kplus , g0 )
+    flatte_bugg = Ostap.Math.FlatteBugg ( m0 ,      g1 , g2 / g1 , alpha , m_piplus , m_pizero , m_Kplus , m_Kzero , g0 )
+    
+
+    mass    = ROOT.RooRealVar  ('mass' , 'm(pipi)' , 0.25 * GeV  , 1.5 * GeV ) 
+
+
+    Fl = Models.Flatte_pdf     ( 'FL' , flatte  ,
+                                 xvar   = mass  ,
+                                 m0     = ( m0      , 0.85 * GeV  , 1.05 * GeV  ) ,
+                                 g1     = ( g1      , 0.5 * g1    , 2    * g1   ) ,
+                                 g2     = ( g2      , 0.5 * g2    , 2    * g2   ) ,
+                                 gamma0 = 0 )
+    Fb = Models.FlatteBugg_pdf ( 'FB' , flatte_bugg  ,
+                                 xvar   = mass       ,
+                                 m0     = Fl.m0      ,
+                                 g1     = Fl.g1      ,
+                                 g2og1  = Fl.g2og1   ,
+                                 gamma0 = Fl.gamma0  )
+    
+    f1 = Fl.draw()
+    f2 = Fb.draw()
+
+    with use_canvas ( 'test_breitwigner_f0_980' ) : 
+        f1.draw()
+        f2.draw('same')
+        time.sleep ( 2 ) 
+
+    models.add ( flatte      )
+    models.add ( flatte_bugg )
+    models.add ( Fl          )
+    models.add ( Fb          )
+
 # =============================================================================
 ## check that everything is serializable
 def test_db() :
@@ -313,11 +374,14 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
- 
+
+    pass 
+
     test_breitwigner_rho      ()        
     test_breitwigner_phi      ()       
     test_breitwigner_phi_ps   ()
     test_breitwigner_rho_more ()
+    test_breitwigner_f0_980   () 
 
     ## check finally that everything is serializeable:
     test_db ()
