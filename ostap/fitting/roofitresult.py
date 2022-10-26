@@ -593,11 +593,13 @@ def _rfr_evaluate_ ( self , func , args , partial = () ) :
 #  result = ...
 #  result.table() 
 #  @endcode 
-def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
+def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     """ print RooFitResult  as a table
     >>> result = ...
     >>> result.table() 
     """
+
+    r = Ostap.Utils.FitResults ( rr )
 
     from  ostap.fitting.utils    import fit_status, cov_qual
     rows = []
@@ -654,6 +656,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
 
     with_globcorr = not ( (6,24) <= root_info < (6,28) )
     with_globcorr = True or not ( (6,24) <= root_info < (6,28) )
+    with_globcorr = True 
 
 
     if with_globcorr : rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
