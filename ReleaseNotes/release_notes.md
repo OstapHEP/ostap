@@ -9,7 +9,6 @@
 ## Bug fixes:
  1. fix formfactor for `Ostap::Math::ChannelFlatteBugg`
 
-
 # v1.9.3.8
 
 ## New features: 
