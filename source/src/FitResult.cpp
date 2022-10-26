@@ -26,6 +26,10 @@ Ostap::Utils::FitResults::FitResults
   : RooFitResult ( right )
 {
   if ( nullptr != newname ) { SetName ( newname ) ; }
+  //
+  if ( _CM && !_GC ) { _GC = new TVectorD ( _CM->GetNcols() ) ; }
+  fillLegacyCorrMatrix() ;
+  //
 }
 // ============================================================================
 // copy constructor 
@@ -33,7 +37,10 @@ Ostap::Utils::FitResults::FitResults
 Ostap::Utils::FitResults::FitResults
 ( const Ostap::Utils::FitResults& right ) 
   : RooFitResult ( right )
-{}
+{
+  if ( _CM && !_GC ) { _GC = new TVectorD ( _CM->GetNcols() ) ; }
+  fillLegacyCorrMatrix() ;
+}
 // ============================================================================
 // full constructor #1
 // ============================================================================
@@ -62,7 +69,7 @@ Ostap::Utils::FitResults::FitResults
   setCovarianceMatrix ( const_cast<TMatrixDSym&> ( v ) ) ;
   setStatusHistory    ( const_cast<History&> ( history ) ) ;
   //
-  _GC = new TVectorD ( _CM->GetNcols() ) ;
+  if ( _CM && !_GC ) { _GC = new TVectorD ( _CM->GetNcols() ) ; }
   fillLegacyCorrMatrix() ;
   //
 }
