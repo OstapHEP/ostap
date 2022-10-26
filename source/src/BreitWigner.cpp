@@ -1606,10 +1606,15 @@ Ostap::Math::ChannelFlatteBugg::D
   const double m0 ) const 
 {
   const double sqs = std::sqrt ( std::abs ( s ) ) ;
-  return 
-    //                    charged                    neutral  
-    m0 * g2 () * 2.0 * ( m_fc * ps2().q1_s  ( s ) + m_fn * m_ps2n.q1_s ( s ) ) / sqs
-    * std::exp ( -2 * m_alpha * m_ps2k.q_s ( s ) ) ;  
+  //
+  // formfactor squared 
+  const double ff2 = 
+    ( m_ps2k.s_threshold() < s && !s_zero ( m_alpha ) ) ? 
+    std::exp ( -2 * m_alpha * std::pow ( m_ps2k.q_s ( s ) , 2 ) ) : 1.0 ;  
+  //
+  return ( m0 * g2 () * 2.0 * ff2 / sqs ) 
+    //        charged                    neutral  
+    * ( m_fc * ps2().q1_s  ( s ) + m_fn * m_ps2n.q1_s ( s ) ) ;
 }
 // ============================================================================
 // get unique tag/label 
