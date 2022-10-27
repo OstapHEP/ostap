@@ -3,6 +3,7 @@
  1. Add `Ostap::Math::FlatteBugg` , `Ostap::Models::FlatteBugg` and `FlatteBugg_pdf` 
  1. add addition for two `ROOT.RooPlot~ objects with the same structure 
  1. more tuning for `Ostap::Utils::FitResult` 
+ 1. add `ROOT.TTree.fstatVar` and `ROOT.TTree.fstatVars` methods 
 
 ## Backward incompatible:  
 

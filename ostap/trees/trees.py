@@ -958,7 +958,7 @@ def _sum_var_old_ ( tree , expression ) :
     """Make a sum over expression in Tree/Dataset
     
     >>> dataset = ...
-    ## get corrected number of signale events  
+    ## get corrected number of signal events  
     >>> n_corr  = dataset.sumVar_( 'S_sw/effic' )
     
     """

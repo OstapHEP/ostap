@@ -1190,6 +1190,12 @@ if ( 6 , 25 ) <= root_info :
     _new_methods_ .append ( frame_table    ) 
     __all__ = __all__ + ( 'frame_statVars' ,  'frame_table' ) 
 
+    ROOT.TTree. fstatVars = frame_statVars
+    _new_methods_ .append ( ROOT.TTree. fstatVars ) 
+    
+ROOT.TTree. fstatVar  = frame_statVar 
+_new_methods_ .append ( ROOT.TTree. fstatVar ) 
+
 for f in frames :
     
     if not hasattr ( f , '__len__') :

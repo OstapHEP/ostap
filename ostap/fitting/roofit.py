@@ -277,7 +277,7 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
     
     if not title  :
         title = 'RooPlot %s' % plot.name
-    table = [ ( 'Index' , 'Type' , 'Option' , 'Name' , 'Id' , '??') ]
+    table = [ ( 'Index' , 'Type' , 'Option' , 'Name' ) ]
 
     names = set() 
     for index , obj in enumerate ( plot )  :
@@ -289,7 +289,7 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
         if invisible :
             if not name in names : options = options + ":I"
             names.add  ( name ) 
-        row  = '%2d' % index , _name ( obj ) , options , name , id ( obj ) , obj.GetName()  
+        row  = '%2d' % index , _name ( obj ) , options , name 
 
         table.append ( row )
 
