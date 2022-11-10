@@ -1749,7 +1749,7 @@ class Reader(object)  :
         def __call__ ( self , entry , cut_efficiency = 0.9  ) :
             return self.eval ( entry , cut_efficiency )
         # =====================================================================
-        ## Evaluate the method from TTree/TCahin/RooAbsData using the accessors, defined  early
+        ## Evaluate the method from TTree/TChain/RooAbsData using the accessors, defined  early
         # @code 
         # tree   = ...
         # method = ...

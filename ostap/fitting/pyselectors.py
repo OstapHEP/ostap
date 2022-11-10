@@ -2214,7 +2214,7 @@ def fill_dataset2 ( self              ,
 
     nevents = nevents if 0 <= nevents else ROOT.TChain.kMaxEntries
     if isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
-        if not silent : logger.info ( "No shortcuts&frame tricks posisble: use plain Selector" )
+        if not silent : logger.info ( "No shortcuts&frame tricks possible: use plain Selector" )
         args   =  () if all else ( nevents , first )
         result = Ostap.Utils.process ( self , selector , *args )
         if result < 0   : logger.error ("TTree::Process: result is %s" % result )
@@ -2222,7 +2222,7 @@ def fill_dataset2 ( self              ,
         return selector.data, selector.stat
     
     if isinstance ( self , ROOT.TTree ) and isinstance ( selector , ROOT.TSelector ) :
-        if not silent : logger.info ( "No shortcuts&frame tricks posisble: use plain Selector" )
+        if not silent : logger.info ( "No shortcuts&frame tricks possible: use plain Selector" )
         args =  () if all else ( nevents , first )
         result = Ostap.Utils.process ( self , selector , *args )
         if result < 0   : logger.error ("TTree::Process: result is %s" % result )

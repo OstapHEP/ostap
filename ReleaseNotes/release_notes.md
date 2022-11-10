@@ -4,6 +4,8 @@
  1. add addition for two `ROOT.RooPlot~ objects with the same structure 
  1. more tuning for `Ostap::Utils::FitResult` 
  1. add `ROOT.TTree.fstatVar` and `ROOT.TTree.fstatVars` methods 
+ 1. extend `test_tools_tmva.py` to include all 5 ways to use TMVA results 
+ 1. add `counters_table` fnuction to printing the counters as a table
 
 ## Backward incompatible:  
 

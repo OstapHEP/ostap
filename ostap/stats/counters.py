@@ -16,13 +16,15 @@ __date__    = "2009-09-12"
 __version__ = ""
 # =============================================================================
 __all__     = (
-    'SE'  , ## simple smart counter (1-bi histo)  C++ Ostap::StatEntity 
-    'WSE' , ## simple smart counter with weight :     Ostap::WStatEntity 
-    'NSE' , ## simple smart running counter     :     Ostap::NStatEntity 
+    'SE'             , ## simple smart counter (1-bi histo)  C++ Ostap::StatEntity 
+    'WSE'            , ## simple smart counter with weight :     Ostap::WStatEntity 
+    'NSE'            , ## simple smart running counter     :     Ostap::NStatEntity
+    'counters_table' , ## make table of counters  
     ) 
 # =============================================================================
-from   ostap.math.ve   import Ostap, VE
-from   ostap.math.base import isequal, isequalf  
+from   ostap.math.ve          import Ostap, VE
+from   ostap.math.base        import isequal, isequalf
+from   ostap.core.ostap_types import dictlike_types, sequence_types 
 import ROOT, cppyy
 # =============================================================================
 _new_methods_ = []
@@ -234,12 +236,67 @@ _new_methods_ += [
     SE.count ,
     ]
 
+# =============================================================================
+## Make table of counters
+#  @code
+#  counters = .... ## sequence or mapping for counters
+#  table    = counters_table ( counters , prrefix = '# ' )
+#  logger.info ( 'Table is \n%s' % table )
+#  @endcode
+def counters_table ( counters , prefix = '' , title = '' ) :
+    """Make table of counters
+    >>> counters = .... ## sequence or mapping for counters
+    >>> table     = counters_table ( counters , prrefix = '# ' )
+    >>> logger.info ( 'Table is \n%s' % table )
+    """
+    
+    if   isinstance ( counters , dictlike_types ) : pass 
+    elif isinstance ( counters , sequence_types ) :
+        cnts = {}
+        for i,c in enumerate ( counters , start = 1 ) : cnts [ i ] = c
+        counters = cnts 
+    elif isntance   ( counters , ( SE , WSE , NSE ) ) :
+        counters = { 1 : counters } 
+    else :
+        raise TypeError ( "cnt_table: illegay type for 'counters' %s" % type ( counters ) )
+
+    rows = [ ( '' , '#' , 'Sum' , 'Mean' , 'RMS' , 'min/max'  ) ] 
+    for key in counters :
+        
+        counter     = counters [ key ]
+        
+        mean        = counter.mean   ()
+        rms         = counter.rms    ()
+        minv, maxv  = counter.minmax () 
+        
+        row = ( '%s'    % key                ,
+                '%d'    % counter.nEntries() ,
+                '%+.6g' % counter.sum     () ,
+                '( %-+.6g +/- %.6g )' %  ( mean.value() , mean.error () ) ,
+                '%.6g' % counter.rms     () ,
+                '( %-+.6g / %+.6g )'  %  ( minv         , maxv ) ) 
+        
+        rows.append ( row )
+
+    import ostap.logger.table as T
+    if not title : title = 'Table of %d counters' % len ( counters )    
+    table = T.table ( rows , prefix = prefix , title = title , alignment = "llcccc" )
+    #
+    return table 
+
+# ==============================================================================
+_new_methods_ += [
+    counters_table  
+    ]
+
+                                       
 _new_methods_ = tuple ( _new_methods_ )
 
 # =============================================================================
 _decorated_classes_ = (
     SE , WSE , NSE 
     )
+
 # =============================================================================
 if '__main__' == __name__  :
 

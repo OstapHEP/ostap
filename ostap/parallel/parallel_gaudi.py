@@ -121,9 +121,9 @@ class WorkManager(TaskManager) :
                 yield result                
 
     # ========================================================================-
-    ## get PP-statistics if/when posisble 
+    ## get PP-statistics if/when possible 
     def get_pp_stat ( self ) : 
-        """Get PP-statistics if/when posisble 
+        """Get PP-statistics if/when possible 
         """
         return None 
             

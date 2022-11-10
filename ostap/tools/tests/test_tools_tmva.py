@@ -3,12 +3,16 @@
 # =============================================================================
 ## @file ostap/tools/tests/test_tools_tmva.py
 #
-#  Test for TMVA machinery
+#  Test for TMVA machinery:
+#  - train TMVA
+#  - use TMVA in 5 different ways 
 # 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-10-25 
 # =============================================================================
 """Test for TVMA machinery in  Ostap
+ -  train TMVA
+ -  use TMVA in 5 different ways 
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -17,9 +21,12 @@ __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
 import ostap.io.root_file 
+from   ostap.utils.timing       import timing
 from   builtins                 import range
-from   ostap.core.core          import ROOTCWD
+from   ostap.core.core          import ROOTCWD, SE
+from   ostap.stats.counters     import counters_table  
 from   ostap.utils.progress_bar import progress_bar 
+from   ostap.tools.tmva         import Reader, addTMVAResponse
 import ROOT, os
 # =============================================================================
 # logging 
@@ -30,8 +37,10 @@ else                       : logger = getLogger ( __name__ )
 # ==============================================================================
 
 
-##def test_tmva () :
-if 1 < 2 :   
+def test_tmva () :
+
+    logger.info('Prepare data for training/testing')
+
     from ostap.utils.cleanup import CleanUp
     data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva-' )
     if not os.path.exists( data_file ) :
@@ -91,171 +100,184 @@ if 1 < 2 :
             test_file.Write()
             test_file.ls()
                 
+
+    logger.info('Create and train TMVA')
+    
+    with ROOT.TFile.Open( data_file ,'READ') as datafile : 
+        datafile.ls()
+        tSignal  = datafile['S']
+        tBkg     = datafile['B']
         
-logger.info('Create and train TMVA')
-with ROOT.TFile.Open( data_file ,'READ') as datafile : 
-    datafile.ls()
-    tSignal  = datafile['S']
-    tBkg     = datafile['B']
-    
-    #
-    ## book TMVA trainer
-    #
-    from ostap.tools.tmva import Trainer 
-    trainer = Trainer (
-        name    = 'TestTMVA' ,   
-        methods = [ # type               name   configuration
-        ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
-        ## ( ROOT.TMVA.Types.kMLP        , "MLPT"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5,N:TestRate=5:!UseRegulator:VarTransform=G,D" ) ,
-        ## ( ROOT.TMVA.Types.kBDT        , "BDTG0"       , "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
-        ## ( ROOT.TMVA.Types.kBDT        , "BDTGT"       , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4:VarTransform=G,D" ) , 
-        ## ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4" ) , 
-        ## ( ROOT.TMVA.Types.kBDT        , "BDTB"        , "H:!V:NTrees=200:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" )  , 
-        ## ( ROOT.TMVA.Types.kBDT        , "BDTD"        , "H:!V:NTrees=200:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" ) ,        
-        ## ( ROOT.TMVA.Types.kCuts       , "Cuts"        , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
-        ## ( ROOT.TMVA.Types.kFisher     , "Fisher"      , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
-        ## ( ROOT.TMVA.Types.kFisher     , "FisherG"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10:VarTransform=G,D" ),
-        ## ( ROOT.TMVA.Types.kSVM        , "SVM"         , "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
-        ## ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=30:NSmoothBkg[0]=30:NSmoothBkg[1]=30:NSmooth=1:NAvEvtPerBin=50:VarTransform=G,D" ) ,
-        ##
-        ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS'        , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
-        ## ( ROOT.TMVA.Types.kKNN        , 'KNN'          , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
-        ##
-        ] ,
-        variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
-        signal                    = tSignal                  , ## ``Signal'' sample
-        background                = tBkg                     , ## ``Background'' sample
-        verbose                   = True                     ,
-        signal_train_fraction     = 0.75                     ,        
-        background_train_fraction = 0.75                     ,
-        workdir                   = CleanUp.tempdir ( prefix = 'ostap-tmva-workdir-' ) ) ##  working directory 
-    
-    from ostap.utils.timing import timing
-    with timing ( 'for TMVA training' , logger ) : 
-        weights_files = trainer.train ()
-        tar_file      = trainer.tar_file
-        ## name   = trainer.name
-        ## output = trainer.output_file 
+        #
+        ## book TMVA trainer
+        #
+        from ostap.tools.tmva import Trainer 
+        trainer = Trainer (
+            name    = 'TestTMVA' ,   
+            methods = [ # type               name   configuration
+            ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
+            ( ROOT.TMVA.Types.kMLP        , "MLPT"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5,N:TestRate=5:!UseRegulator:VarTransform=G,D" ) ,
+            ( ROOT.TMVA.Types.kBDT        , "BDTG0"       , "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
+            ( ROOT.TMVA.Types.kBDT        , "BDTGT"       , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4:VarTransform=G,D" ) , 
+            ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4" ) , 
+            ( ROOT.TMVA.Types.kBDT        , "BDTB"        , "H:!V:NTrees=200:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" )  , 
+            ( ROOT.TMVA.Types.kBDT        , "BDTD"        , "H:!V:NTrees=200:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" ) ,        
+            ( ROOT.TMVA.Types.kCuts       , "Cuts"        , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
+            ( ROOT.TMVA.Types.kFisher     , "Fisher"      , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
+            ( ROOT.TMVA.Types.kFisher     , "FisherG"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10:VarTransform=G,D" ),
+            ( ROOT.TMVA.Types.kSVM        , "SVM"         , "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
+            ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=30:NSmoothBkg[0]=30:NSmoothBkg[1]=30:NSmooth=1:NAvEvtPerBin=50:VarTransform=G,D" ) ,
+            ## it doe snot work
+            ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS'        , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
+            ( ROOT.TMVA.Types.kKNN        , 'KNN'          , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
+            ##
+            ] ,
+            variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
+            signal                    = tSignal                  , ## ``Signal'' sample
+            background                = tBkg                     , ## ``Background'' sample
+            verbose                   = True                     ,
+            signal_train_fraction     = 0.75                     ,        
+            background_train_fraction = 0.75                     ,
+            workdir                   = CleanUp.tempdir ( prefix = 'ostap-tmva-workdir-' ) ) ##  working directory 
         
-## from ostap.tools.tmva import make_Plots
-## make_Plots  ( name , output ) 
+        with timing ( 'for TMVA training' , logger ) : 
+            weights_files = trainer.train ()
+            tar_file      = trainer.tar_file
+            ## name   = trainer.name
+            ## output = trainer.output_file 
+            
+    ## from ostap.tools.tmva import make_Plots
+    ## make_Plots  ( name , output ) 
+
+
+    # =============================================================================
+    ## Use TMVA for classification 
+    # =============================================================================
+    logger.info('Use TMVA for classification')
+    
+    # =============================================================================
+    ## (1) the most efficient way: add TMVA decisions directly into TTree (fast)
+    # =============================================================================
+    logger.info ( 'Add TMVA decision directly into existing TTree (fast)' ) 
+    with timing ( "Add TMVA response to signal TTree" , logger =logger ) : 
+        tSignal = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
+        addTMVAResponse ( tSignal ,
+                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                          weights_files = tar_file ,
+                          prefix        = 'tmva_'     ,
+                          suffix        = '_response' )
+        
+    with timing ( "Add TMVA response to background TTree" , logger =logger ) :     
+        tBkg    = ROOT.TChain ( 'B' ) ;  tBkg.Add    ( data_file )
+        addTMVAResponse ( tBkg    ,
+                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                          weights_files = tar_file ,
+                          prefix        = 'tmva_'     ,
+                          suffix        = '_response' )
+        
+    # ===============================================================================
+    ## (2) Add TMVA decision during TTree -> RooDataSet transformation (can be slow)
+    # ===============================================================================
+    logger.info ( 'Add TMVA decision during TTree -> RooDataSet transformation (can be slow)')
+    variables = [ 'var1' , 'var2' , 'var3' ]
+    
+    ## (2.1) Create TMVA reader
+    reader = Reader ( 'MyMLP' ,
+                      variables     = [ ('var1' , lambda s : s.var1 )   ,
+                                        ('var2' , lambda s : s.var2 )   ,
+                                        ('var3' , lambda s : s.var3 ) ] ,
+                      weights_files = tar_file   )
+    
+    from ostap.fitting.pyselectors import Variable     
+    for m in reader.methods[:] :
+        variables += [ Variable( 'tmva1_%s_response' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
+
+    with timing ( "Add TMVA response during TTree->RooDatSet transforomation (signal)"     , logger =logger ) : 
+        tSignal   = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
+        ds_S1, _  = tSignal.fill_dataset ( variables )
+    with timing ( "Add TMVA response during TTree->RooDatSet transforomation (background)" , logger =logger ) : 
+        tBkg      = ROOT.TChain ( 'B' ) ;  tBkg.Add    ( data_file )
+        ds_B1, _  = tBkg   .fill_dataset ( variables )
+        
+    logger.info ( 'Created signal     dataset\n%s' %  ds_S1.table ( prefix = '# ' ) )
+    logger.info ( 'Created background dataset\n%s' %  ds_B1.table ( prefix = '# ' ) )
+
+    # ===============================================================================
+    ## (3) Add TMVA decision directly into existing RooDataSet (fast)  
+    # ===============================================================================
+    logger.info ( 'Add TMVA decision directly into existing RooDataSet (fast)' ) 
+    with timing ( "Add TMVA response to signal RooDataSet" , logger =logger ) : 
+        addTMVAResponse ( ds_S1  ,
+                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                          weights_files = tar_file ,
+                          prefix        = 'tmva2_'     ,
+                          suffix        = '_response' )
+        
+    with timing ( "Add TMVA response to background TTree" , logger =logger ) :     
+        addTMVAResponse ( ds_B1   ,
+                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                          weights_files = tar_file ,
+                          prefix        = 'tmva2_'    ,
+                          suffix        = '_response' )
+        
+    logger.info ( 'Updated signal     dataset\n%s' %  ds_S1.table ( prefix = '# ' ) )
+    logger.info ( 'Updated background dataset\n%s' %  ds_B1.table ( prefix = '# ' ) )
+
+    # ===============================================================================
+    ## (4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (slow)
+    # ===============================================================================
+    logger.info ( 'Calcuate TMVA decision on-fly via the explict loop over TTree entries (can be slow)')
+    with timing ( "TMVA response via explicit loop over signal TTree" , logger =logger ) :
+        tSignal   = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
+        counters  = {}
+        methods   = reader.methods[:] 
+        for m in methods : counters[m] = SE() 
+        for evt in tSignal :
+            for method in methods : counters[method] += reader ( method , evt )
+        title = 'Signal     response (TTree)'
+        table = counters_table ( counters , title = title , prefix = '# ' )
+        logger.info ( '%s\n%s' % ( title , table ) )
+        
+    with timing ( "TMVA response via explicit loop over background TTree" , logger =logger ) :
+        tBkg      = ROOT.TChain ( 'B' ) ;  tBkg.Add    ( data_file )
+        counters  = {}
+        methods   = reader.methods[:] 
+        for m in methods : counters[m] = SE() 
+        for evt in tBkg :
+            for method in methods : counters[method] += reader ( method , evt )
+        title = 'Background response (TTree)'
+        table = counters_table ( counters , title = title , prefix = '# ' )
+        logger.info ( '%s\n%s' % ( title , table ) )
+
+    # ===============================================================================
+    ## (5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (slow)
+    # ===============================================================================
+    logger.info ( 'Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (can be slow)')
+    with timing ( "TMVA response via explicit loop over signal     RooDataSet" , logger =logger ) :
+        counters  = {}
+        methods   = reader.methods[:] 
+        for m in methods : counters[m] = SE() 
+        for evt in ds_S1 :
+            for method in methods : counters[method] += reader ( method , evt )
+        title = 'Signal     response (RooDataSet)'
+        table = counters_table ( counters , title = title , prefix = '# ' )
+        logger.info ( '%s\n%s' % ( title , table ) )
+            
+    with timing ( "TMVA response via explicit loop over background RooDataSet" , logger = logger ) :        
+        counters  = {}
+        methods   = reader.methods[:] 
+        for m in methods : counters[m] = SE() 
+        for evt in ds_B1 :
+            for method in methods : counters[method] += reader ( method , evt )
+        title = 'Background response (RooDataSet)'
+        table = counters_table ( counters , title = title , prefix = '# ' )
+        logger.info ( '%s\n%s' % ( title , table ) )
 
 # =============================================================================
-## if os.path.exists ( trainer.output_file ) :
-##    os.remove ( trainer.output_file )
+if '__main__' == __name__ :
 
-# =============================================================================
-## Use trained TMVA
-#  There are two alternatives
-#  - usage of TMVA Reader : it can be  rather slow,
-#    but it is very flexible and powerful with respect to variable transformations
-#  - addTMVAResponse function : it is less flexible, but very CPU efficient 
-# =============================================================================
-
-## prepare dataset with TMVA result
-
-from ostap.fitting.pyselectors import SelectorWithVars, Variable     
-## 1) Book RooDataset                 
-variables = [
-    Variable( 'var1' , 'variable#1' ) ,
-    Variable( 'var2' , 'variable#2' ) ,
-    Variable( 'var3' , 'variable#3' ) ,
-    ]
-
-## 2) create TMVA reader
-from ostap.tools.tmva import Reader
-reader = Reader ( 'MyMLP' ,
-                 variables     = [ ('var1' , lambda s : s.var1 )   ,
-                                   ('var2' , lambda s : s.var2 )   ,
-                                   ('var3' , lambda s : s.var3 ) ] ,
-                 weights_files = tar_file   )
-
-methods = reader.methods[:]
-
-## # =============================================================================
-## ## A: Use TMVA  reader
-## #  - It can be slow, but it allows on-flight variables transformation
-## #  - much more efficient alternativeis <code>addTMVAResponse</code> function
-## # =============================================================================
-
-## # =============================================================================
-## ## 2.1) few trivial tests: use the methods/reader as simple function
-## for m in methods :
-##     method = reader[m]
-##     logger.info ( 'Method  %12s , response %s' % ( m , method ( 1.1 , 0.8 , 0.3 ) ) )
-##     del method 
-## # =============================================================================
-
-## ## 2.2) declare/add TMVA  variables with TMVAreader 
-## for m in methods :
-##     variables += [ Variable( 'tmva_%s' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
-## # =============================================================================
-## ## The END of TMVA.Reader fragment 
-## # =============================================================================
-
-
-## 3) Run Ostap to   fill   RooDataSet 
-dsS = SelectorWithVars (
-    variables = variables    ,
-    selection = "var1 < 100" , 
-    )
-dsB = SelectorWithVars (
-    variables = variables    , 
-    selection = "var1 < 100" ,
-    )
-
-## read input data file 
-with ROOT.TFile.Open( data_file ,'READ') as datafile :
-    
-    datafile.ls()
-    tSignal  = datafile['S']
-    tBkg     = datafile['B']
-
-    from ostap.utils.timing import timing
-    with timing("Process signal"     ) : tSignal.process ( dsS )
-    with timing("Process backrgound" ) : tBkg   .process ( dsB )
-    
-    ds1 = dsS.data
-    ds2 = dsB.data
-
-    del variables   ## attention: reader must be deleted explicitely 
-    del reader      ## attention: reader must be deleted explicitely 
-
-    # =========================================================================
-    ## B: addTMVAResponse
-    #  Much better alternative to TMVA.Reader:
-    #  - it has much better performance  :-) 
-    #  - but it is less flexible with respect to varibale  transformation :-(
-    # =========================================================================
-    
-    from ostap.tools.tmva import addTMVAResponse
-
-    logger.info ('dataset SIG:\n%s' % ds1 )
-    logger.info ('dataset BKG:\n%s' % ds2 )
-    addTMVAResponse ( ds1 ,
-                      inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                      weights_files = tar_file ,
-                      prefix        = 'tmva_'     ,
-                      suffix        = '_response' )
-    addTMVAResponse ( ds2    ,
-                      inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                      weights_files = tar_file ,
-                      prefix        = 'tmva_'     ,
-                      suffix        = '_response' )
-    # =========================================================================
-    ## The END of addTMVAResponse  fragment
-    # =========================================================================
-
-    logger.info ('dataset SIG:\n%s' % ds1 )
-    logger.info ('dataset BKG:\n%s' % ds2 )
-
-for m in methods :
-
-    ms = ds1.statVar('tmva_%s_response' % m )
-    mb = ds2.statVar('tmva_%s_response' % m )
-    
-    logger.info('TMVA:%-11s for signal&background: %+.2f+-%.2f(S) vs %+.2f+-%.2f(B)' % ( m, ms.mean().value() , ms.rms() , mb.mean().value() , mb.rms() ) )
-
+    with timing () :
+        test_tmva () 
 
 # =============================================================================
 ##                                                                      The END
