@@ -281,10 +281,11 @@ def test_tmva () :
         logger.info ( '%s\n%s' % ( title , table ) )
 
     # =========================================================================\
-    ## Finally make standard TMVA plots 
+    ## Finally make the standard TMVA plots 
     # =========================================================================    
     from ostap.tools.tmva import make_Plots
     make_Plots  ( trainer_name , tmva_output , False ) 
+
 
 # =============================================================================
 if '__main__' == __name__ :
