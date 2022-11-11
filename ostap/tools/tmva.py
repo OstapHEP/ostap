@@ -1,4 +1,4 @@
-3#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ==========================================================================================
 ## @file ostap/tools/tmva.py
@@ -1184,7 +1184,6 @@ class Trainer(object):
             # Evaluate MVAs
             self.logger.info  ( "Evaluate all methods %s " % str ( ms ) )
             factory.EvaluateAllMethods ()
-
 
         ## ROC curves 
         if ( self.make_plots or self.verbose ) and ( 6 , 24 ) <= root_info :
