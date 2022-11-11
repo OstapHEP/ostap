@@ -27,7 +27,8 @@ from   ostap.core.core          import ROOTCWD, SE
 from   ostap.stats.counters     import counters_table  
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.tools.tmva         import Reader, addTMVAResponse
-import ROOT, os
+from   ostap.utils.cleanup      import CleanUp
+import ROOT, os, random 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -37,70 +38,78 @@ else                       : logger = getLogger ( __name__ )
 # ==============================================================================
 
 
-def test_tmva () :
+# =============================================================================
+## Prepare trainig and testing data for TMVA 
+def prepare_data ( nB = 10000 , nS = 10000 )  :
+    """Prepare trainig and testing data for TMVA"""
+    
+    data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva-' )
 
+    logger.info('Prepare input ROOT file with data  %s' % data_file )
+    with ROOT.TFile.Open( data_file ,'recreate') as test_file:
+        test_file.cd()
+        treeSignal = ROOT.TTree('S','signal     tree')
+        treeBkg    = ROOT.TTree('B','background tree')
+        treeSignal.SetDirectory ( test_file ) 
+        treeBkg   .SetDirectory ( test_file ) 
+        
+        from array import array 
+        var1 = array ( 'd', [0] )
+        var2 = array ( 'd', [0] )
+        var3 = array ( 'd', [0] )
+        
+        treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
+        treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
+        treeSignal.Branch ( 'var3' , var3 , 'var3/D' )
+        
+        treeBkg   .Branch ( 'var1' , var1 , 'var1/D' )
+        treeBkg   .Branch ( 'var2' , var2 , 'var2/D' )
+        treeBkg   .Branch ( 'var3' , var3 , 'var3/D' )
+        
+        ## fill background tuple: 
+        for i in progress_bar ( range ( nB ) ) : 
+            
+            x = random.uniform ( -2.0 , 2.0 )
+            y = random.uniform ( -2.0 , 2.0 )
+            z = random.gauss   (   .0 , 0.5 )
+            
+            var1[0] =  x + 0.1 * y  
+            var2[0] =  x - 0.1 * y  
+            var3[0] = -x +       z
+            
+            treeBkg.Fill()
+            
+        ## fill signal tuple: 
+        for i in progress_bar ( range ( nS ) ) : 
+            
+            x = random.gauss  (  0.0 , 0.1 )
+            y = random.gauss  (  0.0 , 0.2 )
+            z = random.gauss  (  0.5 , 0.5 )
+            
+            var1[0] =  x
+            var2[0] =  y  
+            var3[0] =  z 
+            treeSignal.Fill()
+            
+        test_file.Write()
+        test_file.ls()
+
+        return data_file
+
+# =============================================================================
+def test_tmva () :
+    "Test TMVA machinery"
+    
+    logger = getLogger ( 'test_tmva' )
+
+    
     logger.info('Prepare data for training/testing')
 
-    from ostap.utils.cleanup import CleanUp
-    data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva-' )
-    if not os.path.exists( data_file ) :
-        import random 
-        nB =  10000
-        nS =  10000
-        ## nB =  100000
-        ## nS =   20000
-        logger.info('Prepare input ROOT file with data  %s' % data_file )
-        with ROOT.TFile.Open( data_file ,'recreate') as test_file:
-            test_file.cd()
-            treeSignal = ROOT.TTree('S','signal     tree')
-            treeBkg    = ROOT.TTree('B','background tree')
-            treeSignal.SetDirectory ( test_file ) 
-            treeBkg   .SetDirectory ( test_file ) 
-            
-            from array import array 
-            var1 = array ( 'd', [0] )
-            var2 = array ( 'd', [0] )
-            var3 = array ( 'd', [0] )
-            
-            treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
-            treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
-            treeSignal.Branch ( 'var3' , var3 , 'var3/D' )
-            
-            treeBkg   .Branch ( 'var1' , var1 , 'var1/D' )
-            treeBkg   .Branch ( 'var2' , var2 , 'var2/D' )
-            treeBkg   .Branch ( 'var3' , var3 , 'var3/D' )
-            
-            ## fill background tuple: 
-            for i in progress_bar ( range ( nB ) ) : 
-            ## for i in range ( nB ) : 
-                
-                x = random.uniform ( -2.0 , 2.0 )
-                y = random.uniform ( -2.0 , 2.0 )
-                z = random.gauss   (   .0 , 0.5 )
-                
-                var1[0] =  x + 0.1 * y  
-                var2[0] =  x - 0.1 * y  
-                var3[0] = -x +       z
-                
-                treeBkg.Fill()
-                
-            ## fill signal tuple: 
-            for i in progress_bar ( range ( nS ) ) : 
-            ## for i in range ( nS ) : 
-                
-                x = random.gauss  (  0.0 , 0.1 )
-                y = random.gauss  (  0.0 , 0.2 )
-                z = random.gauss  (  0.5 , 0.5 )
-                
-                var1[0] =  x
-                var2[0] =  y  
-                var3[0] =  z 
-                treeSignal.Fill()
-                
-            test_file.Write()
-            test_file.ls()
-                
-
+    nB =  1000
+    nS =  1000
+    
+    data_file = prepare_data ( nB , nS )
+    
     logger.info('Create and train TMVA')
     
     with ROOT.TFile.Open( data_file ,'READ') as datafile : 
@@ -127,7 +136,7 @@ def test_tmva () :
             ( ROOT.TMVA.Types.kFisher     , "FisherG"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10:VarTransform=G,D" ),
             ( ROOT.TMVA.Types.kSVM        , "SVM"         , "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
             ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=30:NSmoothBkg[0]=30:NSmoothBkg[1]=30:NSmooth=1:NAvEvtPerBin=50:VarTransform=G,D" ) ,
-            ## it doe snot work
+            ## it does not work :-( 
             ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS'        , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
             ( ROOT.TMVA.Types.kKNN        , 'KNN'          , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
             ##
@@ -143,22 +152,20 @@ def test_tmva () :
         with timing ( 'for TMVA training' , logger ) : 
             weights_files = trainer.train ()
             tar_file      = trainer.tar_file
-            ## name   = trainer.name
-            ## output = trainer.output_file 
+            trainer_name  = trainer.name
+            tmva_output   = trainer.output_file
             
-    ## from ostap.tools.tmva import make_Plots
-    ## make_Plots  ( name , output ) 
-
-
+        del trainer 
+        
     # =============================================================================
     ## Use TMVA for classification 
     # =============================================================================
-    logger.info('Use TMVA for classification')
+    logger.info('Five ways to use TMVA for classification')
     
     # =============================================================================
     ## (1) the most efficient way: add TMVA decisions directly into TTree (fast)
     # =============================================================================
-    logger.info ( 'Add TMVA decision directly into existing TTree (fast)' ) 
+    logger.info ( '(1) Add TMVA decision directly into existing TTree (fast)' ) 
     with timing ( "Add TMVA response to signal TTree" , logger =logger ) : 
         tSignal = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         addTMVAResponse ( tSignal ,
@@ -178,7 +185,7 @@ def test_tmva () :
     # ===============================================================================
     ## (2) Add TMVA decision during TTree -> RooDataSet transformation (can be slow)
     # ===============================================================================
-    logger.info ( 'Add TMVA decision during TTree -> RooDataSet transformation (can be slow)')
+    logger.info ( '(2) Add TMVA decision during TTree -> RooDataSet transformation (can be slow)')
     variables = [ 'var1' , 'var2' , 'var3' ]
     
     ## (2.1) Create TMVA reader
@@ -205,7 +212,7 @@ def test_tmva () :
     # ===============================================================================
     ## (3) Add TMVA decision directly into existing RooDataSet (fast)  
     # ===============================================================================
-    logger.info ( 'Add TMVA decision directly into existing RooDataSet (fast)' ) 
+    logger.info ( '(3) Add TMVA decision directly into existing RooDataSet (fast)' ) 
     with timing ( "Add TMVA response to signal RooDataSet" , logger =logger ) : 
         addTMVAResponse ( ds_S1  ,
                           inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
@@ -226,7 +233,7 @@ def test_tmva () :
     # ===============================================================================
     ## (4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (slow)
     # ===============================================================================
-    logger.info ( 'Calcuate TMVA decision on-fly via the explict loop over TTree entries (can be slow)')
+    logger.info ( '(4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (can be slow)')
     with timing ( "TMVA response via explicit loop over signal TTree" , logger =logger ) :
         tSignal   = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         counters  = {}
@@ -252,7 +259,7 @@ def test_tmva () :
     # ===============================================================================
     ## (5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (slow)
     # ===============================================================================
-    logger.info ( 'Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (can be slow)')
+    logger.info ( '(5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (can be slow)')
     with timing ( "TMVA response via explicit loop over signal     RooDataSet" , logger =logger ) :
         counters  = {}
         methods   = reader.methods[:] 
@@ -272,6 +279,12 @@ def test_tmva () :
         title = 'Background response (RooDataSet)'
         table = counters_table ( counters , title = title , prefix = '# ' )
         logger.info ( '%s\n%s' % ( title , table ) )
+
+    # =========================================================================\
+    ## Finally make standard TMVA plots 
+    # =========================================================================    
+    from ostap.tools.tmva import make_Plots
+    make_Plots  ( trainer_name , tmva_output , False ) 
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -38,7 +38,7 @@ from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
 from   ostap.core.meta_info    import root_version_int, root_info  
 import ostap.io.root_file 
-import ROOT, os, math, tarfile, shutil, itertools  
+import ROOT, os, glob, math, tarfile, shutil, itertools 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -74,7 +74,7 @@ def dir_name ( name ) :
     return  name 
 # =============================================================================
 ## @class WeightFiles
-#  helper structure  to deal with weights files
+#  helper structure to deal with weights files
 from ostap.utils.cleanup import  CleanUp
 class WeightsFiles(CleanUp) :
     """Helper structure  to deal with weights files
@@ -441,7 +441,7 @@ class Trainer(object):
         pattern_C   = pattern_CLASS % ( self.dirname ,  self.dirname )
 
         rf = []
-        import glob,os
+        import glob
         for f in glob.glob ( pattern_xml ) :
             rf.append ( f ) 
             os.remove ( f ) 
@@ -865,8 +865,8 @@ class Trainer(object):
         >>> trainer.train () 
         """
 
-        import glob,os
-        rf = [] 
+        rf = []
+        import os, glob
         for f in glob.glob ( self.__pattern_xml ) :
             rf.append ( f ) 
             os.remove ( f ) 
@@ -1208,7 +1208,7 @@ class Trainer(object):
                     continue 
                 ## auc = factory.GetROCIntegral ( dataloader , mname )
                 auc = factory.GetROCIntegral ( self.name , mname )
-                row = mname , '%.5g' % auc
+                row = mname , '%.6g' % auc
                 rows.append ( row ) 
             import ostap.logger.table as T
             title = "ROC/AUC compare"
@@ -1306,69 +1306,52 @@ class Trainer(object):
         ## make the plots in TMVA  style
         #
         
-        self.logger.info ('Making the standard TMVA plots') 
-        from ostap.utils.utils import batch , cmd_exists, keepCanvas  
-        with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , keepCanvas() : ##  , rootWarning ()  :
+        plots = [
+            ##
+            ( ROOT.TMVA.variables      ,  ( name , output     ) ) ,
+            ( ROOT.TMVA.correlations   ,  ( name , output     ) ) ,
+            ##
+            ( ROOT.TMVA.mvas           ,  ( name , output , 0 ) ) ,
+            ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
+            ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
+            ( ROOT.TMVA.mvas           ,  ( name , output , 3 ) ) ,
+            ##
+            ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) ,
+            ##
+            ( ROOT.TMVA.efficiencies   ,  ( name , output , 0 ) ) ,
+            ( ROOT.TMVA.efficiencies   ,  ( name , output , 1 ) ) ,
+            ( ROOT.TMVA.efficiencies   ,  ( name , output , 2 ) ) ,
+            ##
+            ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
+            ## 
+            ]
+        
+        if hasattr ( ROOT.TMVA , 'network'                ) :
+            plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
+        if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
+            plots.append ( ( ROOT.TMVA.annconvergencetest , ( name , output ) ) )
 
-            if hasattr ( ROOT.TMVA , 'variables'    ) :
-                if self.verbose : self.logger.info ( "Execute macro ROOT.TMVA.variables")
-                ROOT.TMVA.variables    ( name , output ) 
-                
-            if hasattr ( ROOT.TMVA , 'correlations' ) :
-                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.correlations")
-                ROOT.TMVA.correlations ( name , output )
-                
-            if hasattr ( ROOT.TMVA , 'mvas'    ) : 
-                for i in ( 0 , 3 ) :
-                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvas(...,%s)" % i)
-                    ROOT.TMVA.mvas ( name , output , i )
-                    
-            if hasattr ( ROOT.TMVA , 'mvaeffs' ) :
-                if ( 6 , 24 ) <= root_info : 
-                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvaeffs")
-                    ROOT.TMVA.mvaeffs  ( name , output )
-                elif self.verbose :
-                    self.logger.warning ( "Skip    macro ROOT.TMVA.mvaeffs")
-                    
-            if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
-                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.efficiencies(...,2)")
-                ROOT.TMVA.efficiencies  ( name , output , 2 )
-                
-            if hasattr ( ROOT.TMVA , 'paracoor' ) :
-                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.paracoor")
-                ROOT.TMVA.paracoor           ( name , output )
-                
-            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kLikelihood ) ] : 
-                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.likelihoodrefs")
-                ROOT.TMVA.likelihoodrefs     ( name , output )
-                        
-            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kMLP ) ] :                    
-                if hasattr ( ROOT.TMVA , 'network'             ) :
-                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.network")
-                    ROOT.TMVA.network            ( name , output )
-                if hasattr ( ROOT.TMVA , 'nannconvergencetest' ) :
-                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.annconvergencetest")
-                    ROOT.TMVA.annconvergencetest ( name , output )
-                    
-            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBDT ) ] :
-                if hasattr ( ROOT.TMVA , 'BDT' ) : 
-                    if ( 6 , 24 ) <= root_info :
-                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDT")
-                        ROOT.TMVA.BDT                ( name , output )
-                    ##if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) :
-                    ##    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDTControlPlots")
-                    ##    ROOT.TMVA.BDTControlPlots    ( name , output )
-                    elif self.verbose :
-                        self.logger.warning ( "Skip    macro ROOT.TMVA.BDT")
-                        
-                    
-            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBoost ) ] : 
-                if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) :
-                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BoostControlPlots")
-                    ROOT.TMVA.BoostControlPlots  ( name , output )
+        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
+            plots.append ( ( ROOT.TMVA.likelihoodrefs     , ( name , output ) ) )
 
+        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBDT ] :            
+            if hasattr ( ROOT.TMVA , 'BDT'                    ) :
+                plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) ) )                
+            if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
+                plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) ) )
+            
+        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBoost ] :                
+            if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
+                plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) ) ) 
 
-
+        ## change to some temporary directory
+                
+                
+        for fun, args  in plots :
+            
+            with batch ( ROOT.ROOT.GetROOT().IsBatch () or not show_plots ) , keepCanvas() : ##  , rootWarning ()  :            
+                logger.info ( 'Execute macro ROOT.TMVA%s%s' % ( fun.__name__ , str ( args ) ) )
+                fun ( *args )
                     
 # =============================================================================
 ## make selected standard TMVA plots 
@@ -1381,7 +1364,7 @@ def make_Plots ( name , output , show_plots = True ) :
     if not os.path.exists ( output ) or not os.path.isfile ( output ) :
         self.logger.error   ('No output file %s is found !' % output )
         return
-    
+
     try :
         import ostap.io.root_file
         with ROOT.TFile.Open ( output , 'READ' , exception = True ) as o :
@@ -1389,68 +1372,75 @@ def make_Plots ( name , output , show_plots = True ) :
     except IOError :
         self.logger.error ("Output file %s can't be opened!"   % output )
         return
-    
-    
-    #
+        
+    output = os.path.abspath ( output )
+        
     ## make the plots in TMVA  style
     #
     logger.info ('Making the standard TMVA plots') 
-    from ostap.utils.utils import batch , cmd_exists, keepCanvas  
-    with batch ( ROOT.ROOT.GetROOT().IsBatch () or not show_plots ) , keepCanvas() : ##  , rootWarning ()  :
-        
-        if hasattr ( ROOT.TMVA , 'variables'    ) :
-            logger.info ( "Execute macro ROOT.TMVA.variables")
-            ROOT.TMVA.variables    ( name , output ) 
-            
-        if hasattr ( ROOT.TMVA , 'correlations' ) :
-            logger.info  ( "Execute macro ROOT.TMVA.correlations")
-            ROOT.TMVA.correlations ( name , output )
-            
-        if hasattr ( ROOT.TMVA , 'mvas'    ) : 
-            for i in ( 0 , 3 ) :
-                logger.info  ( "Execute macro ROOT.TMVA.mvas(...,%s)" % i)
-                ROOT.TMVA.mvas ( name , output , i )
-                
-        if hasattr ( ROOT.TMVA , 'mvaeffs' ) :
-            if ( 6 , 24 ) <= root_info : 
-                logger.info  ( "Execute macro ROOT.TMVA.mvaeffs")
-                ROOT.TMVA.mvaeffs  ( name , output )
-            else : 
-                logger.warning ( "Skip    macro ROOT.TMVA.mvaeffs")
-                
-        if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
-            logger.info  ( "Execute macro ROOT.TMVA.efficiencies(...,2)")
-            ROOT.TMVA.efficiencies  ( name , output , 2 )
-            
-        if hasattr ( ROOT.TMVA , 'paracoor' ) :
-            logger.info  ( "Execute macro ROOT.TMVA.paracoor")
-            ROOT.TMVA.paracoor           ( name , output )
-            
-        ## if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kLikelihood ) ] : 
-        logger.info  ( "Execute macro ROOT.TMVA.likelihoodrefs")
-        ROOT.TMVA.likelihoodrefs     ( name , output )
-            
-        if hasattr ( ROOT.TMVA , 'network'             ) :
-            logger.info  ( "Execute macro ROOT.TMVA.network")
-            ROOT.TMVA.network            ( name , output )
-        if hasattr ( ROOT.TMVA , 'nannconvergencetest' ) :
-            logger.info  ( "Execute macro ROOT.TMVA.annconvergencetest")
-            ROOT.TMVA.annconvergencetest ( name , output )
-            
-        if hasattr ( ROOT.TMVA , 'BDT' ) : 
-            if ( 6 , 24 ) <= root_info :
-                logger.info  ( "Execute macro ROOT.TMVA.BDT")
-                ROOT.TMVA.BDT                ( name , output )
-                ##if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) :
-                ##    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDTControlPlots")
-                ##    ROOT.TMVA.BDTControlPlots    ( name , output )
-            else : 
-                logger.warning ( "Skip    macro ROOT.TMVA.BDT")
-                            
-            if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) :
-                logger.info  ( "Execute macro ROOT.TMVA.BoostControlPlots")
-                ROOT.TMVA.BoostControlPlots  ( name , output )
+    from ostap.utils.utils import batch , cmd_exists, keepCanvas
 
+    plots = [
+        ( ROOT.TMVA.variables      ,  ( name , output     ) ) ,
+        ( ROOT.TMVA.correlations   ,  ( name , output     ) ) ,
+        ( ROOT.TMVA.mvas           ,  ( name , output , 0 ) ) ,
+        ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
+        ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
+        ( ROOT.TMVA.mvas           ,  ( name , output , 3 ) ) ,
+        ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) ,
+        ##
+        ( ROOT.TMVA.efficiencies   ,  ( name , output , 0 ) ) ,
+        ( ROOT.TMVA.efficiencies   ,  ( name , output , 1 ) ) ,
+        ( ROOT.TMVA.efficiencies   ,  ( name , output , 2 ) ) ,
+        ##
+        ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
+        ## 
+        ( ROOT.TMVA.likelihoodrefs ,  ( name , output     ) ) ,
+        ]
+
+    if hasattr ( ROOT.TMVA , 'network'                ) :
+        plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
+    if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
+        plots.append ( ( ROOT.TMVA.annconvergencetest , ( name , output ) ) )
+
+    if hasattr ( ROOT.TMVA , 'BDT'                    ) :
+        plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) ) )
+        
+    if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
+        plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) ) )
+        
+    if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
+        plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) ) ) 
+        
+    workdir = CleanUp.tempdir ( prefix = 'ostap-tmva-%s-plots' % name  )
+    from   ostap.utils.utils import keepCWD
+    import glob 
+    with keepCWD ( workdir ) :
+        
+        logger.info ( "Use temporary working directory:'%s'" % os.getcwd() )
+        
+        for fun, args  in plots :
+            
+            with batch ( ROOT.ROOT.GetROOT().IsBatch () or not show_plots ) , keepCanvas() , rootWarning ()  :            
+                logger.info ( 'Execute macro ROOT.TMVA.%s%s' % ( fun.__name__ , str ( args ) ) )
+                fun ( *args )
+
+        plots = tuple ( [ f for f in glob.glob ( pattern_PLOTS % name ) ] )
+
+        ## tarfile with plots 
+        tfile = '%s_plots.tgz' % name 
+        with tarfile.open ( tfile , 'w:gz' ) as tar :
+            for x in plots  : tar.add ( x )
+            tfile = os.path.abspath ( tar.name ) 
+            
+        if tfile and os.path.exists ( tfile  ) and tarfile.is_tarfile ( tfile ) :
+            with tarfile.open ( tfile , 'r' ) as tar :
+                logger.info ( "Tarfile with plots: '%s'" % tfile )
+                tar.list()
+            return tfile 
+        
+        return '' 
+            
 # =============================================================================
 ## @class Reader
 #  Rather generic python interface to TMVA-reader

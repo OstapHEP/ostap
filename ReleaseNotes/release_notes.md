@@ -6,6 +6,8 @@
  1. add `ROOT.TTree.fstatVar` and `ROOT.TTree.fstatVars` methods 
  1. extend `test_tools_tmva.py` to include all 5 ways to use TMVA results 
  1. add `counters_table` fnuction to printing the counters as a table
+ 1. fix/impove issue with standard TMVA plots 
+ 1. update TMVA examples/tests 
 
 ## Backward incompatible:  
 
