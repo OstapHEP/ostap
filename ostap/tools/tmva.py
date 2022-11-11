@@ -1283,6 +1283,9 @@ class Trainer(object):
     def makePlots ( self , name = None , output = None , ) :
         """Make selected standard TMVA plots"""
 
+        logger.warning ( "makePlots methdod is disabled, use standalone function 'make_Plots' instead" )
+        return 
+
         name   = name   if name   else self.name
         output = output if output else self.output_file
         
@@ -1313,18 +1316,18 @@ class Trainer(object):
             ( ROOT.TMVA.mvas           ,  ( name , output , 0 ) ) ,
             ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
             ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
-            ( ROOT.TMVA.mvas           ,  ( name , output , 3 ) ) ,
             ##
             ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) ,
             ##
             ( ROOT.TMVA.efficiencies   ,  ( name , output , 0 ) ) ,
             ( ROOT.TMVA.efficiencies   ,  ( name , output , 1 ) ) ,
             ( ROOT.TMVA.efficiencies   ,  ( name , output , 2 ) ) ,
+            ( ROOT.TMVA.efficiencies   ,  ( name , output , 3 ) ) ,
             ##
             ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
             ## 
             ]
-        
+
         if hasattr ( ROOT.TMVA , 'network'                ) :
             plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
         if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
@@ -1345,11 +1348,11 @@ class Trainer(object):
 
         ## change to some temporary directory
                 
-                
+        from ostap.utils.utils import batch, keepCanvas    
         for fun, args  in plots :
             
-            with batch ( ROOT.ROOT.GetROOT().IsBatch () or not show_plots ) , keepCanvas() : ##  , rootWarning ()  :            
-                logger.info ( 'Execute macro ROOT.TMVA%s%s' % ( fun.__name__ , str ( args ) ) )
+            with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , keepCanvas() , rootWarning ()  :            
+                logger.info ( 'makePlots: Execute macro ROOT.TMVA%s%s' % ( fun.__name__ , str ( args ) ) )
                 fun ( *args )
                     
 # =============================================================================
@@ -1376,27 +1379,31 @@ def make_Plots ( name , output , show_plots = True ) :
         
     ## make the plots in TMVA  style
     #
-    logger.info ('Making the standard TMVA plots') 
+    logger.info ('make_Plots: Making the standard TMVA plots') 
     from ostap.utils.utils import batch , cmd_exists, keepCanvas
 
     plots = [
+        ##
         ( ROOT.TMVA.variables      ,  ( name , output     ) ) ,
         ( ROOT.TMVA.correlations   ,  ( name , output     ) ) ,
+        ##
         ( ROOT.TMVA.mvas           ,  ( name , output , 0 ) ) ,
         ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
         ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
-        ( ROOT.TMVA.mvas           ,  ( name , output , 3 ) ) ,
-        ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) ,
         ##
         ( ROOT.TMVA.efficiencies   ,  ( name , output , 0 ) ) ,
         ( ROOT.TMVA.efficiencies   ,  ( name , output , 1 ) ) ,
         ( ROOT.TMVA.efficiencies   ,  ( name , output , 2 ) ) ,
+        ( ROOT.TMVA.efficiencies   ,  ( name , output , 3 ) ) ,
         ##
         ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
         ## 
         ( ROOT.TMVA.likelihoodrefs ,  ( name , output     ) ) ,
         ]
-
+    
+    if (6,24) <= root_info :
+        plots.append ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
+        
     if hasattr ( ROOT.TMVA , 'network'                ) :
         plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
     if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
@@ -1421,7 +1428,7 @@ def make_Plots ( name , output , show_plots = True ) :
         for fun, args  in plots :
             
             with batch ( ROOT.ROOT.GetROOT().IsBatch () or not show_plots ) , keepCanvas() , rootWarning ()  :            
-                logger.info ( 'Execute macro ROOT.TMVA.%s%s' % ( fun.__name__ , str ( args ) ) )
+                logger.info ( 'make_Plots: Execute macro ROOT.TMVA.%s%s' % ( fun.__name__ , str ( args ) ) )
                 fun ( *args )
 
         plots = tuple ( [ f for f in glob.glob ( pattern_PLOTS % name ) ] )
