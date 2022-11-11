@@ -180,11 +180,12 @@ else :
         recursive.
         
         """
-        head, tail = path.split(name)
+        head, tail = os.path.split(name)
         if not tail:
-            head, tail = path.split(head)
+            head, tail = os.path.split(head)
             
-        if head and tail and not path.exists(head):
+        if head and tail and not os.path.exists(head):
+            
             try:
                 
                 make_dirs ( head , mode , exist_ok = exist_ok ) ## RECURSION!
@@ -200,7 +201,7 @@ else :
 
         try :
             
-            mkdir ( name , mode )
+            os.mkdir ( name , mode )
             
         except OSError:
             # Cannot rely on checking for EEXIST, since the operating system

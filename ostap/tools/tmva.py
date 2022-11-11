@@ -1420,8 +1420,11 @@ def make_Plots ( name , output , show_plots = True ) :
         
     workdir = CleanUp.tempdir ( prefix = 'ostap-tmva-%s-plots' % name  )
     from   ostap.utils.utils import keepCWD
+    from   ostap.utils.basic import make_dirs
     import glob 
     with keepCWD ( workdir ) :
+
+        make_dirs ( '%s/plots' % name )
         
         logger.info ( "Use temporary working directory:'%s'" % os.getcwd() )
         
