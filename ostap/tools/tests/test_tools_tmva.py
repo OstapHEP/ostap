@@ -284,15 +284,16 @@ def test_tmva () :
     ## Finally make the standard TMVA plots 
     # =========================================================================    
     from ostap.tools.tmva import make_Plots
-    make_Plots  ( trainer_name , tmva_output , False ) 
+    plots = make_Plots  ( trainer_name , tmva_output , False )
+    if plots : logger.info ( "Plots are saved into tarfile: '%s'" % plots ) 
 
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing () :
+    with timing ( 'test_tmva', logger = logger ) :
         test_tmva () 
-
+        
 # =============================================================================
 ##                                                                      The END
 # =============================================================================    

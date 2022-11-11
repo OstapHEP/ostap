@@ -1401,8 +1401,8 @@ def make_Plots ( name , output , show_plots = True ) :
         ( ROOT.TMVA.likelihoodrefs ,  ( name , output     ) ) ,
         ]
     
-    if (6,24) <= root_info :
-        plots.append ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
+    ## if (6,24) <= root_info :
+    ##    plots.append ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
         
     if hasattr ( ROOT.TMVA , 'network'                ) :
         plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
@@ -1436,18 +1436,20 @@ def make_Plots ( name , output , show_plots = True ) :
 
         plots = tuple ( [ f for f in glob.glob ( pattern_PLOTS % name ) ] )
 
-        ## tarfile with plots 
-        tfile = '%s_plots.tgz' % name 
-        with tarfile.open ( tfile , 'w:gz' ) as tar :
-            for x in plots  : tar.add ( x )
-            tfile = os.path.abspath ( tar.name ) 
+        if plots :
             
-        if tfile and os.path.exists ( tfile  ) and tarfile.is_tarfile ( tfile ) :
-            with tarfile.open ( tfile , 'r' ) as tar :
-                logger.info ( "Tarfile with plots: '%s'" % tfile )
-                tar.list()
-            return tfile 
-        
+            ## tarfile with plots 
+            tfile = '%s_plots.tgz' % name 
+            with tarfile.open ( tfile , 'w:gz' ) as tar :
+                for x in plots  : tar.add ( x )
+                tfile = os.path.abspath ( tar.name ) 
+                
+            if tfile and os.path.exists ( tfile  ) and tarfile.is_tarfile ( tfile ) :
+                with tarfile.open ( tfile , 'r' ) as tar :
+                    logger.info ( "Tarfile with plots: '%s'" % tfile )
+                    tar.list()
+                    return tfile 
+                
         return '' 
             
 # =============================================================================
