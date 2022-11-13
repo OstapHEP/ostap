@@ -35,6 +35,7 @@ from   ostap.utils.progress_bar  import progress_bar
 import ostap.trees.treereduce 
 import ostap.histos.histos
 import ostap.trees.param
+import ostap.io.root_file 
 import ROOT, os, math, array 
 # =============================================================================
 # logging 
@@ -1194,7 +1195,7 @@ def _in_types ( t ) :
 def _rt_table_0_ ( tree , pattern = None , cuts = '' , prefix = '' , title = '' , *args ) :
     """
     """
-    ## get list of branches 
+    ## get list of branches/leaves  
     brs = tree.leaves ( pattern )
     if 'TObject' in brs :
         brs = list  ( brs )
@@ -3053,6 +3054,25 @@ class Tree(Chain) :
     def tree ( self ) :
         """``tree'' : get the underlying tree/chain"""
         return self.chain
+
+
+
+# ==============================================================================
+## get a full path of the TTree obnject 
+#  @code
+#  rdir = ...
+#  path = rdirt.full_path 
+#  @endcode
+def tree_path ( tree ) :
+    """Get a full path of the directory
+    >>> tree = ...
+    >>> path = tree.full_path 
+    """
+    rdir = tree.GetDirectory()
+    if not rdir : return tree.GetName()
+    return os.path.join ( rdir.full_path , tree.GetName() ) 
+
+ROOT.TTree.full_path = property ( tree_path , None , None )
 
 # =============================================================================
 _decorated_classes_ = (

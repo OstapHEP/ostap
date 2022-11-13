@@ -993,13 +993,34 @@ def top_dir ( rdir ) :
         while top :
             moth = top.GetMotherDir()
             if not moth : return top  
-            top = moth
+            top  = moth
         else :
             return None 
 
 ROOT.TDirectory.topdir = property ( top_dir , None , None )
 
+# ==============================================================================
+## get a full path of the directory
+#  @code
+#  rdir = ...
+#  path = rdirt.full_path 
+#  @endcode
+def full_path ( rdir ) :
+    """Get a full path of the directory
+    >>> rdir = ...
+    >>> path = rdir.full_path 
+    """
+    assert rdir , 'Invalid ROOT TDirectory'
+    
+    path = rdir.GetPath()
+    n    = path.find (':/')
+    if n <= 0 :
+        logger.error('Invalid directory path')
+        return ''
+    return path[n+2:] 
 
+ROOT.TDirectory.full_path = property ( full_path , None , None )
+    
 # ==============================================================================
 ## Trivial context manager to treat TFile.ReOpen for 'UPDATE' mode
 #  @code

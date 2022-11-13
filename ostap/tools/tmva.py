@@ -37,7 +37,7 @@ __all__     = (
 from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning 
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
 from   ostap.core.meta_info    import root_version_int, root_info  
-import ostap.io.root_file 
+import ostap.io.root_file
 import ROOT, os, glob, math, tarfile, shutil, itertools 
 # =============================================================================
 # logging 
@@ -1400,7 +1400,8 @@ def make_Plots ( name , output , show_plots = True ) :
         ## 
         ( ROOT.TMVA.likelihoodrefs ,  ( name , output     ) ) ,
         ]
-    
+
+    logger.warning ( 'make_Plots: Skip    macro ROOT.TMVA.%s%s' % ( 'mvaeffs'  , str ( ( name , output ) ) ) ) 
     ## if (6,24) <= root_info :
     ##    plots.append ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
         
@@ -1995,24 +1996,42 @@ def _add_response_tree  ( tree , verbose , *args ) :
     from   ostap.io.root_file        import REOPEN
     from   ostap.utils.progress_conf import progress_conf
 
-    tdir  = tree.GetDirectory()
+    vars = set() 
+    if verbose :
+        vars = set ( tree.branches() ) | set ( tree.leaves () ) 
+                
+    tdir  = tree.GetDirectory ()
+    tname = tree.full_path
     with ROOTCWD () , REOPEN ( tdir ) as tfile : 
+
+        fname = tfile.GetName() 
+        logger.debug ( "Procesing %s file" % fname )
+        
+        if not tfile.IsWritable() :
+            logger.error  ( "Can't write TTree back to the file %s" % fname )
+            return Ostap.StatusCode ( 1000 ), tree 
         
         tdir.cd()
-
+        
         ## add the progress bar 
         if verbose : sc = Ostap.TMVA.addResponse ( tree , progress_conf () , *args )
         else       : sc = Ostap.TMVA.addResponse ( tree ,                    *args )
         
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
         
-        if tfile.IsWritable() :
-            tfile.Write( "" , ROOT.TFile.kOverwrite ) 
-            return sc , tdir.Get ( tree.GetName() )
+        ## tfile.Write() ##  "" ) ## , ROOT.TFile.kOverwrite )
+        tfile.Write( "" , ROOT.TFile.kOverwrite )
         
-        else : logger.warning ( "Can't write TTree back to the file" )
-            
-        return sc , tree 
+    tree = ROOT.TChain ( tname )
+    tree.Add ( fname ) 
+    
+    if verbose :
+        vars  = sorted ( ( set ( tree.branches() ) | set ( tree.leaves () ) ) - vars ) 
+        title = "Added TMVA responses [%d entries in '%s'" % ( len ( tree ) , fname  ) 
+        table = tree.table ( vars ,  prefix = '# ' , title = title )
+        logger.info ( '%s\n%s' % ( title , table ) ) 
+        
+    return sc , tree 
 
 # =============================================================================
 def _add_response_chain ( chain , verbose , *args ) :
@@ -2032,8 +2051,13 @@ def _add_response_chain ( chain , verbose , *args ) :
 
     tree_verbose  = verbose and      len ( files ) < 5
     chain_verbose = verbose and 5 <= len ( files )
-    
+
+    vars = set() 
+    if verbose :
+        vars = set ( chain.branches() ) | set ( chain.leaves () ) 
+        
     from ostap.utils.progress_bar import progress_bar
+    nfiles = 0 
     for f in progress_bar ( files , len ( files ) , silent = not chain_verbose  ) :
         
         with ROOT.TFile.Open ( f , 'UPDATE' ,  exception = True ) as rfile :
@@ -2042,10 +2066,17 @@ def _add_response_chain ( chain , verbose , *args ) :
             ## treat the tree
             sc , nt = _add_response_tree ( tt  , tree_verbose , *args )
             if status is None or sc.isFailure() : status = sc
+            nfiles += 1
             
     newc = ROOT.TChain ( cname )
     for f in  files : newc.Add ( f  )
- 
+
+    if verbose :
+        vars  = sorted ( ( set ( newc.branches() ) | set ( newc.leaves () ) ) - vars )
+        title = 'Added TMVA responses [%d entries in %d files]' % ( len ( newc ) , nfiles )
+        table = newc.table ( vars ,  prefix = '# ' , title = title )
+        logger.info ( '%s\n%s' % ( title , table ) )
+                      
     return status, newc
         
 # =============================================================================
@@ -2084,21 +2115,21 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
 
     from ostap.core.core           import cpp, std, Ostap
     from ostap.utils.progress_conf import progress_conf
+    from ostap.utils.basic         import isatty
 
     _inputs       = _inputs2map_  ( inputs        )
     
     weights_files = WeightsFiles  ( weights_files ) 
     _map , _w     = _weights2map_ ( weights_files )
     
-    options = opts_replace   ( options , 'V:'      ,     verbose )
-    options = opts_replace   ( options , 'Silent:' , not verbose )
-    
-    from ostap.utils.basic import isatty
-    options = opts_replace ( options , 'Color:'  , verbose and isatty() )
+    options = opts_replace ( options , 'V:'      ,     verbose    )
+    options = opts_replace ( options , 'Silent:' , not verbose    )
+    options = opts_replace ( options , 'Color:'  ,     isatty  () )
     
     args = _inputs, _map, options, prefix , suffix , aux
     
     if   isinstance ( dataset , ROOT.TChain     ) :
+        
         sc , newdata = _add_response_chain ( dataset , verbose , *args )
         if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
         return newdata

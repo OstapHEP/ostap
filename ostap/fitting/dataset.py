@@ -687,7 +687,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
     if isinstance ( what , string_types ) :
 
         ## ATTENTION reverse here! 
-        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;,' ) ] ) ) 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;' ) ] ) ) 
         return ds_project ( dataset , histo , what , cuts , *events , progress = progress  )
     
     elif isinstance ( what , ROOT.RooArgList ) and isinstance ( dataset , ROOT.RooAbsData ) :
@@ -729,7 +729,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
                                     what     = w        ,
                                     cuts     = cuts     ,
                                     first    = first    ,
-                                    lasrt    = last     , 
+                                    last     = last     , 
                                     progress = progress )
             total += n
             histo += htmp 

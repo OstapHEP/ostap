@@ -25,7 +25,7 @@ import ostap.trees.trees
 from   ostap.core.meta_info import root_info 
 from   ostap.core.core      import cpp, Ostap 
 from   ostap.utils.cleanup  import CleanUp 
-import ROOT, os 
+import ROOT, os, sys 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -155,7 +155,7 @@ class ReduceTree(CleanUp):
         self.__name = name
 
         if not save_vars : 
-            snapshot = frame.Snapshot ( name , output )
+            snapshot = frame.Snapshot ( name , output )            
         else :
             bvars    = chain.the_variables ( *save_vars )
             all_vars = list ( bvars ) + [ v for v in nvars if not v in bvars ]
@@ -163,6 +163,8 @@ class ReduceTree(CleanUp):
             all_vars = _strings ( all_vars  )
             snapshot = frame.Snapshot ( name , output , all_vars )
 
+        sys.stdout.flush()
+        
         ## if  selections or 1 != prescale :
         ##    report = snapshot.Report()
         
