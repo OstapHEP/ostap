@@ -22,7 +22,6 @@ __all__     = (
     'frame_project'        , ## project data frame to the (1D/2D/3D) histogram
     'frame_print'          , ## print frame
     'frame_draw'           , ## draw variable from the frame  
-    'frame_project'        , ## project variables to histogram 
     'frame_columns'        , ## defined columns  
     ##
     'frame_nEff'           , ## nEff function for frames
@@ -726,7 +725,7 @@ def frame_project ( frame , model , *what ) :
     
     if 1 <= len ( what ) <= 2 :
         if   isinstance  ( what [ 0 ] , string_types ) :
-            ww = split_string ( what [ 0 ] , ',:;' )
+            ww = split_string ( what [ 0 ] , ':;' )
             if 1 < len ( ww ) : ww.reverse()                ## ATTENTION HERE: REVERSE!! 
             what = tuple ( ww ) + what [1:]                                              
         elif isinstance ( what [ 0 ] , sequence_types ) :

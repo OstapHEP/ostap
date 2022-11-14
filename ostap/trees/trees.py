@@ -416,7 +416,7 @@ def tree_project ( tree               ,
     if isinstance ( what , string_types ) :
         
         ## ATTENTION reverse here! 
-        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;,' ) ] ) ) 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;' ) ] ) ) 
         return tree_project ( tree , histo , what , cuts , *tail )
 
     assert isinstance ( what , list_types ) , "tree_project: invalid 'what' %s" % what 
