@@ -1,6 +1,6 @@
 ## New features: 
 
- 1. rmeove comma separator from `frame_project` and `tree_project`
+ 1. remove comma separator from `frame_project` and `tree_project`
 
 ## Backward incompatible:  
 
@@ -20,7 +20,7 @@
  1. update TMVA examples/tests 
  1. add `full_path` methods for `ROOT.TDirectory` and `ROOT.TTree`
  1. improve `addTMVAresponce` functons 
- 1. rmeove comma separator from `ds_project`
+ 1. remove comma separator from `ds_project`
  1. slightly improve the prints from `tree_reduce`
  
 ## Backward incompatible:  
