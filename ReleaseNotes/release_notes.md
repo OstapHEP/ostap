@@ -1,9 +1,10 @@
 ## New features: 
 
+ 1. add new test `test_fitting_fitresult.py` for variosu expressions and their uncertainties 
+ 
 ## Backward incompatible:  
 
 ## Bug fixes:
-
 
 # v1.9.4.2
 
