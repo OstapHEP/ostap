@@ -100,73 +100,83 @@ def test_fitresult () :
 
     ## S_0 + S_1
     fun1 = lambda x,y : x+y 
-    row = 'S_0+S_1' , '%s' % ( s0 + s1 )      , \
-          result.sum      ( 'S_0' , 'S_1' )   , \
-          result.evaluate ( fun1  , ( 'S_0' , 'S_1' ) )
+    row = 'S_0+S_1'                                  , \
+          '%s' % ( s0 + s1 )                         , \
+          '%s' % result.sum      ( 'S_0' , 'S_1' )   , \
+          '%s' % result.evaluate ( fun1  , ( 'S_0' , 'S_1' ) )
     rows.append(row)
 
     ## S_0 + S_2
     fun2 = lambda x,y : x+y 
-    row = 'S_0+S_2' , '%s' % ( s0 + s2 )      , \
-          result.sum      ( 'S_0' , 'S_2' )   , \
-          result.evaluate ( fun2  , ( 'S_0' , 'S_2' ) )
+    row = 'S_0+S_2'                                 , \
+          '%s' % ( s0 + s2 )                        , \
+          '%s' % result.sum      ( 'S_0' , 'S_2' )  , \
+          '%s' % result.evaluate ( fun2  , ( 'S_0' , 'S_2' ) )
     rows.append(row)
 
     ## S_1 + S_2
     fun3 = lambda x,y : x+y 
-    row = 'S_1+S_2' , '%s' % ( s1 + s2 )      , \
-          result.sum      ( 'S_1' , 'S_2' )   , \
-          result.evaluate ( fun3  , ( 'S_1' , 'S_2' ) )
+    row = 'S_1+S_2'                                  , \
+          '%s' % ( s1 + s2 )                         , \
+          '%s' % result.sum      ( 'S_1' , 'S_2' )   , \
+          '%s' % result.evaluate ( fun3  , ( 'S_1' , 'S_2' ) )
     rows.append(row)
         
     ## S_0 + S_1 + S_2
     fun4 = lambda x,y,z : x+y+z 
-    row = 'S_0+S_1+S_2' , '%s' % ( s0 + s1 + s2 )      , \
-          result.sum      ( 'S_0' , 'S_1' , 'S_2' )   , \
-          result.evaluate ( fun4  , ( 'S_0' , 'S_1' , 'S_2' ) )
+    row = 'S_0+S_1+S_2'                                      , \
+          '%s' % ( s0 + s1 + s2 )                            , \
+          '%s' % result.sum      ( 'S_0' , 'S_1' , 'S_2' )   , \
+          '%s' % result.evaluate ( fun4  , ( 'S_0' , 'S_1' , 'S_2' ) )
     rows.append(row)
 
     ## S_0 * S_1
     fun5 = lambda x,y : x*y 
-    row = 'S_0*S_1' , '%s' % ( s0 * s1 )      , \
-          result.multiply ( 'S_0' , 'S_1' )   , \
-          result.evaluate ( fun5  , ( 'S_0' , 'S_1' ) )
+    row = 'S_0*S_1'                                  , \
+          '%s' % ( s0 * s1 )                         , \
+          '%s' % result.multiply ( 'S_0' , 'S_1' )   , \
+          '%s' % result.evaluate ( fun5  , ( 'S_0' , 'S_1' ) )
     rows.append(row)
 
     ## S_0 * S_2
     fun6 = lambda x,y : x*y 
-    row = 'S_0*S_2' , '%s' % ( s0 * s2 )      , \
-          result.multiply ( 'S_0' , 'S_2' )   , \
-          result.evaluate ( fun6  , ( 'S_0' , 'S_2' ) )
+    row = 'S_0*S_2'                                  , \
+          '%s' % ( s0 * s2 )                         , \
+          '%s' % result.multiply ( 'S_0' , 'S_2' )   , \
+          '%s' % result.evaluate ( fun6  , ( 'S_0' , 'S_2' ) )
     rows.append(row)
 
     ## S_1 * S_2
     fun7 = lambda x,y : x*y 
-    row = 'S_1+S_2' , '%s' % ( s1 * s2 )      , \
-          result.multiply ( 'S_1' , 'S_2' )   , \
-          result.evaluate ( fun7  , ( 'S_1' , 'S_2' ) )
+    row = 'S_1+S_2'                                  , \
+          '%s' % ( s1 * s2 )                         , \
+          '%s' % result.multiply ( 'S_1' , 'S_2' )   , \
+          '%s' % result.evaluate ( fun7  , ( 'S_1' , 'S_2' ) )
     rows.append(row)
         
     ## S_0 * S_1 * S_2
     fun8 = lambda x,y,z : x*y*z 
-    row = 'S_0*S_1*S_2' , '%s' % ( s0 * s1 * s2 )      , \
-          result.multiply ( 'S_0' , 'S_1' , 'S_2' )   , \
-          result.evaluate ( fun8  , ( 'S_0' , 'S_1' , 'S_2' ) )
+    row = 'S_0*S_1*S_2'                                       , \
+          '%s' % ( s0 * s1 * s2 )                             , \
+          '%s' % result.multiply ( 'S_0' , 'S_1' , 'S_2' )    , \
+          '%s' % result.evaluate ( fun8  , ( 'S_0' , 'S_1' , 'S_2' ) )
     rows.append(row)
 
 
     ## S_1 / ( S_0 + S_2 ) 
     fun9 = lambda x,y,z : y/(x+z)
-    row = 'S_1/(S_0+S_2)' , '%s' % ( s1 / ( s0 + s2 ) ) , \
-          '' ,  \
-          result.evaluate ( fun9  , ( 'S_0' , 'S_1' , 'S_2' ) )
+    row = 'S_1/(S_0+S_2)'             , \
+          '%s' % ( s1 / ( s0 + s2 ) ) , \
+          ' '                         , \
+          '%s' % result.evaluate ( fun9  , ( 'S_0' , 'S_1' , 'S_2' ) )
     rows.append(row)
     
     ## (S_0 + S_1) / ( S_1 + S_2 ) 
     fun10 = lambda x,y,z : (x+y)/(y+z)
-    row = '(S_0+S_1)/(S_1+S_2)' , '%s' % ( ( s0 +  s1 ) / ( s1 + s2 ) ) , \
-          '' ,  \
-          result.evaluate ( fun10  , ( 'S_0' , 'S_1' , 'S_2' ) )
+    row = '(S_0+S_1)/(S_1+S_2)' , \
+          '%s' % ( ( s0 +  s1 ) / ( s1 + s2 ) ) , \
+          ' '                                   , \
+          '%s' % result.evaluate ( fun10  , ( 'S_0' , 'S_1' , 'S_2' ) )
     rows.append(row)
 
 
@@ -176,8 +186,8 @@ def test_fitresult () :
         fun11 = lambda x,y,z : x/(x+v)+y/(y+v)+z/(z+v) 
         row = 'S_0/(S_0+%s)+S_1/(S_1+%s)+S_2/(S_2+%s)' % ( v , v , v ) , \
               '%s' % (  s0/(s0+v) + s1/(s1+v) + s2/(s2+v) ) , \
-              '' ,  \
-              result.evaluate ( fun11  , ( 'S_0' , 'S_1' , 'S_2' ) )
+              ' ' ,  \
+              '%s' % result.evaluate ( fun11  , ( 'S_0' , 'S_1' , 'S_2' ) )
         rows.append(row)
         
         
