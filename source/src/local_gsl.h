@@ -199,6 +199,26 @@ namespace
    */
   const double s_RPRECISION_QAWC  = 2.e-7 ;
   // ==========================================================================
+
+
+  // ==========================================================================
+  /** @var s_APRECISION_CUBE
+   *  the default absolute precision for cubatures 
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_APRECISION_CUBE  = s_APRECISION ;
+  // ==========================================================================
+  /** @var s_EPRECISION_CUBE
+   *  the default relative precision for cubatures 
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION_CUBE  = s_RPRECISION ;
+  // ==========================================================================
+
+
+
 }
 // ============================================================================
 //                                                                     The END 

@@ -875,7 +875,7 @@ namespace Ostap
      */
     ValueWithError pochhammer 
     ( const ValueWithError& x ,  
-      const unsigned short n ) ;
+      const unsigned short  n ) ;
     // ========================================================================
     /** Complete elliptic integral \f$ K(k) \f$  
      *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
@@ -942,10 +942,10 @@ namespace Ostap
       const double          sigma = 1 ) ;
     // ========================================================================    
     /** evaluate <code>hypot(x,y)</code>: \f$ \sqrt( x^2 + y^2 ) \f$
-     *   @param x (INPUT) the first parameter
-     *   @param y (INPUT) the second parameter
-     *   @param c (INPUT) the correlation coefficient  (-1<=c<=1)
-     *   @return the value of <code>hypot</code> function
+     *  @param x (INPUT) the first parameter
+     *  @param y (INPUT) the second parameter
+     *  @param c (INPUT) the correlation coefficient  (-1<=c<=1)
+     *  @return the value of <code>hypot</code> function
      */
     ValueWithError  hypot
     ( const ValueWithError& x     , 
@@ -987,13 +987,15 @@ namespace Ostap
      *  - non-negative integer value 
      *  - cov2 == value  or cov2 == 0 
      */
-    bool natural_number ( const ValueWithError& value ) ;
+    bool natural_number 
+    ( const ValueWithError& value ) ;
     // ========================================================================
     /** Does this object represent natural entry in histogram
      *  - non-negative integer value 
      *  - cov2 == value or ( 0 == value && 1 == cov2 ) 
      */
-    bool natural_entry  ( const ValueWithError& value ) ;
+    bool natural_entry 
+    ( const ValueWithError& value ) ;
     // ========================================================================
     /** make a sum two elements taking into account the 
      *  correlation coefficient  
@@ -1087,7 +1089,8 @@ namespace Ostap
      *  @param v the value 
      *  @return the effective backround-to-signal ratio or -1 
      */
-    ValueWithError b2s    ( const ValueWithError& v ) ;
+    ValueWithError b2s   
+    ( const ValueWithError& v ) ;
     // ========================================================================
     /** calculate the "effective purity" ratio using the identity
      *  \f[ p_{\mathrm{eff}} = \frac{S}{S+B} = \frac{1}{1+\frac{B}{S}}\f]
@@ -1099,7 +1102,8 @@ namespace Ostap
      *  @param v the value 
      *  @return the effective purity or -1 
      */
-    ValueWithError purity ( const ValueWithError& v ) ;
+    ValueWithError purity 
+    ( const ValueWithError& v ) ;
     // ========================================================================
     /** calculate "asymmetry" of two elements: \f$ \kappa = \frac{a-b}{a+b}\f$ 
      *  taking into account the correlation coefficient  
@@ -1217,14 +1221,16 @@ namespace Ostap
      *  @param vct the vector
      *  @return the sum over the vector 
      */
-    ValueWithError abssum ( const std::vector<ValueWithError>& vct ) ;
+    ValueWithError abssum
+    ( const std::vector<ValueWithError>& vct ) ;
     // ========================================================================    
     /** get the sum of the absolute values
      *  @param vct the vector
      *  @return the sum over the vector 
      */
     inline 
-    ValueWithError sumabs ( const std::vector<ValueWithError>& vct )
+    ValueWithError sumabs 
+    ( const std::vector<ValueWithError>& vct )
     { return abssum ( vct )  ; }
     // ========================================================================    
     /** evaluate polynomial
@@ -1236,8 +1242,9 @@ namespace Ostap
      *  @return value of polynomial
      *  @warning invalid and small covariances are ignored 
      */
-    ValueWithError horner_a0 ( const std::vector<double>& poly ,
-                               const ValueWithError&      x    ) ;
+    ValueWithError horner_a0 
+    ( const std::vector<double>& poly ,
+      const ValueWithError&      x    ) ;
     // ======================================================================
     /** evaluate polynomial
      *  \f[ f(x) = a_0x^n + a_1x^{n-1}+ ... + a_{n-1}x + a_n\f], 
@@ -1248,8 +1255,9 @@ namespace Ostap
      *  @return value of polynomial
      *  @warning invalid and small covariances are ignored 
      */
-    ValueWithError horner_aN ( const std::vector<double>& poly ,
-                               const ValueWithError&      x    ) ;
+    ValueWithError horner_aN
+    ( const std::vector<double>& poly ,
+      const ValueWithError&      x    ) ;
     // ========================================================================    
     /// the output operator for the vector 
     std::ostream& operator<<
@@ -1257,18 +1265,21 @@ namespace Ostap
       const std::vector<Ostap::Math::ValueWithError>& v ) ;
     // ========================================================================
     /// swap the content with another object
-    inline void ValueWithError::swap ( ValueWithError& right ) 
+    inline void ValueWithError::swap 
+    ( ValueWithError& right ) 
     {
       std::swap ( m_value , right.m_value ) ;
       std::swap ( m_cov2  , right.m_cov2  ) ;
     }
     // ========================================================================
     /// swap the content of two objects 
-    inline void swap ( ValueWithError& left , 
-                       ValueWithError& right ) { left.swap ( right ) ; }
+    inline void swap 
+    ( ValueWithError& left , 
+      ValueWithError& right ) { left.swap ( right ) ; }
     // ========================================================================
     // converison to string
-    inline std::string to_string ( const ValueWithError& v ) 
+    inline std::string to_string 
+    ( const ValueWithError& v ) 
     { return v.toString() ; }
     // ========================================================================
   } //                                         The end of namespace Ostap::Math 

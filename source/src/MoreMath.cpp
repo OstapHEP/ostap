@@ -937,16 +937,59 @@ double Ostap::Math::psi ( const double x )
   return result.val ;
 }
 // ============================================================================
-
-
-
-
-
-
-
-
-
-
+/** beta function for 
+ *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of beta function 
+ */
+// ============================================================================
+double Ostap::Math::beta ( const double x , const double y ) 
+{ 
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_beta_e ( x , y , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_beta_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return result.val ;
+}
+// ============================================================================
+/* natural logarith of beta function 
+ *  \f$ \log B(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of logarith of beta function 
+ */
+// ============================================================================
+double Ostap::Math::lnbeta ( const double x , const double y ) 
+{ 
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_lnbeta_e ( x , y , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_lnbeta_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return result.val ;
+}
 // ============================================================================
 /*  get the gaussian integral
  *  \f[ f = \int_a^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]

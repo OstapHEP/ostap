@@ -334,6 +334,22 @@ namespace Ostap
      */
     double psi ( const double x ) ;    
     // ========================================================================
+    /** beta function for 
+     *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of beta function 
+     */
+    double beta ( const double x , const double y ) ;
+    // ========================================================================
+    /** natural logarith of beta function 
+     *  \f$ \log B(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of logarith of beta function 
+     */
+    double lnbeta ( const double x , const double y ) ;
+    // ========================================================================
     /** Pochhammer symbol, aka "rising factorial"
      *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
      *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials

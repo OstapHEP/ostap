@@ -46,7 +46,127 @@ namespace
 Ostap::Math::Integrator::Integrator 
 ( const std::size_t size ) 
   : m_workspace ( size )
+  , m_abs_precision_gaq   ( s_APRECISION_GAQ   ) 
+  , m_rel_precision_gaq   ( s_RPRECISION_GAQI  ) 
+  , m_abs_precision_gaqi  ( s_APRECISION_GAQI  ) 
+  , m_rel_precision_gaqi  ( s_RPRECISION_GAQI  ) 
+  , m_abs_precision_gaqiu ( s_APRECISION_GAQIU ) 
+  , m_rel_precision_gaqiu ( s_RPRECISION_GAQIU ) 
+  , m_abs_precision_gaqil ( s_APRECISION_GAQIL ) 
+  , m_rel_precision_gaqil ( s_RPRECISION_GAQIL ) 
+  , m_abs_precision_gaqp  ( s_APRECISION_GAQP  ) 
+  , m_rel_precision_gaqp  ( s_RPRECISION_GAQP  )
+  , m_abs_precision_qawc  ( s_APRECISION_QAWC  ) 
+  , m_rel_precision_qawc  ( s_RPRECISION_QAWC  )
+  , m_abs_precision_cpv   ( s_APRECISION_QAWC  ) 
+  , m_rel_precision_cpv   ( s_RPRECISION_QAWC  ) 
+  , m_abs_precision_cpvi  ( s_APRECISION_QAWC  ) 
+  , m_rel_precision_cpvi  ( s_RPRECISION_QAWC  ) 
+  , m_abs_precision_kk    ( s_APRECISION_QAWC  ) 
+  , m_rel_precision_kk    ( s_RPRECISION_QAWC  )
+  , m_abs_precision_cube  ( s_APRECISION_CUBE  ) 
+  , m_rel_precision_cube  ( s_RPRECISION_CUBE  ) 
 {}
+// =============================================================================
+// set absolute/relative precision for GAG
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_gaq   
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_gaq = 0 < aprec ? aprec : s_APRECISION_GAQ ;
+  m_rel_precision_gaq = 0 < rprec ? rprec : s_RPRECISION_GAQ ;
+}
+// =============================================================================
+// set absolute/relative precision for GAGI
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_gaqi   
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_gaqi = 0 < aprec ? aprec : s_APRECISION_GAQI ;
+  m_rel_precision_gaqi = 0 < rprec ? rprec : s_RPRECISION_GAQI ;
+}
+// =============================================================================
+// set absolute/relative precision for GAGIL
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_gaqil   
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_gaqil = 0 < aprec ? aprec : s_APRECISION_GAQIL ;
+  m_rel_precision_gaqil = 0 < rprec ? rprec : s_RPRECISION_GAQIL ;
+}
+// =============================================================================
+// set absolute/relative precision for GAGIU
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_gaqiu
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_gaqiu = 0 < aprec ? aprec : s_APRECISION_GAQIU ;
+  m_rel_precision_gaqiu = 0 < rprec ? rprec : s_RPRECISION_GAQIU ;
+}
+// =============================================================================
+// set absolute/relative precision for GAQP
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_gaqp
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_gaqp  = 0 < aprec ? aprec : s_APRECISION_GAQP ;
+  m_rel_precision_gaqp  = 0 < rprec ? rprec : s_RPRECISION_GAQP ;
+}
+// =============================================================================
+// set absolute/relative precision for QAWC
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_qawc
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_qawc  = 0 < aprec ? aprec : s_APRECISION_QAWC ;
+  m_rel_precision_qawc  = 0 < rprec ? rprec : s_RPRECISION_QAWC ;
+}
+// =============================================================================
+// set absolute/relative precision for Cauchy PV integration 
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_cpv
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_cpv  = 0 < aprec ? aprec : s_APRECISION_QAWC ;
+  m_rel_precision_cpv  = 0 < rprec ? rprec : s_RPRECISION_QAWC ;
+}
+// =============================================================================
+// set absolute/relative precision for Cauchy PV/inf integration 
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_cpvi
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_cpvi = 0 < aprec ? aprec : s_APRECISION_QAWC ;
+  m_rel_precision_cpvi = 0 < rprec ? rprec : s_RPRECISION_QAWC ;
+}
+// =============================================================================
+// set absolute/relative precision for Kramers-Kronig integration
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_kk
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_kk  = 0 < aprec ? aprec : s_APRECISION_QAWC ;
+  m_rel_precision_kk  = 0 < rprec ? rprec : s_RPRECISION_QAWC ;
+}
+// =============================================================================
+// set absolute/relative precision for cubature 
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_cube
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_cube  = 0 < aprec ? aprec : s_APRECISION ;
+  m_rel_precision_cube  = 0 < rprec ? rprec : s_RPRECISION ;
+}
 // =============================================================================
 /*  calculate the integral 
  *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
@@ -58,12 +178,14 @@ Ostap::Math::Integrator::Integrator
 // =============================================================================
 Ostap::Math::Integrator::result
 Ostap::Math::Integrator::integrate_
-( Ostap::Math::Integrator::function1 f1      , 
-  const double                       xmin    , 
-  const double                       xmax    , 
-  const Ostap::Math::WorkSpace&      ws      , 
-  const std::size_t                  tag     ,  
-  const unsigned short               rescale ) 
+( Ostap::Math::Integrator::function1 f1         , 
+  const double                       xmin       , 
+  const double                       xmax       , 
+  const Ostap::Math::WorkSpace&      ws         , 
+  const std::size_t                  tag        ,  
+  const unsigned short               rescale    , 
+  const double                       aprecision ,
+  const double                       rprecision ) 
 {
   //
   if ( s_equal ( xmin , xmax ) ) { return result ( 0 , 0 )  ; }
@@ -98,8 +220,8 @@ Ostap::Math::Integrator::integrate_
       xmin              ,   // lower integration edge  
       xmax              ,   // upper integration edge
       workspace ( ws )  ,   // workspace 
-      s_APRECISION_GAQ  ,   // absolute precision 
-      s_RPRECISION_GAQ  ,   // relative precision 
+      0 < aprecision ? aprecision : s_APRECISION_GAQ  ,   // absolute precision 
+      0 < rprecision ? rprecision : s_RPRECISION_GAQ  ,   // relative precision 
       -1                ,   // limit 
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
@@ -119,9 +241,11 @@ Ostap::Math::Integrator::integrate_
 // ============================================================================
 Ostap::Math::Integrator::result
 Ostap::Math::Integrator::integrate_infinity_
-( Ostap::Math::Integrator::function1 f1   , 
-  const Ostap::Math::WorkSpace&      ws   ,
-  const std::size_t                  tag  ) 
+( Ostap::Math::Integrator::function1 f1         , 
+  const Ostap::Math::WorkSpace&      ws         ,
+  const std::size_t                  tag        ,
+  const double                       aprecision ,
+  const double                       rprecision )
 {
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -134,8 +258,8 @@ Ostap::Math::Integrator::integrate_infinity_
     integrator.gaqi_integrate 
     ( &F                , 
       workspace ( ws )  ,   // workspace 
-      s_APRECISION_GAQI ,   // absolute precision 
-      s_RPRECISION_GAQI ,   // relative precision 
+      0 < aprecision ? aprecision : s_APRECISION_GAQI ,   // absolute precision 
+      0 < rprecision ? rprecision : s_RPRECISION_GAQI ,   // relative precision 
       -1                ,   // limit 
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
@@ -155,10 +279,12 @@ Ostap::Math::Integrator::integrate_infinity_
 // ============================================================================
 Ostap::Math::Integrator::result
 Ostap::Math::Integrator::integrate_to_infinity_
-( Ostap::Math::Integrator::function1 f1   , 
-  const double                       xmin , 
-  const Ostap::Math::WorkSpace&      ws   ,
-  const std::size_t                  tag  ) 
+( Ostap::Math::Integrator::function1 f1         , 
+  const double                       xmin       , 
+  const Ostap::Math::WorkSpace&      ws         ,
+  const std::size_t                  tag        ,
+  const double                       aprecision ,
+  const double                       rprecision )
 {
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -172,8 +298,8 @@ Ostap::Math::Integrator::integrate_to_infinity_
     ( &F                 , 
       xmin               ,   // lower integration edge  
       workspace ( ws )   ,   // workspace 
-      s_APRECISION_GAQIU ,   // absolute precision 
-      s_RPRECISION_GAQIU ,   // relative precision 
+      0 < aprecision ? aprecision : s_APRECISION_GAQIU ,   // absolute precision 
+      0 < rprecision ? rprecision : s_RPRECISION_GAQIU ,   // relative precision 
       -1                 ,   // limit 
       s_message          ,   // reason of failure 
       __FILE__           ,   // the file 
@@ -193,10 +319,12 @@ Ostap::Math::Integrator::integrate_to_infinity_
 // ============================================================================
 Ostap::Math::Integrator::result
 Ostap::Math::Integrator::integrate_from_infinity_
-( Ostap::Math::Integrator::function1 f1   , 
-  const double                       xmax , 
-  const Ostap::Math::WorkSpace&      ws   ,
-  const std::size_t                  tag  ) 
+( Ostap::Math::Integrator::function1 f1         , 
+  const double                       xmax       , 
+  const Ostap::Math::WorkSpace&      ws         ,
+  const std::size_t                  tag        ,
+  const double                       aprecision ,
+  const double                       rprecision )
 {
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -210,8 +338,8 @@ Ostap::Math::Integrator::integrate_from_infinity_
     ( &F                 , 
       xmax               ,   // lower integration edge  
       workspace ( ws )   ,   // workspace 
-      s_APRECISION_GAQIL ,   // absolute precision 
-      s_RPRECISION_GAQIL ,   // relative precision 
+      0 < aprecision ? aprecision : s_APRECISION_GAQIL ,   // absolute precision 
+      0 < rprecision ? rprecision : s_RPRECISION_GAQIL ,   // relative precision 
       -1                 ,   // limit 
       s_message          ,   // reason of failure 
       __FILE__           ,   // the file 
@@ -233,19 +361,21 @@ Ostap::Math::Integrator::integrate_from_infinity_
 // ============================================================================
 Ostap::Math::Integrator::result 
 Ostap::Math::Integrator::cauchy_pv_
-( Ostap::Math::Integrator::function1 f1      , 
-  const double                       c       , 
-  const double                       xmin    , 
-  const double                       xmax    , 
-  const Ostap::Math::WorkSpace&      ws      ,
-  const std::size_t                  tag     ,
-  const unsigned short               rescale ) 
+( Ostap::Math::Integrator::function1 f1         , 
+  const double                       c          , 
+  const double                       xmin       , 
+  const double                       xmax       , 
+  const Ostap::Math::WorkSpace&      ws         ,
+  const std::size_t                  tag        ,
+  const unsigned short               rescale    , 
+  const double                       aprecision ,
+  const double                       rprecision )
 {
   if      ( s_equal ( xmax , xmin ) ) { return result ( 0 , 0 ) ; }
   //
   if (           xmax < xmin   ) 
   { 
-    result r = cauchy_pv_ ( std::cref ( f1 ) , c , xmax , xmin , ws , tag , rescale ) ; 
+    result r = cauchy_pv_ ( std::cref ( f1 ) , c , xmax , xmin , ws , tag , rescale , aprecision , rprecision ) ; 
     return result ( -r.first , r.second ) ;
   }
   //
@@ -261,7 +391,7 @@ Ostap::Math::Integrator::cauchy_pv_
       { return x <= xmin ? 0.0 : f2 ( x ) * iscale / ( x - c ) ; } ;
     //
     const double xlow = xmin - 0.1 * ( xmax - xmin ) ;
-    result r = integrate_singular_ ( std::cref ( ff ) , xlow , xmax, { c } , ws , ntag ) ;
+    result r = integrate_singular_ ( std::cref ( ff ) , xlow , xmax, { c } , ws , ntag , aprecision , rprecision ) ;
     return result ( r.first / iscale , r.second / iscale ) ;
   }
   //
@@ -273,7 +403,7 @@ Ostap::Math::Integrator::cauchy_pv_
     const double xhigh = xmax + 0.1 * ( xmax - xmin ) ;
     const std::size_t ntag = 
       0 == tag ? tag : std::hash_combine ( tag , rescale , scale , iscale ) ;
-    result r = integrate_singular_ ( std::cref ( ff ) , xmin , xhigh , { c } , ws , ntag ) ;
+    result r = integrate_singular_ ( std::cref ( ff ) , xmin , xhigh , { c } , ws , ntag , aprecision , rprecision ) ;
     return result ( r.first / iscale , r.second / iscale ) ;
   }
   //
@@ -283,7 +413,7 @@ Ostap::Math::Integrator::cauchy_pv_
   // regular integration  ?
   if ( c < xmin || c > xmax ) 
   { 
-    result r = integrate_singular_ ( std::cref ( ff ) , xmin , xmax, { c } , ws , ntag ) ;
+    result r = integrate_singular_ ( std::cref ( ff ) , xmin , xmax, { c } , ws , ntag , aprecision , rprecision ) ;
     return result ( r.first / iscale , r.second / iscale ) ;    
   }
   //
@@ -317,16 +447,16 @@ Ostap::Math::Integrator::cauchy_pv_
       xlow , xhigh      ,   // low and high integration edges 
       c                 ,   // Cauchy's point 
       workspace ( ws )  ,   // workspace 
-      s_APRECISION_QAWC ,   // absolute precision 
-      s_RPRECISION_QAWC ,   // relative precision 
+      0 < aprecision ? aprecision : s_APRECISION_QAWC ,   // absolute precision 
+      0 < rprecision ? rprecision : s_RPRECISION_QAWC ,   // relative precision 
       -1                ,   // limit 
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
       __LINE__          ,   // the line 
       n2tag             ) ; // tag/label 
   //
-  result r1 = integrate_singular_ ( std::cref ( ff ) , xmin   , c - dx , { c } , ws , ntag ) ;
-  result r2 = integrate_singular_ ( std::cref ( ff ) , c + dx , xmax   , { c } , ws , ntag ) ;
+  result r1 = integrate_singular_ ( std::cref ( ff ) , xmin   , c - dx , { c } , ws , ntag , aprecision , rprecision ) ;
+  result r2 = integrate_singular_ ( std::cref ( ff ) , c + dx , xmax   , { c } , ws , ntag , aprecision , rprecision ) ;
   //
   return result ( value / iscale + r1.first  / iscale + r2.first  / iscale , 
                   error / iscale + r1.second / iscale + r2.second / iscale ) ;
@@ -344,12 +474,14 @@ Ostap::Math::Integrator::cauchy_pv_
 // ============================================================================
 Ostap::Math::Integrator::result 
 Ostap::Math::Integrator::cauchy_pv_to_infinity_
-( Ostap::Math::Integrator::function1 f1      , 
-  const double                       c       , 
-  const double                       xmin    , 
-  const Ostap::Math::WorkSpace&      ws      , 
-  const std::size_t                  tag     , 
-  const unsigned short               rescale ) 
+( Ostap::Math::Integrator::function1 f1         , 
+  const double                       c          , 
+  const double                       xmin       , 
+  const Ostap::Math::WorkSpace&      ws         , 
+  const std::size_t                  tag        , 
+  const unsigned short               rescale    ,
+  const double                       aprecision ,
+  const double                       rprecision )
 {
   double xmax = 0 ;
   if ( s_equal ( c , xmin ) ) 
@@ -364,8 +496,8 @@ Ostap::Math::Integrator::cauchy_pv_to_infinity_
   auto f2 = std::cref ( f1 ) ;
   auto ff = [f2,c]  ( const double  x ) -> double { return f2 ( x ) / ( x - c ) ; } ;
   //
-  result r1 = cauchy_pv_             ( std::cref ( f1 ) , c , xmin , xmax , ws , tag , rescale ) ;
-  result r2 = integrate_to_infinity_ ( std::cref ( ff ) ,            xmax , ws , tag ) ;
+  result r1 = cauchy_pv_             ( std::cref ( f1 ) , c , xmin , xmax , ws , tag , rescale , aprecision , rprecision ) ;
+  result r2 = integrate_to_infinity_ ( std::cref ( ff ) ,            xmax , ws , tag           , aprecision , rprecision ) ;
   //
   return result (  r1.first + r2.first , r1.second + r2.second ) ;
 }
@@ -381,12 +513,14 @@ Ostap::Math::Integrator::cauchy_pv_to_infinity_
 // ============================================================================
 Ostap::Math::Integrator::result  
 Ostap::Math::Integrator::cauchy_pv_from_infinity_
-( Ostap::Math::Integrator::function1 f1      , 
-  const double                       c       , 
-  const double                       xmax    , 
-  const Ostap::Math::WorkSpace&      ws      ,
-  const std::size_t                  tag     ,
-  const unsigned short               rescale ) 
+( Ostap::Math::Integrator::function1 f1         , 
+  const double                       c          , 
+  const double                       xmax       , 
+  const Ostap::Math::WorkSpace&      ws         ,
+  const std::size_t                  tag        ,
+  const unsigned short               rescale    ,
+  const double                       aprecision ,
+  const double                       rprecision )
 {
   //
   double xmin = 0 ;
@@ -402,8 +536,8 @@ Ostap::Math::Integrator::cauchy_pv_from_infinity_
   auto f2 = std::cref ( f1 ) ;
   auto ff = [f2,c]  ( const double  x ) -> double { return f2 ( x ) / ( x - c ) ; } ;
   //
-  result r1 = integrate_from_infinity_ ( std::cref ( ff ) ,            xmin , ws , tag           ) ;
-  result r2 = cauchy_pv_               ( std::cref ( f1 ) , c , xmin , xmax , ws , tag , rescale ) ;
+  result r1 = integrate_from_infinity_ ( std::cref ( ff ) ,            xmin , ws , tag           , aprecision , rprecision ) ;
+  result r2 = cauchy_pv_               ( std::cref ( f1 ) , c , xmin , xmax , ws , tag , rescale , aprecision , rprecision ) ;
   //
   return result (  r1.first + r2.first , r1.second + r2.second ) ;
 }
@@ -420,13 +554,15 @@ Ostap::Math::Integrator::cauchy_pv_from_infinity_
 // ============================================================================
 Ostap::Math::Integrator::result
 Ostap::Math::Integrator::kramers_kronig_
-( Ostap::Math::Integrator::function1 f1      , 
-  const double                       s       , 
-  const double                       xmin    , 
-  const unsigned short               n       , 
-  const Ostap::Math::WorkSpace&      ws      ,
-  const std::size_t                  tag     , 
-  const unsigned short               rescale ) 
+( Ostap::Math::Integrator::function1 f1         , 
+  const double                       s          , 
+  const double                       xmin       , 
+  const unsigned short               n          , 
+  const Ostap::Math::WorkSpace&      ws         ,
+  const std::size_t                  tag        , 
+  const unsigned short               rescale    , 
+  const double                       aprecision ,
+  const double                       rprecision )
 {
   // 
   if ( 0 < n ) 
@@ -435,12 +571,12 @@ Ostap::Math::Integrator::kramers_kronig_
     auto ff = [f2,n] ( const double x ) -> double { return f2 ( x ) / std::pow ( x , n ) ; } ;
     //
     const double scale = std::pow ( s , n ) ;
-    result r = kramers_kronig_ ( std::cref ( ff ) , s , xmin , 0 , ws , tag , rescale ) ;
+    result r = kramers_kronig_ ( std::cref ( ff ) , s , xmin , 0 , ws , tag , rescale , aprecision , rprecision ) ;
     //
     return result ( r.first * scale , r.second * scale ) ;
   }
   // no subtractions
-  result r = cauchy_pv_to_infinity_ ( std::cref ( f1 ) , s , xmin , ws , tag , rescale ) ;
+  result r = cauchy_pv_to_infinity_ ( std::cref ( f1 ) , s , xmin , ws , tag , rescale , aprecision , rprecision ) ;
   return result ( r.first / M_PI , r.second / M_PI ) ;
 }
 // ============================================================================
@@ -459,12 +595,14 @@ Ostap::Math::Integrator::kramers_kronig_
 // ============================================================================
 Ostap::Math::Integrator::result
 Ostap::Math::Integrator::integrate_singular_
-( function1                     f1       , 
-  const double                  xmin     , 
-  const double                  xmax     ,
-  const std::vector<double>&    points   ,
-  const Ostap::Math::WorkSpace& ws       , 
-  const std::size_t             tag      ) 
+( function1                     f1         , 
+  const double                  xmin       , 
+  const double                  xmax       ,
+  const std::vector<double>&    points     ,
+  const Ostap::Math::WorkSpace& ws         , 
+  const std::size_t             tag        , 
+  const double                  aprecision ,
+  const double                  rprecision )
 { 
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -480,8 +618,8 @@ Ostap::Math::Integrator::integrate_singular_
       xmax                  ,   // high integration edge
       points                ,   // known singulatories 
       workspace ( ws )      ,   // workspace 
-      s_APRECISION_GAQP     ,   // absolute precision 
-      s_RPRECISION_GAQP     ,   // relative precision 
+      0 < aprecision ? aprecision : s_APRECISION_GAQP     ,   // absolute precision 
+      0 < rprecision ? rprecision : s_RPRECISION_GAQP     ,   // relative precision 
       -1                    ,   // limit 
       s_message             ,   // reason of failure 
       __FILE__              ,   // the file 
@@ -504,17 +642,19 @@ Ostap::Math::Integrator::integrate_singular_
 // ============================================================================
 Ostap::Math::Integrator::result
 Ostap::Math::Integrator::integrateX_
-( Ostap::Math::Integrator::function2 f2     , 
-  const double                       y       , 
-  const double                       xmin    ,
-  const double                       xmax    ,
-  const Ostap::Math::WorkSpace&      ws      , 
-  const std::size_t                  tag     ,
-  const unsigned short               rescale ) 
+( Ostap::Math::Integrator::function2 f2         , 
+  const double                       y          , 
+  const double                       xmin       ,
+  const double                       xmax       ,
+  const Ostap::Math::WorkSpace&      ws         , 
+  const std::size_t                  tag        ,
+  const unsigned short               rescale    ,
+  const double                       aprecision , 
+  const double                       rprecision ) 
 {
   auto f2_ = std::cref ( f2 ) ;
   auto f1  = std::bind ( f2_ , std::placeholders::_1 , y ) ;
-  return integrate_ ( std::cref ( f1 ) , xmin , xmax , ws , tag , rescale ) ;
+  return integrate_ ( std::cref ( f1 ) , xmin , xmax , ws , tag , rescale , aprecision , rprecision ) ;
 } 
 // ============================================================================
 /** calculate the integral 
@@ -530,17 +670,19 @@ Ostap::Math::Integrator::integrateX_
 // ============================================================================
 Ostap::Math::Integrator::result
 Ostap::Math::Integrator::integrateY_
-( Ostap::Math::Integrator::function2 f2      , 
-  const double                       x       , 
-  const double                       ymin    ,
-  const double                       ymax    ,
-  const Ostap::Math::WorkSpace&      ws      ,
-  const std::size_t                  tag     ,
-  const unsigned short               rescale ) 
+( Ostap::Math::Integrator::function2 f2        , 
+  const double                       x          , 
+  const double                       ymin       ,
+  const double                       ymax       ,
+  const Ostap::Math::WorkSpace&      ws         ,
+  const std::size_t                  tag        ,
+  const unsigned short               rescale    ,
+  const double                       aprecision , 
+  const double                       rprecision ) 
 {
   auto f2_ = std::cref ( f2 ) ;
   auto f1  = std::bind ( f2_ , x , std::placeholders::_1 ) ;
-  return integrate_ ( std::cref ( f1 ) , ymin , ymax , ws , tag , rescale ) ;
+  return integrate_ ( std::cref ( f1 ) , ymin , ymax , ws , tag , rescale , aprecision , rprecision ) ;
 }
 // ==========================================================================
 /** calculate the integral 
@@ -556,14 +698,16 @@ Ostap::Math::Integrator::integrateY_
 // ==========================================================================
 Ostap::Math::Integrator::result 
 Ostap::Math::Integrator::integrate_
-( Ostap::Math::Integrator::function2 f2   , 
-  const double                       xmin , 
-  const double                       xmax ,
-  const double                       ymin , 
-  const double                       ymax , 
-  const Ostap::Math::WorkSpace&     /* ws */ , 
-  const std::size_t                  tag     ) 
-{ return integrate_ ( std::cref ( f2 ) , xmin , xmax , ymin , ymax , tag ) ; }
+( Ostap::Math::Integrator::function2 f2         , 
+  const double                       xmin       , 
+  const double                       xmax       ,
+  const double                       ymin       , 
+  const double                       ymax       , 
+  const Ostap::Math::WorkSpace&     /* ws */    , 
+  const std::size_t                  tag        ,
+  const double                       aprecision , 
+  const double                       rprecision ) 
+{ return integrate_ ( std::cref ( f2 ) , xmin , xmax , ymin , ymax , tag , aprecision , rprecision ) ; }
 // ==========================================================================
 /** calculate the integral 
  *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
@@ -577,12 +721,14 @@ Ostap::Math::Integrator::integrate_
 // ==========================================================================
 Ostap::Math::Integrator::result
 Ostap::Math::Integrator::integrate_
-( Ostap::Math::Integrator::function2 f2   , 
-  const double                       xmin , 
-  const double                       xmax ,
-  const double                       ymin , 
-  const double                       ymax ,
-  const std::size_t                  tag  ) 
+( Ostap::Math::Integrator::function2 f2         , 
+  const double                       xmin       ,  
+  const double                       xmax       ,
+  const double                       ymin       , 
+  const double                       ymax       ,
+  const std::size_t                  tag        , 
+  const double                       aprecision , 
+  const double                       rprecision ) 
 { 
   //
   static const Ostap::Math::GSL::Integrator2D<function2> s_cubature{} ;
@@ -594,15 +740,15 @@ Ostap::Math::Integrator::integrate_
   std::tie ( ierror , value , error ) = s_cubature.cubature 
     ( &F          ,   // the function  
       100000      ,   // limits  
-      s_APRECISION ,   // absolute precision 
-      s_RPRECISION ,   // relative precision 
+      0 < aprecision ? aprecision : s_APRECISION ,   // absolute precision 
+      0 < rprecision ? rprecision : s_RPRECISION ,   // relative precision 
       //
       s_message   ,   // message 
       __FILE__    ,   // the file name 
       __LINE__    ,   // the line number 
       tag         ) ; // tag/label 
   //
-  return result  ( value , error );
+  return result  ( value , error ) ;
 }
 // =============================================================================
 

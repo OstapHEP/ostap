@@ -1,6 +1,7 @@
 ## New features: 
 
  1. add new test `test_fitting_fitresult.py` for variosu expressions and their uncertainties 
+ 1. improve `Ostap::Math::Integrator` allowig to specify the absolute and rleative precisions 
  
 ## Backward incompatible:  
 
