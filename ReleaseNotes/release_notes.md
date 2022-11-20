@@ -2,7 +2,8 @@
 
  1. add new test `test_fitting_fitresult.py` for variosu expressions and their uncertainties 
  1. improve `Ostap::Math::Integrator` allowig to specify the absolute and rleative precisions 
- 
+ 1. move `hash_combine` from `local_hash.h` to `Ostap/Utils.h` 
+   
 ## Backward incompatible:  
 
 ## Bug fixes:

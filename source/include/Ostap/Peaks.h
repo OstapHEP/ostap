@@ -3401,6 +3401,171 @@ namespace Ostap
     };
     // ========================================================================
 
+
+
+    // // ========================================================================
+    // /** @class SkewGenT
+    //  *  Skewwed Generalised t-distribution
+    //  *  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution
+    //  *  Original function is parameterised in terms of parameters 
+    //  *  - \f$ \mu \$ related to locartion 
+    //  *  - \f$ \sigma \$ related to width/scale 
+    //  *  - \f$ -1 < \lambda < 1 \f$ related to asymmetry/skewness  
+    //  *  - \f$ 0<p, 0<q \f$ related to kutsosis
+    //  *
+    //  *  Mean value is defiend if \f$ 1 < pq \f$ 
+    //  *  RMS si defined for \f$ 2 < pq \f$
+    //  * 
+    //  *  In this view here we adopt sligth reparameterisation in terms of 
+    //  *  - \f$ 0 < r \f$, such as  \f$  r = \frac{1}{p} 
+    //  *  - \f$ 0< \alpha \f$, such as \f$ pq = \alpha + 2 \f$
+    //  *  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+    //  *
+    //  *  Usage of \f$ \alpha \f$ ensures the existance of the  mean value and RMS.
+    //  * 
+    //  *  Special limitnig cases:
+    //  *  - \f$ q\rigtharrow +\infty (\alpha \rightarrow +\infty) \f$ 
+    //  *     Generalized Error Distribution 
+    //  *  - \f$ \lambda=0 (\xi = 0)  \f$ Generalized t-distribution 
+    //  *  - \f$ p=2(r=\frac{1}{2}) \f$  Skewed t-distribution 
+    //  *  - \f$ p=1(r=1), q\rigtharrow +\infty (\alpha\rightarrow+\infty) \f$
+    //  *     Skewed Laplace distribution 
+    //  *  - \f$ \lambda=0, q\rigtharrow +\infty (\alpha\rightarrow+\infty) \f$
+    //  *     Generalized Error Distribution 
+    //  *  - \f$ p=2(r=\frac{1}{2}), q\rigtharrow +\infty (\alpha\rightarrow+\infty) \f$
+    //  *     Skewed Normal distribution 
+    //  *  - \f$ \sigma=1, \lambda=0,p=2(r=\frac{1}{2},  q=\frac{n+2}{2} (\alpha=n) \f$
+    //  *     Student's t-distribution 
+    //  *  - \f$ \lambda=0, p=1(r=1), q\rigtharrow +\infty (\alpha\rightarrow+\infty) \f$
+    //  *     Laplace distribution 
+    //  *  - \f$ \lambda=0, p=2(r=\frac{1}{2}, q\rigtharrow +\infty (\alpha\rightarrow+\infty) \f$
+    //  *     Skewed Normal distribution 
+    //  *
+    //  *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
+    //  *  @date 2022-01-19
+    //  */
+    // class SkewGenT
+    // {
+    // public:
+    //   // ======================================================================    
+    //   /** constructor with full parameters 
+    //    *  @param mu    related to location 
+    //    *  @param sigma related to RSM/scale/width 
+    //    *  @param xi     related to asymmetry/skewness
+    //    *  @param r      shape parameter 
+    //    *  @param alpha  shape parameter    
+    //    */
+    //   SkewGenT  
+    //   ( const double mu     = 0   ,    // location parameter 
+    //     const double sigma  = 1   ,    // width parameter 
+    //     const double xi     = 0   ,    // asymmetry/skewness parameter 
+    //     const double r      = 0.5 ,    // shape parameter 
+    //     const double alpha  = 2   ) ;  // shape parameter 
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// evaluate the pdf 
+    //   double  pdf ( const double x ) const ;
+    //   /// evaluate the pdf 
+    //   inline double evaluate    ( const double x ) const { return pdf (  x ) ; }
+    //   /// evaluate the pdf 
+    //   inline double operator () ( const double x ) const { return pdf (  x ) ; }
+    //   // ======================================================================
+    // public: // getters 
+    //   // ======================================================================
+    //   /// locaton parameter 
+    //   inline double mu    () const { return m_mu    ; }
+    //   /// width/scale parameter 
+    //   inline double sigma () const { return m_sigma ; }
+    //   /// asymmetry/skewness  parameter      
+    //   inline double xi    () const { return m_xi    ; }
+    //   /// shape parameter 
+    //   inline double r     () const { return m_r     ; }
+    //   /// shape parameter 
+    //   inline double alpha () const { return m_alpha ; }
+    //   // ======================================================================
+    //   // other parameters 
+    //   // ======================================================================
+    //   /// original lambda parametter 
+    //   inline double lambda () const { return m_lambda ; }
+    //   /// original lambda parametter 
+    //   inline double lambd  () const { return m_lambda ; }
+    //   /// progonam p-parameter 
+    //   inline double p      () const { return m_p      ; }
+    //   /// original q-parameter 
+    //   inline double q      () const { return m_q      ; }
+    //   /// helper scale parameter 
+    //   double        v      () const ;
+    //   /// helper bias parameter 
+    //   double        m      () const ;
+    //   /// helper bias parameter for the given v-parameter 
+    //   double        m      ( const double v ) const ;
+    //   // ======================================================================
+    // public: // setters 
+    //   // ======================================================================
+    //   bool setMu    ( const double value ) ;
+    //   bool setSigma ( const double value ) ;
+    //   bool setXi    ( const double value ) ;
+    //   bool setR     ( const double value ) ;
+    //   bool setAlpha ( const double value ) ;
+    //   // ======================================================================
+    // public: // integrals 
+    //   // ======================================================================
+    //   /// integral 
+    //   double integral () const ;
+    //   /// integral from low to high 
+    //   double integral
+    //   ( const double low  , 
+    //     const double high ) const ;
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// get the unique tag 
+    //   std::size_t tag () const ; // get the unique tag 
+    //   // ======================================================================
+    // private: // true parameters         
+    //   // ======================================================================
+    //   /// location 
+    //   double m_mu     { 0   } ; // location parameter
+    //   /// width/scale 
+    //   double m_sigma  { 1   } ; // width/scsle parameter
+    //   /// asymmetry/skewness parameter 
+    //   double m_xi     { 0   } ;
+    //   /// shape parametyer 
+    //   double m_r      { 0.5 } ;
+    //   /// shape parametyer 
+    //   double m_alpha  { 2   } ;
+    //   // ======================================================================
+    // private: // helper parameters 
+    //   // ======================================================================
+    //   /// original lambda parameter 
+    //   double m_lambda { -100 } ;
+    //   /// original p-parameter 
+    //   double m_p      { -100 } ;
+    //   /// original q-parameter 
+    //   double m_q      { -100 } ;         
+    //   /// helper bias parameter 
+    //   double m_mc     { 0    } ;
+    //   /// =====================================================================
+    // private: // helper math constants 
+    //   /// =====================================================================
+    //   ///  1/ [ q^{1/p} B ( 1/p, q)  
+    //   double   m_norm { -100 } ;
+    //   /// B (2/p,q-1/p) / B (1/p,q)
+    //   double   m_b2   { -100 } ;
+    //   /// B (3/p,q-2/p) B (1/p,q)
+    //   double   m_b3   { -100 } ;
+    //   /// q^{1/p}
+    //   double   m_qip  { -100 } ;
+    //   /// =====================================================================      
+    // private:
+    //   // ======================================================================
+    //   /// integration workspace
+    //   Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
+    //   // ======================================================================      
+    // } ;  
+    // // ========================================================================
+
     // ========================================================================
     /// some finite functions 
     // ========================================================================
