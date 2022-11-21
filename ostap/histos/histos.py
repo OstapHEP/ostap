@@ -4108,8 +4108,9 @@ def _smear_ ( h1 , sigma , addsigmas = 5 , silent = True ) :
         ## if very narrow, skip it...
         if sig < 0.01 * x1w  :
             
-            i2      = h2.findBin  ( x1c )
-            h2[i2] += val1 
+            i2 = h2.findBin  ( x1c )
+            if i2 in h2 : h2 [ i2 ] += val1
+            
             continue 
         
         for ibin2 in h2.items() :

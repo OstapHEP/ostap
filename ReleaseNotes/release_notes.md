@@ -9,6 +9,8 @@
 
 ## Bug fixes:
 
+ 1. minor fix in `histos.py:smear`
+
 # v1.9.4.2
 
 ## New features: 
