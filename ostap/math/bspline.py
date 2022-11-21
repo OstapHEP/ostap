@@ -216,7 +216,7 @@ def interpolate ( func , abscissas , spline , *args ) :
     """Construct the interpolation B-spline
     
     func      : the ``function''
-    abscissas : abscissas, if None/Empty,  Greville's abscissas from spline will be used
+    abscissas : abscissas, if None/Empty,  Greville's abscissas from the spline will be used
     spline    : the spline will be constructed from ``spline'' and ``args''
     
     :Example:
