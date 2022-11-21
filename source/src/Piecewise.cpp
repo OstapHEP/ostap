@@ -50,6 +50,12 @@ void Ostap::Math::Piecewise::add_
   std::function<double(double)> fi ,
   const double                  si ) 
 {
+  // remove the entries that are not actual anymore 
+  while ( 1 <= m_edges.size() && xi < m_edges.back() ) 
+  {
+    m_edges.pop_back() ;
+    m_funcs.pop_back() ;
+  }
   //
   Ostap::Assert ( m_edges.empty () || xi > m_edges.back() , s_ERROR , s_METHOD ) ;
   //

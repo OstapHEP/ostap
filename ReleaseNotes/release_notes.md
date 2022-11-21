@@ -3,6 +3,7 @@
  1. add new test `test_fitting_fitresult.py` for variosu expressions and their uncertainties 
  1. improve `Ostap::Math::Integrator` allowig to specify the absolute and rleative precisions 
  1. move `hash_combine` from `local_hash.h` to `Ostap/Utils.h` 
+ 1. improve `Ostap::Math::Piecewise` 
    
 ## Backward incompatible:  
 
@@ -31,7 +32,7 @@
  1. fix/impove issue with standard TMVA plots 
  1. update TMVA examples/tests 
  1. add `full_path` methods for `ROOT.TDirectory` and `ROOT.TTree`
- 1. improve `addTMVAresponce` functons 
+ 1. improve `addTMVAresponce` functions 
  1. remove comma separator from `ds_project`
  1. slightly improve the prints from `tree_reduce`
  
