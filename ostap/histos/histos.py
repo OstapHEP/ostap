@@ -3994,7 +3994,7 @@ ROOT.TH1F.efficiency = _h1_effic2_
 ROOT.TH1D.efficiency = _h1_effic2_ 
 
 # ================================================================================
-if (3,2) <= python_info : _erfc_ = math.erfc 
+if (2,7) <= python_info : _erfc_ = math.erfc 
 else                    : _erfc_ = ROOT.Math.erfc
 # ================================================================================
 _sqrt_2_ = math.sqrt( 2.0 )
