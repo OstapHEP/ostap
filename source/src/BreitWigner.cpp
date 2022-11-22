@@ -1051,11 +1051,13 @@ std::string Ostap::Math::Channel0::describe() const
 // constructor
 // ============================================================================
 Ostap::Math::BW::BW
-( const double                  m0       ,
-  const Ostap::Math::ChannelBW& channel ) 
-  : m_m0         ( std::abs ( m0 )       )
+( const double                  m0      ,
+  const Ostap::Math::ChannelBW& channel ,
+  const double                  scale   )
+  : m_m0         ( std::abs ( m0    )  )
   , m_threshold  ( std::sqrt ( channel.s_threshold  () ) )  //  cache it! 
-  , m_channels   ( ) 
+  , m_scale      ( std::abs ( scale )  )
+  , m_channels   ( )    
   , m_workspace  ( 10000 )
 {
   add ( channel ) ;
@@ -1064,9 +1066,11 @@ Ostap::Math::BW::BW
 // protected default (empty) constructor 
 // ============================================================================
 Ostap::Math::BW::BW
-( const double  m0 )
-  : m_m0         ( std::abs ( m0 ) )
+( const double  m0    , 
+  const double  scale )
+  : m_m0         ( std::abs ( m0    ) )
   , m_threshold  ( 0 )  //  cache it! 
+  , m_scale      ( std::abs ( scale ) ) 
   , m_channels   (   ) 
   , m_workspace  ( 10000 )
 {}
@@ -1078,6 +1082,7 @@ Ostap::Math::BW::BW
   : m_m0         ( bw.m_m0        ) 
   , m_threshold  ( bw.m_threshold )
   , m_channels   ( ) 
+  , m_scale      ( bw.m_scale     )
   , m_workspace  ( 10000 )
 {
   for ( const auto& c : bw.m_channels ) { add ( *c ) ; }
@@ -1146,7 +1151,7 @@ double Ostap::Math::BW::breit_wigner
   // rescale the overall  normalization   facror
   const double gs = 1 < m_channels.size () ? gamma () / channel()->gamma0 () : 1.0 ;
   //
-  return 2 * m * n2 * std::norm ( A ) * rhos * gs / M_PI ;
+  return 2 * m * n2 * std::norm ( A ) * rhos * gs / M_PI * m_scale ;
   //
 }
 // ============================================================================
@@ -1164,6 +1169,14 @@ bool Ostap::Math::BW::setM0     ( const double x )
   const double v       = std::abs ( x ) ;
   if ( s_equal ( v , m_m0 ) ) { return false ; } // RETURN
   m_m0   = v ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::BW::setScale ( const double x )
+{
+  const double v       = std::abs ( x ) ;
+  if ( s_equal ( v , m_scale ) ) { return false ; } // RETURN
+  m_scale   = v ;
   return true ;
 }
 // ============================================================================
@@ -1328,8 +1341,9 @@ Ostap::Math::BreitWigner::BreitWigner
   const double         gam0   ,
   const double         m1     ,
   const double         m2     ,
-  const unsigned short L      ) 
-  : BW ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L ) )
+  const unsigned short L      , 
+  const double         scale  )
+  : BW ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L ) , scale )
 {}
 // ============================================================================
 /*  constructor from all parameters
@@ -1342,13 +1356,14 @@ Ostap::Math::BreitWigner::BreitWigner
  */
 // ============================================================================
 Ostap::Math::BreitWigner::BreitWigner
-( const double                               m0   , 
-  const double                               gam0 ,
-  const double                               m1   ,
-  const double                               m2   ,
-  const unsigned short                       L    ,
-  const Ostap::Math::FormFactors::JacksonRho F    )  
-  : BW ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L , F ) )
+( const double                               m0     , 
+  const double                               gam0   ,
+  const double                               m1     ,
+  const double                               m2     ,
+  const unsigned short                       L      ,
+  const Ostap::Math::FormFactors::JacksonRho F      , 
+  const double                               scale  )
+  : BW ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L , F ) , scale )
 {}
 // ============================================================================
 /*  constructor from all parameters
@@ -1361,13 +1376,14 @@ Ostap::Math::BreitWigner::BreitWigner
  */
 // ============================================================================
 Ostap::Math::BreitWigner::BreitWigner
-( const double                               m0   , 
-  const double                               gam0 ,
-  const double                               m1   ,
-  const double                               m2   ,
-  const unsigned short                       L    ,
-  const Ostap::Math::FormFactor&             F    )  
-  : BW ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L , F ) )
+( const double                               m0    , 
+  const double                               gam0  ,
+  const double                               m1    ,
+  const double                               m2    ,
+  const unsigned short                       L     ,
+  const Ostap::Math::FormFactor&             F     ,  
+  const double                               scale )
+  : BW ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L , F ) , scale )
 {}
 // ============================================================================
 /*  constructor from all parameters
@@ -1376,9 +1392,10 @@ Ostap::Math::BreitWigner::BreitWigner
  */
 // ============================================================================
 Ostap::Math::BreitWigner::BreitWigner
-( const double                  m0 , 
-  const Ostap::Math::ChannelBW& c  )  
-  : BW ( m0 , c )
+( const double                  m0    , 
+  const Ostap::Math::ChannelBW& c     ,  
+  const double                  scale )
+  : BW ( m0 , c , scale )
 {}
 // ============================================================================
 /// copy constructor 
@@ -1431,13 +1448,15 @@ Ostap::Math::BreitWignerMC::clone() const
 Ostap::Math::Rho0::Rho0
 ( const double m0       ,
   const double gam0     ,
-  const double pi_mass  )
+  const double pi_mass  ,
+  const double scale    ) 
   : Ostap::Math::BreitWigner ( m0         ,
                                gam0       ,
                                pi_mass    ,
                                pi_mass    ,
                                1          ,
-                               Ostap::Math::FormFactors::Jackson_A7 )
+                               Ostap::Math::FormFactors::Jackson_A7 , 
+                               scale      )
   , m_m1 ( std::abs ( pi_mass ) )  
 {}
 // ============================================================================
@@ -1452,13 +1471,15 @@ Ostap::Math::Kstar0::Kstar0
 ( const double m0       ,
   const double gam0     ,
   const double k_mass   ,
-  const double pi_mass  )
+  const double pi_mass  ,
+  const double scale    ) 
   : Ostap::Math::BreitWigner ( m0         ,
                                gam0       ,
                                k_mass     ,
                                pi_mass    ,
                                1          ,
-                               Ostap::Math::FormFactors::Jackson_A2 )
+                               Ostap::Math::FormFactors::Jackson_A2 , 
+                               scale      )
   , m_m1 ( std::abs ( k_mass  ) )  
   , m_m2 ( std::abs ( pi_mass ) )  
 {}
@@ -1473,13 +1494,15 @@ Ostap::Math::Kstar0::~Kstar0(){}
 Ostap::Math::Phi0::Phi0
 ( const double m0       ,
   const double gam0     ,
-  const double k_mass   )
+  const double k_mass   ,
+  const double scale    ) 
   : Ostap::Math::BreitWigner ( m0         ,
                                gam0       ,
                                k_mass     ,
                                k_mass     ,
                                1          ,
-                               Ostap::Math::FormFactors::Jackson_A2 )
+                               Ostap::Math::FormFactors::Jackson_A2 , 
+                               scale      )
   , m_m1 ( std::abs ( k_mass  ) )  
 {}
 // ============================================================================
@@ -1624,9 +1647,9 @@ std::size_t Ostap::Math::ChannelFlatteBugg::tag() const
   static const std::string s_name = "ChannelFlatteBugg" ;
   return std::hash_combine ( s_name ,
                              Ostap::Math::ChannelFlatte::tag () , 
+                             m_alpha      , 
                              m_ps2n.tag() ,
                              m_ps2k.tag() ,
-                             m_alpha      , 
                              m_fc         , 
                              m_fn         ) ;
 }
@@ -1664,8 +1687,9 @@ Ostap::Math::Flatte::Flatte
   const double mA2   ,
   const double mB1   ,
   const double mB2   ,
-  const double g0    )
-  : BW ( m0 , ChannelFlatte ( 1 , mA1 , mA2 ) ) 
+  const double g0    ,
+  const double scale )
+  : BW ( m0 , ChannelFlatte ( 1 , mA1 , mA2 ) , scale ) 
   , m_A1 ( std::abs ( mA1 ) ) 
   , m_A2 ( std::abs ( mA2 ) ) 
   , m_B1 ( std::abs ( mB1 ) ) 
@@ -1730,8 +1754,9 @@ Ostap::Math::FlatteBugg::FlatteBugg
   const double mpizero , // pi0 mass in GeV 
   const double mKplus  , // K+ mass in GeV 
   const double mKzero  , // K0 mass in GeV 
-  const double g0      ) // the constant width for "other" decays
-  : BW ( m0 , ChannelFlatteBugg ( g1 , mpiplus , mpizero , mKplus , 0.0 , 2.0/3.0 , 1.0/3.0 ) ) 
+  const double g0      , // the constant width for "other" decays
+  const double scale   )
+  : BW ( m0 , ChannelFlatteBugg ( g1 , mpiplus , mpizero , mKplus , 0.0 , 2.0/3.0 , 1.0/3.0 ) , scale ) 
   , m_alpha   ( std::abs ( alpha ) )
   , m_mpiplus ( std::abs ( mpiplus ) ) 
   , m_mpizero ( std::abs ( mpizero ) ) 
@@ -1770,7 +1795,13 @@ Ostap::Math::FlatteBugg::clone() const
 std::size_t Ostap::Math::FlatteBugg::tag () const
 { 
   static const std::string s_name = "FlatteBugg" ;
-  return std::hash_combine ( s_name , Ostap::Math::BW::tag () ) ; 
+  return std::hash_combine ( s_name , 
+                             Ostap::Math::BW::tag () , 
+                             m_alpha   , 
+                             m_mpiplus , 
+                             m_mpizero , 
+                             m_mKplus  , 
+                             m_mKzero  ) ; 
 }
 
 
@@ -3185,4 +3216,3 @@ double Ostap::Math::A2::operator() ( const double s ) const
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
-

@@ -645,6 +645,19 @@ def _cmplx_ne_    ( s , o ) :
         return _real_ ( s ) != _real_ ( o ) or _imag_ ( s ) != _imag_ ( o )
     return complex ( s ) != o 
 
+
+# ==============================================================================
+## deserialize the complex numbers
+def _cmplx_factory_ ( cmplxt , re , im ) :
+    """Deserialize the complex numbers
+    """
+    return cmplxt ( re , im )
+# ==============================================================================
+## reduce complex numbers 
+def _cmplx_reduce_ ( c ) :
+    """Reduce complex numbers"""
+    return _cmplx_factory_ , ( type ( c ) , c.real , c.imag )
+    
 # =============================================================================
 if root_version_int < 62200  :
     # =========================================================================
@@ -768,7 +781,9 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
     if not hasattr ( CMPLX ,  '__truediv__' ) : CMPLX. __truediv__  = CMPLX. __div__ 
     if not hasattr ( CMPLX , '__itruediv__' ) : CMPLX.__itruediv__  = CMPLX.__idiv__ 
     if not hasattr ( CMPLX , '__rtruediv__' ) : CMPLX.__rtruediv__  = CMPLX.__rdiv__ 
-    
+
+    CMPLX.__reduce__   = _cmplx_reduce_ 
+
 
 
 # =============================================================================
@@ -913,11 +928,12 @@ else :
         return ( a * b ) // _gcd ( a , b )
 
 # =============================================================================
-## imports at the end of the module to avoid ciurcular dependency 
+## imports at the end of the module to avoid the circular dependency 
 # =============================================================================
 
 import ostap.math.reduce  
 import ostap.math.polynomials 
+
 
 # =============================================================================
 if '__main__' == __name__ :

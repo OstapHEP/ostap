@@ -43,7 +43,7 @@ from   ostap.core.core import ( cpp      , Ostap     ,
 from   ostap.math.base          import frexp10 
 from   ostap.core.ostap_types   import integer_types, num_types , long_type, sequence_types
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.core.meta_info     import root_info 
+from   ostap.core.meta_info     import root_info, python_info  
 import ostap.plotting.draw_attributes 
 import ROOT, sys, math, ctypes, array 
 # =============================================================================
@@ -3993,23 +3993,23 @@ ROOT.TH1D.effic      = _h1_effic_
 ROOT.TH1F.efficiency = _h1_effic2_ 
 ROOT.TH1D.efficiency = _h1_effic2_ 
 
-
-
 # ================================================================================
-_sqrt_2_ = math.sqrt( 2.0 ) 
+if (3,2) <= python_info : _erfc_ = math.erfc 
+else                    : _erfc_ = ROOT.Math.erfc
+# ================================================================================
+_sqrt_2_ = math.sqrt( 2.0 )
 ## helper function : convolution of gaussian with the single pulse 
 def _cnv_ ( x , x0 , dx , sigma ) :
     """Simple wrapper over error-function:
     convolution of gaussian with the single pulse 
     """
-    _erf_ = ROOT.Math.erfc
     #
-    s = abs   ( float ( sigma ) ) 
+    s = abs ( float ( sigma ) ) 
     #
-    h = ( x - ( x0 + 0.5 * dx ) ) / _sqrt_2_ / s 
-    l = ( x - ( x0 - 0.5 * dx ) ) / _sqrt_2_ / s 
+    h = ( x - ( x0 + 0.5 * dx ) ) / ( _sqrt_2_ * s )
+    l = ( x - ( x0 - 0.5 * dx ) ) / ( _sqrt_2_ * s )
     #
-    return 0.5 * ( _erf_ ( h ) - _erf_ ( l ) ) / dx 
+    return 0.5 * ( _erfc_ ( h ) - _erfc_ ( l ) ) / dx 
 
 # =============================================================================
 ## "Smear" : make a convolution of the histogram with gaussian function

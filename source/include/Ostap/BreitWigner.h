@@ -1369,8 +1369,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      BW ( const double     m0      , 
-           const ChannelBW& channel ) ;     
+      BW ( const double     m0        , 
+           const ChannelBW& channel   , 
+           const double     scale = 1 ) ;     
       ///    copy constructor
       BW ( const BW&  bw ) ;
       /// move construtor
@@ -1383,7 +1384,8 @@ namespace Ostap
     protected :
       // ======================================================================
       /// default (empty) constructor 
-      BW ( const double m0 = 1 ) ;
+      BW ( const double m0    = 1 , 
+           const double scale = 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1441,6 +1443,8 @@ namespace Ostap
        *   of the Breit-Wigner
        */
       double         gamma  () const ;
+      /// get the scale factor 
+      double         scale  () const { return m_scale ; }
       // =====================================================================
     public: // number of channels 
       // ======================================================================
@@ -1470,6 +1474,10 @@ namespace Ostap
       bool setPeak   ( const double x ) { return setM0     ( x ) ; }
       // set total width at pole 
       bool setGamma  ( const double x ) ;
+      // ======================================================================
+      /// set scale factor 
+      // ======================================================================
+      bool setScale ( const double value ) ;
       // ======================================================================
     public: /// integration 
       // ======================================================================
@@ -1512,6 +1520,8 @@ namespace Ostap
       double m_m0        { 1 } ; // the mass
       /// the threshold 
       double m_threshold { 0 } ; // the threshold 
+      /// additional scale factor 
+      double m_scale     { 1 } ; // additonal scale factor
       // ======================================================================
     protected:
       // ======================================================================
@@ -1553,7 +1563,8 @@ namespace Ostap
         const double         gam0   = 0.150 ,
         const double         m1     = 0.139 ,
         const double         m2     = 0.139 ,
-        const unsigned short L      = 0     ) ;
+        const unsigned short L      = 0     , 
+        const double         scale  = 1     ) ;
       // ======================================================================
       /** constructor from all parameters
        *  @param m0   the pole position 
@@ -1570,7 +1581,8 @@ namespace Ostap
         const double         m1         ,
         const double         m2         ,
         const unsigned short L          ,
-        const FormFactors::JacksonRho F ) ;
+        const FormFactors::JacksonRho F , 
+        const double         scale  = 1 ) ;
       // ======================================================================
       /** constructor from all parameters
        *  @param m0   the pole position 
@@ -1581,17 +1593,19 @@ namespace Ostap
        *  @param F    the formfactor 
        */
       BreitWigner
-      ( const double         m0    ,
-        const double         gam0  ,
-        const double         m1    ,
-        const double         m2    ,
-        const unsigned short L     ,
-        const FormFactor&    F     ) ;
+      ( const double         m0         ,
+        const double         gam0       ,
+        const double         m1         ,
+        const double         m2         ,
+        const unsigned short L          ,
+        const FormFactor&    F          ,
+        const double         scale  = 1 ) ;
       // ======================================================================
       /// constructor from the channel 
       BreitWigner
-      ( const double         m0       ,
-        const ChannelBW&     channel ) ;
+      ( const double         m0          ,
+        const ChannelBW&     channel     , 
+        const double         scale   = 1 ) ;
       /// copy constructor
       BreitWigner ( const BreitWigner&  bw ) ;
       /// move constructor
@@ -1619,7 +1633,8 @@ namespace Ostap
       Rho0
       ( const double m0       = 770   ,     // MeV
         const double gam0     = 150   ,     // MeV
-        const double pi_mass  = 139.6 ) ;   // MeV
+        const double pi_mass  = 139.6 ,     // MeV 
+        const double scale    = 1     ) ;
       /// destructor
       virtual ~Rho0 () ;
       // ======================================================================
@@ -1655,7 +1670,8 @@ namespace Ostap
       ( const double m0       = 770   ,     // MeV
         const double gam0     = 150   ,     // MeV
         const double k_mass   = 493.7 ,     // MeV
-        const double pi_mass  = 139.6 ) ;   // MeV
+        const double pi_mass  = 139.6 ,     // MeV
+        const double scale    = 1     ) ;
       /// destructor
       virtual ~Kstar0 () ;
       // ======================================================================
@@ -1691,7 +1707,8 @@ namespace Ostap
       Phi0
       ( const double m0       = 1019.5 ,     // MeV
         const double gam0     =    4.3 ,     // MeV
-        const double k_mass   =  493.7 ) ;   // MeV
+        const double k_mass   =  493.7 ,     // MeV
+        const double scale    = 1      ) ;
       /// destructor
       virtual ~Phi0 () ;
       // ======================================================================
@@ -1796,7 +1813,8 @@ namespace Ostap
         const double mA2   = 139.57 ,
         const double mB1   = 493.68 ,
         const double mB2   = 493.68 , 
-        const double g0    = 0     ) ; // the constant width for "other" decays
+        const double g0    = 0      ,  // the constant width for "other" decays
+        const double scale = 1      ) ; 
       /// copy constructor 
       Flatte ( const Flatte&  right ) ;
       /// move constructor 
@@ -1883,7 +1901,8 @@ namespace Ostap
         const double mpizero  = 0.13498 , // pi0 mass in GeV 
         const double mKplus   = 0.49368 , // K+ mass in GeV 
         const double mKzero   = 0.49761 , // K0 mass in GeV 
-        const double g0       = 0     ) ; // the constant width for "other" decays
+        const double g0       = 0       ,  // the constant width for "other" decays
+        const double scale    = 1       ) ; 
       /// copy constructor 
       FlatteBugg ( const FlatteBugg&  right ) ;
       /// move constructor 
