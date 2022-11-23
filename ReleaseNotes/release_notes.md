@@ -1,5 +1,7 @@
 ## New features: 
 
+  1. simplify a bit `PDF.load_params` method
+
 ## Backward incompatible:  
 
 ## Bug fixes:

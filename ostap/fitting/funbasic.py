@@ -386,24 +386,26 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
             params = params.dct_params () 
         
         ## get the list of the actual parameters 
-        pars = self.params ( dataset ) 
+        pars = {}
+        for p in  self.params ( dataset ) :
+            pars [ p.name ] = p
 
+            
         table = [] 
         if isinstance ( params , dictlike_types ) :
             keys   = set () 
             for key in params :
-                for p in pars :
-                    if not hasattr ( p  , 'setVal' ) : continue
-                    if p.name != key                 : continue
-                    
-                    v  = params[key]
-                    vv = float ( v  )
-                    pv = p.getVal ()   
-                    if vv != pv : 
-                        p.setVal   ( vv )
-                        item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
-                        table.append ( item ) 
-                    keys.add ( key )
+                if not key in pars : continue
+                p  = pars   [ key ]
+                if not hasattr ( p  , 'setVal' ) : continue
+                v  = params [ key ]
+                pv = float  ( p )
+                vv = float  ( v )
+                if vv != pv : 
+                    p.setVal ( vv )
+                    item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
+                    table.append ( item ) 
+                keys.add ( key )
 
             not_used = set ( params.keys() ) - keys 
 
@@ -411,19 +413,20 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         else :
             
             keys = set()        
-            for i , pp in enumerate ( params ) :  
-                if not isinstance ( pp , ROOT.RooAbsReal ) : continue
-                for p in pars :
-                    if not hasattr ( p  , 'setVal' )       : continue
-                    if p.name != pp.name                   : continue
-                    
-                    vv = float ( pp )
-                    pv = p.getVal () 
-                    if vv != pv :
-                        p.setVal   ( vv )
-                        item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
-                        table.append ( item ) 
-                    keys.add  ( i )
+            for i , v in enumerate ( params ) :  
+                if not isinstance ( v, ROOT.RooAbsReal ) : continue
+                key = v.name 
+                if not key in pars                       : continue
+                p = pars [ key ]
+                if not hasattr ( p  , 'setVal' )         : continue
+                ##
+                vv = float  ( v )
+                pv = float  ( p ) 
+                if vv != pv :
+                    p.setVal   ( vv )
+                    item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
+                    table.append ( item ) 
+                keys.add  ( i )
 
             not_used = []
             for i , pp in enumerate ( params ) :  
@@ -433,20 +436,20 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         ## explicit parameters 
         keys = set()        
         for key in kwargs :
-            for p in pars :
-                if not hasattr ( p  , 'setVal' ) : continue
-                if p.name != key                 : continue
-                
-                v  = kwargs [key]
-                vv = float ( v  )
-                pv = p.getVal ()   
-                if vv != pv : 
-                    p.setVal   ( vv )
-                    item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
-                    table.append ( item ) 
-                keys.add ( key )
-                
-            not_used |= set ( kwargs.keys() ) - keys 
+            if not key in pars : continue 
+            p = pars   [ key ] 
+            v = kwargs [ key ]
+            if not hasattr ( p  , 'setVal' )         : continue
+            ##
+            vv = float  ( v )
+            pv = float  ( p ) 
+            if vv != pv :
+                p.setVal   ( vv )
+                item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
+                table.append ( item ) 
+            keys.add  ( key )
+            
+        not_used |= set ( kwargs.keys() ) - keys 
 
         if not silent :
             
