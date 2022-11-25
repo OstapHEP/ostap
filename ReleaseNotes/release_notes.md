@@ -1,3 +1,9 @@
+## New features: 
+
+## Backward incompatible:  
+
+## Bug fixes:
+
 # v1.9.4.6
 
 ## New features: 
@@ -8,6 +14,7 @@
 ## Backward incompatible:  
 
 ## Bug fixes:
+
   1. fix incorrect tag costurction for `Ostap::Math::BW` function (it affects integration cacheing)
 
 # v1.9.4.4
