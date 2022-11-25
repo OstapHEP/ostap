@@ -1,3 +1,5 @@
+# v1.9.4.6
+
 ## New features: 
 
   1. simplify a bit `PDF.load_params` method
@@ -7,7 +9,6 @@
 
 ## Bug fixes:
   1. fix incorrect tag costurction for `Ostap::Math::BW` function (it affects integration cacheing)
-
 
 # v1.9.4.4
 
