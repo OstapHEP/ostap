@@ -140,7 +140,7 @@ namespace Ostap
     public: //  helper methods 
       // =======================================================================
       /// unique tag/label  
-      virtual std::size_t tag         () const = 0 ;
+      virtual std::size_t tag       () const = 0 ;
       /// describe the channel 
       virtual std::string describe  () const = 0 ;
       // =======================================================================
@@ -154,9 +154,9 @@ namespace Ostap
     public: // interpret it as (a squared) coupling constant 
       // =======================================================================
       /// squared coupling constant 
-      inline double g2    () const { return gamma0 () ; } // squared coupling constant 
+      inline double g2       () const { return gamma0 () ; } // squared coupling constant 
       /// set a squared coupling constant 
-      inline bool   setG2 ( const double value ) { return setGamma0 ( value ) ; }
+      inline bool   setG2    ( const double value ) { return setGamma0 ( value ) ; }
       // =======================================================================
     public:
       // =======================================================================
@@ -1384,8 +1384,9 @@ namespace Ostap
     protected :
       // ======================================================================
       /// default (empty) constructor 
-      BW ( const double m0    = 1 , 
-           const double scale = 1 ) ;
+      BW 
+      ( const double m0    = 1 , 
+        const double scale = 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1453,16 +1454,16 @@ namespace Ostap
        *  @param i channel index 
        *  @return the channel with given index, or <code>nullptr</code> otherwise 
        */
-      const ChannelBW* channel ( const unsigned short i = 0 ) const
+      const ChannelBW*    channel     ( const unsigned short i = 0 ) const
       { return i < m_channels.size() ? m_channels[i].get() : nullptr ; }
       // ======================================================================
       /// get number of channels 
-      inline unsigned int nChannels() const { return m_channels.size()  ; }
+      inline unsigned int nChannels   () const { return m_channels.size()  ; }
       // ======================================================================
       /// get the threshold value (cached in constructor)
-      double           threshold   () const { return m_threshold ; }
+      double              threshold   () const { return m_threshold ; }
       /// get the threshold value (cached in constructor)
-      double           s_threshold () const { return m_threshold * m_threshold ; }
+      double              s_threshold () const { return m_threshold * m_threshold ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1472,11 +1473,9 @@ namespace Ostap
       bool setMass   ( const double x ) { return setM0     ( x ) ; }
       /// set pole position 
       bool setPeak   ( const double x ) { return setM0     ( x ) ; }
-      // set total width at pole 
+      /// set total width at pole 
       bool setGamma  ( const double x ) ;
-      // ======================================================================
       /// set scale factor 
-      // ======================================================================
       bool setScale ( const double value ) ;
       // ======================================================================
     public: /// integration 
@@ -1484,15 +1483,16 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      /// get the  gamma for the certain channel 
+      /// get the partial gamma for the certain channel 
       double gamma    ( const unsigned short i ) const 
       { return i < nChannels() ? m_channels[i] -> gamma0()            : 0.0   ; }
-      /// set the gamma for the certain decay
+      /// set the partial gamma for the certain decay
       bool   setGamma ( const unsigned short i , const double value ) 
       { return i < nChannels() ? m_channels[i] -> setGamma0 ( value ) : false ; }
       // ======================================================================
@@ -1507,8 +1507,9 @@ namespace Ostap
       void add ( const ChannelBW& ) ;
       /// add several channels 
       template <typename ...CHANNELS>
-      void add ( const ChannelBW&    channel  , 
-                 const CHANNELS& ... channels ) 
+      void add
+      ( const ChannelBW&    channel  , 
+        const CHANNELS& ... channels ) 
       {
         this -> add ( channel     ) ;
         this -> add ( channels... ) ;
@@ -1521,7 +1522,7 @@ namespace Ostap
       /// the threshold 
       double m_threshold { 0 } ; // the threshold 
       /// additional scale factor 
-      double m_scale     { 1 } ; // additonal scale factor
+      double m_scale     { 1 } ; // additional scale factor
       // ======================================================================
     protected:
       // ======================================================================
@@ -3433,11 +3434,13 @@ namespace Ostap
     public :
       // ======================================================================
       /// constructor from the breit-wigner
-      A2 ( const BW&    bw           ,
-           const double scale = 1.0  ) ;
+      A2 
+      ( const BW&    bw           ,
+        const double scale = 1.0  ) ;
       // ======================================================================
       /// copy constructor 
-      A2 ( const A2&  bw ) ;
+      A2
+      ( const A2&  bw ) ;
       /// Move constructor 
       A2 (       A2&& bw ) = default ;
       // ======================================================================
@@ -3451,12 +3454,17 @@ namespace Ostap
       const BW& bw    () const { return *m_bw.get() ; }
       double    scale () const { return m_scale      ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// unique tag 
+      std::size_t tag () const ;
+      // ======================================================================
     private: 
       // ======================================================================
       /// Breit-Wigner itself 
-      std::unique_ptr<BW>  m_bw { nullptr } ; // Breit-Wigner 
+      std::unique_ptr<BW>  m_bw    { nullptr } ; // Breit-Wigner 
       // scale factor 
-      double               m_scale { 1.0 }  ; // scale-factor 
+      double               m_scale { 1.0     } ; // scale-factor 
       // ======================================================================
     } ;  
     // ========================================================================

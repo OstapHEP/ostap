@@ -7,6 +7,7 @@
 // ============================================================================
 // local
 // ============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/Dalitz.h"
 #include "Ostap/DalitzIntegrator.h"
 #include "Ostap/Workspace.h"
@@ -132,14 +133,14 @@ double Ostap::Math::DalitzIntegrator::integrate_s
       smin              ,   // lower integration edge  
       smax              ,   // upper integration edge
       workspace ( ws )  ,   // workspace 
-      s_APRECISION       ,   // absolute precision 
-      s_RPRECISION       ,   // relative precision 
+      s_APRECISION      ,   // absolute precision 
+      s_RPRECISION      ,   // relative precision 
       -1                ,   // limit 
       s_MESSAGE1        ,   // reason of failure 
       __FILE__          ,   // the file 
       __LINE__          ,   // the line 
       GSL_INTEG_GAUSS51 ,   // rule 
-      0 == tag ? tag : std::hash_combine (  tag , d.tag() ) ) ; // tag/label 
+      0 == tag ? tag : Ostap::Utils::hash_combiner ( tag , d.tag () ) ) ; // tag/label 
   //
   return result ;  
 }
@@ -217,7 +218,7 @@ double Ostap::Math::DalitzIntegrator::integrate_s1
       __FILE__          ,   // the file 
       __LINE__          ,   // the line 
       GSL_INTEG_GAUSS51 ,   // rule 
-      0 == tag ? tag : std::hash_combine (  tag , d.tag() ) ) ; // tag/label 
+      0 == tag ? tag : Ostap::Utils::hash_combiner (  tag , d.tag() ) ) ; // tag/label 
   //
   return result ;
 }
@@ -319,7 +320,7 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
       s_MESSAGE2  , 
       __FILE__    ,
       __LINE__    , 
-      0 == tag ? tag : std::hash_combine ( f_norm , tag , d.tag() , n1 , n2 ) ) ; // tag/label
+      0 == tag ? tag : Ostap::Utils::hash_combiner ( f_norm , tag , d.tag() , n1 , n2 ) ) ; // tag/label
   //
   return result / f_norm ;
 }
@@ -409,7 +410,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
       s_MESSAGE2  , 
       __FILE__    , 
       __LINE__    , 
-      0 == tag ? tag : std::hash_combine ( f_norm , tag , d.tag () , n1 , n2 ) ) ; // tag/label
+      0 == tag ? tag : Ostap::Utils::hash_combiner ( f_norm , tag , d.tag () , n1 , n2 ) ) ; // tag/label
   //
   return result / f_norm ;
 }

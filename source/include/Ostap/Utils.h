@@ -2,10 +2,6 @@
 #ifndef OSTAP_UTILS_H 
 #define OSTAP_UTILS_H 1
 // ============================================================================
-// STD&STL
-// ============================================================================
-#include <functional>
-// ============================================================================
 /** @file Ostap/Utils.h
  *  collection of various C++ utilities 
  *  @author Vanya Belyaev
@@ -16,30 +12,6 @@ namespace Ostap
   // ==========================================================================
   namespace Utils 
   {
-    // ========================================================================
-    ///  @see http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0814r2.pdf
-    // ==========================================================================
-    template<typename T>
-    void _hash_combine ( std::size_t& seed, const T& val)
-    {
-      seed ^= std::hash<T>()(val) + 0x9e3779b9 + (seed<<6) + (seed>>2);
-    }
-    // ========================================================================
-    inline void _hash_combine ( size_t& /* seed */ ) {}
-    template <typename T, typename... Types>
-    void _hash_combine ( std::size_t& seed , const T& val, const Types&... args)
-    {
-      _hash_combine(seed,val);
-      _hash_combine(seed,args...);
-    }
-    // ========================================================================
-    template<typename RT = std::size_t, typename... T>
-    RT hash_combine ( const T&... args )
-    {
-      std::size_t seed = 0;
-      _hash_combine ( seed, args...) ;
-      return seed ;
-    }
     // ========================================================================
     // artificial namespace to prevent ADL lookups in namespace Ostap::Utils  
     namespace tagged_bool_ns

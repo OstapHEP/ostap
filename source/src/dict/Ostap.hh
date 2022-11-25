@@ -42,6 +42,7 @@
 #include "Ostap/GSL_utils.h"
 #include "Ostap/Hesse.h"
 #include "Ostap/HFuncs.h"
+#include "Ostap/Hash.h"
 #include "Ostap/HistoDump.h"
 #include "Ostap/HistoHash.h"
 #include "Ostap/HistoInterpolation.h"

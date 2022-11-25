@@ -11,6 +11,7 @@
 // ============================================================================
 // Ostap 
 // ============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/Math.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/Power.h"
@@ -1467,9 +1468,9 @@ Ostap::Math::Bernstein::Bernstein
 // ============================================================================
 std::size_t Ostap::Math::Bernstein::tag () const 
 {
-  std::size_t seed = 0 ;
-  for ( const double p : m_pars ) { std::_hash_combine ( seed , p ) ; }
-  return std::hash_combine ( seed , degree () , m_xmin , m_xmax ) ;
+  return Ostap::Utils::hash_combiner 
+    ( Ostap::Utils::hash_range ( m_pars ) ,  
+      degree () , m_xmin , m_xmax ) ;
 }
 // ======================================================================
 

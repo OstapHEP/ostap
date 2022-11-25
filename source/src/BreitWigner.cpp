@@ -366,7 +366,7 @@ double Ostap::Math::FormFactors::BlattWeisskopf::operator()
 std::size_t Ostap::Math::FormFactors::BlattWeisskopf::tag      () const
 {
   static const std::string s_name = "BlattWeisskopf";
-  return std::hash_combine ( s_name , m_what , m_L , m_b ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_what , m_L , m_b ) ; 
 }
 // ============================================================================
 // clone operation 
@@ -398,7 +398,7 @@ Ostap::Math::FormFactors::NoFormFactor::clone() const
 std::size_t Ostap::Math::FormFactors::NoFormFactor::tag      () const
 { 
   static const std::string s_name = "NoFormFactor";
-  return std::hash_combine ( s_name ,  describe () ) ; 
+  return Ostap::Utils::hash_combiner ( s_name ,  describe () ) ; 
 }
 // ============================================================================
 // describe the formfactor
@@ -455,6 +455,14 @@ Ostap::Math::ChannelBW::amplitude
 { 
   const std::complex<double> d = m0 * m0 - s - s_j * D ( s , m0 ) ;
   return 1.0 / d ;
+}
+// ============================================================================
+// unique tag/label
+// ============================================================================
+std::size_t Ostap::Math::ChannelBW::tag      () const
+{ 
+  static const std::string s_name = "ChannelBW";
+  return Ostap::Utils::hash_combiner ( s_name , m_gamma0 ) ; 
 }
 // ============================================================================
 
@@ -536,7 +544,7 @@ Ostap::Math::ChannelBW::amplitude
 // // unique tag for this lineshape 
 // // ============================================================================
 // std::size_t Ostap::Math::ChannelGeneric::tag () const
-// { return std::hash_combine  ( std::string ( "ChannelGeneric" ) ,
+// { return Ostap::Utils::hash_combiner  ( std::string ( "ChannelGeneric" ) ,
 //                               gamma0      () , 
 //                               m_sthreshold   , 
 //                               m_description  , 
@@ -582,11 +590,12 @@ Ostap::Math::ChannelWidth::clone () const
 std::size_t Ostap::Math::ChannelWidth::tag () const
 { 
   static const std::string s_name = "ChannelWidth" ;
-  return std::hash_combine  ( s_name         ,
-                              gamma0      () , 
-                              m_sthreshold   , 
-                              m_description  , 
-                              m_tag          ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name           ,
+      ChannelBW::tag() , 
+      m_sthreshold     , 
+      m_description    , 
+      m_tag            ) ; 
 }
 // ============================================================================
 
@@ -597,11 +606,11 @@ std::size_t Ostap::Math::ChannelWidth::tag () const
 // full constructor with all functions specified 
 // ============================================================================
 Ostap::Math::ChannelGamma::ChannelGamma
-( const double       gamma       ,
-  Width              width       ,  
-  const double       sthreshold  , 
-  const std::size_t  tag         ,
-  const std::string& description ) 
+( const double                     gamma       ,
+  Ostap::Math::ChannelGamma::Width width       ,  
+  const double                     sthreshold  , 
+  const std::size_t                tag         ,
+  const std::string&               description ) 
   : ChannelBW     ( gamma ) 
   , m_gamma       ( width ) 
   , m_sthreshold  ( std::abs ( sthreshold ) ) 
@@ -620,11 +629,12 @@ Ostap::Math::ChannelGamma::clone () const
 std::size_t Ostap::Math::ChannelGamma::tag () const
 { 
   static const std::string s_name = "ChannelGamma" ;
-  return std::hash_combine  ( s_name         , 
-                              gamma0      () , 
-                              m_sthreshold   , 
-                              m_description  , 
-                              m_tag          ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name            , 
+      ChannelBW::tag () , 
+      m_sthreshold      , 
+      m_description     , 
+      m_tag             ) ; 
 }
 // ============================================================================
 
@@ -671,7 +681,10 @@ double Ostap::Math::ChannelCW::rho_s
 std::size_t Ostap::Math::ChannelCW::tag () const
 {
   static const std::string s_name = "ChannelCW" ;
-  return std::hash_combine  ( s_name , ps2 () . tag () , gamma0 () ) ; 
+  return Ostap::Utils::hash_combiner
+    ( s_name            , 
+      ChannelBW::tag () , 
+      m_ps2. tag     () ) ; 
 }
 // ============================================================================
 // describe the channel 
@@ -854,10 +867,11 @@ Ostap::Math::Channel::D
 std::size_t Ostap::Math::Channel::tag() const
 { 
   static const std::string s_name = "Channel" ;
-  return std::hash_combine ( s_name , 
-                             Ostap::Math::ChannelCW::tag() , 
-                             m_L       , 
-                             m_formfactor  ? m_formfactor->tag() : 0 ) ;
+  return Ostap::Utils::hash_combiner
+    ( s_name                         , 
+      Ostap::Math::ChannelCW::tag()  , 
+      m_L                            , 
+      m_formfactor  ? m_formfactor->tag() : 0 ) ;
 }
 // ============================================================================
 // describe the channel 
@@ -1030,7 +1044,8 @@ double Ostap::Math::Channel0::rho_s
 std::size_t Ostap::Math::Channel0::tag() const
 { 
   static const std::string s_name = "Channel0" ;
-  return std::hash_combine ( s_name , Ostap::Math::Channel::tag() , qs () ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name , Ostap::Math::Channel::tag() , qs () ) ; 
 }
 // ============================================================================
 // describe the channel 
@@ -1109,8 +1124,10 @@ Ostap::Math::BW::amplitude ( const double x ) const
 // ============================================================================
 std::size_t Ostap::Math::BW::tag() const
 { 
-  std::size_t seed = std::hash_combine ( std::string ( "BW" ) , m0 () ) ;
-  for ( const auto&c : m_channels ) { std::hash_combine ( seed , c->tag() ) ; }
+  static const std::string s_name { "BW" } ;
+  std::size_t seed = Ostap::Utils::hash_combiner ( s_name , m0 () , m_threshold , m_scale ) ;
+  for ( const auto&c : m_channels ) 
+  { seed = Ostap::Utils::hash_combiner ( s_name , seed , c->tag() ) ; }
   return seed ;
 }
 // ============================================================================
@@ -1576,7 +1593,9 @@ Ostap::Math::ChannelFlatte::D
 std::size_t Ostap::Math::ChannelFlatte::tag() const
 { 
   static const std::string s_name = "ChannelFlatte" ;
-  return std::hash_combine ( s_name , Ostap::Math::ChannelCW::tag () ) ; }
+  return Ostap::Utils::hash_combiner
+    ( s_name    , Ostap::Math::ChannelCW::tag () ) ;
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -1645,13 +1664,14 @@ Ostap::Math::ChannelFlatteBugg::D
 std::size_t Ostap::Math::ChannelFlatteBugg::tag() const
 { 
   static const std::string s_name = "ChannelFlatteBugg" ;
-  return std::hash_combine ( s_name ,
-                             Ostap::Math::ChannelFlatte::tag () , 
-                             m_alpha      , 
-                             m_ps2n.tag() ,
-                             m_ps2k.tag() ,
-                             m_fc         , 
-                             m_fn         ) ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name       ,
+      Ostap::Math::ChannelFlatte::tag () , 
+      m_alpha           , 
+      m_fc              , 
+      m_fn              ,
+      m_ps2n.tag()      ,
+      m_ps2k.tag()      ) ;
 }
 // ============================================================================
 // describe the channel 
@@ -1726,10 +1746,14 @@ Ostap::Math::Flatte::clone() const { return new Ostap::Math::Flatte ( *this ) ; 
 std::size_t Ostap::Math::Flatte::tag () const
 { 
   static const std::string s_name = "Flatte" ;
-  return std::hash_combine ( s_name , Ostap::Math::BW::tag () ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name                  ,
+      Ostap::Math::BW::tag () , 
+      m_A1                    , 
+      m_A2                    , 
+      m_B1                    , 
+      m_B2                    ) ;
 }
-
-
 
 // ============================================================================
 /*  constructor from all parameters
@@ -1795,17 +1819,15 @@ Ostap::Math::FlatteBugg::clone() const
 std::size_t Ostap::Math::FlatteBugg::tag () const
 { 
   static const std::string s_name = "FlatteBugg" ;
-  return std::hash_combine ( s_name , 
-                             Ostap::Math::BW::tag () , 
-                             m_alpha   , 
-                             m_mpiplus , 
-                             m_mpizero , 
-                             m_mKplus  , 
-                             m_mKzero  ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name                  , 
+      Ostap::Math::BW::tag () ,
+      m_alpha                 , 
+      m_mpiplus               , 
+      m_mpizero               , 
+      m_mKplus                , 
+      m_mKzero                ) ;
 }
-
-
-
 
 // // ============================================================================
 // // Bugg
@@ -2351,7 +2373,11 @@ Ostap::Math::Channel23L::clone () const
 std::size_t Ostap::Math::Channel23L::tag () const
 { 
   static const std::string s_name = "Channel23L" ;
-  return std::hash_combine ( s_name , m_channel->tag () , m_ps.tag () ) ; 
+  return Ostap::Utils::hash_combiner
+    ( s_name            ,
+      ChannelBW::tag () , 
+      m_channel->tag () , 
+      m_ps.tag       () ) ; 
 }
 // ============================================================================
 // describe the channel 
@@ -2435,7 +2461,12 @@ Ostap::Math::ChannelNR3::D
 std::size_t Ostap::Math::ChannelNR3::tag () const
 { 
   static const std::string s_name = "ChannelNR" ;
-  return std::hash_combine ( s_name , gamma0 () , m_m1 , m_m2 , m_m3 ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name            ,
+      ChannelBW::tag () , 
+      m_m1              , 
+      m_m2              , 
+      m_m3              ) ; 
 }
 // ============================================================================
 // describe the channel 
@@ -2674,7 +2705,11 @@ double Ostap::Math::ChannelGS::rho_s
 std::size_t Ostap::Math::ChannelGS::tag () const
 { 
   static const std::string s_name = "ChannelGS" ;
-  return std::hash_combine ( s_name , gamma0 () , m_mpi ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name           , 
+      ChannelBW::tag() , 
+      m_mpi            , 
+      m_sthreshold     ) ; 
 }
 // ============================================================================
 // describe the channel 
@@ -2711,7 +2746,10 @@ Ostap::Math::ChannelQ::clone() const
 std::size_t Ostap::Math::ChannelQ::tag () const
 { 
   static const std::string s_name = "ChannelGS" ;
-  return std::hash_combine ( s_name , gamma0 () , m_ps2.tag () ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name            ,
+      ChannelBW::tag () , 
+      m_ps2    . tag () ) ; 
 }
 // ============================================================================
 // describe the channel 
@@ -2740,10 +2778,12 @@ Ostap::Math::ChannelGLR::clone() const
 std::size_t Ostap::Math::ChannelGLR::tag () const
 {
   static const std::string s_name = "ChannelGLR " ;
-  return std::hash_combine ( s_name ,
-                             m_tag  ,
-                             m_description  ,
-                             gamma0    () ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name           ,
+      ChannelBW::tag() , 
+      m_sthreshold     , 
+      m_tag            ,
+      m_description    ) ;
 }
 // ============================================================================
 
@@ -2762,16 +2802,15 @@ Ostap::Math::ChannelNRL::clone() const
 std::size_t Ostap::Math::ChannelNRL::tag () const
 {
   static const std::string s_name = "ChannelNRL" ;
-  return std::hash_combine ( s_name         ,
-                             m_tag          ,
-                             m_sthreshold   , 
-                             m_description  ,
-                             gamma0    () ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name            ,
+      ChannelBW::tag () ,
+      m_sthreshold      , 
+      m_fake            , 
+      m_tag             ,
+      m_description     ) ;
 }
 // ============================================================================
-    
-
-
 
 // ============================================================================
 /*  constructor from all masses and angular momenta
@@ -2908,7 +2947,8 @@ bool Ostap::Math::LASS::setE ( const double x )
 std::size_t Ostap::Math::LASS::tag () const 
 {
   static const std::string s_name = "LASS" ;
-  return std::hash_combine  ( s_name , BW::tag () , m_a , m_b , m_e ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name , BW::tag () , m_a , m_b , m_e ) ; 
 }
 // ============================================================================
 /*  constructor from Breit-Wigner, Phase-space and flags 
@@ -3052,7 +3092,8 @@ double Ostap::Math::BWPS::integral
 std::size_t Ostap::Math::BWPS::tag () const 
 {
   static const std::string s_name = "BWPS" ;
-  return std::hash_combine  ( s_name , m_ps .tag () , m_bw->tag () , m_rho , m_N2 ) ; 
+  return Ostap::Utils::hash_combiner  
+    ( s_name , m_ps .tag () , m_bw->tag () , m_rho , m_N2 ) ; 
 }
 
 // ============================================================================
@@ -3185,7 +3226,8 @@ double Ostap::Math::BW3L::integral
 std::size_t Ostap::Math::BW3L::tag () const 
 { 
   static const std::string s_name = "BW3L" ;
-  return std::hash_combine ( s_name , m_bw -> tag () , m_M , m_m1 , m_m2 , m_m3 , m_L ) ; 
+  return Ostap::Utils::hash_combiner 
+    ( s_name , m_bw -> tag () , m_M , m_m1 , m_m2 , m_m3 , m_L ) ; 
 }
 // ============================================================================
 
@@ -3213,6 +3255,17 @@ double Ostap::Math::A2::operator() ( const double s ) const
   const double m = std::sqrt ( s ) ;
   return m_scale * std::norm ( m_bw->amplitude ( m ) ) ;
 }
+// ============================================================================
+// unique tag 
+// ============================================================================
+std::size_t Ostap::Math::A2::tag () const 
+{
+  static const std::string s_name = "A2" ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , m_bw ? m_bw -> tag () : 0 , m_scale ) ; 
+}
+// ============================================================================
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

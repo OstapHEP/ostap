@@ -11,6 +11,7 @@
 // ============================================================================
 // Ostap 
 // ============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/Math.h"
 #include "Ostap/Bernstein2D.h"
 // ============================================================================
@@ -451,9 +452,9 @@ Ostap::Math::Bernstein2D::__neg__ ()  const
 // ============================================================================
 std::size_t Ostap::Math::Bernstein2D::tag () const  // get the tag value 
 {
-  std::size_t seed = 0 ;
-  for ( const double  p : m_pars ) { std::_hash_combine ( seed , p ) ; }
-  return std::hash_combine ( seed , m_nx , m_ny , m_xmin , m_xmax , m_ymin , m_ymax ) ;
+  return Ostap::Utils::hash_combiner 
+    ( Ostap::Utils::hash_range ( m_pars )  , 
+      m_nx , m_ny , m_xmin , m_xmax , m_ymin , m_ymax ) ;
 }
 // ============================================================================
 
@@ -761,9 +762,9 @@ Ostap::Math::Bernstein2DSym::__neg__ ()  const
 // ============================================================================
 std::size_t Ostap::Math::Bernstein2DSym::tag () const  // get the hash value 
 {
-  std::size_t seed = 0 ;
-  for ( const double  p : m_pars ) { std::_hash_combine ( seed , p ) ; }
-  return std::hash_combine ( seed , m_n , m_xmin , m_xmax ) ;
+  return Ostap::Utils::hash_combiner 
+    ( Ostap::Utils::hash_range ( m_pars ) ,
+      m_n , m_xmin , m_xmax ) ;
 }
 // ============================================================================
 

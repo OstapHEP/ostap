@@ -12,6 +12,8 @@
 // ===============================================================================
 // Ostap
 // ===============================================================================
+#include "Ostap/Hash.h"
+// ===============================================================================
 // local
 // ===============================================================================
 #include "OstapDataFrame.h"
@@ -25,11 +27,11 @@ std::string Ostap::tmp_name
 {
   std::size_t hv = 
     nullptr == named || random ? 
-    std::hash_combine ( prefix , name , random ) :
-    std::hash_combine ( prefix , name , random , 
-                        std::string ( named->GetName  () ) , 
-                        std::string ( named->GetTitle () ) ) ;
-  if ( random ) { hv = std::hash_combine ( prefix , hv , rand() ) ; }
+    Ostap::Utils::hash_combiner ( prefix , name , random ) :
+    Ostap::Utils::hash_combiner ( prefix , name , random , 
+                                  std::string ( named->GetName  () ) , 
+                                  std::string ( named->GetTitle () ) ) ;
+  if ( random ) { hv = Ostap::Utils::hash_combiner ( prefix , hv , rand() ) ; }
   return prefix + std::to_string ( hv ) ;
 }
 // ==========================================================================  

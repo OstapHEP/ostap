@@ -7,6 +7,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/Dalitz.h"
 #include "Ostap/Kinematics.h"
@@ -128,7 +129,7 @@ double Ostap::Math::PhaseSpace2::q2m ( const double q ) const
 }
 // ============================================================================a
 std::size_t Ostap::Math::PhaseSpace2::tag() const 
-{ return std::hash_combine ( m_m1 , m_m2 ) ; }
+{ return Ostap::Utils::hash_combiner ( m_m1 , m_m2 ) ; }
 // ============================================================================
 /*  get (a complex) phase space 
  *  real for x > threhsold, imaginnnnaryu for x< threshold 
@@ -414,7 +415,7 @@ double Ostap::Math::PhaseSpace3::evaluate  ( const double x ) const
   double result   = 1.0 ;
   double error    = 1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( std::hash_combine ( tag () , x ) , 
+    ( Ostap::Utils::hash_combiner ( tag () , x ) , 
       &F     , 
       low    , high ,                // low & high edges
       workspace ( m_workspace ) ,    // workspace
@@ -430,7 +431,7 @@ double Ostap::Math::PhaseSpace3::evaluate  ( const double x ) const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpace3::tag ()  const 
-{ return std::hash_combine ( m_m1 , m_m2 , m_m3 , m_l1 , m_l2 ) ; }
+{ return Ostap::Utils::hash_combiner ( m_m1 , m_m2 , m_m3 , m_l1 , m_l2 ) ; }
 // ============================================================================
 // helper function to get the phase space as
 // ============================================================================
@@ -584,7 +585,7 @@ double Ostap::Math::PhaseSpace3s::phasespace
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpace3s::tag ()  const 
-{ return std::hash_combine ( m_m1 , m_m2 , m_m3 ) ; }
+{ return Ostap::Utils::hash_combiner ( m_m1 , m_m2 , m_m3 ) ; }
 // ==============================================================================
 // evaluate 3-body phase space
 // ==============================================================================
@@ -681,7 +682,7 @@ double Ostap::Kinematics::phasespace3i
   static const Ostap::Math::WorkSpace s_workspace {} ;
   //
   static const std::string s_ps3 = "PS3" ;
-  const std::size_t tag = std::hash_combine ( s_ps3 , x , xm1 , xm2 , xm3 ) ;
+  const std::size_t tag = Ostap::Utils::hash_combiner ( s_ps3 , x , xm1 , xm2 , xm3 ) ;
   //
   const PS3 aux { x , xm1 , xm2 , xm3 } ;
   const auto F = s_integrator.make_function ( &aux ) ;
@@ -927,7 +928,7 @@ bool Ostap::Math::PhaseSpaceLeft::setThreshold ( const double value )
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpaceLeft::tag () const  // get the tag
 { 
-  return std::hash_combine ( m_threshold ,
+  return Ostap::Utils::hash_combiner ( m_threshold ,
                              m_num       , 
                              ps_case ()  , 
                              m_scale     ,
@@ -994,7 +995,7 @@ bool Ostap::Math::PhaseSpaceRight::setThreshold ( const double x )
 // get the tag  
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpaceRight::tag () const  // get the tag
-{ return std::hash_combine ( m_threshold , m_N , m_L  ) ; }
+{ return Ostap::Utils::hash_combiner ( m_threshold , m_N , m_L  ) ; }
 // ============================================================================
 
 // ============================================================================
@@ -1176,7 +1177,7 @@ double  Ostap::Math::PhaseSpaceNL::integral() const
 // get the tag  
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpaceNL::tag () const  // get the tag
-{ return std::hash_combine ( m_L , m_N , m_threshold1 , m_threshold2 ) ; }
+{ return Ostap::Utils::hash_combiner ( m_L , m_N , m_threshold1 , m_threshold2 ) ; }
 // ============================================================================
 
 // ============================================================================
@@ -1260,7 +1261,7 @@ double  Ostap::Math::PSDalitz::integral() const
 // get the tag  
 // ============================================================================
 std::size_t Ostap::Math::PSDalitz::tag () const  // get the tag
-{ return std::hash_combine ( M () , m1 () , m2 () , m3 () ) ; }
+{ return Ostap::Utils::hash_combiner ( M () , m1 () , m2 () , m3 () ) ; }
 // ============================================================================
 
 
@@ -1393,7 +1394,7 @@ double  Ostap::Math::PhaseSpace23L::integral () const
 // get the tag  
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpace23L::tag () const  // get the tag
-{ return std::hash_combine ( m_dalitz.tag () , m_l , m_L ) ; }
+{ return Ostap::Utils::hash_combiner ( m_dalitz.tag () , m_l , m_L ) ; }
 // ============================================================================
 
 // ============================================================================

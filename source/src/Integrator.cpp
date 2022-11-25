@@ -7,6 +7,7 @@
 // =============================================================================
 // Ostap
 // =============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/Integrator.h"
 #include "Ostap/Workspace.h"
 // =============================================================================
@@ -27,10 +28,11 @@ namespace
 {
   // ===========================================================================
   template <class FUNCTION>
-  inline double fun_scale ( const FUNCTION&      fun     , 
-                            const double         xmin    , 
-                            const double         xmax    ,
-                            const unsigned short rescale )
+  inline double fun_scale 
+  ( const FUNCTION&      fun     , 
+    const double         xmin    , 
+    const double         xmax    ,
+    const unsigned short rescale )
   { 
     if ( 0 == rescale ) { return 1.0 ; }
     const double dx = ( xmax - xmin ) / ( rescale + 1 ) ;
@@ -41,13 +43,15 @@ namespace
   // ===========================================================================
 }
 // =============================================================================
-// constructor with integration workspace size 
+// constructor with integration workspace size & name 
 // =============================================================================
 Ostap::Math::Integrator::Integrator 
-( const std::size_t size ) 
-  : m_workspace ( size )
+( const std::string& name , 
+  const std::size_t  size )
+  : m_name ( name ) 
+  , m_gaq_rule            ( GSL_INTEG_GAUSS61  )
   , m_abs_precision_gaq   ( s_APRECISION_GAQ   ) 
-  , m_rel_precision_gaq   ( s_RPRECISION_GAQI  ) 
+  , m_rel_precision_gaq   ( s_RPRECISION_GAQ   ) 
   , m_abs_precision_gaqi  ( s_APRECISION_GAQI  ) 
   , m_rel_precision_gaqi  ( s_RPRECISION_GAQI  ) 
   , m_abs_precision_gaqiu ( s_APRECISION_GAQIU ) 
@@ -66,6 +70,15 @@ Ostap::Math::Integrator::Integrator
   , m_rel_precision_kk    ( s_RPRECISION_QAWC  )
   , m_abs_precision_cube  ( s_APRECISION_CUBE  ) 
   , m_rel_precision_cube  ( s_RPRECISION_CUBE  ) 
+  , m_workspace ( size )
+{}
+// =============================================================================
+// constructor with integration workspace size & name 
+// =============================================================================
+Ostap::Math::Integrator::Integrator 
+( const std::size_t  size , 
+  const std::string& name ) 
+  : Integrator ( name , size ) 
 {}
 // =============================================================================
 // set absolute/relative precision for GAG
@@ -168,11 +181,26 @@ void Ostap::Math::Integrator::set_precision_cube
   m_rel_precision_cube  = 0 < rprec ? rprec : s_RPRECISION ;
 }
 // =============================================================================
+// set the GAQ nitegrtaion rule 
+// =============================================================================
+void Ostap::Math::Integrator::set_gaq_rule ( const int rule ) 
+{
+  m_gaq_rule = 
+    GSL_INTEG_GAUSS15 <= rule && rule <= GSL_INTEG_GAUSS61 <= rule ? rule :
+    GSL_INTEG_GAUSS61 ;
+} 
+// =============================================================================
 /*  calculate the integral 
  *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
  *  @param f1 the function 
  *  @param xmin lower integration edge 
- *  @param xmax upper integration edge
+ *  @param xmax upper  integration edge
+ *  @param ws   integration workspace 
+ *  @param tag   unique tag/label 
+ *  @param rescale rescale function for better numerical precision  
+ *  @param aprecision absolute precision  (if non-positive s_APRECISION_GAQ is used) 
+ *  @param aprecision relative precision  (if non-positive s_RPRECISION_GAQ is used) 
+ *  @param rule       the actual Gauss-Kronrod integration rule 
  *  @return value of the integral and the estimate of the uncertainty
  */
 // =============================================================================
@@ -185,7 +213,8 @@ Ostap::Math::Integrator::integrate_
   const std::size_t                  tag        ,  
   const unsigned short               rescale    , 
   const double                       aprecision ,
-  const double                       rprecision ) 
+  const double                       rprecision , 
+  const int                          rule       )
 {
   //
   if ( s_equal ( xmin , xmax ) ) { return result ( 0 , 0 )  ; }
@@ -199,8 +228,8 @@ Ostap::Math::Integrator::integrate_
       auto f2 = std::cref ( f1 ) ;
       auto ff = [f2,iscale]  ( const double  x ) -> double { return f2 ( x ) * iscale ; } ;
       //
-      const std::size_t ntag = 
-        0 == tag ? tag : std::hash_combine ( tag , rescale , scale , iscale ) ;
+      const std::size_t ntag =
+        0 == tag ? tag : Ostap::Utils::hash_combiner ( tag , rescale , scale , iscale ) ;
       result r = integrate_ ( std::cref ( ff ) , xmin , xmax , ws , ntag , 0 ) ;
       return result ( scale * r.first , scale * r.second ) ;  
     }
@@ -226,7 +255,8 @@ Ostap::Math::Integrator::integrate_
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
       __LINE__          ,   // the line
-      GSL_INTEG_GAUSS51 ,   // the rule 
+      GSL_INTEG_GAUSS15 <= rule && 
+      rule <= GSL_INTEG_GAUSS61 ? rule : GSL_INTEG_GAUSS61 , // the integrtaion rule
       tag               ) ; // label/tag
   //
   return result ( value , error ) ;  
@@ -381,7 +411,7 @@ Ostap::Math::Integrator::cauchy_pv_
   //
   const double       scale = fun_scale ( f1 , xmin , xmax , rescale ) ;
   const double      iscale = s_zero    ( scale ) ? 1.0 : 1.0 / scale ;
-  const std::size_t ntag   = 0 == tag ? tag : std::hash_combine ( tag , rescale , scale , iscale ) ;
+  const std::size_t ntag   = 0 == tag ? tag : Ostap::Utils::hash_combiner ( tag , rescale , scale , iscale ) ;
   //
   auto  f2 = std::cref ( f1 ) ;
   //
@@ -402,7 +432,7 @@ Ostap::Math::Integrator::cauchy_pv_
     //
     const double xhigh = xmax + 0.1 * ( xmax - xmin ) ;
     const std::size_t ntag = 
-      0 == tag ? tag : std::hash_combine ( tag , rescale , scale , iscale ) ;
+      0 == tag ? tag : Ostap::Utils::hash_combiner ( tag , rescale , scale , iscale ) ;
     result r = integrate_singular_ ( std::cref ( ff ) , xmin , xhigh , { c } , ws , ntag , aprecision , rprecision ) ;
     return result ( r.first / iscale , r.second / iscale ) ;
   }
@@ -429,7 +459,7 @@ Ostap::Math::Integrator::cauchy_pv_
   function1 fs = [f2,iscale2] ( const double  x ) -> double { return f2 ( x ) * iscale2 ; } ;
   //
   const std::size_t n2tag   = 
-    0 == tag ? tag : std::hash_combine ( tag , rescale , scale2 , iscale2 ) ;
+    0 == tag ? tag : Ostap::Utils::hash_combiner ( tag , rescale , scale2 , iscale2 ) ;
   //
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   //
@@ -733,7 +763,7 @@ Ostap::Math::Integrator::integrate_
   //
   static const Ostap::Math::GSL::Integrator2D<function2> s_cubature{} ;
   static const char s_message[] = "Ostap::Math::Integrator/integrate(2D)" ;
-  const auto F = s_cubature.make_function ( &f2 , xmin , xmax , ymin , ymax ) ;
+  const auto F   = s_cubature.make_function ( &f2 , xmin , xmax , ymin , ymax ) ;
   int     ierror =  0 ;
   double  value  =  1 ;
   double  error  = -1 ;

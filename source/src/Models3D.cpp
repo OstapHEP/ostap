@@ -2,6 +2,8 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Hash.h"
+#include "Ostap/Math.h"
 #include "Ostap/Vector3DTypes.h"
 #include "Ostap/Models3D.h"
 #include "Ostap/MoreMath.h"
@@ -438,7 +440,7 @@ double Ostap::Math::Gauss3D::integrateXY
   double  result =  1 ;
   double  error  = -1 ;
   std::tie ( ierror , result , error ) = s_cubature.cubature
-    ( std::hash_combine ( tag () , 'Z' , z ) , &F , 50000 , 
+    ( Ostap::Utils::hash_combiner ( tag () , 'Z' , z ) , &F , 50000 , 
       in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
       in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
       s_message , __FILE__ , __LINE__ ) ;
@@ -549,7 +551,7 @@ double Ostap::Math::Gauss3D::integrateYZ
   double  result =  1 ;
   double  error  = -1 ;
   std::tie ( ierror , result , error ) = s_cubature.cubature
-    ( std::hash_combine ( tag () , 'X' , x ) , &F , 50000 ,
+    ( Ostap::Utils::hash_combiner ( tag () , 'X' , x ) , &F , 50000 ,
       in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision 
       in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
       s_message , __FILE__ , __LINE__ ) ;
@@ -659,7 +661,7 @@ double Ostap::Math::Gauss3D::integrateXZ
   double  result =  1 ;
   double  error  = -1 ;
   std::tie ( ierror , result , error ) = s_cubature.cubature
-    ( std::hash_combine ( tag () , 'Y' , y ) , &F , 50000 ,
+    ( Ostap::Utils::hash_combiner ( tag () , 'Y' , y ) , &F , 50000 ,
       in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision 
       in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
       s_message , __FILE__ , __LINE__ ) ;
@@ -748,7 +750,7 @@ double Ostap::Math::Gauss3D::integrateX
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( std::hash_combine ( tag() , 'Y' , 'Z' , y , z  ) , 
+    ( Ostap::Utils::hash_combiner ( tag() , 'Y' , 'Z' , y , z  ) , 
       &F                        ,   // the function
       xlow    , xhigh           ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -843,7 +845,7 @@ double Ostap::Math::Gauss3D::integrateY
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( std::hash_combine ( tag() , 'X' , 'Z' , x , z ) , 
+    ( Ostap::Utils::hash_combiner ( tag() , 'X' , 'Z' , x , z ) , 
       &F                        ,   // the function
       ylow    , yhigh           ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -938,7 +940,7 @@ double Ostap::Math::Gauss3D::integrateZ
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( std::hash_combine ( tag() , 'X' , 'Y' , x , y ) , 
+    ( Ostap::Utils::hash_combiner ( tag() , 'X' , 'Y' , x , y ) , 
       &F                        ,   // the function
       zlow    , zhigh           ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -954,15 +956,15 @@ double Ostap::Math::Gauss3D::integrateZ
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Gauss3D::tag () const 
-{ return std::hash_combine ( m_muX    , 
-                             m_muY    , 
-                             m_muZ    , 
-                             m_sigmaX , 
-                             m_sigmaY , 
-                             m_sigmaZ , 
-                             m_phi    ,
-                             m_theta  ,
-                             m_psi    ) ; }
+{ return Ostap::Utils::hash_combiner ( m_muX    , 
+                                       m_muY    , 
+                                       m_muZ    , 
+                                       m_sigmaX , 
+                                       m_sigmaY , 
+                                       m_sigmaZ , 
+                                       m_phi    ,
+                                       m_theta  ,
+                                       m_psi    ) ; }
 
 // ============================================================================
 //                                                                      The END 

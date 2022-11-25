@@ -9,6 +9,7 @@
 #include <cmath>
 #include <functional>
 #include <utility>
+#include <string>
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -33,8 +34,15 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// constructor with integration workspace size 
-      Integrator ( const std::size_t size = 0 ) ;
+      /// constructor with integration workspace size & th ename 
+      Integrator
+      ( const std::string& name = "" , 
+        const std::size_t  size = 0  ) ;
+      // ======================================================================
+      /// constructor with integration workspace size & the name 
+      Integrator
+      ( const std::size_t  size      ,
+        const std::string& name = "" ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -61,7 +69,8 @@ namespace Ostap
                             m_workspace , 
                             tag  , rescale      , 
                             0 < aprecision ? aprecision : m_abs_precision_gaq , 
-                            0 < rprecision ? rprecision : m_rel_precision_gaq ).first  ; }
+                            0 < rprecision ? rprecision : m_rel_precision_gaq , 
+                            m_gaq_rule ).first ; }
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{-\infty}^{+\infty} f_1(x) dx \f]
@@ -236,7 +245,8 @@ namespace Ostap
                             y , xmin , xmax      , 
                             m_workspace , tag    , 
                             0 < aprecision ? aprecision : m_abs_precision_gaq , 
-                            0 < rprecision ? rprecision : m_rel_precision_gaq ).first  ; }
+                            0 < rprecision ? rprecision : m_rel_precision_gaq , 
+                            m_gaq_rule     ).first  ; }
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{y_{min}}^{y_{max}}f_2(x,y) dy \f]
@@ -259,7 +269,8 @@ namespace Ostap
                             x , ymin , ymax      , 
                             m_workspace , tag    , 
                             0 < aprecision ? aprecision : m_abs_precision_gaq , 
-                            0 < rprecision ? rprecision : m_rel_precision_gaq ).first  ; }
+                            0 < rprecision ? rprecision : m_rel_precision_gaq , 
+                            m_gaq_rule ).first  ; }
       // ======================================================================
       /** integration with known singular points 
        *  \f[ r = \int_{x_{min}}^{x_{max}}f_1(x) dx \f]
@@ -308,12 +319,14 @@ namespace Ostap
         const std::size_t    tag        = 0 , 
         const unsigned short rescale    = 0 , 
         const double         aprecision = 0 , 
-        const double         rprecision = 0 )
+        const double         rprecision = 0 , 
+        const int            rule       = 0 )
       { return integrate_ ( std::cref ( f1 ) , 
                             xmin , xmax ,  
                             ws   , tag  , rescale , 
                             aprecision  , 
-                            rprecision  ).first ; }
+                            rprecision  , 
+                            rule        ).first ; }
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{-\infty}^{+\infty} f_1(x) dx \f]
@@ -515,6 +528,7 @@ namespace Ostap
        *  @param rescale rescale function for better numerical precision  
        *  @param aprecision absolute precision  (if non-positive s_APRECISION_GAQ is used) 
        *  @param aprecision relative precision  (if non-positive s_RPRECISION_GAQ is used) 
+       *  @param rule       the actual Gauss-Kronrod integration rule 
        *  @return value of the integral and the estimate of the uncertainty
        */
       static result integrate_
@@ -525,7 +539,8 @@ namespace Ostap
         const std::size_t    tag        = 0 , 
         const unsigned short rescale    = 0 , 
         const double         aprecision = 0 , 
-        const double         rprecision = 0 ) ;
+        const double         rprecision = 0 , 
+        const int            rule       = 0 ) ;
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{-\infty}^{+\infty} f_1(x) dx \f]
@@ -913,6 +928,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// set the GAQ integration rule 
+      void set_gaq_rule        ( const int rule ) ;
       /// set absolute/relatibe precision fore GAG
       void set_precision_gaq   ( const double aprec , const double rprec ) ;
       /// set absolute/relative precision fore GAGI
@@ -936,6 +953,10 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
+      /// integrator name 
+      std::string m_name           ; // integrator name
+      /// GAQ integration rule 
+      int    m_gaq_rule            ;
       /// absolute precision for GAQ integration 
       double m_abs_precision_gaq   ; // absolute precision for GAQ   integration 
       /// relative precision for GAQ integration

@@ -11,6 +11,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/GSL_utils.h"
 // ============================================================================
 // GSL
@@ -390,7 +391,7 @@ namespace Ostap
         {
           // ==================================================================
           static const std::string s_GAQ { "GAQ" } ;
-          const std::size_t key = std::hash_combine 
+          const std::size_t key = Ostap::Utils::hash_combiner 
             ( tag , func->params , xlow , xhigh ,  s_GAQ , 
               aprecision , rprecision , 
               limit      , reason , file , line , rule ) ;
@@ -437,7 +438,7 @@ namespace Ostap
           //
           // ==================================================================
           static const std::string s_GAQI { "GAQI" } ;
-          const std::size_t key = std::hash_combine 
+          const std::size_t key = Ostap::Utils::hash_combiner 
             ( tag , func->params      ,  s_GAQI     , 
               aprecision , rprecision , 
               limit      , reason     , file , line ) ;
@@ -484,7 +485,7 @@ namespace Ostap
           //
           // ==================================================================
           static const std::string s_GAQIU { "GAQIU" } ;
-          const std::size_t key = std::hash_combine 
+          const std::size_t key = Ostap::Utils::hash_combiner 
             ( tag , func->params , xlow ,  s_GAQIU , 
               aprecision , rprecision , 
               limit      , reason , file , line ) ;
@@ -532,7 +533,7 @@ namespace Ostap
           //
           // ==================================================================
           static const std::string s_GAQIL { "GAQIL" } ;
-          const std::size_t key = std::hash_combine 
+          const std::size_t key = Ostap::Utils::hash_combiner 
             ( tag , func->params , xhigh , s_GAQIL ,  
               aprecision , rprecision    , 
               limit      , reason        ,  file , line ) ;
@@ -581,7 +582,7 @@ namespace Ostap
         {
           // ==================================================================
           static const std::string s_GAQP { "GAQP" } ;
-          const std::size_t key = std::hash_combine 
+          const std::size_t key = Ostap::Utils::hash_combiner 
             ( tag  , func->params       , s_GAQP ,  
               xlow , xhigh , pnts       ,   
               aprecision   , rprecision , 
@@ -636,7 +637,7 @@ namespace Ostap
         {
           // ==================================================================
           static const std::string s_GAWC { "GAWC" } ;
-          const std::size_t key = std::hash_combine 
+          const std::size_t key = Ostap::Utils::hash_combiner 
             ( tag  , func->params       , s_GAWC ,  
               xlow , xhigh , c          ,   
               aprecision   , rprecision , 

@@ -8,6 +8,8 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Hash.h"
+#include "Ostap/Math.h"
 #include "Ostap/Bernstein3D.h"
 // ============================================================================
 // Local
@@ -831,13 +833,12 @@ Ostap::Math::Bernstein3D::__neg__ ()  const
 // ============================================================================
 std::size_t Ostap::Math::Bernstein3D::tag () const  // get the tag value 
 {
-  std::size_t seed = 0 ;
-  for ( const double  p : m_pars ) { std::_hash_combine ( seed , p ) ; }
-  return std::hash_combine ( seed   , 
-                             m_nx   , m_ny   , m_nz ,
-                             m_xmin , m_xmax ,
-                             m_ymin , m_ymax , 
-                             m_zmin , m_zmax ) ; }
+  return Ostap::Utils::hash_combiner
+    ( Ostap::Utils::hash_range ( m_pars )  ,  
+      m_nx   , m_ny   , m_nz ,
+      m_xmin , m_xmax ,
+      m_ymin , m_ymax , 
+      m_zmin , m_zmax ) ; }
 // ============================================================================
 
 
@@ -1282,11 +1283,11 @@ Ostap::Math::Bernstein3DSym::__neg__ ()  const
 // ============================================================================
 std::size_t Ostap::Math::Bernstein3DSym::tag () const  // get the hash value 
 {
-  std::size_t seed = 0 ;
-  for ( const double  p : m_pars ) { std::_hash_combine ( seed , p ) ; }
-  return std::hash_combine ( seed   , 
-                             m_n    , 
-                             m_xmin , m_xmax ) ; }
+  return Ostap::Utils::hash_combiner 
+    ( Ostap::Utils::hash_range ( m_pars ) , 
+      m_n    , 
+      m_xmin , m_xmax ) ; 
+}
 // ============================================================================
 
 
@@ -1881,12 +1882,11 @@ Ostap::Math::Bernstein3DMix::__neg__ ()  const
 // ============================================================================
 std::size_t Ostap::Math::Bernstein3DMix::tag () const  // get the tag value 
 {
-  std::size_t seed = 0 ;
-  for ( const double  p : m_pars ) { std::_hash_combine ( seed , p ) ; }
-  return std::hash_combine ( seed   , 
-                             m_n    , m_nz   ,
-                             m_xmin , m_xmax ,
-                             m_zmin , m_zmax ) ; }
+  return Ostap::Utils::hash_combiner 
+    ( Ostap::Utils::hash_range ( m_pars ) , 
+      m_n    , m_nz   ,
+      m_xmin , m_xmax ,
+      m_zmin , m_zmax ) ; }
 // ============================================================================
 
 

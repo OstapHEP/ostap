@@ -8,6 +8,10 @@
 // ============================================================================
 #include <map>
 // ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/Hash.h"
+// ============================================================================
 // Local 
 // ============================================================================
 #include "Integrator1D.h"     // GSL-integrator 
@@ -105,7 +109,7 @@ namespace Ostap
           const unsigned long line       = 0       ) const // line number 
         {
           //
-          const std::size_t key = std::hash_combine 
+          const std::size_t key = Ostap::Utils::hash_combiner 
             ( tag  , fun->fdata  , 
               fun->min[0] , fun->min[1] , fun->max[0] , fun->max[1] ,
               maxcalls    , aprecision  , rprecision  , 

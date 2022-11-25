@@ -19,6 +19,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/Math.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/qMath.h"
@@ -96,7 +97,7 @@ namespace
     if ( 1 == bp.npars() ) { return bp.par(0) * ps.integral ( xlow , xhigh ) ; }
     //
     // construct the hash 
-    const std::size_t tag = std::hash_combine ( bp.tag () , ps.tag () ) ;
+    const std::size_t tag = Ostap::Utils::hash_combiner ( bp.tag () , ps.tag () ) ;
     //
     /// integrator for class PSBERN 
     static const Ostap::Math::GSL::Integrator1D<PSBERN> s_integrator ;
@@ -331,7 +332,7 @@ double Ostap::Math::PS2DPol::integrateX
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::PS2DPol::tag () const 
-{ return std::hash_combine ( m_positive.tag () , m_psx.tag () , m_psy.tag () ) ; }
+{ return Ostap::Utils::hash_combiner ( m_positive.tag () , m_psx.tag () , m_psy.tag () ) ; }
 // ============================================================================
 
 
@@ -493,7 +494,7 @@ double Ostap::Math::PS2DPolSym::integrateX
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::PS2DPolSym::tag () const 
-{ return std::hash_combine ( m_positive.tag () , m_ps.tag () ) ; }
+{ return Ostap::Utils::hash_combiner ( m_positive.tag () , m_ps.tag () ) ; }
 // ============================================================================
 
 
@@ -656,7 +657,7 @@ double Ostap::Math::PS2DPol2::integrateY
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    (std::hash_combine ( tag() , 'X' , x )                   , 
+    (Ostap::Utils::hash_combiner ( tag() , 'X' , x )                   , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -698,7 +699,7 @@ double Ostap::Math::PS2DPol2::integrateX
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    (std::hash_combine ( tag() , 'Y' , y )                   , 
+    (Ostap::Utils::hash_combiner ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -714,7 +715,7 @@ double Ostap::Math::PS2DPol2::integrateX
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::PS2DPol2::tag () const 
-{ return std::hash_combine ( m_positive. tag () , 
+{ return Ostap::Utils::hash_combiner ( m_positive. tag () , 
                              m_psx     . tag () , 
                              m_psy     . tag () , m_mmax ) ; }
 // ============================================================================
@@ -856,7 +857,7 @@ double Ostap::Math::PS2DPol2Sym::integrateY
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( std::hash_combine ( tag() , 'X' , x )                   , 
+    ( Ostap::Utils::hash_combiner ( tag() , 'X' , x )                   , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -877,7 +878,7 @@ double Ostap::Math::PS2DPol2Sym::integrateX
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::PS2DPol2Sym::tag () const 
-{ return std::hash_combine ( m_positive.tag()  , m_ps.tag () , m_mmax ) ; }
+{ return Ostap::Utils::hash_combiner ( m_positive.tag()  , m_ps.tag () , m_mmax ) ; }
 // ============================================================================
 
 
@@ -1086,7 +1087,7 @@ double Ostap::Math::PS2DPol3::integrateX
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    (std::hash_combine ( tag() , 'Y' , y )                   , 
+    (Ostap::Utils::hash_combiner ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -1102,7 +1103,7 @@ double Ostap::Math::PS2DPol3::integrateX
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::PS2DPol3::tag () const 
-{ return std::hash_combine ( m_psx.tag () , m_psy.tag () , m_mmax ) ; }
+{ return Ostap::Utils::hash_combiner ( m_psx.tag () , m_psy.tag () , m_mmax ) ; }
 // ============================================================================
 
 
@@ -1224,7 +1225,7 @@ double Ostap::Math::PS2DPol3Sym::integrateY
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( std::hash_combine ( tag() , 'X' , x )                  , 
+    ( Ostap::Utils::hash_combiner ( tag() , 'X' , x )                  , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -1245,7 +1246,7 @@ double Ostap::Math::PS2DPol3Sym::integrateX
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::PS2DPol3Sym::tag () const 
-{ return std::hash_combine ( m_ps.tag () , m_mmax ) ; }
+{ return Ostap::Utils::hash_combiner ( m_ps.tag () , m_mmax ) ; }
 // ============================================================================
 
 
@@ -1464,7 +1465,7 @@ double Ostap::Math::ExpoPS2DPol::integrateX
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::ExpoPS2DPol::tag () const 
-{ return std::hash_combine ( m_positive.tag() , m_psy.tag () , m_tau ) ; }
+{ return Ostap::Utils::hash_combiner ( m_positive.tag() , m_psy.tag () , m_tau ) ; }
 // ============================================================================
 
 
@@ -1662,7 +1663,7 @@ double Ostap::Math::Expo2DPol::integrateX
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Expo2DPol::tag () const 
-{ return std::hash_combine ( m_positive.tag () , m_tauX , m_tauY ) ; }
+{ return Ostap::Utils::hash_combiner ( m_positive.tag () , m_tauX , m_tauY ) ; }
 // ============================================================================
 
 // ===========================================================================
@@ -1811,7 +1812,7 @@ double Ostap::Math::Expo2DPolSym::integrateX
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Expo2DPolSym::tag () const 
-{ return std::hash_combine ( m_positive.tag () , m_tau ) ; }
+{ return Ostap::Utils::hash_combiner ( m_positive.tag () , m_tau ) ; }
 // ============================================================================
 
 
@@ -2056,7 +2057,7 @@ double Ostap::Math::Gauss2D::integrateX
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( std::hash_combine ( tag() , 'Y' , y ) , 
+    ( Ostap::Utils::hash_combiner ( tag() , 'Y' , y ) , 
       &F                        ,   // the function
       xlow    , xhigh           ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -2133,7 +2134,7 @@ double Ostap::Math::Gauss2D::integrateY
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( std::hash_combine ( tag() , 'X' , x ) , 
+    ( Ostap::Utils::hash_combiner ( tag() , 'X' , x ) , 
       &F                        ,   // the function
       ylow    , yhigh           ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -2149,7 +2150,7 @@ double Ostap::Math::Gauss2D::integrateY
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Gauss2D::tag () const 
-{ return std::hash_combine ( m_muX    , 
+{ return Ostap::Utils::hash_combiner ( m_muX    , 
                              m_muY    , 
                              m_sigmaX , 
                              m_sigmaY , 
@@ -2293,7 +2294,7 @@ double Ostap::Math::Tsallis2::integrate_y
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( std::hash_combine ( tag() , 'P' , pt )                   , 
+    ( Ostap::Utils::hash_combiner ( tag() , 'P' , pt )                   , 
       &F                        ,   // the function
       ylow    , yhigh           ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -2332,7 +2333,7 @@ double Ostap::Math::Tsallis2::integrate_pt
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( std::hash_combine ( tag() , 'Y' , y )                   , 
+    ( Ostap::Utils::hash_combiner ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       pt_min , pt_max           ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
@@ -2350,7 +2351,7 @@ double Ostap::Math::Tsallis2::integrate_pt
 std::size_t Ostap::Math::Tsallis2::tag () const 
 { 
   static const std::string s_name = "Tsallis2" ;
-  return std::hash_combine ( s_name , m_mass , m_q , m_T , m_mu ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_mass , m_q , m_T , m_mu ) ; 
 }
 // ============================================================================
 

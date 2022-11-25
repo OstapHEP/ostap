@@ -7,6 +7,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/Kinematics.h"
 #include "Ostap/Dalitz.h"
 #include "Ostap/DalitzIntegrator.h"
@@ -55,7 +56,7 @@ Ostap::Kinematics::Dalitz0::Dalitz0
       s_zero ( m_m2 ) ,
       s_zero ( m_m3 )
       }
-  , m_tag ( std::hash_combine ( m_m1  , m_m2 , m_m3 ) ) 
+  , m_tag ( Ostap::Utils::hash_combiner ( m_m1  , m_m2 , m_m3 ) ) 
 {}
 // ============================================================================
 /** Is point \f$ (s_1,s_2)\f$ "inside" the Dalizt plot?
@@ -1077,20 +1078,20 @@ Ostap::Kinematics::Dalitz::Dalitz
   , m_cache2 { Dalitz0::s1_max ( m_M ) , // [0]
                Dalitz0::s2_max ( m_M ) , // [1]
                Dalitz0::s3_max ( m_M ) ,   // [2] 
-               // sum of all invariants 
-               m_M * m_M + summ2 () ,                                                          // [3] 
-               // mass-squared               
-               m_M  * m_M           ,                                                          // [4]
-               // max e1 , e2 , e3 
-               ( m_M * m_M + m1sq () - ( m2 () + m3 () ) * ( m2 () + m3 () ) ) / ( 2 * m_M ) , // [5] 
-               ( m_M * m_M + m2sq () - ( m1 () + m3 () ) * ( m1 () + m3 () ) ) / ( 2 * m_M ) , // [6] 
-               ( m_M * m_M + m3sq () - ( m1 () + m2 () ) * ( m1 () + m2 () ) ) / ( 2 * m_M )   // [7]
-               }
-  , m_tag2 ( std::hash_combine ( Dalitz0::tag()  , m_M ) ) 
-{
-  Ostap::Assert ( m_M > m1 ()  + m2 () + m3 ()  , 
-                  "Invalid masses for Dalitz" , 
-                  "Ostap::Kinematics::Dalitz" ) ;
+    // sum of all invariants 
+    m_M * m_M + summ2 () ,                                                          // [3] 
+    // mass-squared               
+    m_M  * m_M           ,                                                          // [4]
+    // max e1 , e2 , e3 
+    ( m_M * m_M + m1sq () - ( m2 () + m3 () ) * ( m2 () + m3 () ) ) / ( 2 * m_M ) , // [5] 
+    ( m_M * m_M + m2sq () - ( m1 () + m3 () ) * ( m1 () + m3 () ) ) / ( 2 * m_M ) , // [6] 
+    ( m_M * m_M + m3sq () - ( m1 () + m2 () ) * ( m1 () + m2 () ) ) / ( 2 * m_M )   // [7]
+    }
+                 , m_tag2 ( Ostap::Utils::hash_combiner ( Dalitz0::tag()  , m_M ) ) 
+                 {
+                   Ostap::Assert ( m_M > m1 ()  + m2 () + m3 ()  , 
+                                   "Invalid masses for Dalitz" , 
+                                   "Ostap::Kinematics::Dalitz" ) ;
 }
 // ============================================================================
 /** Is point \f$ (s_1,s_2)\f$ "inside" the Dalizt plot?

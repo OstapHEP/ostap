@@ -28,6 +28,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/Math.h"
 #include "Ostap/Power.h"
 #include "Ostap/Polynomials.h"
@@ -162,7 +163,7 @@ double Ostap::Math::Gumbel::integral ( const double low  ,
 std::size_t Ostap::Math::Gumbel::tag () const 
 { 
   static const std::string s_name = "Gumbel" ;
-  return std::hash_combine ( s_name , m_mu , m_beta ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_beta ) ; 
 }
 // ============================================================================
  
@@ -330,7 +331,7 @@ bool Ostap::Math::GramCharlierA::setKappa4 ( const double value )
 std::size_t Ostap::Math::GramCharlierA::tag () const 
 { 
   static const std::string s_name = "GramCharlier" ;
-  return std::hash_combine ( s_name , m_mean , m_sigma , m_kappa3 , m_kappa4 ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mean , m_sigma , m_kappa3 , m_kappa4 ) ;
 }
 // ============================================================================
 
@@ -487,7 +488,7 @@ double  Ostap::Math::PhaseSpacePol::integral
 std::size_t Ostap::Math::PhaseSpacePol::tag () const 
 {
   static const std::string s_name = "PhaseSpacePol" ;
-  return std::hash_combine ( s_name , m_phasespace.tag () , m_positive.tag () ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_phasespace.tag () , m_positive.tag () ) ; 
 }
 // ============================================================================
 
@@ -686,7 +687,7 @@ double Ostap::Math::PhaseSpaceLeftExpoPol::integral
 std::size_t Ostap::Math::PhaseSpaceLeftExpoPol::tag () const 
 {
   static const std::string s_name = "PhaseSpaceLeftExpoPol" ;
-  return std::hash_combine ( s_name , m_phasespace.tag () , m_positive.tag () , m_tau ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_phasespace.tag () , m_positive.tag () , m_tau ) ;
 }
 // ============================================================================
 
@@ -757,7 +758,7 @@ double Ostap::Math::ExpoPositive::integral ( const double low  ,
 std::size_t Ostap::Math::ExpoPositive::tag () const 
 {
   static const std::string s_name = "ExpoPositive" ;
-  return std::hash_combine ( s_name , m_positive.tag () , m_tau ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_positive.tag () , m_tau ) ; 
 }
 // ============================================================================
 
@@ -873,7 +874,7 @@ double Ostap::Math::GammaDist::quantile ( const double p ) const
 std::size_t Ostap::Math::GammaDist::tag () const 
 { 
   static const std::string s_name = "GammaDist" ;
-  return std::hash_combine ( s_name  , m_k , m_theta ) ;
+  return Ostap::Utils::hash_combiner ( s_name  , m_k , m_theta ) ;
 }
 // ============================================================================
 
@@ -974,7 +975,7 @@ double Ostap::Math::GenGammaDist::integral ( const double low  ,
 std::size_t Ostap::Math::GenGammaDist::tag () const 
 { 
   static const std::string s_name = "GenGammaDist" ;
-  return std::hash_combine ( s_name , m_k , m_theta , m_p , m_low ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_k , m_theta , m_p , m_low ) ;
 }
 // ============================================================================
 
@@ -1151,7 +1152,7 @@ double Ostap::Math::Amoroso::sigma () const
 std::size_t Ostap::Math::Amoroso::tag () const 
 { 
   static const std::string s_name = "Amoroso" ;
-  return std::hash_combine ( s_name , m_a , m_theta , m_alpha , m_beta ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_a , m_theta , m_alpha , m_beta ) ; 
 }
 // ============================================================================
 
@@ -1218,7 +1219,7 @@ double Ostap::Math::LogGammaDist::quantile ( const double p ) const
 std::size_t Ostap::Math::LogGammaDist::tag () const 
 { 
   static const std::string s_name = "LogGammaDist" ;
-  return std::hash_combine ( s_name , m_gamma.tag () ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_gamma.tag () ) ;
 }
 // ============================================================================
 
@@ -1268,7 +1269,7 @@ double Ostap::Math::Log10GammaDist::quantile ( const double p ) const
 std::size_t Ostap::Math::Log10GammaDist::tag () const 
 { 
   static const std::string s_name = "Log10GammaDist" ;
-  return std::hash_combine ( s_name , m_gamma.tag () ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_gamma.tag () ) ; 
 }
 // ============================================================================
 
@@ -1391,7 +1392,7 @@ double Ostap::Math::LogGamma::kurtosis () const
 std::size_t Ostap::Math::LogGamma::tag () const 
 { 
   static const std::string s_name = "LogGamma" ;
-  return std::hash_combine ( s_name , m_nu , m_lambda , m_alpha ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_nu , m_lambda , m_alpha ) ; 
 }
 // ============================================================================
 
@@ -1543,7 +1544,7 @@ double Ostap::Math::BetaPrime::skewness  () const
 std::size_t Ostap::Math::BetaPrime::tag () const 
 { 
   static const std::string s_name = "BetaPrime" ;
-  return std::hash_combine ( s_name , m_alpha , m_beta , m_scale , m_shift ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_alpha , m_beta , m_scale , m_shift ) ; 
 }
 // ============================================================================
 
@@ -1763,7 +1764,7 @@ double Ostap::Math::Landau::integral ( const double low  ,
 std::size_t Ostap::Math::Landau::tag () const 
 { 
   static const std::string s_name = "Landau" ;
-  return std::hash_combine ( s_name , m_scale , m_shift ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_scale , m_shift ) ;
 }
 // ============================================================================
 
@@ -1875,7 +1876,7 @@ double Ostap::Math::Weibull::rms () const { return  std::sqrt ( variance () ) ; 
 std::size_t Ostap::Math::Weibull::tag () const 
 { 
   static const std::string s_name = "Weibull" ;
-  return std::hash_combine ( s_name , m_scale , m_shape , m_shift ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_scale , m_shape , m_shift ) ;
 }
 // ============================================================================
 
@@ -2026,7 +2027,7 @@ double Ostap::Math::Sigmoid::integral
 std::size_t Ostap::Math::Sigmoid::tag () const 
 {
   static const std::string s_name = "Sigmoid" ;
-  return std::hash_combine ( s_name , m_positive.tag () , m_alpha , m_x0 ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_positive.tag () , m_alpha , m_x0 ) ; 
 }
 // ============================================================================
 
@@ -2210,7 +2211,7 @@ double Ostap::Math::TwoExpos::derivative
 std::size_t Ostap::Math::TwoExpos::tag () const 
 {
   static const std::string s_name = "TwoExpos" ;
-  return std::hash_combine ( s_name , m_alpha , m_delta , m_x0 ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_alpha , m_delta , m_x0 ) ; 
 }
 // ============================================================================
 
@@ -2302,7 +2303,7 @@ double Ostap::Math::TwoExpoPositive::integral
 std::size_t Ostap::Math::TwoExpoPositive::tag () const 
 { 
   static const std::string s_name = "TwoExposPositive" ;
-  return std::hash_combine ( s_name , m_positive.tag () , m_2exp.tag () ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_positive.tag () , m_2exp.tag () ) ; 
 }
 // ============================================================================
 
@@ -2422,7 +2423,7 @@ double Ostap::Math::Tsallis::integral
 std::size_t Ostap::Math::Tsallis::tag () const 
 { 
   static const std::string s_name = "Tsallis" ;
-  return std::hash_combine ( s_name , m_mass , m_n , m_T ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_mass , m_n , m_T ) ; 
 }
 // ============================================================================
 
@@ -2533,7 +2534,7 @@ double Ostap::Math::QGSM::integral
 std::size_t Ostap::Math::QGSM::tag () const 
 { 
   static const std::string s_name = "QGSM" ;
-  return std::hash_combine ( s_name , m_mass , m_b ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_mass , m_b ) ; 
 }
 // ============================================================================
 
@@ -2614,7 +2615,7 @@ double Ostap::Math::CutOffGauss::integral
 std::size_t Ostap::Math::CutOffGauss::tag () const 
 {  
   static const std::string s_name = "CutOffGauss" ;
-  return std::hash_combine ( s_name , m_right , m_x0 , m_sigma ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_right , m_x0 , m_sigma ) ; 
 }
 // ============================================================================
 
@@ -2716,7 +2717,7 @@ double Ostap::Math::CutOffStudent::integral
 std::size_t Ostap::Math::CutOffStudent::tag () const 
 { 
   static const std::string s_name = "CutOffStudent" ;
-  return std::hash_combine ( s_name , m_right , m_x0 , m_nu , m_sigma ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_right , m_x0 , m_nu , m_sigma ) ;
 }
 // ============================================================================
 
@@ -2868,7 +2869,7 @@ double Ostap::Math::Rice::integral
 std::size_t Ostap::Math::Rice::tag () const 
 { 
   static const std::string s_name = "Rice" ;
-  return std::hash_combine ( s_name , m_nu , m_varsigma , m_shift ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_nu , m_varsigma , m_shift ) ;
 }
   
 
@@ -3050,7 +3051,7 @@ double Ostap::Math::GenInvGauss::integral
 std::size_t Ostap::Math::GenInvGauss::tag () const 
 { 
   static const std::string s_name = "GenInvGauss" ;
-  return std::hash_combine ( s_name , m_theta , m_eta , m_p , m_shift ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_theta , m_eta , m_p , m_shift ) ;
 }
   
 // =============================================================================
@@ -3169,7 +3170,7 @@ double Ostap::Math::Argus::mode     () const
 std::size_t Ostap::Math::Argus::tag () const 
 { 
   static const std::string s_name = "Argus" ;
-  return std::hash_combine ( s_name , m_mu , m_c , m_chi ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_c , m_chi ) ;
 }
 
 
@@ -3300,7 +3301,7 @@ double Ostap::Math::GenArgus::integral
 std::size_t Ostap::Math::GenArgus::tag () const 
 { 
   static const std::string s_name = "GenArgus" ;
-  return std::hash_combine ( s_name , m_mu , m_c , m_chi , m_dp ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_c , m_chi , m_dp ) ;
 }
 
 
@@ -3400,7 +3401,7 @@ double Ostap::Math::HORNSdini::integral
 std::size_t Ostap::Math::HORNSdini::tag () const 
 { 
   static const std::string s_name = "HORNSdini" ;
-  return std::hash_combine ( s_name , m_a , m_delta , m_phi ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_a , m_delta , m_phi ) ;
 }
 
 
@@ -3502,11 +3503,8 @@ double Ostap::Math::HILLdini::integral
 std::size_t Ostap::Math::HILLdini::tag () const 
 { 
   static const std::string s_name = "HILLdini" ;
-  return std::hash_combine ( s_name , m_a , m_delta , m_phi ) ;
+  return Ostap::Utils::hash_combiner ( s_name , m_a , m_delta , m_phi ) ;
 }
-
-
-
 
 // ============================================================================
 //                                                                      The END
