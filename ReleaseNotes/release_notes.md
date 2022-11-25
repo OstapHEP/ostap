@@ -15,7 +15,7 @@
 
 ## Bug fixes:
 
-  1. fix incorrect tag costurction for `Ostap::Math::BW` function (it affects integration cacheing)
+  1. fix incorrect tag construction for `Ostap::Math::BW` function (it affects integration cacheing)
 
 # v1.9.4.4
 
