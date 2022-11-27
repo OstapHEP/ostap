@@ -3698,8 +3698,6 @@ void Ostap::Models::PhaseSpacePol::setPars () const
 {
   //
   RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
   ::set_pars ( m_phis ,  m_ps ) ;
   //
 }
@@ -3875,9 +3873,6 @@ void Ostap::Models::PhaseSpaceLeftExpoPol::setPars () const
   m_ps.setTau    ( m_tau   ) ;
   m_ps.setScale  ( m_scale ) ;
   //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
   ::set_pars ( m_phis , m_ps ) ;
   //
 }
@@ -3966,13 +3961,7 @@ Ostap::Models::PolyPositive::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::PolyPositive::setPars () const 
 {
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  std::vector<double> sin2phi ;
-  //
   ::set_pars ( m_phis , m_positive ) ;
-  //
 }
 //
 // ============================================================================
@@ -4061,15 +4050,7 @@ Ostap::Models::PolyPositiveEven::clone( const char* name ) const
 { return new Ostap::Models::PolyPositiveEven(*this,name) ; }
 // ============================================================================
 void Ostap::Models::PolyPositiveEven::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  std::vector<double> sin2phi ;
-  //
-  ::set_pars ( m_phis , m_even ) ;
-  //
-}
+{ ::set_pars ( m_phis , m_even ) ; }
 //
 // ============================================================================
 // the actual evaluation of function 
@@ -4154,15 +4135,7 @@ Ostap::Models::PolyMonotonic::clone( const char* name ) const
 { return new Ostap::Models::PolyMonotonic(*this,name) ; }
 // ============================================================================
 void Ostap::Models::PolyMonotonic::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  std::vector<double> sin2phi ;
-  //
-  ::set_pars ( m_phis , m_monotonic ) ;
-  //
-}
+{ ::set_pars ( m_phis , m_monotonic ) ; }
 //
 // ============================================================================
 // the actual evaluation of function 
@@ -4249,13 +4222,7 @@ Ostap::Models::PolyConvex::clone( const char* name ) const
 { return new Ostap::Models::PolyConvex(*this,name) ; }
 // ============================================================================
 void Ostap::Models::PolyConvex::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  ::set_pars ( m_phis , m_convex ) ;
-  //
-}
+{ ::set_pars ( m_phis , m_convex ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -4340,15 +4307,7 @@ Ostap::Models::PolyConvexOnly::clone( const char* name ) const
 { return new Ostap::Models::PolyConvexOnly(*this,name) ; }
 // ============================================================================
 void Ostap::Models::PolyConvexOnly::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  std::vector<double> sin2phi ;
-  //
-  ::set_pars ( m_phis , m_convex ) ;
-  //
-}
+{ ::set_pars ( m_phis , m_convex ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -4438,9 +4397,6 @@ Ostap::Models::PolySigmoid::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::PolySigmoid::setPars () const 
 {
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
   ::set_pars ( m_phis , m_sigmoid ) ;
   //
   m_sigmoid.setAlpha ( m_alpha ) ;
@@ -4536,15 +4492,7 @@ Ostap::Models::PositiveSpline::clone( const char* name ) const
 { return new Ostap::Models::PositiveSpline(*this,name) ; }
 // ============================================================================
 void Ostap::Models::PositiveSpline::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  std::vector<double> sin2phi ;
-  //
-  ::set_pars ( m_phis , m_spline ) ;
-  //
-}
+{ ::set_pars ( m_phis , m_spline ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -4636,15 +4584,7 @@ Ostap::Models::MonotonicSpline::clone( const char* name ) const
 { return new Ostap::Models::MonotonicSpline(*this,name) ; }
 // ============================================================================
 void Ostap::Models::MonotonicSpline::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  std::vector<double> sin2phi ;
-  //
-  ::set_pars ( m_phis , m_spline ) ;
-  //
-}
+{  ::set_pars ( m_phis , m_spline ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -4733,15 +4673,7 @@ Ostap::Models::ConvexSpline::clone( const char* name ) const
 { return new Ostap::Models::ConvexSpline(*this,name) ; }
 // ============================================================================
 void Ostap::Models::ConvexSpline::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  std::vector<double> sin2phi ;
-  //
-  ::set_pars ( m_phis , m_spline ) ;
-  //
-}
+{ ::set_pars ( m_phis , m_spline ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -4830,15 +4762,7 @@ Ostap::Models::ConvexOnlySpline::clone( const char* name ) const
 { return new Ostap::Models::ConvexOnlySpline(*this,name) ; }
 // ============================================================================
 void Ostap::Models::ConvexOnlySpline::setPars () const 
-{
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  std::vector<double> sin2phi ;
-  //
-  ::set_pars ( m_phis , m_spline ) ;
-  //
-}
+{ ::set_pars ( m_phis , m_spline ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -4927,13 +4851,7 @@ Ostap::Models::ExpoPositive::clone( const char* name ) const
 { return new Ostap::Models::ExpoPositive(*this,name) ; }
 // ============================================================================
 void Ostap::Models::ExpoPositive::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  std::vector<double> sin2phi ;
-  //
+{ 
   ::set_pars ( m_phis , m_positive ) ;
   //
   m_positive.setTau ( m_tau ) ;
@@ -5031,12 +4949,6 @@ Ostap::Models::TwoExpoPositive::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::TwoExpoPositive::setPars () const 
 {
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  std::vector<double> sin2phi ;
-  //
   ::set_pars ( m_phis , m_2expopos ) ;
   //
   m_2expopos.setAlpha ( m_alpha ) ;

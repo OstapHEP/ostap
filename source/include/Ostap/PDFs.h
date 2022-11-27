@@ -3451,7 +3451,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::PositiveEven& function() const { return m_even ; }
+      const Ostap::Math::PositiveEven& function () const { return m_even ; }
+      const Ostap::Math::PositiveEven& polynom  () const { return m_even ; }
       // ======================================================================
     public:
       // ======================================================================

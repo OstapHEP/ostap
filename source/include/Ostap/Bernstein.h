@@ -830,6 +830,7 @@ namespace Ostap
       // is Bernstein polynomial almost to zero ?
       inline bool operator () ( const Ostap::Math::Bernstein& b ) const
       { return m_zero ( b.pars() ) ; }
+      // ======================================================================
     private:
       // ======================================================================
       /// the actual comparator 
@@ -868,8 +869,9 @@ namespace Ostap
      */
     inline 
     Ostap::Math::Bernstein 
-    ldexp ( const Ostap::Math::Bernstein& b , 
-            const short                   i ) { return b.ldexp ( i ) ; }
+    ldexp 
+    ( const Ostap::Math::Bernstein& b , 
+      const short                   i ) { return b.ldexp ( i ) ; }
     // ========================================================================
     /** deflate Bernstein polynomial at  <code>x=xmin</code>
      *  \f$ b(x)-b(x_{min})=(x-x_{min})*d(x)\f$      
@@ -877,7 +879,8 @@ namespace Ostap
      *  @return deflated polinomial "d"
      */ 
     Ostap::Math::Bernstein
-    deflate_left ( const Ostap::Math::Bernstein& b ) ;    
+    deflate_left 
+    ( const Ostap::Math::Bernstein& b ) ;    
     // ========================================================================
     /** deflate Bernstein polynomial at  <code>x=xmax</code>
      *  \f$ b(x)-b(x_{max})=(x-x_{max})*d(x)\f$      
@@ -885,7 +888,8 @@ namespace Ostap
      *  @return deflated polinomial "d"
      */ 
     Ostap::Math::Bernstein
-    deflate_right ( const Ostap::Math::Bernstein& b ) ;
+    deflate_right
+    ( const Ostap::Math::Bernstein& b ) ;
     // ========================================================================
     /** deflate Bernstein polynomial at  <code>x=x0</code>
      *  \f$ b(x)-b(x_{0})=(x-x_{0})*d(x)\f$      
@@ -894,7 +898,8 @@ namespace Ostap
      *  @return deflated polinomial "d"
      */ 
     Ostap::Math::Bernstein
-    deflate       ( const Ostap::Math::Bernstein& b , const double x0 ) ;
+    deflate
+    ( const Ostap::Math::Bernstein& b , const double x0 ) ;
     // ========================================================================
     /** get abscissas of crosssing point of the control polygon 
      *  for Bernstein polynomial
@@ -902,7 +907,8 @@ namespace Ostap
      *  @return abscissas of crossing points of the control  polygon
      */
     std::vector<double> 
-    crossing_points  ( const Ostap::Math::Bernstein& b ) ;
+    crossing_points 
+    ( const Ostap::Math::Bernstein& b ) ;
     // ========================================================================    
     /** get number of (strickt) sign changes in trhe sequnce of coefficients
      *  for Bernstein polynomial 
@@ -910,19 +916,22 @@ namespace Ostap
      *  \f$ R = N - 2K\f$, where K is non-negative integer
      */
     unsigned short 
-    sign_changes ( const Ostap::Math::Bernstein& b ) ;
+    sign_changes 
+    ( const Ostap::Math::Bernstein& b ) ;
     // ========================================================================
     /** get the most left crossing  point of convex hull with  x-axis 
      *  (it is a step  towards finding the most left root, if any 
      *  if convex hull does not cross the x-axis, xmax is returned      
      */
-    double left_line_hull ( const Ostap::Math::Bernstein& b  ) ;
+    double left_line_hull
+    ( const Ostap::Math::Bernstein& b  ) ;
     // ========================================================================
     /** get the most right rossing  point of convex hull with  x-axis 
      *  (it is a step  towards finding the most right root, if any 
      *  if convex hull does not cross the x-axis, xmin is returned      
      */
-    double right_line_hull ( const Ostap::Math::Bernstein& b ) ;
+    double right_line_hull 
+    ( const Ostap::Math::Bernstein& b ) ;
   } 
   // ==========================================================================
 } //                                                The end of namespace  Ostap 

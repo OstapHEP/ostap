@@ -108,7 +108,7 @@ Ostap::Math::BernsteinEven::BernsteinEven
 ( const unsigned short N    , 
   const double         xmin ,
   const double         xmax ) 
-  : m_bernstein ( 0 == N % 2 ? N : N - 1 , xmin , xmax )
+  : m_bernstein ( 2 * N + 1 , xmin , xmax )
 {}
 // ============================================================================
 /*  constructor from the list of coefficients 
@@ -120,7 +120,7 @@ Ostap::Math::BernsteinEven::BernsteinEven
 ( const std::vector<double>& pars , 
   const double               xmin ,
   const double               xmax ) 
-  : m_bernstein ( pars.empty() ? 0 : 2 * pars.size() - 2 , xmin , xmax )
+  : m_bernstein ( pars.empty() ? 1 : 2 * pars.size() - 1 , xmin , xmax )
 {
   setPars ( pars.begin() , pars.end() ) ;
 }
@@ -136,14 +136,11 @@ bool Ostap::Math::BernsteinEven::setPar
   const double         value ) 
 {
   //
-  const unsigned short np  =  npars  () ;
-  const unsigned short d   =  degree () ;
+  const unsigned short npb = m_bernstein.npars  () ;
+  if ( npb <= k ) { return false ; }
   //
-  if      ( np <=     k ) { return false ; }
-  else if ( d  == 2 * k ) { return m_bernstein.setPar ( k , value ) ; }
-  //
-  const bool b1 = m_bernstein.setPar (     k , value ) ;
-  const bool b2 = m_bernstein.setPar ( d - k , value ) ;
+  const bool b1 = m_bernstein.setPar (       k    , value ) ;
+  const bool b2 = m_bernstein.setPar ( npb - k -1 , value ) ;
   //
   return b1 || b2 ;
   //
@@ -154,8 +151,9 @@ bool Ostap::Math::BernsteinEven::setPar
 std::vector<double>
 Ostap::Math::BernsteinEven::pars () const 
 {
-  return std::vector<double> ( m_bernstein.pars().begin() , 
-                               m_bernstein.pars().begin() + npars() ) ;
+  return std::vector<double> 
+    ( m_bernstein.pars().begin() , 
+      m_bernstein.pars().begin() + npars() ) ;
 }
 // ============================================================================
 //  Sum of Bernstein polynomial and a constant 
@@ -452,8 +450,8 @@ Ostap::Math::PositiveEven::PositiveEven
 ( const unsigned short      N    ,
   const double              xmin ,
   const double              xmax )
-  : m_even     ( N     , xmin , xmax )
-  , m_positive ( N / 2 , xmin , xmax )  
+  : m_even     ( N , xmin , xmax )
+  , m_positive ( N , xmin , xmax )  
 {
   updateBernstein () ;
 }
@@ -464,8 +462,8 @@ Ostap::Math::PositiveEven::PositiveEven
 ( const std::vector<double>& pars ,
   const double               xmin ,
   const double               xmax )
-  : m_even      ( 2 * pars.size() , xmin , xmax )
-  , m_positive  (     pars        , xmin , xmax ) 
+  : m_even      ( pars.size() , xmin , xmax )
+  , m_positive  ( pars        , xmin , xmax ) 
 {
   updateBernstein () ;
 }

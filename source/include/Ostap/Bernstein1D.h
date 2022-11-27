@@ -39,7 +39,7 @@ namespace Ostap
     class ConvexOnly ;
     // ========================================================================
     /** @class BernsteinEven
-     *  A special case of Bernstein polynomial with symmetry:
+     *  A special case of Bernstein polynomial with symmetry relatiev to midpoints
      *  \f$ f( \frac{x_{max}+x_{min}}{2} - x ) \equiv  \frac{x_{max}+x_{min}}{2} + x ) \f$
      *  @see Ostap::Math::Bernstein
      *  @author Vanya Belyaev Ivan.Belyaev@iep.ru
@@ -71,7 +71,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get the value of polynomial
+      /// get the value of the polynomial
       double evaluate ( const double x ) const { return m_bernstein.evaluate ( x ) ; }
       // ======================================================================
       /// get the value
@@ -80,11 +80,11 @@ namespace Ostap
     public:
       // ======================================================================
       /// the degree of polynomial
-      unsigned short degree () const { return m_bernstein.degree () ; }
+      unsigned short degree () const { return m_bernstein.degree ()     ; }
       /// number of parameters
-      unsigned short npars  () const { return degree() / 2 + 1      ; }
+      unsigned short npars  () const { return m_bernstein.npars  () / 2 ; }
       /// all zero ?
-      bool           zero   () const { return m_bernstein.zero()    ; }
+      bool           zero   () const { return m_bernstein.zero()        ; }
       // ======================================================================
       /** set k-parameter
        *  @param k index
@@ -118,19 +118,18 @@ namespace Ostap
         ITERATOR end   ) 
       {
         bool updated = false ;
-        const unsigned short np  =  npars  () ;
-        const unsigned short d   =  degree () ;
-        for ( unsigned short k   = 0 ; k < np && begin != end ; ++k, ++begin )
+        const unsigned short npb = m_bernstein.npars  () ;
+        for ( unsigned short k   = 0 ; k < npb && begin != end ; ++k, ++begin )
         {
-          const bool updated1 =              m_bernstein.setPar (     k , *begin ) ;
-          const bool updated2 = d != 2 * k ? m_bernstein.setPar ( d - k , *begin ) : false ;
+          const bool updated1 = m_bernstein.setPar (       k    , *begin ) ;
+          const bool updated2 = m_bernstein.setPar ( npb - k -1 , *begin ) ;
           updated = updated1 || updated2 ? true : updated ;
         }
         return updated ;
       }
       /// get the parameter value
       double  par          ( const unsigned short k ) const
-      { return 2 * k <= degree() ? m_bernstein.par ( k ) : 0.0 ; }
+      { return m_bernstein.par ( k ) ; }
       /// get the parameter value
       double  parameter    ( const unsigned short k ) const { return par ( k ) ; }
       /// get all parameters (by value!!! COPY!!)
@@ -208,7 +207,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get the tag 
+      /// get the unique tag 
       std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
     public:
@@ -226,7 +225,7 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// the actual Bernstein polynomial
+      /// the actual underlying "regular" Bernstein polynomial
       Bernstein      m_bernstein ; // the actual Bernstein polynomial
       // ======================================================================
     } ;
@@ -253,19 +252,23 @@ namespace Ostap
     inline BernsteinEven operator-( const double v , const BernsteinEven& p )
     { return v + -1*p; }
     // ========================================================================
-    inline Bernstein operator+ ( const BernsteinEven&  a , const Bernstein& b ) 
+    inline Bernstein operator+ ( const BernsteinEven& a , const Bernstein&     b ) 
     { return a.bernstein () + b ; }
-    inline Bernstein operator- ( const BernsteinEven&  a , const Bernstein& b ) 
+    inline Bernstein operator+ ( const Bernstein&     a , const BernsteinEven& b ) 
+    { return a + b.bernstein () ; }
+    inline Bernstein operator- ( const BernsteinEven& a , const Bernstein&     b ) 
     { return a.bernstein () - b ; }
-    inline Bernstein operator+ ( const Bernstein& b , const BernsteinEven&  a ) { return a + b ; }
-    inline Bernstein operator- ( const Bernstein& b , const BernsteinEven&  a ) 
-    { return b - a.bernstein () ; }
-    inline Bernstein operator* ( const BernsteinEven&  a , const Bernstein& b ) 
+    inline Bernstein operator- ( const Bernstein&     a , const BernsteinEven& b ) 
+    { return a - b.bernstein () ; }
+    inline Bernstein operator* ( const BernsteinEven& a , const Bernstein&     b ) 
     { return a.bernstein () * b ; }
-    inline Bernstein operator* ( const Bernstein& b , const BernsteinEven&  a ) { return a * b ; }
+    inline Bernstein operator* ( const Bernstein&     a , const BernsteinEven& b  ) 
+    { return a * b.bernstein () ; }
     // ========================================================================
     /// Swapping function for even bernstein polynomials 
-    inline void swap ( BernsteinEven& a , BernsteinEven& b ) { a.swap ( b ) ; }
+    inline void swap 
+    ( BernsteinEven& a , 
+      BernsteinEven& b ) { a.swap ( b ) ; }
     // ========================================================================
     /** @class Positive
      *  The "positive" polynomial of order N.
@@ -743,10 +746,10 @@ namespace Ostap
       // ======================================================================
     protected:
       // ======================================================================
-      /// the actual bernstein polynomial
+      /// the actual bernstein even polynomial
       Ostap::Math::BernsteinEven m_even     ; // the actual bernstein polynomial
-      /// parameters 
-      Ostap::Math::Positive      m_positive ;
+      /// helper polymnomial to set parameters 
+      Ostap::Math::Positive      m_positive ; // helper polymnomial to set parameters 
       // ======================================================================
     } ;
     // ========================================================================
