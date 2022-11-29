@@ -1,4 +1,3 @@
-
 ## New features: 
 
   1. some massage for `BernsteinEven` and `PositiveEven`
