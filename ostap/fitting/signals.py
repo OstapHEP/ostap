@@ -55,6 +55,7 @@ Empricial PDFs to describe narrow peaks
   - NormalLaplace_pdf
   - Hypatia_pdf
   - PearsonIV_pdf
+  - SkewGenT_pdf
   - Hat, Up & FupN finite functions
   
 PDF to describe 'wide' peaks
@@ -98,7 +99,8 @@ __all__ = (
     'Bukin_pdf'              , ## generic Bukin PDF: skewed gaussian with exponential tails
     'StudentT_pdf'           , ## Student-T function 
     'BifurcatedStudentT_pdf' , ## bifurcated Student-T function
-    'PearsonIV_pdf'          , ## Pearson Type IV pdf  
+    'PearsonIV_pdf'          , ## Pearson Type IV pdf
+    'SkewGenT_pdf'           , ## Skewed generalised t-distribution 
     'SinhAsinh_pdf'          , ## "Sinh-arcsinh distributions". Biometrika 96 (4): 761
     'JohnsonSU_pdf'          , ## JonhsonSU-distribution 
     'Atlas_pdf'              , ## modified gaussian with exponenital tails 
@@ -1817,6 +1819,151 @@ class PearsonIV_pdf(PEAK) :
         self.set_value ( self.__nu , value ) 
 
 models.append ( PearsonIV_pdf )      
+
+
+
+# =============================================================================
+## @class SkewGenT_pdf
+#  Skewed generalised t-distribution
+#  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution
+#  Original function is parameterised in terms of parameters 
+#  - \f$ \mu \$ related to locartion 
+#  - \f$ \sigma \$ related to width/scale 
+#  - \f$ -1 < \lambda < 1 \f$ related to asymmetry/skewness  
+#  - \f$ 0<p, 0<q \f$ related to kutsosis
+#
+#  Mean value is defined if \f$ 1 < pq \f$ 
+#  RMS si defined for \f$ 2 < pq \f$
+# 
+#  In this view here we adopt sligth reparameterisation in terms of 
+#  - \f$ 0 < r \f$, such as  \f$  r = \frac{1}{p} 
+#  - \f$ 0< \zeta \f$, such as \f$ pq = \zeta + 4 \f$
+#  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+#
+#  Usage of \f$ \zeta\f$ ensures the existance of the  mean, RMS, sewness & kurtosis
+# 
+#  Special limitnig cases:
+#  - \f$ q\rigtharrow +\infty (\zeta \rightarrow +\infty) \f$ 
+#     Generalized Error Distribution 
+#  - \f$ \lambda=0 (\xi = 0)  \f$ Generalized t-distribution 
+#  - \f$ p=2(r=\frac{1}{2}) \f$  Skewed t-distribution 
+#  - \f$ p=1(r=1), q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+#     Skewed Laplace distribution 
+#  - \f$ \lambda=0, q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+#     Generalized Error Distribution 
+#  - \f$ p=2(r=\frac{1}{2}), q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+#     Skewed Normal distribution 
+#  - \f$ \sigma=1, \lambda=0,p=2(r=\frac{1}{2},  q=\frac{n+2}{2} (\alpha=n) \f$
+#     Student's t-distribution 
+#  - \f$ \lambda=0, p=1(r=1), q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+#     Laplace distribution 
+#  - \f$ \lambda=0, p=2(r=\frac{1}{2}, q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+#     Skewed Normal distribution 
+#  @see Ostap::Math::SkewGenT 
+#  @see Ostap::Models::SkewGenT 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2022-12-01
+class SkewGenT_pdf(PEAK) :
+    """Skewed Generalised t-distribution:
+    
+    - see Ostap.Models.SkewGenT
+    - see Ostap.Math.SkewGenT
+    """
+    def __init__ ( self         ,
+                   name         ,
+                   xvar         ,
+                   mu           , 
+                   sigma    = 1 ,
+                   xi       = 0 ,
+                   r        = 0 ,
+                   zeta     = 1 ) :
+        #
+        ## initialize the base
+        # 
+        PEAK.__init__  ( self                                 ,
+                         name        = name                   ,
+                         xvar        = xvar                   ,
+                         mean        = mu                     ,
+                         sigma       = sigma                  ,                          
+                         mean_name   = 'mu_%s'         % name ,
+                         mean_title  = '#mu_{SGT}(%s)' % name )
+        
+        ## location parameter 
+        self.__mu       = self.mean
+        
+        ## xi parameter (asymmetry) 
+        self.__xi     = self.make_var ( xi                     ,
+                                        'xi_%s'         % name ,
+                                        '#xi_{SGT}(%s)' % name ,
+                                        False , 0 , -5 , 5  ) 
+        
+        ## r parameter (shape)
+        self.__r      = self.make_var ( r                     ,
+                                        'r_%s'         % name ,
+                                        '#r_{SGT}(%s)' % name ,
+                                        False , 1 , 0.0001 , 1000 ) 
+        ## zeta parameter (shape)
+        self.__zeta   = self.make_var ( zeta                     ,
+                                        'zeta_%s'         % name ,
+                                        '#zeta_{SGT}(%s)' % name  ,
+                                        False , 1 , 0    , 1000 ) 
+
+        #  make the final PDF 
+        self.pdf = Ostap.Models.SkewGenT (
+            self.roo_name ( 'sgt_' ) , 
+            "SkewGenT %s" % self.name ,
+            self.xvar   ,
+            self.mu     ,
+            self.sigma  ,
+            self.xi     ,
+            self.r      ,
+            self.zeta   )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name     ,
+            'xvar'      : self.xvar     ,
+            'mu'        : self.mu       ,
+            'sigma'     : self.sigma    ,
+            'xi'        : self.xi       ,
+            'r'         : self.r        ,
+            'zeta'      : self.zeta     ,
+            }
+        
+    @property     
+    def mu ( self ) :
+        """'mu'-parameter (location) for SkewGenT distribution (same as 'mean')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self, value ) :
+        self.set_value ( self.__mu , value ) 
+
+    @property
+    def xi ( self ) :
+        """'xi'-parameter for SkewGenT distribution (related to asymmetry)"""
+        return self.__xi
+    @xi.setter
+    def xi ( self, value ) :
+        self.set_value ( self.__xi , value ) 
+
+    @property     
+    def r ( self ) :
+        """'r'-parameter (shape) for SkewGenT distribution"""
+        return self.__r
+    @r.setter
+    def r  ( self, value ) :
+        self.set_value ( self.__r , value )
+        
+    @property     
+    def zeta ( self ) :
+        """'zeta'-parameter (shape) for SkewGenT distribution"""
+        return self.__zeta
+    @zeta .setter
+    def zeta ( self, value ) :
+        self.set_value ( self.__zeta , value ) 
+
+
+models.append ( SkewGenT_pdf )      
 
 # =============================================================================
 ## @class SinhAsinh_pdf

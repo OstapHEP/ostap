@@ -1216,13 +1216,13 @@ namespace Ostap
         { const long double c = *begin ; r += std::abs ( c ) ; }
         return r ;                                                     // RETURN 
       }
-      /// 2) (p==infinity) : maximal  absolte value 
+      /// 2) (p==infinity) : maximal  absolute value 
       else if ( 0 == ip )    // p = infinity
       {
         for ( ; begin != end ; ++begin ) 
         {
           const long double c = *begin ;
-          r = std::max ( r , std::abs(c) ) ; 
+          r = std::max ( r , std::abs ( c ) ) ; 
         }
         return r ;                                                      // RETURN 
       }
@@ -1245,7 +1245,7 @@ namespace Ostap
         return std::pow ( r , ip ) ;                                    // RETURN 
       }
       /// 5) generic case 
-      const double p = 1/ip ;
+      const long double p = 1.0L/ip ;
       for ( ; begin != end ; ++begin ) 
       { 
         const long  double c = *begin ;
@@ -1282,7 +1282,7 @@ namespace Ostap
     /** number of (strickt) sign-variations in the sequence
      *  @param first begin-iterator for the input sequence 
      *  @param last  end-iterator for the  input sequence 
-     *  @return number if strickt sign varination 
+     *  @return number if strickt sign variations 
      */
     template <class ITERATOR, class ZERO>
     unsigned int sign_changes

@@ -7813,6 +7813,125 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class SkewGenT 
+     *  Skewwed Generalised t-distribution
+     *  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution
+     *  Original function is parameterised in terms of parameters 
+     *  - \f$ \mu \$ related to locartion 
+     *  - \f$ \sigma \$ related to width/scale 
+     *  - \f$ -1 < \lambda < 1 \f$ related to asymmetry/skewness  
+     *  - \f$ 0<p, 0<q \f$ related to kutsosis
+     *
+     *  Mean value is defined if \f$ 1 < pq \f$ 
+     *  RMS si defined for \f$ 2 < pq \f$
+     * 
+     *  In this view here we adopt sligth reparameterisation in terms of 
+     *  - \f$ 0 < r \f$, such as  \f$  r = \frac{1}{p} 
+     *  - \f$ 0< \zeta \f$, such as \f$ pq = \zeta + 4 \f$
+     *  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+     *
+     *  Usage of \f$ \zeta\f$ ensures the existance of the  mean, RMS, sewness & kurtosis
+     * 
+     *  Special limitnig cases:
+     *  - \f$ q\rigtharrow +\infty (\zeta \rightarrow +\infty) \f$ 
+     *     Generalized Error Distribution 
+     *  - \f$ \lambda=0 (\xi = 0)  \f$ Generalized t-distribution 
+     *  - \f$ p=2(r=\frac{1}{2}) \f$  Skewed t-distribution 
+     *  - \f$ p=1(r=1), q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+     *     Skewed Laplace distribution 
+     *  - \f$ \lambda=0, q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+     *     Generalized Error Distribution 
+     *  - \f$ p=2(r=\frac{1}{2}), q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+     *     Skewed Normal distribution 
+     *  - \f$ \sigma=1, \lambda=0,p=2(r=\frac{1}{2},  q=\frac{n+2}{2} (\alpha=n) \f$
+     *     Student's t-distribution 
+     *  - \f$ \lambda=0, p=1(r=1), q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+     *     Laplace distribution 
+     *  - \f$ \lambda=0, p=2(r=\frac{1}{2}, q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+     *     Skewed Normal distribution 
+     * @see Ostap::Math::SkewGenT 
+     * @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     */
+    class SkewGenT : public RooAbsPdf
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::SkewGenT, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================      
+     SkewGenT 
+     ( const char*  name  , 
+       const char*  title , 
+       RooAbsReal&  x     ,
+       RooAbsReal&  mu    ,   // location/mean  
+       RooAbsReal&  sigma ,   // scale/rms 
+       RooAbsReal&  xi    ,   // related to asymmetry 
+       RooAbsReal&  r     ,   // shape parameter 
+       RooAbsReal&  zeta  ) ; // shape parameter 
+      /// copy constructor 
+      SkewGenT  ( const SkewGenT& right , const char* name = nullptr ) ;
+      /// clone method
+      SkewGenT* clone ( const char* name ) const override ;
+      /// virtual destructor
+      virtual ~SkewGenT() ;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      SkewGenT () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::SkewGenT& function () const { return m_sgt ; }
+      const Ostap::Math::SkewGenT& sgt      () const { return m_sgt ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x     .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu    .arg() ; }
+      const RooAbsReal& sigma   () const { return m_sigma .arg() ; }
+      const RooAbsReal& xi      () const { return m_xi    .arg() ; }
+      const RooAbsReal& r       () const { return m_r     .arg() ; }
+      const RooAbsReal& zeta    () const { return m_zeta  .arg() ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy   m_x      {} ;
+      RooRealProxy   m_mu     {} ;
+      RooRealProxy   m_sigma  {} ;
+      RooRealProxy   m_xi     {} ;
+      RooRealProxy   m_r      {} ;
+      RooRealProxy   m_zeta   {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::SkewGenT m_sgt ;          // the function
+      // ======================================================================
+    } ;  
+    // ========================================================================
     /** @class HORNSdini 
      *  \f[ f(x;a,\delta, \phi) = 
      *  \frac{3}{2\delta}\left( z \right)^2
@@ -7842,8 +7961,7 @@ namespace Ostap
         RooAbsReal&  x     ,
         RooAbsReal&  a     , 
         RooAbsReal&  delta ,
-        RooAbsReal&  phi   ) ;
-      
+        RooAbsReal&  phi   ) ;      
       /// copy constructor 
       HORNSdini ( const HORNSdini & right , const char* name = nullptr ) ;
       /// clone method 

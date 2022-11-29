@@ -506,6 +506,20 @@ def _omp4_reduce_ ( peak ) :
 
 Ostap.Math.PearsonIV. __reduce__ = _omp4_reduce_
 
+
+# =============================================================================
+## reduce Ostao::Math::SkewGenT
+#  @see Ostap::Math::SkewGenT 
+def _omsgt_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.SkewGenT`
+    - see `Ostap.Math.SkewGenT`
+    """
+    return root_factory , ( type ( peak )   , peak.mu   () ,
+                            peak.vsigma ()  , peak.xi   () ,
+                            peak.r      ()  , peak.zeta () )
+
+Ostap.Math.SkewGenT. __reduce__ = _omsgt_reduce_
+
 # =============================================================================
 ## Reduce Ostap::Math::SinhAsinh
 #  @see Ostap::Math::SinhAsinh
@@ -1118,6 +1132,7 @@ _decorated_classes_  = (
     Ostap.Math.StudentT                     , 
     Ostap.Math.BifurcatedStudentT           , 
     Ostap.Math.PearsonIV                    , 
+    Ostap.Math.SkewGenT                     , 
     Ostap.Math.SinhAsinh                    , 
     Ostap.Math.JohnsonSU                    , 
     Ostap.Math.Atlas                        , 

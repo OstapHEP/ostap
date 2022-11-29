@@ -8489,6 +8489,99 @@ Double_t Ostap::Models::GenInvGauss::analyticalIntegral
 
 
 // ============================================================================
+// SkewGenT 
+// ============================================================================
+Ostap::Models::SkewGenT::SkewGenT 
+( const char*  name  , 
+  const char*  title , 
+  RooAbsReal&  x     ,
+  RooAbsReal&  mu    ,   // location/mean  
+  RooAbsReal&  sigma ,   // scale/rms 
+  RooAbsReal&  xi    ,   // related to asymmetry 
+  RooAbsReal&  r     ,   // shape parameter 
+  RooAbsReal&  zeta  )   // shape parameter 
+  : RooAbsPdf ( name , title )
+    //
+  , m_x       ( "!x"     , "x-observable"  , this , x     )
+  , m_mu      ( "!mu"    , "location/mean" , this , mu    )
+  , m_sigma   ( "!sigma" , "sigma/rms"     , this , sigma )
+  , m_xi      ( "!xi"    , "asymmetry"     , this , xi    )
+  , m_r       ( "!r"     , "r-shape"       , this , r     )
+  , m_zeta    ( "!zeta"  , "zeta-shape"    , this , zeta  )
+    //
+  , m_sgt     ( 0.1222 , 0.1222 , 0.1222 , 0.1222 , 0.1222 ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// SkewGenT 
+// ============================================================================
+Ostap::Models::SkewGenT::SkewGenT 
+( const Ostap::Models::SkewGenT& right , 
+  const char*                     name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_mu       ( "!mu"     , this , right.m_mu    ) 
+  , m_sigma    ( "!mu"     , this , right.m_sigma ) 
+  , m_xi       ( "!mu"     , this , right.m_xi    ) 
+  , m_r        ( "!mu"     , this , right.m_r     ) 
+  , m_zeta     ( "!mu"     , this , right.m_zeta  ) 
+    //
+  , m_sgt      ( right.m_sgt )
+{
+  setPars() ;
+}
+// ============================================================================
+// clone method
+// ============================================================================
+Ostap::Models::SkewGenT* 
+Ostap::Models::SkewGenT::clone ( const char* name ) const 
+{ return new Ostap::Models::SkewGenT( *this , name ) ; }
+// ============================================================================
+Ostap::Models::SkewGenT::~SkewGenT(){}
+// ============================================================================
+void Ostap::Models::SkewGenT::setPars () const 
+{
+  m_sgt.setMu     ( m_mu    ) ;
+  m_sgt.setSigma  ( m_sigma ) ;
+  m_sgt.setXi     ( m_xi    ) ;
+  m_sgt.setR      ( m_r     ) ;
+  m_sgt.setZeta   ( m_zeta  ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::SkewGenT::evaluate() const 
+{
+  setPars() ;
+  return m_sgt ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::SkewGenT::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::SkewGenT::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  setPars() ;
+  //
+  return m_sgt.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
 // HORNSdini 
 // ============================================================================
 Ostap::Models::HORNSdini::HORNSdini
@@ -8742,6 +8835,7 @@ ClassImp(Ostap::Models::GenInvGauss        )
 ClassImp(Ostap::Models::ExGauss            )
 ClassImp(Ostap::Models::NormalLaplace      )
 ClassImp(Ostap::Models::PearsonIV          )
+ClassImp(Ostap::Models::SkewGenT           )
 ClassImp(Ostap::Models::HORNSdini          )
 ClassImp(Ostap::Models::HILLdini           )
 // ============================================================================

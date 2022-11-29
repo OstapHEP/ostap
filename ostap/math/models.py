@@ -1073,6 +1073,8 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Das                    ,
                Ostap.Math.Rice                   ,
                Ostap.Math.GenInvGauss            ,
+               Ostap.Math.PearsonIV              ,
+               Ostap.Math.SkewGenT               ,
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,
@@ -1457,7 +1459,9 @@ for pdf in ( Ostap.Models.BreitWigner        ,
              Ostap.Models.DoubleGauss        ,
              Ostap.Models.GenGaussV1         , 
              Ostap.Models.GenGaussV2         , 
-             Ostap.Models.SkewGauss          
+             Ostap.Models.SkewGauss          ,
+             Ostap.Models.PearsonIV          ,
+             Ostap.Models.SkewGenT           
              ) :
 
     pdf.sp_integrate = sp_integrate_1D_

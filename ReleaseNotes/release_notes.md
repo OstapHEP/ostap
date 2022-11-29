@@ -2,6 +2,9 @@
 ## New features: 
 
   1. some massage for `BernsteinEven` and `PositiveEven`
+  1. add `Ostap::Math::SkewGenT` and `Ostap:Models::SkewGenT` (skewed generalised t-distribution)
+  1. add `SkewGenT_pdf`
+  1. extend `test_fittiins_models.py`
 
 ## Backward incompatible:  
 

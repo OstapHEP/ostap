@@ -5156,249 +5156,280 @@ std::size_t Ostap::Math::Das::tag () const
 
 
 
-// // ============================================================================
-// /*  constructor with full parameters 
-//  *  @param mu    related to location 
-//  *  @param sigma related to RSM/scale/width 
-//  *  @param xi    related to asymmetry/skewness
-//  *  @param r     shape parameter 
-//  *  @param alpha shape parameter     
-//  */
-// // ============================================================================
-// Ostap::Math::SkewGenT::SkewGenT  
-// ( const double mu     ,    // location parameter 
-//   const double sigma  ,    // width parameter 
-//   const double xi     ,    // asymmetry/skewness parameter 
-//   const double r      ,    // shape parameter 
-//   const double alpha  )    // shape parameter 
-//   : m_mu    ( mu    ) 
-//   , m_sigma ( sigma ) 
-//   , m_xi    ( xi ) 
-//   , m_r     ( std::abs ( r     ) ) 
-//   , m_alpha ( std::abs ( alpha ) )   
-// {
-//   setMu    ( mu    ) ;
-//   setSigma ( sigma ) ;
-//   setXi    ( xi    ) ;
-//   setR     ( r     ) ;
-//   setAlpha ( alpha ) ;
-// }
-// // ======================================================================
-// // set mu-parameter
-// // ======================================================================
-// bool Ostap::Math::SkewGenT::setMu
-// ( const double value ) 
-// {
-//   if ( s_equal ( value , m_mu ) ) { return false ; }
-//   m_mu = value ;
-//   return true ;
-// }
-// // ======================================================================
-// // set sigma-parameter
-// // ======================================================================
-// bool Ostap::Math::SkewGenT::setSigma
-// ( const double value ) 
-// {
-//   const double avalue = std::abs ( value ) ;
-//   if ( s_equal ( avalue , m_sigma ) ) { return false ; }
-//   m_sigma = avalue ;
-//   return true ;
-// }
-// // ======================================================================
-// // set xi-parameter
-// // ======================================================================
-// bool Ostap::Math::SkewGenT::setXi
-// ( const double value ) 
-// {
-//   if ( s_equal ( value , m_xi ) && -1<= m_lambda && m_lambda <= 1 ) { return false ; }
-//   m_xi     = value ;
-//   m_lambda = std::tanh ( value ) ; 
-//   return true ;
-// }
-// // ======================================================================
-// // set r-parameter
-// // ======================================================================
-// bool Ostap::Math::SkewGenT::setR
-// ( const double value ) 
-// {
-//   const double avalue = std::abs ( value ) ;
-//   if ( s_equal ( avalue , m_r ) 
-//        && 0    < m_p 
-//        && 0    < m_norm 
-//        && 0    < m_qip 
-//        && -100 != m_b2  
-//        && -100 != m_b3 ) { return false ; }
-//   //
-//   m_r = avalue  ;
-//   m_p = 1.0/m_r ;
-//   //
-//   const double q_= ( m_alpha + 2 ) * m_r ;
-//   const double p_= m_p ;
-//   //
-//   m_qip          = std::pow  ( q_ ,  m_r ) ;
-//   const double lnb1  = Ostap::Math::lnbeta ( m_r , q_ ) ;
-//   const double lnqp  = m_r * std::log ( q_ ) ;
-//   m_norm = std::exp ( - lnqp - lnb1 ) ;
-//   m_b2   = std::exp ( Ostap::Math::lnbeta ( 2 * m_r , q_ -     m_r ) - lnb1 ) ;
-//   m_b3   = std::exp ( Ostap::Math::lnbeta ( 3 * m_r , q_ - 2 * m_r ) - lnb1 ) ;
-//   //
-//   m_mc   = m_qip * m_b2 ;
-//   //
-//   return true ;
-// }
-// // ======================================================================
-// // set alpha-parameter
-// // ======================================================================
-// bool Ostap::Math::SkewGenT::setAlpha
-// ( const double value ) 
-// {
-//   const double avalue = std::abs ( value ) ;
-//   if ( s_equal ( avalue , m_alpha ) 
-//        && 0    < m_q 
-//        && 0    < m_norm 
-//        && 0    < m_qip
-//        && -100 != m_b2  
-//        && -100 != m_b3   ) { return false ; }
-//   //
-//   m_alpha = avalue  ;
-//   m_q     = ( m_alpha + 2 ) * m_r ;
-//   //
-//   m_qip          = std::pow  ( m_q , m_r ) ;
-//   //
-//   const double lnb1  = Ostap::Math::lnbeta ( m_r , m_q ) ;
-//   const double lnqp  = m_r * std::log ( m_q ) ;
-//   //
-//   // m_norm = std::exp ( -lbqp - lnb1 ) ;
-//   m_norm = std::exp ( - lnb1 ) ;
-//   m_b2   = std::exp ( Ostap::Math::lnbeta ( 2 * m_r , m_q -     m_r ) - lnb1 ) ;
-//   m_b3   = std::exp ( Ostap::Math::lnbeta ( 3 * m_r , m_q - 2 * m_r ) - lnb1 ) ;
-//   //
-//   return true ;
-// }
-// // ============================================================================
-// // helper bias parameter for location 
-// // ============================================================================
-// double Ostap:: Math::SkewGenT::m ( const double vv ) const
-// { return s_zero ( m_lambda ) ? 0 : 2 * vv * m_sigma * m_lambda * m_qip * m_b2  ; }
-// // ============================================================================
-// // helper bias parameter for location 
-// // ============================================================================
-// double Ostap:: Math::SkewGenT::m () const
-// { return s_zero ( m_lambda ) ? 0 : m ( v () ) ; }
-// // ============================================================================
-// // helper scale parameter 
-// // ============================================================================
-// double Ostap:: Math::SkewGenT::v () const 
-// {  
-//   return 1 / std::sqrt ( ( 3 * m_lambda * m_lambda + 1 )  * m_b3 
-//                          - 4 * m_lambda * m_lambda * m_b2 * m_b2 )  ;
-// }
-// // ============================================================================
-// /// evaluate the pdf 
-// // ============================================================================
-// double Ostap::Math::SkewGenT::pdf ( const double x ) const 
-// { 
-//   const double v_ = v (    ) ;
-//   const double m_ = m ( v_ ) ; 
-//   //
-//   const double dx = ( x - m_mu + m_ ) / ( v_ * m_sigma ) ;
-//   const double t  = dx / ( m_lambda * std::copysign ( 1.0 , dx ) + 1 ) ;
-//   //
-//   return 
-//     m_norm * m_p * std::pow ( std::pow ( std::abs ( t ) , m_p ) + 1 , -m_r - m_q ) / ( 2 * v_ * m_sigma ) ;
-// }
-// // ============================================================================
-// // integral 
-// // ============================================================================
-// double Ostap::Math::SkewGenT::integral () const { return 1 ; }
-// // ============================================================================
-// // integral
-// // ============================================================================
-// double Ostap::Math::SkewGenT::integral
-// ( const double low  , 
-//   const double high ) const 
-// {
-//   //
-//   if      ( s_equal ( low , high ) ) { return 0 ; }
-//   else if ( high < low             ) { return - integral ( high , low ) ; }
-//   //
-//   // split into reasonable sub intervals
-//   //
-//   const double mm = m_mu - m ()  ;
-//   //
-//   if ( low <  mm && mm < high ) { return integral ( low , mm ) + integral ( mm , high ) ; }
-//   //
-//   {
-//     const double x1 = mm + 3 * m_sigma ;
-//     if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
-//     const double x2 = mm - 3 * m_sigma ;
-//     if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
-//   }
-//   //
-//   {
-//     const double x1 = mm  + 5 * m_sigma ;
-//     if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
-//     const double x2 = mm  - 5 * m_sigma ;
-//     if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
-//   }  
-//   //
-//   {
-//     const double x1 = mm + 10 * m_sigma ;
-//     if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
-//     const double x2 = mm - 10 * m_sigma ;
-//     if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
-//   }
-//   //
-//   {
-//     const double x1 = mm + 15 * m_sigma ;
-//     if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
-//     const double x2 = mm -  15 * m_sigma ;
-//     if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
-//   }
-//   //
-//   const double x1     = mm - 15 * m_sigma  ;
-//   const double x2     = mm + 15 * m_sigma  ;
-//   const double x_low  = std::min ( x1 , x2 ) ;
-//   const double x_high = std::max ( x1 , x2 ) ;
-//   //
-//   // use GSL to evaluate the integral
-//   //
-//   static const Ostap::Math::GSL::Integrator1D<SkewGenT> s_integrator {} ;
-//   static char s_message[] = "Integral(SkewGenT)" ;
-//   //
-//   const bool in_tail = high <= x_low || x_high <= low ;
-//   //
-//   const auto F = s_integrator.make_function ( this ) ;
-//   int    ierror   =  0 ;
-//   double result   =  1 ;
-//   double error    = -1 ;
-//   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-//     ( tag () , 
-//       &F     , 
-//       low    , high             ,    // low & high edges
-//       workspace ( m_workspace ) ,    // workspace
-//       in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
-//       in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
-//       m_workspace.size()              ,           // size of workspace
-//       s_message           , 
-//       __FILE__ , __LINE__ ) ;
-//   //
-//   return result ;
-// }
-// // ============================================================================
-// // get the tag 
-// // ============================================================================
-// std::size_t Ostap::Math::SkewGenT::tag () const 
-// { 
-//   static const std::string s_name = "SkewGenT" ;
-//   return Ostap::Utils::hash_combiner ( s_name   , 
-//                              m_mu     , 
-//                              m_sigma  , 
-//                              m_xi     , 
-//                              m_r      , 
-//                              m_alpha  ) ;
-// }
-// // ============================================================================
+// ============================================================================
+/*  constructor with full parameters 
+ *  @param mu    related to location 
+ *  @param sigma related to RSM/scale/width 
+ *  @param xi    related to asymmetry/skewness
+ *  @param r     shape parameter 
+ *  @param zeta  shape parameter     
+ */
+// ============================================================================
+Ostap::Math::SkewGenT::SkewGenT  
+( const double mu     ,    // location parameter 
+  const double sigma  ,    // width parameter 
+  const double xi     ,    // asymmetry/skewness parameter 
+  const double r      ,    // shape parameter 
+  const double zeta   )    // shape parameter 
+  : m_mu     ( mu    ) 
+  , m_sigma  ( sigma ) 
+  , m_xi     ( xi    ) 
+  , m_r      ( std::abs ( r    ) ) 
+  , m_zeta   ( std::abs ( zeta ) )   
+  , m_lambda ( -100  ) 
+  , m_b1     ( -100  ) 
+  , m_b2     ( -100  ) 
+  , m_b3     ( -100  )
+{
+  setMu      ( mu    ) ;
+  setSigma   ( sigma ) ;
+  setXi      ( xi    ) ;
+  setR       ( r     ) ;
+  setZeta    ( zeta  ) ;
+}
+// ======================================================================
+// set mu-parameter
+// ======================================================================
+bool Ostap::Math::SkewGenT::setMu
+( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ======================================================================
+// set sigma-parameter
+// ======================================================================
+bool Ostap::Math::SkewGenT::setSigma
+( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  m_sigma = avalue ;
+  return true ;
+}
+// ======================================================================
+// set xi-parameter
+// ======================================================================
+bool Ostap::Math::SkewGenT::setXi
+( const double value ) 
+{
+  if ( s_equal ( value , m_xi )
+       && -1<= m_lambda 
+       &&      m_lambda <= 1 ) { return false ; }
+  m_xi     = value ;
+  m_lambda = std::tanh ( value ) ; 
+  //
+  return true ;
+}
+// ============================================================================
+/*  calculate helper math constants
+ *  \f[ \left( \begin{array}{l} 
+ *    b_1 \\ b_2 \\ b3
+ *   \end{array}\right) = 
+ *   \left( \begin{array}{l}
+ *    \Beta( \frac{1}{p} , q ) \\ 
+ *   \frac{ \Beta( \frac{2}{p} , q -\frac{1}{p})} { \Beta( \frac{1}{p} , q )} \ \
+ *   \frac{ \Beta( \frac{3}{p} , q -\frac{3}{p})} { \Beta( \frac{1}{p} , q )} 
+ *   \end{array}\right) \f]
+ */
+// ============================================================================
+void Ostap::Math::SkewGenT::calc_b 
+( double& b1 ,    // 1/B( 1/p, q ) 
+  double& b2 ,    // B(2/p,q-1/p) / B ( 1/p.q) 
+  double& b3 )    // B(3/p,q-2/p) / B ( 1/p.q) 
+{
+  //
+  const long double qq = q () ;
+  //
+  const double lnb1 = Ostap::Math::lnbeta ( m_r , qq ) ;
+  b1 = std::exp ( - lnb1 ) ;
+  b2 = std::exp ( Ostap::Math::lnbeta ( 2*m_r , qq -     m_r ) - lnb1 ) ;
+  b3 = std::exp ( Ostap::Math::lnbeta ( 3*m_r , qq - 2 * m_r ) - lnb1 ) ;
+  //
+}
+// ======================================================================
+// set r-parameter
+// ======================================================================
+bool Ostap::Math::SkewGenT::setR
+( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_r ) 
+       && -100 != m_b1  
+       && -100 != m_b2  
+       && -100 != m_b3 ) { return false ; }
+  //
+  m_r = avalue  ;
+  //
+  calc_b ( m_b1 , m_b2 , m_b3 ) ;
+  //
+  return true ;
+}
+// ======================================================================
+// set zeta-parameter
+// ======================================================================
+bool Ostap::Math::SkewGenT::setZeta
+( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_zeta ) 
+       && -100 != m_b1  
+       && -100 != m_b2  
+       && -100 != m_b3 ) { return false ; }
+  //
+  m_zeta = avalue  ;
+  //
+  calc_b ( m_b1 , m_b2 , m_b3 ) ;
+  //
+  return true ;
+}
+// ============================================================================
+// helper scale parameter 
+// ============================================================================
+double Ostap::Math::SkewGenT::v_scale () const 
+{
+  return 1 / std::sqrt ( ( 3 * m_lambda * m_lambda + 1 ) * m_b3 
+                         - 4 * m_lambda * m_lambda * m_b2 * m_b2 ) ;                       
+}
+// ============================================================================
+/* helper bias parameter 
+ *  \f$ m^{\prime} = 2 \sigma \lambda b_2 \f$
+ */
+// ============================================================================
+double Ostap::Math::SkewGenT::m_bias  () const 
+{ return 2 * m_sigma * m_lambda * m_b2 ; }
+// ============================================================================
+// evaluate the pdf 
+// ============================================================================
+double Ostap::Math::SkewGenT::pdf ( const double x ) const 
+{ 
+  //
+  const double qq = q () ;
+  const double pp = p () ;
+  const double v  = v_scale () ;
+  const double m  = m_bias  () * v ;
+  //
+  const double dx = ( x - m_mu + m ) / ( v * m_sigma ) ;
+  const double t  = std::abs ( dx ) / ( m_lambda * std::copysign ( 1.0 , dx ) + 1 ) ;
+  const double tp = std::pow ( t , pp ) ;
+  //
+  return m_b1 / ( 2 * m_sigma * v * m_r * std::pow ( tp + 1 , m_r + qq ) ) ;
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::SkewGenT::integral () const { return 1 ; }
+// ============================================================================
+// integral
+// ============================================================================
+double Ostap::Math::SkewGenT::integral
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low             ) { return - integral ( high , low ) ; }
+  //
+  // split into reasonable sub intervals
+  //
+  const double v  = v_scale ()      ;  
+  const double m  = m_bias  () * v  ;
+  
+  const double mm = m_mu - m ;
+  //
+  if ( low <  mm && mm < high ) { return integral ( low , mm ) + integral ( mm , high ) ; }
+  //
+  {
+    const double x1 = mm + 3 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = mm - 3 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }
+  //
+  {
+    const double x1 = mm  + 5 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = mm  - 5 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }  
+  //
+  {
+    const double x1 = mm + 10 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = mm - 10 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }
+  //
+  {
+    const double x1 = mm + 15 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = mm -  15 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }
+  //
+  const double x1     = mm - 15 * m_sigma  ;
+  const double x2     = mm + 15 * m_sigma  ;
+  const double x_low  = std::min ( x1 , x2 ) ;
+  const double x_high = std::max ( x1 , x2 ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<SkewGenT> s_integrator {} ;
+  static char s_message[] = "Integral(SkewGenT)" ;
+  //
+  const bool in_tail = high <= x_low || x_high <= low ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag () , 
+      &F     , 
+      low    , high             ,    // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
+      m_workspace.size()              ,           // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// skewness 
+// ============================================================================
+double Ostap::Math::SkewGenT::skewness   () const 
+{
+  if ( s_zero ( m_lambda ) || s_zero ( m_xi ) ) { return 0 ; }
+  //
+  const double qq = q ()  ;
+  const double vs = v_scale () * m_sigma ;
+  const double l2 = m_lambda * m_lambda  ;
+  //
+  const double b4 = std::exp ( Ostap::Math::lnbeta ( 4 * m_r , qq - 3 * m_r ) - 
+                               Ostap::Math::lnbeta (     m_r , qq           ) ) ;
+  //
+  return 
+    m_lambda * std::pow ( vs , 3 ) * ( 8 * l2  * std::pow ( m_b3 , 3   ) - 
+                                       3 * ( 3 * l2 + 1 ) * m_b2 * m_b3   +
+                                       2 * (     l2 + 1 ) * b4 ) ;  
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::SkewGenT::tag () const 
+{ 
+  static const std::string s_name = "SkewGenT" ;
+  return Ostap::Utils::hash_combiner ( s_name   , 
+                             m_mu     , 
+                             m_sigma  , 
+                             m_xi     , 
+                             m_r      , 
+                             m_zeta   ) ;
+}
+// ============================================================================
 
 
 

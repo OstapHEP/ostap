@@ -811,6 +811,56 @@ def test_PearsonIV () :
     models.add ( model )
     results.append ( result  )
 
+
+# ==========================================================================
+## SkewGenT 
+# ==========================================================================
+def test_SkewGenT () :
+    
+    logger = getLogger ( 'test_SkewGenT' )
+       
+    
+    logger.info ('Test SkewGenT_pdf: skewed generalised t-distribution' ) 
+    model = Models.Fit1D (
+        signal = Models.SkewGenT_pdf ( name = 'SGT' , 
+                                       xvar      = mass                   ,
+                                       mu        = signal_gauss.mean      ,
+                                       sigma     = signal_gauss.sigma     ,
+                                       xi        = ( 0   ,  -1    , 1   ) ,  
+                                       r         = ( 0.5 ,  1.e-4 , 100 ) ,
+                                       zeta      = ( 1   ,  1.e-4 , 999 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+
+
+    signal = model.signal 
+    model.S = NS 
+    model.B = NB
+
+    model.signal.xi.fix   ( 0 )
+    model.signal.r .fix   ()
+    model.signal.zeta.fix ()  
+    model.signal.mu.fix   ( 3.1 )
+    
+    with rooSilent() :
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.mu    .release ()
+        signal.sigma .release ()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.xi    .release ()
+        signal.r     .release ()
+        signal.zeta  .release ()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        
+    make_print ( model , result , "Skewed Generalised t-distribution" , logger )        
+        
+    models.add ( model )
+    results.append ( result  )
+
+
 # =============================================================================
 ## Test  SinhAsinh-Distribution
 # =============================================================================
@@ -1809,8 +1859,12 @@ if '__main__' == __name__ :
         
     ## PearsonIV                                      + background
     with timing ('test_PearsonIV'          , logger ) :
-        test_PearsonIV () 
-
+        test_PearsonIV ()
+        
+    ## SkewGenT                                      + background
+    with timing ('test_SkewGenT'          , logger ) :
+        test_SkewGenT () 
+        
     ## Sinh-Asinh distribution                   + background
     with timing ('test_sinhasinh'      , logger ) :
         test_sinhasinh      () 

@@ -1420,6 +1420,23 @@ def _rp4_reduce_ ( pdf ):
 Ostap.Models.PearsonIV.__reduce__ = _rp4_reduce_ 
 
 # =============================================================================
+## reduce SkewGenT
+def _rsgt_reduce_ ( pdf ):
+    """Reduce SkewGenT"""
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.x        () , 
+                                  pdf.mu       () ,
+                                  pdf.sigma    () ,                            
+                                  pdf.xi       () ,                            
+                                  pdf.r        () ,                            
+                                  pdf.zeta     () )
+
+Ostap.Models.SkewGenT.__reduce__ = _rsgt_reduce_ 
+
+
+# =============================================================================
 ## reduce GramCharlierA
 def _rgca_reduce_ ( pdf ):
     """Reduce GramCharlierA"""
@@ -2541,6 +2558,7 @@ _decorated_classes_ = (
     Ostap.Models.StudentT              , 
     Ostap.Models.BifurcatedStudentT    , 
     Ostap.Models.PearsonIV             ,
+    Ostap.Models.SkewGenT              ,
     Ostap.Models.GramCharlierA         , 
     Ostap.Models.PhaseSpace2           , 
     Ostap.Models.PhaseSpaceLeft        , 
