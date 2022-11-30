@@ -16,6 +16,7 @@ import ostap.fitting.roofit
 import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID, Ostap, rooSilent 
 from   ostap.fitting.efficiency import Efficiency1D
+from   ostap.fitting.variables  import FIXVAR 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
@@ -212,7 +213,7 @@ def test_vars3 () :
 # =============================================================================
 # use some functions  to parameterize efficiciency
 def test_vars4 () :
-    
+## if 1 < 2 :     
     logger = getLogger ( 'test_vars4' )
 
     a  = ROOT.RooRealVar  ( 'A', 'a' , 0.05  ,   0   , 1   )
@@ -224,6 +225,7 @@ def test_vars4 () :
     X   = Fun1D ( x , xvar = x , name = 'X' )
     
     F      = a + b * X + c * X**2
+    F      = a         + c * X**2
     
     eff2   = Efficiency1D ( 'E5' , F , cut = acc  , xvar = x )
     

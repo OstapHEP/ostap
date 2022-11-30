@@ -13,6 +13,7 @@
 ## Bug fixes:
 
   1. fix serialization for `QGaussian`
+  1. fix `test_fitting_efficiency`
 
 # v1.9.4.6
 
