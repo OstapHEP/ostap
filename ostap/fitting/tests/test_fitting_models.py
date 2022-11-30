@@ -1561,7 +1561,7 @@ def test_hypatia () :
         
     make_print ( model , result , "Hypatia model" , logger )        
     
-    ## models.add     ( model  )
+    models.add     ( model  )
     results.append ( result )
 
 # =============================================================================
@@ -1812,7 +1812,7 @@ if '__main__' == __name__ :
     ## modified Apollonios function              + background
     with timing ('test_apolloniois2'   , logger ) :
         test_apollonios2    () 
-
+        
     ## bifurcated Gaussian function              + background
     with timing ('test_bifurcated'     , logger ) :
         test_bifurcated     () 
@@ -1828,7 +1828,7 @@ if '__main__' == __name__ :
     ## generalized Gaussian function V2          + background
     with timing ('test_gengauss_v2'    , logger ) :
         test_gengauss_v2    () 
-    
+
     ## skew gaussian                             + background
     with timing ('test_skewgauss'      , logger ) :
         test_skewgauss      () 
@@ -1905,7 +1905,7 @@ if '__main__' == __name__ :
     with timing ('test_logistic'       , logger ) :
         test_logistic       () 
 
-    ## Asymmetric hyperbilic secant distribution + background         
+    ## Asymmetric hyperbolic secant distribution + background         
     with timing ('test_losev'          , logger ) :
         test_losev          () 
 
@@ -1937,10 +1937,6 @@ if '__main__' == __name__ :
     with timing ('test_genhyperbolic'     , logger ) :
         test_genhyperbolic     () 
         
-    ## ## Hypatia                                     + background 
-    ## with timing ('test_hypatia'           , logger ) :
-    ##     test_hypatia           ()
-
     ## Voigt profile                             + background
     with timing ('test_voigt'          , logger ) :
         test_voigt          () 
@@ -1952,6 +1948,10 @@ if '__main__' == __name__ :
     ## Breit-Wigner(+resolution)                 + background 
     with timing ('test_bw'             , logger ) :
         test_bw             () 
+
+    ## Hypatia                                     + background 
+    with timing ('test_hypatia'           , logger ) :
+        test_hypatia           ()
 
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :

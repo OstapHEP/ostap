@@ -609,9 +609,20 @@ def _omqg_reduce_ ( peak ) :
     """Reduce `Ostap.Math.QGaussian`
     - see `Ostap.Math.QGaussian`
     """
-    return root_factory , ( type ( peak ) , peak.mean () , peak.q () , peak.scale () )
+    return root_factory , ( type ( peak ) , peak.mean () , peak.scale () , peak.q () )
 
 Ostap.Math.QGaussian. __reduce__ = _omqg_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::KGaussian
+#  @see Ostap::Math::KGaussian
+def _omkg_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.KGaussian`
+    - see `Ostap.Math.KGaussian`
+    """
+    return root_factory , ( type ( peak ) , peak.mean () , peak.scale () , peak.kappa () )
+
+Ostap.Math.KGaussian. __reduce__ = _omkg_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::Hyperbolic
@@ -1143,6 +1154,7 @@ _decorated_classes_  = (
     Ostap.Math.AsymmetricLaplace            , 
     Ostap.Math.RaisingCosine                , 
     Ostap.Math.QGaussian                    , 
+    Ostap.Math.KGaussian                    , 
     Ostap.Math.Hyperbolic                   , 
     Ostap.Math.GenHyperbolic                , 
     Ostap.Math.Das                          , 

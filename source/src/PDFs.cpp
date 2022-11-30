@@ -7623,8 +7623,8 @@ Ostap::Models::KGaussian::clone( const char* name ) const
 void Ostap::Models::KGaussian::setPars () const 
 {
   m_kgauss.setMean  ( m_mean  ) ;
-  m_kgauss.setKappa ( m_kappa ) ;
   m_kgauss.setScale ( m_scale ) ;
+  m_kgauss.setKappa ( m_kappa ) ;
 }
 // ============================================================================
 // the actual evaluation of function 

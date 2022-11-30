@@ -2873,7 +2873,7 @@ class KGaussian_pdf(PEAK) :
         ## k-parameter ( k = tanh(kappa)
         self.__k = var_tanh ( self.kappa , 1 ,
                               name  = self.new_roo_name ( 'k' ) ,   
-                              title = '#kappa(%s)' % name ) 
+                              title = '#k(%s)' % name ) 
         #
         ## finally build pdf
         # 
@@ -3301,10 +3301,10 @@ class Hypatia_pdf(GenHyperbolic_pdf) :
         ## prepare FFT convolution
         from ostap.fitting.resolution import ResoGauss
         
-        gname = self.generate_name ( prefix = self.name , suffix = 'offset' ) 
-        self.__resolution = ResoGauss     ( name  = gname     , 
-                                            xvar  = self.xvar ,
-                                            sigma = sigma0    )
+        gname = self.generate_name    ( prefix = self.name , suffix = 'offset' ) 
+        self.__resolution = ResoGauss ( name   = gname     , 
+                                        xvar   = self.xvar ,
+                                        sigma  = sigma0    )
         
         self.__cnvpars = {}
         self.__cnvpars.update ( cnvpars ) 

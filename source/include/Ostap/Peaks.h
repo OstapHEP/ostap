@@ -2761,7 +2761,7 @@ namespace Ostap
       /** constructor from all arguments            
        *  @param mean  the mean/mode/location of the peak 
        *  @param scale scale parmaeter/sigma 
-       *  @param k     k-value
+       *  @param kappa kappa-value
        */
       KGaussian 
       ( const double mean  = 0 ,   // mean/mode/location 

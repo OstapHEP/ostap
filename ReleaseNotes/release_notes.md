@@ -5,10 +5,13 @@
   1. add `Ostap::Math::SkewGenT` and `Ostap:Models::SkewGenT` (skewed generalised t-distribution)
   1. add `SkewGenT_pdf`
   1. extend `test_fittiins_models.py`
-
+  1. add (se)serialization for `KGaussian`
+ 
 ## Backward incompatible:  
 
 ## Bug fixes:
+
+  1. fix serialization fro `QGaussian`
 
 # v1.9.4.6
 

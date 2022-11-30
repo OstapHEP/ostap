@@ -6511,6 +6511,7 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::QGaussian& function () const { return m_qgauss ; }
+      const Ostap::Math::QGaussian& qgauss   () const { return m_qgauss ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6597,6 +6598,7 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::KGaussian& function () const { return m_kgauss ; }
+      const Ostap::Math::KGaussian& kgauss   () const { return m_kgauss ; }
       // ======================================================================
     public:
       // ======================================================================

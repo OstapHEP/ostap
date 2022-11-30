@@ -2023,6 +2023,20 @@ def _rqgau_reduce_ ( pdf ):
 Ostap.Models.QGaussian.__reduce__ = _rqgau_reduce_ 
 
 # =============================================================================
+## reduce k-Gaussian
+def _rkgau_reduce_ ( pdf ):
+    """Reduce KGaussian"""
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.x        () ,                            
+                                  pdf.mean     () ,                            
+                                  pdf.scale    () ,
+                                  pdf.kappa    () )
+
+Ostap.Models.KGaussian.__reduce__ = _rkgau_reduce_ 
+
+# =============================================================================
 ## reduce Hyperbolic
 def _rhyp_reduce_ ( pdf ):
     """Reduce Hyperbolic"""
@@ -2603,6 +2617,7 @@ _decorated_classes_ = (
     Ostap.Models.Gumbel                , 
     Ostap.Models.Weibull               , 
     Ostap.Models.QGaussian             , 
+    Ostap.Models.KGaussian             , 
     Ostap.Models.Hyperbolic            , 
     Ostap.Models.GenHyperbolic         , 
     Ostap.Models.Das                   , 
