@@ -18,8 +18,9 @@ __all__     = (
     'Convolution_pdf'  , ## ``ready-to-use'' PDF for convolution 
     )
 # =============================================================================
-from   ostap.fitting.pdfbasic import PDF1, Generic1D_pdf
-from   ostap.core.ostap_types import num_types ,  integer_types 
+from   ostap.fitting.pdfbasic  import PDF1, Generic1D_pdf
+from   ostap.core.ostap_types  import num_types ,  integer_types
+from   ostap.fitting.rooreduce import root_store_factory 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -91,7 +92,7 @@ class Convolution(object):
                    nsigmas  = 6      ) : ## number of sigmas for setConvolutionWindow
 
         ## the axis 
-        assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
+        assert isinstance ( xvar , ROOT.RooAbsReal ) or not xvar , "`xvar' must be ROOT.RooAbsReal"
         
         self.__xvar   = xvar
         self.__useFFT = True if useFFT else False
@@ -101,14 +102,18 @@ class Convolution(object):
         self.__arg_xvar       = xvar
         
         ## pdf itself 
-        if   isinstance ( pdf , PDF1           ) : self.__old_pdf = pdf
-        elif isinstance ( pdf , ROOT.RooAbsPdf ) :
+        if   isinstance ( pdf , PDF1           ) :
+            self.__old_pdf = pdf
+            assert not self.xvar or xvar == pdf.xvar , "Invalid 'xvar/pdf' setting!"
+            self.__xvar = pdf.xvar             
+        elif isinstance ( pdf , ROOT.RooAbsPdf ) and self.xvar :
             self.__old_pdf = Generic1D_pdf ( pdf , xvar = self.__xvar )
         else :
             raise TypeError("Convolution: invalid ``pdf'' %s/%s"  % ( pdf , type ( pdf ) ) )
         
         ## resolution  function 
         if   isinstance ( resolution , PDF1           ) :
+            assert resolution.xvar == self.xvar, "Invalid 'xvar/resolution' setting!"
             self.__resolution = resolution
         elif isinstance ( resolution , ROOT.RooAbsPdf ) :
             self.__resolution = Generic1D_pdf ( resolution , xvar = self.__xvar ) 
@@ -128,6 +133,7 @@ class Convolution(object):
         self.__shift2   = shift2
 
         name = name if name else PDF1.generate_name ( prefix = 'cnv_%s@%s' % ( pdf.name , self.resolution.name ) )
+        self.__name = name
         
         if self.useFFT : ## Use Fast Fourier transform  (fast)
             
@@ -181,7 +187,12 @@ class Convolution(object):
                 if hasattr ( self.__resolution , 'mean' ) :
                     self.__pdf.setConvolutionWindow ( self.__resolution.mean  ,
                                                       self.__resolution.sigma , self.__nsigmas  )
-                    logger.debug('Convolution: choose window of %s' % self.__nsigmas ) 
+                    logger.debug('Convolution: choose window of %s' % self.__nsigmas )
+
+    @property
+    def name ( self ) :
+        """'name' : the bname of convolution object"""
+        return self.__name    
     @property
     def xvar (self ) :
         """The axis variable for  convolution"""
@@ -249,6 +260,23 @@ class Convolution(object):
                                                                 self.bufstrat   )  
         return "Convolution(%s,%s,nsigmas=%s)" %  ( part1 , part2 , self.nsigmas)
     __repr__ = __str__
+
+    ## serialize the convolution object object 
+    def __reduce__ ( self ) :
+        """Serialize the convolution object object"""
+        return root_store_factory  , ( type ( self )    ,
+                                       self.old_pdf     , 
+                                       self.xvar        , 
+                                       self.resolution  ,
+                                       self.name        , 
+                                       self.useFFT      ,
+                                       self.nbinsFFT    ,
+                                       self.buffer      ,
+                                       self.bufstrat    ,
+                                       self.shift1      ,
+                                       self.shift2      ,
+                                       self.nsigmas     )
+        
     
 # =============================================================================
 ## @class Convolution_pdf

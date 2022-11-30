@@ -6,7 +6,8 @@
   1. add `SkewGenT_pdf`
   1. extend `test_fittiins_models.py`
   1. add (de)serialization for `KGaussian`
- 
+  1. add serialization for `ostap.convolution.Convolution`
+
 ## Backward incompatible:  
 
 ## Bug fixes:

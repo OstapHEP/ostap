@@ -17,14 +17,14 @@ __date__    = "2011-06-07"
 __all__     = (
     ) 
 # =============================================================================
-from   builtins                    import range
-from   ostap.core.meta_info        import root_info 
-from   ostap.math.base             import doubles
-from   ostap.core.core             import Ostap
-from   ostap.math.reduce           import root_factory
+from   builtins                     import range
+from   ostap.core.meta_info         import root_info 
+from   ostap.math.base              import doubles
+from   ostap.core.core              import Ostap
+from   ostap.math.reduce            import root_factory
 import ostap.fitting.variables
 import ostap.fitting.roocollections
-import ostap.histos.graph_reduce   as     GR 
+import ostap.histos.graph_reduce    as     GR 
 import ROOT, random, array, ctypes, math, itertools    
 # =============================================================================
 # logging 
@@ -142,8 +142,6 @@ def _rrv_reduce ( rrv ) :
     return _rrv_factory , content 
 
 ROOT.RooRealVar.__reduce__ = _rrv_reduce
-
-
 
 
 # =============================================================================
