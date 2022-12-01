@@ -146,13 +146,9 @@ __all__ = (
 from sys import version_info as python_version 
 # =============================================================================
 try:
-    from cPickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
+    from cPickle   import Pickler, Unpickler
 except ImportError:
-    from  pickle   import Pickler, Unpickler, HIGHEST_PROTOCOL 
-# =============================================================================
-## to be compatible between  Python2 and Python3 
-PROTOCOL = 2
-ENCODING = 'utf-8'
+    from  pickle   import Pickler, Unpickler
 # =============================================================================
 if python_version.major > 2  :
     from io import BytesIO
@@ -162,11 +158,9 @@ else :
     except ImportError:
         from  StringIO import StringIO as BytesIO    
 # ==============================================================================
-import os, sys
+import os, sys, shelve, shutil
 import bz2         ## use bz2 to compress DB-content 
-import shelve      ## 
-import shutil
-from   ostap.io.compress_shelve import CompressShelf
+from   ostap.io.compress_shelve import CompressShelf, ENCODING, PROTOCOL, HIGHEST_PROTOCOL
 from   ostap.io.dbase           import TmpDB 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -203,7 +197,7 @@ class Bz2Shelf(CompressShelf):
         compress    = 9                        ,
         writeback   = False                    ,
         silent      = False                    ,
-        keyencoding = 'utf-8'                  ) :
+        keyencoding = ENCODING                 ) :
 
         ## save arguments for pickling....
         self.__init_args = ( filename  ,

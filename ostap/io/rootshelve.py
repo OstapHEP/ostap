@@ -119,14 +119,16 @@ from   ostap.io.dbase          import TmpDB
 import ROOT, shelve, zlib, os 
 # =============================================================================
 try : 
-    from cPickle import Pickler, Unpickler, HIGHEST_PROTOCOL
+    from cPickle import Pickler, Unpickler
 except ImportError : 
-    from  pickle import Pickler, Unpickler, HIGHEST_PROTOCOL
+    from  pickle import Pickler, Unpickler
 # =============================================================================    
 try :
     from io     import             BytesIO 
 except ImportError : 
     from shelve import StringIO as BytesIO
+# =============================================================================
+from   ostap.io.pklprotocol    import PROTOCOL, HIGHEST_PROTOCOL, DEFAULT_PROTOCOL 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.rootshelve' )
@@ -361,6 +363,11 @@ class RootShelf(RootOnlyShelf):
                   protocol  = PROTOCOL                , ## pickling protocol
                   compress  = zlib.Z_BEST_COMPRESSION , ## compression level 
                   args      = ()       ):
+
+        if not 0 <= protocol <= HIGHEST_PROTOCOL :
+            logger.warning ("Invalid protocol:%s" % protocol )
+            protocol = PROTOCOL 
+        
         RootOnlyShelf.__init__ ( self , filename , mode , writeback , args = args )
         self.__protocol      = protocol
         self.__compresslevel = compress

@@ -135,13 +135,12 @@ import sqlite3
 from   ostap.io.sqlitedict  import SqliteDict
 from   ostap.io.dbase       import Item, TmpDB 
 from   ostap.core.meta_info import meta_info 
+from   ostap.io.pklprotocol import PROTOCOL, HIGHEST_PROTOCOL, DEFAULT_PROTOCOL
 # =============================================================================
 try:
-    from cPickle   import Pickler, Unpickler , HIGHEST_PROTOCOL
+    from cPickle   import Pickler, Unpickler
 except ImportError:
-    from  pickle   import Pickler, Unpickler , HIGHEST_PROTOCOL
-# =============================================================================
-PROTOCOL = 2 
+    from  pickle   import Pickler, Unpickler
 # =============================================================================
 try : 
     from io        import             BytesIO
@@ -274,6 +273,10 @@ class SQLiteShelf(SqliteDict):
             logger.warning("Unknown opening mode '%s', replace with 'c'")
             mode = 'c'
             
+        if not 0 <= protocol <= HIGHEST_PROTOCOL :
+            logger.warning ("Invalid protocol:%s" % protocol )
+            protocol = PROTOCOL 
+
         if not filename is None :
             import os 
             filename  = os.path.expandvars ( filename )

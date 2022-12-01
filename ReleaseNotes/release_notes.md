@@ -1,9 +1,19 @@
+## New features: 
+
+  1. change default picklimg protocol from 2 to DEFAULT_PROTOCOL (2 for py2, 3 for python (3.0-3.7), 4 for python 3.8-...)
+  1. add possibility to define protocol either vial the environment variable `OSTAP_PROTOCOL`
+  1. add possibility to define protocol via 'General:protocol' section in th econfigurationfile 
+
+## Backward incompatible:  
+
+## Bug fixes:
+
 # v1.9.4.8
 
 ## New features: 
 
   1. some massage for `BernsteinEven` and `PositiveEven`
-  1. add `Ostap::Math::SkewGenT` and `Ostap:Models::SkewGenT` (skewed generalised t-distribution)
+  1. add `Ostap::Math::SkewGenT` and `Ostap:Models::SkewGenT` (Skewed Generalised t-distribution)
   1. add `SkewGenT_pdf`
   1. extend `test_fittiins_models.py`
   1. add (de)serialization for `KGaussian`
@@ -15,7 +25,6 @@
 
   1. fix serialization for `QGaussian`
   1. fix `test_fitting_efficiency`
-
 
 # v1.9.4.6
 

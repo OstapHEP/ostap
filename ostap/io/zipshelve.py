@@ -146,15 +146,11 @@ logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database"   )
 from sys import version_info as python_version 
 # =============================================================================
 try:
-    from cPickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
+    from cPickle   import Pickler, Unpickler
 except ImportError:
-    from  pickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
+    from  pickle   import Pickler, Unpickler
 # =============================================================================
-## to be compatible between  Python2 and Python3 
-PROTOCOL = 2
-ENCODING = 'utf-8'
-# =============================================================================
-if python_version.major > 2  :
+if 2 < python_version.major :
     from io import BytesIO
 else : 
     try:
@@ -162,12 +158,10 @@ else :
     except ImportError:
         from  StringIO import StringIO as BytesIO    
 # ==============================================================================
-import os, sys
-import zlib        ## use zlib to compress DB-content 
-import shelve      ## 
-import shutil
-from ostap.io.compress_shelve import CompressShelf
-from ostap.io.dbase           import TmpDB 
+import os, sys, shelve, shutil
+import zlib ## use zlib to compress DB-content 
+from   ostap.io.compress_shelve import CompressShelf, ENCODING, PROTOCOL, HIGHEST_PROTOCOL
+from   ostap.io.dbase           import TmpDB 
 # =============================================================================
 ## @class ZipShelf
 #  Zipped-version of ``shelve''-database
@@ -197,7 +191,7 @@ class ZipShelf(CompressShelf):
         compress    = zlib.Z_BEST_COMPRESSION  ,
         writeback   = False                    ,
         silent      = False                    ,
-        keyencoding = 'utf-8'                  ) :
+        keyencoding = ENCODING                 ) :
 
 
         ## save arguments for pickling....

@@ -47,21 +47,26 @@ __date__    = "2010-04-30"
 __version__ = "$Revision$" 
 # =============================================================================
 __all__ = (
-    'CompressShelf' ,   ## The DB-itself
+    'CompressShelf'    ,   ## The DB-itself
+    'PROTOCOL'         ,
+    'DEFAULT_PROTOCOL' ,
+    'HIGHEST_PROTOCOL' ,
+    'ENCODING'       
     )
+# =============================================================================
+import os, sys, abc, shelve, shutil , glob, datetime, collections  
+from   sys                     import version_info           as python_version
+from   ostap.io.dbase          import dbopen, whichdb, Item 
+from   ostap.core.meta_info    import meta_info
+from   ostap.io.pklprotocol    import PROTOCOL, HIGHEST_PROTOCOL, DEFAULT_PROTOCOL 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
 else                      : logger = getLogger ( __name__                   )
 # =============================================================================
-PROTOCOL = -1 
+## encoding 
 ENCODING = 'utf-8'
-# ==============================================================================
-import os, sys, abc, shelve, shutil , glob, datetime, collections  
-from   sys import version_info as     python_version
-from   ostap.io.dbase          import dbopen, whichdb, Item 
-from   ostap.core.meta_info    import meta_info 
-#  =============================================================================
+# =============================================================================
 _modes_ = {
     # =========================================================================
     # 'r'	Open existing database for reading only
@@ -116,7 +121,7 @@ class CompressShelf(shelve.Shelf,object):
         compress    = 0        , 
         writeback   = False    ,
         silent      = True     ,
-        keyencoding = 'utf-8'  ) :
+        keyencoding = ENCODING ) :
 
 
         ## the mode 
@@ -124,6 +129,10 @@ class CompressShelf(shelve.Shelf,object):
         if not mode :
             logger.warning ( "Unknown opening mode '%s', replace with 'c'")
             mode = 'c'
+
+        if not 0 <= protocol <= HIGHEST_PROTOCOL :
+            logger.warning ("Invalid protocol:%s" % protocol )
+            protocol = PROTOCOL 
 
         ## expand the actual file name 
         dbname  = os.path.expandvars ( dbname )
