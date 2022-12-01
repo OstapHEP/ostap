@@ -1465,8 +1465,6 @@ else :
 
 # =============================================================================
 
-
-
 # ==============================================================================
 # primitive functions for RooAbsReal objects 
 # ==============================================================================
@@ -1783,7 +1781,6 @@ def var_max ( a , b = 1 , name = '' , title = '' ) :
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
     return Ostap.MoreRooFit.MaxV ( a, b , name , title )
 
-
 # ==============================================================================
 ## minimal \f$ f = min (a,b)\f$
 #  @code
@@ -1802,8 +1799,6 @@ def var_min ( a , b = 1 , name = '' , title = '' ) :
         ab = min ( float ( a ) , float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
     return Ostap.MoreRooFit.MinV ( a, b , name , title )
-
-
 
 # ==============================================================================
 ## Gamma function \f$ f =    \Gamma(ab) \f$
@@ -1886,8 +1881,6 @@ def var_sum ( v1 , v2 , name = '' , title = '' ) :
     elif f2 and iszero ( v2 ) : return v1
     #
     return Ostap.MoreRooFit.Addition ( v1 , v2 , name , title )
-
-
 
 
 # =============================================================================
