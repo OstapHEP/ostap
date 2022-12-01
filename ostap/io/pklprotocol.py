@@ -19,16 +19,20 @@ __all__ = (
     'PROTOCOL'         ,
     )
 # =============================================================================
-import os
+import os, sys
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.pklprotocol' )
 else                      : logger = getLogger ( __name__               )
 # =============================================================================
+if   sys.version_info < ( 3,0 ) : DEFAULT_PROTOCOL = 2 
+else :  
+    from pickle import DEFAULT_PROTOCOL
+# =============================================================================
 try:
-    from cPickle   import HIGHEST_PROTOCOL, DEFAULT_PROTOCOL
+    from cPickle   import HIGHEST_PROTOCOL
 except ImportError:
-    from  pickle   import HIGHEST_PROTOCOL, DEFAULT_PROTOCOL
+    from  pickle   import HIGHEST_PROTOCOL
 # =============================================================================
 ## helper function to get the protocol 
 def get_protocol ( p ) :
