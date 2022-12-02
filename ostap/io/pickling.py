@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file pklprotocol.py
-# Helper module to pickup proper pickling protocol 
+# @file pickling.py
+# Helper module to define pickling for various databases 
 # @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 # @date   2010-04-30
 # =============================================================================
-""" Helper module to pickup proper pickling protocol 
+""" Helper module to define pickling for various databases
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -17,22 +17,34 @@ __all__ = (
     'DEFAULT_PROTOCOL' ,
     'HIGHEST_PROTOCOL' ,
     'PROTOCOL'         ,
+    'Pickler'          , 
+    'Unpickler'        ,
+    'BytesIO'          ,
     )
 # =============================================================================
 import os, sys
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.pklprotocol' )
+if '__main__' == __name__ : logger = getLogger ( 'ostap.io.pickling' )
 else                      : logger = getLogger ( __name__               )
 # =============================================================================
-if   sys.version_info < ( 3,0 ) : DEFAULT_PROTOCOL = 2 
+if   sys.version_info < ( 3,0 ) :    
+    DEFAULT_PROTOCOL = 2 
+    try:
+        from cPickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
+    except ImportError:
+        from  pickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
+    DEFAULT_PROTOCOL = min ( DEFAULT_PROTOCOL , HIGHEST_PROTOCOL )
 else :  
-    from pickle import DEFAULT_PROTOCOL
-# =============================================================================
-try:
-    from cPickle   import HIGHEST_PROTOCOL
-except ImportError:
-    from  pickle   import HIGHEST_PROTOCOL
+    from pickle import Pickler, Unpickler, DEFAULT_PROTOCOL, HIGHEST_PROTOCOL    
+# =============================================================================    
+try :
+    from io            import BytesIO 
+except ImportError :
+    try:
+        from cStringIO import StringIO as BytesIO 
+    except ImportError:
+        from  StringIO import StringIO as BytesIO
 # =============================================================================
 ## helper function to get the protocol 
 def get_protocol ( p ) :
@@ -52,7 +64,8 @@ PROTOCOL = None
 try :
     pe = os.environ.get ( 'OSTAP_PROTOCOL'  , '' )
     pp = get_protocol   ( pe )
-    if  0 <= pp <= HIGHEST_PROTOCOL :
+    if pp < 0 : pp = HIGHEST_PROTOCOL 
+    if 0  <= pp <= HIGHEST_PROTOCOL :
         PROTOCOL = pp
         logger.debug ( "Protocol %s is picked from 'OSTAP_PROTOCOL=%s' environment" % ( PROTOCOL , pe ) )
 except :
@@ -64,7 +77,8 @@ if PROTOCOL is None :
         import ostap.core.config as OCC
         pe = OCC.general.get ( 'Protocol' , '' )
         pp = get_protocol ( pe )
-        if  0 <= pp <= HIGHEST_PROTOCOL :
+        if pp < 0 : pp = HIGHEST_PROTOCOL 
+        if 0  <= pp <= HIGHEST_PROTOCOL :
             PROTOCOL = pp 
             logger.debug ( "Protocol %s is picked from 'General: protocol=%s' section" %  ( PROTOCOL , pe ) ) 
     except :

@@ -145,18 +145,18 @@ logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database"   )
 # =============================================================================
 from sys import version_info as python_version 
 # =============================================================================
-try:
-    from cPickle   import Pickler, Unpickler
-except ImportError:
-    from  pickle   import Pickler, Unpickler
-# =============================================================================
-if 2 < python_version.major :
-    from io import BytesIO
-else : 
-    try:
-        from cStringIO import StringIO as BytesIO 
-    except ImportError:
-        from  StringIO import StringIO as BytesIO    
+## try:
+##     from cPickle   import Pickler, Unpickler
+## except ImportError:
+##     from  pickle   import Pickler, Unpickler
+## # =============================================================================
+## if 2 < python_version.major :
+##     from io import BytesIO
+## else : 
+##     try:
+##         from cStringIO import StringIO as BytesIO 
+##     except ImportError:
+##         from  StringIO import StringIO as BytesIO    
 # ==============================================================================
 import os, sys, shelve, shutil
 import zlib ## use zlib to compress DB-content 
@@ -291,19 +291,21 @@ class ZipShelf(CompressShelf):
         """Compress (zip) the item using ``zlib.compress''
         - see zlib.compress
         """
-        f = BytesIO ()
-        p = Pickler ( f , self.protocol )
-        p.dump ( value )
-        return zlib.compress ( f.getvalue() , self.compresslevel )
-
+        ## f = BytesIO ()
+        ## p = Pickler ( f , self.protocol )
+        ## p.dump ( value )
+        ## return zlib.compress ( f.getvalue() , self.compresslevel )
+        return zlib.compress ( self.pickle ( value ) , self.compresslevel )
+        
     # =========================================================================
-    ## uncompres (unzip) the item using <code>zlib.decompress</code>
+    ## uncompress (unzip) the item using <code>zlib.decompress</code>
     def uncompress_item ( self , value ) :
         """Uncompress (nuzip) the item using ``zlib.decompress''
         -  see zlib.decompress
         """        
-        f = BytesIO ( zlib.decompress ( value ) )
-        return Unpickler ( f ) . load ( )
+        ## f = BytesIO ( zlib.decompress ( value ) )
+        ## return Unpickler ( f ) . load ( )
+        return self.unpickle ( zlib.decompress ( value ) ) 
 
     # =========================================================================
     ## clone the database into new one

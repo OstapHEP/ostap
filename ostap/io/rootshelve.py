@@ -116,27 +116,16 @@ __all__ = (
 from   sys                     import version_info as     python_version 
 import ostap.io.root_file
 from   ostap.io.dbase          import TmpDB 
+from   ostap.io.pickling       import ( Pickler, Unpickler, BytesIO, 
+                                        PROTOCOL,
+                                        HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
 import ROOT, shelve, zlib, os 
-# =============================================================================
-try : 
-    from cPickle import Pickler, Unpickler
-except ImportError : 
-    from  pickle import Pickler, Unpickler
-# =============================================================================    
-try :
-    from io     import             BytesIO 
-except ImportError : 
-    from shelve import StringIO as BytesIO
-# =============================================================================
-from   ostap.io.pklprotocol    import PROTOCOL, HIGHEST_PROTOCOL, DEFAULT_PROTOCOL 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.rootshelve' )
 else                      : logger = getLogger ( __name__              )
 # =============================================================================
 logger.debug ( "Simple generic ROOT-based shelve-like-database" )
-# =============================================================================
-PROTOCOL = 2
 # =============================================================================
 ## @class RootOnlyShelf
 #  Plain vanilla DBASE for ROOT-object (only)

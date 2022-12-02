@@ -145,19 +145,6 @@ __all__ = (
 # =============================================================================
 from sys import version_info as python_version 
 # =============================================================================
-try:
-    from cPickle   import Pickler, Unpickler
-except ImportError:
-    from  pickle   import Pickler, Unpickler
-# =============================================================================
-if python_version.major > 2  :
-    from io import BytesIO
-else : 
-    try:
-        from cStringIO import StringIO as BytesIO 
-    except ImportError:
-        from  StringIO import StringIO as BytesIO    
-# ==============================================================================
 import os, sys, shelve, shutil
 import bz2         ## use bz2 to compress DB-content 
 from   ostap.io.compress_shelve import CompressShelf, ENCODING, PROTOCOL, HIGHEST_PROTOCOL
@@ -279,10 +266,11 @@ class Bz2Shelf(CompressShelf):
         """Compress (zip) the item using ``bz2.compress''
         - see bz2.compress
         """
-        f = BytesIO ()
-        p = Pickler ( f , self.protocol )
-        p.dump ( value )
-        return bz2.compress ( f.getvalue() , self.compresslevel )
+        ## f = BytesIO ()
+        ## p = Pickler ( f , self.protocol )
+        ## p.dump ( value )
+        ## return bz2.compress ( f.getvalue() , self.compresslevel )
+        return bz2.compress ( self.pickle ( value ) , self.compresslevel )
 
     # =========================================================================
     ## uncompres (bzip2) the item using <code>bz2.decompress</code>
@@ -290,8 +278,9 @@ class Bz2Shelf(CompressShelf):
         """Uncompress (bzip2) the item using ``bz2.decompress''
         -  see bz2.decompress
         """        
-        f = BytesIO ( bz2.decompress ( value ) )
-        return Unpickler ( f ) . load ( )
+        ## f = BytesIO ( bz2.decompress ( value ) )
+        ## return Unpickler ( f ) . load ( )
+        return self.unpickle ( bz2.decompress ( value ) ) 
 
     # =========================================================================
     ## clone the database into new one

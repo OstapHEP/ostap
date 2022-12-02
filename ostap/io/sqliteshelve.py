@@ -135,17 +135,9 @@ import sqlite3
 from   ostap.io.sqlitedict  import SqliteDict
 from   ostap.io.dbase       import Item, TmpDB 
 from   ostap.core.meta_info import meta_info 
-from   ostap.io.pklprotocol import PROTOCOL, HIGHEST_PROTOCOL, DEFAULT_PROTOCOL
-# =============================================================================
-try:
-    from cPickle   import Pickler, Unpickler
-except ImportError:
-    from  pickle   import Pickler, Unpickler
-# =============================================================================
-try : 
-    from io        import             BytesIO
-except ImportError : 
-    from cStringIO import StringIO as BytesIO         
+from   ostap.io.pickling    import ( Pickler, Unpickler, BytesIO ,
+                                     PROTOCOL,
+                                     HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.sqliteshelve' )

@@ -3,6 +3,7 @@
   1. change default picklimg protocol from 2 to DEFAULT_PROTOCOL (2 for py2, 3 for python (3.0-3.7), 4 for python 3.8-...)
   1. add possibility to define protocol either vial the environment variable `OSTAP_PROTOCOL`
   1. add possibility to define protocol via 'General:protocol' section in th econfigurationfile 
+  1. reduce code duplication for variosu databases 
 
 ## Backward incompatible:  
 

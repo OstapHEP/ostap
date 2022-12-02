@@ -145,19 +145,6 @@ __all__ = (
 # =============================================================================
 from sys import version_info as python_version 
 # =============================================================================
-try:
-    from cPickle   import Pickler, Unpickler
-except ImportError:
-    from  pickle   import Pickler, Unpickler
-# =============================================================================
-if python_version.major > 2  :
-    from io import BytesIO
-else : 
-    try:
-        from cStringIO import StringIO as BytesIO 
-    except ImportError:
-        from  StringIO import StringIO as BytesIO    
-# ==============================================================================
 import os, sys, shelve, shutil 
 import lzma  ## use lzma to compress DB-content 
 from   ostap.io.compress_shelve import CompressShelf, ENCODING, PROTOCOL, HIGHEST_PROTOCOL
@@ -281,10 +268,11 @@ class LzShelf(CompressShelf):
         """Compress (LZMA) the item using ``bz2.compress''
         - see lzma.compress
         """
-        f = BytesIO ()
-        p = Pickler ( f , self.protocol )
-        p.dump ( value )
-        return lzma.compress ( f.getvalue() , preset = self.compresslevel )
+        ## f = BytesIO ()
+        ## p = Pickler ( f , self.protocol )
+        ## p.dump ( value )
+        ## return lzma.compress ( f.getvalue() , preset = self.compresslevel )
+        return lzma.compress (  self.pickle ( value ) , preset = self.compresslevel )
     
     # =========================================================================
     ## uncompres (LZMA) the item using <code>lzma.decompress</code>
@@ -292,8 +280,9 @@ class LzShelf(CompressShelf):
         """Uncompress (LZMA) the item using ``lzma.decompress''
         -  see lzma.decompress
         """        
-        f = BytesIO ( lzma.decompress ( value ) )
-        return Unpickler ( f ) . load ( )
+        ## f = BytesIO ( lzma.decompress ( value ) )
+        ## return Unpickler ( f ) . load ( )
+        return self.unpickle ( lzma.decompress ( value ) ) 
 
     # =========================================================================
     ## clone the database into new one

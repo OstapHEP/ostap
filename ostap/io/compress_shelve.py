@@ -54,11 +54,13 @@ __all__ = (
     'ENCODING'       
     )
 # =============================================================================
-import os, sys, abc, shelve, shutil , glob, datetime, collections  
-from   sys                     import version_info           as python_version
-from   ostap.io.dbase          import dbopen, whichdb, Item 
-from   ostap.core.meta_info    import meta_info
-from   ostap.io.pklprotocol    import PROTOCOL, HIGHEST_PROTOCOL, DEFAULT_PROTOCOL 
+import os, abc, shelve, shutil, glob, datetime, collections  
+from   sys                  import version_info           as python_version
+from   ostap.io.dbase       import dbopen, whichdb, Item 
+from   ostap.core.meta_info import meta_info
+from   ostap.io.pickling    import ( Pickler , Unpickler, BytesIO,
+                                     PROTOCOL,
+                                     HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
@@ -753,7 +755,22 @@ class CompressShelf(shelve.Shelf,object):
             if whichdb ( f  ) : return f
 
         raise TypeErrro ('Cannot identify the database name: %s' % str ( files ) )  
-        
+
+    # =========================================================================
+    ## Pickle/serialize compressed data 
+    def pickle ( self , value ) :
+        """Pickle/serialize compressed data"""
+        f = BytesIO ()
+        p = Pickler ( f , self.protocol )
+        p.dump ( value )
+        return f.getvalue()
+    
+    # =========================================================================
+    ## Unpickle/deserialize the uncompressed data
+    def unpickle ( self , value ) :
+        """Unpickle/deserialize uncompressed data"""
+        f = BytesIO ( value )
+        return Unpickler ( f ) . load ( )
     
     # =========================================================================
     @abc.abstractmethod
