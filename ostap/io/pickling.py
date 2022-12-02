@@ -28,7 +28,7 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.pickling' )
 else                      : logger = getLogger ( __name__               )
 # =============================================================================
-if   sys.version_info < ( 3,0 ) :    
+if   sys.version_info < ( 3 , 0 ) :    
     DEFAULT_PROTOCOL = 2 
     try:
         from cPickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
@@ -94,6 +94,7 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+    logger.info ( 'Pickling protocol: %s' % PROTOCOL )
     
 # =============================================================================
 ##                                                                      The END 
