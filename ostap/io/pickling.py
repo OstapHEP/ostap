@@ -54,13 +54,13 @@ def get_protocol ( p ) :
     elif p.lower () in ( 'highest' , 'high' ) :
         return HIGHEST_PROTOCOL
     elif p.lower () in ( 'compat'  , 'compatible' , 'backward_compatible' ) :
-        return 2 
+        return min ( 2 , HIGHEST_PROTOCOL )  
     else :
         return int ( p )
 # =============================================================================    
 ## pickle protocol to be used 
 PROTOCOL = None
-#  (1) pickup protocol form environment variable 
+#  (1) pickup protocol from the environment variable 
 try :
     pe = os.environ.get ( 'OSTAP_PROTOCOL'  , '' )
     pp = get_protocol   ( pe )
