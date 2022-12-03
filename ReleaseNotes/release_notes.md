@@ -1,6 +1,9 @@
 
 ## New features: 
 
+  1. add `psi`, `digamma` , `polygamma`, `beta` and `lnbeta` functions, inclusing theuir variants 
+     with uncertainties 
+
 ## Backward incompatible:  
 
 ## Bug fixes:

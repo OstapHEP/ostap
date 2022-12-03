@@ -236,21 +236,21 @@ namespace Ostap
       ValueWithError& __idiv__     ( const double          right ) { return __itruediv__ ( right ) ; }
       ///
       ///  abs ( a )   
-      ValueWithError __abs__  () const ;
+      ValueWithError __abs__    () const ;
       /// -me
-      ValueWithError __neg__  () const ;
+      ValueWithError __neg__    () const ;
       /// +me  (no effect) 
-      ValueWithError __pos__  () const ; 
+      ValueWithError __pos__    () const ; 
       /// me**e 
-      ValueWithError __pow__  ( const int             e ) const ;
+      ValueWithError __pow__    ( const int             e ) const ;
       /// me**e 
-      ValueWithError __pow__  ( const double          e ) const ;
+      ValueWithError __pow__    ( const double          e ) const ;
       /// me**e 
-      ValueWithError __pow__  ( const ValueWithError& e ) const ;
+      ValueWithError __pow__    ( const ValueWithError& e ) const ;
       /// e**me 
-      ValueWithError __rpow__ ( const int             e ) const ;
+      ValueWithError __rpow__   ( const int             e ) const ;
       /// e**me 
-      ValueWithError __rpow__ ( const double          e ) const ;
+      ValueWithError __rpow__   ( const double          e ) const ;
       /// exp(me) 
       ValueWithError __exp__    () const ;
       /// exp2(me) 
@@ -301,6 +301,10 @@ namespace Ostap
       ValueWithError __tgamma__ () const ;
       /// lgamma 
       ValueWithError __lgamma__ () const ;
+      /// pdigamma
+      ValueWithError __psi__    () const ;
+      /// pdigamma
+      ValueWithError __psi__    ( const unsigned short  n ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -951,6 +955,75 @@ namespace Ostap
     ( const ValueWithError& x     , 
       const ValueWithError& y     , 
       const double          c = 0 ) ;
+    // ========================================================================    
+    /** evaluate beta-function \f$ \Beta(x,y) \f$ 
+     *  @param x (INPUT) the first parameter
+     *  @param y (INPUT) the second parameter
+     *  @param c (INPUT) the correlation coefficient  (-1<=c<=1)
+     *  @return the value of beta function 
+     */
+    ValueWithError beta 
+    ( const ValueWithError& x     , 
+      const ValueWithError& y     , 
+      const double          c = 0 ) ;
+    // =========================================================================
+    /** evaluate log(beta-function) \f$ \log \Beta(x,y) \f$ 
+     *  @param x (INPUT) the first parameter
+     *  @param y (INPUT) the second parameter
+     *  @param c (INPUT) the correlation coefficient  (-1<=c<=1)
+     *  @return the value of log of the beta function 
+     */
+    ValueWithError lnbeta 
+    ( const ValueWithError& x     , 
+      const ValueWithError& y     , 
+      const double          c = 0 ) ;
+    // =========================================================================
+    /** calculate psi/digamma function 
+     *  @see Ostap::Math::digamma 
+     *  @see Ostap::Math::polygamma
+     *  @see Ostap::Math::psi 
+     *  @return the value of digamma function 
+     */
+    ValueWithError psi 
+    ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** calculate psi/polygamma function 
+     *  @see Ostap::Math::digamma 
+     *  @see Ostap::Math::polygamma
+     *  @see Ostap::Math::psi 
+     *  @return the value of polygamma function 
+     */
+    ValueWithError psi 
+    ( const ValueWithError& x , 
+      const unsigned short  n ) ;
+    // ========================================================================
+    /** calculate psi/digamma function 
+     *  @see Ostap::Math::digamma 
+     *  @see Ostap::Math::polygamma
+     *  @see Ostap::Math::psi 
+     *  @return the value of digamma function 
+     */
+    inline ValueWithError digamma 
+    ( const ValueWithError& x ) { return psi ( x ) ; }
+    // ========================================================================
+    /** calculate trigamma function 
+     *  @see Ostap::Math::digamma 
+     *  @see Ostap::Math::polygamma
+     *  @see Ostap::Math::psi 
+     *  @return the value of digamma function 
+     */
+    inline ValueWithError trigamma 
+    ( const ValueWithError& x ) { return psi ( x , 1 ) ; }
+    // ========================================================================
+    /** calculate psi/polygamma function 
+     *  @see Ostap::Math::digamma 
+     *  @see Ostap::Math::polygamma
+     *  @see Ostap::Math::psi 
+     *  @return the value of polygamma function 
+     */
+    inline ValueWithError polygamma 
+    ( const ValueWithError& x , 
+      const unsigned short  n ) { return psi ( x , n ) ; }
     // ========================================================================    
     /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 

@@ -775,6 +775,18 @@ Ostap::Math::ValueWithError::__tgamma__ () const { return tgamma ( *this ) ; }
 Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__lgamma__ () const { return lgamma ( *this ) ; }
 // ============================================================================
+// psi(me) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__psi__    () const { return psi ( *this ) ; }
+// ============================================================================
+// psi(me.n) 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__psi__    ( const unsigned short n ) const 
+{ return psi ( *this , n ) ; }
+// ============================================================================
+
 
 
 // ============================================================================
@@ -1283,7 +1295,7 @@ Ostap::Math::ValueWithError Ostap::Math::pochhammer
  *   @param x (INPUT) the first parameter
  *   @param y (INPUT) the second parameter
  *   @param c (INPUT) the correlation coefficient  (-1<=c<=1)
- *   @return the valueof <code>hypot</code> function
+ *   @return the value of <code>hypot</code> function
  */
 // ============================================================================
 Ostap::Math::ValueWithError  Ostap::Math::hypot
@@ -1321,6 +1333,123 @@ Ostap::Math::ValueWithError  Ostap::Math::hypot
   }
   //
   return ValueWithError ( r , e2 ) ;
+}
+// ============================================================================
+/*  evaluate beta-function \f$ \Beta(x,y) \f$ 
+ *  @param x (INPUT) the first parameter
+ *  @param y (INPUT) the second parameter
+ *  @param c (INPUT) the correlation coefficient  (-1<=c<=1)
+ *  @return the value of beta function 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::beta 
+( const Ostap::Math::ValueWithError& x , 
+  const Ostap::Math::ValueWithError& y , 
+  const double                       c ) 
+{
+  const bool x0 = 0 >= x.cov2() || _zero ( x.cov2() ) ;
+  const bool y0 = 0 >= y.cov2() || _zero ( y.cov2() ) ;
+  //
+  const double r = beta ( x.value() , y.value() ) ;
+  if ( x0 && y0 ) { return r ; }   // RETURN 
+  //
+  double c2 = 0 ;
+  const double p12  =       Ostap::Math::psi ( x.value() + y.value() ) ;
+  const double dbdx = r * ( Ostap::Math::psi ( x.value() ) - p12     ) ;
+  const double dbdy = r * ( Ostap::Math::psi ( x.value() ) - p12     ) ;
+  //
+  c2 += x0 ? 0.0 : x.cov2() * dbdx * dbdx ;
+  c2 += y0 ? 0.0 : y.cov2() * dbdy * dbdy ;
+  c2 += x0 || y0 || _zero ( c ) ? 0.0 :
+    2 * dbdx * dbdy * std::max ( -1.0 , std::min ( c , 1.0 ) ) 
+    * std::max ( 0.0 , x.error() ) 
+    * std::max ( 0.0 , y.error() ) ;
+  //
+  return ValueWithError ( r , c2 ) ;
+}
+// ============================================================================
+/*  evaluate log(beta-function) \f$ \Beta(x,y) \f$ 
+ *  @param x (INPUT) the first parameter
+ *  @param y (INPUT) the second parameter
+ *  @param c (INPUT) the correlation coefficient  (-1<=c<=1)
+ *  @return the value of log for beta function 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::lnbeta 
+( const Ostap::Math::ValueWithError& x , 
+  const Ostap::Math::ValueWithError& y , 
+  const double                       c ) 
+{
+  const bool x0 = 0 >= x.cov2() || _zero ( x.cov2() ) ;
+  const bool y0 = 0 >= y.cov2() || _zero ( y.cov2() ) ;
+  //
+  const double r = lnbeta ( x.value() , y.value() ) ;
+  if ( x0 && y0 ) { return r ; }   // RETURN 
+  //
+  double c2 = 0 ;
+  const double p12  =   Ostap::Math::psi ( x.value() + y.value() ) ;
+  const double dbdx = ( Ostap::Math::psi ( x.value() ) - p12     ) ;
+  const double dbdy = ( Ostap::Math::psi ( x.value() ) - p12     ) ;
+  //
+  c2 += x0 ? 0.0 : x.cov2() * dbdx * dbdx ;
+  c2 += y0 ? 0.0 : y.cov2() * dbdy * dbdy ;
+  c2 += x0 || y0 || _zero ( c ) ? 0.0 :
+    2 * dbdx * dbdy * std::max ( -1.0 , std::min ( c , 1.0 ) ) 
+    * std::max ( 0.0 , x.error() ) 
+    * std::max ( 0.0 , y.error() ) ;
+  //
+  return ValueWithError ( r , c2 ) ;
+}
+// ============================================================================
+/*  calculate digamma function 
+ *  @see Ostap::Math::digamma 
+ *  @see Ostap::Math::polygamma
+ *  @see Ostap::Math::psi 
+ *  @return the value of digamma function 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::psi 
+( const Ostap::Math::ValueWithError& x ) 
+{
+  //
+  const bool x0 = 0 >= x.cov2() || _zero ( x.cov2() ) ;
+  //
+  if ( x0 ) { return  Ostap::Math::psi ( x.value()     ) ; }
+  //
+  const double r    = Ostap::Math::psi ( x.value()     ) ; 
+  //
+  const double dfdx = Ostap::Math::psi ( x.value() , 1 ) ;
+  const double c2   = x.cov2() * dfdx * dfdx ;
+  //
+  return ValueWithError ( r , c2 ) ;  
+}
+// ============================================================================
+/*  calculate digamma function 
+ *  @see Ostap::Math::digamma 
+ *  @see Ostap::Math::polygamma
+ *  @see Ostap::Math::psi 
+ *  @return the value of digamma function 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::psi 
+( const Ostap::Math::ValueWithError& x , 
+  const unsigned short               n )
+{
+  //
+  const bool x0 = 0 >= x.cov2() || _zero ( x.cov2() ) ;
+  //
+  if ( x0 ) { return  Ostap::Math::psi ( x.value() , n     ) ; }
+  //
+  const double r    = Ostap::Math::psi ( x.value() , n     ) ; 
+  //
+  const double dfdx = Ostap::Math::psi ( x.value() , n + 1 ) ;
+  const double c2   = x.cov2() * dfdx * dfdx ;
+  //
+  return ValueWithError ( r , c2 ) ;  
 }
 // ============================================================================
 /* evaluate fma(x,y,z) = x*y+x 

@@ -937,6 +937,43 @@ double Ostap::Math::psi ( const double x )
   return result.val ;
 }
 // ============================================================================
+/* compute polygamma function 
+ * \f$ \psi^{(n)}(x) = \left(\frac{d}{dx}\right)^{(n)}\psi(x) = 
+ * = \left(\frac{d}{dx}\right)^{(n)} \log \Gamma (x) \f$ 
+ * @return value of polygamma function
+ * @see Ostap::Math::polygamma
+ * @see Ostap::Math::digamma
+ * @see Ostap::Math::trigamma
+ */
+// ============================================================================
+double Ostap::Math::psi
+( const double         x , 
+  const unsigned short n )
+{
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_psi_n_e ( n , x , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_psi_n_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return result.val ;
+}
+// ===========================================================================  
+  
+  
+
+
+
+// ============================================================================
 /** beta function for 
  *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
  *  - \f$ 0<x\f$

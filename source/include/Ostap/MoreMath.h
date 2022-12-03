@@ -330,9 +330,55 @@ namespace Ostap
     // ========================================================================
     /** Compute psi function 
      *  \f[ f(x) = \frac{d}{dx}\ln \Gamma(x)\f]
-     *  @return the value of psi function 
+     * @return the value of psi function 
+     * @see Ostap::Math::digamma
+     * @see Ostap::Math::trigamma
      */
-    double psi ( const double x ) ;    
+    double psi ( const double x ) ;
+    // =========================================================================
+    /** compute psi/polygamma function 
+     * \f$ \psi^{(n)}(x) = \left(\frac{d}{dx}\right)^{(n)}\psi(x) = 
+     * = \left(\frac{d}{dx}\right)^{(n+1)} \log \Gamma (x) \f$ 
+     * @return value of polygamma function
+     * @see Ostap::Math::polygamma
+     * @see Ostap::Math::digamma
+     * @see Ostap::Math::trigamma
+     */
+    double psi  
+    ( const double         x , 
+      const unsigned short n ) ;
+    // =======================================================================
+    /** Compute digamma function 
+     *  \f[ f(x) = \psi^{(0)}(x) = \frac{d}{dx}\ln \Gamma(x)\f]
+     * @return the value of psi function 
+     * @see Ostap::Math::psi
+     * @see Ostap::Math::digamma
+     * @see Ostap::Math::polygamma
+     */
+    inline double digamma 
+    ( const double x ) 
+    { return psi ( x ) ; }
+    // ========================================================================
+    /** Compute trigamma function 
+     * @return the value of psi function 
+     * @see Ostap::Math::psi
+     * @see Ostap::Math::digamma
+     * @see Ostap::Math::polygamma
+     */
+    inline double trigamma 
+    ( const double x ) 
+    { return psi ( x , 1 ) ; }
+    // ========================================================================
+    /** compute polygamma function 
+     * \f$ \psi^{(n)}(x) = \left(\frac{d}{dx}\right)^{(n)}\psi(x) = 
+     * = \left(\frac{d}{dx}\right)^{(n+1)} \log \Gamma (x) \f$ 
+     * @return value of polygamma function
+     * @see Ostap::Math::psi
+     */
+    inline double polygamma 
+    ( const double         x , 
+      const unsigned short n ) 
+    { return psi ( x , n ) ; }
     // ========================================================================
     /** beta function for 
      *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
@@ -340,7 +386,7 @@ namespace Ostap
      *  - \f$ 0<y\f$ 
      *  @return value of beta function 
      */
-    double beta ( const double x , const double y ) ;
+    double beta  ( const double x , const double y ) ;
     // ========================================================================
     /** natural logarith of beta function 
      *  \f$ \log B(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 

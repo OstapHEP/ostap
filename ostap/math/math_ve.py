@@ -14,22 +14,22 @@ __version__ = ""
 # =============================================================================
 __all__     = (
     'exp'        , 'expm1'      ,
-    'log'        , 'log10'      , 'log1p'  , 
-    'sqrt'       , 'cbrt'       , 'pow'    ,   
-    'sin'        , 'cos'        , 'tan'    , 
-    'sinh'       , 'cosh'       , 'tanh'   , 'sech'   ,
-    'asin'       , 'acos'       , 'atan'   , 'atan2'  , 
-    'asinh'      , 'acosh'      , 'atanh'  ,
-    'erf'        , 'erfc'       , 'erfi'   , 'erfcx'  ,
+    'log'        , 'log10'      , 'log1p'   , 
+    'sqrt'       , 'cbrt'       , 'pow'     ,   
+    'sin'        , 'cos'        , 'tan'     , 
+    'sinh'       , 'cosh'       , 'tanh'    , 'sech'     ,
+    'asin'       , 'acos'       , 'atan'    , 'atan2'    , 
+    'asinh'      , 'acosh'      , 'atanh'   ,
+    'erf'        , 'erfc'       , 'erfi'    , 'erfcx'    ,
     'probit'     , 'pochhammer' , 
-    'gamma'      , 'tgamma'     , 'lgamma' , 'igamma' , 
+    'gamma'      , 'tgamma'     , 'lgamma'  , 'igamma'   ,
+    'psi'        , 'polygamma'  , 'digamma' , 'trigamma' ,
+    'beta'       , 'lnbeta'     , 
     'exp2'       , 'log2'       ,
     'gauss_pdf'  , 'gauss_cdf'  ,
     'hypot'      , 'fma'        ,
     'minv'       , 'maxv'       
     )
-# =============================================================================
-import ROOT,math
 # =============================================================================
 # logging 
 # =============================================================================
@@ -37,10 +37,11 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.math_ve' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-from   ostap.math.ve    import VE
-from   ostap.math.base  import Ostap, iszero, isequal
-from   ostap.core.ostap_types import num_types, is_integer 
-
+from   ostap.math.ve          import VE
+from   ostap.math.base        import Ostap, iszero, isequal
+from   ostap.core.ostap_types import num_types, is_integer, integer_types  
+import ROOT,math
+# =============================================================================
 _ln2_i = 1/math.log(2.0)                 ## useful constant 
 # =============================================================================
 
@@ -337,6 +338,57 @@ def igamma ( x ) :
     fun = getattr ( x , '__igamma__' , None )
     if fun : return fun()
     return _igamma_ ( x )
+
+_psi_ = Ostap.Math.psi 
+# =============================================================================
+## define polygamma function
+def psi ( x , n = 0  ) :
+    """Polygamma function"""
+    assert isinstance ( n , integer_types ) and 0 <= n ,\
+           'Invalid parameter n=%s' % n  
+    fun = getattr ( x , '__psi__' , None )
+    if fun : return fun ( n )
+    return _psi_ ( x , n )
+
+# =============================================================================
+## define digamma function
+def digamma  ( x ) :
+    """Digamma function"""
+    return psi ( x )
+
+# =============================================================================
+## define trigamma function
+def trigamma  ( x ) :
+    """Trigamma function"""
+    return psi ( x , 1  )
+
+# =============================================================================
+## define polygamma function
+def polygamma  ( x , n  ) :
+    """Polygamma function"""
+    return psi ( x , n )
+
+_beta_ = Ostap.Math.beta  
+# =============================================================================
+## define Beta function
+def beta ( x , y ) :
+    """Beta function"""    
+    fun = getattr ( x , '__beta__' , None )
+    if fun : return fun ( y )
+    fun = getattr ( y , '__beta__' , None )
+    if fun : return fun ( x )
+    return _beta_ ( x , y )
+
+_lnbeta_ = Ostap.Math.lnbeta  
+# =============================================================================
+## define log(Beta) function
+def lnbeta ( x , y ) :
+    """log(Beta) function"""    
+    fun = getattr ( x , '__lnbeta__' , None )
+    if fun : return fun ( y )
+    fun = getattr ( y , '__lnbeta__' , None )
+    if fun : return fun ( x )
+    return _lnbeta_ ( x , y )
 
 _sech_ = Ostap.Math.sech 
 # =============================================================================
