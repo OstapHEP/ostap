@@ -1047,9 +1047,7 @@ namespace Ostap
      *  @see gsl_sf_bessel_Knu_scaled_e 
      */
     double bessel_Knu_scaled ( const double  nu , const double x ) ;
-    // ========================================================================
-    
-    
+    // ========================================================================    
     
     // ========================================================================
     /** Laguerre polynomila of non-integher order 

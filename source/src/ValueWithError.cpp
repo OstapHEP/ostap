@@ -1357,14 +1357,13 @@ Ostap::Math::beta
   double c2 = 0 ;
   const double p12  =       Ostap::Math::psi ( x.value() + y.value() ) ;
   const double dbdx = r * ( Ostap::Math::psi ( x.value() ) - p12     ) ;
-  const double dbdy = r * ( Ostap::Math::psi ( x.value() ) - p12     ) ;
+  const double dbdy = r * ( Ostap::Math::psi ( y.value() ) - p12     ) ;
   //
   c2 += x0 ? 0.0 : x.cov2() * dbdx * dbdx ;
   c2 += y0 ? 0.0 : y.cov2() * dbdy * dbdy ;
   c2 += x0 || y0 || _zero ( c ) ? 0.0 :
     2 * dbdx * dbdy * std::max ( -1.0 , std::min ( c , 1.0 ) ) 
-    * std::max ( 0.0 , x.error() ) 
-    * std::max ( 0.0 , y.error() ) ;
+    * std::sqrt ( x.cov2() * y.cov2() ) ;
   //
   return ValueWithError ( r , c2 ) ;
 }
@@ -1391,14 +1390,13 @@ Ostap::Math::lnbeta
   double c2 = 0 ;
   const double p12  =   Ostap::Math::psi ( x.value() + y.value() ) ;
   const double dbdx = ( Ostap::Math::psi ( x.value() ) - p12     ) ;
-  const double dbdy = ( Ostap::Math::psi ( x.value() ) - p12     ) ;
+  const double dbdy = ( Ostap::Math::psi ( y.value() ) - p12     ) ;
   //
   c2 += x0 ? 0.0 : x.cov2() * dbdx * dbdx ;
   c2 += y0 ? 0.0 : y.cov2() * dbdy * dbdy ;
   c2 += x0 || y0 || _zero ( c ) ? 0.0 :
     2 * dbdx * dbdy * std::max ( -1.0 , std::min ( c , 1.0 ) ) 
-    * std::max ( 0.0 , x.error() ) 
-    * std::max ( 0.0 , y.error() ) ;
+    * std::sqrt ( x.cov2() * y.cov2() ) ;
   //
   return ValueWithError ( r , c2 ) ;
 }
@@ -1417,9 +1415,8 @@ Ostap::Math::psi
   //
   const bool x0 = 0 >= x.cov2() || _zero ( x.cov2() ) ;
   //
-  if ( x0 ) { return  Ostap::Math::psi ( x.value()     ) ; }
-  //
   const double r    = Ostap::Math::psi ( x.value()     ) ; 
+  if ( x0 ) { return r ; }
   //
   const double dfdx = Ostap::Math::psi ( x.value() , 1 ) ;
   const double c2   = x.cov2() * dfdx * dfdx ;
@@ -1442,9 +1439,8 @@ Ostap::Math::psi
   //
   const bool x0 = 0 >= x.cov2() || _zero ( x.cov2() ) ;
   //
-  if ( x0 ) { return  Ostap::Math::psi ( x.value() , n     ) ; }
-  //
   const double r    = Ostap::Math::psi ( x.value() , n     ) ; 
+  if ( x0 ) { return r ; }
   //
   const double dfdx = Ostap::Math::psi ( x.value() , n + 1 ) ;
   const double c2   = x.cov2() * dfdx * dfdx ;
