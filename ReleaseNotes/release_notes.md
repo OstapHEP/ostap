@@ -1,13 +1,13 @@
 ## New features: 
 
-  1. add `psi`, `digamma` , `polygamma`, `beta` and `lnbeta` functions, inclusing their variants 
-     with uncertainties. 
+  1. add `psi`, `digamma` , `polygamma`, `beta` and `lnbeta` functions, including their variants with uncertainties. 
+  1. add these functions to `ostap.math.math_ve` module 
 
 ## Backward incompatible:  
 
 ## Bug fixes:
-  1. fix typo in `Ostap::Math::beta` and `Ostap::Math::lnbeta`
 
+  1. fix a typo in `Ostap::Math::beta` and `Ostap::Math::lnbeta`
 
 # v1.9.5.0
 

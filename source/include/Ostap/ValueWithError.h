@@ -956,6 +956,26 @@ namespace Ostap
       const ValueWithError& y     , 
       const double          c = 0 ) ;
     // ========================================================================    
+    /** evaluate <code>hypot(x,y)</code>: \f$ \sqrt( x^2 + y^2 ) \f$
+     *  @param x (INPUT) the first parameter
+     *  @param y (INPUT) the second parameter
+     *  @param c (INPUT) the correlation coefficient  (-1<=c<=1)
+     *  @return the value of <code>hypot</code> function
+     */
+    ValueWithError  hypot
+    ( const ValueWithError& x     , 
+      const double          y     ) ;
+    // ========================================================================
+    /** evaluate <code>hypot(x,y)</code>: \f$ \sqrt( x^2 + y^2 ) \f$
+     *  @param x (INPUT) the first parameter
+     *  @param y (INPUT) the second parameter
+     *  @param c (INPUT) the correlation coefficient  (-1<=c<=1)
+     *  @return the value of <code>hypot</code> function
+     */
+    inline ValueWithError  hypot
+    ( const double          x     , 
+      const ValueWithError& y     ) { return hypot ( y , x ) ; }
+    // ========================================================================    
     /** evaluate beta-function \f$ \Beta(x,y) \f$ 
      *  @param x (INPUT) the first parameter
      *  @param y (INPUT) the second parameter
@@ -967,6 +987,24 @@ namespace Ostap
       const ValueWithError& y     , 
       const double          c = 0 ) ;
     // =========================================================================
+    /** evaluate beta-function \f$ \Beta(x,y) \f$ 
+     *  @param x (INPUT) the first parameter
+     *  @param y (INPUT) the second parameter
+     *  @return the value of beta function 
+     */
+    ValueWithError beta 
+    ( const ValueWithError& x     , 
+      const double          y     ) ;
+    // ========================================================================
+    /** evaluate beta-function \f$ \Beta(x,y) \f$ 
+     *  @param x (INPUT) the first parameter
+     *  @param y (INPUT) the second parameter
+     *  @return the value of beta function 
+     */
+    inline ValueWithError beta 
+    ( const double          x  , 
+      const ValueWithError& y  ) { return beta ( y , x ) ; }
+    // =========================================================================
     /** evaluate log(beta-function) \f$ \log \Beta(x,y) \f$ 
      *  @param x (INPUT) the first parameter
      *  @param y (INPUT) the second parameter
@@ -977,6 +1015,24 @@ namespace Ostap
     ( const ValueWithError& x     , 
       const ValueWithError& y     , 
       const double          c = 0 ) ;
+    // =========================================================================
+    /** evaluate log(beta-function) \f$ \log \Beta(x,y) \f$ 
+     *  @param x (INPUT) the first parameter
+     *  @param y (INPUT) the second parameter
+     *  @return the value of log of the beta function 
+     */
+    ValueWithError lnbeta 
+    ( const ValueWithError& x     , 
+      const double          y     ) ;
+    // ========================================================================
+    /** evaluate log(beta-function) \f$ \log \Beta(x,y) \f$ 
+     *  @param x (INPUT) the first parameter
+     *  @param y (INPUT) the second parameter
+     *  @return the value of log of the beta function 
+     */
+    inline ValueWithError lnbeta 
+    ( const double          x     ,
+      const ValueWithError& y     ) { return lnbeta ( y , x ) ; }
     // =========================================================================
     /** calculate psi/digamma function 
      *  @see Ostap::Math::digamma 

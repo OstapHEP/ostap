@@ -1335,6 +1335,18 @@ Ostap::Math::ValueWithError  Ostap::Math::hypot
   return ValueWithError ( r , e2 ) ;
 }
 // ============================================================================
+/*  evaluate <code>hypot(x,y)</code>
+ *  \f$ \sqrt( x^2 + y^2 ) \f$
+ *   @param x (INPUT) the first parameter
+ *   @param y (INPUT) the second parameter
+ *   @return the value of <code>hypot</code> function
+ */
+// ============================================================================
+Ostap::Math::ValueWithError  Ostap::Math::hypot
+( const Ostap::Math::ValueWithError& x , 
+  const double                       y )
+{ return hypot ( x , ValueWithError ( y , 0.0 ) , 0.0 ) ; }
+// ============================================================================
 /*  evaluate beta-function \f$ \Beta(x,y) \f$ 
  *  @param x (INPUT) the first parameter
  *  @param y (INPUT) the second parameter
@@ -1368,6 +1380,18 @@ Ostap::Math::beta
   return ValueWithError ( r , c2 ) ;
 }
 // ============================================================================
+/*  evaluate beta-function \f$ \Beta(x,y) \f$ 
+ *  @param x (INPUT) the first parameter
+ *  @param y (INPUT) the second parameter
+ *  @return the value of beta function 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::beta 
+( const Ostap::Math::ValueWithError& x , 
+  const double                       y )
+{ return beta ( x , ValueWithError ( y , 0 ) , 0.0 ) ; }
+// ============================================================================
 /*  evaluate log(beta-function) \f$ \Beta(x,y) \f$ 
  *  @param x (INPUT) the first parameter
  *  @param y (INPUT) the second parameter
@@ -1400,6 +1424,18 @@ Ostap::Math::lnbeta
   //
   return ValueWithError ( r , c2 ) ;
 }
+// ============================================================================
+/*  evaluate log(beta-function) \f$ \Beta(x,y) \f$ 
+ *  @param x (INPUT) the first parameter
+ *  @param y (INPUT) the second parameter
+ *  @return the value of log for beta function 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::lnbeta 
+( const Ostap::Math::ValueWithError& x , 
+  const double                       y )
+{ return lnbeta ( x , ValueWithError ( y , 0 ) , 0.0 ) ; }
 // ============================================================================
 /*  calculate digamma function 
  *  @see Ostap::Math::digamma 
