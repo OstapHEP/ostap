@@ -1908,6 +1908,19 @@ def _rqgsm_reduce_ ( pdf ):
 Ostap.Models.QGSM.__reduce__ = _rqgsm_reduce_ 
 
 # =============================================================================
+## reduce Hagedorn
+def _rhage_reduce_ ( pdf ):
+    """Reduce Hagedorn"""
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.x        () ,                            
+                                  pdf.beta     () ,                            
+                                  pdf.mass     () )
+
+Ostap.Models.Hagedorn.__reduce__ = _rhage_reduce_ 
+
+# =============================================================================
 ## reduce Tsallis2
 def _rtsal2_reduce_ ( pdf ):
     """Reduce Tsallis2"""

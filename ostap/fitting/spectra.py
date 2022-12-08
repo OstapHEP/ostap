@@ -27,6 +27,7 @@ __all__     = (
     'qgsmTF1'       , ## QGSM      create TF1 
     'gammaDistTF1'  , ## GammaDist create TF1 
     #
+    'Hagedorn_pdf'  , ## Hagedorn's PDF 
     )
 # =============================================================================
 from   ostap.core.core  import cpp, Ostap, VE , funID 
@@ -37,11 +38,13 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.spectra' )
 else                       : logger = getLogger ( __name__           )
 # =============================================================================
 models = [] 
-from ostap.fitting.distributions import   Tsallis_pdf
+from ostap.fitting.distributions import ( Tsallis_pdf  ,
+                                          QGSM_pdf     ,
+                                          Hagedorn_pdf , 
+                                          GammDist_pdf ) 
 models.append (   Tsallis_pdf )
-from ostap.fitting.distributions import   QGSM_pdf
 models.append (      QGSM_pdf )
-from ostap.fitting.distributions import   GammaDist_pdf
+models.append (  Hagedorn_pdf )
 models.append ( GammaDist_pdf )
 # ==============================================================================
 ## @class PtFitBase

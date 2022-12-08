@@ -2234,6 +2234,93 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Hagedorn 
+     *  simple function to des ribe pT spectra of particles 
+     *  @see R.Hagedorn, "Multiplicities, p_T distributions and the 
+     *       expected hadron \to Quark - Gluon Phase Transition", 
+     *       Riv.Nuovo Cim. 6N10 (1983) 1-50
+     *  @see https://doi.org/10.1007/BF02740917 
+     *  @see https://inspirehep.net/literature/193590
+     *  
+     *  \f[ f(p_T; m, T) \propto 
+     *   p_T \sqrt{p^2_T + m^2} K_1( \beta \sqrt{ p^2_T+m^2} ) \f] 
+     *
+     *  where \f$ \beta \f$ is inverse temporature 
+     *  \f$ \beta = \frac{1}{T} f$ 
+     *
+     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+     *  @date 2022-12-06
+     */
+    class Hagedorn 
+    {
+    public: 
+      // ======================================================================      
+      /** Constrcutor for all parameters
+       *  @param mass   mas sof th eparticle 
+       *  @param beta   inverse temperature
+       */
+      Hagedorn 
+      ( const double mass = 0 , 
+        const double beta = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluiate the function 
+      double        evaluate    ( const double x ) const ;
+      /// ditto
+      inline double operator()  ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public: /// getters 
+      // ======================================================================
+      /// get the particle mass 
+      inline double mass () const { return m_mass ; }
+      /// get the inverse temperature 
+      inline double beta () const { return m_beta ; }      
+      // ======================================================================
+    public: /// setters 
+      // ======================================================================
+      /// set new mass 
+      bool setMass ( const double value ) ;
+      /// set new inverse temperatoire  
+      bool setBeta ( const double beta  ) ;
+      // ======================================================================
+    public:  /// some statistics 
+      // ======================================================================
+      /// get the mean value 
+      double mean () const ;      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the transverse mass 
+      inline double mT ( const double pT ) const 
+      { return std::hypot ( pT , m_mass ) ; }  
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral between low and high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// particle mass 
+      double m_mass { 0 } ; // particle mass 
+      /// inverse temperature 
+      double m_beta { 1 } ; // inverse temperature 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// workspace
+      Ostap::Math::WorkSpace m_workspace ; // workspace
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class HORNSdini 
      *  \f[ f(x;a,\delta, \phi) = 
      *  \frac{3}{2\delta}\left( z \right)^2

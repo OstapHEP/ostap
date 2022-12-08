@@ -2540,6 +2540,113 @@ std::size_t Ostap::Math::QGSM::tag () const
 
 
 
+// ============================================================================
+/*  Constrcutor for all parameters
+ *  @param mass   mas sof th eparticle 
+ *  @param beta   inverse temperature
+ */
+// ============================================================================
+Ostap::Math::Hagedorn::Hagedorn 
+( const double mass , 
+  const double beta ) 
+  : m_mass ( std::abs ( mass ) ) 
+  , m_beta ( std::abs ( beta ) ) 
+{}
+// ============================================================================
+// set new value for mass
+// ============================================================================
+bool Ostap::Math::Hagedorn::setMass ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_mass , avalue ) ) { return false ; }
+  m_mass = avalue ;
+  return true ;
+}
+// ============================================================================
+// set new value for inverse temporature 
+// ============================================================================
+bool Ostap::Math::Hagedorn::setBeta ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_beta , avalue ) ) { return false ; }
+  m_beta = avalue ;
+  return true ;
+}
+// ============================================================================
+// the main method 
+// ============================================================================
+double Ostap::Math::Hagedorn::evaluate ( const double x ) const 
+{
+  if ( x <= 0 ) { return 0 ; }
+  //
+  const double mt  = mT ( x )    ;
+  const double arg = m_beta * mt ;
+  //
+  return 
+    // GSL_LOG_DBL_MAX < arg ? 0.0 : 
+    300                < arg ? 0.0 : 
+    x * mt * Ostap::Math::bessel_Kn ( 1 , arg ) / m_beta ;
+}
+// ============================================================================
+//  get Hagedorn integral  
+// ============================================================================
+double Ostap::Math::Hagedorn::integral 
+( const double low  , 
+  const double high ) const
+{
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low             ) { return - integral ( high , low ) ; }
+  else if ( high <= 0              ) { return 0 ; }
+  //
+  const double xmin = std::max ( 0.0 , low ) ;
+  const double xmax = high ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Hagedorn> s_integrator {} ;
+  static char s_message [] = "Integral(HAgedorn)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag  ()                   , 
+      &F                        , 
+      xmin    , xmax            ,   // low & high edges
+      workspace ( m_workspace ) ,   // workspace
+      s_APRECISION              ,   // absolute precision
+      s_RPRECISION              ,   // relative precision
+      m_workspace.size()        ,   // size of workspace
+      s_message                 , 
+      __FILE__ , __LINE__       ) ;
+  //
+  return result ;
+  //
+}
+// ============================================================================
+// get the mean value 
+// ============================================================================
+double Ostap::Math::Hagedorn::mean () const 
+{
+  const double mt = m_mass * m_beta ;
+  return 
+    s_SQRTPIHALF * std::sqrt ( m_mass / m_beta ) * 
+    Ostap::Math::bessel_Knu ( 5.0/2 , mt ) /
+    Ostap::Math::bessel_Kn  ( 2     , mt ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Hagedorn::tag () const 
+{ 
+  static const std::string s_name = "Hagedorn" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mass , m_beta ) ; 
+}
+// ============================================================================
+
+  
+
 
 // ============================================================================
 /*  Constructor from all parameters

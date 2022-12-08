@@ -6023,6 +6023,101 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Hagedorn 
+     *  Useful function to describe pT-spectra of particles
+     *
+     *  simple function to des ribe pT spectra of particles 
+     *  @see R.Hagedorn, "Multiplicities, p_T distributions and the 
+     *       expected hadron \to Quark - Gluon Phase Transition", 
+     *       Riv.Nuovo Cim. 6N10 (1983) 1-50
+     *  @see https://doi.org/10.1007/BF02740917 
+     *  @see https://inspirehep.net/literature/193590
+     *  
+     *  \f[ f(p_T; m, T) \propto 
+     *   p_T \sqrt{p^2_T + m^2} K_1( \beta \sqrt{ p^2_T+m^2} ) \f] 
+     *
+     *  where \f$ \beta \f$ is inverse temporature 
+     *  \f$ \beta = \frac{1}{T} f$ 
+     *
+     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+     *  @see Ostap::Math::Hagedorn 
+     *  @date 2022-12-06
+     */
+    class Hagedorn : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Hagedorn, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      Hagedorn
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           beta      ,   // parameter beta 
+        RooAbsReal&           mass      ) ; // particle mass (fixed!)
+      /// "copy constructor"
+      Hagedorn 
+      ( const Hagedorn&       right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~Hagedorn () ;
+      /// clone
+      Hagedorn* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Hagedorn () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Hagedorn& function () const { return m_hagedorn ; }
+      const Ostap::Math::Hagedorn& hagedorn () const { return m_hagedorn ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x    () const { return m_x        .arg() ; }
+      const RooAbsReal& beta () const { return m_beta     .arg() ; }
+      const RooAbsReal& mass () const { return m_mass     .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        ;
+      RooRealProxy m_beta     ;
+      RooRealProxy m_mass     ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Hagedorn m_hagedorn ; // the actual function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class TwoExpos
      *  simple difference of two exponents
      *  \f[ f \propto

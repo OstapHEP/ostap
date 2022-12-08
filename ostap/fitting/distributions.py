@@ -26,6 +26,7 @@
 - Tsallis_pdf        : Tsallis PDF 
 - QGSM_pdf           : QGSM PDF 
 - Tsallis2_pdf       : 2D Tsallis PDF 
+- Hagedorn_pdf       : Hagedorn PDF 
 
 """
 # =============================================================================
@@ -50,6 +51,7 @@ __all__     = (
     'Weibull_pdf'        , ## Weibull distributions
     'Tsallis_pdf'        , ## Tsallis PDF 
     'QGSM_pdf'           , ## QGSM PDF 
+    'Hagedorn_pdf'       , ## Hagedorn PDF 
     'Tsallis2_pdf'       , ## 2D Tsallis PDF 
     )
 # =============================================================================
@@ -1613,8 +1615,7 @@ class QGSM_pdf(PDF1) :
         return self.__m0
     @m0.setter
     def m0 ( self , value ) :
-        value = float ( value )
-        self.__b0.setVal ( value ) 
+        self.set_value ( self.__m0 , value )
 
     @property
     def b ( self ) :
@@ -1622,13 +1623,103 @@ class QGSM_pdf(PDF1) :
         return self.__b
     @b.setter
     def b ( self , value ) :
-        value = float ( value )
-        self.__b.setVal ( value ) 
-       
+        self.set_value ( self.__b , value )
 
 models.append ( QGSM_pdf )
 
 
+# =============================================================================
+## @class Hagedorn_pdf
+#  Useful function to describe pT-spectra of particles 
+#  @see R.Hagedorn, "Multiplicities, p_T distributions and the 
+#       expected hadron \to Quark - Gluon Phase Transition", 
+#       Riv.Nuovo Cim. 6N10 (1983) 1-50
+#  @see https://doi.org/10.1007/BF02740917 
+#  @see https://inspirehep.net/literature/193590
+#  
+#  \f[ f(p_T; m, T) \propto 
+#   p_T \sqrt{p^2_T + m^2} K_1( \beta \sqrt{ p^2_T+m^2} ) \f] 
+#
+#  where \f$ \beta \f$ is inverse temporature 
+#  \f$ \beta = \frac{1}{T} f$ 
+#
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2022-12-06
+#  @see Ostap::Models::Hagedorn
+#  @see Ostap::Math::Hagedorn
+class Hagedorn_pdf(PDF1) :
+    r"""Useful function to describe pT-spectra of particles 
+    
+    - see R.Hagedorn, "Multiplicities, p_T distributions and the 
+    expected hadron \to Quark - Gluon Phase Transition", 
+    Riv.Nuovo Cim. 6N10 (1983) 1-50
+    - see https://doi.org/10.1007/BF02740917 
+    - see https://inspirehep.net/literature/193590
+    
+    \f[ f(p_T; m, T) \propto 
+    p_T \sqrt{p^2_T + m^2} K_1( \beta \sqrt{ p^2_T+m^2} ) \f] 
+    
+    where \f$ \beta \f$ is inverse temporature 
+    \f$ \beta = \frac{1}{T} f$ 
+    """
+    def __init__ ( self             ,
+                   xvar             ,   ## pT-variable (for fitting) 
+                   m0        = 0    ,   ## particle mass (may be fixed)
+                   beta      = None ,   ## inverse temperature
+                   name      = ''   ) :
+        
+        ## initialize the base 
+        PDF1.__init__  ( self , name , pt )
+
+        
+        self.__m0   = self.make_var ( m0              ,
+                                      'm0_%s'  % name , 
+                                      'm0(%s)' % name ,
+                                      True , 0  , 1e+6 )
+        
+        self.__beta = self.make_var ( beta            ,
+                                      'b_%s'   % name , 
+                                      'b(%s) ' % name ,
+                                      False , 1.e-6 , 1e+6 )  
+        
+        self.pdf  = Ostap.Models.Hagedorn (
+            self.roo_name ( 'hage_' ) ,
+            'Hagedorn %s' % self.name , 
+            self.pt               ,
+            self.beta             ,
+            self.m0               )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'beta'  : self.beta  ,             
+            'm0'    : self.m0    ,            
+            }
+    
+    @property
+    def pt ( self ) :
+        """'pt'-variable for Hagedorn distribution (the same as ``x'')"""
+        return self.xvar
+    
+    @property
+    def m0 ( self ) :
+        """'m0'-parameter of Hagedorn function"""
+        return self.__m0
+    @m0.setter
+    def m0 ( self , value ) :
+        self.set_value ( self.__m0 , value )
+
+    @property
+    def beta ( self ) :
+        """'beta'-parameter (inverse temperature) of Hagedorn  function"""
+        return self.__beta
+    @beta.setter
+    def beta ( self , value ) :
+        self.set_value ( self.__beta , value )
+       
+
+models.append ( Hagedorn_pdf )
 
 # =============================================================================
 ## @class Tsallis2_pdf

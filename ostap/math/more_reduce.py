@@ -923,6 +923,17 @@ def _omqgsm_reduce_ ( s ) :
 Ostap.Math.QGSM. __reduce__ = _omqgsm_reduce_
 
 # =============================================================================
+## Reduce Ostap::Math::Hagedorn
+#  @see Ostap::Math::Hagedorn
+def _omhage_reduce_ ( s ) :
+    """Reduce `Ostap.Math.Hagedorn`
+    - see `Ostap.Math.Hagedorn`
+    """
+    return root_factory , ( type ( s ) , s.mass() , s.beta() )
+
+Ostap.Math.Hagedorn. __reduce__ = _omhage_reduce_
+
+# =============================================================================
 ## Reduce Ostap::Math::HORNSdini
 #  @see Ostap::Math::HORNSdini
 def _omdini_reduce_ ( s ) :
