@@ -38,10 +38,10 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.spectra' )
 else                       : logger = getLogger ( __name__           )
 # =============================================================================
 models = [] 
-from ostap.fitting.distributions import ( Tsallis_pdf  ,
-                                          QGSM_pdf     ,
-                                          Hagedorn_pdf , 
-                                          GammDist_pdf ) 
+from ostap.fitting.distributions import ( Tsallis_pdf   ,
+                                          QGSM_pdf      ,
+                                          Hagedorn_pdf  , 
+                                          GammaDist_pdf ) 
 models.append (   Tsallis_pdf )
 models.append (      QGSM_pdf )
 models.append (  Hagedorn_pdf )

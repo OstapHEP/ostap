@@ -3,6 +3,7 @@
 
   1. add `psi`, `digamma` , `polygamma`, `beta` and `lnbeta` functions, including their variants with uncertainties. 
   1. add these functions to `ostap.math.math_ve` module 
+  1. add `Hagedorn` function/PDF
 
 ## Backward incompatible:  
 
