@@ -1473,17 +1473,17 @@ class Tsallis_pdf(PDF1) :
         self.__m0   = self.make_var ( m0              ,
                                       'm0_%s'  % name , 
                                       'm0(%s)' % name ,
-                                      None , 0     , 1e+6 )
+                                      True , 0     , 1e+6 )
         
         self.__n    = self.make_var ( n               ,
                                       'n_%s'   % name , 
                                       'n(%s) ' % name ,
-                                      None , 1 , 0.01  , 1000 )  
+                                      False , 1 , 0.01  , 1000 )  
         
         self.__T    = self.make_var ( T               ,
                                       'T_%s'   % name , 
                                       'T(%s) ' % name ,
-                                      None , 1 , 1.e-4 , 1e+6 )
+                                      False , 1 , 1.e-4 , 1e+6 )
         
         self.pdf  = Ostap.Models.Tsallis (
             self.roo_name ( 'tsallis_' )   ,
@@ -1576,18 +1576,18 @@ class QGSM_pdf(PDF1) :
                    name      = ''   ) :
         
         ## initialize the base 
-        PDF1.__init__  ( self , name , pt )
+        PDF1.__init__  ( self , name , xvar )
 
         
         self.__m0   = self.make_var ( m0              ,
                                       'm0_%s'  % name , 
                                       'm0(%s)' % name ,
-                                      None , 0  , 1e+6 )
+                                      True , 0  , 1e+6 )
         
         self.__b    = self.make_var ( b               ,
                                       'b_%s'   % name , 
                                       'b(%s) ' % name ,
-                                      None , 0. , 1e+6 )  
+                                      False , 0. , 1e+6 )  
         
         self.pdf  = Ostap.Models.QGSM (
             self.roo_name ( 'qgsm_' ) ,
@@ -1669,7 +1669,7 @@ class Hagedorn_pdf(PDF1) :
                    name      = ''   ) :
         
         ## initialize the base 
-        PDF1.__init__  ( self , name , pt )
+        PDF1.__init__  ( self , name , xvar )
 
         
         self.__m0   = self.make_var ( m0              ,
@@ -1677,9 +1677,9 @@ class Hagedorn_pdf(PDF1) :
                                       'm0(%s)' % name ,
                                       True , 0  , 1e+6 )
         
-        self.__beta = self.make_var ( beta            ,
-                                      'b_%s'   % name , 
-                                      'b(%s) ' % name ,
+        self.__beta = self.make_var ( beta                 ,
+                                      'beta_%s'    % name  , 
+                                      '#beta(%s) ' % name  ,
                                       False , 1.e-6 , 1e+6 )  
         
         self.pdf  = Ostap.Models.Hagedorn (

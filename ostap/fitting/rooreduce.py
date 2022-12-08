@@ -1888,7 +1888,7 @@ def _rtsal_reduce_ ( pdf ):
                                   pdf.name        ,
                                   pdf.title       ,
                                   pdf.pt       () ,                            
-                                  pdf.N        () ,                            
+                                  pdf.n        () ,                            
                                   pdf.T        () ,
                                   pdf.mass     () )
 
