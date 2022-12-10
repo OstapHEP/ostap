@@ -92,8 +92,6 @@ def _rca_print_ ( self ) :
     elif 'RefreshNorm'          == name : return "RefreshNorm()"  
     elif 'Efficiency'           == name : return "Efficiency({.})"
     elif 'Rescale'              == name : return "Rescale(%s)"           %   self.getDouble ( 0 ) 
-
-
     
     ## RooDataHist::ctor arguments
     if   'Weight'               == name : return "Weight(%s)"            %   self.getDouble ( 0 )
@@ -293,6 +291,12 @@ def _rca_print_ ( self ) :
     elif 'ScanNumCdf'             == name : return "ScanNumCdf()"
     elif 'ScanAllCdf'             == name : return "ScanAllCdf()"
     elif 'ScanNoCdf'              == name : return "ScanNoCdf()"
+
+    elif 'NewStyle'               == name : return "NewStyle(%s)"                  %   self.getBool () 
+    elif 'Parallelize'            == name : return "Parallelize(%s,%s,%s)"         % ( self.getInt  ( 0 ) ,
+                                                                                       bool ( self.getInt    ( 1 ) ) ,
+                                                                                       bool ( self.getDouble ( 0 ) ) )
+                                                                                       
 
 
     ## ? 

@@ -803,7 +803,23 @@ class FitHelper(VarMaker) :
                 c = self.parse_constraints ( a )
                 if c is None : self.error ('parse_args: Invalid constraint specification: %s/%s' % ( a , type ( a ) ) )
                 else         : _args.append ( c ) 
-                    
+
+            elif kup in ( 'INTEGRATEBINS' , 'INTEGRATE' ) and \
+                     isinstance ( a , num_types )  and (6,24) <= root_info :
+
+                _args.append   (  ROOT.RooFit.IntegrateBins ( a ) )
+                
+            elif kup in ( 'NEWSTYLE' , 'NEW' ) and \
+                     isinstance ( a , bool   ) and (6,27) <= root_info :
+
+                _args.append   (  ROOT.RooFit.NewStyle ( a ) )
+
+            elif kup in ( 'PARALLELIZE' , 'PARALLELISE' ) and \
+                     isinstance ( a , sized_types )       and \
+                     1<= len ( a ) <= 3                   and (6,27) <= root_info :
+
+                _args.append   (  ROOT.RooFit.Parallelize ( *a ) )
+
             else :
                
                 self.error ( 'parse_args: Unknown/illegal keyword argument: %s/%s, skip it ' % ( k , type ( a ) ) )
