@@ -5153,9 +5153,6 @@ std::size_t Ostap::Math::Das::tag () const
 // ============================================================================
 
 
-
-
-
 // ============================================================================
 /*  constructor with full parameters 
  *  @param mu    related to location 
@@ -5428,6 +5425,243 @@ std::size_t Ostap::Math::SkewGenT::tag () const
                              m_xi     , 
                              m_r      , 
                              m_zeta   ) ;
+}
+// ============================================================================
+
+
+
+
+
+
+// ============================================================================
+/*  constructor with full parameters 
+ *  @param mu    related to location 
+ *  @param sigma related to RSM/scale/width 
+ *  @param xi    related to asymmetry/skewness
+ *  @param p     shape parameter 
+ */
+// ============================================================================
+Ostap::Math::SkewGenError::SkewGenError  
+( const double mu     ,    // location parameter 
+  const double sigma  ,    // width parameter 
+  const double xi     ,    // asymmetry/skewness parameter 
+  const double p      )    // shape parameter 
+  : m_mu     ( mu    ) 
+  , m_sigma  ( sigma ) 
+  , m_xi     ( xi    ) 
+  , m_p      ( std::abs ( p    ) ) 
+  , m_lambda ( -100  ) 
+  , m_b0     ( -100  ) 
+  , m_b1     ( -100  ) 
+  , m_b2     ( -100  ) 
+{
+  setMu      ( mu    ) ;
+  setSigma   ( sigma ) ;
+  setXi      ( xi    ) ;
+  setP       ( p     ) ;
+}
+// ======================================================================
+// set mu-parameter
+// ======================================================================
+bool Ostap::Math::SkewGenError::setMu
+( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ======================================================================
+// set sigma-parameter
+// ======================================================================
+bool Ostap::Math::SkewGenError::setSigma
+( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  m_sigma = avalue ;
+  return true ;
+}
+// ======================================================================
+// set xi-parameter
+// ======================================================================
+bool Ostap::Math::SkewGenError::setXi
+( const double value ) 
+{
+  if ( s_equal ( value , m_xi )
+       && -1<= m_lambda 
+       &&      m_lambda <= 1 ) { return false ; }
+  //
+  m_xi     = value ;
+  m_lambda = std::tanh ( value ) ; 
+  //
+  return true ;
+}
+// ============================================================================
+/*  calculate helper math constants
+ *  \f[ \left( \begin{array}{l} 
+ *    b_0 \\ b_1 \\ b_2 
+ *   \end{array}\right) = 
+ *   \left( \begin{array}{l}
+ *   \frac{1}{\Gamma(1/p) } \\ 
+ *   \frac{\Gamma(3/p)    }{\Gamma^3(1/p)} \\ 
+ *   2^{2/p}\frac{\Gamma(1/2+1/p)}{\Gamma(1/p)  } 
+ *   \end{array}\right) \f]
+ */
+// ============================================================================
+void Ostap::Math::SkewGenError::calc_b 
+( double& b9 ,    // 1/Gamma(1/p) 
+  double& b1 ,    // Gamma(3/p)/Gamma(1/p) 
+  double& b2 )    // 2^{2/p} Gamma(1/2+1/p)/Gamma(1/p)
+{
+  //
+  const long double ip  = 1.0L / m_p ;
+  const long double lg1 = std::lgamma ( ip ) ;
+  //
+  m_b0 = Ostap::Math::igamma ( ip ) ;
+  m_b1 = std::exp ( std::lgamma ( 3 * ip ) - 3 * lg1 ) ;
+  m_b2 = std::exp ( 2 * ip * s_ln2 + std::lgamma ( 0.5L + ip ) - lg1 ) ;
+  //
+}
+// ============================================================================
+// set p-parameter
+// ============================================================================
+bool Ostap::Math::SkewGenError::setP
+( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_p ) 
+       && -100 != m_b0  
+       && -100 != m_b1  
+       && -100 != m_b2 ) { return false ; }
+  //
+  m_p = avalue  ;
+  //
+  calc_b ( m_b0 , m_b1 , m_b2 ) ;
+  //
+  return true ;
+}
+// ============================================================================
+// helper scale parameter 
+// ============================================================================
+double Ostap::Math::SkewGenError::v_scale () const 
+{
+  const double l2 = m_lambda * m_lambda ;
+  return std::sqrt ( M_PI / ( M_PI * ( 1.0 + 3.0 * l2 ) * m_b1 - l2 * m_b2 * m_b2 ) ) ;
+}
+// ============================================================================
+/* helper bias parameter 
+ *  \f$ m^{\prime} = \sigma \lambda b_2 \f$
+ */
+// ============================================================================
+double Ostap::Math::SkewGenError::m_bias  () const 
+{ return m_sigma * m_lambda * m_b2 * s_SQRTPIi ; }
+// ============================================================================
+// evaluate the pdf 
+// ============================================================================
+double Ostap::Math::SkewGenError::pdf ( const double x ) const 
+{ 
+  //
+  const double vp = v_scale () ;
+  const double mp = m_bias  () * vp ;
+  //
+  const double dx = ( x - m_mu + mp ) / ( vp * m_sigma * m_b0 ) ;
+  const double t  = std::abs ( dx ) / ( m_lambda * std::copysign ( 1.0 , dx ) + 1 ) ;
+  const double tp = std::pow ( t , m_p ) ;
+  //
+  return m_p * std::exp ( -tp )  / ( 2 * m_sigma * vp ) ;
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::SkewGenError::integral () const { return 1 ; }
+// ============================================================================
+// integral
+// ============================================================================
+double Ostap::Math::SkewGenError::integral
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low             ) { return - integral ( high , low ) ; }
+  //
+  // split into reasonable sub intervals
+  //
+  const double v  = v_scale ()      ;  
+  const double m  = m_bias  () * v  ;
+  
+  const double mm = m_mu - m ;
+  //
+  if ( low <  mm && mm < high ) { return integral ( low , mm ) + integral ( mm , high ) ; }
+  //
+  {
+    const double x1 = mm + 3 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = mm - 3 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }
+  //
+  {
+    const double x1 = mm  + 5 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = mm  - 5 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }  
+  //
+  {
+    const double x1 = mm + 10 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = mm - 10 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }
+  //
+  {
+    const double x1 = mm + 15 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = mm -  15 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }
+  //
+  const double x1     = mm - 15 * m_sigma  ;
+  const double x2     = mm + 15 * m_sigma  ;
+  const double x_low  = std::min ( x1 , x2 ) ;
+  const double x_high = std::max ( x1 , x2 ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<SkewGenError> s_integrator {} ;
+  static char s_message[] = "Integral(SkewGenError)" ;
+  //
+  const bool in_tail = high <= x_low || x_high <= low ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag () , 
+      &F     , 
+      low    , high             ,                  // low & high edges
+      workspace ( m_workspace ) ,                  // workspace
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
+      m_workspace.size()        ,                  // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::SkewGenError::tag () const 
+{ 
+  static const std::string s_name = "SkewGenError" ;
+  return Ostap::Utils::hash_combiner ( s_name   , 
+                                       m_mu     , 
+                                       m_sigma  , 
+                                       m_xi     , 
+                                       m_p      ) ;
 }
 // ============================================================================
 

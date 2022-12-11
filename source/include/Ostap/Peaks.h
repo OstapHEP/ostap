@@ -3400,12 +3400,8 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-
-
-
-    // ========================================================================
     /** @class SkewGenT
-     *  Skewwed Generalised t-distribution
+     *  Skewed Generalised t-distribution
      *  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution
      *  Original function is parameterised in terms of parameters 
      *  - \f$ \mu \$ related to locartion 
@@ -3441,6 +3437,7 @@ namespace Ostap
      *  - \f$ \lambda=0, p=2(r=\frac{1}{2}, q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
      *     Skewed Normal distribution 
      *
+     *  @see Ostap::Math::SkewGenError 
      *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
      *  @date 2022-01-19
      */
@@ -3514,13 +3511,13 @@ namespace Ostap
     public: // some stat quantities 
       // ======================================================================
       /// mean 
-      double mean       () const { return m_mu    ; }
+      inline double mean       () const { return m_mu    ; }
       /// RMS 
-      double rms        () const { return m_sigma ; }
+      inline double rms        () const { return m_sigma ; }
       /// variance 
-      double variance   () const { return m_sigma  * m_sigma ; }
+      inline double variance   () const { return m_sigma  * m_sigma ; }
       /// dispersion 
-      double dispersion () const { return variance () ; }
+      inline double dispersion () const { return variance () ; }
       /// skewness 
       double skewness   () const ;      
       // ======================================================================
@@ -3589,6 +3586,178 @@ namespace Ostap
       // ======================================================================      
     } ;  
     // ========================================================================
+    /** @class SkewGenError 
+     *  Skewed gheneralised error districbution 
+     *  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
+     *
+     *  The Special  case of Skewwed Generaliaed T-distribution 
+     *  @see Ostap::Math::SkewGenT 
+     * 
+     *  Original function is parameterised in terms of parameters 
+     *  - \f$ \mu \$ related to location  
+     *  - \f$ \sigma \$ related to width/scale 
+     *  - \f$ -1 < \lambda < 1 \f$ related to asymmetry/skewness  
+     *  - \f$ 0<p \f$ shape parameters 
+     *
+     *  \f[ f(x;\mu,\sigma,\lambda,p) = 
+     *    \frac{p}{2v\sigma\Gamma(1/p)} \mathrm{e}^{ - \Delta^{p}},  
+     *   \f]
+     *  where 
+     *   - \f$ v = \sqrt{ \frac{ \pi \Gamma(1/p)}{  \pi(1+3\lambda^2)\Gamma(3/p) 
+     *            -16^{1/p} \lambda^2 \Gamma(1/2+1/p)^2\Gamma(1/p) }  }\f$,
+     *   - \f$ \Delta = \frac{\left| \delta x \right|}{v\sigma ( 1+ \lambda \sign \delta x )} \f$
+     *   - \f$ \delta x = x - \mu + m \f$
+     *   - \f$ m =  2^{2/p} v \sigma \Gamma( 1/2+ 1/p)/\sqrt{\pi}\f$ 
+     *
+     *  Here we adopt sligth reparameterisation in terms of 
+     *  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+     * 
+     *  special cases: 
+     *  - \f$ \xi=0 (\lambda=0), p=2\$ corresponds to Gaussian function 
+     *  - \f$ \xi=0 (\lambda=0), p=1\$ corresponds to Laplace case 
+     *
+     *  @see Ostap::Math::SkewGenT 
+     *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
+     *  @date 2022-01-19
+     */
+    class SkewGenError
+    {
+    public:
+      // ======================================================================    
+      /** constructor with full parameters 
+       *  @param mu    related to location 
+       *  @param sigma related to RSM/scale/width 
+       *  @param xi     related to asymmetry/skewness
+       *  @param r      shape parameter 
+       *  @param alpha  shape parameter    
+       */
+      SkewGenError  
+      ( const double mu     = 0 ,   // location parameter 
+        const double sigma  = 1 ,   // width parameter 
+        const double xi     = 0 ,   // asymmetry/skewness parameter 
+        const double p      = 2 ) ; // shape parameter 
+      // ======================================================================
+      public:
+      // ======================================================================
+      /// evaluate the pdf 
+      double  pdf ( const double x ) const ;
+      /// evaluate the pdf 
+      inline double evaluate    ( const double x ) const { return pdf (  x ) ; }
+      /// evaluate the pdf 
+      inline double operator () ( const double x ) const { return pdf (  x ) ; }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// locaton parameter 
+      inline double mu    () const { return m_mu    ; }
+      /// width/scale parameter 
+      inline double sigma () const { return m_sigma ; }
+      /// asymmetry/skewness  parameter      
+      inline double xi    () const { return m_xi    ; }
+      /// shape parameter 
+      inline double p     () const { return m_p     ; }
+      // ======================================================================
+      // other parameters 
+      // ======================================================================
+      /// original lambda parametter 
+      inline double lambda  () const { return m_lambda  ; }
+      /// original lambda parametter 
+      inline double lambd   () const { return m_lambda  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** helper scale parameter 
+       *  \f$ v^{\prime} = \sqrt{ \frac{pi} } { \pi ( 1+3\lambda^2) b_1 - \lambda^2 b_2^2 }  \f$
+       */
+      double        v_scale () const ;
+      // ======================================================================
+      /** helper bias parameter 
+       *  \f$ m^{\prime} = \lambda \sigma b_2 \f$
+       */
+      double        m_bias  () const ;
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setMu    ( const double value ) ;
+      bool setSigma ( const double value ) ;
+      bool setXi    ( const double value ) ;
+      bool setP     ( const double value ) ;
+      // ======================================================================
+    public: // some stat quantities 
+      // ======================================================================
+      /// mean 
+      inline double mean       () const { return m_mu    ; }
+      /// RMS 
+      inline double rms        () const { return m_sigma ; }
+      /// variance 
+      inline double variance   () const { return m_sigma  * m_sigma ; }
+      /// dispersion 
+      inline double dispersion () const { return variance () ; }
+      // ======================================================================
+    public: // integrals 
+      // ======================================================================
+      /// integral 
+      double integral () const ;
+      /// integral from low to high 
+      double integral
+      ( const double low  , 
+        const double high ) const ;
+      // // ======================================================================
+    public:
+      // ======================================================================
+      /// get the unique tag 
+      std::size_t tag () const ; // get the unique tag 
+      // ======================================================================
+    private: // calculate helper math constants 
+      /// =====================================================================
+      /** calculate helper math constants
+       *  \f[ \left( \begin{array}{l} 
+       *    b_0 \\ b_1 \\ b_2 
+       *   \end{array}\right) = 
+       *   \left( \begin{array}{l}
+       *   \frac{1}{\Gamma(1/p) } \\ 
+       *   \frac{\Gamma(3/p)    }{\Gamma^3(1/p)} \\ 
+       *   2^{2/p}\frac{\Gamma(1/2+1/p)}{\Gamma(1/p)  } 
+       *   \end{array}\right) \f]
+       */
+      void calc_b 
+      ( double& b0 ,    // 1/Gamma(1/p) 
+        double& b1 ,    // Gamma(3/p)/Gamma^3(1/p) 
+        double& b2 ) ;  // 2^{2/p} Gamma(1/2+1/p)/Gamma(1/p)
+      // ==============================
+    private: // true parameters         
+      // ======================================================================
+      /// location 
+      double m_mu     { 0   } ; // location parameter
+      /// width/scale 
+      double m_sigma  { 1   } ; // width/scale parameter
+      /// asymmetry/skewness parameter 
+      double m_xi     { 0   } ;
+      /// shape parametyer 
+      double m_p      { 2   } ;
+      // ======================================================================
+    private: // helper parameters 
+      // ======================================================================
+      /// original lambda parameter 
+      double m_lambda { -100 } ;
+      /// =====================================================================
+    private: // helper math constants 
+      /// =====================================================================
+      ///  1/ Gamma(1/p) 
+      double   m_b0   { -100 } ; // 1/Gamma(1/p)
+      /// Gamma(3/p)/Gamma^3(1/p)
+      double   m_b1   { -100 } ; // Gamma(3/p)/Gamma^3(1/p)
+      /// 2^{2/p}Gamma(1/2+1/p)/Gamma(1/p)
+      double   m_b2   { -100 } ; // 2^{2/p} Gamma(1/2+1/p)/Gamma(1/p)
+      /// =====================================================================      
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
+      // ======================================================================      
+    } ;
+    // ========================================================================
+
 
     // ========================================================================
     /// some finite functions 

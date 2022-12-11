@@ -508,17 +508,30 @@ Ostap.Math.PearsonIV. __reduce__ = _omp4_reduce_
 
 
 # =============================================================================
-## reduce Ostao::Math::SkewGenT
+## reduce Ostap::Math::SkewGenT
 #  @see Ostap::Math::SkewGenT 
 def _omsgt_reduce_ ( peak ) :
     """Reduce `Ostap.Math.SkewGenT`
     - see `Ostap.Math.SkewGenT`
     """
     return root_factory , ( type ( peak )   , peak.mu   () ,
-                            peak.vsigma ()  , peak.xi   () ,
+                            peak.sigma  ()  , peak.xi   () ,
                             peak.r      ()  , peak.zeta () )
 
 Ostap.Math.SkewGenT. __reduce__ = _omsgt_reduce_
+
+# =============================================================================
+## reduce Ostap::Math::SkewGenErorr
+#  @see Ostap::Math::SkewGenError 
+def _omsge_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.SkewGenError`
+    - see `Ostap.Math.SkewGenErorr`
+    """
+    return root_factory , ( type ( peak )   , peak.mu   () ,
+                            peak. sigma ()  , peak.xi   () ,
+                            peak.p      ()  )
+
+Ostap.Math.SkewGenError. __reduce__ = _omsge_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::SinhAsinh
@@ -527,7 +540,7 @@ def _omshash_reduce_ ( peak ) :
     """Reduce `Ostap.Math.SinhAsinh`
     - see `Ostap.Math.SinhAsinh`
     """
-    return root_factory , ( type ( peak )    , peak.location () ,
+    return root_factory , ( type ( peak ) , peak.location () ,
                             peak.scale () , peak.epsilon () , peak.delta () )
 
 Ostap.Math.SinhAsinh. __reduce__ = _omshash_reduce_

@@ -8027,7 +8027,119 @@ namespace Ostap
       /// the actual function
       mutable Ostap::Math::SkewGenT m_sgt ;          // the function
       // ======================================================================
-    } ;  
+    } ;
+    // ========================================================================
+    /** @class SkewGenError
+     *  Skewed gheneralised error districbution 
+     *  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
+     *
+     *  The Special  case of Skewwed Generaliaed T-distribution 
+     *  @see Ostap::Math::SkewGenT 
+     * 
+     *  Original function is parameterised in terms of parameters 
+     *  - \f$ \mu \$ related to location  
+     *  - \f$ \sigma \$ related to width/scale 
+     *  - \f$ -1 < \lambda < 1 \f$ related to asymmetry/skewness  
+     *  - \f$ 0<p \f$ shape parameters 
+     *
+     *  \f[ f(x;\mu,\sigma,\lambda,p) = 
+     *    \frac{p}{2v\sigma\Gamma(1/p)} \mathrm{e}^{ - \Delta^{p}},  
+     *   \f]
+     *  where 
+     *   - \f$ v = \sqrt{ \frac{ \pi \Gamma(1/p)}{  \pi(1+3\lambda^2)\Gamma(3/p) 
+     *            -16^{1/p} \lambda^2 \Gamma(1/2+1/p)^2\Gamma(1/p) }  }\f$,
+     *   - \f$ \Delta = \frac{\left| \delta x \right|}{v\sigma ( 1+ \lambda \sign \delta x )} \f$
+     *   - \f$ \delta x = x - \mu + m \f$
+     *   - \f$ m =  2^{2/p} v \sigma \Gamma( 1/2+ 1/p)/\sqrt{\pi}\f$ 
+     *
+     *  Here we adopt sligth reparameterisation in terms of 
+     *  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+     * 
+     *  special cases: 
+     *  - \f$ \xi=0 (\lambda=0), p=2\$ corresponds to Gaussian function 
+     *  - \f$ \xi=0 (\lambda=0), p=1\$ corresponds to Laplace case 
+     *
+     *  @see Ostap::Math::SkewGenError
+     *  @see Ostap::Math::SkewGenT 
+     *  @see Ostap::Models::SkewGenT 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     */
+    class SkewGenError : public RooAbsPdf
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::SkewGenError, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================      
+     SkewGenError 
+     ( const char*  name  , 
+       const char*  title , 
+       RooAbsReal&  x     ,
+       RooAbsReal&  mu    ,   // location/mean  
+       RooAbsReal&  sigma ,   // scale/rms 
+       RooAbsReal&  xi    ,   // related to asymmetry 
+       RooAbsReal&  p     ) ; // shape parameter 
+      /// copy constructor 
+      SkewGenError  ( const SkewGenError& right , const char* name = nullptr ) ;
+      /// clone method
+      SkewGenError* clone ( const char* name ) const override ;
+      /// virtual destructor
+      virtual ~SkewGenError() ;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      SkewGenError () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::SkewGenError& function () const { return m_sge ; }
+      const Ostap::Math::SkewGenError& sge      () const { return m_sge ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x     .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu    .arg() ; }
+      const RooAbsReal& sigma   () const { return m_sigma .arg() ; }
+      const RooAbsReal& xi      () const { return m_xi    .arg() ; }
+      const RooAbsReal& p       () const { return m_p     .arg() ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy   m_x      {} ;
+      RooRealProxy   m_mu     {} ;
+      RooRealProxy   m_sigma  {} ;
+      RooRealProxy   m_xi     {} ;
+      RooRealProxy   m_p      {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::SkewGenError m_sge ;          // the function
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class HORNSdini 
      *  \f[ f(x;a,\delta, \phi) = 

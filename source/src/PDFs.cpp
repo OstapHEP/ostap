@@ -8609,10 +8609,10 @@ Ostap::Models::SkewGenT::SkewGenT
     //
   , m_x        ( "!x"      , this , right.m_x     ) 
   , m_mu       ( "!mu"     , this , right.m_mu    ) 
-  , m_sigma    ( "!mu"     , this , right.m_sigma ) 
-  , m_xi       ( "!mu"     , this , right.m_xi    ) 
-  , m_r        ( "!mu"     , this , right.m_r     ) 
-  , m_zeta     ( "!mu"     , this , right.m_zeta  ) 
+  , m_sigma    ( "!sigma"  , this , right.m_sigma ) 
+  , m_xi       ( "!xiu"    , this , right.m_xi    ) 
+  , m_r        ( "!r"      , this , right.m_r     ) 
+  , m_zeta     ( "!zeta"   , this , right.m_zeta  ) 
     //
   , m_sgt      ( right.m_sgt )
 {
@@ -8663,6 +8663,97 @@ Double_t Ostap::Models::SkewGenT::analyticalIntegral
   setPars() ;
   //
   return m_sgt.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+
+
+
+
+// ============================================================================
+// SkewGenError
+// ============================================================================
+Ostap::Models::SkewGenError::SkewGenError 
+( const char*  name  , 
+  const char*  title , 
+  RooAbsReal&  x     ,
+  RooAbsReal&  mu    ,   // location/mean  
+  RooAbsReal&  sigma ,   // scale/rms 
+  RooAbsReal&  xi    ,   // related to asymmetry 
+  RooAbsReal&  p     )   // shape parameter 
+  : RooAbsPdf ( name , title )
+    //
+  , m_x       ( "!x"     , "x-observable"  , this , x     )
+  , m_mu      ( "!mu"    , "location/mean" , this , mu    )
+  , m_sigma   ( "!sigma" , "sigma/rms"     , this , sigma )
+  , m_xi      ( "!xi"    , "asymmetry"     , this , xi    )
+  , m_p       ( "!p"     , "p-shape"       , this , p     )
+    //
+  , m_sge     ( 0.1222 , 0.1222 , 0.1222 , 0.1222 ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// SkewGenError 
+// ============================================================================
+Ostap::Models::SkewGenError::SkewGenError 
+( const Ostap::Models::SkewGenError& right , 
+  const char*                     name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_mu       ( "!mu"     , this , right.m_mu    ) 
+  , m_sigma    ( "!sigma"  , this , right.m_sigma ) 
+  , m_xi       ( "!xi"     , this , right.m_xi    ) 
+  , m_p        ( "!p"      , this , right.m_p     ) 
+    //
+  , m_sge      ( right.m_sge )
+{
+  setPars() ;
+}
+// ============================================================================
+// clone method
+// ============================================================================
+Ostap::Models::SkewGenError* 
+Ostap::Models::SkewGenError::clone ( const char* name ) const 
+{ return new Ostap::Models::SkewGenError( *this , name ) ; }
+// ============================================================================
+Ostap::Models::SkewGenError::~SkewGenError(){}
+// ============================================================================
+void Ostap::Models::SkewGenError::setPars () const 
+{
+  m_sge.setMu     ( m_mu    ) ;
+  m_sge.setSigma  ( m_sigma ) ;
+  m_sge.setXi     ( m_xi    ) ;
+  m_sge.setP      ( m_p     ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::SkewGenError::evaluate() const 
+{
+  setPars() ;
+  return m_sge ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::SkewGenError::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::SkewGenError::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  setPars() ;
+  //
+  return m_sge.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
 
@@ -8923,6 +9014,7 @@ ClassImp(Ostap::Models::ExGauss            )
 ClassImp(Ostap::Models::NormalLaplace      )
 ClassImp(Ostap::Models::PearsonIV          )
 ClassImp(Ostap::Models::SkewGenT           )
+ClassImp(Ostap::Models::SkewGenError       )
 ClassImp(Ostap::Models::HORNSdini          )
 ClassImp(Ostap::Models::HILLdini           )
 // ============================================================================

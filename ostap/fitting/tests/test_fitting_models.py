@@ -860,6 +860,49 @@ def test_SkewGenT () :
     models.add ( model )
     results.append ( result  )
 
+# ==========================================================================
+## SkewGenError 
+# ==========================================================================
+def test_SkewGenError  () :
+    
+    logger = getLogger ( 'test_SkewGenError' )
+       
+    
+    logger.info ('Test SkewGenError_pdf: skewed generalised error distribution' ) 
+    model = Models.Fit1D (
+        signal = Models.SkewGenError_pdf ( name = 'SGE' , 
+                                           xvar      = mass                   ,
+                                           mu        = signal_gauss.mean      ,
+                                           sigma     = signal_gauss.sigma     ,
+                                           xi        = ( 0   ,  -1    , 1   ) ,  
+                                           p         = ( 2.0 ,  1.e-2 , 100 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+    
+    signal = model.signal 
+    model.S = NS 
+    model.B = NB
+
+    model.signal.xi.fix   ( 0   )
+    model.signal.p .fix   ( 2   )
+    model.signal.mu.fix   ( 3.1 )
+    
+    with rooSilent() :
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.mu    .release ()
+        signal.sigma .release ()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.xi    .release ()
+        signal.p     .release ()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        
+    make_print ( model , result , "Skewed Generalised Error-distribution" , logger )        
+        
+    models.add ( model )
+    results.append ( result  )
 
 # =============================================================================
 ## Test  SinhAsinh-Distribution
@@ -1864,6 +1907,10 @@ if '__main__' == __name__ :
     ## SkewGenT                                      + background
     with timing ('test_SkewGenT'          , logger ) :
         test_SkewGenT () 
+
+    ## SkewGenError                                      + background
+    with timing ('test_SkewGenError'          , logger ) :
+        test_SkewGenError () 
         
     ## Sinh-Asinh distribution                   + background
     with timing ('test_sinhasinh'      , logger ) :

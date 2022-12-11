@@ -417,7 +417,103 @@ def test_normlapl () :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Symmetric Normal Laplace', logger )
+        make_print ( reso , result , 'Normal Laplace', logger )
+ 
+    models.add ( reso)
+
+
+
+# =============================================================================
+## PearsonIV 
+# =============================================================================
+def test_pearsonIV () :
+    
+    logger = getLogger ( 'test_pearsonIV' )
+
+    logger.info ('Test PearsonIV : power-law tails' )
+    from   ostap.fitting.resolution import ResoPearsonIV 
+    reso = ResoPearsonIV ( 'P4' , mass ,
+                           varsigma = ( 0.1 , 0.01 , 5.0 ) ,
+                           n        = ( 1   , 0    , 100 ) , 
+                           kappa    = ( 0.1 , -1 , 1 ) )
+
+    reso.kappa.fix() 
+    result, frame = reso. fitTo ( dataset , silent = True  )
+    
+    reso.kappa.release() 
+    result, frame = reso. fitTo ( dataset , silent = True  )
+
+    with wait ( 1 ) , use_canvas ( 'test_pearsonIV' ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        make_print ( reso , result , 'PearsonIV', logger )
+ 
+    models.add ( reso)
+
+# =============================================================================
+## SkewGenT
+# =============================================================================
+def test_skewgenT () :
+    
+    logger = getLogger ( 'test_skewgenT' )
+
+    logger.info ('Test SkewGenT : Skewed Generalized t-Distribution' )
+    from   ostap.fitting.resolution import ResoSkewGenT 
+    reso = ResoSkewGenT ( 'SGT' , mass ,
+                          sigma  = ( 0.1 , 0.01 , 5.0 ) ,
+                          zeta   = ( 1   , 0    , 100 ) , 
+                          r      = ( 1   , 0    , 100 ) , 
+                          kappa  = ( 0.1 , -1 , 1 ) )
+    
+    reso.kappa.fix() 
+    result, frame = reso. fitTo ( dataset , silent = True  )
+    
+    reso.kappa.release() 
+    result, frame = reso. fitTo ( dataset , silent = True  )
+
+    with wait ( 1 ) , use_canvas ( 'test_skewgenT' ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        make_print ( reso , result , 'SkewGenT', logger )
+ 
+    models.add ( reso)
+
+# =============================================================================
+## SkewGenError
+# =============================================================================
+def test_skewgenerror () :
+    
+    logger = getLogger ( 'test_skewgenerror' )
+
+    logger.info ('Test SkewGenError : Skewed Generalized Error Distribution' )
+    from   ostap.fitting.resolution import ResoSkewGenError 
+    reso = ResoSkewGenError  ( 'SGE' , mass ,
+                               sigma  = ( 0.1 , 0.01 , 5.0 ) ,
+                               p      = ( 1   , 0    , 100 ) , 
+                               kappa  = ( 0.1 , -1 , 1 ) )
+    
+    reso.kappa.fix() 
+    result, frame = reso. fitTo ( dataset , silent = True  )
+    
+    reso.kappa.release() 
+    result, frame = reso. fitTo ( dataset , silent = True  )
+
+    with wait ( 1 ) , use_canvas ( 'test_skewgenerror' ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        make_print ( reso , result , 'SkewGenError', logger )
  
     models.add ( reso)
 
@@ -440,7 +536,6 @@ def dump_models () :
     rows = [ header ] 
     for m in sorted ( mods ) :
         model = mods [ m ]
-        print ( model )
         model.draw() 
         row = m , \
               '%+.4g' % model.get_mean  () , \
@@ -525,14 +620,23 @@ if '__main__' == __name__ :
     with timing ("Normal Laplace"  , logger ) :  
         test_normlapl      ()   ## Normal Laplace resolution model
 
+    with timing ("PearsonIV"  , logger ) :  
+        test_pearsonIV      ()   ## PearsonIV resolution model
+        
+    with timing ("SkewGenT"  , logger ) :  
+        test_skewgenT       ()   ## SkewGenT resolution model
+        
+    with timing ("SkewGenError"  , logger ) :  
+        test_skewgenerror   ()   ## SkewGenError resolution model
+
     ## check finally that everything is serializeable:
     with timing ("Save to DB"    , logger ) :  
         test_db ()          
-
-##    ## check finally that everything is serializeable:
-##    with timing ("Dump models"    , logger ) :  
-##        dump_models ()           
-
+        
+    ## check finally that everything is serializeable:
+    with timing ("Dump models"    , logger ) :  
+        dump_models ()           
+            
 # =============================================================================
 ##                                                                      The END 
 # ============================================================================= 

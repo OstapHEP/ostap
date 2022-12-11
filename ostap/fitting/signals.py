@@ -56,6 +56,7 @@ Empricial PDFs to describe narrow peaks
   - Hypatia_pdf
   - PearsonIV_pdf
   - SkewGenT_pdf
+  - SkewGenError_pdf
   - Hat, Up & FupN finite functions
   
 PDF to describe 'wide' peaks
@@ -101,6 +102,7 @@ __all__ = (
     'BifurcatedStudentT_pdf' , ## bifurcated Student-T function
     'PearsonIV_pdf'          , ## Pearson Type IV pdf
     'SkewGenT_pdf'           , ## Skewed generalised t-distribution 
+    'SkewGenError_pdf'       , ## Skewed generalised error distribution 
     'SinhAsinh_pdf'          , ## "Sinh-arcsinh distributions". Biometrika 96 (4): 761
     'JohnsonSU_pdf'          , ## JonhsonSU-distribution 
     'Atlas_pdf'              , ## modified gaussian with exponenital tails 
@@ -1900,7 +1902,7 @@ class SkewGenT_pdf(PEAK) :
         ## r parameter (shape)
         self.__r      = self.make_var ( r                     ,
                                         'r_%s'         % name ,
-                                        '#r_{SGT}(%s)' % name ,
+                                        'r_{SGT}(%s)' % name ,
                                         False , 1 , 0.0001 , 1000 ) 
         ## zeta parameter (shape)
         self.__zeta   = self.make_var ( zeta                     ,
@@ -1964,6 +1966,129 @@ class SkewGenT_pdf(PEAK) :
 
 
 models.append ( SkewGenT_pdf )      
+
+# =============================================================================
+## @class SkewGenTError_pdf
+#  Skewed gheneralised error districbution 
+#  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
+#
+#  The Special  case of Skewwed Generaliaed T-distribution 
+#  @see Ostap::Math::SkewGenT 
+# 
+#  Original function is parameterised in terms of parameters 
+#  - \f$ \mu \$ related to location  
+#  - \f$ \sigma \$ related to width/scale 
+#  - \f$ -1 < \lambda < 1 \f$ related to asymmetry/skewness  
+#  - \f$ 0<p \f$ shape parameters 
+#
+#  \f[ f(x;\mu,\sigma,\lambda,p) = 
+#    \frac{p}{2v\sigma\Gamma(1/p)} \mathrm{e}^{ - \Delta^{p}},  
+#   \f]
+#  where 
+#   - \f$ v = \sqrt{ \frac{ \pi \Gamma(1/p)}{  \pi(1+3\lambda^2)\Gamma(3/p) 
+#            -16^{1/p} \lambda^2 \Gamma(1/2+1/p)^2\Gamma(1/p) }  }\f$,
+#   - \f$ \Delta = \frac{\left| \delta x \right|}{v\sigma ( 1+ \lambda \sign \delta x )} \f$
+#   - \f$ \delta x = x - \mu + m \f$
+#   - \f$ m =  2^{2/p} v \sigma \Gamma( 1/2+ 1/p)/\sqrt{\pi}\f$ 
+#
+#  Here we adopt sligth reparameterisation in terms of 
+#  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+# 
+#  special cases: 
+#  - \f$ \xi=0 (\lambda=0), p=2\$ corresponds to Gaussian function 
+#  - \f$ \xi=0 (\lambda=0), p=1\$ corresponds to Laplace case 
+#
+#  @see Ostap::Math::SkewGenError
+#  @see Ostap::Math::SkewGenT 
+#  @see Ostap::Models::SkewGenT 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2022-12-01
+class SkewGenError_pdf(PEAK) :
+    """Skewed Generalised Error distribution:
+    - see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
+    - see Ostap.Models.SkewGenError
+    - see Ostap.Math.SkewGenError
+    - see Ostap.Models.SkewGenT
+    - see Ostap.Math.SkewGenT
+    """
+    def __init__ ( self         ,
+                   name         ,
+                   xvar         ,
+                   mu           , 
+                   sigma    = 1 ,
+                   xi       = 0 ,
+                   p        = 2 ) :
+        #
+        ## initialize the base
+        # 
+        PEAK.__init__  ( self                                 ,
+                         name        = name                   ,
+                         xvar        = xvar                   ,
+                         mean        = mu                     ,
+                         sigma       = sigma                  ,                          
+                         mean_name   = 'mu_%s'         % name ,
+                         mean_title  = '#mu_{SGE}(%s)' % name )
+        
+        ## location parameter 
+        self.__mu       = self.mean
+        
+        ## xi parameter (asymmetry) 
+        self.__xi     = self.make_var ( xi                     ,
+                                        'xi_%s'         % name ,
+                                        '#xi_{SGE}(%s)' % name ,
+                                        False , 0 , -5 , 5  ) 
+        
+        ## p parameter (shape)
+        self.__p      = self.make_var ( p                      ,
+                                        'p_%s'         % name  ,
+                                        'p_{SGE}(%s)' % name   ,
+                                        False , 2 , 0.01 , 100 ) 
+
+        #  make the final PDF 
+        self.pdf = Ostap.Models.SkewGenError (
+            self.roo_name ( 'sge_' ) , 
+            "Skewed Generalized Error %s" % self.name ,
+            self.xvar   ,
+            self.mu     ,
+            self.sigma  ,
+            self.xi     ,
+            self.p      )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name     ,
+            'xvar'      : self.xvar     ,
+            'mu'        : self.mu       ,
+            'sigma'     : self.sigma    ,
+            'xi'        : self.xi       ,
+            'p'         : self.p        ,
+            }
+        
+    @property     
+    def mu ( self ) :
+        """'mu'-parameter (location) for SkewGenError distribution (same as 'mean')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self, value ) :
+        self.set_value ( self.__mu , value ) 
+
+    @property
+    def xi ( self ) :
+        """'xi'-parameter for SkewGenError distribution (related to asymmetry)"""
+        return self.__xi
+    @xi.setter
+    def xi ( self, value ) :
+        self.set_value ( self.__xi , value ) 
+
+    @property     
+    def p ( self ) :
+        """'p'-parameter (shape) for SkewGenError distribution"""
+        return self.__p
+    @p.setter
+    def p  ( self, value ) :
+        self.set_value ( self.__p , value )
+        
+models.append ( SkewGenError_pdf )      
 
 # =============================================================================
 ## @class SinhAsinh_pdf

@@ -1433,6 +1433,20 @@ def _rsgt_reduce_ ( pdf ):
 
 Ostap.Models.SkewGenT.__reduce__ = _rsgt_reduce_ 
 
+# =============================================================================
+## reduce SkewGenError
+def _rsge_reduce_ ( pdf ):
+    """Reduce SkewGenError"""
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.x        () , 
+                                  pdf.mu       () ,
+                                  pdf.sigma    () ,                            
+                                  pdf.xi       () ,                            
+                                  pdf.p        () )
+
+Ostap.Models.SkewGenError.__reduce__ = _rsge_reduce_ 
 
 # =============================================================================
 ## reduce GramCharlierA

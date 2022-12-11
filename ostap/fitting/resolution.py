@@ -16,7 +16,8 @@
 #  - generalized Hyperbolic model        (tails are exponential or heavier)
 #  - Hypatia model                       (tails are exponential or heavier)
 #  - Das model                           (gaussian with exponential tails)
-#  - Normal Laplas model                 (gaussian with exponential tails) 
+#  - Normal Laplace model                (gaussian with exponential tails)
+#  - PearsonIV model                     (power-law tails+asymmetry) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-13
 # =============================================================================
@@ -37,6 +38,7 @@
 - Normal Laplace model                 (gaussian with exponential tails) 
 - Das model                           (gaussian with exponential tails)
 - Generalized Gaussian v1             (family that included Gaussian, Laplace, uniform etc...)
+- PearsonIV model                     (power-law tails+asymmetry) 
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -49,6 +51,9 @@ __all__     = (
     'ResoApo2'          , ## Apollonios-2 resolution model,
     'ResoCB2'           , ## double-sided Crystal Ball resolution model,
     'ResoStudentT'      , ## Student-T resolution model,
+    'ResoPearsonIV'     , ## Pearson Tyep IV resolution model
+    'ResoSkewGenT'      , ## Skewed Generalzed t-distribution 
+    'ResoSkewGenError'  , ## Skewed Generalzed Error-distribution 
     'ResoSech'          , ## Sech/hyperbolic secant  resolution model
     'ResoLogistic'      , ## Logistic ("sech-squared") resoltuion model
     'ResoBukin'         , ## Bukin resolution model
@@ -59,7 +64,7 @@ __all__     = (
     'ResoHypatia'       , ## Hypatia resoltuion model
     'ResoDas'           , ## Das resolution model
     'ResoNormalLaplace' , ## Normal Laplace resolution model
-    'ResoGenGaussV1'    , ## Generalized  Gaussian v1 
+    'ResoGenGaussV1'    , ## Generalized  Gaussian v1
     )
 # =============================================================================
 from   ostap.core.core        import Ostap
@@ -558,7 +563,7 @@ class ResoStudentT(RESOLUTION) :
     - see http://en.wikipedia.org/wiki/Student%27s_t-distribution
     see Ostap.Models.StudentT
     see Ostap.Math.StudentT    
-    - when asymmetry is activates use `BifurcatedStudentT`
+    - when asymmetry is activated use `BifurcatedStudentT`
     see Ostap.Models.BigurcatedStudentT
     see Ostap.Math.BofurcatedStudentT    
     """
@@ -705,6 +710,379 @@ class ResoStudentT(RESOLUTION) :
     
 models.add ( ResoStudentT )
 
+
+# =============================================================================
+## @class ResoPearsonIV
+#  (asymmetric) Pearson Type IV model for the resolution
+#   - power-law tails
+#   - asymmetry
+#   Pearson Type IV distribution  
+#   \f$ f(x;\mu, n, \kappa) = 
+#   C \left( 1 + y^{2}\right)^{-(\frac{1}{2}+n)}
+#   \mathrm{e}^{ -\kappa \atan y }}\f$, where 
+#   - \f$  y = \frac{x-\mu}{\sigma}\f$,
+#   - \f$ 0 < n \f$  
+#  @see https://en.wikipedia.org/wiki/Pearson_distribution
+#  For $\kappa=0\f$ one gets Student's t-distribution
+#  @see J. Heinrich, "A guide to the Pearson Type IV distribution", 
+#       CDF/MEMO/STATISTICS/PUBLIC/6820, 2004 
+#  @see http://www-cdf.fnal.gov/physics/statistics/notes/cdf6820_pearson4.pdf
+#  @see Ostap::Models::PearsonIV 
+#  @see Ostap::Math::PearsonIV 
+class ResoPearsonIV(RESOLUTION) :
+    """ (asymmetric) Pearson Type IV model for the resolution
+    - power-law tails
+    - asymmetry
+    """
+    def __init__ ( self           ,
+                   name           ,   ## the name 
+                   xvar           ,   ## the variable
+                   varsigma       ,   ## the width-related parameter 
+                   n              ,   ## N-parameter
+                   fudge  = 1     ,   ## fudge parameter 
+                   mean   = None  ,   ## mean 
+                   kappa  = None  ) : ## asymmetry 
+        
+        ## initialize the base 
+        super(ResoPearsonIV,self).__init__ ( name  = name     ,
+                                             xvar  = xvar     ,
+                                             sigma = varsigma ,
+                                             mean  = mean     ,
+                                             fudge = fudge    )
+        
+        self.__n     = self.make_var ( n                      ,
+                                       'ResoN_'        + name ,
+                                       'ResoN(%s)'     % name ,
+                                       False , 2 , 1.e-6 , 200 )
+
+        
+        ## asymmetry parameter 
+        if kappa is None :
+            self.__kappa = ZERO
+        else             :
+            self.__kappa = self.make_var ( kappa                     , 
+                                           'kappa_%s'         % name ,
+                                           '#kappa_{PIV}(%s)' % name ,
+                                           False , 0 , -100 , 100 )
+            
+        ## finally build PDF 
+        self.pdf = Ostap.Models.PearsonIV (
+            self.roo_name ( 'p4_' )       ,
+            "Resolution Pearson Type IV %s" % self.name ,
+            self.xvar       , 
+            self.mean       ,
+            self.sigma_corr , ## ATTENTION!
+            self.n          ,
+            self.kappa      )
+        
+        ##  save   the configuration
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'varsigma' : self.sigma ,
+            'n'        : self.n     ,
+            'kappa'    : self.kappa ,
+            ## 
+            'mean'     : self.mean  ,
+            'fudge'    : self.fudge ,
+            }
+        
+    @property
+    def n ( self  ) :
+        """'n' parameter for Pearson Type IV resolution function"""
+        return self.__n
+    @n.setter
+    def n ( self , value ) :
+        self.set_value ( self.__n , value ) 
+
+    @property
+    def kappa ( self  ):
+        """'kappa' : asymmetry parameter for Pearson Type IV function"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def varsigma ( self ) :
+        """'varsigma' : 'sigma'-related parameter"""
+        return self.sigma        
+    @varsigma.setter 
+    def varsigma ( self , value ) :
+        self.sigma = value
+    
+models.add ( ResoPearsonIV )
+
+
+# =============================================================================
+## @class ResoSkewGenT
+#  Skewed generalised t-distribution
+#  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution
+#  Original function is parameterised in terms of parameters 
+#  - \f$ \mu \$ related to locartion 
+#  - \f$ \sigma \$ related to width/scale 
+#  - \f$ -1 < \lambda < 1 \f$ related to asymmetry/skewness  
+#  - \f$ 0<p, 0<q \f$ related to kutsosis
+#
+#  Mean value is defined if \f$ 1 < pq \f$ 
+#  RMS si defined for \f$ 2 < pq \f$
+# 
+#  In this view here we adopt sligth reparameterisation in terms of 
+#  - \f$ 0 < r \f$, such as  \f$  r = \frac{1}{p} 
+#  - \f$ 0< \zeta \f$, such as \f$ pq = \zeta + 4 \f$
+#  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+#
+#  Usage of \f$ \zeta\f$ ensures the existance of the  mean, RMS, sewness & kurtosis
+# 
+#  Special limitnig cases:
+#  - \f$ q\rigtharrow +\infty (\zeta \rightarrow +\infty) \f$ 
+#     Generalized Error Distribution 
+#  - \f$ \lambda=0 (\xi = 0)  \f$ Generalized t-distribution 
+#  - \f$ p=2(r=\frac{1}{2}) \f$  Skewed t-distribution 
+#  - \f$ p=1(r=1), q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+#     Skewed Laplace distribution 
+#  - \f$ \lambda=0, q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+#     Generalized Error Distribution 
+#  - \f$ p=2(r=\frac{1}{2}), q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+#     Skewed Normal distribution 
+#  - \f$ \sigma=1, \lambda=0,p=2(r=\frac{1}{2},  q=\frac{n+2}{2} (\alpha=n) \f$
+#     Student's t-distribution 
+#  - \f$ \lambda=0, p=1(r=1), q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+#     Laplace distribution 
+#  - \f$ \lambda=0, p=2(r=\frac{1}{2}, q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
+#     Skewed Normal distribution 
+#  @see Ostap::Math::SkewGenT 
+#  @see Ostap::Models::SkewGenT 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2022-12-01
+class ResoSkewGenT(RESOLUTION) :
+    """ Skewed Generilized t-distribution
+    - power-law, exponential and gauisian tails    
+    - asymmetry
+    - see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution
+    - see `Ostap.Math.SkewGenT`
+    - see `Ostap.Mdoels.SkewGenT`
+    """
+    def __init__ ( self           ,
+                   name           ,   ## the name 
+                   xvar           ,   ## the variable
+                   sigma          ,   ## the width-related parameter 
+                   zeta           ,   ## zeta-parameter
+                   r              ,   ## r-parameter                                      
+                   fudge  = 1     ,   ## fudge parameter 
+                   mean   = None  ,   ## mean 
+                   kappa  = None  ) : ## asymmetry (same as xi)
+        
+        ## initialize the base 
+        super(ResoSkewGenT,self).__init__ ( name  = name  ,
+                                            xvar  = xvar  ,
+                                            sigma = sigma ,
+                                            mean  = mean  ,
+                                            fudge = fudge )
+        
+        
+        ## r parameter (shape)
+        self.__r      = self.make_var ( r                         ,
+                                        'r_%s'            % name  ,
+                                        'r_{SGT}(%s)'     % name  ,
+                                        False , 1 , 0.0001 , 1000 ) 
+        ## zeta parameter (shape)
+        self.__zeta   = self.make_var ( zeta                     ,
+                                        'zeta_%s'         % name ,
+                                        '#zeta_{SGT}(%s)' % name ,
+                                        False , 1 , 0    , 1000  ) 
+        
+        ## asymmetry parameter 
+        if kappa is None : self.__kappa = ZERO
+        else             :
+            self.__kappa = self.make_var ( kappa                     , 
+                                           'xi_%s'         % name ,
+                                           '#xi_{SGT}(%s)' % name ,
+                                           False , 0 , -100 , 100 )
+            
+        ## finally build PDF 
+        self.pdf = Ostap.Models.SkewGenT (
+            self.roo_name ( 'sgt_' )       ,
+            "Resolution Skewed Generalised t:  %s" % self.name ,
+            self.xvar       , 
+            self.mean       ,
+            self.sigma_corr , ## ATTENTION!
+            self.xi         , ## same as kappa 
+            self.r          ,
+            self.zeta       )
+        
+        ##  save   the configuration
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'sigma'    : self.sigma ,
+            'zeta'     : self.zeta  ,
+            'r'        : self.r     ,
+            'kappa'    : self.kappa ,
+            ## 
+            'mean'     : self.mean  ,
+            'fudge'    : self.fudge ,
+            }
+        
+    @property
+    def kappa ( self  ):
+        """'kappa' : asymmetry parameter for SkewGenT function (same as 'xi')"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def xi ( self  ):
+        """'xi' : asymmetry parameter for SkewGenT function (same as 'kappa')"""
+        return self.__kappa
+    @xi.setter
+    def xi ( self , value ) :
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def r ( self  ):
+        """'r' : shape parameter for SkewGenT function"""
+        return self.__r
+    @r.setter
+    def r ( self , value ) :
+        self.set_value ( self.__r , value )
+
+    @property
+    def zeta ( self  ):
+        """'zeta' : shape parameter for SkewGenT function"""
+        return self.__zeta
+    @zeta.setter
+    def kappa ( self , value ) :
+        self.set_value ( self.__zeta , value )
+
+    
+models.add ( ResoSkewGenT )
+
+# =============================================================================
+## @class ResoSkewGenError
+#  Skewed gheneralised error districbution 
+#  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
+#
+#  The Special  case of Skewwed Generaliaed T-distribution 
+#  @see Ostap::Math::SkewGenT 
+# 
+#  Original function is parameterised in terms of parameters 
+#  - \f$ \mu \$ related to location  
+#  - \f$ \sigma \$ related to width/scale 
+#  - \f$ -1 < \lambda < 1 \f$ related to asymmetry/skewness  
+#  - \f$ 0<p \f$ shape parameters 
+#
+#  \f[ f(x;\mu,\sigma,\lambda,p) = 
+#    \frac{p}{2v\sigma\Gamma(1/p)} \mathrm{e}^{ - \Delta^{p}},  
+#   \f]
+#  where 
+#   - \f$ v = \sqrt{ \frac{ \pi \Gamma(1/p)}{  \pi(1+3\lambda^2)\Gamma(3/p) 
+#            -16^{1/p} \lambda^2 \Gamma(1/2+1/p)^2\Gamma(1/p) }  }\f$,
+#   - \f$ \Delta = \frac{\left| \delta x \right|}{v\sigma ( 1+ \lambda \sign \delta x )} \f$
+#   - \f$ \delta x = x - \mu + m \f$
+#   - \f$ m =  2^{2/p} v \sigma \Gamma( 1/2+ 1/p)/\sqrt{\pi}\f$ 
+#
+#  Here we adopt sligth reparameterisation in terms of 
+#  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+# 
+#  special cases: 
+#  - \f$ \xi=0 (\lambda=0), p=2\$ corresponds to Gaussian function 
+#  - \f$ \xi=0 (\lambda=0), p=1\$ corresponds to Laplace case 
+#
+#  @see Ostap::Math::SkewGenError
+#  @see Ostap::Math::SkewGenT 
+#  @see Ostap::Models::SkewGenT 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2022-12-01
+class ResoSkewGenError(RESOLUTION) :
+    """ Skewed Generilized Error-distribution
+    - exponential and gauisian tails    
+    - asymmetry
+    - see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
+    - see `Ostap.Math.SkewGenError`
+    - see `Ostap.Mdoels.SkewGenError`
+    - see `Ostap.Math.SkewGenError`
+    - see `Ostap.Mdoels.SkewGenError`
+    """
+    def __init__ ( self           ,
+                   name           ,   ## the name 
+                   xvar           ,   ## the variable
+                   sigma          ,   ## the width-related parameter 
+                   p              ,   ## r-parameter                                      
+                   fudge  = 1     ,   ## fudge parameter 
+                   mean   = None  ,   ## mean 
+                   kappa  = None  ) : ## asymmetry (same as xi)
+        
+        ## initialize the base 
+        super(ResoSkewGenError,self).__init__ ( name  = name  ,
+                                                xvar  = xvar  ,
+                                                sigma = sigma ,
+                                                mean  = mean  ,
+                                                fudge = fudge )
+        
+        
+        ## p-parameter (shape)
+        self.__p      = self.make_var ( p                         ,
+                                        'p_%s'            % name  ,
+                                        'p_{SGE}(%s)'     % name  ,
+                                        False , 2 , 0.01 , 100 ) 
+        
+        ## asymmetry parameter 
+        if kappa is None : self.__kappa = ZERO
+        else             :
+            self.__kappa = self.make_var ( kappa                     , 
+                                           'xi_%s'         % name ,
+                                           '#xi_{SGE}(%s)' % name ,
+                                           False , 0 , -100 , 100 )
+            
+        ## finally build PDF 
+        self.pdf = Ostap.Models.SkewGenError  (
+            self.roo_name ( 'sge_' )       ,
+            "Resolution Skewed Generalised Error:  %s" % self.name ,
+            self.xvar       , 
+            self.mean       ,
+            self.sigma_corr , ## ATTENTION!
+            self.xi         , ## same as kappa 
+            self.p          )
+        
+        ##  save   the configuration
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'sigma'    : self.sigma ,
+            'p'        : self.p     ,
+            'kappa'    : self.kappa ,
+            ## 
+            'mean'     : self.mean  ,
+            'fudge'    : self.fudge ,
+            }
+        
+    @property
+    def kappa ( self  ):
+        """'kappa' : asymmetry parameter for Skewed Generalized Error shape (same as 'xi')"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def xi ( self  ):
+        """'xi' : asymmetry parameter for Skewed Generalized Error shape  (same as 'kappa')"""
+        return self.__kappa
+    @xi.setter
+    def xi ( self , value ) :
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def p ( self  ):
+        """'p' : shape parameter for Skewed Generalized Error shape"""
+        return self.__p
+    @p.setter
+    def p ( self , value ) :
+        self.set_value ( self.__p , value )
+
+models.add ( ResoSkewGenError )
 
 # =============================================================================
 ## @class ResoSech

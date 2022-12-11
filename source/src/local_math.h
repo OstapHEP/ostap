@@ -88,11 +88,18 @@ namespace
   const double  s_SQRTPIHALF = std::sqrt( M_PI_2 ) ;
   // ==========================================================================
   /** @var s_SQRTPI
-  *  helper constant \f$ \sqrt{\pi}\f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-  *  @date 2016-06-11
-  */
+   *  helper constant \f$ \sqrt{\pi}\f$
+   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+   *  @date 2016-06-11
+   */
   const double  s_SQRTPI = std::sqrt( M_PI ) ;
+  // ==========================================================================
+  /** @var s_SQRTPIi
+   *  helper constant \f$ \frac{1}{\sqrt{\pi}}\f$
+   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+   *  @date 2016-06-11
+   */
+  const double  s_SQRTPIi = 1.0/std::sqrt( M_PI ) ;
   // ==========================================================================
   /** @var s_SQRT2PI
   *  helper constant \f$ \sqrt{2\pi}\f$
@@ -188,7 +195,6 @@ namespace
   *  @date 2010-04-19
   */
   const double s_ln2 = std::log ( 2.0 ) ;
- 
 
   // ==========================================================================
   // Novosibirsk & Co
