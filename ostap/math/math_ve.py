@@ -21,6 +21,7 @@ __all__     = (
     'asin'       , 'acos'       , 'atan'    , 'atan2'    , 
     'asinh'      , 'acosh'      , 'atanh'   ,
     'erf'        , 'erfc'       , 'erfi'    , 'erfcx'    ,
+    'sinc'       , 
     'probit'     , 'pochhammer' , 
     'gamma'      , 'tgamma'     , 'lgamma'  , 'igamma'   ,
     'psi'        , 'polygamma'  , 'digamma' , 'trigamma' ,
@@ -368,6 +369,17 @@ def polygamma  ( x , n  ) :
     """Polygamma function"""
     return psi ( x , n )
 
+_sinc_ = Ostap.Math.sinc  
+# =============================================================================
+## define sinc function  \f$ \frac{ \sin x }{x} \f$ 
+def sinc  ( x ) :
+    """ Sinc function:
+    sin(x)/x
+    """
+    fun = getattr ( x , '__sinc__' , None )
+    if fun : return fun ()
+    return _sinc_ ( x )
+
 _beta_ = Ostap.Math.beta  
 # =============================================================================
 ## define Beta function
@@ -392,7 +404,7 @@ def lnbeta ( x , y ) :
 
 _sech_ = Ostap.Math.sech 
 # =============================================================================
-## define ``sech'' function 
+## define 'sech' function 
 def sech ( x ) :
     """ Sech-function:
     sech(x)=1/cosh(x)
@@ -562,16 +574,18 @@ if '__main__' == __name__ :
     from ostap.utils.docme  import docme
     docme ( __name__ , logger = logger )
     
-    funcs = [ exp    , expm1  ,
-              log    , log10  , log1p  ,
-              sqrt   , cbrt   ,
-              sin    , cos    , tan    ,
-              sinh   , cosh   , tanh   , sech   ,
-              asin   , acos   , atan   ,
-              asinh  , acosh  , atanh  ,
-              erf    , erfc   , erfi   , erfcx  ,
+    funcs = [ exp    , expm1   ,
+              log    , log10   , log1p    ,
+              sqrt   , cbrt    ,
+              sin    , cos     , tan      ,
+              sinh   , cosh    , tanh     , sech   ,
+              asin   , acos    , atan     ,
+              asinh  , acosh   , atanh    ,
+              erf    , erfc    , erfi     , erfcx  ,
+              sinc   ,
               probit ,
-              gamma  , tgamma , lgamma , igamma ,
+              gamma  , tgamma  , lgamma   , igamma ,
+              psi    , digamma , trigamma ,
               gauss_pdf ,
               gauss_cdf ]
     
@@ -589,5 +603,5 @@ if '__main__' == __name__ :
     logger.info ( 80*'*')
     
 # =============================================================================
-# The END
+##                                                                      The END
 # =============================================================================

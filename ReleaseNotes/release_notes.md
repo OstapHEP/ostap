@@ -6,6 +6,7 @@
   1. add test for pt-spectra 
   1. add `integratebins`, `newstyle` and `parallelize` command options 
   1. add Skewed Generslized Error distribution (function, model and resolution) 
+  1. add `sinc` into `math_ve.py`
 
 ## Backward incompatible:  
 

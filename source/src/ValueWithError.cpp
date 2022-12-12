@@ -70,6 +70,11 @@ namespace
   // precomputed value of 1/ln(2) 
   const double s_ln2_i  =  1 / std::log ( double( 2) ) ;
   // ==========================================================================
+  static_assert ( std::numeric_limits<float> ::is_specialized        ,
+                  "std::numeric_limits<float>  is not specialized"   ) ;
+  /// epsilon 
+  const double s_EPSILON = std::numeric_limits<double>::epsilon() ;
+  // ==========================================================================
 }
 // ============================================================================
 // constructor from the value and covariance
@@ -765,6 +770,11 @@ Ostap::Math::ValueWithError::__acosh__ () const { return acosh ( *this ) ; }
 Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__atanh__ () const { return atanh ( *this ) ; }
 // ============================================================================
+// sinc(me)
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__sinc__  () const { return sinc    ( *this ) ; }
+// ============================================================================
 // tgamma(me)
 // ============================================================================
 Ostap::Math::ValueWithError
@@ -774,6 +784,11 @@ Ostap::Math::ValueWithError::__tgamma__ () const { return tgamma ( *this ) ; }
 // ============================================================================
 Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__lgamma__ () const { return lgamma ( *this ) ; }
+// ============================================================================
+// igamma(me)
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__igamma__ () const { return igamma ( *this ) ; }
 // ============================================================================
 // psi(me) 
 // ============================================================================
@@ -1192,6 +1207,42 @@ Ostap::Math::ValueWithError Ostap::Math::expm1
   const double e2 = d2 * b.cov2() ;
   //
   return Ostap::Math::ValueWithError ( v , e2 ) ;
+}
+// ============================================================================
+/* evaluate  <code>sinc(x)</code>: \f$ \frac{\sin x}{x}\f$
+ *  @param x (INPUT) parameter
+ *  @return sinc(x)
+ *  @warning invalid and small covariances are ignored 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::Math::sinc 
+( const Ostap::Math::ValueWithError& b )
+{
+  //
+  const double x = b.value();
+  const double r = Ostap::Math::sinc ( x ) ; 
+  if ( 0 >= b.cov2 () || _zero ( b.cov2() ) ) { return r ; }
+  //
+  // get the derivative
+  if ( 1.e-3 < std::abs ( x ) ) 
+  {
+    const  double d = ( std::cos ( x ) - r ) / ( x * x ) ;
+    return Ostap::Math::ValueWithError ( r , d * d * b.cov2() ) ;
+  }
+  // 
+  const double  x2   =   x  * x   ;
+  long double   term = - x2 / 6.0 ;
+  long double   dres = 0          ;
+  unsigned long k    = 1          ;
+  //
+  while ( s_EPSILON < std::abs ( term ) * 2 * k )
+  {
+    dres += term * 2 * k ;
+    term *= - x2 / ( ( 2 * k + 2 ) * ( 2 * k + 3 ) ) ;
+    k    += 1 ;
+  }
+  const  double d = x * dres ;
+  return Ostap::Math::ValueWithError ( r , d * d * b.cov2() ) ;
 }
 // ============================================================================
 /*  evaluate tgamma(b)

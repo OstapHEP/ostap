@@ -297,10 +297,14 @@ namespace Ostap
       ValueWithError __acosh__  () const ;
       /// atanh
       ValueWithError __atanh__  () const ;
+      /// sinc
+      ValueWithError __sinc__   () const ;
       /// tgamma 
       ValueWithError __tgamma__ () const ;
       /// lgamma 
       ValueWithError __lgamma__ () const ;
+      /// igamma 
+      ValueWithError __igamma__ () const ;
       /// pdigamma
       ValueWithError __psi__    () const ;
       /// pdigamma
@@ -841,6 +845,14 @@ namespace Ostap
      */
     ValueWithError atanh
     ( const ValueWithError& b ) ;
+    // ========================================================================    
+    /** evaluate  <code>sinc(x)</code>: \f$ \frac{\sin x}{x}\f$
+     *  @param x (INPUT) parameter
+     *  @return sinc(x)
+     *  @warning invalid and small covariances are ignored 
+     */
+    ValueWithError sinc 
+    ( const ValueWithError& b ) ;     
     // ========================================================================    
     /** evaluate <code>tgamma(b)</code>:  \f$ \Gamma(b) \f$ 
      *  @param b (INPUT) the parameter 
