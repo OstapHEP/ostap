@@ -34,24 +34,15 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// constructor with integration workspace size & the name 
+      /// constructor with integration workspace size
       Integrator
-      ( const std::string&   name         = "" , 
-        const std::size_t    size         = 0  , 
+      ( const std::size_t    size         = 0  , 
         const unsigned short size_cquad   = 0  ,
         const unsigned short size_romberg = 0  ) ;
       // ======================================================================
-      /// constructor with integration workspace size & the name 
+      /// constructor with integration workspace
       Integrator
-      ( const std::size_t    size              ,
-        const unsigned short size_cquad   = 0  ,
-        const unsigned short size_romberg = 0  ,
-        const std::string&   name         = "" ) ;      
-      // ======================================================================
-      /// constructor with integration workspace the name 
-      Integrator
-      ( const Ostap::Math::WorkSpace& ws        ,
-        const std::string&            name = "" ) ;      
+      ( const Ostap::Math::WorkSpace& ws        ) ;
       // ======================================================================
     public:
       // ======================================================================

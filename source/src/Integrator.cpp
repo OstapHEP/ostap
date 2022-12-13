@@ -48,10 +48,8 @@ namespace
 // constructor with integration workspace the name 
 // =============================================================================
 Ostap::Math::Integrator::Integrator 
-( const Ostap::Math::WorkSpace& ws   ,
-  const std::string&            name ) 
-  : m_name ( name ) 
-  , m_gaq_rule              ( GSL_INTEG_GAUSS61    )
+( const Ostap::Math::WorkSpace& ws ) 
+  : m_gaq_rule              ( GSL_INTEG_GAUSS61    )
   , m_abs_precision_gaq     ( s_APRECISION_GAQ     ) 
   , m_rel_precision_gaq     ( s_RPRECISION_GAQ     ) 
   , m_abs_precision_gaqi    ( s_APRECISION_GAQI    ) 
@@ -82,21 +80,10 @@ Ostap::Math::Integrator::Integrator
 // constructor with integration workspace size & name 
 // =============================================================================
 Ostap::Math::Integrator::Integrator 
-( const std::string&   name         , 
-  const std::size_t    size         , 
+( const std::size_t    size         , 
   const unsigned short size_cquad   ,
   const unsigned short size_romberg ) 
-  : Integrator ( Ostap::Math::WorkSpace ( size ,size_cquad , size_romberg ) , name )
-{}
-// =============================================================================
-// constructor with integration workspace size & name 
-// =============================================================================
-Ostap::Math::Integrator::Integrator 
-( const std::size_t    size         ,
-  const unsigned short size_cquad   ,
-  const unsigned short size_romberg ,
-  const std::string&   name         ) 
-  : Integrator ( name , size , size_cquad , size_romberg ) 
+  : Integrator ( Ostap::Math::WorkSpace ( size ,size_cquad , size_romberg ) )
 {}
 // =============================================================================
 // set absolute/relative precision for GAG

@@ -1139,7 +1139,7 @@ def _omi_reduce_ ( s ) :
     """Reduce `Ostap.Math.Integrator`
     - see `Ostap.Math.Integrator`
     """
-    return root_factory , ( type ( s ) , s.ws () , s.name() ) 
+    return root_factory , ( type ( s ) , s.ws () ) 
 
 Ostap.Math.Integrator. __reduce__ = _omi_reduce_
 
