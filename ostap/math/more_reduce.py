@@ -1117,6 +1117,35 @@ def _omg3d_reduce_ ( s ) :
 Ostap.Math.Gauss3D. __reduce__ = _omg3d_reduce_
 
 
+
+# =============================================================================
+## Reduce Ostap::Math::Workspace
+#  @see Ostap::Math::Workspace
+def _omws_reduce_ ( s ) :
+    """Reduce `Ostap.Math.WorkSpace`
+    - see `Ostap.Math.WorkSpace`
+    """
+    return root_factory , ( type ( s )        ,
+                            s.size         () ,
+                            s.size_cquad   () ,
+                            s.size_romberg () )
+
+Ostap.Math.WorkSpace. __reduce__ = _omws_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::Intefrator
+#  @see Ostap::Math::Integrator
+def _omi_reduce_ ( s ) :
+    """Reduce `Ostap.Math.Integrator`
+    - see `Ostap.Math.Integrator`
+    """
+    return root_factory , ( type ( s ) , s.ws () , s.name() ) 
+
+Ostap.Math.Integrator. __reduce__ = _omi_reduce_
+
+
+
+
 # =============================================================================
 
 _new_methods_ = [] 
@@ -1224,8 +1253,10 @@ _decorated_classes_  = (
     Ostap.Math.Expo2DPolSym                 , 
     Ostap.Math.Gauss2D                      ,
     ## 3D-models 
-    Ostap.Math.Gauss3D                      ,     
-)
+    Ostap.Math.Gauss3D                      ,
+    ## others 
+    Ostap.Math.WorkSpace                    ,     
+    )
 
 for t in _decorated_classes_ :
     _new_methods_.append ( t.__reduce__  )

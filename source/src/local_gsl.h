@@ -35,18 +35,61 @@ namespace
     void* _ws =  ws.workspace() ;
     return (gsl_integration_workspace*) _ws ;
   }
+  // ========================================================================== 
+  /// get GSL-workspace for CQUAD integration 
+  inline gsl_integration_cquad_workspace* workspace_cquad 
+  ( const Ostap::Math::WorkSpace& ws )
+  {
+    void* _ws =  ws.workspace_cquad () ;
+    return (gsl_integration_cquad_workspace*) _ws ;
+  }
   // ==========================================================================
-  // get size of GSL-workspace 
+  /// get GSL-workspace for Romberg integration 
+  inline gsl_integration_romberg_workspace* workspace_romberg 
+  ( const Ostap::Math::WorkSpace& ws )
+  {
+    void* _ws =  ws.workspace_romberg () ;
+    return (gsl_integration_romberg_workspace*) _ws ;
+  }
+  // ==========================================================================
+  /// get GSL-workspace for CQUAD integration 
+  inline gsl_integration_cquad_workspace* cquad_workspace
+  ( const Ostap::Math::WorkSpace& ws )
+  { return workspace_cquad ( ws ) ; }
+  // ==========================================================================
+  /// get GSL-workspace for Romberg integration 
+  inline gsl_integration_romberg_workspace* romberg_workspace
+  ( const Ostap::Math::WorkSpace& ws )
+  { return workspace_romberg ( ws ) ; }
+  // ==========================================================================
+  // get the default size of the main GSL-workspace 
   // ==========================================================================
   /** @var s_SIZE
-   *  the workspace size parameter for GSL-integration
+   *  the default workspace size parameter for GSL-integration
    *  @see https://www.gnu.org/software/gsl/doc/html/integration.html
    *  quote: "The maximum number of subintervals is given by limit,
    *  which may not exceed the allocated size of the workspace."  
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const std::size_t s_SIZE  = 5000 ;
+  const std::size_t s_SIZE = 10000 ;
+  // ==========================================================================
+  /** @var s_SIZE_CQUAD
+   *  the default workspace size parameter for CQUAD double adaptive GSL-integration
+   *  @see https://www.gnu.org/software/gsl/doc/html/integration.html
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2022-12-13
+   */
+  const std::size_t s_SIZE_CQUAD = 5000 ;
+  // ==========================================================================
+  /** @var s_SIZE_ROMBERG
+   *  the default workspace size parameter for Romberg GSL-integration
+   *  Number of divisions is \f$ 2^n + 1 \f$ 
+   *  @see https://www.gnu.org/software/gsl/doc/html/integration.html
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2022-12-13
+   */
+  const std::size_t s_SIZE_ROMBERG  = 20 ;
   // ==========================================================================
   /** @var s_PRECISION
    *  the default precision for various calculations,
@@ -191,7 +234,7 @@ namespace
    */
   const double s_APRECISION_QAWC  = s_APRECISION ;
   // ==========================================================================
-  /** @var s_EPRECISION_QAWC
+  /** @var s_RPRECISION_QAWC
    *  the default relative QAWC precision for various calculations,
    *  in particular GSL integration
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
@@ -200,6 +243,37 @@ namespace
   const double s_RPRECISION_QAWC  = 2.e-7 ;
   // ==========================================================================
 
+  // ==========================================================================
+  /** @var s_APRECISION_CQUAD
+   *  the default absolute precision for CQUAD double adaptive integrator 
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_APRECISION_CQUAD  = s_APRECISION ;
+  // ==========================================================================
+  /** @var s_RPRECISION_CQUAD
+   *  the default relative precision for CQUAD double adaptive integrator 
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION_CQUAD  = s_RPRECISION;
+  // ==========================================================================
+
+  // ==========================================================================
+  /** @var s_APRECISION_ROMBERG
+   *  the default absolute precision for Romberg integrator 
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_APRECISION_ROMBERG  = s_APRECISION ;
+  // ==========================================================================
+  /** @var s_RPRECISION_ROMBERG
+   *  the default relative precision for Romberg integrator 
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION_ROMBERG  = s_RPRECISION;
+  // ==========================================================================
 
   // ==========================================================================
   /** @var s_APRECISION_CUBE
@@ -209,7 +283,7 @@ namespace
    */
   const double s_APRECISION_CUBE  = s_APRECISION ;
   // ==========================================================================
-  /** @var s_EPRECISION_CUBE
+  /** @var s_RPRECISION_CUBE
    *  the default relative precision for cubatures 
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23

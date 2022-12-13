@@ -34,15 +34,24 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// constructor with integration workspace size & th ename 
+      /// constructor with integration workspace size & the name 
       Integrator
-      ( const std::string& name = "" , 
-        const std::size_t  size = 0  ) ;
+      ( const std::string&   name         = "" , 
+        const std::size_t    size         = 0  , 
+        const unsigned short size_cquad   = 0  ,
+        const unsigned short size_romberg = 0  ) ;
       // ======================================================================
       /// constructor with integration workspace size & the name 
       Integrator
-      ( const std::size_t  size      ,
-        const std::string& name = "" ) ;      
+      ( const std::size_t    size              ,
+        const unsigned short size_cquad   = 0  ,
+        const unsigned short size_romberg = 0  ,
+        const std::string&   name         = "" ) ;      
+      // ======================================================================
+      /// constructor with integration workspace the name 
+      Integrator
+      ( const Ostap::Math::WorkSpace& ws        ,
+        const std::string&            name = "" ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -297,6 +306,61 @@ namespace Ostap
                                      m_workspace , tag    , 
                                      0 < aprecision ? aprecision : m_abs_precision_gaqp , 
                                      0 < rprecision ? rprecision : m_rel_precision_gaqp ).first ; }
+      
+      // ======================================================================
+    public:  // specific: use double-adaptive CQUAD integrator 
+      // ======================================================================
+      /** calculate the integral usnig double adaptive CQUAD integrator  
+       *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
+       *  @param f1 the function 
+       *  @param xmin lower integration edge 
+       *  @param xmax upper  integration edge
+       *  @param tag  uqniue label/tag  
+       *  @param rescale rescale function for better numerical precision  
+       *  @return the value of the integral 
+       */
+      template <class FUNCTION1>
+      double integrate_cquad
+      ( FUNCTION1            f1             , 
+        const double         xmin           , 
+        const double         xmax           ,
+        const std::size_t    tag        = 0 , 
+        const unsigned short rescale    = 0 ,
+        const double         aprecision = 0 , 
+        const double         rprecision = 0 ) const 
+      { return integrate_cquad_ ( std::cref ( f1 )    , 
+                                  xmin , xmax ,
+                                  m_workspace , 
+                                  tag  , rescale      , 
+                                  0 < aprecision ? aprecision : m_abs_precision_cquad , 
+                                  0 < rprecision ? rprecision : m_rel_precision_cquad ).first ; }
+      // ======================================================================
+    public:  // specific: use Romberg integrator 
+      // ======================================================================
+      /** calculate the integral using Romberg integrator  
+       *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
+       *  @param f1 the function 
+       *  @param xmin lower integration edge 
+       *  @param xmax upper  integration edge
+       *  @param tag  uqniue label/tag  
+       *  @param rescale rescale function for better numerical precision  
+       *  @return the value of the integral 
+       */
+      template <class FUNCTION1>
+      double integrate_romberg
+      ( FUNCTION1            f1             , 
+        const double         xmin           , 
+        const double         xmax           ,
+        const std::size_t    tag        = 0 , 
+        const unsigned short rescale    = 0 ,
+        const double         aprecision = 0 , 
+        const double         rprecision = 0 ) const 
+      { return integrate_romberg_ ( std::cref ( f1 )    , 
+                                    xmin , xmax ,
+                                    m_workspace , 
+                                    tag  , rescale      , 
+                                    0 < aprecision ? aprecision : m_abs_precision_romberg , 
+                                    0 < rprecision ? rprecision : m_rel_precision_romberg ).first ; }
       // ======================================================================
     public: // the actual static methods to perform the integration 
       // ======================================================================
@@ -712,6 +776,54 @@ namespace Ostap
         const double               aprecision = 0 ,
         const double               rprecision = 0 ) ;
       // ======================================================================
+    public :   // Integtaion using double-adaptive CQUAD integrator 
+      // ======================================================================
+      /** calculate the integral using double adaptive  CQUAD integrator 
+       *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
+       *  @param f1 the function 
+       *  @param xmin lower integration edge 
+       *  @param xmax upper  integration edge
+       *  @param ws   integration workspace 
+       *  @param tag  unique tag/label 
+       *  @param rescale rescale function for better numerical precision  
+       *  @param aprecision absolute precision  (if non-positive s_APRECISION_GAQ is used) 
+       *  @param aprecision relative precision  (if non-positive s_RPRECISION_GAQ is used) 
+       *  @return value of the integral and the estimate of the uncertainty
+       */
+      static result integrate_cquad_
+      ( function1            f1             , 
+        const double         xmin           , 
+        const double         xmax           , 
+        const WorkSpace&     ws             , 
+        const std::size_t    tag        = 0 , 
+        const unsigned short rescale    = 0 , 
+        const double         aprecision = 0 , 
+        const double         rprecision = 0 ) ;
+      // ======================================================================
+    public :   // Integtaion using Romberg integrator 
+      // ======================================================================
+      /** calculate the integral using Romberg integratorr 
+       *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
+       *  @param f1 the function 
+       *  @param xmin lower integration edge 
+       *  @param xmax upper integration edge
+       *  @param ws   integration workspace 
+       *  @param tag  unique tag/label 
+       *  @param rescale rescale function for better numerical precision  
+       *  @param aprecision absolute precision  (if non-positive s_APRECISION_GAQ is used) 
+       *  @param aprecision relative precision  (if non-positive s_RPRECISION_GAQ is used) 
+       *  @return value of the integral and the estimate of the uncertainty
+       */
+      static result integrate_romberg_
+      ( function1            f1             , 
+        const double         xmin           , 
+        const double         xmax           , 
+        const WorkSpace&     ws             , 
+        const std::size_t    tag        = 0 , 
+        const unsigned short rescale    = 0 , 
+        const double         aprecision = 0 , 
+        const double         rprecision = 0 ) ;
+      // ======================================================================
     public:
       // ======================================================================
       // 2D integration 
@@ -929,74 +1041,93 @@ namespace Ostap
     public:
       // ======================================================================
       /// set the GAQ integration rule 
-      void set_gaq_rule        ( const int rule ) ;
+      void set_gaq_rule          ( const int rule ) ;
       /// set absolute/relatibe precision fore GAG
-      void set_precision_gaq   ( const double aprec , const double rprec ) ;
+      void set_precision_gaq     ( const double aprec , const double rprec ) ;
       /// set absolute/relative precision fore GAGI
-      void set_precision_gaqi  ( const double aprec , const double rprec ) ;
+      void set_precision_gaqi    ( const double aprec , const double rprec ) ;
       /// set absolute/relative precision fore GAGIL
-      void set_precision_gaqil ( const double aprec , const double rprec ) ;
+      void set_precision_gaqil   ( const double aprec , const double rprec ) ;
       /// set absolute/relative precision fore GAGIU
-      void set_precision_gaqiu ( const double aprec , const double rprec ) ;
+      void set_precision_gaqiu   ( const double aprec , const double rprec ) ;
       /// set absolute/relative precision fore GAQP 
-      void set_precision_gaqp  ( const double aprec , const double rprec ) ;
+      void set_precision_gaqp    ( const double aprec , const double rprec ) ;
       /// set absolute/relative precision fore QAWC
-      void set_precision_qawc  ( const double aprec , const double rprec ) ;
+      void set_precision_qawc    ( const double aprec , const double rprec ) ;
       /// set absolute/relative precision for Cauchy PV inetegration 
-      void set_precision_cpv   ( const double aprec , const double rprec ) ;
+      void set_precision_cpv     ( const double aprec , const double rprec ) ;
       /// set absolute/relative precision for Cauchy PV/inf inetegration 
-      void set_precision_cpvi  ( const double aprec , const double rprec ) ;
+      void set_precision_cpvi    ( const double aprec , const double rprec ) ;
       /// set absolute/relative precision for Kramers-Kronig integrtaion 
-      void set_precision_kk    ( const double aprec , const double rprec ) ;
+      void set_precision_kk      ( const double aprec , const double rprec ) ;
+      /// set absolute/relative precvision for CQUAD   
+      void set_precision_cquad   ( const double aprec , const double rprec ) ;
+      /// set absolute/relative precvision for Romberg 
+      void set_precision_romberg ( const double aprec , const double rprec ) ;
       /// set absolute/relative precvision for cubature 
-      void set_precision_cube  ( const double aprec , const double rprec ) ;
+      void set_precision_cube    ( const double aprec , const double rprec ) ;
+      // ======================================================================
+    public: // get the workspace 
+      // ======================================================================
+      /// get the workspace 
+      const Ostap::Math::WorkSpace& ws   () const { return m_workspace ; }
+      /// get the name 
+      const std::string&            name () const { return m_name      ; }
       // ======================================================================
     private:
       // ======================================================================
       /// integrator name 
-      std::string m_name           ; // integrator name
+      std::string m_name             ; // integrator name
       /// GAQ integration rule 
-      int    m_gaq_rule            ;
+      int    m_gaq_rule              ;
       /// absolute precision for GAQ integration 
-      double m_abs_precision_gaq   ; // absolute precision for GAQ   integration 
+      double m_abs_precision_gaq     ; // absolute precision for GAQ   integration 
       /// relative precision for GAQ integration
-      double m_rel_precision_gaq   ; // relative precision for GAQ   integration
+      double m_rel_precision_gaq     ; // relative precision for GAQ   integration
       /// absolute precision for GAQI integration 
-      double m_abs_precision_gaqi  ; // absolute precision for GAQI  integration 
+      double m_abs_precision_gaqi    ; // absolute precision for GAQI  integration 
       /// relative precision for GAQI integration
-      double m_rel_precision_gaqi  ; // relative precision for GAQI  integration
+      double m_rel_precision_gaqi    ; // relative precision for GAQI  integration
       /// absolute precision for GAQIU integration 
-      double m_abs_precision_gaqiu ; // absolute precision for GAQIU integration 
+      double m_abs_precision_gaqiu   ; // absolute precision for GAQIU integration 
       /// relative precision for GAQIU integration
-      double m_rel_precision_gaqiu ; // relative precision for GAQIU integration
+      double m_rel_precision_gaqiu   ; // relative precision for GAQIU integration
       /// absolute precision for GAQIL integration 
-      double m_abs_precision_gaqil ; // absolute precision for GAQIL integration 
+      double m_abs_precision_gaqil   ; // absolute precision for GAQIL integration 
       /// relative precision for GAQIL integration
-      double m_rel_precision_gaqil ; // relative precision for GAQIL integration
+      double m_rel_precision_gaqil   ; // relative precision for GAQIL integration
       /// absolute precision for GAQP integration 
-      double m_abs_precision_gaqp  ; // absolute precision for GAQP  integration 
+      double m_abs_precision_gaqp    ; // absolute precision for GAQP  integration 
       /// relative precision for GAQP integration
-      double m_rel_precision_gaqp  ; // relative precision for GAQP  integration      
+      double m_rel_precision_gaqp    ; // relative precision for GAQP  integration      
       /// absolute precision for QAWC integration 
-      double m_abs_precision_qawc  ; // absolute precision for QAWC  integration 
+      double m_abs_precision_qawc    ; // absolute precision for QAWC  integration 
       /// relative precision for QAWC integration
-      double m_rel_precision_qawc  ; // relative precision for QAWC  integration
+      double m_rel_precision_qawc    ; // relative precision for QAWC  integration
       /// absolute precision for Cauchy PV integration 
-      double m_abs_precision_cpv   ; // absolute precion for Cauchy integrtaion      
+      double m_abs_precision_cpv     ; // absolute precion for Cauchy integrtaion      
       /// relative precision for Cauchy PV integration 
-      double m_rel_precision_cpv   ; // relative precion for Cauchy integrtaion
+      double m_rel_precision_cpv     ; // relative precion for Cauchy integrtaion
       /// absolute precision for Cauchy PV/inf integration 
-      double m_abs_precision_cpvi  ; // absolute precion for Cauchy/inf integrtaion      
+      double m_abs_precision_cpvi    ; // absolute precion for Cauchy/inf integrtaion      
       /// relative precision for Cauchy PV/inf integration 
-      double m_rel_precision_cpvi  ; // relative precion for Cauchy/inf integrtaion
+      double m_rel_precision_cpvi    ; // relative precion for Cauchy/inf integrtaion
       /// absolute precision for Kramers-Kronig integration 
-      double m_abs_precision_kk    ; // absolute precion for Kramers-Kronig
+      double m_abs_precision_kk      ; // absolute precion for Kramers-Kronig
       /// relative precision for Kramers-Kronig integration 
-      double m_rel_precision_kk    ; // relative precion for Kramers-Kronig
-      /// absolute precision for cubature integration 
-      double m_abs_precision_cube  ; // absolute precision for cubature integration 
+      double m_rel_precision_kk      ; // relative precion for Kramers-Kronig
+      /// absolute precision for CQUAD integration 
+      double m_abs_precision_cquad   ; // absolute precion for CQUAD 
+      /// relative precision for CQUAD integration 
+      double m_rel_precision_cquad   ; // relative precion for CQUAD
+      /// absolute precision for Romberg integration 
+      double m_abs_precision_romberg ; // absolute precion for Romberg
+      /// relative precision for Romberg integration 
+      double m_rel_precision_romberg ; // relative precion for Romberg
+      /// absolute precision for cubature integration
+      double m_abs_precision_cube    ; // absolute precision for cubature integration 
       /// relative precision for cubature integration
-      double m_rel_precision_cube  ; // relative precision for cubature integration
+      double m_rel_precision_cube    ; // relative precision for cubature integration
       // ======================================================================
     private:
       // ======================================================================

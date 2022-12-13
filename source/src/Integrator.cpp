@@ -37,48 +37,66 @@ namespace
     if ( 0 == rescale ) { return 1.0 ; }
     const double dx = ( xmax - xmin ) / ( rescale + 1 ) ;
     double scale = 0 ;
-    for ( unsigned short i = 1 ; i <= rescale ; ++i ) { scale += fun ( xmin + i * dx ) ; }
+    // for ( unsigned short i = 1 ; i <= rescale ; ++i ) { scale += fun ( xmin + i * dx ) ; }
+    for ( unsigned short i = 1 ; i <= rescale ; ++i ) 
+    { scale += std::abs ( fun ( xmin + i * dx ) ) ; }
     return scale * ( xmin - xmax ) / rescale ;
   } 
   // ===========================================================================
 }
 // =============================================================================
-// constructor with integration workspace size & name 
+// constructor with integration workspace the name 
 // =============================================================================
 Ostap::Math::Integrator::Integrator 
-( const std::string& name , 
-  const std::size_t  size )
+( const Ostap::Math::WorkSpace& ws   ,
+  const std::string&            name ) 
   : m_name ( name ) 
-  , m_gaq_rule            ( GSL_INTEG_GAUSS61  )
-  , m_abs_precision_gaq   ( s_APRECISION_GAQ   ) 
-  , m_rel_precision_gaq   ( s_RPRECISION_GAQ   ) 
-  , m_abs_precision_gaqi  ( s_APRECISION_GAQI  ) 
-  , m_rel_precision_gaqi  ( s_RPRECISION_GAQI  ) 
-  , m_abs_precision_gaqiu ( s_APRECISION_GAQIU ) 
-  , m_rel_precision_gaqiu ( s_RPRECISION_GAQIU ) 
-  , m_abs_precision_gaqil ( s_APRECISION_GAQIL ) 
-  , m_rel_precision_gaqil ( s_RPRECISION_GAQIL ) 
-  , m_abs_precision_gaqp  ( s_APRECISION_GAQP  ) 
-  , m_rel_precision_gaqp  ( s_RPRECISION_GAQP  )
-  , m_abs_precision_qawc  ( s_APRECISION_QAWC  ) 
-  , m_rel_precision_qawc  ( s_RPRECISION_QAWC  )
-  , m_abs_precision_cpv   ( s_APRECISION_QAWC  ) 
-  , m_rel_precision_cpv   ( s_RPRECISION_QAWC  ) 
-  , m_abs_precision_cpvi  ( s_APRECISION_QAWC  ) 
-  , m_rel_precision_cpvi  ( s_RPRECISION_QAWC  ) 
-  , m_abs_precision_kk    ( s_APRECISION_QAWC  ) 
-  , m_rel_precision_kk    ( s_RPRECISION_QAWC  )
-  , m_abs_precision_cube  ( s_APRECISION_CUBE  ) 
-  , m_rel_precision_cube  ( s_RPRECISION_CUBE  ) 
-  , m_workspace ( size )
+  , m_gaq_rule              ( GSL_INTEG_GAUSS61    )
+  , m_abs_precision_gaq     ( s_APRECISION_GAQ     ) 
+  , m_rel_precision_gaq     ( s_RPRECISION_GAQ     ) 
+  , m_abs_precision_gaqi    ( s_APRECISION_GAQI    ) 
+  , m_rel_precision_gaqi    ( s_RPRECISION_GAQI    ) 
+  , m_abs_precision_gaqiu   ( s_APRECISION_GAQIU   ) 
+  , m_rel_precision_gaqiu   ( s_RPRECISION_GAQIU   ) 
+  , m_abs_precision_gaqil   ( s_APRECISION_GAQIL   ) 
+  , m_rel_precision_gaqil   ( s_RPRECISION_GAQIL   ) 
+  , m_abs_precision_gaqp    ( s_APRECISION_GAQP    ) 
+  , m_rel_precision_gaqp    ( s_RPRECISION_GAQP    )
+  , m_abs_precision_qawc    ( s_APRECISION_QAWC    ) 
+  , m_rel_precision_qawc    ( s_RPRECISION_QAWC    )
+  , m_abs_precision_cpv     ( s_APRECISION_QAWC    ) 
+  , m_rel_precision_cpv     ( s_RPRECISION_QAWC    ) 
+  , m_abs_precision_cpvi    ( s_APRECISION_QAWC    ) 
+  , m_rel_precision_cpvi    ( s_RPRECISION_QAWC    ) 
+  , m_abs_precision_kk      ( s_APRECISION_QAWC    ) 
+  , m_rel_precision_kk      ( s_RPRECISION_QAWC    )
+  , m_abs_precision_cquad   ( s_APRECISION_CQUAD   ) 
+  , m_rel_precision_cquad   ( s_RPRECISION_CQUAD   ) 
+  , m_abs_precision_romberg ( s_APRECISION_ROMBERG ) 
+  , m_rel_precision_romberg ( s_RPRECISION_ROMBERG ) 
+  , m_abs_precision_cube    ( s_APRECISION_CUBE    ) 
+  , m_rel_precision_cube    ( s_RPRECISION_CUBE    ) 
+  , m_workspace ( ws )
 {}
 // =============================================================================
 // constructor with integration workspace size & name 
 // =============================================================================
 Ostap::Math::Integrator::Integrator 
-( const std::size_t  size , 
-  const std::string& name ) 
-  : Integrator ( name , size ) 
+( const std::string&   name         , 
+  const std::size_t    size         , 
+  const unsigned short size_cquad   ,
+  const unsigned short size_romberg ) 
+  : Integrator ( Ostap::Math::WorkSpace ( size ,size_cquad , size_romberg ) , name )
+{}
+// =============================================================================
+// constructor with integration workspace size & name 
+// =============================================================================
+Ostap::Math::Integrator::Integrator 
+( const std::size_t    size         ,
+  const unsigned short size_cquad   ,
+  const unsigned short size_romberg ,
+  const std::string&   name         ) 
+  : Integrator ( name , size , size_cquad , size_romberg ) 
 {}
 // =============================================================================
 // set absolute/relative precision for GAG
@@ -171,14 +189,34 @@ void Ostap::Math::Integrator::set_precision_kk
   m_rel_precision_kk  = 0 < rprec ? rprec : s_RPRECISION_QAWC ;
 }
 // =============================================================================
+// set absolute/relative precision for CQUAD
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_cquad
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_cquad  = 0 < aprec ? aprec : s_APRECISION_CQUAD ;
+  m_rel_precision_cquad  = 0 < rprec ? rprec : s_RPRECISION_CQUAD ;
+}
+// =============================================================================
+// set absolute/relative precision for cubature 
+// =============================================================================
+void Ostap::Math::Integrator::set_precision_romberg
+( const double aprec ,
+  const double rprec ) 
+{
+  m_abs_precision_romberg  = 0 < aprec ? aprec : s_APRECISION_ROMBERG ;
+  m_rel_precision_romberg  = 0 < rprec ? rprec : s_RPRECISION_ROMBERG ;
+}
+// =============================================================================
 // set absolute/relative precision for cubature 
 // =============================================================================
 void Ostap::Math::Integrator::set_precision_cube
 ( const double aprec ,
   const double rprec ) 
 {
-  m_abs_precision_cube  = 0 < aprec ? aprec : s_APRECISION ;
-  m_rel_precision_cube  = 0 < rprec ? rprec : s_RPRECISION ;
+  m_abs_precision_cube  = 0 < aprec ? aprec : s_APRECISION_CUBE ;
+  m_rel_precision_cube  = 0 < rprec ? rprec : s_RPRECISION_CUBE ;
 }
 // =============================================================================
 // set the GAQ nitegrtaion rule 
@@ -230,7 +268,7 @@ Ostap::Math::Integrator::integrate_
       //
       const std::size_t ntag =
         0 == tag ? tag : Ostap::Utils::hash_combiner ( tag , rescale , scale , iscale ) ;
-      result r = integrate_ ( std::cref ( ff ) , xmin , xmax , ws , ntag , 0 ) ;
+      result r = integrate_ ( std::cref ( ff ) , xmin , xmax , ws , ntag , 0 , aprecision , rprecision , rule ) ;
       return result ( scale * r.first , scale * r.second ) ;  
     }
   }
@@ -713,6 +751,140 @@ Ostap::Math::Integrator::integrateY_
   auto f2_ = std::cref ( f2 ) ;
   auto f1  = std::bind ( f2_ , x , std::placeholders::_1 ) ;
   return integrate_ ( std::cref ( f1 ) , ymin , ymax , ws , tag , rescale , aprecision , rprecision ) ;
+}
+// =============================================================================
+/* calculate the integral using double adaptive  CQUAD integrator 
+ *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
+ *  @param f1 the function 
+ *  @param xmin lower integration edge 
+ *  @param xmax upper integration edge
+ *  @param ws   integration workspace 
+ *  @param tag  unique tag/label 
+ *  @param rescale rescale function for better numerical precision  
+ *  @param aprecision absolute precision  (if non-positive s_APRECISION_GAQ is used) 
+ *  @param aprecision relative precision  (if non-positive s_RPRECISION_GAQ is used) 
+ *  @return value of the integral and the estimate of the uncertainty
+ */
+// =============================================================================
+Ostap::Math::Integrator::result
+Ostap::Math::Integrator::integrate_cquad_
+( Ostap::Math::Integrator::function1 f1         , 
+  const double                       xmin       , 
+  const double                       xmax       , 
+  const Ostap::Math::WorkSpace&      ws         , 
+  const std::size_t                  tag        ,  
+  const unsigned short               rescale    , 
+  const double                       aprecision ,
+  const double                       rprecision ) 
+{
+  //
+  if ( s_equal ( xmin , xmax ) ) { return result ( 0 , 0 )  ; }
+  //
+  if ( 0 < rescale ) 
+  {
+    const double scale = fun_scale ( f1 , xmin , xmax , rescale ) ;
+    if ( !s_zero ( scale ) && std::abs ( scale ) < 0.1 || 10 < std::abs ( scale ) ) 
+    {
+      const double iscale = 1.0 / scale ;
+      auto f2 = std::cref ( f1 ) ;
+      auto ff = [f2,iscale]  ( const double  x ) -> double { return f2 ( x ) * iscale ; } ;
+      //
+      const std::size_t ntag = ( 0 == tag ) ? tag :
+        Ostap::Utils::hash_combiner ( tag , rescale , scale , iscale ) ;
+      result r = integrate_cquad_ ( std::cref ( ff ) , xmin , xmax , ws , ntag , 0 , aprecision , rprecision ) ;
+      return result ( scale * r.first , scale * r.second ) ;  
+    }
+  }
+  //
+  static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
+  auto F = integrator.make_function( &f1 ) ;
+  //
+  int    ierror ;
+  double value  ;
+  double error  ;
+  static const char s_message[] = "Ostap::Math::Integrator/integrate_cquad(1D)" ;
+  //
+  std::tie ( ierror, value , error ) = 
+    integrator.cquad_integrate    
+    ( &F                       , 
+      xmin                     ,   // lower integration edge  
+      xmax                     ,   // upper integration edge
+      workspace_cquad ( ws )   ,   // workspace 
+      0 < aprecision ? aprecision : s_APRECISION_CQUAD , // absolute precision 
+      0 < rprecision ? rprecision : s_RPRECISION_CQUAD , // relative precision 
+      s_message                ,   // reason of failure 
+      __FILE__                 ,   // the file 
+      __LINE__                 ,   // the line
+      tag                      ) ; // label/tag
+  //
+  return result ( value , error ) ;  
+}
+// =============================================================================
+/* calculate the integral using Romberg integrator 
+ *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
+ *  @param f1 the function 
+ *  @param xmin lower integration edge 
+ *  @param xmax upper integration edge
+ *  @param ws   integration workspace 
+ *  @param tag  unique tag/label 
+ *  @param rescale rescale function for better numerical precision  
+ *  @param aprecision absolute precision  (if non-positive s_APRECISION_GAQ is used) 
+ *  @param aprecision relative precision  (if non-positive s_RPRECISION_GAQ is used) 
+ *  @return value of the integral and the estimate of the uncertainty
+ */
+// =============================================================================
+Ostap::Math::Integrator::result
+Ostap::Math::Integrator::integrate_romberg_
+( Ostap::Math::Integrator::function1 f1         , 
+  const double                       xmin       , 
+  const double                       xmax       , 
+  const Ostap::Math::WorkSpace&      ws         , 
+  const std::size_t                  tag        ,  
+  const unsigned short               rescale    , 
+  const double                       aprecision ,
+  const double                       rprecision ) 
+{
+  //
+  if ( s_equal ( xmin , xmax ) ) { return result ( 0 , 0 )  ; }
+  //
+  if ( 0 < rescale ) 
+  {
+    const double scale = fun_scale ( f1 , xmin , xmax , rescale ) ;
+    if ( !s_zero ( scale ) && std::abs ( scale ) < 0.1 || 10 < std::abs ( scale ) ) 
+    {
+      const double iscale = 1.0 / scale ;
+      auto f2 = std::cref ( f1 ) ;
+      auto ff = [f2,iscale]  ( const double  x ) -> double { return f2 ( x ) * iscale ; } ;
+      //
+      const std::size_t ntag = ( 0 == tag ) ? tag :
+        Ostap::Utils::hash_combiner ( tag , rescale , scale , iscale ) ;
+      result r = integrate_romberg_ ( std::cref ( ff ) , xmin , xmax , ws , ntag , 0 , aprecision , rprecision ) ;
+      return result ( scale * r.first , scale * r.second ) ;  
+    }
+  }
+  //
+  static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
+  auto F = integrator.make_function( &f1 ) ;
+  //
+  int    ierror ;
+  double value  ;
+  double error  ;
+  static const char s_message[] = "Ostap::Math::Integrator/integrate_romberg(1D)" ;
+  //
+  std::tie ( ierror, value , error ) = 
+    integrator.romberg_integrate    
+    ( &F                       , 
+      xmin                     ,   // lower integration edge  
+      xmax                     ,   // upper integration edge
+      workspace_romberg ( ws ) ,   // workspace 
+      0 < aprecision ? aprecision : s_APRECISION_ROMBERG , // absolute precision 
+      0 < rprecision ? rprecision : s_RPRECISION_ROMBERG , // relative precision 
+      s_message                ,   // reason of failure 
+      __FILE__                 ,   // the file 
+      __LINE__                 ,   // the line
+      tag                      ) ; // label/tag
+  //
+  return result ( value , error ) ;  
 }
 // ==========================================================================
 /** calculate the integral 

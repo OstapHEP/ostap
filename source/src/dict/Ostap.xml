@@ -37,7 +37,9 @@
   <class pattern = "std::vector&lt;Ostap::WStatEntity,*&gt;" />
 
   <class name   = "Ostap::Math::WorkSpace">
-    <field name = "m_workspace" transient="true"/>      
+    <field name = "m_workspace"         transient="true"/>      
+    <field name = "m_workspace_cquad"   transient="true"/>      
+    <field name = "m_workspace_romberf" transient="true"/>      
   </class>
 
   <exclusion>    

@@ -372,6 +372,98 @@ namespace Ostap
           return Result { ierror , result , error } ;  
         }
         // ====================================================================
+        /// double-adaptive integration CQUAD 
+        Result cquad_integrate   
+        ( const gsl_function*              func                 ,           // the  function
+          const double                     xlow                 ,           // low  integration edge 
+          const double                     xhigh                ,           // high integration edge 
+          gsl_integration_cquad_workspace* workspace            ,           // workspace
+          const double                     aprecision = s_APRECISION_CQUAD , // absolute precision
+          const double                     rprecision = s_RPRECISION_CQUAD , // relative precision
+          const char*                      reason     = nullptr ,           // message 
+          const char*                      file       = nullptr ,           // file name 
+          const unsigned long              line       = 0       ,           // line number 
+          const std::size_t                tag        = 0       ) const     // tag/label 
+        {
+          // cache? 
+          if ( 0 != tag ) { return cquad_integrate ( tag        , 
+                                                     func       , 
+                                                     xlow       ,
+                                                     xhigh      ,
+                                                     workspace  ,
+                                                     aprecision , 
+                                                     rprecision ,
+                                                     reason     ,
+                                                     file       , 
+                                                     line       ) ; }
+          // setup GSL 
+          Ostap::Math::GSL::GSL_Error_Handler sentry ;
+          //
+          double      result =  1.0 ;
+          double      error  = -1.0 ;
+          std::size_t nevals = 0    ;
+          //
+          const int ierror = gsl_integration_cquad 
+            ( const_cast<gsl_function*> ( func ) ,   // the function
+              xlow   , xhigh                     ,   // low & high edges
+              aprecision                         ,   // absolute precision
+              rprecision                         ,   // relative precision
+              workspace                          ,   // workspace
+              &result                            ,   // the result
+              &error                             ,   // the error in result
+              &nevals                            ) ; // number of function evaluations 
+            if ( ierror ) { gsl_error ( reason , file , line , ierror ) ; }
+          //
+          return Result { ierror , result , error } ;  
+        }
+        // ====================================================================
+        /// Romberg integration 
+        Result romberg_integrate   
+        ( const gsl_function*                func                 ,           // the  function
+          const double                       xlow                 ,           // low  integration edge 
+          const double                       xhigh                ,           // high integration edge 
+          gsl_integration_romberg_workspace* workspace            ,           // workspace
+          const double                       aprecision = s_APRECISION_ROMBERG , // absolute precision
+          const double                       rprecision = s_RPRECISION_ROMBERG , // relative precision
+          const char*                        reason     = nullptr ,           // message 
+          const char*                        file       = nullptr ,           // file name 
+          const unsigned long                line       = 0       ,           // line number 
+          const std::size_t                  tag        = 0       ) const     // tag/label 
+        {
+          // cache? 
+          if ( 0 != tag ) { return romberg_integrate ( tag        , 
+                                                       func       , 
+                                                       xlow       ,
+                                                       xhigh      ,
+                                                       workspace  ,
+                                                       aprecision , 
+                                                       rprecision ,
+                                                       reason     ,
+                                                       file       , 
+                                                       line       ) ; }
+          // setup GSL 
+          Ostap::Math::GSL::GSL_Error_Handler sentry ;
+          //
+          double      result =  1.0 ;
+          std::size_t nevals = 0    ;
+          //
+          const int ierror = gsl_integration_romberg 
+            ( const_cast<gsl_function*> ( func ) ,   // the function
+              xlow   , xhigh                     ,   // low & high edges
+              aprecision                         ,   // absolute precision
+              rprecision                         ,   // relative precision
+              &result                            ,   // the result
+              &nevals                            ,   // number of function evaluations 
+              workspace                          ) ; // workspace
+          if ( ierror ) { gsl_error ( reason , file , line , ierror ) ; }
+          //
+          /// fake to keep the interface mor eor less coherent 
+          const double error = std::max ( abs ( aprecision          ) , 
+                                          abs ( rprecision * result ) ) ;
+          //
+          return Result { ierror , result , error } ;  
+        }
+        // ====================================================================
       public: // integration with cache 
         // ====================================================================
         /// adaptive integrator with cache 
@@ -662,6 +754,108 @@ namespace Ostap
                                            reason     ,
                                            file       , 
                                            line       ) ;
+          // ==================================================================
+          { // update the cache ===============================================
+            CACHE::Lock lock  { s_cache.mutex() } ;
+            // clear the cache is too large
+            if ( s_CACHESIZE < s_cache->size() ) { s_cache->clear() ; }
+            // update the cache
+            s_cache->insert ( std::make_pair ( key , result ) ) ;
+          } // ================================================================
+          // ==================================================================
+          return result ;
+          // ==================================================================
+        }
+        // ====================================================================
+        /// double-adaptive integration CQUAD 
+        Result cquad_integrate   
+        ( const std::size_t                tag                  ,            // tag/label    
+          const gsl_function*              func                 ,            // the  function
+          const double                     xlow                 ,            // low  integration edge 
+          const double                     xhigh                ,            // high integration edge 
+          gsl_integration_cquad_workspace* workspace            ,            // workspace
+          const double                     aprecision = s_APRECISION_CQUAD , // absolute precision
+          const double                     rprecision = s_RPRECISION_CQUAD , // relative precision
+          const char*                      reason     = nullptr ,            // message 
+          const char*                      file       = nullptr ,            // file name 
+          const unsigned long              line       = 0       ) const      // line number 
+        {
+          // ==================================================================
+          static const std::string s_CQUAD { "CQUAD" } ;
+          const std::size_t key = Ostap::Utils::hash_combiner 
+            ( tag  , func->params       , s_CQUAD ,  
+              xlow , xhigh ,    
+              aprecision   , rprecision , 
+              reason       , file       , line    ) ;
+          // ==================================================================
+          { // look into the cache ============================================
+            CACHE::Lock lock { s_cache.mutex() } ;
+            auto it = s_cache->find  ( key ) ;
+            if ( s_cache->end() != it ) {  return it->second ; }  // AVOID calculation
+            // ================================================================
+          } // ================================================================
+          // ==================================================================
+          // perform numerical integration using GSL 
+          Result result = cquad_integrate ( func       ,
+                                            xlow       ,
+                                            xhigh      ,
+                                            workspace  , 
+                                            aprecision , 
+                                            rprecision , 
+                                            reason     ,
+                                            file       , 
+                                            line       ) ;
+          // ==================================================================
+          { // update the cache ===============================================
+            CACHE::Lock lock  { s_cache.mutex() } ;
+            // clear the cache is too large
+            if ( s_CACHESIZE < s_cache->size() ) { s_cache->clear() ; }
+            // update the cache
+            s_cache->insert ( std::make_pair ( key , result ) ) ;
+          } // ================================================================
+          // ==================================================================
+          return result ;
+          // ==================================================================
+        }
+        // ====================================================================
+        /// Romberg integration
+        Result romberg_integrate   
+        ( const std::size_t                  tag                  ,            // tag/label    
+          const gsl_function*                func                 ,            // the  function
+          const double                       xlow                 ,            // low  integration edge 
+          const double                       xhigh                ,            // high integration edge 
+          gsl_integration_romberg_workspace* workspace            ,            // workspace
+          const double                       aprecision = s_APRECISION_ROMBERG , // absolute precision
+          const double                       rprecision = s_RPRECISION_ROMBERG , // relative precision
+          const char*                        reason     = nullptr ,            // message 
+          const char*                        file       = nullptr ,            // file name 
+          const unsigned long                line       = 0       ) const      // line number 
+        {
+          // ==================================================================
+          static const std::string s_ROMBERG { "ROMBERG" } ;
+          const std::size_t key = Ostap::Utils::hash_combiner 
+            ( tag  , func->params       , s_ROMBERG ,  
+              xlow , xhigh ,    
+              aprecision   , rprecision , 
+              reason       , file       , line    ) ;
+          // ==================================================================
+          { // look into the cache ============================================
+            CACHE::Lock lock { s_cache.mutex() } ;
+            auto it = s_cache->find  ( key ) ;
+            if ( s_cache->end() != it ) {  return it->second ; }  // AVOID calculation
+            // ================================================================
+          } // ================================================================
+          // ==================================================================
+          // perform numerical integration using GSL 
+          Result result = romberg_integrate ( func       ,
+                                              xlow       ,
+                                              xhigh      ,
+                                              workspace  , 
+                                              aprecision , 
+                                              rprecision , 
+                                              reason     ,
+                                              file       , 
+                                              line       ) ;
           // ==================================================================
           { // update the cache ===============================================
             CACHE::Lock lock  { s_cache.mutex() } ;
