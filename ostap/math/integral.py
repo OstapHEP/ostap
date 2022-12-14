@@ -90,16 +90,16 @@ else                       : logger = getLogger ( __name__              )
 #  v    = romberg ( func , 0 , 1 ) 
 #  @endcode 
 #  CPU performance is not superb, but it is numerically stable.
-def romberg ( fun                ,
-              x0                 ,
-              x                  ,
-              err      = False   , 
-              epsabs   = 1.49e-8 ,
-              epsrel   = 1.49e-8 ,
-              limit    = 10      , # ignored, kept to mimic consistency with 
-              args     = ()      ,
-              nmax     = 12      , # steps in Richardson's extrapolation
-              maxdepth = 100       # the maxmal depth 
+def romberg ( fun                 ,
+              x0                  ,
+              x                   ,
+              err      = False    , 
+              epsabs   = 1.49e-8  ,
+              epsrel   = 1.49e-8  ,
+              limit    = 10       , # ignored, kept to mimic consistency with 
+              args     = ()       ,
+              nmax     = 20       , # steps in Richardson's extrapolation
+              maxdepth = 200        # the maxmal depth 
               ) : 
     """Straw-man replacement of scipy.integrate.quad when it is not available.
     Actually it is a primitive form of Romberg's adaptive integration

@@ -15,11 +15,12 @@ It tests local implementation of numerical integrtauon using Romberg's method
 CPU performance is not superb, but it is numerically stable.
 """
 # =============================================================================
-from   __future__          import print_function
-from   ostap.math.integral import ( integral  , romberg     , 
-                                    integral2 , genzmalik2  ,  
-                                    integral3 , genzmalik3  ,
-                                    complex_circle_integral ) 
+from ostap.core.pyrouts  import Ostap, SE  
+from ostap.utils.timing  import timing 
+from ostap.math.integral import ( integral  , romberg     , 
+                                  integral2 , genzmalik2  ,  
+                                  integral3 , genzmalik3  ,
+                                  complex_circle_integral ) 
 import ostap.logger.table  as     T
 # ============================================================================= 
 # logging 
@@ -29,9 +30,11 @@ if '__main__' ==  __name__ : logger = getLogger ( 'test_math_integral' )
 else                       : logger = getLogger ( __name__             )
 # ============================================================================= 
 
+# =============================================================================
 def test_integral ():
 
     logger = getLogger('test_integral')
+    logger.info ( 'Simple test for 1D-inttegrtaions' )
     
     from math import sin, cos , exp, log, pi, e  
 
@@ -56,9 +59,73 @@ def test_integral ():
         logger.info ( '%20s: Delta/I  %-20s %-20s' % ( func , (vi-value)/vi.error() ,
                                                        (vr - value)/vr.error() ) )
         
+# =============================================================================
+def test_integrator ():
+
+    logger = getLogger('test_integrator')
+
+    logger.info ( 'Simple test for Ostap.Math.Integrator' )
+
+    from math import sin, pi 
+
+    ## function to be integrated 
+    ff    = lambda x : sin ( x )  
+    low   = 0.0
+    high  = 1.0 * pi 
+    exact = 2.0
+    
+    ## create the function object 
+    f1 = Ostap.Math.Apply ( ff ) 
+
+    I = Ostap.Math.Integrator() 
+
+    cnt1 = SE ()
+    cnt2 = SE ()
+    cnt3 = SE ()
+    cnt4 = SE ()
+    cnt5 = SE ()
+    N    = 100000
+    
+    scale = 1.e+12
+
+    def my_romberg ( *args ) :
+        return romberg ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 ) 
+    
+    results = []
+    for name , fun , func in (  ( 'GAC'       , f1 , I.integrate         ) ,
+                                ( 'CQUAD'     , f1 , I.integrate_cquad   ) ,
+                                ( 'Romberg'   , f1 , I.integrate_romberg ) ,
+                                ( 'Native/1'  , f1 ,   integral          ) ,
+                                ( 'Native/2'  , ff ,   integral          ) ,
+                                ( 'Romberg/1' , f1 ,  my_romberg         ) ,
+                                ( 'Romberg/2' , ff ,  my_romberg         ) ,
+                                ) :
+        cnt = SE()
+        with timing ( '%9s integrator' % name , logger = logger ) as t :  
+            for i in range ( N ) : cnt += abs( func ( fun , low , high ) - exact ) * scale 
+        results.append ( ( name , cnt , t.delta ) )
+
+    rows = [ ( 'Integrator' , 'CPU [s]' , 'delta [%.0e]' % ( 1.0/scale ) , 'max [%.0e]' % ( 1.0/scale ) ) ]
+
+    for name , cnt, td in results :
+        
+        row = name , '%.2f' % td , \
+              '%+.4f' % cnt.mean().value() , \
+              '%+.3f' % ( cnt.max() )
+        rows.append ( row )
+
+    
+    title = 'Compare different integrators'
+    table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+    
+
+# =============================================================================
 def test_integral_2D ():
 
     logger = getLogger('test_integral_2D')
+
+    logger.info ( 'Test for 2D-integration' )
 
     from math import sin, cos , exp, log, pi, e  
 
@@ -80,11 +147,13 @@ def test_integral_2D ():
         logger.info ( '%20s: Delta/I  %-20s %-20s'         % ( entry[0] , (v1-vv)/vv         , (v2 - vv)/vv         ) ) 
         logger.info ( '%20s: Delta/E  %-20s %-20s'         % ( entry[0] , (v1-vv)/v1.error() , (v2 - vv)/v2.error() ) ) 
                 
-
         
+# =============================================================================
 def test_integral_3D ():
 
     logger = getLogger('test_integral_3D')
+
+    logger.info ( 'Test for 3D-integration' )
 
     from math import sin, cos , exp, log, pi, e  
 
@@ -106,10 +175,11 @@ def test_integral_3D ():
         logger.info ( '%20s: Delta/E  %-20s %-20s'         % ( entry[0] , (v1-vv)/v1.error() , (v2 - vv)/v2.error() ) ) 
                 
 
-
+# =============================================================================
 def test_integral_contour ():
 
     logger = getLogger('test_integral_contour')
+    logger.info ( 'Test for coplex contour integration' )
 
     import cmath
     
@@ -154,6 +224,7 @@ def test_integral_contour ():
 if '__main__' == __name__ :
 
     test_integral         ()
+    test_integrator       ()
     test_integral_2D      ()
     test_integral_3D      ()
     test_integral_contour ()

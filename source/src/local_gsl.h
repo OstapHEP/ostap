@@ -89,7 +89,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2022-12-13
    */
-  const std::size_t s_SIZE_ROMBERG  = 20 ;
+  const std::size_t s_SIZE_ROMBERG  = 26 ;
   // ==========================================================================
   /** @var s_PRECISION
    *  the default precision for various calculations,

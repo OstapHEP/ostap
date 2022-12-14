@@ -80,7 +80,7 @@ namespace  Ostap
       // ======================================================================      
     } ;
     // ========================================================================
-    /** @class F1 
+    /** @class F2 
     *   holder for two simple functions
     */
     class F2
@@ -796,7 +796,8 @@ namespace  Ostap
     public:
       // ======================================================================
       /// the only one important method 
-      inline double operator() ( const double x ) const { return m_fun ( x ) ; }
+      inline double operator() ( const double x ) const 
+      { return m_fun ( x ) ; }
       // ======================================================================        
     } ;
     // ========================================================================
