@@ -3,8 +3,11 @@
   1. add an explicit ouble-adaptive CQUAD integrator for `Integrator1D<FUN>` and `Ostap::Math::Integrator`
   1. add an explicit Romberg integrator for `Integrator1D<FUN>` and `Ostap::Math::Integrator`
   1. add a new test for `Ostap::Math::Integrator`
+  1. extend and impove `Ostap::Math::Integrator`
 
 ## Backward incompatible:  
+
+  1. rename some methods for `Ostap::Math::Integrator`
 
 ## Bug fixes:
 

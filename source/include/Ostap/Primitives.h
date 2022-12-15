@@ -1769,6 +1769,95 @@ namespace  Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Apply2
+     *  keep and apply arbitrary 2D-function
+     */
+    class Apply2
+    {
+    public:
+      // ======================================================================
+      /// constructor  from the function 
+      Apply2
+      ( std::function<double(double,double)> f )
+        : m_fun ( f ) 
+      {}
+      // ======================================================================
+      /// constrtuctor  from the function 
+      template <class FUNCTION>
+      Apply2 ( FUNCTION f )
+        : m_fun ( f  )
+      {}
+      /// copy constructor 
+      Apply2 ( const Apply2&  ) = default ;
+      /// move constructor
+      Apply2 (       Apply2&& ) = default ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      template <class FUNCTION>
+      static inline Apply2 
+      create ( FUNCTION f ) { return Apply2 ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the only one important method 
+      inline double operator() 
+      ( const double x , 
+        const double y ) const 
+      { return m_fun ( x , y ) ; }
+      // ======================================================================        
+    protected:
+      // ======================================================================      
+      /// the function itself
+      std::function<double(double,double)> m_fun ; // the function itself
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class Apply3
+     *  keep and apply arbitrary 3D-function
+     */
+    class Apply3
+    {
+    public:
+      // ======================================================================
+      /// constructor  from the function 
+      Apply3
+      ( std::function<double(double,double,double)> f )
+        : m_fun ( f ) 
+      {}
+      // ======================================================================
+      /// constrtuctor  from the function 
+      template <class FUNCTION>
+      Apply3 ( FUNCTION f )
+        : m_fun ( f  )
+      {}
+      /// copy constructor 
+      Apply3 ( const Apply3&  ) = default ;
+      /// move constructor
+      Apply3 (       Apply3&& ) = default ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      template <class FUNCTION>
+      static inline Apply3 
+      create ( FUNCTION f ) { return Apply3 ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the only one important method 
+      inline double operator() 
+      ( const double x , 
+        const double y , 
+        const double z ) const 
+      { return m_fun ( x , y , z ) ; }
+      // ======================================================================        
+    protected:
+      // ======================================================================      
+      /// the function itself
+      std::function<double(double,double,double)> m_fun ; // the function itself
+      // ======================================================================      
+    } ;
+    // ========================================================================    
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
 } //                                                 The end of namespace Ostap 

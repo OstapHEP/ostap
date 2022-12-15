@@ -83,8 +83,8 @@ namespace Ostap
           const double               xlow                 ,           // low integration edge 
           const double               xhigh                ,           // high integration edge 
           gsl_integration_workspace* workspace            ,           // workspace
-          const double               aprecision = s_APRECISION_GAQ ,  // absolute precision
-          const double               rprecision = s_RPRECISION_GAQ ,  // relative precision
+          const double               aprecision = s_APRECISION_QAG ,  // absolute precision
+          const double               rprecision = s_RPRECISION_QAG ,  // relative precision
           int                        limit      = -1      ,           // limit 
           const char*                reason     = nullptr ,           // message 
           const char*                file       = nullptr ,           // file name 
@@ -133,8 +133,8 @@ namespace Ostap
         Result gaqi_integrate   
         ( const gsl_function*        func                 ,           // the function
           gsl_integration_workspace* workspace            ,           // workspace
-          const double               aprecision = s_APRECISION_GAQI , // absolute precision
-          const double               rprecision = s_RPRECISION_GAQI , // relative precision
+          const double               aprecision = s_APRECISION_QAGI , // absolute precision
+          const double               rprecision = s_RPRECISION_QAGI , // relative precision
           int                        limit      = -1      ,           // limit 
           const char*                reason     = nullptr ,           // message 
           const char*                file       = nullptr ,           // file name 
@@ -178,8 +178,8 @@ namespace Ostap
         ( const gsl_function*        func                 ,            // the function
           const double               xlow                 ,            // low integration edge 
           gsl_integration_workspace* workspace            ,            // workspace
-          const double               aprecision = s_APRECISION_GAQIU , // absolute precision
-          const double               rprecision = s_RPRECISION_GAQIU , // relative precision
+          const double               aprecision = s_APRECISION_QAGIU , // absolute precision
+          const double               rprecision = s_RPRECISION_QAGIU , // relative precision
           int                        limit      = -1      ,            // limit 
           const char*                reason     = nullptr ,            // message 
           const char*                file       = nullptr ,            // file name 
@@ -225,8 +225,8 @@ namespace Ostap
         ( const gsl_function*        func                 ,            // the function
           const double               xhigh                ,            // high integration edge 
           gsl_integration_workspace* workspace            ,            // workspace
-          const double               aprecision = s_APRECISION_GAQIL , // absolute precision
-          const double               rprecision = s_RPRECISION_GAQIL , // relative precision
+          const double               aprecision = s_APRECISION_QAGIL , // absolute precision
+          const double               rprecision = s_RPRECISION_QAGIL , // relative precision
           int                        limit      = -1      ,            // limit 
           const char*                reason     = nullptr ,            // message 
           const char*                file       = nullptr ,            // file name 
@@ -273,8 +273,8 @@ namespace Ostap
           const double               xhigh                ,           // high integration edge 
           const std::vector<double>& pnts                 ,           // knowns singular points 
           gsl_integration_workspace* workspace            ,           // workspace
-          const double               aprecision = s_APRECISION_GAQP , // absolute precision
-          const double               rprecision = s_RPRECISION_GAQP , // relative precision
+          const double               aprecision = s_APRECISION_QAGP , // absolute precision
+          const double               rprecision = s_RPRECISION_QAGP , // relative precision
           int                        limit      = -1      ,           // limit 
           const char*                reason     = nullptr ,           // message 
           const char*                file       = nullptr ,           // file name 
@@ -473,8 +473,8 @@ namespace Ostap
           const double               xlow                 ,          // low integration edge 
           const double               xhigh                ,          // high integration edge 
           gsl_integration_workspace* workspace            ,          // workspace
-          const double               aprecision = s_APRECISION_GAQ , // absolute precision
-          const double               rprecision = s_RPRECISION_GAQ , // relative precision
+          const double               aprecision = s_APRECISION_QAG , // absolute precision
+          const double               rprecision = s_RPRECISION_QAG , // relative precision
           int                        limit      = -1      ,          // limit 
           const char*                reason     = nullptr ,          // message 
           const char*                file       = nullptr ,          // file name 
@@ -482,9 +482,9 @@ namespace Ostap
           const int                  rule       = GSL_INTEG_GAUSS61 ) const // integration rule 
         {
           // ==================================================================
-          static const std::string s_GAQ { "GAQ" } ;
+          static const std::string s_QAG { "QAG" } ;
           const std::size_t key = Ostap::Utils::hash_combiner 
-            ( tag , func->params , xlow , xhigh ,  s_GAQ , 
+            ( tag , func->params , xlow , xhigh ,  s_QAG , 
               aprecision , rprecision , 
               limit      , reason , file , line , rule ) ;
           // ==================================================================
@@ -520,8 +520,8 @@ namespace Ostap
         ( const std::size_t          tag                  ,
           const gsl_function*        func                 ,           // the function
           gsl_integration_workspace* workspace            ,           // workspace
-          const double               aprecision = s_APRECISION_GAQI , // absolute precision
-          const double               rprecision = s_RPRECISION_GAQI , // relative precision
+          const double               aprecision = s_APRECISION_QAGI , // absolute precision
+          const double               rprecision = s_RPRECISION_QAGI , // relative precision
           int                        limit      = -1      ,           // limit 
           const char*                reason     = nullptr ,           // message 
           const char*                file       = nullptr ,           // file name 
@@ -529,9 +529,9 @@ namespace Ostap
         {
           //
           // ==================================================================
-          static const std::string s_GAQI { "GAQI" } ;
+          static const std::string s_QAGI { "QAGI" } ;
           const std::size_t key = Ostap::Utils::hash_combiner 
-            ( tag , func->params      ,  s_GAQI     , 
+            ( tag , func->params      ,  s_QAGI     , 
               aprecision , rprecision , 
               limit      , reason     , file , line ) ;
           // ==================================================================
@@ -567,8 +567,8 @@ namespace Ostap
           const gsl_function*        func                 ,            // the function
           const double               xlow                 ,            // low integration edge 
           gsl_integration_workspace* workspace            ,            // workspace
-          const double               aprecision = s_APRECISION_GAQIU , // absolute precision
-          const double               rprecision = s_RPRECISION_GAQIU , // relative precision
+          const double               aprecision = s_APRECISION_QAGIU , // absolute precision
+          const double               rprecision = s_RPRECISION_QAGIU , // relative precision
           int                        limit      = -1      ,            // limit 
           const char*                reason     = nullptr ,            // message 
           const char*                file       = nullptr ,            // file name 
@@ -576,9 +576,9 @@ namespace Ostap
         {
           //
           // ==================================================================
-          static const std::string s_GAQIU { "GAQIU" } ;
+          static const std::string s_QAGIU { "QAGIU" } ;
           const std::size_t key = Ostap::Utils::hash_combiner 
-            ( tag , func->params , xlow ,  s_GAQIU , 
+            ( tag , func->params , xlow ,  s_QAGIU , 
               aprecision , rprecision , 
               limit      , reason , file , line ) ;
           // ==================================================================
@@ -615,8 +615,8 @@ namespace Ostap
           const gsl_function*        func                 ,            // the function
           const double               xhigh                ,            // upper integration edge 
           gsl_integration_workspace* workspace            ,            // workspace
-          const double               aprecision = s_APRECISION_GAQIL , // absolute precision
-          const double               rprecision = s_RPRECISION_GAQIL , // relative precision
+          const double               aprecision = s_APRECISION_QAGIL , // absolute precision
+          const double               rprecision = s_RPRECISION_QAGIL , // relative precision
           int                        limit      = -1      ,            // limit 
           const char*                reason     = nullptr ,            // message 
           const char*                file       = nullptr ,            // file name 
@@ -624,9 +624,9 @@ namespace Ostap
         {
           //
           // ==================================================================
-          static const std::string s_GAQIL { "GAQIL" } ;
+          static const std::string s_QAGIL { "QAGIL" } ;
           const std::size_t key = Ostap::Utils::hash_combiner 
-            ( tag , func->params , xhigh , s_GAQIL ,  
+            ( tag , func->params , xhigh , s_QAGIL ,  
               aprecision , rprecision    , 
               limit      , reason        ,  file , line ) ;
           // ==================================================================
@@ -665,17 +665,17 @@ namespace Ostap
           const double               xhigh                ,           // high integration edge 
           const std::vector<double>& pnts                 ,           // knowns singular points 
           gsl_integration_workspace* workspace            ,           // workspace
-          const double               aprecision = s_APRECISION_GAQP , // absolute precision
-          const double               rprecision = s_RPRECISION_GAQP , // relative precision
+          const double               aprecision = s_APRECISION_QAGP , // absolute precision
+          const double               rprecision = s_RPRECISION_QAGP , // relative precision
           int                        limit      = -1      ,           // limit 
           const char*                reason     = nullptr ,           // message 
           const char*                file       = nullptr ,           // file name 
           const unsigned long        line       = 0       ) const     // line number 
         {
           // ==================================================================
-          static const std::string s_GAQP { "GAQP" } ;
+          static const std::string s_QAGP { "QAGP" } ;
           const std::size_t key = Ostap::Utils::hash_combiner 
-            ( tag  , func->params       , s_GAQP ,  
+            ( tag  , func->params       , s_QAGP ,  
               xlow , xhigh , pnts       ,   
               aprecision   , rprecision , 
               limit        , reason     ,  file , line ) ;

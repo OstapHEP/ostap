@@ -19,7 +19,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class KramersKronig Ostap/KramersKronig.h
-     *  Simple clss to implement Kramers-Kronig relations 
+     *  Simple class to implement Kramers-Kronig relations 
      *  @see  https://en.wikipedia.org/wiki/Kramers%E2%80%93Kronig_relations
      *
      *   \f[ \chi_{\omega } = 
@@ -47,13 +47,14 @@ namespace Ostap
        *   @param size   size of integration workspace  
        */
       template <class FUNCTION>
-      KramersKronig ( FUNCTION             rho         ,
-                      const double         omega0      ,
-                      const unsigned short n       = 0 ,
-                      const double         scale   = 1 ,                      
-                      const std::size_t    tag     = 0 ,
-                      const unsigned short rescale = 0 , 
-                      const std::size_t    size    = 0 )
+      KramersKronig 
+      ( FUNCTION             rho         ,
+        const double         omega0      ,
+        const unsigned short n       = 0 ,
+        const double         scale   = 1 ,                      
+        const std::size_t    tag     = 0 ,
+        const unsigned short rescale = 0 , 
+        const std::size_t    size    = 0 )
         : m_rho        ( rho     )
         , m_omega0     ( omega0  )
         , m_n          ( n       )
@@ -76,13 +77,14 @@ namespace Ostap
        */
       template <class FUNCTION>
       inline static KramersKronig
-      create  ( FUNCTION             rho         ,
-                const double         omega0      ,
-                const unsigned short n       = 0 ,
-                const double         scale   = 1 , 
-                const std::size_t    tag     = 0 ,
-                const unsigned short rescale = 0 ,
-                const std::size_t    size    = 0 )
+      create
+      ( FUNCTION             rho         ,
+        const double         omega0      ,
+        const unsigned short n       = 0 ,
+        const double         scale   = 1 , 
+        const std::size_t    tag     = 0 ,
+        const unsigned short rescale = 0 ,
+        const std::size_t    size    = 0 )
       { return KramersKronig ( rho , omega0 , n , scale , tag , rescale , size ) ; }
       // ======================================================================
     public:

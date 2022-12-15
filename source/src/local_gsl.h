@@ -146,83 +146,83 @@ namespace
   // ==========================================================================
 
   // ===========================================================================
-  /** @var s_APRECISION_GAQ
-   *  the default absolute precision for GAQ calculations,
+  /** @var s_APRECISION_QAG
+   *  the default absolute precision for QAG calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_APRECISION_GAQ  = s_APRECISION ;
+  const double s_APRECISION_QAG  = s_APRECISION ;
   // ==========================================================================
   /** @var s_RPRECISION_QAG
-   *  the default relative precision for GAQ calculations,
+   *  the default relative precision for QAG calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_RPRECISION_GAQ  = s_RPRECISION ;
+  const double s_RPRECISION_QAG  = s_RPRECISION ;
   // ==========================================================================
 
   // ==========================================================================
-  /** @var s_APRECISION_GAQI
-   *  the default absolute precision for GAQI calculations,
+  /** @var s_APRECISION_QAGI
+   *  the default absolute precision for QAGI calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_APRECISION_GAQI  = s_APRECISION ;
+  const double s_APRECISION_QAGI  = s_APRECISION ;
   // ==========================================================================
   /** @var s_RPRECISION_QAGI
-   *  the default relative precision for GAQI calculations,
+   *  the default relative precision for QAGI calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_RPRECISION_GAQI  = 1.e-7 ;
+  const double s_RPRECISION_QAGI  = 1.e-7 ;
   // ==========================================================================
 
   // ==========================================================================
-  /** @var s_APRECISION_GAQIU
-   *  the default absolute precision for GAQIU calculations,
+  /** @var s_APRECISION_QAGIU
+   *  the default absolute precision for QAGIU calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_APRECISION_GAQIU  = s_APRECISION_GAQI ;
+  const double s_APRECISION_QAGIU  = s_APRECISION_QAGI ;
   // ==========================================================================
   /** @var s_RPRECISION_QAGIU
-   *  the default relative precision for GAQIU calculations,
+   *  the default relative precision for QAGIU calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_RPRECISION_GAQIU  = s_RPRECISION_GAQI ;
+  const double s_RPRECISION_QAGIU  = s_RPRECISION_QAGI ;
   // ==========================================================================
   
   // ==========================================================================
-  /** @var s_APRECISION_GAQIL
-   *  the default absolute precision for GAQIL calculations,
+  /** @var s_APRECISION_QAGIL
+   *  the default absolute precision for GAGIL calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_APRECISION_GAQIL  = s_APRECISION_GAQIU ;
+  const double s_APRECISION_QAGIL  = s_APRECISION_QAGIU ;
   // ==========================================================================
   /** @var s_RPRECISION_QAGIL
-   *  the default relative precision for GAQIL calculations,
+   *  the default relative precision for GAGIL calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_RPRECISION_GAQIL  = s_RPRECISION_GAQIU ;
+  const double s_RPRECISION_QAGIL  = s_RPRECISION_QAGIU ;
   // ==========================================================================
 
   // ==========================================================================
-  /** @var s_APRECISION_GAQP
-   *  the default absolute precision for GAQP calculations,
+  /** @var s_APRECISION_QAGP
+   *  the default absolute precision for QAGP calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_APRECISION_GAQP  = s_APRECISION ;
+  const double s_APRECISION_QAGP  = s_APRECISION ;
   // ==========================================================================
   /** @var s_RPRECISION_QAGP
-   *  the default relative precision for GAQP calculations,
+   *  the default relative precision for QAGP calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_RPRECISION_GAQP  = 1.e-7 ;
+  const double s_RPRECISION_QAGP  = 1.e-7 ;
   // ==========================================================================
 
   // ==========================================================================
@@ -276,23 +276,36 @@ namespace
   // ==========================================================================
 
   // ==========================================================================
-  /** @var s_APRECISION_CUBE
-   *  the default absolute precision for cubatures 
+  /** @var s_APRECISION_CUBE2D
+   *  the default absolute precision for 2D-cubatures 
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_APRECISION_CUBE  = s_APRECISION ;
+  const double s_APRECISION_CUBE2D = s_APRECISION ;
   // ==========================================================================
-  /** @var s_RPRECISION_CUBE
-   *  the default relative precision for cubatures 
+  /** @var s_RPRECISION_CUBE2D
+   *  the default relative precision for 2D-cubatures 
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_RPRECISION_CUBE  = s_RPRECISION ;
+  const double s_RPRECISION_CUBE2D = s_RPRECISION ;
   // ==========================================================================
 
-
-
+  // ==========================================================================
+  /** @var s_APRECISION_CUBE3D
+   *  the default absolute precision for 3D-cubatures 
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_APRECISION_CUBE3D = s_APRECISION ;
+  // ==========================================================================
+  /** @var s_RPRECISION_CUBE3D
+   *  the default relative precision for 3D-cubatures 
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION_CUBE3D  = s_RPRECISION ;
+  // ==========================================================================
 }
 // ============================================================================
 //                                                                     The END 
