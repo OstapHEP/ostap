@@ -45,7 +45,45 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_integral' )
 else                       : logger = getLogger ( __name__             )
 # ============================================================================= 
-
+if ( 6 , 24 ) <= root_info :
+    ## convert python 1D-function into C++ functor 
+    def make_fun1 ( fun ) :
+        """Convert python 1D-function into C++ functor"""
+        assert callable ( fun ) , 'Functionmust be callable!'
+        return Ostap.Math.Apply  ( fun )
+    ## convert python 2D-function into C++ functor 
+    def make_fun2 ( fun ) :
+        """Convert python 2D-function into C++ functor"""
+        assert callable ( fun ) , 'Functionmust be callable!'
+        return Ostap.Math.Apply2 ( fun )
+    ## convert python 3D-function into C++ functor 
+    def make_fun3 ( fun ) :
+        """Convert python 3D-function into C++ functor"""
+        assert callable ( fun ) , 'Functionmust be callable!'
+        return Ostap.Math.Apply3 ( fun )
+else :
+    def make_fun1 ( fun ) :
+        """Convert python 1D-function into C++ functor"""
+        assert callable ( fun ) , 'Functionmust be callable!'
+        pc  = Ostap.Functions.PyCallable  ( fun , True ) 
+        res = Ostap.Math.Apply.create     ( pc  )
+        res ._pc = pc
+        return res 
+    def make_fun2 ( fun ) :
+        """Convert python 2D-function into C++ functor"""
+        assert callable ( fun ) , 'Functionmust be callable!'
+        pc  = Ostap.Functions.PyCallable2 ( fun , True ) 
+        res = Ostap.Math.Apply2.create    ( pc  )
+        res ._pc = pc
+        return res 
+    def make_fun3 ( fun ) :
+        """Convert python 3D-function into C++ functor"""
+        assert callable ( fun ) , 'Functionmust be callable!'
+        pc  = Ostap.Functions.PyCallable3 ( fun , True ) 
+        res = Ostap.Math.Apply3.create    ( pc  )
+        res ._pc = pc
+        return res 
+    
 # =============================================================================
 def test_integral ():
 
@@ -94,11 +132,6 @@ def test_inf_integrals ():
 
     logger = getLogger('test_inf_integrals')
 
-    
-    logger.info ( 'Simple test for 1D-integrations for (semi-)infinite ranges' )
-    if root_info < ( 6 , 24 ) :
-        logger.warnig ( "The test is disabled for ROOT %s" % str ( root_info ) ) 
-        return
 
     from math               import pi, exp 
     from ostap.math.math_ve import sech 
@@ -117,7 +150,7 @@ def test_inf_integrals ():
     # (1) sech 
     
     fun = lambda x : sech ( x ) 
-    ff  = Ostap.Math.Apply ( fun )
+    ff  = make_fun1 ( fun )
     
     vi = I.integrate_infinity      ( ff ,       0 , aprec , rprec )
     vl = I.integrate_to_infinity   ( ff , 0.0 , 0 , aprec , rprec )
@@ -135,7 +168,7 @@ def test_inf_integrals ():
     # (2) Cauchy
     
     fun = lambda x : 1.0 / ( x * x + 1.0 ) 
-    ff  = Ostap.Math.Apply ( fun )
+    ff  = make_fun1 ( fun )
     
     vi = I.integrate_infinity      ( ff ,       0 , aprec , rprec )
     vl = I.integrate_to_infinity   ( ff , 0.0 , 0 , aprec , rprec )
@@ -162,13 +195,6 @@ def test_cauchy_integrals ():
 
     logger = getLogger('test_cauchy_integrals')
 
-    
-    logger.info ( 'Simple test for Cauchy PV integrals' )
-    if root_info < ( 6 , 24 ) :
-        logger.warnig ( "The test is disabled for ROOT %s" % str ( root_info ) ) 
-        return
-
-
     from math               import pi, exp 
     from ostap.math.math_ve import sech 
 
@@ -186,7 +212,7 @@ def test_cauchy_integrals ():
     # (1) sech 
     
     fun = lambda x : sech ( x ) 
-    ff  = Ostap.Math.Apply ( fun )
+    ff  = make_fun1 ( fun )
     
     v1 = I.cauchy_pv                ( ff , 0.0 , -10 , 10 , 0 , 0 , aprec , rprec )
     v2 = I.cauchy_pv                ( ff , 1.0 , -10 , 10 , 0 , 0 , aprec , rprec )
@@ -204,7 +230,7 @@ def test_cauchy_integrals ():
     # (2) Cauchy
     
     fun = lambda x : 1.0 / ( x * x + 1.0 ) 
-    ff  = Ostap.Math.Apply ( fun )
+    ff  = make_fun1 ( fun )
     
     v1 = I.cauchy_pv                ( ff , 0.0 , -10 , 10 , 0 , 0 , aprec , rprec )
     v2 = I.cauchy_pv                ( ff , 1.0 , -10 , 10 , 0 , 0 , aprec , rprec )
@@ -230,11 +256,6 @@ def test_integrators ():
 
     logger = getLogger('test_integrators')
 
-    logger.info ( 'Simple test for Ostap.Math.Integrator' )
-    if root_info < ( 6 , 24 ) :
-        logger.warnig ( "The test is disabled for ROOT %s" % str ( root_info ) ) 
-        return
-
     from math import sin, pi 
 
     ## function to be integrated 
@@ -244,7 +265,7 @@ def test_integrators ():
     exact = 2.0
     
     ## create the function object 
-    f1 = Ostap.Math.Apply ( ff ) 
+    f1 = make_fun1 ( ff ) 
 
     I = Ostap.Math.Integrator() 
 
@@ -354,6 +375,7 @@ def test_integrators_2D ():
 
     results = []
     
+    I = Ostap.Math.Integrator() 
     for entry in funcs :
 
         vv    = entry[-1]
@@ -372,14 +394,13 @@ def test_integrators_2D ():
                 cnt +=  abs ( integral2 ( *entry[1:6] , err = True ) - vv ) * scale                
         results.append (  ( name , 'Integral2' , cnt , td.delta ) ) 
 
-        if ( 6 , 24 ) <= root_info :
-            with timing ( 'Cubature2' ) as td :
-                cnt  = SE()
-                fn   = Ostap.Math.Apply2 ( entry[1] )
-                I    = Ostap.Math.Integrator() 
-                for i in progress_bar ( range  ( N ) ) :
-                    cnt +=  abs ( I.integrate2 (  fn , *entry[2:6] , 0 , 0 , 0 ) - vv ) * scale                
-            results.append (  ( name , 'Cubature2' , cnt , td.delta ) ) 
+        with timing ( 'Cubature2' ) as td :
+            cnt  = SE()
+            fn   = make_fun2 ( entry[1] )
+            for i in progress_bar ( range  ( N ) ) :
+                args = entry[2:6] + ( 0,0,0) 
+                cnt +=  abs ( I.integrate2 (  fn , *args ) - vv ) * scale                
+        results.append (  ( name , 'Cubature2' , cnt , td.delta ) ) 
                     
     rows = [ ( 'Function' , 'Integrator' , 'CPU [s]' , 'delta [%.0e]' % ( 1.0/scale ) , 'max [%.0e]' % ( 1.0/scale ) ) ]
 
@@ -459,6 +480,8 @@ def test_integrators_3D ():
 
     results = []
     
+    I = Ostap.Math.Integrator()
+    
     for entry in funcs :
 
         vv    = entry[-1]
@@ -477,14 +500,13 @@ def test_integrators_3D ():
                 cnt +=  abs ( integral3 ( *entry[1:8] , err = True ) - vv ) * scale                
         results.append (  ( name , 'Integral3' , cnt , td.delta ) ) 
 
-        if ( 6 , 24 ) <= root_info :
-            with timing ( 'Cubature3' ) as td :
-                cnt  = SE()
-                fn   = Ostap.Math.Apply3 ( entry[1] )
-                I    = Ostap.Math.Integrator() 
-                for i in progress_bar ( range  ( N ) ) :
-                    cnt +=  abs ( I.integrate3 (  fn , *entry[2:8] , 0 , 0. , 0. ) - vv ) * scale                
-            results.append (  ( name , 'Cubature3' , cnt , td.delta ) ) 
+        with timing ( 'Cubature3' ) as td :
+            cnt  = SE()
+            fn   = make_fun3 ( entry[1] )
+            for i in progress_bar ( range  ( N ) ) :
+                args = entry[2:8] + ( 0, 0.0 , 0.0 ) 
+                cnt +=  abs ( I.integrate3 (  fn , *args ) - vv ) * scale                
+        results.append (  ( name , 'Cubature3' , cnt , td.delta ) ) 
                     
     rows = [ ( 'Function' , 'Integrator' , 'CPU [s]' , 'delta [%.0e]' % ( 1.0/scale ) , 'max [%.0e]' % ( 1.0/scale ) ) ]
 
@@ -503,12 +525,11 @@ def test_integrators_3D ():
 def test_integral_contour ():
 
     logger = getLogger('test_integral_contour')
-    logger.info ( 'Test for coplex contour integration' )
+    logger.info ( 'Test for complex contour integration' )
 
     import cmath
     
     from   math import pi
-
 
     ## function with simple poles
 

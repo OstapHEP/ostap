@@ -4,6 +4,7 @@
   1. add an explicit Romberg integrator for `Integrator1D<FUN>` and `Ostap::Math::Integrator`
   1. add a new test for `Ostap::Math::Integrator`
   1. extend and impove `Ostap::Math::Integrator`
+  1. backport functinality for the older versions of ROOT/PyROOT
 
 ## Backward incompatible:  
 

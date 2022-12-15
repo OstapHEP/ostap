@@ -99,6 +99,170 @@ double Ostap::Functions::PyCallable::evaluate ( const  double x ) const
   //
   return result_to_double ( result , s_METHOD2 ) ;
 }
+
+
+// ============================================================================
+// constructor from the callable object 
+// ============================================================================
+Ostap::Functions::PyCallable2::PyCallable2 
+( PyObject* callable , const bool /* ok */ ) 
+  : m_callable  ( callable ) 
+  , m_arguments ( PyTuple_New ( 2 ) )  
+{
+  //
+  Ostap::Assert ( m_callable && PyCallable_Check ( m_callable ) , 
+                  s_ERROR1 , s_METHOD1 , 510  ) ;
+  //
+  Py_XINCREF ( m_callable ) ;
+}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::PyCallable2::PyCallable2 
+( const Ostap::Functions::PyCallable2&  right ) 
+  : m_callable  ( right.m_callable  ) 
+  , m_arguments ( PyTuple_New ( 2 ) )  
+{
+  Py_XINCREF ( m_callable ) ;
+}
+// ============================================================================
+// Move constructor 
+// ============================================================================
+Ostap::Functions::PyCallable2::PyCallable2 
+( Ostap::Functions::PyCallable2&&  right ) 
+  : m_callable  ( right.m_callable  ) 
+  , m_arguments ( right.m_arguments ) 
+{
+  right.m_callable  = nullptr ;
+  right.m_arguments = nullptr ;
+}
+// ============================================================================
+// Destructor 
+// ============================================================================
+Ostap::Functions::PyCallable2::~PyCallable2() 
+{
+  if  ( m_callable  ) { Py_DECREF ( m_callable  ) ; m_callable  = nullptr ; }
+  if  ( m_arguments ) { Py_DECREF ( m_arguments ) ; m_arguments = nullptr ; }
+}
+// ============================================================================
+// the actual evaluation of function
+// ============================================================================
+double Ostap::Functions::PyCallable2::evaluate 
+(  const  double x ,
+   const  double y ) const 
+{
+  // 
+  if  ( nullptr == m_callable || !PyCallable_Check( m_callable  ) ) 
+  {
+    PyErr_Print() ;
+    Ostap::throwException ( s_ERROR1 , s_METHOD2 , 511 ) ;
+  }
+  //
+  PyObject* px =  PyFloat_FromDouble ( x ) ;
+  if ( 0 != PyTuple_SetItem ( m_arguments , 0 , px ) ) 
+  {
+    PyErr_Print () ;
+    Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
+  }
+  //
+  PyObject* py =  PyFloat_FromDouble ( y ) ;
+  if ( 0 != PyTuple_SetItem ( m_arguments , 1 , py ) ) 
+  {
+    PyErr_Print () ;
+    Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
+  }
+  //
+  PyObject* result = PyObject_CallObject ( m_callable , m_arguments ) ;
+  //
+  return result_to_double ( result , s_METHOD2 ) ;
+}
+
+
+// ============================================================================
+// constructor from the callable object 
+// ============================================================================
+Ostap::Functions::PyCallable3::PyCallable3 
+( PyObject* callable , const bool /* ok */ ) 
+  : m_callable  ( callable ) 
+  , m_arguments ( PyTuple_New ( 3 ) )  
+{
+  //
+  Ostap::Assert ( m_callable && PyCallable_Check ( m_callable ) , 
+                  s_ERROR1 , s_METHOD1 , 510  ) ;
+  //
+  Py_XINCREF ( m_callable ) ;
+}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::PyCallable3::PyCallable3 
+( const Ostap::Functions::PyCallable3&  right ) 
+  : m_callable  ( right.m_callable  ) 
+  , m_arguments ( PyTuple_New ( 3 ) )  
+{
+  Py_XINCREF ( m_callable ) ;
+}
+// ============================================================================
+// Move constructor 
+// ============================================================================
+Ostap::Functions::PyCallable3::PyCallable3 
+( Ostap::Functions::PyCallable3&&  right ) 
+  : m_callable  ( right.m_callable  ) 
+  , m_arguments ( right.m_arguments ) 
+{
+  right.m_callable  = nullptr ;
+  right.m_arguments = nullptr ;
+}
+// ============================================================================
+// Destructor 
+// ============================================================================
+Ostap::Functions::PyCallable3::~PyCallable3() 
+{
+  if  ( m_callable  ) { Py_DECREF ( m_callable  ) ; m_callable  = nullptr ; }
+  if  ( m_arguments ) { Py_DECREF ( m_arguments ) ; m_arguments = nullptr ; }
+}
+// ============================================================================
+// the actual evaluation of function
+// ============================================================================
+double Ostap::Functions::PyCallable3::evaluate 
+(  const  double x ,
+   const  double y ,
+   const  double z ) const 
+{
+  // 
+  if  ( nullptr == m_callable || !PyCallable_Check( m_callable  ) ) 
+  {
+    PyErr_Print() ;
+    Ostap::throwException ( s_ERROR1 , s_METHOD2 , 511 ) ;
+  }
+  //
+  PyObject* px =  PyFloat_FromDouble ( x ) ;
+  if ( 0 != PyTuple_SetItem ( m_arguments , 0 , px ) ) 
+  {
+    PyErr_Print () ;
+    Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
+  }
+  //
+  PyObject* py =  PyFloat_FromDouble ( y ) ;
+  if ( 0 != PyTuple_SetItem ( m_arguments , 1 , py ) ) 
+  {
+    PyErr_Print () ;
+    Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
+  }
+  //
+  PyObject* pz =  PyFloat_FromDouble ( z ) ;
+  if ( 0 != PyTuple_SetItem ( m_arguments , 2 , pz ) ) 
+  {
+    PyErr_Print () ;
+    Ostap::throwException ( s_ERROR2  , s_METHOD2 , 512 ) ;
+  }
+  //
+  PyObject* result = PyObject_CallObject ( m_callable , m_arguments ) ;
+  //
+  return result_to_double ( result , s_METHOD2 ) ;
+}
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

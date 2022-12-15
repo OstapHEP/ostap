@@ -12,20 +12,21 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-12-01"
 __all__     = (
-    'tf1'     , ## convert model/function to TF1 ,
-    'tf2'     , ## convert model/function to TF2 ,
-    'tf3'     , ## convert model/function to TF3 ,
-    'f1_draw' , ## draw 1D-function via conversion to TF1 
-    'f2_draw' , ## draw 1D-function via conversion to TF2 
-    'f3_draw' , ## draw 1D-function via conversion to TF3 
+    'tf1'       , ## convert model/function to TF1 ,
+    'tf2'       , ## convert model/function to TF2 ,
+    'tf3'       , ## convert model/function to TF3 ,
+    ##
+    'f1_draw'   , ## draw 1D-function via conversion to TF1 
+    'f2_draw'   , ## draw 1D-function via conversion to TF2 
+    'f3_draw'   , ## draw 1D-function via conversion to TF3
     )
 # =============================================================================
-import  ROOT 
 from    ostap.core.core        import cpp, Ostap, funID
 from    ostap.core.ostap_types import num_types, integer_types
 import  ostap.math.polynomials 
 import  ostap.math.reduce   
 import  ostap.math.derivative  as     D  
+import  ROOT 
 # =============================================================================
 # logging 
 # =============================================================================

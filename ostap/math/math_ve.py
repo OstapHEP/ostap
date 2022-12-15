@@ -415,7 +415,7 @@ def sech ( x ) :
 
 _probit_ = Ostap.Math.probit  
 # =============================================================================
-## define ``probit'' function 
+## define `probit' function 
 #  @see https://en.wikipedia.org/wiki/Probit
 def probit ( x ) :
     """ Probit function taking into account the uncertainties
@@ -426,7 +426,7 @@ def probit ( x ) :
     return _probit_ ( x )
 
 # =============================================================================
-## define ``min'' function \f$ \min (x,y) \f$ 
+## define `min' function \f$ \min (x,y) \f$ 
 def minv ( x , y ) :
     """'minv' function: min (x,y) 
     """
@@ -437,7 +437,7 @@ def minv ( x , y ) :
     return min ( x , y )
 
 # =============================================================================
-## define ``max'' function \f$ \max (x,y) \f$ 
+## define `max' function \f$ \max (x,y) \f$ 
 def maxv ( x , y ) :
     """'maxv' function: max (x,y) 
     """
