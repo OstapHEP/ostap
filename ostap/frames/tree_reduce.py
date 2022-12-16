@@ -163,10 +163,8 @@ class ReduceTree(CleanUp):
             all_vars = _strings ( all_vars  )
             snapshot = frame.Snapshot ( name , output , all_vars )
 
-        sys.stdout.flush()
-        
-        ## if  selections or 1 != prescale :
-        ##    report = snapshot.Report()
+        if  ( selections or 1 != prescale ) and not silent :
+            report = frame.Report  ()
         
         assert os.path.exists ( output ) and os.path.isfile ( output ) , \
                'Invalid file %s' % output 
@@ -175,12 +173,12 @@ class ReduceTree(CleanUp):
         self.__chain.Add ( output ) 
         self.__output = output 
 
-        self.__report = 'Tree -> Frame -> Tree filter/transformation'
+        self.__report = '' ## '\n# Tree -> Frame -> Tree filter/transformation'
         self.__table  = [] 
         if report :
             from ostap.frames.frames import report_print, report_as_table 
-            title = self.__report 
-            self.__report += '\n%s' % report_print ( report , title , '# ')
+            title = 'Tree -> Frame -> Tree filter/transformation'
+            self.__report += '%s' % report_print ( report , title , '# ')
             self.__table   = report_as_table ( report )
                 
         fs = os.path.getsize ( self.__output )        
@@ -199,7 +197,7 @@ class ReduceTree(CleanUp):
         self.__report += '\n# Reduce %d -> %d branches, %d -> %d entries' % ( nb_ , nb , ne_ , ne ) 
         self.__report += '\n# Output:%s size:%s'                          % ( self.__output , fs  )
         self.__report += '\n# %s' % str ( self.__chain ) 
-
+        
         del self.__frame_main
         
     def __str__  ( self ) : return self.__report 
@@ -297,12 +295,16 @@ def reduce  ( tree               ,
     result = Chain ( reduced.chain )
     if not output : result.trash.add ( reduced.output )  
 
+    sys.stdout.flush() 
     if not silent :
-        logger.info ('Reduce: %s' % str ( reduced ) ) 
+        ## sys.stdout.write('\n')
+        title = 'Tree -> Frame -> Tree filter/transformation'
+        logger.info ('Reduce: %s\n%s' % ( title , reduced  ) ) 
     else     : 
         nb = len ( result.chain.branches() )
         ne = len ( result.chain            )
         f  = float ( nb0 * ne0 ) / ( nb  * ne ) 
+        ## sys.stdout.write('\n')
         logger.info ( 'reduce: (%dx%d) -> (%dx%d) %.1f (branches x entries) ' % ( nb0  , ne0 ,  nb , ne , f ) ) 
                       
     return result

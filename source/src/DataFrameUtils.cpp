@@ -52,16 +52,38 @@ namespace
     ( const unsigned short               nchunks  , 
       const Ostap::Utils::ProgressConf & progress )
       : ProgressConf ( progress ) 
-      , m_nchunks    ( nchunks ) 
-      , m_chunks     ( 0       )
+      , m_nchunks    ( nchunks  ) 
+      , m_chunks     ( 0        )
+      , m_done       ( false    )
     {
-      if ( !m_nchunks ) { setWidth ( 0 ) ; }   // DISBALE IT!
+      if ( !m_nchunks ) { setWidth ( 0 ) ; }   // DISABLE IT!
     }
     // ========================================================================
     /// default move constructor
     DataFrameProgress (       DataFrameProgress&& ) = default ;
     /// disabled copy constructir 
     DataFrameProgress ( const DataFrameProgress&  ) = default ;
+    // ========================================================================
+    /// destructor
+    ~DataFrameProgress()
+    {
+      // std::cout << "DESTRUCTOR1 " 
+      //           <<  ( m_done ? "DONE" : "NOT_YET" )
+      //           <<  "/" << m_chunks 
+      //           <<  "/" << m_nchunks 
+      //           << std::endl ;
+      if ( m_nchunks && m_chunks && !m_done ) 
+      {
+        m_chunks = m_nchunks ;
+        ULong64_t dummy = 0 ;
+        (*this)( 0  , dummy ) ;
+      }
+      // std::cout << "DESTRUCTOR2 "
+      //           <<  ( m_done ? "DONE" : "NOT_YET" ) 
+      //           <<  "/" << m_chunks 
+      //           <<  "/" << m_nchunks
+      //           << std::endl ;
+    }
     // ========================================================================
   public:
     // ========================================================================
@@ -71,31 +93,30 @@ namespace
     {
       std::lock_guard<std::mutex> lock ( s_mutex_bar ) ;
       ///
-      /// increment number of processed chunks 
-      ++m_chunks ; // increment number of processed chunks
-      ///
+      if ( m_done           ) { return ; } //RETURN
+      //
       const unsigned int w  = width () ;
       if ( !w || !m_nchunks ) { return ; } // DISABLED! 
       //
+      /// increment number of processed chunks 
+      ++m_chunks ; // increment number of processed chunks
+      ///
       const double done     = m_nchunks <= m_chunks ? 100 : double ( m_chunks * 100 ) / m_nchunks  ;
       const unsigned int ns = m_nchunks <= m_chunks ? w   : int ( std::floor ( 0.01 * done * w ) ) ;  
       //
       const std::string& s1 = symbol () ;
       const std::string& s2 = empty  () ;
       //
-      if ( m_chunks <= m_nchunks ) 
-      {
-        std::string bar      ;
-        bar.reserve ( 1024 ) ;
-        bar += left () ;
-        for ( unsigned int i = 0  ; i < ns ; ++i ) { bar += s1 ; }
-        for ( unsigned int i = ns ; i < w  ; ++i ) { bar += s2 ; }
-        bar += right ();
-        //
-        std::cout << bar << ' ' << std::floor ( done ) <<  "%" ;
-        if ( m_chunks < m_nchunks ) { std::cout << '\r'                    ; }
-        else                        { std::cout << std::endl << std::flush ; } 
-      }
+      std::string bar      ;
+      bar.reserve ( 1024 ) ;
+      bar += left () ;
+      for ( unsigned int i = 0  ; i < ns ; ++i ) { bar += s1 ; }
+      for ( unsigned int i = ns ; i < w  ; ++i ) { bar += s2 ; }
+      bar += right ();
+      //
+      std::cout << bar << ' ' << std::floor ( done ) <<  "%" ;
+      if ( m_chunks < m_nchunks ) { std::cout << '\r'                    ;                 }
+      else                        { std::cout << std::endl << std::flush ; m_done = true ; } 
     }
     // ========================================================================
   private :
@@ -104,9 +125,12 @@ namespace
     unsigned int   m_nchunks         ; // number of chunks 
     // ========================================================================
     /// number of processed chunks 
-    unsigned int m_chunks { 0 }   ; // number of currently processed chunks 
+    unsigned int m_chunks  { 0     } ; // number of currently processed chunks 
     // ========================================================================
-  } ; 
+    /// done ?
+    bool         m_done    { false } ;
+    // =========================================================================  
+   } ; 
   // ==========================================================================
 } //                                     The end of local anonymous namespace 
 // ============================================================================

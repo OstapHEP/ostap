@@ -18,7 +18,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class ProgressConf
-     *  configurtaion for the progressbar \
+     *  configurtation for the progressbar
      *  @see Ostap::Utils::ProgressBar 
      */
     class ProgressConf

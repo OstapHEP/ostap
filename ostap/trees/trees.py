@@ -1887,8 +1887,8 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0
     assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
            "add_branch: invalid type of ``function'': %s/%s" % ( function , type ( function ) )  
 
-    if   isinstance ( name  ,  dictlike_types ) and function is None : pass    
-    elif isinstance ( function , addbranch_types )                   : pass 
+    if   isinstance   ( name     ,  dictlike_types ) and function is None : pass    
+    elif isinstance   ( function , addbranch_types )                      : pass 
     elif btypes_array ( function ) :    
         return _chain_add_new_branch_array ( chain                ,
                                              name      = name     ,
@@ -1995,7 +1995,10 @@ try :
     import numpy, ctypes  
 except ImportError :
     numpy = None
-    
+
+
+from ostap.utils.utils import implicitMT 
+                
 # ==============================================================================
 ## Add new branch to the tree
 # 
@@ -2123,10 +2126,8 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     for n in names : 
         assert not n in tree.branches() ,"``Branch'' %s already exists!" % n
 
-
     assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
            "add_branch: invalid type of ``function'': %s/%s" % ( function , type ( function ) )  
-
 
     if isinstance ( name  ,  dictlike_types ) and function is None :
         
@@ -2137,7 +2138,7 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
             v = name [ k ]
             if   isinstance ( v , string_types    ) : pass
             elif isinstance ( v , Ostap.IFuncTree ) : typeformula = True
-            else : raise TypeError ('add_branch: Unknown brnach %s/%s for %s'  % ( v , type( v ) , k ) )
+            else : raise TypeError ('add_branch: Unknown branch %s/%s for %s'  % ( v , type( v ) , k ) )
                     
         if typeformula : MMAP = Ostap.Trees.FUNCTREEMAP
         else           : MMAP = std.map  ( 'std::string'       , 'std::string' )
@@ -2149,14 +2150,14 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
                 v = Ostap.Functions.FuncFormula ( v , tree )
                 funcs.append ( v ) 
             ## mmap.insert ( PAIR ( k , v ) )
-            mmap[ k ] = v 
-            
-        args = mmap ,
+            mmap [ k ] = v 
+
+        names = list ( name.keys() )
+        args  = mmap ,
         
     elif isinstance ( function , addbranch_types ) :
 
-        args = tuple ( [n  for n in names ] + [ function ] )
-
+        args = tuple ( [ n  for n in names ] + [ function ] )
 
     ## efficient case with array 
     elif ( 6 , 24 ) <= root_info                   and \
@@ -2190,12 +2191,12 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
 
         data = function 
         from ostap.trees.funcs import PyTreeArray as PTA
-        args = tuple ( [n  for n in names ] + [ PTA ( data , value = value ) ] )
+        args = tuple ( [ n  for n in names ] + [ PTA ( data , value = value ) ] )
 
     elif callable ( function )  :
         
         from ostap.trees.funcs import PyTreeFunction as PTF
-        args = tuple ( [n  for n in names ] + [ PTF ( function  ) ] )
+        args = tuple ( [ n  for n in names ] + [ PTF ( function  ) ] )
 
     else :
 
@@ -2208,20 +2209,34 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     tdir  = tree.GetDirectory ()
     tpath = tree.path
 
+    branches = set ( tree.branches () ) | set ( tree.leaves() ) 
+    exists   = set ( names ) & branches
+    if exists : logger.warning ("Branches '%s' already exist(s)!" % exists  ) 
+            
     from ostap.io.root_file        import REOPEN 
     from ostap.utils.progress_conf import progress_conf
     with ROOTCWD() , REOPEN ( tdir ) as tfile :
         
         tfile.cd() 
-        ttree = tfile.Get ( tpath )
-
+        ttree    = tfile.Get ( tpath )
+        
         ## add progress bar 
         if verbose : sc    = Ostap.Trees.add_branch ( ttree , progress_conf () , *args )
         else       : sc    = Ostap.Trees.add_branch ( ttree ,                    *args )
         
         if   sc.isFailure     () : logger.error ( "Error from Ostap::Trees::add_branch %s" % sc )
         elif tfile.IsWritable () :
-            tfile.Write( "" , ROOT.TObject.kOverwrite )
+
+            for n in names :
+                b = ttree.GetBranch ( n )
+                if not b : logger.warning ( "No branch '%s' is fonud!" % b ) 
+                
+            if ( 6 , 26 ) <= root_info :
+                with implicitMT ( False ) :
+                    tfile.Write ( "" , ROOT.TObject.kOverwrite )
+            else :
+                tfile.Write ( "" , ROOT.TObject.kOverwrite )
+            
             logger.debug ('Write back TTree %s to %s' % ( tpath , tfile ) )            
         else :
             logger.error ("Can't write TTree %s back to the file %s" % ( tpath , tfile ) )

@@ -199,12 +199,16 @@ def frame_progress ( frame  ,
 
     if not length : length = len ( frame )
     
-    if   1000 < length  : nchunks = 512
-    elif 120  < length  : nchunks = 100 
+    if   2048 < length  : nchunks = 2000 
+    elif 1024 < length  : nchunks = 1000 
+    elif  512 < length  : nchunks =  500 
+    elif  101 < length  : nchunks =  100 
     else                : return cnt     ## no progress bar for short frames 
     
-    csize , rr = divmod ( length , nchunks ) 
-    if rr : nchunks += 1 
+    csize , rr = divmod ( length , nchunks )
+    csize      = max    ( csize  , 1       )
+    
+    ## if rr : nchunks += 1 
     
     fun = Ostap.Utils.frame_progress ( nchunks , progress_conf () )
     cnt.OnPartialResultSlot  ( csize , fun )
@@ -512,12 +516,12 @@ def report_print_table ( report , title  = '' , prefix = '' , more_rows = [] ) :
     fmt_name      =  '%%-%ds ' % lmax 
     fmt_input     =  '%10d'
     fmt_passed    =  '%-10d'
-    fmt_eff       =  '%8.3g +- %-8.3g'
-    fmt_cumulated =  '%8.3g +- %-8.3g'
+    fmt_eff       =  '%8.3g +/- %-8.3g'
+    fmt_cumulated =  '%8.3g +/- %-8.3g'
         
     header = ( ( '{:^%d}' % lmax ).format ( 'Filter'   ) ,               
                ( '{:>10}'        ).format ( '#input '  ) ,
-               ( '{:<10}'        ).format ( ' #passed' ) ,
+               ( '{:<10}'        ).format ( '#passed'  ) ,
                ( '{:^20}'        ).format ( 'efficiency [%]' ) ,
                ( '{:^20}'        ).format ( 'cumulated efficiency [%]' ) )
 
@@ -533,7 +537,7 @@ def report_print_table ( report , title  = '' , prefix = '' , more_rows = [] ) :
         table_data.append ( row ) 
     
     import ostap.logger.table as T
-    return T.table ( table_data , title , prefix )
+    return T.table ( table_data , title = title , prefix = prefix , alignment = 'lcccc' )
 
 # ===============================================================================
 ## Print the frame report

@@ -138,7 +138,6 @@ namespace Ostap
     ( TTree*                                   tree     ,  
       const Ostap::Utils::ProgressConf&        progress , 
       const std::map<std::string,std::string>& branches ) ;
-
     // ========================================================================
     /** add new branches to the tree
      *  the value of the branch each  is taken from <code>branches</code>

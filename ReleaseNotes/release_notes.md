@@ -6,7 +6,10 @@
   1. extend and impove `Ostap::Math::Integrator`
   1. backport functinality for the older versions of ROOT/PyROOT
   1. fix the test for ROOT<6.18 
-
+  1. add ROOT-version dependent switch in `add_new_branch` 
+  1. some improvements for frame progress bar 
+  1. some improvements for frame-based `tree_reduce`
+ 
 ## Backward incompatible:  
 
   1. rename some methods for `Ostap::Math::Integrator`
