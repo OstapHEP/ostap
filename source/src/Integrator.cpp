@@ -88,7 +88,14 @@ Ostap::Math::Integrator::Integrator
   const unsigned short size_romberg ) 
   : Integrator ( Ostap::Math::WorkSpace ( size ,size_cquad , size_romberg ) )
 {}
-// =============================================================================
+// ============================================================================
+// constructor with the fictive name 
+// ============================================================================
+Ostap::Math::Integrator::Integrator 
+( const std::string& /* name */ ) 
+  : Integrator () 
+{}
+// ============================================================================
 // set absolute/relative precision for GAG
 // =============================================================================
 void Ostap::Math::Integrator::set_precision_qag   

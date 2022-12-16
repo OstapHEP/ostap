@@ -100,6 +100,9 @@ namespace Ostap
       Integrator
       ( const Ostap::Math::WorkSpace& ws        ) ;
       // ======================================================================
+      /// constructor with the fictive name 
+      Integrator ( const std::string& /* name */ ) ;
+      // ======================================================================
     public: 
       // ======================================================================
       /** calculate the integral 
