@@ -83,6 +83,7 @@ else :
         res = Ostap.Math.Apply3.create    ( pc  )
         res ._pc = pc
         return res 
+
     
 # =============================================================================
 def test_integral ():
@@ -132,6 +133,10 @@ def test_inf_integrals ():
 
     logger = getLogger('test_inf_integrals')
 
+    logger.info ( 'Test 1D-integrals for (semi)infinite intervals' )
+    if root_info < ( 6 , 18 ) :
+        logger.warning ( "Test is disabled for %s" % str ( root_info ) )
+        return 
 
     from math               import pi, exp 
     from ostap.math.math_ve import sech 
@@ -194,6 +199,11 @@ def test_inf_integrals ():
 def test_cauchy_integrals ():
 
     logger = getLogger('test_cauchy_integrals')
+
+    logger.info ( 'Test Cauchy principal value intervals' )
+    if root_info < ( 6 , 18 ) :
+        logger.warning ( "Test is disabled for %s" % str ( root_info ) )
+        return 
 
     from math               import pi, exp 
     from ostap.math.math_ve import sech 
@@ -267,7 +277,6 @@ def test_integrators ():
     ## create the function object 
     f1 = make_fun1 ( ff ) 
 
-    I = Ostap.Math.Integrator() 
 
     cnt1 = SE ()
     cnt2 = SE ()
@@ -282,14 +291,24 @@ def test_integrators ():
         return romberg ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 ) 
     
     results = []
-    for name , fun , func in (  ( 'QAG'       , f1 , I.integrate         ) ,
-                                ( 'CQUAD'     , f1 , I.integrate_cquad   ) ,
-                                ( 'Romberg'   , f1 , I.integrate_romberg ) ,
-                                ( 'Native/1'  , f1 ,   integral          ) ,
-                                ( 'Native/2'  , ff ,   integral          ) ,
-                                ( 'Romberg/1' , f1 ,  my_romberg         ) ,
-                                ( 'Romberg/2' , ff ,  my_romberg         ) ,
-                                ) :
+
+    if root_info < ( 6 , 18 ) :
+        for_test = ( ( 'Native/1'  , f1 ,   integral          ) ,
+                     ( 'Native/2'  , ff ,   integral          ) ,
+                     ( 'Romberg/1' , f1 ,  my_romberg         ) ,
+                     ( 'Romberg/2' , ff ,  my_romberg         ) )
+    else :
+        I = Ostap.Math.Integrator() 
+        for_test = ( ( 'QAG'       , f1 , I.integrate         ) ,
+                     ( 'CQUAD'     , f1 , I.integrate_cquad   ) ,
+                     ( 'Romberg'   , f1 , I.integrate_romberg ) ,
+                     ( 'Native/1'  , f1 ,   integral          ) ,
+                     ( 'Native/2'  , ff ,   integral          ) ,
+                     ( 'Romberg/1' , f1 ,  my_romberg         ) ,
+                     ( 'Romberg/2' , ff ,  my_romberg         ) )
+        
+        
+    for name , fun , func in for_test : 
         cnt = SE()
         with timing ( '%9s integrator' % name , logger = logger ) as t :  
             for i in progress_bar ( range ( N ) ) : cnt += abs( func ( fun , low , high ) - exact ) * scale 
@@ -375,7 +394,8 @@ def test_integrators_2D ():
 
     results = []
     
-    I = Ostap.Math.Integrator() 
+    I = Ostap.Math.Integrator()
+
     for entry in funcs :
 
         vv    = entry[-1]
@@ -394,13 +414,14 @@ def test_integrators_2D ():
                 cnt +=  abs ( integral2 ( *entry[1:6] , err = True ) - vv ) * scale                
         results.append (  ( name , 'Integral2' , cnt , td.delta ) ) 
 
-        with timing ( 'Cubature2' ) as td :
-            cnt  = SE()
-            fn   = make_fun2 ( entry[1] )
-            for i in progress_bar ( range  ( N ) ) :
-                args = entry[2:6] + ( 0,0,0) 
-                cnt +=  abs ( I.integrate2 (  fn , *args ) - vv ) * scale                
-        results.append (  ( name , 'Cubature2' , cnt , td.delta ) ) 
+        if (6,18) <= root_info : 
+            with timing ( 'Cubature2' ) as td :
+                cnt  = SE()
+                fn   = make_fun2 ( entry[1] )
+                for i in progress_bar ( range  ( N ) ) :
+                    args = entry[2:6] + ( 0,0,0) 
+                    cnt +=  abs ( I.integrate2 (  fn , *args ) - vv ) * scale                
+            results.append (  ( name , 'Cubature2' , cnt , td.delta ) ) 
                     
     rows = [ ( 'Function' , 'Integrator' , 'CPU [s]' , 'delta [%.0e]' % ( 1.0/scale ) , 'max [%.0e]' % ( 1.0/scale ) ) ]
 
@@ -500,13 +521,14 @@ def test_integrators_3D ():
                 cnt +=  abs ( integral3 ( *entry[1:8] , err = True ) - vv ) * scale                
         results.append (  ( name , 'Integral3' , cnt , td.delta ) ) 
 
-        with timing ( 'Cubature3' ) as td :
-            cnt  = SE()
-            fn   = make_fun3 ( entry[1] )
-            for i in progress_bar ( range  ( N ) ) :
-                args = entry[2:8] + ( 0, 0.0 , 0.0 ) 
-                cnt +=  abs ( I.integrate3 (  fn , *args ) - vv ) * scale                
-        results.append (  ( name , 'Cubature3' , cnt , td.delta ) ) 
+        if ( 6,18) <= root_info : 
+            with timing ( 'Cubature3' ) as td :
+                cnt  = SE()
+                fn   = make_fun3 ( entry[1] )
+                for i in progress_bar ( range  ( N ) ) :
+                    args = entry[2:8] + ( 0, 0.0 , 0.0 ) 
+                    cnt +=  abs ( I.integrate3 (  fn , *args ) - vv ) * scale                
+            results.append (  ( name , 'Cubature3' , cnt , td.delta ) ) 
                     
     rows = [ ( 'Function' , 'Integrator' , 'CPU [s]' , 'delta [%.0e]' % ( 1.0/scale ) , 'max [%.0e]' % ( 1.0/scale ) ) ]
 

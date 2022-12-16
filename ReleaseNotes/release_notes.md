@@ -5,13 +5,14 @@
   1. add a new test for `Ostap::Math::Integrator`
   1. extend and impove `Ostap::Math::Integrator`
   1. backport functinality for the older versions of ROOT/PyROOT
+  1. fix the test for ROOT<6.18 
 
 ## Backward incompatible:  
 
   1. rename some methods for `Ostap::Math::Integrator`
 
 ## Bug fixes:
-
+  
 
 # v1.9.5.2
 
