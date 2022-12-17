@@ -245,7 +245,7 @@ namespace Ostap
      *  @see http://ab-initio.mit.edu/Faddeeva
      *  @see https://en.wikipedia.org/wiki/Error_function
      */
-    double               erfi ( const double x ) ;
+    double erfi ( const double x ) ;
     // ========================================================================
     /** Dowson function 
      *  \f[ f(x) =  \frac{\sqrt{\pi}}{2}  *  e^{-z^2} * erfi(z) \f] 
@@ -255,7 +255,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Error_function
      *  @see https://en.wikipedia.org/wiki/Dowson_function
      */
-    double               dowson     ( const double                x ) ;
+    double dowson     ( const double                x ) ;
     // ========================================================================
     /** Mill's ratio for normal distribution
      *  - \f$ m (x) = \frac{1 - \Phi(x)}{\phi(x)}\f$  
@@ -264,7 +264,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Mills_ratio
      *  @see Ostap::Math::erfcx 
      */
-    double              mills_normal ( const double x ) ;
+    double mills_normal ( const double x ) ;
     // ========================================================================
     /** Product of the Gaussian PDF and Millt's ratio 
      *  \f$ f(a,b) = \phi(a) R(b) \f$
@@ -272,13 +272,7 @@ namespace Ostap
      *  @see Ostap::Math::ExGauss
      *  @see Ostap::Math::NormalLaplace
      */
-    double              gauss_mills ( const double a , const double b ) ;
-    // ========================================================================
-    /** Compute <code>sech</code> function 
-     *  \f[ f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f]
-     *  @return the value of sech function 
-     */
-    double sech ( const double x ) ;
+    double gauss_mills ( const double a , const double b ) ;
     // ========================================================================
     /** \overload Compute <code>sech</code> function 
      *  \f[ f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f]
@@ -286,6 +280,13 @@ namespace Ostap
      */
     std::complex<double> sech ( const std::complex<double>& x ) ;
     // ========================================================================
+    /** Compute <code>sech</code> function 
+     *  \f[ f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f]
+     *  @return the value of sech function 
+     */
+    double sech ( const double x ) ;
+    // ========================================================================
+
 
     // ========================================================================
     // Gamma function and fiends 

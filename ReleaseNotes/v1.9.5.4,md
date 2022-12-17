@@ -1,0 +1,23 @@
+# v1.9.5.4
+
+## New features: 
+
+  1. add an explicit ouble-adaptive CQUAD integrator for `Integrator1D<FUN>` and `Ostap::Math::Integrator`
+  1. add an explicit Romberg integrator for `Integrator1D<FUN>` and `Ostap::Math::Integrator`
+  1. add a new test for `Ostap::Math::Integrator`
+  1. extend and impove `Ostap::Math::Integrator`
+  1. backport functinality for the older versions of ROOT/PyROOT
+  1. fix the test for ROOT<6.18 
+  1. add ROOT-version dependent switch in `add_new_branch` 
+  1. some improvements for frame progress bar 
+  1. some improvements for frame-based `tree_reduce`
+  1. disable new frame-test for old ROOT 
+  1. add treatment of new `ROOT.RooFit.MaxCalls` agrument 
+  
+
+## Backward incompatible:  
+
+  1. rename some methods for `Ostap::Math::Integrator`
+
+## Bug fixes:
+  

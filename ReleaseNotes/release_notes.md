@@ -1,3 +1,5 @@
+# v1.9.5.4
+
 ## New features: 
 
   1. add an explicit ouble-adaptive CQUAD integrator for `Integrator1D<FUN>` and `Ostap::Math::Integrator`
