@@ -164,7 +164,11 @@ def test_frame3 () :
 def test_frame4 () :
 
     logger = getLogger ( 'test_frame4' ) 
-               
+    logger = getLogger ( 'test_frame0' ) 
+    if root_info < (6,16) : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
+        return 
+                   
     frame = DataFrame     ( tname        , fname        )
     tree  = Tree      ( name = tname , file = fname ).chain
 
@@ -183,8 +187,6 @@ def test_frame4 () :
     
 # =============================================================================
 if '__main__' == __name__ :
-
-    ## pass
 
     test_frame0 () 
     test_frame1 ()
