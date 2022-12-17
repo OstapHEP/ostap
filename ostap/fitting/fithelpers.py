@@ -789,7 +789,7 @@ class FitHelper(VarMaker) :
                 
                 _args.append   (  ROOT.RooFit.Offset       ( a )  )
                 
-            elif kup in ( 'FITOPTIONS' , 'FITOPTION'      ) and \
+            elif kup in ( 'FITOPTIONS' , 'FITOPTION' ) and \
                           isinstance ( a , string_types   ) and root_info < ( 6 , 28 ) :
                 
                 _args.append   (  ROOT.RooFit.FitOptions   ( a )  )
@@ -819,6 +819,11 @@ class FitHelper(VarMaker) :
                      1<= len ( a ) <= 3                   and (6,27) <= root_info :
 
                 _args.append   (  ROOT.RooFit.Parallelize ( *a ) )
+
+            elif kup in ( 'MAXCALLS' , 'MAXCALL' ) and \
+                     isinstance ( a , integer_types )    and (6,27) <= root_info :
+                
+                _args.append   ( ROOT.RooFit.MaxCalls ( a ) ) 
 
             else :
                

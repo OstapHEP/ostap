@@ -10,7 +10,9 @@
   1. some improvements for frame progress bar 
   1. some improvements for frame-based `tree_reduce`
   1. disable new frame-test for old ROOT 
- 
+  1. add treatment of new `ROOT.RooFit.MaxCalls` agrument 
+  
+
 ## Backward incompatible:  
 
   1. rename some methods for `Ostap::Math::Integrator`
