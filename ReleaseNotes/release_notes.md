@@ -1,3 +1,17 @@
+## New features: 
+
+  1. back-propagate Ostap::Math::Integrtaor toold versions of PyROOT 
+  1. extend tests
+
+## Backward incompatible:  
+
+  1. rename some methods for `Ostap::Math::Integrator`
+
+## Bug fixes:
+
+  1. Fix typos for `Ostap::Math::Integrator`
+
+
 # v1.9.5.4
 
 ## New features: 

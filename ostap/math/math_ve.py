@@ -39,9 +39,9 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.math_ve' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 from   ostap.math.ve          import VE
-from   ostap.math.base        import Ostap, iszero, isequal
+from   ostap.math.base        import Ostap, iszero, isequal, complex_types 
 from   ostap.core.ostap_types import num_types, is_integer, integer_types  
-import ROOT,math
+import ROOT, math, cmath 
 # =============================================================================
 _ln2_i = 1/math.log(2.0)                 ## useful constant 
 # =============================================================================
@@ -53,6 +53,7 @@ def exp ( x ) :
     """
     fun = getattr ( x , '__exp__' , None )
     if fun : return fun()
+    if isinstance ( x , complex_types ) : return cmath.exp ( x )
     return math.exp ( x )
 
 # =============================================================================
@@ -80,6 +81,7 @@ def log ( x ) :
     """
     fun = getattr ( x , '__log__' , None )
     if fun : return fun()
+    if isinstance ( x , complex_types ) : return cmath.log ( x )
     return math.log ( x )
 
 # =============================================================================
@@ -99,6 +101,7 @@ def log10 ( x ) :
     """
     fun = getattr ( x , '__log10__' , None )
     if fun : return fun()
+    if isinstance ( x , complex_types ) : return cmath.log10 ( x )
     return math.log10 ( x )
 
 # =============================================================================
@@ -117,6 +120,7 @@ def sqrt ( x ) :
     """
     fun = getattr ( x , '__sqrt__' , None )
     if fun : return fun()
+    if isinstance ( x , complex_types ) : return cmath.sqrt ( x )
     return math.sqrt ( x )
 
 # =============================================================================
@@ -143,6 +147,7 @@ def sin ( x ) :
     """
     fun = getattr ( x , '__sin__' , None )
     if fun : return fun()
+    if isinstance ( x , complex_types ) : return cmath.sin ( x )
     return math.sin ( x )
 
 # =============================================================================
@@ -152,6 +157,7 @@ def cos ( x ) :
     """
     fun = getattr ( x , '__cos__' , None )
     if fun : return fun()
+    if isinstance ( x , complex_types ) : return cmath.cos ( x )
     return math.cos ( x )
 
 # =============================================================================
@@ -161,6 +167,7 @@ def tan ( x ) :
     """
     fun = getattr ( x , '__tan__' , None )
     if fun : return fun()
+    if isinstance ( x , complex_types ) : return cmath.tan ( x )
     return math.tan ( x )
 
 # =============================================================================
@@ -170,6 +177,7 @@ def sinh ( x ) :
     """
     fun = getattr ( x , '__sinh__' , None )
     if fun : return fun()
+    if isinstance ( x , complex_types ) : return cmath.sinh ( x )
     return math.sinh ( x )
 
 # =============================================================================
@@ -179,6 +187,7 @@ def cosh ( x ) :
     """
     fun = getattr ( x , '__cosh__' , None )
     if fun : return fun()
+    if isinstance ( x , complex_types ) : return cmath.cosh ( x )
     return math.cosh ( x )
 
 # =============================================================================
@@ -188,6 +197,7 @@ def tanh ( x ) :
     """
     fun = getattr ( x , '__tanh__' , None )
     if fun : return fun()
+    if isinstance ( x , complex_types ) : return cmath.tanh ( x )
     return math.tanh ( x )
 
 _erf_   = Ostap.Math.erf 

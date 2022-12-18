@@ -83,6 +83,7 @@ add_library(ostap SHARED src/format.cpp
                          src/PyFuncs.cpp 
                          src/PyPdf.cpp   
                          src/PyIterator.cpp
+                         src/PyIntegrator.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp
                          src/PyVar.cpp   

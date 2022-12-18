@@ -68,11 +68,11 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-import ROOT, warnings, math 
 from   builtins        import range
 from   ostap.math.ve   import VE
 from   ostap.math.base import isequal, iszero
 from   ostap.core.core import items_loop 
+import ROOT, warnings, math 
 # =============================================================================
 # logging 
 # =============================================================================

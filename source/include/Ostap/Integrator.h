@@ -299,7 +299,7 @@ namespace Ostap
         const unsigned short rescale    = 0 ,
         const double         aprecision = 0 , 
         const double         rprecision = 0 , 
-        const double         width      = 0 ) 
+        const double         width      = 0 ) const 
       { return cauchy_pv_infinity_ 
           ( std::cref ( f1 ) , c , 
             m_workspace , tag , rescale , 
@@ -432,7 +432,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION2>
-      inline double integrate2
+      double integrate2
       ( FUNCTION2         f2             , 
         const double      xmin           , 
         const double      xmax           ,
@@ -470,7 +470,7 @@ namespace Ostap
         const double         aprecision = 0 , 
         const double         rprecision = 0 , 
         const int            rule       = 0 ) const
-      { return integrateX_ 
+      { return integrate2X_ 
           ( std::cref ( f2 )     , 
             y , xmin , xmax      , 
             m_workspace , tag    , rescale , 
@@ -497,7 +497,7 @@ namespace Ostap
         const double         aprecision = 0 , 
         const double         rprecision = 0 ,
         const int            rule       = 0 ) const
-      { return integrateY_ 
+      { return integrate2Y_ 
           ( std::cref ( f2 )     , 
             x , ymin , ymax      , 
             m_workspace , tag    , rescale , 
@@ -526,7 +526,7 @@ namespace Ostap
        *  @return the value of the integral and the estimate of the error 
        */
       template <class FUNCTION3>
-      inline double integrate3
+      double integrate3
       ( FUNCTION3         f3             , 
         const double      xmin           , 
         const double      xmax           ,
@@ -565,7 +565,7 @@ namespace Ostap
        *  @see Ostap::Math::Integrator::integrate2_ 
        */
       template <class FUNCTION3>
-      inline double integrate3XY
+      double integrate3XY
       ( FUNCTION3            f3             ,
         const double         z              , 
         const double         xmin           ,
@@ -575,7 +575,7 @@ namespace Ostap
         const std::size_t    tag        = 0 , 
         const double         aprecision = 0 , 
         const double         rprecision = 0 )  const 
-      { return integrateXY_ 
+      { return integrate3XY_ 
           ( std::cref ( f3 ) , 
             z    , 
             xmin , xmax ,
@@ -600,7 +600,7 @@ namespace Ostap
        *  @see Ostap::Math::Integrator::integrate2_ 
        */
       template <class FUNCTION3>
-      inline double integrate3XZ
+      double integrate3XZ
       ( FUNCTION3            f3             ,
         const double         y              , 
         const double         xmin           ,
@@ -610,7 +610,7 @@ namespace Ostap
         const std::size_t    tag        = 0 , 
         const double         aprecision = 0 , 
         const double         rprecision = 0 ) const 
-      { return integrateXZ_ 
+      { return integrate3XZ_ 
           ( std::cref ( f3 ) , 
             y    , 
             xmin , xmax ,
@@ -635,7 +635,7 @@ namespace Ostap
        *  @see Ostap::Math::Integrator::integrate2_ 
        */
       template <class FUNCTION3>
-      inline double integrate3YZ
+      double integrate3YZ
       ( FUNCTION3            f3             ,
         const double         x              , 
         const double         ymin           ,
@@ -645,7 +645,7 @@ namespace Ostap
         const std::size_t    tag        = 0 , 
         const double         aprecision = 0 , 
         const double         rprecision = 0 ) const
-      { return integrateYZ_ 
+      { return integrate3YZ_ 
           ( std::cref ( f3 ) , 
             x    , 
             ymin , ymax ,
@@ -661,7 +661,6 @@ namespace Ostap
        *  @param z parameter z
        *  @param xmin lower integration edge in x 
        *  @param xmax upper integration edge in x 
-       *  @param integration workspace 
        *  @param tag unique label/tag 
        *  @param rescale rescale function for better numerical precision 
        *  @param aprecision absolute precision  (if non-positive s_APRECISION_QAG is used) 
@@ -669,19 +668,18 @@ namespace Ostap
        *  @return the value of the integral and the estimate of the error 
        */
       template <class FUNCTION3>
-      inline double integrate3X
+      double integrate3X
       ( FUNCTION3            f3             ,
         const double         y              , 
         const double         z              , 
         const double         xmin           ,
         const double         xmax           ,
-        // const WorkSpace&     ws             , 
         const std::size_t    tag        = 0 , 
         const unsigned short rescale    = 0 ,
         const double         aprecision = 0 , 
         const double         rprecision = 0 , 
         const int            rule       = 0 ) const
-      { return integrateX_ 
+      { return integrate3X_ 
           ( std::cref ( f3 ) , 
             y     , z    , 
             xmin  , xmax ,
@@ -697,7 +695,6 @@ namespace Ostap
        *  @param z parameter z
        *  @param ymin lower integration edge in y 
        *  @param ymax upper integration edge in y 
-       *  @param integration workspace 
        *  @param tag unique label/tag 
        *  @param rescale rescale function for better numerical precision 
        *  @param aprecision absolute precision  (if non-positive s_APRECISION_QAG is used) 
@@ -705,19 +702,18 @@ namespace Ostap
        *  @return the value of the integral and the estimate of the error 
        */
       template <class FUNCTION3>
-      inline double integrate3Y
+      double integrate3Y
       ( FUNCTION3            f3             ,
         const double         x              , 
         const double         z              , 
         const double         ymin           ,
         const double         ymax           ,
-        // const WorkSpace&     ws             , 
         const std::size_t    tag        = 0 , 
         const unsigned short rescale    = 0 ,
         const double         aprecision = 0 , 
         const double         rprecision = 0 , 
         const int            rule       = 0 ) const 
-      { return integrateY_ 
+      { return integrate3Y_ 
           ( std::cref ( f3 ) , 
             x     , z    , 
             ymin  , ymax ,
@@ -733,7 +729,6 @@ namespace Ostap
        *  @param y parameter y
        *  @param zmin lower integration edge in z 
        *  @param zmax upper integration edge in z 
-       *  @param integration workspace 
        *  @param tag unique label/tag 
        *  @param rescale rescale function for better numerical precision 
        *  @param aprecision absolute precision  (if non-positive s_APRECISION_QAG is used) 
@@ -741,13 +736,12 @@ namespace Ostap
        *  @return the value of the integral and the estimate of the error 
        */
       template <class FUNCTION3>
-      inline double integrate3Z
+      double integrate3Z
       ( FUNCTION3            f3             ,
         const double         x              , 
         const double         y              , 
         const double         zmin           ,
         const double         zmax           ,
-        // const WorkSpace&     ws             , 
         const std::size_t    tag        = 0 , 
         const unsigned short rescale    = 0 ,
         const double         aprecision = 0 , 
@@ -1666,18 +1660,71 @@ namespace Ostap
     public:
       // ======================================================================
       /// set the QAG integration rule 
+      inline int qag_rule () const { return m_qag_rule ; }
+      /// set absolute/relative precision for GAG
+      inline double abs_precision_qag     () const { return m_abs_precision_qag     ; }
+      /// set absolute/relative precision for GAG
+      inline double rel_precision_qag     () const { return m_rel_precision_qag     ; }
+      /// set absolute/relative precision for GAGI
+      inline double abs_precision_qagi    () const { return m_abs_precision_qagi    ; }
+      /// set absolute/relative precision for GAGI
+      inline double rel_precision_qagi    () const { return m_rel_precision_qagi    ; }
+      /// set absolute/relative precision for GAGIU
+      inline double abs_precision_qagiu   () const { return m_abs_precision_qagiu   ; }
+      /// set absolute/relative precision for GAGIU
+      inline double rel_precision_qagiu   () const { return m_rel_precision_qagiu   ; }
+      /// set absolute/relative precision for GAGIL
+      inline double abs_precision_qagil   () const { return m_abs_precision_qagil   ; }
+      /// set absolute/relative precision for GAGIL
+      inline double rel_precision_qagil   () const { return m_rel_precision_qagil   ; }
+      /// set absolute/relative precision for GAGP
+      inline double abs_precision_qagp    () const { return m_abs_precision_qagp    ; }
+      /// set absolute/relative precision for GAGP
+      inline double rel_precision_qagp    () const { return m_rel_precision_qagp    ; }
+      /// set absolute/relative precision for GAWC
+      inline double abs_precision_qawc    () const { return m_abs_precision_qawc    ; }
+      /// set absolute/relative precision for GAWC
+      inline double rel_precision_qawc    () const { return m_rel_precision_qawc    ; }
+      /// set absolute/relative precision for CPV
+      inline double abs_precision_cpv     () const { return m_abs_precision_cpv     ; }
+      /// set absolute/relative precision for CPV
+      inline double rel_precision_cpv     () const { return m_rel_precision_cpv     ; }      
+      /// set absolute/relative precision for KK
+      inline double abs_precision_kk      () const { return m_abs_precision_kk      ; }
+      /// set absolute/relative precision for KK
+      inline double rel_precision_kk      () const { return m_rel_precision_kk      ; }
+      /// set absolute/relative precision for CQUAD
+      inline double abs_precision_cquad   () const { return m_abs_precision_cquad   ; }
+      /// set absolute/relative precision for CQUAD
+      inline double rel_precision_cquad   () const { return m_rel_precision_cquad   ; }      
+      /// set absolute/relative precision for Romberg
+      inline double abs_precision_romberg () const { return m_abs_precision_romberg ; }
+      /// set absolute/relative precision for Romberg
+      inline double rel_precision_romberg () const { return m_rel_precision_romberg ; }
+      /// set absolute/relative precision for CUBE2
+      inline double abs_precision_cube2   () const { return m_abs_precision_cube2   ; }
+      /// set absolute/relative precision for CUBE2
+      inline double rel_precision_cube2   () const { return m_rel_precision_cube2   ; }
+      /// set absolute/relative precision for CUBE3
+      inline double abs_precision_cube3   () const { return m_abs_precision_cube3   ; }
+      /// set absolute/relative precision for CUBE3
+      inline double rel_precision_cube3   () const { return m_rel_precision_cube3   ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set the QAG integration rule 
       void set_qag_rule          ( const int rule ) ;
-      /// set absolute/relatibe precision fore GAG
+      /// set absolute/relatibe precision for GAG
       void set_precision_qag     ( const double aprec , const double rprec ) ;
-      /// set absolute/relative precision fore GAGI
+      /// set absolute/relative precision for GAGI
       void set_precision_qagi    ( const double aprec , const double rprec ) ;
-      /// set absolute/relative precision fore GAGIL
+      /// set absolute/relative precision for GAGIL
       void set_precision_qagil   ( const double aprec , const double rprec ) ;
-      /// set absolute/relative precision fore GAGIU
+      /// set absolute/relative precision for GAGIU
       void set_precision_qagiu   ( const double aprec , const double rprec ) ;
-      /// set absolute/relative precision fore QAGP 
+      /// set absolute/relative precision for QAGP 
       void set_precision_qagp    ( const double aprec , const double rprec ) ;
-      /// set absolute/relative precision fore QAWC
+      /// set absolute/relative precision for QAWC
       void set_precision_qawc    ( const double aprec , const double rprec ) ;
       /// set absolute/relative precision for Cauchy PV inetegration 
       void set_precision_cpv     ( const double aprec , const double rprec ) ;
@@ -1744,7 +1791,7 @@ namespace Ostap
       /// relative precision for QAWC integration
       double m_rel_precision_qawc    ; // relative precision for QAWC  integration
       /// absolute precision for Cauchy PV integration 
-      double m_abs_precision_cpv     ; // absolute precion for Cauchy integrtaion      
+      double m_abs_precision_cpv     ; // absolute precion for Cauchy integration      
       /// relative precision for Cauchy PV integration 
       double m_rel_precision_cpv     ; // relative precion for Cauchy integrtaion
       /// absolute precision for Cauchy PV/inf integration 

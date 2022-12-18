@@ -104,7 +104,9 @@ __all__     = (
     ##
     'ROOTIgnore'     , ## control ROOT verbosity, suppress ROOT errors
     ##
-    'typename'       , ## get typename for the instance 
+    'typename'       , ## get typename for the instance
+    ##
+    'complex_types'  , ## list of complex & complex-like types 
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import root_version_int 
@@ -519,7 +521,10 @@ COMPLEXl = cpp.std.complex ( 'long double' )
 
 VCOMPLEX   = cpp.std.vector ( COMPLEX )
 VDOUBLE    = cpp.std.vector ('double' )
-VCT_TYPES  = VDOUBLE, VCOMPLEX 
+VCT_TYPES  = VDOUBLE, VCOMPLEX
+# =============================================================================
+## list of complex types: native and X++
+complex_types = complex , COMPLEX, COMPLEXf, COMPLEXl
 # =============================================================================
 if root_version_int < 62200 : 
     def _real_ ( s ) : return s.real ()

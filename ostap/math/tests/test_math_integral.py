@@ -36,8 +36,9 @@ from ostap.utils.progress_bar import progress_bar
 from ostap.math.integral      import ( integral  , romberg     , 
                                        integral2 , genzmalik2  ,  
                                        integral3 , genzmalik3  ,
-                                       complex_circle_integral ) 
-import ostap.logger.table  as     T
+                                       complex_circle_integral )
+import ostap.math.integrator 
+import ostap.logger.table     as     T
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -49,41 +50,59 @@ if ( 6 , 24 ) <= root_info :
     ## convert python 1D-function into C++ functor 
     def make_fun1 ( fun ) :
         """Convert python 1D-function into C++ functor"""
-        assert callable ( fun ) , 'Functionmust be callable!'
+        assert callable ( fun ) , 'Function must be callable!'
         return Ostap.Math.Apply  ( fun )
     ## convert python 2D-function into C++ functor 
     def make_fun2 ( fun ) :
         """Convert python 2D-function into C++ functor"""
-        assert callable ( fun ) , 'Functionmust be callable!'
+        assert callable ( fun ) , 'Function must be callable!'
         return Ostap.Math.Apply2 ( fun )
     ## convert python 3D-function into C++ functor 
     def make_fun3 ( fun ) :
         """Convert python 3D-function into C++ functor"""
-        assert callable ( fun ) , 'Functionmust be callable!'
+        assert callable ( fun ) , 'Function must be callable!'
         return Ostap.Math.Apply3 ( fun )
-else :
+elif (6,18) <= root_info :
     def make_fun1 ( fun ) :
         """Convert python 1D-function into C++ functor"""
-        assert callable ( fun ) , 'Functionmust be callable!'
-        pc  = Ostap.Functions.PyCallable  ( fun , True ) 
+        assert callable ( fun ) , 'Function must be callable!'        
+        PC  = Ostap.Functions.PyCallable
+        pc  = fun if isinstance ( fun , PC ) else PC ( fun , True ) 
         res = Ostap.Math.Apply.create     ( pc  )
-        res ._pc = pc
+        res ._pc = pc,fun 
         return res 
     def make_fun2 ( fun ) :
         """Convert python 2D-function into C++ functor"""
-        assert callable ( fun ) , 'Functionmust be callable!'
-        pc  = Ostap.Functions.PyCallable2 ( fun , True ) 
-        res = Ostap.Math.Apply2.create    ( pc  )
-        res ._pc = pc
+        assert callable ( fun ) , 'Function must be callable!'
+        PC2 = Ostap.Functions.PyCallable2
+        pc  = fun if isinstance ( fun , PC2 ) else PC2 ( fun , True ) 
+        res = Ostap.Math.Apply2.create     ( pc  )
+        res ._pc = pc,fun 
         return res 
     def make_fun3 ( fun ) :
         """Convert python 3D-function into C++ functor"""
-        assert callable ( fun ) , 'Functionmust be callable!'
-        pc  = Ostap.Functions.PyCallable3 ( fun , True ) 
-        res = Ostap.Math.Apply3.create    ( pc  )
-        res ._pc = pc
+        assert callable ( fun ) , 'Function must be callable!'
+        PC3 = Ostap.Functions.PyCallable3
+        pc  = fun if isinstance ( fun , PC3 ) else PC3 ( fun , True ) 
+        res = Ostap.Math.Apply3.create     ( pc  )
+        res ._pc = pc,fun 
         return res 
-
+else :
+    def make_fun1 ( fun ) :
+        """Convert python 1D-function into C++ functor"""
+        assert callable ( fun ) , 'Function must be callable!'
+        PC = Ostap.Functions.PyCallable
+        return fun if isinstance ( fun , PC ) else PC ( fun , True ) 
+    def make_fun2 ( fun ) :
+        """Convert python 2D-function into C++ functor"""
+        assert callable ( fun ) , 'Function must be callable!'
+        PC2 = Ostap.Functions.PyCallable2
+        return fun if isinstance ( fun , PC2 ) else PC2 ( fun , True ) 
+    def make_fun3 ( fun ) :
+        """Convert python 3D-function into C++ functor"""
+        assert callable ( fun ) , 'Function must be callable!'
+        PC3 = Ostap.Functions.PyCallable3
+        return fun if isinstance ( fun , PC3 ) else PC3 ( fun , True ) 
     
 # =============================================================================
 def test_integral ():
@@ -134,9 +153,9 @@ def test_inf_integrals ():
     logger = getLogger('test_inf_integrals')
 
     logger.info ( 'Test 1D-integrals for (semi)infinite intervals' )
-    if root_info < ( 6 , 18 ) :
-        logger.warning ( "Test is disabled for %s" % str ( root_info ) )
-        return 
+    ## if root_info < ( 6 , 18 ) :
+    ##     logger.warning ( "Test is disabled for %s" % str ( root_info ) )
+    ##    return 
 
     from math               import pi, exp 
     from ostap.math.math_ve import sech 
@@ -201,9 +220,9 @@ def test_cauchy_integrals ():
     logger = getLogger('test_cauchy_integrals')
 
     logger.info ( 'Test Cauchy principal value intervals' )
-    if root_info < ( 6 , 18 ) :
-        logger.warning ( "Test is disabled for %s" % str ( root_info ) )
-        return 
+    ## if root_info < ( 6 , 18 ) :
+    ##    logger.warning ( "Test is disabled for %s" % str ( root_info ) )
+    ##    return 
 
     from math               import pi, exp 
     from ostap.math.math_ve import sech 
@@ -292,21 +311,21 @@ def test_integrators ():
     
     results = []
 
-    if root_info < ( 6 , 18 ) :
-        for_test = ( ( 'Native/1'  , f1 ,   integral          ) ,
-                     ( 'Native/2'  , ff ,   integral          ) ,
-                     ( 'Romberg/1' , f1 ,  my_romberg         ) ,
-                     ( 'Romberg/2' , ff ,  my_romberg         ) )
-    else :
-        I = Ostap.Math.Integrator() 
-        for_test = ( ( 'QAG'       , f1 , I.integrate         ) ,
-                     ( 'CQUAD'     , f1 , I.integrate_cquad   ) ,
-                     ( 'Romberg'   , f1 , I.integrate_romberg ) ,
-                     ( 'Native/1'  , f1 ,   integral          ) ,
-                     ( 'Native/2'  , ff ,   integral          ) ,
-                     ( 'Romberg/1' , f1 ,  my_romberg         ) ,
-                     ( 'Romberg/2' , ff ,  my_romberg         ) )
-        
+    ## if root_info < ( 6 , 18 ) :
+    ##     for_test = ( ( 'Native/1'  , f1 ,   integral          ) ,
+    ##                  ( 'Native/2'  , ff ,   integral          ) ,
+    ##                  ( 'Romberg/1' , f1 ,  my_romberg         ) ,
+    ##                  ( 'Romberg/2' , ff ,  my_romberg         ) )
+    ## else :
+    I = Ostap.Math.Integrator() 
+    for_test = ( ( 'QAG'       , f1 , I.integrate         ) ,
+                 ( 'CQUAD'     , f1 , I.integrate_cquad   ) ,
+                 ( 'Romberg'   , f1 , I.integrate_romberg ) ,
+                 ( 'Native/1'  , f1 ,   integral          ) ,
+                 ( 'Native/2'  , ff ,   integral          ) ,
+                 ( 'Romberg/1' , f1 ,  my_romberg         ) ,
+                 ( 'Romberg/2' , ff ,  my_romberg         ) )
+    
         
     for name , fun , func in for_test : 
         cnt = SE()
@@ -414,14 +433,14 @@ def test_integrators_2D ():
                 cnt +=  abs ( integral2 ( *entry[1:6] , err = True ) - vv ) * scale                
         results.append (  ( name , 'Integral2' , cnt , td.delta ) ) 
 
-        if (6,18) <= root_info : 
-            with timing ( 'Cubature2' ) as td :
-                cnt  = SE()
-                fn   = make_fun2 ( entry[1] )
-                for i in progress_bar ( range  ( N ) ) :
-                    args = entry[2:6] + ( 0,0,0) 
-                    cnt +=  abs ( I.integrate2 (  fn , *args ) - vv ) * scale                
-            results.append (  ( name , 'Cubature2' , cnt , td.delta ) ) 
+        ## if (6,18) <= root_info : 
+        with timing ( 'Cubature2' ) as td :
+            cnt  = SE()
+            fn   = make_fun2 ( entry[1] )
+            for i in progress_bar ( range  ( N ) ) :
+                args = entry[2:6] + ( 0,0,0) 
+                cnt +=  abs ( I.integrate2 (  fn , *args ) - vv ) * scale                
+        results.append (  ( name , 'Cubature2' , cnt , td.delta ) ) 
                     
     rows = [ ( 'Function' , 'Integrator' , 'CPU [s]' , 'delta [%.0e]' % ( 1.0/scale ) , 'max [%.0e]' % ( 1.0/scale ) ) ]
 
@@ -521,14 +540,14 @@ def test_integrators_3D ():
                 cnt +=  abs ( integral3 ( *entry[1:8] , err = True ) - vv ) * scale                
         results.append (  ( name , 'Integral3' , cnt , td.delta ) ) 
 
-        if ( 6,18) <= root_info : 
-            with timing ( 'Cubature3' ) as td :
-                cnt  = SE()
-                fn   = make_fun3 ( entry[1] )
-                for i in progress_bar ( range  ( N ) ) :
-                    args = entry[2:8] + ( 0, 0.0 , 0.0 ) 
-                    cnt +=  abs ( I.integrate3 (  fn , *args ) - vv ) * scale                
-            results.append (  ( name , 'Cubature3' , cnt , td.delta ) ) 
+        ## if ( 6,18) <= root_info : 
+        with timing ( 'Cubature3' ) as td :
+            cnt  = SE()
+            fn   = make_fun3 ( entry[1] )
+            for i in progress_bar ( range  ( N ) ) :
+                args = entry[2:8] + ( 0, 0.0 , 0.0 ) 
+                cnt +=  abs ( I.integrate3 (  fn , *args ) - vv ) * scale                
+        results.append (  ( name , 'Cubature3' , cnt , td.delta ) ) 
                     
     rows = [ ( 'Function' , 'Integrator' , 'CPU [s]' , 'delta [%.0e]' % ( 1.0/scale ) , 'max [%.0e]' % ( 1.0/scale ) ) ]
 
