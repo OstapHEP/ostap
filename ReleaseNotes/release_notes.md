@@ -1,5 +1,3 @@
-
-
 ## New features: 
 
   1. back-propagate Ostap::Math::Integrtaor toold versions of PyROOT 
