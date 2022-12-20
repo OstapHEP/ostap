@@ -32,7 +32,7 @@ else                       : logger = getLogger ( __name__                      
 functions = set () 
 
 
-
+# =============================================================================
 def more_uniform ( a , b , N , N1 = 10 ) :
 
     assert 0 <= N  , 'N  must be positive!'
@@ -49,12 +49,15 @@ def more_uniform ( a , b , N , N1 = 10 ) :
         
         yield random.uniform ( ai, bi )
 
+# =============================================================================
 try :
     from   ostap.math.interpolation import bspline_interpolate
 except ImportError :
     bspline_interpolate = None
     logger.warning ( "``bspline_interpolate'' is not available" )
-                     
+
+
+# =============================================================================
 ## calculate "distance" between two functions 
 def distance ( fun1 , fun2 , low , high ) :
     """calculate ``distance'' between two functions"""
@@ -371,7 +374,7 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
 ## interpolate cos function 
 def test_cos () :
 
-    logger = getLogger ( 'test_cos' ) 
+    logger = getLogger ( 'test_cos' )
     fun , N , low , high = math.cos , 10 , 0 , 1.9 * math.pi
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( 'cos' , N , low , high )  ) 
     
@@ -383,9 +386,7 @@ def test_cos () :
 def test_abssin () :
     
     logger = getLogger ( 'test_abssin' ) 
-
     fun = lambda x : abs( math.sin ( x ) )
-
     N , low , high = 15 , -0.1 , 0.2
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( '|sin|' , N , low , high )  ) 
     
@@ -395,8 +396,7 @@ def test_abssin () :
 ## interpolate |PW| function 
 def test_PW () :
     
-    logger = getLogger ( 'test_piecewise' ) 
-
+    logger = getLogger ( 'test_PW' ) 
     def fun ( x ) :        
         return 0.25*x**2 if 0 <= x else abs(x)**5
 
@@ -434,7 +434,6 @@ def test_runge () :
     random.seed ( 50948524584 )
     return run_func_interpolation ( fun , N , low , high , scale = 1.e-3 , logger = logger , name = 'Runge') 
 
-
 # =============================================================================
 ## interpolate the table of values 
 def test_random_grid_sin () :
@@ -456,7 +455,6 @@ def test_random_grid_sin () :
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( 'sin' , N , low , high )  )
     
     return run_grid_interpolation ( tfun , dct , N , low , high , scale = 1.e-4 , logger = logger , name = 'sin(x)') 
-
 
 # =============================================================================
 ## interpolate the table of values 
@@ -577,20 +575,38 @@ def test_db() :
     
 # =============================================================================
 if '__main__' == __name__ :
-    
-    test_cos                () 
-    test_abssin             ()
-    test_PW                 ()  
-    test_gauss              ()
-    test_runge              ()
 
-    test_random_grid_sin    ()
-    test_random_grid_abssin ()
-    test_random_grid_sin2   ()
-    test_random_grid_gauss  ()
+    with timing ( 'test_cos'    , logger = logger ) : 
+        test_cos                ()
+        
+    with timing ( 'test_abssin' , logger = logger ) : 
+        test_abssin             ()
+        
+    with timing ( 'test_PW'     , logger = logger ) : 
+        test_PW                 ()
+        
+    with timing ( 'test_gauss'     , logger = logger ) : 
+        test_gauss              ()
+        
+    with timing ( 'test_runge'     , logger = logger ) : 
+        test_runge              ()
+
+    with timing ( 'test_random_grid_sin'     , logger = logger ) : 
+        test_random_grid_sin    ()
+        
+    with timing ( 'test_random_grid_abssin'     , logger = logger ) : 
+        test_random_grid_abssin ()
+        
+    with timing ( 'test_random_grid_sin2'     , logger = logger ) : 
+        test_random_grid_sin2   ()
+        
+    with timing ( 'test_random_grid_gauss'     , logger = logger ) : 
+        test_random_grid_gauss  ()
 
     ## check finally that everything is serializeable:
-    test_pickle () 
+    with timing ( 'test_pickle'     , logger = logger ) : 
+        test_pickle ()
+        
     with timing ('test_db' , logger ) :
         test_db ()
     

@@ -2,6 +2,9 @@
 
   1. back-propagate Ostap::Math::Integrtaor toold versions of PyROOT 
   1. extend tests
+  1. add (fictive) `Ostap:Math::Thiele::abscissas` method 
+  1. add (fictive) `Ostap:Math::Thiele::values`    method 
+  1. add missing `__reduce__` for `Ostap::Math::Thiele` interpolant 
 
 ## Backward incompatible:  
 
@@ -10,7 +13,6 @@
 ## Bug fixes:
 
   1. Fix typos for `Ostap::Math::Integrator`
-
 
 # v1.9.5.4
 

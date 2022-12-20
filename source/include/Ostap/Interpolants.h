@@ -573,6 +573,9 @@ namespace Ostap
       Interpolation::Abscissas::Data::const_iterator y_begin () const { return m_y.begin () ; }
       Interpolation::Abscissas::Data::const_iterator y_end   () const { return m_y.end   () ; }        
       // ====================================================================
+      const Interpolation::Abscissas::Data& abscissas () const { return m_x ; }
+      const Interpolation::Abscissas::Data& values    () const { return m_y ; }
+      // ====================================================================
       /// number of interpolation points 
       unsigned int size    () const { return m_x.size  () ; }
       /// no interpolation points 

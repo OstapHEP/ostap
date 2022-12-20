@@ -370,6 +370,7 @@ def intfh_reduce ( table ) :
 for t in ( Ostap.Math.Neville     ,
            Ostap.Math.Lagrange    , 
            Ostap.Math.Newton      , 
+           Ostap.Math.Thiele      , 
            Ostap.Math.Barycentric , 
            Ostap.Math.Berrut1st   , 
            Ostap.Math.Berrut2nd   ) :
