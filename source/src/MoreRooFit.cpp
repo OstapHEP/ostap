@@ -50,6 +50,10 @@ ClassImp(Ostap::MoreRooFit::Cosh          )
 ClassImp(Ostap::MoreRooFit::Tanh          )
 ClassImp(Ostap::MoreRooFit::Sech          )
 ClassImp(Ostap::MoreRooFit::Atan2         )
+ClassImp(Ostap::MoreRooFit::BesselJ       )
+ClassImp(Ostap::MoreRooFit::BesselY       )
+ClassImp(Ostap::MoreRooFit::BesselI       )
+ClassImp(Ostap::MoreRooFit::BesselK       )
 ClassImp(Ostap::MoreRooFit::Gamma         )
 ClassImp(Ostap::MoreRooFit::LGamma        )
 ClassImp(Ostap::MoreRooFit::IGamma        )
@@ -70,46 +74,52 @@ namespace
   const std::string s_division_by_zero      { "division by zero"       } ;
   const std::string s_negative_log          { "log of negativenumber"  } ;
   //
-  inline std::string  name_  ( const std::string&  name , 
-                               const std::string&  oper , 
-                               const TNamed&       a    ,
-                               const TNamed&       b    )
+  inline std::string  name_ 
+  ( const std::string&  name , 
+    const std::string&  oper , 
+    const TNamed&       a    ,
+    const TNamed&       b    )
   { 
     return 
       name.empty () ? ( oper + "_" + a.GetName() + "_" + b.GetName() ) : name ; 
   }  
   // ==========================================================================
-  inline std::string  title_ ( const std::string& title , 
-                               const std::string& oper  , 
-                               const TNamed&      a    ,
-                               const TNamed&      b    )
+  inline std::string  title_ 
+  ( const std::string& title , 
+    const std::string& oper  , 
+    const TNamed&      a    ,
+    const TNamed&      b    )
   { return 
       title.empty () ? std::string ( "(" ) + a.GetName() + oper + b.GetName() + ")" : title  ; }
   // ==========================================================================
-  inline std::string  title1_ ( const std::string& title , 
-                                const std::string& oper  , 
-                                const TNamed&      a    ,
-                                const TNamed&      b    )
+  inline std::string  title1_ 
+  ( const std::string& title , 
+    const std::string& oper  , 
+    const TNamed&      a    ,
+    const TNamed&      b    )
   { return 
       title.empty () ? oper + "(" + a.GetName() + "," + b.GetName() + ")" : title  ; }
   // ==========================================================================
-  inline std::string  name2_ ( const std::string&  name , 
-                               const std::string&  oper , 
-                               const TNamed&       b    )
+  inline std::string  name2_
+  ( const std::string&  name , 
+    const std::string&  oper , 
+    const TNamed&       b    )
   { 
     return 
       name.empty () ? ( oper + "_" + b.GetName() ) : name ; 
   }  
   // ==========================================================================
-  inline std::string  title2_ ( const std::string& title , 
-                                const std::string&  oper  , 
-                                const TNamed&        b    )
+  inline std::string  title2_ 
+  ( const std::string& title , 
+    const std::string&  oper  , 
+    const TNamed&        b    )
   { return 
-    title.empty () ? oper + "(" + b.GetName() + ")" : title  ; }
+      title.empty () ? oper + "(" + b.GetName() + ")" : title  ; }
   // ==========================================================================
   inline bool a_zero ( const double x ) { return s_zero ( x ) ; }
   // ==========================================================================
 }
+
 // ============================================================================
 // constructor with no variables 
 // ============================================================================
@@ -708,6 +718,53 @@ Ostap::MoreRooFit::Atan2::Atan2
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
+Ostap::MoreRooFit::BesselJ::BesselJ
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "besselJ" , a , b ) ,
+              title1_ ( title , "besselJ" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::BesselY::BesselY
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "besselY" , a , b ) ,
+              title1_ ( title , "besselY" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::BesselI::BesselI
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "besselI" , a , b ) ,
+              title1_ ( title , "besselI" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::BesselK::BesselK
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "besselK" , a , b ) ,
+              title1_ ( title , "besselK" , a , b ) , a , b )
+{}
+
+
+
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
 Ostap::MoreRooFit::MaxV::MaxV
 ( const std::string& name  , 
   const std::string& title , 
@@ -857,6 +914,19 @@ Double_t Ostap::MoreRooFit::MinV::evaluate () const
 // ============================================================================
 
 
+// ============================================================================
+Double_t Ostap::MoreRooFit::BesselJ::evaluate () const 
+{ const double x = m_x ; const double nu = m_y ; return Ostap::Math::bessel_Jnu ( nu , x ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::BesselY::evaluate () const 
+{ const double x = m_x ; const double nu = m_y ; return Ostap::Math::bessel_Ynu ( nu , x ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::BesselI::evaluate () const 
+{ const double x = m_x ; const double nu = m_y ; return Ostap::Math::bessel_Inu ( nu , x ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::BesselK::evaluate () const 
+{ const double x = m_x ; const double nu = m_y ; return Ostap::Math::bessel_Knu ( nu , x ) ; }
+// ============================================================================
 
 
 

@@ -2125,7 +2125,7 @@ namespace Ostap
     class Atan2 final : public TwoVars 
     {
       // ========================================================================
-      ClassDefOverride(Ostap::MoreRooFit::Atan2 , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Atan2 , 2 ) ;  // atan2 function
       // ========================================================================
     public:
       // ======================================================================
@@ -2186,7 +2186,255 @@ namespace Ostap
       Double_t evaluate () const override ;
       // ======================================================================
     }; //
-    // ========================================================================    
+    // ========================================================================
+    /** Bessel function \f$ J_{\nu}(x)\f$
+     *  @see Ostap::Math::bessel_Jnu 
+     */
+    class BesselJ : public TwoVars 
+    {
+    public: 
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::BesselJ , 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      BesselJ 
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        x     , 
+        RooAbsReal&        nu    ) ;
+      /// constructor with two variables
+      BesselJ 
+      ( RooAbsReal&         x           , 
+        RooAbsReal&         nu          ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselJ ( name , title , x , nu )
+      {}
+      /// constructor with two variables
+      BesselJ 
+      ( RooAbsReal&         x           , 
+        const double        nu          ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselJ ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variable
+      BesselJ 
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        x     ,
+        const double       nu    )
+        : BesselJ ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization)
+      BesselJ () = default ;
+      // ======================================================================
+      // copy 
+      BesselJ
+        ( const BesselJ& right , 
+          const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      BesselJ* clone ( const char* newname ) const override 
+      { return new BesselJ ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** Bessel function \f$ Y_{\nu}(x)\f$
+     *  @see Ostap::Math::bessel_Ynu 
+     */
+    class BesselY : public TwoVars 
+    {
+    public: 
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::BesselY , 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      BesselY 
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        x     , 
+        RooAbsReal&        nu    ) ;
+      /// constructor with two variables
+      BesselY 
+      ( RooAbsReal&         x           , 
+        RooAbsReal&         nu          ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselY  ( name , title , x , nu )
+      {}
+      /// constructor with two variables
+      BesselY 
+      ( RooAbsReal&         x           , 
+        const double        nu          ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselY ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variable
+      BesselY 
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        x     ,
+        const double       nu    )
+        : BesselY ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization)
+      BesselY () = default ;
+      // ======================================================================
+      // copy 
+      BesselY 
+        ( const BesselY& right , 
+          const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      BesselY* clone ( const char* newname ) const override 
+      { return new BesselY ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** Bessel function \f$ I_{\nu}(x)\f$
+     *  @see Ostap::Math::bessel_Inu 
+     */
+    class BesselI : public TwoVars 
+    {
+    public: 
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::BesselI , 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      BesselI 
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        x     , 
+        RooAbsReal&        nu    ) ;
+      /// constructor with two variables
+      BesselI 
+      ( RooAbsReal&         x           , 
+        RooAbsReal&         nu          ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselI  ( name , title , x , nu )
+      {}
+      /// constructor with two variables
+      BesselI 
+      ( RooAbsReal&         x           , 
+        const double        nu          ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselI ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variable
+      BesselI 
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        x     ,
+        const double       nu    )
+        : BesselI ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization)
+      BesselI () = default ;
+      // ======================================================================
+      // copy 
+      BesselI 
+        ( const BesselI& right , 
+          const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      BesselI* clone ( const char* newname ) const override 
+      { return new BesselI ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** Bessel function \f$ K_{\nu}(x)\f$
+     *  @see Ostap::Math::bessel_Knu 
+     */
+    class BesselK : public TwoVars 
+    {
+    public: 
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::BesselK , 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      BesselK
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        x     , 
+        RooAbsReal&        nu    ) ;
+      /// constructor with two variables
+      BesselK 
+      ( RooAbsReal&         x           , 
+        RooAbsReal&         nu          ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselK  ( name , title , x , nu )
+      {}
+      /// constructor with two variables
+      BesselK 
+      ( RooAbsReal&         x           , 
+        const double        nu          ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselK ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variable
+      BesselK 
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        x     ,
+        const double       nu    )
+        : BesselK ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization)
+      BesselK () = default ;
+      // ======================================================================
+      // copy 
+      BesselK 
+        ( const BesselK& right , 
+          const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      BesselK* clone ( const char* newname ) const override 
+      { return new BesselK ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
     /** @class MaxV
      *  Evaluate \f$ max ( a , b ) \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
