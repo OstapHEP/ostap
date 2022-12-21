@@ -2725,6 +2725,129 @@ Ostap::Math::barrier_g
 }
 // ============================================================================
 
+
+// ============================================================================
+/* regular Bessel function of the first kind
+ *  \f$ J_n(x)\f$ 
+ * @see https://en.wikipedia.org/wiki/Bessel_function
+ * @see gsl_sf_bessel_J0
+ * @see gsl_sf_bessel_J1
+ * @see gsl_sf_bessel_Jn
+ */
+// ============================================================================
+double Ostap::Math::bessel_Jn
+( const int    n , 
+  const double x ) 
+{
+  gsl_sf_result result ;
+  const int ierror = 
+    ( 0 == n ) ? gsl_sf_bessel_J0_e ( x , &result ) :
+    ( 1 == n ) ? gsl_sf_bessel_J1_e ( x , &result ) :
+    gsl_sf_bessel_Jn_e ( n , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( 0 == n ? "Error from gsl_sf_bessel_J0_e" : 
+                1 == n ? "Error from gsl_sf_bessel_J1_e" : 
+                "Error from gsl_sf_bessel_Jn_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  //
+  return result.val ;  
+}
+// ============================================================================
+/* Irregular Bessel function of the first kind
+ *  \f$ Y_n(x)\f$ 
+ * @see https://en.wikipedia.org/wiki/Bessel_function
+ * @see gsl_sf_bessel_Y0
+ * @see gsl_sf_bessel_Y1
+ * @see gsl_sf_bessel_Yn
+ */
+// ============================================================================
+double Ostap::Math::bessel_Yn
+( const int    n , 
+  const double x ) 
+{
+  gsl_sf_result result ;
+  const int ierror = 
+    ( 0 == n ) ? gsl_sf_bessel_Y0_e ( x , &result ) :
+    ( 1 == n ) ? gsl_sf_bessel_Y1_e ( x , &result ) :
+    gsl_sf_bessel_Yn_e ( n , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( 0 == n ? "Error from gsl_sf_bessel_Y0_e" : 
+                1 == n ? "Error from gsl_sf_bessel_Y1_e" : 
+                "Error from gsl_sf_bessel_Yn_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  //
+  return result.val ;  
+}
+
+
+// ============================================================================
+/** Regular Bessel function 
+ *  \f$ J_{\nu}(x) \f$ 
+ *  @see https://en.wikipedia.org/wiki/Bessel_function
+ *  @see gsl_sf_bessel_Jnu_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Jnu 
+( const double nu , 
+  const double x  ) 
+{ 
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Jn ( n , x ) ;
+  }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_bessel_Jnu_e ( nu , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_bessel_Jnu_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+
+// ============================================================================
+/** Itregular Bessel function
+ *  \f$ Y_{\nu}(x) \f$ 
+ *  @see https://en.wikipedia.org/wiki/Bessel_function
+ *  @see gsl_sf_bessel_Ynu_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Ynu 
+( const double nu , 
+  const double x  ) 
+{ 
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Yn ( n , x ) ;
+  }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_bessel_Ynu_e ( nu , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_bessel_Ynu_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+
 // ============================================================================
 /*  modified Bessel function of the fist kind  
  *  \f$ I_n(x) \f$ for \f$ x>0 \f$
@@ -2784,29 +2907,29 @@ double Ostap::Math::bessel_Kn
   return result.val ;
 }
 // ============================================================================
-/** scaled modified Bessel function of the second kind 
- *  \f$ \mathrm{e}^x K_n(x) \f$ for \f$ x>0 \f$
+/** modified Bessel function of the second kind  
+ *  \f$ I_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
  *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
- *  @see gsl_sf_bessel_K0_scaled_e 
- *  @see gsl_sf_bessel_K1_scaled_e 
- *  @see gsl_sf_bessel_Kn_scaled_e 
+ *  @see gsl_sf_bessel_Inu_e 
  */
 // ============================================================================
-double Ostap::Math::bessel_Kn_scaled 
-( const int    n , 
-  const double x ) 
+double Ostap::Math::bessel_Inu 
+( const double nu , 
+  const double x  ) 
 { 
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_In ( n , x ) ;
+  }
+  //
   gsl_sf_result result ;
-  const int ierror = 
-    ( 0 == n ) ? gsl_sf_bessel_K0_scaled_e ( x , &result ) :
-    ( 1 == n ) ? gsl_sf_bessel_K1_scaled_e ( x , &result ) :
-    gsl_sf_bessel_Kn_scaled_e ( n , x , &result )  ;
+  const int ierror = gsl_sf_bessel_Inu_e ( nu , x , &result )  ;
   //
   if ( ierror ) 
   {
-    gsl_error ( ( 0 == n ) ? "Error from gsl_sf_bessel_K0_scaled_e" : 
-                ( 1 == n ) ? "Error from gsl_sf_bessel_K1_scaled_e" : 
-                "Error from gsl_sf_bessel_Kn_scaled_e" , __FILE__ , __LINE__ , ierror ) ;
+    gsl_error ( "Error from gsl_sf_bessel_Inu_e" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
     { return std::numeric_limits<double>::quiet_NaN(); }
   }
@@ -2836,6 +2959,38 @@ double Ostap::Math::bessel_Knu
   if ( ierror ) 
   {
     gsl_error ( "Error from gsl_sf_bessel_Knu_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+
+
+
+// ============================================================================
+/** scaled modified Bessel function of the second kind 
+ *  \f$ \mathrm{e}^x K_n(x) \f$ for \f$ x>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_K0_scaled_e 
+ *  @see gsl_sf_bessel_K1_scaled_e 
+ *  @see gsl_sf_bessel_Kn_scaled_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Kn_scaled 
+( const int    n , 
+  const double x ) 
+{ 
+  gsl_sf_result result ;
+  const int ierror = 
+    ( 0 == n ) ? gsl_sf_bessel_K0_scaled_e ( x , &result ) :
+    ( 1 == n ) ? gsl_sf_bessel_K1_scaled_e ( x , &result ) :
+    gsl_sf_bessel_Kn_scaled_e ( n , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( ( 0 == n ) ? "Error from gsl_sf_bessel_K0_scaled_e" : 
+                ( 1 == n ) ? "Error from gsl_sf_bessel_K1_scaled_e" : 
+                "Error from gsl_sf_bessel_Kn_scaled_e" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
     { return std::numeric_limits<double>::quiet_NaN(); }
   }
@@ -3165,6 +3320,42 @@ double Ostap::Math::fupN_F
 // ============================================================================
 
 // ============================================================================
+/* smoothstep (polynomial) function
+ *  @see https://en.wikipedia.org/wiki/Smoothstep
+ *  Transition function for \f$ 0 \le x \le 1\f$ 
+ *  Transition function for \f$ 0 \le x \le 1\f$ 
+ *  - \f$ f(x)=0\f$ for  \f$ x \le 0 \f$
+ *  - \f$ f(x)=1\f$ for  \f$ x \ge 1 \f$
+ *  - \f$ f(x)\f$ if a \f$ 2n+1 \f$ polynomial fuction inbetween      
+ *  @param x variable
+ *  @param n index, polynomial of order \f$ 2n+1 \f$     
+ */
+// ============================================================================
+double Ostap::Math::smooth_step
+( const double         x , 
+  const unsigned short n ) 
+{
+  //
+  static const std::array<int,4> s_3 { -20  ,   +70 , -84    , +35                             } ;
+  static const std::array<int,5> s_4 { +70  ,  -315 , +540   , -420   , +126                   } ;
+  static const std::array<int,6> s_5 { -252 , +1386 , -3080  , +3465  , -1980  , +462          } ;
+  static const std::array<int,7> s_6 { +924 , -6006 , +16380 , -24024 , +20020 , -9009 , +1716 } ;
+  //
+  return 
+    x <= 0 ? 0 : 
+    x >= 1 ? 1 : 
+    0 == n ? x : // simple clump function 
+    1 == n ? x * x *     (            -  2 * x +  3 ) : 
+    2 == n ? x * x * x * (  6 * x * x - 15 * x + 10 ) :
+    3 == n ? std::pow ( x , 4 ) * Ostap::Math::Clenshaw::monomial_sum ( s_3.begin () , s_3.end() , x ).first : 
+    4 == n ? std::pow ( x , 5 ) * Ostap::Math::Clenshaw::monomial_sum ( s_4.begin () , s_4.end() , x ).first : 
+    5 == n ? std::pow ( x , 6 ) * Ostap::Math::Clenshaw::monomial_sum ( s_5.begin () , s_5.end() , x ).first : 
+    6 == n ? std::pow ( x , 7 ) * Ostap::Math::Clenshaw::monomial_sum ( s_6.begin () , s_6.end() , x ).first : 
+    // use n = 7 for other cases too.. 
+    std::pow ( x , 7 ) * Ostap::Math::Clenshaw::monomial_sum ( s_6.begin () , s_6.end() , x ).first ; 
+}
+
+// ============================================================================
 namespace 
 {
   // ==========================================================================
@@ -3204,6 +3395,7 @@ double Ostap::Math::smooth_transtion
     x >= xmax ? 1.0 :
     ::_smooth_phi_ ( ( x - xmin ) / ( xmax - xmin ) ) ;
 }
+
 
 // ============================================================================
 //                                                                      The END 

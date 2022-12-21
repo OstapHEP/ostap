@@ -977,6 +977,36 @@ namespace Ostap
       const double a = 0 ,
       const double b = 1 ) ;
     // ========================================================================
+    
+    // ========================================================================
+    /** trivial clamping function 
+     *  - \f$ f(x)=0\f$ for  \f$ x \le 0 \f$
+     *  - \f$ f(x)=1\f$ for  \f$ x \ge 1 \f$
+     *  - \f$ f(x)=x\f$ otherwise  
+     *  @param x variable
+     *  @return clamped value 
+     *  @see Ostap::Math::smooth_step 
+     */
+    inline double clamp 
+    ( const double x )
+    { return x <= 0 ? 0 : x <= 1 ? 1 : x ; }
+    
+    // ========================================================================
+    /** smooth (polynomial) step function
+     *  @see https://en.wikipedia.org/wiki/Smoothstep
+     *  Transition function for \f$ 0 \le x \le 1\f$ 
+     *  - \f$ f(x)=0\f$ for  \f$ x \le 0 \f$
+     *  - \f$ f(x)=1\f$ for  \f$ x \ge 1 \f$
+     *  - \f$ f(x)\f$ if a \f$ 2n+1 \f$ polynomial fuction inbetween      
+     *  @param x variable
+     *  @param n index, polynomial of order \f$ 2n+1 \f$     
+     *  @see Ostap::Math::smooth_transtion 
+     *  @see Ostap::Math::clamp 
+     */
+    double smooth_step
+    ( const double         x     , 
+      const unsigned short n = 1 ) ;
+    // ========================================================================
 
     // ========================================================================
     /** Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile
@@ -1007,13 +1037,60 @@ namespace Ostap
       const double u1 , 
       const double u2 ) ;
     
+
+    // ========================================================================
+    // Bessel functions 
+    // ========================================================================
+
+    // ========================================================================
+    /** regular Bessel function of the first kind
+     *  \f$ J_n(x)\f$ 
+     * @see https://en.wikipedia.org/wiki/Bessel_function
+     * @see gsl_sf_bessel_J0
+     * @see gsl_sf_bessel_J1
+     * @see gsl_sf_bessel_Jn
+     */
+    double bessel_Jn
+    ( const int    n , 
+      const double x ) ;
+    // ========================================================================
+    /** Irregular Bessel function of the first kind
+     *  \f$ Y_n(x)\f$ 
+     * @see https://en.wikipedia.org/wiki/Bessel_function
+     * @see gsl_sf_bessel_Y0
+     * @see gsl_sf_bessel_Y1
+     * @see gsl_sf_bessel_Yn
+     */
+    double bessel_Yn
+    ( const int    n , 
+      const double x ) ;
+    // ========================================================================
+    /** regular Bessel function of the first kind
+     *  \f$ J_{\nu}(x)\f$ 
+     * @see https://en.wikipedia.org/wiki/Bessel_function
+     * @see gsl_sf_bessel_Jnu
+     */
+    double bessel_Jnu
+    ( const double nu , 
+      const double x  ) ;
+    // ========================================================================
+    /** Irregular Bessel function of the first kind
+     *  \f$ Y_{\nu}(x)\f$ 
+     * @see https://en.wikipedia.org/wiki/Bessel_function
+     * @see gsl_sf_bessel_Y0
+     * @see gsl_sf_bessel_Y1
+     * @see gsl_sf_bessel_Yn
+     */
+    double bessel_Ynu
+    ( const double nu , 
+      const double x  ) ;
     // ========================================================================
     /** modified Bessel function of the fist kind  
      *  \f$ I_n(x) \f$ for \f$ x>0 \f$
      * @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions:_I%CE%B1,_K%CE%B1 
      * @see gsl_sf_bessel_I0
      * @see gsl_sf_bessel_I1
-     * @see gsl_sf_bessel_I2
+     * @see gsl_sf_bessel_In
      */
     double bessel_In
     ( const int    n , 
@@ -1030,6 +1107,24 @@ namespace Ostap
     ( const int    n , 
       const double x ) ;
     // ========================================================================
+    /** modified Bessel function of the second kind  
+     *  \f$ I_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function
+     *  @see gsl_sf_bessel_Inu_e 
+     */
+    double bessel_Inu   
+    ( const double nu , 
+      const double x  ) ;
+    // ========================================================================
+    /** modified Bessel function of the second kind  
+     *  \f$ K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function
+     *  @see gsl_sf_bessel_Knu_e 
+     */
+    double bessel_Knu   
+    ( const double nu , 
+      const double x  ) ;
+    // ========================================================================
     /** scaled modified Bessel function of the second kind 
      *  \f$ \mathrm{e}^x K_n(x) \f$ for \f$ x>0 \f$
      *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
@@ -1041,15 +1136,6 @@ namespace Ostap
     ( const int    n , 
       const double x ) ;
     // ========================================================================
-    /** modified Bessel function of the second kind  
-     *  \f$ K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
-     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
-     *  @see gsl_sf_bessel_Knu_e 
-     */
-    double bessel_Knu   
-    ( const double nu , 
-      const double x  ) ;
-    // ========================================================================
     /** scaled modified Bessel function of the second kind 
      *  \f$ \mathrm{e}^x K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
      *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
@@ -1058,8 +1144,8 @@ namespace Ostap
     double bessel_Knu_scaled
     ( const double nu , 
       const double x  ) ;
-    // ========================================================================    
-    
+    // ========================================================================
+
     // ========================================================================
     /** Laguerre polynomila of non-integher order 
      *  \f$ L_{q}(x) = {}_1F_1(-1; 1; x ) \f$, where 
@@ -1068,7 +1154,8 @@ namespace Ostap
     double laguerre_q 
     ( const double q , 
       const double x ) ;
-    
+
+
     // ========================================================================
     // clenshaw summation algorithms 
     // ========================================================================

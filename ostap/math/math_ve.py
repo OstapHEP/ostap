@@ -27,6 +27,8 @@ __all__     = (
     'psi'        , 'polygamma'  , 'digamma' , 'trigamma' ,
     'beta'       , 'lnbeta'     , 
     'exp2'       , 'log2'       ,
+    'bessel_J'   , 'bessel_Y'   , 
+    'bessel_I'   , 'bessel_K'   , 
     'gauss_pdf'  , 'gauss_cdf'  ,
     'hypot'      , 'fma'        ,
     'minv'       , 'maxv'       
@@ -532,6 +534,83 @@ def pochhammer ( x , n ) :
     _x = x if isinstance ( x , num_types ) else VE ( x )
     
     return _pochhammer ( _x , n ) 
+
+# =============================================================================
+_bessel_Jn  = Ostap.Math.bessel_Jn 
+_bessel_Jnu = Ostap.Math.bessel_Jnu
+_bessel_Yn  = Ostap.Math.bessel_Yn 
+_bessel_Ynu = Ostap.Math.bessel_Ynu
+_bessel_In  = Ostap.Math.bessel_In 
+_bessel_Inu = Ostap.Math.bessel_Inu
+_bessel_Kn  = Ostap.Math.bessel_Kn 
+_bessel_Knu = Ostap.Math.bessel_Knu
+
+# =============================================================================
+## Evaluate regular Bessel function \f$ J_{\nu}(x)\f$
+#  @see https://en.wikipedia.org/wiki/Bessel_function
+#  @see Ostap::Math::bessel_Jn
+#  @see Ostap::Math::bessel_Jnu
+def bessel_J ( nu , x ) : 
+    """Evaluate reguar Bessel function J_nu (x)
+    - see https://en.wikipedia.org/wiki/Bessel_function
+    - see `Ostap.Math.bessel_Jn`
+    - see `Ostap.Math.bessel_Jnu`    
+    """
+    if   isinstance ( nu , integer_types ) : return _bessel_Jn  ( int ( nu ) , x )
+    elif isinstance ( nu , float         ) : return _bessel_Jnu (       nu   , x )
+    else :
+        raise TypeError ("invalid nu/index/order type!") 
+    
+# =============================================================================
+## Evaluate irregular Bessel function \f$ Y_{\nu}(x)\f$
+#  @see https://en.wikipedia.org/wiki/Bessel_function
+#  @see Ostap::Math::bessel_Yn
+#  @see Ostap::Math::bessel_Ynu
+def bessel_Y ( nu , x ) : 
+    """Evaluate reguar Bessel function J_nu (x)
+    - see https://en.wikipedia.org/wiki/Bessel_function
+    - see `Ostap.Math.bessel_Yn`
+    - see `Ostap.Math.bessel_Ynu`    
+    """
+    assert isinstance ( nu , num_types ) , "Invalid index/orderNu type!"
+
+    if   isinstance ( nu , integer_types ) : return _bessel_Yn  ( int ( nu ) , x )
+    elif isinstance ( nu , float         ) : return _bessel_Ynu (       nu   , x )
+    else :
+        raise TypeError ("invalid nu/index/order type!") 
+    
+# =============================================================================
+## Evaluate modified Bessel function \f$ I_{\nu}(x)\f$
+#  @see https://en.wikipedia.org/wiki/Bessel_function
+#  @see Ostap::Math::bessel_In
+#  @see Ostap::Math::bessel_Inu
+def bessel_I ( nu , x ) : 
+    """Evaluate modified Bessel function I_nu (x)
+    - see https://en.wikipedia.org/wiki/Bessel_function
+    - see `Ostap.Math.bessel_In`
+    - see `Ostap.Math.bessel_Inu`    
+    """
+    if   isinstance ( nu , integer_types ) : return _bessel_In  ( int ( nu ) , x )
+    elif isinstance ( nu , float         ) : return _bessel_Inu (       nu   , x )
+    else :
+        raise TypeError ("invalid nu/index/order type!") 
+    
+# =============================================================================
+## Evaluate modified Bessel function \f$ K_{\nu}(x)\f$
+#  @see https://en.wikipedia.org/wiki/Bessel_function
+#  @see Ostap::Math::bessel_Kn
+#  @see Ostap::Math::bessel_Knu
+def bessel_K ( nu , x ) : 
+    """Evaluate modified Bessel function K_nu (x)
+    - see https://en.wikipedia.org/wiki/Bessel_function
+    - see `Ostap.Math.bessel_Kn`
+    - see `Ostap.Math.bessel_Knu`    
+    """
+    if   isinstance ( nu , integer_types ) : return _bessel_Kn  ( int ( nu ) , x )
+    elif isinstance ( nu , float         ) : return _bessel_Knu (       nu   , x )
+    else :
+        raise TypeError ("invalid nu/index/order type!") 
+    
 
 _gauss_pdf_ = Ostap.Math.gauss_pdf
 # =============================================================================

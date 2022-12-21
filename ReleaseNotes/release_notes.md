@@ -5,6 +5,8 @@
   1. add (fictive) `Ostap:Math::Thiele::abscissas` method 
   1. add (fictive) `Ostap:Math::Thiele::values`    method 
   1. add missing `__reduce__` for `Ostap::Math::Thiele` interpolant 
+  1. extend `MoreMath.h` and `math_ve.py`
+  1. add `smooth_step` polynomial fuctions 
 
 ## Backward incompatible:  
 

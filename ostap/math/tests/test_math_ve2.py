@@ -59,6 +59,7 @@ def test_math_ve1 ():
     logger.info ( '%s\n%s' % ( title , table ) ) 
 
 
+
 # =============================================================================
 def test_math_ve2 ():
 
@@ -112,12 +113,47 @@ def test_math_ve2 ():
     table = T.table ( rows, title = title , prefix = '# ' , alignment = 'lcc' ) 
     logger.info ( '%s\n%s' % ( title , table ) ) 
 
+
+# =============================================================================
+def test_math_ve3 ():
+
+    logger = getLogger("test_math_ve2")
+
+
+    funcs = ( bessel_J , bessel_Y ,bessel_I , bessel_K )
+
+    rows = [ ( 'Function' , 'order' ,  'argument' , 'value' ) ]
+    
+    for f in funcs :
+
+        for n in range ( 0 , 4 ) : 
+            x   = random.uniform ( 0 , 1 )
+            row = f.__name__ , '%s' % n , '%s' % x , '%s' % f ( n , x )        
+            rows.append ( row )
+
+            x   = VE ( random.uniform ( 1 , 2 ) , 0.1 **2 ) 
+            row = f.__name__ , '%s' % n , '%s' % x , '%s' % f ( n , x )        
+            rows.append ( row )
+
+        n   = random.uniform ( -1 , 3 )
+        row = f.__name__ , '%+.3f' % n , '%s' % x , '%s' % f ( n , x )        
+        rows.append ( row )
+        
+        x   = VE ( random.uniform ( 1 , 2 ) , 0.1 **2 ) 
+        row = f.__name__ , '%+.3f' % n , '%s' % x , '%s' % f ( n , x )        
+        rows.append ( row )
+
+    title = 'Functions'
+    table = T.table ( rows, title = title , prefix = '# ' , alignment = 'lccc' ) 
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+
     
 # =============================================================================
 if '__main__' == __name__ :
 
     test_math_ve1 ()
     test_math_ve2 ()
+    test_math_ve3 ()
     
 # =============================================================================
 ##                                                                      The END 

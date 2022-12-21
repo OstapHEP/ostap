@@ -1111,6 +1111,46 @@ namespace Ostap
       const double          cxz = 0  ,
       const double          cyz = 0  ) ;
     // ========================================================================
+    /// Regular Bessel function \f$ J_n(s)\f$
+    ValueWithError bessel_Jn 
+    ( const int             n  , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
+    /// Regular Bessel function \f$ J_{\nu}(s)\f$
+    ValueWithError bessel_Jnu 
+    ( const double          nu , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
+    /// Irregular Bessel function \f$ Y_n(s)\f$
+    ValueWithError bessel_Yn 
+    ( const int             n  , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
+    /// Irregular Bessel function \f$ Y_{\nu}(s)\f$
+    ValueWithError bessel_Ynu 
+    ( const double          nu , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
+    /// Modified Bessel function \f$ I_n(s)\f$
+    ValueWithError bessel_In
+    ( const int             n  , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
+    /// Modified Bessel function \f$ I_{\nu}(s)\f$
+    ValueWithError bessel_Inu 
+    ( const double          nu , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
+    /// Modified Bessel function \f$ K_n(s)\f$
+    ValueWithError bessel_Kn 
+    ( const int             n  , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
+    /// Modified Bessel function \f$ K_{\nu}(s)\f$
+    ValueWithError bessel_Knu 
+    ( const double          nu , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
     /// check for NaN
     inline bool isnan    ( const ValueWithError& v ) { return v.isnan    () ; }
     /// finite ?

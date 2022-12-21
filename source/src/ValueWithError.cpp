@@ -2920,11 +2920,205 @@ Ostap::Math::q
   //
   return Ostap::Math::ValueWithError ( v , d * d * m.cov2 () ) ;
 }
+// ============================================================================
 
+
+// ============================================================================
+// Regular Bessel function \f$ J_n(s)\f$
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::bessel_Jn 
+( const int                          n  , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::bessel_Jn ( n , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = 
+    ( 0 == n ) ?  - Ostap::Math::bessel_Jn ( 1 , xv ) :
+    0.5 * ( Ostap::Math::bessel_Jn ( n - 1 , xv ) - Ostap::Math::bessel_Jn ( n + 1 , xv ) ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
+// ============================================================================
+// Irregular Bessel function \f$ Y_n(s)\f$
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::bessel_Yn 
+( const int                          n  , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::bessel_Yn ( n , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = 
+    ( 0 == n ) ?  - Ostap::Math::bessel_Yn ( 1 , xv ) :
+    0.5 * ( Ostap::Math::bessel_Yn ( n - 1 , xv ) - Ostap::Math::bessel_Yn ( n + 1 , xv ) ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
+// ============================================================================
+// Modified Bessel function \f$ I_n(s)\f$
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::bessel_In 
+( const int                          n  , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::bessel_In ( n , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = 
+    ( 0 == n ) ?  Ostap::Math::bessel_In ( 1 , xv ) :
+    0.5 * ( Ostap::Math::bessel_In ( n - 1 , xv ) + Ostap::Math::bessel_In ( n + 1 , xv ) ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
+// ============================================================================
+// Modified Bessel function \f$ K_n(s)\f$
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::bessel_Kn 
+( const int                          n  , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::bessel_Kn ( n , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = 
+    ( 0 == n ) ? - Ostap::Math::bessel_Kn ( 1 , xv ) :
+    - 0.5 * ( Ostap::Math::bessel_Kn ( n - 1 , xv ) + Ostap::Math::bessel_Kn ( n + 1 , xv ) ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
+// ============================================================================
+// Regular Bessel function \f$ J_{\nu}(s)\f$
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::bessel_Jnu 
+( const double                       nu , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Jn ( n , x ) ;
+  }
+  //
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::bessel_Jnu ( nu , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = 
+    s_zero ( nu ) ?  - Ostap::Math::bessel_Jn ( 1 , xv ) :
+    0.5 * ( Ostap::Math::bessel_Jnu ( nu - 1 , xv ) - Ostap::Math::bessel_Jnu ( nu + 1 , xv ) ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
+// ============================================================================
+// Irregular Bessel function \f$ Y_{\nu}(s)\f$
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::bessel_Ynu 
+( const double                       nu , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Yn ( n , x ) ;
+  }
+  //
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::bessel_Ynu ( nu , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = 
+    s_zero ( nu ) ?  - Ostap::Math::bessel_Yn ( 1 , xv ) :
+    0.5 * ( Ostap::Math::bessel_Yn ( nu - 1 , xv ) - Ostap::Math::bessel_Ynu ( nu + 1 , xv ) ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
+// ============================================================================
+// Modified Bessel function \f$ I_{\nu}(s)\f$
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::bessel_Inu 
+( const double                       nu , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_In ( n , x ) ;
+  }
+  //
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::bessel_Inu ( nu , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = 
+    s_zero ( nu ) ? Ostap::Math::bessel_In ( 1 , xv ) :
+    0.5 * ( Ostap::Math::bessel_Inu ( nu - 1 , xv ) + Ostap::Math::bessel_Inu ( nu + 1 , xv ) ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
+// ============================================================================
+// Modified Bessel function \f$ K_n(s)\f$
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::bessel_Knu
+( const double                       nu , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Kn ( n , x ) ;
+  }
+  //
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::bessel_Knu ( nu , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = 
+    s_zero ( nu ) ? - Ostap::Math::bessel_Kn ( 1 , xv ) :
+    - 0.5 * ( Ostap::Math::bessel_Knu ( nu - 1 , xv ) + Ostap::Math::bessel_Knu ( nu + 1 , xv ) ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
 
 
 // =============================================================================
-// The END
+//                                                                       The END
 // =============================================================================
 
 
