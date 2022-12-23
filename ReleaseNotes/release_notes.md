@@ -9,7 +9,8 @@
   1. add `smooth_step` polynomial fuctions 
   1. add explicit functions for derivatives of Bessel functuons
   1. make use of explicit derivatives of Bessel fuctions
-  
+
+
 ## Backward incompatible:  
 
   1. rename some methods for `Ostap::Math::Integrator`
