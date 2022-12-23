@@ -3028,6 +3028,161 @@ double Ostap::Math::bessel_Knu_scaled
 // ============================================================================
 
 
+
+// ============================================================================
+/*  derivative for the  regular Bessel function of the first kind
+ *  - \f$ J_0^{\prime}(x) =  0 J_1(s)\f$
+ *  - \f$ J_{n}^{\prime}(x) = \frac{1}{2}\left(J_{n-1}(x) - J_{n+1}(x)\right)\f$ 
+ *  @see Ostap::Math::bessel_Jn
+ */
+// ============================================================================
+double Ostap::Math::der_bessel_Jn
+( const int    n , 
+  const double x )
+{
+  return
+    0 == n ? -Ostap::Math::bessel_Jn ( 1 , x ) :
+    0.5 * ( Ostap::Math::bessel_Jn ( n - 1 , x ) -
+            Ostap::Math::bessel_Jn ( n + 1 , x ) ) ; 
+}
+// ============================================================================
+/*  derivative for the  regular Bessel function of the first kind
+ *  - \f$ J_0^{\prime}(x) =  0 J_1(s)\f$
+ *  - \f$ J_{n}^{\prime}(x) = \frac{1}{2}\left(J_{n-1}(x) - J_{n+1}(x)\right)\f$ 
+ *  @see Ostap::Math::bessel_Jnu
+ */
+// ============================================================================
+double Ostap::Math::der_bessel_Jnu
+( const double nu , 
+  const double x  )
+{
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round  ( nu ) ;
+    return Ostap::Math::der_bessel_Jn ( n , x ) ;
+  }
+  return
+    s_zero ( nu ) ? -Ostap::Math::bessel_Jn ( 1 , x ) :
+    0.5 * ( Ostap::Math::bessel_Jnu ( nu - 1 , x ) -
+            Ostap::Math::bessel_Jnu ( nu + 1 , x ) ) ; 
+}
+// ============================================================================
+/*  derivative for the irregular Bessel function of the first kind 
+ *  - \f$ Y_0^{\prime}(x) =  - Y_1(s)\f$
+ *  - \f$ Y_{n}^{\prime}(x) = \frac{1}{2}\left(Y_{n-1}(x) - Y_{n+1}(x)\right)\f$ 
+ *  @see Ostap::Math::bessel_Yn
+ */
+// ============================================================================
+double Ostap::Math::der_bessel_Yn
+( const int    n , 
+  const double x )
+{
+  return
+    0 == n ? -Ostap::Math::bessel_Yn ( 1 , x ) :
+    0.5 * ( Ostap::Math::bessel_Yn ( n - 1 , x ) -
+            Ostap::Math::bessel_Yn ( n + 1 , x ) ) ; 
+}
+// ============================================================================
+/*  derivative for the irregular Bessel function of the first kind 
+ *  - \f$ Y_0^{\prime}(x) =  - Y_1(s)\f$
+ *  - \f$ Y_{n}^{\prime}(x) = \frac{1}{2}\left(Y_{n-1}(x) - Y_{n+1}(x)\right)\f$ 
+ *  @see Ostap::Math::bessel_Yn
+ */
+// ============================================================================
+double Ostap::Math::der_bessel_Ynu
+( const double nu , 
+  const double x  )
+{
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round  ( nu ) ;
+    return Ostap::Math::der_bessel_Yn ( n , x ) ;
+  }
+  return
+    s_zero ( nu ) ? -Ostap::Math::bessel_Yn ( 1 , x ) :
+    0.5 * ( Ostap::Math::bessel_Ynu ( nu - 1 , x ) -
+            Ostap::Math::bessel_Ynu ( nu + 1 , x ) ) ; 
+}
+// ============================================================================
+/*  derivative for the  modified Bessel function
+ *  - \f$ I_0^{\prime}(x) =  I_1(s)\f$
+ *  - \f$ I_{n}^{\prime}(x) = \frac{1}{2}\left(I_{n-1}(x) + I_{n+1}(x)\right)\f$ 
+ *  @see Ostap::Math::bessel_In
+ */
+// ============================================================================
+double Ostap::Math::der_bessel_In
+( const int    n , 
+  const double x )
+{
+  return
+    0 == n ? Ostap::Math::bessel_In ( 1 , x ) :
+    0.5 * ( Ostap::Math::bessel_In ( n - 1 , x ) +
+            Ostap::Math::bessel_In ( n + 1 , x ) ) ; 
+}
+// ============================================================================
+/*  derivative for the  modified Bessel function
+ *  - \f$ I_0^{\prime}(x) =  I_1(s)\f$
+ *  - \f$ I_{n}^{\prime}(x) = \frac{1}{2}\left(I_{n-1}(x) + I_{n+1}(x)\right)\f$ 
+ *  @see Ostap::Math::bessel_Inu
+ */
+// ============================================================================
+double Ostap::Math::der_bessel_Inu
+( const double nu , 
+  const double x  )
+{
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round  ( nu ) ;
+    return Ostap::Math::der_bessel_In ( n , x ) ;
+  }
+  return
+    s_zero ( nu ) ?  Ostap::Math::bessel_In ( 1 , x ) :
+    0.5 * ( Ostap::Math::bessel_Inu ( nu - 1 , x ) +
+            Ostap::Math::bessel_Inu ( nu + 1 , x ) ) ; 
+}
+// ============================================================================
+/*  derivative for the  modified Bessel function
+ *  - \f$ K_0^{\prime}(x) = -K_1(s)\f$
+ *  - \f$ K_{n}^{\prime}(x) = -\frac{1}{2}\left(K_{n-1}(x) + K_{n+1}(x)\right)\f$ 
+ *  @see Ostap::Math::bessel_Kn
+ */
+// ============================================================================
+double Ostap::Math::der_bessel_Kn
+( const int    n , 
+  const double x )
+{
+  return
+    0 == n ? - Ostap::Math::bessel_Kn ( 1 , x ) :
+    -0.5 * ( Ostap::Math::bessel_Kn ( n - 1 , x ) +
+             Ostap::Math::bessel_Kn ( n + 1 , x ) ) ; 
+}
+// ============================================================================
+/*  derivative for the  modified Bessel function
+ *  - \f$ K_0^{\prime}(x) = -K_1(s)\f$
+ *  - \f$ K_{n}^{\prime}(x) = -\frac{1}{2}\left(K_{n-1}(x) + K_{n+1}(x)\right)\f$ 
+ *  @see Ostap::Math::bessel_Knu
+ */
+// ============================================================================
+double Ostap::Math::der_bessel_Knu
+( const double nu , 
+  const double x  )
+{
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round  ( nu ) ;
+    return Ostap::Math::der_bessel_Kn ( n , x ) ;
+  }
+  return
+    s_zero ( nu ) ? - Ostap::Math::bessel_Kn ( 1 , x ) :
+    - 0.5 * ( Ostap::Math::bessel_Knu ( nu - 1 , x ) +
+              Ostap::Math::bessel_Knu ( nu + 1 , x ) ) ; 
+}
+
+
+
+
+
+
 // ============================================================================
 /*  Laguerre polynomila of non-integher order 
  *  \f$ L_{q}(x) = {}_1F_1(-q; 1; x ) \f$, where 

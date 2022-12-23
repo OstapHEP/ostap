@@ -44,7 +44,11 @@ __all__     = (
     'var_tan'        , ## tangent             function for RooAbsReal objects           
     'var_tanh'       , ## hyperbolic tangent  function for RooAbsReal objects           
     'var_sech'       , ## hyperbolic secant   function for RooAbsReal objects           
-    'var_atan2'      , ## inverse tangent     function for RooAbsReal objects           
+    'var_atan2'      , ## inverse tangent     function for RooAbsReal objects
+    'var_bessel_J'   , ## regular   Bessel function 
+    'var_bessel_Y'   , ## irregular Bessel function 
+    'var_bessel_I'   , ## modified  Bessel function 
+    'var_bessel_K'   , ## modified  Bessel function 
     'var_min'        , ## minimal             function for RooAbsReal objects           
     'var_max'        , ## minimal             function for RooAbsReal objects           
     'var_gamma'      , ## gamma               function for RooAbsReal objects           
@@ -69,6 +73,7 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.ostap_types   import ( num_types      , list_types   ,
                                          integer_types  , string_types ,
                                          dictlike_types )
+import ostap.math.math_ve       as       mve 
 import ostap.fitting.rooreduce 
 import ROOT, random, array, ctypes
 # =============================================================================
@@ -86,10 +91,10 @@ isone = lambda x : isequal ( float ( x ) , 1 )
 _new_methods_ = []
 # =============================================================================
 ## Factory for deserialization of generic objects
-#  @attention it stores the constructor kaprameters as local attributes
+#  @attention it stores the constructor parameters as local attributes
 def root_store_factory ( klass , *params ) :
     """Factory for deserialization of generic object
-    - attention: it stores the constructor kaprameters as local attributes
+    - attention: it stores the constructor parameters as local attributes
     """
     ## create the objects 
     obj = root_factory ( klass , *params )
@@ -1760,6 +1765,87 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
         ab = math.atan2 ( float ( a ) , float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
     return Ostap.MoreRooFit.Atan2 ( a, b , name , title )
+
+# ==============================================================================
+## Bessel function \f$ f = J_{\nu}(x)\f$
+#  @code
+#  x   = ...
+#  nu  = ... 
+#  e   = var_bessel_J ( x , nu ) 
+#  @endcode
+def var_bessel_J ( x , nu = 0 , name = '' , title = '' ) :
+    """Bessel function f(x) = J_{nu}(x)
+    >>> x  = ...
+    >>> nu = ... 
+    >>> e  = var_bessel_J ( x , nu  ) 
+    """
+    fx  = isinstance ( x  , num_types )
+    fnu = isinstance ( nu , num_types )
+    if fa and fb :
+        val = mve.bessel_J ( float ( fnu ) , float ( fx ) ) 
+        return ROOT.RooFit.RooConst ( val )      ## RETURN
+    return Ostap.MoreRooFit.BesselJ ( x , nu , name , title )
+
+# ==============================================================================
+## Bessel function \f$ f = Y_{\nu}(x)\f$
+#  @code
+#  x   = ...
+#  nu  = ... 
+#  e   = var_bessel_Y ( x , nu ) 
+#  @endcode
+def var_bessel_Y ( x , nu = 0 , name = '' , title = '' ) :
+    """Bessel function f(x) = Y_{nu}(x)
+    >>> x  = ...
+    >>> nu = ... 
+    >>> e  = var_bessel_Y ( x , nu  ) 
+    """
+    fx  = isinstance ( x  , num_types )
+    fnu = isinstance ( nu , num_types )
+    if fa and fb :
+        val = mve.bessel_Y ( float ( fnu ) , float ( fx ) ) 
+        return ROOT.RooFit.RooConst ( val )      ## RETURN
+    return Ostap.MoreRooFit.BesselY ( x , nu , name , title )
+
+# ==============================================================================
+## Bessel function \f$ f = I_{\nu}(x)\f$
+#  @code
+#  x   = ...
+#  nu  = ... 
+#  e   = var_bessel_I ( x , nu ) 
+#  @endcode
+def var_bessel_I ( x , nu = 0 , name = '' , title = '' ) :
+    """Bessel function f(x) = I_{nu}(x)
+    >>> x  = ...
+    >>> nu = ... 
+    >>> e  = var_bessel_I ( x , nu  ) 
+    """
+    fx  = isinstance ( x  , num_types )
+    fnu = isinstance ( nu , num_types )
+    if fa and fb :
+        val = mve.bessel_I ( float ( fnu ) , float ( fx ) ) 
+        return ROOT.RooFit.RooConst ( val )      ## RETURN
+    return Ostap.MoreRooFit.BesselI ( x , nu , name , title )
+
+# ==============================================================================
+## Bessel function \f$ f = K_{\nu}(x)\f$
+#  @code
+#  x   = ...
+#  nu  = ... 
+#  e   = var_bessel_K ( x , nu ) 
+#  @endcode
+def var_bessel_K ( x , nu = 0 , name = '' , title = '' ) :
+    """Bessel function f(x) = K_{nu}(x)
+    >>> x  = ...
+    >>> nu = ... 
+    >>> e  = var_bessel_K ( x , nu  ) 
+    """
+    fx  = isinstance ( x  , num_types )
+    fnu = isinstance ( nu , num_types )
+    if fa and fb :
+        val = mve.bessel_K ( float ( fnu ) , float ( fx ) ) 
+        return ROOT.RooFit.RooConst ( val )      ## RETURN
+    return Ostap.MoreRooFit.BesselK ( x , nu , name , title )
+
 
 
 # ==============================================================================

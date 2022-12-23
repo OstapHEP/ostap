@@ -1037,7 +1037,6 @@ namespace Ostap
       const double u1 , 
       const double u2 ) ;
     
-
     // ========================================================================
     // Bessel functions 
     // ========================================================================
@@ -1147,6 +1146,84 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
+    // derivatives for Bessel functions 
+    // ========================================================================
+
+    // ========================================================================
+    /** derivative for the  regular Bessel function of the first kind
+     *  - \f$ J_0^{\prime}(x) =  - J_1(s)\f$
+     *  - \f$ J_{n}^{\prime}(x) = \frac{1}{2}\left(J_{n-1}(x) - J_{n+1}(x)\right)\f$ 
+     *  @see Ostap::Math::bessel_Jn
+     */
+    double der_bessel_Jn
+    ( const int    n , 
+      const double x ) ;
+    // ========================================================================
+    /** derivative for the  regular Bessel function of the first kind
+     *  - \f$ J_0^{\prime}(x) =  - J_1(s)\f$
+     *  - \f$ J_{n}^{\prime}(x) = \frac{1}{2}\left(J_{n-1}(x) - J_{n+1}(x)\right)\f$ 
+     *  @see Ostap::Math::bessel_Jnu
+     */
+    double der_bessel_Jnu
+    ( const double nu , 
+      const double x  ) ;
+    // =========================================================================
+    /** derivative for the  irregular Bessel function of the first kind
+     *  - \f$ Y_0^{\prime}(x) =  - Y_1(s)\f$
+     *  - \f$ Y_{n}^{\prime}(x) = \frac{1}{2}\left(Y_{n-1}(x) - Y_{n+1}(x)\right)\f$ 
+     *  @see Ostap::Math::bessel_Yn
+     */
+    double der_bessel_Yn
+    ( const int    n , 
+      const double x ) ;
+    // ========================================================================
+    /** derivative for the irregular Bessel function of the first kind
+     *  - \f$ Y_0^{\prime}(x) =  - Y_1(s)\f$
+     *  - \f$ Y_{n}^{\prime}(x) = \frac{1}{2}\left(Y_{n-1}(x) - Y_{n+1}(x)\right)\f$ 
+     *  @see Ostap::Math::bessel_Ynu
+     */
+    double der_bessel_Ynu
+    ( const double nu , 
+      const double x  ) ;
+    // ========================================================================
+    /** derivative for the  modified Bessel function
+     *  - \f$ I_0^{\prime}(x) =  I_1(s)\f$
+     *  - \f$ I_{n}^{\prime}(x) = \frac{1}{2}\left(I_{n-1}(x) + I_{n+1}(x)\right)\f$ 
+     *  @see Ostap::Math::bessel_In
+     */
+    double der_bessel_In
+    ( const int    n , 
+      const double x ) ;
+    // ========================================================================
+    /** derivative for the modified Bessel function
+     *  - \f$ I_0^{\prime}(x) =  I_1(s)\f$
+     *  - \f$ I_{n}^{\prime}(x) = \frac{1}{2}\left(I_{n-1}(x) + I_{n+1}(x)\right)\f$ 
+     *  @see Ostap::Math::bessel_Inu
+     */
+    double der_bessel_Inu
+    ( const double nu , 
+      const double x  ) ;
+    // ========================================================================
+    /** derivative for the  modified Bessel function
+     *  - \f$ K_0^{\prime}(x) = -K_1(s)\f$
+     *  - \f$ K_{n}^{\prime}(x) = -\frac{1}{2}\left(K_{n-1}(x) + K_{n+1}(x)\right)\f$ 
+     *  @see Ostap::Math::bessel_Kn
+     */
+    double der_bessel_Kn
+    ( const int    n , 
+      const double x ) ;
+    // ========================================================================
+    /** derivative for the modified Bessel function
+     *  - \f$ K_0^{\prime}(x) = -K_1(s)\f$
+     *  - \f$ K_{n}^{\prime}(x) = -\frac{1}{2}\left(K_{n-1}(x) + K_{n+1}(x)\right)\f$ 
+     *  @see Ostap::Math::bessel_Knu
+     */
+    double der_bessel_Knu
+    ( const double nu , 
+      const double x  ) ;
+    // ========================================================================
+    
+    // ========================================================================
     /** Laguerre polynomila of non-integher order 
      *  \f$ L_{q}(x) = {}_1F_1(-1; 1; x ) \f$, where 
      *  \f$ {}_1F_1(-1; 1; x ) \f$ is a confluent hypergeometrical function 
@@ -1154,8 +1231,8 @@ namespace Ostap
     double laguerre_q 
     ( const double q , 
       const double x ) ;
-
-
+    // ========================================================================
+    
     // ========================================================================
     // clenshaw summation algorithms 
     // ========================================================================

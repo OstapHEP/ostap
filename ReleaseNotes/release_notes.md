@@ -7,7 +7,9 @@
   1. add missing `__reduce__` for `Ostap::Math::Thiele` interpolant 
   1. extend `MoreMath.h` and `math_ve.py`
   1. add `smooth_step` polynomial fuctions 
-
+  1. add explicit functions for derivatives of Bessel functuons
+  1. make use of explicit derivatives of Bessel fuctions
+  
 ## Backward incompatible:  
 
   1. rename some methods for `Ostap::Math::Integrator`

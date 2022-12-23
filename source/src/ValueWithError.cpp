@@ -2938,9 +2938,7 @@ Ostap::Math::bessel_Jn
   if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
   //
   /// get derivative 
-  const double derivative = 
-    ( 0 == n ) ?  - Ostap::Math::bessel_Jn ( 1 , xv ) :
-    0.5 * ( Ostap::Math::bessel_Jn ( n - 1 , xv ) - Ostap::Math::bessel_Jn ( n + 1 , xv ) ) ;
+  const double derivative = Ostap::Math::der_bessel_Jn ( n , x  ) ;
   //
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }
@@ -2959,9 +2957,7 @@ Ostap::Math::bessel_Yn
   if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
   //
   /// get derivative 
-  const double derivative = 
-    ( 0 == n ) ?  - Ostap::Math::bessel_Yn ( 1 , xv ) :
-    0.5 * ( Ostap::Math::bessel_Yn ( n - 1 , xv ) - Ostap::Math::bessel_Yn ( n + 1 , xv ) ) ;
+  const double derivative = Ostap::Math::der_bessel_Yn ( n , x  ) ;
   //
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }
@@ -2980,9 +2976,7 @@ Ostap::Math::bessel_In
   if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
   //
   /// get derivative 
-  const double derivative = 
-    ( 0 == n ) ?  Ostap::Math::bessel_In ( 1 , xv ) :
-    0.5 * ( Ostap::Math::bessel_In ( n - 1 , xv ) + Ostap::Math::bessel_In ( n + 1 , xv ) ) ;
+  const double derivative = Ostap::Math::der_bessel_In ( n , x  ) ;
   //
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }
@@ -3001,9 +2995,7 @@ Ostap::Math::bessel_Kn
   if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
   //
   /// get derivative 
-  const double derivative = 
-    ( 0 == n ) ? - Ostap::Math::bessel_Kn ( 1 , xv ) :
-    - 0.5 * ( Ostap::Math::bessel_Kn ( n - 1 , xv ) + Ostap::Math::bessel_Kn ( n + 1 , xv ) ) ;
+  const double derivative = Ostap::Math::der_bessel_Kn ( n , x  ) ;
   //
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }
@@ -3027,9 +3019,7 @@ Ostap::Math::bessel_Jnu
   if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
   //
   /// get derivative 
-  const double derivative = 
-    s_zero ( nu ) ?  - Ostap::Math::bessel_Jn ( 1 , xv ) :
-    0.5 * ( Ostap::Math::bessel_Jnu ( nu - 1 , xv ) - Ostap::Math::bessel_Jnu ( nu + 1 , xv ) ) ;
+  const double derivative = Ostap::Math::der_bessel_Jn ( nu , x  ) ;
   //
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }
@@ -3054,9 +3044,7 @@ Ostap::Math::bessel_Ynu
   if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
   //
   /// get derivative 
-  const double derivative = 
-    s_zero ( nu ) ?  - Ostap::Math::bessel_Yn ( 1 , xv ) :
-    0.5 * ( Ostap::Math::bessel_Yn ( nu - 1 , xv ) - Ostap::Math::bessel_Ynu ( nu + 1 , xv ) ) ;
+  const double derivative = Ostap::Math::der_bessel_Ynu ( nu , x  ) ;
   //
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }
@@ -3081,9 +3069,7 @@ Ostap::Math::bessel_Inu
   if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
   //
   /// get derivative 
-  const double derivative = 
-    s_zero ( nu ) ? Ostap::Math::bessel_In ( 1 , xv ) :
-    0.5 * ( Ostap::Math::bessel_Inu ( nu - 1 , xv ) + Ostap::Math::bessel_Inu ( nu + 1 , xv ) ) ;
+  const double derivative = Ostap::Math::der_bessel_Inu ( nu , x  ) ;
   //
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }
@@ -3109,9 +3095,7 @@ Ostap::Math::bessel_Knu
   if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
   //
   /// get derivative 
-  const double derivative = 
-    s_zero ( nu ) ? - Ostap::Math::bessel_Kn ( 1 , xv ) :
-    - 0.5 * ( Ostap::Math::bessel_Knu ( nu - 1 , xv ) + Ostap::Math::bessel_Knu ( nu + 1 , xv ) ) ;
+  const double derivative = Ostap::Math::der_bessel_Knu ( nu , x  ) ;
   //
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }
