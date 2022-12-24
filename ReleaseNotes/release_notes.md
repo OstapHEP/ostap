@@ -20,6 +20,7 @@
 
   1. Fix typos for `Ostap::Math::Integrator`
 
+
 # v1.9.5.4
 
 ## New features: 
