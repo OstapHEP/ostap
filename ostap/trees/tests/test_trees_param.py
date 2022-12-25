@@ -25,7 +25,9 @@ __all__    = () ## nothing to import
 import ostap.core.pyrouts
 import ostap.trees.param
 import ostap.math.models
-from   ostap.core.core    import hID, SE, Ostap 
+from   ostap.core.core       import hID, SE, Ostap
+from   ostap.plotting.canvas import use_canvas
+from   ostap.utils.utils     import wait  
 import ROOT, os,  random
 # =============================================================================
 # logging 
@@ -105,12 +107,23 @@ def test_parameterize_1D () :
         ly = Ostap.Math.LegendreSum ( 4 , -2 , 2 )
         lz = Ostap.Math.LegendreSum ( 4 , -4 , 4 )
         lu = Ostap.Math.LegendreSum ( 4 , -4 , 6 )
-        
+
         lx.parameterize ( tree , 'x' , cuts )
         ly.parameterize ( tree , 'y' , cuts )
         lz.parameterize ( tree , 'z' , cuts )
         lu.parameterize ( tree , 'u' , cuts )
         
+        cx = Ostap.Math.ChebyshevSum ( 4 , -2 , 2 )
+        cy = Ostap.Math.ChebyshevSum ( 4 , -2 , 2 )
+        cz = Ostap.Math.ChebyshevSum ( 4 , -4 , 4 )
+        cu = Ostap.Math.ChebyshevSum ( 4 , -4 , 6 )
+
+        cx.parameterize ( tree , 'x' , cuts )
+        cy.parameterize ( tree , 'y' , cuts )
+        cz.parameterize ( tree , 'z' , cuts )
+        cu.parameterize ( tree , 'u' , cuts )
+        
+
         hx = ROOT.TH1D(hID(),'',100,-2,2)
         hy = ROOT.TH1D(hID(),'',100,-2,2)
         hz = ROOT.TH1D(hID(),'',100,-4,4)
@@ -122,46 +135,72 @@ def test_parameterize_1D () :
         tree.project ( hu , 'u' , cuts )
         
         hx.SetMinimum(0)
-        hx.draw()
-        lx *= 0.04   ## bin-width
-        lx.draw('same', linecolor=2)
-        
         hy.SetMinimum(0)
-        hy.draw()
-        ly *= 0.04   ## bin-width
-        ly.draw('same', linecolor=2)
-
         hz.SetMinimum(0)
-        hz.draw()
-        lz *= 0.08   ## bin-width
-        lz.draw('same', linecolor=2)
-        
         hu.SetMinimum(0)
-        hu.draw()
-        lu *= 0.10   ## bin-width
-        lu.draw('same', linecolor=2)
 
-        d1 = SE()
-        d2 = SE()
-        d3 = SE()
-        d4 = SE()
+        with use_canvas ( 'X-variable' ) , wait ( 2 ) : 
+            hx.draw()        
+            lx *= 0.04   ## bin-width
+            lx.draw('same', linecolor=2)            
+            cx *= 0.04   ## bin-width
+            cx.draw('same', linecolor=4)
+            
+        with use_canvas ( 'Y-variable' ) , wait ( 2 ) :         
+            hy.draw()            
+            ly *= 0.04   ## bin-width
+            ly.draw('same', linecolor=2)
+            cy *= 0.04   ## bin-width
+            cy.draw('same', linecolor=4)
+            
+        with use_canvas ( 'Z-variable' ) , wait ( 2 ) :         
+            hz.draw()
+            lz *= 0.08   ## bin-width
+            lz.draw('same', linecolor=2)
+            cz *= 0.08   ## bin-width
+            cz.draw('same', linecolor=4)
+            
+        with use_canvas ( 'Z-variable' ) , wait ( 2 ) :                     
+            hu.draw()
+            lu *= 0.10   ## bin-width
+            lu.draw('same', linecolor=2)
+            cu *= 0.10   ## bin-width
+            cu.draw('same', linecolor=4)
+
+        d1  = SE()
+        d2  = SE()
+        d3  = SE()
+        d4  = SE()
+        dp1 = SE()
+        dp2 = SE()
+        dp3 = SE()
+        dp4 = SE()
 
         for i in range ( 1000 ) :
             
-            x = random.uniform ( -2 , 2 )
-            y = random.uniform ( -2 , 2 )
-            z = random.uniform ( -4 , 4 )
-            u = random.uniform ( -4 , 6 )
-
-            d1 += ( hx ( x ) - lx ( x ) ) / max ( hx ( x ) , lx ( x ) )
-            d2 += ( hy ( y ) - ly ( y ) ) / max ( hy ( y ) , ly ( y ) )
-            d3 += ( hz ( z ) - lz ( z ) ) / max ( hz ( z ) , lz ( z ) )
-            d4 += ( hu ( u ) - lu ( u ) ) / max ( hu ( u ) , lu ( u ) )
+            x   = random.uniform ( -2 , 2 )
+            y   = random.uniform ( -2 , 2 )
+            z   = random.uniform ( -4 , 4 )
+            u   = random.uniform ( -4 , 6 )
             
-        logger.info ( '1D-(x)-DIFFERENCES are %s ' % d1 ) 
-        logger.info ( '1D-(y)-DIFFERENCES are %s ' % d2 ) 
-        logger.info ( '1D-(z)-DIFFERENCES are %s ' % d3 ) 
-        logger.info ( '1D-(u)-DIFFERENCES are %s ' % d4 ) 
+            d1  += ( hx ( x ) - lx ( x ) ) / max ( hx ( x ) , lx ( x ) )
+            d2  += ( hy ( y ) - ly ( y ) ) / max ( hy ( y ) , ly ( y ) )
+            d3  += ( hz ( z ) - lz ( z ) ) / max ( hz ( z ) , lz ( z ) )
+            d4  += ( hu ( u ) - lu ( u ) ) / max ( hu ( u ) , lu ( u ) )
+
+            dp1 += ( cx ( x ) - lx ( x ) ) / max ( cx ( x ) , lx ( x ) )
+            dp2 += ( cy ( y ) - ly ( y ) ) / max ( cy ( y ) , ly ( y ) )
+            dp3 += ( cz ( z ) - lz ( z ) ) / max ( cz ( z ) , lz ( z ) )
+            dp4 += ( cu ( u ) - lu ( u ) ) / max ( cu ( u ) , lu ( u ) )
+
+        logger.info ( '1D-(x)      DIFFERENCES are %s ' % d1  ) 
+        logger.info ( '1D-(y)      DIFFERENCES are %s ' % d2  ) 
+        logger.info ( '1D-(z)      DIFFERENCES are %s ' % d3  ) 
+        logger.info ( '1D-(u)      DIFFERENCES are %s ' % d4  ) 
+        logger.info ( '1D-(x) (L/C)DIFFERENCES are %s ' % dp1 ) 
+        logger.info ( '1D-(y) (L/C)DIFFERENCES are %s ' % dp2 ) 
+        logger.info ( '1D-(z) (L/C)DIFFERENCES are %s ' % dp3 ) 
+        logger.info ( '1D-(u) (L/C)DIFFERENCES are %s ' % dp4 ) 
 
 
 # =============================================================================

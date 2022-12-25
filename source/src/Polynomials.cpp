@@ -1144,6 +1144,51 @@ Ostap::Math::ChebyshevSum::derivative () const
   return Ostap::Math::ChebyshevSum ( npars , m_xmin , m_xmax ) ;
 }
 // ============================================================================
+/*  update  the chebyshev expansion by addition of one "event" with 
+ *  the given weight
+ *  @code
+ *  ChebyshevSum sum = ... ;
+ *  for ( auto x : .... ) { sum.fill ( x ) ; }
+ *  @endcode
+ */
+// ============================================================================
+bool 
+Ostap::Math::ChebyshevSum::fill 
+( const double x      , 
+  const double weight ) 
+{
+  // no update 
+  if ( x < m_xmin || x > m_xmax ) { return false ; }
+  else if ( s_zero ( weight )   ) { return true  ; }
+  // 
+  const long double tt =  t ( x ) ;
+  //
+  const long double w  = weight * 4.0L / ( m_xmax - m_xmin ) / ( std::sqrt ( 1.0L - tt * tt ) * M_PI ) ;
+  if ( !std::isfinite( w  )     ) { return false ; }
+  //
+  const unsigned short N = degree() ;
+  //
+  m_pars[0] += w * 0.5L ;
+  if ( 0 == N ) { return true ; } //  RETURN 
+  //
+  m_pars[1] += w * tt   ;
+  if ( 1 == N ) { return true ; } //  RETURN 
+  //
+  long double p0  = 1  ;
+  long double p1  = tt ;
+  long double p_i = 0  ;
+  //
+  for ( unsigned short i = 2 ; i <= N ; ++i ) 
+  {
+    p_i        = 2.0L * tt * p1 - p0 ;
+    m_pars[i] += w * p_i ;
+    p0         = p1  ;
+    p1         = p_i ;
+  }
+  //
+  return true ;
+}
+// ============================================================================
 // simple  manipulations with polynoms: shift it! 
 // ============================================================================
 Ostap::Math::ChebyshevSum& 

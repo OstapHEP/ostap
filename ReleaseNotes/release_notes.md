@@ -1,3 +1,12 @@
+## New features: 
+  1. Add `Ostap::Math::chebyshevSum::fill` mehtod
+  1. Add `ChebyshedSum` into `Ostap/Params.h` set of cuntions
+  1. extend `test_trees_params.py` test
+  
+## Backward incompatible:  
+
+## Bug fixes:
+
 # v1.9.5.6
 
 ## New features: 

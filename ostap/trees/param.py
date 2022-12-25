@@ -29,9 +29,14 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 _large = 2**64 -1 
 # =============================================================================
-## parameterize 1D unbinned ddistribution from TTree in terms of Legendre sum
+## parameterize 1D unbinned ddistribution from TTree in terms of
+#  Legendre or chebyshev sum
 #  @code
 #  l = LegendreSum ( 5 , -1.0 , 1.0 )
+#  tree = ...
+#  l.parameterize ( tree , 'X' , 'Y>0' )
+#
+#  c = ChebyshevSum ( 5 , -1.0 , 1.0 )
 #  tree = ...
 #  l.parameterize ( tree , 'X' , 'Y>0' ) 
 #  @endcode
@@ -41,11 +46,15 @@ def _l1_parameterize_ ( l1   ,
                         tree ,
                         var  ,
                         cut = '' , first = 0 , last = _large ) :
-    """Parameterize 1D unbinned ddistribution from TTree in terms of Legendre sum
+    """Parameterize 1D unbinned ddistribution from TTree in terms of Legendre or Chebyshev sum
     
     >>> l = LegendreSum ( 5 , -1.0 , 1.0 )
     >>> tree = ...
-    >>> l.parameterize ( tree , 'X' , 'Y>0' ) 
+    >>> l.parameterize ( tree , 'X' , 'Y>0' )
+    
+    >>> c = ChebyshevSum ( 5 , -1.0 , 1.0 )
+    >>> tree = ...
+    >>> c.parameterize ( tree , 'X' , 'Y>0' ) 
     """
     return Ostap.DataParam.parameterize ( tree        , l1    ,
                                           var         ,
@@ -131,8 +140,10 @@ Ostap.Math.LegendreSum2.parameterize = _l2_parameterize_
 Ostap.Math.LegendreSum3.parameterize = _l3_parameterize_
 Ostap.Math.LegendreSum4.parameterize = _l4_parameterize_
 
+Ostap.Math.ChebyshevSum.parameterize = _l1_parameterize_
+
 # =============================================================================
-## parameterize 1,2,3&4D unbinned distributions in terms of Legeendre series
+## parameterize 1,2,3&4D unbinned distributions in terms of Legendre series
 #  @see Ostap.Math.LegendreSum
 #  @see Ostap.Math.LegendreSum2
 #  @see Ostap.Math.LegendreSum3
@@ -158,7 +169,8 @@ def _rt_parameterize_ ( tree , func , *args , **kwargs ) :
     assert isinstance ( func , ( Ostap.Math.LegendreSum  ,
                                  Ostap.Math.LegendreSum2 ,
                                  Ostap.Math.LegendreSum3 ,
-                                 Ostap.Math.LegendreSum4 ) ) ,\
+                                 Ostap.Math.LegendreSum4 ,
+                                 Ostap.Math.ChebyshevSum  ) ) ,\
                                  'Invalid function object %s/%s' % ( func , type  ( func) )
     
     return func.parameterize ( tree , *args , **kwargs )
@@ -168,11 +180,12 @@ ROOT.TTree.parameterize = _rt_parameterize_
 
 
 _decorated_classes_ = (
-    ROOT.TTree             ,
+    ROOT.TTree              ,
     Ostap.Math.LegendreSum  ,
     Ostap.Math.LegendreSum2 ,
     Ostap.Math.LegendreSum3 , 
     Ostap.Math.LegendreSum4 , 
+    Ostap.Math.ChebyshevSum ,
     )
 
 _new_methods_       = (
@@ -180,6 +193,7 @@ _new_methods_       = (
     Ostap.Math.LegendreSum2.parameterize ,
     Ostap.Math.LegendreSum3.parameterize , 
     Ostap.Math.LegendreSum4.parameterize , 
+    Ostap.Math.ChebyshevSum.parameterize , 
     ROOT.TTree.parameterize ,
     )
 

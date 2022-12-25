@@ -1571,6 +1571,21 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /** update  the Chebyshev expansion by addition of one "event" with 
+       *  the given weight
+       *  @code
+       *  chebsjevSum sum = ... ;
+       *  for ( auto x : .... ) { sum.fill ( x ) ; }
+       *  @endcode
+       *  This is a useful function to make an unbinned parameterization 
+       *  of certain distribution and/or efficiency 
+       *  @parameter x      the event content 
+       *  @parameter weight the weight 
+       */
+      bool fill ( const double x , const double weight = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /// simple  manipulations with polynoms: shift it! 
       ChebyshevSum& operator += ( const double a ) ; 
       /// simple  manipulations with polynoms: shift it! 

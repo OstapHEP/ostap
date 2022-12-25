@@ -23,6 +23,7 @@ namespace Ostap
     class LegendreSum2 ;
     class LegendreSum3 ;
     class LegendreSum4 ;
+    class ChebyshevSum ;
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
@@ -259,6 +260,58 @@ namespace Ostap
       const unsigned long        first       =  0 ,
       const unsigned long        last        = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
+  public:
+    // =========================================================================
+    /** fill Chebyshev sum with data from the Tree 
+     *  @see Ostap::Math::ChebyshevSum 
+     *  @see Ostap::Math::chebyshevSum::fill
+     *  @param tree       (INPUT)  the input tree 
+     *  @param sum        (UPDATE) the parameterization object 
+     *  @param expression (INPUT)  expression to be parameterized
+     *  @param first      (INPUT)  the first event in Tree 
+     *  @param last       (INPUT)  the last  event in Tree 
+     *  @return number of events used in parameterization 
+     *  @code
+     *  Tree*  tree = ...
+     *  ChebyshevSum s ( 5 , -1 , 1 ) ;
+     *  DataParam::parameterize ( tree , s , "x" ) ;
+     *  @endcode
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2019-07-3
+     */ 
+    static unsigned long parameterize 
+    ( TTree*                     tree       , 
+      Ostap::Math::ChebyshevSum& sum        , 
+      const std::string&         expression , 
+      const unsigned long        first      =  0 ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** fill Chebyshev sum with data from the Tree 
+     *  @see Ostap::Math::ChebyshevSum 
+     *  @see Ostap::Math::chebyshevSum::fill
+     *  @param tree       (INPUT)  the input tree 
+     *  @param sum        (UPDATE) the parameterization object 
+     *  @param expression (INPUT)  expression to be parameterized
+     *  @param seelction  (INPUT)  selection/weight to be used 
+     *  @param first      (INPUT)  the first event in Tree 
+     *  @param last       (INPUT)  the last  event in Tree 
+     *  @return  sum of weigths  used in parameterization
+     *  @code
+     *  Tree*  tree = ...
+     *  ChebyshevSum s ( 5 , -1 , 1 ) ;
+     *  DataParam::parameterize ( tree , s , "x"  , "y>10" ) ;
+     *  @endcode
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2019-07-3
+     */ 
+    static double parameterize 
+    ( TTree*                     tree       , 
+      Ostap::Math::ChebyshevSum& sum        , 
+      const std::string&         expression , 
+      const std::string&         selection  , 
+      const unsigned long        first      =  0 ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // =======================================================================
   } ; //                                      The end of class Ostap::DataParam 
   // ==========================================================================
 } //                                                 The end of namespace Ostap
