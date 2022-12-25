@@ -445,6 +445,21 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /** update  the Bernstein expansion by addition of one "event" with 
+       *  the given weight
+       *  @code
+       *  Bernstein sum = ... ;
+       *  for ( auto x : .... ) { sum.fill ( x ) ; }
+       *  @endcode
+       *  This is a useful function to make an unbinned parameterization 
+       *  of certain distribution and/or efficiency 
+       *  @parameter x      the event content 
+       *  @parameter weight the weight 
+       */
+      bool fill ( const double x , const double weight = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /// simple  manipulations with polynomial: shift it!
       Bernstein& operator += ( const double a ) ;
       /// simple  manipulations with polynomial: shift it!
@@ -677,14 +692,15 @@ namespace Ostap
     ( const std::vector<double>& pars ,
       const double               x    ) ;
     // ========================================================================
-    /** Dual basic Bernstein function
+    /** @class BernsteinDual 
+     *  Element from the  Dual Bernstein basis 
      *  The dual basic functions \f$ d^n_j(x)\f$ are defined as
      *   \f$  \int_{x_{min}}^{x_{max}}   b^n_k(x) d^n_j(x) = \delta_{kj}\f$,
      *   where \f$b^n_k(x)\f$ is basic Bernstein polynomial
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2016-07-03
      */
-    class BernsteinDualBasis 
+    class BernsteinDual 
     {
       // ======================================================================
     public :
@@ -695,8 +711,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      BernsteinDualBasis ( const unsigned short N     = 0 ,
-                           const unsigned short k     = 0 ) ;
+      BernsteinDual
+      ( const unsigned short N     = 0 ,
+        const unsigned short k     = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -716,7 +733,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// swap  them!
-      void swap ( BernsteinDualBasis& right ) ;
+      void swap ( BernsteinDual& right ) ;
       ///  get the tag 
       std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
@@ -730,8 +747,33 @@ namespace Ostap
     };
     // ========================================================================
     /// swap  them!
-    inline void swap ( BernsteinDualBasis& a , BernsteinDualBasis& b ) 
+    inline void swap ( BernsteinDual& a , BernsteinDual& b ) 
     { a.swap ( b ) ; }
+    // ========================================================================
+    /** @class BernsteinDualBasic
+     *  @see Ostap::Math::BernsteinDual
+     *  @see Ostap::Math::Bernstein
+     *  (static) store for Benstein Dual Basis functions 
+     */
+    class BernsteinDualBasis 
+    {
+    public:
+      // ======================================================================
+      /// Bernstein Dual Basic 
+      typedef Ostap::Math::BernsteinDual Element ;
+      typedef std::vector<Element>       Basis   ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the whole basic 
+      static const Basis*   basis
+      ( const unsigned short N ) ;
+      /// get the basis element 
+      static const Element* element
+      ( const unsigned short N ,
+        const unsigned short k ) ;
+      // ======================================================================
+    } ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

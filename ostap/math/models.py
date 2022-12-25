@@ -1083,7 +1083,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.ConvexSpline           ,
                Ostap.Math.ConvexOnlySpline       ,
                #
-               Ostap.Math.BernsteinDualBasis     ,
+               Ostap.Math.BernsteinDual          ,
                ## interpolators  
                Ostap.Math.Neville                ,
                Ostap.Math.Lagrange               ,
@@ -1192,7 +1192,7 @@ def _bdb_getattr_ ( self ,  attr ) :
     """
     b = self.bernstein()
     return getattr ( b , attr )
-Ostap.Math.BernsteinDualBasis.__getattr__ = _bdb_getattr_
+Ostap.Math.BernsteinDual.__getattr__ = _bdb_getattr_
 
 
 ## add some drawing method for some shapes 
@@ -2306,7 +2306,7 @@ _decorated_classes_ = set( [
     Ostap.Math.ConvexSpline           ,
     Ostap.Math.ConvexOnlySpline       ,
     #
-    Ostap.Math.BernsteinDualBasis     ,
+    Ostap.Math.BernsteinDual          ,
     ##
     Ostap.Math.Bernstein         ,
     Ostap.Math.BernsteinEven     , 

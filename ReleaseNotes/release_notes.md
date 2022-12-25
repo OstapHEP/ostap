@@ -1,10 +1,16 @@
 ## New features: 
-  1. Add `Ostap::Math::chebyshevSum::fill` mehtod
+  1. Add `Ostap::Math::ChebyshevSum::fill` method
   1. Add `ChebyshedSum` into `Ostap/Params.h` set of cuntions
+  1. extend `test_trees_params.py` test
+  1. redesign Bernstein dual basis: `Ostap::Math::BernsteinDual` & `Ostap::Math::BernsteinDualBasis`
+  1. Add `Ostap::Math::Bernstein::fill` method
+  1. Add `Bernstein` into `Ostap/Params.h` set of cuntions
   1. extend `test_trees_params.py` test
   
 ## Backward incompatible:  
 
+  1. rename `BernsteinDualBasis` into `Ostap::Math::BErnsteinnDual`
+  
 ## Bug fixes:
 
 # v1.9.5.6

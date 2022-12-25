@@ -30,13 +30,17 @@ else                       : logger = getLogger( __name__ )
 _large = 2**64 -1 
 # =============================================================================
 ## parameterize 1D unbinned ddistribution from TTree in terms of
-#  Legendre or chebyshev sum
+#  Legendre/chebyshev/Bernstein sums
 #  @code
 #  l = LegendreSum ( 5 , -1.0 , 1.0 )
 #  tree = ...
 #  l.parameterize ( tree , 'X' , 'Y>0' )
 #
 #  c = ChebyshevSum ( 5 , -1.0 , 1.0 )
+#  tree = ...
+#  l.parameterize ( tree , 'X' , 'Y>0' )
+#
+#  b = Bernstein  ( 5 , -1.0 , 1.0 )
 #  tree = ...
 #  l.parameterize ( tree , 'X' , 'Y>0' ) 
 #  @endcode
@@ -54,7 +58,11 @@ def _l1_parameterize_ ( l1   ,
     
     >>> c = ChebyshevSum ( 5 , -1.0 , 1.0 )
     >>> tree = ...
-    >>> c.parameterize ( tree , 'X' , 'Y>0' ) 
+    >>> c.parameterize ( tree , 'X' , 'Y>0' )
+    
+    >>> b = Bernstein  ( 5 , -1.0 , 1.0 )
+    >>> tree = ...
+    >>> b.parameterize ( tree , 'X' , 'Y>0' ) 
     """
     return Ostap.DataParam.parameterize ( tree        , l1    ,
                                           var         ,
@@ -141,6 +149,7 @@ Ostap.Math.LegendreSum3.parameterize = _l3_parameterize_
 Ostap.Math.LegendreSum4.parameterize = _l4_parameterize_
 
 Ostap.Math.ChebyshevSum.parameterize = _l1_parameterize_
+Ostap.Math.Bernstein   .parameterize = _l1_parameterize_
 
 # =============================================================================
 ## parameterize 1,2,3&4D unbinned distributions in terms of Legendre series
@@ -148,6 +157,8 @@ Ostap.Math.ChebyshevSum.parameterize = _l1_parameterize_
 #  @see Ostap.Math.LegendreSum2
 #  @see Ostap.Math.LegendreSum3
 #  @see Ostap.Math.LegendreSum4
+#  @see Ostap.Math.ChebyshevSum
+#  @see Ostap.Math.Bernstein
 #  @code
 #  tree  = ....
 #  l2    = Ostap.Math.LegendreSum2 ( 5 , -1.0 , 1.0 )
@@ -170,14 +181,14 @@ def _rt_parameterize_ ( tree , func , *args , **kwargs ) :
                                  Ostap.Math.LegendreSum2 ,
                                  Ostap.Math.LegendreSum3 ,
                                  Ostap.Math.LegendreSum4 ,
-                                 Ostap.Math.ChebyshevSum  ) ) ,\
+                                 Ostap.Math.ChebyshevSum ,
+                                 Ostap.Math.Bernstein    ) ) ,\
                                  'Invalid function object %s/%s' % ( func , type  ( func) )
     
     return func.parameterize ( tree , *args , **kwargs )
 
     
 ROOT.TTree.parameterize = _rt_parameterize_
-
 
 _decorated_classes_ = (
     ROOT.TTree              ,
@@ -186,6 +197,7 @@ _decorated_classes_ = (
     Ostap.Math.LegendreSum3 , 
     Ostap.Math.LegendreSum4 , 
     Ostap.Math.ChebyshevSum ,
+    Ostap.Math.Bernstein    ,
     )
 
 _new_methods_       = (
@@ -194,6 +206,7 @@ _new_methods_       = (
     Ostap.Math.LegendreSum3.parameterize , 
     Ostap.Math.LegendreSum4.parameterize , 
     Ostap.Math.ChebyshevSum.parameterize , 
+    Ostap.Math.Bernstein.parameterize , 
     ROOT.TTree.parameterize ,
     )
 

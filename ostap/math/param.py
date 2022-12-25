@@ -372,9 +372,6 @@ except ImportError :
     pass
 
 # =============================================================================
-## BernsteinDualBasis
-_bernstein_dual_basis_ = {}
-# =============================================================================
 ## make a function representation in terms of Bezier sum
 #  (sum over Bernstein polynomials)
 #  @code 
@@ -409,19 +406,24 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
  
     from ostap.math.integral import integral as _integral 
 
-    args = {} 
-    for i in  range ( 0 , N + 1 ) :
+    args = {}
+    
+    basis = Ostap.Math.BernsteinDualBasis.basis ( N  )
+    assert basis , 'cannot acquire Bernstein dual Basis!'
 
-        index = N , i
+    ##for i, dual  in  enumerate ( range ( 0 , N + 1 ) :
+    for i, dual  in  enumerate ( basis ) : 
+
+        ## if not index in _bernstein_dual_basis_ :
+        ##     ## create the dual basic function
+        ##      _DUAL = Ostap.Math.BernsteinDualBasis
+        ##     _dual = _DUAL ( *index )
+        ##     _bernstein_dual_basis_ [ index ] = _dual
+        ##  ## get the dual basic function
+        ##  dual = _bernstein_dual_basis_[ index ]
         
-        if not index in _bernstein_dual_basis_ :
-            ## create the dual basic function
-            _DUAL = Ostap.Math.BernsteinDualBasis
-            _dual = _DUAL ( *index )
-            _bernstein_dual_basis_ [ index ] = _dual
-
-        ## get the dual basic function
-        dual = _bernstein_dual_basis_[ index ]
+        ## dual = Ostap.Math.BernsteinDualBasis.element ( N , i )
+        ## assert dual , 'cannot acquare BernsteinDual Basis!'
             
         ## get the integration function 
         fun_i = lambda x : float ( func ( x ) ) * dual ( bsum.t( x ) )
@@ -488,21 +490,26 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
     
     from ostap.math.integral import integral as _integral 
     
-    args = {} 
+    args = {}
+
+    ## basis = Ostap.Math.BernsteinDualBasis.element ( bsum.degree() , i ) 
+    ## assert dual, 'Cannot acquare element of Bernstein dual basis!'
+
     for i in  range ( len ( b_i ) )  : 
         
         ## index = 2 * N + 1 , i
         index = bsum.degree () , i
         
-        if not index in _bernstein_dual_basis_ :
-            ## create the dual basic function
-            _DUAL = Ostap.Math.BernsteinDualBasis
-            _dual = _DUAL ( *index )
-            _bernstein_dual_basis_ [ index ] = _dual
-
-        ## get the dual basic function
-        dual = _bernstein_dual_basis_[ index ]
-            
+        ## if not index in _bernstein_dual_basis_ :
+        ##    ## create the dual basic function
+        ##    _DUAL = Ostap.Math.BernsteinDualBasis
+        ##    _dual = _DUAL ( *index )
+        ##    _bernstein_dual_basis_ [ index ] = _dual
+        ##  ## get the dual basic function
+        ##  dual = _bernstein_dual_basis_[ index ]
+        dual = Ostap.Math.BernsteinDualBasis.element ( bsum.degree() , i ) 
+        assert dual, 'Cannot acquare element of Bernstein dual basis!'
+        
         ## get the integration function 
         fun_i = lambda x : _sym_func_ ( x ) * dual ( bsum.t( x ) )
 

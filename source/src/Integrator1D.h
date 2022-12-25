@@ -36,7 +36,7 @@ namespace Ostap
     { 
       // ======================================================================
       /** @typedef    Result 
-       *  the  type for  result of numerica intehgrtaion routines 
+       *  the  type for  result of numerica integration routines 
        */
       typedef std::tuple<int,double,double> Result ;
       // ======================================================================

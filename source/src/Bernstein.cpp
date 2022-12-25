@@ -4,6 +4,7 @@
 // STD& STL
 // ============================================================================
 #include <cmath>
+#include <map>
 #include <array>
 #include <climits>
 #include <cassert>
@@ -27,6 +28,7 @@
 #include "Exception.h"
 #include "local_math.h"
 #include "local_hash.h"
+#include "syncedcache.h"  // the cache 
 #include "bernstein_utils.h"
 // ============================================================================
 /** @file 
@@ -1986,11 +1988,11 @@ double Ostap::Math::right_line_hull ( const Ostap::Math::Bernstein& b )
   return b.x ( ( yi - xi * p0 ) / ( yi - p0 ) ) ;
 }  
 // ============================================================================
-//  DUAL BASIC 
+//  BERNSTEIN DUAL 
 // ============================================================================
 // constructor from the order
 // ============================================================================
-Ostap::Math::BernsteinDualBasis::BernsteinDualBasis
+Ostap::Math::BernsteinDual::BernsteinDual
 ( const unsigned short N ,
   const unsigned short j ) 
   : m_k         ( j ) 
@@ -2022,11 +2024,68 @@ Ostap::Math::BernsteinDualBasis::BernsteinDualBasis
 // ============================================================================
 // swap  them!
 // ============================================================================
-void Ostap::Math::BernsteinDualBasis::swap 
-( Ostap::Math::BernsteinDualBasis& right ) 
+void Ostap::Math::BernsteinDual::swap 
+( Ostap::Math::BernsteinDual& right ) 
 {
   std::swap         ( m_k          , right.m_k         ) ;
   Ostap::Math::swap ( m_bernstein  , right.m_bernstein ) ;
+}
+// ============================================================================
+// get the whole basic from the store
+// ============================================================================
+const Ostap::Math::BernsteinDualBasis::Basis* 
+Ostap::Math::BernsteinDualBasis::basis
+( const unsigned short N )
+{
+  typedef std::map<unsigned short,Basis> MAP   ;
+  typedef SyncedCache<MAP>               STORE ;
+  /// the actual store 
+  static  STORE s_store {} ; // the actual store 
+  // ==========================================================================
+  { // look into the store
+    // ========================================================================
+    STORE::Lock lock ( s_store.mutex() ) ;
+    auto it = s_store->find ( N ) ;
+    if  ( s_store->end() != it ) { return &(it->second) ; }
+    // ========================================================================
+  } // ========================================================================
+  // ==========================================================================
+  Basis b {} ;
+  b.reserve ( N + 1 ) ;
+  for ( unsigned short k = 0 ; k <= N ; ++k )
+  { b.push_back ( BernsteinDual ( N , k ) ) ;}
+  // ==========================================================================
+  { // update the store
+    // ========================================================================
+    STORE::Lock lock ( s_store.mutex() ) ;
+    s_store->insert ( std::make_pair ( N , b ) ) ;
+    // ========================================================================
+  } // ========================================================================
+  // ==========================================================================
+  { // look into the store
+    // ========================================================================
+    STORE::Lock lock ( s_store.mutex() ) ;
+    auto it = s_store->find ( N ) ;
+    if  ( s_store->end() != it ) { return &(it->second) ; }
+    // ========================================================================
+  } // ========================================================================
+  // ==========================================================================
+  return nullptr ;
+}
+// ============================================================================
+// get the basis element 
+// ============================================================================
+const Ostap::Math::BernsteinDualBasis::Element* 
+Ostap::Math::BernsteinDualBasis::element
+( const unsigned short N ,
+  const unsigned short k )
+{
+  if  ( N < k        ) { return nullptr ; }
+  const Basis* b = basis ( N ) ;
+  if  ( nullptr == b ) { return nullptr ; }
+  const std::size_t nn = b->size() ;
+  if  ( nn  <= k     ) { return nullptr ; }
+  return & ( (*b)[k] ) ;
 }
 // ============================================================================
 // Interpolation stuff 
@@ -2151,7 +2210,45 @@ Ostap::Math::Interpolation::bernstein
                      Abscissas ( N , xmin , xmax , Abscissas::Lobatto ) , 
                      xmin , xmax ) ; }
 // ============================================================================
- 
+/*  update  the Bernstein expansion by addition of one "event" with 
+ *  the given weight
+ *  @code
+ *  Bernstein sum = ... ;
+ *  for ( auto x : .... ) { sum.fill ( x ) ; }
+ *  @endcode
+ */
+// ============================================================================
+bool 
+Ostap::Math::Bernstein::fill 
+( const double x      , 
+  const double weight ) 
+{
+  // no update 
+  if ( x <  m_xmin || x >  m_xmax ) { return false ; }
+  else if ( s_zero ( weight )     ) { return true  ; }
+  // 
+  const long double tt =  t ( x ) ;
+  //
+  const long double w  = weight * 1.0L / ( m_xmax - m_xmin ) ;
+  //
+  const unsigned short N = degree() ;
+  //
+  const Ostap::Math::BernsteinDualBasis::Basis* basis =
+    Ostap::Math::BernsteinDualBasis::basis ( N ) ;
+  //
+  const std::size_t NP = npars() ;
+
+  static std::string s_MESSAGE { "Cannot get valid Bernstein dual basis!" };
+  static std::string s_TAG     { "Ostap::Math::Bernstein"} ;
+  //
+  Ostap::Assert ( basis && ( NP == basis->size() ) , 
+                  s_MESSAGE , s_TAG , 800 ) ;
+  //
+  for  ( unsigned int i = 0 ; i < NP  ; ++i )
+  { m_pars [i] += w * (*basis)[i] ( tt ) ; }
+  //
+  return true ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

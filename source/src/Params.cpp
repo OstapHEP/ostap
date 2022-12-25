@@ -8,6 +8,7 @@
 #include "Ostap/Notifier.h"
 #include "Ostap/Parameterization.h"
 #include "Ostap/Polynomials.h"
+#include "Ostap/Bernstein.h"
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -688,6 +689,132 @@ unsigned long Ostap::DataParam::parameterize
 double Ostap::DataParam::parameterize 
 ( TTree*                     tree       , 
   Ostap::Math::ChebyshevSum& sum        , 
+  const std::string&         expression , 
+  const std::string&         selection  , 
+  const unsigned long        first      ,
+  const unsigned long        last       ) 
+{
+  // invalid tree or emptry range 
+  if ( nullptr == tree || last <= first ) { return 0 ; }
+  //
+  if ( 0 == selection.size() ) 
+  { return parameterize ( tree ,  sum , expression , first , last ) ; }
+  //
+  //
+  Ostap::Formula var ( expression , tree ) ;
+  Ostap::Assert ( var.ok()                                    , 
+                  "Invalid expression:\"" + expression + "\"" ,
+                  "Ostap::DataParams::parameterize"           ) ;
+  //
+  Ostap::Formula weight ( selection , tree ) ;
+  Ostap::Assert ( weight.ok()                                 , 
+                  "Invalid selection:\"" + selection   + "\"" ,
+                  "Ostap::DataParams::parameterize"           ) ;
+  //
+  Ostap::Utils::Notifier notify ( tree , &var ,  &weight ) ;
+  //
+  const unsigned long nEntries = std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  long double wsum = 0 ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
+  { 
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { break ; }                        // BREAK
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { break ; }                        // BREAK
+    //
+    // get the weight  
+    const double w = weight.evaluate () ;
+    if ( !w        ) { continue ; }
+    //
+    // get the variable   
+    const double v =    var.evaluate() ;
+    //
+    // fill the sum 
+    wsum += ( sum.fill ( v , w ) ? w : 0 ) ;
+  }
+  //
+  return wsum ;
+}
+// ============================================================================
+/*  fill Bernstein sum with data from the Tree 
+ *  @see Ostap::Math::Bernstein 
+ *  @see Ostap::Math::Bernstein::fill
+ *  @param tree       (INPUT)  the input tree 
+ *  @param sum        (UPDATE) the parameterization object 
+ *  @param expression (INPUT)  expresion to be parameterized
+ *  @param first      (INPUT)  the first event in Tree 
+ *  @param last       (INPUT)  the last  event in Tree 
+ *  @return number of events sused in parameterization 
+ *  @code
+ *  Tree*  tree = ...
+ *  Bernsteins ( 5 , -1 , 1 ) ;
+ *  DataParam::parameterize ( tree , s , "x" ) ;
+ *  @endcode
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2019-07-3
+ */ 
+// ============================================================================
+unsigned long Ostap::DataParam::parameterize 
+( TTree*                     tree       , 
+  Ostap::Math::Bernstein&    sum        , 
+  const std::string&         expression , 
+  const unsigned long        first      ,
+  const unsigned long        last       ) 
+{
+  // invalid tree or emptry range 
+  if ( nullptr == tree || last <= first ) { return 0 ; }
+  //
+  Ostap::Formula var ( expression , tree ) ;
+  Ostap::Assert ( var.ok()                                    , 
+                  "Invalid expression:\"" + expression + "\"" ,
+                  "Ostap::DataParams::parameterize"           ) ;
+  //
+  Ostap::Utils::Notifier notify ( tree , &var ) ;
+  //
+  const unsigned long nEntries = std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  unsigned long filled = 0 ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
+  { 
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { break ; }                        // BREAK
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { break ; }                        // BREAK
+    //
+    // get the variable   
+    const double v = var.evaluate() ;
+    //
+    // fill the sum 
+    filled += ( sum.fill ( v , 1 ) ? 1 : 0 ) ;
+  }
+  //
+  return filled ;
+}
+// ==================================================================================
+/*  fill Bernstein sum with data from the Tree 
+ *  @see Ostap::Math::Bernstein 
+ *  @see Ostap::Math::Bernstein::fill
+ *  @param tree       (INPUT)  the input tree 
+ *  @param sum        (UPDATE) the parameterization object 
+ *  @param expression (INPUT)  expression to be parameterized
+ *  @param seelction  (INPUT)  selection/weight to be used 
+ *  @param first      (INPUT)  the first event in Tree 
+ *  @param last       (INPUT)  the last  event in Tree 
+ *  @return  sum of weigths  used in parameterization
+ *  @code
+ *  Tree*  tree = ...
+ *  Bernstein s ( 5 , -1 , 1 ) ;
+ *  DataParam::parameterize ( tree , s , "x"  , "y>10" ) ;
+ *  @endcode
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2019-07-3
+ */ 
+// ==================================================================================
+double Ostap::DataParam::parameterize 
+( TTree*                     tree       , 
+  Ostap::Math::Bernstein&    sum        , 
   const std::string&         expression , 
   const std::string&         selection  , 
   const unsigned long        first      ,

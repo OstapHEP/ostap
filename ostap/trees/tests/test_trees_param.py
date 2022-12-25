@@ -25,9 +25,11 @@ __all__    = () ## nothing to import
 import ostap.core.pyrouts
 import ostap.trees.param
 import ostap.math.models
-from   ostap.core.core       import hID, SE, Ostap
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.utils     import wait  
+from   ostap.core.core          import hID, SE, Ostap
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait
+from   ostap.utils.timing       import timing
+from   ostap.utils.progress_bar import progress_bar 
 import ROOT, os,  random
 # =============================================================================
 # logging 
@@ -45,7 +47,7 @@ if not os.path.exists( data_file ) :
     
     import random
     
-    N =  200000
+    N = 100000
         
     logger.info('Prepare input ROOT file with data %s' % data_file )
     with ROOT.TFile.Open( data_file ,'recreate') as test_file:
@@ -64,8 +66,7 @@ if not os.path.exists( data_file ) :
         tree .Branch ( 'z' , var3 , 'z/D' )
         tree .Branch ( 'u' , var4 , 'u/D' )
 
-        I = 0
-        while I < N : 
+        for i in progress_bar ( range  ( N ) ) : 
             
             x =      random.uniform     ( -4.0 , 4.0 )
             y = -5 + random.expovariate ( 1/5.0 )
@@ -83,7 +84,6 @@ if not os.path.exists( data_file ) :
             if not -4 <= var4[0] <= 6 : continue
                         
             tree.Fill()
-            I+= 1
             
         test_file.Write()
         test_file.ls()
@@ -98,7 +98,10 @@ cuts = cut1&cut2&cut4&cut4
 ## 1D parameterizations
 # =============================================================================
 def test_parameterize_1D () :
-    
+
+    logger  = getLogger("test_parameterize_1D")
+    logger.info ( 'Test 1D parameterisations' ) 
+
     with ROOT.TFile.Open(data_file,'READ') as f :
         
         tree = f.S
@@ -108,64 +111,85 @@ def test_parameterize_1D () :
         lz = Ostap.Math.LegendreSum ( 4 , -4 , 4 )
         lu = Ostap.Math.LegendreSum ( 4 , -4 , 6 )
 
-        lx.parameterize ( tree , 'x' , cuts )
-        ly.parameterize ( tree , 'y' , cuts )
-        lz.parameterize ( tree , 'z' , cuts )
-        lu.parameterize ( tree , 'u' , cuts )
-        
+        with timing ( "LegendreSums" , logger = logger ) : 
+            lx.parameterize ( tree , 'x' , cuts )
+            ly.parameterize ( tree , 'y' , cuts )
+            lz.parameterize ( tree , 'z' , cuts )
+            lu.parameterize ( tree , 'u' , cuts )
+            
         cx = Ostap.Math.ChebyshevSum ( 4 , -2 , 2 )
         cy = Ostap.Math.ChebyshevSum ( 4 , -2 , 2 )
         cz = Ostap.Math.ChebyshevSum ( 4 , -4 , 4 )
         cu = Ostap.Math.ChebyshevSum ( 4 , -4 , 6 )
 
-        cx.parameterize ( tree , 'x' , cuts )
-        cy.parameterize ( tree , 'y' , cuts )
-        cz.parameterize ( tree , 'z' , cuts )
-        cu.parameterize ( tree , 'u' , cuts )
-        
+        with timing ( "ChebyshevSums" , logger = logger ) : 
+            cx.parameterize ( tree , 'x' , cuts )
+            cy.parameterize ( tree , 'y' , cuts )
+            cz.parameterize ( tree , 'z' , cuts )
+            cu.parameterize ( tree , 'u' , cuts )
+            
+        bx = Ostap.Math.Bernstein  ( 4 , -2 , 2 )
+        by = Ostap.Math.Bernstein  ( 4 , -2 , 2 )
+        bz = Ostap.Math.Bernstein  ( 4 , -4 , 4 )
+        bu = Ostap.Math.Bernstein  ( 4 , -4 , 6 )
 
+        with timing ( "Bernstein" , logger = logger ) : 
+            bx.parameterize ( tree , 'x' , cuts )
+            by.parameterize ( tree , 'y' , cuts )
+            bz.parameterize ( tree , 'z' , cuts )
+            bu.parameterize ( tree , 'u' , cuts )
+            
         hx = ROOT.TH1D(hID(),'',100,-2,2)
         hy = ROOT.TH1D(hID(),'',100,-2,2)
         hz = ROOT.TH1D(hID(),'',100,-4,4)
         hu = ROOT.TH1D(hID(),'',100,-4,6)
         
-        tree.project ( hx , 'x' , cuts )
-        tree.project ( hy , 'y' , cuts )
-        tree.project ( hz , 'z' , cuts )
-        tree.project ( hu , 'u' , cuts )
-        
+        with timing ( "Histos" , logger = logger ) : 
+            tree.project ( hx , 'x' , cuts )
+            tree.project ( hy , 'y' , cuts )
+            tree.project ( hz , 'z' , cuts )
+            tree.project ( hu , 'u' , cuts )
+            
         hx.SetMinimum(0)
         hy.SetMinimum(0)
         hz.SetMinimum(0)
         hu.SetMinimum(0)
 
-        with use_canvas ( 'X-variable' ) , wait ( 2 ) : 
+        with use_canvas ( 'X-variable' ) , wait ( 1 ) , timing ( 'X-varibale' , logger = logger ) : 
             hx.draw()        
             lx *= 0.04   ## bin-width
-            lx.draw('same', linecolor=2)            
+            lx.draw('same', linecolor=2)
             cx *= 0.04   ## bin-width
             cx.draw('same', linecolor=4)
+            bx *= 0.04   ## bin-width
+            bx.draw('same', linecolor=8)
             
-        with use_canvas ( 'Y-variable' ) , wait ( 2 ) :         
+        with use_canvas ( 'Y-variable' ) , wait ( 1 ) , timing ( 'Y-variable' , logger = logger ) : 
             hy.draw()            
             ly *= 0.04   ## bin-width
             ly.draw('same', linecolor=2)
             cy *= 0.04   ## bin-width
             cy.draw('same', linecolor=4)
+            by *= 0.04   ## bin-width
+            by.draw('same', linecolor=8)
             
-        with use_canvas ( 'Z-variable' ) , wait ( 2 ) :         
+        with use_canvas ( 'Z-variable' ) , wait ( 1 ) , timing ( 'Z-variable' , logger = logger ) : 
             hz.draw()
             lz *= 0.08   ## bin-width
             lz.draw('same', linecolor=2)
             cz *= 0.08   ## bin-width
             cz.draw('same', linecolor=4)
+            bz *= 0.08   ## bin-width
+            bz.draw('same', linecolor=8)
             
-        with use_canvas ( 'Z-variable' ) , wait ( 2 ) :                     
+        with use_canvas ( 'U-variable' ) , wait ( 1 ) , timing ( 'U-variable' , logger = logger ) :
             hu.draw()
             lu *= 0.10   ## bin-width
             lu.draw('same', linecolor=2)
             cu *= 0.10   ## bin-width
             cu.draw('same', linecolor=4)
+            bu *= 0.10   ## bin-width
+            bu.draw('same', linecolor=8)
 
         d1  = SE()
         d2  = SE()
@@ -175,8 +199,12 @@ def test_parameterize_1D () :
         dp2 = SE()
         dp3 = SE()
         dp4 = SE()
-
-        for i in range ( 1000 ) :
+        db1 = SE()
+        db2 = SE()
+        db3 = SE()
+        db4 = SE()
+        
+        for i in progress_bar ( range ( 1000 ) ):
             
             x   = random.uniform ( -2 , 2 )
             y   = random.uniform ( -2 , 2 )
@@ -193,14 +221,25 @@ def test_parameterize_1D () :
             dp3 += ( cz ( z ) - lz ( z ) ) / max ( cz ( z ) , lz ( z ) )
             dp4 += ( cu ( u ) - lu ( u ) ) / max ( cu ( u ) , lu ( u ) )
 
+            db1 += ( bx ( x ) - lx ( x ) ) / max ( cx ( x ) , lx ( x ) )
+            db2 += ( by ( y ) - ly ( y ) ) / max ( cy ( y ) , ly ( y ) )
+            db3 += ( bz ( z ) - lz ( z ) ) / max ( cz ( z ) , lz ( z ) )
+            db4 += ( bu ( u ) - lu ( u ) ) / max ( cu ( u ) , lu ( u ) )
+
         logger.info ( '1D-(x)      DIFFERENCES are %s ' % d1  ) 
         logger.info ( '1D-(y)      DIFFERENCES are %s ' % d2  ) 
         logger.info ( '1D-(z)      DIFFERENCES are %s ' % d3  ) 
-        logger.info ( '1D-(u)      DIFFERENCES are %s ' % d4  ) 
+        logger.info ( '1D-(u)      DIFFERENCES are %s ' % d4  )
+        
         logger.info ( '1D-(x) (L/C)DIFFERENCES are %s ' % dp1 ) 
         logger.info ( '1D-(y) (L/C)DIFFERENCES are %s ' % dp2 ) 
         logger.info ( '1D-(z) (L/C)DIFFERENCES are %s ' % dp3 ) 
         logger.info ( '1D-(u) (L/C)DIFFERENCES are %s ' % dp4 ) 
+
+        logger.info ( '1D-(x) (B/L)DIFFERENCES are %s ' % db1 ) 
+        logger.info ( '1D-(y) (L/L)DIFFERENCES are %s ' % db2 ) 
+        logger.info ( '1D-(z) (B/L)DIFFERENCES are %s ' % db3 ) 
+        logger.info ( '1D-(u) (B/L)DIFFERENCES are %s ' % db4 ) 
 
 
 # =============================================================================
@@ -208,6 +247,9 @@ def test_parameterize_1D () :
 # =============================================================================
 def test_parameterize_2D () :
     
+    logger  = getLogger("test_parameterize_2D")
+    logger.info ( 'Test 2D parameterisations' ) 
+
     with ROOT.TFile.Open(data_file,'READ') as f :
         
         tree = f.S
@@ -215,7 +257,7 @@ def test_parameterize_2D () :
         lxy = Ostap.Math.LegendreSum2 ( 12 , 12 , -2 , 2 , -2 , 2 )
         lzu = Ostap.Math.LegendreSum2 ( 12 , 12 , -4 , 4 , -4 , 6 )
         lxu = Ostap.Math.LegendreSum2 ( 12 , 12 , -2 , 2 , -4 , 6 )
-        
+
         lxy.parameterize ( tree , 'x' , 'y' ,  cuts )
         lzu.parameterize ( tree , 'z' , 'u' ,  cuts )
         lxu.parameterize ( tree , 'x' , 'u' ,  cuts )
@@ -257,6 +299,9 @@ def test_parameterize_2D () :
 # =============================================================================
 def test_parameterize_3D () :
     
+    logger  = getLogger("test_parameterize_3D")
+    logger.info ( 'Test 3D parameterisations' ) 
+
     with ROOT.TFile.Open(data_file,'READ') as f :
         
         tree = f.S
@@ -313,6 +358,9 @@ def test_parameterize_3D () :
 # =============================================================================
 def test_parameterize_4D () :
     
+    logger  = getLogger("test_parameterize_4D")
+    logger.info ( 'Test 4D parameterisations' ) 
+
     with ROOT.TFile.Open(data_file,'READ') as f :
         
         tree = f.S

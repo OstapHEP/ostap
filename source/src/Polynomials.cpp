@@ -1158,8 +1158,8 @@ Ostap::Math::ChebyshevSum::fill
   const double weight ) 
 {
   // no update 
-  if ( x < m_xmin || x > m_xmax ) { return false ; }
-  else if ( s_zero ( weight )   ) { return true  ; }
+  if ( x <= m_xmin || x >= m_xmax ) { return false ; }
+  else if ( s_zero ( weight )     ) { return true  ; }
   // 
   const long double tt =  t ( x ) ;
   //
