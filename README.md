@@ -1,6 +1,6 @@
 Ostap Project                   
 =============
-[![Build Status](https://travis-ci.org/OstapHEP/ostap.svg?branch=master)](https://travis-ci.org/OstapHEP/ostap)
+[![ostap](https://github.com/OstapHEP/ostap/actions/workflows/coveralls.yml/badge.svg?branch=master&event=push)](https://github.com/OstapHEP/ostap/actions/workflows/coveralls.yml)
 [![Coverage Status](https://coveralls.io/repos/github/OstapHEP/ostap/badge.svg?branch=master)](https://coveralls.io/github/OstapHEP/ostap?branch=master)
 [![Build Status](https://dev.azure.com/OstapHep/OstapHep/_apis/build/status/OstapHEP.ostap?branchName=master)](https://dev.azure.com/OstapHep/OstapHep/_build/latest?definitionId=5&branchName=master)
 [![pipeline status](https://gitlab.cern.ch/ostapHep/ostaphep/badges/master/pipeline.svg?ignore_skipped=true)](https://gitlab.cern.ch/ostapHep/ostaphep/commits/master)
