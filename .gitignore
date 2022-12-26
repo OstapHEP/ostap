@@ -15,6 +15,7 @@ _templates
 # Editor temporary/working/backup files #
 #########################################
 .#*
+*.*#
 *~
 *.egg-info
 *.d
