@@ -48,6 +48,9 @@ Ostap::Math::Bernstein2D::Bernstein2D
     //
   , m_bx   () 
   , m_by   ()
+    //
+  , m_fx   ( nX + 1 , 0.0 ) 
+  , m_fy   ( nY + 1 , 0.0 ) 
 {
   //
   m_bx.reserve ( m_nx + 1 ) ;
@@ -75,6 +78,8 @@ Ostap::Math::Bernstein2D::Bernstein2D
   , m_ymax ( right.xmax() ) 
   , m_bx   () 
   , m_by   () 
+  , m_fx   ( right.nX() + 1 , 0.0 ) 
+  , m_fy   ( right.nY() + 1 , 0.0 ) 
 {
   //
   m_bx.reserve ( m_nx ) ;
@@ -121,6 +126,9 @@ Ostap::Math::Bernstein2D::Bernstein2D
     //
   , m_bx   () 
   , m_by   ()
+    // 
+  , m_fx   ( bx.n() + 1 , 0.0 ) 
+  , m_fy   ( by.n() + 1 , 0.0 ) 
 {
   //
   m_bx.reserve ( m_nx + 1 ) ;
@@ -152,6 +160,8 @@ void Ostap::Math::Bernstein2D::swap ( Ostap::Math::Bernstein2D& right )
   std::swap ( m_ymax , right.m_ymax  ) ;
   std::swap ( m_bx   , right.m_bx    ) ;
   std::swap ( m_by   , right.m_by    ) ;
+  std::swap ( m_fx   , right.m_fx    ) ;
+  std::swap ( m_fy   , right.m_fy    ) ;
 }
 // ============================================================================
 // helper function to make calculations
@@ -192,15 +202,13 @@ double Ostap::Math::Bernstein2D::evaluate
     return m_pars [0] * scalex * scaley ; 
   }
   //
-  std::vector<double> fx ( m_nx + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= m_nx ; ++i )
-  { fx[i] = m_bx[i] ( x )  ; }
+  { m_fx[i] = m_bx[i] ( x )  ; }
   //
-  std::vector<double> fy ( m_ny + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= m_ny ; ++i )
-  { fy[i] = m_by[i] ( y )  ; }
+  { m_fy[i] = m_by[i] ( y )  ; }
   //
-  return calculate ( fx  ,  fy ) ;
+  return calculate ( m_fx , m_fy ) ;
 }
 // ============================================================================
 /** get the integral over 2D-region 
@@ -243,15 +251,15 @@ double Ostap::Math::Bernstein2D::integral
   const double  y_high = std::min ( ymax() , yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  std::vector<double> fy ( m_ny + 1 , 0 ) ;
+  // std::vector<double> fy ( m_ny + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= m_ny ; ++i )
-  { fy[i] = m_by[i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_by[i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fx ( m_nx + 1 , 0 ) ;
+  // std::vector<double> fx ( m_nx + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= m_nx ; ++i )
-  { fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
   //
-  return calculate (  fx , fy ) ;
+  return calculate ( m_fx , m_fy ) ;
 }
 // ============================================================================
 /*  integral over x-dimension 
@@ -276,15 +284,15 @@ double Ostap::Math::Bernstein2D::integrateX
   const double  x_high = std::min ( xmax() , xhigh ) ;
   if ( x_low >= x_high ) { return 0 ; }
   //
-  std::vector<double> fy ( m_ny + 1 , 0 ) ;
+  // std::vector<double> fy ( m_ny + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= m_ny ; ++i )
-  { fy[i] = m_by[i] ( y ) ; }
+  { m_fy[i] = m_by[i] ( y ) ; }
   //
-  std::vector<double> fx ( m_nx + 1 , 0 ) ;
+  // std::vector<double> fx ( m_nx + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= m_nx ; ++i )
-  { fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
   //
-  return calculate (  fx , fy ) ;
+  return calculate ( m_fx , m_fy ) ;
 }
 // ============================================================================
 /*  integral over y-dimension 
@@ -309,15 +317,15 @@ double Ostap::Math::Bernstein2D::integrateY
   const double  y_high = std::min ( ymax() , yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  std::vector<double> fy ( m_ny + 1 , 0 ) ;
+  // std::vector<double> fy ( m_ny + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= m_ny ; ++i )
-  { fy[i] = m_by[i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_by[i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fx ( m_nx + 1 , 0 ) ;
+  // std::vector<double> fx ( m_nx + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= m_nx ; ++i )
-  { fx[i] = m_bx[i] ( x ) ; }
+  { m_fx[i] = m_bx[i] ( x ) ; }
   //
-  return calculate (  fx , fy ) ;
+  return calculate ( m_fx , m_fy ) ;
 }
 // ============================================================================
 /*  integral over x-dimension 
@@ -329,13 +337,14 @@ double Ostap::Math::Bernstein2D::integrateX ( const double y ) const
 {
   if ( y < ymin () || y > ymax() ) { return 0 ; }
   //
-  const std::vector<double> fx ( m_nx + 1 , (xmax()  -  xmin() ) / ( m_nx  + 1 ) ) ;
+  // const std::vector<double> fx ( m_nx + 1 , (xmax()  -  xmin() ) / ( m_nx  + 1 ) ) ;
+  std::fill ( m_fx.begin() , m_fx.end() , (xmax()  -  xmin() ) / ( m_nx  + 1 ) ) ;
   //
-  std::vector<double> fy ( m_ny + 1 , 0 ) ;
+  // std::vector<double> fy ( m_ny + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= m_ny ; ++i )
-  { fy[i] = m_by[i] ( y ) ; }
+  { m_fy[i] = m_by[i] ( y ) ; }
   //
-  return calculate (  fx , fy ) ;
+  return calculate ( m_fx , m_fy ) ;
 }
 // ============================================================================
 /*  integral over x-dimension 
@@ -348,13 +357,14 @@ double Ostap::Math::Bernstein2D::integrateY
 {
  if ( x < xmin () || x > xmax() ) { return 0 ; }
   //
-  std::vector<double> fx ( m_nx + 1 , 0 ) ;
+ // std::vector<double> fx ( m_nx + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= m_nx ; ++i )
-  { fx[i] = m_bx[i] ( x ) ; }
+  { m_fx[i] = m_bx[i] ( x ) ; }
   //
-  const std::vector<double> fy ( m_ny + 1 , (ymax()  -  ymin() ) / ( m_ny  + 1 ) ) ;
+  // const std::vector<double> fy ( m_ny + 1 , (ymax()  -  ymin() ) / ( m_ny  + 1 ) ) ;
+  std::fill ( m_fy.begin() , m_fy.end() , (ymax()  -  ymin() ) / ( m_ny  + 1 ) ) ;
   //
-  return calculate ( fx ,  fy ) ;
+  return calculate ( m_fx ,  m_fy ) ;
 }
 // ============================================================================
 // Operators 
@@ -477,7 +487,9 @@ Ostap::Math::Bernstein2DSym::Bernstein2DSym
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
   //
-  , m_b    () 
+  , m_b    ()
+  , m_fx   ( n + 1 , 0.0 ) 
+  , m_fy   ( n + 1 , 0.0 )
 {
   //
   typedef  Ostap::Math::Bernstein::Basic BB ;
@@ -495,6 +507,8 @@ void Ostap::Math::Bernstein2DSym::swap( Ostap::Math::Bernstein2DSym& right )
   std::swap ( m_xmin ,  right.m_xmin ) ;
   std::swap ( m_xmax ,  right.m_xmax ) ;
   std::swap ( m_b    ,  right.m_b    ) ;
+  std::swap ( m_fx   ,  right.m_fx   ) ;
+  std::swap ( m_fy   ,  right.m_fy   ) ;
 }
 // ============================================================================
 // helper function to make calculations
@@ -534,15 +548,15 @@ double Ostap::Math::Bernstein2DSym::evaluate
     return m_pars [0] * ( scale * scale ) ;
   }
   ///
-  std::vector<double> fy ( m_n + 1 , 0 ) ;
+  // std::vector<double> fy ( m_n + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= m_n ; ++i )
-  { fy[i] = m_b[i] ( y ) ; }
+  { m_fy[i] = m_b[i] ( y ) ; }
   //
-  std::vector<double> fx ( m_n + 1 , 0 ) ;
+  // std::vector<double> fx ( m_n + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= m_n ; ++i )
-  { fx[i] = m_b[i] ( x ) ; }
+  { m_fx[i] = m_b[i] ( x ) ; }
   //
-  return calculate ( fx , fy ) ;
+  return calculate ( m_fx , m_fy ) ;
 }
 // ============================================================================
 /* get the integral over 2D-region 
@@ -569,15 +583,15 @@ double Ostap::Math::Bernstein2DSym::integral
   //
   else if ( s_equal ( xlow , xhigh ) || s_equal ( ylow , yhigh ) ) { return 0 ; }
   //
-  std::vector<double> fx ( m_n + 1 , 0 ) ;
+  // std::vector<double> fx ( m_n + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= m_n ; ++i )
-  { fx[i] = m_b[i].integral ( xlow , xhigh ) ; }
+  { m_fx[i] = m_b[i].integral ( xlow , xhigh ) ; }
   //
-  std::vector<double> fy ( m_n + 1 , 0 ) ;
+  // std::vector<double> fy ( m_n + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= m_n ; ++i )
-  { fy[i] = m_b[i].integral ( ylow , yhigh ) ; }
+  { m_fy[i] = m_b[i].integral ( ylow , yhigh ) ; }
   //
-  return calculate ( fx , fy ) ;
+  return calculate ( m_fx , m_fy ) ;
 }
 // ============================================================================
 /*  integral over x-dimension 
@@ -615,15 +629,15 @@ double Ostap::Math::Bernstein2DSym::integrateY
   const double  y_high = std::min ( ymax() , yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  std::vector<double> fy ( m_n + 1 , 0 ) ;
+  // std::vector<double> fy ( m_n + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= m_n ; ++i )
-  { fy[i] = m_b[i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_b[i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fx ( m_n + 1 , 0 ) ;
+  // std::vector<double> fx ( m_n + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= m_n ; ++i )
-  { fx[i] = m_b[i] ( x ) ; }
+  { m_fx[i] = m_b[i] ( x ) ; }
   //
-  return calculate ( fx , fy ) ;
+  return calculate ( m_fx , m_fy ) ;
 }
 // ============================================================================
 /* get the integral over 2D-region 
@@ -662,11 +676,13 @@ double Ostap::Math::Bernstein2DSym::integrateY ( const double x ) const
   //
   if ( x     <  xmin () || x    >  xmax() ) { return 0 ; }
   //
-  std::vector<double>       fx ( m_n + 1 , 0 ) ;
-  for  ( unsigned short i = 0 ; i <= m_n ; ++i ) { fx[i] = m_b[i] ( x ) ; }
-  const std::vector<double> fy ( m_n + 1 , ( ymax() - ymin () ) / ( m_n + 1 ) ) ;
+  // std::vector<double>       fx ( m_n + 1 , 0 ) ;
+  for  ( unsigned short i = 0 ; i <= m_n ; ++i ) { m_fx[i] = m_b[i] ( x ) ; }
   //
-  return  calculate ( fx , fy ) ;
+  // const std::vector<double> fy ( m_n + 1 , ( ymax() - ymin () ) / ( m_n + 1 ) ) ;
+  std::fill ( m_fy.begin(), m_fy.end() , ( ymax() - ymin () ) / ( m_n + 1 ) ) ;
+  //
+  return  calculate ( m_fx , m_fy ) ;
 }
 // ============================================================================
 Ostap::Math::Bernstein2DSym&

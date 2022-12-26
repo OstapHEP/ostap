@@ -78,14 +78,15 @@ Ostap::Math::Bernstein::Bernstein
 // ============================================================================
 namespace 
 {
-  //
-  inline double _mjk_ ( const unsigned short    j    , 
-                        const unsigned short    k    ,
-                        const unsigned short    n    , 
-                        Ostap::Math::Bernstein& ba   , 
-                        Ostap::Math::Bernstein& bb   , 
-                        const double            abar , 
-                        const double            bbar ) 
+  // ==========================================================================
+  inline double _mjk_
+  ( const unsigned short    j    , 
+    const unsigned short    k    ,
+    const unsigned short    n    , 
+    Ostap::Math::Bernstein& ba   , 
+    Ostap::Math::Bernstein& bb   , 
+    const double            abar , 
+    const double            bbar ) 
   {
     if ( j > n || k > n ) { return 0 ; }
     //
@@ -102,7 +103,8 @@ namespace
       bb.setPar (     i , 0 ) ;      
     }
     return m ;
-  }                         
+  }
+  // ==========================================================================
 }
 // ============================================================================
 Ostap::Math::Bernstein::Bernstein
@@ -337,8 +339,9 @@ double Ostap::Math::Bernstein::integral () const
  */
 // ============================================================================
 unsigned short 
-Ostap::Math::Bernstein::remove_noise ( const double epsilon , 
-                                       const double scale   )
+Ostap::Math::Bernstein::remove_noise
+( const double epsilon , 
+  const double scale   )
 {
   unsigned short       num = 0           ;
   const unsigned short N   = degree()    ;
@@ -380,8 +383,10 @@ Ostap::Math::Bernstein::indefinite_integral
                                   m_aux.begin() + npars() + 1 , m_xmin , m_xmax ) ;
 }
 // ============================================================================
-double Ostap::Math::Bernstein::integral ( const double low  ,
-                                          const double high ) const 
+double
+Ostap::Math::Bernstein::integral
+( const double low  ,
+  const double high ) const 
 {
   //
   if      ( s_equal ( low , high )           ) { return  0 ; }
@@ -426,7 +431,9 @@ Ostap::Math::Bernstein::derivative () const
                                   m_aux.begin () + npars () , m_xmin  , m_xmax ) ;
 }
 // ============================================================================
-double Ostap::Math::Bernstein::derivative ( const double x   ) const 
+double
+Ostap::Math::Bernstein::derivative
+( const double x   ) const 
 {
   if      ( m_pars.size() <= 1       ) { return 0 ; }
   else if ( x < m_xmin || x > m_xmax ) { return 0 ; }

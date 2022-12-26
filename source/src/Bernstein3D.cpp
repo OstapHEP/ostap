@@ -42,7 +42,6 @@ Ostap::Math::Bernstein3D::Bernstein3D
   , m_ny   ( nY )
   , m_nz   ( nZ )
     //
-    //
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
   , m_ymin ( std::min ( ymin , ymax ) )
@@ -53,6 +52,10 @@ Ostap::Math::Bernstein3D::Bernstein3D
   , m_bx   ()
   , m_by   ()
   , m_bz   ()
+    //
+  , m_fx   ( nX + 1 , 0.0 )
+  , m_fy   ( nY + 1 , 0.0 )
+  , m_fz   ( nZ + 1 , 0.0 )
 {
   //
   m_bx.reserve ( m_nx + 1 ) ;
@@ -102,6 +105,10 @@ Ostap::Math::Bernstein3D::Bernstein3D
   , m_bx   () 
   , m_by   ()
   , m_bz   ()
+    // 
+  , m_fx   ( bx.n() + 1 , 0.0 )
+  , m_fy   ( by.n() + 1 , 0.0 )
+  , m_fz   ( bz.n() + 1 , 0.0 )
 {
   //
   m_bx.reserve ( m_nx + 1 ) ;
@@ -144,6 +151,10 @@ Ostap::Math::Bernstein3D::Bernstein3D
   , m_bx   ()
   , m_by   ()
   , m_bz   ()
+    //
+  , m_fx   ( right.nX() + 1 , 0.0 )
+  , m_fy   ( right.nY() + 1 , 0.0 )
+  , m_fz   ( right.nZ() + 1 , 0.0 )
 {
   //
   m_bx.reserve ( m_nx + 1 ) ;
@@ -181,6 +192,10 @@ Ostap::Math::Bernstein3D::Bernstein3D
   , m_bx   ()
   , m_by   ()
   , m_bz   ()
+    //
+  , m_fx   ( right.nX() + 1 , 0.0 )
+  , m_fy   ( right.nY() + 1 , 0.0 )
+  , m_fz   ( right.nZ() + 1 , 0.0 )
 {
   //
   m_bx.reserve ( m_nx + 1 ) ;
@@ -217,6 +232,9 @@ void Ostap::Math::Bernstein3D::swap ( Ostap::Math::Bernstein3D&  right )
   std::swap ( m_bx   , right.m_bx    ) ;
   std::swap ( m_by   , right.m_by    ) ;
   std::swap ( m_bz   , right.m_bz    ) ;
+  std::swap ( m_fz   , right.m_fx    ) ;
+  std::swap ( m_fz   , right.m_fx    ) ;
+  std::swap ( m_fz   , right.m_fx    ) ;
 }
 // ============================================================================
 // helper function to make calculations
@@ -267,21 +285,20 @@ double Ostap::Math::Bernstein3D::evaluate
     return m_pars [0] * scalex * scaley * scalez ;
   }
   ///
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nX ()  ; ++i )
-  { fx[i] = m_bx[i] ( x )  ; }
+  { m_fx[i] = m_bx[i] ( x )  ; }
   //
-  std::vector<double> fy ( nY ()  + 1 , 0 ) ;
+  // std::vector<double> fy ( nY ()  + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY ()  ; ++i )
-  { fy[i] = m_by[i] ( y )  ; }
+  { m_fy[i] = m_by[i] ( y )  ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_bz[i] ( z )  ; }
+  { m_fz[i] = m_bz[i] ( z )  ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
-
 // ============================================================================
 /** get the integral over 3D-region
  *  \f[  x_{min} < x < x_{max}, y_{min}< y< y_{max} , z_{min} < z < z_{max}\f]
@@ -342,19 +359,19 @@ double Ostap::Math::Bernstein3D::integral
   const double  z_high = std::min ( zmax() , zhigh ) ;
   if ( z_low >= z_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nX ()  ; ++i )
-  { fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY ()  ; ++i )
-  { fy[i] = m_by[i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_by[i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fz ( nZ ()  + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ ()  + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ ()  ; ++i )
-  { fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
+  { m_fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x-dimension
@@ -382,19 +399,19 @@ double Ostap::Math::Bernstein3D::integrateX
   const double  x_high = std::min ( xmax() , xhigh ) ;
   if ( x_low >= x_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_by[i] ( y ) ; }
+  { m_fy[i] = m_by[i] ( y ) ; }
   //
-  std::vector<double> fz ( nZ ()  + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ ()  + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ ()  ; ++i )
-  { fz[i] = m_bz[i] ( z ) ; }
+  { m_fz[i] = m_bz[i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /** integral over y-dimension
@@ -422,19 +439,19 @@ double Ostap::Math::Bernstein3D::integrateY
   const double  y_high = std::min ( ymax() , yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX ()  + 1 , 0 ) ;
+  // std::vector<double> fx ( nX ()  + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nX ()  ; ++i )
-  { fx[i] = m_bx[i] ( x ) ; }
+  { m_fx[i] = m_bx[i] ( x ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_by[i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_by[i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fz ( nZ ()  + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ ()  + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ ()  ; ++i )
-  { fz[i] = m_bz[i] ( z ) ; }
+  { m_fz[i] = m_bz[i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /** integral over z-dimension
@@ -445,7 +462,8 @@ double Ostap::Math::Bernstein3D::integrateY
  *  @param zhigh high edge in z
  */
 // ============================================================================
-double Ostap::Math::Bernstein3D::integrateZ
+double
+Ostap::Math::Bernstein3D::integrateZ
 ( const double x    ,
   const double y    ,
   const double zlow , const double zhigh ) const
@@ -462,76 +480,85 @@ double Ostap::Math::Bernstein3D::integrateZ
   const double  z_high = std::min ( zmax() , zhigh ) ;
   if ( z_low >= z_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nX ()  ; ++i )
-  { fx[i] = m_bx[i] ( x ) ; }
+  { m_fx[i] = m_bx[i] ( x ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY ()  ; ++i )
-  { fy[i] = m_by[i] ( y ) ; }
+  { m_fy[i] = m_by[i] ( y ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ () ; ++i ) 
-  { fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
+  { m_fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
-double Ostap::Math::Bernstein3D::integrateX ( const double y , 
-                                              const double z ) const
+double
+Ostap::Math::Bernstein3D::integrateX
+( const double y , 
+  const double z ) const
 {
   if      ( y < ymin () || y > ymax() ) { return 0 ; }
   else if ( z < zmin () || z > zmax() ) { return 0 ; }
   //
-  const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  // const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  std::fill ( m_fx.begin() , m_fx.end() , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_by[i] ( y ) ; }
+  { m_fy[i] = m_by[i] ( y ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ ()  ; ++i )
-  { fz[i] = m_bz[i] ( z ) ; }
+  { m_fz[i] = m_bz[i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
-double Ostap::Math::Bernstein3D::integrateY ( const double x , 
-                                              const double z ) const
+double
+Ostap::Math::Bernstein3D::integrateY
+( const double x , 
+  const double z ) const
 {
   if      ( x < xmin () || x > xmax() ) { return 0 ; }
   else if ( z < zmin () || z > zmax() ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_bx[i] ( x ) ; }
+  { m_fx[i] = m_bx[i] ( x ) ; }
   //
-  const std::vector<double> fy ( nY () + 1 , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
+  // const std::vector<double> fy ( nY () + 1 , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
+  std::fill  ( m_fy.begin () , m_fy.end() , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ ()  ; ++i )
-  { fz[i] = m_bz[i] ( z ) ; }
+  { m_fz[i] = m_bz[i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
-double Ostap::Math::Bernstein3D::integrateZ ( const double x , 
-                                              const double y ) const
+double
+Ostap::Math::Bernstein3D::integrateZ
+( const double x , 
+  const double y ) const
 {
   if      ( x < xmin () || x > xmax() ) { return 0 ; }
   else if ( y < ymin () || y > ymax() ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_bx[i] ( x ) ; }
+  { m_fx[i] = m_bx[i] ( x ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_by[i] ( y ) ; }
+  { m_fy[i] = m_by[i] ( y ) ; }
   //
-  const std::vector<double> fz ( nZ() + 1 , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
+  // const std::vector<double> fz ( nZ() + 1 , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
+  std::fill  ( m_fz.begin () , m_fz.end() , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x&y-dimensions
@@ -567,19 +594,19 @@ double Ostap::Math::Bernstein3D::integrateXY
   const double  y_high = std::min ( ymax() , yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX ()  ; ++i )
-  { fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_by[i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_by[i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_bz[i] ( z ) ; }
+  { m_fz[i] = m_bz[i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /** integral over x&z-dimensions
@@ -615,19 +642,19 @@ double Ostap::Math::Bernstein3D::integrateXZ
   const double  z_high = std::min ( zmax() , zhigh ) ;
   if ( z_low >= z_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_bx[i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_by[i] ( y ) ; }
+  { m_fy[i] = m_by[i] ( y ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
+  { m_fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /** integral over y&z-dimensions
@@ -663,19 +690,19 @@ double Ostap::Math::Bernstein3D::integrateYZ
   const double  z_high = std::min ( zmax() , zhigh ) ;
   if ( z_low >= z_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_bx[i] ( x ) ; }
+  { m_fx[i] = m_bx[i] ( x ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_by[i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_by[i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <=  nZ () ; ++i )
-  { fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
+  { m_fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x&y-dimensions
@@ -688,14 +715,16 @@ double Ostap::Math::Bernstein3D::integrateXY ( const double z    ) const
 {
   if ( z < zmin () || z > zmax() ) { return 0 ; }
   //
-  const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
-  const std::vector<double> fy ( nY () + 1 , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
+  // const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  // const std::vector<double> fy ( nY () + 1 , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
+  std::fill ( m_fx.begin() , m_fx.end() , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  std::fill ( m_fy.begin() , m_fy.end() , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_bz[i] ( z ) ; }
+  { m_fz[i] = m_bz[i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x&z-dimensions
@@ -708,15 +737,17 @@ double Ostap::Math::Bernstein3D::integrateXZ ( const double y    ) const
 {
   if ( y < ymin () || y > ymax() ) { return 0 ; }
   //
-  const std::vector<double> fx ( nX() + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  // const std::vector<double> fx ( nX() + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  std::fill ( m_fx.begin() , m_fx.end() , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
   //
-  std::vector<double> fy ( nY ()  + 1 , 0 ) ;
+  // std::vector<double> fy ( nY ()  + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_by[i] ( y ) ; }
+  { m_fy[i] = m_by[i] ( y ) ; }
   //
-  const std::vector<double> fz ( nZ () + 1 , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
+  // const std::vector<double> fz ( nZ () + 1 , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
+  std::fill ( m_fz.begin() , m_fz.end() , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /* integral over y&z-dimensions
@@ -729,15 +760,17 @@ double Ostap::Math::Bernstein3D::integrateYZ ( const double x    ) const
 {
   if ( x < xmin () || x > xmax() ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_bx[i] ( x ) ; }
+  { m_fx[i] = m_bx[i] ( x ) ; }
   //
-  const std::vector<double> fy ( nY () + 1 , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
+  // const std::vector<double> fy ( nY () + 1 , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
+  std::fill ( m_fy.begin() , m_fy.end() , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
   //
-  const std::vector<double> fz ( nZ () + 1 , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
+  // const std::vector<double> fz ( nZ () + 1 , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
+  std::fill ( m_fz.begin() , m_fz.end() , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 Ostap::Math::Bernstein3D&
@@ -862,6 +895,10 @@ Ostap::Math::Bernstein3DSym::Bernstein3DSym
   , m_xmax ( std::max ( xmin , xmax ) )
     //
   , m_b    ()
+    //
+  , m_fx ( N + 1  , 0.0 )
+  , m_fy ( N + 1  , 0.0 )
+  , m_fz ( N + 1  , 0.0 )    
 {
   //
   typedef  Ostap::Math::Bernstein::Basic BB ;
@@ -881,6 +918,9 @@ void Ostap::Math::Bernstein3DSym::swap
   std::swap ( m_xmin , right.m_xmin  ) ;
   std::swap ( m_xmax , right.m_xmax  ) ;
   std::swap ( m_b    , right.m_b     ) ;
+  std::swap ( m_fx   , right.m_fx    ) ;
+  std::swap ( m_fy   , right.m_fy    ) ;
+  std::swap ( m_fz   , right.m_fx    ) ;
 }
 // ============================================================================
 // helper function to make calculations
@@ -956,19 +996,19 @@ double Ostap::Math::Bernstein3DSym::evaluate
     return m_pars [0] * scale * scale * scale ;
   }
   ///
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_b [i] ( x )  ; }
+  { m_fx[i] = m_b [i] ( x )  ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY ()  ; ++i )
-  { fy[i] = m_b [i] ( y )  ; }
+  { m_fy[i] = m_b [i] ( y )  ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_b [i] ( z )  ; }
+  { m_fz[i] = m_b [i] ( z )  ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /** get the integral over 3D-region
@@ -1048,19 +1088,19 @@ double Ostap::Math::Bernstein3DSym::integral
   const double  z_high = std::min ( zmax() , zhigh ) ;
   if ( z_low >= z_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_b [i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_b [i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_b [i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_b [i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ ()  ; ++i )
-  { fz[i] = m_b [i].integral ( z_low , z_high ) ; }
+  { m_fz[i] = m_b [i].integral ( z_low , z_high ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x-dimension
@@ -1088,38 +1128,41 @@ double Ostap::Math::Bernstein3DSym::integrateX
   const double  x_high = std::min ( xmax() , xhigh ) ;
   if ( x_low >= x_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_b [i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_b [i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY ()   ; ++i )
-  { fy[i] = m_b [i] ( y ) ; }
+  { m_fy[i] = m_b [i] ( y ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ ()  ; ++i )
-  { fz[i] = m_b [i] ( z ) ; }
+  { m_fz[i] = m_b [i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
-double Ostap::Math::Bernstein3DSym::integrateX ( const double y , 
-                                                 const double z ) const
+double
+Ostap::Math::Bernstein3DSym::integrateX
+( const double y , 
+  const double z ) const
 {
   if      ( y < ymin () || y > ymax() ) { return 0 ; }
   else if ( z < zmin () || z > zmax() ) { return 0 ; }
   //
-  const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  // const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  std::fill ( m_fx.begin() , m_fx.end() , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_b [i] ( y ) ; }
+  { m_fy[i] = m_b [i] ( y ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_b [i] ( z ) ; }
+  { m_fz[i] = m_b [i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x&y-dimensions
@@ -1155,19 +1198,19 @@ double Ostap::Math::Bernstein3DSym::integrateXY
   const double  y_high = std::min ( ymax() , yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_b [i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_b [i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_b [i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_b [i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_b [i] ( z ) ; }
+  { m_fz[i] = m_b [i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x&y-dimensions
@@ -1176,18 +1219,22 @@ double Ostap::Math::Bernstein3DSym::integrateXY
  *  @param z     variable
  */
 // ============================================================================
-double Ostap::Math::Bernstein3DSym::integrateXY ( const double z    ) const 
+double
+Ostap::Math::Bernstein3DSym::integrateXY
+( const double z    ) const 
 {
   if ( z < zmin () || z > zmax() ) { return 0 ; }
   //
-  const std::vector<double> fx ( nX() + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
-  const std::vector<double> fy ( nY() + 1 , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
+  // const std::vector<double> fx ( nX() + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  // const std::vector<double> fy ( nY() + 1 , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
+  std::fill ( m_fx.begin() , m_fx.end() , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  std::fill ( m_fy.begin() , m_fy.end() , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_b [i] ( z ) ; }
+  { m_fz[i] = m_b [i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 Ostap::Math::Bernstein3DSym&
@@ -1317,6 +1364,10 @@ Ostap::Math::Bernstein3DMix::Bernstein3DMix
     //
   , m_b    ()
   , m_bz   ()
+    //
+  , m_fx ( N  + 1 , 0.0 ) 
+  , m_fy ( N  + 1 , 0.0 ) 
+  , m_fz ( Nz + 1 , 0.0 ) 
 {
   //
   typedef  Ostap::Math::Bernstein::Basic BB ;
@@ -1344,6 +1395,10 @@ Ostap::Math::Bernstein3DMix::Bernstein3DMix
     //
   , m_b    ()
   , m_bz   ()
+    //
+  , m_fx ( right.nX() + 1 , 0.0 ) 
+  , m_fy ( right.nY() + 1 , 0.0 ) 
+  , m_fz ( right.nZ() + 1 , 0.0 ) 
 {
   //
   typedef  Ostap::Math::Bernstein::Basic BB ;
@@ -1369,6 +1424,9 @@ void Ostap::Math::Bernstein3DMix::swap
   std::swap ( m_zmax , right.m_zmax  ) ;
   std::swap ( m_b    , right.m_b     ) ;
   std::swap ( m_bz   , right.m_bz    ) ;
+  std::swap ( m_fx   , right.m_fx    ) ;
+  std::swap ( m_fy   , right.m_fy    ) ;
+  std::swap ( m_fz   , right.m_fz    ) ;
 }
 // ============================================================================
 // helper function to make calculations
@@ -1430,19 +1488,19 @@ double Ostap::Math::Bernstein3DMix::evaluate
     return m_pars [0] * scalex * scaley * scalez ;
   }
   ///
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_b [i] ( x )  ; }
+  { m_fx[i] = m_b [i] ( x )  ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_b [i] ( y )  ; }
+  { m_fy[i] = m_b [i] ( y )  ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_bz[i] ( z )  ; }
+  { m_fz[i] = m_bz[i] ( z )  ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /** get the integral over 3D-region
@@ -1519,19 +1577,19 @@ double Ostap::Math::Bernstein3DMix::integral
   const double  z_high = std::min ( zmax() , zhigh ) ;
   if ( z_low >= z_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_b [i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_b [i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_b [i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_b [i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
+  { m_fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x-dimension
@@ -1559,19 +1617,19 @@ double Ostap::Math::Bernstein3DMix::integrateX
   const double  x_high = std::min ( xmax() , xhigh ) ;
   if ( x_low >= x_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  //  std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX ()  ; ++i )
-  { fx[i] = m_b [i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_b [i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY ()  ; ++i )
-  { fy[i] = m_b [i] ( y ) ; }
+  { m_fy[i] = m_b [i] ( y ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_bz[i] ( z ) ; }
+  { m_fz[i] = m_bz[i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over z-dimension
@@ -1599,38 +1657,41 @@ double Ostap::Math::Bernstein3DMix::integrateZ
   const double  z_high = std::min ( zmax() , zhigh ) ;
   if ( z_low >= z_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_b [i] ( x ) ; }
+  { m_fx[i] = m_b [i] ( x ) ; }
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_b [i] ( y ) ; }
+  { m_fy[i] = m_b [i] ( y ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ () ; ++i ) 
-  { fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
+  { m_fz[i] = m_bz[i].integral ( z_low , z_high ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
-double Ostap::Math::Bernstein3DMix::integrateX ( const double y , 
-                                                 const double z ) const
+double
+Ostap::Math::Bernstein3DMix::integrateX
+( const double y , 
+  const double z ) const
 {
   if      ( y < ymin () || y > ymax() ) { return 0 ; }
   else if ( z < zmin () || z > zmax() ) { return 0 ; }
   //
-  const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( m_n + 1 ) ) ;
+  // const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( m_n + 1 ) ) ;
+  std::fill ( m_fx.begin() , m_fx.end() , ( xmax() - xmin () ) / ( m_n + 1 ) ) ;
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_b [i] ( y ) ; }
+  { m_fy[i] = m_b [i] ( y ) ; }
   //
-  std::vector<double> fz ( nY () + 1 , 0 ) ;
+  // std::vector<double> fz ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY ()  ; ++i )
-  { fz[i] = m_bz[i] ( z ) ; }
+  { m_fz[i] = m_bz[i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 double Ostap::Math::Bernstein3DMix::integrateZ ( const double x , 
@@ -1639,17 +1700,18 @@ double Ostap::Math::Bernstein3DMix::integrateZ ( const double x ,
   if      ( x < xmin () || x > xmax() ) { return 0 ; }
   else if ( y < ymin () || y > ymax() ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_b [i] ( x ) ; }
+  { m_fx[i] = m_b [i] ( x ) ; }
   //
-  std::vector<double> fy ( nY() + 1 , 0 ) ;
+  // std::vector<double> fy ( nY() + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_b [i] ( y ) ; }
+  { m_fy[i] = m_b [i] ( y ) ; }
   //
-  const std::vector<double> fz ( nZ () + 1  , ( zmax() - zmin () ) / ( nZ () + 1  ) ) ;
+  // const std::vector<double> fz ( nZ () + 1  , ( zmax() - zmin () ) / ( nZ () + 1  ) ) ;
+  std::fill ( m_fz.begin() , m_fz.end() , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x&y-dimensions
@@ -1685,19 +1747,19 @@ double Ostap::Math::Bernstein3DMix::integrateXY
   const double  y_high = std::min ( ymax() , yhigh ) ;
   if ( y_low >= y_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_b [i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_b [i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1  , 0 ) ;
+  // std::vector<double> fy ( nY () + 1  , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY ()  ; ++i )
-  { fy[i] = m_b [i].integral ( y_low , y_high ) ; }
+  { m_fy[i] = m_b [i].integral ( y_low , y_high ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_bz [i] ( z ) ; }
+  { m_fz[i] = m_bz [i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x&z-dimensions
@@ -1733,19 +1795,19 @@ double Ostap::Math::Bernstein3DMix::integrateXZ
   const double  z_high = std::min ( zmax() , zhigh ) ;
   if ( z_low >= z_high ) { return 0 ; }
   //
-  std::vector<double> fx ( nX () + 1 , 0 ) ;
+  // std::vector<double> fx ( nX () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nX () ; ++i )
-  { fx[i] = m_b [i].integral ( x_low , x_high ) ; }
+  { m_fx[i] = m_b [i].integral ( x_low , x_high ) ; }
   //
-  std::vector<double> fy ( nY () + 1  , 0 ) ;
+  // std::vector<double> fy ( nY () + 1  , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY ()  ; ++i )
-  { fy[i] = m_b [i] ( y ) ; }
+  { m_fy[i] = m_b [i] ( y ) ; }
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for  ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_b [i].integral ( z_low , z_high ) ; }
+  { m_fz[i] = m_b [i].integral ( z_low , z_high ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x&y-dimensions
@@ -1754,18 +1816,22 @@ double Ostap::Math::Bernstein3DMix::integrateXZ
  *  @param z     variable
  */
 // ============================================================================
-double Ostap::Math::Bernstein3DMix::integrateXY ( const double z    ) const 
+double
+Ostap::Math::Bernstein3DMix::integrateXY
+( const double z    ) const 
 {
   if ( z < zmin () || z > zmax() ) { return 0 ; }
   //
-  const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
-  const std::vector<double> fy ( nY () + 1 , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
+  // const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  // const std::vector<double> fy ( nY () + 1 , ( ymax() - ymin () ) / ( nY () + 1 ) ) ;
+  std::fill ( m_fx.begin() , m_fx.end() , ( xmax() - xmin () ) / ( nX() + 1 ) ) ;
+  std::fill ( m_fy.begin() , m_fy.end() , ( ymax() - ymin () ) / ( nY() + 1 ) ) ;
   //
-  std::vector<double> fz ( nZ () + 1 , 0 ) ;
+  // std::vector<double> fz ( nZ () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nZ () ; ++i )
-  { fz[i] = m_bz [i] ( z ) ; }
+  { m_fz[i] = m_bz [i] ( z ) ; }
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 /*  integral over x&z-dimensions
@@ -1778,15 +1844,17 @@ double Ostap::Math::Bernstein3DMix::integrateXZ ( const double y    ) const
 {
   if ( y < ymin () || y > ymax() ) { return 0 ; }
   //
-  const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  // const std::vector<double> fx ( nX () + 1 , ( xmax() - xmin () ) / ( nX () + 1 ) ) ;
+  std::fill ( m_fx.begin() , m_fx.end() , ( xmax() - xmin () ) / ( nX() + 1 ) ) ;
   //
-  std::vector<double> fy ( nY () + 1 , 0 ) ;
+  // std::vector<double> fy ( nY () + 1 , 0 ) ;
   for ( unsigned short i = 0 ; i <= nY () ; ++i )
-  { fy[i] = m_b  [i] ( y ) ; }
+  { m_fy[i] = m_b  [i] ( y ) ; }
   //
-  const std::vector<double> fz ( nZ () + 1 , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
+  // const std::vector<double> fz ( nZ () + 1 , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
+  std::fill ( m_fz.begin() , m_fz.end() , ( zmax() - zmin () ) / ( nZ() + 1 ) ) ;
   //
-  return calculate ( fx , fy , fz ) ;
+  return calculate ( m_fx , m_fy , m_fz ) ;
 }
 // ============================================================================
 Ostap::Math::Bernstein3DMix&

@@ -312,6 +312,11 @@ namespace Ostap
       ///  vector  of basic  Bernstein polynomials
       VB m_by ; //  vector  of basic  Bernetin polynomials
       // ======================================================================
+    private: // some workspace 
+      // ======================================================================
+      mutable std::vector<double> m_fx { 1 , 0.0 } ;
+      mutable std::vector<double> m_fy { 1 , 0.0 } ;      
+      // ======================================================================      
     } ;
     // ========================================================================
     ///  Bernstein plus      constant
@@ -771,6 +776,11 @@ namespace Ostap
       ///  vector  of basic  Bernetin polynomials
       VB m_b  ; //  vector  of basic  Bernstein polynomials
       // ======================================================================
+    private: // some workspace 
+      // ======================================================================
+      mutable std::vector<double> m_fx { 1 , 0.0 } ;
+      mutable std::vector<double> m_fy { 1 , 0.0 } ;      
+      // ======================================================================      
     } ;
     // ========================================================================
     ///  Bernstein plus      constant
