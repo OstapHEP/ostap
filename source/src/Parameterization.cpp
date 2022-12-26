@@ -106,6 +106,21 @@ Ostap::Math::LegendreSum2::LegendreSum2
   , m_cache_y ( ( m_NY + 1 ) , 0.0 )
 {}
 // ============================================================================
+// constructor from parameters 
+// ============================================================================
+Ostap::Math::LegendreSum2::LegendreSum2 
+( const std::vector<double>& pars ,
+  const unsigned short       NX   , 
+  const unsigned short       NY   , 
+  const double               xmin , 
+  const double               xmax , 
+  const double               ymin , 
+  const double               ymax )
+  : Ostap::Math::LegendreSum2 ( NX , NY , xmin , xmax , ymin , ymax )
+{
+  setPars ( pars  ) ;
+}
+// ============================================================================
 /* constructor orm the product of two Legendre sums
  *  \f$ S(x,y) = S_x(x)\times S_y(y) \f$ 
  *  @param sx (INPUT) the first  Legendre sum 
@@ -389,6 +404,26 @@ Ostap::Math::LegendreSum3::LegendreSum3
   , m_cache_y ( NY + 1 , 0.0 ) 
   , m_cache_z ( NZ + 1 , 0.0 )
 {}
+// ============================================================================
+Ostap::Math::LegendreSum3::LegendreSum3 
+( const std::vector<double>& pars ,
+  const unsigned short       NX   , 
+  const unsigned short       NY   , 
+  const unsigned short       NZ   , 
+  const double               xmin , 
+  const double               xmax , 
+  const double               ymin , 
+  const double               ymax ,
+  const double               zmin , 
+  const double               zmax )
+  : Ostap::Math::LegendreSum3 ( NX   , NY   , NZ ,
+                                xmin , xmax ,
+                                ymin , ymax ,
+                                zmin , zmax )
+{
+  setPars ( pars ) ;
+  
+}
 // ============================================================================
 /*  constructor orm the product of two Legendre sums
  *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \times S_z(z) \f$ 
@@ -833,6 +868,30 @@ Ostap::Math::LegendreSum4::LegendreSum4
   , m_cache_u ( m_NU + 1 , 0.0 )
     //
 {}
+// ============================================================================
+Ostap::Math::LegendreSum4::LegendreSum4 
+( const std::vector<double>& pars ,
+  const unsigned short       NX   , 
+  const unsigned short       NY   , 
+  const unsigned short       NZ   , 
+  const unsigned short       NU   , 
+  const double               xmin , 
+  const double               xmax , 
+  const double               ymin , 
+  const double               ymax ,
+  const double               zmin , 
+  const double               zmax ,
+  const double               umin , 
+  const double               umax ) 
+  : Ostap::Math::LegendreSum4 ( NX   , NY   ,
+                                NZ   , NU   ,
+                                xmin , xmax ,
+                                ymin , ymax ,
+                                zmin , zmax ,
+                                umin , umax )
+{
+  setPars  ( pars ) ;
+}
 // ============================================================================
 /*  constructor orm the product of two Legendre sums
  *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \times S_z(z) \f$ 

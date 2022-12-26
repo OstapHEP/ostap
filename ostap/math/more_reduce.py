@@ -10,7 +10,7 @@ __date__    = "2011-12-01"
 __all__     = ()
 # =============================================================================
 from    ostap.math.base        import Ostap, doubles 
-from    ostap.math.reduce      import root_factory
+from    ostap.math.reduce      import root_factory, poly_factory 
 from    ostap.core.ostap_types import sequence_types 
 import  ROOT, array 
 # =============================================================================
@@ -1144,6 +1144,127 @@ def _omi_reduce_ ( s ) :
 Ostap.Math.Integrator. __reduce__ = _omi_reduce_
 
 
+# ============================================================================
+## reduce 2D polynomial objects
+#  @see Ostap::Math::Bernstein2D
+#  @see Ostap::Math::Positive2D
+#  @see Ostap::Math::LegendreSum2
+def _b2d_reduce_ ( p ) :
+    """reduce polynomial object
+    - see  `Ostap.Math.Bernstein2D` 
+    - see  `Ostap.Math.Positive2D` 
+    - see  `Ostap.Math.LegendreSum2` 
+    """
+    return poly_factory, ( type ( p ) ,
+                           array.array ( 'd' ,  p.pars() ) ,
+                           p.nX   (),
+                           p.nY   () ,  
+                           p.xmin () ,
+                           p.xmax () ,
+                           p.ymin () ,
+                           p.ymax () )
+
+Ostap.Math.Bernstein2D  .__reduce__ = _b2d_reduce_
+Ostap.Math.Positive2D   .__reduce__ = _b2d_reduce_
+Ostap.Math.LegendreSum2 .__reduce__ = _b2d_reduce_
+
+
+# ============================================================================
+## reduce symmetric polynomial objects 
+#  @see Ostap::Math::Bernstein2DSym
+#  @see Ostap::Math::Positive2DSym
+#  @see Ostap::Math::Bernstein3DSym
+#  @see Ostap::Math::Positive23Sym
+def _b2ds_reduce_ ( p ) :
+    """reduce `Ostap.Math.Bernstein2DSym` & `Ostap.Math.Positive2DSym` object
+    - see  `Ostap.Math.Bernstein2DSym` 
+    - see  `Ostap.Math.Positive2DSym` 
+    - see  `Ostap.Math.Bernstein3DSym` 
+    - see  `Ostap.Math.Positive3DSym` 
+    """
+    return poly_factory, ( type ( p ) ,
+                           array.array ( 'd' ,  p.pars() ) ,
+                           p.nX   () ,
+                           p.xmin () ,
+                           p.xmax () )
+
+Ostap.Math.Bernstein2DSym.__reduce__ = _b2ds_reduce_
+Ostap.Math.Positive2DSym .__reduce__ = _b2ds_reduce_
+Ostap.Math.Bernstein3DSym.__reduce__ = _b2ds_reduce_
+Ostap.Math.Positive3DSym .__reduce__ = _b2ds_reduce_
+
+# ============================================================================
+## reduce 3D polymonial obhjects objects
+#  @see Ostap::Math::Bernstein3D
+#  @see Ostap::Math::Positive3D
+#  @see Ostap::Math::LegendreSum3
+def _b3d_reduce_ ( p ) :
+    """reduce 3D polynomial objects object
+    - see  `Ostap.Math.Bernstein3D` 
+    - see  `Ostap.Math.Positive3D` 
+    - see  `Ostap.Math.LegendreSum3` 
+    """
+    return poly_factory, ( type ( p ) ,
+                           array.array ( 'd' ,  p.pars() ) ,
+                           p.nX   (),
+                           p.nY   () ,  
+                           p.nZ   () ,  
+                           p.xmin () ,
+                           p.xmax () ,
+                           p.ymin () ,
+                           p.ymax () ,
+                           p.zmin () ,
+                           p.zmax () )
+
+Ostap.Math.Bernstein3D. __reduce__ = _b3d_reduce_
+Ostap.Math.Positive3D   .__reduce__ = _b3d_reduce_
+Ostap.Math.LegendreSum3 .__reduce__ = _b3d_reduce_
+
+
+# ============================================================================
+## reduce mized symmetry objects
+#  @see Ostap::Math::Bernstein3DMix
+#  @see Ostap::Math::Positive23Mix
+def _b3dm_reduce_ ( p ) :
+    """reduce `Ostap.Math.Bernstein2DMix` & `Ostap.Math.Positive2DMix` object
+    - see  `Ostap.Math.Bernstein3DMix` 
+    - see  `Ostap.Math.Positive3DMix` 
+    """
+    return poly_factory, ( type ( p ) ,
+                           array.array ( 'd' ,  p.pars() ) ,
+                           p.nX   () ,
+                           p.nZ   () ,                           
+                           p.xmin () ,
+                           p.xmax () ,
+                           p.zmin () ,
+                           p.zmax () )
+
+Ostap.Math.Bernstein3DMix.__reduce__ = _b3dm_reduce_
+Ostap.Math.Positive3DMix .__reduce__ = _b3dm_reduce_
+
+# ============================================================================
+## reduce 4D polynomial objects
+#  @see Ostap::Math::LegendreSum4
+def _b4d_reduce_ ( p ) :
+    """reduce 4D polynomial object
+    - see  `Ostap.Math.LegendreSum4` 
+    """
+    return poly_factory, ( type ( p ) ,
+                           array.array ( 'd' ,  p.pars() ) ,
+                           p.nX   (),
+                           p.nY   () ,  
+                           p.nZ   () ,  
+                           p.nU   () ,  
+                           p.xmin () ,
+                           p.xmax () ,
+                           p.ymin () ,
+                           p.ymax () ,
+                           p.zmin () ,
+                           p.zmax () ,
+                           p.umin () ,
+                           p.umax () )
+
+Ostap.Math.LegendreSum4 .__reduce__ = _b4d_reduce_
 
 
 # =============================================================================
@@ -1255,7 +1376,21 @@ _decorated_classes_  = (
     ## 3D-models 
     Ostap.Math.Gauss3D                      ,
     ## others 
-    Ostap.Math.WorkSpace                    ,     
+    Ostap.Math.WorkSpace                    ,
+    ## 2D3D&4D polynomials
+    Ostap.Math.Bernstein2D                  ,
+    Ostap.Math.Bernstein2DSym               ,
+    Ostap.Math.Positive2D                   ,
+    Ostap.Math.Positive2DSym                ,
+    Ostap.Math.Bernstein3D                  ,
+    Ostap.Math.Bernstein3DSym               ,
+    Ostap.Math.Bernstein3DMix               ,
+    Ostap.Math.Positive3D                   ,
+    Ostap.Math.Positive3DSym                ,
+    Ostap.Math.Positive3DMix                ,
+    Ostap.Math.LegendreSum2                 ,
+    Ostap.Math.LegendreSum3                 ,
+    Ostap.Math.LegendreSum4                 ,
     )
 
 for t in _decorated_classes_ :

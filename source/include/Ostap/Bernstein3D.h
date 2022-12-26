@@ -54,6 +54,19 @@ namespace Ostap
         const double               zmin  =  0 ,
         const double               zmax  =  1 ) ;
       // ======================================================================
+      /// constructor from parameyers 
+      Bernstein3D
+      ( const std::vector<double>& pars       ,
+        const unsigned short       nX         ,
+        const unsigned short       nY         ,
+        const unsigned short       nZ         ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               ymin  =  0 ,
+        const double               ymax  =  1 ,
+        const double               zmin  =  0 ,
+        const double               zmax  =  1 ) ;
+      // ======================================================================
       /** As a product of three 1D-polynomials:
        *  \f[  B_{n^x,n^y,n^z}(x,y,z) \equiv 
        *      B^{n^x}(x)B^{n^y}(y)B^{n^z}(z) = 
@@ -69,7 +82,7 @@ namespace Ostap
       Bernstein3D 
       ( const Bernstein& bx , 
         const Bernstein& by ,
-        const Bernstein& bz ) ;
+        const Bernstein& bz ) ;      
       // ======================================================================
       /// from symmetric variant 
       explicit Bernstein3D ( const Bernstein3DSym& right ) ;
@@ -494,6 +507,13 @@ namespace Ostap
         const double               xmin  =  0 ,
         const double               xmax  =  1 ) ;
       // ======================================================================
+      /// constructor from parameters 
+      Bernstein3DSym 
+      ( const std::vector<double>& pars       ,
+        const unsigned short       N          ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ) ;
+      // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -889,6 +909,16 @@ namespace Ostap
         const double               xmax  =  1 ,
         const double               zmin  =  0 ,
         const double               zmax  =  1 ) ;
+      // ======================================================================
+      /// constructor from parameters
+      Bernstein3DMix
+      ( const std::vector<double>&pars       ,
+        const unsigned short      N          ,
+        const unsigned short      Nz         ,
+        const double              xmin  =  0 ,
+        const double              xmax  =  1 ,
+        const double              zmin  =  0 ,
+        const double              zmax  =  1 ) ;      
       // ======================================================================
       /// from symmetric variant 
       explicit Bernstein3DMix ( const Bernstein3DSym&  right ) ;
@@ -1296,6 +1326,19 @@ namespace Ostap
         const double               zmin  =  0 ,
         const double               zmax  =  1 ) ;
       // ======================================================================
+      /// constructor from parameters 
+      Positive3D 
+      ( const std::vector<double>& pars       ,
+        const unsigned short       Nx         ,
+        const unsigned short       Ny         ,
+        const unsigned short       Nz         ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               ymin  =  0 ,
+        const double               ymax  =  1 ,
+        const double               zmin  =  0 ,
+        const double               zmax  =  1 ) ;      
+      // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -1572,6 +1615,13 @@ namespace Ostap
       /// constructor from the order
       Positive3DSym 
       ( const unsigned short       N     =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 );
+      // ======================================================================
+      /// constructor from parameters
+      Positive3DSym 
+      ( const std::vector<double>& pars       , 
+        const unsigned short       N          ,
         const double               xmin  =  0 ,
         const double               xmax  =  1 );
       // ======================================================================
@@ -1853,6 +1903,16 @@ namespace Ostap
       Positive3DMix 
       ( const unsigned short       N     =  1 ,
         const unsigned short       Nz    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               zmin  =  0 ,
+        const double               zmax  =  1 );
+      // ======================================================================
+      /// constructor from parameters
+      Positive3DMix 
+      ( const std::vector<double>& pars       ,
+        const unsigned short       N          ,
+        const unsigned short       Nz         ,
         const double               xmin  =  0 ,
         const double               xmax  =  1 ,
         const double               zmin  =  0 ,

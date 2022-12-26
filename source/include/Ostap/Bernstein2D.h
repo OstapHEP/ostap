@@ -76,6 +76,18 @@ namespace Ostap
       Bernstein2D 
       ( const Bernstein2DSym& right ) ;
       // ======================================================================
+      /** constructor from the parameters and setting
+       *  - \f$  (n_x+1)\times(n_Y+1) \f$  parameters are taken from <code>pars</code>
+       */ 
+      Bernstein2D 
+      ( const std::vector<double>& pars       ,
+        const unsigned short       nX         ,
+        const unsigned short       nY         ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               ymin  =  0 ,
+        const double               ymax  =  1 ) ;
+      // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -372,6 +384,15 @@ namespace Ostap
         const double               xmax  =  1 ,
         const double               ymin  =  0 ,
         const double               ymax  =  1 ) ;
+      /// constructor from the phases 
+      Positive2D 
+      ( const std::vector<double>& phass      ,
+        const unsigned short       Nx         ,
+        const unsigned short       Ny         ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               ymin  =  0 ,
+        const double               ymax  =  1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -550,6 +571,13 @@ namespace Ostap
       /// constructor from the order
       Bernstein2DSym
       ( const unsigned short       n     =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ) ;
+      // ======================================================================
+      /// constructor from the list of parameters  
+      Bernstein2DSym
+      ( const std::vector<double>& pars       ,
+        const unsigned short       n          ,
         const double               xmin  =  0 ,
         const double               xmax  =  1 ) ;
       // ======================================================================
@@ -831,6 +859,13 @@ namespace Ostap
       /// constructor from the order
       Positive2DSym 
       ( const unsigned short       Nx    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ) ;
+      // =======================================================================
+      /// constructor from the parameters  
+      Positive2DSym 
+      ( const std::vector<double>& pars       ,
+        const unsigned short       Nx         ,
         const double               xmin  =  0 ,
         const double               xmax  =  1 ) ;
       // ======================================================================

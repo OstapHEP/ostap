@@ -65,6 +65,23 @@ Ostap::Math::Bernstein2D::Bernstein2D
   //
 }
 // ============================================================================
+/* constructor from the parameters and setting
+ *  - \f$  (n_x+1)\times(n_Y+1) \f$  parameters are taken from <code>pars</code>
+ */ 
+// ============================================================================
+Ostap::Math::Bernstein2D::Bernstein2D 
+( const std::vector<double>& pars  ,
+  const unsigned short       nX    ,
+  const unsigned short       nY    ,
+  const double               xmin  ,
+  const double               xmax  ,
+  const double               ymin  ,
+  const double               ymax  )
+  : Ostap::Math::Bernstein2D ( nX  , nY , xmin , xmax  , ymin , ymax  )
+{
+  setPars ( pars ); 
+}
+// ============================================================================
 // from symmetric variant
 // ============================================================================
 Ostap::Math::Bernstein2D::Bernstein2D
@@ -498,6 +515,19 @@ Ostap::Math::Bernstein2DSym::Bernstein2DSym
   //
 }
 // ============================================================================
+// constructor from the list of parameters
+// ============================================================================
+Ostap::Math::Bernstein2DSym::Bernstein2DSym
+( const std::vector<double>& pars  ,
+  const unsigned short       n     ,
+  const double               xmin  ,
+  const double               xmax  )
+  : Ostap::Math::Bernstein2DSym ( n , xmin , xmax )
+{ setPars  ( pars ) ; }
+// ======================================================================
+
+
+// ============================================================================
 // swap
 // ============================================================================
 void Ostap::Math::Bernstein2DSym::swap( Ostap::Math::Bernstein2DSym& right )
@@ -801,6 +831,23 @@ Ostap::Math::Positive2D::Positive2D
   updateBernstein () ;
 }
 // ============================================================================
+// constructor from the order
+// ============================================================================
+Ostap::Math::Positive2D::Positive2D
+( const std::vector<double>& pars ,
+  const unsigned short       nX   ,
+  const unsigned short       nY   ,
+  const double               xmin ,
+  const double               xmax ,
+  const double               ymin ,
+  const double               ymax )
+  : m_bernstein (   nX , nY , xmin , xmax , ymin , ymax ) 
+  , m_sphere    ( ( nX + 1 ) * ( nY + 1 ) - 1 )
+{
+  m_sphere.setPars ( pars ) ;
+  updateBernstein () ;
+}
+// ============================================================================
 // swap 
 // ============================================================================
 void Ostap::Math::Positive2D::swap ( Ostap::Math::Positive2D& right ) 
@@ -883,6 +930,20 @@ Ostap::Math::Positive2DSym::Positive2DSym
   : m_bernstein (   N , xmin , xmax ) 
   , m_sphere    ( ( N + 1 ) * ( N + 2 ) / 2 - 1  )
 {
+  updateBernstein () ;
+}
+// ============================================================================
+// constructor from the order
+// ============================================================================
+Ostap::Math::Positive2DSym::Positive2DSym
+( const std::vector<double>& pars ,
+  const unsigned short       N    ,
+  const double               xmin ,
+  const double               xmax )
+  : m_bernstein (   N , xmin , xmax ) 
+  , m_sphere    ( ( N + 1 ) * ( N + 2 ) / 2 - 1  )
+{
+  m_sphere.setPars ( pars ) ;
   updateBernstein () ;
 }
 // ============================================================================

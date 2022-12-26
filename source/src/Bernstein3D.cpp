@@ -73,6 +73,27 @@ Ostap::Math::Bernstein3D::Bernstein3D
   { m_bz.push_back ( Bernstein ( BB ( iz , nZ ) , zmin , zmax ) ) ; }
   //
 }
+// ============================================================================
+// constructor from parameters 
+// ============================================================================
+Ostap::Math::Bernstein3D::Bernstein3D 
+( const std::vector<double>& pars  ,
+  const unsigned short       nX    ,
+  const unsigned short       nY    ,
+  const unsigned short       nZ    ,
+  const double               xmin  ,
+  const double               xmax  ,
+  const double               ymin  ,
+  const double               ymax  ,
+  const double               zmin  ,
+  const double               zmax  )
+  : Ostap::Math::Bernstein3D ( nX   , nY   , nZ ,
+                               xmin , xmax ,
+                               ymin , ymax ,
+                               zmin , zmax )
+{
+  setPars ( pars ) ;
+}
 // ======================================================================
 /*  As a product of three 1D-polynomials:
  *  \f[  B_{n^x,n^y,n^z}(x,y,z) \equiv 
@@ -907,6 +928,18 @@ Ostap::Math::Bernstein3DSym::Bernstein3DSym
   //
 }
 // ============================================================================
+// constructor from parameters 
+// ============================================================================
+Ostap::Math::Bernstein3DSym::Bernstein3DSym 
+( const std::vector<double>& pars  ,
+  const unsigned short       N     ,
+  const double               xmin  ,
+  const double               xmax  )
+  : Ostap::Math::Bernstein3DSym ( N , xmin , xmax )
+{
+  setPars ( pars ) ;
+}
+// ============================================================================
 // swap  two 3D-polynomials 
 // ============================================================================
 void Ostap::Math::Bernstein3DSym::swap
@@ -1376,6 +1409,23 @@ Ostap::Math::Bernstein3DMix::Bernstein3DMix
   for ( unsigned short iz = 0 ; iz <= Nz ; ++iz )
   { m_bz.push_back ( Bernstein ( BB ( iz , Nz ) , zmin , zmax ) ) ; }
   //
+}
+// ============================================================================
+// constructor from parameters  
+// ============================================================================
+Ostap::Math::Bernstein3DMix::Bernstein3DMix
+( const std::vector<double>& pars ,
+  const unsigned short       N     ,
+  const unsigned short       Nz    ,
+  const double               xmin  ,
+  const double               xmax  ,
+  const double               zmin  ,
+  const double               zmax  )
+  : Ostap::Math::Bernstein3DMix ( N    , Nz   ,
+                                  xmin , xmax ,
+                                  zmin , zmax )
+{
+  setPars ( pars ) ;
 }
 // ============================================================================
 // constructor from symmetric polynomial
@@ -1981,6 +2031,26 @@ Ostap::Math::Positive3D::Positive3D
   updateBernstein () ;
 }
 // ============================================================================
+// constructor from parameters 
+// ============================================================================
+Ostap::Math::Positive3D::Positive3D 
+( const std::vector<double>& pars  , 
+  const unsigned short       Nx    ,
+  const unsigned short       Ny    ,
+  const unsigned short       Nz    ,
+  const double               xmin  ,
+  const double               xmax  ,
+  const double               ymin  ,
+  const double               ymax  ,
+  const double               zmin  ,
+  const double               zmax  )
+  : m_bernstein (   Nx , Ny , Nz,  xmin , xmax , ymin , ymax , zmin , zmax ) 
+  , m_sphere    ( ( Nx + 1 ) * ( Ny + 1 ) * ( Nz + 1 ) - 1 )
+{
+  m_sphere.setPars ( pars ) ;
+  updateBernstein () ;
+}
+// ============================================================================
 // swap  two 2D-polynomials 
 // ============================================================================
 void Ostap::Math::Positive3D::swap ( Ostap::Math::Positive3D&  right ) 
@@ -2071,6 +2141,20 @@ Ostap::Math::Positive3DSym::Positive3DSym
   : m_bernstein (   N ,  xmin , xmax ) 
   , m_sphere    ( ( N + 1 ) * ( N + 2 ) * ( N + 3 ) / 6 - 1 ) ///  ????? 
 {
+  updateBernstein () ;
+}
+// ============================================================================
+// constructor from parameters 
+// ============================================================================
+Ostap::Math::Positive3DSym::Positive3DSym 
+( const std::vector<double>& pars  ,
+  const unsigned short       N     ,
+  const double               xmin  ,
+  const double               xmax  )
+  : m_bernstein (   N ,  xmin , xmax ) 
+  , m_sphere    ( ( N + 1 ) * ( N + 2 ) * ( N + 3 ) / 6 - 1 ) ///  ????? 
+{
+  m_sphere.setPars ( pars ) ;
   updateBernstein () ;
 }
 // ============================================================================
@@ -2168,6 +2252,23 @@ Ostap::Math::Positive3DMix::Positive3DMix
   : m_bernstein (   N , Nz ,  xmin , xmax , zmin , zmax ) 
   , m_sphere    ( ( N + 1 ) * ( N + 2 ) * ( Nz + 1 ) / 2  - 1 ) 
 {
+  updateBernstein () ;
+}
+// ============================================================================
+// constructor from parameters  
+// ============================================================================
+Ostap::Math::Positive3DMix::Positive3DMix
+( const std::vector<double>& pars  , 
+  const unsigned short       N     , 
+  const unsigned short       Nz    ,
+  const double               xmin  ,
+  const double               xmax  ,
+  const double               zmin  ,
+  const double               zmax  )
+  : m_bernstein (   N , Nz ,  xmin , xmax , zmin , zmax ) 
+  , m_sphere    ( ( N + 1 ) * ( N + 2 ) * ( Nz + 1 ) / 2  - 1 ) 
+{
+  m_sphere.setPars  ( pars ) ;
   updateBernstein () ;
 }
 // ============================================================================

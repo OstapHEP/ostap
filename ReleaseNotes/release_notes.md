@@ -6,7 +6,7 @@
   1. Add `Ostap::Math::Bernstein::fill` method
   1. Add `Bernstein` into `Ostap/Params.h` set of cuntions
   1. extend `test_trees_params.py` test
-  1. optimise `Ostap::Math::Bernstein2D` and `Ostap::Math::Bernstein3D`, make them a bit faster and efficient 
+  1. optimise `Ostap::Math::Bernstein2D` and `Ostap::Math::Bernstein3D`, make them a bit faster and efficient  1. add proper (de)serialisation for 2D,3D74D polynomial objects  
   
 ## Backward incompatible:  
 

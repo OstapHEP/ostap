@@ -42,12 +42,22 @@ namespace Ostap
        *  - \f$ y^{\prime} = \frac{2y-y_{min}-y_{max}}{y_{max}-y_{min}}\f$.
        */
       LegendreSum2 
-      ( const unsigned short NX =  0 , 
-        const unsigned short NY =  0 , 
-        const double   xmin     = -1 , 
-        const double   xmax     =  1 , 
-        const double   ymin     = -1 , 
-        const double   ymax     =  1 ) ;
+      ( const unsigned short NX   =  0 , 
+        const unsigned short NY   =  0 , 
+        const double         xmin = -1 , 
+        const double         xmax =  1 , 
+        const double         ymin = -1 , 
+        const double         ymax =  1 ) ;
+      // ======================================================================
+      // consntructor from parameters
+      LegendreSum2 
+      ( const std::vector<double>& pars      ,
+        const unsigned short       NX        , 
+        const unsigned short       NY        , 
+        const double               xmin = -1 , 
+        const double               xmax =  1 , 
+        const double               ymin = -1 , 
+        const double               ymax =  1 ) ;
       // ======================================================================
       /** constructor orm the product of two Legendre sums
        *  \f$ S(x,y) = S_x(x)\times S_y(y) \f$ 
@@ -87,6 +97,8 @@ namespace Ostap
       std::size_t degree_y  () const { return m_NY ; }
       std::size_t nx        () const { return m_NX ; }
       std::size_t ny        () const { return m_NY ; }
+      std::size_t nX        () const { return m_NX ; }
+      std::size_t nY        () const { return m_NY ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -302,15 +314,27 @@ namespace Ostap
        *  - \f$ z^{\prime} = \frac{2z-z_{min}-z_{max}}{z_{max}-z_{min}}\f$. 
        */
       LegendreSum3 
-      ( const unsigned short NX =  0 , 
-        const unsigned short NY =  0 , 
-        const unsigned short NZ =  0 , 
-        const double   xmin     = -1 , 
-        const double   xmax     =  1 , 
-        const double   ymin     = -1 , 
-        const double   ymax     =  1 ,
-        const double   zmin     = -1 , 
-        const double   zmax     =  1 ) ;
+      ( const unsigned short NX   =  0 , 
+        const unsigned short NY   =  0 , 
+        const unsigned short NZ   =  0 , 
+        const double         xmin = -1 , 
+        const double         xmax =  1 , 
+        const double         ymin = -1 , 
+        const double         ymax =  1 ,
+        const double         zmin = -1 , 
+        const double         zmax =  1 ) ;
+      // consntructor from parameters
+      LegendreSum3 
+      ( const std::vector<double>& pars      ,
+        const unsigned short       NX        , 
+        const unsigned short       NY        , 
+        const unsigned short       NZ        , 
+        const double               xmin = -1 , 
+        const double               xmax =  1 , 
+        const double               ymin = -1 , 
+        const double               ymax =  1 ,
+        const double               zmin = -1 , 
+        const double               zmax =  1 ) ;
       // ======================================================================
       /** constructor orm the product of two Legendre sums
        *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \times S_z(z) \f$ 
@@ -384,6 +408,9 @@ namespace Ostap
       std::size_t nx        () const { return m_NX ; }
       std::size_t ny        () const { return m_NY ; }
       std::size_t nz        () const { return m_NZ ; }
+      std::size_t nX        () const { return m_NX ; }
+      std::size_t nY        () const { return m_NY ; }
+      std::size_t nZ        () const { return m_NZ ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -628,18 +655,34 @@ namespace Ostap
        *  - \f$ u^{\prime} = \frac{2u-u_{min}-u_{max}}{u_{max}-u_{min}}\f$. 
        */
       LegendreSum4 
-      ( const unsigned short NX =  0 , 
-        const unsigned short NY =  0 , 
-        const unsigned short NZ =  0 , 
-        const unsigned short NU =  0 , 
-        const double   xmin     = -1 , 
-        const double   xmax     =  1 , 
-        const double   ymin     = -1 , 
-        const double   ymax     =  1 ,
-        const double   zmin     = -1 , 
-        const double   zmax     =  1 ,
-        const double   umin     = -1 , 
-        const double   umax     =  1 ) ;
+      ( const unsigned short NX   =  0 , 
+        const unsigned short NY   =  0 , 
+        const unsigned short NZ   =  0 , 
+        const unsigned short NU   =  0 , 
+        const double         xmin = -1 , 
+        const double         xmax =  1 , 
+        const double         ymin = -1 , 
+        const double         ymax =  1 ,
+        const double         zmin = -1 , 
+        const double         zmax =  1 ,
+        const double         umin = -1 , 
+        const double         umax =  1 ) ;
+      // ======================================================================
+      // consntructor from parameters
+      LegendreSum4 
+      ( const std::vector<double>& pars      ,
+        const unsigned short       NX        , 
+        const unsigned short       NY        , 
+        const unsigned short       NZ        , 
+        const unsigned short       NU        , 
+        const double               xmin = -1 , 
+        const double               xmax =  1 , 
+        const double               ymin = -1 , 
+        const double               ymax =  1 ,
+        const double               zmin = -1 , 
+        const double               zmax =  1 ,
+        const double               umin = -1 , 
+        const double               umax =  1 ) ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -709,6 +752,10 @@ namespace Ostap
       std::size_t ny        () const { return m_NY ; }
       std::size_t nz        () const { return m_NZ ; }
       std::size_t nu        () const { return m_NU ; }
+      std::size_t nX        () const { return m_NX ; }
+      std::size_t nY        () const { return m_NY ; }
+      std::size_t nZ        () const { return m_NZ ; }
+      std::size_t nU        () const { return m_NU ; }
       // ======================================================================
     public:
       // ======================================================================

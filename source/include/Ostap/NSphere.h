@@ -35,39 +35,45 @@ namespace Ostap
       /** Standard constructor for rotated sphere 
        *  @param nPhases  dimensionality of N-sphere 
        */
-      NSphere  ( const unsigned short       nPhases = 1 ) ;
+      NSphere
+      ( const unsigned short       nPhases = 1 ) ;
       // =======================================================================
       /** Standard constructor
        *  @param nPhases  dimensionality of N-sphere 
        *  @param rotated  rotate it?
        */
-      NSphere  ( const unsigned short       nPhases     ,
-                 const unsigned short       rotated     ) ;
+      NSphere
+      ( const unsigned short       nPhases     ,
+        const unsigned short       rotated     ) ;
       // =======================================================================
       /** Standard constructor
        *  @param phases  vector of phases 
        *  @param rotated  rotate it?
        */
-      NSphere  ( const std::vector<double>& phases      ,
-                 const unsigned short       rotated     ) ;
+      NSphere
+      ( const std::vector<double>& phases      ,
+        const unsigned short       rotated     ) ;
       // =======================================================================
       /** Standard constructor with deltas 
        *  @param phases  vector of phases 
        *  @param deltas  rotation deltas 
        */
-      NSphere  ( const std::vector<double>& phases ,
-                 const std::vector<double>& deltas ) ;
+      NSphere
+      ( const std::vector<double>& phases ,
+        const std::vector<double>& deltas ) ;
       // =======================================================================
       /** constructor from deltas 
        *  @param deltas  rotation deltas 
        */
-      NSphere  ( const std::string&       /* fake */ ,
-                 const std::vector<double>& deltas ) ;
+      NSphere
+      ( const std::string&       /* fake */ ,
+        const std::vector<double>& deltas ) ;
       // =======================================================================
       /** Standard constructor
        *  @param phases  vector of phases 
        */
-      NSphere  ( const std::vector<double>& phases      ) ;
+      NSphere
+      ( const std::vector<double>& phases      ) ;
       // =======================================================================
       /// copy
       NSphere  ( const NSphere&  right ) ;
@@ -121,8 +127,9 @@ namespace Ostap
        *  @param value new value to be set 
        *  @return true is new value is really set 
        */
-      bool setPhase   ( const unsigned short index , 
-                        const double         value ) ;
+      bool setPhase
+      ( const unsigned short index , 
+        const double         value ) ;
       // ======================================================================
     public: // "par"-like interface
       // ======================================================================
@@ -139,8 +146,9 @@ namespace Ostap
        *  @param value new value to be set 
        *  @return true is new value is really set 
        */
-      bool setPar     ( const unsigned short index , 
-                        const double         value ) 
+      bool setPar
+      ( const unsigned short index , 
+        const double         value ) 
       { return index < m_phases.size() ? setPhase ( index , value ) : false ; }
       // ======================================================================
       /** set several/all parameters at once 
@@ -149,8 +157,9 @@ namespace Ostap
        *  @return true if at least one parameter is actually changed 
        */
       template <class ITERATOR>
-      bool setPars ( ITERATOR begin  , 
-                     ITERATOR end    ) ;
+      bool setPars
+      ( ITERATOR begin  , 
+        ITERATOR end    ) ;
       // ======================================================================
       /** set several/all parameters at once 
        *  @param pars (NIPUT) vector of parameters 
@@ -239,8 +248,10 @@ inline double Ostap::Math::NSphere::x
  *  @return true if at least one parameter is actually changed 
  */
 template <class ITERATOR>
-inline bool Ostap::Math::NSphere::setPars ( ITERATOR begin  , 
-                                            ITERATOR end    ) 
+inline bool
+Ostap::Math::NSphere::setPars
+( ITERATOR begin  , 
+  ITERATOR end    ) 
 {
   bool update = false ;
   const unsigned int   N = nPhi ()  ;
