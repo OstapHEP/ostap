@@ -793,7 +793,7 @@ def frame_project ( frame , model , *what ) :
             
     if   isinstance ( model , DF_P2Model ) and 3 <= numvars <= 4 : action = current.Profile2D ( model , *pvars )
     elif isinstance ( model , DF_P1Model ) and 2 <= numvars <= 3 : action = current.Profiel1D ( model , *pvars )
-    elif isinstance ( model , DF_H3Model ) and 3 <= numbers <= 4 : action = current.Histo3D   ( model , *pvars )
+    elif isinstance ( model , DF_H3Model ) and 3 <= numvars <= 4 : action = current.Histo3D   ( model , *pvars )
     elif isinstance ( model , DF_H2Model ) and 2 <= numvars <= 3 : action = current.Histo2D   ( model , *pvars )
     elif isinstance ( model , DF_H1Model ) and 1 <= numvars <= 2 : action = current.Histo1D   ( model , *pvars )
     else :

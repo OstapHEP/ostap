@@ -12,13 +12,15 @@
   1. Add `Ostap::Math::Bernstein3D::fill` method
   1. Add `Bernstein2D/3D` into `Ostap/Params.h` set of funtions
   1. further extend `test_trees_params.py` test
+  1. further extend `test_trees_params.py` test
 
 ## Backward incompatible:  
 
   1. rename `BernsteinDualBasis` into `Ostap::Math::BernsteinnDual`
   
 ## Bug fixes:
-
+  1. fix typo in `rames.py` for frame projections into 3D-histograms
+  
 # v1.9.5.6
 
 ## New features: 
