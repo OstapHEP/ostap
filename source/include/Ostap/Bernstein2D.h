@@ -236,6 +236,26 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /** update Bernstein expansion by addition of one "event" with 
+       *  the given weight
+       *  @code
+       *  Bernsteinn2D sum = ... ;
+       *  for ( auto x : .... ) { sum.fill ( x , y ) ; }
+       *  @endcode
+       *  This is a useful function to make an unbinned parameterization 
+       *  of certain distribution and/or efficiency 
+       *  @see Ostap::MAth::LegendreSum2 
+       *  @see Ostap::MAth::LegendreSum2::fill 
+       *  @see Ostap::MAth::Bernsteinn::fill        
+       *  @attentionn It is less CPU efficienct than Ostap::Math::LegendreSum2::fill
+       */
+      bool fill
+      ( const double x          , 
+        const double y          , 
+        const double weight = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /// simple  manipulations with polynoms: shift it!
       Bernstein2D& operator += ( const double a ) ;
       /// simple  manipulations with polynoms: shift it!

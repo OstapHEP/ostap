@@ -71,9 +71,12 @@ def _l1_parameterize_ ( l1   ,
 # =============================================================================
 ## parameterize 2D unbinned ddistribution from TTree in terms of Legendre sum
 #  @code
-#  l = LegendreSum2 ( 5 , 4 , -1.0 , 1.0 , 0.0 , 1.0 )
 #  tree = ...
+#  l = LegendreSum2 ( 5 , 4 , -1.0 , 1.0 , 0.0 , 1.0 )
 #  l.parameterize ( tree , 'X' , 'Z' , 'Y>0' ) 
+#
+#  b = Bernsteinn2D ( 5 , 4 , -1.0 , 1.0 , 0.0 , 1.0 )
+#  b.parameterize ( tree , 'X' , 'Z' , 'Y>0' ) 
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-07-03
@@ -84,9 +87,11 @@ def _l2_parameterize_ ( l2   ,
                         cut = '' , first = 0 , last = _large ) :
     """Parameterize 2D unbinned ddistribution from TTree in terms of Legendre sum
     
-    >>> l = LegendreSum3 ( 5 , 3 , -1.0 , 1.0 , 0.0 , 1.0  )
     >>> tree = ...
-    >>> l.parameterize ( tree , 'X' , 'Y' , 'Z>0' ) 
+    >>> l = LegendreSum2 ( 5 , 3 , -1.0 , 1.0 , 0.0 , 1.0  )
+    >>> l.parameterize (  tree , 'X' , 'Y' , 'Z>0' ) 
+    >>> b = BErnstein2D  ( 5 , 3 , -1.0 , 1.0 , 0.0 , 1.0  )
+    >>> b.parameterize ( tree , 'X' , 'Y' , 'Z>0' ) 
     """
     return Ostap.DataParam.parameterize ( tree        , l2    ,
                                           xvar        , yvar  ,
@@ -95,9 +100,11 @@ def _l2_parameterize_ ( l2   ,
 # =============================================================================
 ## parameterize 3D unbinned ddistribution from TTree in terms of Legendre sum
 #  @code
-#  l = LegendreSum3 ( 5 , 4 , 2  , -1.0 , 1.0 , 0.0 , 1.0 , -2.0 , 2.0 )
 #  tree = ...
+#  l = LegendreSum3 ( 5 , 4 , 2  , -1.0 , 1.0 , 0.0 , 1.0 , -2.0 , 2.0 )
 #  l.parameterize ( tree , 'X' , 'Y' ,  'Z' , 'T>0' ) 
+#  b = Bernsteinn3D ( 5 , 4 , 2  , -1.0 , 1.0 , 0.0 , 1.0 , -2.0 , 2.0 )
+#  b.parameterize ( tree , 'X' , 'Y' ,  'Z' , 'T>0' ) 
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-07-03
@@ -109,9 +116,11 @@ def _l3_parameterize_ ( l3   ,
                         cut = '' , first = 0 , last = _large ) :
     """Parameterize 3D unbinned ddistribution from TTree in terms of Legendre sum
     
-    >>> l = LegendreSum3 ( 5 , 3 , 2 , -1.0 , 1.0 , 0.0 , 1.0  , 0.0 , 5.0 )
     >>> tree = ...
+    >>> l = LegendreSum3 ( 5 , 3 , 2 , -1.0 , 1.0 , 0.0 , 1.0  , 0.0 , 5.0 )
     >>> l.parameterize ( tree , 'X' , 'Y' , 'Z' , 'T>0' ) 
+    >>> b = Bernsteinn3D ( 5 , 3 , 2 , -1.0 , 1.0 , 0.0 , 1.0  , 0.0 , 5.0 )
+    >>> b.parameterize ( tree , 'X' , 'Y' , 'Z' , 'T>0' ) 
     """
     return Ostap.DataParam.parameterize ( tree        , l3    ,
                                           xvar        , yvar  , zvar ,
@@ -150,6 +159,8 @@ Ostap.Math.LegendreSum4.parameterize = _l4_parameterize_
 
 Ostap.Math.ChebyshevSum.parameterize = _l1_parameterize_
 Ostap.Math.Bernstein   .parameterize = _l1_parameterize_
+Ostap.Math.Bernstein2D .parameterize = _l2_parameterize_
+Ostap.Math.Bernstein3D .parameterize = _l3_parameterize_
 
 # =============================================================================
 ## parameterize 1,2,3&4D unbinned distributions in terms of Legendre series
@@ -159,6 +170,8 @@ Ostap.Math.Bernstein   .parameterize = _l1_parameterize_
 #  @see Ostap.Math.LegendreSum4
 #  @see Ostap.Math.ChebyshevSum
 #  @see Ostap.Math.Bernstein
+#  @see Ostap.Math.Bernstein2D
+#  @see Ostap.Math.Bernstein3D
 #  @code
 #  tree  = ....
 #  l2    = Ostap.Math.LegendreSum2 ( 5 , -1.0 , 1.0 )
@@ -176,13 +189,19 @@ def _rt_parameterize_ ( tree , func , *args , **kwargs ) :
     - see Ostap.Math.LegendreSum2
     - see Ostap.Math.LegendreSum3
     - see Ostap.Math.LegendreSum4
+    - see Ostap.Math.ChebyshevSum
+    - see Ostap.Math.Bernstein
+    - see Ostap.Math.Bernstein2D
+    - see Ostap.Math.Bernstein3D
     """
     assert isinstance ( func , ( Ostap.Math.LegendreSum  ,
                                  Ostap.Math.LegendreSum2 ,
                                  Ostap.Math.LegendreSum3 ,
                                  Ostap.Math.LegendreSum4 ,
                                  Ostap.Math.ChebyshevSum ,
-                                 Ostap.Math.Bernstein    ) ) ,\
+                                 Ostap.Math.Bernstein    ,
+                                 Ostap.Math.Bernstein2D  ,
+                                 Ostap.Math.Bernstein3D  ) ) ,\
                                  'Invalid function object %s/%s' % ( func , type  ( func) )
     
     return func.parameterize ( tree , *args , **kwargs )
@@ -198,6 +217,8 @@ _decorated_classes_ = (
     Ostap.Math.LegendreSum4 , 
     Ostap.Math.ChebyshevSum ,
     Ostap.Math.Bernstein    ,
+    Ostap.Math.Bernstein2D  ,
+    Ostap.Math.Bernstein3D  ,
     )
 
 _new_methods_       = (
@@ -206,7 +227,9 @@ _new_methods_       = (
     Ostap.Math.LegendreSum3.parameterize , 
     Ostap.Math.LegendreSum4.parameterize , 
     Ostap.Math.ChebyshevSum.parameterize , 
-    Ostap.Math.Bernstein.parameterize , 
+    Ostap.Math.Bernstein   .parameterize , 
+    Ostap.Math.Bernstein2D .parameterize , 
+    Ostap.Math.Bernstein3D .parameterize , 
     ROOT.TTree.parameterize ,
     )
 

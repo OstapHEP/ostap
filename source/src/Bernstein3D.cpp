@@ -16,6 +16,7 @@
 // ============================================================================
 #include "local_math.h"
 #include "local_hash.h"
+#include "Exception.h"
 // ============================================================================
 /** @file
  *  Implementation file for functions, related to Bernstein's polynomnials
@@ -792,6 +793,72 @@ double Ostap::Math::Bernstein3D::integrateYZ ( const double x    ) const
   std::fill ( m_fz.begin() , m_fz.end() , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
   //
   return calculate ( m_fx , m_fy , m_fz ) ;
+}
+// ============================================================================
+/** update Bernstein expansion by addition of one "event" with 
+ *  the given weight
+ *  @code
+ *  Bernstein3D sum = ... ;
+ *  for ( auto x : .... ) { sum.fill ( x , y , z ) ; }
+ *  @endcode
+ *  This is a useful function to make an unbinned parameterization 
+ *  of certain distribution and/or efficiency 
+ */
+// ============================================================================
+bool Ostap::Math::Bernstein3D::fill 
+( const double x      , 
+  const double y      , 
+  const double z      , 
+  const double weight )
+{
+  // no update 
+  if      ( x < m_xmin || x > m_xmax ) { return false ; }
+  else if ( y < m_ymin || y > m_ymax ) { return false ; }
+  else if ( z < m_zmin || y > m_zmax ) { return false ; }
+  else if ( s_zero ( weight )        ) { return true  ; }
+  //
+  const long double w = weight * 1.0L / 
+    // ( 1.0L * ( m_ymax - m_ymin ) * ( m_xmax - m_xmin ) * ( m_nx + 1 ) * ( m_ny + 1 ) ) ;
+    ( 1.0L * ( m_nx + 1 ) * ( m_ny + 1 )* ( m_nz  + 1 )  ) ;
+  //
+  const double xx  =  tx ( x ) ;
+  const double yy  =  ty ( y ) ;
+  const double zz  =  tz ( y ) ;
+  //
+  typedef Ostap::Math::BernsteinDualBasis::Basis Basis ;
+  const Basis* basisx = Ostap::Math::BernsteinDualBasis::basis ( m_nx ) ; 
+  const Basis* basisy = Ostap::Math::BernsteinDualBasis::basis ( m_ny ) ;
+  const Basis* basisz = Ostap::Math::BernsteinDualBasis::basis ( m_nz ) ;
+  //
+  static const std::string s_MSGX { "Cannot aquire valid Bernstein dual basis/x" } ;
+  static const std::string s_MSGY { "Cannot aquire valid Bernstein dual basis/y" } ;
+  static const std::string s_MSGZ { "Cannot aquire valid Bernstein dual basis/y" } ;
+  static const std::string s_TAG  { "Ostap::Math::Bernstein3D::fill"          } ;
+  //
+  Ostap::Assert ( basisx && basisx->size() == m_nx + 1 , s_MSGX , s_TAG , 950 ) ;
+  Ostap::Assert ( basisy && basisy->size() == m_ny + 1 , s_MSGY , s_TAG , 950 ) ;
+  Ostap::Assert ( basisz && basisy->size() == m_nz + 1 , s_MSGZ , s_TAG , 950 ) ;
+  //
+  std::transform ( basisx->begin () , basisx->end () , m_fx.begin() ,
+                   [xx]( const auto& b )->double { return b ( xx  ) ; } ) ;
+  std::transform ( basisy->begin () , basisy->end () , m_fy.begin() ,
+                   [yy]( const auto& b )->double { return b ( yy  ) ; } ) ;
+  std::transform ( basisz->begin () , basisz->end () , m_fz.begin() ,
+                   [zz]( const auto& b )->double { return b ( zz  ) ; } ) ;
+  //
+  for ( unsigned short ix = 0 ; ix <= m_nx  ; ++ix  )
+  {
+    for ( unsigned short iy = 0 ; iy <= m_ny  ; ++iy  )
+    {
+      for ( unsigned short iz = 0 ; iz <= m_nz  ; ++iz  )
+      {
+        const std::size_t k = index  ( ix  , iy , iz ) ;
+        m_pars [ k ] += w * m_fx [ ix ] * m_fy [ iy ] * m_fz [ iz  ] ;
+      }
+    }
+  }
+  //
+  return true ;
 }
 // ============================================================================
 Ostap::Math::Bernstein3D&

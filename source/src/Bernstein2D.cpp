@@ -384,6 +384,71 @@ double Ostap::Math::Bernstein2D::integrateY
   return calculate ( m_fx ,  m_fy ) ;
 }
 // ============================================================================
+/* update Bernstein expansion by addition of one "event" with 
+ *  the given weight
+ *  @code
+ *  Bernsteinn2D sum = ... ;
+ *  for ( auto x : .... ) { sum.fill ( x , y ) ; }
+ *  @endcode
+ *  This is a useful function to make an unbinned parameterization 
+ *  of certain distribution and/or efficiency 
+ *  @see Ostap::MAth::LegendreSum2 
+ *  @see Ostap::MAth::LegendreSum2::fill 
+ *  @see Ostap::MAth::Bernsteinn::fill        
+ *  @attentionn It is less CPU efficienct than Ostap::Math::LegendreSum2::fill
+ */
+// ============================================================================
+bool Ostap::Math::Bernstein2D::fill
+( const double x      , 
+  const double y      , 
+  const double weight )
+{
+  // no update 
+  if      ( x < m_xmin || x > m_xmax ) { return false ; }
+  else if ( y < m_ymin || y > m_ymax ) { return false ; }
+  else if ( s_zero ( weight )        ) { return true  ; }
+  //
+  const long double w = weight * 1.0L / 
+    // ( 1.0L * ( m_ymax - m_ymin ) * ( m_xmax - m_xmin ) * ( m_nx + 1 ) * ( m_ny + 1 ) ) ;
+    ( 1.0L * ( m_nx + 1 ) * ( m_ny + 1 ) ) ;
+  //
+  const double xx  =  tx ( x ) ;
+  const double yy  =  ty ( y ) ;
+  //
+  typedef Ostap::Math::BernsteinDualBasis::Basis Basis ;
+  const Basis* basisx = Ostap::Math::BernsteinDualBasis::basis ( m_nx ) ; 
+  const Basis* basisy = Ostap::Math::BernsteinDualBasis::basis ( m_ny ) ;
+  //
+  static const std::string s_MSGX { "Cannot aquire valid Bernstein dual basis/x" } ;
+  static const std::string s_MSGY { "Cannot aquire valid Bernstein dual basis/y" } ;
+  static const std::string s_TAG  { "Ostap::Math::Bernstein2D::fill"          } ;
+  //
+  Ostap::Assert ( basisx && basisx->size() == m_nx + 1 , s_MSGX , s_TAG , 950 ) ;
+  Ostap::Assert ( basisy && basisy->size() == m_ny + 1 , s_MSGY , s_TAG , 950 ) ;
+  //
+  std::transform ( basisx->begin () , basisx->end () , m_fx.begin() ,
+                   [xx]( const auto& b )->double { return b ( xx  ) ; } ) ;
+  std::transform ( basisy->begin () , basisy->end () , m_fy.begin() ,
+                   [yy]( const auto& b )->double { return b ( yy  ) ; } ) ;
+  //
+  for ( unsigned short ix = 0 ; ix <= m_nx  ; ++ix  )
+  {
+    for ( unsigned short iy = 0 ; iy <= m_ny  ; ++iy  )
+    {
+      const std::size_t k = index  ( ix  , iy ) ;
+      m_pars [ k ] += w * m_fx [ ix ] * m_fy [ iy ] ;
+    }
+  }
+  //
+  return true ;
+}
+// ============================================================================
+
+
+
+
+
+// ============================================================================
 // Operators 
 // ============================================================================
 Ostap::Math::Bernstein2D&

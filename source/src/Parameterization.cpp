@@ -21,13 +21,15 @@ namespace
 {
   // ==========================================================================
   //  precompute values of Legendre polynomials P_i(x) 
-  inline void _legendre_values   ( std::vector<double>& values , const long double x ) 
-  { Ostap::Math::legendre_values ( values.begin() , values.end  () , x ) ; }
+  inline void _legendre_values
+  ( std::vector<double>& values , const long double x ) 
+  { Ostap::Math::legendre_values ( values.begin() , values.end () , x ) ; }
   // ==========================================================================
   //  precompute values of Legendre integrals P_i(x) 
-  void _legendre_integrals ( std::vector<double>& values , 
-                             const long double    xlow   , 
-                             const long double    xhigh  ) 
+  void _legendre_integrals
+  ( std::vector<double>& values , 
+    const long double    xlow   , 
+    const long double    xhigh  ) 
   {
     const unsigned long N = values.size() ;
     if ( 0 == N ) { return ; }

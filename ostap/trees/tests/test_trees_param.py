@@ -253,27 +253,45 @@ def test_parameterize_2D () :
     with ROOT.TFile.Open(data_file,'READ') as f :
         
         tree = f.S
-        
-        lxy = Ostap.Math.LegendreSum2 ( 12 , 12 , -2 , 2 , -2 , 2 )
-        lzu = Ostap.Math.LegendreSum2 ( 12 , 12 , -4 , 4 , -4 , 6 )
-        lxu = Ostap.Math.LegendreSum2 ( 12 , 12 , -2 , 2 , -4 , 6 )
 
-        lxy.parameterize ( tree , 'x' , 'y' ,  cuts )
-        lzu.parameterize ( tree , 'z' , 'u' ,  cuts )
-        lxu.parameterize ( tree , 'x' , 'u' ,  cuts )
-        
-        hxy = ROOT.TH2F(hID() , '', 20 , -2, 2, 20 , -2 , 2 )
-        hzu = ROOT.TH2F(hID() , '', 20 , -4, 4, 20 , -4 , 6 )
-        hxu = ROOT.TH2F(hID() , '', 20 , -2, 2, 20 , -4 , 6 )
-        
-        tree.project ( hxy , 'y:x' , cuts )
-        tree.project ( hzu , 'u:z' , cuts )
-        tree.project ( hxu , 'u:x' , cuts )
-        
+        with timing ( "2D-Legendre prameterization" , logger = logger ) :
+            
+            lxy = Ostap.Math.LegendreSum2 ( 12 , 12 , -2 , 2 , -2 , 2 )
+            lzu = Ostap.Math.LegendreSum2 ( 12 , 12 , -4 , 4 , -4 , 6 )
+            lxu = Ostap.Math.LegendreSum2 ( 12 , 12 , -2 , 2 , -4 , 6 )
+            
+            lxy.parameterize ( tree , 'x' , 'y' ,  cuts )
+            lzu.parameterize ( tree , 'z' , 'u' ,  cuts )
+            lxu.parameterize ( tree , 'x' , 'u' ,  cuts )
+
+        with timing ( "2D-Bernstein prameterization" , logger = logger ) :
+            
+            bxy = Ostap.Math.Bernstein2D ( 12 , 12 , -2 , 2 , -2 , 2 )
+            bzu = Ostap.Math.Bernstein2D ( 12 , 12 , -4 , 4 , -4 , 6 )
+            bxu = Ostap.Math.Bernstein2D ( 12 , 12 , -2 , 2 , -4 , 6 )
+            
+            bxy.parameterize ( tree , 'x' , 'y' ,  cuts )
+            bzu.parameterize ( tree , 'z' , 'u' ,  cuts )
+            bxu.parameterize ( tree , 'x' , 'u' ,  cuts )
+                 
+        with timing ( "2D-histograms" , logger = logger ) :
+            
+            hxy = ROOT.TH2F(hID() , '', 20 , -2, 2, 20 , -2 , 2 )
+            hzu = ROOT.TH2F(hID() , '', 20 , -4, 4, 20 , -4 , 6 )
+            hxu = ROOT.TH2F(hID() , '', 20 , -2, 2, 20 , -4 , 6 )
+            
+            tree.project ( hxy , 'y:x' , cuts )
+            tree.project ( hzu , 'u:z' , cuts )
+            tree.project ( hxu , 'u:x' , cuts )
+
         lxy *= ( 4.0 / 20 ) * (  4.0 / 20 ) 
         lzu *= ( 8.0 / 20 ) * ( 10.0 / 20 ) 
         lxu *= ( 4.0 / 20 ) * ( 10.0 / 20 ) 
-        
+
+        bxy *= ( 4.0 / 20 ) * (  4.0 / 20 ) 
+        bzu *= ( 8.0 / 20 ) * ( 10.0 / 20 ) 
+        bxu *= ( 4.0 / 20 ) * ( 10.0 / 20 ) 
+
         d1 = SE()
         d2 = SE()
         d3 = SE() 
@@ -305,29 +323,45 @@ def test_parameterize_3D () :
     with ROOT.TFile.Open(data_file,'READ') as f :
         
         tree = f.S
-        
-        lx = Ostap.Math.LegendreSum3 ( 8 , 8 , 8 , -2 , 2 , -4 , 4 , -4 , 6 )
-        ly = Ostap.Math.LegendreSum3 ( 8 , 8 , 8 , -2 , 2 , -4 , 4 , -4 , 6 )
-        lz = Ostap.Math.LegendreSum3 ( 8 , 8 , 8 , -2 , 2 , -2 , 2 , -4 , 6 )
-        lu = Ostap.Math.LegendreSum3 ( 8 , 8 , 8 , -2 , 2 , -2 , 2 , -4 , 4 )
-        
-        lx.parameterize ( tree , 'y' , 'z' , 'u' ,  cuts )
-        ly.parameterize ( tree , 'x' , 'z' , 'u' ,  cuts )
-        lz.parameterize ( tree , 'x' , 'y' , 'u' ,  cuts )
-        lu.parameterize ( tree , 'x' , 'y' , 'z' ,  cuts )
-        
+
+        with timing ( "3D-Legendre prameterization" , logger = logger ) :
+            
+            lx = Ostap.Math.LegendreSum3 ( 8 , 8 , 8 , -2 , 2 , -4 , 4 , -4 , 6 )
+            ly = Ostap.Math.LegendreSum3 ( 8 , 8 , 8 , -2 , 2 , -4 , 4 , -4 , 6 )
+            lz = Ostap.Math.LegendreSum3 ( 8 , 8 , 8 , -2 , 2 , -2 , 2 , -4 , 6 )
+            lu = Ostap.Math.LegendreSum3 ( 8 , 8 , 8 , -2 , 2 , -2 , 2 , -4 , 4 )
+            
+            lx.parameterize ( tree , 'y' , 'z' , 'u' ,  cuts )
+            ly.parameterize ( tree , 'x' , 'z' , 'u' ,  cuts )
+            lz.parameterize ( tree , 'x' , 'y' , 'u' ,  cuts )
+            lu.parameterize ( tree , 'x' , 'y' , 'z' ,  cuts )
+
+        with timing ( "3D-Bernsteinprameterization" , logger = logger ) :
+            
+            bx = Ostap.Math.Bernstein3D ( 8 , 8 , 8 , -2 , 2 , -4 , 4 , -4 , 6 )
+            by = Ostap.Math.Bernstein3D ( 8 , 8 , 8 , -2 , 2 , -4 , 4 , -4 , 6 )
+            bz = Ostap.Math.Bernstein3D ( 8 , 8 , 8 , -2 , 2 , -2 , 2 , -4 , 6 )
+            bu = Ostap.Math.Bernstein3D ( 8 , 8 , 8 , -2 , 2 , -2 , 2 , -4 , 4 )
+            
+            bx.parameterize ( tree , 'y' , 'z' , 'u' ,  cuts )
+            by.parameterize ( tree , 'x' , 'z' , 'u' ,  cuts )
+            bz.parameterize ( tree , 'x' , 'y' , 'u' ,  cuts )
+            bu.parameterize ( tree , 'x' , 'y' , 'z' ,  cuts )
+
         lxy = lz.integralZ()
         lzu = lx.integralX()
         lxu = ly.integralY()
         
-        hxy = ROOT.TH2F(hID() , '', 20 , -2, 2, 20 , -2 , 2 )
-        hzu = ROOT.TH2F(hID() , '', 20 , -4, 4, 20 , -4 , 6 )
-        hxu = ROOT.TH2F(hID() , '', 20 , -2, 2, 20 , -4 , 6 )
-        
-        tree.project ( hxy , 'y:x' , cuts )
-        tree.project ( hzu , 'u:z' , cuts )
-        tree.project ( hxu , 'u:x' , cuts )
-        
+        with timing ( "2D-histograms" , logger = logger ) :
+            
+            hxy = ROOT.TH2F(hID() , '', 20 , -2, 2, 20 , -2 , 2 )
+            hzu = ROOT.TH2F(hID() , '', 20 , -4, 4, 20 , -4 , 6 )
+            hxu = ROOT.TH2F(hID() , '', 20 , -2, 2, 20 , -4 , 6 )
+            
+            tree.project ( hxy , 'y:x' , cuts )
+            tree.project ( hzu , 'u:z' , cuts )
+            tree.project ( hxu , 'u:x' , cuts )
+            
         lxy *= ( 4.0 / 20 ) * (  4.0 / 20 ) 
         lzu *= ( 8.0 / 20 ) * ( 10.0 / 20 ) 
         lxu *= ( 4.0 / 20 ) * ( 10.0 / 20 ) 

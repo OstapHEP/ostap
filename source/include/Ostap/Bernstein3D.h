@@ -391,6 +391,23 @@ namespace Ostap
        */
       double integrateYZ ( const double x    ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /** update Bernstein expansion by addition of one "event" with 
+       *  the given weight
+       *  @code
+       *  Bernstein3D sum = ... ;
+       *  for ( auto x : .... ) { sum.fill ( x , y , z ) ; }
+       *  @endcode
+       *  This is a useful function to make an unbinned parameterization 
+       *  of certain distribution and/or efficiency 
+       */
+      bool fill 
+      ( const double x          , 
+        const double y          , 
+        const double z          , 
+        const double weight = 1 ) ;
+      // ======================================================================
     public: // few helper functions to expose internals
       // ======================================================================
       /// evaluate the basic polynomials
