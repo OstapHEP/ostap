@@ -256,7 +256,8 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
     if isatty () :
         
         title = allright ( title ) 
-        table_instance = terminaltables.SingleTable ( rows , title )
+        ## table_instance = terminaltables.SingleTable ( rows , title )
+        table_instance = terminaltables.DoubleTable ( rows , title )
         
     else :
         

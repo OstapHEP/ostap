@@ -14,6 +14,7 @@
   1. further extend `test_trees_params.py` test
   1. further extend `test_trees_params.py` test
   1. add `__bool__` and `__nonzero__` methods for `ProgressBar`  - it allows to make more easy `while`-loops 
+  1. change default table layour for `isatty` regime from `SingleTable` to `DoubleTable`
   
 ## Backward incompatible:  
 
