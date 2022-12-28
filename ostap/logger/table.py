@@ -216,7 +216,15 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
 #  t = table ( table_data , 'Title' )
 #  print (t)
 #  @endcode
-def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 , indent = wrap_indent  ) :
+#  Vaild format arguments (case insensitive) 
+#   - local :  use local, handmade repalcement
+#   - ascii :  use AsciiTable 
+#   - single :  use SingleTable 
+#   - porcelain :  use PorcelainTable 
+#   - github :  use GithubFlavoredMarkdownTable
+#   - markdown :  use GithubFlavoredMarkdownTable
+#   - double (default) : DoubleTable 
+def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 , indent = wrap_indent , format = '' ) :
     """Format the list of rows as a  table.
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
@@ -233,9 +241,20 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
     ...   ( 'Bob'   , 'unemployed' , ''     ) ]
     >>> t = table ( table_data , 'Title' )
     >>> print (t)
+    
+    Vaild `format` arguments (case insensitive) 
+    - `local`     :  use local, handmade repalcement
+    - `ascii`     :  use `AsciiTable` 
+    - `single`    :  use `SingleTable` 
+    - `porcelain` :  use `PorcelainTable` 
+    - `github`    :  use `GithubFlavoredMarkdownTable`
+    - `markdown`  :  use `GithubFlavoredMarkdownTable`
+    - `double`    : use `DoubleTable` 
+    - (default)   : use `DoubleTable` 
     """
     
     from ostap.utils.basic import isatty
+
 
     title = allright ( decolorize ( title ) )
     if rows :
@@ -247,23 +266,28 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
         
     rows = [ list(row) for row in rows ]
 
-    if not terminaltables :
+    fmt = format.lower() 
+
+    if 'local' == fmt or not terminaltables :
         
        ## use the local replacement 
         return the_table ( rows , title , prefix , alignment = alignment )
 
-
-    if isatty () :
-        
-        title = allright ( title ) 
-        ## table_instance = terminaltables.SingleTable ( rows , title )
-        table_instance = terminaltables.DoubleTable ( rows , title )
-        
+    title = allright ( title )
+    
+    if 'ascii' == fmt or not isatty() : 
+        table_instance = terminaltables.AsciiTable                  ( rows , title )        
+    elif 'single' == fmt : 
+        table_instance = terminaltables.SingleTable                 ( rows , title )
+    elif 'porcelain' == fmt :
+        table_instance = terminaltables.PorcelainTable              ( rows )
+    elif fmt in ( 'github' , 'markdown' ) :
+        table_instance = terminaltables.GithubFlavoredMarkdownTable ( rows )
+    elif 'double' == fmt : 
+        table_instance = terminaltables.DoubleTable                 ( rows , title )
     else :
-        
-        title = allright ( title ) 
-        table_instance = terminaltables.AsciiTable ( rows , title)
-        
+        table_instance = terminaltables.DoubleTable                 ( rows , title )
+    
     cw = table_instance.column_widths
     nc = len ( cw )
 
