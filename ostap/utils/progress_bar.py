@@ -103,8 +103,8 @@ __all__      = (
     "running_bar"     ## helper function for RunningBar 
     )
 # =============================================================================
-import sys , os, time 
 from   builtins import range
+import sys , os, time 
 # =============================================================================
 if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
 else                              : from collections     import Sized
@@ -155,14 +155,22 @@ from ostap.logger.colorized import allright, infostr
 # 
 #  Use as class:
 #  @code
-#  count = 0
-#  total = 100000
-#  bar   = ProgressBar(count, total, 77, mode='fixed', char='#')
+#  counnt = 0 
+#  total  = 100000
+#  bar    = ProgressBar(total, 77, mode='fixed', char='#')
 #  while count <= total:
-#    count += 1
+#    ...
+#    count += 1 
 #    bar   += 1 
 #  @endcode
-#
+#  Or
+#  @code
+#  total = 100000
+#  bat = ProgressBar(total, 77, mode='fixed', char='#') as bar  :
+#  while bar : 
+#    ...
+#    bar += 1 
+#  @endcode
 #  Better to use as context manager:
 #  @code
 #  count = 0
@@ -172,7 +180,6 @@ from ostap.logger.colorized import allright, infostr
 #      count += 1
 #      bar   += 1 
 #  @endcode
-#
 #  With helper function:
 #  @code 
 #  for i in progress_bar  ( range ( 10000 ) ) :
@@ -186,14 +193,20 @@ class ProgressBar(object):
     
     >>> count = 0
     >>> total = 100000
-    >>> bar   = ProgressBar(count, total, 77, mode='fixed', char='#')
+    >>> bar   = ProgressBar(total, 77, mode='fixed', char='#')
     >>> while count <= total:
     ...   count += 1
     ...   bar   += 1 
-    
+
+
+    >>> total = 100000
+    >>> bar   = ProgressBar(total, 77, mode='fixed', char='#')
+    >>> while bar :
+    ...   bar   += 1 
+
     Better to use as context manager:
     
-    >>> with ProgressBar(count, total, 77, mode='fixed', char='#') as bar  :
+    >>> with ProgressBar(total, 77, mode='fixed', char='#') as bar  :
     >>>    while count <= total:
     ...       count += 1
     ...       bar   += 1 
@@ -234,7 +247,8 @@ class ProgressBar(object):
         self.prefix   = kwargs.get('description','' )  ## description
         self.width    = self.width - len(self.prefix)
         
-        self.amount   = 0    
+        ##  self.amount   = 0    
+        self.amount   = self.min ## ??    
 
         self._hashes  = -1 
         self.__end    = None 
@@ -243,6 +257,16 @@ class ProgressBar(object):
         self.build_bar ()
         self.show      ()
         self.__start  = time.time ()
+
+    ## Is this bar active?
+    def __nonzero__ ( self ) :
+        """Is this bar active?"""
+        return self.min <= self.amount < self.max
+    
+    ## Is this bar active?
+    def __bool__    ( self ) :
+        """Is this bar active?"""
+        return self.min <= self.amount < self.max
         
     def increment_amount(self, add_amount = 1):
         return self if self.silent else self.update_amount ( self.amount + add_amount )
@@ -497,12 +521,14 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
     >>> for i in progress_bar  ( range ( 10000 ) ) :
     ...      do something here
     """
-    if   max_value is None  \
-           and isinstance ( iterable , Sized      ) :
+    if isinstance ( iterable , int ) and  0 <= iterable  :
+        iterable = range ( iterable )
+        
+    if   max_value is None and isinstance ( iterable , Sized     ) :
         max_value = len ( iterable ) 
-    elif max_value is None and hasattr ( iterable , '__len__' ) :
+    elif max_value is None and hasattr    ( iterable , '__len__' ) :
         max_value = len ( iterable )
-    elif max_value is None and hasattr ( iterable , 'size'    ) :
+    elif max_value is None and hasattr    ( iterable , 'size'    ) :
         max_value = iterable.size()
 
     if   max_value is None : bar = RunningBar  ( **kwargs )

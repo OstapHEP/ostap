@@ -13,7 +13,8 @@
   1. Add `Bernstein2D/3D` into `Ostap/Params.h` set of funtions
   1. further extend `test_trees_params.py` test
   1. further extend `test_trees_params.py` test
-
+  1. add `__bool__` and `__nonzero__` methods for `ProgressBar`  - it allows to make more easy `while`-loops 
+  
 ## Backward incompatible:  
 
   1. rename `BernsteinDualBasis` into `Ostap::Math::BernsteinnDual`
