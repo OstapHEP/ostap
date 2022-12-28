@@ -20,8 +20,10 @@
   1. rename `BernsteinDualBasis` into `Ostap::Math::BernsteinnDual`
   
 ## Bug fixes:
+
   1. fix typo in `rames.py` for frame projections into 3D-histograms
-  
+  1. fix couple of stupid bugs in `ResoStudentT` resolution fnunction
+
 # v1.9.5.6
 
 ## New features: 

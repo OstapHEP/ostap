@@ -618,19 +618,22 @@ class ResoStudentT(RESOLUTION) :
             
         else:
             
+            self.__kappaS = self.make_var ( ZERO if kappaS is None else kappaS ,
+                                            "kappaS_%s"           % name ,
+                                            "#kappa_{#sigma}(%s)" % name ,
+                                            None , 0 , -1 , 1 )
             self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
                 self.sigma_corr                                   , ## mean/average sigma
-                self.kappa                                        , ## asymmetry parametet
+                self.kappaS                                       , ## asymmetry parameter
                 v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
                 v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
                 v1title = '#sigma_L: #sigma #times (1+#kappa)'    , 
                 v2title = '#sigma_R: #sigma #times (1-#kappa)'    )
-                
                  
         # 
         ## finally build pdf
         #
-        if kappaL is None and kappaS is None :
+        if kappaN is None and kappaS is None :
             
             self.pdf = Ostap.Models.StudentT (
                 self.roo_name ( 'rstt_' )       ,
@@ -661,8 +664,8 @@ class ResoStudentT(RESOLUTION) :
             'n'        : self.n     ,
             'mean'     : self.mean  ,
             'fudge'    : self.fudge ,
-            'kappaS'   : kappaS if kappaS is None else self.kappaS ,  
-            'kappaN'   : kappaN if kappaN is None else self.kappaN ,
+            'kappaS'   : None if kappaS is None else self.kappaS ,  
+            'kappaN'   : None if kappaN is None else self.kappaN ,
             }
         
     @property
