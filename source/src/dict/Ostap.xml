@@ -41,6 +41,10 @@
     <field name = "m_workspace_cquad"   transient="true"/>      
     <field name = "m_workspace_romberf" transient="true"/>      
   </class>
+  
+  <class name   = "Ostap::Exception">
+    <field name = "m_previous"          transient="true"/>      
+  </class>
 
   <exclusion>    
 
@@ -73,14 +77,25 @@
       <field name  = "m_workspace"/>      
     </class>
     
+    <class name    = "Ostap::Exception">
+      <field name  = "m_previous"/>      
+    </class>
+    
     <class name    = "Ostap::Math::Bernstein2D">
       <field name  = "m_bx"/>      
       <field name  = "m_by"/>      
     </class>
-    
+
+    <class name    = "Ostap::Math::Bernstein3D">
+      <field name  = "m_bx"/>      
+      <field name  = "m_by"/>      
+      <field name  = "m_bz"/>      
+    </class>
+
     <class name    = "Ostap::Math::Bernstein2DSym">
       <field name  = "m_b"/>      
     </class>
+    
     <class name    = "Ostap::Math::Chi2Fit">  
       <field name  = "m_solu" />      
       <field name  = "m_cov2" />      
