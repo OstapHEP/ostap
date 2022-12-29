@@ -814,7 +814,7 @@ bool Ostap::Math::Bernstein3D::fill
   // no update 
   if      ( x < m_xmin || x > m_xmax ) { return false ; }
   else if ( y < m_ymin || y > m_ymax ) { return false ; }
-  else if ( z < m_zmin || y > m_zmax ) { return false ; }
+  else if ( z < m_zmin || z > m_zmax ) { return false ; }
   else if ( s_zero ( weight )        ) { return true  ; }
   //
   const long double w = weight * 1.0L / 
@@ -823,7 +823,7 @@ bool Ostap::Math::Bernstein3D::fill
   //
   const double xx  =  tx ( x ) ;
   const double yy  =  ty ( y ) ;
-  const double zz  =  tz ( y ) ;
+  const double zz  =  tz ( z ) ;
   //
   typedef Ostap::Math::BernsteinDualBasis::Basis Basis ;
   const Basis* basisx = Ostap::Math::BernsteinDualBasis::basis ( m_nx ) ; 
@@ -832,19 +832,19 @@ bool Ostap::Math::Bernstein3D::fill
   //
   static const std::string s_MSGX { "Cannot aquire valid Bernstein dual basis/x" } ;
   static const std::string s_MSGY { "Cannot aquire valid Bernstein dual basis/y" } ;
-  static const std::string s_MSGZ { "Cannot aquire valid Bernstein dual basis/y" } ;
+  static const std::string s_MSGZ { "Cannot aquire valid Bernstein dual basis/z" } ;
   static const std::string s_TAG  { "Ostap::Math::Bernstein3D::fill"          } ;
   //
   Ostap::Assert ( basisx && basisx->size() == m_nx + 1 , s_MSGX , s_TAG , 950 ) ;
   Ostap::Assert ( basisy && basisy->size() == m_ny + 1 , s_MSGY , s_TAG , 950 ) ;
-  Ostap::Assert ( basisz && basisy->size() == m_nz + 1 , s_MSGZ , s_TAG , 950 ) ;
+  Ostap::Assert ( basisz && basisz->size() == m_nz + 1 , s_MSGZ , s_TAG , 950 ) ;
   //
   std::transform ( basisx->begin () , basisx->end () , m_fx.begin() ,
-                   [xx]( const auto& b )->double { return b ( xx  ) ; } ) ;
+                   [xx]( const auto& b ) -> double { return b ( xx  ) ; } ) ;
   std::transform ( basisy->begin () , basisy->end () , m_fy.begin() ,
-                   [yy]( const auto& b )->double { return b ( yy  ) ; } ) ;
+                   [yy]( const auto& b ) -> double { return b ( yy  ) ; } ) ;
   std::transform ( basisz->begin () , basisz->end () , m_fz.begin() ,
-                   [zz]( const auto& b )->double { return b ( zz  ) ; } ) ;
+                   [zz]( const auto& b ) -> double { return b ( zz  ) ; } ) ;
   //
   for ( unsigned short ix = 0 ; ix <= m_nx  ; ++ix  )
   {

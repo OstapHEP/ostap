@@ -234,6 +234,36 @@ namespace Ostap
        */
       double integrateY ( const double x    ) const ;
       // ======================================================================
+    public:   // integrals as objects  
+      // ======================================================================
+      /** get integral as an object 
+       *  \f$ \mathcal{B} (y) = \int_{x_{min}}^{x_{max}} \mathcal{B}(x,y)dx \f$  
+       *  @see Ostap::Math::Bernstein::integrateX  
+       */
+      Bernstein  integralX () const ;
+      // ======================================================================
+      /** get integral as an object 
+       *  \f$ \mathcal{B} (x) = \int_{y_{min}}^{y_{max}} \mathcal{B}(x,y)dy\f$  
+       *  @see Ostap::Math::Bernstein::integrateY  
+       */
+      Bernstein  integralY () const ;
+      // ======================================================================
+      /** get integral as an object 
+       *  \f$ \mathcal{B} (y) = \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y)dx \f$  
+       *  @see Ostap::Math::Bernstein::integrateX  
+       */
+      Bernstein  integralX
+      ( const double xlow  ,
+        const double xhigh ) const ;
+      // ======================================================================
+      /** get integral as an object 
+       *  \f$ \mathcal{B} (x) = \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y)dy\f$  
+       *  @see Ostap::Math::Bernstein::integrateY  
+       */
+      Bernstein  integralY
+      ( const double ylow  ,
+        const double yhigh ) const ;
+      // ======================================================================
     public:
       // ======================================================================
       /** update Bernstein expansion by addition of one "event" with 

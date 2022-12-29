@@ -480,7 +480,6 @@ def test_legendresum_8 ( ) :
     table = T.table ( rows , title = title  , prefix = '# ')
     logger.info ( 'Test %s\n%s' % ( title , table ) )
 
-
 # =============================================================================
 if '__main__' == __name__ :
     

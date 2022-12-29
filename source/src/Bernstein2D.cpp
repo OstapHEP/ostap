@@ -384,6 +384,96 @@ double Ostap::Math::Bernstein2D::integrateY
   return calculate ( m_fx ,  m_fy ) ;
 }
 // ============================================================================
+/*  get integral as an obejct 
+ *  \f$ \mathcal{B} (y) = \int_{x_{min}}^{x_{max}} \mathcal{B}(x,y)dx \f$  
+ *  @see Ostap::Math::Bernstein::inntegrateX  
+ */
+// ============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein2D::integralX () const
+{
+  for  ( unsigned int iy = 0 ; iy <= m_ny ; ++iy )
+  {
+    m_fy[ iy ] = 0 ;
+    for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+    { m_fy [ iy ] += par ( ix , iy ) ; }
+  }
+  const double scale = ( m_ny + 1 ) / ( m_ymax - m_ymin ) ;
+  Ostap::Math::scale ( m_fy.begin(), m_fy.end() , scale ) ;
+  return Bernstein ( m_fy , ymin() , ymax() ) ;
+}
+// ============================================================================
+/*  get integral as an obejct 
+ *  \f$ \mathcal{B} (x) = \int_{y_{min}}^{y_{max}} \mathcal{B}(x,y)dy\f$  
+ *  @see Ostap::Math::Bernstein::inntegrateY  
+ */
+// ============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein2D::integralY () const
+{
+  for  ( unsigned int ix = 0 ; ix <= m_nx ; ++ix )
+  {
+    m_fx[ ix ] = 0 ;
+    for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+    { m_fx [ ix ] += par ( ix , iy ) ; }
+  }
+  const double scale =  ( m_nx + 1 ) / ( m_xmax - m_xmin ) ;
+  Ostap::Math::scale ( m_fx.begin(), m_fx.end() , scale ) ;
+  return Bernstein ( m_fx , xmin() , xmax() ) ;
+}
+// ============================================================================
+/*  get integral as an object 
+ *  \f$ \mathcal{B} (y) = \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y)dx \f$  
+ *  @see Ostap::Math::Bernstein::integrateX  
+ */
+// ============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein2D::integralX
+( const double xlow  ,
+  const double xhigh ) const
+{
+  // get integrals over X 
+  for  ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+  { m_fx [ ix ] = m_bx [ ix ].integral ( xlow , xhigh ) ; }
+  //
+  for  ( unsigned int iy = 0 ; iy <= m_ny ; ++iy )
+  {
+    m_fy[ iy ] = 0 ;
+    for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+    { m_fy [ iy ] += par ( ix , iy ) * m_fx [ ix ] ; }
+  }
+  const double scale = 1.0 * ( m_nx  + 1 ) * ( m_ny + 1 ) /
+    ( (  m_xmax - m_xmin ) * ( m_ymax  - m_ymin ) ) ;
+  Ostap::Math::scale ( m_fy.begin(), m_fy.end() , scale ) ;
+  return Bernstein ( m_fy , ymin() , ymax() ) ; 
+}
+// ============================================================================
+/* get integral as an object 
+ *  \f$ \mathcal{B} (x) = \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y)dy\f$  
+ *  @see Ostap::Math::Bernstein::integrateY  
+ */
+// ============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein2D::integralY
+( const double ylow  ,
+  const double yhigh ) const
+{
+  // get integrals over Y 
+  for  ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+  { m_fy [ iy ] = m_by [ iy ].integral ( ylow , yhigh ) ; }
+  //
+  for  ( unsigned int ix = 0 ; ix <= m_nx ; ++ix )
+  {
+    m_fx[ ix ] = 0 ;
+    for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+    { m_fx [ ix ] += par ( ix , iy ) * m_fy [ iy ] ; }
+  }
+  const double scale = 1.0 * ( m_nx  + 1 ) * ( m_ny + 1 ) /
+    ( (  m_xmax - m_xmin ) * ( m_ymax  - m_ymin ) ) ;
+  Ostap::Math::scale ( m_fx.begin(), m_fx.end() , scale ) ;
+  return Bernstein ( m_fx , xmin() , xmax() ) ;  
+}
+// ============================================================================
 /* update Bernstein expansion by addition of one "event" with 
  *  the given weight
  *  @code

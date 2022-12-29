@@ -17,7 +17,9 @@
   1. add `__bool__` and `__nonzero__` methods for `ProgressBar`  - it allows to make more easy `while`-loops 
   1. change default table layour for `isatty` regime from `SingleTable` to `DoubleTable`
   1. allow to specify the default table format (`local`,`ascii`,`single`,`double`(default),`porcelain`, `github`,`markdown`
-
+  1. reshuffle code for `Ostap::Exception` - make it visible
+  1. extend tests for `Bernstein2D` and `Bernstein3D` objects
+  
 ## Backward incompatible:  
 
   1. rename `BernsteinDualBasis` into `Ostap::Math::BernsteinnDual`
@@ -26,7 +28,8 @@
 
   1. fix typo in `rames.py` for frame projections into 3D-histograms
   1. fix couple of stupid bugs in `ResoStudentT` resolution fnunction
-
+  1. fix bug in `Bernstein3D::fill`
+  
 # v1.9.5.6
 
 ## New features: 
