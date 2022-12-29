@@ -1,4 +1,3 @@
-
 ## New features:
 
   1. Add `Ostap::Math::ChebyshevSum::fill` method
@@ -19,6 +18,8 @@
   1. allow to specify the default table format (`local`,`ascii`,`single`,`double`(default),`porcelain`, `github`,`markdown`
   1. reshuffle code for `Ostap::Exception` - make it visible
   1. extend tests for `Bernstein2D` and `Bernstein3D` objects
+  1. add `Bernstein3D::integralXY`,`Bernstein3D::integralXZ` and `Bernstein3D::integralYZ` methods
+  
   
 ## Backward incompatible:  
 
@@ -29,7 +30,7 @@
   1. fix typo in `rames.py` for frame projections into 3D-histograms
   1. fix couple of stupid bugs in `ResoStudentT` resolution fnunction
   1. fix bug in `Bernstein3D::fill`
-  
+    
 # v1.9.5.6
 
 ## New features: 

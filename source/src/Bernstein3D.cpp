@@ -733,7 +733,9 @@ double Ostap::Math::Bernstein3D::integrateYZ
  *  @param z     variable
  */
 // ============================================================================
-double Ostap::Math::Bernstein3D::integrateXY ( const double z    ) const 
+double
+Ostap::Math::Bernstein3D::integrateXY
+( const double z    ) const 
 {
   if ( z < zmin () || z > zmax() ) { return 0 ; }
   //
@@ -793,6 +795,183 @@ double Ostap::Math::Bernstein3D::integrateYZ ( const double x    ) const
   std::fill ( m_fz.begin() , m_fz.end() , ( zmax() - zmin () ) / ( nZ () + 1 ) ) ;
   //
   return calculate ( m_fx , m_fy , m_fz ) ;
+}
+// ============================================================================
+/* get the integral 
+ *  \f$ \mathcal{B}(z) = 
+ *   \int_{x_{min}}^{x_{max}}
+ *   \int_{y_{min}}^{y_{max}} \mathcal{B}(x,y,z)dxdy \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateXY  
+ */
+// ============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein3D::integralXY () const
+{
+  for  ( unsigned int iz = 0 ; iz <= m_nz ; ++iz )
+  {
+    m_fz [ iz ] = 0 ;
+    for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+    {
+      for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+      { m_fz [ iz ] += par ( ix , iy , iz ) ; }
+    }
+  }
+  const double scale = 1.0 * ( m_nz + 1 )/ ( m_zmax - m_zmin ) ;
+  Ostap::Math::scale ( m_fz.begin(), m_fz.end() , scale ) ;
+  return Bernstein ( m_fz , zmin() , zmax() ) ; 
+}
+// ============================================================================
+/* get the integral 
+ *  \f$ \mathcal{B}(y) = 
+ *   \int_{x_{min}}^{x_{max}}
+ *   \int_{z_{min}}^{z_{max}} \mathcal{B}(x,y,z)dxdz \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateXZ  
+ */
+// ============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein3D::integralXZ () const
+{
+  for  ( unsigned int iy = 0 ; iy <= m_ny ; ++iy )
+  {
+    m_fy [ iy ] = 0 ;
+    for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+    {
+      for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+      { m_fy [ iy ] += par ( ix , iy , iz ) ; }
+    }
+  }
+  const double scale = 1.0 * ( m_ny + 1 )/ ( m_ymax - m_ymin ) ;
+  Ostap::Math::scale ( m_fy.begin(), m_fy.end() , scale ) ;
+  return Bernstein ( m_fy , ymin() , ymax() ) ; 
+}
+// ============================================================================
+/* get the integral 
+ *  \f$ \mathcal{B}(x) = 
+ *   \int_{y_{min}}^{y_{max}}
+ *   \int_{z_{min}}^{z_{max}} \mathcal{B}(x,y,z)dydz \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateYZ  
+ */
+// ============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein3D::integralYZ () const
+{
+  for  ( unsigned int ix = 0 ; ix <= m_nx ; ++ix )
+  {
+    m_fx [ ix ] = 0 ;
+    for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+    {
+      for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+      { m_fx [ ix ] += par ( ix , iy , iz ) ; }
+    }
+  }
+  const double scale = 1.0 * ( m_nx + 1 )/ ( m_xmax - m_xmin ) ;
+  Ostap::Math::scale ( m_fx.begin(), m_fx.end() , scale ) ;
+  return Bernstein ( m_fx , xmin() , xmax() ) ; 
+}
+// ============================================================================
+/*  get the integral 
+ *  \f$ \mathcal{B}(z) = 
+ *   \int_{x_{low}}^{x_{high}}
+ *   \int_{y_{low}}^{y_{max}} \mathcal{B}(x,y,z)dxdy \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateXY  
+ */
+// ============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein3D::integralXY
+( const double xlow , const double xhigh ,
+  const double ylow , const double yhigh ) const
+{
+  // get integrals over X 
+  for  ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+  { m_fx [ ix ] = m_bx [ ix ].integral ( xlow , xhigh ) ; }
+  // get integrals over Y 
+  for  ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+  { m_fy [ iy ] = m_by [ iy ].integral ( ylow , yhigh ) ; }
+  //
+  for  ( unsigned int iz = 0 ; iz <= m_nz ; ++iz )
+  {
+    m_fz [ iz ] = 0 ;
+    for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+    {
+      for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+      { m_fz [ iz ] += par ( ix , iy , iz ) * m_fx [ ix ] * m_fy [ iy ] ; }
+    }
+  }
+  const double scale =
+    1.0 * ( m_nx  + 1 ) * ( m_ny + 1 ) * ( m_nz + 1 ) /
+    ( (  m_xmax - m_xmin ) * ( m_ymax  - m_ymin ) * ( m_zmax - m_zmin ) ) ;
+  Ostap::Math::scale ( m_fz.begin(), m_fz.end() , scale ) ;
+  return Bernstein ( m_fz , zmin() , zmax() ) ; 
+}
+// ============================================================================
+/*  get the integral 
+ *  \f$ \mathcal{B}(y) = 
+ *   \int_{x_{low}}^{x_{high}}
+ *   \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z)dxdz \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateXZ  
+ */
+// ============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein3D::integralXZ
+( const double xlow , const double xhigh ,
+  const double zlow , const double zhigh ) const
+{
+  // get integrals over X 
+  for  ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+  { m_fx [ ix ] = m_bx [ ix ].integral ( xlow , xhigh ) ; }
+  // get integrals over Z 
+  for  ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+  { m_fz [ iz ] = m_bz [ iz ].integral ( zlow , zhigh ) ; }
+  //
+  for  ( unsigned int iy = 0 ; iy <= m_ny ; ++iy )
+  {
+    m_fy [ iy ] = 0 ;
+    for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+    {
+      for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+      { m_fy [ iy ] += par ( ix , iy , iz ) * m_fx [ ix ] * m_fz [ iz ] ; }
+    }
+  }
+  const double scale =
+    1.0 * ( m_nx  + 1 ) * ( m_ny + 1 ) * ( m_nz + 1 ) /
+    ( (  m_xmax - m_xmin ) * ( m_ymax  - m_ymin ) * ( m_zmax - m_zmin ) ) ;
+  Ostap::Math::scale ( m_fy.begin(), m_fy.end() , scale ) ;
+  return Bernstein ( m_fy , ymin() , ymax() ) ; 
+}
+// ============================================================================
+/* get the integral 
+ *  \f$ \mathcal{B}(x) = 
+ *   \int_{y_{low}}^{y_{high}}
+ *   \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z)dydz \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateYZ  
+ */
+// ============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein3D::integralYZ
+( const double ylow , const double yhigh ,
+  const double zlow , const double zhigh ) const
+{
+  // get integrals over Y 
+  for  ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+  { m_fy [ iy ] = m_by [ iy ].integral ( ylow , yhigh ) ; }
+  // get integrals over Z 
+  for  ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+  { m_fz [ iz ] = m_bz [ iz ].integral ( zlow , zhigh ) ; }
+  //
+  for  ( unsigned int ix = 0 ; ix <= m_nx ; ++ix )
+  {
+    m_fx [ ix ] = 0 ;
+    for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+    {
+      for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+      { m_fx [ ix ] += par ( ix , iy , iz ) * m_fy [ iy ] * m_fz [ iz ] ; }
+    }
+  }
+  const double scale =
+    1.0 * ( m_nx  + 1 ) * ( m_ny + 1 ) * ( m_nz + 1 ) /
+    ( (  m_xmax - m_xmin ) * ( m_ymax  - m_ymin ) * ( m_zmax - m_zmin ) ) ;
+  Ostap::Math::scale ( m_fx.begin(), m_fx.end() , scale ) ;
+  return Bernstein ( m_fx , xmin() , xmax() ) ; 
 }
 // ============================================================================
 /** update Bernstein expansion by addition of one "event" with 

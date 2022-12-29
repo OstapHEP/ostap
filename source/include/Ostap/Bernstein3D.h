@@ -13,6 +13,7 @@
 #include "Ostap/Math.h"
 #include "Ostap/Parameters.h"
 #include "Ostap/Bernstein.h"
+#include "Ostap/Bernstein2D.h"
 #include "Ostap/NSphere.h"
 // ============================================================================
 /** @file Ostap/Bernstein3D.h
@@ -345,6 +346,7 @@ namespace Ostap
        *       z_{min} < z < z_{max}\f]
        */
       double integral   () const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_{min}}^{x_{max}} \mathcal{B}(x,y,z) \mathrm{d}x\f]
        *  @param y     variable
@@ -353,6 +355,7 @@ namespace Ostap
       double integrateX 
       ( const double y , 
         const double z ) const ;
+      // ======================================================================
       /** integral over y-dimension
        *  \f[ \int_{y_{min}}^{y_{max}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
        *  @param x     variable
@@ -361,6 +364,7 @@ namespace Ostap
       double integrateY 
       ( const double x , 
         const double z ) const ;
+      // ======================================================================
       /** integral over z-dimension
        *  \f[ \int_{z_{min}}^{z_{max}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
        *  @param x     variable
@@ -378,18 +382,78 @@ namespace Ostap
        *  @param z     variable
        */
       double integrateXY ( const double z    ) const ;
+      // ======================================================================
       /** integral over x&z-dimensions
        *  \f[ \int_{x_{min}}^{x_{min}}
        *      \int_{z_{max}}^{z_{max}} \mathcal{B}(x,y,z) \mathrm{d}x\mathrm{d}z\f]
        *  @param y     variable
        */
       double integrateXZ ( const double y    ) const ;
+      // ======================================================================
       /** integral over y&z-dimensions
        *  \f[ \int_{y_{min}}^{y_{max}}
        *      \int_{z_{min}}^{z_{max}} \mathcal{B}(x,y,z) \mathrm{d}y\mathrm{d}z\f]
        *  @param x     variable
        */
       double integrateYZ ( const double x    ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(z) = 
+       *   \int_{x_{min}}^{x_{max}}
+       *   \int_{y_{min}}^{y_{max}} \mathcal{B}(x,y,z)dxdy \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateXY  
+       */
+      Bernstein  integralXY () const ;
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(y) = 
+       *   \int_{x_{min}}^{x_{max}}
+       *   \int_{z_{min}}^{z_{max}} \mathcal{B}(x,y,z)dxdz \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateXZ  
+       */
+      Bernstein  integralXZ () const ;
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(x) = 
+       *   \int_{y_{min}}^{y_{max}}
+       *   \int_{z_{min}}^{z_{max}} \mathcal{B}(x,y,z)dydz \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateYZ  
+       */
+      Bernstein  integralYZ () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(z) = 
+       *   \int_{x_{low}}^{x_{high}}
+       *   \int_{y_{low}}^{y_{max}} \mathcal{B}(x,y,z)dxdy \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateXY  
+       */
+      Bernstein  integralXY
+      ( const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ) const ;
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(y) = 
+       *   \int_{x_{low}}^{x_{high}}
+       *   \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z)dxdz \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateXZ  
+       */
+      Bernstein  integralXZ 
+      ( const double xlow , const double xhigh ,
+        const double zlow , const double zhigh ) const ;
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(x) = 
+       *   \int_{y_{low}}^{y_{high}}
+       *   \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z)dydz \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateYZ  
+       */
+      Bernstein  integralYZ
+      ( const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const ;      
       // ======================================================================
     public:
       // ======================================================================
