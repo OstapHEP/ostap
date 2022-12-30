@@ -98,7 +98,8 @@ __all__     = (
     ##
     'hadd'               , ## merge ROOT files using command `hadd`
     'num_fds'            , ## get number of opened file descriptors 
-    'get_open_fds'       , ## get list of opened file descriptors 
+    'get_open_fds'       , ## get list of opened file descriptors
+    ##
     )
 
 # =============================================================================
@@ -203,8 +204,6 @@ def profiler( name = '' ) :
     """
     return Profiler ( name )
             
-
-
 # =============================================================================
 ## @class TakeIt
 #  Take some object, keep it and delete at the exit

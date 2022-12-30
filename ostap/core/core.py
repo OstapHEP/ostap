@@ -69,7 +69,6 @@ __all__     = (
     ## 
     'rootException'       , ## context manager to perform ROOT Error -> C++/Python exception
     'RootError2Exception' , ## context manager to perform ROOT Error -> C++/Python exception
-    ##
     )
 # =============================================================================
 import math, sys, os 
@@ -86,7 +85,7 @@ from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.meta_info   import root_info
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
-from   ostap.utils.basic      import NoContext
+from   ostap.utils.basic      import NoContext, loop_items, items_loop 
 import ROOT, cppyy
 # =============================================================================
 ## ROOT.ROOT.EnableThreadSafety()
@@ -586,17 +585,6 @@ def split_string ( line , separators = ',;:' ) :
     return items 
 
 # =============================================================================
-if python_version.major > 2 : items_loop = lambda d : d.items     () 
-else                        : items_loop = lambda d : d.iteritems ()
-# =============================================================================
-def loop_items ( d ) :
-    """Return  iterator over the dictionary   items
-    >>> d = { 'a' : ...   , 'b' : ... , }
-    >>> for e in   loop_items ( d ) : print (e) 
-    """
-    return items_loop ( d ) 
-
-# =============================================================================
 ## valid TDirectory?
 #  - check valid C++ TDirectory pointer 
 #  - for file directories check validity of the file
@@ -1029,8 +1017,6 @@ def rootException () :
     ... do something here 
     """
     return RootError2Exception()
-
-
 
 
 # =============================================================================

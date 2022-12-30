@@ -33,8 +33,10 @@ prefix_dir = 'ostap-build-dir-'
 # =============================================================================
 # 1) use environment variable 
 if not build_dir :
-
-    build_dir = os.environ.get ( 'OSTAP_BUILD_DIR' , '' )
+    
+    from   ostap.utils.basic import get_env 
+    build_dir = get_env ( 'OSTAP_BUILD_DIR' , '' )
+    ## build_dir = os.environ.get ( 'OSTAP_BUILD_DIR' , '' )
     
     if build_dir and not os.path.exists ( build_dir ) :
         build_dir = make_dir ( build_dir ) 

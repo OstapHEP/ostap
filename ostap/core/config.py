@@ -27,7 +27,8 @@ __all__     = (
     )
 # =============================================================================
 import configparser, os, sys  
-import ostap.core.default_config as _config
+import ostap.core.default_config as     _config
+from   ostap.utils.basic         import get_env as ostap_getenv 
 # =============================================================================
 ## print for configparger 
 def _cp_str_ ( cp ) :
@@ -59,7 +60,8 @@ config [ 'Tables'   ] = {}
 ## the list of processes config files 
 files_read = config.read (
     _config.config_files + 
-    os.environ.get ( 'OSTAP_CONFIG', '' ).split( os.pathsep ) )
+    ostap_getenv( 'OSTAP_CONFIG', '' ).split( os.pathsep ) )
+## os.environ.get ( 'OSTAP_CONFIG', '' ).split( os.pathsep ) )
 
 # =============================================================================
 ## sections

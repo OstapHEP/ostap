@@ -23,6 +23,8 @@ __all__     = (
     )
 # =============================================================================
 import sys, os
+from ostap.utils.basic   import has_env as ostap_hasenv 
+from ostap.utils.basic   import get_env as ostap_getenv 
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel')
 else                      : logger = getLogger ( __name__         ) 
@@ -32,12 +34,10 @@ from ostap.parallel.task import  Task, GenericTask
 workers = 'PATHOS' , 'GAUDIMP'
 
 worker  = '' 
-
-if 'OSTAP_PARALLEL' in os.environ :
+if ostap_hasenv ( 'OSTAP_PARALLEL' ) :
+    worker = ostap_getenv( 'OSTAP_PARALLEL', '' ) .upper()
+    if not worker in workers : worker = ''
     
-    worker  = os.environ['OSTAP_PARALLEL'].upper()
-    if not  worker in workers : worker = ''
-
 if not worker :
 
     import ostap.core.config as _CONFIG

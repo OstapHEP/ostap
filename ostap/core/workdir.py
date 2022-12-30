@@ -15,7 +15,8 @@ __all__     = (
     'workdir' , ## workdir where selector cache, etc. can be placed  
     )
 # =============================================================================
-import os 
+import os
+from   ostap.utils.basic import get_env as ostap_getenv 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -24,7 +25,8 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.core.workdir'  )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
 ## import ostap.core.config as _config 
-workdir = os.environ.get('OSTAP_DIR') or os.environ.get('OSTAPDIR') or '$HOME/.ostap'
+##  workdir = os.environ.get('OSTAP_DIR') or os.environ.get('OSTAPDIR') or '$HOME/.ostap'
+workdir = ostap_getenv ( 'OSTAP_DIR' , '' ) or '$HOME/.ostap'
 
 workdir = os.path.expandvars ( workdir )
 workdir = os.path.expanduser ( workdir )

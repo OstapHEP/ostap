@@ -44,7 +44,9 @@ for_cleanup  = False
 
 ## 1) check the environment variable OSTAP_TMPDIR 
 if not base_tmp_dir :
-    base_tmp_dir = os.environ.get  ( 'OSTAP_TMP_DIR' , None )
+    from ostap.utils.basic import get_env as ostap_getenv  
+    ## base_tmp_dir = os.environ.get  ( 'OSTAP_TMP_DIR' , None )
+    base_tmp_dir = ostap_getenv ( 'OSTAP_TMP_DIR' , None )
     ##
     if base_tmp_dir and not os.path.exists ( base_tmp_dir ) :
         base_tmp_dir = make_dir  ( base_tmp_dir ) 

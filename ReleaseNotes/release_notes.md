@@ -1,5 +1,9 @@
 ## New features:
 
+   1. add `get_env` and `has_env` functions to `ostap/utils/basic.py` to check/acess environment varibales inn case-innsensititve way
+   1. make use of `get_env` and `has_env` functions alsmost everywhere innsted of `os.environ`
+   1. small reshuffle of code between `ostap.core.core` and `ostap.utils.basic`
+   
 ## Backward incompatible:  
   
 ## Bug fixes:

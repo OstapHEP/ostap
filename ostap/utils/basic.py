@@ -28,7 +28,12 @@ __all__     = (
     'commonpath'    , ## common path(prefix) for list of files
     'copy_file'     , ## copy fiel creating inetremadiet directorys if needed 
     'NoContext'     , ## empty context manager
-    ## 
+    ##
+    'loop_items'    , ## loop over dictionary items 
+    'items_loop'    , ## ditto
+    ##
+    'has_env'       , ## case-insensitive check for environment variable   
+    'get_env'       , ## case-insensitive access to environment variable   
     )
 # =============================================================================
 import sys, os 
@@ -229,6 +234,88 @@ class NoContext(object) :
     ## context manager 
     def __exit__  ( self , *args ) : pass  
 
+
+# =============================================================================
+if   ( 3 , 0 ) <= sys.version_info : items_loop = lambda d : d.items     () 
+else                               : items_loop = lambda d : d.iteritems ()
+# =============================================================================
+def loop_items ( d ) :
+    """Return  iterator over the dictionary   items
+    >>> d = { 'a' : ...   , 'b' : ... , }
+    >>> for e in   loop_items ( d ) : print (e) 
+    """
+    return items_loop ( d ) 
+
+# =============================================================================
+## case-insensitive check for existence of the environment variable
+#  - case-insensitive
+#  - space ignored
+#  - underline ignored
+#  @code
+#  has_env ( 'Ostap_Table_Style' ) 
+#  @endcode
+def has_env ( variable ) :
+    """
+    Case-insensitive check for existence of the environment variable
+    
+    - case-insensitive
+    - space ignored
+    - underline ignored
+    
+    >>> has_env ( 'Ostap_Table_Style' )
+    
+    """
+    transform = lambda v : v.replace(' ','').replace('_','').lower()
+    new_var   = transform ( variable )
+    for key, _ in items_loop ( os.environ ) :
+        if transform ( key ) == new_var  : return True
+    return False
+
+# =============================================================================
+## case-insensitive access for the environment variable
+#  - case-insensitive
+#  - space ignored
+#  - underline ignored
+#  @code
+#  var = get_env ( 'Ostap_Table_Style' , '' ) 
+#  @endcode
+#  In ambiguous case warning message is printed and the last value is returned 
+def get_env ( variable , default ) :
+    """
+    Case-insensitive access for the environment variable
+    
+    - case-insensitive
+    - space ignored
+    - underline ignored
+    
+    >>> var = has_env ( 'Ostap_Table_Style' , 'empty' )
+    
+    In ambiguous case  warning message is printed and the last value is returned 
+    """
+    transform = lambda v : v.replace(' ','').replace('_','').lower()
+    new_var   = transform ( variable )
+    found     = [] 
+    for key, value in items_loop ( os.environ ) :
+        if transform ( key ) == new_var  :
+            item = key, value
+            found.append  ( item )
+            
+    if not found : return default
+
+    if 1 < len ( found )  :
+        rows = [ ( 'Variable' , 'value' ) ]
+        for k, v in found  :
+            row = '%s' % k , '%s' % v
+            rows.append ( row )
+        title  = "'%s' matches" % variable
+        import ostap.logger.table as T 
+        table = T.table ( rows,  title = title  , prefix = '# ' , alignment = 'll' )
+        from ostap.logger.logger import getLogger
+        logger = getLogger ( 'ostap.get_env' ) 
+        title2 = "Found %s matches for '%s', the last is taken" % ( len ( found ) , variable )  
+        logger.warning ( '%s\n%s' %  ( title2 , table ) ) 
+    
+    return found [ -1] [ 1 ] 
 
 # =========================================================================
 ## copy source file into destination, creating intermediate directories

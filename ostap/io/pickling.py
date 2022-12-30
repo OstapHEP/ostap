@@ -62,7 +62,9 @@ def get_protocol ( p ) :
 PROTOCOL = None
 #  (1) pickup protocol from the environment variable 
 try :
-    pe = os.environ.get ( 'OSTAP_PROTOCOL'  , '' )
+    from ostap.utils.basic import get_env as ostap_getenv 
+    ##  pe = os.environ.get ( 'OSTAP_PROTOCOL'  , '' )
+    pe = ostap_getenv ( 'OSTAP_PROTOCOL'  , '' )
     pp = get_protocol   ( pe )
     if pp < 0 : pp = HIGHEST_PROTOCOL 
     if 0  <= pp <= HIGHEST_PROTOCOL :

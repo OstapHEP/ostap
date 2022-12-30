@@ -45,14 +45,16 @@ default_style = ''
 if    not terminaltables     :
     ## only 'local' is available for this case 
     default_style = 'local'
-elif env_var in os.environ :
-    ## get the preferred table style from envitonment variable 
-    default_style = os.environ.get ( env_var, default_style )
 else :
-    ## get the preferred table style from the configuration file(s)
-    import ostap.core.config as OCC
-    if 'STYLE' in OCC.tables :
-        default_style = OCC.tables.get ( 'STYLE' , fallback = default_style )
+    from ostap.utils.basic import has_env as ostap_hasenv 
+    if  ostap_hasenv ( env_var ) :
+        from ostap.utils.basic import get_env as ostap_getenv 
+        default_style = ostaogetenv ( env_var, default_style )
+    else :
+        ## get the preferred table style from the configuration file(s)
+        import ostap.core.config as OCC
+        if 'STYLE' in OCC.tables :
+            default_style = OCC.tables.get ( 'STYLE' , fallback = default_style )
 ## finally adjust the style
 default_style = default_style.strip().lower()
 # =============================================================================

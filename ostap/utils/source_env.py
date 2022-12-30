@@ -33,7 +33,7 @@ __all__     = (
     'source_env' , ## 'source' environment script 
   ) 
 # =============================================================================
-import ROOT, sys , os , time
+import sys , os , time
 import subprocess, shlex 
 # =============================================================================
 # logging 
@@ -52,7 +52,7 @@ def clip ( text  , lmax = 55 ) :
     return  text [:ll] + '<...>' + text [-ll:]
 
 # ============================================================================
-#  'Source' the  environmentfile
+#  'Source' the  environment file
 #  @code
 #  from ostap.utuls.source_env import source_env
 #  ## get the dict of all modified/new variables 
