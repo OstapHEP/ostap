@@ -275,6 +275,7 @@ namespace Ostap
       ( const double y    ,
         const double z    ,                          
         const double xlow , const double xhigh ) const ;
+      // ======================================================================      
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
        *  @param y     variable
@@ -286,6 +287,7 @@ namespace Ostap
       ( const double x    ,
         const double z    ,
         const double ylow , const double yhigh ) const ;
+      // ======================================================================
       /** integral over z-dimension
        *  \f[ \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
        *  @param x     variable
@@ -311,6 +313,7 @@ namespace Ostap
       ( const double z    ,                          
         const double xlow , const double xhigh ,
         const double ylow , const double yhigh ) const ;
+      // ======================================================================
       /** integral over x&z-dimensions
        *  \f[ \int_{x_{low}}^{x_{high}}
        *      \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}x\mathrm{d}z\f]
@@ -324,6 +327,7 @@ namespace Ostap
       ( const double y    ,                          
         const double xlow , const double xhigh ,
         const double zlow , const double zhigh ) const ;      
+      // ======================================================================
       /** integral over y&z-dimensions
        *  \f[ \int_{y_{low}}^{y_{high}}
        *      \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\mathrm{d}z\f]
@@ -454,6 +458,64 @@ namespace Ostap
       Bernstein  integralYZ
       ( const double ylow , const double yhigh ,
         const double zlow , const double zhigh ) const ;      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(y,z) = 
+       *   \int_{x_{min}}^{x_{max}}
+       *   \mathcal{B}(x,y,z)dx \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateX  
+       */
+      Bernstein2D integralX () const ;
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(x,z) = 
+       *   \int_{y_{min}}^{y_{max}}
+       *   \mathcal{B}(x,y,z)dy \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateY  
+       */
+      Bernstein2D integralY () const ;
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(x,y) = 
+       *   \int_{z_{min}}^{z_{max}}
+       *   \mathcal{B}(x,y,z)dz \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateZ  
+       */
+      Bernstein2D integralZ () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(y,z) = 
+       *   \int_{x_{low}}^{x_{high}}
+       *   \mathcal{B}(x,y,z)dx \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateX  
+       */
+      Bernstein2D integralX
+      ( const double xlow  ,
+        const double xhigh ) const ;
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(x,z) = 
+       *   \int_{y_{low}}^{y_{high}}
+       *   \mathcal{B}(x,y,z)dy \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateY  
+       */
+      Bernstein2D integralY 
+      ( const double ylow  ,
+        const double yhigh ) const ;
+      // ======================================================================
+      /** get the integral 
+       *  \f$ \mathcal{B}(x,y) = 
+       *   \int_{z_{low}}^{z_{high}}
+       *   \mathcal{B}(x,y,z)dz \f$ 
+       *  @see Ostap::Math::Bernstein3D::integrateZ  
+       */
+      Bernstein2D integralZ 
+      ( const double zlow  ,
+        const double zhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================

@@ -122,7 +122,7 @@ def int3_y ( f3 , x , z , ymn = None , ymx = None ) :
     """numerical partial 1D-integral for 3D-funcntion"""
     if ymn is None : ymn = f3.ymin()
     if ymx is None : ymx = f3.ymax()
-    fi = lambda y : f3 ( x , y )
+    fi = lambda y : f3 ( x , y , z )
     return I.integral ( fi , ymn , ymx )
 
 # =============================================================================
@@ -448,9 +448,10 @@ def test_poly3 () :
     NX , NY , NZ   , \
        xmin , xmax , \
        ymin , ymax , \
-       zmin , zmax = 3 , 2 , 4 , -1 , 3  , -2 , 5 , 0 , 3 
-       
-    ##  NX , NY , xmin, xmax, ymin, ymax = 4 , 5 ,  0 , 1  ,  0 , 1
+       zmin , zmax = 3 , 4 , 5 , -1 , 3  , -2 , 5 , 1 , 4 
+
+
+## zmin , zmax = 3 , 4 , 5 , 0 , 1  , 0 , 1 , 0 , 1
 
     ## (1) prepare polynomials
     
@@ -716,6 +717,166 @@ def test_poly3 () :
     rows.append ( row )
 
 
+    ## test 1D-integrals
+    
+    cnt1, cnt2 , cnt3 = SE(), SE() , SE()
+
+    bxy = b3.integralZ ()
+    bxz = b3.integralY ()
+    byz = b3.integralX ()
+    
+    for i in progress_bar  ( 1000 ) :
+
+        x = random.uniform ( xmin , xmax )
+        y = random.uniform ( ymin , ymax )
+        z = random.uniform ( zmin , zmax )
+
+        vxy   = bxy    ( x , y  )
+        vxz   = bxz    ( x , z  )
+        vyz   = byz    ( y , z  )
+        
+        nxy   = int3_z ( b3  , x  , y )
+        nxz   = int3_y ( b3  , x  , z )
+        nyz   = int3_x ( b3  , y  , z )
+        
+        cnt1 += diff ( vxy , nxy ) * scale 
+        cnt2 += diff ( vxz , nxz ) * scale 
+        cnt3 += diff ( vyz , nyz ) * scale 
+        
+    check ( cnt1 , 'Bernstein vs numeric' , 'integralZ' , logger )    
+    row = 'Bernstein vs numeric' , 'integralZ' , \
+          '%+.3g'  % float ( cnt1.mean() ) , \
+          '%.3g'   % float ( cnt1.rms () ) , \
+          '%+.3g'  % float ( cnt1.min () ) , \
+          '%+.3g'  % float ( cnt1.max () )
+    rows.append ( row )
+    
+    check ( cnt2 , 'Bernstein vs numeric' , 'integralY' , logger )    
+    row = 'Bernstein vs numeric' , 'integralY' , \
+          '%+.3g'  % float ( cnt2.mean() ) , \
+          '%.3g'   % float ( cnt2.rms () ) , \
+          '%+.3g'  % float ( cnt2.min () ) , \
+          '%+.3g'  % float ( cnt2.max () )
+    rows.append ( row )
+
+    check ( cnt3 , 'Bernstein vs numeric' , 'integralX' , logger )    
+    row = 'Bernstein vs numeric' , 'integralX' , \
+          '%+.3g'  % float ( cnt3.mean() ) , \
+          '%.3g'   % float ( cnt3.rms () ) , \
+          '%+.3g'  % float ( cnt3.min () ) , \
+          '%+.3g'  % float ( cnt3.max () )
+    rows.append ( row )
+
+
+    ## test 1D-integrals
+    
+    cnt1, cnt2 , cnt3 = SE(), SE() , SE()
+
+    for i in progress_bar  ( 1000 ) :
+
+        x = random.uniform ( xmin , xmax )
+        y = random.uniform ( ymin , ymax )
+        z = random.uniform ( zmin , zmax )
+
+        x1 = random.uniform ( xmin , xmax )
+        x2 = random.uniform ( xmin , xmax )
+        y1 = random.uniform ( ymin , ymax )
+        y2 = random.uniform ( ymin , ymax )
+        z1 = random.uniform ( zmin , zmax )
+        z2 = random.uniform ( zmin , zmax )
+
+        vxy   = b3.integrateZ ( x , y  , z1 , z2 )
+        vxz   = b3.integrateY ( x , z  , y1 , y2 )
+        vyz   = b3.integrateX ( y , z  , x1 , x2 )
+        
+        nxy   = int3_z ( b3  , x  , y , z1  , z2 )
+        nxz   = int3_y ( b3  , x  , z , y1  , y2 )  
+        nyz   = int3_x ( b3  , y  , z , x1  , x2 )  
+        
+        cnt1 += diff ( vxy , nxy ) * scale 
+        cnt2 += diff ( vxz , nxz ) * scale 
+        cnt3 += diff ( vyz , nyz ) * scale 
+        
+    check ( cnt1 , 'Bernstein vs numeric' , 'integrateZ' , logger )    
+    row = 'Bernstein vs numeric' , 'integrateZ' , \
+          '%+.3g'  % float ( cnt1.mean() ) , \
+          '%.3g'   % float ( cnt1.rms () ) , \
+          '%+.3g'  % float ( cnt1.min () ) , \
+          '%+.3g'  % float ( cnt1.max () )
+    rows.append ( row )
+    
+    check ( cnt2 , 'Bernstein vs numeric' , 'integrateY' , logger )    
+    row = 'Bernstein vs numeric' , 'integrateY' , \
+          '%+.3g'  % float ( cnt2.mean() ) , \
+          '%.3g'   % float ( cnt2.rms () ) , \
+          '%+.3g'  % float ( cnt2.min () ) , \
+          '%+.3g'  % float ( cnt2.max () )
+    rows.append ( row )
+
+    check ( cnt3 , 'Bernstein vs numeric' , 'integrateX' , logger )    
+    row = 'Bernstein vs numeric' , 'integrateX' , \
+          '%+.3g'  % float ( cnt3.mean() ) , \
+          '%.3g'   % float ( cnt3.rms () ) , \
+          '%+.3g'  % float ( cnt3.min () ) , \
+          '%+.3g'  % float ( cnt3.max () )
+    rows.append ( row )
+
+
+    ## test 1D-integrals
+    
+    cnt1, cnt2 , cnt3 = SE(), SE() , SE()
+
+    for i in progress_bar  ( 1000 ) :
+
+        x = random.uniform ( xmin , xmax )
+        y = random.uniform ( ymin , ymax )
+        z = random.uniform ( zmin , zmax )
+
+        x1 = random.uniform ( xmin , xmax )
+        x2 = random.uniform ( xmin , xmax )
+        y1 = random.uniform ( ymin , ymax )
+        y2 = random.uniform ( ymin , ymax )
+        z1 = random.uniform ( zmin , zmax )
+        z2 = random.uniform ( zmin , zmax )
+
+        vxy   = b3.integralZ ( z1 , z2 ) ( x , y ) 
+        vxz   = b3.integralY ( y1 , y2 ) ( x , z )
+        vyz   = b3.integralX ( x1 , x2 ) ( y , z )
+        
+        nxy   = int3_z ( b3  , x  , y , z1  , z2 )
+        nxz   = int3_y ( b3  , x  , z , y1  , y2 )  
+        nyz   = int3_x ( b3  , y  , z , x1  , x2 )  
+        
+        cnt1 += diff ( vxy , nxy ) * scale 
+        cnt2 += diff ( vxz , nxz ) * scale 
+        cnt3 += diff ( vyz , nyz ) * scale 
+
+    check ( cnt1 , 'Bernstein vs numeric' , 'integralZ/2' , logger )    
+    row = 'Bernstein vs numeric' , 'integralZ/2' , \
+          '%+.3g'  % float ( cnt1.mean() ) , \
+          '%.3g'   % float ( cnt1.rms () ) , \
+          '%+.3g'  % float ( cnt1.min () ) , \
+          '%+.3g'  % float ( cnt1.max () )
+    rows.append ( row )
+    
+    check ( cnt2 , 'Bernstein vs numeric' , 'integralY/2' , logger )    
+    row = 'Bernstein vs numeric' , 'integralY/2' , \
+          '%+.3g'  % float ( cnt2.mean() ) , \
+          '%.3g'   % float ( cnt2.rms () ) , \
+          '%+.3g'  % float ( cnt2.min () ) , \
+          '%+.3g'  % float ( cnt2.max () )
+    rows.append ( row )
+
+    check ( cnt3 , 'Bernstein vs numeric' , 'integralX/2' , logger )    
+    row = 'Bernstein vs numeric' , 'integralX/2' , \
+          '%+.3g'  % float ( cnt3.mean() ) , \
+          '%.3g'   % float ( cnt3.rms () ) , \
+          '%+.3g'  % float ( cnt3.min () ) , \
+          '%+.3g'  % float ( cnt3.max () )
+    rows.append ( row )
+
+
+    
     title = '3D polynomials'
     table = T.table ( rows , title = title , prefix = '# ' , alignment ='llcccc' )
     logger.info ( '%s\n%s' %  ( title , table ) )
@@ -724,7 +885,7 @@ def test_poly3 () :
 # =============================================================================
 if '__main__' == __name__ :
     
-    ## test_poly2 ()
+    test_poly2 ()
     test_poly3 ()
 
 # =============================================================================

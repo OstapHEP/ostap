@@ -19,6 +19,8 @@
   1. reshuffle code for `Ostap::Exception` - make it visible
   1. extend tests for `Bernstein2D` and `Bernstein3D` objects
   1. add `Bernstein3D::integralXY`,`Bernstein3D::integralXZ` and `Bernstein3D::integralYZ` methods
+  1. add `Bernstein3D::integralX`,`Bernstein3D::integralY` and `Bernstein3D::integralZ` methods
+  1. extend tests for `Bernstein3D` objects
   
   
 ## Backward incompatible:  

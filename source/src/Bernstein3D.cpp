@@ -10,6 +10,7 @@
 // ============================================================================
 #include "Ostap/Hash.h"
 #include "Ostap/Math.h"
+#include "Ostap/Bernstein2D.h"
 #include "Ostap/Bernstein3D.h"
 // ============================================================================
 // Local
@@ -973,6 +974,207 @@ Ostap::Math::Bernstein3D::integralYZ
   Ostap::Math::scale ( m_fx.begin(), m_fx.end() , scale ) ;
   return Bernstein ( m_fx , xmin() , xmax() ) ; 
 }
+// ============================================================================
+/*  get the integral 
+ *  \f$ \mathcal{B}(y,z) = 
+ *   \int_{x_{min}}^{x_{max}}
+ *   \mathcal{B}(x,y,z)dx \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateX  
+ */
+// ============================================================================
+Ostap::Math::Bernstein2D
+Ostap::Math::Bernstein3D::integralX() const
+{
+  // crete the output object 
+  Ostap::Math::Bernstein2D b2 { m_ny   , m_nz   ,
+                                m_ymin , m_ymax ,
+                                m_zmin , m_zmax };
+  // fill it! 
+  for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+  {
+    for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+    {
+      double pp = 0.0 ;
+      for  ( unsigned int ix = 0 ; ix <= m_nx ; ++ix )
+      { pp += par ( ix , iy , iz ) ; }
+      //
+      b2.setPar ( iy , iz , pp ) ;
+    }
+  }
+  return b2 ;
+}
+// ============================================================================
+/*  get the integral 
+ *  \f$ \mathcal{B}(x,z) = 
+ *   \int_{y_{min}}^{y_{max}}
+ *   \mathcal{B}(x,y,z)dy \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateY  
+ */
+// ============================================================================
+Ostap::Math::Bernstein2D
+Ostap::Math::Bernstein3D::integralY() const
+{
+  // crete the output object 
+  Ostap::Math::Bernstein2D b2 { m_nx   , m_nz   ,
+                                m_xmin , m_xmax ,
+                                m_zmin , m_zmax };
+  // fill it! 
+  for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+  {
+    for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+    {
+      double pp = 0.0 ;
+      for  ( unsigned int iy = 0 ; iy <= m_ny ; ++iy )
+      { pp += par ( ix , iy , iz ) ; }
+      //
+      b2.setPar ( ix , iz , pp ) ;
+    }
+  }
+  return b2 ;
+}
+// ============================================================================
+/*  get the integral 
+ *  \f$ \mathcal{B}(x,y) = 
+ *   \int_{z_{min}}^{z_{max}}
+ *   \mathcal{B}(x,y,z)dz \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateZ  
+ */
+// ============================================================================
+Ostap::Math::Bernstein2D
+Ostap::Math::Bernstein3D::integralZ() const
+{
+  // crete the output object 
+  Ostap::Math::Bernstein2D b2 { m_nx   , m_ny   ,
+                                m_xmin , m_xmax ,
+                                m_ymin , m_ymax };
+  // fill it! 
+  for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+  {
+    for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+    {
+      double pp = 0.0 ;
+      for  ( unsigned int iz = 0 ; iz <= m_nz ; ++iz )
+      { pp += par ( ix , iy , iz ) ; }
+      //
+      b2.setPar ( ix , iy , pp ) ;
+    }
+  }
+  return b2 ;
+}
+// ============================================================================
+/*  get the integral 
+ *  \f$ \mathcal{B}(y,z) = 
+ *   \int_{x_{low}}^{x_{high}}
+ *   \mathcal{B}(x,y,z)dx \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateX  
+ */
+// ============================================================================
+Ostap::Math::Bernstein2D
+Ostap::Math::Bernstein3D::integralX
+( const double xlow  ,
+  const double xhigh ) const 
+{
+  // perform integration 
+  for ( unsigned short ix = 0 ; ix <= m_nx  ; ++ix )
+  { m_fx [ ix ] = m_bx [ ix ] .integral ( xlow , xhigh ) ; }
+  
+  // crete the output object 
+  Ostap::Math::Bernstein2D b2 { m_ny   , m_nz   ,
+                                m_ymin , m_ymax ,
+                                m_zmin , m_zmax };
+  // fill it! 
+  for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+  {
+    for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+    {
+      double pp = 0.0 ;
+      for  ( unsigned int ix = 0 ; ix <= m_nx ; ++ix )
+      { pp += par ( ix , iy , iz ) * m_fx [ ix ] ; }
+      //
+      b2.setPar ( iy , iz , pp ) ;
+    }
+  }
+  //
+  b2 *= ( m_nx + 1 ) / ( m_xmax - m_xmin ) ;
+  return b2 ;
+}
+// ============================================================================
+/*  get the integral 
+ *  \f$ \mathcal{B}(x,z) = 
+ *   \int_{y_{low}}^{y_{high}}
+ *   \mathcal{B}(x,y,z)dy \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateY  
+ */
+// ============================================================================
+Ostap::Math::Bernstein2D
+Ostap::Math::Bernstein3D::integralY
+( const double ylow  ,
+  const double yhigh ) const 
+{
+  // perform integration 
+  for ( unsigned short iy = 0 ; iy <= m_ny  ; ++iy )
+  { m_fy [ iy ] = m_by [ iy ] .integral ( ylow , yhigh ) ; }
+  
+  // crete the output object 
+  Ostap::Math::Bernstein2D b2 { m_nx   , m_nz   ,
+                                m_xmin , m_xmax ,
+                                m_zmin , m_zmax };
+  // fill it! 
+  for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+  {
+    for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz )
+    {
+      double pp = 0.0 ;
+      for  ( unsigned int iy = 0 ; iy <= m_ny ; ++iy )
+      { pp += par ( ix , iy , iz ) * m_fy [ iy ] ; }
+      //
+      b2.setPar ( ix , iz , pp ) ;
+    }
+  }
+  //
+  b2 *= ( m_ny + 1 ) / ( m_ymax - m_ymin ) ;
+  return b2 ;
+}
+// ============================================================================
+/** get the integral 
+ *  \f$ \mathcal{B}(x,y) = 
+ *   \int_{z_{low}}^{z_{high}}
+ *   \mathcal{B}(x,y,z)dz \f$ 
+ *  @see Ostap::Math::Bernstein3D::integrateZ  
+ */
+// ============================================================================
+Ostap::Math::Bernstein2D
+Ostap::Math::Bernstein3D::integralZ
+( const double zlow  ,
+  const double zhigh ) const 
+{
+  // perform integration 
+  for ( unsigned short iz = 0 ; iz <= m_nz  ; ++iz )
+  { m_fz [ iz ] = m_bz [ iz ] .integral ( zlow , zhigh ) ; }
+  
+  // crete the output object 
+  Ostap::Math::Bernstein2D b2 { m_nx   , m_ny   ,
+                                m_xmin , m_xmax ,
+                                m_ymin , m_ymax };
+  // fill it! 
+  for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix )
+  {
+    for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
+    {
+      double pp = 0.0 ;
+      for  ( unsigned int iz = 0 ; iz <= m_nz ; ++iz )
+      { pp += par ( ix , iy , iz ) * m_fz [ iz ] ; }
+      //
+      b2.setPar ( ix , iy , pp ) ;
+    }
+  }
+  //
+  b2 *= ( m_nz + 1 ) / ( m_zmax - m_zmin ) ;
+  return b2 ;
+}
+
+
+
 // ============================================================================
 /** update Bernstein expansion by addition of one "event" with 
  *  the given weight
