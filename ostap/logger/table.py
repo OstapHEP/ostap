@@ -29,14 +29,32 @@ __all__     = (
     'add_prefix'   , ## add the prefix to each row of the table 
     )
 # =============================================================================
-import textwrap 
 from   ostap.logger.colorized import infostr, allright, decolorize        
 from   ostap.utils.basic      import terminal_size 
-# =============================================================================
+import textwrap, os  
+# =============================================================================    
 try :
     import terminaltables
 except ImportError :
     terminaltables = None
+# =============================================================================
+## environment variable
+env_var = 'OSTAP_TABLE_STYLE'
+## default style
+default_style = ''
+if    not terminaltables     :
+    ## only 'local' is available for this case 
+    default_style = 'local'
+elif env_var in os.environ :
+    ## get the preferred table style from envitonment variable 
+    default_style = os.environ.get ( env_var, default_style )
+else :
+    ## get the preferred table style from the configuration file(s)
+    import ostap.core.config as OCC
+    if 'STYLE' in OCC.tables :
+        default_style = OCC.tables.get ( 'STYLE' , fallback = default_style )
+## finally adjust the style
+default_style = default_style.strip().lower()
 # =============================================================================
 left        = '<' , 'l' , 'left'  
 right       = '>' , 'r' , 'right' 
@@ -216,7 +234,7 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
 #  t = table ( table_data , 'Title' )
 #  print (t)
 #  @endcode
-#  Vaild format arguments (case insensitive) 
+#  Vaild `style` arguments (case insensitive) 
 #   - local :  use local, handmade repalcement
 #   - ascii :  use AsciiTable 
 #   - single :  use SingleTable 
@@ -224,7 +242,7 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
 #   - github :  use GithubFlavoredMarkdownTable
 #   - markdown :  use GithubFlavoredMarkdownTable
 #   - double (default) : DoubleTable 
-def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 , indent = wrap_indent , format = '' ) :
+def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 , indent = wrap_indent , style = '' ) :
     """Format the list of rows as a  table.
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
@@ -242,7 +260,7 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
     >>> t = table ( table_data , 'Title' )
     >>> print (t)
     
-    Vaild `format` arguments (case insensitive) 
+    Vaild `style` arguments (case insensitive) 
     - `local`     :  use local, handmade repalcement
     - `ascii`     :  use `AsciiTable` 
     - `single`    :  use `SingleTable` 
@@ -266,7 +284,10 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
         
     rows = [ list(row) for row in rows ]
 
-    fmt = format.lower() 
+    if not style :
+        style = '%s' % default_style
+        
+    fmt = style.lower() 
 
     if 'local' == fmt or not terminaltables :
         
@@ -395,10 +416,10 @@ def align_column ( table , index , align = 'left') :
     
 # =============================================================================
 if __name__ == '__main__' :
-
+    
     from ostap.logger.logger import getLogger
     logger = getLogger ( 'ostap.logger.table')
-
+    
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     

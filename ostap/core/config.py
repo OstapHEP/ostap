@@ -54,7 +54,7 @@ config [ 'Canvas'   ] = { 'Width'       :  '1000' , 'Height'       :  '800' ,
 
 config [ 'Fit Draw' ] = {}
 config [ 'Parallel' ] = {}
-
+config [ 'Tables'   ] = {}
 
 ## the list of processes config files 
 files_read = config.read (
@@ -75,6 +75,10 @@ canvas  = config [ 'Canvas'    ]
 # =============================================================================
 ## section for fit drawing options 
 fit_draw = config [ 'Fit Draw' ]
+
+# =============================================================================
+## section for Tables  
+tables   = config [ 'Tables'   ]
 
 # =============================================================================
 # logging 
