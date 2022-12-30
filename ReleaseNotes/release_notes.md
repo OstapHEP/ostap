@@ -21,7 +21,7 @@
   1. add `Bernstein3D::integralXY`,`Bernstein3D::integralXZ` and `Bernstein3D::integralYZ` methods
   1. add `Bernstein3D::integralX`,`Bernstein3D::integralY` and `Bernstein3D::integralZ` methods
   1. extend tests for `Bernstein3D` objects
-  1. allow to define the default tabel style either via connfigiraitno file (section 'Tables', field `Style`) or envitonment variable `OSTAP_TABLE_STYLE`
+  1. allow to define the default table style either via connfigiraitno file (section 'Tables', field `Style`) or envitonment variable `OSTAP_TABLE_STYLE`
   
 ## Backward incompatible:  
 
