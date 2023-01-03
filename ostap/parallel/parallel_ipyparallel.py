@@ -9,7 +9,7 @@
 # =============================================================================
 __all__ = () 
 # =============================================================================
-import sys, os, time
+import sys, os, time, warnings 
 from   itertools                    import repeat , count
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.parallel.task          import Task, TaskManager 
@@ -25,10 +25,11 @@ else                              : from collections     import Sized
 ipp = None
 if ( 3 , 6 ) <= sys.version_info :
     try :
-        import ipyparallel as ipp
+        with warnings.catch_warnings() :            
+            warnings.simplefilter("ignore")
+            import ipyparallel as ipp
     except ImportError :
         ipp = None
-
 
 # =============================================================================
 ## Use only relatively fresh versions of ipyparallel 

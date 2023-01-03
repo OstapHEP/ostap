@@ -22,7 +22,7 @@ __all__     = (
     'GenericTask' , ## very generic "template"  tasl 
     )
 # =============================================================================
-import sys, os
+import sys, os, warnings 
 from ostap.parallel.task import Task, GenericTask
 from ostap.utils.basic   import has_env as ostap_hasenv 
 from ostap.utils.basic   import get_env as ostap_getenv 
@@ -74,8 +74,10 @@ if ( 3 , 6 ) <= sys.version_info and dill :
 if not worker or 'IPYPARALLEL' == worker :
     if ( 3 , 6 ) <= sys.version_info :
         try :
-            import ipyparallel as _ipp
-            worker = 'IPYPARALLEL' if ( 8 , 0 ) <= _ipp.version_info else '' 
+            with warnings.catch_warnings() :            
+                warnings.simplefilter("ignore")                
+                import ipyparallel as _ipp
+                worker = 'IPYPARALLEL' if ( 8 , 0 ) <= _ipp.version_info else '' 
         except ImportError :
             worker = ''
     else :
