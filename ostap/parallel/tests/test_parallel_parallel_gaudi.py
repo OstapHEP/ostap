@@ -110,11 +110,10 @@ def test_parallel_gaudi_mp_bare ( ) :
         if result is None  : result = res
         else               : result.Add ( res )  
 
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
-    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
-    
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_bare' ) : 
+        logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+        logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
+        result.Draw (   ) 
 
     return result
 
@@ -147,10 +146,9 @@ def test_parallel_gaudi_mp_task ( ) :
     ## process the task 
     result   = manager.process ( task ,  inputs ) 
     
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
-    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
-    
     with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_task' ) : 
+        logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+        logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
         result.draw (   ) 
     
     return result
@@ -181,10 +179,9 @@ def test_parallel_gaudi_mp_func ( ) :
     ## process the function  
     result   = manager.process ( make_histo , inputs , merger = merge_histos )
     
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
-    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
-    
     with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_func' ) : 
+        logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+        logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
         result.draw (   ) 
 
     return result
@@ -218,10 +215,9 @@ def test_parallel_gaudi_mp_generic ( ) :
     ## process the task 
     result   = manager.process ( task ,  inputs ) 
     
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
-    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
-    
     with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_generic' ) : 
+        logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+        logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
         result.draw (   ) 
         
     return result

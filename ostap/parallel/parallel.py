@@ -23,37 +23,42 @@ __all__     = (
     )
 # =============================================================================
 import sys, os
+from ostap.parallel.task import Task, GenericTask
 from ostap.utils.basic   import has_env as ostap_hasenv 
 from ostap.utils.basic   import get_env as ostap_getenv 
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel')
 else                      : logger = getLogger ( __name__         ) 
 # =============================================================================
-from ostap.parallel.task import  Task, GenericTask
 
-workers = 'PATHOS' , 'GAUDIMP'
+# =============================================================================
+## possible types of workers 
+workers = 'PATHOS'      , \
+          'IPYPARALLEL' , \
+          'GAUDIMP'     , 'GAUDI' , 'MULTIPROCESS' , 'MULTIPRCCESSION' ,
 
+# ============================================================================
 worker  = '' 
 if ostap_hasenv ( 'OSTAP_PARALLEL' ) :
-    worker = ostap_getenv( 'OSTAP_PARALLEL', '' ) .upper()
+    worker = ostap_getenv ( 'OSTAP_PARALLEL', '' ) .upper()
     if not worker in workers : worker = ''
     
 if not worker :
-
     import ostap.core.config as _CONFIG
     if 'PARALLEL' in _CONFIG.general :
         worker = _CONFIG.general.get('PARALLEL', fallback = '' ).upper() 
-        if not  worker in workers : worker = ''
+        if not worker in workers : worker = ''
 
 # ===============================================================================
-DILL_PY3_issue = False 
 
 try : 
     import dill 
 except ImportError :
     dill = None    
 
+DILL_PY3_issue = False 
 if ( 3 , 6 ) <= sys.version_info and dill :
+    
     dill_version   =  getattr ( dill , '__version__' , '' )
     if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
     DILL_PY3_issue = dill_version < '0.3'
@@ -64,23 +69,61 @@ if ( 3 , 6 ) <= sys.version_info and dill :
         
     if DILL_PY3_issue : worker = 'GAUDIMP'
 
-# ===============================================================================
+# ==============================================================================
+## Check for ipyparallel 
+if not worker or 'IPYPARALLEL' == worker :
+    if ( 3 , 6 ) <= sys.version_info :
+        try :
+            import ipyparallel as _ipp
+            worker = 'IPYPARALLEL' if ( 8 , 0 ) <= _ipp.version_info else '' 
+        except ImportError :
+            worker = ''
+    else :
+        worker = ''
 
-if  'GAUDIMP' != worker :
+# ==============================================================================
+## Check for pathos 
+if not worker  or 'PATHOS' == worker :
+    if not DILL_PY3_issue :
+        try :
+            import pathos as _pathos 
+            worker = 'PATHOS'
+        except ImportError :
+            worker = ''
+    else :
+        worker = ''
+        
+# ===============================================================================
+WorkManager = None
+
+# ===============================================================================
+## Use ipyparallel? 
+if 'IPYPARALLEL' == worker and ( 3 , 6 ) <= sys.version_info : 
     
+    try :
+        from ostap.parallel.parallel_ipyparallel import WorkManager 
+        logger.debug ('Use TaskManager from ostap.parallel.ipyparallel')
+    except ImportError :
+        WorkManager = None 
+        worker      = 'PATHOS'
+
+# ===============================================================================
+## Use PATHOS? 
+if 'PATHOS' == worker and not WorkManager and not DILL_PY3_issue : 
+
     try :
         from ostap.parallel.parallel_pathos import WorkManager 
         logger.debug ('Use TaskManager from ostap.parallel.pathos')
     except ImportError :
-        from ostap.parallel.parallel_gaudi  import WorkManager 
-        logger.info  ('Use TaskManager from GaudiMP.Parallel'     )
+        WorkManager = None 
 
-else :
+# ===============================================================================
+## Use multiprocess/multiprocessing  
+if not WorkManager :
     
     from ostap.parallel.parallel_gaudi  import WorkManager 
     logger.debug ('Use TaskManager from GaudiMP.Parallel'         )
 
-    
 # =============================================================================
 if '__main__' == __name__ :
     

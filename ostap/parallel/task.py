@@ -518,13 +518,14 @@ class StatMerger(object) :
         >>> merged.print_stats () 
         """
         suffix = ''
+
         if cputime and 0 < cputime :
 
             sumtime = 0
             for host in self.__merged :
                 se       = self.__merged[host]
                 sumtime += se.time
-                
+
             if 0 < sumtime :
                 
                 h1 , r1 = divmod ( cputime , 3600 )

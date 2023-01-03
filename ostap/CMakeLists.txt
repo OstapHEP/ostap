@@ -57,6 +57,18 @@ if ( NOT ${PY_scipy_FOUND} )
 message ( "----> warning (optional)          scipy is NOT found!" ) 
 endif()
 
+
+if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
+find_python_module ( ipyparallel          QUIET )
+if ( NOT ${PY_ipyparallel_FOUND} )
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ipyparallel ${PIP_ARGS})
+endif()
+find_python_module ( ipyparallel          QUIET )
+if ( NOT ${PY_ipyparallel_FOUND} )
+message ( "----> (warning) (optional) ipyparallel is NOT found!" ) 
+endif()
+endif() 
+
 ##if  ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
 ## Check for PATHOS & friends
 
@@ -70,7 +82,6 @@ find_python_module ( dill          QUIET )
 if ( NOT ${PY_dill_FOUND} )
 message ( "----> (warning) (optional)           dill (part of pathos) is NOT found!" ) 
 endif()
-
 
 find_python_module ( ppft          QUIET )
 if ( NOT ${PY_ppft_FOUND} )
@@ -97,7 +108,6 @@ endif()
 if ( NOT ${PY_pathos_FOUND} )
 message ( "----> (warning) (optional)         pathos (part of pathos) is NOT found!" ) 
 endif()
-
 
 if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
 message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
