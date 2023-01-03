@@ -83,7 +83,7 @@ def test_ipyparallel_function () :
         return
 
     result = None 
-    with ipp.Cluster() as cluster :
+    with ipp.Cluster( silent = True ) as cluster :
 
         view    = cluster.load_balanced_view()
         
