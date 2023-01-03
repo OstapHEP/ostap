@@ -3,6 +3,7 @@
    1. add `get_env` and `has_env` functions to `ostap/utils/basic.py` to check/acess environment varibales inn case-innsensititve way
    1. make use of `get_env` and `has_env` functions alsmost everywhere innsted of `os.environ`
    1. small reshuffle of code between `ostap.core.core` and `ostap.utils.basic`
+   1. first step towards usage of `ipyparallel` for parallel processing: ad trivial test `test_parallel_ipyparallel.py`
    
 ## Backward incompatible:  
   
