@@ -32,6 +32,12 @@ if ( 3 , 6 )<= sys.version_info :
         ipp = None 
 
 # =============================================================================
+try :
+    import dill
+except ImportError :
+    dill = None
+    
+# =============================================================================
 ## simple    function that created and  fill a histogram
 def make_histos ( item ) :
     """Simple    function that creates and  fills a histogram
@@ -83,11 +89,55 @@ def test_ipyparallel_function () :
         return
 
     result = None 
-    with ipp.Cluster( silent = True ) as cluster :
+    with ipp.Cluster() as cluster :
 
         view    = cluster.load_balanced_view()
         
         results = view.map_async ( make_histos , zip  ( count () , inputs ) )
+        
+        for r in progress_bar ( results ) :
+            if not result  : result = r
+            else           : result.Add ( r )
+            
+    with wait ( 3 ) , use_canvas ( 'test_ipyparallel_function' ) : 
+        logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
+        logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+        result.draw (   ) 
+
+    return result
+
+# =============================================================================
+## test parallel processing with ipyparallel
+def test_ipyparallel_callable () :
+    """Test parallel processnig with ipyparallel
+    """
+
+    logger = getLogger ( "ostap.test_ipyparallel_callable")    
+    logger.info ('Test job submission with ipyparallel')
+    
+    if not (3,6)<= sys.version_info :
+        logger.error ( "python3.6 is required for the test!")
+        
+    if not ipp :
+        logger.error ( "ipyparallel module is not available")
+        return
+    
+    if not (8,0) <= ipp.version_info :
+        logger.error ( "ipyparallel module is too old %s" % str ( ipp.version_info ) ) 
+        return
+
+    if not dill :
+        logger.error ( "dill is not available" ) 
+        return
+        
+    result = None 
+    with ipp.Cluster() as cluster :
+
+        ##view    = cluster.load_balanced_view()
+        view    = cluster[:] 
+        view.use_dill()
+        
+        results = view.map_async ( mh , zip  ( count () , inputs ) )
         
         for r in progress_bar ( results ) :
             if not result  : result = r
@@ -105,6 +155,7 @@ def test_ipyparallel_function () :
 if '__main__' == __name__ :
 
     test_ipyparallel_function () 
+    test_ipyparallel_callable () 
         
 # =============================================================================
 ##                                                                      The END 
