@@ -1,7 +1,8 @@
+
 ## New features:
 
-   1. add `get_env` and `has_env` functions to `ostap/utils/basic.py` to check/acess environment varibales inn case-innsensititve way
-   1. make use of `get_env` and `has_env` functions alsmost everywhere innsted of `os.environ`
+   1. add `get_env` and `has_env` functions to `ostap/utils/basic.py` to check/access environment varibales inn case-insensititve way
+   1. make use of `get_env` and `has_env` functions alsmost everywhere insted of `os.environ`
    1. small reshuffle of code between `ostap.core.core` and `ostap.utils.basic`
    1. first step towards usage of `ipyparallel` for parallel processing: ad trivial test `test_parallel_ipyparallel.py`
    
@@ -18,32 +19,33 @@
   1. extend `test_trees_params.py` test
   1. redesign Bernstein dual basis: `Ostap::Math::BernsteinDual` & `Ostap::Math::BernsteinDualBasis`
   1. Add `Ostap::Math::Bernstein::fill` method
-  1. Add `Bernstein` into `Ostap/Params.h` set of funtions
+  1. Add `Bernstein` into `Ostap/Params.h` set of functions
   1. extend `test_trees_params.py` test
-  1. optimise `Ostap::Math::Bernstein2D` and `Ostap::Math::Bernstein3D`, make them a bit faster and efficient  1. add proper (de)serialisation for 2D,3D&4D polynomial objects  
-  1. Add `Ostap::Math::Bernstein2D::fill` method
-  1. Add `Ostap::Math::Bernstein3D::fill` method
-  1. Add `Bernstein2D/3D` into `Ostap/Params.h` set of funtions
-  1. further extend `test_trees_params.py` test
-  1. further extend `test_trees_params.py` test
-  1. add `__bool__` and `__nonzero__` methods for `ProgressBar`  - it allows to make more easy `while`-loops 
-  1. change default table layour for `isatty` regime from `SingleTable` to `DoubleTable`
-  1. allow to specify the default table format (`local`,`ascii`,`single`,`double`(default),`porcelain`, `github`,`markdown`
-  1. reshuffle code for `Ostap::Exception` - make it visible
-  1. extend tests for `Bernstein2D` and `Bernstein3D` objects
-  1. add `Bernstein3D::integralXY`,`Bernstein3D::integralXZ` and `Bernstein3D::integralYZ` methods
-  1. add `Bernstein3D::integralX`,`Bernstein3D::integralY` and `Bernstein3D::integralZ` methods
-  1. extend tests for `Bernstein3D` objects
-  1. allow to define the default table style either via connfigiraitno file (section 'Tables', field `Style`) or envitonment variable `OSTAP_TABLE_STYLE`
+  1. optimise `Ostap::Math::Bernstein2D` and `Ostap::Math::Bernstein3D`, make them a bit faster and efficient  
+  1. add proper (de)serialisation for 2D,3D&4D polynomial objects  
+  3. Add `Ostap::Math::Bernstein2D::fill` method
+  4. Add `Ostap::Math::Bernstein3D::fill` method
+  5. Add `Bernstein2D/3D` into `Ostap/Params.h` set of functions
+  6. further extend `test_trees_params.py` test
+  7. further extend `test_trees_params.py` test
+  8. add `__bool__` and `__nonzero__` methods for `ProgressBar`  - it allows to make more easy `while`-loops 
+  9. change default table layout for `isatty` regime from `SingleTable` to `DoubleTable`
+  10. allow to specify the default table format (`local`,`ascii`,`single`,`double`(default),`porcelain`, `github`,`markdown`)
+  11. reshuffle code for `Ostap::Exception` - make it visible
+  12. extend tests for `Bernstein2D` and `Bernstein3D` objects
+  13. add `Bernstein3D::integralXY`,`Bernstein3D::integralXZ` and `Bernstein3D::integralYZ` methods
+  14. add `Bernstein3D::integralX`,`Bernstein3D::integralY` and `Bernstein3D::integralZ` methods
+  15. extend tests for `Bernstein3D` objects
+  16. allow to define the default table style either via configiraitno file (section 'Tables', field `Style`) or environment variable `OSTAP_TABLE_STYLE`
   
 ## Backward incompatible:  
 
-  1. rename `BernsteinDualBasis` into `Ostap::Math::BernsteinnDual`
+  1. rename `BernsteinDualBasis` into `Ostap::Math::BernsteinDual`
   1. `ostap.logger.table.table` : rename argument `format` to `style`
   
 ## Bug fixes:
 
-  1. fix typo in `rames.py` for frame projections into 3D-histograms
+  1. fix typo in `rames.py` for data frame projections into 3D-histograms
   1. fix couple of stupid bugs in `ResoStudentT` resolution fnunction
   1. fix bug in `Bernstein3D::fill`
     
@@ -85,14 +87,12 @@
   1. disable new frame-test for old ROOT 
   1. add treatment of new `ROOT.RooFit.MaxCalls` agrument 
   
-
 ## Backward incompatible:  
 
   1. rename some methods for `Ostap::Math::Integrator`
 
 ## Bug fixes:
   
-
 # v1.9.5.2
 
 ## New features: 
