@@ -3474,6 +3474,65 @@ double Ostap::Math::fupN_F
 }
 // ============================================================================
 
+
+// ============================================================================
+/*  get Arithmetic-geometric mean 
+ *  @see https://en.wikipedia.org/wiki/Arithmetic%E2%80%93geometric_mean
+ *  @param x  x-value, \f$ x \ge 0 \f$   
+ *  @param y  y-value, \f$ y \ge 0 \f$    
+ *  @return Arithmetic-geometric mean 
+ */
+// ============================================================================
+double Ostap::Math::agm
+( const double x ,
+  const double y )
+{
+  //
+  if ( !std::isfinite ( x ) || x < 0 ) 
+  { return std::numeric_limits<double>::quiet_NaN() ; }
+  //
+  if ( !std::isfinite ( y ) || y < 0 ) 
+  { return std::numeric_limits<double>::quiet_NaN() ; }
+  //
+  if ( 0 == x || 0 == y ) { return 0 ; }
+  //
+  long double a = x ;
+  long double b = y ;
+  //
+  for ( unsigned short i = 0 ; i < 50 ; ++i )
+  {
+    long double aa = 0.5L *    ( a + b ) ;
+    long double bb = std::sqrt ( a * b ) ;
+    //
+    if ( 3 < i && s_equal ( aa , bb ) ) { return 0.5L * ( aa + bb ) ; }
+    a = aa ;
+    b = bb ;
+  }
+  return 0.5L * ( a + b ) ;  
+}
+// ============================================================================
+/*  get Geometric-harmonic  mean         
+ *  @see https://en.wikipedia.org/wiki/Geometric%E2%80%93harmonic_mean
+ *  @param x  x-value, \f$ x > 0 \f$   
+ *  @param y  y-value, \f$ y > 0 \f$    
+ *  @return Geometric-harmonic  mean         
+ */
+// ============================================================================
+double Ostap::Math::ghm 
+( const double x ,
+  const double y )
+{
+  //
+  if ( !std::isfinite ( x ) || x <= 0 ) 
+  { return std::numeric_limits<double>::quiet_NaN() ; }
+  //
+  if ( !std::isfinite ( y ) || y <= 0 ) 
+  { return std::numeric_limits<double>::quiet_NaN() ; }
+  //
+  return x * y / agm ( x , y ) ;
+}
+// ============================================================================
+
 // ============================================================================
 /* smoothstep (polynomial) function
  *  @see https://en.wikipedia.org/wiki/Smoothstep

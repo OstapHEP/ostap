@@ -31,7 +31,8 @@ __all__     = (
     'bessel_I'   , 'bessel_K'   , 
     'gauss_pdf'  , 'gauss_cdf'  ,
     'hypot'      , 'fma'        ,
-    'minv'       , 'maxv'       
+    'minv'       , 'maxv'       ,
+    'agm'        , 'ghm'        ,
     )
 # =============================================================================
 # logging 
@@ -534,6 +535,38 @@ def pochhammer ( x , n ) :
     _x = x if isinstance ( x , num_types ) else VE ( x )
     
     return _pochhammer ( _x , n ) 
+
+# =============================================================================
+_agm_ = Ostap.Math.agm
+_ghm_ = Ostap.Math.ghm
+# =============================================================================
+## get Arithmetic-geometric mean 
+#  @see https://en.wikipedia.org/wiki/Arithmetic%E2%80%93geometric_mean
+#  @param x  x-value, \f$ x \ge 0 \f$   
+#  @param y  y-value, \f$ y \ge 0 \f$    
+#  @return Arithmetic-geometric mean 
+#  @see Ostap::Math::agm
+def agm ( x  , y ) :
+    """Get Arithmetic-geometric mean 
+    - see https://en.wikipedia.org/wiki/Arithmetic%E2%80%93geometric_mean
+    - see `Ostap.Math.agm`
+    """
+    return _agm_ ( x , y )
+# =============================================================================
+## get Geometric-harmonic  mean         
+#  @see https://en.wikipedia.org/wiki/Geometric%E2%80%93harmonic_mean
+#  @param x  x-value, \f$ x > 0 \f$   
+#  @param y  y-value, \f$ y > 0 \f$    
+#  @return Geometric-harmonic  mean         
+#  @see Ostap::Math::agm
+def ghm ( x  , y ) :
+    """Get Geometric-harmonic  mean         
+    - see https://en.wikipedia.org/wiki/Geometric%E2%80%93harmonic_mean
+    - see `Ostap.Math.ghm`
+    """
+    return _ghm_ ( x , y )
+# =============================================================================
+
 
 # =============================================================================
 _bessel_Jn  = Ostap.Math.bessel_Jn 

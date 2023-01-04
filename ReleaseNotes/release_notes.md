@@ -6,6 +6,7 @@
    1. small reshuffle of code between `ostap.core.core` and `ostap.utils.basic`
    1. first step towards usage of `ipyparallel` for parallel processing: ad trivial test `test_parallel_ipyparallel.py`
    1. make use of `ipyparallel` parallelisation
+   1. add `Ostap::Math;:agm` and `Ostap::Math::ghm` fuctions
    
 ## Backward incompatible:  
   

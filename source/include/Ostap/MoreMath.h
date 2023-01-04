@@ -431,6 +431,30 @@ namespace Ostap
     ( const double         x , 
       const unsigned short n ) ;    
     // ========================================================================
+    
+    // ========================================================================
+    /** get Arithmetic-geometric mean 
+     *  @see https://en.wikipedia.org/wiki/Arithmetic%E2%80%93geometric_mean
+     *  @param x  x-value, \f$ x \ge 0 \f$   
+     *  @param y  y-value, \f$ y \ge 0 \f$    
+     *  @return Arithmetic-geometric mean 
+     */
+    double agm
+    ( const double x ,
+      const double y ) ;
+    // ========================================================================
+    /** get Geometric-harmonic  mean         
+     *  @see https://en.wikipedia.org/wiki/Geometric%E2%80%93harmonic_mean
+     *  @param x  x-value, \f$ x > 0 \f$   
+     *  @param y  y-value, \f$ y > 0 \f$    
+     *  @return Geometric-harmonic  mean         
+     */
+    double ghm 
+    ( const double x ,
+      const double y ) ;
+    // ========================================================================
+    
+    // ========================================================================
     /** get the standard gaussian pdf 
      *  @see https://en.wikipedia.org/wiki/Normal_distribution
      *  @param x x-value  
