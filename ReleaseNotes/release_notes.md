@@ -1,4 +1,3 @@
-
 ## New features:
 
    1. add `get_env` and `has_env` functions to `ostap/utils/basic.py` to check/access environment varibales inn case-insensititve way
