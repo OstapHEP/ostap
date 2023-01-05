@@ -35,6 +35,8 @@ __version__ = '$Revision$'
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
+    'get_remote_conf'    , ## get remote configurtaion
+    'get_workers'        , ## get list of remote workers/servers 
     'ping'               , ## ping remote host
     'good_pings'         , ## get alive hosts
     'get_local_port'     , ## get local port number
@@ -48,6 +50,129 @@ from ostap.logger.logger    import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
 else                      : logger = getLogger ( __name__               ) 
 # =============================================================================
+## Get the remove configuration for the remote host from the certain section of
+#  the configuration file 
+#  @code
+#  env , script , profile = get_remote_config ( 'Pathos' , 'lxplus701.cern.ch' ) 
+#  @endcode
+#  The configuration information is looked in the following sections:
+#  -  host-specific section "<SECTION >:<remote-host>"
+#  -  domain specific section "<SECTION>:<remote-domain>"
+#  -  global section "<SECTION>"
+def get_remote_conf ( section , remote ) :
+    """ Get the PP-configuration for the remote host form the configuration file 
+    >>> env , script , profile = get_remote_config ( 'Pathos' , 'lxplus701.cern.ch' ) 
+    The configuration information is looked in the following sections:
+    -  host-specific section `<SECTION>:<remote-host>'
+    -  domain specific section `<SECTION>:<remote-domain>'
+    -  global section `<SECTION>'
+    """
+    environment = ''
+    script      = None
+    profile     = None 
+    
+    import socket
+    remote = socket.getfqdn ( remote ).lower()
+
+    nl = len ( section ) + 1 
+    import ostap.core.config as CONFIG
+    # =====================================================================
+    # 1) Try to get specific configuration for the given remote host
+    if ( not environment ) or ( not script ) or ( not profile ) :
+        for k in CONFIG.config :
+            if not k.startswith ( '%s:' % section ) : continue
+            klow   = k.lower()
+            if klow [ nl: ].strip() == remote : 
+                node = CONFIG.config[ k ]
+                if not environment : environment = node.get ( 'environment' , ''   )
+                if not script      : script      = node.get ( 'script'      , None )
+                if not profile     : profile     = node.get ( 'profile'     , None )                
+                break
+            
+    # =====================================================================
+    # 2) Try to get the domain-specific configuration
+    if ( not environment ) or ( not script ) or ( not profile ) :
+        for k in CONFIG.config :
+            if not k.startswith ( '%s:' % section ) : continue
+            klow   = k.lower()
+            domain = klow [ nl: ].strip()
+            if domain and remote.endswith ( domain ) and domain != remote :
+                node = CONFIG.config[ k ]
+                if not environment : environment = node.get ( 'environment' , ''   )
+                if not script      : script      = node.get ( 'script'      , None )
+                if not profile     : profile     = node.get ( 'profile'     , None )
+                
+    # =====================================================================
+    # 3) Try to get global configuration
+    if ( not environment ) or ( not script ) or ( not profile ) :
+        import ostap.core.config as CONFIG
+        if CONFIG.config.has_section  ( section ) :
+            node = CONFIG.config [ section ]
+            if not environment : environment = node.get ( 'environment' , ''   )
+            if not script      : script      = node.get ( 'script'      , None )
+            if not profile     : profile     = node.get ( 'profile'     , None )
+
+    return environment , script , profile
+
+# =============================================================================
+## get the defined workers through the following scan:
+#  - the domain-specific configuration section `<SECTION>:<local-domain>'
+#  - the global configuration section `<SECTION>'
+#  - the environment variable <code>VARIABLE</code>
+#
+#  Infornartion is taken  form node <code>workers</code> of the section
+#  and the list is entended from the envirnment variable
+#  @code
+#  ppservers = get_workers ( 'Pathos' , env_bvar = 'OSTAP_PPSERVERS' ) 
+#  @endcode
+def get_workers ( section , envvar = '' , local_host = '' ) :
+    """Get the defined list of workers through the following scan:
+    - the domain-specific configuration section `<SECTION >:<local-domain>'
+    - the global configuration section `<SECTION>'
+    - the environment variable <code>envvar</code>
+    
+    >>> ppservers = get_workers ('Pathos' , envvar = 'OSTAP_PPSERVERS' )
+
+    Information is taken  form node `workers` of the section
+    and th elist is entended from the envirnment variable
+
+    """
+    import socket, string 
+    local_host = socket.getfqdn ( local_host ).lower()
+
+    import ostap.core.config as CONFIG
+    
+    nl = len ( section ) + 1 
+    ppsvc1 = ()
+    ws     = string.whitespace
+    # =================================================================
+    ## 1) try domain specific configuration 
+    for k in CONFIG.config :
+        if not k.startswith ( '%s:' % section ) : continue
+        klow   = k.lower()
+        domain = klow [ nl: ].strip()
+        if domain and local_host.endswith ( domain ) and domain != local_host :
+            node   = CONFIG.config[ k ]
+            pp     = node.get( 'workers' , '()' )
+            ppsvc1 = tuple ( i.strip ( ws ) for i in pp.split ( ',' ) if i.strip ( ws ) )  
+
+    if not ppsvc1 and CONFIG.config.has_section  ( sections ) :
+        node = CONFIG.config [ section ]
+        pp     = node.get( 'workers' , '()' )
+        ppsvc1 = tuple ( i.strip ( ws ) for i in pp.split ( ',' ) if i.strip ( ws ) )  
+            
+    ## use the environment variables
+    import os 
+    ppsvc2    = tuple ( os.getenv ( 'OSTAP_PPSERVERS','').split( ',' ) )
+    
+    if ppsvc1 : logger.debug ( 'Get workers from config          : %s' % list ( ppsvc1 ) )    
+    if ppsvc2 : logger.debug ( 'Get workerd from "%s"            : %s' % ( envvar , list ( ppsvc2 ) ) ) 
+    
+    ppsvc = set ( ppsvc1 + ppsvc2 )
+    ppsvc.discard ( '' )
+    
+    return tuple ( ppsvc )
+                
 
 # =============================================================================
 ## Get the maximum size of jobs chunk

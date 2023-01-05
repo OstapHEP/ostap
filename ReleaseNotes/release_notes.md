@@ -11,6 +11,7 @@
    1. improve printout from `ostap/core/config.py`
    1. add `$OSTAPDIR/.ostaprc` in the list of configuraiton files for processing 
    1. provide `$OSTAPDIR/.ostaprc` configuration file 
+   1. more reshuffling of the code for generic and specific parallelisation 
 
 ## Backward incompatible:  
   

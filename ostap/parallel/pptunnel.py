@@ -19,75 +19,12 @@ __all__     = (
     )
 # =============================================================================
 import sys, os, time 
-import pathos.core    as PC
-import pathos.secure  as PS
+import pathos.core         as     PC
+import pathos.secure       as     PS
 # =============================================================================
 from ostap.logger.logger import getLogger, keepLevel, enabledVerbose 
 if '__main__' == __name__ : logger = getLogger ( 'ostap.paralllel.pptunnel' )
 else                      : logger = getLogger ( __name__                   ) 
-# =============================================================================
-## Get the PP-configuration for the remote host from the configuration file 
-#  @code
-#  env , script , profile = pathos_remote_config ( 'lxplus701.cern.ch' ) 
-#  @endcode
-#  The configuration information is looked in the following sections:
-#  -  host-specific section "Pathos:<remote-host>"
-#  -  domain specific section "Pathos:<remote-domain>"
-#  -  global section "Parallel"
-def pathos_remote_conf ( remote ) :
-    """ Get the PP-configuration for the remote host form the configuration file 
-    >>> env , script , profile = pathos_remote_config ( 'lxplus701.cern.ch' ) 
-    The configuration information is looked in the following sections:
-    -  host-specific section `Pathos:<remote-host>'
-    -  domain specific section `Pathos:<remote-domain>'
-    -  global section ``Parallel''
-    """
-    environment = ''
-    script      = None
-    profile     = None 
-    
-    import socket
-    remote = socket.getfqdn ( remote ).lower()
-    
-    import ostap.core.config as CONFIG
-    # =====================================================================
-    # 1) Try to get specific configuration for the given remote host
-    if ( not environment ) or ( not script ) or ( not profile ) :
-        for k in CONFIG.config :
-            if not k.startswith ( 'Pathos:' ) : continue
-            klow   = k.lower()
-            if klow[9:].strip() == remote : 
-                node = CONFIG.config[ k ]
-                if not environment : environment = node.get ( 'environment' , ''   )
-                if not script      : script      = node.get ( 'script'      , None )
-                if not profile     : profile     = node.get ( 'profile'     , None )                
-                break
-            
-    # =====================================================================
-    # 2) Try to get the domain-specific configuration
-    if ( not environment ) or ( not script ) or ( not profile ) :
-        for k in CONFIG.config :
-            if not k.startswith ( 'Pathos:' ) : continue
-            klow   = k.lower()
-            domain = klow[9:].strip()
-            if domain and remote.endswith ( domain ) and domain != remote :
-                node = CONFIG.config[ k ]
-                if not environment : environment = node.get ( 'environment' , ''   )
-                if not script      : script      = node.get ( 'script'      , None )
-                if not profile     : profile     = node.get ( 'profile'     , None )
-                
-    # =====================================================================
-    # 3) Try to get global configuration
-    if ( not environment ) or ( not script ) or ( not profile ) :
-        import ostap.core.config as CONFIG
-        if CONFIG.config.has_section  ( 'Pathos' ) :
-            node = CONFIG.config [ 'Pathos' ]
-            if not environment : environment = node.get ( 'environment' , ''   )
-            if not script      : script      = node.get ( 'script'      , None )
-            if not profile     : profile     = node.get ( 'profile'     , None )
-
-    return environment , script , profile
-
 # =============================================================================
 ## @class ppServer
 #  Helper class that starts <code>ppserver</code> on remote site
@@ -176,7 +113,8 @@ class ppServer(object) :
             # =================================================================
             # Get configuration information for the given remote host
             if ( not environment ) or ( not script ) or ( not profile ) :
-                e , s , p = pathos_remote_conf ( remote ) 
+                from  ostap.parallel.utils import get_remote_conf                 
+                e , s , p = get_remote_conf ( 'Pathos' , remote ) 
                 if e and not environment : environment = e
                 if s and not script      : script      = s
                 if p and not profile     : profile     = p
