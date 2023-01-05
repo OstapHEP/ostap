@@ -12,7 +12,6 @@ from   ostap.parallel.task      import Task, GenericTask
 from   ostap.parallel.utils     import pool_context 
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
 import ROOT, time, sys 
 # =============================================================================
 # logging 
@@ -88,9 +87,9 @@ class HTask(Task) :
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel (bare interface) 
 def test_parallel_ipyparallel_bare ( ) :
-    """Test parallel processnig with parallel_gaudi (bare interface) 
+    """Test parallel processing with parallel_ipyparallel (bare interface) 
     """
-    logger  = getLogger ("ostap.test_parallel_ipyparallel_bare")
+    logger  = getLogger ("test_parallel_ipyparallel_bare")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -108,7 +107,7 @@ def test_parallel_ipyparallel_bare ( ) :
         if result is None  : result = res
         else               : result.Add ( res )  
         
-    with wait ( 1 ) , use_canvas ( 'test_parallel_ipyparallel_bare' ) : 
+    with use_canvas ( 'test_parallel_ipyparallel_bare' , wait = 2 ) : 
         
         logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
         logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
@@ -120,9 +119,9 @@ def test_parallel_ipyparallel_bare ( ) :
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel (task interface) 
 def test_parallel_ipyparallel_task ( ) :
-    """Test parallel processnig with parallel_ipyparallel (task interface) 
+    """Test parallel processing with parallel_ipyparallel (task interface) 
     """
-    logger  = getLogger ("ostap.test_parallel_iparallel_task")
+    logger  = getLogger ("test_parallel_iparallel_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -138,7 +137,7 @@ def test_parallel_ipyparallel_task ( ) :
     ## process the task 
     result   = manager.process ( task ,  inputs ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_task' ) : 
+    with use_canvas ( 'test_parallel_ipyparallel_task' , wait = 2 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
         logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
         result.draw (   ) 
@@ -149,9 +148,9 @@ def test_parallel_ipyparallel_task ( ) :
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel  (func interface) 
 def test_parallel_ipyparallel_func ( ) :
-    """Test parallel processnig with parallel_ipyparallel (func interface) 
+    """Test parallel processing with parallel_ipyparallel (func interface) 
     """
-    logger  = getLogger ("ostap.test_parallel_ipyparallel_task")
+    logger  = getLogger ("test_parallel_ipyparallel_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -164,7 +163,7 @@ def test_parallel_ipyparallel_func ( ) :
     ## process the function  
     result   = manager.process ( make_histo , inputs , merger = merge_histos )
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_func' ) : 
+    with use_canvas ( 'test_parallel_ipyparallel_func' , wait = 2 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
         logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
         result.draw (   ) 
@@ -177,7 +176,7 @@ def test_parallel_ipyparallel_func ( ) :
 def test_parallel_ipyparallel_generic ( ) :
     """Test parallel processnig with parallel_ipyparallel (use generic task)
     """
-    logger  = getLogger ("ostap.test_parallel_ipyparallel_generic")
+    logger  = getLogger ("test_parallel_ipyparallel_generic")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -194,7 +193,7 @@ def test_parallel_ipyparallel_generic ( ) :
     ## process the task 
     result   = manager.process ( task ,  inputs ) 
     
-    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_generic' ) : 
+    with use_canvas ( 'test_parallel_ipyparalell_generic' , wait = 2 ) : 
         logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
         logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) )         
         result.draw (   ) 

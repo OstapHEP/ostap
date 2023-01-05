@@ -69,7 +69,7 @@ def test_parallel_toys ( ) :
     - fill distributions of pulls 
     """
 
-    logger = getLogger ( 'ostap.test_parallel_toys' ) 
+    logger = getLogger ( 'test_parallel_toys' ) 
          
     results , stats = Toys.parallel_toys  (
         pdf         = gen_gauss ,
@@ -112,7 +112,7 @@ def test_parallel_toys2 ( ) :
     - fill distributions of fit results
     """    
 
-    logger = getLogger ( 'ostap.test_parallel_toys2' ) 
+    logger = getLogger ( 'test_parallel_toys2' ) 
 
     results , stats = Toys.parallel_toys2 (
         gen_pdf     = gen_gauss ,
@@ -157,7 +157,7 @@ def test_parallel_significance_toys ( ) :
     - fill distributions for fit results
     """
     
-    logger = getLogger ( 'ostap.test_parallel_significance_toys' ) 
+    logger = getLogger ( 'test_parallel_significance_toys' ) 
 
     ## only background hypothesis
     bkg_only = Models.Bkg_pdf    ( "BKG" , xvar =  mass , power = 0 , tau = 0      )

@@ -72,15 +72,15 @@ class MakeHisto(object)  :
     def __call__ ( self , *args ) :
         return self.process ( *args ) 
     
-## start 10 jobs, and for each job create the histogram with 100 entries 
-inputs = 10 * [ 100 ]
+## start 50 jobs, and for each job create the histogram with 100 entries 
+inputs = 50 * [ 100 ]
 
 # =============================================================================
 ## test parallel processing with pathos: ProcessPool
 def test_pathos_mp_function () :
     """Test parallel processnig with pathos: ProcessPool
     """
-    logger = getLogger("ostap.test_pathos_mp_function")
+    logger = getLogger("test_pathos_mp_function")
     if not pathos :
         logger.error ( "pathos is not available" )
         return 
@@ -121,7 +121,7 @@ def test_pathos_mp_function () :
 def test_pathos_mp_callable  () :
     """Test parallel processnig with pathos: ProcessPool
     """
-    logger = getLogger("ostap.test_pathos_mp_callable")             
+    logger = getLogger("test_pathos_mp_callable")             
     if not pathos :
         logger.error ( "pathos is not available" )
         return 
@@ -167,7 +167,7 @@ def test_pathos_mp_callable  () :
 def test_pathos_pp_function () :
     """Test parallel processnig with pathos: ParallelPool  
     """
-    logger = getLogger("ostap.test_pathos_pp_function") 
+    logger = getLogger("test_pathos_pp_function") 
     if not pathos :
         logger.error ( "pathos is not available" )
         return 
@@ -217,7 +217,7 @@ def test_pathos_pp_function () :
 def test_pathos_pp_method () :
     """Test parallel processnig with pathos: ParallelPool  
     """
-    logger = getLogger("ostap.test_pathos_pp_method ")
+    logger = getLogger("test_pathos_pp_method ")
     if not pathos :
         logger.error ( "pathos is not available" )
         return 
@@ -263,7 +263,7 @@ def test_pathos_pp_method () :
 def test_pathos_pp_callable () :
     """Test parallel processnig with pathos: ParallelPool  
     """
-    logger = getLogger("ostap.test_pathos_pp_callable")         
+    logger = getLogger("test_pathos_pp_callable")         
     if not pathos :
         logger.error ( "pathos is not available" )
         return

@@ -31,7 +31,7 @@ import ROOT,os,  random
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' == __name__ or '__builtin__' == __name__ : 
-    logger = getLogger( 'ostap.test_parallel_kisa' )
+    logger = getLogger( 'test_parallel_kisa' )
 else : 
     logger = getLogger( __name__ )
 # =============================================================================
@@ -122,7 +122,7 @@ with timing('Prepare data') :
 def test_kisa () : 
 
 
-    logger = getLogger ( 'ostap.test_kisa' )
+    logger = getLogger ( 'test_parallel_kisa' )
     
     if 62400 <= ROOT.gROOT.GetVersionInt() < 62406 :
         logger.warning ('Test can fail for %s' % ROOT.gROOT.GetVersion() )
@@ -152,7 +152,7 @@ def MASS1  ( s ) : return s.mass
 # =============================================================================
 def test_kisa2 () :
        
-    logger = getLogger ( 'ostap.test_kisa2' )
+    logger = getLogger ( 'test_parallel_kisa2' )
 
     if 62400 <= ROOT.gROOT.GetVersionInt() < 62406 :
         logger.warning ('Test can fail for %s' % ROOT.gROOT.GetVersion() )
@@ -207,7 +207,7 @@ def test_kisa2 () :
 # =============================================================================
 def test_kisa3 () :
 
-    logger = getLogger ( 'ostap.test_kisa3' )
+    logger = getLogger ( 'test_parallel_kisa3' )
 
     if 62400 <= ROOT.gROOT.GetVersionInt() < 62406 :
         logger.warning ('Test can fail for %s' % ROOT.gROOT.GetVersion() )

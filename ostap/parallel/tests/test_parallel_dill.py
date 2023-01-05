@@ -23,7 +23,7 @@ import ROOT, pickle, sys
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' == __name__ or '__builtin__' == __name__ : 
-    logger = getLogger( 'ostap.test_parallel_dill' )
+    logger = getLogger( 'test_parallel_dill' )
 else : 
     logger = getLogger( __name__ )
 # =============================================================================
@@ -37,7 +37,7 @@ except ImportError :
 # =============================================================================
 def test_dill () :
 
-    logger = getLogger ( 'ostap.test_dill' )
+    logger = getLogger ( 'test_parallel_dill' )
     
     h = ROOT.TH1D()
     

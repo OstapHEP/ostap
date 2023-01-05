@@ -49,8 +49,8 @@ class MakeHisto(object) :
 
 mh  = MakeHisto  ()
 
-## start 5 jobs, and for each job create the histogram with 100 entries 
-inputs = 5 * [ 100 ]
+## start 50 jobs, and for each job create the histogram with 100 entries 
+inputs = 50 * [ 100 ]
 
 
 # ===============================================================================
@@ -72,7 +72,7 @@ def uimap  ( jobs ) :
 def test_pp_function () :
     """Test parallel python with plain function
     """
-    logger =    getLogger ("ostap.test_pp_function")
+    logger =    getLogger ("test_pp_function")
     logger.info ('Test job submission with %s' %  pp ) 
 
     from ostap.core.known_issues import DILL_ROOT_issue
@@ -107,7 +107,7 @@ def test_pp_function () :
 def test_pp_method() :
     """Test parallel python with object method  
     """
-    logger =    getLogger ("ostap.test_pp_method")
+    logger =    getLogger ("test_pp_method")
     logger.info ('Test job submission with %s' %  pp ) 
 
     from ostap.core.known_issues import DILL_ROOT_issue
@@ -141,7 +141,7 @@ def test_pp_method() :
 def test_pp_callable () :
     """Test parallel python with callable  
     """
-    logger = getLogger ("ostap.test_pp_callable")
+    logger = getLogger ("test_pp_callable")
     logger.info ('Test job submission with %s' %  pp ) 
     
         

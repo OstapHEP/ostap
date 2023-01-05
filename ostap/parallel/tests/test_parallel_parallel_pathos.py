@@ -75,8 +75,8 @@ def merge_histos  ( h1 , h2 ) :
     return h1
 
 # =============================================================================
-## start 5 jobs, and for each job create the histogram with 100 entries 
-inputs = 5 * [ 100 ] 
+## start 50 jobs, and for each job create the histogram with 100 entries 
+inputs = 50 * [ 100 ] 
 
 # ==============================================================================
 ## simple task to create and fill historgam 
@@ -102,7 +102,7 @@ class HTask(Task) :
 def test_parallel_pathos_mp_bare ( ) :
     """Test parallel processnig with parallel_pathos (bare interface) 
     """
-    logger  = getLogger ("ostap.test_parallel_pathos_mp_bare")
+    logger  = getLogger ("test_parallel_pathos_mp_bare")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -137,7 +137,7 @@ def test_parallel_pathos_mp_bare ( ) :
 def test_parallel_pathos_pp_bare ( ) :
     """Test parallel processnig with parallel_pathos (bare interface) 
     """
-    logger  = getLogger ("ostap.test_parallel_pathos_mp_bare")
+    logger  = getLogger ("test_parallel_pathos_mp_bare")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return 
@@ -171,7 +171,7 @@ def test_parallel_pathos_pp_bare ( ) :
 def test_parallel_pathos_mp_task ( ) :
     """Test parallel processnig with parallel_pathos (task interface) 
     """
-    logger  = getLogger ("ostap.test_parallel_pathos_mp_task")
+    logger  = getLogger ("test_parallel_pathos_mp_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -206,7 +206,7 @@ def test_parallel_pathos_mp_task ( ) :
 def test_parallel_pathos_pp_task ( ) :
     """Test parallel processnig with parallel_pathos (task interface) 
     """
-    logger  = getLogger ("ostap.test_parallel_pathos_pp_task")
+    logger  = getLogger ("test_parallel_pathos_pp_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -240,7 +240,7 @@ def test_parallel_pathos_pp_task ( ) :
 def test_parallel_pathos_mp_func ( ) :
     """Test parallel processnig with parallel_pathos (func interface) 
     """
-    logger  = getLogger ("ostap.test_parallel_pathos_mp_task")
+    logger  = getLogger ("test_parallel_pathos_mp_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -271,7 +271,7 @@ def test_parallel_pathos_mp_func ( ) :
 def test_parallel_pathos_pp_func ( ) :
     """Test parallel processnig with parallel_pathos (func interface) 
     """
-    logger  = getLogger ("ostap.test_parallel_pathos_pp_task")
+    logger  = getLogger ("test_parallel_pathos_pp_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -302,7 +302,7 @@ def test_parallel_pathos_pp_func ( ) :
 def test_parallel_pathos_mp_generic ( ) :
     """Test parallel processnig with parallel_pathos (use generic task)
     """
-    logger  = getLogger ("ostap.test_parallel_pathos_mp_generic")
+    logger  = getLogger ("test_parallel_pathos_mp_generic")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -336,7 +336,7 @@ def test_parallel_pathos_mp_generic ( ) :
 def test_parallel_pathos_pp_generic ( ) :
     """Test parallel processnig with parallel_pathos (use generic task)
     """
-    logger  = getLogger ("ostap.test_parallel_pathos_mp_generic")
+    logger  = getLogger ("test_parallel_pathos_mp_generic")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return

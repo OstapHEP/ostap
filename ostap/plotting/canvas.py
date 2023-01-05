@@ -912,8 +912,6 @@ def use_pad ( pad , **config ) :
 usePad = use_pad
 
 
-
-
 # =============================================================================
 ## @class Canvas
 #  helper context manager to create and configure a canvas (and pad)
@@ -931,6 +929,7 @@ class Canvas(KeepCanvas) :
                    title  = ''            ,
                    width  = canvas_width  ,   ## canvas width
                    height = canvas_height ,   ## canvas height 
+                   wait   = 0             ,   ## pause before exit 
                    **kwargs               ) : ## Pad configuration
         
         self.__name   = name
@@ -940,7 +939,7 @@ class Canvas(KeepCanvas) :
         self.__kwargs = kwargs
         self.__cnv    = None 
         ## 
-        KeepCanvas.__init__ ( self ) 
+        KeepCanvas.__init__ ( self , wait ) 
         
     ## context manager: exit 
     def __enter__ ( self ) :
@@ -990,7 +989,8 @@ class Canvas(KeepCanvas) :
 def use_canvas ( name   = ''            ,
                  title  = ''            ,
                  width  = canvas_width  ,   ## canvas width
-                 height = canvas_height ,   ## canvas height 
+                 height = canvas_height ,   ## canvas height
+                 wait   = 0             ,   ## pause before exit 
                  **kwargs               ) : ## Pad configuration
     """Helper context manager to create and configure a canvas (and pad)
     >>> with use_canvas ( title = 'Canvas #2' , width = 1000 ) :
@@ -999,7 +999,8 @@ def use_canvas ( name   = ''            ,
     return Canvas ( name   = name   ,
                     title  = title  ,
                     width  = width  ,   ## canvas width
-                    height = height ,   ## canvas height 
+                    height = height ,   ## canvas height
+                    wait   = wait   ,   ## pause before exit 
                     **kwargs        )   ## Pad configuration
 
 

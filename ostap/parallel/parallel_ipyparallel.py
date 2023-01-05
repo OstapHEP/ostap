@@ -36,6 +36,12 @@ if ( 3 , 6 ) <= sys.version_info :
 if ipp and ( 8,0 ) <= ipp.version_info :
 
     # =========================================================================
+    try :
+        import dill
+    except ImportError :
+        dill = None
+        
+    # =========================================================================
     ## @class WorkManager
     #  Class to in charge of managing the tasks and distributing them to
     #  the workers. They can be local (using other cores) or remote
@@ -49,7 +55,14 @@ if ipp and ( 8,0 ) <= ipp.version_info :
                       ncpus    = None   ,
                       silent   = False  ,
                       progress = True   ,
-                      balanced = False  , **kwargs ) :
+                      balanced = False  ,
+                      use_dill = True   , **kwargs ) :
+
+            if isinstance ( ncpus , str ) and ncpus.lower() == 'autodetect' :
+                ncpus = None
+            n = kwargs.get ( 'n' , ncpus )
+            if isinstance ( n , int ) and 0 < n :     kwargs  [ 'n' ] = n
+            elif 'n' in kwargs                  : del kwargds [ 'n' ]
             
             ## initialize the base class 
             TaskManager.__init__  ( self ,
@@ -57,10 +70,30 @@ if ipp and ( 8,0 ) <= ipp.version_info :
                                     silent   = silent   ,
                                     progress = progress )
             
+            if self.silent :
+                import logging 
+                kwargs [ 'log_level' ] = logging.WARNING 
+
             ##  ipp.Cluster arguments 
             self.__kwargs   = kwargs
-            self.__balanced = balanced 
-            
+            self.__balanced = True if balanced else False 
+            self.__use_dill = True if use_dill else False
+            if self.__use_dill and not dill :
+                logger.warning ( "dill is not available, swithc it off" ) 
+                self.__use_dill = False
+
+            if not self.silent :
+                logger.info ( 'WorkManager is ipyparallel'  )
+                if self.__kwargs :
+                    rows = [ ( 'Parameter' , 'value' ) ]
+                    for k, v in self.__kwargs :
+                        row = k  , str ( v  )
+                        rows.append ( row )
+                    import ostap.logger.table as T
+                    title = 'ipyparallel'
+                    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'll' )
+                    logger.info ( '%s\n%s' % ( title , table ) )
+                        
         # =====================================================================
         ## process the bare <code>executor</code> function
         #  @param job   function to be executed
@@ -95,11 +128,13 @@ if ipp and ( 8,0 ) <= ipp.version_info :
             silent = self.silent or not progress 
             with ipp.Cluster ( **self.__kwargs ) as cluster :
 
-                if self.__balanced :
-                    view = cluster.load_balanced_view()
-                else : 
+                if   self.__use_dill :
                     view = cluster[:]                    
                     view.use_dill()
+                elif self.__balanced : 
+                    view = cluster.load_balanced_view()
+                else :
+                    view = cluster[:]                    
                 
                 results = view.map_async ( job , jobs_args )
 

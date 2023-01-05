@@ -403,7 +403,49 @@ def keepCWD ( new_dir = '' ) :
     - No action if no directory is specified 
     """
     return KeepCWD ( new_dir ) 
-        
+
+
+# =============================================================================
+## context manager that invokes <code>time.sleep</code> before and after action
+#  @code
+#  with Wait ( after = 5 , before = 0 ) :
+#  ...
+#  @endcode
+class Wait(object):
+    """Context manager that invokes <code>time.sleep</code> before and after action
+    >>> with Wait ( after = 5 , before = 0 ) :
+    >>> ...
+    """
+    def __init__ ( self , after = 0 , before = 0 ) :
+        self.__after  = after
+        self.__before = before 
+
+    def __enter__ ( self ) :
+        if 0 < self.__before : time.sleep  ( self.__before ) 
+    def __exit__ ( self , *_ ) :
+        if 0 < self.__after  : time.sleep  ( self.__after  ) 
+    @property
+    def before ( self ) :
+        """``before'': wait some time before the action"""
+        return self.__before    
+    @property
+    def after  ( self ) :
+        """``after'': wait some time after the action"""
+        return self.__after
+
+# =============================================================================
+## context manager that invokes <code>time.sleep</code> before and after action
+#  @code
+#  with wait ( after = 5 , before = 0 ) :
+#  ...
+#  @endcode
+def wait ( after = 0 , before = 0 ) :
+    """Context manager that invokes <code>time.sleep</code> before and after action
+    >>> with wait ( after = 5 , before = 0 ) :
+    >>> ...
+    """    
+    return Wait ( after = after , before = before )
+
 # =============================================================================
 ## @class KeepCanvas
 #  helper class to keep the current canvas
@@ -411,18 +453,21 @@ def keepCWD ( new_dir = '' ) :
 #  with KeepCanvas() :
 #  ... do something here 
 #  @endcode 
-class KeepCanvas(object) :
+class KeepCanvas(Wait) :
     """Helper class to keep the current canvas
     >>> with KeepCanvas() :
     ... do something here 
     """
-    def __init__ ( self ) :
+    def __init__ ( self , wait = 0 ) :
+        Wait.__init__ ( self , after = wait ) 
         self.__old_canvas  = None 
     def __enter__ ( self ) :
+        Wait.__enter__ ( self ) 
         import ROOT
         cnv  = ROOT.gPad.GetCanvas() if ROOT.gPad else None 
         self.__old_canvas = cnv if cnv else None 
     def __exit__  ( self , *_ ) :
+        Wait.__exit__ ( self , *_ )         
         if self.__old_canvas:
             self.__old_canvas.cd()
         self.__old_canvas = None             
@@ -525,48 +570,6 @@ def keepArgs() :
     ...  
     """
     return KeepArgs()
-
-
-# =============================================================================
-## context manager that invokes <code>time.sleep</code> before and after action
-#  @code
-#  with Wait ( after = 5 , before = 0 ) :
-#  ...
-#  @endcode
-class Wait(object):
-    """Context manager that invokes <code>time.sleep</code> before and after action
-    >>> with Wait ( after = 5 , before = 0 ) :
-    >>> ...
-    """
-    def __init__ ( self , after = 0 , before = 0 ) :
-        self.__after  = after
-        self.__before = before 
-
-    def __enter__ ( self ) :
-        if 0 < self.__before : time.sleep  ( self.__before ) 
-    def __exit__ ( self , *_ ) :
-        if 0 < self.__after : time.sleep  ( self.__after  ) 
-    @property
-    def before ( self ) :
-        """``before'': wait some time before the action"""
-        return self.__before    
-    @property
-    def after  ( self ) :
-        """``after'': wait some time after the action"""
-        return self.__after
-
-# =============================================================================
-## context manager that invokes <code>time.sleep</code> before and after action
-#  @code
-#  with wait ( after = 5 , before = 0 ) :
-#  ...
-#  @endcode
-def wait ( after = 0 , before = 0 ) :
-    """Context manager that invokes <code>time.sleep</code> before and after action
-    >>> with wait ( after = 5 , before = 0 ) :
-    >>> ...
-    """    
-    return Wait ( after = after , before = before )
 
 # =============================================================================
 ## EnableImplicitMT

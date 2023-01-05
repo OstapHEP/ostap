@@ -71,8 +71,8 @@ class MakeHisto(object) :
     
 mh  = MakeHisto  ()
 
-## start 5 jobs, and for each job create the histogram with 100 entries 
-inputs = 5 * [ 100 ]
+## start 50 jobs, and for each job create the histogram with 100 entries 
+inputs = 50 * [ 100 ]
 
 
 # ===============================================================================
@@ -94,7 +94,7 @@ def uimap  ( jobs ) :
 def test_ppft_function () :
     """Test parallel python with plain function
     """
-    logger =    getLogger ("ostap.test_ppft_function")
+    logger =    getLogger ("test_ppft_function")
     logger.info ('Test job submission with %s' %  ppft ) 
                   
     if not ppft :
@@ -132,7 +132,7 @@ def test_ppft_function () :
 def test_ppft_method() :
     """Test parallel python with object method  
     """
-    logger =    getLogger ("ostap.test_ppft_method")
+    logger =    getLogger ("test_ppft_method")
     logger.info ('Test job submission with %s' %  ppft ) 
     
     if not ppft :
@@ -171,7 +171,7 @@ def test_ppft_method() :
 def test_ppft_callable () :
     """Test parallel python with callable  
     """
-    logger = getLogger ("ostap.test_ppft_callable")
+    logger = getLogger ("test_ppft_callable")
     logger.info ('Test job submission with %s' %  ppft ) 
     
     if not ppft :

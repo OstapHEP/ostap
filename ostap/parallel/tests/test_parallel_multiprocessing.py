@@ -53,8 +53,8 @@ class MakeHisto(object) :
 
 mh  = MakeHisto  ()
 
-## start 10 jobs, and for each job create the histogram with 100 entries 
-inputs = 10 * [ 100 ]
+## start 50 jobs, and for each job create the histogram with 100 entries 
+inputs = 50 * [ 100 ]
 
 # =============================================================================
 ## test parallel processing with pathos
@@ -62,7 +62,7 @@ def test_multiprocessing_function () :
     """Test parallel processnig with multiprocessing
     """
 
-    logger = getLogger ("ostap.test_multiprocessing_function")    
+    logger = getLogger ("test_multiprocessing_function")    
     logger.info ('Test job submission with module %s' %  multiprocessing )
     
     ncpus = multiprocessing.cpu_count() 
@@ -98,7 +98,7 @@ def test_multiprocessing_callable  () :
     """Test parallel processnig with multiprocessing
     """
 
-    logger = getLogger ("ostap.test_multiprocessing_callable")
+    logger = getLogger ("test_multiprocessing_callable")
     
     logger.info ('Test job submission with module %s' %  multiprocessing )
     

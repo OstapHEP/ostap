@@ -77,15 +77,15 @@ class MakeHisto(object) :
 
 mh  = MakeHisto  ()
 
-## start 5 jobs, and for each job create the histogram with 100 entries 
-inputs = 5 * [ 100 ]
+## start 50 jobs, and for each job create the histogram with 100 entries 
+inputs = 50 * [ 100 ]
 
 # =============================================================================
 ## test parallel processing with multiprocess
 def test_multiprocess_function () :
     """Test parallel processnig with multiprocess
     """
-    logger =    getLogger ("ostap.test_multiprocess_function")
+    logger =    getLogger ("test_multiprocess_function")
     logger.info ('Test job submission with %s' %  multiprocess ) 
     
     if not dill :
@@ -130,7 +130,7 @@ def test_multiprocess_function () :
 def test_multiprocess_callable  () :
     """Test parallel processnig with multiprocess
     """
-    logger =    getLogger ("ostap.test_multiprocess_callable")
+    logger =    getLogger ("test_multiprocess_callable")
     logger.info ('Test job submission with %s' %  multiprocess ) 
     
     if not dill :
