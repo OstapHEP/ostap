@@ -8,6 +8,7 @@
 #  - <code>$HOME/.ostaprc</code>
 #  - <code>~/.ostaprc</code>
 #  - <code>- ~/.config/ostap/.ostaprc<.code>
+#  - <code>- $HOME/.config/ostap/.ostaprc<.code>
 #  - <code>.ostaprc</code>
 #  - <code>$OSTAP_CONFIG</code>
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -63,9 +64,6 @@ config [ 'Pathos'      ] = {} ## PATHOS configuration
 config [ 'IPyparallel' ] = {} ## ipyparallel configuration 
 
 ## the list of processes config files
-
-print ( default_config.config_files )
-
 config_files = default_config.config_files + tuple ( ostap_getenv ( 'OSTAP_CONFIG', '' ).split( os.pathsep ) )
 the_files    = [] 
 for f in config_files :
@@ -73,9 +71,9 @@ for f in config_files :
     for i in range ( 5 ) :
         ff = os.path.expandvars ( ff )
         ff = os.path.expanduser ( ff )
-    if not os.path.exists ( ff ) : continue
-    if not os.path.isfile ( ff ) : continue
-    if ff in the_files               : continue 
+    if not os.path.exists ( ff )                 : continue
+    if not os.path.isfile ( ff )                 : continue
+    if [ fn for fn in the_files if fn[0] == ff ] : continue
     the_files.append ( ( ff , f ) )
 the_files = tuple ( the_files ) 
 config_files = tuple ( f [ 0 ] for f in the_files ) 
@@ -167,6 +165,12 @@ def config_goodby () :
         pass
     
 
+
+# =============================================================================
+for k in config :
+    if k.startswith ( 'Parallel' ) :
+        logger.warning ( 'Generic section "%s" is obsolete, switch to "Pathos" or "IPyParalllel"' % k )
+        
 # =============================================================================
 if '__main__' == __name__ :
 

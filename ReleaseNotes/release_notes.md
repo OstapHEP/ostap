@@ -12,6 +12,8 @@
    1. add `$OSTAPDIR/.ostaprc` in the list of configuraiton files for processing 
    1. provide `$OSTAPDIR/.ostaprc` configuration file 
    1. more reshuffling of the code for generic and specific parallelisation 
+   1. more polishing for the updated configuration  
+
 
 ## Backward incompatible:  
   
