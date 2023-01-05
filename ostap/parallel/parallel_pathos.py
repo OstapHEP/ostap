@@ -63,6 +63,9 @@ if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel_pathos
 else                      : logger = getLogger ( __name__                         ) 
 # =============================================================================
 
+
+
+
 # =============================================================================
 ## helper function to access the underlyng <code>pp.Server</code> object
 #  @attention It should not be abused! 
@@ -72,6 +75,61 @@ def get_pps ( pool ) :
     """
     import pathos.parallel
     return pathos.parallel.__STATE.get ( pool._id , None )
+
+
+# =============================================================================
+## get the defined PP-servers through the following scan:
+#  - the domain-specific configuration section `Pathos:<local-domain>'
+#  - the global configuration section `Pathos'
+#  - the environment variable <code>OSTAP_PPSERVERS</code>
+#  @code
+#  ppservers = pathos_ppservers () 
+#  @endcode
+def pathos_ppservers  ( local_host = '' ) :
+    """Get the defined list of PP-servers through the following scan:
+    - the domain-specific configuration section ``Parallel:<local-domain>''
+    - the global configuration section ``Parallel''
+    - the environment variable <code>OSTAP_PPSERVERS</code>
+    
+    >>> ppservers = get_ppservers ()
+    
+    """
+    import socket, string 
+    local_host = socket.getfqdn ( local_host ).lower()
+
+    import ostap.core.config as CONFIG
+
+    ppsvc1 = ()
+    ws     = string.whitespace
+    # =================================================================
+    ## 1) try domain specific configuration 
+    for k in CONFIG.config :
+        if not k.startswith ( 'Pathos:' ) : continue
+        klow   = k.lower()
+        domain = klow[9:].strip()
+        if domain and local_host.endswith ( domain ) and domain != local_host :
+            node   = CONFIG.config[ k ]
+            pp     = node.get( 'ppservers' , '()' )
+            ppsvc1 = tuple ( i.strip ( ws ) for i in pp.split ( ',' ) if i.strip ( ws ) )  
+
+    if not ppsvc1 and CONFIG.config.has_section  ( 'Pathos' ) :
+        node = CONFIG.config [ 'Pathos' ]
+        pp     = node.get( 'ppservers' , '()' )
+        ppsvc1 = tuple ( i.strip ( ws ) for i in pp.split ( ',' ) if i.strip ( ws ) )  
+            
+    ## use the environment variables
+    import os 
+    ppsvc2    = tuple ( os.getenv ( 'OSTAP_PPSERVERS','').split( ',' ) )
+    
+    if ppsvc1 : logger.debug ( 'Get PP-servers from config          : %s' % list ( ppsvc1 ) )    
+    if ppsvc2 : logger.debug ( 'Get PP-servers from OSTAP_PPSERVERS : %s' % list ( ppsvc2 ) )
+
+    ppsvc = set ( ppsvc1 + ppsvc2 )
+    ppsvc.discard ( '' )
+    
+    return tuple ( ppsvc )
+                
+
 
 # =============================================================================
 ## @class WorkManager
@@ -120,8 +178,7 @@ class WorkManager (TaskManager) :
         from   ostap.core.ostap_types import string_types 
         if isinstance ( ppservers , string_types ) and \
                ppservers.lower() in ( 'config' , 'auto' , '*' ) : 
-            from ostap.parallel.utils import get_ppservers
-            ppservers = get_ppservers ( local_host )
+            ppservers = pathos_ppservers ( local_host )
 
         ## use Paralell python if ppservers are specified or explicit flag
         if ppservers or kwa.pop ( 'PP' , False ) or kwa.pop ( 'Parallel' , False ) :
@@ -215,7 +272,6 @@ class WorkManager (TaskManager) :
         ps = ps.replace( '<pool ' , '' ).replace  ('>','').replace ('servers','remotes')
         for p in self.ppservers : ps = ps.replace ( p.local , p.remote )
         if not self.silent : logger.info ( 'WorkManager is %s' % ps )
-
 
 
     @property

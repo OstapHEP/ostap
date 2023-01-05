@@ -35,12 +35,10 @@ __version__ = '$Revision$'
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
-    'get_ppservers'    , ## get list of PP-servers  
-    'get_remote_conf'  , ## get PP-configuration for remote PP-server
-    'ping'             , ## ping remote host
-    'good_pings'       , ## get alive hosts
-    'get_local_port'   , ## get local port number
-    'pool_context'     , ## useful context for the pathos's Pools
+    'ping'               , ## ping remote host
+    'good_pings'         , ## get alive hosts
+    'get_local_port'     , ## get local port number
+    'pool_context'       , ## useful context for the pathos's Pools
     )
 # =============================================================================
 import sys
@@ -50,120 +48,6 @@ from ostap.logger.logger    import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
 else                      : logger = getLogger ( __name__               ) 
 # =============================================================================
-## Get the PP-configuration for the remote host from the configuration file 
-#  @code
-#  env , script , profile = get_remote_config ( 'lxplu701.cern.ch' ) 
-#  @endcode
-#  The configuration information is looked in the following sections:
-#  -  host-specific section "Parallel:<remote-host>"
-#  -  domain specific section "Parallel:<remote-domain>"
-#  -  global section "Parallel"
-def get_remote_conf ( remote ) :
-    """ Get the PP-configuration for the remote host form the configuration file 
-    >>> env , script , profile = get_remote_config ( 'lxplu701.cern.ch' ) 
-    The configuration information is looked in the following sections:
-    -  host-specific section ``Parallel:<remote-host>''
-    -  domain specific section ``Parallel:<remote-domain>''
-    -  global section ``Parallel''
-    """
-    environment = ''
-    script      = None
-    profile     = None 
-    
-    import socket
-    remote = socket.getfqdn ( remote ).lower()
-    
-    import ostap.core.config as CONFIG
-    # =====================================================================
-    # 1) Try to get specific configuration for the given remote host
-    if ( not environment ) or ( not script ) or ( not profile ) :
-        for k in CONFIG.config :
-            if not k.startswith ( 'Parallel:' ) : continue
-            klow   = k.lower()
-            if klow[9:].strip() == remote : 
-                node = CONFIG.config[ k ]
-                if not environment : environment = node.get ( 'environment' , ''   )
-                if not script      : script      = node.get ( 'script'      , None )
-                if not profile     : profile     = node.get ( 'profile'     , None )                
-                break
-            
-    # =====================================================================
-    # 2) Try to get the domain-specific configuration
-    if ( not environment ) or ( not script ) or ( not profile ) :
-        for k in CONFIG.config :
-            if not k.startswith ( 'Parallel:' ) : continue
-            klow   = k.lower()
-            domain = klow[9:].strip()
-            if domain and remote.endswith ( domain ) and domain != remote :
-                node = CONFIG.config[ k ]
-                if not environment : environment = node.get ( 'environment' , ''   )
-                if not script      : script      = node.get ( 'script'      , None )
-                if not profile     : profile     = node.get ( 'profile'     , None )
-                
-    # =====================================================================
-    # 3) Try to get global configuration
-    if ( not environment ) or ( not script ) or ( not profile ) :
-        import ostap.core.config as CONFIG
-        if CONFIG.config.has_section  ( 'Parallel' ) :
-            node = CONFIG.config [ 'Parallel' ]
-            if not environment : environment = node.get ( 'environment' , ''   )
-            if not script      : script      = node.get ( 'script'      , None )
-            if not profile     : profile     = node.get ( 'profile'     , None )
-
-    return environment , script , profile
-
-# =============================================================================
-## get the defined PP-servers through the following scan:
-#  - the domain-specific configuration section ``Parallel:<local-domain>''
-#  - the global configuration section ``Parallel''
-#  - the environment variable <code>OSTAP_PPSERVERS</code>
-#  @code
-#  ppservers = get_ppservers () 
-#  @endcode
-def get_ppservers  ( local_host = '' ) :
-    """Get the defined list of PP-servers through the following scan:
-    - the domain-specific configuration section ``Parallel:<local-domain>''
-    - the global configuration section ``Parallel''
-    - the environment variable <code>OSTAP_PPSERVERS</code>
-    
-    >>> ppservers = get_ppservers ()
-    
-    """
-    import socket, string 
-    local_host = socket.getfqdn ( local_host ).lower()
-
-    import ostap.core.config as CONFIG
-
-    ppsvc1 = ()
-    ws     = string.whitespace
-    # =================================================================
-    ## 1) try domain specific configuration 
-    for k in CONFIG.config :
-        if not k.startswith ( 'Parallel:' ) : continue
-        klow   = k.lower()
-        domain = klow[9:].strip()
-        if domain and local_host.endswith ( domain ) and domain != local_host :
-            node   = CONFIG.config[ k ]
-            pp     = node.get( 'ppservers' , '()' )
-            ppsvc1 = tuple ( i.strip ( ws ) for i in pp.split ( ',' ) if i.strip ( ws ) )  
-
-    if not ppsvc1 and CONFIG.config.has_section  ( 'Parallel' ) :
-        node = CONFIG.config [ 'Parallel' ]
-        pp     = node.get( 'ppservers' , '()' )
-        ppsvc1 = tuple ( i.strip ( ws ) for i in pp.split ( ',' ) if i.strip ( ws ) )  
-            
-    ## use the environment variables
-    import os 
-    ppsvc2    = tuple ( os.getenv ( 'OSTAP_PPSERVERS','').split( ',' ) )
-    
-    if ppsvc1 : logger.debug ( 'Get PP-servers from config          : %s' % list ( ppsvc1 ) )    
-    if ppsvc2 : logger.debug ( 'Get PP-servers from OSTAP_PPSERVERS : %s' % list ( ppsvc2 ) )
-
-    ppsvc = set ( ppsvc1 + ppsvc2 )
-    ppsvc.discard ( '' )
-    
-    return tuple ( ppsvc )
-                
 
 # =============================================================================
 ## Get the maximum size of jobs chunk

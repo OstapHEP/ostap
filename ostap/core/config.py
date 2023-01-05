@@ -4,15 +4,19 @@
 ## @file ostap/core/config.py
 #  The basic configuration of ostap.
 #  Ostap parses the following configuration files :
-#   - <code>'~/.ostaprc'</code>
-#   - <code>'~/.config/ostap/.ostaprc'</code>
-#   - <code>'.ostaprc'</code>
-#   - <code>$OSTAP_CONFIG</code>
+#  - <code>$OSTAPDIR/.ostaprc</code>
+#  - <code>$HOME/.ostaprc</code>
+#  - <code>~/.ostaprc</code>
+#  - <code>- ~/.config/ostap/.ostaprc<.code>
+#  - <code>.ostaprc</code>
+#  - <code>$OSTAP_CONFIG</code>
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-05-19
 # =============================================================================
 """The basic configuration of ostap
 Ostap parses the following configuration files :
+- $OSTAPDIR/.ostaprc
+- $HOME/.ostaprc
 - ~/.ostaprc
 - ~/.config/ostap/.ostaprc
 - .ostaprc
@@ -27,8 +31,8 @@ __all__     = (
     )
 # =============================================================================
 import configparser, os, sys  
-import ostap.core.default_config as     _config
-from   ostap.utils.basic         import get_env as ostap_getenv 
+import ostap.core.default_config as     default_config 
+from   ostap.utils.basic         import get_env        as ostap_getenv 
 # =============================================================================
 ## print for configparger 
 def _cp_str_ ( cp ) :
@@ -44,8 +48,8 @@ type(config).__repr__ = _cp_str_
 
 ## Define the major sections
 config [ 'General'  ] = {
-    'Quiet'     : str ( _config.quiet   ) ,
-    'Verbose'   : str ( _config.verbose ) ,
+    'Quiet'     : str ( default_config.quiet   ) ,
+    'Verbose'   : str ( default_config.verbose ) ,
     'Parallel'  : 'PATHOS'                ,
     }
 
@@ -53,15 +57,31 @@ config [ 'Canvas'   ] = { 'Width'       :  '1000' , 'Height'       :  '800' ,
                           'MarginTop'   : '0.05'  , 'MarginBottom' : '0.12' ,
                           'MarginRight' : '0.05'  , 'MarginLeft'   : '0.12' }
 
-config [ 'Fit Draw' ] = {}
-config [ 'Parallel' ] = {}
-config [ 'Tables'   ] = {}
+config [ 'Fit Draw'    ] = {}
+config [ 'Tables'      ] = {}
+config [ 'Pathos'      ] = {} ## PATHOS configuration  
+config [ 'IPyparallel' ] = {} ## ipyparallel configuration 
 
-## the list of processes config files 
-files_read = config.read (
-    _config.config_files + 
-    ostap_getenv( 'OSTAP_CONFIG', '' ).split( os.pathsep ) )
-## os.environ.get ( 'OSTAP_CONFIG', '' ).split( os.pathsep ) )
+## the list of processes config files
+
+print ( default_config.config_files )
+
+config_files = default_config.config_files + tuple ( ostap_getenv ( 'OSTAP_CONFIG', '' ).split( os.pathsep ) )
+the_files    = [] 
+for f in config_files :
+    ff = f
+    for i in range ( 5 ) :
+        ff = os.path.expandvars ( ff )
+        ff = os.path.expanduser ( ff )
+    if not os.path.exists ( ff ) : continue
+    if not os.path.isfile ( ff ) : continue
+    if ff in the_files               : continue 
+    the_files.append ( ( ff , f ) )
+the_files = tuple ( the_files ) 
+config_files = tuple ( f [ 0 ] for f in the_files ) 
+
+## read the files 
+files_read = config.read ( config_files )
 
 # =============================================================================
 ## sections
@@ -95,13 +115,37 @@ logging.disable ( ( logging.WARNING - 1 ) if quiet   else
 
 # =============================================================================
 
+
+
 import atexit
 @atexit.register
 def config_goodby () :
     import  datetime
     now = datetime.datetime.now() 
     if files_read :
-        logger.info  ( 'The configuration of Ostap was read from %s' %  files_read )        
+        n = len ( files_read )
+        if 1 == n :
+            f = files_read[0]
+            for fn in the_files :
+                if f == fn[0] :
+                    f = fn[1]
+                    break                
+            logger.info  ( 'The configuration of Ostap was read from %s' % f )
+        else :
+            import ostap.logger.table as T
+            rows = [ ( '', 'file' ) ]
+            for i, ff in enumerate ( files_read , start = 1 ) :
+                f = ff 
+                for fn in the_files :
+                    if f == fn[0] :
+                        f = fn[1]
+                        break    
+                row = '%d' % i , f 
+                rows.append ( row )
+            title = 'Configuration'
+            table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rl' )
+            logger.info ( 'Configuration is read from\n%s' % table ) 
+            
     import io 
     with io.StringIO() as o : 
         config.write( o )

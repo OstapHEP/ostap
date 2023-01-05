@@ -22,11 +22,13 @@ quiet        =  False
 verbose      =  False
 
 ## configuration files to read 
-config_files = [
-    u'~/.ostaprc'               ,
-    u'~/.config/ostap/.ostaprc' ,
-    u'.ostaprc'
-    ]
+config_files = (
+    u'$OSTAPDIR/.ostaprc'       ,  ## .ostaprc from central directory 
+    u'$HOME/.ostaprc'           ,  ## .ostaprc from home directory 
+    u'~/.ostaprc'               ,  ## .ostaprc from home directory 
+    u'~/.config/ostap/.ostaprc' ,  ## .ostaprc from config directory 
+    u'.ostaprc'                    ## .ostaprc from local directory 
+    )
 
 # =============================================================================
 if '__main__' == __name__ :

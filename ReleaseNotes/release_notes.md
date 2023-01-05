@@ -8,9 +8,15 @@
    1. make use of `ipyparallel` parallelisation
    1. add `Ostap::Math;:agm` and `Ostap::Math::ghm` fuctions
    1. improve `ostap/parallel/parallel_ipyparallel.py`
-   
+   1. improve printout from `ostap/core/config.py`
+   1. add `$OSTAPDIR/.ostaprc` in the list of configuraiton files for processing 
+   1. provide `$OSTAPDIR/.ostaprc` configuration file 
+
 ## Backward incompatible:  
   
+   1. rename `Parallel` section in configiration files into `Pathos`
+   1. rename and move some `pathos` specific code from `ostap/parallel/utils.py` to `ostap/parallel/pathos.py`
+
 ## Bug fixes:
 
 # v1.9.5.8
