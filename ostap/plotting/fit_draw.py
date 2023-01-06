@@ -657,9 +657,10 @@ draw_combined_component        = False
 # =============================================================================
 
 # =============================================================================
-## get the options from configuration parser 
-# =============================================================================
+## Get the drawing options from configuration parser 
 def  get_options ( config , option , default ) :
+    """Get the drawing options from configuration parser
+    """
     
     if not option in config : return default
 
@@ -771,10 +772,11 @@ default_background2D_style = default_background_style
 
 
 # =============================================================================
-## get the options/styles from configurtaion parser 
-# =============================================================================
+## get the drawing options/styles from configurtaion parser 
 def  get_style ( config , style , default ) :
-
+    """Get the options/styles from configurtaion parser 
+    """
+    
     if not style in config : return default
 
     opts = config.get ( style , fallback = '()' )

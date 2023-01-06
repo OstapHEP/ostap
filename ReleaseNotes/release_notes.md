@@ -1,6 +1,6 @@
 ## New features:
 
-   1. add `get_env` and `has_env` functions to `ostap/utils/basic.py` to check/access environment varibales inn case-insensititve way
+   1. add `get_env` and `has_env` functions to `ostap/utils/basic.py` to check/access environment variables in case-insensititve way
    1. make use of `get_env` and `has_env` functions alsmost everywhere insted of `os.environ`
    1. small reshuffle of code between `ostap.core.core` and `ostap.utils.basic`
    1. first step towards usage of `ipyparallel` for parallel processing: ad trivial test `test_parallel_ipyparallel.py`
@@ -11,8 +11,8 @@
    1. add `$OSTAPDIR/.ostaprc` in the list of configuraiton files for processing 
    1. provide `$OSTAPDIR/.ostaprc` configuration file 
    1. more reshuffling of the code for generic and specific parallelisation 
-   1. more polishing for the updated configuration  
-
+   1. more polishing for the updated configuration     
+   1. more polishing for the configuration  
 
 ## Backward incompatible:  
   

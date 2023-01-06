@@ -16,6 +16,8 @@ marginbottom = 0.12
 marginright  = 0.07
 marginleft   = 0.12
 
+[RooFit] 
+
 [Fit Draw]
 
 [Tables]

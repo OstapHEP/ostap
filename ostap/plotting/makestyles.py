@@ -33,27 +33,11 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.plotting.makestyles' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-## font 
-ostap_font       = 132     ## Times-Roman 
-## line thickness
-ostap_line_width =   1
-## define style for text
-ostap_label = ROOT.TText   (             )
-ostap_label . SetTextFont  ( ostap_font  )
-ostap_label . SetTextColor (  1          )
-ostap_label . SetTextSize  (  0.04       )
-ostap_label . SetTextAlign ( 12          )
-## define style of latex text
-ostap_latex = ROOT.TLatex   () 
-ostap_latex . SetTextFont   ( ostap_font )
-ostap_latex . SetTextColor  ( 1          )
-ostap_latex . SetTextSize   ( 0.04       )
-ostap_latex . SetTextAlign  ( 12         )
-# ==============================================================================
+## Canvas size 
 margin_top    = 0.05
 margin_bottom = 0.12
 margin_left   = 0.12
-margin_right  = 0.05
+margin_right  = 0.07
 # ==============================================================================
 import ostap.core.config as OCC
 width_  = OCC.canvas.get ( 'Width'       , fallback = '1000' )
@@ -95,13 +79,43 @@ if   0 <      tmp_ < 1             : margin_top = tmp_
 elif 0 < -1 * tmp_ < canvas_height : margin_top = abs ( 1.0 * tmp_ / canvas_weight )  
 #
 
-logger.verbose ( 'Default parameters: ')
+logger.verbose ( 'Default Canvas parameters: ')
 logger.verbose ( '  canvas_height : %s ' % canvas_height )
 logger.verbose ( '  canvas_width  : %s ' % canvas_width  )
 logger.verbose ( '  margin_top    : %s ' % margin_top    )
 logger.verbose ( '  margin_bottom : %s ' % margin_bottom )
 logger.verbose ( '  margin_left   : %s ' % margin_left   )
 logger.verbose ( '  margin_right  : %s ' % margin_right  )
+
+# =============================================================================
+## default font 
+ostap_font       = 132     ## Times-Roman 
+## line thickness
+ostap_line_width =   1
+# =============================================================================
+tmp_    = OCC.canvas.get ( 'TextFont'   , fallback = '%d'  % ostap_font ) 
+try               : tmp_  = int ( tmp_ ) 
+except ValueError : tmp_  = ostap_font
+ostap_font = tmp_
+# =============================================================================
+tmp_    = OCC.canvas.get ( 'LineWidth'   , fallback = '%d'  % ostap_line_width ) 
+try               : tmp_  = int ( tmp_ ) 
+except ValueError : tmp_  = ostap_line_width
+ostap_line_width = tmp_
+# ==============================================================================
+## define style for text
+ostap_label = ROOT.TText    (             )
+ostap_label . SetTextFont   ( ostap_font  )
+ostap_label . SetTextColor  (  1          )
+ostap_label . SetTextSize   (  0.04       )
+ostap_label . SetTextAlign  ( 12          )
+## define style of latex text
+ostap_latex = ROOT.TLatex   () 
+ostap_latex . SetTextFont   ( ostap_font  )
+ostap_latex . SetTextColor  ( 1           )
+ostap_latex . SetTextSize   ( 0.04        )
+ostap_latex . SetTextAlign  ( 12          )
+# ==============================================================================
 
 # ==============================================================================
 ## @class StyleStore
@@ -291,7 +305,7 @@ def set_style ( style , config ) :
     
     for attr in style_setters [0] :
         
-        if not attr in config : continue
+        if not attr in conf : continue
 
         try :
             
@@ -344,7 +358,7 @@ def set_style ( style , config ) :
             
     for attr in style_setters [2] :
         
-        if not attr in config : continue
+        if not attr in conf : continue
 
         try :
             
@@ -531,7 +545,6 @@ ROOT.TStyle.dump = dump_style
 ROOT.TStyle.get  = dump_style  
 ROOT.TStyle.set  =  set_style  
 
-
 # =============================================================================
 ## Parse the configuration and create
 #  all the styles according to configuration 
@@ -598,7 +611,6 @@ def get_bool    ( config , name , default ) :
     except :
         return default 
 
-
 # =============================================================================
 def get_str    ( config , name , default ) :
     
@@ -633,77 +645,77 @@ def make_ostap_style ( name                           ,
     conf [ 'BarWidth'          ] = get_float ( config , 'BarWidth'            , 1.0 )
     
 
-    conf [ 'CanvasBorderMode'  ] = get_int   ( config , 'CanvasBorderMode'   , 0      ) 
-    conf [ 'CanvasBorderSize'  ] = get_int   ( config , 'CanvasBorderSize'   , 2      ) 
-    conf [ 'CanvasColor'       ] = get_int   ( config , 'CanvasColor'        , 0      ) 
-    conf [ 'CanvasDefH'        ] = get_int   ( config , 'CanvasDefH'         , canvas_height ) 
-    conf [ 'CanvasDefW'        ] = get_int   ( config , 'CanvasDefW'         , canvas_width  ) 
-    conf [ 'CanvasDefX'        ] = get_int   ( config , 'CanvasDefX'         , 10     ) 
-    conf [ 'CanvasDefY'        ] = get_int   ( config , 'CanvasDefY'         , 10     ) 
+    conf [ 'CanvasBorderMode'  ] = get_int   ( config , 'CanvasBorderMode'    , 0      ) 
+    conf [ 'CanvasBorderSize'  ] = get_int   ( config , 'CanvasBorderSize'    , 2      ) 
+    conf [ 'CanvasColor'       ] = get_int   ( config , 'CanvasColor'         , 0      ) 
+    conf [ 'CanvasDefH'        ] = get_int   ( config , 'CanvasDefH'          , canvas_height ) 
+    conf [ 'CanvasDefW'        ] = get_int   ( config , 'CanvasDefW'          , canvas_width  ) 
+    conf [ 'CanvasDefX'        ] = get_int   ( config , 'CanvasDefX'          , 10     ) 
+    conf [ 'CanvasDefY'        ] = get_int   ( config , 'CanvasDefY'          , 10     ) 
 
-    conf [ 'DateX'             ] = get_float ( config , 'DateX'              , 0.01   ) 
-    conf [ 'DateY'             ] = get_float ( config , 'DateY'              , 0.01   ) 
+    conf [ 'DateX'             ] = get_float ( config , 'DateX'               , 0.01   ) 
+    conf [ 'DateY'             ] = get_float ( config , 'DateY'               , 0.01   ) 
 
-    conf [ 'DrawBorder'        ] = get_int   ( config , 'DrawBorder'         , 0      ) 
+    conf [ 'DrawBorder'        ] = get_int   ( config , 'DrawBorder'          , 0      ) 
 
-    conf [ 'EndErrorSize'      ] = get_float ( config , 'EndErrorSize'       , 2.0    )
-    conf [ 'ErrorX'            ] = get_float ( config , 'ErrorX'             , 0.5    )
+    conf [ 'EndErrorSize'      ] = get_float ( config , 'EndErrorSize'        , 2.0    )
+    conf [ 'ErrorX'            ] = get_float ( config , 'ErrorX'              , 0.5    )
 
-    conf [ 'FitFormat'         ] = get_str   ( config , 'FitFormat'          , '5.4g' ) 
+    conf [ 'FitFormat'         ] = get_str   ( config , 'FitFormat'           , '5.4g' ) 
     
-    conf [ 'FrameBorderMode'   ] = get_int   ( config , 'FrameBorderMode'    , 0    )
-    conf [ 'FrameBorderSize'   ] = get_int   ( config , 'FrameBorderSize'    , 1    )
-    conf [ 'FrameFillColor'    ] = get_int   ( config , 'FrameFillColor'     , 0    )
-    conf [ 'FrameFillStyle'    ] = get_int   ( config , 'FrameFillStyle'     , 1001 )
-    conf [ 'FrameLineColor'    ] = get_int   ( config , 'FrameLineColor'     , 1    )
-    conf [ 'FrameLineStyle'    ] = get_int   ( config , 'FrameLineStyle'     , 1    )
-    conf [ 'FrameLineWidth'    ] = get_int   ( config , 'FrameLineWidth'     , line_width  )
+    conf [ 'FrameBorderMode'   ] = get_int   ( config , 'FrameBorderMode'     , 0      )
+    conf [ 'FrameBorderSize'   ] = get_int   ( config , 'FrameBorderSize'     , 1      )
+    conf [ 'FrameFillColor'    ] = get_int   ( config , 'FrameFillColor'      , 0      )
+    conf [ 'FrameFillStyle'    ] = get_int   ( config , 'FrameFillStyle'      , 1001   )
+    conf [ 'FrameLineColor'    ] = get_int   ( config , 'FrameLineColor'      , 1      )
+    conf [ 'FrameLineStyle'    ] = get_int   ( config , 'FrameLineStyle'      , 1      )
+    conf [ 'FrameLineWidth'    ] = get_int   ( config , 'FrameLineWidth'      , line_width  )
 
-    conf [ 'FuncColor'         ] = get_int   ( config , 'FuncColor'          , 2 )
-    conf [ 'FuncStyle'         ] = get_int   ( config , 'FuncStyle'          , 1 )
-    conf [ 'FuncWidth'         ] = get_int   ( config , 'FuncWidth'          , line_width )
+    conf [ 'FuncColor'         ] = get_int   ( config , 'FuncColor'           , 2 )
+    conf [ 'FuncStyle'         ] = get_int   ( config , 'FuncStyle'           , 1 )
+    conf [ 'FuncWidth'         ] = get_int   ( config , 'FuncWidth'           , line_width )
     
-    conf [ 'GridColor'         ] = get_int   ( config , 'GridColor'          , 1 )
-    conf [ 'GridStyle'         ] = get_int   ( config , 'GridStyle'          , 3 )
-    conf [ 'GridWidth'         ] = get_int   ( config , 'GridWidth'          , 1 )
+    conf [ 'GridColor'         ] = get_int   ( config , 'GridColor'           , 1 )
+    conf [ 'GridStyle'         ] = get_int   ( config , 'GridStyle'           , 3 )
+    conf [ 'GridWidth'         ] = get_int   ( config , 'GridWidth'           , 1 )
 
-    conf [ 'HatchesLineWidth'  ] = get_int   ( config , 'HatchesLineWidth'   , 1     )
-    conf [ 'HatchesSpacing'    ] = get_float ( config , 'HatchesSpacing'     , 1.0   )
+    conf [ 'HatchesLineWidth'  ] = get_int   ( config , 'HatchesLineWidth'    , 1     )
+    conf [ 'HatchesSpacing'    ] = get_float ( config , 'HatchesSpacing'      , 1.0   )
 
-    conf [ 'HistFillColor'     ] = get_int   ( config , 'HistFillColor'      , 0     )
-    conf [ 'HistFillStyle'     ] = get_int   ( config , 'HistFillStyle'      , 1001  )
-    conf [ 'HistLineColor'     ] = get_int   ( config , 'HistLineColor'      , 1     )
-    conf [ 'HistLineStyle'     ] = get_int   ( config , 'HistLineStyle'      , 1     )
-    conf [ 'HistLineWidth'     ] = get_int   ( config , 'HistLineStyle'      , line_width )
+    conf [ 'HistFillColor'     ] = get_int   ( config , 'HistFillColor'       , 0     )
+    conf [ 'HistFillStyle'     ] = get_int   ( config , 'HistFillStyle'       , 1001  )
+    conf [ 'HistLineColor'     ] = get_int   ( config , 'HistLineColor'       , 1     )
+    conf [ 'HistLineStyle'     ] = get_int   ( config , 'HistLineStyle'       , 1     )
+    conf [ 'HistLineWidth'     ] = get_int   ( config , 'HistLineStyle'       ,  line_width )
 
-    conf [ 'HistMinimumZero'   ] = get_bool  ( config , 'HistMinimumZero'    , False )
-    conf [ 'HistTopMargin'     ] = get_float ( config , 'HistTopMargin'      , 0.05  )
+    conf [ 'HistMinimumZero'   ] = get_bool  ( config , 'HistMinimumZero'     , False )
+    conf [ 'HistTopMargin'     ] = get_float ( config , 'HistTopMargin'       , 0.05  )
 
-    conf [ 'JoinLinePS'        ] = get_int   ( config , 'JoinLinePS'         , 0.    )
+    conf [ 'JoinLinePS'        ] = get_int   ( config , 'JoinLinePS'          , 0.    )
 
-    conf [ 'LabelColor_X'      ] = get_int   ( config , 'LabelColor_X'       , 1     )
-    conf [ 'LabelColor_Y'      ] = get_int   ( config , 'LabelColor_Y'       , 1     )
-    conf [ 'LabelColor_Z'      ] = get_int   ( config , 'LabelColor_Z'       , 1     )
+    conf [ 'LabelColor_X'      ] = get_int   ( config , 'LabelColor_X'        , 1     )
+    conf [ 'LabelColor_Y'      ] = get_int   ( config , 'LabelColor_Y'        , 1     )
+    conf [ 'LabelColor_Z'      ] = get_int   ( config , 'LabelColor_Z'        , 1     )
 
-    conf [ 'LabelFont_X'       ] = get_int   ( config , 'LabelFont_X'        , font  )
-    conf [ 'LabelFont_Y'       ] = get_int   ( config , 'LabelFont_Y'        , font  )
-    conf [ 'LabelFont_Z'       ] = get_int   ( config , 'LabelFont_Z'        , font  )
+    conf [ 'LabelFont_X'       ] = get_int   ( config , 'LabelFont_X'         , font  )
+    conf [ 'LabelFont_Y'       ] = get_int   ( config , 'LabelFont_Y'         , font  )
+    conf [ 'LabelFont_Z'       ] = get_int   ( config , 'LabelFont_Z'         , font  )
 
-    conf [ 'LabelOffset_X'     ] = get_float ( config , 'LabelOffset_X'      , 0.015 )
-    conf [ 'LabelOffset_Y'     ] = get_float ( config , 'LabelOffset_Y'      , 0.005 )
-    conf [ 'LabelOffset_Z'     ] = get_float ( config , 'LabelOffset_Z'      , 0.005 )
+    conf [ 'LabelOffset_X'     ] = get_float ( config , 'LabelOffset_X'       , 0.015 )
+    conf [ 'LabelOffset_Y'     ] = get_float ( config , 'LabelOffset_Y'       , 0.005 )
+    conf [ 'LabelOffset_Z'     ] = get_float ( config , 'LabelOffset_Z'       , 0.005 ) 
 
-    conf [ 'LabelSize_X'       ] = get_float ( config , 'LabelSize_X'        , 0.05  )
-    conf [ 'LabelSize_Y'       ] = get_float ( config , 'LabelSize_Y'        , 0.05  )
-    conf [ 'LabelSize_Z'       ] = get_float ( config , 'LabelSize_Z'        , 0.05  )
-    
-    conf [ 'LegendBorderSize'  ] = get_int   ( config , 'LegendBorderSize'   , 4    )
-    conf [ 'LegendFillColor'   ] = get_int   ( config , 'LegendFillColor'    , 0    )
-    conf [ 'LegendFont'        ] = get_int   ( config , 'LegendFont'         , font )
-    conf [ 'LegendTextSize'    ] = get_float ( config , 'LegendTextSize'     , 0.0  )
+    conf [ 'LabelSize_X'       ] = get_float ( config , 'LabelSize_X'         , 0.05  )
+    conf [ 'LabelSize_Y'       ] = get_float ( config , 'LabelSize_Y'         , 0.05  )
+    conf [ 'LabelSize_Z'       ] = get_float ( config , 'LabelSize_Z'         , 0.05  )
+     
+    conf [ 'LegendBorderSize'  ] = get_int   ( config , 'LegendBorderSize'    , 4    )
+    conf [ 'LegendFillColor'   ] = get_int   ( config , 'LegendFillColor'     , 0    )
+    conf [ 'LegendFont'        ] = get_int   ( config , 'LegendFont'          , font )
+    conf [ 'LegendTextSize'    ] = get_float ( config , 'LegendTextSize'      , 0.0  )
 
-    conf [ 'LegoInnerR'        ] = get_float ( config , 'LegoInnerR'         , 0.5  )
-    conf [ 'LineScalePS'       ] = get_float ( config , 'LineScalePS'        , 3.0  )
+    conf [ 'LegoInnerR'        ] = get_float ( config , 'LegoInnerR'          , 0.5  )
+    conf [ 'LineScalePS'       ] = get_float ( config , 'LineScalePS'         , 3.0  )
 
     for i in range ( 31 ) :
         key = 'LineStyleString_%d' % i
@@ -717,7 +729,6 @@ def make_ostap_style ( name                           ,
     if not 'LineStyleString_14' in conf : conf [ 'LineStyleString_14' ] = " 32 32"
     if not 'LineStyleString_15' in conf : conf [ 'LineStyleString_15' ] = " 80 20"
     if not 'LineStyleString_16' in conf : conf [ 'LineStyleString_16' ] = " 40 10"
-
 
     conf [ 'Ndivisions_X'      ] = get_int   ( config , 'Ndivisions_X'       , 505  )
     conf [ 'Ndivisions_Y'      ] = get_int   ( config , 'Ndivisions_Y'       , 510  )

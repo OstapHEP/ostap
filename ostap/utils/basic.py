@@ -280,7 +280,7 @@ def has_env ( variable ) :
 #  var = get_env ( 'Ostap_Table_Style' , '' ) 
 #  @endcode
 #  In ambiguous case warning message is printed and the last value is returned 
-def get_env ( variable , default ) :
+def get_env ( variable , default , silent = False ) :
     """
     Case-insensitive access for the environment variable
     
@@ -302,7 +302,7 @@ def get_env ( variable , default ) :
             
     if not found : return default
 
-    if 1 < len ( found )  :
+    if 1 < len ( found )  and not silent :
         rows = [ ( 'Variable' , 'value' ) ]
         for k, v in found  :
             row = '%s' % k , '%s' % v

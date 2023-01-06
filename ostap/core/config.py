@@ -35,15 +35,16 @@ import configparser, os, sys
 import ostap.core.default_config as     default_config 
 from   ostap.utils.basic         import get_env        as ostap_getenv 
 # =============================================================================
+
 ## print for configparger 
 def _cp_str_ ( cp ) :
+    """print for configparger"""
     import io 
     with io.StringIO() as o :
         config.write( o )
         return o.getvalue()
 
 config = configparser.ConfigParser()
-
 type(config).__str__  = _cp_str_
 type(config).__repr__ = _cp_str_
 
@@ -51,20 +52,23 @@ type(config).__repr__ = _cp_str_
 config [ 'General'  ] = {
     'Quiet'     : str ( default_config.quiet   ) ,
     'Verbose'   : str ( default_config.verbose ) ,
-    'Parallel'  : 'PATHOS'                ,
+    'Parallel'  : 'PATHOS'                       ,
     }
 
-config [ 'Canvas'   ] = { 'Width'       :  '1000' , 'Height'       :  '800' , 
-                          'MarginTop'   : '0.05'  , 'MarginBottom' : '0.12' ,
-                          'MarginRight' : '0.05'  , 'MarginLeft'   : '0.12' }
+## generic TCanvas configuration
+config [ 'Canvas'      ] = { 'Width'       :  '1000' , 'Height'       :  '800' , 
+                             'MarginTop'   : '0.05'  , 'MarginBottom' : '0.12' ,
+                             'MarginRight' : '0.07'  , 'MarginLeft'   : '0.12' }
 
-config [ 'Fit Draw'    ] = {}
-config [ 'Tables'      ] = {}
+config [ 'Fit Draw'    ] = {} ## RooFit plotting configuration
+config [ 'Tables'      ] = {} ## configuration for Tables 
+config [ 'RooFit'      ] = {} ## RooFit configuration
+
 config [ 'Pathos'      ] = {} ## PATHOS configuration  
 config [ 'IPyparallel' ] = {} ## ipyparallel configuration 
 
 ## the list of processes config files
-config_files = default_config.config_files + tuple ( ostap_getenv ( 'OSTAP_CONFIG', '' ).split( os.pathsep ) )
+config_files = default_config.config_files + tuple ( ostap_getenv ( 'OSTAP_CONFIG', '' , True ).split( os.pathsep ) )
 the_files    = [] 
 for f in config_files :
     ff = f
@@ -93,6 +97,10 @@ verbose = general.getboolean ( 'Verbose', fallback = False )
 canvas  = config [ 'Canvas'    ]
 
 # =============================================================================
+## section for RooFit 
+roofit   = config [ 'RooFit'   ]
+
+# =============================================================================
 ## section for fit drawing options 
 fit_draw = config [ 'Fit Draw' ]
 
@@ -112,9 +120,20 @@ logging.disable ( ( logging.WARNING - 1 ) if quiet   else
                   ( logging.DEBUG   - 5 ) if verbose else ( logging.INFO - 1 ) )
 
 # =============================================================================
+## check (and remove) obsolete sections 
+remove = set() 
+for k in config :
+    if k.startswith ( 'Parallel:' ) :
+        logger.error ( 'Section "%s" is obsolete! Switch to specific "Pathos:..." or "IPyparallel:..."' % k )
+        remove.add ( k ) 
+    elif k.startswith ( 'Parallel' ) :
+        logger.error ( 'Section "%s" is obsolete! Switch to specific "Pathos" or "IPyparallel"' % k )
+        remove.add ( k ) 
+for k in remove :
+    del config[k]
 
-
-
+# =============================================================================
+## the final action...
 import atexit
 @atexit.register
 def config_goodby () :
@@ -152,13 +171,17 @@ def config_goodby () :
         dump = '.ostap_config.txt'
         if os.path.exists ( dump ) : os.remove ( dump )
         with open ( dump , 'w' ) as ff :
-            ff.write('#' + 78*'*' + '\n')
-            ff.write('# Ostap configuration (read from %s)\n' % files_read )
-            ff.write('#' + 78*'*' + '\n')                
+            ff.write('# ' + 78*'*' + '\n')
+            if files_read : 
+                ff.write('# Ostap configuration read from:\n' )
+                for i,f in enumerate ( files_read , start = 1 ) : ff.write('#  %2d. %s\n' % ( i , f ) ) 
+            else :
+                ff.write('# Ostap configuration:\n' )                
+            ff.write('# ' + 78*'*' + '\n')    
             config.write( ff )            
-            ff.write('#' + 78*'*' + '\n')
+            ff.write('# ' + 78*'*' + '\n')
             ff.write('# Configuration saved at %s\n' % now.strftime('%c') )
-            ff.write('#' + 78*'*' + '\n')            
+            ff.write('# ' + 78*'*' + '\n')            
         if os.path.exists ( dump ) and os.path.isfile ( dump ) :
             logger.info ( 'Ostap  configuration saved: %s' %  dump )
     except :
@@ -166,11 +189,6 @@ def config_goodby () :
     
 
 
-# =============================================================================
-for k in config :
-    if k.startswith ( 'Parallel' ) :
-        logger.warning ( 'Generic section "%s" is obsolete, switch to "Pathos" or "IPyParalllel"' % k )
-        
 # =============================================================================
 if '__main__' == __name__ :
 
