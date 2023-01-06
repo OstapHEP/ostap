@@ -105,7 +105,7 @@ def diff ( a , b ) :
     aa = float ( a  )
     bb = float ( b  )
     if aa == bb : return 0 
-    return ( aa - bb ) / max ( abs ( aa ) , abs ( bb ) ) 
+    return ( aa - bb ) / ( abs ( aa ) + abs ( bb ) ) 
 
 # =============================================================================
 ## 1D parameterizations
@@ -487,57 +487,70 @@ def test_parameterize_4D () :
         
         tree = f.S
         
-        l  = Ostap.Math.LegendreSum4 ( 8 , 8 , 8 , 8 ,
-                                       -2 , 2 ,
-                                       -2 , 2 ,
-                                       -4 , 4 , -4 , 6 )
+        l  = Ostap.Math.LegendreSum4 ( 10 , 10 , 10 , 10 ,
+                                       xmin , xmax ,
+                                       ymin , ymax ,
+                                       zmin , zmax ,
+                                       umin , umax ) 
         
-        l.parameterize ( tree , 'x' , 'y' , 'z' , 'u' ,  cuts )
-        
+        with timing ( "4D-Legendre  parameterization" , logger = logger ) :
+            l.parameterize ( tree , 'x' , 'y' , 'z' , 'u' )
+            
         lxy = l.integralU().integralZ() 
         lzu = l.integralX().integralX() 
         lxu = l.integralY().integralY() 
         
-        hxy = ROOT.TH2F(hID() , '', 20 , -2, 2, 20 , -2 , 2 )
-        hzu = ROOT.TH2F(hID() , '', 20 , -4, 4, 20 , -4 , 6 )
-        hxu = ROOT.TH2F(hID() , '', 20 , -2, 2, 20 , -4 , 6 )
+        hxy = ROOT.TH2F(hID() , '', 20 , xmin , xmax , 20 , ymin , ymax )
+        hzu = ROOT.TH2F(hID() , '', 20 , zmin , zmax , 20 , umin , umax )
+        hxu = ROOT.TH2F(hID() , '', 20 , xmin , xmax , 20 , umin , umax )
         
-        tree.project ( hxy , 'y:x' )
-        tree.project ( hzu , 'u:z' )
-        tree.project ( hxu , 'u:x' )
+        with timing ( "Histogram projections" , logger = logger ) :
+            tree.project ( hxy , 'y:x' )
+            tree.project ( hzu , 'u:z' )
+            tree.project ( hxu , 'u:x' )
         
-        lxy *= ( 4.0 / 20 ) * (  4.0 / 20 ) 
-        lzu *= ( 8.0 / 20 ) * ( 10.0 / 20 ) 
-        lxu *= ( 4.0 / 20 ) * ( 10.0 / 20 ) 
+        lxy *= ( ( xmax - xmin ) / 20 ) * ( ( ymax - ymin ) / 20 ) 
+        lzu *= ( ( zmax - zmin ) / 20 ) * ( ( umax - umin ) / 20 ) 
+        lxu *= ( ( xmax - xmin ) / 20 ) * ( ( umax - umin ) / 20 ) 
         
         d1 = SE()
         d2 = SE()
         d3 = SE() 
         
-        for i in range ( 1000 ) :
+        for i in progress_bar ( 100000 ) :
             
-            x   =  random.uniform ( -2 , 2 )
-            y   =  random.uniform ( -2 , 2 )
-            z   =  random.uniform ( -4 , 4 )
-            u   =  random.uniform ( -4 , 6 )
+            x   =  random.uniform ( xmin , xmax )
+            y   =  random.uniform ( ymin , ymax )
+            z   =  random.uniform ( zmin , zmax )
+            u   =  random.uniform ( umin , umax )
         
-            d1 += ( lxy ( x , y ) - hxy ( x , y ) ) / max ( lxy ( x , y ) , hxy ( x , y ) )
-            d2 += ( lzu ( z , u ) - hzu ( z , u ) ) / max ( lzu ( z , u ) , hzu ( z , u ) )
-            d3 += ( lxu ( x , u ) - hxu ( x , u ) ) / max ( lxu ( x , u ) , hxu ( x , u ) )
+            d1 += diff ( lxy ( x , y ) , hxy ( x , y ) )
+            d2 += diff ( lzu ( z , u ) , hzu ( z , u ) ) 
+            d3 += diff ( lxu ( x , u ) , hxu ( x , u ) ) 
+
             
-        logger.info ( '4D-(xy)-DIFFERENCES are %s ' % d1 ) 
-        logger.info ( '4D-(zu)-DIFFERENCES are %s ' % d2 ) 
-        logger.info ( '4D-(xu)-DIFFERENCES are %s ' % d3 ) 
+        rows = [ ( '' , 'Variable'  , 'mean[%]' , 'rms[%]' , 'min[%]' , 'max[%]') ]
+        for  d, v in zip ( ( d1 , d2 , d3 ) , ( 'X:Y' , 'Z:U' , 'X:U' ) ) :  
+            row = 'Legendre vs histogram'  , v , \
+                  '%+6.3f' % float ( d.mean() * 100 ) , \
+                  '%6.3f'  % float ( d.rms () * 100 ) , \
+                  '%+6.3f' % float ( d.min () * 100 ) , \
+                  '%+6.3f' % float ( d.max () * 100 ) , 
+            rows.append ( row )
+            
+        title = '4D parameterisation+projections'
+        table = T.table ( rows , title = title , prefix = '# ' , alignment =  'llcc' )
+        logger.info ( '%s\n%s' % ( title , table ) )
         
 
     
 # =============================================================================
 if '__main__' == __name__ :
 
-    ##  test_parameterize_1D() 
-    test_parameterize_2D() 
-    ##  test_parameterize_3D() 
-    ## test_parameterize_4D() 
+    test_parameterize_1D () 
+    test_parameterize_2D () 
+    test_parameterize_3D () 
+    test_parameterize_4D () 
     
 # =============================================================================
 ##                                                                      The END 

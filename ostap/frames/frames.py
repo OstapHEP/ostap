@@ -1270,7 +1270,8 @@ for f in frames :
     _new_methods_ .append ( f. draw       )
     
 
-_decorated_classes_ = frames
+
+_decorated_classes_ = frames 
 
 _new_methods_ += [ 
     ROOT.TH1.model        , 
@@ -1279,6 +1280,32 @@ _new_methods_ += [
     ROOT.TProfile  .model , 
     ROOT.TProfile2D.model ,
     ]
+
+
+# =============================================================================
+if ( 6 , 18 ) <= root_info :
+    # =========================================================================
+    ## Project the tree to the histogram using DataFrame machinery
+    #  @code
+    #  tree  = ...
+    #  histo = ...
+    #  tree.fproject ( histo , what , ... ) 
+    #  @endcode
+    def _rt_fproject_ ( tree , histo , *args ) :
+        """Project the tree to the histogram using DataFrame machinery
+        >>> tree  = ...
+        >>> histo = ...
+        >>> tree.fproject ( histo , what , ... ) 
+        """
+        assert isinstance ( histo , ROOT.TTree ) , '"histo" must be ROOT.TH*!'
+        ## use frame methods
+        frame_project ( tree , histo , *args )
+        ## return 
+        return histo 
+    
+    ROOT.TTree.fproject  = _rt_fproject_
+    _decorated_classes_ += ( ROOT.TTree , )
+    _new_methods_.append   ( ROOT.TTree.fproject ) 
     
 _new_methods_       = tuple ( _new_methods_ ) 
 

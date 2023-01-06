@@ -331,51 +331,58 @@ namespace Ostap
       Equal_To ( const unsigned int eps  = mULPS_double ) : m_cmp ( eps ) {}
       // ======================================================================
       /// comparison:
-      inline bool operator() ( const std::vector<double>& v1 , 
-                               const std::vector<double>& v2 ) const
+      inline bool operator()
+      ( const std::vector<double>& v1 , 
+        const std::vector<double>& v2 ) const
       {
         return ( &v1 == &v2 ) || 
           ( v1.size() == v2.size() &&
             std::equal ( v1.begin () , v1.end () , v2.begin () , m_cmp ) ) ;
       }      
       /// comparison:
-      inline bool operator() ( const std::vector<double>& v1 , 
-                               const std::vector<float>&  v2 ) const
+      inline bool operator() 
+      ( const std::vector<double>& v1 , 
+        const std::vector<float>&  v2 ) const
       {
         return v1.size() == v2.size() && 
           std::equal ( v1.begin () , v1.end () , v2.begin () , m_cmp ) ;
       }      
       /// comparison:
-      inline bool operator() ( const std::vector<double>& v1 , 
-                               const std::vector<int>&    v2 ) const
+      inline bool operator() 
+      ( const std::vector<double>& v1 , 
+        const std::vector<int>&    v2 ) const
       {
         return v1.size() == v2.size() && 
           std::equal ( v1.begin () , v1.end () , v2.begin () , m_cmp ) ;
       }      
       /// comparison:
-      inline bool operator() ( const std::vector<double>&       v1 , 
-                               const std::vector<unsigned int>& v2 ) const
+      inline bool operator()
+      ( const std::vector<double>&       v1 , 
+        const std::vector<unsigned int>& v2 ) const
       {
         return v1.size() == v2.size() && 
           std::equal ( v1.begin () , v1.end () , v2.begin () , m_cmp ) ;
       }      
       /// comparison:
-      inline bool operator() ( const std::vector<float>&  v1 , 
-                               const std::vector<double>& v2 ) const
+      inline bool operator() 
+      ( const std::vector<float>&  v1 , 
+        const std::vector<double>& v2 ) const
       {
         return v1.size() == v2.size() && 
           std::equal ( v1.begin () , v1.end () , v2.begin () , m_cmp ) ;
       }      
       /// comparison:
-      inline bool operator() ( const std::vector<int>&    v1 , 
-                               const std::vector<double>& v2 ) const
+      inline bool operator() 
+      ( const std::vector<int>&    v1 , 
+        const std::vector<double>& v2 ) const
       {
         return v1.size() == v2.size() && 
           std::equal ( v1.begin () , v1.end () , v2.begin () , m_cmp ) ;
       }      
       /// comparison:
-      inline bool operator() ( const std::vector<unsigned int>& v1 , 
-                               const std::vector<double>&       v2 ) const
+      inline bool operator() 
+      ( const std::vector<unsigned int>& v1 , 
+        const std::vector<double>&       v2 ) const
       {
         return v1.size() == v2.size() && 
           std::equal ( v1.begin () , v1.end () , v2.begin () , m_cmp ) ;
@@ -1105,9 +1112,10 @@ namespace Ostap
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
               typename = std::enable_if<std::is_convertible<value_type,long double>::value> , 
               typename = std::enable_if<std::is_convertible<SCALAR,long double>::value>     >
-    void scale ( ITERATOR first  ,
-                 ITERATOR last   , 
-                 SCALAR   factor )
+    void scale
+    ( ITERATOR first  ,
+      ITERATOR last   , 
+      SCALAR   factor )
     { for ( ; first != last ; ++first ) { (*first) *= factor ; } }
     // ========================================================================
     /// shift all elements of non-constant sequence        
@@ -1116,9 +1124,10 @@ namespace Ostap
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
               typename = std::enable_if<std::is_convertible<value_type,long double>::value> , 
               typename = std::enable_if<std::is_convertible<SCALAR,long double>::value>     >
-    void shift ( ITERATOR first  ,
-                 ITERATOR last   , 
-                 SCALAR   factor )
+    void shift 
+    ( ITERATOR first  ,
+      ITERATOR last   , 
+      SCALAR   factor )
     { for ( ; first != last ; ++first ) { (*first) += factor ; } }
     // ========================================================================
     /// simple scale and shift of elements of non-constant sequence        
@@ -1127,10 +1136,11 @@ namespace Ostap
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
               typename = std::enable_if<std::is_convertible<value_type,long double>::value> , 
               typename = std::enable_if<std::is_convertible<SCALAR,long double>::value>     >
-    void scale_and_shift ( ITERATOR first ,
-                           ITERATOR last  , 
-                           SCALAR   scale ,
-                           SCALAR   shift )
+    void scale_and_shift 
+    ( ITERATOR first ,
+      ITERATOR last  , 
+      SCALAR   scale ,
+      SCALAR   shift )
     { for ( ; first != last ; ++first ) 
       { (*first) = std::fma ( *first , scale , shift ) ; } }
     // ========================================================================
@@ -1140,9 +1150,10 @@ namespace Ostap
               class SCALAR   , 
               typename = std::enable_if<std::is_convertible<TYPE  ,long double>::value> , 
               typename = std::enable_if<std::is_convertible<SCALAR,long double>::value> >    
-    inline void scale_and_shift ( std::vector<TYPE,ALLOCATOR>& vct , 
-                                  SCALAR scale , 
-                                  SCALAR shift ) 
+    inline void scale_and_shift
+    ( std::vector<TYPE,ALLOCATOR>& vct , 
+      SCALAR scale , 
+      SCALAR shift ) 
     { scale_and_shift ( vct.begin() , vct.end() , scale , shift ) ; }
     // ========================================================================
     /// simple scaling of exponents for all elements of non-constant sequence        

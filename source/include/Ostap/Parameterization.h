@@ -686,7 +686,7 @@ namespace Ostap
       // ======================================================================
     public: 
       // ======================================================================
-      /** constructor orm the product of two Legendre sums
+      /** constructor form the product of two Legendre sums
        *  \f$ S(x,y,z) = S_x(x)\times S_y(y) \times S_z(z) \f$ 
        *  @param sx (INPUT) the first  Legendre sum 
        *  @param sy (INPUT) the second Legendre sum 

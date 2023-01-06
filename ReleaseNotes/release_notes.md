@@ -1,3 +1,11 @@
+## New features:
+
+  1. add `ROOT.TTree.fproject` method for projection of the trees using ~DataFrame` (the sam eas `frame_project`
+
+## Backward incompatible:  
+
+## Bug fixes:
+
 # v1.9.6.0
 
 ## New features:
