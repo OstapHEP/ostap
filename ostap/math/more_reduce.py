@@ -698,9 +698,8 @@ Ostap.Math.FupN. __reduce__ = _omfup_reduce_
 
 
 # =============================================================================
-## Mdoels 
+## Models 
 # =============================================================================
-
 
 # =============================================================================
 ## Reduce Ostap::Math::Gumbel
@@ -945,6 +944,32 @@ def _omhage_reduce_ ( s ) :
     return root_factory , ( type ( s ) , s.mass() , s.beta() )
 
 Ostap.Math.Hagedorn. __reduce__ = _omhage_reduce_
+
+
+# =============================================================================
+## reduce Ostap::Math::IrwinHall & Ostap::Math::Bates 
+#  @see Ostap::Math::IrwinHall
+#  @see Ostap::Math::Bates
+def _omih_reduce_ ( s ) :
+    """Reduce `Ostap.Math.IrwinHall` & `Ostap.Math.Bates` 
+    - see `Ostap.Math.IrwinHall`
+    - see `Ostap.Math.Bates` 
+    """
+    return root_factory , ( type ( s ) , s.n ()  )
+
+Ostap.Math.IrwinHall. __reduce__ = _omih_reduce_
+Ostap.Math.Bates    . __reduce__ = _omih_reduce_
+
+# =============================================================================
+## reduce Ostap::Math::BatesSHape 
+#  @see Ostap::Math::BatesShape
+def _ombs_reduce_ ( s ) :
+    """Reduce `Ostap.Math.BatesShape` 
+    - see `Ostap.Math.BatesShape` 
+    """
+    return root_factory , ( type ( s ) , s.mu() , s.sigma() , s.n ()  )
+
+Ostap.Math.BatesShape . __reduce__ = _ombs_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::HORNSdini

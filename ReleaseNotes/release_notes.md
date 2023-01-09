@@ -1,7 +1,13 @@
 ## New features:
 
   1. add `ROOT.TTree.fproject` method for projection of the trees using ~DataFrame` (the sam eas `frame_project`
+  1. add `Ostap::Math::IrwinHall`, `Ostap::Math::Bates` and `Ostap::Math::BAresShape`
+  1. add `Ostap::Models::BatesShape`
+  1. add `ostap.fitting.signals.BatesShape_pdf
+  1. add `ostap.fitting.resolution.ResoBatesShape
+  1. update tests 
 
+`
 ## Backward incompatible:  
 
 ## Bug fixes:

@@ -3413,6 +3413,226 @@ std::size_t Ostap::Math::GenArgus::tag () const
 
 
 
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  inline 
+  std::vector<double> index_knots 
+  ( const unsigned short n ) 
+  {
+    std::vector<double> result ( n + 1 ) ;
+    std::iota ( result.begin() , result.end() , 0 ) ;
+    return result ;
+  }
+  // ==========================================================================
+}
+// ============================================================================
+/*  constructor from n-parameter
+ *  @param n  n-parameter (shape) 
+ */
+// ============================================================================
+Ostap::Math::IrwinHall::IrwinHall
+( const unsigned short n ) 
+  : m_bspline ( index_knots ( n ) , n - 1 ) 
+{
+  //
+  static const std::string s_E {"Shape parameter n must be positive!"} ;
+  static const std::string s_R {"Ostap::Math::IrwinHall"} ;
+  Ostap::Assert ( 1<= n , s_E , s_R , 360 ) ;
+  //
+  m_bspline.setPar ( n - 1 , 1 ) ;
+}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double 
+Ostap::Math::IrwinHall::evaluate ( const double x )  const 
+{
+  return
+    x <= xmin() ? 0.0 :
+    x >= xmax() ? 0.0 : m_bspline ( x ) ;
+}
+// ============================================================================
+// get rms 
+// ============================================================================
+double Ostap::Math::IrwinHall::rms () const { return std::sqrt ( variance () ) ; }
+// ============================================================================
+// get kurtosis 
+// ============================================================================
+double Ostap::Math::IrwinHall::kurtosis () const 
+{ return 3 - 6.0 / ( 5 * n () )  ; }
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::IrwinHall::integral ()  const { return 1 ; }
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::IrwinHall::integral 
+( const double low  ,
+  const double high ) const 
+{
+  if ( high < low ) { return - integral ( high , low ) ; } 
+  return m_bspline.integral ( low , high ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::IrwinHall::tag () const 
+{ 
+  static const std::string s_name = "IrwinHall" ;
+  return Ostap::Utils::hash_combiner ( s_name , n () ) ;
+}
+
+
+
+
+// ============================================================================
+/*  constructor from n-parameter
+ *  @param n  n-parameter (shape) 
+ */
+// ============================================================================
+Ostap::Math::Bates::Bates
+( const unsigned short n ) 
+  : m_ih ( n ) 
+{
+  //
+  static const std::string s_E {"Shape parameter n must be positive!"} ;
+  static const std::string s_R {"Ostap::Math::Bates"} ;
+  Ostap::Assert ( 1<= n , s_E , s_R , 360 ) ;
+}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double 
+Ostap::Math::Bates::evaluate ( const double x )  const 
+{
+  const std::size_t nn = n() ;
+  return
+    x <= 0 ? 0.0 :
+    x >= 1 ? 0.0 : m_ih ( x * nn ) * nn ;
+}
+// ============================================================================
+// get variance 
+// ============================================================================
+double Ostap::Math::Bates::variance () const { return 1.0 / ( 12.0 * n() ) ; }
+// ============================================================================
+// get rms 
+// ============================================================================
+double Ostap::Math::Bates::rms      () const { return std::sqrt ( variance () ) ; }
+// ============================================================================
+// get kurtosis 
+// ============================================================================
+double Ostap::Math::Bates::kurtosis () const { return m_ih.kurtosis ()  ; }
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::Bates::integral ()  const { return 1 ; }
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::Bates::integral 
+( const double low  ,
+  const double high ) const 
+{
+  if ( high < low ) { return - integral ( high , low ) ; }
+  if ( high <= 0  ) { return 0 ; }
+  if ( low  >= 1  ) { return 0 ; }
+  const std::size_t nn = n() ;
+  return m_ih.integral ( low * nn , high * nn ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Bates::tag () const 
+{ 
+  static const std::string s_name = "Bates" ;
+  return Ostap::Utils::hash_combiner ( s_name , n () ) ;
+}
+// ============================================================================
+/*  constructor from n-parameter
+ *  @param n  n-parameter (shape) 
+ */
+// ============================================================================
+Ostap::Math::BatesShape::BatesShape 
+( const double         mu    ,  
+  const double         sigma , 
+  const unsigned short n     ) 
+  : m_sq12n ( std::sqrt ( 12.0 * n ) )
+  , m_mu    (            mu      )
+  , m_sigma ( std::abs ( sigma ) )
+  , m_bates (  n ) 
+{}
+// ============================================================================
+bool Ostap::Math::BatesShape::setMu ( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) {  return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::BatesShape::setSigma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_sigma ) ) {  return false ; }
+  m_sigma = avalue ;
+  return true ;
+}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double 
+Ostap::Math::BatesShape::evaluate ( const double x )  const 
+{
+  const double y = t ( x ) ;
+  return 
+    y <= 0 ? 0.0 : 
+    y >= 1 ? 0.0 :
+    m_bates ( y ) / ( m_sq12n * m_sigma ) ;
+}
+// ============================================================================
+// minimal x 
+// ============================================================================
+double Ostap::Math::BatesShape::xmin () const { return x ( 0 ) ; }
+// ============================================================================
+// maximal x 
+// ============================================================================
+double Ostap::Math::BatesShape::xmax () const { return x ( 1 ) ; }
+// ============================================================================
+// get kurtosis 
+// ============================================================================
+double Ostap::Math::BatesShape::kurtosis   () const 
+{ return m_bates.kurtosis ()  ; }
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::BatesShape::integral ()  const { return 1 ; }
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::BatesShape::integral 
+( const double low  ,
+  const double high ) const 
+{
+  if ( high < low ) { return - integral ( high , low ) ; }
+  const double ylow  = t ( low  ) ;
+  const double yhigh = t ( high ) ;
+  return m_bates.integral ( ylow , yhigh ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BatesShape::tag () const 
+{ 
+  static const std::string s_name = "BatesShape" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_sigma , n () ) ;
+}
+
+
+
+
+
 
 // ============================================================================
 /*  constructor fron all parameters

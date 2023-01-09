@@ -38,7 +38,8 @@
 - Normal Laplace model                 (gaussian with exponential tails) 
 - Das model                           (gaussian with exponential tails)
 - Generalized Gaussian v1             (family that included Gaussian, Laplace, uniform etc...)
-- PearsonIV model                     (power-law tails+asymmetry) 
+- PearsonIV model                     (power-law tails+asymmetry)
+- Bates-shape models                  (spline-like finite model)
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -52,8 +53,8 @@ __all__     = (
     'ResoCB2'           , ## double-sided Crystal Ball resolution model,
     'ResoStudentT'      , ## Student-T resolution model,
     'ResoPearsonIV'     , ## Pearson Tyep IV resolution model
-    'ResoSkewGenT'      , ## Skewed Generalzed t-distribution 
-    'ResoSkewGenError'  , ## Skewed Generalzed Error-distribution 
+    'ResoSkewGenT'      , ## Skewed Generalized t-distribution 
+    'ResoSkewGenError'  , ## Skewed Generalized Error-distribution 
     'ResoSech'          , ## Sech/hyperbolic secant  resolution model
     'ResoLogistic'      , ## Logistic ("sech-squared") resoltuion model
     'ResoBukin'         , ## Bukin resolution model
@@ -65,6 +66,8 @@ __all__     = (
     'ResoDas'           , ## Das resolution model
     'ResoNormalLaplace' , ## Normal Laplace resolution model
     'ResoGenGaussV1'    , ## Generalized  Gaussian v1
+    'ResoBatesShape'    , ## Bates-shape models (spline-like finite model)
+
     )
 # =============================================================================
 from   ostap.core.core        import Ostap
@@ -2336,6 +2339,65 @@ class ResoNormalLaplace(RESOLUTION) :
         self.set_value ( self.__kappa , value )
 
 
+# =============================================================================
+## @class ResoBateShape 
+#  @see Ostap::Math::BatesShape 
+#  @see Ostap::Math::Bates
+#  @see Ostap::Math::IrwinHall
+#  @see Ostap::Models::BatesShape
+#  For good fits parmaeter n showul be large. e.g.  n>10 
+class ResoBatesShape(RESOLUTION) :
+    """BatesShape resolution model (spline-like finite model) 
+    - see Ostap::Math::BatesShape
+    - see Ostap::Math::Bates
+    - see Ostap::Math::IrwinHall
+    - see Ostap::Models::BatesShape 
+    - see BatesShape_pdf 
+    For good fits parmaeter n showul be large. e.g.  n>10 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   sigma     = None ,   ## related to sigma
+                   n         = 2    ,   ## shape 
+                   fudge     = 1    ,   ## fudge-parameter 
+                   mean      = None ) : ## related to mean 
+        
+        ## initialize the base 
+        super(ResoBatesShape,self).__init__ ( name  = name  ,
+                                              xvar  = xvar  ,
+                                              sigma = sigma ,
+                                              mean  = mean  ,
+                                              fudge = fudge )
+        
+        assert isinstance ( n , int ) and 1<= n, "Invalid parameter n!"
+        self.__n      = int ( n )
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.BatesShape (
+            self.roo_name ( 'rbs_' ) , 
+            "Resolution Bates-shape %s" % self.name ,
+            self.xvar       ,
+            self.mean       ,
+            self.sigma_corr ,
+            self.n          )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'n'         : self.n     ,
+            'fudge'     : self.fudge }
+
+    @property
+    def n ( self ) :
+        """'n' : shape parameter"""
+        return self.__n
+        
 # =============================================================================
 if '__main__' == __name__ :
     

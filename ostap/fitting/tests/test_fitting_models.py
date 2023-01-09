@@ -37,6 +37,8 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 
+print ( 'HERE/1' )
+
 ## make simple test mass 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 2.9 , 3.3 )
 
@@ -1088,6 +1090,48 @@ def test_das_2 () :
     models.add     ( model  )
     results.append ( result )
 
+
+
+# ==========================================================================
+## BatesShape
+# ==========================================================================
+def test_bates_shape  () :
+    
+    logger = getLogger ( 'test_bates_shape' )
+
+    for N in range ( 2 , 10 , 2 ) :
+        
+        logger.info ('Test BatesShape_pdf(%s): test BatesShape ' % N ) 
+        model = Models.Fit1D (
+            signal = Models.BatesShape_pdf ( name  = 'BS%d' % N         , 
+                                             xvar  = mass               ,
+                                             n     = N                  ,
+                                             mean  = signal_gauss.mean  ,
+                                             sigma = signal_gauss.sigma ) , 
+            background = background   ,
+            S = S , B = B ,
+            )
+        
+        signal = model.signal 
+        
+        signal.sigma = 0.051  
+        signal.mean .fix ( m.value() ) 
+        
+        model.S = NS 
+        model.B = NB
+        
+        with rooSilent() :
+            result, frame = model. fitTo ( dataset0 , silent = True )
+            signal.mean.release() 
+            result, frame = model. fitTo ( dataset0 , silent = True )
+            result, frame = model. fitTo ( dataset0 , silent = True )
+            
+        make_print ( model , result , "BatesShape%d model" % N  , logger )        
+        
+        models.add     ( model  )
+        results.append ( result )
+
+
 # ==========================================================================
 ## Hat
 # ==========================================================================
@@ -1167,7 +1211,6 @@ def test_up  () :
 ## FupN
 # ==========================================================================
 def test_fupn  () :
-## if 1 < 2 :
     
     logger = getLogger ( 'test_fupN' )
 
@@ -1203,6 +1246,8 @@ def test_fupn  () :
         
         models.add     ( model  )
         results.append ( result )
+
+
 
 # =============================================================================
 ## Test  SECH
@@ -1889,7 +1934,7 @@ if '__main__' == __name__ :
         test_novosibirsk     ()
 
     ## Bukin - skew Gaussian core with exponential tails  + background         
-    with timing ('test_bukun'          , logger ) :
+    with timing ('test_bukin'          , logger ) :
         test_bukin          ()
 
     ## Student-t shape                           + background 
@@ -1932,6 +1977,10 @@ if '__main__' == __name__ :
     with timing ('test_das_2'             , logger ) :
         test_das_2            () 
 
+    ## BatesShape
+    with timing ( 'test_bates_shape'  , logger ) :
+        test_bates_shape      () 
+        
     ## Hat                                       + background 
     with timing ('test_hat'             , logger ) :
         test_hat            () 

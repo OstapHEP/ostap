@@ -57,6 +57,7 @@ Empricial PDFs to describe narrow peaks
   - PearsonIV_pdf
   - SkewGenT_pdf
   - SkewGenError_pdf
+  - BatesShape_pdf 
   - Hat, Up & FupN finite functions
   
 PDF to describe 'wide' peaks
@@ -120,6 +121,7 @@ __all__ = (
     'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
     'Losev_pdf'              , ## asymmetric hyperbolic secant
     'Logistic_pdf'           , ## Logistic aka "sech-squared"   
+    'BatesShape_pdf'         , ## Bates-shape
     'Hat_pdf'                , ## hat function (smoth&finite)
     'Up_pdf'                 , ## finite atomin fnuction up
     'FupN_pdf'               , ## finite atomin fnuction up
@@ -2799,6 +2801,74 @@ class Logistic_pdf(PEAK) :
     
 models.append ( Logistic_pdf )      
 
+
+# =============================================================================
+## @class BatesShapoe_pdf
+#  Modified Bates distribution such that it has mean of \f$ \mu \f$
+#  and rms of \f$ \sigma \f$, \f$ n>0\f$ is just a shape parameters 
+#  @see https://en.wikipedia.org/wiki/Bates_distribution
+#  Essentially it is a scaled version of Irwin-Hall distribution 
+#  @see https://en.wikipedia.org/wiki/Irwin%E2%80%93Hall_distribution
+#  @see Ostap::Models::BatesShape
+#  @see Ostap::Math::Bates
+#  @see Ostap::Math::IrwinHall
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2022-01-09
+class BatesShape_pdf(PEAK) :
+    """ Modified Bates distribution such that it has mean of mu 
+    and rms of \sigma ,  n>0 is just a shape parameters 
+    - see https://en.wikipedia.org/wiki/Bates_distribution
+    Essentially it is a scaled version of Irwin-Hall distribution 
+    - see https://en.wikipedia.org/wiki/Irwin%E2%80%93Hall_distribution
+    - see `Ostap.Models.BatesShape`
+    - see `Ostap.Math.Bates`
+    - see `Ostap.Math.IrwinHall`
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mean      = None ,   ## related to mean 
+                   sigma     = None ,   ## related to RMS 
+                   n         = 2    ) : ## define the shape 
+        
+        #
+        ## initialize the base
+        #
+        PEAK.__init__  ( self , name , xvar , mean , sigma  )
+
+        ## 
+        assert isinstance ( n , integer_types ) and 1 <= n , 'Inmvalid parameteter n!'
+        ## shape parameter N 
+        self.__n = int ( n )
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.BatesShape (
+            self.roo_name ( 'bates_' ) , 
+            "Bates shape %s" % self.name ,
+            self.xvar      ,
+            self.mean      ,
+            self.sigma     ,
+            self.n         )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'n'         : self.n     ,
+            }
+
+    
+    @property
+    def n ( self ) :
+        """'n'-parameter, it defines the shape"""
+        return self.__n
+    
+models.append ( BatesShape_pdf )      
+
 # =============================================================================
 ## @class RaisingCosine_pdf 
 #  "Raising cosine" distribution
@@ -2814,8 +2884,8 @@ class RaisingCosine_pdf(PEAK) :
     (x,\mu,s) = \dfrac{1}{2s}   \left( 1   +\cos \pi y \right), 
     where y  \equiv = \dfrac{x-\mu}{s} 
     - see https://en.wikipedia.org/wiki/Raised_cosine_distribution
-    - see Ostap::Models::RaisnCosine 
-    - see Ostap::Math::RaisnCosine
+    - see Ostap::Models::RaisinCosine 
+    - see Ostap::Math::RaisinCosine
     """
     def __init__ ( self             ,
                    name             ,

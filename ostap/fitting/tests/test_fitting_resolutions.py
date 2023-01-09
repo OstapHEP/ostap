@@ -542,6 +542,39 @@ def test_das () :
     models.add ( reso  )
     plots .add ( frame ) 
 
+
+# =============================================================================
+## Bates-shape 
+# =============================================================================
+def test_bates_shape() :
+    
+    logger = getLogger ( 'test_bates_shape' )
+
+    logger.info ('Test Bates-shape: finite spline' )
+    from   ostap.fitting.resolution import ResoBatesShape
+    for n in range ( 10 , 16 , 2 ) :
+        
+        reso = ResoBatesShape ( 'RBS%s' % n ,
+                                mass        ,
+                                n     = n   , 
+                                sigma = ( 0.41 , 0.01 , 5.0 ) )
+
+        with timing ( 'Bates-shape %s' % n , logger = logger ) : 
+            result, frame = reso. fitTo ( dataset , silent = True  )
+            result, frame = reso. fitTo ( dataset , silent = True  )    
+            with use_canvas ( 'test_bates_shape[%s]' % n  , wait = 1 ) : 
+                result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+                
+        if 0 != result.status() or 3 != result.covQual() :
+            logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+            print(result)
+        else :     
+            make_print ( reso , result , 'Bates Shape %s' % n , logger )
+                
+        models.add ( reso  )
+        plots .add ( frame ) 
+                
+
 # =============================================================================
 ## Normal Laplace 
 # =============================================================================
@@ -667,6 +700,9 @@ if '__main__' == __name__ :
 
     with timing ("NormalLaplace" , logger ) :  
         test_normlapl      ()   ## Normal Laplace resolution model
+
+    with timing ("BatesShape" , logger ) :  
+        test_bates_shape    ()   ## Bates Shape resolution model
 
     ## check finally that everything is serializeable:
     with timing ("Save to DB"    , logger ) :  

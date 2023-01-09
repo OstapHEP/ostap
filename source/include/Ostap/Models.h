@@ -17,6 +17,7 @@
 #include "Ostap/Bernstein1D.h"
 #include "Ostap/Workspace.h"
 #include "Ostap/PhaseSpace.h"
+#include "Ostap/BSpline.h"
 // ============================================================================
 /** @file Ostap/Models.h
  *  set of useful models
@@ -2006,6 +2007,262 @@ namespace Ostap
       double   m_dp   {  1 } ; // parameter chi
       /// normalization 
       double   m_norm { -1 } ; // normalization
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class IrwinHall
+     *  Irwin-Hall distribution 
+     *  @see https://en.wikipedia.org/wiki/Irwin%E2%80%93Hall_distribution
+     */
+    class IrwinHall 
+    {
+    public: 
+      // ======================================================================
+      /** constructor from n-parameter
+       *  @param n  n-parameter (shape) 
+       */
+      IrwinHall ( const unsigned short n = 2 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function 
+      double evaluate ( const double x )  const ;
+      /// evaluate the function 
+      inline double operator () ( const double x )  const 
+      { return evaluate ( x ) ;  }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// n-parameter 
+      unsigned short n    () const { return m_bspline.degree () + 1 ; } ;
+      // ======================================================================
+    public: // 
+      // ======================================================================
+      double         xmin () const { return m_bspline.xmin   () ; }
+      double         xmax () const { return m_bspline.xmax   () ; }      
+      // ======================================================================
+    public: // some statistical properties 
+      // ======================================================================
+      /// get mode 
+      double mode       () const { return 0.5 * n ()  ; }
+      /// get mean 
+      double mean       () const { return 0.5 * n ()  ; }
+      /// get median
+      double median     () const { return 0.5 * n ()  ; }
+      /// get variance 
+      double variance   () const { return n () / 12.0 ; }
+      /// get doispersion 
+      double dispersion () const { return n () / 12.0 ; }
+      /// get rms 
+      double rms        () const ; 
+      /// get skewness 
+      double skewness   () const { return 0 ; }
+      /// get kurtosis 
+      double kurtosis   () const ; 
+      // ======================================================================
+    public:
+      // ====================================================================== 
+      /// get the integral 
+      double integral  () const ;
+      /// get the integral between low and high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual bspliine 
+      Ostap::Math::BSpline m_bspline ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class Bates 
+     *  Bates distribution 
+     *  @see https://en.wikipedia.org/wiki/Bates_distribution
+     *  Essentially it is a scaled version of Irwin-Hall distribution 
+     *  @see https://en.wikipedia.org/wiki/Irwin%E2%80%93Hall_distribution
+     *  @see Ostap::Math::IrwinHall 
+     */
+    class Bates
+    {
+    public:
+      // ======================================================================
+      /** constructor from n-parameter
+       *  @param n  n-parameter (shape) 
+       */
+      Bates  ( const unsigned short n = 2 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function 
+      double evaluate ( const double x )  const ;
+      /// evaluate the function 
+      inline double operator () ( const double x )  const 
+      { return evaluate ( x ) ;  }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// n-parameter 
+      unsigned short n    () const { return m_ih.n () ; } ;
+      // ======================================================================
+    public: // 
+      // ======================================================================
+      double         xmin () const { return 0 ; }
+      double         xmax () const { return 1 ; }      
+      // ======================================================================
+    public: // some statistical properties 
+      // ====================================================================== 
+      /// get mode 
+      double mode       () const { return 0.5 ; }
+      /// get mean 
+      double mean       () const { return 0.5 ; }
+      /// get median 
+      double median     () const { return 0.5 ; }
+      /// get variance 
+      double variance   () const ; 
+      /// get dispersion 
+      double dispersion () const { return variance () ; }
+      /// get rms 
+      double rms        () const ;
+      /// get skewness 
+      double skewness   () const { return 0           ; }
+      /// get kurtosis 
+      double kurtosis   () const ; 
+      // ======================================================================
+    public:
+      // ====================================================================== 
+      /// get the integral 
+      double integral  () const ;
+      /// get the integral between low and high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual Irwin-Hall distribution  
+      Ostap::Math::IrwinHall m_ih ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class BatesShape 
+     *  Modified Bates distribution such that it has mean of \f$ \mu \f$
+     *  and rms of \f$ \sigma \f$, \f$ n>0\f$ is just a shape parameters 
+     *  @see https://en.wikipedia.org/wiki/Bates_distribution
+     *  Essentially it is a scaled version of Irwin-Hall distribution 
+     *  @see https://en.wikipedia.org/wiki/Irwin%E2%80%93Hall_distribution
+     *  @see Ostap::Math::Bates  
+     *  @see Ostap::Math::IrwinHall 
+     */
+    class BatesShape 
+    {
+    public:
+      // ======================================================================
+      /** constructor from n-parameter
+       *  @param n     n-parameter (shape) 
+       *  @param mu    mu-parameter (location)
+       *  @param sigma sigma-parameter (scale/width)
+       *  - \f$ \mu = \frac{1}{2} \f$ and \f$ \sigma = \frac{1}{\sqrt{12n} \f$ 
+       *     give the original Bates shape 
+       */
+      BatesShape 
+      ( const double         mu    = 0 , 
+        const double         sigma = 1 , 
+        const unsigned short n     = 2 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function 
+      double evaluate ( const double x )  const ;
+      /// evaluate the function 
+      inline double operator () ( const double x )  const 
+      { return evaluate ( x ) ;  }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// mu-parameter 
+      double         mu    () const { return m_mu         ; }
+      /// sigma-parameter 
+      double         sigma () const { return m_sigma      ; }
+      /// n-parameter 
+      unsigned short n     () const { return m_bates.n () ; } 
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// set parameter mu 
+      bool setMu     ( const double value ) ;
+      /// set parameter sigma 
+      bool setSigma  ( const double value ) ;
+      // ======================================================================
+    public: // 
+      // ======================================================================
+      /// get x for given t 
+      inline double x ( const double t ) const 
+      { return m_mu + ( t - 0.5 ) * m_sigma * m_sq12n ; }
+      /// get t for given x 
+      inline double t ( const double x ) const  
+      { return ( x - m_mu ) / ( m_sq12n * m_sigma ) + 0.5 ; }
+      // ======================================================================
+    public: // 
+      // ======================================================================
+      /// minimal x 
+      double         xmin () const ; 
+      /// maximal x 
+      double         xmax () const ; 
+      // ======================================================================
+    public: // some statistical properties 
+      // ====================================================================== 
+      /// get mode 
+      double mode       () const { return m_mu ; }
+      /// get mean 
+      double mean       () const { return m_mu ; }
+      /// get median 
+      double median     () const { return m_mu ; }
+      /// get variance 
+      double variance   () const { return m_sigma * m_sigma ; }
+      /// get dispersion 
+      double dispersion () const { return variance () ; }
+      /// get rms 
+      double rms        () const { return m_sigma     ; }
+      /// get skewness 
+      double skewness   () const { return 0           ; }
+      /// get kurtosis 
+      double kurtosis   () const ; 
+      // ======================================================================
+    public:
+      // ====================================================================== 
+      /// get the integral 
+      double integral  () const ;
+      /// get the integral between low and high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// helper constant \f$ \sqrt{12n}\f$ 
+      double             m_sq12n  ; // sqrt(12n)
+      /// parameter mu 
+      double             m_mu     ; // parameter mu 
+      /// parameter sigma 
+      double             m_sigma  ; // parameter sigma 
+      /// the actual Bates distribution  
+      Ostap::Math::Bates m_bates  ;
       // ======================================================================
     } ;
     // ========================================================================

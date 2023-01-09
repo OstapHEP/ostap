@@ -1811,6 +1811,20 @@ Ostap.Models.Hat      .__reduce__ = _ratlas_reduce_
 Ostap.Models.Up       .__reduce__ = _ratlas_reduce_ 
 
 # =============================================================================
+## reduce BatesShae  
+def _rbats_reduce_ ( pdf ):
+    """Reduce BatesShape"""
+    return root_store_factory , ( type ( pdf )   ,
+                                  pdf.name       ,
+                                  pdf.title      ,
+                                  pdf.x       () ,                            
+                                  pdf.mu      () ,
+                                  pdf.sigma   () ,
+                                  pdf.n       () )
+
+Ostap.Models.BatesShape .__reduce__ = _rbats_reduce_ 
+
+# =============================================================================
 ## reduce Slash
 def _rslash_reduce_ ( pdf ):
     """Reduce Slasj"""

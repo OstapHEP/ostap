@@ -6629,6 +6629,90 @@ Double_t Ostap::Models::AsymmetricLaplace::analyticalIntegral
 
 
 
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::BatesShape::BatesShape
+( const char*          name     , 
+  const char*          title    ,
+  RooAbsReal&          x        ,
+  RooAbsReal&          mu       ,
+  RooAbsReal&          sigma    , 
+  const unsigned short n        )
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x     ( "!x"     , "observable" , this , x     ) 
+  , m_mu    ( "!mu"    , "location"   , this , mu    ) 
+  , m_sigma ( "!sigma" , "scale"      , this , sigma ) 
+    //
+  , m_bs ( 0 , 1 , n ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::BatesShape::BatesShape
+( const Ostap::Models::BatesShape& right ,
+  const char*                      name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"     , this , right.m_x     ) 
+  , m_mu     ( "!mu"    , this , right.m_mu    )
+  , m_sigma  ( "!sigma" , this , right.m_sigma )
+    //
+  , m_bs  ( right.m_bs ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::BatesShape::~BatesShape(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::BatesShape*
+Ostap::Models::BatesShape::clone( const char* name ) const 
+{ return new Ostap::Models::BatesShape( *this , name) ; }
+// ============================================================================
+void Ostap::Models::BatesShape::setPars () const 
+{
+  m_bs.setMu    ( m_mu    ) ;
+  m_bs.setSigma ( m_sigma ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::BatesShape::evaluate() const 
+{
+  setPars () ;
+  return m_bs ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::BatesShape::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::BatesShape::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_bs.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -8986,6 +9070,7 @@ ClassImp(Ostap::Models::Argus              )
 ClassImp(Ostap::Models::GenArgus           ) 
 ClassImp(Ostap::Models::Slash              ) 
 ClassImp(Ostap::Models::AsymmetricLaplace  ) 
+ClassImp(Ostap::Models::BatesShape         ) 
 ClassImp(Ostap::Models::Hat                ) 
 ClassImp(Ostap::Models::Up                 ) 
 ClassImp(Ostap::Models::FupN               ) 

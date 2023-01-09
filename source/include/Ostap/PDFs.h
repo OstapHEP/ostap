@@ -5586,6 +5586,92 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class BatesShape
+     *  Modified Bates distribution such that it has mean of \f$ \mu \f$
+     *  and rms of \f$ \sigma \f$, \f$ n>0\f$ is just a shape parameters 
+     *  @see https://en.wikipedia.org/wiki/Bates_distribution
+     *  Essentially it is a scaled version of Irwin-Hall distribution 
+     *  @see https://en.wikipedia.org/wiki/Irwin%E2%80%93Hall_distribution
+     *  @see Ostap::Math::BatesShape  
+     *  @see Ostap::Math::Bates  
+     *  @see Ostap::Math::IrwinHall 
+     */
+    class BatesShape : public RooAbsPdf 
+    {
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::BatesShape, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      BatesShape
+      ( const char*          name  ,
+        const char*          title ,
+        RooAbsReal&          x     ,
+        RooAbsReal&          mu    ,
+        RooAbsReal&          sigma , 
+        const unsigned short n     ) ;
+      /// "copy constructor"
+      BatesShape       
+      ( const BatesShape&    right     ,
+        const char*          name  = 0 )  ;
+      /// destructor
+      virtual ~BatesShape() ;
+      /// clone
+      BatesShape* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      BatesShape () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::BatesShape& function   () const { return m_bs ; }
+      const Ostap::Math::BatesShape& batesshape () const { return m_bs ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x       .arg () ; }
+      const RooAbsReal& mu       () const { return m_mu      .arg () ; }
+      const RooAbsReal& sigma    () const { return m_sigma   .arg () ; }
+      unsigned short    n        () const { return m_bs      .n   () ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_mu    {} ;
+      RooRealProxy m_sigma {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::BatesShape m_bs ; // the actual function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Hat
      *  Finite smooth functon
      *  \f$ f(x;\mu\sigma) = \frac{C}{\sigma} 

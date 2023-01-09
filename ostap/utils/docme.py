@@ -92,12 +92,12 @@ def docme( module , symbols = {} , logger = None ) :
             sym = getattr ( module , key )            
             if isinstance ( sym , primitive ) : continue
             if isinstance ( sym , ( tuple , list, set ) ) :
-                logger.info ( "Symbol ``%s''\n# - %s" % ( key , str ( sym ) ) )                
+                logger.info ( "Symbol `%s'\n# - %s" % ( key , str ( sym ) ) )                
             elif hasattr ( sym , '__doc__' ) and sym.__doc__ :
                 d = sym.__doc__.replace( '\n' , '\n#' )
-                logger.info ( "Symbol ``%s''\n# - %s" % ( key , d ) )
+                logger.info ( "Symbol `%s'\n# - %s" % ( key , d ) )
             else : 
-                logger.info ( "``%s''" %        key )
+                logger.info ( "`%s'" %        key )
 
             _done_.add ( sym ) 
         logger.info ( 80*'*' )
@@ -109,7 +109,7 @@ def docme( module , symbols = {} , logger = None ) :
         for sym in _klasses_ :
             if hasattr ( sym , '__doc__' ) and sym.__doc__ :
                 d = str ( sym.__doc__ ) .replace( '\n' , '\n#' )
-                logger.info ( "Decorated class ``%s''\n# - %s" % ( getattr ( sym , '__name__' , sym ) , d ) )
+                logger.info ( "Decorated class `%s'\n# - %s" % ( getattr ( sym , '__name__' , sym ) , d ) )
         
         logger.info ( 80*'*' )
 
@@ -131,9 +131,9 @@ def docme( module , symbols = {} , logger = None ) :
             if inspect.ismodule ( sym ) : continue 
             if hasattr ( sym , '__doc__' ) and sym.__doc__ and not isinstance ( sym , primitive ) : 
                 d = str ( sym.__doc__ ) .replace( '\n' , '\n#' )
-                logger.info ( "Symbol ``%s''\n# - %s" % ( key , d ) )
+                logger.info ( "Symbol `%s'\n# - %s" % ( key , d ) )
             else : 
-                logger.info ( "``%s''" %        key ) 
+                logger.info ( "`%s'" %        key ) 
 
         logger.info ( 80*'*' )
 
@@ -144,9 +144,9 @@ def docme( module , symbols = {} , logger = None ) :
             if inspect.ismodule ( sym ) : continue 
             if hasattr ( sym , '__doc__' ) and sym.__doc__ and not isinstance ( sym , primitive ) : 
                 d = str ( sym.__doc__ ) .replace( '\n' , '\n#' )
-                logger.info ( "Symbol ``%s''\n# - %s" % ( key , d ) )
+                logger.info ( "Symbol `%s'\n# - %s" % ( key , d ) )
             else : 
-                logger.info ( "``%s''" %        key ) 
+                logger.info ( "`%s'" %        key ) 
                         
         logger.info ( 80*'*' )
 

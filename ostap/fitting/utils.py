@@ -267,7 +267,6 @@ def _rt_new_init_ ( self , topics , level = ROOT.RooFit.INFO , streams = -1  ) :
     - see Ostap::Utils::AddTopic
     - see Ostap::Utils::RemoveTopic
     """
-
     if isinstance ( topics , integer_types ) and 0 < topics and topics <= 2**16 :
         return self._old_init_ ( topics , level , streams )    
     if isinstance ( topics , string_types  ) : topics = topics.split()
@@ -299,7 +298,6 @@ def _at_new_init_ ( self , topics , streams = -1  ) :
     - see Ostap::Utils::AddTopic
     - see Ostap::Utils::RemoveTopic
     """
-
     if isinstance ( topics , integer_types ) and 0 < topics and topics <= 2**16 :
         return self._old_init_ ( topics , streams )
     
@@ -391,8 +389,9 @@ def suppress_topics ( *topics ) :
             ws     = string.whitespace 
             node   = CONFIG.config [ 'RooFit' ]
             data   = node.get('RemoveTopics','(,)' )
+            data   = node.get('RemoveTopics','' )
             topics = tuple ( i.strip ( ws ) for i in data.split ( ',' ) if i.strip ( ws ) ) 
-            
+
     if topics : 
         svc = ROOT.RooMsgService.instance()
         svc.saveState () 
