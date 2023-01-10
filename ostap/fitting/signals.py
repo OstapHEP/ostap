@@ -2815,8 +2815,8 @@ models.append ( Logistic_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2022-01-09
 class BatesShape_pdf(PEAK) :
-    """ Modified Bates distribution such that it has mean of mu 
-    and rms of \sigma ,  n>0 is just a shape parameters 
+    """Modified Bates distribution such that it has mean of mu 
+    and rms of sigma ,  n>0 is just a shape parameters 
     - see https://en.wikipedia.org/wiki/Bates_distribution
     Essentially it is a scaled version of Irwin-Hall distribution 
     - see https://en.wikipedia.org/wiki/Irwin%E2%80%93Hall_distribution
