@@ -2320,7 +2320,7 @@ class RooCheb_pdf(RooPolyBase) :
                    coefficients = [] ) : ## the list of coefficients 
         
         ## initialize the base class 
-        RooPolyBase.__init__ ( sels , name , xvar , power ,  coefficients )
+        RooPolyBase.__init__ ( self , name , xvar , power ,  coefficients )
 
         ## create PDF 
         self.pdf = ROOT.RooChebyshev (
