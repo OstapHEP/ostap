@@ -206,7 +206,7 @@ namespace Ostap
                                   const double z ) const 
       {
         return Ostap::Math::HistoInterpolation::interpolate_3D
-          ( m_h ,  x  ,  y  ,  z  , m_tx  ,  m_ty  ,  m_tx , 
+          ( m_h ,  x  ,  y  ,  z  , m_tx  ,  m_ty  ,  m_tz , 
             edges () , extrapolate () , density () );                    
       }
       // ======================================================================
