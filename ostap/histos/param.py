@@ -2280,11 +2280,12 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
         _h1_pdf_convexSpline_   ,
         _h1_pdf_concaveSpline_  ,
         ]
+    
 # =============================================================================
 ## make a histogram representation in terms of Legendre polynomials
 #  @code 
 #  histo  = ...
-#  fsum   = histo.legendre_sum ( 4 )
+#  fsum   = histo.legendre_sum_orig ( 4 )
 #  print fsum
 #  x = ...
 #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
@@ -2293,10 +2294,10 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
 #  @author Vanya Belyaev Ivan.Belyaev@iter.ru
 #  It is not very CPU efficient, but stable enough...
 #  @date 2015-07-26
-def _h1_legendre_sum_ ( h1 , N , **kwargs ) :
+def _h1_legendre_sum_orig_ ( h1 , N , **kwargs ) :
     """Make a histogram representation in terms of Legendre polynomials
     >>> histo  = ...
-    >>> fsum   = histo.legendre_sum ( 4 )
+    >>> fsum   = histo.legendre_sum_orig ( 4 )
     >>> print fsum
     >>> x = ...
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
@@ -2308,11 +2309,50 @@ def _h1_legendre_sum_ ( h1 , N , **kwargs ) :
     ##
     return legendre_sum ( h1 , N , xmin , xmax , *kwargs )
 
+
+# =============================================================================
+## make a histogram representation in terms of Legendre polynomials
+#  @code 
+#  histo  = ...
+#  fsum   = histo.legendre_sum_fill ( 4 )
+#  print fsum
+#  x = ...
+#  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+#  @endcode 
+#  @see Ostap::Math::LegendreSum
+#  @see Ostap::Math::LegendreSum::fill
+#  @author Vanya Belyaev Ivan.Belyaev@iter.ru
+#  @date 2015-07-26
+def _h1_legendre_sum_fill_ ( h1 , N , **kwargs ) :
+    """Make a histogram representation in terms of Legendre polynomials
+    >>> histo  = ...
+    >>> fsum   = histo.legendre_sum_fill ( 4 )
+    >>> print fsum
+    >>> x = ...
+    >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+    - see `Ostap::Math::LegendreSum`
+    - see `Ostap::Math::LegendreSum::fill`
+    """
+    ##
+    xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
+    xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
+    ##
+    lsum = Ostap.Math.LegendreSum ( N , xmin , xmax ) 
+    for i, x , y in h1.items() :
+        xx     = x.value()
+        if  not xmin <= xx <= xmax : continue                 
+        yy     = y.value() 
+        volume = 2 * x.error() 
+        lsum.fill ( xx , yy * volume ) 
+    return lsum 
+
+    
+
 # =============================================================================
 ## make a histogram representation in terms of Chebyshev polynomials
 #  @code 
 #  histo  = ...
-#  fsum   = histo.chebyshev_sum ( 4 )
+#  fsum   = histo.chebyshev_sum_orig ( 4 )
 #  print fsum
 #  x = ...
 #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
@@ -2321,10 +2361,10 @@ def _h1_legendre_sum_ ( h1 , N , **kwargs ) :
 #  @author Vanya Belyaev Ivan.Belyaev@iter.ru
 #  It is not very CPU efficient, but stable enough...
 #  @date 2015-07-26
-def _h1_chebyshev_sum_ ( h1 , N , **kwargs ) :
+def _h1_chebyshev_sum_orig_ ( h1 , N , **kwargs ) :
     """Make a histogram representation in terms of Chebyshev polynomials
     >>> histo  = ...
-    >>> fsum   = histo.chebyshev_sum ( 4 )
+    >>> fsum   = histo.chebyshev_sum_orig ( 4 )
     >>> print fsum
     >>> x = ...
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
@@ -2337,12 +2377,47 @@ def _h1_chebyshev_sum_ ( h1 , N , **kwargs ) :
 
 
 # =============================================================================
+## make a histogram representation in terms of Chebyshev polynomials
+#  @code 
+#  histo  = ...
+#  fsum   = histo.chebyshev_sum_fill ( 4 )
+#  print fsum
+#  x = ...
+#  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+#  @endcode 
+#  @see Ostap::Math::ChebyshevSum
+#  @see Ostap::Math::ChebyshevSum::fill
+#  @author Vanya Belyaev Ivan.Belyaev@iter.ru
+#  It is not very CPU efficient, but stable enough...
+#  @date 2015-07-26
+def _h1_chebyshev_sum_fill_ ( h1 , N , **kwargs ) :
+    """Make a histogram representation in terms of Chebyshev polynomials
+    >>> histo  = ...
+    >>> fsum   = histo.chebyshev_sum_fill ( 4 )
+    >>> print fsum
+    >>> x = ...
+    >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+    """
+    ##
+    xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
+    xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
+    ##
+    csum = Ostap.Math.ChebyshevSum ( N , xmin , xmax ) 
+    for i, x , y in h1.items() :
+        xx     = x.value()
+        if  not xmin <= xx <= xmax : continue                 
+        yy     = y.value() 
+        volume = 2 * x.error() 
+        csum.fill ( xx , yy * volume ) 
+    return csum 
+
+# =============================================================================
 ## make a histogram representation in terms of Bezier(Bernstein) sum
 #  (sum over Bernstein polynomials)
 #  @code 
 #  histo  = ...
-#  fsum   = histo.bezier_sum    ( 4 )
-#  fsum   = histo.bernstein_sum ( 4 ) ## ditto
+#  fsum   = histo.bezier_sum_orig    ( 4 )
+#  fsum   = histo.bernstein_sum_orig ( 4 ) ## ditto
 #  print fsum
 #  x = ...
 #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
@@ -2350,12 +2425,12 @@ def _h1_chebyshev_sum_ ( h1 , N , **kwargs ) :
 #  @see Ostap::Math::Bernstein
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2015-07-26
-def _h1_bezier_sum_ ( h1 , N , **kwargs ) :
+def _h1_bezier_sum_orig_ ( h1 , N , **kwargs ) :
     """Make a histogram representation in terms of Bezier/Bernstein sum
     (sum over Bernstein polynomials)
     >>> histo  = ...
-    >>> fsum   = histo.bezier_sum    ( 4 )
-    >>> fsum   = histo.bernstein_sum ( 4 ) ## ditto 
+    >>> fsum   = histo.bezier_sum_orig    ( 4 )
+    >>> fsum   = histo.bernstein_sum_orig ( 4 ) ## ditto 
     >>> print fsum
     >>> x = ...
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
@@ -2365,6 +2440,47 @@ def _h1_bezier_sum_ ( h1 , N , **kwargs ) :
     xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
     ##
     return bezier_sum ( h1 , N , xmin , xmax )
+
+
+# =============================================================================
+## make a histogram representation in terms of Bezier(Bernstein) sum
+#  (sum over Bernstein polynomials)
+#  @code 
+#  histo  = ...
+#  fsum   = histo.bezier_sum_fill    ( 4 )
+#  fsum   = histo.bernstein_sum_fill ( 4 ) ## ditto
+#  print fsum
+#  x = ...
+#  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+#  @endcode 
+#  @see Ostap::Math::Bernstein
+#  @see Ostap::Math::Bernstein::fill
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2015-07-26
+def _h1_bezier_sum_fill_ ( h1 , N , **kwargs ) :
+    """Make a histogram representation in terms of Bezier/Bernstein sum
+    (sum over Bernstein polynomials)
+    >>> histo  = ...
+    >>> fsum   = histo.bezier_sum_fill    ( 4 )
+    >>> fsum   = histo.bernstein_sum_fill ( 4 ) ## ditto 
+    >>> print fsum
+    >>> x = ...
+    >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+    - see `Ostap/Math.Bernstein`
+    - see `Ostap.Math.Bernstein.fill`
+    """
+    ##
+    xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
+    xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
+    ##
+    bsum = Ostap.Math.Bernstein ( N , xmin , xmax ) 
+    for i, x , y in h1.items() :
+        xx     = x.value()
+        if not xmin <= xx <= xmax : continue                 
+        yy     = y.value() 
+        volume = 2 * x.error() 
+        bsum.fill ( xx , yy * volume ) 
+    return bsum 
 
 
 # =============================================================================
@@ -2403,57 +2519,82 @@ def _h1_beziereven_sum_ ( h1 , N , **kwargs ) :
 
 for h in ( ROOT.TH1F , ROOT.TH1D ) :
 
-    h.legendre_sum      = _h1_legendre_sum_
-    h.chebyshev_sum     = _h1_chebyshev_sum_
-    h.bezier_sum        = _h1_bezier_sum_
-    h.bernstein_sum     = _h1_bezier_sum_
-    h.beziereven_sum    = _h1_beziereven_sum_
-    h.bernsteineven_sum = _h1_beziereven_sum_
+
+    h.beziereven_sum     = _h1_beziereven_sum_
+    h.bernsteineven_sum  = _h1_beziereven_sum_
     
-_new_methods_ .append ( _h1_legendre_sum_   )
-_new_methods_ .append ( _h1_chebyshev_sum_  )
-_new_methods_ .append ( _h1_bezier_sum_     )
-_new_methods_ .append ( _h1_beziereven_sum_ )
+    h.chebyshev_sum_orig = _h1_chebyshev_sum_orig_
+    h.chebyshev_sum_fill = _h1_chebyshev_sum_fill_
+
+    h.legendre_sum_orig  = _h1_legendre_sum_orig_
+    h.legendre_sum_fill  = _h1_legendre_sum_fill_
 
 
+    h.bezier_sum_fill    = _h1_bezier_sum_fill_
+    h.bernstein_sum_fill = _h1_bezier_sum_fill_
+
+    h.bezier_sum_orig    = _h1_bezier_sum_orig_
+    h.bernstein_sum_orig = _h1_bezier_sum_orig_
+
+    h.legendre_sum       = _h1_legendre_sum_orig_  ## ATTENTION 
+    h.chebyshev_sum      = _h1_chebyshev_sum_orig_ ## ATTENTION 
+    h.bezier_sum         = _h1_bezier_sum_orig_    ## ATTENTION
+    h.bernstein_sum      = _h1_bezier_sum_orig_    ## ATTENTION
+    
+    _new_methods_ .append ( h.legendre_sum_orig  )
+    _new_methods_ .append ( h.legendre_sum_fill  )
+    _new_methods_ .append ( h.legendre_sum       )
+
+    _new_methods_ .append ( h.chebyshev_sum_orig )
+    _new_methods_ .append ( h.chebyshev_sum_fill )
+    _new_methods_ .append ( h.chebyshev_sum      )
+
+    _new_methods_ .append ( h.bezier_sum_fill    )
+    _new_methods_ .append ( h.bernstein_sum_fill )
+    _new_methods_ .append ( h.bezier_sum_orig    )
+    _new_methods_ .append ( h.bernstein_sum_orig )
+    _new_methods_ .append ( h.bezier_sum         )
+    _new_methods_ .append ( h.bernstein_sum      )
+    
+    _new_methods_ .append ( h.beziereven_sum     )
+    _new_methods_ .append ( h.bernsteineven_sum  )
+    
+    
 # ==============================================================================
 ## (relatively) fast parameterization of 2D histogram as sum of
-#  legendre polynomials
+#  2D-Legendre polynomials
 #  @code
 #  histo = ...
 #  func  = histo.legendre      ( 5 , 3 ) 
 #  func  = histo.legendre_fast ( 5 , 3 ) ## ditto
+#  func  = histo.legendre_fill ( 5 , 3 ) ## ditto
 #  @endcode
 #  @see Ostap::LegendreSum2
 #  @see Ostap::LegendreSum2::fill 
-def _h2_legendre_fast_ ( h2  ,
-                         xdegree , ydegree , 
+def _h2_legendre_fast_ ( h2  , NX , NY , 
                          xmin = inf_neg , xmax = inf_pos , 
                          ymin = inf_neg , ymax = inf_pos ) :
-    """(relatively) fast parameterization of 2D histogram as sum of Legendre polynomials
+    """(relatively) fast parameterization of 2D histogram as sum of 2D-Legendre polynomials
     >>> histo = ...
+    >>> func  = histo.legendre      ( 5 , 3  )
     >>> func  = histo.legendre_fast ( 5 , 3  )
+    >>> func  = histo.legendre_fill ( 5 , 3  )
     - see Ostap.Math.LegendreSum2
     - see Ostap.Math.LegendreSum2.fill
     """
     
-    assert isinstance ( xdegree , int ) and 0 <= xdegree , \
-           "Invalid xdegree %s" % xdegree
-    
-    assert isinstance ( ydegree , int ) and 0 <= ydegree , \
-           "Invalid ydegree %s" % ydegree
+    assert isinstance ( NX , int ) and 0 <= NX , "Invalid NX=%s" % NX     
+    assert isinstance ( NY , int ) and 0 <= NY , "Invalid NY=%s" % NY
 
     xmin = max ( xmin , h2.xmin() ) 
     xmax = min ( xmax , h2.xmax() )
-
     assert xmin < xmax , 'Invalid xmin/xmax: %s/%s' % ( xmin , xmax )
 
     ymin = max ( ymin , h2.ymin() ) 
     ymax = min ( ymax , h2.ymax() )
-
     assert ymin < ymax , 'Invalid ymin/ymax: %s/%s' % ( ymin , ymax )
     
-    func = Ostap.Math.LegendreSum2 ( xdegree , ydegree ,  xmin , xmax , ymin , ymax )
+    func = Ostap.Math.LegendreSum2 ( NX , NY ,  xmin , xmax , ymin , ymax )
     
     sum  = 0
     for ix , iy , x , y , v in h2.iteritems()  :        
@@ -2468,75 +2609,198 @@ def _h2_legendre_fast_ ( h2  ,
 
     return func 
 
+# ==============================================================================
+## (relatively) fast parameterization of 2D histogram as sum of
+#  2D-Bernstein polynomials
+#  @code
+#  histo = ...
+#  func  = histo.bernstein      ( 5 , 3 ) 
+#  func  = histo.bernstein_fast ( 5 , 3 ) ## ditto
+#  func  = histo.bernstein_fill ( 5 , 3 ) ## ditto
+#  @endcode
+#  @see Ostap::Bernstein2D
+#  @see Ostap::Bernstein2D::fill 
+def _h2_bernstein_fast_ ( h2  , NX , NY , 
+                          xmin = inf_neg , xmax = inf_pos , 
+                          ymin = inf_neg , ymax = inf_pos ) :
+    """(relatively) fast parameterization of 2D histogram as sum of 2D-Bernstein polynomials
+    >>> histo = ...
+    >>> func  = histo.bernstein      ( 5 , 3  )
+    >>> func  = histo.bernstein_fast ( 5 , 3  )
+    >>> func  = histo.bernstein_fill ( 5 , 3  )
+    - see Ostap.Math.Bernstein2D
+    - see Ostap.Math.Bernstein2D.fill
+    """
+    
+    assert isinstance ( NX , int ) and 0 <= NX , "Invalid NX=%s" % NX     
+    assert isinstance ( NY , int ) and 0 <= NY , "Invalid NY=%s" % NY
+    
+    xmin = max ( xmin , h2.xmin() ) 
+    xmax = min ( xmax , h2.xmax() )
+    assert xmin < xmax , 'Invalid xmin/xmax: %s/%s' % ( xmin , xmax )
+
+    ymin = max ( ymin , h2.ymin() ) 
+    ymax = min ( ymax , h2.ymax() )
+    assert ymin < ymax , 'Invalid ymin/ymax: %s/%s' % ( ymin , ymax )
+    
+    func = Ostap.Math.Bernstein2D ( NX , NY , xmin , xmax , ymin , ymax )
+    sum  = 0
+    for ix , iy , x , y , v in h2.iteritems()  :        
+        xv = x.value()
+        if not xmin <= xv <= xmax : continue        
+        yv = y.value()
+        if not ymin <= yv <= ymax : continue
+        vv = v.value()        
+        w  = 4 * vv * x.error() * y.error()        
+        ok = func.fill ( xv , yv , w )        
+        if ok : sum +=             w
+
+    return func 
+
+
         
 for h in ( ROOT.TH2F , ROOT.TH2D ) :
 
-    h.legendre      = _h2_legendre_fast_
-    h.legendre_fast = _h2_legendre_fast_
+    h.legendre       = _h2_legendre_fast_
+    h.legendre_fast  = _h2_legendre_fast_
+    h.legendre_fill  = _h2_legendre_fast_
 
-_new_methods_ .append ( _h2_legendre_fast_   )
+    h.bernstein      = _h2_bernstein_fast_
+    h.bernstein_fast = _h2_bernstein_fast_
+    h.bernstein_fill = _h2_bernstein_fast_
 
+    h.bezier         = _h2_bernstein_fast_
+    h.bezier_fast    = _h2_bernstein_fast_
+    h.bezier_fill    = _h2_bernstein_fast_
+
+    _new_methods_ .append ( h.legendre       )
+    _new_methods_ .append ( h.legendre_fast  )
+    _new_methods_ .append ( h.legendre_fill  )
+    
+    _new_methods_ .append ( h.bernstein      )
+    _new_methods_ .append ( h.bernstein_fast )
+    _new_methods_ .append ( h.bernstein_fill )
+
+    _new_methods_ .append ( h.bezier         )
+    _new_methods_ .append ( h.bezier_fast    )
+    _new_methods_ .append ( h.bezier_fill    )
 
 # ==============================================================================
 ## (relatively) fast parameterization of 3D histogram as sum of
-#  legendre polynomials
+#  3D-Legendre polynomials
 #  @code
 #  histo = ...
 #  func  = histo.legendre      ( 5 , 3 , 2 ) 
 #  func  = histo.legendre_fast ( 5 , 3 , 2 ) ## ditto
+#  func  = histo.legendre_fill ( 5 , 3 , 2 ) ## ditto
 #  @endcode
 #  @see Ostap::LegendreSum3
 #  @see Ostap::LegendreSum3::fill 
-def _h3_legendre_fast_ ( h3 , xdegree , ydegree , zdegree , 
+def _h3_legendre_fast_ ( h3 , NX , NY , NZ , 
                          xmin = inf_neg , xmax = inf_pos  ,
                          ymin = inf_neg , ymax = inf_pos  ,
                          zmin = inf_neg , zmax = inf_pos  ) :
-    """(relatively) fast parameterization of 2D histogram as sum of Legendre polynomials
+    """(relatively) fast parameterization of 2D histogram as sum of 3D-Legendre polynomials
     >>> histo = ...
+    >>> func  = histo.legendre      ( 5 , 3  )
     >>> func  = histo.legendre_fast ( 5 , 3  )
-    - see Ostap.Math.LegendreSum2
-    - see Ostap.Math.LegendreSum2.fill
+    >>> func  = histo.legendre_fill  ( 5 , 3  )
+    - see Ostap.Math.LegendreSum3
+    - see Ostap.Math.LegendreSum3.fill
     """
     
-    assert isinstance ( xdegree , int ) and 0 <= xdegree , \
-           "Invalid xdegree %s" % xdegree
-    
-    assert isinstance ( ydegree , int ) and 0 <= ydegree , \
-           "Invalid ydegree %s" % ydegree
-    
-    assert isinstance ( zdegree , int ) and 0 <= zdegree , \
-           "Invalid zdegree %s" % zdegree
+    assert isinstance ( NX , int ) and 0 <= NX , "Invalid NX=%s" % NX     
+    assert isinstance ( NY , int ) and 0 <= NY , "Invalid NY=%s" % NY
+    assert isinstance ( NZ , int ) and 0 <= NZ , "Invalid NZ=%s" % NZ
 
     xmin = max ( xmin , h3.xmin() ) 
     xmax = min ( xmax , h3.xmax() )
-
     assert xmin < xmax , 'Invalid xmin/xmax: %s/%s' % ( xmin , xmax )
 
     ymin = max ( ymin , h3.ymin() ) 
     ymax = min ( ymax , h3.ymax() )
-
     assert ymin < ymax , 'Invalid ymin/ymax: %s/%s' % ( ymin , ymax )
 
     zmin = max ( zmin , h3.zmin() ) 
     zmax = min ( zmax , h3.zmax() )
-
     assert zmin < zmax , 'Invalid zmin/zmax: %s/%s' % ( zmin , zmax )
     
-    func = Ostap.Math.LegendreSum3 ( xdegree , ydegree , zdegree ,
+    func = Ostap.Math.LegendreSum3 ( NX , NY , NZ , 
                                      xmin , xmax ,
                                      ymin , ymax ,
                                      zmin , zmax )
+    
+    sum  = 0    
+    for ix , iy, iz , x , y , z , v in h3.iteritems()  :
+        
+        xv = x.value()
+        if not xmin <= xv <= xmax : continue        
+        yv = y.value()
+        if not ymin <= yv <= ymax : continue
+        zv = z.value()
+        if not zmin <= zv <= zmax : continue
+
+        vv = v.value()
+        w  = 8 * vv * x.error() * y.error() * z.error() 
+        ok = func.fill ( xv , yv , zv , w )
+        if ok : sum +=                  w
+
+    return func 
+
+
+# ==============================================================================
+## (relatively) fast parameterization of 3D histogram as sum of
+#  3D-Bernstein polynomials
+#  @code
+#  histo = ...
+#  func  = histo.bernstein      ( 5 , 3 , 2 ) 
+#  func  = histo.bernstein_fast ( 5 , 3 , 2 ) ## ditto
+#  func  = histo.bernstein_fill ( 5 , 3 , 2 ) ## ditto
+#  @endcode
+#  @see Ostap::Bernstein3D
+#  @see Ostap::Bernstein3D::fill 
+def _h3_bernstein_fast_ ( h3 , NX , NY , NZ ,  
+                          xmin = inf_neg , xmax = inf_pos  ,
+                          ymin = inf_neg , ymax = inf_pos  ,
+                          zmin = inf_neg , zmax = inf_pos  ) :
+    """(relatively) fast parameterization of 2D histogram as sum of 3D-Bernstein polynomials
+    >>> histo = ...
+    >>> func  = histo.bernstein      ( 5 , 3  )
+    >>> func  = histo.bernstein_fast ( 5 , 3  )
+    >>> func  = histo.bernstein_fill ( 5 , 3  )
+    - see Ostap.Math.Bernstein3D
+    - see Ostap.Math.Bernstein3D.fill
+    """
+    
+    assert isinstance ( NX , int ) and 0 <= NX , "Invalid NX=%s" % NX     
+    assert isinstance ( NY , int ) and 0 <= NY , "Invalid NY=%s" % NY
+    assert isinstance ( NZ , int ) and 0 <= NZ , "Invalid NZ=%s" % NZ
+
+    xmin = max ( xmin , h3.xmin() ) 
+    xmax = min ( xmax , h3.xmax() )
+    assert xmin < xmax , 'Invalid xmin/xmax: %s/%s' % ( xmin , xmax )
+
+    ymin = max ( ymin , h3.ymin() ) 
+    ymax = min ( ymax , h3.ymax() )
+    assert ymin < ymax , 'Invalid ymin/ymax: %s/%s' % ( ymin , ymax )
+
+    zmin = max ( zmin , h3.zmin() ) 
+    zmax = min ( zmax , h3.zmax() )
+    assert zmin < zmax , 'Invalid zmin/zmax: %s/%s' % ( zmin , zmax )
+    
+    func = Ostap.Math.Bernstein3D ( NX , NY , NZ , 
+                                    xmin , xmax ,
+                                    ymin , ymax ,
+                                    zmin , zmax )
     
     sum  = 0
     
     for ix , iy, iz , x , y , z , v in h3.iteritems()  :
         
         xv = x.value()
-        if not xmin <= xv <= xmax : continue
-        
+        if not xmin <= xv <= xmax : continue        
         yv = y.value()
         if not ymin <= yv <= ymax : continue
-
         zv = z.value()
         if not zmin <= zv <= zmax : continue
 
@@ -2548,12 +2812,32 @@ def _h3_legendre_fast_ ( h3 , xdegree , ydegree , zdegree ,
 
     return func 
 
-        
+
 for h in ( ROOT.TH3F , ROOT.TH3D ) :
 
-    h.legendre      = _h3_legendre_fast_
-    h.legendre_fast = _h3_legendre_fast_
+    h.legendre       = _h3_legendre_fast_
+    h.legendre_fast  = _h3_legendre_fast_
+    h.legendre_fill  = _h3_legendre_fast_
 
+    h.bernstein      = _h3_bernstein_fast_
+    h.bernstein_fast = _h3_bernstein_fast_
+    h.bernstein_fill = _h3_bernstein_fast_
+
+    h.bezier         = _h3_bernstein_fast_
+    h.bezier_fast    = _h3_bernstein_fast_
+    h.bezier_fill    = _h3_bernstein_fast_
+
+    _new_methods_ .append ( h.legendre       )
+    _new_methods_ .append ( h.legendre_fast  )
+    _new_methods_ .append ( h.legendre_fill  )
+    
+    _new_methods_ .append ( h.bernstein      )
+    _new_methods_ .append ( h.bernstein_fast )
+    _new_methods_ .append ( h.bernstein_fill )
+
+    _new_methods_ .append ( h.bezier         )
+    _new_methods_ .append ( h.bezier_fast    )
+    _new_methods_ .append ( h.bezier_fill    )
 _new_methods_ .append ( _h3_legendre_fast_   )
 
 # =============================================================================
@@ -2562,6 +2846,8 @@ _decorated_classes = (
     ROOT.TH1F ,
     ROOT.TH2D ,
     ROOT.TH2F ,
+    ROOT.TH3D ,
+    ROOT.TH3F ,
     )
 
 _new_methods_ = tuple ( _new_methods_ )

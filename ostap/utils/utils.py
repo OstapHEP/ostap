@@ -100,6 +100,7 @@ __all__     = (
     'num_fds'            , ## get number of opened file descriptors 
     'get_open_fds'       , ## get list of opened file descriptors
     ##
+    'slow'               , ## "slow" looping with delays at each step 
     )
 
 # =============================================================================
@@ -446,6 +447,26 @@ def wait ( after = 0 , before = 0 ) :
     """    
     return Wait ( after = after , before = before )
 
+
+# =============================================================================
+## "slow" looping over some iterable with delay for each step
+# @code
+# for i in slow ( range ( 5 ) , wait = 0.1 ) :
+# ... 
+# @endcode 
+def slow ( iterable , wait = 0 ) :
+    """ `slow' looping over some iterable with delay for each eatep 
+    >>> for i in slow ( range ( 5 ) , wait = 0.1 ) :
+    >>> ... 
+    """
+    if isinstance ( iterable , int ) and 0 <= iterable :
+        iterable = range ( iterable )
+        
+    for r in iterable :
+        if 0 < wait : time.sleep ( wait )
+        yield r 
+        
+    
 # =============================================================================
 ## @class KeepCanvas
 #  helper class to keep the current canvas

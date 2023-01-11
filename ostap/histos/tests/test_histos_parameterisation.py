@@ -131,6 +131,35 @@ def diff3 ( func , histo ) :
     return _diff2_ ( _fun1 , _fun2 , histo.xmin() , histo.xmax() )
 
 
+# =============================================================================
+def test_bernstein_sum_orig() :
+
+    logger = getLogger("test_bernstein_sum_orig")
+
+    with timing ( 'Bernstein-sum-orig[6]' , logger ) :
+        params  = [ h.bernstein_sum_orig ( 6 ) for h in histos ]
+
+    for h , f in zip ( histos , params ) :
+        with use_canvas ( 'test_bernstein_sum_orig: ' + h.GetTitle() , wait = 1 )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+
+
+# =============================================================================
+def test_bernstein_sum_fill() :
+
+    logger = getLogger("test_bernstein_sum_fill")
+
+    with timing ( 'Bernstein-sum-fill[6]' , logger ) :
+        params  = [ h.bernstein_sum_fill ( 6 ) for h in histos ]
+
+    for h , f in zip ( histos , params ) :
+        with use_canvas ( 'test_bernstein_sum_fill: ' + h.GetTitle() , wait = 1 )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+
 
 # =============================================================================
 def test_bernstein_sum() :
@@ -145,19 +174,46 @@ def test_bernstein_sum() :
             h.draw()
             f.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-            
+
+
 # =============================================================================
 def test_bernsteineven_sum() :
             
     logger = getLogger("test_bernsteineven_sum")
-
-    logger.warning ('FIX ME!!!')
 
     with timing ( 'Bernstein-(even)-sum[6]' , logger ) :
         params  = [ h.bernsteineven_sum ( 6 ) for h in histos[4:] ]
     
     for h , f in zip ( histos[4:] , params ) :
         with wait ( 1 ) ,  use_canvas ( 'test_bernsteineven_sum: ' + h.GetTitle() )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+
+# =============================================================================
+def test_legendre_sum_orig () :
+    
+    logger = getLogger("test_legendre_sum_orig")
+
+    with timing ( 'Legendre-sum-orig[6]' , logger ) :
+        params  = [ h.legendre_sum_orig ( 6 ) for h in histos ]
+
+    for h , f in zip ( histos , params ) :
+        with use_canvas ( 'test_legendre_sum_orig: ' + h.GetTitle() , wait = 1 )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+
+# =============================================================================
+def test_legendre_sum_fill () :
+    
+    logger = getLogger("test_legendre_sum_fill ")
+
+    with timing ( 'Legendre-sum-fill[6]' , logger ) :
+        params  = [ h.legendre_sum_fill ( 6 ) for h in histos ]
+
+    for h , f in zip ( histos , params ) :
+        with use_canvas ( 'test_legendre_sum_fill: ' + h.GetTitle() , wait = 1 )  :
             h.draw()
             f.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
@@ -171,11 +227,40 @@ def test_legendre_sum() :
         params  = [ h.legendre_sum ( 6 ) for h in histos ]
 
     for h , f in zip ( histos , params ) :
-        with wait ( 1 ) ,  use_canvas ( 'test_legendre_sum: ' + h.GetTitle() )  :
+        with use_canvas ( 'test_legendre_sum: ' + h.GetTitle() , wait = 1 )  :
             h.draw()
             f.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        
+
+
+# =============================================================================
+def test_chebyshev_sum_orig () :
+    
+    logger = getLogger("test_chebyshev_sum_orig")
+    
+    with timing ( 'Chebyshev-sum-orig[6]' , logger ) :
+        params  = [ h.chebyshev_sum_orig ( 8 ) for h in histos ]
+
+    for h , f in zip ( histos , params ) :
+        with use_canvas ( 'test_chebyshev_sum_orig: ' + h.GetTitle() , wait = 1 )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+
+# =============================================================================
+def test_chebyshev_sum_fill () :
+    
+    logger = getLogger("test_chebyshev_sum_fill")
+    
+    with timing ( 'Chebyshev-sum-fill[6]' , logger ) :
+        params  = [ h.chebyshev_sum_fill ( 8 ) for h in histos ]
+
+    for h , f in zip ( histos , params ) :
+        with use_canvas ( 'test_chebyshev_sum_fill: ' + h.GetTitle() , wait = 1 )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+
 # =============================================================================
 def test_chebyshev_sum() :
     
@@ -185,10 +270,11 @@ def test_chebyshev_sum() :
         params  = [ h.chebyshev_sum ( 8 ) for h in histos ]
 
     for h , f in zip ( histos , params ) :
-        with wait ( 1 ) ,  use_canvas ( 'test_chebyshev_sum: ' + h.GetTitle() )  :
+        with use_canvas ( 'test_chebyshev_sum: ' + h.GetTitle() , wait = 1 )  :
             h.draw()
             f.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+
 
 # =============================================================================
 def test_fourier_sum() :
@@ -234,12 +320,22 @@ if '__main__' == __name__ :
     logger.info ( 'Parameterizations techniques using histogram values only (in general fast)')
     logger.info ( 100*'*')
     
-    test_bernstein_sum     ()
-    test_bernsteineven_sum ()
-    test_legendre_sum      ()
-    test_chebyshev_sum     ()
-    test_fourier_sum       ()
-    test_cosine_sum        ()
+    test_bernstein_sum_orig ()
+    test_bernstein_sum_fill ()
+    test_bernstein_sum      ()
+
+    test_bernsteineven_sum  ()
+    
+    test_legendre_sum_orig  ()
+    test_legendre_sum_fill  ()
+    test_legendre_sum       ()
+    
+    test_chebyshev_sum_orig ()
+    test_chebyshev_sum_fill ()
+    test_chebyshev_sum      ()
+    
+    test_fourier_sum        ()
+    test_cosine_sum         ()
     
 # =============================================================================
 ##                                                                      The END 
