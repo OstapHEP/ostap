@@ -1151,6 +1151,35 @@ namespace Ostap
     ( const double          nu , 
       const ValueWithError& x  ) ;
     // ========================================================================
+    /** arithmetic-geometric mean 
+     *  @param x the first value 
+     *  @param y the second value 
+     *  @param c correlaiton coefficient \f$ -1 \le c \le 1 \f$ 
+     *  @return arithmetic-geometric mean 
+     */
+    ValueWithError agm  
+    ( const ValueWithError& x     ,
+      const ValueWithError& y     , 
+      const double          c = 0 ) ;
+    // ========================================================================
+    /** arithmetic-geometric mean 
+     *  @param x the first value 
+     *  @param y the second value 
+     *  @return arithmetic-geometric mean 
+     */
+    ValueWithError agm  
+    ( const ValueWithError& x     ,
+      const double          y     ) ;
+    // ========================================================================    
+    /** arithmetic-geometric mean 
+     *  @param x the first value 
+     *  @param y the second value 
+     *  @return arithmetic-geometric mean 
+     */
+    ValueWithError agm  
+    ( const double          x     , 
+      const ValueWithError& y     ) ;
+    // ========================================================================
     /// check for NaN
     inline bool isnan    ( const ValueWithError& v ) { return v.isnan    () ; }
     /// finite ?

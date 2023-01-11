@@ -453,7 +453,38 @@ namespace Ostap
     ( const double x ,
       const double y ) ;
     // ========================================================================
-    
+    /** get Arithmetic-geometric mean for complex numbers 
+     *  @see https://en.wikipedia.org/wiki/Arithmetic%E2%80%93geometric_mean
+     *  @param x  x-value, \f$ x \ge 0 \f$   
+     *  @param y  y-value, \f$ y \ge 0 \f$    
+     *  @return Arithmetic-geometric mean 
+     *  @see https://www.johndcook.com/blog/2022/07/30/complex-agm/#:~:text=Complex%20AGM,%E2%88%9A(an%20bn)
+     */
+    std::complex<double> agm
+    ( const std::complex<double>& x , 
+      const std::complex<double>& y ) ;
+    // ========================================================================
+    /** simple geometric mean for two real numbers (just for completeness)
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return geometric mean 
+     */
+    double
+    geometric_mean 
+    ( const double a , 
+      const double b ) ;
+    // ========================================================================
+    /** simple geometric mean for two complex numbers 
+     *  branch is chosen according to this:
+     *  @see https://www.johndcook.com/blog/2022/07/30/complex-agm/#:~:text=Complex%20AGM,%E2%88%9A(an%20bn)
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return geometric mean 
+     */
+    std::complex<double>
+    geometric_mean 
+    ( const std::complex<double>& a , 
+      const std::complex<double>& b ) ;
     // ========================================================================
     /** get the standard gaussian pdf 
      *  @see https://en.wikipedia.org/wiki/Normal_distribution

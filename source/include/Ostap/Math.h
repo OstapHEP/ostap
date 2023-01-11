@@ -7,6 +7,7 @@
 // STD & STL 
 // ============================================================================
 #include <cmath>
+#include <complex>
 #include <algorithm>
 #include <functional>
 #include <vector>
@@ -206,10 +207,12 @@ namespace Ostap
       // ======================================================================
       /// comparison
       inline bool operator() ( T v1 , T v2 ) const
-      {
-        std::equal_to<TYPE> cmp ;
-        return cmp ( v1 , v2 ) ;
-      }
+      { return m_cmp ( v1 , v2 ) ; }
+      // ======================================================================
+    private :      
+      // ======================================================================
+      /// comparison criteria 
+      std::equal_to<TYPE> m_cmp {} ; // comparison criteria 
       // ======================================================================
     } ;
     // ========================================================================
@@ -314,6 +317,32 @@ namespace Ostap
       Lomont<float> m_cmp ;                       // the evaluator
       // ======================================================================
     } ;
+    // ========================================================================
+    /// specialization for complex values 
+    template <class TYPE>
+    struct Equal_To< std::complex<TYPE> > 
+    {
+    public: 
+      // ======================================================================
+      /// constructor
+      Equal_To ( const unsigned int eps = mULPS_double ) : m_equal ( eps ) {}
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// comparison:
+      inline bool operator() 
+      ( const std::complex<TYPE>& v1 ,
+        const std::complex<TYPE>& v2 ) const
+      { return
+          m_equal ( v1.real () , v2.real () ) && 
+          m_equal ( v1.imag () , v2.imag () ) ; }
+      // =======================================================================
+    private: 
+      // =======================================================================
+      /// comparison for real and imagibary parts 
+      Equal_To<TYPE> m_equal ;
+      // =======================================================================
+    };
     // ========================================================================
     /** specialisation for vectors 
      *  @see Ostap::Math::mULPS_double
@@ -457,6 +486,22 @@ namespace Ostap
     template <class TYPE>
     struct Zero<TYPE&>         : public Zero<TYPE>     {} ;
     // ========================================================================
+    /// partial specialisation for the complex values 
+    template <class TYPE>
+    struct Zero< std::complex<TYPE> >
+    {
+      // ======================================================================
+      /// comparison
+      inline bool operator() ( const std::complex<TYPE>& v ) const 
+      { return m_zero ( v.real() ) && m_zero ( v.imag () ) ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      // the comparison criteria 
+      Zero<TYPE> m_zero {} ;
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @struct NotZero
      *  helper structure for comparison of floating values
      *  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
@@ -476,6 +521,7 @@ namespace Ostap
       Zero<TYPE> m_zero ;
       // ======================================================================
     } ;
+    // ========================================================================
     /// partial specialization for const-types
     template <class TYPE>
     struct NotZero<const TYPE> : public NotZero<TYPE>  {} ;
@@ -533,11 +579,33 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /// specialization for complex values 
+    template <class TYPE>
+    struct Small< std::complex <TYPE> >  
+    {
+      // ======================================================================
+      // constructor with threshold 
+      Small ( const TYPE& a ) : m_small ( a ) {}
+      // the opnly one important method   
+      inline bool operator() ( const std::complex<TYPE>& a ) const
+      { return m_small ( a.real() ) && m_small ( a.imag() ); }
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// default constructor is disabled 
+      Small () ;  // default constructor is disabled 
+      // ======================================================================
+    private :
+      // ======================================================================
+      Small<TYPE> m_small  ;
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** specialization for vectors 
      *  vector is small, if empty or all elements are small 
      */ 
     template <class TYPE>
-    struct Small<std::vector<TYPE> > 
+    struct Small< std::vector<TYPE> > 
     {
       // ======================================================================
       /// inner type 
@@ -611,10 +679,40 @@ namespace Ostap
       // ======================================================================      
     private :
       // ======================================================================
+      /// default constructor is disabled 
+      Tiny () ; // default constructor is disabled 
+      // ======================================================================      
+    private :
+      // ======================================================================
       /// the reference value
       TYPE              m_b       ;
       /// smaller ? 
       MuchSmaller<TYPE> m_smaller ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// partial specialisation for the complex values 
+    template <class TYPE>
+    struct Tiny< std::complex<TYPE> >
+    {
+    public:
+      // ======================================================================
+      // constructor 
+      Tiny ( TYPE  b ) : m_tiny ( b ) {} ;
+      // ======================================================================
+      /// comparison
+      inline bool operator() ( const std::complex<TYPE>& v ) const 
+      { return m_tiny ( v.real() ) && m_tiny ( v.imag () ) ; }
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// default consyruictor is disabled 
+      Tiny () ; // default consyruictor is disabled 
+      // ======================================================================      
+    private:
+      // ======================================================================
+      // the comparison criteria 
+      Tiny <TYPE> m_tiny ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -676,6 +774,42 @@ namespace Ostap
       std::less<TYPE>            m_less  ; // comparion criteria for objects
       /// equality criteria for  objects  
       Equal_To<TYPE>             m_equal ; // equality criteria for objects  
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// real value? 
+    template <class TYPE> struct IsReal;
+    // ========================================================================
+    template <class TYPE>
+    struct IsReal< std::complex<TYPE> > 
+    {
+    public:
+      // ======================================================================
+      bool operator () ( const std::complex<TYPE>& v ) const 
+      { return s_zero ( v.imag() ) ; }
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// check that imaginary part is zero
+      Zero <TYPE> s_zero ; // check that imaginary part is zero
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// imaginary value? 
+    template <class TYPE> struct IsImagine;
+    // ========================================================================
+    template <class TYPE>
+    struct IsImagine< std::complex<TYPE> > 
+    {
+    public:
+      // ======================================================================
+      bool operator () ( const std::complex<TYPE>& v ) const 
+      { return s_zero ( v.real () ) ; }
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// check that real part is zero
+      Zero <TYPE> s_zero ; // check that real part is zero
       // ======================================================================
     } ;
     // ========================================================================

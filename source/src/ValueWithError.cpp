@@ -2402,7 +2402,7 @@ Ostap::Math::ValueWithError Ostap::Math::atan2
     ( x_err ? dphidx2 * x.cov2() : 0.0 ) + 
     ( y_err ? dphidy2 * y.cov2() : 0.0 ) + 
     ( x_err && y_err && !s_zero ( cor ) ? 
-      - 2 * cor * xv * yv * x.error() * y.error() / r4 : 0.0 ) ;
+      - 2 * cor * xv * yv * std::sqrt ( x.cov2() * y.cov2() ) / r4 : 0.0 ) ;
   //
   return Ostap::Math::ValueWithError ( v , e2 ) ;
 }
@@ -3099,6 +3099,95 @@ Ostap::Math::bessel_Knu
   //
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }
+// ============================================================================
+/*  arithmetic-geometric mean 
+ *  @param x the first value 
+ *  @param y the second value 
+ *  @param c correlaiton coefficient \f$ -1 \le c \le 1 \f$ 
+ *  @return arithmetic-geometric mean 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::agm  
+( const Ostap::Math::ValueWithError& x ,
+  const Ostap::Math::ValueWithError& y , 
+  const double                       c )
+{
+  const double xcov2 = x.cov2  () ;
+  const double ycov2 = y.cov2  () ;
+  const double xv    = x.value () ;
+  const double yv    = y.value () ;
+  //
+  const bool covx = 0 < xcov2 && !s_zero ( xcov2 ) ;
+  const bool covy = 0 < ycov2 && !s_zero ( ycov2 ) ;
+  //
+  const double result = Ostap::Math::agm ( xv , yv ) ;
+  if  ( !covx && !covy ) { return result ; }
+  //
+  if  ( !std::isfinite ( result  ) ) { return result ; } // ATTENTION!
+  //
+  static const double s_isqrt2 = 1.0 / std::sqrt (2.0) ;
+  //
+  double dfdy = -0.5 ;
+  double dfdx = -0.5 ;
+  //
+  if ( !s_equal ( xv , yv ) ) 
+  {
+    //
+    const double k = std::abs ( x - y ) / ( x + y ) ;
+    const double e = Ostap::Math::elliptic_E ( k ) ;
+    //
+    const double f = result / ( ( xv - yv ) * M_PI ) ;
+    //
+    dfdy =   f * ( 2 * result * e - xv * M_PI ) / yv ;
+    dfdx = - f * ( 2 * result * e - yv * M_PI ) / xv ;
+  }
+  //
+  double cov2 = 0 ;
+  //
+  cov2 += covx ? dfdx * dfdx * xcov2 : 0.0 ;
+  cov2 += covy ? dfdy * dfdy * ycov2 : 0.0 ;
+  cov2 += covy && covy && !s_zero ( c ) ? 
+                        2 * dfdx * dfdy * std::sqrt ( xcov2 * ycov2 )
+                        * std::max ( -1.0 , std::min ( 1.0 , c ) ) : 0.0 ;
+  //
+  return ValueWithError ( result , cov2 ) ;
+}
+// ============================================================================
+/*  arithmetic-geometric mean 
+ *  @param x the first value 
+ *  @param y the second value 
+ *  @return arithmetic-geometric mean 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::agm  
+( const Ostap::Math::ValueWithError& x ,
+  const double                       y )
+{
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) )
+  { return agm ( x.value() , y ) ; }
+  //
+  return agm ( x , y , 0.0 ) ;
+}
+// ============================================================================
+/*  arithmetic-geometric mean 
+ *  @param x the first value 
+ *  @param y the second value 
+ *  @return arithmetic-geometric mean 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::agm  
+( const double                       x , 
+  const Ostap::Math::ValueWithError& y )
+{
+  if ( y.cov2() <= 0 || s_zero ( y.cov2() ) )
+  { return agm ( x , y.value () ) ; }
+  //
+  return agm ( x , y , 0.0 ) ;
+}
+
 
 
 // =============================================================================

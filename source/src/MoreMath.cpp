@@ -3532,7 +3532,111 @@ double Ostap::Math::ghm
   return x * y / agm ( x , y ) ;
 }
 // ============================================================================
-
+/* simple geometric mean for two real numbers (just for completeness)
+ *  @param a the first number 
+ *  @param b the second number 
+ *  @return geometric mean 
+ */
+// ============================================================================
+double
+Ostap::Math::geometric_mean 
+( const double a , 
+  const double b ) 
+{
+  return 
+    s_zero ( a ) ? 0.0 :
+    s_zero ( b ) ? 0.0 : std::sqrt ( a * b ) ;
+}
+// ============================================================================
+/*  simple geometric mean for two complex numbers 
+ *  branch is chosen according to this:
+ *  @see https://www.johndcook.com/blog/2022/07/30/complex-agm/#:~:text=Complex%20AGM,%E2%88%9A(an%20bn)
+ *  @param a the first number 
+ *  @param b the second number 
+ *  @return geomentric mean 
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::geometric_mean 
+( const std::complex<double>& a , 
+  const std::complex<double>& b ) 
+{
+  //
+  static const Ostap::Math::Zero     < std::complex<double> >  s_czero  {} ;
+  static const Ostap::Math::Equal_To < std::complex<double> >  s_cequal {} ;
+  //
+  if      ( s_czero  ( a     ) ) { return 0.0 ; }
+  else if ( s_czero  ( b     ) ) { return 0.0 ; }
+  else if ( s_cequal ( a , b ) ) { return a   ; }
+  //
+  const double d1 = std::norm ( a + b ) ;
+  const double d2 = std::norm ( a - b ) ;
+  //
+  const std::complex<double> r { std::sqrt ( a * b ) } ;
+  //
+  if      (           d2 < d1                              ) { return r ; }
+  else if ( s_equal ( d2 , d2 ) && 0 < std::imag ( b / a ) ) { return r ; }
+  //
+  return -r ;
+}
+// ============================================================================
+/** get Arithmetic-geometric mean for complex numbers 
+ *  @see https://en.wikipedia.org/wiki/Arithmetic%E2%80%93geometric_mean
+ *  @param x  x-value, \f$ x \ge 0 \f$   
+ *  @param y  y-value, \f$ y \ge 0 \f$    
+ *  @return Arithmetic-geometric mean 
+ *  @see https://www.johndcook.com/blog/2022/07/30/complex-agm/#:~:text=Complex%20AGM,%E2%88%9A(an%20bn)
+ */
+// ============================================================================
+std::complex<double> 
+Ostap::Math::agm
+( const std::complex<double>& x , 
+  const std::complex<double>& y ) 
+{
+  //
+  static const Ostap::Math::IsReal   < std::complex<double> > s_isreal {} ;
+  static const Ostap::Math::Zero     < std::complex<double> > s_czero  {} ;
+  static const Ostap::Math::Equal_To < std::complex<double> > s_cequal {} ;
+  //
+  if ( s_isreal ( x ) && s_isreal ( y ) ) { return agm ( x.real () , y.real () ) ; }
+  //
+  if      ( s_czero  ( x     ) ) { return 0.0 ; }
+  else if ( s_czero  ( y     ) ) { return 0.0 ; }
+  else if ( s_cequal ( x , y ) ) { return x   ; }
+  //
+  std::complex<double> a = x ;
+  std::complex<double> b = y ;
+  //
+  for ( unsigned short i = 0 ; i < 100 ; ++i )
+  {
+    std::complex<double> aa = 0.5 *     ( a + b ) ;
+    std::complex<double> bb = std::sqrt ( a * b ) ;
+    //
+    if ( s_czero  ( aa      ) ) { return 0.0 ; }
+    if ( s_cequal ( aa , bb ) ) { return 0.5 * ( aa + bb ) ; }
+    //
+    const double d1 = std::norm ( a + b ) ;
+    const double d2 = std::norm ( a - b ) ;
+    //
+    if      (           d2 < d1 )                 
+    {
+      a =  aa ;
+      b =  bb ;
+    }
+    else if ( s_equal ( d1 , d2 ) && 0 < std::imag ( bb / aa ) ) 
+    {
+      a =  aa ;
+      b =  bb ;
+    }
+    else 
+    {
+      a =  aa ;
+      b = -bb ;
+    }
+    //
+  }
+  return 0.5 * ( a + b ) ; 
+}
 // ============================================================================
 /* smoothstep (polynomial) function
  *  @see https://en.wikipedia.org/wiki/Smoothstep
