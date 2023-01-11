@@ -10,8 +10,8 @@
 `ChebyshevSum::fill` methods. Extend the corresponding test
   1. add `TH(2,3)(F,D).bezier`, `TH(2,3)(F,D).bezier_fast`, `TH(2,3)(F,D).bezier_fill` methods for 2&3D-histogram parameterisations based on `Bernstein2D::fill` and `Bernstein3D::fill` methods 
   1. add `TH(2,3)(F,D).bernstein`, `TH(2,3)(F,D).bernstein_fasr`, `TH(2,3)(F,D).bernstein_fill` methods for 2&3D-histogram parameterisations based on `Bernstein2D::fill` and `Bernstein3D::fill` methods 
-
-  
+  1. add `ostap.utils.utils.slow`  method for `slow`-iteration with delaye at each step
+ 
 `
 ## Backward incompatible:  
 
