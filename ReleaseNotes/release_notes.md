@@ -13,7 +13,7 @@
   1. add `ostap.utils.utils.slow`  method for `slow`-iteration with delaye at each step
   1. add `Ostap::Math::agm` for complex numbers 
   1. add `Ostap::Math::agm` for `ValueWithError` objects 
-  1. historgam parameterization: add warnings for `fill`-based methods if polynomial degree is too large for such number of bins  
+  1. histogram parameterisations: add warnings for `fill`-based methods if polynomial degree is too large for such number of bins  
   1. extend `test_histos_parameterisation` for 2D and 3D cases 
 
 ## Backward incompatible:  
