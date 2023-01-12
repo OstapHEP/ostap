@@ -19,7 +19,12 @@ import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait
+from   ostap.histos.param       import legendre_sum, chebyshev_sum
+from   ostap.core.core          import hID , fID, SE, Ostap  
+from   ostap.utils.timing       import timing
+from   ostap.utils.progress_bar import progress_bar 
+import ostap.logger.table       as     T 
 import ROOT, random, time
 # =============================================================================
 # logging 
@@ -39,12 +44,9 @@ try :
     use_scipy = True 
 except ImportError :
     use_scipy = False 
-    logger.warning ("Numpy/scipy-dependent are disables!")
+    logger.warning ("Numpy/scipy-dependent test are disabled!")
     
 # =============================================================================
-from ostap.histos.param import legendre_sum, chebyshev_sum
-from ostap.core.core    import hID , fID 
-from ostap.utils.timing import timing
 
 h1 = ROOT.TH1F ( hID () , 'decreasing convex ' , 100 , 0 , 1 ) ; h1.Sumw2 () 
 h2 = ROOT.TH1F ( hID () , 'increasing convex ' , 100 , 0 , 1 ) ; h2.Sumw2 () 
@@ -81,6 +83,54 @@ for i in range ( 0 , entries ) :
 ## all histograms 
 histos = h1 , h2 , h3 , h4 , h5 , h6
 
+# =============================================================================
+## 2D&2D histograms
+h2D = ROOT.TH2F ( hID() , '2D histogram' ,
+                  40 , -10 , 10 ,
+                  40 , -10 , 10 )
+h3D = ROOT.TH3F ( hID() , '3D histogram' ,
+                  20 , -10 , 10 ,
+                  20 , -10 , 10 ,
+                  20 , -10 , 10 )
+
+## NMAX = 2000000
+## NN   = 0
+## while NN < NMAX :
+    
+##     x = random.gauss ( 0 , 6 )
+##     if not -10 < x < 10 : continue
+    
+##     y = random.gauss ( 0 , 6 )
+##     if not -10 < y < 10 : continue
+
+##     z = random.gauss ( 0 , 6 )
+##     if not -10 < z < 10 : continue
+
+##     NN += 1
+    
+##     h2D.Fill ( x , y     )
+##     h2D.Fill ( y , x     )    
+##     h2D.Fill ( x , z     )
+##     h2D.Fill ( z , x     )    
+##     h2D.Fill ( y , z     )
+##     h2D.Fill ( z , y     )
+    
+##     h3D.Fill ( x , y , z )    
+##     h3D.Fill ( x , z , y )    
+##     h3D.Fill ( y , x , z )
+##     h3D.Fill ( y , z , x )
+##     h3D.Fill ( z , x , y )
+##     h3D.Fill ( z , y , x )
+
+
+fun2D = lambda x,y   : ( 220.0 - x * x ) * ( 160.0 - y * y )
+fun3D = lambda x,y,z : ( 220.0 - x * x ) * ( 160.0 - y * y ) * ( 120.0 - z * z ) 
+
+
+h2D  += fun2D
+h3D  += fun3D 
+    
+# =============================================================================
 ## make a quadratic difference between two functions 
 def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
 
@@ -100,6 +150,7 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
     import math
     return "%.4e" % math.sqrt(dd/(d1*d2))
 
+# =============================================================================
 ## make a quadratic difference between histogram and function 
 def diff1 ( func , histo ) :
 
@@ -108,6 +159,7 @@ def diff1 ( func , histo ) :
         
     return _diff2_ ( _fun1 , _fun2 , histo.xmin() , histo.xmax() )
 
+# =============================================================================
 ## make a quadratic difference between histogram and function 
 def diff2 ( func , histo ) :
 
@@ -119,6 +171,7 @@ def diff2 ( func , histo ) :
         
     return _diff2_ ( _fun1 , _fun2 , histo.xmin() , histo.xmax() )
 
+# =============================================================================
 ## make a quadratic difference between histogram and function 
 def diff3 ( func , histo ) :
 
@@ -170,7 +223,7 @@ def test_bernstein_sum() :
         params  = [ h.bernstein_sum ( 6 ) for h in histos ]
 
     for h , f in zip ( histos , params ) :
-        with wait ( 1 ) ,  use_canvas ( 'test_bernstein_sum: ' + h.GetTitle() )  :
+        with use_canvas ( 'test_bernstein_sum: ' + h.GetTitle() , wait = 1 )  :
             h.draw()
             f.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
@@ -185,7 +238,7 @@ def test_bernsteineven_sum() :
         params  = [ h.bernsteineven_sum ( 6 ) for h in histos[4:] ]
     
     for h , f in zip ( histos[4:] , params ) :
-        with wait ( 1 ) ,  use_canvas ( 'test_bernsteineven_sum: ' + h.GetTitle() )  :
+        with use_canvas ( 'test_bernsteineven_sum: ' + h.GetTitle() , wait = 1 )  :
             h.draw()
             f.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
@@ -290,7 +343,7 @@ def test_fourier_sum() :
         params  = [ h.fourier_sum ( 10 ) for h in hh ]
 
     for h , f in zip ( hh , params ) :
-        with wait ( 1 ) ,  use_canvas ( 'test_fourier_sum: ' + h.GetTitle() )  :
+        with use_canvas ( 'test_fourier_sum: ' + h.GetTitle() , wait = 1 )  :
             h.draw()
             f.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
@@ -308,11 +361,266 @@ def test_cosine_sum() :
         params  = [ h.cosine_sum ( 10 ) for h in hh ]
         
     for h , f in zip ( hh , params ) :
-        with wait ( 1 ) ,  use_canvas ( 'test_cosine_sum: ' + h.GetTitle() )  :
+        with use_canvas ( 'test_cosine_sum: ' + h.GetTitle() , wait = 1 )  :
             h.draw()
             f.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+                        
+# =============================================================================
+def test_legendre_2D () :
+
+    logger = getLogger("test_legendre_2D")
+
+    lsums = {}
+    lsums[ ('*','*') ] = fun2D 
+    
+    N1    = 2
+    N2    = 11
+    with timing ( '2D Legendre parameterisation' , logger ) :                   
+        for nx in range ( N1 , N2 ) :
+            for ny in range ( nx , N2 ) :
+                lsum = h2D.legendre ( nx , ny )
+                lsums [ ( nx , ny ) ] = lsum 
+            
+    def rdif ( x , y ) :
+        fx = float ( x )
+        fy = float ( y )
+        return ( fx - fy ) / ( abs ( fx ) + abs ( fy ) )
+
+    scale = 1.e+2
+    rows  = [ ('nx' , 'ny' , 'mean [%] ' , 'rms [%]' , 'min [%]' , 'max [%]')  ]
+    
+    for n in progress_bar ( lsums ) :
+        lsum    = lsums [ n ]
+        nx , ny = n
+        cnt     = SE()
+
+        for i in range ( 1000 ) :
+            
+            x  = random.uniform ( -10 , 10 )
+            y  = random.uniform ( -10 , 10 )
+            
+            vl   = lsum ( x  , y  )
+            vh   = h2D  ( x  , y  ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = lsum ( y  , x  )
+            vh   = h2D  ( y  , x  ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+        row = '%s' % nx , '%s' % ny , \
+              '%+.3g' % ( float ( cnt.mean() ) ) , \
+              '%.3g'  % ( float ( cnt.rms () ) ) , \
+              '%+.3g' % ( float ( cnt.min () ) ) , \
+              '%+.3g' % ( float ( cnt.max () ) ) 
+        rows.append ( row )
+
+    title = '2D Legendre parameterisations'
+    table = T.table ( rows, title = title , prefix = '# ' , alignment = 'rrllrl' )
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+
+# =============================================================================
+def test_bernstein_2D () :
+
+    logger = getLogger("test_bernstein_2D")
+
+    bsums = {}
+    bsums[ ('*','*') ] = fun2D 
+    
+    N1    = 2
+    N2    = 11  
+    with timing ( '2D Bernstein parameterisation' , logger ) :                   
+        for nx in range ( N1 , N2 ) :
+            for ny in range ( nx , N2 ) :
+                bsum = h2D.bernstein ( nx , ny )
+                bsums [ ( nx , ny ) ] = bsum 
+                
+    def rdif ( x , y ) :
+        fx = float ( x )
+        fy = float ( y )
+        return ( fx - fy ) / ( abs ( fx ) + abs ( fy ) )
+
+    scale = 1.e+2
+    rows  = [ ('nx' , 'ny' , 'mean [%] ' , 'rms [%]' , 'min/max [%s]')  ]
+    
+    for n in progress_bar ( bsums ) :
+        bsum    = bsums [ n ]
+        nx , ny = n
+        cnt     = SE()
+
+        for i in range ( 1000 ) :
+            
+            x  = random.uniform ( -10 , 10 )
+            y  = random.uniform ( -10 , 10 )
+            
+            vl   = bsum ( x  , y  )
+            vh   = h2D  ( x  , y  ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = bsum ( y  , x  )
+            vh   = h2D  ( y  , x  ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+        row = '%s' % nx , '%s' % ny , \
+              '%+.3g' % ( float ( cnt.mean() ) ) , \
+              '%.3g'  % ( float ( cnt.rms () ) ) , \
+              '%+.3g' % ( float ( cnt.min () ) ) , \
+              '%+.3g' % ( float ( cnt.max () ) ) 
+        rows.append ( row )
         
+    title = '2D Bernstein parameterisations'
+    table = T.table ( rows, title = title , prefix = '# ' , alignment = 'rrllrl' )
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+
+# =============================================================================
+def test_legendre_3D () :
+
+    logger = getLogger("test_legendre_3D")
+
+    lsums = {}
+
+    lsums[ ('*','*','*') ] = fun3D 
+
+    
+    N1    = 2
+    N2    = 7
+    with timing ( '3D Legendre parameterisation' , logger ) :                   
+        for nx in range ( N1 , N2 ) :
+            for ny in range ( nx , N2 ) :
+                for nz in range ( ny , N2 ) :
+                    lsum = h3D.legendre ( nx , ny , nz )
+                    lsums [ ( nx , ny , nz ) ] = lsum 
+            
+    def rdif ( x , y ) :
+        fx = float ( x )
+        fy = float ( y )
+        return ( fx - fy ) / ( abs ( fx ) + abs ( fy ) )
+
+    scale = 1.e+2
+    rows  = [ ('nx' , 'ny' , 'nz' , 'mean [%] ' , 'rms [%]' , 'min [%s]' , 'max [%]')  ]
+    
+    for n in progress_bar ( lsums ) :
+        lsum         = lsums [ n ]
+        nx , ny , nz = n
+        cnt          = SE()
+
+        for i in range ( 1000 ) :
+            
+            x  = random.uniform ( -10 , 10 )
+            y  = random.uniform ( -10 , 10 )
+            z  = random.uniform ( -10 , 10 )
+            
+            vl   = lsum ( x  , y  , z )
+            vh   = h3D  ( x  , y  , z ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = lsum ( y  , x  , z )
+            vh   = h3D  ( y  , x  , z ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = lsum ( y  , z  , x )
+            vh   = h3D  ( y  , z  , x ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = lsum ( z  , y  , x )
+            vh   = h3D  ( z  , y  , x ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = lsum ( x  , z  , y )
+            vh   = h3D  ( x  , z  , y ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = lsum ( z  , x  , y )
+            vh   = h3D  ( z  , x  , y ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+
+        row = '%s' % nx , '%s' % ny , '%s' % nz  , \
+              '%+.3g' % ( float ( cnt.mean() ) ) , \
+              '%.3g'  % ( float ( cnt.rms () ) ) , \
+              '%+.3g' % ( float ( cnt.min () ) ) , \
+              '%+.3g' % ( float ( cnt.max () ) ) 
+        rows.append ( row )
+
+    title = '3D Legendre parameterisations'
+    table = T.table ( rows, title = title , prefix = '# ' , alignment = 'rrrllrl' )
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+
+
+# =============================================================================
+def test_bernstein_3D () :
+
+    logger = getLogger("test_bernstein_3D")
+
+    bsums = {}
+    
+    bsums[ ('*','*','*') ] = fun3D 
+
+    N1    = 2
+    N2    = 6
+    with timing ( '3D Bernstein parameterisation' , logger ) :                   
+        for nx in range ( N1 , N2 ) :
+            for ny in range ( nx , N2 ) :
+                for nz in range ( ny , N2 ) :
+                    bsum = h3D.bernstein ( nx , ny , nz )
+                    bsums [ ( nx , ny , nz ) ] = bsum 
+                    
+    def rdif ( x , y ) :
+        fx = float ( x )
+        fy = float ( y )
+        return ( fx - fy ) / ( abs ( fx ) + abs ( fy ) )
+
+    scale = 1.e+2
+    rows  = [ ('nx' , 'ny' , 'nz' , 'mean [%] ' , 'rms [%]' , 'min [%s]' , 'max [%]')  ]
+    
+    for n in progress_bar ( bsums ) :
+        bsum         = bsums [ n ]
+        nx , ny , nz = n
+        cnt          = SE()
+
+        for i in range ( 1000 ) :
+            
+            x  = random.uniform ( -10 , 10 )
+            y  = random.uniform ( -10 , 10 )
+            z  = random.uniform ( -10 , 10 )
+            
+            vl   = bsum ( x  , y  , z )
+            vh   = h3D  ( x  , y  , z ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = bsum ( y  , x  , z )
+            vh   = h3D  ( y  , x  , z ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = bsum ( y  , z  , x )
+            vh   = h3D  ( y  , z  , x ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = bsum ( z  , y  , x )
+            vh   = h3D  ( z  , y  , x ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = bsum ( x  , z  , y )
+            vh   = h3D  ( x  , z  , y ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+            vl   = bsum ( z  , x  , y )
+            vh   = h3D  ( z  , x  , y ) 
+            cnt += rdif ( vl , vh ) * scale 
+
+
+        row = '%s' % nx , '%s' % ny , '%s' % nz  , \
+              '%+.3g' % ( float ( cnt.mean() ) ) , \
+              '%.3g'  % ( float ( cnt.rms () ) ) , \
+              '%+.3g' % ( float ( cnt.min () ) ) , \
+              '%+.3g' % ( float ( cnt.max () ) ) 
+        rows.append ( row )
+
+    title = '3D Bernstein parameterisations'
+    table = T.table ( rows, title = title , prefix = '# ' , alignment = 'rrrllrl' )
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+
+
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -336,7 +644,13 @@ if '__main__' == __name__ :
     
     test_fourier_sum        ()
     test_cosine_sum         ()
-    
+
+    test_legendre_2D        () 
+    test_bernstein_2D       () 
+
+    test_legendre_3D        () 
+    test_bernstein_3D       () 
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

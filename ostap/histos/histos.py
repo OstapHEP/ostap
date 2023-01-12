@@ -815,7 +815,12 @@ ROOT.TH3   . __len__      = lambda s : s.size()
 ROOT.TH3   .   size       = lambda s : s.GetNbinsX() * s.GetNbinsY() * s.GetNbinsZ()
 
 ROOT.TH1D  . nbins        = lambda s : s.GetNbinsX() 
-ROOT.TH1F  . nbins        = lambda s : s.GetNbinsX() 
+ROOT.TH1F  . nbins        = lambda s : s.GetNbinsX()
+ROOT.TH1D  . nbinsx       = lambda s : s.GetNbinsX() 
+ROOT.TH1F  . nbinsx       = lambda s : s.GetNbinsX()
+ROOT.TH1D  .  binsx       = lambda s : s.GetNbinsX() 
+ROOT.TH1F  .  binsx       = lambda s : s.GetNbinsX()
+
 ROOT.TH1D  .  bins        = lambda s : s.GetNbinsX() 
 ROOT.TH1F  .  bins        = lambda s : s.GetNbinsX()
 ROOT.TH2D  . nbinsx       = lambda s : s.GetNbinsX()

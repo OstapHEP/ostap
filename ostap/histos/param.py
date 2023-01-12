@@ -2337,6 +2337,9 @@ def _h1_legendre_sum_fill_ ( h1 , N , **kwargs ) :
     xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
     xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
     ##
+    if h1.nbinsx () <= N + 1 :
+        logger.warning ( "Legendre-sum parameterisation: N=%d is too large for %d-bins" % ( N , h1.nbinss () ) )
+        
     lsum = Ostap.Math.LegendreSum ( N , xmin , xmax ) 
     for i, x , y in h1.items() :
         xx     = x.value()
@@ -2402,6 +2405,9 @@ def _h1_chebyshev_sum_fill_ ( h1 , N , **kwargs ) :
     xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
     xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
     ##
+    if h1.nbinsx () <= N + 1 :
+        logger.warning ( "Chebyshev-sum parameterisation: N=%d is too large for %d-bins" % ( N , h1.nbinsx () ) )
+
     csum = Ostap.Math.ChebyshevSum ( N , xmin , xmax ) 
     for i, x , y in h1.items() :
         xx     = x.value()
@@ -2473,6 +2479,9 @@ def _h1_bezier_sum_fill_ ( h1 , N , **kwargs ) :
     xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
     xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
     ##
+    if h1.nbinsx () <= N + 1 :
+        logger.warning ( "Bernstein-sum parameterisation: N=%d is too large for %d-bins" % ( N , h1.nbinss () ) )
+
     bsum = Ostap.Math.Bernstein ( N , xmin , xmax ) 
     for i, x , y in h1.items() :
         xx     = x.value()
@@ -2594,14 +2603,20 @@ def _h2_legendre_fast_ ( h2  , NX , NY ,
     ymax = min ( ymax , h2.ymax() )
     assert ymin < ymax , 'Invalid ymin/ymax: %s/%s' % ( ymin , ymax )
     
+    if h2.nbinsx() <= NX + 1 :
+        logger.warning ( "Legendre-sum parameterisation: NX=%d is too large for %d-bins" % ( NX , h2.nbinsx () ) )
+    if h2.nbinsy() <= NY + 1 :
+        logger.warning ( "Legendre-sum parameterisation: NY=%d is too large for %d-bins" % ( NY , h2.nbinsy () ) )
+
     func = Ostap.Math.LegendreSum2 ( NX , NY ,  xmin , xmax , ymin , ymax )
     
     sum  = 0
-    for ix , iy , x , y , v in h2.iteritems()  :        
+    for ix , iy , x , y , v in h2.iteritems()  :
+        
         xv = x.value()
         if not xmin <= xv <= xmax : continue        
         yv = y.value()
-        if not ymin <= yv <= ymax : continue
+        if not ymin <= yv <= ymax : continue        
         vv = v.value()        
         w  = 4 * vv * x.error() * y.error()        
         ok = func.fill ( xv , yv , w )        
@@ -2643,6 +2658,11 @@ def _h2_bernstein_fast_ ( h2  , NX , NY ,
     ymax = min ( ymax , h2.ymax() )
     assert ymin < ymax , 'Invalid ymin/ymax: %s/%s' % ( ymin , ymax )
     
+    if h2.nbinsx() <= NX + 1 :
+        logger.warning ( "Bernstein-sum parameterisation: NX=%d is too large for %d-bins" % ( NX , h2.nbinsx () ) )
+    if h2.nbinsy() <= NY + 1 :
+        logger.warning ( "Bernstein-sum parameterisation: NY=%d is too large for %d-bins" % ( NY , h2.nbinsy () ) )
+
     func = Ostap.Math.Bernstein2D ( NX , NY , xmin , xmax , ymin , ymax )
     sum  = 0
     for ix , iy , x , y , v in h2.iteritems()  :        
@@ -2725,6 +2745,13 @@ def _h3_legendre_fast_ ( h3 , NX , NY , NZ ,
     zmax = min ( zmax , h3.zmax() )
     assert zmin < zmax , 'Invalid zmin/zmax: %s/%s' % ( zmin , zmax )
     
+    if h3.nbinsx () <= NX + 1 :
+        logger.warning ( "Legendre-sum parameterisation: NX=%d is too large for %d-bins" % ( NX , h3.nbinsx () ) )
+    if h3.nbinsy () <= NY + 1 :
+        logger.warning ( "Legendre-sum parameterisation: NY=%d is too large for %d-bins" % ( NY , h3.nbinsy () ) )
+    if h3.nbinsz () <= NZ + 1 :
+        logger.warning ( "Legendre-sum parameterisation: NZ=%d is too large for %d-bins" % ( NZ , h3.nbinsz () ) )
+
     func = Ostap.Math.LegendreSum3 ( NX , NY , NZ , 
                                      xmin , xmax ,
                                      ymin , ymax ,
@@ -2788,6 +2815,13 @@ def _h3_bernstein_fast_ ( h3 , NX , NY , NZ ,
     zmax = min ( zmax , h3.zmax() )
     assert zmin < zmax , 'Invalid zmin/zmax: %s/%s' % ( zmin , zmax )
     
+    if h3.nbinsx () <= NX + 1 :
+        logger.warning ( "Bernstein-sum parameterisation: NX=%d is too large for %d-bins" % ( NX , h3.nbinsx () ) )
+    if h3.nbinsy () <= NY + 1 :
+        logger.warning ( "Bernstein-sum parameterisation: NY=%d is too large for %d-bins" % ( NY , h3.nbinsy () ) )
+    if h3.nbinsz () <= NZ + 1 :
+        logger.warning ( "Bernstein-sum parameterisation: NZ=%d is too large for %d-bins" % ( NZ , h3.nbinsz () ) )
+
     func = Ostap.Math.Bernstein3D ( NX , NY , NZ , 
                                     xmin , xmax ,
                                     ymin , ymax ,
