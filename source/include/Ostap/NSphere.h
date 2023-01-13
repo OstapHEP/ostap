@@ -152,8 +152,8 @@ namespace Ostap
       { return index < m_phases.size() ? setPhase ( index , value ) : false ; }
       // ======================================================================
       /** set several/all parameters at once 
-       *  @param begin  start itertaor for sequence of coefficients 
-       *  @param end    end  titertaor for sequence of coefficients 
+       *  @param begin  start iterator for the sequence of coefficients 
+       *  @param end    end   iterator for the sequence of coefficients 
        *  @return true if at least one parameter is actually changed 
        */
       template <class ITERATOR>
@@ -190,6 +190,11 @@ namespace Ostap
       NSphere& operator=( const NSphere&  right ) ;
       /// move assignement 
       NSphere& operator=(       NSphere&& right ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get unique tag for the given sphere 
+      std::size_t tag () const ;
       // ======================================================================
     public:
       // ======================================================================

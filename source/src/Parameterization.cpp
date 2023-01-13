@@ -3,6 +3,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Hash.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/Parameterization.h"
 // ============================================================================
@@ -374,6 +375,24 @@ Ostap::Math::LegendreSum2::transpose() const
   //
   return t ; 
 }
+// ============================================================================
+// get unique tag 
+// ============================================================================
+std::size_t Ostap::Math::LegendreSum2::tag() const 
+{
+  static const std::string s_name { "LegendreSum2" } ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , Ostap::Utils::hash_range ( m_pars ) ,  
+      nx () , m_xmin , m_xmax , 
+      ny () , m_ymin , m_ymax ) ;
+}
+// ============================================================================
+
+
+
+
+
+
 // ============================================================================
 // 3D
 // ============================================================================
@@ -828,6 +847,22 @@ double Ostap::Math::LegendreSum3::integral
 // ============================================================================
 double Ostap::Math::LegendreSum3::integral () const 
 { return m_pars[0] * ( m_xmax - m_xmin ) * ( m_ymax - m_ymin ) * ( m_zmax - m_zmin ); }
+// ============================================================================
+// get unique tag 
+// ============================================================================
+std::size_t Ostap::Math::LegendreSum3::tag() const 
+{
+  static const std::string s_name { "LegendreSum3" } ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , Ostap::Utils::hash_range ( m_pars ) ,  
+      nx () , m_xmin , m_xmax , 
+      ny () , m_ymin , m_ymax ,
+      nz () , m_zmin , m_zmax ) ;
+}
+// ============================================================================
+
+
+
 
 // ============================================================================
 // 4D
@@ -1289,6 +1324,20 @@ Ostap::Math::LegendreSum4::integralU
   //
   return r ;
 }
+// ============================================================================
+// get unique tag 
+// ============================================================================
+std::size_t Ostap::Math::LegendreSum4::tag() const 
+{
+  static const std::string s_name { "LegendreSum4" } ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , Ostap::Utils::hash_range ( m_pars ) ,  
+      nx () , m_xmin , m_xmax , 
+      ny () , m_ymin , m_ymax ,
+      nz () , m_zmin , m_zmax ,
+      nu () , m_umin , m_umax ) ;
+}
+// ============================================================================
  
 // ============================================================================
 // The END 

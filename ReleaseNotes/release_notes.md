@@ -15,6 +15,8 @@
   1. add `Ostap::Math::agm` for `ValueWithError` objects 
   1. histogram parameterisations: add warnings for `fill`-based methods if polynomial degree is too large for such number of bins  
   1. extend `test_histos_parameterisation` for 2D and 3D cases 
+  1. add `tag` method to several C+ classes 
+
 
 ## Backward incompatible:  
 

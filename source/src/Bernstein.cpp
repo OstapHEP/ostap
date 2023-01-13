@@ -1477,8 +1477,9 @@ Ostap::Math::Bernstein::Bernstein
 // ============================================================================
 std::size_t Ostap::Math::Bernstein::tag () const 
 {
+  static const std::string s_name { "Bernstein" } ;
   return Ostap::Utils::hash_combiner 
-    ( Ostap::Utils::hash_range ( m_pars ) ,  
+    ( s_name , Ostap::Utils::hash_range ( m_pars ) ,  
       degree () , m_xmin , m_xmax ) ;
 }
 // ======================================================================

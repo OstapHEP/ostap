@@ -11,6 +11,7 @@
 // local
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/Hash.h"
 #include "Ostap/NSphere.h"
 // ============================================================================
 /** @file 
@@ -322,6 +323,18 @@ Ostap::Math::NSphere::phis ( const std::vector<double>& x )
   }
   return phis ;
 }  
+// =============================================================================
+// get unique tag for the given sphere 
+// =============================================================================
+std::size_t Ostap::Math::NSphere::tag () const 
+{
+  static const std::string s_name { "NSPhere" } ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , nPhi() , 
+      Ostap::Utils::hash_range ( m_delta  ) ,  
+      Ostap::Utils::hash_range ( m_phases ) ) ;
+} 
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

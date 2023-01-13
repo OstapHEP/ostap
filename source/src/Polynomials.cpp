@@ -13,6 +13,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/Hash.h"
 #include "Ostap/Power.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Choose.h"
@@ -958,6 +959,17 @@ Ostap::Math::Polynomial
 Ostap::Math::Polynomial::__sub__   
 ( const Ostap::Math::Polynomial& a ) const { return subtract ( a ) ; } 
 // ============================================================================
+// get unique tag 
+// ============================================================================
+std::size_t Ostap::Math::Polynomial::tag () const 
+{
+  static const std::string s_name { "Polynomial" } ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , Ostap::Utils::hash_range ( m_pars ) ,  
+      degree () , m_xmin , m_xmax ) ;
+}
+// ============================================================================
+
 
 
 // ============================================================================
@@ -1337,6 +1349,22 @@ Ostap::Math::ChebyshevSum::subtract
   return sum ( a ) ;  
 }
 // ============================================================================
+// get unique tag 
+// ============================================================================
+std::size_t Ostap::Math::ChebyshevSum::tag () const 
+{
+  static const std::string s_name { "ChebyshevSum" } ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , Ostap::Utils::hash_range ( m_pars ) ,  
+      degree () , m_xmin , m_xmax ) ;
+}
+// ============================================================================
+
+
+
+
+
+// ============================================================================
 // LegendreSum 
 // ============================================================================
 // constructor from the degree 
@@ -1634,6 +1662,19 @@ Ostap::Math::LegendreSum::subtract
   Ostap::Math::negate ( a.m_pars ) ;
   return sum ( a ) ;  
 }
+// ============================================================================
+// get unique tag 
+// ============================================================================
+std::size_t Ostap::Math::LegendreSum::tag () const 
+{
+  static const std::string s_name { "LegendreSum" } ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , Ostap::Utils::hash_range ( m_pars ) ,  
+      degree () , m_xmin , m_xmax ) ;
+}
+// ============================================================================
+
+
 
 
 // ============================================================================
@@ -1881,6 +1922,19 @@ Ostap::Math::HermiteSum::subtract
   Ostap::Math::negate ( a.m_pars ) ;
   return sum ( a ) ;  
 }
+// ============================================================================
+// get unique tag 
+// ============================================================================
+std::size_t Ostap::Math::HermiteSum::tag () const 
+{
+  static const std::string s_name { "HermiteSum" } ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , Ostap::Utils::hash_range ( m_pars ) ,  
+      degree () , m_xmin , m_xmax ) ;
+}
+// ============================================================================
+
+
 // ============================================================================
 /// legendre to bernstein transformation 
 namespace 
