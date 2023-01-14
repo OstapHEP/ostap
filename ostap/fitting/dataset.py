@@ -910,10 +910,21 @@ def ds_var_minmax ( dataset , var , cuts = '' , delta = 0.0 )  :
     if cuts : s = dataset.statVar ( var , cuts )
     else    : s = dataset.statVar ( var )
     mn , mx = s.minmax()
+
+    ## if range is invalid, recalculate the range without cuts 
+    if mx < mn and cuts :
+        mn , mx = ds_var_minmax ( dataset , var )
+
+    ## if range is invalid and variable is in dataset, try to use the native range 
+    if mx < mn and var in dataset :
+        vv = getattr ( dataset , var ) 
+        mn, mx = vv.minmax ()
+        
     if mn < mx and 0.0 < delta :
         dx   = delta * 1.0 * ( mx - mn )  
         mx  += dx   
-        mn  -= dx   
+        mn  -= dx
+        
     return mn , mx
 
 

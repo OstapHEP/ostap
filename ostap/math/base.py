@@ -837,7 +837,6 @@ def frexp10 ( value ) :
     ## p = cpp_frexp10 ( value )
     ## return p.first, p.second
 
-
     xv = abs ( value )
     if iszero ( xv )  : return  ( 0 , 0 ) 
 

@@ -16,6 +16,8 @@
   1. histogram parameterisations: add warnings for `fill`-based methods if polynomial degree is too large for such number of bins  
   1. extend `test_histos_parameterisation` for 2D and 3D cases 
   1. add `tag` method to several C+ classes 
+  1. add ``SimFit.sPlot` method (background-subtraction for simultaneous fits) & extend the test 
+  1. slight update in `ds_var_minmax` : try to deduce minmax when result is empty....
 
 
 ## Backward incompatible:  

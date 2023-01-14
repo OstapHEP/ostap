@@ -36,14 +36,15 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 ## make simple test mass 
-mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 5 )
+mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 5  )
+xyz      = ROOT.RooRealVar ( 'test_xyz'  , 'Some test xyz'  , 0 , 10 )
 
 ## book very simple data set:
-varset1  = ROOT.RooArgSet  ( mass )
+varset1  = ROOT.RooArgSet  ( mass , xyz )
 dataset1 = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset1 )  
 
 ## book very simple data set:
-varset2  = ROOT.RooArgSet  ( mass )
+varset2  = ROOT.RooArgSet  ( mass , xyz )
 dataset2 = ROOT.RooDataSet ( dsID() , 'Test Data set-2' , varset2 )  
 
 ## high statistic, low-background "control channel"
@@ -53,34 +54,66 @@ NS1    =  10000
 NB1    =   1000
 
 for i in range ( NS1 )  :
-    v1 = random.gauss( mean1 , sigma1 )
-    if v1 in mass :
-        mass.setVal ( v1 )
-        dataset1.add ( varset1 )
+    
+    v1 = random.gauss ( mean1 , sigma1 )
+    while not v1 in mass :
+        v1 = random.gauss ( mean1 , sigma1 )
+        
+    vv = random.triangular( 0 , 10, 1 ) 
+    while not vv in xyz : 
+        vv = random.triangular ( 0, 10 , 1 ) 
+
+    mass.setVal  ( v1 )
+    xyz .setVal  ( vv )
+    
+    dataset1.add ( varset1 )
 
 for i in range ( NB1 ) :
     v1 = random.uniform ( 0 , 5  )
-    if v1 in mass :
-        mass.setVal ( v1 )
-        dataset1.add ( varset1 )
+    while not v1 in mass :
+        v1 = random.uniform ( 0 , 5  )
         
-## low statistic, high-background "control channel"
+    vv = random.triangular( 0 , 10, 9 ) 
+    while not vv in xyz : 
+        vv = random.triangular ( 0, 10 , 9 ) 
+
+    mass.setVal  ( v1 )
+    xyz .setVal  ( vv )
+    
+    dataset1.add ( varset1 )
+        
+## low statistic, high-background "signal channel"
 NS2     =    500
 NB2     =  10000     
 mean2   = mean1  + 1.0
 sigma2  = sigma1 * 0.5
 
-for i in range(NS2)  :
-    v2 = random.gauss( mean2 , sigma2 )
-    if v2 in mass :
-        mass.setVal ( v2 )
-        dataset2.add ( varset2 )
+for i in range ( NS2 )  :
+    v2 = random.gauss ( mean2 , sigma2 )
+    while not v2 in mass : 
+        v2 = random.gauss ( mean2 , sigma2 )
+        
+    vv = random.expovariate ( 1/2.0 )
+    while not vv in xyz : 
+        vv = random.expovariate ( 1/2.0 )
+
+    mass.setVal  ( v2 )
+    xyz .setVal  ( vv )
+    dataset2.add ( varset2 )
 
 for i in range (NB2 ) :
     v2 = random.uniform ( 0 , 5  )
-    if v2 in mass :
-        mass.setVal ( v2 )
-        dataset2.add ( varset2 )
+    while not v2 in mass : 
+        v2 = random.uniform ( 0 , 5  )
+        
+    vv = random.expovariate ( 1/2.0 )
+    while not vv in xyz : 
+        vv = random.expovariate ( 1/2.0 )
+
+    mass.setVal  ( v2      )
+    xyz .setVal  ( 10 - vv )
+    dataset2.add ( varset2 )
+
 
 sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
 
@@ -132,13 +165,11 @@ def test_simfit1 () :
         # =========================================================================
 
     ## combine data
-    
-    
+        
     ## combine datasets
     from ostap.fitting.simfit import combined_data 
-    vars    = ROOT.RooArgSet ( mass )
+    vars    = ROOT.RooArgSet ( mass , xyz )
     dataset = combined_data  ( sample , vars , { 'A' : dataset1 , 'B' : dataset2 } )
-    
     
     ## combine PDFs
     model_sim  = Models.SimFit (
@@ -152,9 +183,9 @@ def test_simfit1 () :
     title = 'Results of simultaneous fit'
     logger.info ( '%s\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
     
-    with wait ( 2 ) , use_canvas ( 'test_simfit1: fit both datasets & draw A' ) :        
+    with use_canvas ( 'test_simfit1: fit both datasets & draw A' , wait = 2 ) :        
         fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
-    with wait ( 2 ) , use_canvas ( 'test_simfit1: fit both datasets & draw B' ) :        
+    with use_canvas ( 'test_simfit1: fit both datasets & draw B' , wait = 2 ) :        
         fB = model_sim.draw ( 'B' , dataset , nbins = 50 )            
 
     models.add ( model1        )
@@ -168,7 +199,24 @@ def test_simfit1 () :
     results.append ( r1 ) 
     results.append ( r2 ) 
     results.append ( r  ) 
+
+    # ========================================================================
+    logger.info ( 'Make sPlot-analysis')
+    model_sim.sPlot ( dataset ) 
+
+    with use_canvas ( 'test_simfit1: sPlot/xyz for A (signal)'     , wait = 1 ) :
+        dataset.draw ( 'test_xyz' , '(sample==0)*S_M1_sw' )
+
+    with use_canvas ( 'test_simfit1: sPlot/xyz for A (background)' , wait = 1 ) :
+        dataset.draw ( 'test_xyz' , '(sample==0)*B_M1_sw' )
+
+    with use_canvas ( 'test_simfit1: sPlot/xyz for B (signal)'     , wait = 1 ) :
+        dataset.draw ( 'test_xyz' , '(sample==1)*S_M2_sw' )
+
+    with use_canvas ( 'test_simfit1: sPlot/xyz for B (background)' , wait = 1 ) :
+        dataset.draw ( 'test_xyz' , '(sample==1)*B_M2_sw' )
         
+
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================
@@ -197,7 +245,7 @@ if '__main__' == __name__ :
 
 
     with timing( "simfit-1" ,   logger ) :  
-       test_simfit1 ()
+        test_simfit1 ()
         
     ## check finally that everything is serializeable:
     with timing ('Save to DB:'     , logger ) :

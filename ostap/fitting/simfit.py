@@ -300,8 +300,8 @@ class Sim1D(PDF1) :
                    xvar       = None ,
                    name       = None , 
                    title      = ''   ) :
-
-        warnings.warn ( "Usage of obsolete Sim1D. Use SimFit instead" )
+        
+        warnings.warn ( "Usage of obsolete Sim1D. Use SimFit instead!" )
         
         if isinstance ( sample , ( tuple , list ) ) :
             _cat = ROOT.RooCategory ( 'sample' , 'sample' )
@@ -354,6 +354,9 @@ class Sim1D(PDF1) :
         ## initialize the base 
         PDF1.__init__ ( self , name , xvar = _xvar ) 
         
+        self.warning  ( "Usage of obsolete Sim1D. Use SimFit instead!" )
+
+
         self.pdf = ROOT.RooSimultaneous (
             self.roo_name ( 'sim1d_' ) ,
             title if title else "Simultaneous %s" % self.name , 
@@ -376,9 +379,10 @@ class Sim1D(PDF1) :
             ## copy draw options 
             for k in pdf.draw_options :
                 self.draw_options [ k ] = pdf.draw_options [ k ]
-            
-            ## for c in pdf.alist1      : self.alist1.add ( c ) 
-            ## for c in pdf.alist2      : self.alist2.add ( c ) 
+
+            ## copy "components" (needed for e.g. splot) 
+            for c in pdf.alist1      : self.alist1.add ( c ) 
+            for c in pdf.alist2      : self.alist2.add ( c ) 
 
         self.config = {
             'name'       : self.name       ,
@@ -678,6 +682,10 @@ class SimFit (VarMaker) :
             
             self.pdf.draw_options.update ( cmp.draw_options )
             
+            ## copy "components" (needed for e.g. splot) 
+            for c in cmp.alist1               : self.pdf.alist1 . add ( c ) 
+            for c in cmp.alist2               : self.pdf.alist2 . add ( c ) 
+
         # =====================================================================
         ##  drawing helpers
         # =====================================================================
@@ -1180,6 +1188,18 @@ class SimFit (VarMaker) :
                                data        ,
                                args = args )
     
+    # =========================================================================
+    ## perform sPlot-analysis 
+    #  @code
+    #  r,f = model.fitTo ( dataset )
+    #  model.sPlot ( dataset ) 
+    #  @endcode 
+    def sPlot ( self , dataset , silent = False , **kwargs ) : 
+        """ Make sPlot analysis
+        >>> r,f = model.fitTo ( dataset )
+        >>> model.sPlot ( dataset ) 
+        """
+        return self.pdf.sPlot ( dataset , silent = silent , **kwargs )
 
     # =========================================================================
     ## Load parameters from external dictionary <code>{ name : value }</code>
