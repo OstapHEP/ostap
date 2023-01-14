@@ -159,6 +159,23 @@ def _rconst_reduce ( var ) :
 ROOT.RooConstVar.__reduce__ = _rconst_reduce 
 
 # ==============================================================================
+## reduce <code>RooLinearVar</code>
+#  @see RooLinearVar
+def _rlinv_reduce ( var ) :
+    """Reduce `RooLinearVar`
+    - see `ROOT.RooLinearVar`
+    """ 
+    return root_factory , ( type ( var )  ,
+                            var.name      ,
+                            var.title     ,
+                            var.variable  ,
+                            var.slope     ,
+                            var.offset    ,
+                            var.unit      )
+    
+ROOT.RooLinearVar.__reduce__ = _rlinv_reduce 
+
+# ==============================================================================
 ## factory for RooCategory objects
 #  @see RooCategory
 def _rcat_factory_  ( klass , name , title , index  , items ) :

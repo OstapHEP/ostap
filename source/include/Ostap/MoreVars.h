@@ -30,6 +30,7 @@ class RooEfficiency       ; // ROOT,RooFit
 class RooPolyVar          ; // ROOT,RooFit 
 class RooPolynomial       ; // ROOT,RooFit 
 class RooMultiVarGaussian ; // ROOT,RooFit 
+class RooLinearVar        ; // ROOT,RooFit 
 // ============================================================================
 namespace Ostap 
 {
@@ -568,11 +569,29 @@ namespace Ostap
     RooArgList observables 
     ( const RooMultiVarGaussian& pdf ) ;
     // ========================================================================
-    /** get vectro of mu-values from <code>RooMultiVarGaussian</code>
+    /** get vector of mu-values from <code>RooMultiVarGaussian</code>
      *  @see RooMultiVarGaussian
      */
     TVectorD mu_vec
     ( const RooMultiVarGaussian& pdf ) ;
+    // ========================================================================
+    /** get the variable from <code>RooLinearVar</code>
+     *  @see RooLinearVar
+     */
+    const RooAbsReal& get_variable 
+    ( const RooLinearVar& var ) ;
+    // ========================================================================
+    /** get the slope  from <code>RooLinearVar</code>
+     *  @see RooLinearVar
+     */
+    const RooAbsReal& get_alope 
+    ( const RooLinearVar& var ) ;
+    // =======================================================================
+    /** get the offset from <code>RooLinearVar</code>
+     *  @see RooLinearVar
+     */
+    const RooAbsReal& get_offset
+    ( const RooLinearVar& var ) ;
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit
   // ==========================================================================

@@ -15,6 +15,7 @@
 #include "RooPolyVar.h"
 #include "RooPolynomial.h"
 #include "RooMultiVarGaussian.h"
+#include "RooLinearVar.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -244,6 +245,25 @@ namespace
     const RooArgList& observables () const { return _x ; }
     TVectorD          mu_vec      () const 
     { syncMuVec() ; return _muVec ; }
+    // ========================================================================
+  } ;    
+  // ==========================================================================
+  class FakeLinearVar: public RooLinearVar
+  {
+  public: 
+    // ========================================================================
+    FakeLinearVar
+    ( const RooLinearVar& var , const char* newname = 0 ) 
+      : RooLinearVar( var , newname ) 
+    {}
+    // ========================================================================
+    virtual ~FakeLinearVar () {}
+    // ========================================================================
+  public:
+    // ========================================================================
+    const RooAbsReal& get_var    () const { return _var    .arg () ; }
+    const RooAbsReal& get_slope  () const { return _slope  .arg () ; }    
+    const RooAbsReal& get_offset () const { return _offset .arg () ; }
     // ========================================================================
   } ;    
   // ==========================================================================
@@ -920,7 +940,7 @@ RooArgList Ostap::MoreRooFit::observables
   return fake->observables () ;  
 }
 // ============================================================================
-/*  get vectro of mu-values from <code>RooMultiVarGaussian</code>
+/*  get vector of mu-values from <code>RooMultiVarGaussian</code>
  *  @see RooMultiVarGaussian
  */
 // ============================================================================
@@ -930,10 +950,43 @@ TVectorD Ostap::MoreRooFit::mu_vec
   std::unique_ptr<::FakeMultiVarGaussian> fake { new ::FakeMultiVarGaussian ( pdf ) } ;
   return fake->mu_vec () ;  
 }
-// ========================================================================
-
-
-
+// ============================================================================
+/** get the variable from <code>RooLinearVar</code>
+ *  @see RooLinearVar
+ */
+// ============================================================================
+const RooAbsReal& 
+Ostap::MoreRooFit::get_variable 
+( const RooLinearVar& var ) 
+{
+  std::unique_ptr<::FakeLinearVar> fake { new ::FakeLinearVar( var) } ;
+  return fake->get_var () ;  
+}
+// ============================================================================
+/** get the slope  from <code>RooLinearVar</code>
+ *  @see RooLinearVar
+ */
+// ============================================================================
+const RooAbsReal&
+Ostap::MoreRooFit::get_alope 
+( const RooLinearVar& var ) 
+{
+  std::unique_ptr<::FakeLinearVar> fake { new ::FakeLinearVar( var) } ;
+  return fake->get_slope () ;  
+}
+// ============================================================================
+/** get the offset from <code>RooLinearVar</code>
+ *  @see RooLinearVar
+ */
+// ============================================================================
+const RooAbsReal& 
+Ostap::MoreRooFit::get_offset
+( const RooLinearVar& var ) 
+{
+  std::unique_ptr<::FakeLinearVar> fake { new ::FakeLinearVar( var) } ;
+  return fake->get_offset () ;  
+}
+// ============================================================================
 
 // ============================================================================
 //                                                                      The END 

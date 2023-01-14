@@ -170,6 +170,9 @@ def _rrv_contains_ ( var , value ) :
     return True 
     
 # =============================================================================
+ROOT.RooAbsReal.unit = property ( ROOT.RooAbsReal.getUnit ,
+                                  ROOT.RooAbsReal.setUnit , None , "get/set Unit" ) 
+# =============================================================================
 ## decorate RooRealVar:
 ROOT.RooRealVar     . as_VE           = _rrv_ve_ 
 ROOT.RooRealVar     . asVE            = _rrv_ve_ 
@@ -1313,7 +1316,6 @@ _new_methods_ += [
     ROOT.RooRealVar. bins ,
     ]
 
-
 ROOT.RooRealVar.getValue = ROOT.RooRealVar.getVal
 ROOT.RooRealVar.setValue = ROOT.RooRealVar.setVal
 
@@ -1322,7 +1324,6 @@ _new_methods_ += [
     ROOT.RooRealVar.getValue , 
     ROOT.RooRealVar.setValue , 
     ]
-
 
 # =============================================================================
 ## printout for RooUniformBinning
@@ -1469,6 +1470,78 @@ else :
         ]
 
 # =============================================================================
+
+# =============================================================================
+## get underlying variable from <code>RooLinearVar</code>
+#  @code
+#  linvar = ...
+#  var    = linvar.get_variable () 
+#  var    = linvar.get_var      () ## ditto 
+#  var    = linvar.variable        ## ditto
+#  var    = linvar.var             ## ditto
+#  @endcode 
+#  @see Ostap::MoreRooFit::get_variable
+#  @see RooLinearVar
+def _rlinv_var_ ( var ) : 
+    """Get underlying variable from <code>RooLinearVar</code>
+    >>> linvar = ...
+    >>> var    = linvar.get_variable () 
+    >>> var    = linvar.get_var      () ## ditto 
+    >>> var    = linvar.variable        ## ditto
+    >>> var    = linvar.var             ## ditto
+    - see `Ostap.MoreRooFit.get_variable`
+    - see `ROOT.RooLinearVar`
+    """
+    return Ostap.MoreRooFit.get_variable ( var )
+
+ROOT.RooLinearVar.get_variable = _rlinv_var_
+ROOT.RooLinearVar.get_var      = _rlinv_var_
+ROOT.RooLinearVar.variable     = property ( _rlinv_var_ , None , None , _rlinv_var_.__doc__ )
+ROOT.RooLinearVar.var          = property ( _rlinv_var_ , None , None , _rlinv_var_.__doc__ )
+
+# =============================================================================
+## get the slope variable from <code>RooLinearVar</code>
+#  @code
+#  linvar = ...
+#  slope  = linvar.get_slope () 
+#  slope  = linvar.slope        ## ditto
+#  @endcode 
+#  @see Ostap::MoreRooFit::get_slope
+#  @see RooLinearVar
+def _rlinv_slope_ ( var ) : 
+    """Get the slope variable from <code>RooLinearVar</code>
+    >>> linvar = ...
+    >>> slope  = linvar.get_slope  () 
+    >>> slope  = linvar.slope         ## ditto
+    - see `Ostap.MoreRooFit.get_slope`
+    - see `ROOT.RooLinearVar`
+    """
+    return Ostap.MoreRooFit.get_slope ( var )
+
+ROOT.RooLinearVar.get_slope = _rlinv_slope_
+ROOT.RooLinearVar.slope     = property ( _rlinv_slope_ , None , None , _rlinv_slope_.__doc__ )
+
+# =============================================================================
+## get the offset variable from <code>RooLinearVar</code>
+#  @code
+#  linvar = ...
+#  offset = linvar.get_offset () 
+#  offset = linvar.offset        ## ditto
+#  @endcode 
+#  @see Ostap::MoreRooFit::get_offset
+#  @see RooLinearVar
+def _rlinv_offset_ ( var ) : 
+    """Get the offset variable from <code>RooLinearVar</code>
+    >>> linvar = ...
+    >>> offset = linvar.get_offset () 
+    >>> offset = linvar.offset         ## ditto
+    - see `Ostap.MoreRooFit.get_offset`
+    - see `ROOT.RooLinearVar`
+    """
+    return Ostap.MoreRooFit.get_offset ( var )
+
+ROOT.RooLinearVar.get_offset = _rlinv_offset_
+ROOT.RooLinearVar.offset     = property ( _rlinv_offset_ , None , None , _rlinv_offset_.__doc__ )
 
 # ==============================================================================
 # primitive functions for RooAbsReal objects 
