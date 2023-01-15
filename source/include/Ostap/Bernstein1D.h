@@ -853,11 +853,12 @@ namespace Ostap
       template<typename ITERATOR,
                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
-      Monotonic ( ITERATOR     begin             , 
-                  ITERATOR     end               , 
-                  const double xmin       = 0    ,
-                  const double xmax       = 1    , 
-                  const bool   increasing = true ) 
+      Monotonic 
+      ( ITERATOR     begin             , 
+        ITERATOR     end               , 
+        const double xmin       = 0    ,
+        const double xmax       = 1    , 
+        const bool   increasing = true ) 
         : Monotonic ( std::distance (  begin , end ) , xmin , xmax , increasing ) 
       { setPars  ( begin , end ) ; }
       // ======================================================================
@@ -903,9 +904,12 @@ namespace Ostap
        *  @param end    end   itertaor for the sequence of coefficients 
        *  @return true if at least one parameter is actually changed 
        */
-      template <class ITERATOR>
-      inline bool setPars ( ITERATOR begin , 
-                            ITERATOR end   ) 
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      inline bool setPars 
+      ( ITERATOR begin , 
+        ITERATOR end   ) 
       {
         const auto NN = std::distance ( begin  , end ) ;
         const unsigned short nS = m_sphere.npars () ;
@@ -1189,9 +1193,12 @@ namespace Ostap
        *  @param end    end   itertaor for the sequence of coefficients 
        *  @return true if at least one parameter is actually changed 
        */
-      template <class ITERATOR>
-      inline bool setPars ( ITERATOR begin , 
-                            ITERATOR end   ) 
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      inline bool setPars 
+      ( ITERATOR begin , 
+        ITERATOR end   ) 
       {
         const auto NN = std::distance ( begin  , end ) ;
         const unsigned short nA = m_sphereA .npars () ;

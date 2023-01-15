@@ -993,9 +993,12 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Polynomial             ,               
                Ostap.Math.Positive               ,
                Ostap.Math.PositiveEven           ,
-               Ostap.Math.Monotonic             ,
+               Ostap.Math.Monotonic              ,
                Ostap.Math.Convex                 ,
-               Ostap.Math.ConvexOnly             ,
+               Ostap.Math.ConvexOnly             ,               
+               Ostap.Math.KarlinShapley          ,           
+               Ostap.Math.KarlinStudden          ,
+               ## 
                Ostap.Math.BifurcatedGauss        ,
                Ostap.Math.DoubleGauss            ,
                Ostap.Math.Bukin                  ,
@@ -1213,7 +1216,10 @@ for model in ( Ostap.Math.Bernstein         ,
                Ostap.Math.CosineSum         ,               
                Ostap.Math.Polynomial        ,               
                Ostap.Math.ExpoPositive      , 
-               Ostap.Math.TwoExpoPositive   , 
+               Ostap.Math.TwoExpoPositive   ,
+               ##
+               Ostap.Math.KarlinShapley     , 
+               Ostap.Math.KarlinStudden     , 
                ##
                Ostap.Math.BSpline           ,
                Ostap.Math.MonotonicSpline   ,
@@ -1813,6 +1819,27 @@ Ostap.Math.GammaBW3.xmin =  lambda s : s.dalitz().s_min()
 
 
 # =============================================================================
+## Karlin-Shapley & Karlin_Studden 
+# =============================================================================
+from ostap.math.bernstein import _p_set_par_, _p_get_par_, _p_new_init_ 
+for p in ( Ostap.Math.KarlinShapley , ) :
+    p.__getitem__ = _p_get_par_
+    p.__setitem__ = _p_set_par_
+    ##
+    if not hasattr ( p , '_old_init_' ) :
+        p._old_init_ = p.__init__
+        ## Modifed constructor to allow python lists/tuples
+        def _pp_new_init_ ( s ,  *args ) :
+            """Modifed constructor to allow python lists/tuples
+            """
+            _p_new_init_ ( s , *args )
+            
+        _pp_new_init_.__doc__ += '\n' + _p_new_init_.__doc__ 
+        _pp_new_init_.__doc__ += '\n' + p._old_init_.__doc__ 
+        p.__init__ = _pp_new_init_ 
+        
+    
+# =============================================================================
 ## more opreations for primitives 
 # =============================================================================
 ## absolute value for primitive functions
@@ -1820,7 +1847,7 @@ Ostap.Math.GammaBW3.xmin =  lambda s : s.dalitz().s_min()
 # @see Ostap::Magth::Abs 
 def _prims_abs_ ( f ) :
     """Absolute value for primitive functions: g(x)  = |f(x)||
-    - see `Ostap.Magth.Abs`
+    - see `Ostap.Math.Abs`
     """
     return Ostap.Math.Abs.create ( f ) 
 
@@ -2352,9 +2379,12 @@ _decorated_classes_ = set( [
     Ostap.Math.PositiveEven  ,
     Ostap.Math.Convex        ,
     Ostap.Math.ConvexOnly    ,
-    Ostap.Math.Monotonic    ,
+    Ostap.Math.Monotonic     ,
     Ostap.Math.FourierSum    ,
     Ostap.Math.CosineSum     ,
+    ##
+    Ostap.Math.KarlinShapley ,
+    Ostap.Math.KarlinStudden ,
     ##
     Ostap.Math.BSpline2D       ,
     Ostap.Math.BSpline2DSym    , 

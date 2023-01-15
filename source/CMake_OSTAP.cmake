@@ -75,6 +75,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp   
                          src/Polarization.cpp
+                         src/Positive.cpp
                          src/Primitives.cpp
                          src/Printable.cpp
                          src/ProgressBar.cpp

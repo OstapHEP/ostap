@@ -88,6 +88,7 @@
 #include "Ostap/Point3DTypes.h"
 #include "Ostap/Point3DWithError.h"
 #include "Ostap/Polynomials.h"
+#include "Ostap/Positive.h"
 #include "Ostap/Power.h"
 #include "Ostap/Primitives.h"
 #include "Ostap/Printable.h"

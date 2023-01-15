@@ -15,6 +15,7 @@
 #include "Ostap/Voigt.h"
 #include "Ostap/Models.h"
 #include "Ostap/BSpline.h"
+#include "Ostap/Positive.h"
 #include "Ostap/HistoInterpolators.h"
 // ============================================================================
 // ROOT
@@ -24,6 +25,10 @@
 #include "RooListProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
+// ============================================================================
+// forward declarations 
+// ============================================================================
+class    RooRealVar ; // ROOT,RooFit 
 // ============================================================================
 namespace Ostap
 {
@@ -8404,7 +8409,192 @@ namespace Ostap
       mutable Ostap::Math::HILLdini m_hill ;          // the function
       // ======================================================================
     } ;
-
+    // ========================================================================
+    /** @class KarlinShapley
+     *  Positive polinomial on the interval 
+     *  @see Ostap::Math::KarlinStudden
+     *  @see Ostap::Math::KarlinShapley
+     *  @see Ostap::Math::Posititive 
+     *  @see Ostap::Models::PplyPosititive 
+     *  @see Ostap::Models::KarlinShapley
+     *  - note that Ostap::Models::PolyPositive shodu be better here 
+     */
+    class KarlinShapley : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::KarlinShapley, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general
+      KarlinShapley
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        const RooArgList&    coeffs    ,
+        const double         xmin      ,
+        const double         xmax      ) ;
+      /// general
+      KarlinShapley
+      ( const char*          name      ,
+        const char*          title     ,
+        RooRealVar&          x         ,
+        const RooArgList&    coeffs    ) ;
+      /// copy
+      KarlinShapley
+      ( const KarlinShapley& right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~KarlinShapley() ;
+      /// clone
+      KarlinShapley* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      KarlinShapley () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::KarlinShapley& function      () const { return m_positive ; }
+      const Ostap::Math::KarlinShapley& positive      () const { return m_positive ; }
+      const Ostap::Math::KarlinShapley& karlinshapley () const { return m_positive ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x    () const { return m_x    .arg()      ; }
+      const RooArgList& phis () const { return m_phis             ; }
+      double            xmin () const { return m_positive.xmin () ; }
+      double            xmax () const { return m_positive.xmax () ; }    
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x    {} ;
+      RooListProxy m_phis {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::KarlinShapley  m_positive {} ;  // the function
+      // ======================================================================
+    } ;
+    
+    // ========================================================================
+    /** @class KarlinStudden
+     *  Positive polinomial on the interval
+     *  @see Ostap::Math::KarlinStudden
+     *  @see Ostap::Math::KarlinShapley
+     *  @see Ostap::Math::Posititive 
+     *  @see Ostap::Models::PplyPosititive 
+     *  @see Ostap::Models::KarlinShapley
+     *  - note that Ostap::Models::PolyPositive shodul be better choice  
+     */
+    class KarlinStudden : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::KarlinStudden, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general
+      KarlinStudden
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        const RooArgList&    coeffs    ,
+        const double         xmin      ,
+        const double         scale = 1 ) ;
+      /// general
+      KarlinStudden 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooRealVar&          x         ,
+        const RooArgList&    coeffs    ,
+        const double         scale = 1 ) ;
+      /// copy
+      KarlinStudden
+      ( const KarlinStudden& right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~KarlinStudden() ;
+      /// clone
+      KarlinStudden* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      KarlinStudden () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::KarlinStudden& function      () const { return m_positive ; }
+      const Ostap::Math::KarlinStudden& positive      () const { return m_positive ; }
+      const Ostap::Math::KarlinStudden& karlinstudden () const { return m_positive ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x    .arg()       ; }
+      const RooArgList& phis  () const { return m_phis              ; }
+      double            xmin  () const { return m_positive.xmin  () ; }
+      double            scale () const { return m_positive.scale () ; }    
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x    {} ;
+      RooListProxy m_phis {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::KarlinStudden  m_positive {} ;  // the function
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class Shape1D
      *  simple generic PDF

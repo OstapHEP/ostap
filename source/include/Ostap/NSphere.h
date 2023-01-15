@@ -75,10 +75,19 @@ namespace Ostap
       NSphere
       ( const std::vector<double>& phases      ) ;
       // =======================================================================
-      /// copy
-      NSphere  ( const NSphere&  right ) ;
+      /// create n-sphere from the sequence of phases 
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      NSphere 
+      ( ITERATOR begin , 
+        ITERATOR end   ) 
+        : NSphere ( std::vector<double> ( begin , end ) ) 
+      {}
+      // =======================================================================
+      NSphere  ( const NSphere&  right ) = default ;
       /// move
-      NSphere  (       NSphere&& right ) ;
+      NSphere  (       NSphere&& right ) = default ;
       /// destructor 
       ~NSphere () ; 
       // ======================================================================

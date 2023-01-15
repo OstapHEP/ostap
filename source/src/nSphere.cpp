@@ -38,8 +38,8 @@ namespace
     // double sinv = 0 ;
     // double cosv = 1 ;
     // vdt::fast_sincos ( phase , sinv , cosv ) ;
-    const double sinv = std::sin ( phase ) ;
-    const double cosv = std::cos ( phase ) ;
+    const double sinv  = std::sin ( phase ) ;
+    const double cosv  = std::cos ( phase ) ;
     //
     const double acosv = std::abs ( cosv ) ;
     if ( 0 == sinv  || 1 == acosv ) 
@@ -153,7 +153,7 @@ Ostap::Math::NSphere::NSphere
   , m_sin_phi ( phases.size () , 0 ) 
   , m_cos_phi ( phases.size () , 1 ) 
 { 
-  // ==============================
+  // ==========================================================================
   // calculate the bias (if needed) 
   if  ( rotated )                       // ROTATE SPHERE 
   {
@@ -175,26 +175,6 @@ Ostap::Math::NSphere::NSphere
   }
   //
 }
-// ============================================================================
-// copy
-// ============================================================================
-Ostap::Math::NSphere::NSphere 
-( const Ostap::Math::NSphere&  right ) 
-  : m_delta    ( right.m_delta   ) 
-  , m_phases   ( right.m_phases  ) 
-  , m_sin_phi  ( right.m_sin_phi ) 
-  , m_cos_phi  ( right.m_cos_phi ) 
-{}
-// ============================================================================
-// move
-// ============================================================================
-Ostap::Math::NSphere::NSphere 
-(       Ostap::Math::NSphere&& right ) 
-  : m_delta   ( std::move ( right.m_delta   ) ) 
-  , m_phases  ( std::move ( right.m_phases  ) ) 
-  , m_sin_phi ( std::move ( right.m_sin_phi ) )  
-  , m_cos_phi ( std::move ( right.m_cos_phi ) ) 
-{}
 // ============================================================================
 // destructor 
 // ============================================================================

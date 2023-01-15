@@ -1195,6 +1195,35 @@ Ostap.Math.LegendreSum2 .__reduce__ = _b2d_reduce_
 
 
 # ============================================================================
+## Reduce KarlinShapley polynomials 
+#  @see Ostap::Math::KarlinShapley 
+def _kshp_reduce_ ( p ) :
+    """Reduce KarlinShapley polymonials
+    - see `Ostap.Math.KarlinShapley` 
+    """
+    pars = tuple ( [ p.A() ] + [ v for v in  p.phases1() ] + [ v for v in  p.phases1() ] ) 
+    return poly_factory , ( type ( p ) ,
+                            array.array ( 'd' ,  pars ) ,
+                            p.xmin () ,
+                            p.xmax () )
+
+# ============================================================================
+## Reduce KarlinStudden polynonial
+#  @see Ostap::Math::KarlinStudden
+def _kssp_reduce_ ( p ) :
+    """Reduce KarlinStudden polymonials
+    - see `Ostap.Math.KarlinStudden`
+    """
+    pars = tuple ( [ p.A() ] + [ v for v in  p.phases1() ] + [ v for v in  p.phases1() ] ) 
+    return poly_factory , ( type ( p ) ,
+                            array.array ( 'd' ,  pars ) ,
+                            p.xmin  () ,
+                            p.scale () )
+
+Ostap.Math.KarlinShapley. __reduce__ = _kshp_reduce_
+Ostap.Math.KarlinStudden. __reduce__ = _kssp_reduce_
+
+# ============================================================================
 ## reduce symmetric polynomial objects 
 #  @see Ostap::Math::Bernstein2DSym
 #  @see Ostap::Math::Positive2DSym

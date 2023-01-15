@@ -88,7 +88,9 @@ namespace
   }
   // ==========================================================================
   template <class OBJECT>
-  inline void set_pars ( const RooListProxy& lst , OBJECT& obj ) 
+  inline void set_pars ( const RooListProxy&  lst      , 
+                         OBJECT&              obj      , 
+                         const unsigned short shift = 0 ) 
   {
     //
     const RooArgSet* nset  = lst.nset() ;
@@ -101,7 +103,7 @@ namespace
     while ( ( p = (RooAbsArg*) it.next() ) )
     {
       const RooAbsReal* r = static_cast<const RooAbsReal*>( p ) ;
-      obj.setPar ( k , r->getVal ( nset ) ) ;  
+      obj.setPar ( k + shift , r->getVal ( nset ) ) ;  
       ++k ;
     }
     //
@@ -111,7 +113,7 @@ namespace
     for ( unsigned int k = 0 ; k < N ; ++k ) 
     {
       const RooAbsReal& r = static_cast<const RooAbsReal&>( lst [ k ] ) ;
-      obj.setPar ( k , r.getVal ( nset ) ) ;  
+      obj.setPar ( k + shift , r.getVal ( nset ) ) ;  
     }
     //
 #endif

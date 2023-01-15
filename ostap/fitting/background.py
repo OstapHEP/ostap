@@ -15,11 +15,11 @@ __all__     = (
     'Bkg_pdf'           , ## An exponential function, modulated by positive polynomial
     'PSPol_pdf'         , ## A phase space  function, modulated by positive polynomial
     'PSLeftExpoPol_pdf' , ## A phase space function, modulated by positive polynomial and exponent
-    'PolyPos_pdf'       , ## A positive polynomial
-    'PolyEven_pdf'      , ## A positive even polynomial
-    'Monotonic_pdf'     , ## A positive monotonic polynomial
-    'Convex_pdf'        , ## A positive polynomial with fixed sign first and second derivatives 
-    'ConvexOnly_pdf'    , ## A positive polynomial with fixed sign second derivatives 
+    'PolyPos_pdf'       , ## Bernstein positive polynomial
+    'PolyEven_pdf'      , ## Bernstine positive even polynomial
+    'Monotonic_pdf'     , ## Bernstein positive monotonic polynomial
+    'Convex_pdf'        , ## Bernstein positive polynomial with fixed sign first and second derivatives 
+    'ConvexOnly_pdf'    , ## Bernstein  positive polynomial with fixed sign second derivatives 
     'Sigmoid_pdf'       , ## Background: sigmoid modulated by positive polynom 
     'TwoExpoPoly_pdf'   , ## difference of two exponents, modulated by positive polynomial
     ##
@@ -38,7 +38,10 @@ __all__     = (
     'PS23L_pdf'         , ## 2-body phase space from 3-body decays with orbital momenta
     ##
     'PSSmear_pdf'       , ## smeared (left/right, Gaussian) PhaseSpace-based PDF 
-    'PSSmear2_pdf'      , ## smeared (left, generic)        PhaseSpace-based PDF 
+    'PSSmear2_pdf'      , ## smeared (left, generic)        PhaseSpace-based PDF
+    ##
+    'KarlinShapley_pdf' , ## Kaglin-Shapley positive polynomial 
+    'KarlinStudden_pdf' , ## Kaglin-Studden positive polynomial 
     ## 
     ## get the native RooFit background shapes
     ##
@@ -106,7 +109,7 @@ class Bkg_pdf(PolyBase) :
         ##            
         PolyBase.__init__  ( self , name , power , xvar , the_phis )
         #                
-        self.__power = power
+        self.__power = len ( self.phis ) 
         #
         ## xmin/xmax
         xmin , xmax = self.xmnmx ( xmin , xmax )
@@ -191,7 +194,7 @@ class PolyPos_pdf(PolyBase) :
         #
         PolyBase.__init__ ( self , name , power , xvar , the_phis )
         #
-        self.__power = power
+        self.__power = len ( self.phis ) 
         #
         ## xmin/xmax
         xmin , xmax = self.xmnmx ( xmin , xmax )
@@ -222,6 +225,153 @@ class PolyPos_pdf(PolyBase) :
 
 
 models.append ( PolyPos_pdf ) 
+
+
+# =============================================================================
+## @class KarlinShapley_pdf
+#  A positive polynomial 
+#  @see Ostap::Models::KarlinShapley
+#  @see Ostap::Math::KarlinShapley
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2011-07-25
+class KarlinShapley_pdf(PolyBase) :
+    """Positive Karlin-Shapley  polynomial: 
+    
+    f(x) = Pol_n(x)
+    with Pol_n(x)>= 0 over the whole range 
+    
+    >>>  mass = ROOT.RooRealVar( ... )
+    >>>  bkg  = KarlinShapley_pdf ( 'B' , mass , power = 2 )
+    """
+    ## constructor
+    def __init__ ( self             ,
+                   name             ,  ## the name 
+                   xvar             ,  ## the variable 
+                   power    = 1     ,  ## degree of the polynomial
+                   xmin     = None  ,  ## optional x-min
+                   xmax     = None  ,  ## optional x-max 
+                   the_phis = None  ) : 
+        #
+        PolyBase.__init__ ( self , name , power , xvar , the_phis )
+        #
+        self.__power = len ( self.phis ) 
+        #
+
+        ## xmin/xmax
+        self.__x_min , self.__x_max = self.xmnmx ( xmin , xmax )
+        #
+
+        ## build the model
+        self.pdf   = Ostap.Models.KarlinShapley (
+            self.roo_name ( "ksp_"  ) ,
+            "Karlin-Shapley polynom %s" % self.name , 
+            self.xvar            ,
+            self.phi_list        ,
+            self.x_min , self.x_max )
+        
+        ## save configuration 
+        self.config = {
+            'name'     : self.name   ,
+            'xvar'     : self.xvar   ,
+            'power'    : self.power  ,            
+            'the_phis' : self.phis   ,
+            'xmin'     : self.x_min  ,
+            'xmax'     : self.x_max  ,            
+            }
+                
+    @property
+    def power ( self ) :
+        """``power''-parameter (polynomial order) for Karlin-Shapley function"""
+        return self.__power
+
+    @property
+    def x_min ( self ) :
+        """'xmin' - minimal x for Karlin-Studden polynomial"""
+        return self.__x_min
+
+    @property
+    def x_max ( self ) :
+        """'xmax' - maximal x for Karlin-Studden polynomial"""
+        return self.__x_max
+
+
+models.append ( KarlinShapley_pdf ) 
+
+# =============================================================================
+## @class KarlinStudden_pdf
+#  A positive polynomial 
+#  @see Ostap::Models::KarlinStudden
+#  @see Ostap::Math::KarlinStudden
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2011-07-25
+class KarlinStudden_pdf(PolyBase) :
+    """Positive Karlin-Studden polynomial: 
+    
+    f(x) = Pol_n(x)
+    with Pol_n(x)>= 0 for x > xmin 
+    
+    >>>  mass = ROOT.RooRealVar( ... )
+    >>>  bkg  = KarlinStudden_pdf ( 'B' , mass , power = 2 )
+    """
+    ## constructor
+    def __init__ ( self             ,
+                   name             ,  ## the name 
+                   xvar             ,  ## the variable 
+                   power    = 1     ,  ## degree of the polynomial
+                   xmin     = None  ,  ## optional x-min
+                   scale    = 1     ,  ## scale 
+                   the_phis = None  ) : 
+        #
+        PolyBase.__init__ ( self , name , power , xvar , the_phis )
+        #
+        self.__power = len ( self.phis ) 
+        #
+        assert isinstance ( xmin , num_types ) or self.xvar.hasMin() , \
+               'Invalid setting for xmin!'
+        
+        if isinstance ( xmin , num_types ) : self.__x_min = float ( xmin )
+        else                               : self.__x_min = self.xvar.getMin() 
+        
+        assert isinstance ( scale , num_types ) , 'Invalid setting for scale!'
+        self.__scale = float ( scale ) 
+        
+        #
+        ## build the model
+        self.pdf   = Ostap.Models.KarlinStudden (
+            self.roo_name ( "ksp_"  ) ,
+            "Karlin-Studden polynom %s" % self.name , 
+            self.xvar     ,
+            self.phi_list ,
+            self.x_min    ,
+            self.scale    )
+        
+        ## save configuration 
+        self.config = {
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'power'    : self.power ,            
+            'the_phis' : self.phis  ,
+            'x_min'    : self.x_min ,
+            'scale'    : self.scale ,            
+            }
+                
+    @property
+    def power ( self ) :
+        """'power'-parameter (polynomial order) for Karlin-Studden function"""
+        return self.__power
+
+    @property
+    def x_min ( self ) :
+        """'xmin' - minimal x for Karlin-Studden polynomial"""
+        return self.__x_min
+
+    @property
+    def scale ( self ) :
+        """'scale' - scale for Karlin-Studden polynomial"""
+        return self.__scale 
+
+
+models.append ( KarlinStudden_pdf ) 
 
 
 # =============================================================================

@@ -924,7 +924,7 @@ Ostap.Math.Bernstein. __pow__      = _b_pow_
 #  Lists and tuples are converted on flight to :
 # - std::vector<double> 
 # - std::vector<std::complex<double> >
-def _new_init_ ( t ,  *args )  :
+def _p_new_init_ ( t ,  *args )  :
     """(Redefine standard constructor to allow usage of python lists&tuples)
     Lists and tuples are  converted on flight to :
     - std::vector<double> 
@@ -1065,14 +1065,14 @@ for  p in ( Ostap.Math.Bernstein     ,
     if not hasattr ( p , '_old_init_' ) :
         p._old_init_ = p.__init__
         ## Modifed constructor to allow python lists/tuples
-        def _p_new_init_ ( s ,  *args ) :
+        def _pp_new_init_ ( s ,  *args ) :
             """Modifed constructor to allow python lists/tuples
             """
-            _new_init_ ( s , *args )
+            _p_new_init_ ( s , *args )
             
-        _p_new_init_.__doc__ += '\n' +   _new_init_.__doc__ 
-        _p_new_init_.__doc__ += '\n' + p._old_init_.__doc__ 
-        p.__init__ = _p_new_init_ 
+        _pp_new_init_.__doc__ += '\n' + _p_new_init_.__doc__ 
+        _pp_new_init_.__doc__ += '\n' + p._old_init_.__doc__ 
+        p.__init__ = _pp_new_init_ 
 
 
 # =============================================================================

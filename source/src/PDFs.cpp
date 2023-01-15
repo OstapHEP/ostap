@@ -9004,6 +9004,235 @@ Double_t Ostap::Models::HILLdini::analyticalIntegral
 
 
 // ============================================================================
+// generic positive polinomial
+// ============================================================================
+Ostap::Models::KarlinShapley::KarlinShapley
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  const RooArgList&    phis      , 
+  const double         xmin      , 
+  const double         xmax      ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable"   , this , x ) 
+  , m_phis     ( "phi"     , "Coefficients" , this     )
+    //
+  , m_positive ( phis.getSize() , xmin , xmax ) 
+{
+  //
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
+                  "Ostap::Models::KarlinShapley" ) ;
+  Ostap::Assert ( ::size ( m_phis ) + 1 == m_positive.npars()  , 
+                  "#phis/#npars mismatch!"             ,
+                  "Ostap::Models::KarlinShapley" ) ;
+  //
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::KarlinShapley::KarlinShapley
+( const char*          name      , 
+  const char*          title     ,
+  RooRealVar&          x         ,
+  const RooArgList&    phis      )
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable"   , this , x ) 
+  , m_phis     ( "phi"     , "Coefficients" , this     )
+    //
+  , m_positive ( phis.getSize() , x.getMin() , x.getMax() ) 
+{
+  //
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
+                  "Ostap::Models::KarlinShapley" ) ;
+  Ostap::Assert ( ::size ( m_phis ) + 1 == m_positive.npars()  , 
+                  "#phis/#npars mismatch!"             ,
+                  "Ostap::Models::KarlinShapley" ) ;
+  Ostap::Assert ( x.hasMin() && x.hasMax() && 
+                  x.getMin() <  x.getMax()       , 
+                  "Range must be specified!"     , 
+                  "Ostap::Models::KarlinShapley" ) ;
+  //
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::KarlinShapley::KarlinShapley
+( const Ostap::Models::KarlinShapley&  right ,      
+  const char*                          name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x        ( "x"      , this , right.m_x     ) 
+  , m_phis     ( "phis"   , this , right.m_phis  ) 
+    //
+  , m_positive ( right.m_positive ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::KarlinShapley::~KarlinShapley (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::KarlinShapley*
+Ostap::Models::KarlinShapley::clone( const char* name ) const 
+{ return new Ostap::Models::KarlinShapley(*this,name) ; }
+// ============================================================================
+void Ostap::Models::KarlinShapley::setPars () const 
+{
+  ::set_pars ( m_phis , m_positive , 1 ) ;
+  m_positive.setA ( 1.0 ) ;
+}
+//
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::KarlinShapley::evaluate() const 
+{
+  setPars () ;
+  return m_positive ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::KarlinShapley::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::KarlinShapley::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+// generic positive polinomial
+// ============================================================================
+Ostap::Models::KarlinStudden::KarlinStudden
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  const RooArgList&    phis      , 
+  const double         xmin      , 
+  const double         scale     ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable"   , this , x ) 
+  , m_phis     ( "phi"     , "Coefficients" , this     )
+    //
+  , m_positive ( phis.getSize() , xmin , scale ) 
+{
+  //
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
+                  "Ostap::Models::KarlinStudden" ) ;
+  Ostap::Assert ( ::size ( m_phis ) + 1 == m_positive.npars()  , 
+                  "#phis/#npars mismatch!"             ,
+                  "Ostap::Models::KarlinStudden" ) ;
+  //
+  setPars () ;
+}
+// ============================================================================
+// generic positive polinomial
+// ============================================================================
+Ostap::Models::KarlinStudden::KarlinStudden
+( const char*          name      , 
+  const char*          title     ,
+  RooRealVar&          x         ,
+  const RooArgList&    phis      , 
+  const double         scale     ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"       , "Observable"   , this , x ) 
+  , m_phis     ( "phi"     , "Coefficients" , this     )
+    //
+  , m_positive ( phis.getSize() , x.getMin() , scale ) 
+{
+  //
+  ::copy_real   ( phis , m_phis , "Invalid parameter!" , 
+                  "Ostap::Models::KarlinStudden" ) ;
+  Ostap::Assert ( ::size ( m_phis ) + 1 == m_positive.npars()  , 
+                  "#phis/#npars mismatch!"             ,
+                  "Ostap::Models::KarlinStudden" ) ;
+  Ostap::Assert ( x.hasMin() , 
+                  "Min-range must be specified!" , 
+                  "Ostap::Models::KarlinStudden" ) ;
+  //
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::KarlinStudden::KarlinStudden
+( const Ostap::Models::KarlinStudden&  right ,      
+  const char*                          name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x        ( "x"      , this , right.m_x     ) 
+  , m_phis     ( "phis"   , this , right.m_phis  ) 
+    //
+  , m_positive ( right.m_positive ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::KarlinStudden::~KarlinStudden (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::KarlinStudden*
+Ostap::Models::KarlinStudden::clone( const char* name ) const 
+{ return new Ostap::Models::KarlinStudden(*this,name) ; }
+// ============================================================================
+void Ostap::Models::KarlinStudden::setPars () const 
+{
+  ::set_pars ( m_phis , m_positive , 1 ) ;
+  m_positive.setA ( 1.0 ) ;
+}
+//
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::KarlinStudden::evaluate() const 
+{
+  setPars () ;
+  return m_positive ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::KarlinStudden::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::KarlinStudden::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
 ClassImp(Ostap::Models::Shape1D            ) 
 ClassImp(Ostap::Models::Shape2D            ) 
 ClassImp(Ostap::Models::Shape3D            ) 
@@ -9102,6 +9331,8 @@ ClassImp(Ostap::Models::SkewGenT           )
 ClassImp(Ostap::Models::SkewGenError       )
 ClassImp(Ostap::Models::HORNSdini          )
 ClassImp(Ostap::Models::HILLdini           )
+ClassImp(Ostap::Models::KarlinShapley      )
+ClassImp(Ostap::Models::KarlinStudden      )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
