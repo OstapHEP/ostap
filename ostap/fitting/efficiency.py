@@ -18,12 +18,13 @@ __all__     = (
     'Efficiency3D', ## helper utility to get the efficiency (3D-case)
     )
 # =============================================================================
-from   ostap.core.core        import Ostap, roo_silent  
-from   ostap.fitting.funbasic import ( FUN1  , FUN2  , FUN3 , \
-                                       Fun1D , Fun2D , Fun3D , func_factory )  
-from   ostap.fitting.pdfbasic import ( PDF1 , Generic1D_pdf ,
-                                       PDF2 , Generic2D_pdf ,
-                                       PDF3 , Generic3D_pdf )
+from   ostap.core.core          import Ostap, roo_silent  
+from   ostap.fitting.funbasic   import ( FUN1  , FUN2  , FUN3  , 
+                                         Fun1D , Fun2D , Fun3D )  
+from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf ,
+                                         PDF2 , Generic2D_pdf ,
+                                         PDF3 , Generic3D_pdf )
+from   ostap.fitting.fithelpers import ConfigReducer 
 import ROOT
 # =============================================================================
 # logging 
@@ -37,7 +38,7 @@ logger.debug ( 'Utilities to get efficiency using RooFit machinery')
 ## @class Efficiency1D
 #  Helper class  to get get the efficiency using unbinned fit and ROOT.RooEfficiency class
 #  @attention this an internal class, not to be used directly!
-class Efficiency ( object ) :
+class Efficiency (ConfigReducer) :
     """ Helper class to get the efficiency using unbinned fit and ROOT.RooEfficiency class
     - attention : this an internal class, not to be used directly!
     """
@@ -50,6 +51,9 @@ class Efficiency ( object ) :
                     accept = 'accept' ,
                     scale  = None     ) :
 
+        ## 
+        ConfigReducer.__init__ ( self )
+        
         self.__name   = str(name)
         self.__cut    = cut
         self.__accept = str(accept) 
@@ -264,7 +268,6 @@ class Efficiency ( object ) :
                                     silent = silent ,
                                     args   = args   , **kwargs )
     
-
     # =========================================================================
     ## reduce Efficieny instance 
     def __reduce__ ( self ) :
