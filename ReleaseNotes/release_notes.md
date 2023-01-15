@@ -19,8 +19,7 @@
   1. add ``SimFit.sPlot` method (background-subtraction for simultaneous fits) & extend the test 
   1. slight update in `ds_var_minmax` : try to deduce minmax when result is empty....
   1. add proper pickling for `ROOT.RooLinearVar`
-  1. introeuce `ConfigReducer` base class for better pickling/deserialisation 
-
+  1. introduce `ConfigReducer` base class for better pickling/deserialisation 
 
 
 ## Backward incompatible:  
