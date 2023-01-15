@@ -1,4 +1,3 @@
-
 ## New features:
 
   1. add `ROOT.TTree.fproject` method for projection of the trees using ~DataFrame` (the same as `frame_project`)
@@ -21,7 +20,6 @@
   1. slight update in `ds_var_minmax` : try to deduce minmax when result is empty....
   1. add proper pickling for `ROOT.RooLinearVar`
   1. introduce `ConfigReducer` base class for better pickling/deserialisation 
-
 
 ## Backward incompatible:  
 
