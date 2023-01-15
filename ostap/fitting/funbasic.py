@@ -38,8 +38,11 @@ from   ostap.math.base               import iszero , isequal
 from   ostap.fitting.utils           import make_name 
 from   ostap.fitting.variables       import SETVAR
 from   ostap.fitting.roofit          import PDF_fun 
-from   ostap.fitting.fithelpers      import ( VarMaker , FitHelper ,
-                                              XVar, YVar, ZVar, NameDuplicates ) 
+## from   ostap.fitting.fithelpers      import ( VarMaker  ,
+##                                               FitHelper ,
+##                                              XVar, YVar, ZVar, NameDuplicates ) 
+from   ostap.fitting.fithelpers      import ( FitHelper , ConfigReducer , 
+                                              XVar      , YVar          ,  ZVar ) 
 from   ostap.utils.cidict            import cidict
 from   ostap.plotting.fit_draw       import key_transform, draw_options  
 import ostap.fitting.variables
@@ -56,15 +59,15 @@ constant_types = num_types + ( ROOT.RooConstVar , )
 ## is valuer equal to 1?
 isone = lambda x : isequal ( float ( x ) , 1 )
 # =============================================================================
-## helper factory function
-def func_factory ( klass , config ) :
-    """Helper factory function, used for unpickling"""
-    with NameDuplicates ( True ) : 
-        return klass ( **config ) 
+## ## helper factory function
+## def func_factory ( klass , config ) :
+##     """Helper factory function, used for unpickling"""
+##     with NameDuplicates ( True ) : 
+##         return klass ( **config ) 
 # =============================================================================
 ## @class AFUN1
 #  Helper base class for implementation of various (Roo)Function-wrappers
-class AFUN1(XVar,FitHelper) : ## VarMaker) :
+class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     """Helper base class for implementation of various (Roo)Function-wrappers
     """
         
@@ -78,7 +81,7 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         self.__vars      = ROOT.RooArgSet  ()
         self.__variables = [] 
 
-        self.__config       = {}
+        ## self.__config       = {}
         self.__fun          = None
 
         ## attention here, allow to define the fun-object from the arguments  
@@ -115,17 +118,17 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
                         'tricks' : self.tricks ,
                         'fun'    : self.fun    }
         
-    ## pickling via reduce 
-    def __reduce__ ( self ) :
-        if py2 : return func_factory , ( type ( self ) , self.config, )
-        else   : return type ( self ).factory , ( self.config, )
+    ## ## pickling via reduce 
+    ## def __reduce__ ( self ) :
+    ##     if py2 : return func_factory , ( type ( self ) , self.config, )
+    ##     else   : return type ( self ).factory , ( self.config, )
         
-    ## factory method 
-    @classmethod
-    def factory ( klass , config ) :
-        """Factory method, used for unpickling"""
-        with NameDuplicates ( True ) :
-            return klass ( **config ) 
+    ## ## factory method 
+    ## @classmethod
+    ## def factory ( klass , config ) :
+    ##     """Factory method, used for unpickling"""
+    ##     with NameDuplicates ( True ) :
+    ##         return klass ( **config ) 
         
     ## conversion to string 
     def __str__ (  self ) :
@@ -163,17 +166,17 @@ class AFUN1(XVar,FitHelper) : ## VarMaker) :
         """'fun_name' : the name of the underlying RooAbsReal"""
         return  self.fun.GetName() if self.fun else ''
 
-    @property
-    def config ( self ) :
-        """The full configuration info for the PDF"""
-        conf = {}
-        conf.update ( self.__config )
-        return conf
-    @config.setter
-    def config ( self , value ) :
-        conf = {}
-        conf.update ( value )
-        self.__config = conf
+    ## @property
+    ## def config ( self ) :
+    ##     """The full configuration info for the PDF"""
+    ##     conf = {}
+    ##     conf.update ( self.__config )
+    ##     return conf
+    ## @config.setter
+    ## def config ( self , value ) :
+    ##     conf = {}
+    ##     conf.update ( value )
+    ##     self.__config = conf
 
     @property    
     def tricks ( self ) :

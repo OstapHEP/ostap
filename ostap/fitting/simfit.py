@@ -24,7 +24,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.core          import std , Ostap , dsID , items_loop
 from   ostap.utils.utils        import chunked 
-from   ostap.fitting.fithelpers import VarMaker
+from   ostap.fitting.fithelpers import VarMaker, ConfigReducer
 from   ostap.fitting.pdfbasic   import ( PDF1 , Generic1D_pdf , 
                                          PDF2 , Generic2D_pdf , 
                                          PDF3 , Generic3D_pdf )
@@ -586,8 +586,8 @@ for _a in (
 #  - <code>minuit</code> 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-11-23
-class SimFit (VarMaker) :
-    """Helper pdf-like class to simplify the creation and usage of simultaneous PDF
+class SimFit (VarMaker,ConfigReducer) :
+    """Helper PDF-like class to simplify the creation and usage of simultaneous PDF
     
     >>> sample = ROOT.RooCategory( 'sample', 'fitting sample' , 'A' , 'B' )
     >>> pdfA   = ... ## pdf for the sample 'A'
@@ -610,7 +610,7 @@ class SimFit (VarMaker) :
                    categories        ,
                    name       = None , 
                    title      = ''   ) :
-        """Helper pdf-like class to simplify the creation and usage of simultaneous PDF
+        """Helper PDF-like class to simplify the creation and usage of simultaneous PDF
         
         >>> sample = ROOT.RooCategory( 'sample', 'fitting sample' , 'A' , 'B' )
         >>> pdfA   = ... ## pdf for the sample 'A'
@@ -618,6 +618,9 @@ class SimFit (VarMaker) :
         >>> simfit = SimFit (  sample , { 'A' : pdfA , 'B' : pdfB } )
         """
 
+        ## initialize the base class 
+        ConfigReducer.__init__ ( self )
+        
         self.__categories   = {}
         
         if isinstance ( sample , ( tuple , list ) ) :
@@ -663,6 +666,13 @@ class SimFit (VarMaker) :
             self.roo_name ( 'simfit_' ) ,
             title if title else "Simultaneous %s" % self.name , 
             self.sample )
+        
+        ## print ( 'CONFIG/BEFORE:', sim_pdf.config )
+        ## cnf = sim_pdf.config
+        ## del cnf['pdf']
+        ## sim_pdf.config = cnf 
+        ## print ( 'CONFIG/AFTER:', sim_pdf.config )
+        
         
         keys = self.categories.keys()
         for key in sorted ( keys ) :

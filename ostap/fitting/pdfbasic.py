@@ -1628,7 +1628,7 @@ class APDF1 ( object ) :
                                           self.pdf           ,
                                           self.alist2        )
         
-            self.__splots += [ splot ]
+            ## self.__splots += [ splot ]
 
         if not silent :
             vars = set ( ( v.name for v in dataset.varset() ) ) - vars

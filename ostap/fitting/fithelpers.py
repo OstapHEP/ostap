@@ -14,7 +14,8 @@ __date__    = "2018-08-14"
 __all__     = (
     ##
     'VarMaker'          , ## Helper bade class that allow storage of newly created RooFit objects
-    'FitHelper'         , ## Helper base class for fit-relate objects 
+    'FitHelper'         , ## Helper base class for fit-relate objects
+    'ConfigReducer'     , ## Helper base class for pickliing/unpickling via  reduce
     ## 
     'XVar'              , ## helper MIXIN to deal with x-variable
     'YVar'              , ## helper MIXIN to deal with y-variable
@@ -86,6 +87,50 @@ class NameDuplicates(object) :
         return self
     def __exit__   ( self , *_     ) :
         self.allow ( self.__backup )
+# =============================================================================
+## helper factory function
+def config_factory ( klass , config ) :
+    """Helper factory function, used for unpickling"""
+    with NameDuplicates ( True ) : 
+        return klass ( **config ) 
+# =============================================================================
+## @class ConfigReducer
+#  Helper base class for pickling/unpickling FUNs/PDFs
+class ConfigReducer(object) :
+    """Helper base class for pickling/unpickling FUNs/PDFs
+    """
+    def __init__ ( self , **kwargs ) :
+        self.__config = {}
+        self.__config.update ( kwargs )
+        
+    ## pickling via reduce 
+    def __reduce__ ( self ) :
+        if _py2 : return config_factory , ( type ( self ) , self.config, )
+        else    : return type ( self ).factory , ( self.config, )
+
+    ## factory method 
+    @classmethod
+    def factory ( klass , config ) :
+        """Factory method, used for unpickling"""
+        with NameDuplicates ( True ) :
+            return klass ( **config )
+        
+    @property
+    def config ( self ) :
+        """The full configuration info for the FUN/PDF"""
+        conf = {}
+        conf.update ( self.__config )
+        return conf
+    @config.setter
+    def config ( self , value ) :
+        conf = {}
+        conf.update ( value )
+        self.__config = conf
+
+        
+        
+
+
 # =============================================================================
 ## @class VarMaker
 #  Helper class that allows implement several purely  technical methods:

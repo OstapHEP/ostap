@@ -504,6 +504,7 @@ def _rsim_factory_ ( klass , args , catlst ) :
     """
     pdf = klass ( *args )
     for l , p in catlst : pdf.addPdf ( p , l )
+    pdf.__args   = args 
     pdf.__catlst = catlst 
     return pdf
 
@@ -516,7 +517,7 @@ def _rsim_reduce_ ( pdf ) :
     """
     cat    = pdf.indexCat()
     labels = cat.labels()
-    catlst = tuple ( ( l , pdf.getPdf(l) ) for l in labels )
+    catlst = tuple ( ( l , pdf.getPdf ( l ) ) for l in labels )
     args   = pdf.name , pdf.title , cat 
     return _rsim_factory_ , ( type ( pdf ) , args , catlst ) 
 

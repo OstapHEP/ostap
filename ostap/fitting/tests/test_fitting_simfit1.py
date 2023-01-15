@@ -118,7 +118,7 @@ for i in range (NB2 ) :
 sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
 
 models  = set()
-results = [] 
+results = []
 # =============================================================================
 def test_simfit1 () :
 ## if 1 < 2 :
@@ -191,10 +191,10 @@ def test_simfit1 () :
     models.add ( model1        )
     models.add ( model2        )
     models.add ( model_sim     )
-    models.add ( model_sim.pdf )
+    ## models.add ( model_sim.pdf )
     
-    for k in model_sim.categories : models.add ( model_sim.categories[k] )
-    for k in model_sim.drawpdfs   : models.add ( model_sim.drawpdfs  [k] )
+    ## for k in model_sim.categories : models.add ( model_sim.categories[k] )
+    ## for k in model_sim.drawpdfs   : models.add ( model_sim.drawpdfs  [k] )
         
     results.append ( r1 ) 
     results.append ( r2 ) 
@@ -215,7 +215,6 @@ def test_simfit1 () :
 
     with use_canvas ( 'test_simfit1: sPlot/xyz for B (background)' , wait = 1 ) :
         dataset.draw ( 'test_xyz' , '(sample==1)*B_M2_sw' )
-        
 
 # =============================================================================
 ## check that everything is serializable
@@ -233,8 +232,8 @@ def test_db() :
         db['dataset2' ] = dataset2
         db['sample'   ] = sample 
         for m in models :
-            db['model:'     + m.name ] = m
-            db['roo_tot:%s' % m.name ] = m.pdf
+            logger.info ( 'save %s '% m )  
+            db [ 'model:'     + m.name ] = m
         db['models'  ] = models
         for r in results : db['result' + r.name ] = r 
         db['results' ] = results
@@ -243,9 +242,8 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-
     with timing( "simfit-1" ,   logger ) :  
-        test_simfit1 ()
+       test_simfit1 ()
         
     ## check finally that everything is serializeable:
     with timing ('Save to DB:'     , logger ) :
