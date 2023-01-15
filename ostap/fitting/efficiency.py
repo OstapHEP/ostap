@@ -267,13 +267,8 @@ class Efficiency (ConfigReducer) :
                                     nbins  = nbins  ,
                                     silent = silent ,
                                     args   = args   , **kwargs )
-    
-    # =========================================================================
-    ## reduce Efficieny instance 
-    def __reduce__ ( self ) :
-        """Reduce Efficiency instance"""
-        return func_factory , ( type ( self ) , self.config ) 
 
+    
 # =============================================================================
 ## @class Efficiency1D
 #  Get the efficiency using unbinned fit and ROOT.RooEfficiency class
