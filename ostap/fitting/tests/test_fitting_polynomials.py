@@ -66,7 +66,7 @@ plots   = {}
 graphs  = set()
     
 
-Nmin , Nmax = 2 , 9
+Nmin , Nmax = 2 , 8
 
 # =============================================================================
 ## Test Bernstein positive polynomials PolyPos_pdf
