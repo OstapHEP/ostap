@@ -583,40 +583,73 @@ def _reff_reduce_ ( pdf ) :
 ROOT.RooEfficiency.__reduce__  = _reff_reduce_ 
 
 # ================================================================================
-## get the list of coefficients from <code>RooPolyVar</code>
+## get the list of coefficients from <code>RooPolyVar</code> & <code>RooPolynomial</code> & 
 #  @see RooPolyVar
+#  @see RooPolynomial
 def _rpv_coefficients_ ( var ) :
-    """Get the list of coefficients from `ROOT.RooPolyVar`
-    -see `ROOT.RooPolyVar`
+    """Get the list of coefficients from `ROOT.RooPolyVar` & `ROOT.RooPolynomial` &
+    - see `ROOT.RooPolyVar`
+    - see `ROOT.RooPolynomial`
     """
     return Ostap.MoreRooFit.coefficients ( var ) 
+# ================================================================================
+## get the variable from <code>RooPolyVar</code> & <code>RooPolynomial</code> & 
+#  @see RooPolyVar
+#  @see RooPolynomial
+def _rpv_variable_ ( var ) :
+    """Get the variable from `ROOT.RooPolyVar` & `ROOT.RooPolynomial` &
+    - see `ROOT.RooPolyVar`
+    - see `ROOT.RooPolynomial`
+    """
+    return Ostap.MoreRooFit.get_variable ( var ) 
+# ================================================================================
+## get the lowest order from <code>RooPolyVar</code> & <code>RooPolynomial</code> & 
+#  @see RooPolyVar
+#  @see RooPolynomial
+def _rpv_lowest_order_ ( var ) :
+    """Get the lowest order from `ROOT.RooPolyVar` & `ROOT.RooPolynomial` &
+    - see `ROOT.RooPolyVar`
+    - see `ROOT.RooPolynomial`
+    """
+    return Ostap.MoreRooFit.lowest_order( var ) 
+
+
 
 ROOT.RooPolyVar   . coefficients = _rpv_coefficients_
 ROOT.RooPolynomial. coefficients = _rpv_coefficients_
+ROOT.RooPolyVar   . get_variable = _rpv_variable_
+ROOT.RooPolynomial. get_variable = _rpv_variable_
+ROOT.RooPolyVar   . lowest_order = _rpv_lowest_order_
+ROOT.RooPolynomial. lowest_order = _rpv_lowest_order_
+
 
 _new_methods_ += [
-    ROOT.RooPolyVar   . coefficients  ,
-    ROOT.RooPolynomial. coefficients  ,
+    ROOT.RooPolyVar   . coefficients ,
+    ROOT.RooPolynomial. coefficients ,
+    ROOT.RooPolyVar   . get_variable ,
+    ROOT.RooPolynomial. get_variable ,
+    ROOT.RooPolyVar   . lowest_order ,
+    ROOT.RooPolynomial. lowest_order ,
     ]
 
-
 # =============================================================================
-## reduce RooPolyVar
+## reduce RooPolyVar & RooPolynomial
 #  @see RooPolyVar
+#  @see RooPolynomial
 def _rpv_reduce_ ( var ) :
-    """Reduce `ROOT.RooPolyVar`
+    """Reduce `ROOT.RooPolyVar` & `ROOT.RooPolynomial`
     - see `ROOT.RooPolyVar`
+    - see `ROOT.RooPolynomial`
     """
-    return root_store_factory , ( type ( pdf )        ,
-                                  pdf.name            ,
-                                  pdf.title           ,
-                                  pdf.coefficients () )
-
+    return root_store_factory , ( type ( var )        ,
+                                  var.name            ,
+                                  var.title           ,
+                                  var.get_variable () , 
+                                  var.coefficients () ,
+                                  var.lowest_order () )
+                                  
 ROOT.RooPolyVar   . __reduce__  = _rpv_reduce_
 ROOT.RooPolynomial. __reduce__  = _rpv_reduce_
-
-
-
 
 
 # ================================================================================

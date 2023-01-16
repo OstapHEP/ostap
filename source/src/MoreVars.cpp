@@ -209,7 +209,9 @@ namespace
     // ========================================================================
   public:
     // ========================================================================
-    const RooArgList& coefficients () const { return _coefList ; }
+    const RooArgList& coefficients () const { return _coefList    ; }
+    const RooAbsReal& get_variable () const { return _x .arg()    ; }
+    Int_t             lowest_order () const { return _lowestOrder ; }
     // ========================================================================
   } ;    
   // ==========================================================================
@@ -225,7 +227,9 @@ namespace
     // ========================================================================
   public:
     // ========================================================================
-    const RooArgList& coefficients () const { return _coefList ; }
+    const RooArgList& coefficients () const { return _coefList    ; }
+    const RooAbsReal& get_variable () const { return _x .arg()    ; }
+    Int_t             lowest_order () const { return _lowestOrder ; }
     // ========================================================================
   } ;    
   // ==========================================================================
@@ -927,6 +931,50 @@ RooArgList Ostap::MoreRooFit::coefficients
 {
   std::unique_ptr<::FakePolynomial> fake { new ::FakePolynomial( var ) } ;
   return fake->coefficients () ;  
+}
+// ============================================================================
+/*  get the variable from <code>RooPolynomial</code>
+ *  @see RooPolynomial
+ */
+// ============================================================================
+const RooAbsReal& Ostap::MoreRooFit::get_variable 
+( const RooPolynomial& var ) 
+{
+  std::unique_ptr<::FakePolynomial> fake { new ::FakePolynomial ( var ) } ;
+  return fake->get_variable () ;  
+}
+// ============================================================================
+/*  get the variable from <code>RooPolyVar</code>
+ *  @see RooPolyVar
+ */
+// ============================================================================
+const RooAbsReal& Ostap::MoreRooFit::get_variable 
+( const RooPolyVar& var ) 
+{
+  std::unique_ptr<::FakePolyVar> fake { new ::FakePolyVar ( var ) } ;
+  return fake->get_variable () ;  
+}
+// ============================================================================
+/*  get the lowest order  <code>RooPolynomial</code>
+ *  @see RooPolynomial
+ */
+// ============================================================================
+Int_t Ostap::MoreRooFit::lowest_order 
+( const RooPolynomial& var ) 
+{
+  std::unique_ptr<::FakePolynomial> fake { new ::FakePolynomial( var ) } ;
+  return fake->lowest_order () ;  
+}
+// ============================================================================
+/*  get the lowest order  <code>RooPolyVar</code>
+ *  @see RooPolyVar
+ */
+// ============================================================================
+Int_t Ostap::MoreRooFit::lowest_order 
+( const RooPolyVar& var ) 
+{
+  std::unique_ptr<::FakePolyVar> fake { new ::FakePolyVar( var ) } ;
+  return fake->lowest_order () ;  
 }
 // ============================================================================
 /*  get the observables from <code>RooMultiVarGaussian</code>

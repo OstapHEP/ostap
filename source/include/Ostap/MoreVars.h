@@ -563,6 +563,30 @@ namespace Ostap
     RooArgList coefficients 
     ( const RooPolynomial&  var    ) ;
     // ========================================================================
+    /** get the variable from <code>RooPolynomial</code>
+     *  @see RooPolynomial
+     */
+    const RooAbsReal& get_variable 
+    ( const RooPolynomial& var ) ;
+    // ========================================================================
+    /** get the variable from <code>RooPolyVar</code>
+     *  @see RooPolyVar
+     */
+    const RooAbsReal& get_variable 
+    ( const RooPolyVar& var ) ;
+    // ========================================================================
+    /** get the lowest order  <code>RooPolynomial</code>
+     *  @see RooPolynomial
+     */
+    Int_t lowest_order 
+    ( const RooPolynomial& var ) ;
+    // ========================================================================
+    /** get the lowest order  <code>RooPolyVar</code>
+     *  @see RooPolyVar
+     */
+    Int_t lowest_order 
+    ( const RooPolyVar& var ) ;
+    // ========================================================================
     /** get the observables from <code>RooMultiVarGaussian</code>
      *  @see RooMultiVarGaussian
      */

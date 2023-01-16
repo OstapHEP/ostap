@@ -187,6 +187,13 @@ namespace Ostap
       ( const double xmin , 
         const double xmax ) const ;
       // ======================================================================
+    public: // get n-spheres 
+      // ======================================================================
+      /// 1st n-sphere 
+      const Ostap::Math::NSphere& sphere1 () const { return m_sphere1 ; }
+      /// 2nd n-sphere 
+      const Ostap::Math::NSphere& sphere2 () const { return m_sphere2 ; }
+      // ======================================================================
     public:
       // ======================================================================
       /// get the unique tag 
@@ -379,8 +386,10 @@ namespace Ostap
       // ======================================================================
     public: 
       // ======================================================================
-      /// get Karlin-Studden t-roots 
+      /// get Karlin-Studden t-roots  [0,1)
       const std::vector<double>& troots () const { return m_troots ; }
+      /// get Karlin-Studden z-roots  [0,+inf)
+      const std::vector<double>& zroots () const { return m_zroots ; }
       // ======================================================================
     public:  // numerical intergation
       // ======================================================================
@@ -390,6 +399,13 @@ namespace Ostap
       double integral 
       ( const double xmin , 
         const double xmax ) const ;
+      // ======================================================================
+    public: // get n-spheres 
+      // ======================================================================
+      /// 1st n-sphere 
+      const Ostap::Math::NSphere& sphere1 () const { return m_sphere1 ; }
+      /// 2nd n-sphere 
+      const Ostap::Math::NSphere& sphere2 () const { return m_sphere2 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -421,14 +437,16 @@ namespace Ostap
       Ostap::Math::NSphere    m_sphere1   {} ; // n-sphere
       /// 2nd n-sphere 
       Ostap::Math::NSphere    m_sphere2   {} ; // n-sphere
-      /// Karlin-Shapley t-roots
-      std::vector<double>     m_troots    {} ; // Karlin-Shapley t-roots 
+      /// Karlin-Studden t-roots
+      std::vector<double>     m_troots    {} ; // Karlin-Studden t-roots 
+      /// Karlin-Studden z-roots: t/(1-t)
+      std::vector<double>     m_zroots    {} ; // Karlin-Studden z-roots 
       /// integration workspace for numerical integration  
       Ostap::Math::WorkSpace  m_workspace {} ;
       // ======================================================================      
     } ;
     // ========================================================================
-    /// swap two Karlin-Studdenpolynomials 
+    /// swap two Karlin-Studden polynomials 
     inline void swap 
     ( KarlinStudden& a , 
       KarlinStudden& b ) { a.swap ( b ) ; }

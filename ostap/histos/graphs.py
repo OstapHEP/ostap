@@ -765,7 +765,7 @@ def _gr_setitem_ ( graph , ipoint , point )  :
     x = float ( point [ 0 ] )
     y = float ( point [ 1 ] )
     
-    graph.SetPoint      ( ipoint , x , y )
+    graph.SetPoint ( ipoint , x , y )
 
 
 # ==============================================================================
@@ -2583,7 +2583,7 @@ def _gr_append_ ( graph , *point ) :
 #  graph.pop (   ) ## pop th elast point 
 #  @endcode
 def _gr_pop_  ( graph , i = None ) :
-    """Pop the point fro mthe graph
+    """Pop the point fromt he graph
     >>> graph = ...
     >>> graph.pop ( 3 ) ## pop the point #3
     >>> graph.pop (   ) ## pop th elast point 

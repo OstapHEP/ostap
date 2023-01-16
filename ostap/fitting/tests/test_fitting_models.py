@@ -37,8 +37,6 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 
-print ( 'HERE/1' )
-
 ## make simple test mass 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 2.9 , 3.3 )
 

@@ -2922,7 +2922,7 @@ class ParamsPoly(object) :
     - it requres the method `make_var`
     - it requres the method `component_setter`
     """
-    def __init__ ( self , npars = 1 , pars = None ) :
+    def __init__ ( self , npars = 1 , pars = None , limits = ( 0 , -1.e+6 , 1.e+6 ) ) :
         
         from ostap.math.base import isint as _isint 
         assert pars or ( ( isinstance ( npars , integer_types ) or _isint ( npars ) ) and 0 <= npars ) ,\
@@ -2931,30 +2931,31 @@ class ParamsPoly(object) :
         npars = int ( npars )
 
         self.__pars     = [] 
-        limits = 0 , -1.e+6 , 1.e+6 
 
+        if not limits : limits = 0 , -1.e+6 , 1.e+6
+            
         if isinstance ( pars , ParamsPoly      ) :
             
             self.__pars = [ p for p in pars.pars ]
-            npars = len ( self.__pars ) 
+            npars       = len ( self.__pars ) 
             
         else : 
-            
+
             newpars     = make_iterable ( pars , size = npars )
             self.__pars = [ self.make_var ( p ,
                                             'par%d_%s'            % ( i , self.name ) ,
                                             'parameter %d for %s' % ( i , self.name ) ,
                                             False , *limits ) for ( i , p ) in enumerate ( newpars ) ]
 
-            
         self.__pars     = tuple ( self.__pars ) 
         self.__pars_lst = ROOT.RooArgList()
         for p in self.pars : self.__pars_lst.add ( p )
         
         self.config = {
-            'name'  : self.name ,
-            'xvar'  : self.xvar ,
-            'pars'  : self.pars ,
+            'name'   : self.name ,
+            'xvar'   : self.xvar ,
+            'pars'   : self.pars ,
+            'limits' : limits 
             }
         
     ## release parameter

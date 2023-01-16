@@ -11,6 +11,7 @@
 #include "Ostap/Hash.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/Positive.h"
+#include "Ostap/Lomont.h"
 // ============================================================================
 // lcoal
 // ============================================================================
@@ -187,10 +188,10 @@ double Ostap::Math::KarlinShapley::evaluate ( const double x ) const
   // ==========================================================================
   // calculate beta-polynomials 
   // ===========================================================================
-  if ( 4 <= NT && !s_zero ( beta ) ) 
+  if ( 3 <= NT && !s_zero ( beta ) ) 
   {
     long double bp = 1.0L ;
-    for ( unsigned short k = even ? 2 : 1 ; k < NT ; k +=2 ) 
+    for ( unsigned short k = even ? 2 : 1 ; k + 1 < NT ; k +=2 ) 
     { bp *= ( tt - m_troots [ k ] ) ; }
     bp = bp * bp ;
     if ( even ) { bp *= ( tt - m_troots.front () ) * ( m_troots.back() - tt ) ; }
@@ -230,6 +231,9 @@ void Ostap::Math::KarlinShapley::swap
 // ============================================================================
 void Ostap::Math::KarlinShapley::updateRoots() 
 {
+  //
+  if ( m_troots.empty() ) { return ; }
+  //
   m_troots.front () = 0 ;
   m_troots.back  () = 0 ;
   //
@@ -237,9 +241,10 @@ void Ostap::Math::KarlinShapley::updateRoots()
   for ( unsigned short k  = 0 ; k < np ; ++k ) 
   { m_troots [ k + 1 ] = m_sphere2.x2 ( k ) ; }
   //
-  std::partial_sum ( m_troots.begin() , m_troots.end() , m_troots.begin() ) ;
+  std::partial_sum ( m_troots.begin ()     , m_troots.end () , m_troots.begin() ) ;
   //
   m_troots.back  () = 1 ;
+  //
 }
 // ============================================================================
 /*  get (numerical) integral 
@@ -297,6 +302,7 @@ Ostap::Math::KarlinStudden::KarlinStudden
   , m_sphere1   ( 0 == N ? 0 : 1     )  
   , m_sphere2   ( 2 <= N ? N - 1 : 0 ) 
   , m_troots    ( N , 0.0 ) 
+  , m_zroots    ( N , 0.0 ) 
   , m_workspace () 
 {
   //
@@ -320,6 +326,7 @@ Ostap::Math::KarlinStudden::KarlinStudden
   , m_sphere2   ( pars.begin() + ( pars.size() < 2 ? pars.size() : 2 ) , 
                   pars.end  () )
   , m_troots    ( pars.size() < 2 ? 1 : pars.size() , 0.0 )
+  , m_zroots    ( pars.size() < 2 ? 1 : pars.size() , 0.0 )
   , m_workspace () 
 {
   updateRoots () ;
@@ -346,6 +353,7 @@ Ostap::Math::KarlinStudden::KarlinStudden
   , m_sphere1   ( phases1 )   
   , m_sphere2   ( phases2 ) 
   , m_troots    ( phases2.size() + 1 , 0.0 ) 
+  , m_zroots    ( phases2.size() + 1 , 0.0 ) 
   , m_workspace () 
 {
   static const std::string s_M3 { "1st sphere cannot be empty for non-empty 2nd!"} ;
@@ -373,14 +381,6 @@ Ostap::Math::KarlinStudden::KarlinStudden
   const double               scale   ) 
   : KarlinStudden ( A , {{ phi }} , phases2 , xmin , scale )
 {}
-
-    
-
-
-
-
-
-
 // ============================================================================
 // set parameter alpha 
 // ============================================================================
@@ -411,8 +411,8 @@ double Ostap::Math::KarlinStudden::evaluate ( const double x ) const
   // 1st degree polynomial 
   if ( 0 == m_sphere2.npars() ) { return alpha * tt + beta ; } // RETURN 
   //
-  // number of t-roots 
-  const std::size_t NT = m_troots.size() ;
+  // number of z-roots 
+  const std::size_t NT = m_zroots.size() ;
   //
   // even degree ? (odd #troots) 
   const bool        even = ( NT % 2 ) ;
@@ -424,9 +424,8 @@ double Ostap::Math::KarlinStudden::evaluate ( const double x ) const
   if ( !s_zero ( alpha ) ) 
   {
     long double ap = 1.0L ;
-    ap = 1.0L;
     for ( unsigned short k = even ? 1 : 2 ; k < NT ; k += 2 ) 
-    { ap *= ( tt - m_troots [ k ] ) ; }
+    { ap *= ( tt - m_zroots [ k ] ) ; }
     ap = ap * ap ;
     if ( odd ) { ap *= tt ; }
     result += alpha * ap ;
@@ -438,7 +437,7 @@ double Ostap::Math::KarlinStudden::evaluate ( const double x ) const
   {
     long double bp = 1.0L ;
     for ( unsigned short k = even ? 2 : 1 ; k < NT ; k +=2 ) 
-    { bp *= ( tt - m_troots [ k ] ) ; }
+    { bp *= ( tt - m_zroots [ k ] ) ; }
     bp = bp * bp ;
     if ( even ) { bp *= tt ; }
     result += beta * bp ;  
@@ -469,6 +468,7 @@ void Ostap::Math::KarlinStudden::swap
   Ostap::Math::swap ( m_sphere1   , right.m_sphere1   ) ;
   Ostap::Math::swap ( m_sphere2   , right.m_sphere2   ) ;
   std::swap         ( m_troots    , right.m_troots    ) ;
+  std::swap         ( m_zroots    , right.m_zroots    ) ;
   Ostap::Math::swap ( m_workspace , right.m_workspace ) ;
 }
 // ============================================================================
@@ -479,23 +479,32 @@ void Ostap::Math::KarlinStudden::updateRoots()
   if ( m_troots.empty() ) { return ; }
   //
   m_troots.front () = 0 ;
+  m_zroots.front () = 0 ;
   //
   const unsigned short np = m_sphere2.npars () ;
   for ( unsigned short k  = 0 ; k < np ; ++k ) 
   { m_troots [ k + 1 ] = m_sphere2.x2 ( k ) ; }
   //
-  std::partial_sum ( m_troots.begin() , m_troots.end() , m_troots.begin() ) ;
+  std::reverse     ( m_troots.begin () + 1 , m_troots.end () ) ;
+  std::partial_sum ( m_troots.begin ()     , m_troots.end () , m_troots.begin() ) ;
+  //
+  const long double r_small { Ostap::Math::next_float ( 1.0f , -2 )  } ;
   std::transform   ( m_troots.begin () + 1 , 
                      m_troots.end   () , 
-                     m_troots.begin () + 1 , 
-                     []( const long double r ) -> double 
-                     { return r / ( 1.0L - r ) ; } ) ;
+                     m_zroots.begin () + 1 , 
+                     [r_small]( const long double r ) -> double 
+                     {
+                       const long double rr = std::min ( r , r_small ) ;
+                       return rr / ( 1.0L - rr ) ; 
+                     } ) ;
 }
 // ============================================================================
 /*  get (numerical) integral 
  * \f$ f = \int^{x_{max}}_{x_{min}} P(x) dx \f$ 
  */
 // ============================================================================
+#include <iostream> 
+#include "Ostap/ToStream.h" 
 double Ostap::Math::KarlinStudden::integral 
 ( const double xmin , 
   const double xmax ) const 
@@ -521,6 +530,13 @@ double Ostap::Math::KarlinStudden::integral
       m_workspace.size()  ,           // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
+  //
+  if ( ierror ) 
+  {
+    std::cerr << " error:" << ierror << " troots: " ;
+    Ostap::Utils::toStream ( m_troots , std::cerr ) ;
+    std::cerr << std::endl ;
+  }
   //
   return result ;
 }

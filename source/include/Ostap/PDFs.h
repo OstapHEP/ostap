@@ -8479,9 +8479,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::KarlinShapley& function      () const { return m_positive ; }
-      const Ostap::Math::KarlinShapley& positive      () const { return m_positive ; }
-      const Ostap::Math::KarlinShapley& karlinshapley () const { return m_positive ; }
+      const Ostap::Math::KarlinShapley& function       () const { return m_positive ; }
+      const Ostap::Math::KarlinShapley& positive       () const { return m_positive ; }
+      const Ostap::Math::KarlinShapley& karlin_shapley () const { return m_positive ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8501,7 +8501,6 @@ namespace Ostap
       mutable Ostap::Math::KarlinShapley  m_positive {} ;  // the function
       // ======================================================================
     } ;
-    
     // ========================================================================
     /** @class KarlinStudden
      *  Positive polinomial on the interval
@@ -8573,9 +8572,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::KarlinStudden& function      () const { return m_positive ; }
-      const Ostap::Math::KarlinStudden& positive      () const { return m_positive ; }
-      const Ostap::Math::KarlinStudden& karlinstudden () const { return m_positive ; }
+      const Ostap::Math::KarlinStudden& function       () const { return m_positive ; }
+      const Ostap::Math::KarlinStudden& positive       () const { return m_positive ; }
+      const Ostap::Math::KarlinStudden& karlin_studden () const { return m_positive ; }
       // ======================================================================
     public:
       // ======================================================================

@@ -57,7 +57,8 @@ from   ostap.core.ostap_types   import integer_types , num_types
 from   ostap.math.base          import iszero
 from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf 
 from   ostap.fitting.fit1d      import Flat1D,  Sum1D
-from   ostap.fitting.fithelpers import Phases, ParamsPoly 
+from   ostap.fitting.fithelpers import Phases, ParamsPoly
+from   ostap.utils.utils        import vrange 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger      import getLogger
@@ -256,15 +257,14 @@ class KarlinShapley_pdf(PolyBase) :
         #
         self.__power = len ( self.phis ) 
         #
-
         ## xmin/xmax
         self.__x_min , self.__x_max = self.xmnmx ( xmin , xmax )
         #
 
         ## build the model
         self.pdf   = Ostap.Models.KarlinShapley (
-            self.roo_name ( "ksp_"  ) ,
-            "Karlin-Shapley polynom %s" % self.name , 
+            self.roo_name ( "ksh_"  ) ,
+            "Karlin-Shapley polynomial %s" % self.name , 
             self.xvar            ,
             self.phi_list        ,
             self.x_min , self.x_max )
@@ -294,7 +294,22 @@ class KarlinShapley_pdf(PolyBase) :
         """'xmax' - maximal x for Karlin-Studden polynomial"""
         return self.__x_max
 
+    @property
+    def karlin_shapley ( self ) :
+        """'karlin-shapley' : polinomial onject"""
+        self.pdf.setPars()
+        return self.pdf.karlin_shapley()
+    
+    @property
+    def pars ( self ) :
+        """'pars' : phases (same as 'phis')"""
+        return self.phis
 
+    @property
+    def troots ( self ) :
+        """'troots' : Karlin-Shapley t-roots"""
+        return tuple ( p for p in self.karlin_shapley.troots() )
+    
 models.append ( KarlinShapley_pdf ) 
 
 # =============================================================================
@@ -319,7 +334,7 @@ class KarlinStudden_pdf(PolyBase) :
                    xvar             ,  ## the variable 
                    power    = 1     ,  ## degree of the polynomial
                    xmin     = None  ,  ## optional x-min
-                   scale    = 1     ,  ## scale 
+                   scale    = None  ,  ## scale 
                    the_phis = None  ) : 
         #
         PolyBase.__init__ ( self , name , power , xvar , the_phis )
@@ -331,15 +346,18 @@ class KarlinStudden_pdf(PolyBase) :
         
         if isinstance ( xmin , num_types ) : self.__x_min = float ( xmin )
         else                               : self.__x_min = self.xvar.getMin() 
+
+        assert ( isinstance ( scale , num_types ) and scale ) or self.xvar.hasMax() and self.x_min < self.xvar.getMax() , \
+               'Invalid setting for scale!'
         
-        assert isinstance ( scale , num_types ) , 'Invalid setting for scale!'
-        self.__scale = float ( scale ) 
+        if isinstance ( scale , num_types ) and scale : self.__scale =       abs ( float ( scale ) )
+        else                                          : self.__scale = 0.5 * abs ( self.xvar.getMax() - self.x_min )
         
         #
         ## build the model
         self.pdf   = Ostap.Models.KarlinStudden (
-            self.roo_name ( "ksp_"  ) ,
-            "Karlin-Studden polynom %s" % self.name , 
+            self.roo_name ( "kst_"  ) ,
+            "Karlin-Studden polynomial %s" % self.name , 
             self.xvar     ,
             self.phi_list ,
             self.x_min    ,
@@ -351,7 +369,7 @@ class KarlinStudden_pdf(PolyBase) :
             'xvar'     : self.xvar  ,
             'power'    : self.power ,            
             'the_phis' : self.phis  ,
-            'x_min'    : self.x_min ,
+            'xmin'     : self.x_min ,
             'scale'    : self.scale ,            
             }
                 
@@ -370,6 +388,29 @@ class KarlinStudden_pdf(PolyBase) :
         """'scale' - scale for Karlin-Studden polynomial"""
         return self.__scale 
 
+    @property
+    def pars ( self ) :
+        """'pars' : phases (same as 'phis')"""
+        return self.phis
+
+    @property
+    def karlin_studden ( self ) :
+        """'karlin-studden' : polinomial onject"""
+        self.pdf.setPars()
+        return self.pdf.karlin_studden()
+
+    @property
+    def troots ( self ) :
+        """'troots' : Karlin-Studden t-roots"""
+        self.pdf.setPars()
+        return tuple ( p for p in self.pdf.karlin_studden.troots() )
+    
+    @property
+    def zroots ( self ) :
+        """'zroots' : Karlin-Studden z-roots"""
+        self.pdf.setPars()
+        return tuple ( p for p in self.pdf.karlin_studden.zroots() )
+    
 
 models.append ( KarlinStudden_pdf ) 
 
@@ -2421,28 +2462,56 @@ class RooPoly_pdf(RooPolyBase) :
     >>> poly = RooPoly_pdf ( 'P3' , xvar , coefficients = [ 1, 2 , 3 ] )
     """
     ## constructor
-    def __init__ ( self         ,
-                   name         , ## the name 
-                   xvar         , ## the variable
-                   power = 1    , ## degree of polynomial
-                   pars  = [] ) : ## the list of coefficients 
-        
+    def __init__ ( self                ,
+                   name                , ## the name 
+                   xvar                , ## the variable
+                   power        = 1    , ## degree of polynomial
+                   coefficients = [] ) : ## the list of coefficients 
+
+        coeffs = [ c for c in coefficients ] 
+        if not coeffs :
+            if isinstance ( xvar , ROOT.RooAbsReal ) and xvar.hasMin() and xvar.hasMax() : 
+                from ostap.core.core import iszero 
+                xmin , xmax = xvar.getMin() , xvar.getMax() 
+                limits = []
+                for p in range ( 1 , power + 1 ) :
+                    vv   = tuple ( v ** p for v in vrange ( xmin , xmax ,  ) )
+                    vmin = min ( vv )
+                    vmax = max ( vv )
+                    a1   = +1.e+7 if iszero ( vmin ) else -1.0/vmin
+                    a2   = -1.e+7 if iszero ( vmax ) else -1.0/vmax
+                    amin = min ( 0 , a1 , a2 )
+                    amax = max ( 0 , a1 , a2 )
+                    lims = 0 , amin , amax
+                    limits.append ( lims )
+                coeffs = limits
+                    
         ## initialize the base class 
-        RooPolyBase.__init__ (  self , name , xvar = xvar , power = power , npars = pars )
+        RooPolyBase.__init__ (  self  , name , xvar = xvar , power = power , pars = coeffs  )
 
         ## create PDF
         self.pdf = ROOT.RooPolynomial (
             self.roo_name ( 'rpoly_' ) ,
             'RooPolynomial %s|%d' % ( self.name , self.power ) ,
-            self.xvar , self.__clist )
+            self.xvar , self.pars_lst )
 
         ## save configuration 
         self.config = {
-            'name'        : self.name  ,
-            'xvar'        : self.xvar  ,
-            'power'       : self.npars ,            
-            'coefficients': self.pars  ,            
+            'name'        : self.name         ,
+            'xvar'        : self.xvar         ,
+            'power'       : self.power        ,            
+            'coefficients': self.coefficients ,            
             }
+
+    @property
+    def power ( self ) :
+        """'power' : degree/order/power of polynomial"""
+        return self.npars
+    
+    @property
+    def coefficients ( self ) :
+        """'coefficients' : polynomial coeffcients"""
+        return self.pars 
 
 # =============================================================================        
 ## @class RooCheb_pdf
@@ -2468,16 +2537,23 @@ class RooCheb_pdf(RooPolyBase) :
                    xvar                , ## the variable
                    power        = 0    , ## degree of polynomial
                    coefficients = [] ) : ## the list of coefficients 
-        
+
+        coeffs = [ c for c in coefficients ] 
+        if not coeffs :
+            coeffs = [] 
+            for n in range ( power ) : 
+                limits = 0 , -1 , 1
+                coeffs.append ( limits ) 
+
         ## initialize the base class 
-        RooPolyBase.__init__ ( self , name , xvar , power ,  coefficients )
+        RooPolyBase.__init__ ( self , name , xvar , power ,  pars = coeffs )
 
         ## create PDF 
-        self.pdf = ROOT.RooChebyshev (
+        self.pdf = ROOT.RooChebychev (
             self.roo_name ( 'rcheb_' ) ,
-            'RooChebyshev %s|%d' % ( self.name , self.power ) ,
-            self.xvar , self.__clist )
-
+            'RooChebychev %s|%d' % ( self.name , self.power ) ,
+            self.xvar , self.pars_lst )
+        
         ## save configuration 
         self.config = {
             'name'        : self.name         ,
@@ -2486,6 +2562,16 @@ class RooCheb_pdf(RooPolyBase) :
             'coefficients': self.coefficients ,            
             }        
 
+    @property
+    def power ( self ) :
+        """'power' : degree/order/power of polynomial"""
+        return self.npars
+    
+    @property
+    def coefficients ( self ) :
+        """'coefficients' : polynomial coeffcients"""
+        return self.pars
+    
 # =============================================================================        
 ## @class RooKeys1D_pdf
 #  Trivial Ostap wrapper for the native <code>RooNDKeysPdf</code> from RooFit
