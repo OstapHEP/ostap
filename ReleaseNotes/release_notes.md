@@ -21,6 +21,7 @@
   1. add proper pickling for `ROOT.RooLinearVar`
   1. introduce `ConfigReducer` base class for better pickling/deserialisation 
   1. add Karlin-Shapley & Karlin-Studen positive polynomials (functions&pdfs)
+  1. more polishing for Karlin-Shapley & Karlin-Studden stuff 
 
 
 ## Backward incompatible:  

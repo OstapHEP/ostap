@@ -23,8 +23,6 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
 from   ostap.fitting.background import make_bkg
 from   ostap.logger.colorized   import attention
-from   ostap.utils.utils        import vrange
-import ostap.histos.graphs 
 import ostap.logger.table       as     T
 import ROOT, random, math 
 # =============================================================================
@@ -42,13 +40,13 @@ x       = ROOT.RooRealVar ( 'x' , 'Some test variable' , 0, 10)
 varset  = ROOT.RooArgSet  ( x )
 dataset = ROOT.RooDataSet ( dsID() , 'Test data' , varset )
 
-NS      = 10000
-NB      = 10000 
+NS      = 15000
+NB      =  5000 
 
 for i in range ( NS ) :
-    v = random.gammavariate ( 3 , 1/0.8 )
+    v = random.expovariate ( 1.0/2.5 )
     while not v in x :
-        v = random.gammavariate ( 3 , 1/0.8 )
+        v = random.expovariate ( 1.0/2.5 )
     x.value = v
     dataset.add ( varset )
     
@@ -63,10 +61,8 @@ logger.info ('DATASET\n%s' % dataset )
 models  = {} 
 results = {}
 plots   = {}
-graphs  = set()
-    
 
-Nmin , Nmax = 2 , 8
+Nmin , Nmax = 2 , 6
 
 # =============================================================================
 ## Test Bernstein positive polynomials PolyPos_pdf
@@ -189,73 +185,6 @@ def test_poly_roocheb () :
 
 
 # =============================================================================
-def make_graphs ( obj , index ) :
-    
-    npars  = obj.npars()
-
-    ## reset 
-    for  i in range ( npars ) : obj.setPar ( i , 0 )
-    
-    troots = obj.troots()
-    NP     = 200 
-
-    grs    = []
-    while len ( grs ) < len  ( troots ) : grs.append ( ROOT.TGraph() )
-    
-
-    for phi in vrange ( 0 , 2 * math.pi , NP ) :
-        
-        obj.setPar ( index , phi )
-        
-        for i, g in enumerate ( grs ) :
-            
-            v = obj.troots()[i]
-            g.append ( phi , v ) 
-
-    print ( 'LEN', [ len(g) for g in grs ] )
-    
-    ## reset 
-    for  i in range ( npars ) : obj.setPar ( i , 0 )
-    
-    return tuple ( grs ) 
-        
-# =============================================================================
-## Evolution of Karlin-Shapley t-roots 
-def test_karlin_shapley_troots () :
-    """Evolution of Karlin-Shapley t-roots"""
-    
-    logger = getLogger ( 'test_karlin_shapley_troots' ) 
-
-    low  = 0
-    high = 2 * math.pi 
-    
-    h1 = ROOT.TH1F ( hID() , '' , 1 , 0 , 2*math.pi ) 
-    h1.SetMinimum  ( 0 )
-    h1.SetMaximum  ( 1 )
-    
-    for n in range ( 2 , 6 ) :
-        
-        ks    = Ostap.Math.KarlinShapley ( n , 0 , 1 )
-        
-        npars = ks.npars()
-        
-        for  phase in range ( 1 , npars ) :
-            
-            title = 'KarlinShapley(n=%s) t-roots for par %d' % ( n , phase )
-            with use_canvas ( title , wait = 2 ) :
-                
-                h1.draw()
-                grs = make_graphs ( ks , phase )
-                
-                for i,g in enumerate ( grs , start = 1 ) :
-                    g.SetLineColor   ( i )
-                    g.SetMarkerColor ( i )
-                    g.draw('c')
-                    
-                graphs.add ( grs ) 
-
-                
-# =============================================================================
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
@@ -278,7 +207,6 @@ def test_db() :
         for p in plots :
             db [ 'plot:%s'  % p ] = plots   [ p ] 
         db['plots'     ] = plots 
-        db['graphs'    ] = graphs 
         db.ls() 
 
 
@@ -300,8 +228,6 @@ if '__main__' == __name__ :
     with timing ( 'RooFit Chebyshev polynomials: RooCheb_pdf' , logger ) : 
         test_poly_roocheb() 
 
-    test_karlin_shapley_troots() 
-       
     test_db()
     
 # =============================================================================

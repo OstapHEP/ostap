@@ -526,7 +526,7 @@ def test_pickle () :
         rows.append ( row )
 
     import ostap.logger.table as T
-    title = "Compare before/after eserialisation"
+    title = "Compare before/after serialisation"
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rllll' ) 
     logger.info ( '%s\n%s' % ( title , table ) ) 
 
