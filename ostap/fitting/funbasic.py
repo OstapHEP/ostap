@@ -333,25 +333,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         return result 
 
     # ==========================================================================
-    ## get parameters of interest as  <code>ROOT.RooArgSet</code>
-    #  @code
-    #  pdf = ...
-    #  poi = pdf.poi () 
-    #  @endcode
-    def poi ( self , dataset = None ) :
-        """get parameters of interest as  <code>ROOT.RooArgSet</code>
-        >>> pdf = ...
-        >>> poi = pdf.poi () 
-        """
-        ps   = ROOT.RooArgSet() 
-        pars = self.params ( dataset )
-        vvs  = self.vars 
-        for p in pars :
-            if p in vvs : continue
-            ps.add ( p )
-        return ps 
-            
-    # ==========================================================================
     ## get parameter by name 
     #  @code
     #  pdf = ...
