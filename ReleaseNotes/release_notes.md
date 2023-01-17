@@ -24,6 +24,9 @@
   1. more polishing for Karlin-Shapley & Karlin-Studden stuff   
   1. remove `conf_interval`, `upper_limit` and `lower_limit` methods for `PDF`, based on `RooStats::ProfileLikelihoodCalculator`
   1. remove `poi` method from `funbasuic`
+  1. rewrite `ostap.fitting.roostats`
+  1. add new test `test_fitting_roostats.py`
+
 
 ## Backward incompatible:  
 

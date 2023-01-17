@@ -13,35 +13,23 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2023-01-17"
 __all__     = (
     ##
-    'create_MC_WS'       , ## helper fnuction to create (and fill) ModelConfig & RooWorkspace
+    'interval_PL'   , ## Profile-likelihood confidence interval or upper/lower limit 
+    'interval_FC'   , ## Feldman-Cousins    confidence interval or upper/lower limit 
+    'interval_BC'   , ## Bayesian           confidence interval or upper/lowee limir
+    'interval_MCMC' , ## MCMC               confidence interval or upper/lower limit 
     ##
-    'conf_interval_PL'   , ## Profile-likelihood confidence interval
-    'conf_interval_FC'   , ## Feldman-Cousins    confidence interval
-    'conf_interval_BC'   , ## Bayesian           confidence interval
-    'conf_interval_MCMC' , ## MCMC               confidence interval
+    'create_MC_WS'  , ## helper function to create (and fill) ModelConfig & RooWorkspace
     ##
-    'upper_limit_PL'     , ## Profile-likelihood upper limit 
-    'upper_limit_FC'     , ## Feldman-Cousins    upper limit 
-    'upper_limit_BC'     , ## Bayesian           upper limit 
-    'upper_limit_MCMC'   , ## MCMC               upper limit 
-    ##
-    'lower_limit_PL'     , ## Profile-likelihood lower limit 
-    'lower_limit_FC'     , ## Feldman-Cousins    lower limit 
-    'lower_limit_BC'     , ## Bayesian           lower limit 
-    'lower_limit_MCMC'   , ## MCMC               lower limit 
-    ##    
     )
 # =============================================================================
-import ostap.fitting.roofit 
-from   ostap.core.ostap_types import stgirng_types 
-
+import ostap.fitting.roofit
+from   ostap.core.ostap_types import string_types 
 import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roostats' )
 else                       : logger = getLogger ( __name__                 )
 # =============================================================================
-
 
 # =============================================================================
 ## Create (and fill) ModelConfig & RooWorkspace
@@ -55,8 +43,8 @@ else                       : logger = getLogger ( __name__                 )
 def create_MC_WS  ( pdf , params , dataset = None , ws = None , globobs = () ) :
     """ Create (and fill) ModelConfig & RooWorkspace
     >>> pdf     = ...
-    >>> globars = [ ... ] 
-    >>> mc , ws = create_MC_WS ( pdf , [ 'S' , 'B' ] , globvars = globvars , dataset = dataset ) 
+    >>> globobs = [ ... ] 
+    >>> mc , ws = create_MC_WS ( pdf , [ 'S' , 'B' ] , globobs = globobs , dataset = dataset ) 
     - see `ROOT.RooStats.ModelConfig` 
     - see `ROOT.RooWorkspace`  
     """
@@ -65,18 +53,18 @@ def create_MC_WS  ( pdf , params , dataset = None , ws = None , globobs = () ) :
     
     parameters = [ pdf.parameter ( p , dataset ) for p in params ]
     
-    if not ws : ws = ROOT.RooWorkSpace         ( 'WS%s' % pdf.name  , 'workspace' )
+    if not ws : ws = ROOT.RooWorkspace         ( 'WS%s' % pdf.name  , 'workspace' )
         
-    mc = ROOT.RooStats.ModelConfig ( 'MC' % pdf.name  , 'model-config for %s' % pdf  , ws )
+    mc = ROOT.RooStats.ModelConfig ( 'MC%s' % pdf.name  , 'model-config for %s' % pdf  , ws )
 
     mc.SetPdf                  ( pdf.pdf     )
     mc.SetObservables          ( pdf.vars    )
 
     poi = ROOT.RooArgSet       ( *parameters ) 
-    mc.SerParametersOfInterest (  poi        )
+    mc.SetParametersOfInterest (  poi        )
     
     nuis = [ v for v in pdf.params ( dataset ) if not v in pdf.vars and not v in poi ]
-    nuis = ROOT.RooAbsArg      ( *nuis )    
+    nuis = ROOT.RooArgSet      ( *nuis )    
     mc.SetNuisanceParameters   (  nuis )
 
     pdf.aux_keep.append ( poi  )
@@ -93,22 +81,49 @@ def create_MC_WS  ( pdf , params , dataset = None , ws = None , globobs = () ) :
 
 
 # =============================================================================
+## helper method to get the actual innterval/limits
+def get_result ( interval , limit , par = None , ws = None , mc = None ) :
+    """Helper methdo to get the actual innterval/limits"""
+    
+    if   limit and 0 < limit :
+        high   = interval.UpperLimit ( par ) if par else interval.UpperLimit ()
+        result = high
+    elif limit and 0 > limit :
+        low    = interval.LowerLimit ( par ) if par else interval.LowerLimit ()
+        result = low 
+    else :        
+        low    = interval.LowerLimit ( par ) if par else interval.LowerLimit ()
+        high   = interval.UpperLimit ( par ) if par else interval.UpperLimit ()
+        result = low , high 
+        
+    if ws : del ws
+    if mc : del mc  
+
+    return result
+
+
+# =============================================================================
 ## Profile Likelihood 
 # =============================================================================
 
 # =============================================================================
-## Get a profile likelihood confidence interval
+## Get a profile likelihood confidence interval or upper/lower limit  
 #  @code
-#  pdf       = ...
-#  dataset   = ...
-#  low, high = conf_interval_PL ( pdf , 'N' , 0.95 , dataset )
+#  pdf        =  ...
+#  dataset    = ...
+#  low, high  = interval_PL ( pdf , 'N' , 0.95 , dataset )
+#  low_limit  = interval_PL ( pdf , 'N' , 0.95 , dataset , limit = -1 )
+#  high_limit = interval_PL ( pdf , 'N' , 0.95 , dataset , limit = +1 )
 #  @endcode 
 #  @see RooStats::ProfileLikelihoodCalculator
-def conf_interval_PL ( pdf , param , level , dataset , globvars = () , constraints = () , ws = None ) :
+def interval_PL ( pdf , param , level , dataset ,
+                  globobs = () , constraints = () , ws = None , limit = None ) :
     """Get a profile likelihood confidence interval
-    >>> pdf       = ...
-    >>> dataset   = ...
-    >>> low, high = conf_interval_PL ( pdf , 'N' , 0.95 , dataset )
+    >>> pdf        = ...
+    >>> dataset    = ...
+    >>> low, high  = interval_PL ( pdf , 'N' , 0.95 , dataset )
+    >>> low_limit  = interval_PL ( pdf , 'N' , 0.95 , dataset , limit = -1 )
+    >>> high_limit = interval_PL ( pdf , 'N' , 0.95 , dataset , limit = +1 )
     - see `ROOT.RooStats.ProfileLikelihoodCalculator`
     """
     assert 0 < level < 1 , 'Invalid confidence level %s' % level
@@ -117,128 +132,42 @@ def conf_interval_PL ( pdf , param , level , dataset , globvars = () , constrain
     mc , ws = create_MC_WS  ( pdf      = pdf      ,
                               params   = param    ,
                               dataset  = dataset  ,
-                              globvars = globvars ,
+                              globobs  = globobs  ,
                               ws       = ws       )
     
     plc = ROOT.RooStats.ProfileLikelihoodCalculator ( dataset , mc )
         
-    plc.SetConfidenceLevel ( level )        
-    plInt = plc.GetInterval()
+    plc.SetConfidenceLevel ( level )
+
+    interval = plc.GetInterval()
+
+    pp       = pdf.parameter  ( param   ) 
+    par      = ws.var         ( pp.name )
     
-    pp    = self.parameter  ( param ) 
-    par   = ws.var ( pp.name )
-    
-    low   = plInt.LowerLimit ( par )
-    high  = plInt.UpperLimit ( par )
-
-    if ws_new : 
-        del ws
-        del ws 
-        
-    return low, high 
-
-
-# =============================================================================
-## Get an upper limit using profile likelihood 
-#  @code
-#  pdf       = ...
-#  dataset   = ...
-#  limit     = upper_limit_PL ( pdf , 'N' , 0.95 , dataset )
-#  @endcode 
-#  @see RooStats::ProfileLikelihoodCalculator
-def upper_limit_PL ( pdf , param  , level , dataset , globvars = () , constraints = () , ws = None ) :
-    """Get a profile likelihood confidence interval
-    >>> pdf       = ...
-    >>> dataset   = ...
-    >>> low, high = conf_interval_PL ( pdf , 'N' , 0.95 , dataset )
-    - see `ROOT.RooStats.ProfileLikelihoodCalculator`
-    """
-    assert 0 < level < 1 , 'Invalid confidence level %s' % level
-
-    ws_new  = True if not ws else False  
-    mc , ws = create_MC_WS  ( pdf      = pdf      ,
-                              params   = param    ,
-                              dataset  = dataset  ,
-                              globvars = globvars ,
-                              ws       = ws       )
-
-    plc = ROOT.RooStats.ProfileLikelihoodCalculator ( dataset , mc )
-        
-    plc.SetConfidenceLevel ( 1 - 2 * ( 1 - level ) )   ## ATTENTION! 
-    plInt = plc.GetInterval()
-    
-    pp    = self.parameter  ( param ) 
-    par   = ws.var ( pp.name )
-    
-    high  = plInt.UpperLimit ( par )
-
-    if ws_new : 
-        del ws
-        del ws 
-
-    return high 
-
-
-# =============================================================================
-## Get a lower limit using profile likelihood 
-#  @code
-#  pdf       = ...
-#  dataset   = ...
-#  limit     = lower_limit_PL ( pdf , 'N' , 0.95 , dataset )
-#  @endcode 
-#  @see RooStats::ProfileLikelihoodCalculator
-def lower_limit_PL ( pdf , param  , level , dataset , globvars = () , constraints = () , ws = None ) :
-    """Get a profile likelihood confidence interval
-    >>> pdf       = ...
-    >>> dataset   = ...
-    >>> limit     = lower_limit_PL ( pdf , 'N' , 0.95 , dataset )
-    - see `ROOT.RooStats.ProfileLikelihoodCalculator`
-    """
-    assert 0 < level < 1 , 'Invalid confidence level %s' % level
-
-    ws_new  = True if not ws else False  
-    mc , ws = create_MC_WS  ( pdf      = pdf      ,
-                              params   = param    ,
-                              dataset  = dataset  ,
-                              globvars = globvars ,
-                              ws       = ws       )
-
-    plc = ROOT.RooStats.ProfileLikelihoodCalculator ( dataset , mc )
-        
-    plc.SetConfidenceLevel ( 1 - 2 * ( 1 - level ) )   ## ATTENTION! 
-    plInt = plc.GetInterval()
-    
-    pp    = self.parameter  ( param ) 
-    par   = ws.var ( pp.name )
-    
-    low   = plInt.UpperLimit ( par )
-
-    if ws_new : 
-        del ws
-        del ws 
-
-    return low 
-
-
+    return get_result ( interval , limit , par , mc , ws ) if ws_new else get_result (  interval , limit , par ) 
+                         
 # =============================================================================
 ## Feldman-Cousins 
 # =============================================================================
 
-
 # =============================================================================
-## Get  Feldman-Cousins  confidence interval
+## Get  Feldman-Cousins  confidence interval or upper/lower limits 
 #  @code
 #  pdf       = ...
 #  dataset   = ...
 #  low, high = conf_interval_FC ( pdf , 'N' , 0.95 , dataset )
+#  lower     = conf_interval_FC ( pdf , 'N' , 0.95 , dataset , limit = -1 )
+#  upper     = conf_interval_FC ( pdf , 'N' , 0.95 , dataset , limit = +1 )
 #  @endcode 
 #  @see RooStats::FeldmanCousins
-def conf_interval_FC ( pdf , param , level , dataset , 
-                       globvars          = ()   ,
-                       constraints       = ()   ,
-                       ws                = None ,
-                       nbins             = 100  ,
-                       adaptive_sampling = True ) :
+def interval_FC ( pdf , param , level , dataset , 
+                  globobs           = ()    ,
+                  constraints       = ()    , 
+                  ws                = None  ,
+                  nbins             = 200   ,
+                  adaptive_sampling = True  ,
+                  fluctuate         = False , 
+                  limit             = None ) :
     """Get Felddman-Cousins confidence interval
     >>> pdf       = ...
     >>> dataset   = ...
@@ -251,113 +180,22 @@ def conf_interval_FC ( pdf , param , level , dataset ,
     mc , ws = create_MC_WS  ( pdf      = pdf      ,
                               params   = param    ,
                               dataset  = dataset  ,
-                              globvars = globvars ,
+                              globobs  = globobs  ,
                               ws       = ws       )
     
     fcc = ROOT.RooStats.FeldmanCousins ( dataset , mc )
     
-    fcc.SetConfidenceLevel  ( level )
+    fcc.SetConfidenceLevel      ( level     )
+    fcc.FluctuateNumDataEntries ( fluctuate ) 
+    fcc.UseAdaptiveSampling     ( True if adaptive_sampling else False  )
+    fcc.SetNBins                ( nbins )
     
-    fcc.UseAdaptiveSampling ( True if adaptive_sampling else False  )
-    fcc.SetNBins            ( nbins )
-    
-    fcInt = fcc.GetInterval()
-    
-    pp    = self.parameter  ( param ) 
-    par   = ws.var ( pp.name )
-    
-    low   = fcInt.LowerLimit ( par )
-    high  = fcInt.UpperLimit ( par )
+    interval = fcc.GetInterval()
 
-    if ws_new : 
-        del ws
-        del ws 
-        
-    return low, high 
-
-
-# =============================================================================
-## Get  Feldman-Cousins upper limit
-#  @code
-#  pdf       = ...
-#  dataset   = ...
-#  limit     = upper_limit_FC ( pdf , 'N' , 0.95 , dataset )
-#  @endcode 
-#  @see RooStats::FeldmanCousins
-def upper_limit_FC ( pdf , param , level , dataset , globvars = () , constraints = () , ws = None ) :
-    """Get Felddman-Cousins upper limit
-    >>> pdf       = ...
-    >>> dataset   = ...
-    >>> limit     = upper_limit_FC ( pdf , 'N' , 0.95 , dataset )
-    - see `ROOT.RooStats.FeldmanCousins`
-    """
-    assert 0 < level < 1 , 'Invalid confidence level %s' % level
-
-    ws_new  = True if not ws else False  
-    mc , ws = create_MC_WS  ( pdf      = pdf      ,
-                              params   = param    ,
-                              dataset  = dataset  ,
-                              globvars = globvars ,
-                              ws       = ws       )
+    pp       = pdf.parameter  ( param   ) 
+    par      = ws.var         ( pp.name )
     
-    fcc = ROOT.RooStats.FeldmanCousins ( dataset , mc )
-
-    
-    fcc.SetConfidenceLevel ( 1  - 2.0 * ( 1 - level )  )  ## attention!
-    fcInt = fcc.GetInterval()
-    
-    pp    = self.parameter  ( param ) 
-    par   = ws.var ( pp.name )
-    
-    high  = fcInt.UpperLimit ( par )
-
-    if ws_new : 
-        del ws
-        del ws 
-        
-    return high
-
-# =============================================================================
-## Get  Feldman-Cousins lowewr limit
-#  @code
-#  pdf       = ...
-#  dataset   = ...
-#  limit     = lower_limit_FC ( pdf , 'N' , 0.95 , dataset )
-#  @endcode 
-#  @see RooStats::FeldmanCousins
-def upper_limit_FC ( pdf , param , level , dataset , globvars = () , constraints = () , ws = None ) :
-    """Get Felddman-Cousins upper limit
-    >>> pdf       = ...
-    >>> dataset   = ...
-    >>> limit     = upper_limit_FC ( pdf , 'N' , 0.95 , dataset )
-    - see `ROOT.RooStats.FeldmanCousins`
-    """
-    assert 0 < level < 1 , 'Invalid confidence level %s' % level
-
-    ws_new  = True if not ws else False  
-    mc , ws = create_MC_WS  ( pdf      = pdf      ,
-                              params   = param    ,
-                              dataset  = dataset  ,
-                              globvars = globvars ,
-                              ws       = ws       )
-    
-    fcc = ROOT.RooStats.FeldmanCousins ( dataset , mc )
-
-    
-    fcc.SetConfidenceLevel ( 1  - 2.0 * ( 1 - level )  )  ## attention!
-    fcInt = fcc.GetInterval()
-    
-    pp    = self.parameter  ( param ) 
-    par   = ws.var ( pp.name )
-    
-    low   = fcInt.LowerLimit ( par )
-
-    if ws_new : 
-        del ws
-        del ws 
-        
-    return low
-
+    return get_result ( interval , limit , par , mc , ws ) if ws_new else get_result ( interval , limit , par ) 
 
 
 # =============================================================================
@@ -365,19 +203,21 @@ def upper_limit_FC ( pdf , param , level , dataset , globvars = () , constraints
 # =============================================================================
 
 # =============================================================================
-## Get  Bayesian confidence interval
+## Get  Bayesian confidence interval or upper/lower limit
 #  @code
 #  pdf       = ...
 #  dataset   = ...
-#  low, high = conf_interval_BC ( pdf , 'N' , 0.95 , dataset )
+#  low, high = interval_BC ( pdf , 'N' , 0.95 , dataset )
+#  lower     = interval_BC ( pdf , 'N' , 0.95 , dataset , limit = -1 )
+#  upper     = interval_BC ( pdf , 'N' , 0.95 , dataset , limit = +1 )
 #  @endcode 
 #  @see RooStats::BayesianCalculator
-def conf_interval_BC ( pdf , param , level , dataset , 
-                       globvars          = ()   ,
-                       constraints       = ()   ,
-                       ws                = None ,
-                       nbins             = 200  ,
-                       adaptive_sampling = True ) :
+def interval_BC ( pdf , param , level , dataset , 
+                  globobs           = ()   ,
+                  constraints       = ()   ,
+                  ws                = None ,
+                  prior             = None , 
+                  limit             = None ) :
     """Get Bayesian confidence interval
     >>> pdf       = ...
     >>> dataset   = ...
@@ -390,120 +230,29 @@ def conf_interval_BC ( pdf , param , level , dataset ,
     mc , ws = create_MC_WS  ( pdf      = pdf      ,
                               params   = param    ,
                               dataset  = dataset  ,
-                              globvars = globvars ,
+                              globobs  = globobs  ,
                               ws       = ws       )
-
     
-    pp  = self.parameter  ( param ) 
-    ws.factory("Uniform::prior(%s)" % pp.name )
-    mc.SetPriorPdf(ws.pdf("prior"))
+    pp  = pdf.parameter  ( param )
     
-    bc = ROOT.RooStats.Bayesian ( dataset , mc )
+    from   ostap.fitting.pdfbasic import APDF1 
+    if   prior and isinstance ( prior , APDF1  ) :
+        mc.SetPriorPdf( prior.pdf )
+    elif prior and isinstance ( prior , ROOT.RooAbsPdf ) :
+        mc.SetPriorPdf( prior  )
+    else :
+        ws.factory("Uniform::prior(%s)" % pp.name )
+        mc.SetPriorPdf(ws.pdf("prior"))
+    
+    bc = ROOT.RooStats.BayesianCalculator ( dataset , mc )
     bc.SetConfidenceLevel  ( level )
     
     bcInt = bc.GetInterval()
-    
-    par   = ws.var ( pp.name )
-    
-    low   = bcInt.LowerLimit ( par )
-    high  = bcInt.UpperLimit ( par )
 
-    if ws_new : 
-        del ws
-        del ws 
-        
-    return low, high 
+    interval = bc.GetInterval()
 
-
-# =============================================================================
-## Get  Bayesian upper limit 
-#  @code
-#  pdf       = ...
-#  dataset   = ...
-#  limit     = upper_limit_BC ( pdf , 'N' , 0.95 , dataset )
-#  @endcode 
-#  @see RooStats::BayesianCalculator
-def upper_limit_BC ( pdf , param , level , dataset , 
-                     globvars          = ()   ,
-                     constraints       = ()   ,
-                     ws                = None ) :
-    """Get Bayesian upper limit
-    >>> pdf       = ...
-    >>> dataset   = ...
-    >>> limit     = upper_limit_BC ( pdf , 'N' , 0.95 , dataset )
-    - see `ROOT.RooStats.BayesianCalculator`
-    """
-    assert 0 < level < 1 , 'Invalid confidence level %s' % level
-
-    ws_new  = True if not ws else False  
-    mc , ws = create_MC_WS  ( pdf      = pdf      ,
-                              params   = param    ,
-                              dataset  = dataset  ,
-                              globvars = globvars ,
-                              ws       = ws       )
-
-    pp  = self.parameter  ( param ) 
-    ws.factory("Uniform::prior(%s)" % pp.name )
-    mc.SetPriorPdf(ws.pdf("prior"))
-    
-    bc = ROOT.RooStats.Bayesian ( dataset , mc )
-    bc.SetConfidenceLevel  ( 1 - 2.0 * ( 1 - level )  ) ## ATTENTION 
-    
-    bcInt = bc.GetInterval()
-    
-    high  = bcInt.UpperLimit ()
-
-    if ws_new : 
-        del ws
-        del ws 
-        
-    return high 
-
-
-# =============================================================================
-## Get  Bayesian lower limit 
-#  @code
-#  pdf       = ...
-#  dataset   = ...
-#  limit     = lower_limit_BC ( pdf , 'N' , 0.95 , dataset )
-#  @endcode 
-#  @see RooStats::BayesianCalculator
-def lower_limit_BC ( pdf , param , level , dataset , 
-                     globvars          = ()   ,
-                     constraints       = ()   ,
-                     ws                = None )
-    """Get Bayesian lowerlimit
-    >>> pdf       = ...
-    >>> dataset   = ...
-    >>> limit     = lower_limit_BC ( pdf , 'N' , 0.95 , dataset )
-    - see `ROOT.RooStats.BayesianCalculator`
-    """
-    assert 0 < level < 1 , 'Invalid confidence level %s' % level
-
-    ws_new  = True if not ws else False  
-    mc , ws = create_MC_WS  ( pdf      = pdf      ,
-                              params   = param    ,
-                              dataset  = dataset  ,
-                              globvars = globvars ,
-                              ws       = ws       )
-
-    
-    pp  = self.parameter  ( param ) 
-    ws.factory("Uniform::prior(%s)" % pp.name )
-    mc.SetPriorPdf(ws.pdf("prior"))
-    
-    bc = ROOT.RooStats.Bayesian ( dataset , mc )
-    bc.SetConfidenceLevel  ( 1 - 2.0 * ( 1 - level )  ) ## ATTENTION 
-    
-    bcInt = bc.GetInterval()
-    
-    low   = bcInt.LowerLimit ()
-
-    if ws_new : 
-        del ws
-        del ws 
-        
-    return low
+    par      = None 
+    return get_result ( interval , limit , par , mc , ws ) if ws_new else get_result ( interval , limit , par ) 
 
 
 # =============================================================================
@@ -511,27 +260,31 @@ def lower_limit_BC ( pdf , param , level , dataset ,
 # =============================================================================
 
 
-
 # =============================================================================
 ## Get MCMC confidence interval
 #  @code
 #  pdf       = ...
 #  dataset   = ...
-#  low, high = conf_interval_MCMC ( pdf , 'N' , 0.95 , dataset )
+#  low, high = interval_MCMC ( pdf , 'N' , 0.95 , dataset )
+#  lower     = interval_MCMC ( pdf , 'N' , 0.95 , dataset , limit = -1 )
+#  upper     = interval_MCMC ( pdf , 'N' , 0.95 , dataset , limit = +1 )
 #  @endcode 
 #  @see RooStats::MCMCCalculator
-def conf_interval_MCMC ( pdf , param , level , dataset , 
-                         globvars     = ()     ,
-                         constraints  = ()     ,
-                         ws           = None   ,
-                         nbins        = 200    ,
-                         burnsteps    = 500    ,
-                         numiters     = 100000 ,
-                         leftfraction = 0.5    ) :    
+def interval_MCMC ( pdf , param , level , dataset , 
+                    globobs      = ()     ,
+                    constraints  = ()     ,
+                    ws           = None   ,
+                    nbins        = 200    ,
+                    burnsteps    = 500    ,
+                    numiters     = 100000 ,
+                    leftfraction = 0.5    ,
+                    limit        = None   ) :    
     """Get MCMC confidence interval
     >>> pdf       = ...
     >>> dataset   = ...
-    >>> low, high = conf_interval_FC ( pdf , 'N' , 0.95 , dataset )
+    >>> low, high = interval_FC   ( pdf , 'N' , 0.95 , dataset )
+    >>> lower     = interval_MCMC ( pdf , 'N' , 0.95 , dataset , limit = -1 )
+    >>> upper     = interval_MCMC ( pdf , 'N' , 0.95 , dataset , limit = +1 )
     - see `ROOT.RooStats.MCMCCalculator`
     """
     assert 0 < level < 1 , 'Invalid confidence level %s' % level
@@ -540,137 +293,24 @@ def conf_interval_MCMC ( pdf , param , level , dataset ,
     mc , ws = create_MC_WS  ( pdf      = pdf      ,
                               params   = param    ,
                               dataset  = dataset  ,
-                              globvars = globvars ,
+                              globobs  = globobs  ,
                               ws       = ws       )
     
     mcmc= ROOT.RooStats.MCMCCalculator ( dataset , mc )
 
     mcmc.SetConfidenceLevel       ( level        )
     
-    mcmc.SetNBins                 ( nbins        )
+    mcmc.SetNumBins               ( nbins        )
     mcmc.SetNumBurnInSteps        ( burnsteps    )
     mcmc.SetNumIters              ( numiters     )
-    mcmc.SetLedtSideTailFractgion ( leftFraction )
+    mcmc.SetLeftSideTailFraction  ( leftfraction )
     
-    mcInt = mcmc.GetInterval()
-    
-    pp    = self.parameter  ( param ) 
-    par   = ws.var ( pp.name )
-    
-    low   = mcmcInt.LowerLimit ( par )
-    high  = mcmcInt.UpperLimit ( par )
+    interval = mcmc.GetInterval()
 
-    if ws_new : 
-        del ws
-        del ws 
-        
-    return low, high 
-
-# =============================================================================
-## Get MCMC upper limit
-#  @code
-#  pdf       = ...
-#  dataset   = ...
-#  lmit      = upper_limit_MCMC ( pdf , 'N' , 0.95 , dataset )
-#  @endcode 
-#  @see RooStats::MCMCCalculator
-def upper_limit_MCMC ( pdf , param , level , dataset , 
-                       globvars     = ()     ,
-                       constraints  = ()     ,
-                       ws           = None   ,
-                       nbins        = 200    ,
-                       burnsteps    = 500    ,
-                       numiters     = 100000 ,
-                       leftfraction = 0.5    ) :    
-    """Get MCMC upper_limit
-    >>> pdf       = ...
-    >>> dataset   = ...
-    >>> limit     = upper_limit_FC ( pdf , 'N' , 0.95 , dataset )
-    - see `ROOT.RooStats.MCMCCalculator`
-    """
-    assert 0 < level < 1 , 'Invalid confidence level %s' % level
-
-    ws_new  = True if not ws else False  
-    mc , ws = create_MC_WS  ( pdf      = pdf      ,
-                              params   = param    ,
-                              dataset  = dataset  ,
-                              globvars = globvars ,
-                              ws       = ws       )
+    pp       = pdf.parameter  ( param   ) 
+    par      = ws.var         ( pp.name )
     
-    mcmc= ROOT.RooStats.MCMCCalculator ( dataset , mc )
-
-    mcmc.SetConfidenceLevel       ( 1 - 2.0 * ( 1 - level ) ) 
-    
-    mcmc.SetNBins                 ( nbins        )
-    mcmc.SetNumBurnInSteps        ( burnsteps    )
-    mcmc.SetNumIters              ( numiters     )
-    mcmc.SetLedtSideTailFractgion ( leftFraction )
-    
-    mcInt = mcmc.GetInterval()
-    
-    pp    = self.parameter  ( param ) 
-    par   = ws.var ( pp.name )
-    
-    high  = mcmcInt.UpperLimit ( par )
-
-    if ws_new : 
-        del ws
-        del ws 
-        
-    return high 
-
-# =============================================================================
-## Get MCMC lower limit
-#  @code
-#  pdf       = ...
-#  dataset   = ...
-#  lmit      = lower_limit_MCMC ( pdf , 'N' , 0.95 , dataset )
-#  @endcode 
-#  @see RooStats::MCMCCalculator
-def lower_limit_MCMC ( pdf , param , level , dataset , 
-                       globvars     = ()     ,
-                       constraints  = ()     ,
-                       ws           = None   ,
-                       nbins        = 200    ,
-                       burnsteps    = 500    ,
-                       numiters     = 100000 ,
-                       leftfraction = 0.5    ) :    
-    """Get MCMC upper_limit
-    >>> pdf       = ...
-    >>> dataset   = ...
-    >>> limit     = lower_limit_FC ( pdf , 'N' , 0.95 , dataset )
-    - see `ROOT.RooStats.MCMCCalculator`
-    """
-    assert 0 < level < 1 , 'Invalid confidence level %s' % level
-
-    ws_new  = True if not ws else False  
-    mc , ws = create_MC_WS  ( pdf      = pdf      ,
-                              params   = param    ,
-                              dataset  = dataset  ,
-                              globvars = globvars ,
-                              ws       = ws       )
-    
-    mcmc= ROOT.RooStats.MCMCCalculator ( dataset , mc )
-
-    mcmc.SetConfidenceLevel       ( 1 - 2.0 * ( 1 - level ) ) 
-    
-    mcmc.SetNBins                 ( nbins        )
-    mcmc.SetNumBurnInSteps        ( burnsteps    )
-    mcmc.SetNumIters              ( numiters     )
-    mcmc.SetLedtSideTailFractgion ( leftFraction )
-    
-    mcInt = mcmc.GetInterval()
-    
-    pp    = self.parameter  ( param ) 
-    par   = ws.var ( pp.name )
-    
-    low   = mcmcInt.LowerLimit ( par )
-
-    if ws_new : 
-        del ws
-        del ws 
-        
-    return low
+    return get_result ( interval , limit , par , mc , ws ) if ws_new else get_result ( interval , limit , par ) 
 
 
 # =============================================================================

@@ -6,7 +6,7 @@
 # @file test_fitting_models.py
 # Test module for varipsu polynomial PDFs
 # ============================================================================= 
-""" Test module for varipsu polynomial PDFs
+""" Test module for various polynomial PDFs
 """
 # ============================================================================= 
 from   __future__               import print_function
