@@ -426,7 +426,7 @@ def conf_interval_BC ( pdf , param , level , dataset ,
 def upper_limit_BC ( pdf , param , level , dataset , 
                      globvars          = ()   ,
                      constraints       = ()   ,
-                     ws                = None )
+                     ws                = None ) :
     """Get Bayesian upper limit
     >>> pdf       = ...
     >>> dataset   = ...
