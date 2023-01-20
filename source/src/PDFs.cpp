@@ -295,7 +295,7 @@ Ostap::Models::BreitWigner::BreitWigner
   , m_mass   ( "m0" , this , right.m_mass   ) 
   , m_widths ( "g"  , this , right.m_widths )
     //
-  , m_bw     (  right.m_bw->clone()        ) 
+  , m_bw     (  right.m_bw->clone()         ) 
 {
 }
 // ============================================================================
@@ -345,13 +345,24 @@ Double_t Ostap::Models::BreitWigner::analyticalIntegral
 // get the amplitude 
 // ============================================================================
 std::complex<double> Ostap::Models::BreitWigner::amplitude () const
+{ return bw_amplitude () ; }
+// ============================================================================
+// get the amplitude 
+// ============================================================================
+std::complex<double> Ostap::Models::BreitWigner::bw_amplitude () const
 { setPars () ; return m_bw->amplitude ( m_x ) ; }
 // ============================================================================
-
-
-
-
-
+/** Get Breit-Wigner lineshape in channel \f$ a\f$ : 
+ *  \f[ F_a(m) = 2m \varrho(s) N^2_a(s,m_0) 
+ *    \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A}  \right|^2 \f] 
+ *  @param m the mass point 
+ *  @param A the amplitide at this point 
+ */
+// ============================================================================
+double Ostap::Models::BreitWigner::breit_wigner 
+( const double                m , 
+  const std::complex<double>& A ) const 
+{ setPars() ; return m_bw->breit_wigner ( m , A ) ; }
 
 // ============================================================================
 // multi-channel BreiWigner
@@ -428,13 +439,11 @@ Ostap::Models::BWI::BWI
   RooAbsReal&                       phase     , 
   RooAbsReal&                       scale1    , 
   RooAbsReal&                       scale2    ) 
-  : BreitWigner ( bw , name ) 
+  : BreitWigner ( bw , name )
   , m_magnitude ( "!magnitude" , "background magnitude" , this , magnitude ) 
-  , m_phase     ( "!phib"      , "background phase"     , this , phase     )
+  , m_phase     ( "!phase"     , "background phase"     , this , phase     )
   , m_scale1    ( "!scale1"    , "background scale1"    , this , scale1    ) 
-  , m_scale2    ( "!scale1"    , "background scale2"    , this , scale2    ) 
-  // clone the original 
-  , m_original ( bw.clone ( nullptr ) )
+  , m_scale2    ( "!scale2"    , "background scale2"    , this , scale2    ) 
 {
   SetTitle ( title ) ;  
 }
@@ -475,8 +484,6 @@ Ostap::Models::BWI::BWI
   , m_phase     ( "!phase"     , this , right.m_phase     )
   , m_scale1    ( "!scale1"    , this , right.m_scale1    ) 
   , m_scale2    ( "!scale2"    , this , right.m_scale2    ) 
-    // clone the original 
-  , m_original ( right.m_original->clone( nullptr ) )
 {}
 // ============================================================================
 Ostap::Models::BWI::~BWI(){}
@@ -489,12 +496,8 @@ Ostap::Models::BWI::clone ( const char* name ) const
 // ============================================================================
 // get the amplitude
 // ============================================================================
-#include <iostream> 
 std::complex<double> Ostap::Models::BWI::amplitude () const
 {
-  // setPars () ;
-  //
-  const double x         = m_x ;
   //
   const double magnitude = m_magnitude ; // background magnitude 
   const double phase     = m_phase     ; // background phase 
@@ -518,15 +521,18 @@ std::complex<double> Ostap::Models::BWI::amplitude () const
 Double_t Ostap::Models::BWI::evaluate () const 
 {
   const std::complex<double> amp = this->amplitude() ;
-  return m_bw->breit_wigner ( m_x , amp ) ;
+  return breit_wigner ( m_x , amp ) ;
 }
 // ============================================================================
 Int_t Ostap::Models::BWI::getAnalyticalIntegral
 ( RooArgSet&     allVars      , 
   RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const { return 0 ; }
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 0 ; }
+  return 0 ;
+}
 // ============================================================================
-
 
   
 // ============================================================================

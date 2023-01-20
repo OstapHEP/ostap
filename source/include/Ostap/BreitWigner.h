@@ -680,7 +680,6 @@ namespace Ostap
       Ostap::Math::PhaseSpace2  m_ps2 ; // two  body phase space 
       // =======================================================================
     } ;
-
     // =========================================================================
     /** @class Channel
      *  Simple definition for the open decay channel, \f$ m_0 > m_1 + m_2 \f$) 
@@ -1400,11 +1399,11 @@ namespace Ostap
     public:  // amplitude 
       // ======================================================================
       /** Get Breit-Wigner amplitude
-       *  \f[ A(m) = \frac{1}{m^2_0 - m^2 - \sum_a D_a ( m^2 ) } \f]
+       *  \f[ A(m) = \frac{1}{m^2_0 - m^2 - i \sum_a D_a ( m^2 ) } \f]
        */
       virtual std::complex<double> amplitude ( const double m ) const ;
       // ======================================================================      
-      /** Get Breit-Wigner lineshape in channel \f$ a\f$ : 
+      /** Get Breit-Wigner lineshape : 
        *  \f[ F_a(m) = 2m \varrho(s) N^2_a(s,m_0) 
        *   \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A} \right|^2 \f] 
        *  @param m the mass point 
@@ -1412,7 +1411,7 @@ namespace Ostap
       double breit_wigner ( const double m ) const 
       { return m <= threshold() ? 0.0 : breit_wigner ( m , amplitude ( m ) ) ; }
       // ======================================================================
-      /** Get Breit-Wigner lineshape in channel \f$ a\f$ : 
+      /** Get Breit-Wigner lineshape : 
        *  \f[ F_a(m) = 2m \varrho(s) N^2_a(s,m_0) 
        *    \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A}  \right|^2 \f] 
        *  @param m the mass point 

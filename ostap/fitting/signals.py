@@ -150,7 +150,7 @@ from   ostap.fitting.funbasic   import FUN1 , Fun1D
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
 from   ostap.fitting.fithelpers import Phases
-from   ostap.fitting.variables  import var_tanh
+from   ostap.fitting.variables  import var_tanh, SETVAR
 import ostap.math.dalitz 
 import ROOT, math
 # =============================================================================
@@ -4769,13 +4769,7 @@ class BWI_pdf (BreitWigner_pdf) :
         ## take care on background and scale 
         # =====================================================================
 
-        if   isinstance ( magnitude , FUN1 ) and self.xvar is magnitude.xvar :
-            
-            ## ideal case
-            self.__magnitude     =      magnitude
-            self.__magnitude_tot = self.magnitude
-            
-        elif isinstance ( magnitude , PDF1 ) and self.xvar is magnitude.xvar :
+        if isinstance ( magnitude , PDF1 ) and self.xvar is magnitude.xvar :
             
             ## almost ideal case , but the scale factor is needed 
             self.__magnitude     = magnitude
@@ -4784,6 +4778,12 @@ class BWI_pdf (BreitWigner_pdf) :
                                                    "scale1(%s)" % name ,
                                                    False , 1 , 1e-6 , 1e+6 )
             self.__magnitude_tot = self.magnitude.as_FUN() * self.scale1 
+            
+        elif   isinstance ( magnitude , FUN1 ) and self.xvar is magnitude.xvar :
+            
+            ## ideal case
+            self.__magnitude     =      magnitude
+            self.__magnitude_tot = self.magnitude
             
         elif isinstance ( magnitude  , ROOT.RooRealVar ) :
             
@@ -4809,7 +4809,7 @@ class BWI_pdf (BreitWigner_pdf) :
 
         else :
             
-            ## use the predefined backgrond shapes (PDFs), scale factor is needed  
+            ## use the predefined shapes (PDFs), scale factor is needed  
             from ostap.fitting.background import make_bkg as MKB
             self.__magnitude = MKB ( magnitude ,  name = 'B4'+ self.name , xvar  = self.xvar )
             self.__scale1    = self.make_var ( scale1 ,
@@ -4822,13 +4822,9 @@ class BWI_pdf (BreitWigner_pdf) :
         ## now take care on the phase
         # =====================================================================
 
-        if   isinstance ( phase , FUN1 ) and self.xvar is phase.xvar :
+
+        if   isinstance ( phase , PDF1 ) and self.xvar is phase.xvar :
             
-            ## the ideal case 
-            self.__phase     =      phase 
-            self.__phase_tot = self.phase 
-            
-        elif isinstance ( phase , PDF1 ) and self.xvar is phase.xvar :
             ## almost ideal case , but the scale factor is needed 
             self.__phase     = phase 
             self.__scale2    = self.make_var ( scale2 ,
@@ -4837,16 +4833,22 @@ class BWI_pdf (BreitWigner_pdf) :
                                               False , 1 , 1e-6 , 1e+6 )
             self.__phase_tot = self.phase.as_FUN () * self.scale2
             
+        elif isinstance ( phase , FUN1 ) and self.xvar is phase.xvar :
+            
+            ## the ideal case 
+            self.__phase     =      phase 
+            self.__phase_tot = self.phase 
+            
         elif isinstance ( phase , ROOT.RooRealVar ) :
             
             ## simple case: phase is a kind of a simple constant/variable
-            self.__phase     = Fun1D ( phase , name = self.new_name ( 'phase' ) ) 
+            self.__phase     = Fun1D ( phase , name = self.new_name ( 'phase' ) , xvar = self.xvar ) 
             self.__phase_tot = self.phase 
             
         elif isinstance ( phase , ROOT.RooAbsPdf ) :
             
             ## simple case: phase is RooAbsPdf, scale factor is needed
-            self.__phase     = Fun1D ( phase , name = self.new_name ( 'phase' ) ) 
+            self.__phase     = Fun1D ( phase , name = self.new_name ( 'phase' ) , xvar = self.xvar ) 
             self.__scale2    = self.make_var ( scale2 ,
                                                "scale2_%s"  % name ,
                                                "scale2(%s)" % name ,
@@ -4861,7 +4863,7 @@ class BWI_pdf (BreitWigner_pdf) :
             
         else :  
 
-            ## use the predefined background shapes (PDFs), scale factor is needed  
+            ## use the predefined shapes (PDFs), scale factor is needed  
             from ostap.fitting.background import make_bkg as MKB
             self.__phase     = MKB ( phase ,  name = 'P4'+ self.name , xvar  = self.xvar )
             self.__scale2    = self.make_var ( scale2 ,
@@ -4932,6 +4934,75 @@ class BWI_pdf (BreitWigner_pdf) :
     @scale2.setter
     def scale2 ( self , value ) :
         self.set_value ( self.__scale2 , value ) 
+
+    # =========================================================================
+    ## Get the "signal" component 
+    def cmp_signal ( self , x )  :
+        """get the 'signal' component"""
+        
+        with SETVAR ( self.xvar ) :
+            self.xvar.setVal ( x )
+            amp = self.pdf.bw_amplitude ()
+            return self.pdf.breit_wigner ( x , amp )
+
+    # =========================================================================
+    ## Get the "background" component 
+    def cmp_bkg    ( self , x )  :
+        """Get the 'signal' component"""
+        
+        with SETVAR ( self.xvar ) :
+            self.xvar.setVal ( x )
+            amp = self.pdf.amplitude () - self.pdf.bw_amplitude () 
+            return self.pdf.breit_wigner ( x , amp )
+        
+    # =========================================================================
+    ## Get the "total" component 
+    def cmp_total ( self , x )  :
+        """Get the 'total' component"""
+        
+        with SETVAR ( self.xvar ) :
+            self.xvar.setVal ( x )
+            amp = self.pdf.amplitude ()
+            return self.pdf.breit_wigner ( x , amp )
+
+    # =========================================================================
+    ## Get the "interference" component 
+    def cmp_interference ( self , x )  :
+        """Get the 'interference' component"""
+
+        s = self.cmp_signal ( x )
+        b = self.cmp_bkg    ( x )
+        t = self.cmp_total  ( x )
+
+        return t - ( s + b ) 
+    
+    # =========================================================================
+    ## Get the signal, background & interference fit fractions
+    #  @code
+    #  pdf = ...
+    #  pdf.fitTo  ( ... )
+    #  sF , bF , iF = pdf.fit_fractions () 
+    #  @endcode 
+    def ffs  ( self ) :
+        """ Get the signal, background & interference fit fractions 
+        >>> pdf = ...
+        >>> pdf.fitTo  ( ... )
+        >>> sF , bF, iF  = pdf.fit_fractions () 
+        """
+
+        self.pdf.setPars()
+        
+        xmn, xmx = self.xminmax() 
+        
+        import ostap.math.integral as I
+        
+        iS = I.integral ( self.cmp_signal       , xmin = xmn , xmax = xmx )
+        iB = I.integral ( self.cmp_bkg          , xmin = xmn , xmax = xmx )
+        iI = I.integral ( self.cmp_interference , xmin = xmn , xmax = xmx )
+        iT = I.integral ( self.cmp_total        , xmin = xmn , xmax = xmx )
+                
+        return iS/iT, iB/iT, iI/iT  
+    
         
 # =============================================================================
 ## @class BWPS

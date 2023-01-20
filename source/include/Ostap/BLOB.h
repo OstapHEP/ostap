@@ -37,19 +37,20 @@ namespace Ostap
     // ========================================================================
     /// get the size of the buffer 
     std::size_t size   () const { return m_data.GetSize  () ; }
-    /// ghet teh buffer itself 
+    /// get the buffer itself 
     const void* buffer () const { return m_data.GetArray () ; }    
     // ========================================================================
   public: // setters 
     // ========================================================================
     /// redefine the buffer 
-    void setBuffer ( const std::size_t size   , 
-                     const void*       buffer ) ;
+    void setBuffer 
+    ( const std::size_t size   , 
+      const void*       buffer ) ;
     // ========================================================================
   private:
     // ========================================================================
-    // the data itself  
-    TArrayC m_data {} ; /// the data buffer 
+    /// the data itself  
+    TArrayC m_data {} ; // the data buffer 
     // ========================================================================
   };
   // ==========================================================================

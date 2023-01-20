@@ -69,6 +69,8 @@ __all__     = (
     ## 
     'rootException'       , ## context manager to perform ROOT Error -> C++/Python exception
     'RootError2Exception' , ## context manager to perform ROOT Error -> C++/Python exception
+    ##
+    'var_separators'      , ##  defalt separators for the string expressions
     )
 # =============================================================================
 import math, sys, os 
@@ -560,31 +562,6 @@ def _tn_path_ ( obj ) :
 ROOT.TNamed.path = property ( _tn_path_ , None , None , None  ) 
 
 # =============================================================================
-## split string using separators:
-#  @code
-#  split_string ( ' a b cde,fg;jq', ',;:' )
-#  @endcode
-def split_string ( line , separators = ',;:' ) :
-    """Split the string using separators
-    >>> split_string ( ' a b cde,fg;jq', ',;:' )
-    """
-    
-    if ' ' in separators : items = line.split()
-    else                 : items = [ line ]
-    
-    for s in separators :
-        result = []
-        for item in items :
-            if s in item : result += item.split ( s )
-            else         : result.append ( item ) 
-        items = result
-
-    ## remove empty items 
-    while '' in items: items.remove ( '' )
-
-    return items 
-
-# =============================================================================
 ## valid TDirectory?
 #  - check valid C++ TDirectory pointer 
 #  - for file directories check validity of the file
@@ -1017,6 +994,41 @@ def rootException () :
     ... do something here 
     """
     return RootError2Exception()
+
+# =============================================================================
+## defalt separators for the string expressions
+var_separators = ':,;'
+# =============================================================================
+
+
+# =============================================================================
+## split string using separators:
+#  @code
+#  split_string ( ' a b cde,fg;jq', ',;:' )
+#  @endcode
+def split_string ( line , separators = var_separators , strip = False ) :
+    """Split the string using separators
+    >>> split_string ( ' a b cde,fg;jq', ',;:' )
+    """
+    
+    if ' ' in separators : items = line.split()
+    else                 : items = [ line ]
+    
+    for s in separators :
+        result = []
+        for item in items :
+            if s in item : result += item.split ( s )
+            else         : result.append ( item ) 
+        items = result
+
+    ## strip items if required 
+    if strip : items = [ i.strip() for i in items ] 
+
+    ## remove empty items 
+    while '' in items: items.remove ( '' )
+    
+
+    return items 
 
 
 # =============================================================================

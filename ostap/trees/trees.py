@@ -21,7 +21,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info      import root_info
 from   ostap.core.core           import ( std , Ostap , VE  , WSE , hID ,
-                                          ROOTCWD , strings  , split_string ,
+                                          ROOTCWD , strings  ,
+                                          split_string , var_separators , 
                                           valid_pointer           ) 
 from   ostap.core.ostap_types    import ( integer_types  , long_type      ,
                                           string_types   , sequence_types ,
@@ -252,11 +253,11 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 , progress 
     last  = min ( last , len ( tree ) )
     first = max ( 0    , first        ) 
     
-    if isinstance ( variables , string_types ) : variables = split_string ( variables , ' ,;:' )
+    if isinstance ( variables , string_types ) : variables = split_string ( variables , var_separators , strip = True )
     vars = []
     for v in variables :
-        vars += split_string ( v , ' ,;:' )
-
+        vars += split_string ( v , var_separators , strip = True )
+    
     if active :
         
         cvar    = tree.the_variables ( cuts , vars ,  *active )
@@ -383,7 +384,7 @@ def tree_project ( tree               ,
     - what  : variable/expression to project. It can be expression or list/tuple of expression or comma (or semicolumn) separated expression
     - cuts  : selection criteria/weights
     
-    - For 2D&3D cases if variables specifed as singel string, the order is Z,Y,X,
+    - For 2D&3D cases if variables specifed as single string, the order is Z,Y,X,
     - Otherwide the natural order is used.
 
     """
@@ -416,7 +417,7 @@ def tree_project ( tree               ,
     if isinstance ( what , string_types ) :
         
         ## ATTENTION reverse here! 
-        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;' ) ] ) ) 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True ) ] ) ) 
         return tree_project ( tree , histo , what , cuts , *tail )
 
     assert isinstance ( what , list_types ) , "tree_project: invalid 'what' %s" % what 
@@ -569,7 +570,7 @@ def tree_project_old ( tree               ,
     ## comma, column or semicolumn separated list
     if isinstance ( what , string_types ) :
         ## attention! note reversed here! 
-        what = [ w.strip() for w in reversed ( split_string ( what , ',;:' ) ) ] ## attention! note reversed here! 
+        what = [ w.strip() for w in reversed ( split_string ( what , var_separators , strip = True ) ) ] ## attention! 
         
     assert isinstance ( what , sequence_types  ) and \
            isinstance ( what , sized_types     ) and 1 <= len ( what ) ,\
@@ -712,7 +713,7 @@ def _stat_var_ ( tree , expression , *cuts ) :
     
     if isinstance ( expression , string_types ) :
         
-        explist = split_string ( expression , ' ,;:' )         
+        explist = split_string ( expression , var_separators , strip = True )
         if 1 != len ( explist ) :
             return _stat_vars_ ( tree , explist , *cuts )  ## RETURRN
         
@@ -1610,11 +1611,11 @@ def _rt_slice_ ( tree , varname , cut = '' , weight = '' , transpose = False , f
     >>> print ( varr )  
     """
 
-    if isinstance ( varname , string_types ) : varname = split_string ( varname , ' ,;:' )
+    if isinstance ( varname , string_types ) : varname = split_string ( varname , var_separators , strip = True )
     names = []
     for v in varname :
-        names += split_string ( v , ' ,;:' )
-
+        names += split_string ( v , var_separators, strip = True )
+              
     if weight : names.append ( weight )
         
     if not names : return () 

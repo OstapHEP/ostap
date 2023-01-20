@@ -1097,7 +1097,7 @@ def _rbw_reduce_ ( pdf ):
                                   pdf.title          ,
                                   pdf.x      ()      , 
                                   pdf.mass   ()      ,
-                                  pdf.widths ()[0]   ,
+                                  pdf.widths ()      ,
                                   pdf.breit_wigner() ) 
 
 Ostap.Models.BreitWigner.__reduce__ = _rbw_reduce_ 
@@ -1123,7 +1123,7 @@ def _rbwi_reduce_ ( pdf ):
     return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
-                                  pdf.original  () ,
+                                  Ostap.Models.BreitWigner ( pdf , 'pkl' + pdf.name ) ,
                                   pdf.magnitude () ,
                                   pdf.phase     () ,
                                   pdf.scale1    () ,

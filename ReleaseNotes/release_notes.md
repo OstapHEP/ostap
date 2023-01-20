@@ -27,7 +27,8 @@
   1. remove `poi` method from `funbasuic`
   1. rewrite `ostap.fitting.roostats`
   1. add new test `test_fitting_roostats.py`
-
+  1. largely rewrite  "Breit-Wigner with interference" model
+  1. unify the variable separators for trees, datastes and frames 
 
 ## Backward incompatible:  
 

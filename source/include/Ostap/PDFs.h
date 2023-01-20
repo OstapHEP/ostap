@@ -152,15 +152,6 @@ namespace Ostap
         RooAbsReal&            mass      ,
         RooAbsReal&            width     ,
         const Ostap::Math::BW& bw        ) ;
-      /// "copy" constructor
-      BreitWigner ( const BreitWigner& , const char* name = 0 ) ;
-      /// virtual destructor
-      virtual ~BreitWigner() ;
-      /// clone
-      BreitWigner* clone ( const char* name ) const override;
-      // ======================================================================
-    protected: 
-      // ======================================================================
       /// constructor from main parameters and "shape"
       BreitWigner 
       ( const char*            name      ,
@@ -169,6 +160,12 @@ namespace Ostap
         RooAbsReal&            mass      ,
         RooArgList&            widths    ,
         const Ostap::Math::BW& bw        ) ;
+      /// "copy" constructor
+      BreitWigner ( const BreitWigner& , const char* name = 0 ) ;
+      /// virtual destructor
+      virtual ~BreitWigner() ;
+      /// clone
+      BreitWigner* clone ( const char* name ) const override;
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
@@ -203,12 +200,29 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get the Breit Wigner amplitude
+      /// get the Breit-Wigner amplitude
       virtual std::complex<double> amplitude () const  ;
       /// access to underlying function
       const Ostap::Math::BW& function     () const { setPars () ; return *m_bw ; }
       /// access to underlying function
       const Ostap::Math::BW& breit_wigner () const { setPars () ; return *m_bw ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the raw Breit-Wigner amplitude
+      std::complex<double> bw_amplitude () const ;
+      // ======================================================================
+    public: // evaluate the breit wigner 
+      // ======================================================================
+      /** Get Breit-Wigner lineshape in channel \f$ a\f$ : 
+       *  \f[ F_a(m) = 2m \varrho(s) N^2_a(s,m_0) 
+       *    \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A}  \right|^2 \f] 
+       *  @param m the mass point 
+       *  @param A the amplitide at this point 
+       */
+      double breit_wigner 
+      ( const double                m , 
+        const std::complex<double>& A ) const ;
       // ======================================================================
     protected :
       // ======================================================================
@@ -290,7 +304,7 @@ namespace Ostap
       // ======================================================================
       /// constructor from the Breit-Wigner
       BWI ( const char*                         name      , 
-            const char*                         title     , 
+            const char*                         title     ,
             const Ostap::Models::BreitWigner&   bw        ,
             RooAbsReal&                         magnitude ,  
             RooAbsReal&                         phase     ,
@@ -331,9 +345,9 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-      ( RooArgSet&     allVars      ,
-        RooArgSet&     analVars     ,
-        const char* /* rangename */ ) const override ;
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -342,22 +356,12 @@ namespace Ostap
       const RooAbsReal& scale1    () const { return m_scale1    .arg() ; }
       const RooAbsReal& scale2    () const { return m_scale2    .arg() ; }
       // ======================================================================
-    public:
-      // ======================================================================
-      /// get the original (cloned) Breit-Wigner function  
-      const Ostap::Models::BreitWigner& original() const { return *m_original.get() ; }
-      // ======================================================================
     protected:
       // ======================================================================
-      RooRealProxy m_magnitude ;  // background magnitude  
-      RooRealProxy m_phase     ;  // background phase 
-      RooRealProxy m_scale1    ;  // background factor  
-      RooRealProxy m_scale2    ;  // background factor  
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// keep  the original Breit-Wigner 
-      std::unique_ptr<Ostap::Models::BreitWigner> m_original {} ;
+      RooRealProxy                m_magnitude ;  // background magnitude  
+      RooRealProxy                m_phase     ;  // background phase 
+      RooRealProxy                m_scale1    ;  // background factor  
+      RooRealProxy                m_scale2    ;  // background factor  
       // ======================================================================
     };
     // ========================================================================

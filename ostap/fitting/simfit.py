@@ -41,7 +41,7 @@ else                       : logger = getLogger ( __name__               )
 #  @code
 #  sample = ROOT.RooCategory ( 'sample' , 'sample' , 'cc' , 'zz' )
 #  vars   = ROOT.RooArgSet   ( m2c )
-#  ds_cmb = combined_data ( sample  ,
+#  ds_cmb = combined_data    ( sample  ,
 #                vars    , { 'cc' : ds_cc ,  'zz' : ds_00 } )
 #  @endcode
 #  - weighted variant: combine unweighted datasets and then apply weight 
@@ -84,6 +84,8 @@ def combined_data ( sample          ,
     store_error      = False 
     store_asym_error = False 
 
+    ## collect all vars 
+    all_vars = ROOT.RooArgSet()
     for label in labels :
 
         dset = None 
@@ -96,6 +98,9 @@ def combined_data ( sample          ,
                 
         assert dset and isinstance ( dset , ROOT.RooAbsData ),\
                'Invalid data set for label %s' % label
+
+        for v in dset.vars :
+            if not v in all_vars : all_vars.add ( v ) 
 
         ##assert not dset.isNonPoissonWeighted () ,\
         ##       'Weighted data cannot be combined!'
@@ -126,9 +131,13 @@ def combined_data ( sample          ,
     elif  isinstance ( varset , ROOT.RooAbsCategory ) : vars.add ( varset )
     else :
         for i , v in enumerate ( varset ) :
-            assert isinstance ( v , ( ROOT.RooAbsReal , ROOT.RooAbsCategory ) ) , \
-                   'Invalid variable type [%d] %s/%s' % ( i , v , type ( v ) )
-            vars.add ( v )
+            if   isinstance ( v , ROOT.RooAbsReal     ) : vars.add ( v )
+            elif isinstance ( v , ROOT.RooAbsCategory ) : vars.add ( v )
+            elif v in all_vars :
+                vv = all_vars [ v ]
+                vars.add ( vv )
+            else : 
+                assert TypeError ( 'Invalid variable [%d] %s/%s' % ( i , v , type ( v ) ) )
 
     wset = ROOT.RooArgSet() 
     if weight :
@@ -269,10 +278,12 @@ def combined_hdata ( sample        ,
     title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
 
     varlst = ROOT.RooArgList()
-    if isinstance ( varset , ROOT.RooAbsReal ) : varlst.add ( varset )
+    if   isinstance ( varset , ROOT.RooAbsReal     ) : varlst.add ( varset )
+    elif isinstance ( varset , ROOT.RooAbsCategory ) : varlst.add ( varset )
     else :  
-        for v in varset : varlst.add ( v )
-
+        for i , v in enumerate ( varset ) :
+            varlst.add ( v )
+            
     ## assert ( d3 and 3 == len ( varlst ) ) or \
     ##       ( d2 and 2 == len ( varlst ) ) or \
     ##       ( d1 and 1 == len ( varlst ) )  , \

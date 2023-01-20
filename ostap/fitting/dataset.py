@@ -26,23 +26,16 @@ __all__     = (
 # =============================================================================
 from   builtins                  import range
 from   ostap.core.core           import ( Ostap, VE, hID, dsID , strings , 
-                                          valid_pointer , split_string   , ROOTCWD )
-from   ostap.core.ostap_types    import integer_types, string_types, list_types   
+                                          valid_pointer , split_string   ,
+                                          ROOTCWD       , var_separators )
+from   ostap.core.ostap_types    import ( integer_types , string_types   ,
+                                          list_types    , sequence_types )
 from   ostap.math.base           import islong
 import ostap.trees.cuts     
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ROOT, random, math, sys, ctypes  
-# =============================================================================
-if   ( 3 , 5 ) <= sys.version_info  : from collections.abc import Generator, Collection, Sequence, Iterable  
-elif ( 3 , 3 ) <= sys.version_info  :
-    from collections.abc import Collection, Sequence, Iterable  
-    from types           import GeneratorType as Generator 
-else :
-    from collections     import Sequence , Iterable            
-    from collections     import Container     as Collection
-    from types           import GeneratorType as Generator 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -118,7 +111,7 @@ def _rad_getitem_ ( data , index ) :
 
 
     ## the actual loop over entries 
-    if isinstance ( index , ( Generator , Collection , Sequence ) ) :
+    if isinstance ( index , sequence_types ) :
 
         weighted = data.isWeighted                    ()
         se       = weighted and data.store_error      ()
@@ -127,12 +120,12 @@ def _rad_getitem_ ( data , index ) :
         result = data.emptyClone ( dsID () )
         for i in index :
 
-            j = int ( i )                 ## the content must be convertible tointegers 
+            j = int ( i )                 ## the content must be convertible to integers 
 
-            if j < 0 : j += N             ## allow negative indicees 
+            if j < 0 : j += N             ## allow negative indices 
             
             if not 0 <= j < N :           ## is adjusted integer in the proper range ? 
-                logger.error ( 'Invalid index %d, skip it' % j ) 
+                logger.error ( 'Invalid index [%s]=%s, skip it' % ( i , j ) ) 
                 continue  
             
             vars = data.get ( j )
@@ -542,10 +535,16 @@ ROOT.RooAbsData . varlist       = _rad_vlist_
 ROOT.RooAbsData . varlst        = _rad_vlist_
 ROOT.RooAbsData . vlist         = _rad_vlist_
 ROOT.RooAbsData . vlst          = _rad_vlist_
-ROOT.RooAbsData . varset        = lambda s : s.get()
 
-ROOT.RooAbsData . __len__       = lambda s   : s.numEntries()
-ROOT.RooAbsData . __nonzero__   = lambda s   : 0 != len ( s ) 
+ROOT.RooAbsData . varset        = lambda s : s.get()
+ROOT.RooAbsData . __len__       = lambda s : s.numEntries()
+ROOT.RooAbsData . __nonzero__   = lambda s : 0 != len ( s )
+
+
+ROOT.RooAbsData .vars       = property ( lambda s : s.get() ,  None , None , """Variables (as ROOT.RooArgSet)""" ) 
+ROOT.RooAbsData .variables  = property ( lambda s : s.get() ,  None , None , """Variables (as ROOT.RooArgSet)""" ) 
+ROOT.RooAbsData .content    = property ( lambda s : s.get() ,  None , None , """Variables (as ROOT.RooArgSet)""" ) 
+                                    
 ROOT.RooAbsData . __contains__  = _rad_contains_
 ROOT.RooAbsData . __iter__      = _rad_iter_ 
 ROOT.RooAbsData . __getitem__   = _rad_getitem_
@@ -651,10 +650,10 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
     
     if   isinstance ( histo , ROOT.TProfile2D ) :
         histo.Reset() 
-        logger.errort ('ds_project: TProfile2D is not (yet) supported')
+        logger.error ('ds_project: TProfile2D is not (yet) supported')
         return 0 , histo 
     elif isinstance ( histo , ROOT.TProfile  ) :
-        logger.errort ('ds_project: TProfile   is not (yet) supported')
+        logger.error ('ds_project: TProfile   is not (yet) supported')
         return 0 , histo 
     
     assert not cuts or \
@@ -687,7 +686,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
     if isinstance ( what , string_types ) :
 
         ## ATTENTION reverse here! 
-        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;' ) ] ) ) 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True ) ] ) ) 
         return ds_project ( dataset , histo , what , cuts , *events , progress = progress  )
     
     elif isinstance ( what , ROOT.RooArgList ) and isinstance ( dataset , ROOT.RooAbsData ) :
@@ -809,7 +808,7 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args , **kwargs ) :
     if isinstance ( what , string_types ) :
         
         ## ATTENTION reverse here! 
-        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , ':;,' ) ] ) ) 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True ) ] ) ) 
         return ds_draw ( dataset , what , cuts , opts , *args , **kwargs )
 
     elif isinstance ( what , ROOT.RooArgList ) :
@@ -1227,8 +1226,8 @@ def add_new_var ( dataset , varname , what , *args ) :
     """
     
     if isinstance ( varname , string_types ) :
-        if    isinstance ( what , string_types ) : pass
-        elif  isinstance ( what ,   ( Generator, Collection, Sequence, Iterable  ) ) :
+        if    isinstance ( what , string_types   ) : pass
+        elif  isinstance ( what , sequence_types ) :
             vvar  = ROOT.RooRealVar ( varname , 'variable %s' % varname , -999.999 )
             vset  = ROOT.RooArgSet  ( vvar )
             dset  = ROOT.RooDataSet ( dsID() , 'dataset with %s' % varname , vset )
@@ -1658,7 +1657,7 @@ def _ds_table_0_ ( dataset           ,
         return ''
 
     if isinstance ( variables ,  str ) :
-        variables = split_string ( variables ,' ,:;' ) 
+        variables = split_string ( variables , var_separators , strip = True ) 
         
     if 1 == len ( variables ) : variables = variables [0]
 
@@ -2257,7 +2256,6 @@ _new_methods_ += [
 ## Get "slice" from <code>RooAbsData</code> in form of numpy array
 #  @code
 #  data = ...
-#  varr , weights = data.slice ( 'a b c'     , 'd>0' )
 #  varr , weights = data.slice ( 'a : b : c' , 'd>0' )
 #  varr , weights = data.slice ( 'a , b , c' , 'd>0' )
 #  varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
@@ -2265,17 +2263,16 @@ _new_methods_ += [
 def _rda_slice_ ( dataset , variables , cuts = '' , transpose = False , cut_range = '' , *args ) :
     """Get "slice" from <code>RooAbsData</code> in form of numpy array
     >>> data = ...
-    >>> varr , weights = data.slice ( 'a b c'     , 'd>0' )
     >>> varr , weights = data.slice ( 'a : b : c' , 'd>0' )
     >>> varr , weights = data.slice ( 'a , b , c' , 'd>0' )
     >>> varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
     """
     
-    if isinstance ( variables , string_types ) : variables = split_string ( variables , ' ,;:' )
+    if isinstance ( variables , string_types ) : variables = split_string ( variables , var_separators , strip = True )
     
     names = []
     for v in variables :
-        names += split_string ( v , ' ,;:' )
+        names += split_string ( v , var_separators , strip = True )
 
     names = strings ( names )
     
@@ -2681,13 +2678,13 @@ except ImportError :
 ## Iterator for rows in dataset
 #  @code
 #  dataset = ...
-#  for row , weight in dataset.rows ( 'pt pt/p mass ' , 'pt>1' ) :
+#  for row , weight in dataset.rows ( 'pt, pt/p, mass ' , 'pt>1' ) :
 #     print (row, weight) 
 #  @endcode 
 def _rad_rows_ ( dataset , variables = [] , cuts = '' , cutrange = '' , first = 0 , last = -1 ) :
     """Iterator for rows in dataset
     >>> dataset = ...
-    >>> for row , weight in dataset.rows ( 'pt pt/p mass ' , 'pt>1' ) :
+    >>> for row , weight in dataset.rows ( 'pt, pt/p, mass ' , 'pt>1' ) :
     >>>    print (row, weight) 
     """
     
@@ -2695,10 +2692,10 @@ def _rad_rows_ ( dataset , variables = [] , cuts = '' , cutrange = '' , first = 
     last  = min ( last , len ( dataset ) )
     first = max ( 0    , first           ) 
 
-    if isinstance ( variables , string_types ) : variables = split_string ( variables , ' ,;:' )
+    if isinstance ( variables , string_types ) : variables = split_string ( variables , var_separators , strip = True )
     vars = []
     for v in variables :
-        vars += split_string ( v , ' ,;:' )
+        vars += split_string ( v , var_separators , strip = True )
     vars = strings ( vars ) 
 
     formulas = []

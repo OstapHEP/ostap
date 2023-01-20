@@ -49,7 +49,8 @@ __all__     = (
     ## 
     ) 
 # =============================================================================
-from   ostap.core.core           import cpp, Ostap, strings, split_string
+from   ostap.core.core           import ( cpp , Ostap,
+                                          strings, split_string, var_separators )
 from   ostap.core.meta_info      import root_info 
 from   ostap.core.ostap_types    import integer_types, string_types, sequence_types   
 from   ostap.logger.utils        import multicolumn
@@ -729,7 +730,7 @@ def frame_project ( frame , model , *what ) :
     
     if 1 <= len ( what ) <= 2 :
         if   isinstance  ( what [ 0 ] , string_types ) :
-            ww = split_string ( what [ 0 ] , ':;' )
+            ww = split_string ( what [ 0 ] , var_separators , strip = True )
             if 1 < len ( ww ) : ww.reverse()                ## ATTENTION HERE: REVERSE!! 
             what = tuple ( ww ) + what [1:]                                              
         elif isinstance ( what [ 0 ] , sequence_types ) :
