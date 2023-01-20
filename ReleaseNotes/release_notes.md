@@ -29,6 +29,9 @@
   1. add new test `test_fitting_roostats.py`
   1. largely rewrite  "Breit-Wigner with interference" model
   1. unify the variable separators for trees, datastes and frames 
+  1. further imporvements 
+  1. make a try to fix morphing 
+
 
 ## Backward incompatible:  
 

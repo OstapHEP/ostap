@@ -164,7 +164,7 @@ class MorphingN1_pdf (PDF1) :
                 pass 
 
             pair = k , pdfk 
-            self.pdflist.append ( pair )
+            self.__pdflist.append ( pair )
             
         ## convert to tuple 
         self.__pdflist = tuple ( self.__pdflist ) 
@@ -189,18 +189,18 @@ class MorphingN1_pdf (PDF1) :
             muvct [ i ] = p [ 0 ]
             pdflst.add (  p [ 1 ].pdf ) 
 
-        observables = ROOT.RooArgList (  self.xvar )
-        self.aux_keep.append  ( observables )
-        
+        self.__morph_pdflst      = pdflst        
+        self.__morph_observables = ROOT.RooArgList (  self.xvar )
+
         ## create the PDF  
         self.pdf = ROOT.RooMomentMorph (
             self.roo_name ( 'morph_' ) ,
             "Morphing %s" % self.name  , 
-            self.mu               , ## morphing variable
-            observables           , ## observables 
-            pdflst                , ## ordered list of PDFs  
-            muvct                 , ## values of morhing parameter 
-            self.setting          ) ## morphing setting 
+            self.mu                    , ## morphing variable
+            self.__morph_observables   , ## observables 
+            self.__morph_pdflst        , ## ordered list of PDFs  
+            muvct                      , ## values of morhing parameter 
+            self.setting               ) ## morphing setting 
 
         #
         self.config = {
@@ -324,7 +324,6 @@ class MorphingN2_pdf (PDF1) :
             
         ## save setting 
         self.__setting = setting
-
         
         ## fill morphing grid
         from ostap.fitting.variables import binning
@@ -350,18 +349,15 @@ class MorphingN2_pdf (PDF1) :
 
             self.__grid.addPdf ( p.pdf , ib1 , ib2 )
 
-        morph_vars  = ROOT.RooArgList ( self.mu1 , self.mu2 )
-        observables = ROOT.RooArgList ( self.xvar )
+        self.__morph_vars        = ROOT.RooArgList ( self.mu1 , self.mu2 )
+        self.__morph_observables = ROOT.RooArgList ( self.xvar )
 
-        self.aux_keep.append  ( morph_vars  )
-        self.aux_keep.append  ( observables )
-        
         ## create the PDF  
         self.pdf = ROOT.RooMomentMorphND (
             self.roo_name ( 'morph2_' )   ,
             "Morphing 2D %s" % self.name  , 
-            morph_vars              , ## morphing variables 
-            observables             , ## observables 
+            self.__morph_vars         , ## morphing variables 
+            self.__morph_observables  , ## observables 
             self.grid               , ## morphing grid 
             self.setting            ) ## morphing setting 
 
@@ -542,20 +538,17 @@ class MorphingN3_pdf (PDF1) :
 
             self.__grid.addPdf ( p.pdf , ib1 , ib2 , ib3 )
 
-        morph_vars  = ROOT.RooArgList ( self.mu1 , self.mu2 , self.mu3 )
-        observables = ROOT.RooArgList ( self.xvar )
+        self.__morph_vars         = ROOT.RooArgList ( self.mu1 , self.mu2 , self.mu3 )
+        self.__morth__observables = ROOT.RooArgList ( self.xvar )
 
-        self.aux_keep.append  ( morph_vars  )
-        self.aux_keep.append  ( observables )
-        
         ## create the PDF  
         self.pdf = ROOT.RooMomentMorphND (
             self.roo_name ( 'morph3_' )   ,
             "Morphing 3D %s" % self.name  , 
-            morph_vars              , ## morphing variables 
-            observables             , ## observables 
-            self.grid               , ## morphing grid 
-            self.setting            ) ## morphing setting 
+            self.__morph_vars        , ## morphing variables 
+            self.__morth_observables , ## observables 
+            self.grid                , ## morphing grid 
+            self.setting             ) ## morphing setting 
 
         #
         self.config = {
