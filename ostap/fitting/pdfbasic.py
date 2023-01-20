@@ -488,14 +488,18 @@ class APDF1 ( object ) :
         assert all ( isinstance ( o , ROOT.RooCmdArg ) for o in options  ), \
                "fit_to: invalid argument types: %s" % list ( options  ) 
 
-        ## for "small" number of arguments use the standard function 
-        if len ( options ) <= NARGS :
-            return model.fitTo ( data , *options )
+        print ( 'I AM HERE/1', options  )
+
+        ## ## for "small" number of arguments use the standard function 
+        ## if len ( options ) <= NARGS :
+        ##     return model.fitTo ( data , *options )
         
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
+
+        print ( 'I AM HERE/2', cmd  , type( cmd ) )
         
-        return model.fitTo ( frame , cmd  )
+        return model.fitTo ( data , cmd  )
 
 
     ## helper method to draw set of components 

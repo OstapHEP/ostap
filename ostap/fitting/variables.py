@@ -1065,6 +1065,15 @@ def two_yields ( total , fraction ) :
     return yield1 , yield2 
     
 
+
+
+# =============================================================================
+if ( 6,6) <= root_info :
+    var1_types = ROOT.RooAbsRealLValue , ROOT.RooAbsCategoryLValue
+    var2_types = ROOT.RooAbsReal       , ROOT.RooAbsCategory 
+else :  
+    var1_types = ROOT.RooAbsReal       , ROOT.RooAbsCategory 
+    var2_types = () 
 # =============================================================================
 ## @class SETVAR
 #  Simple context manager to preserve current value for RooAbsVar
@@ -1089,15 +1098,45 @@ class SETVAR(object):
     ...    print '3) value %s ' % var.getVal() 
     >>> print '4) value %s ' % var.getVal() 
     """
-    def __init__  ( self , xvar ) :
-        self.xvar = xvar
+    def __init__  ( self , *xvars ) :
+        
+        self.__args  = xvars
+        
+        self.__xvars = [] 
+        for x in xvars :
+            if                  isinstance ( x , var1_types ) : self.__xvars.append ( x )
+            elif var2_types and isinstance ( x , var2_types ) : pass ## ATTENTION 
+            elif isinstance ( x , ROOT.RooAbsCollection ) :
+                for v in x :
+                    if                  isinstance ( v , var1_types ) : self.__xvars.append ( v )
+                    elif var2_types and isinstance ( v , var2_types ) : pass  ## ATTENTION! 
+                    else :
+                        logger.error ( 'SETVAL: invalid type of variable v: %s, skip it' % type ( v ) ) 
+            else :
+                logger.error ( 'SETVAL: invalid type of variable x: %s, skip it' % type ( x ) ) 
+
+        self.__xvars = tuple ( self.__xvars )
+
+        
     def __enter__ ( self        ) :
-        self._old = float ( self.xvar.getVal() ) 
-        return self 
+        self.__values = tuple ( v.getVal() for v in self.__xvars ) 
+        return self
+    
     def __exit__  ( self , *_   ) :
-        self.xvar.setVal  ( self._old ) 
-
-
+        for x,v in zip ( self.__xvars , self.__values ) :  x.setVal ( v )
+        self.__args  = ()
+        self.__xvars = ()
+        
+    @property
+    def xvars  ( self )  :
+        """'xvars' : variables that will be restored at the exit"""
+        return self.__xvars
+    
+    @property
+    def values ( self )  :
+        """'values' : values to be restored at the exit"""
+        return self.__values 
+        
 # =============================================================================
 ## @class FIXVAR
 #  Simple context manager to fix/unfix the variable 

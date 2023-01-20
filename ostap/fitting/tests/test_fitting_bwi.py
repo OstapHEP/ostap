@@ -12,14 +12,17 @@
 from   __future__        import print_function
 # ============================================================================= 
 import ostap.fitting.roofit 
-import ostap.fitting.models  as     Models 
-from   ostap.core.core       import Ostap
-import ostap.io.zipshelve    as     DBASE
-from   ostap.utils.timing    import timing
-from   ostap.utils.utils     import wait
-from   ostap.plotting.canvas import use_canvas 
-from   builtins              import range
-import ROOT, time 
+import ostap.fitting.models    as     Models 
+from   ostap.core.core         import Ostap
+import ostap.io.zipshelve      as     DBASE
+import ostap.logger.table      as     T 
+from   ostap.utils.timing      import timing
+from   ostap.utils.utils       import wait
+from   ostap.plotting.canvas   import use_canvas
+from   ostap.fitting.variables import SETVAR 
+from   ostap.utils.utils       import vrange 
+from   builtins                import range
+import ROOT, time, math  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -39,6 +42,7 @@ def test_fitting_bwi1 () :
     
     
     logger = getLogger ( 'test_fitting_bwi1' )
+    logger.info ( 'Test simple "Breit-Wigner with interference" model' )
     
     m1    = 1.0 
     m2    = 1.0
@@ -50,19 +54,19 @@ def test_fitting_bwi1 () :
     phasespace  = Ostap.Math.PhaseSpace2 ( m1 , m2 )
     
     ## mass observable 
-    mass       = ROOT.RooRealVar ( 'mass' , 'mass-observable' , 0 , 15 )  
+    mass        = ROOT.RooRealVar ( 'mass' , 'mass-observable' , 0 , 15 )  
     
     ## create BW function
-    bw        = Models.BreitWigner_pdf ( 'BW'  ,
-                                         m0     = ( m0 , m0 - 1 , m0 + 1 ) , 
-                                         gamma  = ( g0 , g0/2   , g0 * 2 ) , 
-                                         breitwigner = breitwigner , xvar = mass )
+    bw          = Models.BreitWigner_pdf ( 'BW'  ,
+                                           m0     = ( m0 , m0 - 1 , m0 + 1 ) , 
+                                           gamma  = ( g0 , g0/2   , g0 * 2 ) , 
+                                           breitwigner = breitwigner , xvar = mass )
     
     ## create BWI function
-    bwi        = Models.BWI_pdf        ( 'BWI' ,
-                                         m0          = bw.m0    ,
-                                         gamma       = bw.gamma ,                                     
-                                         breitwigner = bw.breitwigner , xvar = mass )
+    bwi         = Models.BWI_pdf        ( 'BWI' ,
+                                          m0          = bw.m0    ,
+                                          gamma       = bw.gamma ,                                     
+                                          breitwigner = bw.breitwigner , xvar = mass )
     bwi.magnitude.phis =  0.05 , 
     bwi.phase    .phis = -0.7  , 
     bwi.scale1         =  0.3
@@ -129,7 +133,134 @@ def test_fitting_bwi1 () :
         results.append ( r21 ) 
 
 
+data  = {} 
+rs    = {}
+plots = {}
 
+# =============================================================================
+## def test_fitting_bwi2 () :
+if 1 < 2 :
+    
+    logger = getLogger ( 'test_fitting_bwi2' )
+    logger.info ( 'Test simple "Breit-Wigner with interference" model' )
+
+    GeV = 1.0
+    MeV = 0.001 * GeV
+    
+    xmin, xmax = 3.85 * GeV , 3.90 * GeV  
+    mass = ROOT.RooRealVar( 'mass' , '' , xmin , xmax )
+
+    m0   = 3.872 * GeV 
+    g0   = 0.9   * MeV 
+
+    m1   = 3.1 * GeV
+    m2   = 0.5 * GeV 
+
+    breit_wigner = Ostap.Math.BreitWigner ( m0 , g0 , m1 , m2 )
+
+    ## create BW function
+    bw   = Models.BreitWigner_pdf ( 'BW2'  ,
+                                    xvar        = mass , 
+                                    m0          = ( m0 , m0 - 3 * MeV , m0 + 3 * MeV  ) , 
+                                    gamma       = ( g0 , g0/2   , g0 * 2 ) , 
+                                    breitwigner = breit_wigner )
+    
+    bw.m0   .fix()
+    bw.gamma.fix()
+    
+    b     = ROOT.RooRealVar( 'b'     , 'magnitude of the coherent background' , 1 , 0 , 200 ) 
+    phi_b = ROOT.RooRealVar( 'phi_b' , 'phase of the coherent background'     , 0 , -4 * math.pi , 4 * math.pi )
+    
+    ## create BWI function
+    bwi   = Models.BWI_pdf        ( 'BWI2'                        ,
+                                    xvar        = mass            , 
+                                    m0          = bw.m0           ,
+                                    gamma       = bw.gamma        ,                                     
+                                    breitwigner = bw.breitwigner  ,
+                                    magnitude   = b               ,
+                                    phase       = phi_b           )
+    
+    ## apply mass-resolution
+    resolution = Models.ResoGauss ( 'Gauss'           ,
+                                    xvar  = mass      ,
+                                    sigma = 2.3 * MeV )
+    
+    cnv_conf = { 'nbins' : 10000 , 'buffer' : 0.3 } 
+    signal   = Models.Convolution_pdf ( name       = 'X'        ,
+                                        pdf        = bwi        ,
+                                        resolution = resolution , **cnv_conf)
+    
+    model    = Models.Fit1D ( signal = signal , background = -1 )
+    model.S  = 1
+    model.B  = 1 
+    
+
+    NN       = 1000 
+    for vb in vrange ( 1 , 100 , 4 ) :
+        with SETVAR ( b ) :
+            b.setVal ( vb )
+            for vphi in vrange ( 0 , math.pi , 4 ) :
+                with SETVAR ( b ) :                    
+                    phi_b.setVal ( phi_b ) 
+                    ds = model.generate ( 1000 )
+                    data [ ( vb, vphi ) ] = ds
+
+
+    rows = [ ( 'b[gen]' ,  'phi/pi[gen]' , 'b/fit' , 'phi/pi[fit]' , 'status' , 'cov2' , 'fS' , 'fB' , 'fI' , 'nSfit' , 'nBfit' , 'nS*' , 'nB*' ) ]
+    
+    for key in data :
+        vb , vphi = key
+        ds        = data [ key ]
+
+        with SETVAR ( phi_b ) , SETVAR ( b ) :
+            
+            b    .setVal ( vb   )
+            phi_b.setVal ( vphi )
+            r , f    = model.fitTo ( ds , silent = True , draw =True , nbins = 50 )
+            
+            iS,iB,iI = bwi.ffs() 
+            
+            nS       = r.S * 1
+            nB       = r.B * 1
+            
+            b_fit    = r.b * 1.0 
+            phi_fit  = r.phi_b / math.pi 
+            
+            nSt      = nS * ( iS + iI )
+            nBt      = nB + nS * iB
+
+            
+            row      = '%.1f'  % vb                           , \
+                       '%+.3f' % ( vphi / math.pi )           , \
+                       b_fit  .toString ( '%+.2f +/- %-.2f' ) , \
+                       phi_fit.toString ( '%+.2f +/- %-.2f' ) , \
+                       '%s' % r.status () , \
+                       '%s' % r.covQual() , \
+                       '%+.2f' % iS , \
+                       '%+.2f' % iB , \
+                       '%+.2f' % iI , \
+                       nS .toString ( '%.0f +/- %-.0f' ) , \
+                       nB .toString ( '%.0f +/- %-.0f' ) , \
+                       nSt.toString ( '%.0f +/- %-.0f' ) , \
+                       nBt.toString ( '%.0f +/- %-.0f' ) 
+                       
+            
+            
+            
+        
+              
+        rows.append ( row ) 
+        
+        plots [ key ] = f
+        rs    [ key ] = r        
+        
+        print ( key , r ) 
+
+    title = 'Fits witn interference' 
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rrcccc') 
+    logger.info ( '%s\n%s' % ( title , table ) )
+
+    
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================
@@ -146,15 +277,25 @@ def test_db() :
         db['models'   ] = models
         for i, r in enumerate ( results ) :
             db ['result:%s' % r.name ] = r
-        db['results'   ] = results 
+        db['results'   ] = results
+
+        for key in data :
+            db ['d_%s' % str  (key ) ] = data  [ key ]
+            db ['r_%s' % str  (key ) ] = rs    [ key ]
+            db ['p_%s' % str  (key ) ] = plots [ key ]
+            
+        db ['d'] = data 
+        db ['r'] = rs
+        db ['p'] = plots 
+        
         db.ls() 
 
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ('Test BWI-1' , logger ) :
-        test_fitting_bwi1 ()
+    ##with timing ('Test BWI-1' , logger ) :
+    ##    test_fitting_bwi1 ()
         
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
