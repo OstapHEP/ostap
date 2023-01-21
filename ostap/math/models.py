@@ -502,7 +502,7 @@ if root_info < ( 6, 24 ) :
         if not hasattr ( t , '_old_breit_wigner_' ) :
             t._old_breit_wigner_ = t.breit_wigner
             # 
-            def _new_breit_wigner_ ( f , x , a ) :
+            def _new_breit_wigner_ ( f , x , amp ) :
                 """Updated `Breit-wigner` function
                 _ see `Ostap.Math.BW.breit_wigner`
                 _ see `Ostap.Models.breit_wigner`
