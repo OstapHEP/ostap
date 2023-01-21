@@ -1431,7 +1431,7 @@ def _h3_call_ ( h3                         ,
     >>> ve = histo ( x , y , z , edges = False )         ## no special treatment of edge bins
     >>> ve = histo ( x , y , z , extrapolate =  True ) ## allow extrapolation outside histogram range
     >>> ve = histo ( x , y , z , density = True ) ## interpolate for density: (content)/(volume)  
-    """    
+    """
     #
     x = float ( x )
     y = float ( y )
@@ -1779,10 +1779,9 @@ def _h2_transpose_ ( h2 ) :
     hn = h2_axes ( ya , xa )  
     ##
     for i in h2 :
-        hn[ (i[1],i[0]) ] = h2[ i ] 
+        hn [ (i[1],i[0]) ] = h2[ i ] 
 
     return hn
-
 
 ROOT.TH2F.T         = _h2_transpose_
 ROOT.TH2D.T         = _h2_transpose_
@@ -2349,7 +2348,6 @@ def objectAsFunction ( obj ) :
         func = lambda x,*y     : VE ( f1 ( float ( x ) , 0 ) )
         return func                                      ## RETURN 
 
-
     ## the original stuff 
     return obj
 
@@ -2406,7 +2404,6 @@ class FUNC_OTHER(FUNCX) :
             self.integral = lambda x,y,*z : integral ( self.func , x , y , *z ) 
     def __call__ ( self , x , *y      ) : return self.func ( float ( x ) , *y ) 
     def integral ( self , s ,  y , *z ) : return self.integral ( x , y , *z )
-
 
 
 
@@ -3509,16 +3506,16 @@ for t in ( ROOT.TH2F , ROOT.TH2D ) :
     t . __iadd__     = _h2_iadd_
     t . __isub__     = _h2_isub_
     
-    t .  frac    = _h2_frac_
-    t .  asym    = _h2_asym_
-    t .  diff    = _h2_diff_
-    t .  chi2    = _h2_chi2_
-    t .  average = _h2_average_
+    t .  frac        = _h2_frac_
+    t .  asym        = _h2_asym_
+    t .  diff        = _h2_diff_
+    t .  chi2        = _h2_chi2_
+    t .  average     = _h2_average_
 
-    t .  box     = _h2_box_
-    t .  lego    = _h2_lego_
-    t .  surf    = _h2_surf_
-    t .  surf2   = _h2_surf2_
+    t .  box         = _h2_box_
+    t .  lego        = _h2_lego_
+    t .  surf        = _h2_surf_
+    t .  surf2       = _h2_surf2_
 
 
 
@@ -3535,11 +3532,13 @@ def _h3_oper_ ( h1 , h2 , oper ) :
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
+
     result = h1.Clone( hID() )
     if not result.GetSumw2() : result.Sumw2()
     #
     f2 = objectAsFunction ( h2 ) 
-    # 
+    #
+    
     for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
         result.SetBinContent ( ix1 , iy1 , iz1 , 0 ) 
@@ -4303,7 +4302,7 @@ ROOT.TH2D. b2s       = _h2_b2s_
 #  @code
 #  >>> h1 = ...
 #  >>> h2 = h1.rescale_bins ( h1 , 1 )
-#  @endcode 
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-03-19   
 def _h1_rescale_ ( h1 , factor = 1 ) :
@@ -5479,6 +5478,53 @@ def _h3_integrate_ ( h                         ,
             if cut ( i ) : result = func ( result , i[-1] * vol )
                 
     return result 
+
+
+# =============================================================================
+## make transformation of histogram content 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2012-10-23  
+def _h3_transform_ ( h3 , func ) :
+    """Make the transformation of the 2D-histogram content 
+    >>> func = lambda x,y,z,v: v   ## identical transformation/copy
+    >>> h3   = ...
+    >>> h3   = h3.fransform ( func ) 
+    """
+    #
+    if not h3.GetSumw2() : h3.Sumw2()
+    hn = h3.Clone ( hID() )
+    if not hn.GetSumw2() : hn.Sumw2()
+    #
+    for ix,iy,iz, x,y,z, v  in h3.items() :        
+        hn [ ix , iy , iz ] = func ( x, y , z , v ) 
+        
+    hn.ResetStats() 
+    return hn 
+
+ROOT.TH3F. transform = _h3_transform_ 
+ROOT.TH3D. transform = _h3_transform_ 
+
+# =============================================================================
+## rescale the histogram for effective uniform bins
+#  new_content = old_content * factor / bin_area
+#  @code
+#  >>> h2 = ...
+#  >>> h3 = h2.rescale_bins ( h2 , 1 )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-03-19   
+def _h3_rescale_ ( h3 , factor = 1 ) :
+    """Rescale the histogram for effective uniform bins : 
+    new_bin_content = old_bin_content * factor / bin_area
+    >>> h1 = ...
+    >>> h2 = h1.rescale_bins ( h1 , 1 )
+    
+    """
+    return _h3_transform_ ( h3 , lambda x , y , z, v : ( 0.125 * factor / ( x.error() * y.error() * z.error () ) * v ) )
+
+ROOT.TH3F. rescale_bins = _h3_rescale_ 
+ROOT.TH3D. rescale_bins = _h3_rescale_ 
+
 
 
 ROOT.TH1F .   shift     = _h1_shift_

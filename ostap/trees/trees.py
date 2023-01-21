@@ -2125,11 +2125,18 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     if isinstance ( names , string_types ) : names = [ names ]
     names = [ n.strip() for n in names ] 
     for n in names : 
-        assert not n in tree.branches() ,"``Branch'' %s already exists!" % n
+        assert not n in tree.branches() ,"`Branch' %s already exists!" % n
 
     assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
            "add_branch: invalid type of ``function'': %s/%s" % ( function , type ( function ) )  
 
+
+    treepath =  tree.path
+    the_file = tree.topdir
+    assert treepath and the_file and ( not the_file is ROOT.gROOT ) and isinstance ( the_file ,  ROOT.TFile ) , \
+           'This is not file-resident TTree object, addition of new branch is not posisble!'
+    the_file = the_file.GetName() 
+    
     if isinstance ( name  ,  dictlike_types ) and function is None :
         
         typeformula = False 
@@ -2209,6 +2216,7 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     tname = tree.GetName      ()
     tdir  = tree.GetDirectory ()
     tpath = tree.path
+    
 
     branches = set ( tree.branches () ) | set ( tree.leaves() ) 
     exists   = set ( names ) & branches
@@ -2241,6 +2249,13 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
             logger.debug ('Write back TTree %s to %s' % ( tpath , tfile ) )            
         else :
             logger.error ("Can't write TTree %s back to the file %s" % ( tpath , tfile ) )
+
+    ## recollect the chain 
+    newc = ROOT.TChain ( treepath )
+    newc.Add ( the_file )
+
+    return newc
+
 
 ROOT.TTree.add_new_branch = add_new_branch 
 

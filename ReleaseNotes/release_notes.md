@@ -31,7 +31,7 @@
   1. unify the variable separators for trees, datastes and frames 
   1. further imporvements 
   1. make a try to fix morphing 
-
+  1. fix for 3D-reweighting, add 3D-reweigtni test/example for  Paula Garcia 
 
 ## Backward incompatible:  
 

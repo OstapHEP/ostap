@@ -55,7 +55,7 @@ class AttrGetter(object):
 
     @property 
     def attributes ( self ) :
-        """``attributes'': the actual attributes
+        """`attributes': the actual attributes
         """
         return self.__attributes
     
@@ -67,14 +67,14 @@ class AttrGetter(object):
 class Weight(object) :
     """Helper class for semi-automatic reweighting of data
 
-    It reads various ``weigth components'' from DBASE and calculates
-    the ``global'' event weight via simple accumulation of weights
+    It reads various `weigth components' from DBASE and calculates
+    the `global' event weight via simple accumulation of weights
     
     Simplest case: calculate weights for one variable.
     
     factors = [ ( fun , name ) ] 
-    where ``fun'' is a function to get variable from TTree/RooDataSet 
-    and   ``name'' is address in data base with reweighting information 
+    where `fun' is a function to get variable from TTree/RooDataSet 
+    and   `name' is address in data base with reweighting information 
     e.g.
     
     >>> factors = [ ( lambda s : s.pt  , 'pt-data' ) ]
@@ -84,7 +84,7 @@ class Weight(object) :
     
     >>> funcs = database['pt-data']
     
-    Here ``func'' will be function/callable or list of functions/callables 
+    Here `func' will be function/callable or list of functions/callables 
     with weights:
     
     >>> pt = fun ( entry ) 
@@ -92,9 +92,9 @@ class Weight(object) :
     >>> w *= func ( pt )              ## for the single function/callable
     >>> for f in funcs : w*= f ( pt ) ## for list of functions/callables  
     
-    quantity ``w'' will be an event  weight
+    quantity `w' will be an event  weight
     
-    if list of ``factors'' constains more than one entry,
+    if list of `factors' constains more than one entry,
     to each entry weigth is calculated independently and total weight
     is a product of individual weights.
 
@@ -140,7 +140,6 @@ class Weight(object) :
                 merge   = wvar.merge     ## merge sequence of callables?
                 skip    = wvar.skip      ## skip   some of them?
 
-
                 row = []
                 
                 row.append ( funname ) 
@@ -159,7 +158,7 @@ class Weight(object) :
                 ## 
                 functions  = db.get ( funname , [] ) ## db[ funname ]
                 if not functions :
-                    logger.warning ( "No reweighting is available for ``%s'', skip it" % funname )
+                    logger.warning ( "No reweighting is available for `%s', skip it" % funname )
                     continue
                                 
                 if not isinstance (  functions , ( list , tuple ) ) :
@@ -167,15 +166,15 @@ class Weight(object) :
                 
                 flen = len(functions) 
                 if   0 < skip and skip      < flen :
-                    logger.info  ("Use only %d first iterations for ``%s''" % ( skip , funname ) )
+                    logger.info  ("Use only %d first iterations for `%s'" % ( skip , funname ) )
                     functions = functions[:skip] 
                 elif 0 > skip and abs(skip) < flen :
-                    logger.info  ("Skip last %d iterations for ``%s''" % ( skip , funname ) )
+                    logger.info  ("Skip last %d iterations for `%s'" % ( skip , funname ) )
                     functions = functions[:skip] 
                 elif 0 == skip :
                     pass
                 else :
-                    logger.error("Invalid ``skip'' parameter %s/%d for ``%s''" % ( skip , flen , funname ) )
+                    logger.error("Invalid `skip' parameter %s/%d for `%s'" % ( skip , flen , funname ) )
                 row.append ( '%d' % flen ) 
                 
                 ## nullify the uncertainties except for the last histogram
@@ -220,27 +219,27 @@ class Weight(object) :
 
     @property
     def dbase ( self ) :
-        """``dbase'' : th ename of the database woith reweigting information
+        """`dbase' : the name of the database for storage of reweigting information
         """
         return self.__dbase
     
     @property
     def variables ( self ) :
-        """```variables'' - the structure of reweigjhting variables/machinery"""
+        """``variables' - the structure of reweighting variables/machinery"""
         return self.__vars 
         
     @property 
     def stat    ( self ) :
-        """``stat'' : get the statistic of used weights"""
+        """`stat' : get the statistic of used weights"""
         return self.__counter
     @property 
     def nZeroes ( self ) :
-        """``nZeroes'': Number of null weights"""
+        """`nZeroes': Number of null weights"""
         return self.__nzeroes
     
     ## calculate the weight for the given "event"
     def __call__ ( self , s ) :
-        """   Calculate the weigth for the given ``event'' (==record in TTree/TChain or RooDataSet):
+        """   Calculate the weigth for the given `event' (==record in TTree/TChain or RooDataSet):
         >>> weight = Weight ( ... )
         >>> tree   = ...
         >>> w = weight ( tree )
@@ -333,10 +332,10 @@ class Weight(object) :
     #  - tree/chain/dataset -> accessor -> database(address) -> weight
     class  Var(object) :
         """Helper class to keep information about singe reweighting
-        - ``accessor'' : an accessor function that extracts the variable(s) from  TTree/TChain/RooDataSet
-        - ``address''  : the  address in DBASE, where reweigftjnig callable(s) is/are stored
-        - ``merge''    : merge list of callables from DB into the single callable ?
-        - ``skip''     : use only certain elements from the list of callables from DBASE
+        - `accessor'  : an accessor function that extracts the variable(s) from  TTree/TChain/RooDataSet
+        - `address'   : the  address in DBASE, where reweigftjnig callable(s) is/are stored
+        - `merge'     : merge list of callables from DB into the single callable ?
+        - ``skip'     : use only certain elements from the list of callables from DBASE
         
         Schematic data flow to get the weigth for the given event 
         - tree/chain/dataset -> accessor -> database(address) -> weight
@@ -352,10 +351,10 @@ class Weight(object) :
                        merge     = True ,   ## merge sequence of reweighting objects ?
                        skip      = None ) : ## skip some reweigting objects ? 
             """Keep information about single reweighting
-            - ``accessor'' : an accessor function that extracts the variable(s) from  TTree/TChain/RooDataSet
-            - ``address''  : the  address in DBASE, where reweigftjnig callable(s) is/are stored
-            - ``merge''    : merge list of callables from DB into the single callable ?
-            - ``skip''     : use only certain elements from the list of callables from DBASE
+            - `accessor' : an accessor function that extracts the variable(s) from  TTree/TChain/RooDataSet
+            - `address'  : the  address in DBASE, where reweigftjnig callable(s) is/are stored
+            - `merge'    : merge list of callables from DB into the single callable ?
+            - `skip'     : use only certain elements from the list of callables from DBASE
             
             Schematic data flow to get the weigth for the given event 
             - tree/chain/dataset -> accessor -> database(address) -> weight
@@ -370,7 +369,7 @@ class Weight(object) :
                 accessor = AttrGetter ( *accessor )
             
             assert callable ( accessor ) , \
-                   "Invalid type of ``accessor'' %s/%s" % ( accessor , type( accessor ) )
+                   "Invalid type of `accessor' %s/%s" % ( accessor , type( accessor ) )
             
             self.__accessor = accessor ,
             self.__address  = str ( address )
@@ -379,8 +378,8 @@ class Weight(object) :
             
         @property
         def accessor ( self ) :
-            """``accessor'' - the accessor function to get the variable from TTree/TChain/RooDataSet
-            e.g.  to get the variable ``x'' : 
+            """`accessor' - the accessor function to get the variable from TTree/TChain/RooDataSet
+            e.g.  to get the variable `x' : 
             >>> xvar   = lambda s : s.x
             get to     variables for 2D-reweighting:
             >>> xyvars = lambda s : s.x,s.y         
@@ -389,23 +388,23 @@ class Weight(object) :
         
         @property
         def address  ( self ) :
-            """``address''  - the address in DB with the reweighting information
+            """`address'  - the address in DB with the reweighting information
             for the  given varibale(s).
             A callable (or list of  callables) is expected in database
-            These callables accept their result of ``accessor'' as their argument
+            These callables accept their result of `accessor' as their argument
             """
             return self.__address
         
         @property
         def merge ( self ) :
-            """``merge'' - merge list  of callables into the single  callable?"""
+            """`merge' - merge list  of callables into the single  callable?"""
             return self.__merge
         
         @property
         def skip ( self ) :
-            """``skip''  - use only certain elements from the list of callables from DBASE
-            0 < skip ?   - use only the first  ``skip'' elements 
-            0 > skip ?   - skip last  ``abs(skip)'' elements        
+            """`skip'   - use only certain elements from the list of callables from DBASE
+            0 < skip ?  - use only the first  `skip' elements 
+            0 > skip ?  - skip last  `abs(skip)' elements        
             """
             return self.__skip 
 
@@ -425,32 +424,32 @@ def mc_data_projector  ( dataset , histo , what , how ) :
 
 # =============================================================================
 ## @class WeightingPlot
-#  helper class to manage/keep ``weighting-plot'' 
+#  helper class to manage/keep `weighting-plot' 
 class WeightingPlot(object) :    
-    """Helper class to manage/keep ``weighting-plot''
+    """Helper class to manage/keep `weighting-plot'
     
-    - ``what'' : the variable/expression to be used for ``weighting-plot''
-    Used  as the second argument of ``dataset.project'' method to produce
-    ``weighted-plot'':
+    - `what' : the variable/expression to be used for `weighting-plot'
+    Used  as the second argument of `dataset.project' method to produce
+    `weighted-plot':
     
     >>> dataset.project ( mchisto , WHAT , how , ... ) 
     
-    - ``how'' : the ``weight'' expression to be used for ``weighed-plots''
-    Used  as the third argument of ``dataset.project'' method to produce
-    ``weighted-plot'':
+    - `how' : the `weight' expression to be used for `weighed-plots'
+    Used  as the third argument of `dataset.project' method to produce
+    `weighted-plot':
     
     >>> dataset.project ( mchisto , what , HOW , ... )
     
-    Typically it refers to ``weight'' variable in datasete
+    Typically it refers to `weight' variable in the dataset
     
-    - ``address'' : the addres in ``weighting-database''
+    - `address' : the addres in `weighting-database'
     where to store the obtained weights
     
-    - ``data'' : the ``data'' object, or  the ``target'' for the reweighting procedure
+    - `data' : the `data' object, or  the `target' for the reweighting procedure
     Typically it is a histogram. But it could be any kind of callable 
     
-    - ``mchisto'' : template/shape for the mc-histogram, to be used for reweighting.
-    It is used as the  first argument of ``dataset.project'' method
+    - `mchisto' : template/shape for the mc-histogram, to be used for reweighting.
+    It is used as the  first argument of `dataset.project' method
     
     >>> dataset.project ( MCHISTO , what , how , ... )             
     """
@@ -463,33 +462,35 @@ class WeightingPlot(object) :
                    w         = 1.0   ,
                    projector = None  ,
                    ignore    = False ) :
-        """Helper class to manage/keep ``weighting-plot''
+        """Helper class to manage/keep `weighting-plot'
         
-        - ``what'' : the variable/expression to be used for ``weighting-plot''
-        Used  as the second argument of ``dataset.project'' method to produce
-        ``weighted-plot'':
+        - `what' : the variable/expression to be used for `weighting-plot'
+        Used  as the second argument of `dataset.project' method to produce
+        `weighted-plot':
         
         >>> dataset.project ( mchisto , WHAT , how , ... ) 
         
-        - ``how'' : the ``weight'' expression to be used for ``weighed-plots''
-        Used  as the third argument of ``dataset.project'' method to produce
-        ``weighted-plot'':
+        - `how' : the `weight' expression to be used for `weighed-plots'
+        Used  as the third argument of `dataset.project' method to produce
+        `weighted-plot':
         
         >>> dataset.project ( mchisto , what , HOW , ... )
         
-        Typically it refers to ``weight'' variable in datasete
+        Typically it refers to `weight' variable in datasete
         
-        - ``address'' : the addres in ``weighting-database''
+        - `address' : the addres in `weighting-database'
         where to store the obtained weights
         
-        - ``data'' : the ``data'' object, or  the ``target'' for the reweighting procedure
+        - `data' : the `data' object, or  the `target' for the reweighting procedure
         Typically it is a histotgram. But it could be any kind of callable 
         
-        - ``mc_histo'' : template/shape for the mc-histogram, to be used for reweighting.
-        It is used as the  first argument of ``dataset.project'' method
+        - `mc_histo' : template/shape for the mc-histogram, to be used for reweighting.
+        It is used as the  first argument of `dataset.project' method
         
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
+
+        assert data and callable ( data ) , "ReweightingPlot: `data' object must be callable!"
         
         self.__what      = str(what)     if isinstance ( what , str ) else what 
         self.__how       = str(how )     if isinstance ( how  , str ) else how 
@@ -497,66 +498,66 @@ class WeightingPlot(object) :
         self.__data      = data
         self.__mc        = mc_histo      if mc_histo else data.clone()
         assert isinstance ( self.__mc , ROOT.TH1 ), \
-               "WPlot: invalid type of ``mchisto'' %s/%s"  % ( self.__mc , type ( self.__mc ) )
+               "WPlot: invalid type of `mchisto' %s/%s"  % ( self.__mc , type ( self.__mc ) )
         self.__w         = w
 
         if not projector : projector = mc_data_projector
             
         self.__projector = projector
         
-        assert self.projector and callable ( self.projector ) ,"``Projector'' must be callable!"
+        assert self.projector and callable ( self.projector ) ,"`Projector' must be callable!"
         self.__ignore    = True if ignore else False 
         
     @property
     def  what ( self ) :
-        """``what'' : the variable/expression to be used for ``weighting-plot''
-        Used  as the second argument of ``dataset.project'' method to produce
-        ``weighted-plot'':
+        """`what' : the variable/expression to be used for `weighting-plot'
+        Used  as the second argument of `dataset.project' method to produce
+        `weighted-plot':
         >>> dataset.project ( mchisto , WHAT , how , ... ) 
         """
         return self.__what
     @property
     def  how  ( self ) :
-        """``how'' : the ``weight'' expression to be used for ``weighed-plots''
-        Used  as the third argument of ``dataset.project'' method to produce
-        ``weighted-plot'':
+        """`how' : the `weight' expression to be used for `weighed-plots'
+        Used  as the third argument of `dataset.project' method to produce
+        `weighted-plot':
         >>> dataset.project ( mchisto , what , HOW , ... )
-        Typically it refers to ``weight'' variable in datasete
+        Typically it refers to `weight' variable in datasete
         """
         return self.__how 
     @property
     def  address ( self ) :
-        """``address'' : the address in ``weighting-database''
+        """`address' : the address in `weighting-database'
         where to store the obtained weights
         """
         return self.__address
     @property
     def  data ( self ) :
-        """``data'' : the ``data'' object, or  the ``target'' for the reweighting procedure
-        Typically it is a histotgram. But it could be any kind of callable 
+        """`data' : the `data' object, or  the `target' for the reweighting procedure
+        Typically it is a histogram. But it could be any kind of callable 
         """
         return self.__data 
     @property
     def  mc_histo ( self ) :
-        """``mc_histo'' : template/shape for the mc-histogram, to be used for reweighting.
-        It is used as the  first argument of ``dataset.project'' method 
+        """`mc_histo' : template/shape for the mc-histogram, to be used for reweighting.
+        It is used as the  first argument of `dataset.project' method 
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
         return self.__mc
     @property
     def projector ( self ) :
-        """``projector'' :  callable function to build MC distribution:
+        """`projector' :  callable function to build MC distribution:
         hmc = projector ( dataset , hmc ) 
         """
         return self.__projector
     
     @property
     def w  ( self )   :
-        """``w''  - relative weight (relative importance is this variable)"""
+        """`w'  - relative weight (relative importance is this variable)"""
         return self.__w 
     @property
     def ignore ( self ) :
-        """``ignore'' : do nto use varibal ein reweights, but use for comparsion"""
+        """`ignore' : do not use variable in reweights, but use for comparsion"""
         return self.__ignore
     
 # =============================================================================
@@ -643,14 +644,14 @@ def makeWeights  ( dataset                    ,
                    plots      = []            , 
                    database   = "weights.db"  ,
                    compare    = None          , ## comparison function 
-                   delta      = 0.01          , ## delta for ``mean''  weight variation
-                   minmax     = 0.03          , ## delta for ``minmax'' weight variation
+                   delta      = 0.01          , ## delta for `mean'  weight variation
+                   minmax     = 0.03          , ## delta for `minmax' weight variation
                    power      = None          , ## auto-determination
                    debug      = True          , ## save intermediate information in DB
                    make_plots = False         , ## make plots 
                    tag        = "Reweighting" ) :
     """The main  function: perform one re-weighting iteration 
-    and reweight ``MC''-data set to looks as ``data''(reference) dataset
+    and reweight `MC'-data set to looks as `data'(reference) dataset
     >>> results = makeWeights (
     ... dataset           , ## data source to be  reweighted (DataSet, TTree, abstract source)
     ... plots             , ## reweighting plots
@@ -676,8 +677,8 @@ def makeWeights  ( dataset                    ,
     If no more rewighting iteratios required, <code>active</code> is an empty tuple 
     """
 
-    assert 0 < delta  , "makeWeights(%s): Invalid value for ``delta''  %s" % ( tag , delta  )
-    assert 0 < minmax , "makeWeights(%s): Invalid value for ``minmax'' %s" % ( tag , minmax ) 
+    assert 0 < delta  , "makeWeights(%s): Invalid value for `delta'  %s" % ( tag , delta  )
+    assert 0 < minmax , "makeWeights(%s): Invalid value for `minmax' %s" % ( tag , minmax ) 
 
     from ostap.logger.colorized   import allright , attention , infostr 
     from ostap.utils.basic        import isatty
@@ -706,7 +707,7 @@ def makeWeights  ( dataset                    ,
         hmc0      = wplot.mc_histo   ## original "MC"   histogram 
         ww        = wplot.w          ## relative weight
         projector = wplot.projector  ## projector for MC data
-        ignore    = wplot.ignore     ## ignore for weigtht building?
+        ignore    = wplot.ignore     ## ignore for weight building?
         #
         # normalize the data
         #
@@ -721,14 +722,16 @@ def makeWeights  ( dataset                    ,
         st   = hmc0.stat()
         mnmx = st.minmax()
         if  iszero ( mnmx [0] ) :
-            logger.warning ( "%s: statistic goes to zero %s/``%s''" % ( tag , st , address ) ) 
+            logger.warning ( "%s: statistic goes to zero %s/`%s'" % ( tag , st , address ) ) 
         elif mnmx [0] <= 0      :
-            logger.warning ( "%s: statistic is negative  %s/``%s''" % ( tag , st , address ) ) 
+            logger.warning ( "%s: statistic is negative  %s/`%s'" % ( tag , st , address ) ) 
             
         # =====================================================================
         ## normalize MC
         # =====================================================================
-        hmc = hmc0.density() 
+        if isinstance ( hmc0 , ROOT.TH1 ) or hasattr ( hmc , 'density' ) :
+            hmc = hmc0.density()
+        else : hmc = hmc0 
 
         # =====================================================================
         ## calculate  the reweighting factor : a bit conservative (?)
@@ -743,16 +746,20 @@ def makeWeights  ( dataset                    ,
             w = ( 1.0 / hmc ) * hdata                                 ## NB! 
         elif hboth and 2 == hmc.dim () and 2 == hdata.dim () and \
                  ( hmc.binsx() >= hdata.binsx() ) and \
-                 ( hmc.binsy() >= hdata.binsy() ) :
+                 ( hmc.binsy() >= hdata.binsy() ) and \
+                 ( hmc.binsx() >  hdata.binsx()   or  \
+                   hmc.binsy() >  hdata.binsy() ) :            
             w = ( 1.0 / hmc ) * hdata                                 ## NB! 
         elif hboth and 3 == hmc.dim () and 3 == hdata.dim () and \
                  ( hmc.binsx() >= hdata.binsx() ) and \
                  ( hmc.binsy() >= hdata.binsy() ) and \
-                 ( hmc.binsz() >= hdata.binsz() ) :
-            w = ( 1.0 / hmc ) * hdata                                 ## NB! 
-        else                            : 
+                 ( hmc.binsz() >= hdata.binsz() ) and \
+                 ( hmc.binsx() >  hdata.binsx()   or  \
+                   hmc.binsy() >  hdata.binsy()   or  \
+                   hmc.binsz() >  hdata.binsz() ) :
+            w = ( 1.0 / hmc ) * hdata                                 ## NB!            
+        else                            :            
             w = hdata / hmc                                           ## NB!
-
 
         # =====================================================================
         ## scale & get the statistics of weights 
@@ -812,7 +819,7 @@ def makeWeights  ( dataset                    ,
         eff_exp = 1.00 
     else               : 
         eff_exp = 1.10 / max ( nactive , 1 ) 
-            
+
     while database and save_to_db :
 
         entry = save_to_db.pop() 
@@ -832,10 +839,11 @@ def makeWeights  ( dataset                    ,
     
         if 1 < nactive and 1 != ww :
             eff_exp *= ww
-            logger.info  ("%s: apply ``effective exponent'' of %.3f for ``%s''" % ( tag , eff_exp  , address ) )
+            logger.info  ("%s: apply `effective exponent' of %.3f for `%s'" % ( tag , eff_exp  , address ) )
 
         if 1 != eff_exp and 0 < eff_exp : 
             weight = weight ** eff_exp
+
             row = list ( rows [ address ] )
             row.append ( '%4.3f' % eff_exp )            
             rows [ address ] = tuple ( row ) 
@@ -892,7 +900,7 @@ class W2Tree(FuncTree) :
 
     @property
     def weight ( self ) :
-        """``weight'' : get the weighter object"""
+        """`weight' : get the weighter object"""
         return  self.__weight
 
 # =============================================================================
@@ -930,7 +938,7 @@ class W2Data(FuncData) :
     
     @property
     def weight ( self ) :
-        """``weight'' : get the weighter object"""
+        """`weight' : get the weighter object"""
         return  self.__weight
     
 # =============================================================================
