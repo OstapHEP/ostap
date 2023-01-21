@@ -1426,6 +1426,18 @@ namespace Ostap
       Polynomial subtract ( const Polynomial& other ) const ;
       // ======================================================================      
     public:
+      // ======================================================================
+      /// Add       polynomials (with the same domain!)
+      Polynomial& isum    ( const Polynomial& other ) ;
+      /// Subtract  polynomials (with the same domain!)
+      Polynomial& isub    ( const Polynomial& other ) ;
+      // ======================================================================
+    public:
+      // ====================================================================== 
+      inline Polynomial& operator+=( const Polynomial& other ) { return isum ( other ) ; }
+      inline Polynomial& operator-=( const Polynomial& other ) { return isub ( other ) ; }
+      // ======================================================================
+    public:
       // ======================================================================      
       /// Add       polynomials (with the same domain!)
       Polynomial __add__   ( const Polynomial& other ) const ;
@@ -1455,6 +1467,11 @@ namespace Ostap
       Polynomial  __rmul__  ( const double a ) const ;
       // ======================================================================
     public:
+      // ======================================================================
+      Polynomial& __iadd__  ( const Polynomial& a ) { return isum ( a ) ; }
+      Polynomial& __isub__  ( const Polynomial& a ) { return isub ( a ) ; }
+      // ======================================================================
+     public:
       // ======================================================================
       /// Negate it! 
       Polynomial  __neg__   () const ; // Negate it! 
@@ -1617,6 +1634,18 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// add      chebyshev sum (with the same domain)
+      ChebyshevSum& isum    ( const ChebyshevSum& other ) ;
+      /// subtract chebyshev sum (with the same domain)
+      ChebyshevSum& isub    ( const ChebyshevSum& other ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline ChebyshevSum& operator+=( const ChebyshevSum& other ) { return isum ( other ) ; }
+      inline ChebyshevSum& operator-=( const ChebyshevSum& other ) { return isub ( other ) ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
       ChebyshevSum& __iadd__      ( const double a ) ;
       ChebyshevSum& __isub__      ( const double a ) ;
       ChebyshevSum& __imul__      ( const double a ) ;
@@ -1641,6 +1670,11 @@ namespace Ostap
       // ======================================================================
       ChebyshevSum  __add__   ( const ChebyshevSum& a ) const ;
       ChebyshevSum  __sub__   ( const ChebyshevSum& a ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      ChebyshevSum& __iadd__  ( const ChebyshevSum& a ) { return isum ( a ) ; }
+      ChebyshevSum& __isub__  ( const ChebyshevSum& a ) { return isub ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1789,6 +1823,18 @@ namespace Ostap
       LegendreSum sum      ( const LegendreSum& other ) const ;
       /// subtract legendre sum (with the same domain)
       LegendreSum subtract ( const LegendreSum& other ) const ;
+      // =======================================================================
+    public:
+      // =======================================================================
+      /// add      legendre sum (with the same domain)
+      LegendreSum& isum    ( const LegendreSum& other ) ;
+      /// subtract legendre sum (with the same domain)
+      LegendreSum& isub    ( const LegendreSum& other ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline LegendreSum& operator+=( const LegendreSum& other ) { return isum ( other ) ; }
+      inline LegendreSum& operator-=( const LegendreSum& other ) { return isub ( other ) ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -1816,6 +1862,9 @@ namespace Ostap
       // ======================================================================
       LegendreSum  __add__       ( const LegendreSum& a ) const ;
       LegendreSum  __sub__       ( const LegendreSum& a ) const ;
+      // ======================================================================
+      LegendreSum& __iadd__      ( const LegendreSum& a ) { return isum ( a ) ; }
+      LegendreSum& __isub__      ( const LegendreSum& a ) { return isub ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1851,23 +1900,23 @@ namespace Ostap
       // ======================================================================      
     } ;
     // ========================================================================
-    inline LegendreSum operator+( const LegendreSum& a , const LegendreSum& b ) 
+    inline LegendreSum  operator+( const LegendreSum& a , const LegendreSum& b ) 
     { return a.sum       ( b ) ; }    
-    inline LegendreSum operator-( const LegendreSum& a , const LegendreSum& b ) 
+    inline LegendreSum  operator-( const LegendreSum& a , const LegendreSum& b ) 
     { return a.subtract  ( b ) ; }
-    inline LegendreSum operator+( const LegendreSum& a , const double       b ) 
+    inline LegendreSum  operator+( const LegendreSum& a , const double       b ) 
     { return a.__add__   ( b ) ; }    
-    inline LegendreSum operator+( const double       b , const LegendreSum& a )
+    inline LegendreSum  operator+( const double       b , const LegendreSum& a )
     { return a.__add__   ( b ) ; }
-    inline LegendreSum operator-( const LegendreSum& a , const double       b ) 
+    inline LegendreSum  operator-( const LegendreSum& a , const double       b ) 
     { return a.__sub__   ( b ) ; }    
-    inline LegendreSum operator-( const double       b , const LegendreSum& a )
+    inline LegendreSum  operator-( const double       b , const LegendreSum& a )
     { return a.__rsub__  ( b ) ; }
-    inline LegendreSum operator*( const LegendreSum& a , const double       b ) 
+    inline LegendreSum  operator*( const LegendreSum& a , const double       b ) 
     { return a.__mul__   ( b ) ; }    
-    inline LegendreSum operator*( const double       b , const LegendreSum& a )
+    inline LegendreSum  operator*( const double       b , const LegendreSum& a )
     { return a.__mul__   ( b ) ; }
-    inline LegendreSum operator/( const LegendreSum& a , const double       b ) 
+    inline LegendreSum  operator/( const LegendreSum& a , const double       b ) 
     { return a.__truediv__   ( b ) ; }    
     // ========================================================================
     /** @class HermiteSum 

@@ -30,6 +30,14 @@ namespace Ostap
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
+  namespace Utils 
+  {
+    // ========================================================================
+    /// forward declaration 
+    class ProgressConf ; // forward declaration 
+    // ========================================================================
+  }    
+  // ==========================================================================
   /** @class  DataParam  Ostap/Params.h
    *  Helper  class to parameterize the data 
    *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -263,7 +271,7 @@ namespace Ostap
       const unsigned long        first       =  0 ,
       const unsigned long        last        = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
-  public:
+  public: // Parameterse in terms oc Chebyshed polynomials 
     // =========================================================================
     /** fill Chebyshev sum with data from the Tree 
      *  @see Ostap::Math::ChebyshevSum 
@@ -315,7 +323,7 @@ namespace Ostap
       const unsigned long        first      =  0 ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // =======================================================================
-  public:
+  public: // Parameterse in terms of Bernstein polynomials 
     // =========================================================================
     /** fill Bernstein sum with data from the Tree 
      *  @see Ostap::Math::Bernstein 
@@ -396,7 +404,7 @@ namespace Ostap
       const unsigned long        first       =  0 ,
       const unsigned long        last        = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
-    /** fill BErnstein with data from the Tree 
+    /** fill Bernstein with data from the Tree 
      *  @see Ostap::Math::Bernstein2D
      *  @see Ostap::Math::Bernstein2D::fill
      *  @param tree        (INPUT)  the input tree 

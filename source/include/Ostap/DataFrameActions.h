@@ -98,7 +98,6 @@ namespace ROOT
         std::vector<Ostap::StatEntity>           m_slots  { 1 } ;
         // ===================================================================
       } ; //                        The end of class ROOT::Detail::RDF::StatVar
-
       // ======================================================================
       /** @class WStatVar
        *  Helper class to get weighted statitsics for the column in DataFrame 
@@ -148,7 +147,7 @@ namespace ROOT
         {
           Ostap::WStatEntity& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e.add ( v , weight ) ; } 
         }
-        // ===============================================================================
+        // ====================================================================
         /// The basic method: increment the counter for the vector-like column of weight 
 #if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
@@ -157,14 +156,14 @@ namespace ROOT
 #endif
         void Exec ( unsigned int slot , const double value , const T &ws )
         { Ostap::WStatEntity& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.add ( value , w   ) ; } }
-        // ===============================================================================
+        // ====================================================================
       public:
-        // ===============================================================================
+        // ====================================================================
         /// Get the result 
         std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
         /// get partial result for the given slot 
         Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
-        // ===============================================================================
+        // ====================================================================
       private:
         // ====================================================================
         /// the final result 
@@ -194,44 +193,6 @@ namespace Ostap
   }
   // ==========================================================================
 }
-// ============================================================================
-    
-  //   // ========================================================================
-  //   /** get statistics for the certain column 
-  //    *  @code 
-  //    *  cnt = StatVar  ( frame , "myvar" ) ;
-  //    *  @endcode 
-  //    *  @see Ostap::StatEntity 
-  //    */
-  //   template<typename Proxied, typename DataSource>
-  //   ROOT::RDF::RResultPtr<Ostap::StatEntity>
-  //   StatVar ( ROOT::RDF::RInterface< Proxied, DataSource >& frame    ,
-  //             const std::string&                            variable )
-  //   {
-  //     using CN = typename ROOT::RDF::RInterface< Proxied, DataSource >::ColumnNames_t ;
-  //     return frame.Fill ( Ostap::StatEntity() , CN ( 1 , variable ) ) ;  
-  //   }
-  //   // ========================================================================
-  //   /** get weighted statistics for the certain column 
-  //    *  @code 
-  //    *  cnt = StatVar  ( frame , "myvar" , "weight") ;
-  //    *  @endcode 
-  //    *  @see Ostap::WStatEntity 
-  //    */
-  //   template<typename Proxied, typename DataSource>
-  //   ROOT::RDF::RResultPtr<Ostap::WStatEntity>
-  //   StatVar ( ROOT::RDF::RInterface< Proxied, DataSource >& frame    ,
-  //             const std::string&                            variable , 
-  //             const std::string&                            weight   )
-  //   {
-  //     using CN = typename ROOT::RDF::RInterface< Proxied, DataSource >::ColumnNames_t ;
-  //     return frame.Fill ( Ostap::WStatEntity() , { variable , weight } ) ; 
-  //   }
-  //   // ========================================================================    
-  // }
-  // ==========================================================================
-  // }
-
 // ============================================================================
 #endif // #if ROOT_VERSION_CODE >= ROOT_VERSION(6,16,0)
 // ============================================================================

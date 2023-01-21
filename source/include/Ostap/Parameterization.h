@@ -170,6 +170,25 @@ namespace Ostap
       /// negate it! 
       LegendreSum2  operator-    () const ;
       // ======================================================================
+    public:
+      // ======================================================================   
+      /// add      legendre sum (with the same domain)
+      LegendreSum2 sum      ( const LegendreSum2& other ) const ;
+      /// subtract legendre sum (with the same domain)
+      LegendreSum2 subtract ( const LegendreSum2& other ) const ;
+      // =======================================================================
+    public:
+      // =======================================================================
+      /// add      legendre sum (with the same domain)
+      LegendreSum2& isum    ( const LegendreSum2& other ) ;
+      /// subtract legendre sum (with the same domain)
+      LegendreSum2& isub    ( const LegendreSum2& other ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline LegendreSum2& operator+=( const LegendreSum2& other ) { return isum ( other ) ; }
+      inline LegendreSum2& operator-=( const LegendreSum2& other ) { return isub ( other ) ; }
+      // ======================================================================
     public: // please python
       // ======================================================================
       LegendreSum2& __iadd__     ( const double value ) { return  (*this) += value ; }
@@ -187,6 +206,14 @@ namespace Ostap
       LegendreSum2  __radd__     ( const double value ) { return  (*this) +  value ; }
       LegendreSum2  __rsub__     ( const double value ) { return -(*this) +  value ; }
       LegendreSum2  __rmult__    ( const double value ) { return  (*this) *  value ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      LegendreSum2  __add__     ( const LegendreSum2& a ) const { return sum      ( a ) ; }
+      LegendreSum2  __sub__     ( const LegendreSum2& a ) const { return subtract ( a ) ; }
+      // ======================================================================
+      LegendreSum2& __iadd__    ( const LegendreSum2& a ) { return isum ( a ) ; }
+      LegendreSum2& __isub__    ( const LegendreSum2& a ) { return isub ( a ) ; }
       // ======================================================================
       /// negate it! 
       LegendreSum2  __neg__      () const { return  -(*this) ; }
@@ -286,6 +313,9 @@ namespace Ostap
     inline LegendreSum2 operator-( const double b , const LegendreSum2& a ) { return -a + b ; }
     inline LegendreSum2 operator*( const double b , const LegendreSum2& a ) { return  a * b ; }
     // ========================================================================
+    inline LegendreSum2 operator+( const LegendreSum2& a , const LegendreSum2& b ) { return a.sum      ( b ) ; }    
+    inline LegendreSum2 operator-( const LegendreSum2& a , const LegendreSum2& b ) { return a.subtract ( b ) ; }    
+    // =======================================================================
     /// Decartes product of two Legendre sums 
     inline LegendreSum2 operator*
     ( const LegendreSum& a , 
@@ -495,6 +525,25 @@ namespace Ostap
       /// negate it! 
       LegendreSum3  operator-    () const ;
       // ======================================================================
+    public:
+      // ======================================================================   
+      /// add      legendre sum (with the same domain)
+      LegendreSum3 sum      ( const LegendreSum3& other ) const ;
+      /// subtract legendre sum (with the same domain)
+      LegendreSum3 subtract ( const LegendreSum3& other ) const ;
+      // =======================================================================
+    public:
+      // =======================================================================
+      /// add      legendre sum (with the same domain)
+      LegendreSum3& isum    ( const LegendreSum3& other ) ;
+      /// subtract legendre sum (with the same domain)
+      LegendreSum3& isub    ( const LegendreSum3& other ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline LegendreSum3& operator+=( const LegendreSum3& other ) { return isum ( other ) ; }
+      inline LegendreSum3& operator-=( const LegendreSum3& other ) { return isub ( other ) ; }
+      // ======================================================================
     public: // please python
       // ======================================================================
       LegendreSum3& __iadd__     ( const double value ) { return  (*this) += value ; }
@@ -512,6 +561,14 @@ namespace Ostap
       LegendreSum3  __radd__     ( const double value ) { return  (*this) +  value ; }
       LegendreSum3  __rsub__     ( const double value ) { return -(*this) +  value ; }
       LegendreSum3  __rmult__    ( const double value ) { return  (*this) *  value ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      LegendreSum3  __add__     ( const LegendreSum3& a ) const { return sum      ( a ) ; }
+      LegendreSum3  __sub__     ( const LegendreSum3& a ) const { return subtract ( a ) ; }
+      // ======================================================================
+      LegendreSum3& __iadd__    ( const LegendreSum3& a ) { return isum ( a ) ; }
+      LegendreSum3& __isub__    ( const LegendreSum3& a ) { return isub ( a ) ; }
       // ======================================================================
       /// negate it! 
       LegendreSum3  __neg__      () const { return  -(*this) ; }
@@ -622,6 +679,10 @@ namespace Ostap
     inline LegendreSum3 operator+( const double b , const LegendreSum3& a ) { return  a + b ; }    
     inline LegendreSum3 operator-( const double b , const LegendreSum3& a ) { return -a + b ; }
     inline LegendreSum3 operator*( const double b , const LegendreSum3& a ) { return  a * b ; }
+    // =======================================================================
+    inline LegendreSum3 operator+( const LegendreSum3& a , const LegendreSum3& b ) { return a.sum      ( b ) ; }    
+    inline LegendreSum3 operator-( const LegendreSum3& a , const LegendreSum3& b ) { return a.subtract ( b ) ; }    
+    // =======================================================================
     /// Decartes product of two Legendre sums 
     inline LegendreSum3 operator*
     ( const LegendreSum2& a , 
@@ -853,6 +914,25 @@ namespace Ostap
       /// negate it! 
       LegendreSum4  operator-    () const ;
       // ======================================================================
+    public:
+      // ======================================================================   
+      /// add      legendre sum (with the same domain)
+      LegendreSum4 sum      ( const LegendreSum4& other ) const ;
+      /// subtract legendre sum (with the same domain)
+      LegendreSum4 subtract ( const LegendreSum4& other ) const ;
+      // =======================================================================
+    public:
+      // =======================================================================
+      /// add      legendre sum (with the same domain)
+      LegendreSum4& isum    ( const LegendreSum4& other ) ;
+      /// subtract legendre sum (with the same domain)
+      LegendreSum4& isub    ( const LegendreSum4& other ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline LegendreSum4& operator+=( const LegendreSum4& other ) { return isum ( other ) ; }
+      inline LegendreSum4& operator-=( const LegendreSum4& other ) { return isub ( other ) ; }
+      // ======================================================================
     public: // please python
       // ======================================================================
       LegendreSum4& __iadd__     ( const double value ) { return  (*this) += value ; }
@@ -870,6 +950,14 @@ namespace Ostap
       LegendreSum4  __radd__     ( const double value ) { return  (*this) +  value ; }
       LegendreSum4  __rsub__     ( const double value ) { return -(*this) +  value ; }
       LegendreSum4  __rmult__    ( const double value ) { return  (*this) *  value ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      LegendreSum4  __add__     ( const LegendreSum4& a ) const { return sum      ( a ) ; }
+      LegendreSum4  __sub__     ( const LegendreSum4& a ) const { return subtract ( a ) ; }
+      // ======================================================================
+      LegendreSum4& __iadd__    ( const LegendreSum4& a ) { return isum ( a ) ; }
+      LegendreSum4& __isub__    ( const LegendreSum4& a ) { return isub ( a ) ; }
       // ======================================================================
       /// negate it! 
       LegendreSum4  __neg__      () const { return  -(*this) ; }
@@ -1004,6 +1092,10 @@ namespace Ostap
     inline LegendreSum4 operator+( const double b , const LegendreSum4& a ) { return  a + b ; }    
     inline LegendreSum4 operator-( const double b , const LegendreSum4& a ) { return -a + b ; }
     inline LegendreSum4 operator*( const double b , const LegendreSum4& a ) { return  a * b ; }
+    // =======================================================================
+    inline LegendreSum4 operator+( const LegendreSum4& a , const LegendreSum4& b ) { return a.sum      ( b ) ; }    
+    inline LegendreSum4 operator-( const LegendreSum4& a , const LegendreSum4& b ) { return a.subtract ( b ) ; }    
+    // =======================================================================
     // /// Decartes product of two Legendre sums 
     // inline LegendreSum3 operator*
     // ( const LegendreSum2& a , 

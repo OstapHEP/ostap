@@ -849,29 +849,59 @@ Ostap::Math::Polynomial::operator/= ( const double a )
 // ============================================================================
 // Add       polynomials (with the same domain!)
 // ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isum
+( const Ostap::Math::Polynomial& other ) 
+{
+  if ( this == &other ) { *this *= 2 ; return *this; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial"                       , 
+                  Ostap::StatusCode ( 520 )                       )  ;
+  //
+  const unsigned short idegree = std::max ( degree() , other.degree() ) ;
+  m_pars.resize ( idegree + 1 ) ;
+  //
+  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
+  { m_pars[i] += other.m_pars [ i ] ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
 Ostap::Math::Polynomial 
 Ostap::Math::Polynomial::sum
 ( const Ostap::Math::Polynomial& other ) const 
 {
-  if ( this == &other ) 
-  {
-    Polynomial result(*this) ;
-    result *= 2 ;
-    return result ;
-  }
-  if ( !s_equal ( xmin() , other.xmin() ) || 
-       !s_equal ( xmax() , other.xmax() ) )
-  {
-    throw Ostap::Exception ( "Can't sum Polynomials with different domains" , 
-                             "Ostap::Math::Polynomial", 
-                             Ostap::StatusCode ( Ostap::StatusCode::FAILURE ) ) ;
-  }
-  const unsigned short idegree = std::max ( degree() , other.degree() ) ;
-  //
-  Polynomial result( idegree , xmin () , xmax () ) ;
-  for ( unsigned short i = 0 ; i < result.npars() ; ++i ) 
-  { result.m_pars[i] += par(i) +  other.par( i ) ; }
+  Polynomial result(*this) ;
+  result.isum ( other ) ;
   return result ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::Polynomial& other ) 
+{
+  if ( this == &other ) { *this *= 0 ; return *this ; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial"                      , 
+                  Ostap::StatusCode ( 521 )                      )  ;
+  //
+  const unsigned short idegree = std::max ( degree() , other.degree() ) ;
+  m_pars.resize ( idegree + 1 ) ;
+  //
+  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars [ i ] ; }
+  //
+  return *this ;
 }
 // ============================================================================
 // Subtract      polynomials (with the same domain!)
@@ -880,20 +910,9 @@ Ostap::Math::Polynomial
 Ostap::Math::Polynomial::subtract
 ( const Ostap::Math::Polynomial& other ) const 
 {
-  if ( this == &other ) 
-  { return Polynomial( degree() , xmin() , xmax() ) ; }
-  //
-  if ( !s_equal ( xmin() , other.xmin() ) || 
-       !s_equal ( xmax() , other.xmax() ) )
-  {
-    throw Ostap::Exception ( "Can't subtract Polynomials with different domains" , 
-                             "Ostap::Math::Polynomial", 
-                             Ostap::StatusCode( Ostap::StatusCode::FAILURE ) ) ;
-  }
-  //
-  Polynomial a ( other ) ;
-  Ostap::Math::negate ( a.m_pars ) ;
-  return sum ( a ) ;  
+  Polynomial result(*this) ;
+  result.isub ( other ) ;
+  return result ;
 }
 // ============================================================================
 // unary minus 
@@ -1299,6 +1318,32 @@ Ostap::Math::ChebyshevSum::__sub__
 ( const Ostap::Math::ChebyshevSum& a ) const { return subtract ( a ) ; } 
 // ============================================================================
 
+
+
+
+
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::ChebyshevSum&
+Ostap::Math::ChebyshevSum::isum
+( const Ostap::Math::ChebyshevSum& other )
+{
+  if ( this == &other ) { *this *= 2 ; return *this ; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )                ,
+                  "Cannot sum Chebyshev with different domains" , 
+                  "Ostap::Math::Chebyshev"                         , 
+                  Ostap::StatusCode ( 522 )                        )  ;
+  //
+  const unsigned short idegree = std::max ( degree() , other.degree() ) ;
+  //
+  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
+  { m_pars[i] += other.m_pars [ i ] ; }
+  //
+  return *this ;
+}
 // ============================================================================
 // Add       polynomials (with the same domain!)
 // ============================================================================
@@ -1306,25 +1351,31 @@ Ostap::Math::ChebyshevSum
 Ostap::Math::ChebyshevSum::sum
 ( const Ostap::Math::ChebyshevSum& other ) const 
 {
-  if ( this == &other ) 
-  {
-    ChebyshevSum result(*this) ;
-    result *= 2 ;
-    return result ;
-  }
-  if ( !s_equal ( xmin() , other.xmin() ) || 
-       !s_equal ( xmax() , other.xmax() ) )
-  {
-    throw Ostap::Exception ( "Can't sum Chebyshev polynomials with different domains" , 
-                             "Ostap::Math::ChebyshevSum", 
-                             Ostap::StatusCode( Ostap::StatusCode::FAILURE ) ) ;
-  }
+  ChebyshevSum result(*this) ;
+  result.isum ( other ) ;
+  return result ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::ChebyshevSum&
+Ostap::Math::ChebyshevSum::isub
+( const Ostap::Math::ChebyshevSum& other )
+{
+  if ( this == &other ) { *this *= 0 ; return *this ; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )                  ,
+                  "Cannot subtract Chebyshev with different domains" , 
+                  "Ostap::Math::Chebyshev"                           , 
+                  Ostap::StatusCode ( 523 )                          )  ;
+  //
   const unsigned short idegree = std::max ( degree() , other.degree() ) ;
   //
-  ChebyshevSum result( idegree , xmin () , xmax () ) ;
-  for ( unsigned short i = 0 ; i < result.npars() ; ++i ) 
-  { result.m_pars[i] += par(i) +  other.par( i ) ; }
-  return result ;
+  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars [ i ] ; }
+  //
+  return *this ;
 }
 // ============================================================================
 // Subtract      polynomials (with the same domain!)
@@ -1333,21 +1384,12 @@ Ostap::Math::ChebyshevSum
 Ostap::Math::ChebyshevSum::subtract
 ( const Ostap::Math::ChebyshevSum& other ) const 
 {
-  if ( this == &other ) 
-  { return ChebyshevSum( degree() , xmin() , xmax() ) ; }
-  //
-  if ( !s_equal ( xmin() , other.xmin() ) || 
-       !s_equal ( xmax() , other.xmax() ) )
-  {
-    throw Ostap::Exception ( "Can't subtract Chebyshev polynomials with different domains" , 
-                             "Ostap::Math::ChebyshevSum", 
-                             Ostap::StatusCode( Ostap::StatusCode::FAILURE ) ) ;
-  }
-  //
-  ChebyshevSum a ( other ) ;
-  Ostap::Math::negate ( a.m_pars ) ;
-  return sum ( a ) ;  
+  ChebyshevSum result(*this) ;
+  result.isub ( other ) ;
+  return result ;
 }
+
+
 // ============================================================================
 // get unique tag 
 // ============================================================================
@@ -1613,6 +1655,32 @@ Ostap::Math::LegendreSum::__sub__
 ( const Ostap::Math::LegendreSum& a ) const { return subtract ( a ) ; } 
 // ============================================================================
 
+
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum&
+Ostap::Math::LegendreSum::isum
+( const Ostap::Math::LegendreSum& other )
+{
+  // self-addition 
+  if ( this == &other ) { (*this)*= 2 ; return *this ; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )            ,
+                  "Cannot sum Legendre with different domains" , 
+                  "Ostap::Math::LegendreSum"                   , 
+                  Ostap::StatusCode ( 524 )                    )  ;
+  //
+  const unsigned short idegree = std::max ( degree() , other.degree() ) ;
+  //
+  m_pars.resize ( idegree + 1 ) ;
+  //
+  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
+  { m_pars[i] += other.m_pars[ i ] ; }
+  //
+  return *this ;
+}
 // ============================================================================
 // Add       polynomials (with the same domain!)
 // ============================================================================
@@ -1620,25 +1688,34 @@ Ostap::Math::LegendreSum
 Ostap::Math::LegendreSum::sum
 ( const Ostap::Math::LegendreSum& other ) const 
 {
-  if ( this == &other ) 
-  {
-    LegendreSum result(*this) ;
-    result *= 2 ;
-    return result ;
-  }
-  if ( !s_equal ( xmin() , other.xmin() ) || 
-       !s_equal ( xmax() , other.xmax() ) )
-  {
-    throw Ostap::Exception ( "Can't sum Legendre polynomials with different domains" , 
-                             "Ostap::Math::LegendreSum", 
-                             Ostap::StatusCode( Ostap::StatusCode::FAILURE ) ) ;
-  }
+  LegendreSum result(*this) ;
+  result.isum ( other ) ;
+  return result ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum&
+Ostap::Math::LegendreSum::isub
+( const Ostap::Math::LegendreSum& other )
+{
+  // self-subtraction
+  if ( this == &other ) { *this *= 0.0 ; return *this ; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )                 ,
+                  "Cannot subtract Legendre with different domains" , 
+                  "Ostap::Math::LegendreSum"                        , 
+                  Ostap::StatusCode ( 525 )                         )  ;
+  //
   const unsigned short idegree = std::max ( degree() , other.degree() ) ;
   //
-  LegendreSum result( idegree , xmin () , xmax () ) ;
-  for ( unsigned short i = 0 ; i < result.npars() ; ++i ) 
-  { result.m_pars[i] += par(i) +  other.par( i ) ; }
-  return result ;
+  m_pars.resize ( idegree + 1 ) ;
+  //
+  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars[ i ] ; }
+  //
+  return *this ;
 }
 // ============================================================================
 // Subtract      polynomials (with the same domain!)
@@ -1647,20 +1724,9 @@ Ostap::Math::LegendreSum
 Ostap::Math::LegendreSum::subtract
 ( const Ostap::Math::LegendreSum& other ) const 
 {
-  if ( this == &other ) 
-  { return LegendreSum( degree() , xmin() , xmax() ) ; }
-  //
-  if ( !s_equal ( xmin() , other.xmin() ) || 
-       !s_equal ( xmax() , other.xmax() ) )
-  {
-    throw Ostap::Exception ( "Can't subtract Legendre polynomials with different domains" , 
-                             "Ostap::Math::LegendreSum", 
-                             Ostap::StatusCode( Ostap::StatusCode::FAILURE ) ) ;
-  }
-  //
-  LegendreSum a ( other ) ;
-  Ostap::Math::negate ( a.m_pars ) ;
-  return sum ( a ) ;  
+  LegendreSum result(*this) ;
+  result.isub ( other ) ;
+  return result ;
 }
 // ============================================================================
 // get unique tag 

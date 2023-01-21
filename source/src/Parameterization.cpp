@@ -6,10 +6,12 @@
 #include "Ostap/Hash.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/Parameterization.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local
 // ============================================================================
 #include "local_math.h"
+#include "Exception.h"
 // ============================================================================
 /** @file 
  *  Implemenation of functions and classes
@@ -389,10 +391,78 @@ std::size_t Ostap::Math::LegendreSum2::tag() const
 // ============================================================================
 
 
-
-
-
-
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum2&
+Ostap::Math::LegendreSum2::isum
+( const Ostap::Math::LegendreSum2& other )
+{
+  // self-addition 
+  if ( this == &other ) { (*this)*= 2 ; return *this ; }
+  //
+  Ostap::Assert ( m_NX == other.m_NX && 
+                  m_NY == other.m_NY &&
+                  s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() ) &&         
+                  s_equal ( ymin() , other.ymin() ) && 
+                  s_equal ( ymax() , other.ymax() )            ,
+                  "Cannot sum Legendre with different domains" , 
+                  "Ostap::Math::LegendreSum2"                  , 
+                  Ostap::StatusCode ( 525 )                    )  ;
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] += other.m_pars[ i ] ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum2 
+Ostap::Math::LegendreSum2::sum
+( const Ostap::Math::LegendreSum2& other ) const 
+{
+  LegendreSum2 result(*this) ;
+  result.isum ( other ) ;
+  return result ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum2&
+Ostap::Math::LegendreSum2::isub
+( const Ostap::Math::LegendreSum2& other )
+{
+  // self-subtraction
+  if ( this == &other ) { *this *= 0.0 ; return *this ; }
+  //
+  Ostap::Assert ( m_NX == other.m_NX && 
+                  m_NY == other.m_NY &&
+                  s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() ) &&         
+                  s_equal ( ymin() , other.ymin() ) &&
+                  s_equal ( ymax() , other.ymax() )            ,
+                  "Cannot subtract Legendre with different domains" , 
+                  "Ostap::Math::LegendreSum2"                       , 
+                  Ostap::StatusCode ( 526 )                         )  ;
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars[ i ] ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum2 
+Ostap::Math::LegendreSum2::subtract
+( const Ostap::Math::LegendreSum2& other ) const 
+{
+  LegendreSum2 result(*this) ;
+  result.isub ( other ) ;
+  return result ;
+}
 // ============================================================================
 // 3D
 // ============================================================================
@@ -860,6 +930,86 @@ std::size_t Ostap::Math::LegendreSum3::tag() const
       nz () , m_zmin , m_zmax ) ;
 }
 // ============================================================================
+
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum3&
+Ostap::Math::LegendreSum3::isum
+( const Ostap::Math::LegendreSum3& other )
+{
+  // self-addition 
+  if ( this == &other ) { (*this)*= 2 ; return *this ; }
+  //
+  Ostap::Assert ( m_NX == other.m_NX                && 
+                  m_NY == other.m_NY                &&
+                  m_NZ == other.m_NZ                &&
+                  s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() ) && 
+                  s_equal ( ymin() , other.ymin() ) &&
+                  s_equal ( ymax() , other.ymax() ) && 
+                  s_equal ( zmin() , other.zmin() ) &&
+                  s_equal ( zmax() , other.zmax() ) ,
+                  "Cannot sum Legendre with different domains" , 
+                  "Ostap::Math::LegendreSum3"                  , 
+                  Ostap::StatusCode ( 527 )                    )  ;
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] += other.m_pars[ i ] ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum3 
+Ostap::Math::LegendreSum3::sum
+( const Ostap::Math::LegendreSum3& other ) const 
+{
+  LegendreSum3 result(*this) ;
+  result.isum ( other ) ;
+  return result ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum3&
+Ostap::Math::LegendreSum3::isub
+( const Ostap::Math::LegendreSum3& other )
+{
+  // self-subtraction
+  if ( this == &other ) { *this *= 0.0 ; return *this ; }
+  //
+  Ostap::Assert ( m_NX == other.m_NX                && 
+                  m_NY == other.m_NY                &&
+                  m_NZ == other.m_NZ                &&
+                  s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() ) && 
+                  s_equal ( ymin() , other.ymin() ) &&
+                  s_equal ( ymax() , other.ymax() ) && 
+                  s_equal ( zmin() , other.zmin() ) &&
+                  s_equal ( zmax() , other.zmax() ) ,
+                  "Cannot subtract Legendre with different domains" , 
+                  "Ostap::Math::LegendreSum3"                       , 
+                  Ostap::StatusCode ( 528 )                         )  ;
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars[ i ] ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum3 
+Ostap::Math::LegendreSum3::subtract
+( const Ostap::Math::LegendreSum3& other ) const 
+{
+  LegendreSum3 result(*this) ;
+  result.isub ( other ) ;
+  return result ;
+}
+
 
 
 
@@ -1338,7 +1488,94 @@ std::size_t Ostap::Math::LegendreSum4::tag() const
       nu () , m_umin , m_umax ) ;
 }
 // ============================================================================
+
+
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum4&
+Ostap::Math::LegendreSum4::isum
+( const Ostap::Math::LegendreSum4& other )
+{
+  // self-addition 
+  if ( this == &other ) { (*this)*= 2 ; return *this ; }
+  //
+  Ostap::Assert ( m_NX == other.m_NX                && 
+                  m_NY == other.m_NY                &&
+                  m_NZ == other.m_NZ                &&
+                  m_NU == other.m_NU                &&
+                  s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() ) && 
+                  s_equal ( ymin() , other.ymin() ) &&
+                  s_equal ( ymax() , other.ymax() ) && 
+                  s_equal ( zmin() , other.zmin() ) &&
+                  s_equal ( zmax() , other.zmax() ) &&
+                  s_equal ( umin() , other.umin() ) &&
+                  s_equal ( umax() , other.umax() ) ,
+                  "Cannot sum Legendre with different domains" , 
+                  "Ostap::Math::LegendreSum4"                  , 
+                  Ostap::StatusCode ( 529 )                    )  ;
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] += other.m_pars[ i ] ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum4 
+Ostap::Math::LegendreSum4::sum
+( const Ostap::Math::LegendreSum4& other ) const 
+{
+  LegendreSum4 result(*this) ;
+  result.isum ( other ) ;
+  return result ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum4&
+Ostap::Math::LegendreSum4::isub
+( const Ostap::Math::LegendreSum4& other )
+{
+  // self-subtraction
+  if ( this == &other ) { *this *= 0.0 ; return *this ; }
+  //
+  Ostap::Assert ( m_NX == other.m_NX                && 
+                  m_NY == other.m_NY                &&
+                  m_NZ == other.m_NZ                &&
+                  m_NU == other.m_NU                &&
+                  s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() ) && 
+                  s_equal ( ymin() , other.ymin() ) &&
+                  s_equal ( ymax() , other.ymax() ) && 
+                  s_equal ( zmin() , other.zmin() ) &&
+                  s_equal ( zmax() , other.zmax() ) &&
+                  s_equal ( umin() , other.umin() ) &&
+                  s_equal ( umax() , other.umax() ) ,
+                  "Cannot subtract Legendre with different domains" , 
+                  "Ostap::Math::LegendreSum4"                       , 
+                  Ostap::StatusCode ( 530 )                         )  ;
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars[ i ] ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum4 
+Ostap::Math::LegendreSum4::subtract
+( const Ostap::Math::LegendreSum4& other ) const 
+{
+  LegendreSum4 result(*this) ;
+  result.isub ( other ) ;
+  return result ;
+}
+
  
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

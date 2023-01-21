@@ -18,18 +18,18 @@ namespace Ostap
 {
   // ==========================================================================
   inline bool Assert
-  ( const bool assertion                                          ,
-    const std::string& message                               ,
-    const std::string& tag     = "Ostap"                    ,
-    const StatusCode&  sc      =  StatusCode::FAILURE )
+  ( const bool         assertion                        ,
+    const std::string& message                          ,
+    const std::string& tag       = "Ostap"              ,
+    const StatusCode&  sc        =  StatusCode::FAILURE )
   { return assertion ? true : throwException ( message , tag , sc ).isSuccess() ; }
   // ===========================================================================
   template < unsigned int N1, unsigned int N2>
   inline bool Assert
-  ( const bool assertion      ,
-    const char (&message)[N1] ,
-    const char (&tag)    [N2] ,
-    const StatusCode& sc = StatusCode::FAILURE )
+  ( const bool        assertion                            ,
+    const char        (&message)[N1]                       ,
+    const char        (&tag)    [N2]                       ,
+    const StatusCode& sc             = StatusCode::FAILURE )
   { return assertion ? true :
       throwException ( std::string ( message , message + N1 ) ,
                        std::string ( tag     , tag     + N2 ) , sc ).isSuccess() ; }
