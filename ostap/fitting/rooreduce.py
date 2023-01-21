@@ -1092,13 +1092,13 @@ Ostap.Models.Uniform.__reduce__ = _runi_reduce_
 ## reduce BreitWigner
 def _rbw_reduce_ ( pdf ):
     """Reduce BreitWigner"""
-    return root_store_factory , ( type ( pdf )       ,
-                                  pdf.name           ,
-                                  pdf.title          ,
-                                  pdf.x      ()      , 
-                                  pdf.mass   ()      ,
-                                  pdf.widths ()      ,
-                                  pdf.breit_wigner() ) 
+    return root_store_factory , ( type ( pdf )      ,
+                                  pdf.name          ,
+                                  pdf.title         ,
+                                  pdf.x      ()     , 
+                                  pdf.mass   ()     ,
+                                  pdf.widths ()     ,
+                                  pdf.breitwigner() ) 
 
 Ostap.Models.BreitWigner.__reduce__ = _rbw_reduce_ 
 
@@ -1106,13 +1106,13 @@ Ostap.Models.BreitWigner.__reduce__ = _rbw_reduce_
 ## reduce BreitWignerMC
 def _rbwmc_reduce_ ( pdf ):
     """Reduce BreitWignerMC"""
-    return root_store_factory , ( type ( pdf )          ,
-                                  pdf.name              ,
-                                  pdf.title             ,
-                                  pdf.x      ()         , 
-                                  pdf.mass   ()         ,
-                                  pdf.widths ()         ,
-                                  pdf.breit_wigner_MC() ) 
+    return root_store_factory , ( type ( pdf )         ,
+                                  pdf.name             ,
+                                  pdf.title            ,
+                                  pdf.x      ()        , 
+                                  pdf.mass   ()        ,
+                                  pdf.widths ()        ,
+                                  pdf.breitwigner_MC() ) 
 
 Ostap.Models.BreitWignerMC.__reduce__ = _rbwmc_reduce_ 
 

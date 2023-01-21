@@ -416,7 +416,7 @@ void Ostap::Models::BreitWignerMC::setPars () const
 // access to underlying function
 // ============================================================================
 const Ostap::Math::BreitWignerMC&  
-Ostap::Models::BreitWignerMC::breit_wigner_MC () const 
+Ostap::Models::BreitWignerMC::breitwigner_MC () const 
 { 
   setPars() ;
   const Ostap::Math::BreitWignerMC* bwmc = 

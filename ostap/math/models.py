@@ -21,6 +21,7 @@ __all__     = (
     'f3_draw'   , ## draw 1D-function via conversion to TF3
     )
 # =============================================================================
+from    ostap.core.meta_info   import root_info
 from    ostap.core.core        import cpp, Ostap, funID
 from    ostap.core.ostap_types import num_types, integer_types
 import  ostap.math.polynomials 
@@ -490,7 +491,32 @@ for m in  ( Ostap.Math.Flatte    ,
     m.amp_imag  = _amp_im_ 
     m.amp_phase = _amp_phase_ 
     m.argand    = _amp_argand_ 
+
+## # =============================================================================
+if root_info < ( 6, 24 ) :
     
+    from ostap.math.base import COMPLEX
+    for t in ( Ostap.Math.BW            ,
+               Ostap.Models.BreitWigner ) :
+        
+        if not hasattr ( t , '_old_breit_wigner_' ) :
+            t._old_breit_wigner_ = t.breit_wigner
+            # 
+            def _new_breit_wigner_ ( f , x , a ) :
+                """Updated `Breit-wigner` function
+                _ see `Ostap.Math.BW.breit_wigner`
+                _ see `Ostap.Models.breit_wigner`
+                _ see `Ostap.Math.BW._old_breit_wigner_`
+                _ see `Ostap.Models._old_breit_wigner_`
+                _ see `Ostap.Math.BW._new_breit_wigner_`
+                _ see `Ostap.Models._new_breit_wigner_`
+                """
+                a = COMPLEX ( amp )
+                return f._old_breit_wigner_ ( x , a )
+            t._new_breit_wigner_ = _new_breit_wigner_
+            t.breit_wigner       = _new_breit_wigner_
+            
+            
 # =============================================================================
 ## get min/max values for bernstein polynomials
 #  @code

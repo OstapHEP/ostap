@@ -151,7 +151,8 @@ from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
 from   ostap.fitting.fithelpers import Phases
 from   ostap.fitting.variables  import var_tanh, SETVAR
-import ostap.math.dalitz 
+import ostap.math.dalitz
+import ostap.math.models
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger

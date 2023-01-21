@@ -138,8 +138,8 @@ rs    = {}
 plots = {}
 
 # =============================================================================
-## def test_fitting_bwi2 () :
-if 1 < 2 :
+def test_fitting_bwi2 () :
+## if 1 < 2 :
     
     logger = getLogger ( 'test_fitting_bwi2' )
     logger.info ( 'Test simple "Breit-Wigner with interference" model' )
@@ -193,7 +193,11 @@ if 1 < 2 :
     model    = Models.Fit1D ( signal = signal , background = -1 )
     model.S  = 1
     model.B  = 1 
-    
+
+    models.add ( bw     )
+    models.add ( bwi    )
+    models.add ( signal )
+    models.add ( model  )
 
     NN       = 1000 
     for vb in vrange ( 1 , 100 , 4 ) :
@@ -216,7 +220,8 @@ if 1 < 2 :
             
             b    .setVal ( vb   )
             phi_b.setVal ( vphi )
-            r , f    = model.fitTo ( ds , silent = True , draw =True , nbins = 50 )
+            with use_canvas ( 'tets_fititng_bwi2: b=%.2f phi/pi=%+.2f' % ( vb , vphi / math.pi ) ) : 
+                r , f    = model.fitTo ( ds , silent = True , draw =True , nbins = 50 )
             
             iS,iB,iI = bwi.ffs() 
             
@@ -243,11 +248,7 @@ if 1 < 2 :
                        nB .toString ( '%.0f +/- %-.0f' ) , \
                        nSt.toString ( '%.0f +/- %-.0f' ) , \
                        nBt.toString ( '%.0f +/- %-.0f' ) 
-                       
-            
-            
-            
-        
+                               
               
         rows.append ( row ) 
         
@@ -294,9 +295,12 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    ##with timing ('Test BWI-1' , logger ) :
-    ##    test_fitting_bwi1 ()
-        
+    with timing ('Test BWI-1' , logger ) :
+        test_fitting_bwi1 ()
+
+    with timing ('Test BWI-2' , logger ) :
+        test_fitting_bwi2 ()
+
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()

@@ -205,7 +205,7 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::BW& function     () const { setPars () ; return *m_bw ; }
       /// access to underlying function
-      const Ostap::Math::BW& breit_wigner () const { setPars () ; return *m_bw ; }
+      const Ostap::Math::BW& breitwigner  () const { setPars () ; return *m_bw ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -214,7 +214,7 @@ namespace Ostap
       // ======================================================================
     public: // evaluate the breit wigner 
       // ======================================================================
-      /** Get Breit-Wigner lineshape in channel \f$ a\f$ : 
+      /** Get Breit-Wigner \f$ a\f$ : 
        *  \f[ F_a(m) = 2m \varrho(s) N^2_a(s,m_0) 
        *    \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A}  \right|^2 \f] 
        *  @param m the mass point 
@@ -278,7 +278,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::BreitWignerMC& breit_wigner_MC () const ;
+      const Ostap::Math::BreitWignerMC& breitwigner_MC () const ;
       // ======================================================================
     } ;
     // ========================================================================
