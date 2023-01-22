@@ -25,6 +25,15 @@ class TTree      ;  // ROOT
 class RooAbsData ; // RooFit 
 class RooAbsReal ; // RooFit 
 // =============================================================================
+namespace Ostap { namespace Math { class ChebyshevSum ; } }
+namespace Ostap { namespace Math { class LegendreSum  ; } }
+namespace Ostap { namespace Math { class LegendreSum2 ; } }
+namespace Ostap { namespace Math { class LegendreSum3 ; } }
+namespace Ostap { namespace Math { class LegendreSum4 ; } }
+namespace Ostap { namespace Math { class Bernstein    ; } }
+namespace Ostap { namespace Math { class Bernstein2D  ; } }
+namespace Ostap { namespace Math { class Bernstein3D  ; } }
+// =============================================================================
 namespace Ostap
 {  
   // ==========================================================================
@@ -487,6 +496,337 @@ namespace Ostap
       const std::string&                yexpression     ,
       const std::string&                zexpression     ,
       const std::string&                selection  = "" ) ;
+    // ========================================================================
+  public: 
+    // ========================================================================
+    // TTeee -> 1D non-histograms 
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param data        (INPUT)  input data 
+     *  @param sum         (UPDATE) sum  
+     *  @param expression  (INPUT)  expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( TTree*                     data            , 
+      Ostap::Math::LegendreSum&  sum             ,
+      const std::string&         expression      ,
+      const std::string&         selection  = "" ,
+      const unsigned long        first      = 0  ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param sum         (UPDATE) sum 
+     *  @param expression  (INPUT)  expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( TTree*                            data            , 
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::LegendreSum&         sum             ,
+      const std::string&                expression      ,
+      const std::string&                selection  = "" ,
+      const unsigned long               first      = 0  ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param data        (INPUT)  input data 
+     *  @param sum         (UPDATE) sum  
+     *  @param expression  (INPUT)  expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( TTree*                     data            , 
+      Ostap::Math::ChebyshevSum& sum             ,
+      const std::string&         expression      ,
+      const std::string&         selection  = "" ,
+      const unsigned long        first      = 0  ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param sum         (UPDATE) sum 
+     *  @param expression  (INPUT)  expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( TTree*                            data            , 
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::ChebyshevSum&        sum             ,
+      const std::string&                expression      ,
+      const std::string&                selection  = "" ,
+      const unsigned long               first      = 0  ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param data        (INPUT)  input data 
+     *  @param sum         (UPDATE) sum  
+     *  @param expression  (INPUT)  expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( TTree*                     data            , 
+      Ostap::Math::Bernstein&    sum             ,
+      const std::string&         expression      ,
+      const std::string&         selection  = "" ,
+      const unsigned long        first      = 0  ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param sum         (UPDATE) sum 
+     *  @param expression  (INPUT)  expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( TTree*                            data            , 
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::Bernstein&           sum             ,
+      const std::string&                expression      ,
+      const std::string&                selection  = "" ,
+      const unsigned long               first      = 0  ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+  public: 
+    // ========================================================================
+    // TTeee -> 2D non-histograms 
+    // ========================================================================
+    /** make a projection of TTree into the object
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param data        (INPUT)  input data 
+     *  @param sum         (UPDATE) sum 
+     *  @param xexpression (INPUT)  x-expression
+     *  @param yexpression (INPUT)  y-expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( TTree*                     data            , 
+      Ostap::Math::LegendreSum2& sum             ,
+      const std::string&         xexpression     ,
+      const std::string&         yexpression     ,
+      const std::string&         selection  = "" ,
+      const unsigned long        first      = 0  ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param sum         (UPDATE) sum 
+     *  @param xexpression (INPUT)  x-expression
+     *  @param yexpression (INPUT)  y-expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( TTree*                            data            , 
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::LegendreSum2&        sum             ,
+      const std::string&                xexpression     ,
+      const std::string&                yexpression     ,
+      const std::string&                selection  = "" ,
+      const unsigned long               first      = 0  ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param data        (INPUT)  input data 
+     *  @param sum         (UPDATE) sum 
+     *  @param xexpression (INPUT)  x-expression
+     *  @param yexpression (INPUT)  y-expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( TTree*                     data            , 
+      Ostap::Math::Bernstein2D&  sum             ,
+      const std::string&         xexpression     ,
+      const std::string&         yexpression     ,
+      const std::string&         selection  = "" ,
+      const unsigned long        first      = 0  ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param sum         (UPDATE) sum 
+     *  @param xexpression (INPUT)  x-expression
+     *  @param yexpression (INPUT)  y-expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( TTree*                            data            , 
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::Bernstein2D&         sum             ,
+      const std::string&                xexpression     ,
+      const std::string&                yexpression     ,
+      const std::string&                selection  = "" ,
+      const unsigned long               first      = 0  ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+  public: 
+    // ========================================================================
+    // TTeee -> 3D non-histograms 
+    // ========================================================================
+    /** make a projection of TTree into the object
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param data        (INPUT)  input data 
+     *  @param sum         (UPDATE) sum 
+     *  @param xexpression (INPUT)  x-expression
+     *  @param yexpression (INPUT)  y-expression
+     *  @param zexpression (INPUT)  z-expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( TTree*                     data            , 
+      Ostap::Math::LegendreSum3& sum             ,
+      const std::string&         xexpression     ,
+      const std::string&         yexpression     ,
+      const std::string&         zexpression     ,
+      const std::string&         selection  = "" ,
+      const unsigned long        first      = 0  ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param sum         (UPDATE) sum 
+     *  @param xexpression (INPUT)  x-expression
+     *  @param yexpression (INPUT)  y-expression
+     *  @param zexpression (INPUT)  z-expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( TTree*                            data            , 
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::LegendreSum3&        sum             ,
+      const std::string&                xexpression     ,
+      const std::string&                yexpression     ,
+      const std::string&                zexpression     ,
+      const std::string&                selection  = "" ,
+      const unsigned long               first      = 0  ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param data        (INPUT)  input data 
+     *  @param sum         (UPDATE) sum 
+     *  @param xexpression (INPUT)  x-expression
+     *  @param yexpression (INPUT)  y-expression
+     *  @param zexpression (INPUT)  z-expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( TTree*                     data            , 
+      Ostap::Math::Bernstein3D&  sum             ,
+      const std::string&         xexpression     ,
+      const std::string&         yexpression     ,
+      const std::string&         zexpression     ,
+      const std::string&         selection  = "" ,
+      const unsigned long        first      = 0  ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param sum         (UPDATE) sum 
+     *  @param xexpression (INPUT)  x-expression
+     *  @param yexpression (INPUT)  y-expression
+     *  @param zexpression (INPUT)  z-expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( TTree*                            data            , 
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::Bernstein3D&         sum             ,
+      const std::string&                xexpression     ,
+      const std::string&                yexpression     ,
+      const std::string&                zexpression     ,
+      const std::string&                selection  = "" ,
+      const unsigned long               first      = 0  ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+  public: 
+    // ========================================================================
+    // TTeee -> 4D non-histograms 
+    // ========================================================================
+    /** make a projection of TTree into the object
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param data        (INPUT)  input data 
+     *  @param sum         (UPDATE) sum 
+     *  @param xexpression (INPUT)  x-expression
+     *  @param yexpression (INPUT)  y-expression
+     *  @param zexpression (INPUT)  z-expression
+     *  @param zexpression (INPUT)  z-expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project4
+    ( TTree*                     data            , 
+      Ostap::Math::LegendreSum4& sum             ,
+      const std::string&         xexpression     ,
+      const std::string&         yexpression     ,
+      const std::string&         zexpression     ,
+      const std::string&         uexpression     ,
+      const std::string&         selection  = "" ,
+      const unsigned long        first      = 0  ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of TTree into the object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param sum         (UPDATE) sum 
+     *  @param xexpression (INPUT)  x-expression
+     *  @param yexpression (INPUT)  y-expression
+     *  @param zexpression (INPUT)  z-expression
+     *  @param selection   (INPUT)  selection criteria/weight 
+     *  @param first       (INPUT)  the first event to process 
+     *  @param last        (INPUT)  the last event to process 
+     */
+    static Ostap::StatusCode project4
+    ( TTree*                            data            , 
+      const Ostap::Utils::ProgressConf& progress        ,
+      Ostap::Math::LegendreSum4&        sum             ,
+      const std::string&                xexpression     ,
+      const std::string&                yexpression     ,
+      const std::string&                zexpression     ,
+      const std::string&                uexpression     ,
+      const std::string&                selection  = "" ,
+      const unsigned long               first      = 0  ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
   } ;
   // ==========================================================================

@@ -588,10 +588,18 @@ Ostap::Math::Bernstein::sum ( const Ostap::Math::Bernstein& other ) const
     return b1.sum ( b2 ) ;
   }
   //
-  if ( degree() < other.degree() )
-  { return other.sum ( this->elevate ( other.degree() - degree       () ) ) ; }
-  if ( degree() > other.degree() ) 
-  { return       sum ( other.elevate (       degree() - other.degree () ) ) ; }
+  if      ( degree() < other.degree() )
+  {
+    Bernstein tmp ( *this ) ;
+    tmp.elevate ( other.degree() - degree() ) ;
+    return tmp.sum ( other ) ;  
+  }
+  else if ( degree() > other.degree() ) 
+  { 
+    Bernstein tmp ( other ) ;
+    tmp.elevate ( degree() - other.degree () ) ;
+    return sum ( tmp ) ;
+  }
   //
   Bernstein result ( *this ) ;
   for ( unsigned short i = 0 ; i < npars() ; ++i ) 
@@ -605,10 +613,92 @@ Ostap::Math::Bernstein::sum ( const Ostap::Math::Bernstein& other ) const
 Ostap::Math::Bernstein  
 Ostap::Math::Bernstein::subtract ( const Ostap::Math::Bernstein& other ) const
 {
-  if ( this == &other ) { return Bernstein( degree() , xmin() , xmax() ) ; }
-  Bernstein b ( other ) ;
-  Ostap::Math::negate ( b.m_pars ) ;
-  return sum ( b ) ;  
+  if ( this == &other ) { return Bernstein ( degree() , xmin() , xmax() ) ; }
+  //
+  if ( !s_equal ( xmin () , other.xmin() ) || 
+       !s_equal ( xmax () , other.xmax() ) ) 
+  {
+    const double x_min = std::min ( xmin() , other.xmin() ) ;
+    const double x_max = std::max ( xmax() , other.xmax() ) ;
+    Bernstein b1 ( *this , x_min , x_max ) ;
+    Bernstein b2 ( other , x_min , x_max ) ;
+    return b1.subtract ( b2 ) ;
+  }
+  //
+  if      ( degree() < other.degree() )
+  {
+    Bernstein tmp ( *this ) ;
+    tmp.elevate ( other.degree() - degree() ) ;
+    return tmp.subtract( other ) ;  
+  }
+  else if ( degree() > other.degree() ) 
+  { 
+    Bernstein tmp ( other ) ;
+    tmp.elevate ( degree() - other.degree () ) ;
+    return subtract ( tmp ) ;
+  }
+  //
+  Bernstein result ( *this ) ;
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { result.m_pars [ i ] -= other.par( i ) ; }
+  //
+  return result ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isum
+( const Ostap::Math::Bernstein& other ) 
+{
+  if ( this == &other ) { *this *= 2 ; return *this; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot isum Bernstein with different domains"  , 
+                  "Ostap::Math::Bernstein"                        , 
+                  Ostap::StatusCode ( 520 )                       )  ;
+  //
+  if      ( degree()       < other.degree() ) 
+  { elevate ( other.degree() - degree() ) ; }
+  else if ( other.degree() < degree()       ) 
+  {
+    Bernstein tmp ( other ) ; tmp.elevate ( degree() - other.degree() ) ;
+    return isum ( tmp ) ;
+  }
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] += other.m_pars [ i ] ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Subtract polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::Bernstein& other ) 
+{
+  if ( this == &other ) { *this *= 0 ; return *this; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot isub Bernstein with different domains"  , 
+                  "Ostap::Math::Bernstein"                        , 
+                  Ostap::StatusCode ( 521 )                       )  ;
+  //
+  if      ( degree()       < other.degree() ) 
+  { elevate ( other.degree() - degree() ) ; }
+  else if ( other.degree() < degree() ) 
+  {
+    Bernstein tmp ( other ) ; tmp.elevate ( degree() - other.degree() ) ;
+    return isub ( tmp ) ;
+  }
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars [ i ] ; }
+  //
+  return *this ;
 }
 // ============================================================================
 // swap two polynomials 

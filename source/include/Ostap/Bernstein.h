@@ -457,6 +457,7 @@ namespace Ostap
        *  @parameter weight the weight 
        */
       bool fill ( const double x , const double weight = 1 ) ;
+      bool Fill ( const double x , const double weight = 1 ) { return fill ( x , weight ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -545,6 +546,23 @@ namespace Ostap
       // ======================================================================
       /// scale  all coefficients with 2**i 
       Bernstein  ldexp    ( const short i )  const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// Add       polynomials (with the same domain!)
+      Bernstein& isum    ( const Bernstein& other ) ;
+      /// Subtract  polynomials (with the same domain!)
+      Bernstein& isub    ( const Bernstein& other ) ;
+      // ======================================================================
+    public:
+      // ====================================================================== 
+      inline Bernstein& operator+=( const Bernstein& other ) { return isum ( other ) ; }
+      inline Bernstein& operator-=( const Bernstein& other ) { return isub ( other ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      Bernstein& __iadd__  ( const Bernstein& a ) { return isum ( a ) ; }
+      Bernstein& __isub__  ( const Bernstein& a ) { return isub ( a ) ; }
       // ======================================================================
     public:  // various assignements
       // ======================================================================

@@ -66,6 +66,111 @@ void ROOT::Detail::RDF::WStatVar::Finalize()
 }
 // ============================================================================
 
+
+// ============================================================================
+// constructor 
+// ============================================================================
+ROOT::Detail::RDF::LegendrePoly::LegendrePoly
+( const unsigned short N    , 
+  const double         xmin ,
+  const double         xmax )
+  : m_result ( std::make_shared<Result_t> ( N , xmin , xmax ) )
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
+#else 
+  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
+#endif
+  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+{}
+// ============================================================================
+// constructor 
+// ============================================================================
+ROOT::Detail::RDF::LegendrePoly::LegendrePoly
+( const Ostap::Math::LegendreSum& p )
+  : LegendrePoly ( p.degree() , p.xmin () , p.xmax () )
+{}
+// ============================================================================
+// Finalize 
+// ============================================================================
+void ROOT::Detail::RDF::LegendrePoly::Finalize() 
+{ 
+  (*m_result) *= 0.0 ;
+  for ( unsigned int i = 0 ; i < m_N ; ++i ) { *m_result += m_slots [ i ] ; }
+}
+
+
+
+// ============================================================================
+// constructor 
+// ============================================================================
+ROOT::Detail::RDF::ChebyshevPoly::ChebyshevPoly
+( const unsigned short N    , 
+  const double         xmin ,
+  const double         xmax )
+  : m_result ( std::make_shared<Result_t> ( N , xmin , xmax ) )
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
+#else 
+  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
+#endif
+  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+{}
+// ============================================================================
+// constructor 
+// ============================================================================
+ROOT::Detail::RDF::ChebyshevPoly::ChebyshevPoly
+( const Ostap::Math::ChebyshevSum& p )
+  : ChebyshevPoly ( p.degree() , p.xmin () , p.xmax () )
+{}
+// ============================================================================
+// Finalize 
+// ============================================================================
+void ROOT::Detail::RDF::ChebyshevPoly::Finalize() 
+{ 
+  (*m_result) *= 0.0 ;
+  for ( unsigned int i = 0 ; i < m_N ; ++i ) { *m_result += m_slots [ i ] ; }
+}
+// ============================================================================
+
+
+
+// ============================================================================
+// constructor 
+// ============================================================================
+ROOT::Detail::RDF::BernsteinPoly::BernsteinPoly
+( const unsigned short N    , 
+  const double         xmin ,
+  const double         xmax )
+  : m_result ( std::make_shared<Result_t> ( N , xmin , xmax ) )
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
+#else 
+  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
+#endif
+  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+{}
+// ============================================================================
+// constructor 
+// ============================================================================
+ROOT::Detail::RDF::BernsteinPoly::BernsteinPoly
+( const Ostap::Math::Bernstein& p )
+  : BernsteinPoly ( p.degree() , p.xmin () , p.xmax () )
+{}
+// ============================================================================
+// Finalize 
+// ============================================================================
+void ROOT::Detail::RDF::BernsteinPoly::Finalize() 
+{ 
+  (*m_result) *= 0.0 ;
+  for ( unsigned int i = 0 ; i < m_N ; ++i ) { *m_result += m_slots [ i ] ; }
+}
+// ============================================================================
+
+
+
+
+
+
 // ============================================================================
 #endif // #if ROOT_VERSION_CODE >= ROOT_VERSION(6,16,0)
 // ============================================================================

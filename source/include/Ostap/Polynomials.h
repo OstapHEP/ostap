@@ -1608,6 +1608,7 @@ namespace Ostap
        *  @parameter weight the weight 
        */
       bool fill ( const double x , const double weight = 1 ) ;
+      bool Fill ( const double x , const double weight = 1 ) { return fill ( x , weight ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1885,6 +1886,7 @@ namespace Ostap
        *  @parameter weight the weight 
        */
       bool fill ( const double x , const double weight = 1 ) ;
+      bool Fill ( const double x , const double weight = 1 ) { return fill ( x , weight ) ; }
       // ======================================================================
     public: 
       // ======================================================================      

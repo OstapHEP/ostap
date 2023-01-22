@@ -33,7 +33,9 @@
   1. make a try to fix morphing 
   1. fix for 3D-reweighting, add 3D-reweighting test/example for  Paula Garcia 
   1. add (self)addition/subtraction operators for polynomial classes (`Polynomial`, `ChebyshevSum`, `LegendreSum`, `LegendreSum2`, `LegendreSum3` and `LegendreSum4`) with the same domain. 
+  1. few steps towards better polinomial parameterrisatios
 
+ 
 ## Backward incompatible:  
 
 ## Bug fixes:

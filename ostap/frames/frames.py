@@ -359,6 +359,7 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
     
     return results 
 
+
 # =============================================================================
 ## Simplified print out for the  frame 
 #  @code 
