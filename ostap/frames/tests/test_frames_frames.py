@@ -202,6 +202,23 @@ def test_frame5 () :
     frame = DataFrame      ( tname        , fname        )
     tree  = Tree           ( name = tname , file = fname ).chain
     
+    from ostap.frames.frames import frame_table
+
+    ft    = frame_table ( frame )
+
+    logger.info ( 'The frame:\n%s' % ft ) 
+
+# =============================================================================
+def test_frame6 () :
+
+    logger = getLogger ( 'test_frame6' ) 
+    if root_info < (6,16) : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
+        return 
+                   
+    frame = DataFrame      ( tname        , fname        )
+    tree  = Tree           ( name = tname , file = fname ).chain
+    
     pb    = frame_progress ( frame  , len ( tree ) )
 
     
@@ -226,9 +243,9 @@ def test_frame5 () :
 
 
 # =============================================================================
-def test_frame6 () :
+def test_frame7 () :
 
-    logger = getLogger ( 'test_frame6' ) 
+    logger = getLogger ( 'test_frame7' ) 
     if root_info < (6,16) or not has_std_move : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return
@@ -273,8 +290,9 @@ if '__main__' == __name__ :
         test_frame2 ()
         test_frame3 ()
         test_frame4 ()   
-        test_frame5 ()
+        test_frame5 ()   
         test_frame6 ()
+        test_frame7 ()
         
     else :
         
