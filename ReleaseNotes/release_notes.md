@@ -35,6 +35,7 @@
   1. add (self)addition/subtraction operators for polynomial classes (`Polynomial`, `ChebyshevSum`, `LegendreSum`, `LegendreSum2`, `LegendreSum3` and `LegendreSum4`) with the same domain. 
   1. few steps towards better polinomial parameterrisatios
   1. Add polynomial parameterisation to frames (and trees) 
+  1. disable some frame functionality when `ROOT.std.move` is not available
 
   
 ## Backward incompatible:  

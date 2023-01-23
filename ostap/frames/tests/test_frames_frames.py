@@ -32,7 +32,8 @@ if root_info < (6,16) :
     
 else :
     
-    from ostap.frames.frames   import DataFrame, frame_project, frame_statVar, frame_statCov, frame_progress 
+    from ostap.frames.frames   import DataFrame, frame_project, \
+         frame_statVar, frame_statCov, frame_progress, has_std_move  
     
     # A simple helper function to fill a test tree
     def fill_tree ( tname , fname ) :
@@ -204,9 +205,47 @@ def test_frame5 () :
     pb    = frame_progress ( frame  , len ( tree ) )
 
     
-    bs = Ostap.Math.Bernstein   ( 10 , -3 , 3 )
-    ls = Ostap.Math.LegendreSum ( 10 , -3 , 3 )
-    cs = Ostap.Math.LegendreSum ( 10 , -3 , 3 )
+    bs = Ostap.Math.Bernstein    ( 10 , -3 , 3 )
+    ls = Ostap.Math.LegendreSum  ( 10 , -3 , 3 )
+    cs = Ostap.Math.ChebyshevSum ( 10 , -3 , 3 )
+
+    from ostap.frames.frames import frame_project
+
+    h1 = ROOT.TH1D ( hID() , '' , 20 , -3, 3 )
+    
+    rh = frame_project  ( frame , h1 , 'b6' )
+
+    with use_canvas ( 'test_frame6: b4' , wait = 2 ) :
+        h1.draw () 
+
+
+    ## report = frame.Report()
+    ## from ostap.frames.frames import report_print, report_as_table
+    ## title = 'Params summary'
+    ## logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+
+
+# =============================================================================
+def test_frame6 () :
+
+    logger = getLogger ( 'test_frame6' ) 
+    if root_info < (6,16) or not has_std_move : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
+        return
+    
+    if not has_std_move : 
+        logger.warning ( "Test is disabled (no std::move)" )
+        return     
+    
+    frame = DataFrame      ( tname        , fname        )
+    tree  = Tree           ( name = tname , file = fname ).chain
+    
+    pb    = frame_progress ( frame  , len ( tree ) )
+
+    
+    bs = Ostap.Math.Bernstein    ( 10 , -3 , 3 )
+    ls = Ostap.Math.LegendreSum  ( 10 , -3 , 3 )
+    cs = Ostap.Math.ChebyshevSum ( 10 , -3 , 3 )
 
     from ostap.frames.frames import frame_param
 
@@ -223,22 +262,24 @@ def test_frame5 () :
         poll.draw (          linecolor = 2 ) 
         polc.draw ( 'same' , linecolor = 4 ) 
         polb.draw ( 'same' , linecolor = 8 ) 
-            
-    ## report = frame.Report()
-    ## from ostap.frames.frames import report_print, report_as_table
-    ## title = 'Params summary'
-    ## logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
-    
+
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_frame0 () 
-    test_frame1 ()
-    test_frame2 ()
-    test_frame3 ()
-    test_frame4 ()
-    test_frame5 ()
-    
+    if (6,16) <= root_info :
+        
+        test_frame0 () 
+        test_frame1 ()
+        test_frame2 ()
+        test_frame3 ()
+        test_frame4 ()   
+        test_frame5 ()
+        test_frame6 ()
+        
+    else :
+        
+        logger.warning ( "All tests are disabled for this version of ROOT %s" % str ( root_info ) )
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

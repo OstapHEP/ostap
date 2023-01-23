@@ -1321,7 +1321,18 @@ _new_methods_ = [
 if FrameNode is DataFrame : frames = DataFrame ,
 else                      : frames = DataFrame , FrameNode
 
-if ( 6 , 25 ) <= root_info :
+# ===============================================================================
+has_std_move = False 
+try :
+    mv           = ROOT.std.move
+    has_std_move = True
+except AttributeError : 
+    has_std_move = False 
+# ================================================================================
+
+## if ( 6 , 25 ) <= root_info :
+
+if ( 6 , 16 ) <= root_info and has_std_move :
     frame_statVar       = _fr_statVar_new_
     frame_statVars      = _fr_statVar_new_
     frame_table         = _fr_table_ 
@@ -1444,7 +1455,7 @@ if ( 6 , 18 ) <= root_info :
                '"histo" must be ROOT.TH1 or polynomial type!'
         ## use frame methods
         frame_project ( tree , histo , *args )
-        ## return 
+        ## return        
         return histo
     
     _rt_fproject_.__doc__ += '\n' + frame_project.__doc__ 
@@ -1453,8 +1464,9 @@ if ( 6 , 18 ) <= root_info :
     _decorated_classes_ += ( ROOT.TTree , )
     _new_methods_.append   ( ROOT.TTree.fproject ) 
 
+
 # =============================================================================
-if ( 6 , 16 ) <= root_info :
+if ( 6 , 16 ) <= root_info and has_std_move :
     # =========================================================================
     frame_param = _fr_param_
     __all__ = __all__ + ( 'frame_param' , ) 
