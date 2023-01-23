@@ -1343,6 +1343,63 @@ std::size_t Ostap::Math::Bernstein3D::tag () const  // get the tag value
       m_zmin , m_zmax ) ; }
 // ============================================================================
 
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Bernstein3D&
+Ostap::Math::Bernstein3D::isum
+( const Ostap::Math::Bernstein3D& other ) 
+{
+  if ( this == &other ) { *this *= 2 ; return *this; }
+  //
+  Ostap::Assert ( m_nx == other.m_nx && 
+                  m_ny == other.m_ny && 
+                  m_nz == other.m_nz && 
+                  s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() ) && 
+                  s_equal ( ymin() , other.ymin() ) &&
+                  s_equal ( ymax() , other.ymax() ) && 
+                  s_equal ( zmin() , other.zmin() ) &&
+                  s_equal ( zmax() , other.zmax() )               ,
+                  "Cannot isum Bernstein3D with different domains"  , 
+                  "Ostap::Math::Bernstei3D"                        , 
+                  Ostap::StatusCode ( 527 )                       )  ;
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] += other.m_pars [ i ] ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Subtract polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Bernstein3D&
+Ostap::Math::Bernstein3D::isub
+( const Ostap::Math::Bernstein3D& other ) 
+{
+  if ( this == &other ) { *this *= 0 ; return *this; }
+  //
+  Ostap::Assert ( m_nx == other.m_nx && 
+                  m_ny == other.m_ny && 
+                  m_nz == other.m_nz && 
+                  s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() ) && 
+                  s_equal ( ymin() , other.ymin() ) &&
+                  s_equal ( ymax() , other.ymax() ) && 
+                  s_equal ( zmin() , other.zmin() ) &&
+                  s_equal ( zmax() , other.zmax() )               ,
+                  "Cannot isub Bernstein3D with different domains"  , 
+                  "Ostap::Math::Bernstei3D"                        , 
+                  Ostap::StatusCode ( 528 )                       )  ;
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] += other.m_pars [ i ] ; }
+  //
+  return *this ;
+}
+
+
+
 
 
 // ============================================================================

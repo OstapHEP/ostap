@@ -144,6 +144,12 @@ namespace Ostap
       ( const double x          , 
         const double y          , 
         const double weight = 1 ) ;
+      // ditto 
+      inline
+      bool Fill
+      ( const double x          , 
+        const double y          , 
+        const double weight = 1 )  { return fill ( x , y , weight ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -499,6 +505,13 @@ namespace Ostap
         const double y          , 
         const double z          , 
         const double weight = 1 ) ;
+      // ditto 
+      inline
+      bool Fill
+      ( const double x          , 
+        const double y          , 
+        const double z          , 
+        const double weight = 1 )  { return fill ( x , y , z , weight ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -888,6 +901,14 @@ namespace Ostap
         const double z          , 
         const double u          , 
         const double weight = 1 ) ;
+      // ditto 
+      inline
+      bool Fill
+      ( const double x          , 
+        const double y          , 
+        const double z          , 
+        const double u          , 
+        const double weight = 1 )  { return fill ( x , y , z , u , weight ) ; } 
       // ======================================================================
     public:
       // ======================================================================

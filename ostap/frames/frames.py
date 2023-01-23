@@ -56,7 +56,8 @@ from   ostap.core.ostap_types    import integer_types, string_types, sequence_ty
 from   ostap.logger.utils        import multicolumn
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.basic         import isatty
-import ostap.stats.statvars      as     SV 
+import ostap.stats.statvars      as     SV
+import ostap.logger.table        as     T 
 import ostap.histos.histos
 import ROOT, math
 # =============================================================================
@@ -314,9 +315,8 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
     vars     = frame_columns ( node ) 
     all_vars = set ( vars ) 
     
-    names   = {}
-
-    current = node  
+    names    = {}
+    current  = node  
     for e in expressions :
 
         e = str ( e )
@@ -328,8 +328,7 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
         vn      = var_name ( 'var_' , used , e , *vars )
         all_vars.add ( vn )
         current = current.Define ( vn , e )
-        
-        names [ e ] = vn
+        names    [ e  ] = vn
 
     cuts  = str ( cuts )
     cname = cuts 
@@ -358,6 +357,139 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
         return r
     
     return results 
+
+
+
+# ============================================================================
+_types_1D = Ostap.Math.LegendreSum  , Ostap.Math.Bernstein   , Ostap.Math.ChebyshevSum , 
+_types_2D = Ostap.Math.LegendreSum2 , Ostap.Math.Bernstein2D ,
+_types_3D = Ostap.Math.LegendreSum3 , Ostap.Math.Bernstein3D , 
+_types_4D = Ostap.Math.LegendreSum4 ,
+_types_nD = _types_1D + _types_2D + _types_3D + _types_4D 
+# =============================================================================
+## "project/parameterise" frame into polynomial structures
+#  @code
+#  frame = ...
+#
+#  ls    = Ostap.Math.LegendreSum ( ... )
+#  res   = frame_param ( frame , ls , 'x' , 'y>0' )
+#
+#  bs    = Ostap.Math.Bernstein   ( ... )
+#  res   = frame_param ( frame , bs , 'x' , 'y>0' )
+#
+#  cs    = Ostap.Math.ChebyshevSum ( ... )
+#  res   = frame_param ( frame , cs , 'x' , 'y>0' )
+#
+#  ls2   = Ostap.Math.LegendreSum2 ( ... )
+#  res   = frame_param ( frame , ls2 , 'y' , 'x' , 'z>0' )
+# 
+#  bs2   = Ostap.Math.Bernstein2D  ( ... )
+#  res   = frame_param ( frame , bs2 , 'y' , 'x' , 'z>0' )
+#
+#  ls3   = Ostap.Math.LegendreSum3 ( ... )
+#  res   = frame_param ( frame , ls3 , 'z' , 'y' , 'x' , 'z>0' )
+# 
+#  bs2   = Ostap.Math.Bernstein2D  ( ... )
+#  res   = frame_param ( frame , bs2 , 'y' , 'x' , 'z>0' )
+# 
+#  @endcode
+def _fr_param_ ( frame , poly , *expressions ) :
+    """ `project/parameterise` frame into polynomial structures
+    >>> frame = ...
+    
+    >>> ls    = Ostap.Math.LegendreSum ( ... )
+    >>> res   = frame_param ( frame , ls , 'x' , 'y>0' )
+    
+    >>> bs    = Ostap.Math.Bernstein   ( ... )
+    >>> res   = frame_param ( frame , bs , 'x' , 'y>0' )
+
+    >>> cs    = Ostap.Math.ChebyshevSum ( ... )
+    >>> res   = frame_param ( frame , cs , 'x' , 'y>0' )
+
+    >>> ls2   = Ostap.Math.LegendreSum2 ( ... )
+    >>> res   = frame_param ( frame , ls2 , 'y' , 'x' , 'z>0' )
+
+    >>> bs2   = Ostap.Math.Bernstein2D  ( ... )
+    >>> res   = frame_param ( frame , bs2 , 'y' , 'x' , 'z>0' )
+
+    >>> ls3   = Ostap.Math.LegendreSum3 ( ... )
+    >>> res   = frame_param ( frame , ls3 , 'z' , 'y' , 'x' , 'z>0' )
+
+    >>> bs2   = Ostap.Math.Bernstein2D  ( ... )
+    >>> res   = frame_param ( frame , bs2 , 'y' , 'x' , 'z>0' )
+    """
+    
+    if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )
+    
+    node = as_rnode ( frame )
+    
+    items = []
+    for e in expressions :
+        items += split_string ( e , ',:;' , strip = True )
+        
+    ## get the list of currently known names
+    vars     = frame_columns ( node ) 
+    all_vars = set ( vars ) 
+
+
+    assert ( isinstance ( poly , _types_1D ) and 1 <= len ( items ) <= 2 ) or \
+           ( isinstance ( poly , _types_2D ) and 2 <= len ( items ) <= 3 ) or \
+           ( isinstance ( poly , _types_3D ) and 3 <= len ( items ) <= 4 ) or \
+           ( isinstance ( poly , _types_4D ) and 4 <= len ( items ) <= 5 ) , \
+           "Invalid structure of  polynomial and variables/cuts!"
+    
+    current = node
+    
+    ## actual variables 
+    uvars   = []   
+    for e in items :        
+        if e in all_vars :
+            uvars.append ( e )
+            continue
+        else :
+            used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
+            vn      = var_name ( 'var_' , used , e , *vars )
+            all_vars.add ( vn )
+            current = current.Define ( vn , e )        
+            uvars.append ( vn )
+
+    if ( isinstance ( poly , _types_1D ) and 2 == len ( uvars ) ) or \
+       ( isinstance ( poly , _types_2D ) and 3 == len ( uvars ) ) or \
+       ( isinstance ( poly , _types_3D ) and 4 == len ( uvars ) ) or \
+       ( isinstance ( poly , _types_4D ) and 5 == len ( uvars ) ) :
+        
+        cuts    = uvars [ -1]        
+        current = current.Filter ( cuts )        
+        
+        wn      = var_name ( 'weight_' , used , cuts , *vars )
+        all_vars.add ( wn )
+        current = current.Define ( wn , '1.0*(%s)' % cuts )
+        
+        uvars   = [ u for u in reversed ( uvars [:-1] ) ] + [ wn ]    ## ATTENTION !! RESERSED HERE!
+        
+    else :
+        uvars   = [ u for u in reversed ( uvars ) ]             ## ATTENTION !! RESERSED HERE!
+
+    
+    ## finally book the actions!
+    if   isinstance ( poly , Ostap.Math.LegendreSum  ) :
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly   ( poly ) ) , CNT ( uvars ) )
+    elif isinstance ( poly , Ostap.Math.LegendreSum2 ) :
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly2  ( poly ) ) , CNT ( uvars ) )
+    elif isinstance ( poly , Ostap.Math.LegendreSum3 ) :
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly3  ( poly ) ) , CNT ( uvars ) )
+    elif isinstance ( poly , Ostap.Math.LegendreSum4 ) :
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly4  ( poly ) ) , CNT ( uvars ) )
+    elif isinstance ( poly , Ostap.Math.ChebyshevSum ) :
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.ChebyshevPoly  ( poly ) ) , CNT ( uvars ) )
+    elif isinstance ( poly , Ostap.Math.Bernstein    ) :
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly  ( poly ) ) , CNT ( uvars ) )
+    elif isinstance ( poly , Ostap.Math.Bernstein2D  ) :
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly2 ( poly ) ) , CNT ( uvars ) )
+    elif isinstance ( poly , Ostap.Math.Bernstein3D  ) :
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly3 ( poly ) ) , CNT ( uvars ) )
+        
+    return result
 
 
 # =============================================================================
@@ -653,6 +785,10 @@ def _p2_model_ ( histo ) :
         histo.Copy ( model )
     return P2Model ( model ) 
 
+
+
+# ==============================================================================
+
 ROOT.TH1.model        = _h1_model_
 ROOT.TH2.model        = _h2_model_
 ROOT.TH3.model        = _h3_model_
@@ -728,6 +864,10 @@ def frame_project ( frame , model , *what ) :
     if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )
     
     frame = as_rnode  ( frame )
+    
+    if ( 6 , 16 ) <= root_info and isinstance ( model , _types_nD ) :
+        return _fr_param_ ( frame , model , *what ) 
+       
     
     if 1 <= len ( what ) <= 2 :
         if   isinstance  ( what [ 0 ] , string_types ) :
@@ -1299,16 +1439,54 @@ if ( 6 , 18 ) <= root_info :
         >>> histo = ...
         >>> tree.fproject ( histo , what , ... ) 
         """
-        assert isinstance ( histo , ROOT.TTree ) , '"histo" must be ROOT.TH*!'
+        assert isinstance ( histo , ROOT.TH1  ) or \
+               isinstance ( histo , _types_nD ) ,  \
+               '"histo" must be ROOT.TH1 or polynomial type!'
         ## use frame methods
         frame_project ( tree , histo , *args )
         ## return 
-        return histo 
+        return histo
     
+    _rt_fproject_.__doc__ += '\n' + frame_project.__doc__ 
     ROOT.TTree.fproject  = _rt_fproject_
+
     _decorated_classes_ += ( ROOT.TTree , )
     _new_methods_.append   ( ROOT.TTree.fproject ) 
+
+# =============================================================================
+if ( 6 , 16 ) <= root_info :
+    # =========================================================================
+    frame_param = _fr_param_
+    __all__ = __all__ + ( 'frame_param' , ) 
     
+    for f in frames : f.param = frame_param
+
+    ## Project/parameterise the tree to the polynomial using DataFrame machinery
+    #  @code
+    #  tree  = ...
+    #  poly  = ...
+    #  tree.fparam ( histo , what , ... ) 
+    #  @endcode
+    def _rt_fparam_ ( tree , poly , *args ) :
+        """Project/parameterise the tree into polynomial using DataFrame machinery
+        >>> tree  = ...
+        >>> poly  = ...
+        >>> tree.fparam ( poly , what , ... ) 
+        """
+        assert isinstance ( poly , _types_nD  ) , '"poly" must be polynomial!'
+        ## use frame methods
+        result = frame_param ( tree , poly, *args )
+        ## return 
+        return result.GetValue() 
+
+    _rt_fparam_ .__doc__ += '\n' + frame_param  .__doc__ 
+
+        
+    ROOT.TTree.fparam    = _rt_fparam_
+    
+    _decorated_classes_ += ( ROOT.TTree , )
+    _new_methods_.append   ( ROOT.TTree.fparam   ) 
+
 _new_methods_       = tuple ( _new_methods_ ) 
 
 # =============================================================================

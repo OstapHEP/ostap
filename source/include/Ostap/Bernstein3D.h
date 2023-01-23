@@ -222,6 +222,23 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// Add       polynomials (with the same domain!)
+      Bernstein3D& isum    ( const Bernstein3D& other ) ;
+      /// Subtract  polynomials (with the same domain!)
+      Bernstein3D& isub    ( const Bernstein3D& other ) ;
+      // ======================================================================
+    public:
+      // ====================================================================== 
+      inline Bernstein3D& operator+=( const Bernstein3D& other ) { return isum ( other ) ; }
+      inline Bernstein3D& operator-=( const Bernstein3D& other ) { return isub ( other ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      Bernstein3D& __iadd__  ( const Bernstein3D& a ) { return isum ( a ) ; }
+      Bernstein3D& __isub__  ( const Bernstein3D& a ) { return isub ( a ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// negate it!
       Bernstein3D  operator-() const ;
       // ======================================================================
@@ -533,6 +550,13 @@ namespace Ostap
         const double y          , 
         const double z          , 
         const double weight = 1 ) ;
+      // ditto 
+      inline
+      bool Fill
+      ( const double x          , 
+        const double y          , 
+        const double z          , 
+        const double weight = 1 )  { return fill ( x , y , z , weight ) ; }
       // ======================================================================
     public: // few helper functions to expose internals
       // ======================================================================

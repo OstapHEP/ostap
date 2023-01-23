@@ -535,9 +535,54 @@ bool Ostap::Math::Bernstein2D::fill
 // ============================================================================
 
 
-
-
-
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Bernstein2D&
+Ostap::Math::Bernstein2D::isum
+( const Ostap::Math::Bernstein2D& other ) 
+{
+  if ( this == &other ) { *this *= 2 ; return *this; }
+  //
+  Ostap::Assert ( m_nx == other.m_nx && 
+                  m_nx == other.m_nx && 
+                  s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() ) && 
+                  s_equal ( ymin() , other.ymin() ) &&
+                  s_equal ( ymax() , other.ymax() )               ,
+                  "Cannot isum Bernstein2D with different domains"  , 
+                  "Ostap::Math::Bernstein2D"                        , 
+                  Ostap::StatusCode ( 525 )                       )  ;
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] += other.m_pars [ i ] ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Subtract polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Bernstein2D&
+Ostap::Math::Bernstein2D::isub
+( const Ostap::Math::Bernstein2D& other ) 
+{
+  if ( this == &other ) { *this *= 0 ; return *this; }
+  //
+  Ostap::Assert ( m_nx == other.m_nx && 
+                  m_nx == other.m_nx && 
+                  s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() ) && 
+                  s_equal ( ymin() , other.ymin() ) &&
+                  s_equal ( ymax() , other.ymax() )               ,
+                  "Cannot isub Bernstein2D with different domains"  , 
+                  "Ostap::Math::Bernstein2D"                        , 
+                  Ostap::StatusCode ( 526 )                       )  ;
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars [ i ] ; }
+  //
+  return *this ;
+}
 // ============================================================================
 // Operators 
 // ============================================================================

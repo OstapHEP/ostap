@@ -283,6 +283,12 @@ namespace Ostap
       ( const double x          , 
         const double y          , 
         const double weight = 1 ) ;
+      // ditto 
+      inline
+      bool Fill
+      ( const double x          , 
+        const double y          , 
+        const double weight = 1 )  { return fill ( x , y , weight ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -294,6 +300,23 @@ namespace Ostap
       Bernstein2D& operator *= ( const double a ) ;
       /// simple  manipulations with polynoms: scale it!
       Bernstein2D& operator /= ( const double a ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// Add       polynomials (with the same domain!)
+      Bernstein2D& isum    ( const Bernstein2D& other ) ;
+      /// Subtract  polynomials (with the same domain!)
+      Bernstein2D& isub    ( const Bernstein2D& other ) ;
+      // ======================================================================
+    public:
+      // ====================================================================== 
+      inline Bernstein2D& operator+=( const Bernstein2D& other ) { return isum ( other ) ; }
+      inline Bernstein2D& operator-=( const Bernstein2D& other ) { return isub ( other ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      Bernstein2D& __iadd__  ( const Bernstein2D& a ) { return isum ( a ) ; }
+      Bernstein2D& __isub__  ( const Bernstein2D& a ) { return isub ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
