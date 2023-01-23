@@ -1,3 +1,9 @@
+## New features:
+
+## Backward incompatible:  
+
+## Bug fixes:
+
 # v1.9.6.2
 
 ## New features:
@@ -38,7 +44,6 @@
   1. Add polynomial parameterisation to frames (and trees) 
   1. disable some frame functionality when `ROOT.std.move` is not available
   1. add `ROOT.TTree.fparam` method for projection of the trees using `DataFrame` (the same as `frame_param`)
-
   
 ## Backward incompatible:  
 
