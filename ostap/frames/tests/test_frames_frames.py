@@ -190,7 +190,6 @@ def test_frame4 () :
     title = 'Filter summary'
     logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
 
-
 # =============================================================================
 def test_frame5 () :
 
@@ -199,6 +198,10 @@ def test_frame5 () :
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
                    
+    if not has_std_move : 
+        logger.warning ( "Test is disabled (no std::move)" )
+        return     
+    
     frame = DataFrame      ( tname        , fname        )
     tree  = Tree           ( name = tname , file = fname ).chain
     
@@ -220,7 +223,6 @@ def test_frame6 () :
     tree  = Tree           ( name = tname , file = fname ).chain
     
     pb    = frame_progress ( frame  , len ( tree ) )
-
     
     bs = Ostap.Math.Bernstein    ( 10 , -3 , 3 )
     ls = Ostap.Math.LegendreSum  ( 10 , -3 , 3 )

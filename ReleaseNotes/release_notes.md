@@ -1,11 +1,10 @@
-
 ## New features:
 
-  1. add `ROOT.TTree.fproject` method for projection of the trees using ~DataFrame` (the same as `frame_project`)
+  1. add `ROOT.TTree.fproject` method for projection of the trees using `DataFrame` (the same as `frame_project`)
   1. add `Ostap::Math::IrwinHall`, `Ostap::Math::Bates` and `Ostap::Math::BAresShape`
   1. add `Ostap::Models::BatesShape`
-  1. add `ostap.fitting.signals.BatesShape_pdf
-  1. add `ostap.fitting.resolution.ResoBatesShape
+  1. add `ostap.fitting.signals.BatesShape_pdf`
+  1. add `ostap.fitting.resolution.ResoBatesShape`
   1. update tests 
   1. add  'TH1(F,D).bezier_sum_fill', 'TH1(F,D).bernstein_sum_fill', 'TH1(F,D).legendre_sum_fill', 'TH1(F,D).chebyshev_sum_fill' methods  for 1D-historgam parameterisations based on `Bernstein::fill`, `LegendreSum::fill` and 
 `ChebyshevSum::fill` methods. Extend the corresponding test
@@ -24,7 +23,7 @@
   1. add Karlin-Shapley & Karlin-Studen positive polynomials (functions&pdfs)
   1. more polishing for Karlin-Shapley & Karlin-Studden stuff   
   1. remove `conf_interval`, `upper_limit` and `lower_limit` methods for `PDF`, based on `RooStats::ProfileLikelihoodCalculator`
-  1. remove `poi` method from `funbasuic`
+  1. remove `poi` method from `funbasic`
   1. rewrite `ostap.fitting.roostats`
   1. add new test `test_fitting_roostats.py`
   1. largely rewrite  "Breit-Wigner with interference" model
@@ -36,6 +35,7 @@
   1. few steps towards better polinomial parameterrisatios
   1. Add polynomial parameterisation to frames (and trees) 
   1. disable some frame functionality when `ROOT.std.move` is not available
+  1. add `ROOT.TTree.fparam` method for projection of the trees using `DataFrame` (the same as `frame_param`)
 
   
 ## Backward incompatible:  

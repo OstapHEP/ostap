@@ -359,7 +359,6 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
     return results 
 
 
-
 # ============================================================================
 _types_1D = Ostap.Math.LegendreSum  , Ostap.Math.Bernstein   , Ostap.Math.ChebyshevSum , 
 _types_2D = Ostap.Math.LegendreSum2 , Ostap.Math.Bernstein2D ,
@@ -1325,14 +1324,15 @@ else                      : frames = DataFrame , FrameNode
 has_std_move = False 
 try :
     mv           = ROOT.std.move
-    has_std_move = True
+    has_std_move = True and (6,25)<= root_info  ## ATTENTION! 
 except AttributeError : 
-    has_std_move = False 
+    has_std_move = False
+
 # ================================================================================
 
 ## if ( 6 , 25 ) <= root_info :
-
-if ( 6 , 16 ) <= root_info and has_std_move :
+## if ( 6 , 16 ) <= root_info and has_std_move :
+if ( 6 , 25 ) <= root_info and has_std_move :
     frame_statVar       = _fr_statVar_new_
     frame_statVars      = _fr_statVar_new_
     frame_table         = _fr_table_ 
@@ -1466,7 +1466,8 @@ if ( 6 , 18 ) <= root_info :
 
 
 # =============================================================================
-if ( 6 , 16 ) <= root_info and has_std_move :
+##  if ( 6 , 16 ) <= root_info and has_std_move :
+if ( 6 , 25 ) <= root_info and has_std_move :
     # =========================================================================
     frame_param = _fr_param_
     __all__ = __all__ + ( 'frame_param' , ) 
@@ -1508,7 +1509,7 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-    
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
