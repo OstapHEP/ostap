@@ -35,9 +35,11 @@ namespace Ostap
   {
     // ========================================================================
     /// forward declaration
-    class LegendreSum  ; // forward declaration
-    class ChebyshevSum ; // forward declaration
-    class Polynomial   ; // forward declaration
+    class LegendreSum   ; // forward declaration
+    class ChebyshevSum  ; // forward declaration
+    class Polynomial    ; // forward declaration
+    class KarlinShapley ; // forward declaration 
+    // ========================================================================
     /// Interpolants 
     namespace Interpolation { class Table ; } // forward declaration
     // ========================================================================

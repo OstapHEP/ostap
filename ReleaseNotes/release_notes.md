@@ -2,6 +2,7 @@
 
   1. add `+=` and `-=` operators for `Ostap::Math::HermiteSum`
   1. re-introduce `ostapfitting.funbasic.func_factory` for better backward compatibility 
+  1. add forward declarations for Karlin-Shapley and Karlin-Studden 
 
 ## Backward incompatible:  
 
