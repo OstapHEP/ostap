@@ -1882,6 +1882,10 @@ Ostap::Math::HermiteSum::operator-() const
   return a ;
 }
 // ============================================================================
+
+
+
+// ============================================================================
 // Python
 // ============================================================================
 Ostap::Math::HermiteSum& 
@@ -1939,6 +1943,32 @@ Ostap::Math::HermiteSum
 Ostap::Math::HermiteSum::__sub__   
 ( const Ostap::Math::HermiteSum& a ) const { return subtract ( a ) ; } 
 
+
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::HermiteSum&
+Ostap::Math::HermiteSum::isum
+( const Ostap::Math::HermiteSum& other )
+{
+  // self-addition 
+  if ( this == &other ) { (*this)*= 2 ; return *this ; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )           ,
+                  "Cannot sum Hermite with different domains" , 
+                  "Ostap::Math::HermiteSum"                   , 
+                  Ostap::StatusCode ( 528 )                   )  ;
+  //
+  const unsigned short idegree = std::max ( degree() , other.degree() ) ;
+  //
+  m_pars.resize ( idegree + 1 ) ;
+  //
+  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
+  { m_pars[i] += other.m_pars[ i ] ; }
+  //
+  return *this ;
+}
 // ============================================================================
 // Add       polynomials (with the same domain!)
 // ============================================================================
@@ -1946,25 +1976,34 @@ Ostap::Math::HermiteSum
 Ostap::Math::HermiteSum::sum
 ( const Ostap::Math::HermiteSum& other ) const 
 {
-  if ( this == &other ) 
-  {
-    HermiteSum result(*this) ;
-    result *= 2 ;
-    return result ;
-  }
-  if ( !s_equal ( xmin() , other.xmin() ) || 
-       !s_equal ( xmax() , other.xmax() ) )
-  {
-    throw Ostap::Exception ( "Can't sum Hermite polynomials with different domains" , 
-                             "Ostap::Math::HermiteSum", 
-                             Ostap::StatusCode( Ostap::StatusCode::FAILURE ) ) ;
-  }
+  HermiteSum result(*this) ;
+  result.isum ( other ) ;
+  return result ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::HermiteSum&
+Ostap::Math::HermiteSum::isub
+( const Ostap::Math::HermiteSum& other )
+{
+  // self-subtraction
+  if ( this == &other ) { *this *= 0.0 ; return *this ; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )                ,
+                  "Cannot subtract Hermite with different domains" , 
+                  "Ostap::Math::HermiteSum"                        , 
+                  Ostap::StatusCode ( 529 )                        )  ;
+  //
   const unsigned short idegree = std::max ( degree() , other.degree() ) ;
   //
-  HermiteSum result( idegree , xmin () , xmax () ) ;
-  for ( unsigned short i = 0 ; i < result.npars() ; ++i ) 
-  { result.m_pars[i] += par(i) +  other.par( i ) ; }
-  return result ;
+  m_pars.resize ( idegree + 1 ) ;
+  //
+  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars[ i ] ; }
+  //
+  return *this ;
 }
 // ============================================================================
 // Subtract      polynomials (with the same domain!)
@@ -1973,20 +2012,9 @@ Ostap::Math::HermiteSum
 Ostap::Math::HermiteSum::subtract
 ( const Ostap::Math::HermiteSum& other ) const 
 {
-  if ( this == &other ) 
-  { return HermiteSum( degree() , xmin() , xmax() ) ; }
-  //
-  if ( !s_equal ( xmin() , other.xmin() ) || 
-       !s_equal ( xmax() , other.xmax() ) )
-  {
-    throw Ostap::Exception ( "Can't subtract Hermite polynomials with different domains" , 
-                             "Ostap::Math::HermiteSum", 
-                             Ostap::StatusCode( Ostap::StatusCode::FAILURE ) ) ;
-  }
-  //
-  HermiteSum a ( other ) ;
-  Ostap::Math::negate ( a.m_pars ) ;
-  return sum ( a ) ;  
+  HermiteSum result(*this) ;
+  result.isub ( other ) ;
+  return result ;
 }
 // ============================================================================
 // get unique tag 

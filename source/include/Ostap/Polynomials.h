@@ -1198,8 +1198,9 @@ namespace Ostap
       double derivative  ( const double x ) const ;
       // ======================================================================
       /// get integral between low and high 
-      double integral    ( const double low  , 
-                           const double high ) const ;
+      double integral   
+      ( const double low  , 
+        const double high ) const ;
       // ======================================================================
     public: // roots 
       // ======================================================================
@@ -1359,11 +1360,11 @@ namespace Ostap
       /// move 
       Polynomial (       Polynomial&& ) = default ;
       // ======================================================================
-      ///  constructor from Bernstein polinomial (efficient) 
+      ///  constructor from Bernstein polynomial (efficient) 
       explicit Polynomial ( const Bernstein&     poly ) ;
-      ///  constructor from Legendre polinomial  (efficient)
+      ///  constructor from Legendre polynomial  (efficient)
       explicit Polynomial ( const LegendreSum&   poly ) ;
-      ///  constructor from Chebyshev polinomial (delegation) 
+      ///  constructor from Chebyshev polynomial (delegation) 
       explicit Polynomial ( const ChebyshevSum&  poly ) ;
       // ======================================================================
     public:
@@ -2018,6 +2019,20 @@ namespace Ostap
       HermiteSum subtract ( const HermiteSum& other ) const ;
       // ======================================================================
     public:
+      // =======================================================================
+      /// add      legendre sum (with the same domain)
+      HermiteSum& isum    ( const HermiteSum& other ) ;
+      /// subtract legendre sum (with the same domain)
+      HermiteSum& isub    ( const HermiteSum& other ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline HermiteSum& operator+=( const HermiteSum& other ) { return isum ( other ) ; }
+      inline HermiteSum& operator-=( const HermiteSum& other ) { return isub ( other ) ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+    public:
       // ======================================================================
       HermiteSum& __iadd__      ( const double a ) ;
       HermiteSum& __isub__      ( const double a ) ;
@@ -2044,7 +2059,10 @@ namespace Ostap
       HermiteSum  __add__   ( const HermiteSum& a ) const ;
       HermiteSum  __sub__   ( const HermiteSum& a ) const ;
       // ======================================================================
-    public:
+      HermiteSum& __iadd__  ( const HermiteSum& a ) { return isum ( a ) ; }
+      HermiteSum& __isub__  ( const HermiteSum& a ) { return isub ( a ) ; }
+      // ======================================================================
+       public:
       // ======================================================================
       // negate it! 
       HermiteSum __neg__    () const ; // negate it!

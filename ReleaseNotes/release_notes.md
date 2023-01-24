@@ -1,5 +1,7 @@
 ## New features:
 
+  1. add `+=` and `-=` operators for `Ostap::Math::HermiteSum`
+
 ## Backward incompatible:  
 
 ## Bug fixes:
@@ -28,7 +30,7 @@
   1. slight update in `ds_var_minmax` : try to deduce minmax when result is empty....
   1. add proper pickling for `ROOT.RooLinearVar`
   1. introduce `ConfigReducer` base class for better pickling/deserialisation 
-  1. add Karlin-Shapley & Karlin-Studen positive polynomials (functions&pdfs)
+  1. add Karlin-Shapley & Karlin-Studden positive polynomials (functions&pdfs)
   1. more polishing for Karlin-Shapley & Karlin-Studden stuff   
   1. remove `conf_interval`, `upper_limit` and `lower_limit` methods for `PDF`, based on `RooStats::ProfileLikelihoodCalculator`
   1. remove `poi` method from `funbasic`
