@@ -41,8 +41,10 @@ from   ostap.fitting.roofit          import PDF_fun
 ## from   ostap.fitting.fithelpers      import ( VarMaker  ,
 ##                                               FitHelper ,
 ##                                              XVar, YVar, ZVar, NameDuplicates ) 
-from   ostap.fitting.fithelpers      import ( FitHelper , ConfigReducer , 
-                                              XVar      , YVar          ,  ZVar ) 
+from   ostap.fitting.fithelpers      import ( FitHelper      ,
+                                              ConfigReducer  ,
+                                              config_factory , 
+                                              XVar , YVar , ZVar )
 from   ostap.utils.cidict            import cidict
 from   ostap.plotting.fit_draw       import key_transform, draw_options  
 import ostap.fitting.variables
@@ -59,6 +61,8 @@ constant_types = num_types + ( ROOT.RooConstVar , )
 ## is valuer equal to 1?
 isone = lambda x : isequal ( float ( x ) , 1 )
 # =============================================================================
+## for better backward compatibility
+func_factory = config_factory  
 ## ## helper factory function
 ## def func_factory ( klass , config ) :
 ##     """Helper factory function, used for unpickling"""

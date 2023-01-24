@@ -1,6 +1,7 @@
 ## New features:
 
   1. add `+=` and `-=` operators for `Ostap::Math::HermiteSum`
+  1. re-introduce `ostapfitting.funbasic.func_factory` for better backward compatibility 
 
 ## Backward incompatible:  
 
