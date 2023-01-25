@@ -686,6 +686,62 @@ bool Ostap::Math::affine_transform
 
 
 // ============================================================================
+namespace 
+{
+  // ==========================================================================
+  inline void add_root 
+  ( std::vector<double>& pars , 
+    const double         root ) 
+  {
+    //
+    if ( pars.empty() ) 
+    {
+      pars.push_back ( -root ) ;
+      pars.push_back ( 1.0   ) ;
+      return ;
+    }
+    //
+    pars.push_back ( 0 ) ;
+    const std::size_t N = pars.size() ;
+    for ( std::size_t k = N - 1  ;  1 <= k  ; --k )
+    { pars [ k ] = pars [ k - 1 ] - pars [ k ] * root ; }
+    //
+    pars [ 0 ] *= -root ;
+  }
+  // ==========================================================================
+  inline void add_roots
+  ( std::vector<double>&       pars , 
+    const std::complex<double> root ) 
+  {
+    //
+    const double alpha = -2 * root.real()    ;
+    const double beta  = std::norm ( root ) ;
+    //
+    if ( pars.empty() ) 
+    {
+      pars.push_back ( beta  ) ;
+      pars.push_back ( alpha ) ;
+      pars.push_back ( 1     ) ;
+      return ;
+    }
+    //
+    pars.push_back ( 0 ) ;
+    pars.push_back ( 0 ) ;
+    //
+    const std::size_t N = pars.size() ;
+    for ( std::size_t k = N - 1  ;  2 <= k  ; --k )
+    { pars [ k ] = 
+        pars [ k     ] * beta   + 
+        pars [ k - 1 ] * alpha  + 
+        pars [ k - 2 ] ; 
+    }
+    //
+    pars [ 1 ]  = beta * pars[1] + alpha * pars[0] ;
+    pars [ 0 ] *= beta  ;
+  }
+  // ==========================================================================
+} 
+// ============================================================================
 /*  class Polynomial
  *  Trivial polynomial
  *  \f$ f(x) = \sum_i \p_i x^i\f$
@@ -713,6 +769,88 @@ Ostap::Math::Polynomial::Polynomial
   : Ostap::Math::PolySum ( pars ) 
   , m_xmin ( std::min ( xmin, xmax ) )
   , m_xmax ( std::max ( xmin, xmax ) )
+{}
+// ============================================================================
+// construct polynomial from different range
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial
+( const Polynomial& right ,
+  const double      xmin  ,
+  const double      xmax  )
+  : Ostap::Math::PolySum ( right )
+  , m_xmin ( std::min ( xmin, xmax ) )
+  , m_xmax ( std::max ( xmin, xmax ) )
+{
+  if ( !s_equal ( m_xmin , right.m_xmin ) ||
+       !s_equal ( m_xmax , right.m_xmax )  ) 
+  {
+    const double len1  =       m_xmax -       m_xmin ;
+    const double len2  = right.m_xmax - right.m_xmin ;
+    //
+    const double scale = len1 / len2 ;
+    const double shift = 2 * ( xmid () - right.xmid () ) / len2 ;
+    affine_transform ( right.m_pars , 
+                       m_pars       ,
+                       scale        , 
+                       shift        ) ;
+  }
+}
+// ============================================================================
+/* construct Bernstein polynomial from its roots
+ *
+ *  Polinomial has a form
+ *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
+ *
+ *  @param xmin low  edge for polynomial
+ *  @param xmax high edge for polynomial
+ *  @param roots_real    the list of real  roots of the polinomial
+ *  @param roots_complex the list of complex roots (only one root from cc-pair is needed)
+ */
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial
+( const double xmin , 
+  const double xmax , 
+  const std::vector<double>&                 roots_real    ,     
+  const std::vector<std::complex<double> > & roots_complex )
+  : Ostap::Math::PolySum ( roots_real.size() + 2 * roots_complex.size () )
+  , m_xmin ( std::min ( xmin, xmax ) )
+  , m_xmax ( std::max ( xmin, xmax ) )
+{
+  std::vector<double> coeffs { {1.0} } ;
+  coeffs.reserve ( degree() + 1 ) ;
+  /// add real roots 
+  for ( std::vector<double>::const_iterator rr = roots_real.begin() ; 
+        roots_real.end()    != rr ; ++rr ) 
+  { add_root ( coeffs , t ( *rr ) ) ; }
+  /// add complex roots 
+  for ( std::vector<std::complex<double>>::const_iterator cr = roots_complex.begin() ; 
+        roots_complex.end() != cr ; ++cr ) 
+  { 
+    const double a = t ( cr->real () ) ;
+    const double b = t ( cr->imag () ) ;
+    add_roots ( coeffs , std::complex<double>( a , b ) ) ;
+  }
+  //
+  m_pars = coeffs ;
+}
+// ============================================================================
+/** construct polynomial from its roots
+ *
+ *  Polinomial has a form
+ *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
+ *
+ *  @param xmin low  edge for polynomial
+ *  @param xmax high edge polynomial
+ *  @param roots_complex the list of complex roots (only one root from cc-pair is needed)
+ *  @param roots_real    the list of real  roots of the polinomial
+ */
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial
+( const double xmin , 
+  const double xmax , 
+  const std::vector<std::complex<double> > & roots_complex ,
+  const std::vector<double>&                 roots_real    ) 
+  : Polynomial ( xmin , xmax , roots_real , roots_complex )
 {}
 // ============================================================================
 // get the value

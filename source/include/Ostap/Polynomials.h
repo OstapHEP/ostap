@@ -1355,6 +1355,44 @@ namespace Ostap
         , m_xmax ( std::max ( xmin, xmax ) )
       {}
       // ======================================================================
+      /// construct polynomial from different range
+      Polynomial
+      ( const Polynomial& right ,
+        const double      xmin  ,
+        const double      xmax  ) ;             
+      // ======================================================================
+      /** construct Bernstein polynomial from its roots
+       *
+       *  Polinomial has a form
+       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
+       *
+       *  @param xmin low  edge for polynomial
+       *  @param xmax high edge for polynomial
+       *  @param roots_real    the list of real  roots of the polinomial
+       *  @param roots_complex the list of complex roots (only one root from cc-pair is needed)
+       */
+      Polynomial
+      ( const double xmin , 
+        const double xmax , 
+        const std::vector<double>&                 roots_real    ,     
+        const std::vector<std::complex<double> > & roots_complex = std::vector<std::complex<double> > () );
+      // ======================================================================
+      /** construct polynomial from its roots
+       *
+       *  Polinomial has a form
+       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
+       *
+       *  @param xmin low  edge for polynomial
+       *  @param xmax high edge polynomial
+       *  @param roots_complex the list of complex roots (only one root from cc-pair is needed)
+       *  @param roots_real    the list of real  roots of the polinomial
+       */
+      Polynomial
+      ( const double xmin , 
+        const double xmax , 
+        const std::vector<std::complex<double> > & roots_complex ,
+        const std::vector<double>&                 roots_real    = std::vector<double> () ) ;
+      // ======================================================================
       /// copy 
       Polynomial ( const Polynomial&  ) = default ;
       /// move 
@@ -1382,6 +1420,10 @@ namespace Ostap
       double xmin  () const { return m_xmin ; }
       /// get upper edge
       double xmax  () const { return m_xmax ; }
+      /// middle x
+      double xmid  () const { return 0.5 * ( m_xmin + m_xmax ) ; }
+      /// delta/scale/interval length 
+      double delta () const { return m_xmax - m_xmin ; }
       // ======================================================================
     public:
       // ======================================================================
