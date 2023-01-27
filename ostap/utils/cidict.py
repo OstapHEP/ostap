@@ -24,7 +24,7 @@ if    3<= python_version.major : from collections.abc import  MutableMapping
 else                           : from collections     import  MutableMapping
 # =============================================================================
 if (3,3) <= python_version : case_transform = lambda s : s.casefold() 
-else                       : case_transfrom = lambda s : s.lower()  
+else                       : case_transform = lambda s : s.lower()  
 # =============================================================================
 ## @class cidict
 #  Case-insensitive dictionary
