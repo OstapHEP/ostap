@@ -4,6 +4,9 @@
   1. re-introduce `ostapfitting.funbasic.func_factory` for better backward compatibility 
   1. add forward declarations for Karlin-Shapley and Karlin-Studden 
   1. add more constructors to `Ostap::Math::Polynomial`
+  1. add conversion from Karlin-Shapley and Karlin-Studden polynomials into regular polynomials 
+  1. add more contructors to `Ostap::Math::Polynomial` class 
+
 
 ## Backward incompatible:  
 

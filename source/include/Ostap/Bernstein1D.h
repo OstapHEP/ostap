@@ -1389,7 +1389,6 @@ namespace Ostap
     /// Swapping function for positive monotonic convex/concave polynomials 
     inline void swap ( Convex&        a , Convex&        b ) { a.swap ( b ) ; }
     // ========================================================================
-
     /** @class ConvexOnly
      *  The "positive" polynomial of order N with
      *  fixed sign the second derivatives

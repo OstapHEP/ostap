@@ -38,7 +38,6 @@ namespace Ostap
     class LegendreSum   ; // forward declaration
     class ChebyshevSum  ; // forward declaration
     class Polynomial    ; // forward declaration
-    class KarlinShapley ; // forward declaration 
     // ========================================================================
     /// Interpolants 
     namespace Interpolation { class Table ; } // forward declaration
@@ -272,13 +271,13 @@ namespace Ostap
       /** constructor from Legendre polynomial
        *  @see http://www.sciencedirect.com/science/article/pii/S0377042700003769 eq.20
        */
-      explicit Bernstein ( const LegendreSum&  poly ) ;
+      explicit Bernstein ( const LegendreSum&   poly ) ;
       // ======================================================================
       /// constructor from Chebyshev polynomial
-      explicit Bernstein ( const ChebyshevSum& poly ) ;
+      explicit Bernstein ( const ChebyshevSum&  poly ) ;
       // ======================================================================
       /// constructor from simple monomial form
-      explicit Bernstein ( const Polynomial&   poly ) ;
+      explicit Bernstein ( const Polynomial&    poly ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -397,7 +396,9 @@ namespace Ostap
        *  - q_inv = 0.5 -> \f$ \sqrt{ \sum_k  c_k^2 }     \f$
        *  - q_inv = 1.0 -> \f$ \sum_k \left| c_k \right|  \f$
        */
-      double distance ( const Bernstein& other , const double q_inv = 0 ) const ;
+      double distance 
+      ( const Bernstein& other     ,
+        const double     q_inv = 0 ) const ;
       // ======================================================================
       /** filter out very small terms
        *  the term is considered to be very small if
@@ -414,8 +415,9 @@ namespace Ostap
        *  @param  scale    parameter to define "smalness" of terms
        *  @return number of nullified terms
        */
-      unsigned short remove_noise ( const double epsilon = 0 , 
-                                    const double scale   = 0 ) ;
+      unsigned short remove_noise 
+      ( const double epsilon = 0 , 
+        const double scale   = 0 ) ;
       // ======================================================================
     public:  // polynomial division
       // ======================================================================

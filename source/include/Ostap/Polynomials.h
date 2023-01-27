@@ -1312,11 +1312,18 @@ namespace Ostap
     } ;  
     // ========================================================================    
     /// forward declarations 
-    class Bernstein    ; // forward declarations 
-    class Polynomial   ; // forward declarations 
-    class LegendreSum  ; // forward declarations 
-    class ChebyshevSum ; // forward declarations 
-    class HermiteSum   ; // forward declarations 
+    class Bernstein     ; // forward declaration 
+    class Polynomial    ; // forward declaration 
+    class LegendreSum   ; // forward declaration 
+    class ChebyshevSum  ; // forward declaration 
+    class HermiteSum    ; // forward declaration 
+    class KarlinShapley ; // forward declaration
+    class KarlinStudden ; // forward declaration
+    class BernsteinEven ; // forward declaration 
+    class Positive      ; // forward declaration 
+    class Monotonic     ; // forward declaration 
+    class Convex        ; // forward declaration 
+    class ConvexOnly    ; // forward declaration 
     // ========================================================================
     // Polynomial sums
     // ========================================================================
@@ -1404,6 +1411,20 @@ namespace Ostap
       explicit Polynomial ( const LegendreSum&   poly ) ;
       ///  constructor from Chebyshev polynomial (delegation) 
       explicit Polynomial ( const ChebyshevSum&  poly ) ;
+      /// constructor from Karlin-Shapley polinomial
+      explicit Polynomial ( const KarlinShapley& poly ) ;      
+      /// constructor from Karlin-Studden polinomial
+      explicit Polynomial ( const KarlinStudden& poly ) ;
+      ///  constructor from Even Bernstein polynomial (efficient) 
+      explicit Polynomial ( const BernsteinEven& poly ) ;
+      ///  constructor from positive Bernstein polynomial (efficient) 
+      explicit Polynomial ( const Positive&      poly ) ;
+      ///  constructor from monotonic Bernstein polynomial (efficient) 
+      explicit Polynomial ( const Monotonic&     poly ) ;
+      ///  constructor from convex Bernstein polynomial (efficient) 
+      explicit Polynomial ( const Convex&        poly ) ;
+      ///  constructor from convex-only Bernstein polynomial (efficient) 
+      explicit Polynomial ( const ConvexOnly&    poly ) ;
       // ======================================================================
     public:
       // ======================================================================

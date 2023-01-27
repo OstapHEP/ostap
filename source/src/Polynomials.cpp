@@ -20,6 +20,8 @@
 #include "Ostap/Bernstein.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Polynomials.h"
+#include "Ostap/Positive.h"
+#include "Ostap/Bernstein1D.h"
 // ============================================================================
 // Local 
 // ============================================================================
@@ -796,7 +798,7 @@ Ostap::Math::Polynomial::Polynomial
   }
 }
 // ============================================================================
-/* construct Bernstein polynomial from its roots
+/* construct polynomial from its roots
  *
  *  Polinomial has a form
  *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
@@ -851,6 +853,157 @@ Ostap::Math::Polynomial::Polynomial
   const std::vector<std::complex<double> > & roots_complex ,
   const std::vector<double>&                 roots_real    ) 
   : Polynomial ( xmin , xmax , roots_real , roots_complex )
+{}
+// ============================================================================
+// constructor from Karlin-Shapley polinomial
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial
+( const Ostap::Math::KarlinShapley& poly ) 
+  : PolySum ( poly.degree() ) 
+  , m_xmin  ( poly.xmin () )
+  , m_xmax  ( poly.xmax () )
+{
+  const double alpha = poly.alpha () ;
+  const double beta  = poly.beta  () ;
+  if      ( s_zero ( poly.A() ) ) {}  
+  else if ( 0 == degree()       ) { m_pars [0] = alpha ; }
+  else if ( 1 == degree()       ) 
+  {
+    m_pars [ 0 ] = ( alpha + beta ) * 0.5 ;   
+    m_pars [ 1 ] = ( alpha - beta ) * 0.5 ;
+  }
+  else
+  {
+    const double even =  0 == degree() % 2 ;
+    const double odd  = !even ;
+    //
+    const unsigned int NT = degree() + 1 ;
+    //
+    if ( !s_zero ( alpha ) ) 
+    {
+      std::vector<double> aroots {} ; aroots.reserve ( degree() ) ;
+      for ( unsigned k = even ? 1: 2  ; k < NT ; k+= 2 ) 
+      {
+        const double r = poly.x ( poly.troot ( k ) ) ;
+        aroots.push_back ( r ) ;
+        aroots.push_back ( r ) ;
+      }
+      //
+      if ( odd ) { aroots.push_back ( m_xmin ) ; }
+      Polynomial tmpa ( m_xmin , m_xmax , aroots ) ;
+      tmpa *= alpha / std::pow ( 2.0 , degree () ) ;;
+      isum ( tmpa ) ;
+    }
+    if ( !s_zero ( beta ) ) 
+    {
+      std::vector<double> broots {} ; broots.reserve ( degree() ) ;
+      //
+      for ( unsigned k = even ? 2 : 1  ; k + 1 < NT ; k+= 2 ) 
+      {
+        const double r = poly.x ( poly.troot ( k ) ) ;
+        broots.push_back ( r ) ;
+        broots.push_back ( r ) ;
+      }
+      if ( even ) { broots.push_back ( m_xmin ) ;  broots.push_back ( m_xmax ) ; }
+      else        { broots.push_back ( m_xmax ) ; }
+      //
+      Polynomial tmpb ( m_xmin , m_xmax , broots ) ;
+      tmpb *= -beta / std::pow ( 2.0 , degree () ) ;
+      isum ( tmpb ) ;
+    }
+  }
+}
+// ============================================================================
+// constructor from Karlin-Studden polinomial
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial
+( const Ostap::Math::KarlinStudden& poly ) 
+  : PolySum ( poly.degree() ) 
+  , m_xmin  ( poly.xmin ()                )
+  , m_xmax  ( poly.xmin () + poly.scale() )
+{
+  const double alpha = poly.alpha () ;
+  const double beta  = poly.beta  () ;
+  if      ( s_zero ( poly.A() ) ) {}  
+  else if ( 1 == degree () ) 
+  {
+    m_pars [ 0 ] = alpha * 0.5 + beta ;   
+    m_pars [ 1 ] = alpha * 0.5  ;
+  }
+  else
+  {
+    const double even =  0 == degree() % 2 ;
+    const double odd  = !even ;
+    //
+    const unsigned int NT = degree() + 1 ;
+    //
+    if ( !s_zero ( alpha ) ) 
+    {
+      std::vector<double> aroots {} ; aroots.reserve ( degree() ) ;
+      for ( unsigned k = even ? 1: 2  ; k < NT ; k+= 2 ) 
+      {
+        const double r = poly.x ( poly.zroot ( k ) ) ;
+        aroots.push_back ( r ) ;
+        aroots.push_back ( r ) ;
+      }
+      //
+      if ( odd ) { aroots.push_back ( m_xmin ) ; }
+      Polynomial tmpa ( m_xmin , m_xmax , aroots ) ;
+      tmpa *= alpha / std::pow ( 2.0 , aroots.size() ) ;;
+      isum ( tmpa ) ;
+    }
+    if ( !s_zero ( beta ) ) 
+    {
+      std::vector<double> broots {} ; broots.reserve ( degree() ) ;
+      //
+      for ( unsigned k = even ? 2 : 1  ; k + 1 < NT ; k+= 2 ) 
+      {
+        const double r = poly.x ( poly.zroot ( k ) ) ;
+        broots.push_back ( r ) ;
+        broots.push_back ( r ) ;
+      }
+      if ( even ) { broots.push_back ( m_xmin ) ; }
+      //
+      Polynomial tmpb ( m_xmin , m_xmax , broots ) ;
+      tmpb *= beta / std::pow ( 2.0 , broots.size ()  ) ;
+      isum ( tmpb ) ;
+    }
+  }
+}
+// ============================================================================
+//  constructor from Even Bernstein polynomial (efficient) 
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial 
+( const Ostap::Math::BernsteinEven& poly ) 
+  : Polynomial ( poly.bernstein() ) 
+{}
+// ============================================================================
+//  constructor from Positive Bernstein polynomial (efficient) 
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial 
+( const Ostap::Math::Positive& poly ) 
+  : Polynomial ( poly.bernstein() ) 
+{}
+// ============================================================================
+//  constructor from Monotonic Bernstein polynomial (efficient) 
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial 
+( const Ostap::Math::Monotonic& poly ) 
+  : Polynomial ( poly.bernstein() ) 
+{}
+// ============================================================================
+//  constructor from Convex Bernstein polynomial (efficient) 
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial 
+( const Ostap::Math::Convex& poly ) 
+  : Polynomial ( poly.bernstein() ) 
+{}
+// ============================================================================
+//  constructor from Convex-only Bernstein polynomial (efficient) 
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial 
+( const Ostap::Math::ConvexOnly& poly ) 
+  : Polynomial ( poly.bernstein() ) 
 {}
 // ============================================================================
 // get the value

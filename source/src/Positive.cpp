@@ -79,6 +79,11 @@ Ostap::Math::KarlinShapley::KarlinShapley
   //
   Ostap::Assert ( m_xmin < m_xmax  , s_M1 , s_T , 282 ) ;
   //
+  if ( 1 <= pars.size() ) { setA ( pars[0] ) ; }
+  if ( 2 <= pars.size() ) { m_sphere1.setPar ( 0 , pars[1] ) ; }
+  for ( unsigned short k = 2 ; k <pars.size () ; ++k ) 
+  { m_sphere2.setPar ( k - 2 , pars[k] ) ; }
+  //
   updateRoots () ;
 }
 // ============================================================================
@@ -158,8 +163,8 @@ double Ostap::Math::KarlinShapley::evaluate ( const double x ) const
   const long double tt = t ( x ) ;
   //
   long double result = 0 ;
-  const long double alpha = m_sphere1 . x2 ( 0 ) ;
-  const long double beta  = m_sphere1 . x2 ( 1 ) ;
+  const long double alpha = m_sphere1 . x2 ( 0 ) * m_A ;
+  const long double beta  = m_sphere1 . x2 ( 1 ) * m_A ;
   //
   // 1st degree polynomial 
   if ( 0 == m_sphere2.npars() ) 
@@ -199,7 +204,7 @@ double Ostap::Math::KarlinShapley::evaluate ( const double x ) const
     result += beta * bp ;  
   }
   //
-  return m_A * result ;
+  return result ;
 }
 // ============================================================================
 // get the unique tag 
@@ -328,7 +333,13 @@ Ostap::Math::KarlinStudden::KarlinStudden
   , m_troots    ( pars.size() < 2 ? 1 : pars.size() , 0.0 )
   , m_zroots    ( pars.size() < 2 ? 1 : pars.size() , 0.0 )
   , m_workspace () 
+  //
 {
+  if ( 1 <= pars.size() ) { setA ( pars[0] ) ; }
+  if ( 2 <= pars.size() ) { m_sphere1.setPar ( 0 , pars[1] ) ; }
+  for ( unsigned short k = 2 ; k <pars.size () ; ++k ) 
+  { m_sphere2.setPar ( k - 2 , pars[k] ) ; }
+  //
   updateRoots () ;
 }
 // ============================================================================
@@ -392,7 +403,7 @@ bool Ostap::Math::KarlinStudden::setA ( const double value )
   return true ; 
 }
 // ============================================================================
-// evaluate Karlin-Studdenpolynomial 
+// evaluate Karlin-Studden polynomial 
 // ============================================================================
 double Ostap::Math::KarlinStudden::evaluate ( const double x ) const 
 {
@@ -405,8 +416,8 @@ double Ostap::Math::KarlinStudden::evaluate ( const double x ) const
   const long double tt = t ( x ) ;
   //
   long double result = 0 ;
-  const long double alpha = m_sphere1 . x2 ( 0 ) ;
-  const long double beta  = m_sphere1 . x2 ( 1 ) ;
+  const long double alpha = m_A * m_sphere1 . x2 ( 0 ) ;
+  const long double beta  = m_A * m_sphere1 . x2 ( 1 ) ;
   //
   // 1st degree polynomial 
   if ( 0 == m_sphere2.npars() ) { return alpha * tt + beta ; } // RETURN 
@@ -436,14 +447,14 @@ double Ostap::Math::KarlinStudden::evaluate ( const double x ) const
   if ( !s_zero ( beta ) ) 
   {
     long double bp = 1.0L ;
-    for ( unsigned short k = even ? 2 : 1 ; k < NT ; k +=2 ) 
+    for ( unsigned short k = even ? 2 : 1 ; k + 1 < NT ; k +=2 ) 
     { bp *= ( tt - m_zroots [ k ] ) ; }
     bp = bp * bp ;
     if ( even ) { bp *= tt ; }
-    result += beta * bp ;  
+    result += beta * bp ; 
   }
   //
-  return m_A * result ;
+  return result ;
 }
 // ============================================================================
 // get the unique tag 

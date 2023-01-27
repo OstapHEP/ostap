@@ -112,7 +112,7 @@ namespace Ostap
       { return 1 + m_sphere1.npars() + m_sphere2.npars() ; }
       /// global coefficient 
       double A () const { return m_A ; }
-      /// coeffcienct at alpha-polynomial 
+      /// coeffcient at alpha-polynomial 
       double alpha () const { return m_A * m_sphere1.x2 ( 0 ) ; }
       /// coeffcienct at beta-polynomial
       double beta  () const { return m_A * m_sphere1.x2 ( 1 ) ; }
@@ -177,6 +177,9 @@ namespace Ostap
       // ======================================================================
       /// get Karlin-Shapley t-roots 
       const std::vector<double>& troots () const { return m_troots ; }
+      /// get Karlin-Shapley t-root
+      inline double  troot ( const unsigned short k ) const 
+      { return  k <  m_troots.size() ? m_troots [ k ] : m_troots.back () ; }
       // ======================================================================
     public:  // numerical intergation
       // ======================================================================
@@ -390,6 +393,12 @@ namespace Ostap
       const std::vector<double>& troots () const { return m_troots ; }
       /// get Karlin-Studden z-roots  [0,+inf)
       const std::vector<double>& zroots () const { return m_zroots ; }
+      /// get Karlin-Studden t-root
+      inline double  troot ( const unsigned short k ) const 
+      { return  k <  m_troots.size() ? m_troots [ k ] : m_troots.back () ; }
+      /// get Karlin-Studden z-root
+      inline double  zroot ( const unsigned short k ) const 
+      { return  k <  m_zroots.size() ? m_zroots [ k ] : m_zroots.back () ; }
       // ======================================================================
     public:  // numerical intergation
       // ======================================================================
