@@ -59,7 +59,7 @@ class cidict(MutableMapping) :
         
         from ostap.core.core import items_loop
         dtmp = dict ( dct )
-        for k,v in  in items_loop ( dtmp ) :
+        for k,v in items_loop ( dtmp ) :
             kk = self.the_key( k )
             self.__store [ kk ] = v 
             
