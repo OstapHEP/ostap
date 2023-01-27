@@ -14,13 +14,17 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
-    'cidict'      , ## case-insensitive dictionary
-    'select_keys' , ## select ``interesting'' keys from the dictionary 
+    'cidict'          , ## case-insensitive dictionary
+    'case_transform'  , ## simple key-funnction for case-insensitive comparison 
+    'select_keys'     , ## select ``interesting'' keys from the dictionary 
     )
 # =============================================================================
-from sys import version_info as python_version
-if python_version.major >= 3  : from collections.abc import  MutableMapping
-else                          : from collections     import  MutableMapping
+from sys             import version_info as python_version
+if    3<= python_version.major : from collections.abc import  MutableMapping
+else                           : from collections     import  MutableMapping
+# =============================================================================
+if (3,3) <= python_version : case_transform = lambda s : s.casefold() 
+else                       : case_transfrom = lambda s : s.lower()  
 # =============================================================================
 ## @class cidict
 #  Case-insensitive dictionary
@@ -45,23 +49,23 @@ class cidict(MutableMapping) :
     ...              transform = lambda k : k.lower().replace('_','') )
     """
     
-    def __init__ ( self                             ,
-                   dct       = {}                   ,
-                   transform = lambda k : k.lower() ,
-                   **kwargs ) :
+    def __init__ ( self                       ,
+                   dct       = {}             ,
+                   transform = case_transform ,
+                   **kwargs                   ) :
 
         self.__transform = transform 
         self.__store     = {}
         
+        from ostap.core.core import items_loop
         dtmp = dict ( dct )
-        for k in dtmp :
+        for k,v in  in items_loop ( dtmp ) :
             kk = self.the_key( k )
-            self.__store [ kk ] = dtmp [ k ]
+            self.__store [ kk ] = v 
             
-        for k in kwargs  :
-            
+        for k, v  in items_loop ( kwargs ) :
             kk = self.the_key( k )
-            self.__store [ kk ] = kwargs [ k ]
+            self.__store [ kk ] = v 
 
     # =========================================================================
     ## transform the key 
@@ -97,7 +101,7 @@ class cidict(MutableMapping) :
 #  dct = { ... }
 #  res = select_keys ( dct , ( 'a' , 'b' ) , transform = lambda s : s.lower() )
 #  @endcode 
-def select_keys ( origin , keys , transform = lambda s : s  , **kwargs ) :
+def select_keys ( origin , keys , transform = case_transform , **kwargs ) :
     """Select from mapping object <code>origin</code> the "interesting" keys.
     The keys, that result in the same <code>transform(key)</code> value 
     are considered as non-distiguishable
@@ -113,11 +117,15 @@ def select_keys ( origin , keys , transform = lambda s : s  , **kwargs ) :
     
     from ostap.core.core import items_loop
     
+    remove = set() 
     for k , value in items_loop ( origin ) :
         kk = selected.the_key ( k )
         if kk in kt :
             selected [ kk ] = value
-            origin.pop ( k )  
+            remove.add ( k ) 
+            
+    ## remove selected keys from the origin  
+    for k in remove : origin.pop ( k )  
         
     for k , value in items_loop ( kwargs ) :
         kk = selected.the_key ( k )
