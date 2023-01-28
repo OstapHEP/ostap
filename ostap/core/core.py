@@ -71,6 +71,8 @@ __all__     = (
     'RootError2Exception' , ## context manager to perform ROOT Error -> C++/Python exception
     ##
     'var_separators'      , ##  defalt separators for the string expressions
+    ##
+    'cidict_fun'          , ## key transformation for case-insensitive keys ingoring underscores
     )
 # =============================================================================
 import math, sys, os 
@@ -108,8 +110,9 @@ zechEff         = Ostap.Math.zechEff
 wilsonEff       = Ostap.Math.wilsonEff
 agrestiCoullEff = Ostap.Math.agrestiCoullEff
 # =============================================================================
-## helper function for case-insensitive dictionary with ignorance of underscores and blanks 
-cidict_fun = lambda k : k.lower().replace('_','').replace(' ','')
+## helper function for case-insensitive dictionary with ignorance of underscores and blanks
+from ostap.utils.cidict import case_transform 
+cidict_fun = lambda k : case_transform ( k ) . replace('_','') . replace ( ' ', '') 
 # =============================================================================
 ## @class ROOTCWD
 #  context manager to preserve current directory (rather confusing stuff in ROOT)

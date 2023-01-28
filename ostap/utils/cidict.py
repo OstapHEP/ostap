@@ -19,10 +19,11 @@ __all__     = (
     'select_keys'     , ## select ``interesting'' keys from the dictionary 
     )
 # =============================================================================
-from sys             import version_info as python_version
+from sys  import version_info as python_version
 if    3<= python_version.major : from collections.abc import  MutableMapping
 else                           : from collections     import  MutableMapping
 # =============================================================================
+## for case-insensitive comparison 
 if (3,3) <= python_version : case_transform = lambda s : s.casefold() 
 else                       : case_transform = lambda s : s.lower()  
 # =============================================================================

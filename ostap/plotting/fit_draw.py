@@ -180,8 +180,8 @@ def lineColor ( c ) : return ROOT.RooFit.LineColor ( c )
 # ==============================================================================
 ## compare the keys
 # ==============================================================================
-## transformation for the keys 
-def key_transform ( key ) : return key.lower().replace('_','')
+## transformation for the keys
+from ostap.core.core import cidict_fun as key_transform
 ## compare two keys 
 def key_compare   ( key1 , key2 ) :
     """Comparison of keys"""
@@ -282,7 +282,7 @@ class Style(object):
     def __init__ ( self  , *args , **kwargs ) :
         
         from ostap.utils.cidict import cidict
-        kw = cidict ( transform = lambda k : k.lower().replace('_','') , **kwargs )
+        kw = cidict ( transform = key_transform , **kwargs )
 
         linecolor    = kw.pop ( 'linecolor'    , ROOT.kBlack )
         linestyle    = kw.pop ( 'linestyle'    , 1           )
@@ -416,7 +416,7 @@ class Area (Style) :
     def __init__ ( self , color = ROOT.kRed , style = 1001 , **kwargs ) :
 
         from ostap.utils.cidict import cidict
-        kw = cidict ( transform = lambda k : k.lower().replace('_','') , **kwargs )
+        kw = cidict ( transform = key_transform , **kwargs )
         
         fillcolor = kw.pop ( 'fill_color' , color )
         fillstyle = kw.pop ( 'fill_style' , style )
@@ -450,7 +450,7 @@ class Line (Style) :
 
         
         from ostap.utils.cidict import cidict
-        kw = cidict ( transform = lambda k : k.lower().replace('_','') , **kwargs )
+        kw = cidict ( transform = key_transform , **kwargs )
         
         fillcolor = kw.pop ( 'fill_color' , None  ) ## ignore 
         fillstyle = kw.pop ( 'fill_style' , None  ) ## ignore 

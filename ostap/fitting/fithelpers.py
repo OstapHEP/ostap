@@ -623,21 +623,21 @@ class FitHelper(VarMaker) :
 
         silent  = None
         verbose = None
-        
+
+        from ostap.core.core import cidict_fun as key_transform 
+
         for k , a in items_loop ( kwargs ) :
             
-            klow = k.lower ().replace('_','')
-            kup  = k.upper ().replace('_','')
+            key  = key_transform ( k )             
             
             ## skip "drawing" options 
-            if   klow in drawing_options                            : continue 
-            if   klow in ( 'draw'            ,
-                           'drawoption'      ,
-                           'drawoptions'     ) : continue 
+            if   key in drawing_options       : continue 
+            if   key in ( 'draw'            ,
+                          'drawoption'      ,
+                          'drawoptions'     ) : continue 
             
-            if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )
-            
-            elif kup in ( 'VERBOSE' ,        ) and isinstance ( a , bool ) :
+            if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )            
+            elif key in ( 'verbose' ,       ) and isinstance ( a , bool ) :
                 
                 if not verbose is None :
                     if a != verbose : 
@@ -649,8 +649,8 @@ class FitHelper(VarMaker) :
                         silent = not a 
                 _args.append ( ROOT.RooFit.Verbose (     a ) )
 
-            elif kup in ( 'SILENT'           ,
-                          'SILENCE'          ) and isinstance ( a , bool ) :
+            elif key in ( 'silent'  , 'silence') and isinstance ( a , bool ) :
+                
                 if not silent is None :
                     if a != silent : 
                         self.warning ( 'parse_args: Redefine SILENT to %s' %  a ) 
@@ -661,38 +661,37 @@ class FitHelper(VarMaker) :
                         verbose = not a
                 _args.append ( ROOT.RooFit.Verbose ( not a ) )
                 
-            elif kup in ( 'STRATEGY'         , 
-                          'MINUITSTRATEGY'   ,
-                          'STRATEGYMINUIT'   ) and isinstance ( a , integer_types ) and 0 <= a <= 2 :
+            elif key in ( 'strategy'         , 
+                          'miniutstrategy'   ,
+                          'strategyminuit'   ) and isinstance ( a , integer_types ) and 0 <= a <= 2 :
                 
                 _args.append ( ROOT.RooFit.Strategy (    a ) )
                 
-            elif kup in ( 'PRINTLEVEL'       ,
-                          'MINUITPRINT'      ,
-                          'MINUITLEVEL'      ) and isinstance ( a , integer_types ) and -1 <= a <= 3 :
+            elif key in ( 'printlevel'       ,
+                          'minuitprint'      ,
+                          'minuitlevel'      ) and isinstance ( a , integer_types ) and -1 <= a <= 3 :
                 
                 _args.append ( ROOT.RooFit.PrintLevel ( a ) )
                 
-            elif kup in ( 'PRINTEVALERRORS'  ,
-                          'PRINTERRORS'      ,
-                          'ERRORSPRINT'      ) and isinstance ( a , integer_types ) and -1 <= a :
+            elif key in ( 'printevalerrors'  ,
+                          'printerrors'      ,
+                          'errorspront'      ) and isinstance ( a , integer_types ) and -1 <= a :
                 
                 _args.append ( ROOT.RooFit.PrintEvalErrors ( a ) )
                 
-            elif kup in ( 'TIMER'            ,
-                          'TIMING'           ) and isinstance ( a , bool ) :
+            elif key in ( 'timer' , 'timing' ) and isinstance ( a , bool ) :
                 
                 _args.append ( ROOT.RooFit.Timer    ( a ) )
                 
-            elif kup in ( 'WARNING'          ,
-                          'WARNINGS'         ) and isinstance ( a , bool ) :
+            elif key in ( 'warning' , 'warnings' ) and isinstance ( a , bool ) :
                 
                 _args.append ( ROOT.RooFit.Warnings ( a ) ) 
             
-            elif kup in ( 'SUMW2'            ,
-                          'SUMW2ERR'         ,
-                          'SUMW2ERROR'       ,
-                          'SUMW2ERRORS'      ) and isinstance ( a , bool ) :
+            elif key in ( 'sumw2'            ,
+                          'sumw2err'         ,
+                          'sumw2errs'        ,
+                          'sumw2error'       ,
+                          'sumw2errors'      ) and isinstance ( a , bool ) :
                 
                 if   a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
@@ -703,10 +702,11 @@ class FitHelper(VarMaker) :
 
                 _args.append (  ROOT.RooFit.SumW2Error( a ) )
                                     
-            elif kup in ( 'ASYMPTOTIC'       ,
-                          'ASYMPTOTICERR'    ,
-                          'ASYMPTOTICERROR'  ,
-                          'ASYMPTOTICERRORS' ) and isinstance ( a , bool ) and (6,19) <= root_info :
+            elif key in ( 'asymptotic'       ,
+                          'asymptoticerr'    ,
+                          'asymptoticerrs'   ,
+                          'asymptoticerror'  ,
+                          'asymptoticerrors' ) and isinstance ( a , bool ) and (6,19) <= root_info :
                 
                 if   a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
@@ -722,82 +722,86 @@ class FitHelper(VarMaker) :
                     
                 _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
                     
-            elif kup in ( 'BATCH'            ,
-                          'BATCHMODE'        ) and isinstance ( a , bool ) and  ( 6, 20) <= root_info :
+            elif key in ( 'batch'            ,
+                          'batchmode'        ,
+                          'modebatch'        ) and isinstance ( a , bool ) and  ( 6, 20) <= root_info :
                 
                 _args.append (  ROOT.RooFit.BatchMode ( a ) )
                 
-            elif kup in ( 'EXTENDED' ,       ) and isinstance ( a , bool ) :
+            elif key in ( 'extended' ,       ) and isinstance ( a , bool ) :
                 
                 _args.append   (  ROOT.RooFit.Extended ( a ) )
                 
-            elif kup in ( 'CPU'              ,
-                          'CPUS'             ,
-                          'NCPU'             ,
-                          'NCPUS'            ,
-                          'NUMCPU'           ,
-                          'NUMCPUS'          ) and isinstance ( a , int ) and 1<= a :
+            elif key in ( 'cpu'              ,
+                          'cpus'             ,
+                          'ncpu'             ,
+                          'ncpus'            ,
+                          'numcpu'           ,
+                          'numcpus'          ) and isinstance ( a , int ) and 1<= a :
                 
                 _args.append   (  ROOT.RooFit.NumCPU( a  ) )
                 
-            elif kup in ( 'CPU'              ,
-                          'CPUS'             ,
-                          'NCPU'             ,
-                          'NCPUS'            ,
-                          'NUMCPU'           ,
-                          'NUMCPUS'          ) and \
+            elif key in ( 'cpu'              ,
+                          'cpus'             ,
+                          'ncpu'             ,
+                          'ncpus'            ,
+                          'numcpu'           ,
+                          'numcpus'          ) and \
                  isinstance ( a , list_types ) and 2 == len ( a )  and \
                  isinstance ( a[0] , integer_types ) and 1 <= a[1] and \
                  isinstance ( a[1] , integer_types ) and 0 <= a[1] <=3 :
                 
                 _args.append   (  ROOT.RooFit.NumCPU( a[0] ,  a[1] ) ) 
                 
-            elif kup in ( 'RANGE'            ,
-                          'FITRANGE'         ,
-                          'RANGES'           ,
-                          'FITRANGES'        ) and isinstance ( a , string_types ) :
+            elif key in ( 'range'            ,
+                          'fitrange'         ,
+                          'rangefit'         ,
+                          'ranges'           ,
+                          'fitranges'        ) and isinstance ( a , string_types ) :
                 
                 _args.append   (  ROOT.RooFit.Range ( a ) )
                 
-            elif kup in ( 'RANGE'            ,
-                          'FITRANGE'         ) and isinstance ( a , list_types   ) and 2 == len ( a ) \
+            elif key in ( 'range'            ,
+                          'fitrange'         ,
+                          'rangefit'         ) and isinstance ( a , list_types   ) and 2 == len ( a ) \
                  and isinstance ( a[0] ,  num_types ) \
                  and isinstance ( a[1] ,  num_types ) \
                  and a[0] < a[1]  :
                 
                 _args.append   (  ROOT.RooFit.Range ( a[0] , a[1] ) )
                 
-            elif kup in ( 'MINIMIZER'  ,     ) and isinstance ( a , list_types   ) and 2 == len ( 2 ) \
+            elif key in ( 'minimizer'       ,
+                          'minimiser'       ) and isinstance ( a , list_types   ) and 2 == len ( 2 ) \
                  and isinstance ( a[0] ,  string_types ) \
                  and isinstance ( a[1] ,  string_types ) :
                 
                 _args.append   (  ROOT.RooFit.Minimizer ( a[0] , a[1] ) )
                 
-            elif kup in  ( 'HESSE'    ,      ) and isinstance ( a , bool ) :
+            elif key in  ( 'hesse'    ,     ) and isinstance ( a , bool ) :
                 
                 _args.append   (  ROOT.RooFit.Hesse ( a )  )
                 
-            elif kup in  ( 'INITIALHESSE'    ,
-                           'INITHESSE'       ,
-                           'HESSEINIT'       ,
-                           'HESSEINITIAL'    ) and isinstance ( a , bool ) :
+            elif key in  ( 'initialhesse'    ,
+                           'inithesse'       ,
+                           'hesseinit'       ,
+                           'hesseinitial'    ) and isinstance ( a , bool ) :
                 
                 _args.append   (  ROOT.RooFit.InitialHesse ( a )  )
                 
-            elif kup in ( 'OPTIMIZE'         ,
-                          'OPTIMISE'         ) and isinstance ( a , integer_types  ) :
+            elif key in ( 'optimize'         ,
+                          'optimise'         ) and isinstance ( a , integer_types  ) :
                 
                 _args.append   (  ROOT.RooFit.Optimize     ( a )  )
                 
-            elif kup in ( 'MINOS'    ,       ) and isinstance ( a , bool           ) :
+            elif key in ( 'minos'    ,       ) and isinstance ( a , bool           ) :
                 
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
                 
-            elif kup in ( 'MINOS'    ,       ) and isinstance ( a , ROOT.RooArgSet ) :
+            elif key in ( 'minos'    ,       ) and isinstance ( a , ROOT.RooArgSet ) :
                 
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
                 
-            elif kup in ( 'MINOS'    ,       ) and isinstance ( a , string_types   ) \
+            elif key in ( 'minos'    ,       ) and isinstance ( a , string_types   ) \
                      and hasattr  ( self , 'params' ) and a in self.params ( dataset ) :
                 
                 _v = self.params()[ a ]
@@ -805,7 +809,7 @@ class FitHelper(VarMaker) :
                 self.aux_keep.append ( _s ) 
                 _args.append   (  ROOT.RooFit.Minos        ( _s )  )
                 
-            elif kup in ( 'MINOS'    ,       ) and not isinstance ( a , string_types ) :
+            elif key in ( 'MINOS'    ,       ) and not isinstance ( a , string_types ) :
 
                 _s     = ROOT.RooArgSet()
                 _pars = self.params ( dataset ) if hasattr  ( self , 'params' ) else ROOT.RooArgSet() 
@@ -821,51 +825,65 @@ class FitHelper(VarMaker) :
                 self.aux_keep.append ( _s ) 
                 _args.append   (  ROOT.RooFit.Minos ( _s )  )
                                 
-            elif kup in ( 'SAVE'     ,       ) and isinstance ( a , bool           ) :
+            elif key in ( 'save'     ,       ) and isinstance ( a , bool           ) :
                 
                 _args.append   (  ROOT.RooFit.Save         ( a )  )
                 
-            elif kup in ( 'CLONE'            ,
-                          'CLONEDATA'        ) and isinstance ( a , bool           ) :
+            elif key in ( 'clone'            ,
+                          'clonedata'        ,
+                          'dataclone'        ) and isinstance ( a , bool           ) :
                 
                 _args.append   (  ROOT.RooFit.CloneData    ( a )  )
                 
-            elif kup in ( 'OFFSET'           ) and isinstance ( a , bool           ) :
+            elif key in ( 'offset' ,         ) and isinstance ( a , bool           ) :
                 
                 _args.append   (  ROOT.RooFit.Offset       ( a )  )
                 
-            elif kup in ( 'FITOPTIONS' , 'FITOPTION' ) and \
+            elif key in ( 'fitoption'  ,
+                          'fitoptions' ,
+                          'optionfit'  ,
+                          'potionsfit' ) and \
                           isinstance ( a , string_types   ) and root_info < ( 6 , 28 ) :
                 
                 _args.append   (  ROOT.RooFit.FitOptions   ( a )  )
                 
-            elif kup in ( 'CONSTRAINT'       ,
-                          'CONSTRAINTS'      ,
-                          'PARS'             ,
-                          'PARAMS'           ,
-                          'PARAMETER'        ,
-                          'PARAMETERS'       ) :
+            elif key in ( 'constraint'       ,
+                          'constraints'      ,
+                          'pars'             ,
+                          'params'           ,
+                          'parameters'       ) :
                 c = self.parse_constraints ( a )
                 if c is None : self.error ('parse_args: Invalid constraint specification: %s/%s' % ( a , type ( a ) ) )
                 else         : _args.append ( c ) 
 
-            elif kup in ( 'INTEGRATEBINS' , 'INTEGRATE' ) and \
-                     isinstance ( a , num_types )  and (6,24) <= root_info :
-
+            elif key in ( 'integratebin'  ,
+                          'integratebins' ,                          
+                          'binintegrate'  ,
+                          'binsintegrate' ,
+                          'integrate'     )  and \
+                          isinstance ( a , num_types )  and (6,24) <= root_info :
+                
                 _args.append   (  ROOT.RooFit.IntegrateBins ( a ) )
                 
-            elif kup in ( 'NEWSTYLE' , 'NEW' ) and \
-                     isinstance ( a , bool   ) and (6,27) <= root_info :
-
+            elif key in ( 'newstyle' ,
+                          'stylenew' ,
+                          'new'      ) and \
+                          isinstance ( a , bool   ) and (6,27) <= root_info :
+                
                 _args.append   (  ROOT.RooFit.NewStyle ( a ) )
 
-            elif kup in ( 'PARALLELIZE' , 'PARALLELISE' ) and \
-                     isinstance ( a , sized_types )       and \
-                     1<= len ( a ) <= 3                   and (6,27) <= root_info :
-
+            elif key in ( 'parallelize' ,
+                          'parallelise' ,
+                          'parallel' ) and \
+                          isinstance ( a , sized_types )       and \
+                          1<= len ( a ) <= 3                   and (6,27) <= root_info :
+                
                 _args.append   (  ROOT.RooFit.Parallelize ( *a ) )
 
-            elif kup in ( 'MAXCALLS' , 'MAXCALL' ) and \
+            elif key in ( 'maxcall'  ,
+                          'maxcalls' ,
+                          'callmax'  ,
+                          'callsmax' ) and \
                      isinstance ( a , integer_types )    and (6,27) <= root_info :
                 
                 _args.append   ( ROOT.RooFit.MaxCalls ( a ) ) 

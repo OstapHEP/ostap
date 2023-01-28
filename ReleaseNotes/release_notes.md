@@ -6,6 +6,7 @@
   1. add more constructors to `Ostap::Math::Polynomial`
   1. add conversion from Karlin-Shapley and Karlin-Studden polynomials into regular polynomials 
   1. add more contructors to `Ostap::Math::Polynomial` class 
+  1. unify the key-function for case-insensitive (and noi underscores) dictionaries 
 
 
 ## Backward incompatible:  
