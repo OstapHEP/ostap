@@ -9,7 +9,6 @@
   1. unify the key-function for case-insensitive (and noi underscores) dictionaries 
   1. improve `ostap.fitting.roostats` and corresponding test 
 
-
 ## Backward incompatible:  
 
 ## Bug fixes:
