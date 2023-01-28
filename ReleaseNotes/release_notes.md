@@ -7,6 +7,7 @@
   1. add conversion from Karlin-Shapley and Karlin-Studden polynomials into regular polynomials 
   1. add more contructors to `Ostap::Math::Polynomial` class 
   1. unify the key-function for case-insensitive (and noi underscores) dictionaries 
+  1. improve `ostap.fitting.roostats` and corresponding test 
 
 
 ## Backward incompatible:  

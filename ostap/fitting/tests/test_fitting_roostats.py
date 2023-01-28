@@ -22,10 +22,11 @@ from   builtins                 import range
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
 import ostap.logger.table       as     T
-from   ostap.fitting.roostats   import ( interval_PL, interval_FC   ,
-                                         interval_BC, interval_MCMC )    
+from   ostap.fitting.roostats   import ( ProfileLikelihoodInterval ,
+                                         FeldmanCousinsInterval    ,
+                                         BayesianInterval          ,
+                                         MCMCInterval              )
 import ROOT
-
 # =============================================================================
 # logging 
 # =============================================================================
@@ -58,62 +59,73 @@ def test_limits () :
         result , frame = pdf.fitTo ( dataset , draw = True , nbins = 20 )
 
     rows = [  ( 'Method' , 'Interval [90%]' , 'Lower [95%]' , 'Upper[95%]' , 'CPU' ) ]
-    
-    with timing ( "Profile Likelihood" , logger ) as t :
-        low, high = interval_PL ( pdf  , pdf.mean , 0.90 , dataset )
-        lower     = interval_PL ( pdf  , pdf.mean , 0.95 , dataset , limit = -1 )
-        upper     = interval_PL ( pdf  , pdf.mean , 0.95 , dataset , limit = +1 )
 
+    
+    with timing ( "Profile Likelihood", logger ) as t :
+        pli = ProfileLikelihoodInterval ( pdf     = pdf      ,
+                                          params  = pdf.mean , 
+                                          dataset = dataset  )
+        low, high = pli.interval    ( 0.90 , dataset )
+        upper     = pli.upper_limit ( 0.95 , dataset )
+        lower     = pli.lower_limit ( 0.95 , dataset )
+        
     row = 'Profile likelihood' , \
           '[%-+.3f,%+.3f]' %  ( low , high ) , \
           '%+.3f' %  lower , '%+.3f' %  upper , '%.1f' % t.delta
     rows.append ( row )
-    
+
     with use_canvas ( "test_limits" ) : 
         result , frame = pdf.fitTo ( dataset , draw = True , nbins = 20 )
         
-    with timing ( "Feldman-Cousins" , logger ) as t :
-        low, high = interval_FC ( pdf  , pdf.mean , 0.90 , dataset )
-        lower     = interval_FC ( pdf  , pdf.mean , 0.95 , dataset , limit = -1 )
-        upper     = interval_FC ( pdf  , pdf.mean , 0.95 , dataset , limit = +1 )
-        
-    row = 'Feldman-Cousin' , \
+    with timing ( 'Feldman-Cousins [~30",silent]'   , logger ) as t :
+        with rooSilent ( ROOT.RooFit.WARNING ) : 
+            fci = FeldmanCousinsInterval ( pdf     = pdf      ,
+                                           params  = pdf.mean , 
+                                           dataset = dataset  )  
+            low, high = fci.interval    ( 0.90 , dataset )
+            upper     = fci.upper_limit ( 0.95 , dataset )
+            lower     = fci.lower_limit ( 0.95 , dataset )
+            
+    row = 'Feldman-Cousins' , \
           '[%-+.3f,%+.3f]' %  ( low , high ) , \
           '%+.3f' %  lower , '%+.3f' %  upper , '%.1f' % t.delta
     rows.append ( row )
-    
+
     with use_canvas ( "test_limits" ) : 
         result , frame = pdf.fitTo ( dataset , draw = True , nbins = 20 )
         
-    with timing ( "Bayesian" , logger ) as t :
-        low, high = interval_BC ( pdf  , pdf.mean , 0.90 , dataset )
-        lower     = interval_BC ( pdf  , pdf.mean , 0.95 , dataset , limit = -1 )
-        upper     = interval_BC ( pdf  , pdf.mean , 0.95 , dataset , limit = +1 )
+    with timing ( 'Bayesian [~60"]' , logger ) as t :        
+        bci = BayesianInterval ( pdf     = pdf      ,
+                                 params  = pdf.mean , 
+                                 dataset = dataset  ) 
+        low, high = bci.interval    ( 0.90 , dataset )
+        upper     = bci.upper_limit ( 0.95 , dataset )
+        lower     = bci.lower_limit ( 0.95 , dataset )
         
     row = 'Bayesian' , \
           '[%-+.3f,%+.3f]' %  ( low , high ) , \
           '%+.3f' %  lower , '%+.3f' %  upper , '%.1f' % t.delta
     rows.append ( row )
     
-    with use_canvas ( "test_limits" ) : 
-        result , frame = pdf.fitTo ( dataset , draw = True , nbins = 20 )
-        
-    with timing ( "MCMC" , logger ) as t :
-        low, high = interval_MCMC ( pdf  , pdf.mean , 0.90 , dataset )
-        lower     = interval_MCMC ( pdf  , pdf.mean , 0.95 , dataset , limit = -1 )
-        upper     = interval_MCMC ( pdf  , pdf.mean , 0.95 , dataset , limit = +1 )
-        
+
+    with timing ( "MCMC (~6')" , logger ) as t :
+        mci = MCMCInterval ( pdf     = pdf      ,
+                             params  = pdf.mean , 
+                             dataset = dataset  )          
+        low, high = mci.interval    ( 0.90 , dataset )
+        upper     = mci.upper_limit ( 0.95 , dataset )
+        lower     = mci.lower_limit ( 0.95 , dataset )
+
     row = 'MCMC' , \
           '[%-+.3f,%+.3f]' %  ( low , high ) , \
           '%+.3f' %  lower , '%+.3f' %  upper , '%.1f' % t.delta
     rows.append ( row )
 
+
     title = 'Intervals & Limits'
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rcccr' )
     logger.info ( '%s\n%s' % ( title , table ) )
-    
-    
-          
+
     
 # =============================================================================
 if '__main__' == __name__ :

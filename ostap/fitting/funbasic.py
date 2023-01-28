@@ -146,13 +146,18 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
 
     @property 
     def vars ( self ) :
-        """'vars' : variables/observables (as ROOT.RooArgSet)"""
+        """'vars' : variables/observables (as ROOT.RooArgSet) (same as 'observables')"""
         return self.__vars
 
     @property 
     def variables ( self ) :
         """'variables' : variables/observables at list"""
         return self.__variables
+
+    @property
+    def observables ( self ) :
+        """'vars' : variables/observables (as ROOT.RooArgSet) (same as 'vars')"""
+        return self.vars 
 
     @property
     def fun  ( self ) :
