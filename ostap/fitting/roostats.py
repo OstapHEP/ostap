@@ -13,6 +13,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2023-01-17"
 __all__     = (
     ##
+    'ModelConfig'              , ## creator of RooStats ModelConfig 
     'ProfileLikelihoodInterval', ## Profile-likelihood confidence interval or upper/lower limit 
     'FeldmanCousinsInterval'   , ## Feldman-Cousins    confidence interval or upper/lower limit 
     'BayesianInterval'         , ## Bayesian           confidence interval or upper/lowee limir
@@ -28,90 +29,168 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roostats' )
 else                       : logger = getLogger ( __name__                 )
 # =============================================================================
-## Create (and fill) ModelConfig & RooWorkspace
-#  @code
-#  pdf     = ...
-#  globars = [ ... ] 
-#  mc , ws = create_MC_WS ( pdf , [ 'S' , 'B' ] , dataset = dataset , globobs = () ) 
-#  @endcode
+## @class ModelConfig
+#  Helper class to create `RooStats::ModelConfig`
 #  @see RooStats::ModelConfig 
-#  @see RooWorkspace  
-def create_MC_WS  ( pdf , params , dataset = None , ws = None , globobs = () , **kwargs ) :
-    """ Create (and fill) ModelConfig & RooWorkspace
-    >>> pdf     = ...
-    >>> globobs = [ ... ] 
-    >>> mc , ws = create_MC_WS ( pdf , [ 'S' , 'B' ] , globobs = globobs , dataset = dataset ) 
-    - see `ROOT.RooStats.ModelConfig` 
-    - see `ROOT.RooWorkspace`  
+class ModelConfig(object): 
+    """Helper class to create `RooStats::ModelConfig`
+    - see `ROOT.RooStats.ModelConfig`
     """
-    if   isinstance ( params , ROOT.RooAbsReal ) : params = [ params ]
-    elif isinstance ( params , string_types    ) : params = [ params ]
-    
-    parameters = [ pdf.parameter ( p , dataset ) for p in params ]
+    def __init__  ( self                      ,
+                    pdf                       , ## PDF 
+                    poi                       , ## parameter(s) of interest
+                    dataset            = None , ## dataset  (optional)
+                    workspace          = None , ## worspace (optional)
+                    global_observables = ()   , ## global observables
+                    constraints        = ()   , ## contraints 
+                    **kwargs                  ) : ## other arguments
 
-    from ostap.utils.cidict import cidict
-    from ostap.core.core    import cidict_fun
-    
-    kw_args = cidict( transform = cidict_fun , **kwargs )
-    
-    if not ws :
-        wsname  = kw_args.pop ( 'ws_name'  , 'WS_%s'            % pdf.name )
-        wstitle = kw_args.pop ( 'ws_title' , 'workspace for %s' % pdf.name )
-        ws      = ROOT.RooWorkspace         ( wsname  , wstitle )
+        params = poi 
+        if   isinstance ( params , ROOT.RooAbsReal ) : params = [ params ]
+        elif isinstance ( params , string_types    ) : params = [ params ]
 
-    mcname  = kw_args.pop ( 'mc_name'  , 'MC_%s'               % pdf.name )
-    mctitle = kw_args.pop ( 'mc_title' , 'model-config for %s' % pdf.name )
-    mc      = ROOT.RooStats.ModelConfig ( mcname , mctitle , ws )
-
-    mc.SetPdf                  ( pdf.pdf         )
-    mc.SetObservables          ( pdf.observables )
-
-    poi = ROOT.RooArgSet       ( *parameters     ) 
-    mc.SetParametersOfInterest (  poi            )
-    
-    nuis = [ v for v in pdf.params ( dataset ) if not v in pdf.vars and not v in poi ]
-    nuis = ROOT.RooArgSet      ( *nuis )    
-    mc.SetNuisanceParameters   (  nuis )
-
-    pdf.aux_keep.append        ( poi  )
-    pdf.aux_keep.append        ( nuis )
-
-    if globobs :
-        if isinstance ( globobs , ROOT.RooAbsReal ) : globobs = [ globobs ] 
-        gobs = [ pdf.parameter  ( v , dataset ) for v in globobs ]
-        gobs = ROOT.RooArgSet   ( *gobs )
-        mc.SetGlobalObservables (  gobs )
-        pdf.aux_keep.append     (  gobs )
-
-    if kw_args :
-        logger.warning ( 'create ModelConfig: Ignore keyword arguments: %s' % [ k for k in kw_args ] )
+        ## allow soem freedom in arguments 
+        from ostap.utils.cidict import cidict
+        from ostap.core.core    import cidict_fun
         
-    return mc, ws
+        kw_args = cidict ( transform = cidict_fun , **kwargs )
+        
+        ## (1) create workspace (if needed)
+        ws = workspace 
+        if ws and isinstance ( ws , ROOT.RooWorkspace ) : pass
+        else : 
+            wsname  = kw_args.pop ( 'ws_name'  , 'WS_%s'            % pdf.name )
+            wstitle = kw_args.pop ( 'ws_title' , 'workspace for %s' % pdf.name )
+            ws      = ROOT.RooWorkspace         ( wsname  , wstitle )
+
+        ## (2) create ModelConfig        
+        mcname  = kw_args.pop ( 'mc_name'  , 'MC_%s'               % pdf.name )
+        mctitle = kw_args.pop ( 'mc_title' , 'model-config for %s' % pdf.name )
+        mc      = ROOT.RooStats.ModelConfig ( mcname , mctitle , ws )
+
+        ## (3/4) set PDF and observables 
+        mc.SetPdf         ( pdf.pdf         )
+        mc.SetObservables ( pdf.observables )
+
+        ## (5) set parameters of interest
+        pars = [ pdf.parameter ( p , dataset ) for p in params ]
+        pois = ROOT.RooArgSet ()
+        for p in pars : pois.add   ( p    )
+        mc.SetParametersOfInterest ( pois )
+        pdf.aux_keep.append        ( pois )
+
+        ## (6) Nuisance parameters
+        pars = [ v for v in pdf.params ( dataset ) if not v in pdf.vars and not v in pois ]
+        nuis = ROOT.RooArgSet    ()
+        for p in pars : nuis.add ( p    ) 
+        mc.SetNuisanceParameters ( nuis )
+        pdf.aux_keep.append      ( nuis )
+        
+        ## (7) global observables
+        if global_observables :
+            if isinstance ( global_observables , ROOT.RooAbsReal ) :
+                global_observables = [ global_observables ]                
+            pars = [ pdf.parameter  ( v , dataset ) for v in global_observables ]
+            gobs = ROOT.RooArgSet   () 
+            for p in pars : gobs.add ( p    ) 
+            mc.SetGlobalObservables  ( gobs )
+            pdf.aux_keep.append      ( gobs )
+
+        ## (8) constraints
+        if constraints :
+            if isinstance ( constrainst , ROOT.RooAbsReal ) :
+                constraints = [ constraints ]
+            assert all ( [ isinstance ( c , ROOT.RooAbsPdf ) for c in constraints ] ) , \
+                   'Invalid consraints: %s' % constraints
+            cnts = ROOT.RooArgSet()
+            for c in constraints : cnts.add ( c )
+            mc.SetConstraintParameters  ( cnts )
+            pdf.aux_keep.append         ( cnts )
+            
+
+        ## (9) define the default dataset 
+        self.__dataset = dataset 
+
+        if kw_args :
+            logger.warning ( 'create ModelConfig: Ignore keyword arguments: %s' % [ k for k in kw_args ] )
+
+        self.__ws   = ws
+        self.__mc   = mc
+        
+    @property
+    def ws ( self ) :
+        """'ws' : RooStats workspace (same as 'workspace')"""
+        return self.__ws
+    @property
+    def workspace ( self ) :
+        """'workspace' : RooStats workspace (same as 'ws')"""
+        return self.ws
+    @property
+    def mc ( self ) :
+        """'mc' : RooStats ModelConfig object (same as 'model_config')"""
+        return self.__mc
+    @property
+    def model_config ( self ) :
+        """'model_config' : RooStats ModelConfig object (same as 'mc')"""
+        return self.mc
+    @property
+    def dataset ( self ) :
+        """'dataset' : defaukt dataset"""
+        return self.__dataset
+    
+    @property
+    def poi ( self ) :
+        """'poi' : parameter(s) of interest from ModelConfig
+        - see `ROOT.RooStats.ModelConfig.GetParametersOfInterest`
+        """
+        pars = self.mc.GetParametersOfInterest()
+        return pars if pars and 0 < len ( pars ) else () 
+    @property
+    def nuisance ( self ) :
+        """'nuisance' : nuisance parameters from ModelConfig
+        - see `ROOT.RooStats.ModelConfig.GetNuisanceParameters`
+        """
+        pars = self.mc.GetNuisanceParameters()
+        return pars if pars and 0 < len ( pars ) else () 
+    @property
+    def global_observables ( self ) :
+        """'global_observables' : Global observables from ModelConfig
+        - see `ROOT.RooStats.ModelConfig.GetNuisanceParameters`
+        """
+        pars = self.mc.GetGobalObservables()
+        return pars if pars and 0 < len ( pars ) else () 
+    @property
+    def constraints  ( self ) :
+        """'constraints' : constrain parameters from ModelConfig
+        - see `ROOT.RooStats.ModelConfig.GetConstraintParameters`
+        """
+        pars = self.mc.GetConstraintParameters()
+        return pars if pars and 0 < len ( pars ) else () 
 
 # ================================================================================
-## Helper (abstract) base class for confidence intervals and limits 
-class CLInterval(object)  :
+## Helper (abstract) base class for the confidence intervals and limits 
+class CLInterval(ModelConfig)  :
     """Helper (abstract) base class for confidence intervals and limits"""
+    __metaclass__ = abc.ABCMeta
     
-    def __init__ ( self            ,
-                   pdf             ,   ## pdf
-                   params          ,   ## parameter(s) of interest
-                   ws      = None  ,   ## existing workspace
-                   dataset = None  ,   ## dataset
-                   **kwargs        ) : ## other arguments 
+    def __init__ ( self             ,
+                   pdf              ,   ## pdf
+                   poi              ,   ## parameter(s) of interest
+                   workspace = None ,   ## existing workspace
+                   dataset   = None ,   ## dataset
+                   **kwargs         ) : ## other arguments 
 
-        self.__new_ws = True if not ws else False
-        ## use function, later move it into base class 
-        self.__mc , self.__ws = create_MC_WS ( pdf     = pdf     ,
-                                               params  = params  ,
-                                               dataset = dataset ,
-                                               ws      = ws      , **kwargs )
+        ModelConfig.__init__ ( self                ,
+                               pdf       = pdf     ,
+                               poi       = poi     ,
+                               dataset   = dataset ,
+                               workspace = workspace , **kwargs )
         
-        self.__dataset  =  dataset
-        pp              = pdf.parameter ( params  ) 
-        self.__par      = self.__ws.var ( pp.name ) ## parameter as it is in workspace 
-        self.__interval = None 
-
+        pp                = pdf.parameter ( poi     ) 
+        self.__par        = self.ws.var   ( pp.name ) ## parameter as it is in workspace 
+        self.__interval   = None 
+        self.__calculator = None
+        
     # =========================================================================
     ## Abstract method to create the interval calculator
     @abc.abstractmethod 
@@ -190,22 +269,16 @@ class CLInterval(object)  :
 
     # =========================================================================
     @property
-    def ws ( self )  :
-        """'ws' : RooStats workspace"""
-        return self.__ws
+    def calculator ( self ) :
+        """'calculator' : get the actual calculator"""
+        return self.__calculator
+    @calculator.setter
+    def calculator ( self , value ) :
+        self.__calculator = value
     @property
-    def workspace ( self )  :
-        """'workspace' : RooStats workspace"""
-        return self.ws
-    @property
-    def mc ( self )  :
-        """'mc' : RooStats ModelConfig object"""
-        return self.__mc    
-    @property
-    def model_config ( self )  :
-        """'model_config' : RooStats ModelConfig object"""
-        return self.mc
-    
+    def the_interval ( self ) :
+        """'the_interval' : the actual interval object"""
+        return self.__interval 
     @property
     def par ( self ) :
         """'par' : parameter as it is stored in workspace"""
@@ -236,18 +309,19 @@ class ProfileLikelihoodInterval(CLInterval) :
     >>> lower        = interval.lower_limit ( 0.90 ) 
     - see `ROOT.RooStats.ProfileLikelihoodCalculator`
     """
-    
+    # =========================================================================
     ## create the interval 
     def make_interval ( self , level , dataset = None ) :
-    ## create the interval 
+        """Create the interval"""
 
-        ds = dataset if dataset else self.__dataset 
+        ds = dataset if dataset else self.dataset 
         assert ds ,           'Invalid dataset!'
 
-        self.__plc = ROOT.RooStats.ProfileLikelihoodCalculator ( ds , self.mc )
-        self.__plc.SetConfidenceLevel ( level )
+        pl = ROOT.RooStats.ProfileLikelihoodCalculator ( ds , self.mc )
+        pl .SetConfidenceLevel ( level )
         
-        return self.__plc.GetInterval()
+        self.calculator = pl        
+        return pl.GetInterval()
 
     ## ===========================================================================
     #  make a plot
@@ -256,8 +330,8 @@ class ProfileLikelihoodInterval(CLInterval) :
         """Make a plot
         - see `ROOT.RooStats.LikelihoodIntervalPlot`
         """
-        if self.__interval :
-            return  ROOT.RooStats.LikelihoodIntervalPlot( self.__interval )
+        if self.the_interval :
+            return  ROOT.RooStats.LikelihoodIntervalPlot( self.the_interval )
         
 # ================================================================================
 ## Feldman-Cousins confidence interval
@@ -279,24 +353,22 @@ class FeldmanCousinsInterval(CLInterval) :
     >>> upper        = interval.upper_limit ( 0.90 ) 
     >>> lower        = interval.lower_limit ( 0.90 ) 
     - see `ROOT.RooStats.FeldmanCousins`
-    """
-    
+    """    
     def __init__ ( self              ,
                    pdf               ,   ## pdf
-                   params            ,   ## parameter(s) of interest
-                   ws        = None  ,   ## existing workspace
+                   poi               ,   ## parameter(s) of interest
                    dataset   = None  ,   ## dataset
+                   workspace = None  ,   ## existing workspace
                    fluctuate = False ,   ## for RooStats.FeldmanCousins.FluctuateNumDataEntries
                    adaptive  = True  ,   ## for RooStats.FeldmanCousins.UseAdaptiveSampling 
                    nbins     = 200   ,   ## for RooStats.FeldmanCousins.SetNbins                    
                    **kwargs          ) : ## other arguments 
         
-
         CLInterval.__init__ ( self,
-                              pdf     = pdf     ,
-                              params  = params  ,
-                              ws      = ws      ,
-                              dataset = dataset , **kwargs )
+                              pdf       = pdf       ,
+                              poi       = poi       ,
+                              dataset   = dataset   ,
+                              workspace = workspace , **kwargs )
 
         assert isinstance ( nbins , integer_types ) and 10 < nbins ,'Inavlid number of bins!'
         
@@ -308,17 +380,17 @@ class FeldmanCousinsInterval(CLInterval) :
     def make_interval ( self , level , dataset = None ) :
         """Create the interval"""
         
-        ds = dataset if dataset else self.__dataset 
+        ds = dataset if dataset else self.dataset 
         assert ds ,           'Invalid dataset!'
 
-        self.__fc = ROOT.RooStats.FeldmanCousins( ds , self.mc )
-        self.__fc.SetConfidenceLevel ( level )
+        fc = ROOT.RooStats.FeldmanCousins( ds , self.mc )
+        fc.SetConfidenceLevel      ( level          )
+        fc.FluctuateNumDataEntries ( self.fluctuate ) 
+        fc.UseAdaptiveSampling     ( self.adaptive  )
+        fc.SetNBins                ( self.nbins     )
 
-        self.__fc.FluctuateNumDataEntries ( self.fluctuate ) 
-        self.__fc.UseAdaptiveSampling     ( self.adaptive  )
-        self.__fc.SetNBins                ( self.nbins     )
-        
-        return self.__fc.GetInterval()
+        self.calculator = fc         
+        return fc.GetInterval()
 
     @property
     def fluctuate ( self ) :
@@ -333,7 +405,48 @@ class FeldmanCousinsInterval(CLInterval) :
         """'nbins': parameter for `RooStats.FeldmanCousins.SetNBins`"""
         return self.__nbins
 
+    # =========================================================================
+    ## visualize the interval
+    #  - inspired by rs401c_FeldmanCousins.py
+    #  @code
+    #  fci = ...
+    #  graph = fci.plot()
+    #  graph.Draw('ap')
+    #  @endcode 
+    def plot ( self ) :
+        """Visualize the interval
+        - inspired by rs401c_FeldmanCousins.py
+        >>> fci = ...
+        >>> graph = fci.plot()
+        >>> graph.Draw('ap')
+        """
+        
+        if self.calculator and self.the_interval :
+            
+            import ostap.fitting.dataset
+            import ostap.histos.graphs
+            
+            fc  = self.calculator 
+            fci = self.the_interval
 
+            gr1 = ROOT.TGraph ()
+            gr2 = ROOT.TGraph ()
+            gr1.red  ()
+            gr2.blue ()
+        
+            ps  = fc.GetPointsToScan()
+            for entry in ps :            
+                point = float ( entry[0] ) 
+                if fci.IsInInterval ( entry ) : gr1.append ( point , 1 )
+                else                          : gr2.append ( point , 0 )
+
+            mgr = ROOT.TMultiGraph()
+            mgr.Add ( gr1 )
+            mgr.Add ( gr2 )
+
+            del ps 
+            return mgr
+        
 # ================================================================================
 ## Bayesian confidence interval
 #  @code
@@ -347,29 +460,29 @@ class FeldmanCousinsInterval(CLInterval) :
 #  @see RooStats::BayesianCalcualtor
 class BayesianInterval(CLInterval) :
     """Bayesian confidence interval
-    >>> interval     = BAyesianInterval ( .... )
+    >>> interval     = BayesianInterval ( .... )
     >>> lower, upper = interval.interval ( 0.90 ) 
     >>> upper        = interval.limit ( 0.90 , +1 ) 
     >>> lower        = interval.limit ( 0.90 , -1 ) 
     >>> upper        = interval.upper_limit ( 0.90 ) 
     >>> lower        = interval.lower_limit ( 0.90 ) 
-    - see `ROOT.RooStats.FeldmanCousins`
+    - see `ROOT.RooStats.BayesianCalculator`
     """
     
     def __init__ ( self              ,
                    pdf               ,   ## pdf
-                   params            ,   ## parameter(s) of interest
-                   ws        = None  ,   ## existing workspace
+                   poi               ,   ## parameter(s) of interest
                    dataset   = None  ,   ## dataset
+                   workspace = None  ,   ## existing workspace
                    prior     = None  ,   ## Bayesin prior 
                    **kwargs          ) : ## other arguments 
         
         ## initialize the Base class
         CLInterval.__init__ ( self,
-                              pdf     = pdf     ,
-                              params  = params  ,
-                              ws      = ws      ,
-                              dataset = dataset , **kwargs )
+                              pdf       = pdf       ,
+                              poi       = poi       ,
+                              dataset   = dataset   ,
+                              workspace = workspace , **kwargs )
         
         from   ostap.fitting.pdfbasic import APDF1
         
@@ -395,13 +508,14 @@ class BayesianInterval(CLInterval) :
     def make_interval ( self , level , dataset = None ) :
         """Create the interval"""
         
-        ds = dataset if dataset else self.__dataset 
+        ds = dataset if dataset else self.dataset 
         assert ds ,           'Invalid dataset!'
 
-        self.__bc = ROOT.RooStats.BayesianCalculator ( ds , self.mc )
-        self.__bc.SetConfidenceLevel ( level )
-        
-        return self.__bc.GetInterval()
+        bc = ROOT.RooStats.BayesianCalculator ( ds , self.mc )
+        bc.SetConfidenceLevel ( level )
+
+        self.calculator = bc 
+        return bc.GetInterval()
 
     @property
     def prior     ( self ) :
@@ -415,10 +529,11 @@ class BayesianInterval(CLInterval) :
         """Make a plot
         - see `ROOT.RooStats.BayesianCalculator.GetPosteriorPlot`
         """
-        if self.__bc : return self.__bc.GetPosteriorPlot() 
+        if self.calculator :
+            return self.calculator.GetPosteriorPlot() 
 
 # ================================================================================
-## MCMC confidence interval
+## Marcov Chain MC confidence interval
 #  @code
 #  interval     = MCMCInterval ( .... )
 #  lower, upper = interval.interval ( 0.90 ) 
@@ -429,7 +544,7 @@ class BayesianInterval(CLInterval) :
 #  @endcode
 #  @see RooStats::MCMCCalculator
 class MCMCInterval(CLInterval) :
-    """MCMC confidence interval
+    """Markov Chain confidence interval
     >>> interval     = MCMCInterval  ( .... )
     >>> lower, upper = interval.interval ( 0.90 ) 
     >>> upper        = interval.limit ( 0.90 , +1 ) 
@@ -441,9 +556,9 @@ class MCMCInterval(CLInterval) :
     
     def __init__ ( self                  ,
                    pdf                   ,    ## pdf
-                   params                ,   ## parameter(s) of interest
-                   ws           = None   ,   ## existing workspace
+                   poi                   ,   ## parameter(s) of interest
                    dataset      = None   ,   ## dataset
+                   workspace    = None   ,   ## existing workspace
                    burnsteps    = 500    ,   ## for RooStats.MCMCCalculator.SetNumBurnInSteps 
                    iterations   = 100000 ,   ## for RooStats.MCMCCalculator.SetNumIters  
                    leftfraction = 0.5    ,   ## for RooStats.MCMCCalculator.SetNumIters  
@@ -451,10 +566,10 @@ class MCMCInterval(CLInterval) :
                    **kwargs              ) : ## other arguments 
         
         CLInterval.__init__ ( self,
-                              pdf     = pdf     ,
-                              params  = params  ,
-                              ws      = ws      ,
-                              dataset = dataset , **kwargs )
+                              pdf       = pdf       ,
+                              poi       = poi       ,
+                              dataset   = dataset   ,
+                              workspace = workspace , **kwargs )
 
         assert isinstance ( nbins      , integer_types ) and  10 < nbins      ,'Inavlid number of bins!'
         assert isinstance ( burnsteps  , integer_types ) and  10 < burnsteps  , "Invalid nurnsteps!"
@@ -470,18 +585,19 @@ class MCMCInterval(CLInterval) :
     def make_interval ( self , level , dataset = None ) :
         """Create the interval"""
         
-        ds = dataset if dataset else self.__dataset 
+        ds = dataset if dataset else self.dataset 
         assert ds ,           'Invalid dataset!'
 
-        self.__mcmc = ROOT.RooStats.MCMCCalculator ( ds , self.mc )
-        self.__mcmc.SetConfidenceLevel ( level )
+        mcmc = ROOT.RooStats.MCMCCalculator ( ds , self.mc )
+        mcmc.SetConfidenceLevel ( level )
 
-        self.__mcmc.SetNumBins              ( self.nbins        )
-        self.__mcmc.SetNumBurnInSteps       ( self.burnsteps    ) 
-        self.__mcmc.SetNumIters             ( self.iterations   )
-        self.__mcmc.SetLeftSideTailFraction ( self.leftfraction )
+        mcmc.SetNumBins              ( self.nbins        )
+        mcmc.SetNumBurnInSteps       ( self.burnsteps    ) 
+        mcmc.SetNumIters             ( self.iterations   )
+        mcmc.SetLeftSideTailFraction ( self.leftfraction )
 
-        return self.__mcmc.GetInterval()
+        self.calculator = mcmc 
+        return mcmc.GetInterval()
 
     @property
     def nbins        ( self ) :
@@ -507,8 +623,8 @@ class MCMCInterval(CLInterval) :
         """Make a plot
         - see `ROOT.RooStats.MCMCIntervallPlot`
         """
-        if self.__interval :
-            return ROOT.RooStats.MCMCIntervalPlot(mcInt)( self.__interval )
+        if self.the_interval :
+            return ROOT.RooStats.MCMCIntervalPlot( self.the_interval )
     
 
 # =============================================================================
@@ -516,6 +632,20 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+
+
+    assert issubclass ( ProfileLikelihoodInterval , CLInterval ) , \
+           'ProfileLikelihoodInterval is not subsclas of CLInterval'
+    
+    assert issubclass ( FeldmanCousinsInterval    , CLInterval ) , \
+           'FeldmanCousinsInterval    is not subsclas of CLInterval'
+
+    assert issubclass ( BayesianInterval         , CLInterval ) , \
+           'BayesianInterval          is not subsclas of CLInterval'
+
+    assert issubclass ( MCMCInterval             , CLInterval ) , \
+           'MCMCInterval              is not subsclas of CLInterval'
+
     
 # =============================================================================
 ##                                                                      The END 

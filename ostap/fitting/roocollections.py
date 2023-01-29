@@ -198,6 +198,10 @@ def _ras_getitem_ ( self , aname ) :
     >>> aset = ...
     >>> print aset['pt']    
     """
+    if isinstance ( aname , integer_types ) and 0 <= aname :
+        if aname < len  ( self ) :
+            return ROOT.RooAbsCollection.__getitem__ ( self , aname )
+        raise IndexError('Invalid index!') 
     _v = self.find ( aname )
     if not _v : raise  IndexError
     return _v 

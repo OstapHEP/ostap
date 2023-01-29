@@ -50,6 +50,7 @@ with use_canvas ( "test_fitting_roostats" ) :
 # ============================================================================
 def test_limits () :
 
+
     logger = getLogger("test_limits")
 
     logger.info ( "Test Limits with RooStats" )
@@ -63,7 +64,7 @@ def test_limits () :
     
     with timing ( "Profile Likelihood", logger ) as t :
         pli = ProfileLikelihoodInterval ( pdf     = pdf      ,
-                                          params  = pdf.mean , 
+                                          poi     = pdf.mean , 
                                           dataset = dataset  )
         low, high = pli.interval    ( 0.90 , dataset )
         upper     = pli.upper_limit ( 0.95 , dataset )
@@ -74,13 +75,17 @@ def test_limits () :
           '%+.3f' %  lower , '%+.3f' %  upper , '%.1f' % t.delta
     rows.append ( row )
 
+    with use_canvas  ( 'Profile Likelihood plot ' , wait = 1 ) :
+        pli_plot = pli.plot ()
+        if pli_plot : pli_plot.draw () 
+
     with use_canvas ( "test_limits" ) : 
         result , frame = pdf.fitTo ( dataset , draw = True , nbins = 20 )
         
     with timing ( 'Feldman-Cousins [~30",silent]'   , logger ) as t :
         with rooSilent ( ROOT.RooFit.WARNING ) : 
             fci = FeldmanCousinsInterval ( pdf     = pdf      ,
-                                           params  = pdf.mean , 
+                                           poi     = pdf.mean , 
                                            dataset = dataset  )  
             low, high = fci.interval    ( 0.90 , dataset )
             upper     = fci.upper_limit ( 0.95 , dataset )
@@ -91,12 +96,16 @@ def test_limits () :
           '%+.3f' %  lower , '%+.3f' %  upper , '%.1f' % t.delta
     rows.append ( row )
 
+    with use_canvas  ( 'Felfman-Cousins plot ' , wait = 1 ) :
+        fci_plot = fci.plot ()
+        if fci_plot : fci_plot.draw ('ap') 
+
     with use_canvas ( "test_limits" ) : 
         result , frame = pdf.fitTo ( dataset , draw = True , nbins = 20 )
         
     with timing ( 'Bayesian [~60"]' , logger ) as t :        
         bci = BayesianInterval ( pdf     = pdf      ,
-                                 params  = pdf.mean , 
+                                 poi     = pdf.mean , 
                                  dataset = dataset  ) 
         low, high = bci.interval    ( 0.90 , dataset )
         upper     = bci.upper_limit ( 0.95 , dataset )
@@ -107,26 +116,55 @@ def test_limits () :
           '%+.3f' %  lower , '%+.3f' %  upper , '%.1f' % t.delta
     rows.append ( row )
     
+    with use_canvas  ( 'Bayesian  plot ' , wait = 1 ) :
+        bci_plot = bci.plot ()
+        if bci_plot : bci_plot.draw () 
 
-    with timing ( "MCMC (~6')" , logger ) as t :
+    with timing ( "Markov Chain MC (~6')" , logger ) as t :
         mci = MCMCInterval ( pdf     = pdf      ,
-                             params  = pdf.mean , 
+                             poi     = pdf.mean , 
                              dataset = dataset  )          
         low, high = mci.interval    ( 0.90 , dataset )
         upper     = mci.upper_limit ( 0.95 , dataset )
         lower     = mci.lower_limit ( 0.95 , dataset )
 
-    row = 'MCMC' , \
+
+    row = 'Markov Chain MC' , \
           '[%-+.3f,%+.3f]' %  ( low , high ) , \
           '%+.3f' %  lower , '%+.3f' %  upper , '%.1f' % t.delta
     rows.append ( row )
 
+    with use_canvas  ( 'Markov Chain MC plot ' , wait = 1 ) :
+        mci_plot = mci.plot ()
+        if mci_plot : mci_plot.draw () 
 
-    title = 'Intervals & Limits'
-    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rcccr' )
-    logger.info ( '%s\n%s' % ( title , table ) )
+    with use_canvas  ( 'Visualise CL intervals' , wait = 2 ) as cnv :
+        
+        cnv.Divide(2,2)
+        
+        cnv.cd(1) 
+        pli_plot = pli.plot ()
+        if pli_plot : pli_plot.draw () 
+        
+        cnv.cd(2) 
+        fci_plot = fci.plot ()
+        if fci_plot : fci_plot.draw ('ap') 
+        
+        cnv.cd(3) 
+        bci_plot = bci.plot ()
+        if bci_plot : bci_plot.draw () 
+        
+        cnv.cd(4) 
+        mci_plot = mci.plot ()
+        if mci_plot : mci_plot.draw () 
+        
+        title = 'Intervals & Limits'
+        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rcccr' )
+        logger.info ( '%s\n%s' % ( title , table ) )
 
-    
+    del mci
+
+
 # =============================================================================
 if '__main__' == __name__ :
 
