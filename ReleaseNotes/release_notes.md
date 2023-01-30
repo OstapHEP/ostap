@@ -10,7 +10,6 @@
   1. improve `ostap.fitting.roostats` and corresponding test 
   1. more polishing for `ostap.fitting.roostats` and corresponding test 
 
-
 ## Backward incompatible:  
 
 ## Bug fixes:
