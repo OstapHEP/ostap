@@ -21,6 +21,9 @@ __all__     = (
     'RooPoly'        , ## simple wrapper for RooPolyVar            (RooAbsReal)
     'ScaleAndShift'  , ## scale and shift                          (RooAbsReal)
     'BSplineFun'     , ## BSpline                                  (RooAbsReal)
+    'Shape1D_fun'    , ## arbitrary fixed shape                    (RooAbsReal)
+    'Histo1D_fun'    , ## fixed shap form historgam                (RooAbsReal)
+    'Histo1DErr_fun' , ## fixed shap from historgam errors         (RooAbsReal)
     ##
     ## 'var_sum'        , ## sum                          for RooAbsReal objects           
     ## 'var_mul'        , ## product                      for RooAbsReal objects           
@@ -54,11 +57,12 @@ __all__     = (
     ## 'asymmetry_var'  , ## var_asymmetry
    )
 # =============================================================================
-from   ostap.core.core                import Ostap 
+from   ostap.core.core                import Ostap, VE  
 from   ostap.core.ostap_types         import num_types
 from   ostap.fitting.fithelpers       import ParamsPoly , ShiftScalePoly
 import ostap.fitting.variables 
 from   ostap.fitting.funbasic         import FUN1, Fun1D, Fun2D, Fun3D
+import ostap.histos.histos 
 import ROOT, math, array
 # =============================================================================
 from   ostap.logger.logger          import getLogger
@@ -109,8 +113,7 @@ class BernsteinPoly(FUN1,ParamsPoly) :
             'xvar'  : self.xvar      ,
             'pars'  : self.pars      ,
             'power' : self.npars - 1 
-            }
-    
+            }    
 # =============================================================================
 ## @class MonotonicPoly
 #  Simple monotonical polynomial 
@@ -423,7 +426,6 @@ class ScaleAndShift (FUN1) :
         self.set_value ( self.__c , value )
 
 
-
 # ============================================================================
 ## @class RooPoly
 #  Simple wrapper for class RooPolyVar
@@ -535,7 +537,122 @@ class BSplineFun(FUN1,ParamsPoly) :
     def power ( self ) :
         """'power' : degree for BSpline object""" 
         return self.fun.degree() 
+
+    
+# =============================================================================
+## Generic 1D-shape from C++ callable
+#  @see Ostap::MoreRooFit::Shape1D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape1D_fun(FUN1) :
+    """ Generic 1D-shape from C++ callable
+    - see Ostap::MoreRooFit:Shape1D
+    """
+    
+    def __init__ ( self , name , shape , xvar ) :
+
+        if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) and not xvar :
+            xvar = shape.xminmax() 
+
+        if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) :
+            self.histo = shape
+            shape      = Ostap.Math.Histo1D ( shape )
+
+        ##  initialize the base 
+        FUN1.__init__ ( self , name , xvar = xvar ) 
+
         
+        self.__shape = shape
+
+        if isinstance ( self.shape , Ostap.Math.Histo1D ) :
+        
+            ## create the actual function
+            self.fun = Ostap.MoreRooFit.Histo1D (
+                self.roo_name ( 'histo1fun_' ) , 
+                "Histo-1D-fun %s" % self.name  ,
+                self.xvar                      ,
+                self.shape                     )
+            
+        else :
+            
+            ## create the actual pdf
+            self.fun = Ostap.MoreRooFit.Shape1D.create  (
+                self.roo_name ( 'shape1fun_' ) , 
+                "Shape-1D-fun %s" % self.name  ,
+                self.xvar                      ,
+                self.shape                     ) 
+            
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            }
+        
+    @property
+    def shape  ( self ) :
+        """'shape': the actual C++ callable shape"""
+        return self.__shape 
+
+# =============================================================================
+## Generic 1D-shape from histogram 
+#  @see Ostap::MoreRooFit::Histo1D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Histo1D_fun(Shape1D_fun) :
+    """ Generic 1D-shape from C++ callable
+    - see Ostap::MoreRooFit:Shape1D
+    """
+    
+    def __init__ ( self , name , histo , xvar ) :
+
+        assert ( isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() ) or \
+               isinstance ( histo , Ostap.Math.Histo1D ) , \
+               "Invalid 'histo' argument!"
+
+        ##  initialize the base class 
+        Shape1D_fun.__init__ ( self , name , xvar = xvar , shape = histo )
+
+        ## save the configuration
+        self.config = {
+            'name'    : self.name  , 
+            'histo'   : self.shape , 
+            'xvar'    : self.xvar  , 
+            }
+        
+    @property
+    def histo  ( self ) :
+        """'histo': the actual histogram (same as 'shape')"""
+        return self.shape 
+
+# =============================================================================
+## Generic 1D-shape from histogram errors 
+#  @see Ostap::MoreRooFit::Histo1D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Histo1DErr_fun(Shape1D_fun) :
+    """ Generic 1D-shape from hisgram errors 
+    - see Ostap::MoreRooFit:Shape1D
+    """
+    
+    def __init__ ( self , name , histo , xvar ) :
+
+        assert ( isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() ) or \
+               isinstance ( histo , Ostap.Math.Histo1D ) , \
+               "Invalid 'histo' argument!"
+
+        ## get the histogram
+        h    = histo.h    () if isinstance ( histo , Ostap.Math.Histo1D ) else histo
+
+        ## clone it and store uncertainties
+        herr = h.clone ()
+        for i, x, y in herr.items() : herr [ i ] = VE ( y.error() , 0 ) 
+
+        if isinstance ( histo , Ostap.Math.Histo1D ) :
+            he = Ostap<Math.Histo1D ( he , histo ) 
+            
+        ##  initialize the base class 
+        Histo1D_fun.__init__ ( self , name , xvar = xvar , histo = herr )
 
 # =============================================================================
 if '__main__' == __name__ :

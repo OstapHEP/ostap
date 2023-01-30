@@ -86,6 +86,11 @@ namespace Ostap
         const bool extrapolate = false , 
         const bool density     = false ) ;
       // ======================================================================
+      /// constructor from the histogram and predefined configuration 
+      Histo1D 
+      ( const TH1&     histo ,
+        const Histo1D& conf  ) ;
+      // ======================================================================
       /// default  constructor 
       Histo1D () ;
       // ======================================================================

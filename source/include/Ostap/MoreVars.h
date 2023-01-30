@@ -19,6 +19,7 @@
 #include "Ostap/Bernstein.h"
 #include "Ostap/Bernstein1D.h"
 #include "Ostap/BSpline.h"
+#include "Ostap/HistoInterpolators.h"
 // ============================================================================
 /// froward declarations 
 // ============================================================================
@@ -491,6 +492,127 @@ namespace Ostap
       mutable Ostap::Math::BSpline  m_bspline {} ; 
       // ======================================================================
     } ; //                          The end of class Ostap::MoreRooFit::BSpline 
+    // ========================================================================
+    /** @class Shape 
+     *  The generic "fixed shape" function 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2023-01-30     
+     */
+    class Shape1D final : public RooAbsReal 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Shape1D, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION> 
+        Shape1D ( const char*  name  , 
+                  const char*  title , 
+                  RooAbsReal&  x     ,
+                  FUNCTION     f     )
+        : RooAbsReal (  name ,  title ) 
+        , m_x        ( "x"   , "Variable" , this , x ) 
+        , m_function ( f ) 
+      {}
+      /// copy constructor 
+      Shape1D ( const Shape1D& right , const char* name = nullptr ) ;
+      /// clone method
+      Shape1D* clone ( const char* name ) const override ;
+      /// virtual destructor 
+      virtual ~Shape1D() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION> 
+        static inline Shape1D 
+        create
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        x     ,
+          FUNCTION           f     ) 
+      { return Shape1D ( name.c_str () , title.c_str () , x , f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the PDF 
+      Double_t evaluate () const override
+      { const double x = m_x ; return m_function ( x ) ; }
+      // ======================================================================        
+    public:
+      // ======================================================================
+      /// evaluate the function
+      double func  ( const double x ) const { return m_function ( x ) ; }
+      // ======================================================================        
+    private :
+      // ======================================================================
+      /// variable 
+      RooRealProxy                   m_x        ; // variable 
+      /// the function itself 
+      std::function<double(double)>  m_function ; // function 
+      // ======================================================================      
+    } ; //                          The end of class Ostap::MoreRooFit::Shape1D
+    // ========================================================================
+    /** @class Histo1D
+     *  simple generic function from the histogram 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2023-01-30     
+     */
+    class Histo1D final : public RooAbsReal 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Histo1D, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor
+      Histo1D 
+        ( const char*                 name  , 
+          const char*                 title , 
+          RooAbsReal&                 x     ,
+          const Ostap::Math::Histo1D& histo ) ;
+      /// copy constructor 
+      Histo1D ( const Histo1D& right , const char* name = nullptr ) ;
+      /// clone method
+      Histo1D* clone ( const char* name ) const override ;
+      /// virtual destructor 
+      virtual ~Histo1D() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // fake default contructor, needed just for the proper (de)serialization
+      Histo1D () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function 
+      Double_t evaluate () const override { return func ( m_x ) ; }
+      // ======================================================================        
+    public:
+      // ======================================================================
+      /// the function itself 
+      const Ostap::Math::Histo1D& histo () const { return   m_histo ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function
+      double func  ( const double x ) const { return m_histo ( x )  ; }
+      // ======================================================================        
+    public:
+      // ======================================================================
+      const RooAbsReal& x () const { return m_x     .arg() ; }
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// variable 
+      RooRealProxy                   m_x     ; // variable 
+      /// the function itself 
+      Ostap::Math::Histo1D           m_histo ; // function 
+      // ======================================================================      
+    } ; //                          The end of class Ostap::MoreRooFit::Histo1D
     // ========================================================================
     /** Helper method to check if recursive fractions were 
      *  used for creation of RooAddPdf object

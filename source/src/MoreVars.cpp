@@ -783,8 +783,61 @@ Double_t Ostap::MoreRooFit::BSpline::analyticalIntegral
   return m_bspline.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
-
+ClassImp ( Ostap::MoreRooFit::Shape1D ) ;
+ClassImp ( Ostap::MoreRooFit::Histo1D ) ;
+// ============================================================================
+// copy constructor 
+// =============================================================================
+Ostap::MoreRooFit::Shape1D::Shape1D
+( const Ostap::MoreRooFit::Shape1D& right , 
+  const char*                       name  )
+  : RooAbsReal  ( right , name ) 
+  , m_x         ( "!x"    , this , right.m_x ) 
+  , m_function  ( right.m_function ) 
+{}
+// =============================================================================
+// virtual destructor 
+// =============================================================================
+Ostap::MoreRooFit::Shape1D::~Shape1D(){}
+// =============================================================================
+// clone method
+// =============================================================================
+Ostap::MoreRooFit::Shape1D*
+Ostap::MoreRooFit::Shape1D::clone ( const char* name ) const 
+{ return new Ostap::MoreRooFit::Shape1D ( *this , name ) ; }
+// =============================================================================
+// constructor
+// =============================================================================
+Ostap::MoreRooFit::Histo1D::Histo1D
+( const char*                 name  , 
+  const char*                 title , 
+  RooAbsReal&                 x     ,
+  const Ostap::Math::Histo1D& histo ) 
+  : RooAbsReal (  name ,  title ) 
+  , m_x        ( "!x"   , "Variable" , this , x ) 
+  , m_histo    ( histo ) 
+{}
+// ============================================================================
+// copy constructor 
+// =============================================================================
+Ostap::MoreRooFit::Histo1D::Histo1D
+( const Ostap::MoreRooFit::Histo1D& right , 
+  const char*                       name  )
+  : RooAbsReal  ( right , name ) 
+  , m_x         ( "!x"    , this , right.m_x ) 
+  , m_histo     ( right.m_histo ) 
+{}
+// =============================================================================
+// virtual destructor 
+// =============================================================================
+Ostap::MoreRooFit::Histo1D::~Histo1D(){}
+// =============================================================================
+// clone method
+// =============================================================================
+Ostap::MoreRooFit::Histo1D*
+Ostap::MoreRooFit::Histo1D::clone ( const char* name ) const 
+{ return new Ostap::MoreRooFit::Histo1D ( *this , name ) ; }
+// =============================================================================
 
 
 // ============================================================================

@@ -37,7 +37,7 @@ Ostap::Math::HistoInterpolator::HistoInterpolator
   , m_density     ( density     ) 
 {}
 // ============================================================================
-/** constructor with full specification 
+/*  constructor with full specification 
  *  @see Ostap::Math::HistoInterpolation
  *  @see Ostap::Math::HistoInterpolation::interpolate_1D
  */
@@ -59,6 +59,18 @@ Ostap::Math::Histo1D::Histo1D
   histo.Copy ( m_h ) ;
   m_h.SetDirectory ( nullptr ) ;
 }
+// ===========================================================================
+// constructor from the histogram and predefined configuration 
+// ===========================================================================
+Ostap::Math::Histo1D::Histo1D 
+( const TH1&                  histo ,
+  const Ostap::Math::Histo1D& conf  ) 
+  : Histo1D ( histo               , 
+              conf.t           () ,
+              conf.edges       () , 
+              conf.extrapolate () , 
+              conf.density     () )
+{}
 // ============================================================================
 /*  constructor with full specification 
  *  @see Ostap::Math::HistoInterpolation

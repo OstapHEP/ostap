@@ -29,7 +29,9 @@ namespace
 {
   // ==========================================================================
   /// size of RooArgList 
-  inline std::size_t size ( const RooArgList& lst ) 
+  inline std::size_t size 
+  // ( const RooArgList& lst ) 
+  ( const RooAbsCollection& lst ) 
   {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
     return lst.getSize () ;
@@ -43,7 +45,8 @@ namespace
    *  @param to   objects to be copied to this proxy 
    */
   inline unsigned   int copy_real 
-  ( const RooArgList&  from ,
+  ( // const RooArgList&  from ,
+    const RooAbsCollection&  from ,
     // RooListProxy&      to   , 
     RooArgList&        to   , 
     const std::string& message = "Variable is not RooAbsReal!" ,
@@ -77,7 +80,9 @@ namespace
   }
   // ==========================================================================
   /// get parameter from RooListProxy
-  inline double get_par ( const unsigned short index , const RooListProxy&  lst ) 
+  inline double get_par 
+  ( const unsigned short index , 
+    const RooListProxy&  lst   ) 
   {
     const RooAbsArg* v    = lst.at ( index ) ;
     if ( nullptr ==  v ) { return 0 ; }
@@ -88,9 +93,10 @@ namespace
   }
   // ==========================================================================
   template <class OBJECT>
-  inline void set_pars ( const RooListProxy&  lst      , 
-                         OBJECT&              obj      , 
-                         const unsigned short shift = 0 ) 
+  inline void set_pars 
+  ( const RooListProxy&  lst      , 
+    OBJECT&              obj      , 
+    const unsigned short shift = 0 ) 
   {
     //
     const RooArgSet* nset  = lst.nset() ;

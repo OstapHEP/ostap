@@ -11,6 +11,8 @@
   1. more polishing for `ostap.fitting.roostats` and corresponding test 
   1. disable plot from FEldman-Cousins for ROOT<6.18
   1. for ROOT>6.18 for `ROOT.RooArgSet` extend `contains` and `getitem` to accept indices and slices 
+  1. add generic fixed shape (no parameters) as `RooAbsReal`
+  1. add fixed shape from histogam (no parmameters) as `RooAbsReal`
 
 ## Backward incompatible:  
 

@@ -1086,8 +1086,21 @@ def _runi_reduce_ ( uni ) :
 
 Ostap.Models.Uniform.__reduce__ = _runi_reduce_
 
-
-
+# ==============================================================================
+## reduce Ostap::MoreRooFit::Histo1D
+#  @see Ostap::MoreRooFit::Histo1D
+def _rmrfh_reduce_ ( h1d ) :
+    """ reduce Ostap.MoreRooFit.Histo1D
+    -see  `Ostap.MoreRooFit.Histo1D`
+    """
+    return root_store_factory , ( type ( h1d ) ,
+                                  h1d.name     ,
+                                  h1d.title    ,
+                                  h1d.x     () ,
+                                  h1d.histo () )
+                                  
+Ostap.MoreRooFit.Histo1D.__reduce__ = _rmrfh_reduce_
+                                  
 # =============================================================================
 ## reduce BreitWigner
 def _rbw_reduce_ ( pdf ):
