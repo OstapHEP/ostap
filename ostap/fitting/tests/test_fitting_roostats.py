@@ -162,8 +162,6 @@ def test_limits () :
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rcccr' )
         logger.info ( '%s\n%s' % ( title , table ) )
 
-    del mci
-
 
 # =============================================================================
 if '__main__' == __name__ :

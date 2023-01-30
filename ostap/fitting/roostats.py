@@ -21,6 +21,7 @@ __all__     = (
     ##
     )
 # =============================================================================
+from   ostap.core.meta_info    import root_info 
 import ostap.fitting.roofit
 from   ostap.core.ostap_types import string_types, integer_types
 import ROOT, abc 
@@ -286,8 +287,8 @@ class CLInterval(ModelConfig)  :
     @par.setter
     def par ( self , value ) :
         self.__par = value 
-    
-        
+
+
 # ================================================================================
 ## Profile Likelihood confidence interval
 #  @code
@@ -420,7 +421,11 @@ class FeldmanCousinsInterval(CLInterval) :
         >>> graph = fci.plot()
         >>> graph.Draw('ap')
         """
-        
+
+        if root_info < (6,18) :
+            logger.warning ( "No plots from Feldman-Cousins for ROOT<(6.18)" )
+            return 
+            
         if self.calculator and self.the_interval :
             
             import ostap.fitting.dataset

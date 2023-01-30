@@ -9,6 +9,8 @@
   1. unify the key-function for case-insensitive (and noi underscores) dictionaries 
   1. improve `ostap.fitting.roostats` and corresponding test 
   1. more polishing for `ostap.fitting.roostats` and corresponding test 
+  1. disable plot from FEldman-Cousins for ROOT<6.18
+  1. for ROOT>6.18 for `ROOT.RooArgSet` extend `contains` and `getitem` to accept indices and slices 
 
 ## Backward incompatible:  
 

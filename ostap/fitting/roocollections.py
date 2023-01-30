@@ -22,8 +22,9 @@ __all__     = (
     'KeepArgs'  , ## context manager to preserve the content of the list
     ) 
 # =============================================================================
+from   ostap.core.meta_info    import root_info 
 from   ostap.core.core         import Ostap
-from   ostap.core.ostap_types  import string_types , integer_types  
+from   ostap.core.ostap_types  import string_types , integer_types
 import ostap.fitting.variables
 import ROOT, sys, random
 # =============================================================================
@@ -192,29 +193,71 @@ def _ras_getattr_ ( self , aname ) :
     return _v 
 
 # =============================================================================
-## get the attibute for RooArgSet 
-def _ras_getitem_ ( self , aname ) :
-    """Get the attibute from RooArgSet
-    >>> aset = ...
-    >>> print aset['pt']    
-    """
-    if isinstance ( aname , integer_types ) and 0 <= aname :
-        if aname < len  ( self ) :
-            return ROOT.RooAbsCollection.__getitem__ ( self , aname )
-        raise IndexError('Invalid index!') 
-    _v = self.find ( aname )
-    if not _v : raise  IndexError
-    return _v 
-
+if (6,18) <= root_info :
+    # =========================================================================
+    ## get the item for RooArgSet
+    def _ras_getitem_ ( self , aname ) :
+        """Get the attibute from RooArgSet
+        >>> aset = ...
+        >>> print ( aset[' pt']  )    
+        >>> print ( aset[  0  ]  ) ## the first element
+        >>> print ( aset[ -1 ]   ) ## the last element
+        >>> print ( aset[ 3,5,2] ) ## get the range 
+        """
+        
+        if   isinstance ( aname , slice ) :
+            l = len ( self )
+            indices = aname.indices ( l )
+            result  = ROOT.RooArgSet()
+            for i in range (*indices) : result.add ( self[i] ) 
+            return result
+        elif isinstance ( aname , integer_types ) :
+            l = len ( self ) 
+            ## allow "slightly negative values 
+            if aname < 0 : aname += l 
+            if 0 <= aname < l : 
+                return ROOT.RooAbsCollection.__getitem__ ( self , aname )
+            raise IndexError('Invalid index!')
+        
+        ## normal lookup 
+        _v = self.find ( aname )
+        if not _v : raise  IndexError('Invalid nidex/name!')
+        return _v
+    # =========================================================================
+else :
+    # =========================================================================
+    ## get the item for RooArgSet
+    def _ras_getitem_ ( self , aname ) :
+        """Get the attibute from RooArgSet
+        >>> aset = ...
+        >>> print aset['pt']    
+        """
+        _v = self.find ( aname )
+        if not _v : raise  IndexError('Invalid nidex/name!')
+        return _v 
+        
 # =============================================================================
-## check the presence of variable in set 
-def _ras_contains_ ( self , aname ) :
-    """Check the presence of variable in set 
-    """
-    _v = self.find ( aname )
-    if not _v : return False 
-    return             True 
-
+if (6,18) <= root_info :
+    # =========================================================================
+    ## check the presence of variable in set 
+    def _ras_contains_ ( self , aname ) :
+        """Check the presence of variable in set 
+        """
+        if isinstance ( aname , integer_types ) : return  0 <= aname < len ( self )
+        _v = self.find ( aname )
+        if not _v : return False 
+        return             True
+    # =========================================================================
+else :
+    # =========================================================================
+    ## check the presence of variable in set 
+    def _ras_contains_ ( self , aname ) :
+        """Check the presence of variable in set 
+        """
+        _v = self.find ( aname )
+        if not _v : return False 
+        return             True
+    
 # =============================================================================
 ## some decoration over RooArgSet 
 ROOT.RooArgSet . __len__           = lambda s   : s.getSize()
