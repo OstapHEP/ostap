@@ -22,8 +22,8 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info    import root_info 
-import ostap.fitting.roofit
 from   ostap.core.ostap_types import string_types, integer_types
+import ostap.fitting.roofit
 import ROOT, abc 
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -69,10 +69,12 @@ class ModelConfig(object):
         mctitle = kw_args.pop ( 'mc_title' , 'model-config for %s' % pdf.name )
         mc      = ROOT.RooStats.ModelConfig ( mcname , mctitle , ws )
 
+        self.__pdf = pdf
         ## (3/4) set PDF and observables 
         mc.SetPdf         ( pdf.pdf         )
         mc.SetObservables ( pdf.observables )
 
+        self.__params = params 
         ## (5) set parameters of interest
         pars = [ pdf.parameter ( p , dataset ) for p in params ]
         pois = ROOT.RooArgSet ()
@@ -89,6 +91,7 @@ class ModelConfig(object):
         
         ## (7) global observables
         if global_observables :
+            self.__go = global_observables
             if isinstance ( global_observables , ROOT.RooAbsReal ) :
                 global_observables = [ global_observables ]                
             pars = [ pdf.parameter  ( v , dataset ) for v in global_observables ]
@@ -96,9 +99,10 @@ class ModelConfig(object):
             for p in pars : gobs.add ( p    ) 
             mc.SetGlobalObservables  ( gobs )
             pdf.aux_keep.append      ( gobs )
-
+            
         ## (8) constraints
         if constraints :
+            self.__cts = constraints
             if isinstance ( constrainst , ROOT.RooAbsReal ) :
                 constraints = [ constraints ]
             assert all ( [ isinstance ( c , ROOT.RooAbsPdf ) for c in constraints ] ) , \
@@ -108,7 +112,6 @@ class ModelConfig(object):
             mc.SetConstraintParameters  ( cnts )
             pdf.aux_keep.append         ( cnts )
             
-
         ## (9) define the default dataset 
         self.__dataset = dataset 
 
@@ -187,10 +190,8 @@ class CLInterval(ModelConfig)  :
                                dataset   = dataset ,
                                workspace = workspace , **kwargs )
         
-        pp                = pdf.parameter ( poi     ) 
-        self.__par        = self.ws.var   ( pp.name ) ## parameter as it is in workspace 
-        self.__interval   = None 
-        self.__calculator = None
+        self.__interval     = None 
+        self.__calculator   = None
         
     # =========================================================================
     ## Abstract method to create the interval calculator
@@ -205,19 +206,21 @@ class CLInterval(ModelConfig)  :
     #  interval = ...
     #  lower, upper = interval.interval ( 0.90 ) 
     #  @endcode 
-    def interval ( self , level , dataset = None ) :
+    def interval ( self , level , par = None , dataset = None ) :
         """get the confidence interal at certain confidence level
         >>> interval = ...
         >>> lower, upper = interval.interval ( 0.90 ) 
         """
         assert 0 < level < 1 , 'Invalid confidence level!'
-        self.__interval = self.make_interval ( level , dataset )
-        self.__interval.SetConfidenceLevel   ( level )
 
-        par    = self.par
-        
-        low    = self.__interval.LowerLimit  ( par ) if par else self.__interval.LowerLimit ()
-        high   = self.__interval.UpperLimit  ( par ) if par else self.__interval.UpperLimit ()
+        if not self.the_interval or level != self.the_interval.ConfidenceLevel or dataset : 
+            self.__interval = self.make_interval ( level , dataset )
+            
+        ##
+        par = self.par_from_poi ( par ) 
+            
+        low    = self.the_interval.LowerLimit  ( par ) if par else self.the_interval.LowerLimit ()
+        high   = self.the_interval.UpperLimit  ( par ) if par else self.the_interval.UpperLimit ()
   
         return low, high 
 
@@ -228,19 +231,23 @@ class CLInterval(ModelConfig)  :
     #  upper    = interval.limit ( 0.90 , +1 ) 
     #  lower    = interval.limit ( 0.90 , -1 ) 
     #  @endcode
-    def limit    ( self , level , limit , dataset = None ) :
+    def limit    ( self , level , limit , par = None, dataset = None ) :
         """Get the upper/lower limit at certain confidence level
         >>> interval =...
         >>> upper    = interval.limit ( 0.90 , +1 ) 
         >>> lower    = interval.limit ( 0.90 , -1 ) 
         """
         assert 0 < level < 1 , 'Invalid confidence level!'
-        self.__interval = self.make_interval ( level , dataset ) 
-        self.__interval.SetConfidenceLevel   ( 1.0 - 0.5 * ( 1 - level ) ) ## ATTENTION!
 
-        par = self.par 
-        if   0 < limit : return self.__interval.UpperLimit ( par ) if par else self.__interval.UpperLimit ()
-        elif 0 > limit : return self.__interval.LowerLimit ( par ) if par else self.__interval.LowerLimit ()
+        ## attention! 
+        limit_level = 1.0 - 2 * ( 1.0 - level ) 
+        if not self.the_interval or limit_level != self.the_interval.ConfidenceLevel or dataset : 
+            self.__interval = self.make_interval ( limit_level , dataset ) 
+            
+        par = self.par_from_poi ( par )
+        
+        if   0 < limit : return self.the_interval.UpperLimit ( par ) if par else self.the_interval.UpperLimit ()
+        elif 0 > limit : return self.the_interval.LowerLimit ( par ) if par else self.the_interval.LowerLimit ()
                 
     # =========================================================================
     ## Get the upper limit at certain confidence level
@@ -248,12 +255,12 @@ class CLInterval(ModelConfig)  :
     #  interval =...
     #  upper    = interval.upper_limit ( 0.90 ) 
     #  @endcode 
-    def upper_limit ( self , level , dataset = None ) :
+    def upper_limit ( self , level , par = None , dataset = None ) :
         """Get the upper limit at certain confidence level
         >>> interval =...
         >>> upper    = interval.upper_limit ( 0.90 ) 
         """
-        return self.limit ( level , limit = +1 , dataset = dataset )
+        return self.limit ( level , limit = +1 , par = par , dataset = dataset )
     
     # =========================================================================
     ## get the lower limit at certain confidence level
@@ -261,12 +268,24 @@ class CLInterval(ModelConfig)  :
     #  interval =...
     #  lower    = interval.lower_limit ( 0.90 ) 
     #  @endcode 
-    def lower_limit ( self , level , dataset = None ) :
+    def lower_limit ( self , level , par = None , dataset = None ) :
         """Get the lower limit at certain confidence level
         >>> interval =...
         >>> lower    = interval.lower_limit ( 0.90 ) 
         """        
-        return self.limit ( level , limit = -1 , dataset = dataset )
+        return self.limit ( level , limit = -1 , par = par , dataset = dataset )
+
+    # =========================================================================
+    ## Helper method to get the true parameter from poi 
+    def par_from_poi ( self , par ) :
+        """Helper method to get the true parameter from poi
+        """
+        poi = self.poi             
+        if   par and isinstance ( par , string_types   ) and poi : return poi [ par      ]
+        elif par and isinstance ( par , ROOT.RooAbsArg ) and poi : return poi [ par.name ]
+        elif not par and 1 == len ( poi )                        : return poi.front ()
+
+        raise TypeError ( "Invalid setting for 'par' %s | %s" %  ( par , poi ) )
 
     # =========================================================================
     @property
@@ -279,15 +298,7 @@ class CLInterval(ModelConfig)  :
     @property
     def the_interval ( self ) :
         """'the_interval' : the actual interval object"""
-        return self.__interval 
-    @property
-    def par ( self ) :
-        """'par' : parameter as it is stored in workspace"""
-        return self.__par 
-    @par.setter
-    def par ( self , value ) :
-        self.__par = value 
-
+        return self.__interval
 
 # ================================================================================
 ## Profile Likelihood confidence interval
@@ -488,7 +499,10 @@ class BayesianInterval(CLInterval) :
                               poi       = poi       ,
                               dataset   = dataset   ,
                               workspace = workspace , **kwargs )
-        
+
+        np = len ( self.poi )
+        assert 1 == np , 'Bayesing interval works only for 1 poi!'
+
         from   ostap.fitting.pdfbasic import APDF1
         
         assert prior is None or \
@@ -503,12 +517,11 @@ class BayesianInterval(CLInterval) :
         elif prior and isinstance ( prior , ROOT.RooAbsPdf ) :
             self.mc.SetPriorPdf ( prior  )
         else :
-            self.ws.factory("Uniform::prior(%s)" % self.par.name )
+            par = self.poi.front()
+            self.ws.factory("Uniform::prior(%s)" % par.name )
             self.mc.SetPriorPdf ( self.ws.pdf("prior") )
 
-        ## important to reset it here! 
-        self.par = None
-
+    # =========================================================================
     ## create the interval 
     def make_interval ( self , level , dataset = None ) :
         """Create the interval"""
@@ -536,6 +549,13 @@ class BayesianInterval(CLInterval) :
         """
         if self.calculator :
             return self.calculator.GetPosteriorPlot() 
+
+    # =========================================================================
+    ## Helper method to get the true parameter from poi 
+    def par_from_poi ( self , par ) :
+        """Helper method to get the true parameter from poi
+        """
+        return None
 
 # ================================================================================
 ## Marcov Chain MC confidence interval

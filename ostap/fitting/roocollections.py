@@ -89,12 +89,12 @@ def _ral_getitem_ ( self , index ) :
 
     l = len ( self )
     
-    if not isinstance ( index , integer_types ) or l <= index :
-        raise IndexError('List Index %s is out of the range [%d,%d)' % ( index , 0 , l ) )
-    
     ## allow slightly negative indices 
     if index < 0 : index += l 
-    
+
+    if not isinstance ( index , integer_types ) or l <= index :
+        raise IndexError('List Index %s is out of the range [%d,%d)' % ( index , 0 , l ) )
+        
     if not 0 <= index < l :
         raise IndexError('List Index %d is out of the range [%d,%d)' % ( index , 0 , l ) )
     
@@ -232,31 +232,88 @@ else :
         >>> aset = ...
         >>> print aset['pt']    
         """
-        _v = self.find ( aname )
-        if not _v : raise  IndexError('Invalid nidex/name!')
-        return _v 
+        if   isinstance ( aname , slice ) :
+            l = len ( self )
+            indices = aname.indices ( l )
+            result  = ROOT.RooArgSet()
+            for i in range (*indices) : result.add ( self[i] ) 
+            return result
+        elif isinstance ( aname , integer_types ) :
+            l = len ( self ) 
+            ## allow "slightly negative" values 
+            if aname < 0 : aname += l 
+            if 0 <= aname < l : 
+                for i, value in enumerate ( self ) :
+                    if i == aname : return v 
+            raise IndexError('Invalid index/name!')
         
+        _v = self.find ( aname )
+        if not _v : raise  IndexError('Invalid index/name!')
+        return _v 
+
 # =============================================================================
-if (6,18) <= root_info :
-    # =========================================================================
-    ## check the presence of variable in set 
-    def _ras_contains_ ( self , aname ) :
-        """Check the presence of variable in set 
-        """
-        if isinstance ( aname , integer_types ) : return  0 <= aname < len ( self )
-        _v = self.find ( aname )
-        if not _v : return False 
-        return             True
-    # =========================================================================
-else :
-    # =========================================================================
-    ## check the presence of variable in set 
-    def _ras_contains_ ( self , aname ) :
-        """Check the presence of variable in set 
-        """
-        _v = self.find ( aname )
-        if not _v : return False 
-        return             True
+## get the first element in collection 
+def _rac_front_ ( self ) :
+    """Get the first element in collection
+    >>> lst   = ...
+    >>> first = lst.front ()
+    """
+    assert 0 < len ( self ) , 'front: collection is empty!'
+    return self [ 0 ]
+# =============================================================================
+## get the last element in collection 
+def _rac_back_ ( self ) :
+    """Get the last element in collection
+    >>> lst = ...
+    >>> last = lst.back() 
+    """
+    assert 0 < len ( self ) , 'back: collection is empty!'
+    return self [ -1 ]
+# ==============================================================================
+## Remove and return item at index (default last).
+#  @code
+#  lst  = ...
+#  item = lst.pop( )   ## get and remove from collection the last   element 
+#  item = lst.pop(2)   ## get and remove from collection the second element 
+#  item = lst.pop('a') ## get and remove from collection the element with name 'a'
+#  @endcode 
+def _rac_pop_ ( self , item = -1 ) :
+    """Remove and return item at index( or name) (default last).
+    >>> lst  = ...
+    >>> item = lst.pop( )   ## get and remove from collection the last   element 
+    >>> item = lst.pop(2)   ## get and remove from collection the second element 
+    >>> item = lst.pop('a') ## get and remove from collection the element with name 'a'
+    """
+    entry = self [ item ]
+    self.remove ( entry ) 
+    return entry 
+    
+for r in ( ROOT.RooArgSet  ,
+           ROOT.RooArgList ) :
+    r.front = _rac_front_
+    r.back  = _rac_back_
+    r.pop   = _rac_pop_
+    
+_new_methods_ += [
+    ROOT.RooArgSet  . front ,
+    ROOT.RooArgSet  . back  ,
+    ROOT.RooArgSet  . pop   ,
+    ROOT.RooArgList . front ,
+    ROOT.RooArgList . back  ,
+    ROOT.RooArgList . pop   ,
+    ]
+
+# =============================================================================
+## check the presence of variable/name/index in set 
+def _ras_contains_ ( self , aname ) :
+    """Check the presence of variable/name/index in set 
+    """
+    if isinstance ( aname , integer_types ) :
+        return  0 <= aname < len ( self )
+    _v = self.find ( aname )
+    if not _v : return False 
+    return             True
+
     
 # =============================================================================
 ## some decoration over RooArgSet 

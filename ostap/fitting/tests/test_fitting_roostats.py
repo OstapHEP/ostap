@@ -66,9 +66,9 @@ def test_limits () :
         pli = ProfileLikelihoodInterval ( pdf     = pdf      ,
                                           poi     = pdf.mean , 
                                           dataset = dataset  )
-        low, high = pli.interval    ( 0.90 , dataset )
-        upper     = pli.upper_limit ( 0.95 , dataset )
-        lower     = pli.lower_limit ( 0.95 , dataset )
+        low, high = pli.interval    ( 0.90 )
+        upper     = pli.upper_limit ( 0.95 )
+        lower     = pli.lower_limit ( 0.95 )
         
     row = 'Profile likelihood' , \
           '[%-+.3f,%+.3f]' %  ( low , high ) , \
@@ -87,9 +87,9 @@ def test_limits () :
             fci = FeldmanCousinsInterval ( pdf     = pdf      ,
                                            poi     = pdf.mean , 
                                            dataset = dataset  )  
-            low, high = fci.interval    ( 0.90 , dataset )
-            upper     = fci.upper_limit ( 0.95 , dataset )
-            lower     = fci.lower_limit ( 0.95 , dataset )
+            low, high = fci.interval    ( 0.90 )
+            upper     = fci.upper_limit ( 0.95 )
+            lower     = fci.lower_limit ( 0.95 )
             
     row = 'Feldman-Cousins' , \
           '[%-+.3f,%+.3f]' %  ( low , high ) , \
@@ -107,9 +107,9 @@ def test_limits () :
         bci = BayesianInterval ( pdf     = pdf      ,
                                  poi     = pdf.mean , 
                                  dataset = dataset  ) 
-        low, high = bci.interval    ( 0.90 , dataset )
-        upper     = bci.upper_limit ( 0.95 , dataset )
-        lower     = bci.lower_limit ( 0.95 , dataset )
+        low, high = bci.interval    ( 0.90 )
+        upper     = bci.upper_limit ( 0.95 )
+        lower     = bci.lower_limit ( 0.95 )
         
     row = 'Bayesian' , \
           '[%-+.3f,%+.3f]' %  ( low , high ) , \
@@ -124,9 +124,9 @@ def test_limits () :
         mci = MCMCInterval ( pdf     = pdf      ,
                              poi     = pdf.mean , 
                              dataset = dataset  )          
-        low, high = mci.interval    ( 0.90 , dataset )
-        upper     = mci.upper_limit ( 0.95 , dataset )
-        lower     = mci.lower_limit ( 0.95 , dataset )
+        low, high = mci.interval    ( 0.90 )
+        upper     = mci.upper_limit ( 0.95 )
+        lower     = mci.lower_limit ( 0.95 )
 
 
     row = 'Markov Chain MC' , \
