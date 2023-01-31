@@ -50,7 +50,6 @@ with use_canvas ( "test_fitting_roostats" ) :
 # ============================================================================
 def test_limits () :
 
-
     logger = getLogger("test_limits")
 
     logger.info ( "Test Limits with RooStats" )

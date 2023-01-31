@@ -644,6 +644,8 @@ class Histo1DErr_fun(Shape1D_fun) :
         ## get the histogram
         h    = histo.h    () if isinstance ( histo , Ostap.Math.Histo1D ) else histo
 
+        self.__init_histo = histo 
+
         ## clone it and store uncertainties
         herr = h.clone ()
         for i, x, y in herr.items() : herr [ i ] = VE ( y.error() , 0 ) 
@@ -653,6 +655,18 @@ class Histo1DErr_fun(Shape1D_fun) :
             
         ##  initialize the base class 
         Histo1D_fun.__init__ ( self , name , xvar = xvar , histo = herr )
+
+        ## save the configuration
+        self.config = {
+            'name'    : self.name       , 
+            'histo'   : self.init_histo , 
+            'xvar'    : self.xvar       , 
+            }
+        
+    @property
+    def init_histo  ( self ) :
+        """'init_histo': initial histogram"""
+        return self.__init_histo
 
 # =============================================================================
 if '__main__' == __name__ :

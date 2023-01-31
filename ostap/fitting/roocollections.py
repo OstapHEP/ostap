@@ -244,7 +244,7 @@ else :
             if aname < 0 : aname += l 
             if 0 <= aname < l : 
                 for i, value in enumerate ( self ) :
-                    if i == aname : return v 
+                    if i == aname : return value  
             raise IndexError('Invalid index/name!')
         
         _v = self.find ( aname )

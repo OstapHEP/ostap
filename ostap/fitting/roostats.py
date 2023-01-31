@@ -74,24 +74,24 @@ class ModelConfig(object):
         mc.SetPdf         ( pdf.pdf         )
         mc.SetObservables ( pdf.observables )
 
-        self.__params = params 
         ## (5) set parameters of interest
         pars = [ pdf.parameter ( p , dataset ) for p in params ]
         pois = ROOT.RooArgSet ()
         for p in pars : pois.add   ( p    )
         mc.SetParametersOfInterest ( pois )
         pdf.aux_keep.append        ( pois )
-
+        self.__ps = params , pars, pois
+        
         ## (6) Nuisance parameters
         pars = [ v for v in pdf.params ( dataset ) if not v in pdf.vars and not v in pois ]
         nuis = ROOT.RooArgSet    ()
         for p in pars : nuis.add ( p    ) 
         mc.SetNuisanceParameters ( nuis )
         pdf.aux_keep.append      ( nuis )
-        
+        self.__ns = pars, nuis 
+
         ## (7) global observables
         if global_observables :
-            self.__go = global_observables
             if isinstance ( global_observables , ROOT.RooAbsReal ) :
                 global_observables = [ global_observables ]                
             pars = [ pdf.parameter  ( v , dataset ) for v in global_observables ]
@@ -99,10 +99,10 @@ class ModelConfig(object):
             for p in pars : gobs.add ( p    ) 
             mc.SetGlobalObservables  ( gobs )
             pdf.aux_keep.append      ( gobs )
+            self.__go = global_observables, gobs 
             
         ## (8) constraints
         if constraints :
-            self.__cts = constraints
             if isinstance ( constrainst , ROOT.RooAbsReal ) :
                 constraints = [ constraints ]
             assert all ( [ isinstance ( c , ROOT.RooAbsPdf ) for c in constraints ] ) , \
@@ -111,6 +111,7 @@ class ModelConfig(object):
             for c in constraints : cnts.add ( c )
             mc.SetConstraintParameters  ( cnts )
             pdf.aux_keep.append         ( cnts )
+            self.__cs = constraints, cnts 
             
         ## (9) define the default dataset 
         self.__dataset = dataset 
@@ -120,6 +121,8 @@ class ModelConfig(object):
 
         self.__ws   = ws
         self.__mc   = mc
+
+
         
     @property
     def ws ( self ) :
