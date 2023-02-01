@@ -15,6 +15,7 @@
   1. add fixed shape from histogam (no parmameters) as `RooAbsReal`
   1. more polishing for `ostap.fitting.roostats` and corresponding test 
   1. add `front`,`back` and `pop` methods 
+  1. add Karlin-Shapley and Karlin-Studden parameterisation for histograms 
 
 ## Backward incompatible:  
 

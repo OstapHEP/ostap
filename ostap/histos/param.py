@@ -140,8 +140,8 @@ from   ostap.math.param       import ( legendre_sum      ,
                                        bernstein_sum     , 
                                        beziereven_sum    ,
                                        bernsteineven_sum )
-from   ostap.core.ostap_types import integer_types, long_type
-from   collections            import namedtuple 
+from   ostap.core.ostap_types import integer_types, long_type, num_types 
+from   collections            import namedtuple
 import ROOT, math 
 # =============================================================================
 # logging 
@@ -187,18 +187,25 @@ def _h1_param_sum_ ( h1               ,
                      refit  = False   ) : ## refit ? 
     """ Represent histo as polynomial-like  sum    
     """
+    
+    import ostap.fitting.funcs 
+
+    xmin  = max ( xmin , h1.xmin() )
+    xmax  = min ( xmax , h1.xmax() )
+
+    assert h1.xmin() <= xmin and xmin <  h1.xmax() , "Invalid xmin!"
+    assert h1.xmin() <  xmax and xmax <= h1.xmax() , "Invalid xmax!"
+    assert xmin < xmax                             , "Invalid xmin/xmax!"
+    
     ## 
     b     = fun_obj  
     #
-    bfit  = fit_type ( b )
+    bfit  = fit_type ( b , xmin = xmin , xmax = xmax )
     
     bfit.fun.SetNpx  ( max ( 100 , 3 * h1.bins() , bfit.fun.GetNpx() ) )   
     
     bfit.histo     = h1
     
-    xmin  = max ( xmin , h1.xmin() )
-    xmax  = min ( xmax , h1.xmax() )
-
     fun = bfit.fun
 
     normalized = hasattr ( bfit , 'norm' ) and  bfit.norm()
@@ -242,7 +249,7 @@ def _h1_param_sum_ ( h1               ,
             fun.SetParLimits ( i , l , h )
             
     ## set parameters (if specified) 
-    for i , v in zip ( range ( np ) , params ) :
+    for i , v in enumerate ( params ) :
         if i < np : 
             logger.verbose ( 'param_sum: set parameter %d at %s' % ( i , v ) ) 
             fun.SetParameter ( i , float ( v ) )
@@ -591,8 +598,7 @@ def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
 
 try :
     
-    from ostap.math.param       import fourier_sum 
-    from ostap.math.param       import cosine_sum
+    from ostap.math.param       import fourier_sum, cosine_sum
     
     # =============================================================================
     ## make a histogram representation in terms of Fourier serie
@@ -1609,6 +1615,162 @@ def _h1_concavespline_ ( h1               ,
 # =============================================================================
 
 # =============================================================================
+## represent 1D-histo as positive Karlin-Shapley polymonial 
+#  @code
+#  h = ...                  ## the histogram
+#  b = h.karlin_shapley ( degree = 3 )
+#
+#  tf1        = b[0]        ## TF1 object
+#  obj        = b[1]        ## helper object 
+#  fun        = b[2]        ## uderlying normalzed C++ object 
+#  fit_result = b[3]        ## fit result & status
+#  norm       = b[4]        ## normalization
+# 
+#  x = ...
+#  print ( 'TF1(%s) = %s' % ( x , tf1 ( x )        ) ) 
+#  print ( 'fun(%s) = %s' % ( x , fun ( x ) * norm ) ) 
+#  @endcode 
+def _h1_karlinshapley_ ( h1                   ,
+                         degree     = 3       ,
+                         opts       = 'SQ0'   ,
+                         xmin       = inf_neg ,
+                         xmax       = inf_pos , 
+                         fixes      = ()      ,
+                         params     = ()      ,
+                         limits     = ()      ,
+                         refit      = 1       ) :
+    """Represent histo as positive Karlin-Shapley polynomial
+    
+    >>> h = ... # the histogram
+    >>> b = h.karlin_shapley ( degree = 3 , knots = 3 )
+    
+    >>> tf1        = b[0] ## TF1 object
+    >>> obj        = b[1] ## helper object 
+    >>> fun        = b[2] ## underlying normalzed C++ object 
+    >>> fit_result = b[3] ## fit result & status
+    >>> norm       = b[4] ## normalization 
+    
+    >>> x = ... 
+    >>> print ( 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) )
+    >>> print ( 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) )        
+    """
+
+    xmin = max ( xmin , h1.xmin() ) 
+    xmax = min ( xmax , h1.xmax() )  
+    #
+    #
+    func   = Ostap.Math.KarlinShapley ( degree , xmin , xmax )
+    
+    my = h1.accumulate().value()/h1.bins()
+    func.setPar ( 0, my )   
+
+    newlims = tuple ( l for l in limits ) 
+    if degree :
+        lims = {}
+        for l in newlims : lims [ l[0] ] = l
+        for i in range ( 1 , degree + 1 ) :
+            if not i in lims : lims [i] = i , -3 * math.pi , 4 * math.pi
+
+        newlims = [] 
+        for k in sorted ( lims ) : newlims.append ( lims[k] )
+        newlims = tuple ( newlims )
+        
+    ## make a fit 
+    from ostap.fitting.param import H_fit
+    return _h1_param_sum_ ( h1               ,
+                            func             ,
+                            H_fit            ,
+                            opts   = opts    ,
+                            xmin   = xmin    ,
+                            xmax   = xmax    ,
+                            fixes  = fixes   ,
+                            params = params  ,
+                            limits = newlims ,
+                            refit  = refit   )
+
+# =============================================================================
+## represent 1D-histo as positive Karlin-Studden polymonial 
+#  @code
+#  h = ...                  ## the histogram
+#  b = h.karlin_studden( degree = 3 )
+#
+#  tf1        = b[0]        ## TF1 object
+#  obj        = b[1]        ## helper object 
+#  fun        = b[2]        ## uderlying normalzed C++ object 
+#  fit_result = b[3]        ## fit result & status
+#  norm       = b[4]        ## normalization
+# 
+#  x = ...
+#  print ( 'TF1(%s) = %s' % ( x , tf1 ( x )        ) ) 
+#  print ( 'fun(%s) = %s' % ( x , fun ( x ) * norm ) ) 
+#  @endcode 
+def _h1_karlinstudden_ ( h1               ,
+                         degree     = 3       ,
+                         opts       = 'SQ0'   ,
+                         xmin       = inf_neg ,
+                         xmax       = inf_pos ,
+                         scale      = None    ,
+                         fixes      = ()      ,
+                         params     = ()      ,
+                         limits     = ()      ,
+                         refit      = 1       ) :
+    """Represent histo as positive Karlin-Shapley polynomial
+    
+    >>> h = ... # the histogram
+    >>> b = h.karlin_shapley ( degree = 3 , knots = 3 )
+    
+    >>> tf1        = b[0] ## TF1 object
+    >>> obj        = b[1] ## helper object 
+    >>> fun        = b[2] ## underlying normalzed C++ object 
+    >>> fit_result = b[3] ## fit result & status
+    >>> norm       = b[4] ## normalization 
+    
+    >>> x = ... 
+    >>> print ( 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) )
+    >>> print ( 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) )        
+    """
+
+    xmin = max ( xmin , h1.xmin() ) 
+    xmax = min ( xmax , h1.xmax() )  
+    
+    if scale is None : scale = xmax - xmin 
+    assert isinstance ( scale , num_types ) and 0 < scale < inf_pos , \
+           'Invalid scale parameter'
+
+    #
+    func   = Ostap.Math.KarlinStudden ( degree , xmin , scale )
+    
+    my = h1.accumulate().value()/h1.bins()
+    func.setPar ( 0, my )   
+
+    newlims = tuple ( l for l in limits ) 
+    if degree :
+        lims = {}
+        for l in newlims : lims [ l[0] ] = l
+        for i in range ( 1 , degree + 1 ) :
+            if not i in lims : lims [i] = i , -3 * math.pi , 4 * math.pi
+
+        newlims = [] 
+        for k in sorted ( lims ) : newlims.append ( lims[k] )
+        newlims = tuple ( newlims )
+        
+    ## make a fit 
+    from ostap.fitting.param import H_fit
+    return _h1_param_sum_ ( h1               ,
+                            func             ,
+                            H_fit            ,
+                            opts   = opts    ,
+                            xmin   = xmin    ,
+                            xmax   = xmax    ,
+                            fixes  = fixes   ,
+                            params = params  ,
+                            limits = newlims ,
+                            refit  = refit   )
+
+
+
+
+# =============================================================================
 ## decorate histograms 
 for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.bernstein      = _h1_bernstein_
@@ -1633,6 +1795,8 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.convexspline   = _h1_convexspline_ 
     t.concavespline  = _h1_concavespline_ 
     t.legendre_fast  = _h1_legendre_fast_
+    t.karlin_shapley = _h1_karlinshapley_ 
+    t.karlin_studden = _h1_karlinstudden_ 
 
 _new_methods_ += [
     _h1_bernstein_     ,
@@ -1653,6 +1817,8 @@ _new_methods_ += [
     _h1_convexspline_  ,
     _h1_concavespline_ ,
     _h1_legendre_fast_ ,
+    _h1_karlinshapley_ , 
+    _h1_karlinstudden_ 
     ]
 
 # =============================================================================

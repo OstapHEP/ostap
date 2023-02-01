@@ -145,7 +145,6 @@ def _tf1_release_ ( func , par ) :
     if     isinstance ( par , str  ) : par = func.GetParNumber( par )
     func.ReleaseParameter( par ) 
 
-
 # =============================================================================
 ## get the parameter from TF1
 #  @code
@@ -167,7 +166,6 @@ def _tf1_par_ ( func , par ) :
     e = func.GetParError  ( par )
     #
     return VE ( v , e * e )
-
 
 # =============================================================================
 ## set parameter of TF1
@@ -360,5 +358,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

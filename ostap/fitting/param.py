@@ -194,10 +194,13 @@ class H_fit(HFIT) :
     """Simple helper function to fit/represent the histogram with sum of
     Bernstein/b-spline/legendre/chebyshev, etc functions 
     """
-    def __init__ ( self ,  hfit ) :
+    def __init__ ( self ,  hfit , xmin = None , xmax = None ) :
 
+        if xmin is None and hasattr ( hfit , 'xmin' ) : xmin = hfit.xmin ()
+        if xmax is None and hasattr ( hfit , 'xmax' ) : xmax = hfit.xmax ()
+        
         ## create the function
-        tf1 = ROOT.TF1 ( funID() , self , hfit.xmin() , hfit.xmax() , hfit.npars() )
+        tf1 = ROOT.TF1 ( funID() , self , xmin , xmax , hfit.npars() )
 
         ## initialize the base 
         super(H_fit,self).__init__ ( hfit , tf1 ) 
@@ -230,10 +233,13 @@ class H_Nfit (HFIT) :
     """ Simple helper function to fit/represent the histogram with
     the sum of bernstein positive polynominals
     """
-    def __init__ ( self , hfit ) :
+    def __init__ ( self , hfit , xmin = None , xmax = None ) :
+
+        if xmin is None and hasattr ( hfit , 'xmin' ) : xmin = hfit.xmin ()
+        if xmax is None and hasattr ( hfit , 'xmax' ) : xmax = hfit.xmax ()
         
         ## create function 
-        tf1 = ROOT.TF1 ( funID() , self , hfit.xmin() , hfit.xmax() , hfit.npars() + 1 )
+        tf1 = ROOT.TF1 ( funID() , self , xmin , xmax , hfit.npars() + 1 )
         
         ## initialize the base 
         super(H_Nfit,self).__init__ ( hfit , tf1 )

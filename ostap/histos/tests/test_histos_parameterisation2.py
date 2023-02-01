@@ -389,6 +389,39 @@ def test_convex_only_spline () :
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
+
+# ============================================================================
+## Karlin-Shapley
+# ============================================================================
+def test_karlin_shapley () :
+    
+    logger =   getLogger("test_karlin_shapley")
+    with timing ( 'Karlin-Shapley [4]' , logger ) :
+        params = [ h.karlin_shapley ( 4 ) for h in  histos[:2] ]
+        
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_karlin_shapley %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
+            
+
+# ============================================================================
+## Karlin-Studden
+# ============================================================================
+def test_karlin_studden () :
+    
+    logger =   getLogger("test_karlin_studden")
+    with timing ( 'Karlin-Studden [4]' , logger ) :
+        params = [ h.karlin_studden ( 4 ) for h in  histos[:2] ]
+        
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_karlin_studden %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
+            
+
 # =============================================================================
 #  Legendre fast
 # =============================================================================
@@ -449,7 +482,7 @@ def test_legendre3_fast () :
                                                                          ( r333 , f_3) ,
                                                                          ( r432 , f_3) ,
                                                                          ( r535 , f_3) ] ] )
-    
+
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -474,6 +507,9 @@ if '__main__' == __name__ :
     test_monotonic_spline       ()
     test_convex_spline          ()
     test_convex_only_spline     ()
+
+    test_karlin_shapley         ()
+    test_karlin_studden         ()
     
 
     test_legendre_fast          ()
