@@ -1,4 +1,3 @@
-
 ## New features:
 
   1. add `+=` and `-=` operators for `Ostap::Math::HermiteSum`
@@ -17,11 +16,14 @@
   1. more polishing for `ostap.fitting.roostats` and corresponding test 
   1. add `front`,`back` and `pop` methods 
   1. add Karlin-Shapley and Karlin-Studden parameterisation for histograms 
+  1. remove some script from `scripts` subdirectory 
 
 ## Backward incompatible:  
 
 ## Bug fixes:
 
+  1. fix `thisostap.sh` for usage with `zsh` 
+ 
 # v1.9.6.2
 
 ## New features:

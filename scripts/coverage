@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-LCG=$1
-CMTCONFIG=$2
-source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-source build/INSTALL/thisostap.sh 
-pip install coverage  nose
-nosetests --with-coverage --cover-package=ostap"

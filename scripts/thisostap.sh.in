@@ -63,6 +63,11 @@ fi
 ## define OSTAPDIR  as a directory where the script 
 # =============================================================================
 OSTAPDIR="${BASH_SOURCE[0]}"
+# =============================================================================
+if [ "x$OSTAPDIR" = "x" ]; then
+    OSTAPDIR=${(%):-%N} # for zsh
+fi
+# =============================================================================
 while [ -h "$OSTAPDIR" ]; do # resolve $OSTAPDIR until the file is no longer a symlink
   DIR="$( cd -P "$( dirname "$OSTAPDIR" )" >/dev/null && pwd )"
   OSTAPDIR="$(readlink "$OSTAPDIR")"
