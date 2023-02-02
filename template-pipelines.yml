@@ -33,10 +33,10 @@ jobs:
       docker cp  .  ostap-build:/osya
     displayName: 'docker container'
   - script: |
-     docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0  --security-opt seccomp=unconfined ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/build_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
+     docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0  --security-opt seccomp=unconfined ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./aux/build_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
     displayName: 'build stage'
   - script: |
-     docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0 --security-opt seccomp=unconfined ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/test_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
+     docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0 --security-opt seccomp=unconfined ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./aux/test_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
     displayName: 'test stage'
   - script: |
      docker cp  ostap-build:/osya/build .
