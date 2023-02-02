@@ -71,7 +71,7 @@ class ModelConfig(object):
 
         self.__pdf = pdf
         ## (3/4) set PDF and observables 
-        mc.SetPdf         ( pdf.pdf         )
+        mc.SetPdf         ( pdf.roo_pdf     ) ## note: we uise `roo_pdf` here
         mc.SetObservables ( pdf.observables )
 
         ## (5) set parameters of interest

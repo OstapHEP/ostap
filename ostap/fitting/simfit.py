@@ -326,7 +326,7 @@ class Sim1D(PDF1) :
         
         self.__sample     = sample 
         self.__categories = {}
-        
+
         # =====================================================================
         ## components
         # =====================================================================
@@ -649,6 +649,9 @@ class SimFit (VarMaker,ConfigReducer) :
         
         self.__sample       = sample 
 
+        ## observables 
+        self.__observables  = ROOT.RooArgSet()
+        
         # =====================================================================
         ## components
         # =====================================================================
@@ -671,13 +674,19 @@ class SimFit (VarMaker,ConfigReducer) :
             self.__categories [ label ] = cmp
             _xv = cmp.xvar
 
-            
         sim_pdf     = PDF1 ( self.name + '_Sim' , xvar = _xv )            
         sim_pdf.pdf = ROOT.RooSimultaneous (
             self.roo_name ( 'simfit_' ) ,
             title if title else "Simultaneous %s" % self.name , 
             self.sample )
         
+        ## get all observables  
+        for label in self.categories :
+            pdf = self.categories[ label ]
+            for v in pdf.observables :
+                if not v in self.__observables :
+                    self.__observables.add ( v )
+                    
         ## print ( 'CONFIG/BEFORE:', sim_pdf.config )
         ## cnf = sim_pdf.config
         ## del cnf['pdf']
@@ -777,6 +786,11 @@ class SimFit (VarMaker,ConfigReducer) :
         return self.__pdf.pdf 
         
     @property
+    def roo_pdf ( self ) :
+        """'roo_pdf' : get the underlying RooFit RooAbsPdf object (same as `simpdf` here)"""
+        return self.pdf.pdf 
+
+    @property
     def samples ( self ) :
         "'samples' : list/tuple of known categories"
         return tuple ( self.__categories.keys() ) 
@@ -786,6 +800,16 @@ class SimFit (VarMaker,ConfigReducer) :
         "'categories' : map { category : pdf } "
         return self.__categories
 
+    @property
+    def observables ( self ) :
+        """'observables' : get the observables (as `ROOT.RooArgSet`, same as `vars`)"""
+        return self.__observables
+    
+    @property
+    def vars        ( self ) :
+        """'vars' : get the observables (as `ROOT.RooArgSet`, same as `obsevables`)"""
+        return self.observables
+            
     @property
     def drawpdfs ( self ) :
         "'drawpdfs' dictionary with PDFs (manily for drawing)"

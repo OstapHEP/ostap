@@ -139,10 +139,15 @@ class APDF1 ( object ) :
         else : 
             assert value and isinstance ( value , ROOT.RooAbsPdf ) , "'pdf' is not ROOT.RooAbsPdf"
             self.fun = value
-        
+
+    @property
+    def roo_pdf ( self ) :
+        """'roo_pdf' : get the underlying RooFit `RooAbsPdf` object (same as `pdf` here)"""
+        return self.pdf
+
     @property
     def pdf_name ( self ) :
-        """'pdf_name' : get the name of the underlying RooAbsPdf (same as 'fun_name') """
+        """'pdf_name' : get the name of the underlying `RooAbsPdf` (same as 'fun_name') """
         return  self.fun_name 
 
     @property
