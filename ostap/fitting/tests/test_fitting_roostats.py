@@ -482,12 +482,13 @@ def test_scan_limit1 () :
             rows.append ( row ) 
                 
     with use_canvas ( 'test_scan_limit1: Brasil plot' , wait = 2 ) :
-        p = bplot.plot () 
-        p.draw('a')
+        
+        bplot.plot  .draw ( 'a' )
+        bplot.legend.draw (     )
 
         title = '90% Upper limits'
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )
-        logger.info ( '%s\n%s' % ( title , table ) )
+        logger.info ( '%s:\n%s' % ( title , table ) )
         
 
 # ============================================================================-
@@ -613,12 +614,12 @@ def test_scan_limit2 () :
             rows.append ( row ) 
                 
     with use_canvas ( 'test_scan_limit2: Brasil plot' , wait = 2 ) :
-        p = bplot.plot () 
-        p.draw('a')
+        bplot.plot  .draw ( 'a' )
+        bplot.legend.draw (     )
 
         title = '90% Upper limits'
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )
-        logger.info ( '%s\n%s' % ( title , table ) )
+        logger.info ( '%s:\n%s' % ( title , table ) )
         
 
 # =============================================================================
@@ -627,13 +628,14 @@ if '__main__' == __name__ :
     from ostap.core.core    import rooSilent
     with rooSilent ( ) : 
         
-        test_intervals    ()
+        ## test_intervals    ()
         
-        test_point_limit  () 
-        test_point_limit2 ()
+        ## test_point_limit  () 
+        ## test_point_limit2 ()
         
-        test_scan_limit1 () 
-        test_scan_limit2 () 
+        test_scan_limit1 ()
+        
+        ## test_scan_limit2 () 
         
 
 # =============================================================================

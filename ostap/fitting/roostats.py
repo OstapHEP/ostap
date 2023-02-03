@@ -1006,10 +1006,17 @@ class BrasilBand(object) :
         ss = set()
         for s in sigmas : ss.add (  1*s ) 
         for s in sigmas : ss.add ( -1*s ) 
+        if  ( not 0 in ss ) and ( not 0.0 in ss ) : ss.add ( 0 )
         
         self.__nsigmas = tuple ( sorted ( ss ) ) 
         self.__data    = {} 
 
+        assert 1 == len ( self.__nsigmas ) % 2 , 'Invalid number of nsigmas!'
+
+        self.__plot   = None
+        self.__legend = None
+        
+        
     # =========================================================================
     ## Add the point to the Brasil-plot
     def fill ( self , x , observed , hti_result ) : 
@@ -1017,18 +1024,34 @@ class BrasilBand(object) :
         """
         expected = tuple ( hti_result.GetExpectedUpperLimit ( s ) for s in self.__nsigmas )
         self.__data [ x ] = observed, expected
+        if self.__plot   : self.__plot   = None 
+        if self.__legend : self.__legend = None 
 
     ## ========================================================================
     #  Create the actual (multi)-graph
-    #  @see TMultGraph 
+    #  @see TMultGraph
+    #  @code 
+    #  bp = BrasilBand ( ... )
+    #  for ... :
+    #      bp.fill ( ... ) 
+    #  bp.plot.draw('a')
+    #  bp.legend.draw('a')
+    @property 
     def plot  ( self ) :
-        """Create the actual (multi)-graph
+        """'plot' : get the actual (multi)-graph
         -see `ROOT.TMultGraph` 
+        >>> bp = BrasilBand ( ... )
+        >>> for .... :
+        >>>    bp.fill ( ... ) 
+        >>> bp.plot.draw('a')
+        >>> bp.legend.draw('a')
         """
-        
+
+        if self.__plot and self.__legend : return self.__plot
+
         import ostap.histos.graphs
 
-        np = len ( self.__data ) 
+        np  = len ( self.__data ) 
         ## bands
         ns  = len ( self.__nsigmas )
         ngb = ns // 2
@@ -1041,11 +1064,10 @@ class BrasilBand(object) :
         gr_median   = ROOT.TGraph ( np ) 
         gr_bands    = [ ROOT.TGraphAsymmErrors ( np ) for i in range ( ngb ) ]
 
-        for i, entry  in  enumerate ( data ) :
+        for i , x in  enumerate ( sorted ( self.__data ) ) :
 
-            x , item            = entry
-            observed , expected = item
-            
+            observed , expected = self.__data [ x ] 
+
             median   = expected [ ngb ] 
             
             gr_observed [ i ] = x , observed
@@ -1070,7 +1092,9 @@ class BrasilBand(object) :
         if 5 <= ngb : gr_bands [ -5 ].color ( ROOT.kBlue    , marker = 1 )
         if 6 <= ngb : gr_bands [ -6 ].color ( ROOT.kOrange  , marker = 1 )
 
-        gr_median   .SetLineStyle ( 2 )
+        gr_median   .SetLineStyle ( 9 )
+        gr_median   .SetLineWidth ( 2 )
+        
         gr_observed .red          (   ) 
         
         ## create the final (multi) graph & populate it 
@@ -1082,10 +1106,45 @@ class BrasilBand(object) :
         result.Add ( gr_median   , 'L'  ) 
         result.Add ( gr_observed , 'LP' )
 
-        return result
-    
-                        
+        self.__plot = result 
+
+        ## re-create the legend 
+        legend = ROOT.TLegend ( 0.2 , 0.65 , 0.4 , 0.9 )
+        legend.SetFillColor  ( 0 )
+        legend.SetFillStyle  ( 0 )
+        legend.SetBorderSize ( 0 )
         
+        legend.AddEntry ( gr_observed , "observed", "lp" )
+        legend.AddEntry ( gr_median   , "expected", "l"  )
+
+        for g , ns in zip ( reversed ( gr_bands ) , self.__nsigmas[ngb+1:]  ) :
+            legend.AddEntry( g ,"expected #pm%s#sigma"% abs ( ns ) , "f")
+            
+        self.__legend = legend 
+
+        return self.__plot
+
+    # =========================================================================
+    ## get standard legend for the plot
+    #  @code 
+    #  bp = BrasilBand ( ... ) 
+    #  for .... :
+    #    bp.fill ( ... ) 
+    #  bp.plot.draw('a')
+    #  bp.legend.draw('a')
+    #  @endcode 
+    @property
+    def legend ( self )  :
+        """'legend' : get standarde legend for the plot
+        >>> bp = BrasilBand ( ... ) 
+        >>> for .... :
+        >>>    bp.fill ( ... ) 
+        >>> bp.plot.draw('a')
+        >>> bp.legend.draw('a')
+        """
+        if not self.__legend : plot = self.plot
+        return self.__legend
+    
 # =============================================================================
 if '__main__' == __name__ :
     
