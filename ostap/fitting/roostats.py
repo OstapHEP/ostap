@@ -44,11 +44,14 @@ from   ostap.core.meta_info   import root_info
 from   ostap.core.ostap_types import string_types, integer_types, sequence_types 
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
-import ROOT, abc 
+import ROOT, abc, sys  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roostats' )
 else                       : logger = getLogger ( __name__                 )
+# =============================================================================
+if (3,0) <= sys.version_info : from itertools import  zip_longest
+else                         : from itertools import izip_longest as zip_longest 
 # =============================================================================
 ## @class ModelConfig
 #  Helper class to create `RooStats::ModelConfig`
@@ -977,6 +980,11 @@ class HypoTestInverter(object) :
         if self.__plot     : self.__plot = None 
         
 # =============================================================================
+## default color for Brasil-plot bands
+band_colors = ( ROOT.kGreen , ROOT.kYellow  ,
+                ROOT.kCyan  , ROOT.kMagenta ,
+                ROOT.kBlue  , ROOT.kOrange  )
+# =============================================================================
 ## helper class to create and keep the 'Brasil-band' plot
 #  @code
 #  bp = BrasilBand( sigmas = (1,2,3) )  ## draw 1,2&3-sigma bands 
@@ -1001,7 +1009,7 @@ class BrasilBand(object) :
     >>> p = bp.plot()
     >>> p.draw('a')
     """
-    def __init__  ( self , sigmas = ( 0 , 1 , 2 ) ) :
+    def __init__  ( self , sigmas = ( 0 , 1 , 2 ) , colors = () ) :
 
         ss = set()
         for s in sigmas : ss.add (  1*s ) 
@@ -1013,9 +1021,21 @@ class BrasilBand(object) :
 
         assert 1 == len ( self.__nsigmas ) % 2 , 'Invalid number of nsigmas!'
 
+        self.__colors = [] 
+        for i , j in zip_longest ( colors , band_colors , fillvalue = None ) :
+            if   not i is None : self.__colors.append ( i )
+            elif not j is None : self.__colors.append ( j )
+
+        nb = len ( self.__nsigmas ) // 2
+        ic = 31 
+        while len ( self.__colors ) < nb :
+            self.__solors.append ( ic  ) 
+            ic += 1
+
+        self.__colors = tuple ( self.__colors )
+        
         self.__plot   = None
         self.__legend = None
-        
         
     # =========================================================================
     ## Add the point to the Brasil-plot
@@ -1084,13 +1104,8 @@ class BrasilBand(object) :
                 
                 g [ i ] = ( x , 0 , 0 ) , ( val, errl , errh )
 
-        
-        if 1 <= ngb : gr_bands [ -1 ].color ( ROOT.kGreen   , marker = 1 )
-        if 2 <= ngb : gr_bands [ -2 ].color ( ROOT.kYellow  , marker = 1 )
-        if 3 <= ngb : gr_bands [ -3 ].color ( ROOT.kCyan    , marker = 1 )
-        if 4 <= ngb : gr_bands [ -4 ].color ( ROOT.kMagenta , marker = 1 )
-        if 5 <= ngb : gr_bands [ -5 ].color ( ROOT.kBlue    , marker = 1 )
-        if 6 <= ngb : gr_bands [ -6 ].color ( ROOT.kOrange  , marker = 1 )
+
+        for g,c  in zip ( reversed ( gr_bands ) , self.__colors ) : g.color ( c )
 
         gr_median   .SetLineStyle ( 9 )
         gr_median   .SetLineWidth ( 2 )
