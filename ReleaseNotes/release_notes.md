@@ -17,7 +17,10 @@
   1. add `front`,`back` and `pop` methods 
   1. add Karlin-Shapley and Karlin-Studden parameterisation for histograms 
   1. remove some script from `scripts` subdirectory 
+  1. add more wrappers and utilites for `RooStats` (many thanks to Dmintry Golubkov for his examples and slides)
+  1. extend `test_fitting_roostats` to cover intervals, point limit, scans - including constraints, resolution and efficincies that depends on ovservables 
 
+ 
 ## Backward incompatible:  
 
 ## Bug fixes:

@@ -2,11 +2,26 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file  ostap/fitting/roostats.py
-#  Set of useful basic utilities to dela with RooStats 
+#  Set of useful basic utilities to dela with RooStats
+#
+# - confidence interval estimation
+# - confidence interval and limits
+# - hypothesis tests
+# - Brasilian  plots 
+#
+#  @thanks to Dmitry Golubkov for th egreat heap and examples 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2023-01-17
 # =============================================================================
-""" Set of useful basic utilities to dela with RooStats"""
+""" Set of useful basic utilities to deal with RooStats
+
+- confidence interval estimation
+- confidence interval and limits
+- hypothesis tests
+- Brasilian  plots 
+
+@thanks to Dmitry Golubkov for
+"""
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -19,11 +34,16 @@ __all__     = (
     'BayesianInterval'         , ## Bayesian           confidence interval or upper/lowee limir
     'MCMCInterval'             , ## MCMC               confidence interval or upper/lower limit 
     ##
+    'AsymptoticCalculator'     , ## AsymptoticCalculator for limits and intervals
+    'HypoTestInverter'         , ## 
+    ##
+    'BrasilBand'               , ## utility to porduce Brasil-band plots 
     )
 # =============================================================================
-from   ostap.core.meta_info    import root_info 
-from   ostap.core.ostap_types import string_types, integer_types
+from   ostap.core.meta_info   import root_info 
+from   ostap.core.ostap_types import string_types, integer_types, sequence_types 
 import ostap.fitting.roofit
+from   ostap.fitting.pdfbasic import APDF1
 import ROOT, abc 
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -42,6 +62,7 @@ class ModelConfig(object):
                     poi                       , ## parameter(s) of interest
                     dataset            = None , ## dataset  (optional)
                     workspace          = None , ## worspace (optional)
+                    observables        = ()   , ## observables 
                     global_observables = ()   , ## global observables
                     constraints        = ()   , ## contraints 
                     **kwargs                  ) : ## other arguments
@@ -63,65 +84,101 @@ class ModelConfig(object):
             wsname  = kw_args.pop ( 'ws_name'  , 'WS_%s'            % pdf.name )
             wstitle = kw_args.pop ( 'ws_title' , 'workspace for %s' % pdf.name )
             ws      = ROOT.RooWorkspace         ( wsname  , wstitle )
+        self.__ws   = ws
 
         ## (2) create ModelConfig        
-        mcname  = kw_args.pop ( 'mc_name'  , 'MC_%s'               % pdf.name )
-        mctitle = kw_args.pop ( 'mc_title' , 'model-config for %s' % pdf.name )
-        mc      = ROOT.RooStats.ModelConfig ( mcname , mctitle , ws )
+        mcname    = kw_args.pop ( 'name'  , 'MC_%s'               % pdf.name )
+        mctitle   = kw_args.pop ( 'title' , 'model-config for %s' % pdf.name )
+        mc        = ROOT.RooStats.ModelConfig ( mcname , mctitle , ws )
+        self.__mc = mc
+
 
         self.__pdf = pdf
-        ## (3/4) set PDF and observables 
-        mc.SetPdf         ( pdf.roo_pdf     ) ## note: we uise `roo_pdf` here
-        mc.SetObservables ( pdf.observables )
+        
+        if   isinstance ( pdf , APDF1          ) :
+            self.__raw_pdf = pdf.pdf 
+        elif isinstance ( pdf , ROOT.RooAbsPdf ) and observables :
+            self.__raw_pdf = pdf
+        else :
+            raise TypeError ( "Inavlid seting of pdf/observables!" ) 
 
+        ## final pdf? (not yet...) 
+        self.__final_pdf = self.__raw_pdf
+
+        ## (0) We need to start from constraints and modify our PDF on-fly 
+        if constraints :
+            if isinstance ( constraints , ROOT.RooAbsReal ) :
+                constraints = [ constraints ]
+            assert all ( [ isinstance ( c , ROOT.RooAbsPdf ) for c in constraints ] ) , \
+                   'Invalid constraints: %s' % str ( constraints ) 
+            cnts = ROOT.RooArgSet()
+            for c in constraints : cnts.add ( c )
+
+            clst = ROOT.RooArgList ()
+            clst.add ( self.__raw_pdf )
+            for c in cnts : clst.add ( c )
+            self.__final_pdf = ROOT.RooProdPdf ( '%s_constrained' % pdf.name ,
+                                                 "PDF with %d constraints" % len ( cnts ) , clst )
+            self.__cs   = constraints, cnts, clst
+
+            ## attention, redefine/update 
+            constraints = cnts
+            
+        ## propagate PDF to ModelConfig/Workspace 
+        if isinstance   ( pdf , ROOT.RooAbsPdf ) and observables :
+            ## (3) set PDF  
+            mc.SetPdf         ( self.__final_pdf ) ## note: we use bare RooAbsPdf here 
+        elif isinstance ( pdf , APDF1 ) :  
+            ## (3/4) set PDF and observables 
+            mc.SetPdf         ( self.__final_pdf ) ## note: we use bare RooAbsPdf here 
+            mc.SetObservables ( pdf.observables  )
+            
+        ## (4) observables
+        if observables :
+            if isinstance ( observables , ROOT.RooAbsReal ) :
+                observables = [ observables ]                
+            pars = [ self.pdf_param ( v , dataset ) for v in observables ]
+            obs  = ROOT.RooArgSet   () 
+            for p in pars : obs.add ( p    ) 
+            mc.SetObservables  ( obs )
+            self.__ob = observables, obs 
+
+        ## get them back from workspace 
+        observables = self.observables
+        
         ## (5) set parameters of interest
         pars = [ pdf.parameter ( p , dataset ) for p in params ]
         pois = ROOT.RooArgSet ()
         for p in pars : pois.add   ( p    )
         mc.SetParametersOfInterest ( pois )
-        pdf.aux_keep.append        ( pois )
         self.__ps = params , pars, pois
         
         ## (6) Nuisance parameters
-        pars = [ v for v in pdf.params ( dataset ) if not v in pdf.vars and not v in pois ]
+        pars = [ v for v in self.pdf_params ( dataset ) if  not v in observables and not v in pois ]
         nuis = ROOT.RooArgSet    ()
         for p in pars : nuis.add ( p    ) 
         mc.SetNuisanceParameters ( nuis )
-        pdf.aux_keep.append      ( nuis )
         self.__ns = pars, nuis 
 
         ## (7) global observables
         if global_observables :
             if isinstance ( global_observables , ROOT.RooAbsReal ) :
                 global_observables = [ global_observables ]                
-            pars = [ pdf.parameter  ( v , dataset ) for v in global_observables ]
+            pars = [ self.pdf_param  ( v , dataset ) for v in global_observables ]
             gobs = ROOT.RooArgSet   () 
             for p in pars : gobs.add ( p    ) 
             mc.SetGlobalObservables  ( gobs )
-            pdf.aux_keep.append      ( gobs )
             self.__go = global_observables, gobs 
             
         ## (8) constraints
         if constraints :
-            if isinstance ( constrainst , ROOT.RooAbsReal ) :
-                constraints = [ constraints ]
-            assert all ( [ isinstance ( c , ROOT.RooAbsPdf ) for c in constraints ] ) , \
-                   'Invalid consraints: %s' % constraints
-            cnts = ROOT.RooArgSet()
-            for c in constraints : cnts.add ( c )
-            mc.SetConstraintParameters  ( cnts )
-            pdf.aux_keep.append         ( cnts )
-            self.__cs = constraints, cnts 
+            mc.SetConstraintParameters  ( constraints )
             
         ## (9) define the default dataset 
         self.__dataset = dataset 
 
         if kw_args :
             logger.warning ( 'create ModelConfig: Ignore keyword arguments: %s' % [ k for k in kw_args ] )
-
-        self.__ws   = ws
-        self.__mc   = mc
-
 
         
     @property
@@ -146,6 +203,13 @@ class ModelConfig(object):
         return self.__dataset
     
     @property
+    def observables ( self ) :
+        """'observables' : Global observables from ModelConfig
+        - see `ROOT.RooStats.ModelConfig.GetObservables`
+        """
+        pars = self.mc.GetObservables()
+        return pars if pars and 0 < len ( pars ) else () 
+    @property
     def poi ( self ) :
         """'poi' : parameter(s) of interest from ModelConfig
         - see `ROOT.RooStats.ModelConfig.GetParametersOfInterest`
@@ -162,9 +226,9 @@ class ModelConfig(object):
     @property
     def global_observables ( self ) :
         """'global_observables' : Global observables from ModelConfig
-        - see `ROOT.RooStats.ModelConfig.GetNuisanceParameters`
+        - see `ROOT.RooStats.ModelConfig.GetGlobalObservables`
         """
-        pars = self.mc.GetGobalObservables()
+        pars = self.mc.GetGlobalObservables()
         return pars if pars and 0 < len ( pars ) else () 
     @property
     def constraints  ( self ) :
@@ -173,6 +237,75 @@ class ModelConfig(object):
         """
         pars = self.mc.GetConstraintParameters()
         return pars if pars and 0 < len ( pars ) else () 
+
+    @property
+    def snapshot ( self ) :
+        """'snapshot' : get/set snapshot fomr the model/workspacee
+        - see `ROOT.RooStats.ModelConfig.GetSnapshot`
+        - see `ROOT.RooStats.ModelConfig.SetSnapshot`
+        """
+        pars = self.mc.GetSnapshot()
+        return pars if pars and 0 < len ( pars ) else ()
+    @snapshot.setter
+    def snapshot ( self , values ) :
+        
+        if   isinstance ( values , ROOT.RooArgSet  ) : return self.mc.SetSnapshot (  values ) 
+        elif isinstance ( values , ROOT.RooAbsReal ) : return self.mc.SetSnapshot ( ROOT.RooArgSet ( values ) )
+        elif isinstance ( values , sequence_types  ) :
+
+            vv = [ v for v in values ]
+            if  all ( isinstance ( v , ROOT.RooAbsReal ) for v in vv ) :
+                vs = ROOT.RooArgSet()
+                for v in values : vs.add ( vs )
+                return self.mc.SetSnapshot ( vs )
+
+        raise TypeError ( 'Invalid type for snapshot %s' % type ( values )  ) 
+
+    # =========================================================================
+    ## helper function to get parameters from PDF 
+    def pdf_params ( self , dataset = None ) :
+        """helepr function to get the parameters from PDF"""
+        pdf = self.__final_pdf
+        return pdf.getParameters ( 0 ) if dataset is None else  pdf.getParameters ( dataset )
+        
+    # =========================================================================
+    ## helper function to get parameters from PDF 
+    def pdf_param  ( self , param , dataset = None ) :
+        """helepr function to get the parameters from PDF"""
+        params = self.pdf_params ( dataset )
+        ## already parameter 
+        if isinstance ( param , ROOT.RooAbsReal ) and param in params : return param
+        ## loop by name 
+        if isinstance ( param , string_types    ) :
+            for p in params :
+                if p.name == param       : return p
+        elif isinstance ( param , ROOT.RooAbsReal ) :
+            for p in params :
+                if p.name == param.name  : return p
+        ## try with workspace
+        vv = self.var ( param )
+        if vv : return vv
+        raise KeyError ( "No parameter %s/%s defined" % ( param , type ( param ) ) )
+    
+    # =========================================================================
+    ## get a variable from workspace
+    #  @code
+    #  mc = ...
+    #  v1 = mc.var ( 'mass' ) ## get by name
+    # 
+    #  var = 
+    #  v1 = mc.var ( 'var   ) ## get by var     
+    #  @endcode
+    def var ( self , variable ) :
+        """Get a variable from workspace
+        >>> mc = ...
+        >>>> v1 = mc.var ( 'mass' ) ## get by name
+        >>> var = 
+        >>> v1 = mc.var ( 'var   ) ## get by var     
+        """
+        if isinstance ( variable , ROOT.RooAbsReal ) :
+            return self.var ( variable.name )
+        return self.ws.var ( variable ) 
 
 # ================================================================================
 ## Helper (abstract) base class for the confidence intervals and limits 
@@ -506,8 +639,6 @@ class BayesianInterval(CLInterval) :
         np = len ( self.poi )
         assert 1 == np , 'Bayesing interval works only for 1 poi!'
 
-        from   ostap.fitting.pdfbasic import APDF1
-        
         assert prior is None or \
                isinstance ( prior , APDF1          ) or \
                isinstance ( prior , ROOT.RooAbsPdf ) ,  \
@@ -656,11 +787,310 @@ class MCMCInterval(CLInterval) :
     
 
 # =============================================================================
+## Calculators
+# =============================================================================
+## @class Calculator
+#  base class for Calcualtors 
+class Calculator (object) :
+    """base class for Calculators 
+    - see `ROOT.RooStats.AsymptoticCalculator`
+    """
+    def __init__ ( self             ,
+                   H1               ,   ## H1 model, e.g. background only
+                   H0               ,   ## H0 model, e.g. signal+background
+                   dataset          ) : ## dataset 
+        
+        assert isinstance ( H1 , ( ROOT.RooStats.ModelConfig , ModelConfig ) ) , \
+               'Invalid type for H1!'
+        assert isinstance ( H0 , ( ROOT.RooStats.ModelConfig , ModelConfig ) ) , \
+               'Invalid type for H0!'
+
+        self.__H1      = H1
+        self.__H0      = H0
+        self.__dataset = dataset 
+
+    @property
+    def H0 ( self ) :
+        """'H0' - H0-model"""
+        return self.__H0 
+    @property
+    def H1 ( self ) :
+        """'H1' - H1-model"""
+        return self.__H1 
+    @property
+    def h0 ( self ) :
+        """'h0' : H1-model as `ROOT.RooStats.ModelConfig`"""
+        return self.H0 if isinstance ( self.H0 , ROOT.RooStats.ModelConfig ) else self.H0.mc
+    @property
+    def h1 ( self ) :
+        """'h1' : H1-model as `ROOT.RooStats.ModelConfig`"""
+        return self.H1 if isinstance ( self.H1 , ROOT.RooStats.ModelConfig ) else self.H1.mc
+    @property
+    def dataset ( self ) :
+        """'dataset' : dataste used for calculations"""
+        return self.__dataset
+    
+# =============================================================================
+## @class AsymptoticCalculator
+#  @see RooStats::AsymptoticCalculator
+class AsymptoticCalculator (Calculator) :
+    """Asymptotoc calcualator
+    - see `ROOT.RooStats.AsymptoticCalculator`
+    """
+    
+    def __init__ ( self             ,
+                   H1               ,   ## H1 model, e.g. background only
+                   H0               ,   ## H0 model, e.g. signal+background
+                   dataset          ,   ## dataset 
+                   one_sided = True ) : 
+        
+        Calculator.__init__ ( self , H1 , H0 , dataset )
+        self.__calculator = ROOT.RooStats.AsymptoticCalculator ( dataset , self.h1 , self.h0 ) 
+        self.__calculator.SetOneSided ( one_sided )
+        
+    @property
+    def calculator ( self ) :
+        """'calculator' : actual RooStats calculator"""
+        return self.__calculator
+
+# =============================================================================
+# @class HypoTestInverter
+# @see RooStats::HypoTestInverter
+class HypoTestInverter(object) :
+    """Hypo test inverter 
+    -see `ROOT.RooStats.HypoTestInverter`
+    """
+    
+    def __init__ ( self            ,
+                   calculator      ,
+                   level           ,
+                   use_CLs         ,
+                   verbose = False ) :
+        
+        self.__calculator = calculator
+        self.__inverter   = ROOT.RooStats.HypoTestInverter ( self.calc )
+        
+        self.__inverter.SetConfidenceLevel   ( level )
+        
+        if use_CLs :  self.__inverter.UseCLs ( True )
+        self.__inverter.SetVerbose ( verbose )
+        self.__interval = None 
+        self.__plot     = None 
+        
+    @property
+    def calculator ( self ) :
+        """'calculator' : calcualtor"""
+        return self.__calculator
+    
+    @property
+    def calc ( self ) :
+        """'calc' : calculator as RooStats object"""
+        c = self.__calculator 
+        return  c if not isinstance ( c , Calculator ) else c.calculator 
+
+    # =========================================================================
+    ## define (or perform the actual scan)
+    #  @code
+    #  hti = ...
+    #  hti.scan ( 100 , 0.0 , 10.0 )   ## define scan with 100 point between 0 and 10
+    #  hti.scan ()                     ## define auto scan 
+    #  hti.scan (  [ 0, 1, 2, 3, 4 ] ) ## define custom scane    
+    #  @endcode
+    def scan ( self , *values ) :
+        """Define (or perform the actual scan)
+        >>> hti = ...
+        >>> hti.scan ( 100 , 0.0 , 10.0 )   ## define scan with 100 point between 0 and 10
+        >>> hti.scan ()                     ## define auto scan 
+        >>> hti.scan (  [ 0, 1, 2, 3, 4 ] ) ## define custom scane    
+        """
+        
+        if    not values :
+            self.__inverter.SetAutoScan  ()
+            if self.__interval : self.__interval = None
+            if self.__plot     : self.__plot = None 
+        elif  3 == len ( values ) and isinstance ( values [ 0 ] , integer_types ) and 2 <= values [ 0 ] :
+            self.__inverter.SetFixedScan ( *values )
+            if self.__interval : self.__interval = None 
+            if self.__plot     : self.__plot = None 
+        elif  1 == len ( values ) and isinstance ( values [ 0 ] , sequence_types  ) :
+            for v in values [ 0 ] : self.__inverter.RunOnePoint ( v )
+        else :
+            for v in values : self.__inverter.RunOnePoint ( v )
+            
+    @property
+    def inverter ( self ) :
+        """'inverter' : actual `HypoTestInverter` object from `RooStats`"""
+        return self.__inverter
+    
+    @property
+    def interval ( self ) :
+        """'interval' : get the confidence iterval"""
+        if not self.__interval : self.__interval =  self.__inverter.GetInterval()
+        return self.__interval
+    
+    @property 
+    def limits ( self ) :
+        """'limits' : get the upper and lower limit"""
+        ii = self.interval
+        return ii.UpperLimit() , ii.UpperLimit() 
+
+    @property 
+    def upper_limit ( self ) :
+        """'upper_limit' : get the upper limit"""
+        ii = self.interval
+        return ii.UpperLimit() 
+
+    @property 
+    def lower_limit ( self ) :
+        """'lower_limit' : get the upper limit"""
+        ii = self.interval
+        return ii.LowerLimit() 
+
+    @property
+    def plot ( self ) :
+        """'plot' : prepare the plot
+        
+        >>> hti  = HypoTestInverter( ... )
+        >>> plot = hti.plot
+        >>> plot.Draw('CLb 2CL')
+        
+        Possible options:
+        
+        - SAME : draw in the current axis
+        - OBS  : draw only the observed plot
+        - EXP  : draw only the expected plot
+        - CLB  : draw also the CLB
+        - 2CL  : draw both clsplusb and cls
+        
+        default draw observed + expected with 1 and 2 sigma bands
+        """
+        if not self.__plot :
+            self.__plot = ROOT.RooStats.HypoTestInverterPlot('','', self.interval  )
+        return self.__plot 
+    
+    # ========================================================================= 
+    ## Reset/clear current interval & plot
+    def reset  ( self ) :
+        """Reset/clear current interval & plot
+        """
+        if self.__interval : self.__interval = None
+        if self.__plot     : self.__plot = None 
+        
+# =============================================================================
+## helper class to create and keep the 'Brasil-band' plot
+#  @code
+#  bp = BrasilBand( sigmas = (1,2,3) )  ## draw 1,2&3-sigma bands 
+#  for value  in [ ... ] :
+#       ...
+#       hti      = HypoTestInverter ( ... )
+#       interval = hti.interval
+#       ul       = hti.upper_limit
+#       bp.fill ( value , limit ,  interval )
+#  p = bp.plot()
+#  p.draw('a')
+#  @endcode 
+class BrasilBand(object) :
+    """Helper class to create and keep the 'Brasil-band' plot
+    >>> bp = BrasilBand( sigmas = (1,2,3) )  ## draw 1,2&3-sigma bands 
+    >>> for value  in [ ... ] :
+    >>>     ...
+    >>>     hti      = HypoTestInverter ( ... )
+    >>      interval = hti.interval
+    >>>     limit    = hti.upper_limit
+    >>>     bp.fill ( value , limit ,  interval )
+    >>> p = bp.plot()
+    >>> p.draw('a')
+    """
+    def __init__  ( self , sigmas = ( 0 , 1 , 2 ) ) :
+
+        ss = set()
+        for s in sigmas : ss.add (  1*s ) 
+        for s in sigmas : ss.add ( -1*s ) 
+        
+        self.__nsigmas = tuple ( sorted ( ss ) ) 
+        self.__data    = {} 
+
+    # =========================================================================
+    ## Add the point to the Brasil-plot
+    def fill ( self , x , observed , hti_result ) : 
+        """Add the point to the Brasil-plot
+        """
+        expected = tuple ( hti_result.GetExpectedUpperLimit ( s ) for s in self.__nsigmas )
+        self.__data [ x ] = observed, expected
+
+    ## ========================================================================
+    #  Create the actual (multi)-graph
+    #  @see TMultGraph 
+    def plot  ( self ) :
+        """Create the actual (multi)-graph
+        -see `ROOT.TMultGraph` 
+        """
+        
+        import ostap.histos.graphs
+
+        np = len ( self.__data ) 
+        ## bands
+        ns  = len ( self.__nsigmas )
+        ngb = ns // 2
+
+        ## get sorted data 
+        data = sorted ( self.__data.items() )
+        
+        ## create "band-graphs"
+        gr_observed = ROOT.TGraph ( np )
+        gr_median   = ROOT.TGraph ( np ) 
+        gr_bands    = [ ROOT.TGraphAsymmErrors ( np ) for i in range ( ngb ) ]
+
+        for i, entry  in  enumerate ( data ) :
+
+            x , item            = entry
+            observed , expected = item
+            
+            median   = expected [ ngb ] 
+            
+            gr_observed [ i ] = x , observed
+            gr_median   [ i ] = x , median  
+
+            for j , g in enumerate ( gr_bands ) :
+
+                el   = expected [          j ]
+                eh   = expected [ ns - 1 - j ]
+                val  = median if el < median < eh else 0.5 * ( eh + el )
+
+                errl = el - val
+                errh = eh - val 
+                
+                g [ i ] = ( x , 0 , 0 ) , ( val, errl , errh )
+
+        
+        if 1 <= ngb : gr_bands [ -1 ].color ( ROOT.kGreen   , marker = 1 )
+        if 2 <= ngb : gr_bands [ -2 ].color ( ROOT.kYellow  , marker = 1 )
+        if 3 <= ngb : gr_bands [ -3 ].color ( ROOT.kCyan    , marker = 1 )
+        if 4 <= ngb : gr_bands [ -4 ].color ( ROOT.kMagenta , marker = 1 )
+        if 5 <= ngb : gr_bands [ -5 ].color ( ROOT.kBlue    , marker = 1 )
+        if 6 <= ngb : gr_bands [ -6 ].color ( ROOT.kOrange  , marker = 1 )
+
+        gr_median   .SetLineStyle ( 2 )
+        gr_observed .red          (   ) 
+        
+        ## create the final (multi) graph & populate it 
+        result = ROOT.TMultiGraph()
+        for g in gr_bands :
+            g.SetFillStyle ( 1001 ) 
+            result.Add ( g , '3' ) 
+            
+        result.Add ( gr_median   , 'L'  ) 
+        result.Add ( gr_observed , 'LP' )
+
+        return result
+    
+                        
+        
+# =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
 
     assert issubclass ( ProfileLikelihoodInterval , CLInterval ) , \
            'ProfileLikelihoodInterval is not subsclas of CLInterval'

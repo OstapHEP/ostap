@@ -1741,6 +1741,7 @@ def _color_ ( self , color = 2 , marker = 20 , size = -1 ) :
     """
     #
     if hasattr ( self , 'SetLineColor'   ) : self.SetLineColor   ( color  )
+    if hasattr ( self , 'SetFillColor'   ) : self.SetFillColor   ( color  )
     if hasattr ( self , 'SetMarkerColor' ) : self.SetMarkerColor ( color  )
     if hasattr ( self , 'SetMarkerStyle' ) : self.SetMarkerStyle ( marker )
     ##

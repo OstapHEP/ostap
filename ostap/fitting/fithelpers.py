@@ -1762,7 +1762,7 @@ class FitHelper(VarMaker) :
     #  sigma      = ...
     #  constraint = pdf.soft_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
     #  @endcode 
-    def soft_constraint ( self , var , value , name = '' , title = '' ) :
+    def soft_constraint ( self , var , value , name = '' , title = '' , error = None ) :
         """Prepare 'soft' Gaussian constraint for the variable
         -  consraint is prepared but not applied!
         >>> sigma      = ...
@@ -1770,18 +1770,24 @@ class FitHelper(VarMaker) :
         """
         
         assert isinstance ( var   , ROOT.RooAbsReal ) ,\
-               "Invalid 'v': %s/%s"  % ( var , type ( var ) )               
-        assert isinstance ( value , VE ),\
-               "Invalid 'value': %s/%s"  % ( value , type ( value ) )
+               "Invalid 'v': %s/%s"  % ( var , type ( var ) )
 
-        assert 0 < value.cov2() , 'Invalid error for %s' % value
+        if isinstance ( value , VE ) and 0 < value.cov2() and error is None : 
+            error = value.error ()
+            value = value.value ()
+
+        assert isinstance ( value , ROOT.RooAbsReal ) or   isinstance ( value , num_types ) , \
+               "Invalid 'value': %s/%s"  % ( value , type ( value ) )
+               
+        assert isinstance ( error , ROOT.RooAbsReal ) or ( isinstance ( error , num_types ) and 0 < error ) , \
+               "Invalid 'error': %s/%s"  % ( error , type ( error ) )
         
         name  = name  if name  else 'Gauss_%s_%s'                      % ( var.GetName() , self.name ) 
         title = title if title else 'Gaussian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
         
-        # value & error as RooFit objects: 
-        val = ROOT.RooFit.RooConst ( value.value () )
-        err = ROOT.RooFit.RooConst ( value.error () )
+        # value & error as RooFit objects:
+        val = value if isinstance ( value , ROOT.RooAbsReal ) else ROOT.RooFit.RooConst ( value )
+        err = error if isinstance ( error , ROOT.RooAbsReal ) else ROOT.RooFit.RooConst ( error )
         
         # Gaussian constrains 
         gauss = ROOT.RooGaussian ( self.var_name ( name ) , title , var , val , err )
