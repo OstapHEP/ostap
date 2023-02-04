@@ -277,8 +277,8 @@ namespace Ostap
     }; // 
     // ========================================================================
     /** @class Constant 
-     *  simple extension for the constant varibale 
-     *  - add (fuictive) dependencies
+     *  simple extension for the constant variable 
+     *  - add (fictive) dependencies
      *  @see RooConstVar 
      */
     class Constant : public RooAbsReal
@@ -648,6 +648,77 @@ namespace Ostap
       std::function<double(double,double)> m_fun2 {} ; // the function 
       // =====================================================================      
     } ;
+    // ========================================================================
+    /** @class NVars
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2020-03-17
+     */ 
+    class NVars : public RooAbsReal 
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::NVars , 1 ) ;  
+      // ========================================================================
+    public:
+      // ========================================================================
+      /// constructor with variable
+      NVars
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        a1    ,
+        RooAbsReal&        a2    ) ;
+      /// constructor with variables
+      NVars
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        a1    ,
+        RooAbsReal&        a2    ,
+        RooAbsReal&        a3    ) ;
+      /// constructor with variables
+      NVars
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        a1    ,
+        RooAbsReal&        a2    ,
+        RooAbsReal&        a3    , 
+        RooAbsReal&        a4    ) ;
+      /// constructor with variables
+      NVars
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        a1    ,
+        RooAbsReal&        a2    ,
+        RooAbsReal&        a3    , 
+        RooAbsReal&        a4    ,
+        RooAbsReal&        a5    ) ;
+      /// constructor with variables
+      NVars
+      ( const std::string& name  , 
+        const std::string& title , 
+        const RooArgList&  lst   ) ;
+      /// constructor with variables
+      NVars
+      ( const std::string& name  , 
+        const std::string& title , 
+        const RooArgSet&   lst   ) ;
+      /// copy 
+      NVars
+      ( const NVars& right       , 
+        const char*  newname = 0 ) ;
+      /// destructor 
+      virtual ~NVars () ;
+      /// fake default constructor (needed for serisalization)
+      NVars () = default ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooArgList& vars () const { return m_vars ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      /// variables
+      RooListProxy m_vars {} ;
+      // ======================================================================
+    }; //
     // ========================================================================
     /** @class Division
      *  Evaluate \f$ \frac{a}{b}\f$
@@ -2627,7 +2698,7 @@ namespace Ostap
     }; //
     // ========================================================================    
     /** @class AddDeps
-     *  helper class to add a fictive dependency of one varibale on others 
+     *  helper class to add a fictive dependency of one variable on others 
      */
     class AddDeps final : public OneVar 
     {
@@ -2664,8 +2735,9 @@ namespace Ostap
 #if ROOT_VERSION(6,24,0)<=ROOT_VERSION_CODE
       // ======================================================================
       RooSpan<const double>
-      getValues ( RooBatchCompute::RunContext& evalData , 
-                  const RooArgSet*             aset     ) const override 
+      getValues 
+        ( RooBatchCompute::RunContext& evalData , 
+          const RooArgSet*             aset     ) const override 
       {  return m_x.arg ().getValues ( evalData , aset ) ; }
       // ======================================================================
 #endif 
@@ -2682,6 +2754,142 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================    
+    /** @class Minimal 
+     *  Trivial function that gets a minimum from several component 
+     */
+    class Minimal final : public NVars 
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Minimal , 1 ) ;  
+      // ========================================================================
+    public:
+      // =======================================================================
+      /// constructor with two variables 
+      Minimal
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        v1    , 
+          RooAbsReal&        v2    ) ;
+      /// constructor with three variables 
+      Minimal
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        v1    ,
+          RooAbsReal&        v2    ,
+          RooAbsReal&        v3    ) ;
+      /// constructor with four variables 
+      Minimal
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        v1    , 
+          RooAbsReal&        v2    ,
+          RooAbsReal&        v3    ,
+          RooAbsReal&        v4    ) ;
+      /// constructor with five variables 
+      Minimal
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        v1    , 
+          RooAbsReal&        v2    ,
+          RooAbsReal&        v3    ,
+          RooAbsReal&        v4    , 
+          RooAbsReal&        v5    ) ;
+      /// constructor with list of variables 
+      Minimal
+        ( const std::string& name  , 
+          const std::string& title , 
+          const RooArgList&  lst   ) ;
+      /// constructor with list of variables 
+      Minimal
+        ( const std::string& name  , 
+          const std::string& title , 
+          const RooArgSet&   lst   ) ;
+      /// copy 
+      Minimal
+        ( const Minimal&     right       , 
+          const char*        newname = 0 ) ;
+      /// clone 
+      Minimal* clone ( const char* newname ) const override ;
+      /// fake default constructor (needed for serisalization)
+      Minimal () = default ;
+      // virtual destructor 
+      virtual ~Minimal () ;
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ; 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Maximal
+     *  Trivial function that gets a maximum from several component 
+     */
+    class Maximal final : public NVars 
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Maximal , 1 ) ;  
+      // ========================================================================
+    public:
+      // =======================================================================
+      /// constructor with two variables 
+      Maximal
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        v1    , 
+          RooAbsReal&        v2    ) ;
+      /// constructor with three variables 
+      Maximal
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        v1    ,
+          RooAbsReal&        v2    ,
+          RooAbsReal&        v3    ) ;
+      /// constructor with four variables 
+      Maximal
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        v1    , 
+          RooAbsReal&        v2    ,
+          RooAbsReal&        v3    ,
+          RooAbsReal&        v4    ) ;
+      /// constructor with five variables 
+      Maximal
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        v1    , 
+          RooAbsReal&        v2    ,
+          RooAbsReal&        v3    ,
+          RooAbsReal&        v4    , 
+          RooAbsReal&        v5    ) ;
+      /// constructor with list of variables 
+      Maximal
+        ( const std::string& name  , 
+          const std::string& title , 
+          const RooArgList&  lst   ) ;
+      /// constructor with list of variables 
+      Maximal
+        ( const std::string& name  , 
+          const std::string& title , 
+          const RooArgSet&   lst   ) ;
+      /// copy 
+      Maximal
+        ( const Maximal&     right       , 
+          const char*        newname = 0 ) ;
+      /// clone 
+      Maximal* clone ( const char* newname ) const override ;
+      /// fake default constructor (needed for serisalization)
+      Maximal () = default ;
+      // virtual destructor 
+      virtual ~Maximal () ;
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ; 
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class ProductPdf
      *  Oversimplified product of two PDF
      *  - It is useful to bypass some "features" of RooFit

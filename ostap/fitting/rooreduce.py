@@ -866,10 +866,10 @@ def _radd1_reduce ( var ) :
     return root_store_factory , content 
 
 # ===================================================================
-## Reduce <code>Ostap::MoreRooFit::Addition3</code> objects
+## Reduce <code>Ostap::MoreRooFit::Addition2</code> objects
 #  @see Ostap::MoreRooFit.Addition3
 def _radd2_reduce ( var ) :
-    """Reduce `Ostap.MoreRooFit.Addition` objects
+    """Reduce `Ostap.MoreRooFit.Addition2` objects
     - see Ostap.MoreRooFit.Addition2
     """
     content = type ( var ) , var.name , var.title , var.x () , var.y () , var.c1 () , var.c2 () 
@@ -911,6 +911,24 @@ Ostap.MoreRooFit.ProductPdf  .__reduce__  = _r2v_reduce
 
 Ostap.MoreRooFit.Id          .__reduce__  = _rid_reduce
 Ostap.MoreRooFit.AddDeps     .__reduce__  = _radddep_reduce
+
+
+# =============================================================================
+## reduce <code>Ostap::MoreRooFit::Minimal/Maximal<code> objects
+#  @see Ostap.MoreRooFit::Minimal
+#  @see Ostap.MoreRooFit::Maximal
+def _romrfm_reduce ( var ) :
+    """Reduce `Ostap.MoreRooFit.Minimal/Maximal` object
+    - see `Ostap.MoreRooFit.Minimal`
+    - see `Ostap.MoreRooFit.Maximal`
+    """
+    return root_store_factory , ( type ( var ) ,
+                                  var.name     ,
+                                  var.title    ,
+                                  var.vars ()  )
+
+Ostap.MoreRooFit.Minimal .__reduce__  = _romrfm_reduce
+Ostap.MoreRooFit.Maximal .__reduce__  = _romrfm_reduce
 
 # ===================================================================
 ## Reduce <code>Ostap::MoreRooFit::Combination</code> objects

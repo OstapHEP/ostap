@@ -34,7 +34,8 @@ __all__     = (
     'BayesianInterval'         , ## Bayesian           confidence interval or upper/lowee limir
     'MCMCInterval'             , ## MCMC               confidence interval or upper/lower limit 
     ##
-    'AsymptoticCalculator'     , ## AsymptoticCalculator for limits and intervals
+    'AsymptoticCalculator'     , ## AsymptoticCalculator   for limits and intervals
+    'FrequentistCalculator'    , ## Frequentist calcualtor for limits and nitervals 
     'HypoTestInverter'         , ## 
     ##
     'BrasilBand'               , ## utility to porduce Brasil-band plots 
@@ -534,7 +535,7 @@ class FeldmanCousinsInterval(CLInterval) :
         ds = dataset if dataset else self.dataset 
         assert ds ,           'Invalid dataset!'
 
-        fc = ROOT.RooStats.FeldmanCousins( ds , self.mc )
+        fc = ROOT.RooStats.FeldmanCousins ( ds , self.mc )
         fc.SetConfidenceLevel      ( level          )
         fc.FluctuateNumDataEntries ( self.fluctuate ) 
         fc.UseAdaptiveSampling     ( self.adaptive  )
@@ -742,7 +743,8 @@ class MCMCInterval(CLInterval) :
         self.__burnsteps    = burnsteps
         self.__iterations   = iterations
         self.__leftfraction = leftfraction
-        
+
+    # =========================================================================
     ## create the interval 
     def make_interval ( self , level , dataset = None ) :
         """Create the interval"""
@@ -788,16 +790,17 @@ class MCMCInterval(CLInterval) :
         if self.the_interval :
             return ROOT.RooStats.MCMCIntervalPlot( self.the_interval )
     
-
 # =============================================================================
 ## Calculators
 # =============================================================================
 ## @class Calculator
-#  base class for Calcualtors 
+#  base class for Calculators 
 class Calculator (object) :
     """base class for Calculators 
     - see `ROOT.RooStats.AsymptoticCalculator`
     """
+    __metaclass__ = abc.ABCMeta
+    
     def __init__ ( self             ,
                    H1               ,   ## H1 model, e.g. background only
                    H0               ,   ## H0 model, e.g. signal+background
@@ -808,10 +811,23 @@ class Calculator (object) :
         assert isinstance ( H0 , ( ROOT.RooStats.ModelConfig , ModelConfig ) ) , \
                'Invalid type for H0!'
 
-        self.__H1      = H1
-        self.__H0      = H0
-        self.__dataset = dataset 
+        self.__H1         = H1
+        self.__H0         = H0
+        self.__dataset    = dataset 
+        self.__calculator = None
+        
+    ## abstract method to create (and configire) calculator
+    @abc.abstractmethod 
+    def make_calculator ( self ) :
+        """Abstract method to create the calculator"""
+        pass
 
+    @property
+    def calculator ( self ) :
+        """'calculator' : actual RooStats calculator"""
+        if not self.__calculator : self.__calculator = self.make_calculator()
+        return self.__calculator
+    
     @property
     def H0 ( self ) :
         """'H0' - H0-model"""
@@ -822,7 +838,7 @@ class Calculator (object) :
         return self.__H1 
     @property
     def h0 ( self ) :
-        """'h0' : H1-model as `ROOT.RooStats.ModelConfig`"""
+        """'h0' : H0-model as `ROOT.RooStats.ModelConfig`"""
         return self.H0 if isinstance ( self.H0 , ROOT.RooStats.ModelConfig ) else self.H0.mc
     @property
     def h1 ( self ) :
@@ -830,7 +846,7 @@ class Calculator (object) :
         return self.H1 if isinstance ( self.H1 , ROOT.RooStats.ModelConfig ) else self.H1.mc
     @property
     def dataset ( self ) :
-        """'dataset' : dataste used for calculations"""
+        """'dataset' : dataset used for calculations"""
         return self.__dataset
     
 # =============================================================================
@@ -846,15 +862,97 @@ class AsymptoticCalculator (Calculator) :
                    H0               ,   ## H0 model, e.g. signal+background
                    dataset          ,   ## dataset 
                    one_sided = True ) : 
-        
+
+        self.__one_sided  = one_sided 
         Calculator.__init__ ( self , H1 , H0 , dataset )
-        self.__calculator = ROOT.RooStats.AsymptoticCalculator ( dataset , self.h1 , self.h0 ) 
-        self.__calculator.SetOneSided ( one_sided )
+
+    ## create and configire the calculator 
+    def make_calculator ( self ) :
+        calc = ROOT.RooStats.AsymptoticCalculator ( self.dataset , self.h1 , self.h0 ) 
+        calc.SetOneSided ( self.one_sided )
+        return calc
         
     @property
-    def calculator ( self ) :
-        """'calculator' : actual RooStats calculator"""
-        return self.__calculator
+    def one_sided ( self ) :
+        """'one_sided' : actual RooStats calculator"""
+        return self.__one_sided
+
+# =============================================================================
+## @class FrequentistCalculator
+#  @see RooStats::FreqentistCalculator
+class FrequentistCalculator (Calculator) :
+    """Frequentist calcualator
+    - see `ROOT.RooStats.FrequentistCalculator`
+    """
+    
+    def __init__ ( self                   ,
+                   H1                     ,   ## H1 model, e.g. background only
+                   H0                     ,   ## H0 model, e.g. signal+background
+                   dataset                ,   ## dataset 
+                   sampler         = None ,
+                   ntoys_null      = -1   ,
+                   ntoys_alt       = -1   ,
+                   ntoys_null_tail =  0   ,
+                   ntoys_alt_tail  =  0   ,
+                   ) : 
+
+        assert isinstance ( ntoys_null , integer_types ) and -1 <= ntoys_null , \
+               "Invalid ntoys_null parameter!"
+        assert isinstance ( ntoys_alt  , integer_types ) and -1 <= ntoys_alt  , \
+               "Invalid ntoys_alt parameter!"
+        assert isinstance ( ntoys_null_tail , integer_types ) and 0 <= ntoys_null_tail , \
+               "Invalid ntoys_null_tail parameter!"
+        assert isinstance ( ntoys_alt_tail  , integer_types ) and 0 <= ntoys_alt_tail  , \
+               "Invalid ntoys_alt_tail parameter!"
+        
+        self.__ntoys_null      = ntoys_null 
+        self.__ntoys_alt       = ntoys_alt 
+        self.__ntoys_null_tail = ntoys_null_tail
+        self.__ntoys_alt_tail  = ntoys_alt_tail
+        
+        assert sampler is None or ( sampler and isinstance ( sampler , ROOT.RooStat.TestStatSampler ) ) , \
+               'Invalid sampler!'
+        
+        slef.__sampler = sampler 
+    
+        Calculator.__init__ ( self , H1 , H0 , dataset )
+
+    # ==============================================================================================
+    ## create and configire the calculator 
+    def make_calculator ( self ) :
+        """Create and configure the calculator"""
+        if self.sampler : calc = ROOT.RooStats.FrequestistCalculator ( self.dataset , self.h1 , self.h0 , self.sampler )
+        else            : calc = ROOT.RooStats.FrequestistCalculator ( self.dataset , self.h1 , self.h0 )
+        
+        if -1 != self.ntoys_null      or -1 != slef.ntoys_alt :
+            calc.SetToys         ( self.ntoys_null      , self.ntoys_alt      )
+        if  0 != self.ntoys_null_tail or -1 != slef.ntoys_alt_tail  :
+            calc.SetNToysInTails ( self.ntoys_null_tail , self.ntoys_alt_tail )
+            
+        return calc
+        
+    @property
+    def sampler ( self ) :
+        """'sampler' : sampler used for toys"""
+        return self.__sampler
+
+    @property
+    def ntoys_null ( self ) :
+        """'ntoys_null' : the first parameter of `ROOT.RooStats.FrequentistCalculator.SetToys`"""
+        return self.__ntoys_null
+    @property
+    def ntoys_alt  ( self ) :
+        """'ntoys_alt' : the seconf parameter of `ROOT.RooStats.FrequentistCalculator.SetToys`"""
+        return self.__ntoys_alt 
+    @property
+    def ntoys_null_tail ( self ) :
+        """'ntoys_null_tail' : the first parameter of `ROOT.RooStats.FrequentistCalculator.SetNToysInTails`"""
+        return self.__ntoys_null_tail
+    @property
+    def ntoys_alt_tail  ( self ) :
+        """'ntoys_alt_tail' : the second parameter of `ROOT.RooStats.FrequentistCalculator.SetNToysInTails`"""
+        return self.__ntoys_alt_tail 
+    
 
 # =============================================================================
 # @class HypoTestInverter
@@ -1009,7 +1107,9 @@ class BrasilBand(object) :
     >>> p = bp.plot()
     >>> p.draw('a')
     """
-    def __init__  ( self , sigmas = ( 0 , 1 , 2 ) , colors = () ) :
+    def __init__  ( self               ,
+                    sigmas = ( 1 , 2 ) ,
+                    colors = ()        ) :
 
         ss = set()
         for s in sigmas : ss.add (  1*s ) 
@@ -1105,7 +1205,7 @@ class BrasilBand(object) :
                 g [ i ] = ( x , 0 , 0 ) , ( val, errl , errh )
 
 
-        for g,c  in zip ( reversed ( gr_bands ) , self.__colors ) : g.color ( c )
+        for g,c  in zip ( reversed ( gr_bands ) , self.__colors ) : g.color ( c , marker = 1 , size = 1 )
 
         gr_median   .SetLineStyle ( 9 )
         gr_median   .SetLineWidth ( 2 )

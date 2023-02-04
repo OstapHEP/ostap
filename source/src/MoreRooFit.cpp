@@ -62,11 +62,15 @@ ClassImp(Ostap::MoreRooFit::MaxV          )
 ClassImp(Ostap::MoreRooFit::MinV          )
 ClassImp(Ostap::MoreRooFit::OneVar        )
 ClassImp(Ostap::MoreRooFit::TwoVars       )
+ClassImp(Ostap::MoreRooFit::NVars         )
 ClassImp(Ostap::MoreRooFit::FunOneVar     )
 ClassImp(Ostap::MoreRooFit::FunTwoVars    )
 ClassImp(Ostap::MoreRooFit::ProductPdf    )
 ClassImp(Ostap::MoreRooFit::WrapPdf       )
 ClassImp(Ostap::MoreRooFit::AddDeps       )
+ClassImp(Ostap::MoreRooFit::NVars         )
+ClassImp(Ostap::MoreRooFit::Minimal       )
+ClassImp(Ostap::MoreRooFit::Maximal       )
 // ============================================================================
 namespace 
 {
@@ -435,6 +439,118 @@ Ostap::MoreRooFit::TwoVars::TwoVars
 // ============================================================================
 Ostap::MoreRooFit::TwoVars::~TwoVars(){}
 // ============================================================================
+
+
+// ============================================================================
+// constructor with wtwo variables 
+// ============================================================================
+Ostap::MoreRooFit::NVars::NVars
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    ) 
+  : RooAbsReal ( name.c_str()  , title.c_str() ) 
+  , m_vars     ( "!vars"  , "variables" , this ) 
+{
+  m_vars.add ( a1 ) ;
+  m_vars.add ( a2 ) ;  
+}  
+// ============================================================================
+// constructor with three variables 
+// ============================================================================
+Ostap::MoreRooFit::NVars::NVars
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    ,
+  RooAbsReal&        a3    ) 
+  : RooAbsReal ( name.c_str()  , title.c_str() ) 
+  , m_vars     ( "!vars"  , "variables" , this ) 
+{
+  m_vars.add ( a1 ) ;
+  m_vars.add ( a2 ) ;  
+  m_vars.add ( a3 ) ;  
+}  
+// ============================================================================
+// constructor with four variables 
+// ============================================================================
+Ostap::MoreRooFit::NVars::NVars
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    ,
+  RooAbsReal&        a3    , 
+  RooAbsReal&        a4    ) 
+  : RooAbsReal ( name.c_str()  , title.c_str() ) 
+  , m_vars     ( "!vars"  , "variables" , this ) 
+{
+  m_vars.add ( a1 ) ;
+  m_vars.add ( a2 ) ;  
+  m_vars.add ( a3 ) ;  
+  m_vars.add ( a4 ) ;  
+}  
+// ============================================================================
+// constructor with five variables 
+// ============================================================================
+Ostap::MoreRooFit::NVars::NVars
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    ,
+  RooAbsReal&        a3    , 
+  RooAbsReal&        a4    ,
+  RooAbsReal&        a5    ) 
+  : RooAbsReal ( name.c_str()  , title.c_str() ) 
+  , m_vars     ( "!vars"  , "variables" , this ) 
+{
+  m_vars.add ( a1 ) ;
+  m_vars.add ( a2 ) ;  
+  m_vars.add ( a3 ) ;  
+  m_vars.add ( a4 ) ;  
+  m_vars.add ( a5 ) ;  
+}
+// ============================================================================
+// constructor with list of variables 
+// ============================================================================
+Ostap::MoreRooFit::NVars::NVars
+( const std::string& name  , 
+  const std::string& title , 
+  const RooArgList&  lst   )
+  : RooAbsReal ( name.c_str()  , title.c_str() ) 
+  , m_vars     ( "!vars"  , "variables" , this ) 
+{
+  ::copy_real   ( lst , m_vars, "Invalid var parameter!" ,
+                  "Ostap::MoreRooFit::NVars" ) ;
+}
+// ============================================================================
+// constructor with list of variables 
+// ============================================================================
+Ostap::MoreRooFit::NVars::NVars
+( const std::string& name  , 
+  const std::string& title , 
+  const RooArgSet&   lst   )
+  : RooAbsReal ( name.c_str()  , title.c_str() ) 
+  , m_vars     ( "!vars"  , "variables" , this ) 
+{
+  ::copy_real   ( lst , m_vars, "Invalid var parameter!" ,
+                  "Ostap::MoreRooFit::NVars" ) ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::MoreRooFit::NVars::NVars
+( const Ostap::MoreRooFit::NVars& right ,
+  const char*                     name  ) 
+  : RooAbsReal ( right , name )
+  , m_vars     ( "!vars"  , this , right.m_vars )
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::NVars::~NVars(){}
+// ============================================================================
+
+
 
 
 // ============================================================================
@@ -1159,6 +1275,269 @@ Ostap::MoreRooFit::AddDeps*
 Ostap::MoreRooFit::AddDeps::clone ( const char* newname ) const 
 { return new Ostap::MoreRooFit::AddDeps( *this , newname ) ; }
 // ============================================================================
+
+
+
+
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Minimal::Minimal
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    ) 
+  : NVars ( name , title , a1 , a2 ) 
+{}
+// ============================================================================
+// constructor with three variables 
+// ============================================================================
+Ostap::MoreRooFit::Minimal::Minimal
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    , 
+  RooAbsReal&        a3    ) 
+  : NVars ( name , title , a1 , a2 , a3 ) 
+{}
+// ============================================================================
+// constructor with four variables 
+// ============================================================================
+Ostap::MoreRooFit::Minimal::Minimal
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    , 
+  RooAbsReal&        a3    ,
+  RooAbsReal&        a4    ) 
+  : NVars ( name , title , a1 , a2 , a3 , a4 ) 
+{}
+// ============================================================================
+// constructor with five variables 
+// ============================================================================(
+Ostap::MoreRooFit::Minimal::Minimal
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    , 
+  RooAbsReal&        a3    ,
+  RooAbsReal&        a4    , 
+  RooAbsReal&        a5    ) 
+  : NVars ( name , title , a1 , a2 , a3 , a4 , a5 ) 
+{}
+// ============================================================================
+// constructor with list of variables 
+// ============================================================================
+Ostap::MoreRooFit::Minimal::Minimal
+( const std::string& name  , 
+  const std::string& title , 
+  const RooArgList&  lst   )
+  : NVars ( name , title , lst ) 
+{
+  Ostap::Assert ( 2 <= ::size( m_vars )        ,
+                  "Invalid var parameter!"     ,
+                  "Ostap::MoreRooFit::Minimal" ) ;
+}
+// ============================================================================
+// constructor with list of variables 
+// ============================================================================
+Ostap::MoreRooFit::Minimal::Minimal
+( const std::string& name  , 
+  const std::string& title , 
+  const RooArgSet&   lst   )
+  : NVars ( name , title , lst ) 
+{
+  Ostap::Assert ( 2 <= ::size( m_vars )        ,
+                  "Invalid var parameter!"     ,
+                  "Ostap::MoreRooFit::Minimal" ) ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::MoreRooFit::Minimal::Minimal
+( const Ostap::MoreRooFit::Minimal& right ,
+  const char*                       name  ) 
+  : NVars ( right , name ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::Minimal::~Minimal(){}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::MoreRooFit::Minimal*
+Ostap::MoreRooFit::Minimal::clone ( const char* newname ) const
+{ return new Ostap::MoreRooFit::Minimal ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ================m===========================================================
+Double_t Ostap::MoreRooFit::Minimal::evaluate () const
+{
+  // ==========================================================================
+  double value = s_INFINITY ;
+  // ==========================================================================
+  static const std::string s_message { "Invalid variable type!"      } ;
+  static const std::string s_tag     { "Ostap::MoreRooFit::Minimal!" } ;
+  // ==========================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+  //
+  Ostap::Utils::Iterator tmp ( this->m_vars ) ;
+  RooAbsArg* c = 0 ;
+  while ( c = (RooAbsArg*) tmp.next() )
+  {
+    const RooAbsReal* v = dynamic_cast<RooAbsReal*> ( c ) ;
+    Ostap::Assert ( v != nullptr , s_message , s_tag , 510 ) ;
+    value = std::min ( value , v->getVal() ) ;
+  }
+  //
+#else
+  //
+  unsigned ii = 0 ;
+  for ( auto* c : this->m_vars ) 
+  {
+    const RooAbsReal* v = dynamic_cast<RooAbsReal*> ( c ) ;
+    Ostap::Assert ( v != nullptr , s_message , s_tag , 510 ) ;
+    value = std::min ( value , v->getVal() ) ;
+  }
+  //
+#endif 
+  // 
+  return value ; 
+} 
+// ============================================================================
+
+
+
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Maximal::Maximal
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    ) 
+  : NVars ( name , title , a1 , a2 ) 
+{}
+// ============================================================================
+// constructor with three variables 
+// ============================================================================
+Ostap::MoreRooFit::Maximal::Maximal
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    , 
+  RooAbsReal&        a3    ) 
+  : NVars ( name , title , a1 , a2 , a3 ) 
+{}
+// ============================================================================
+// constructor with four variables 
+// ============================================================================
+Ostap::MoreRooFit::Maximal::Maximal
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    , 
+  RooAbsReal&        a3    ,
+  RooAbsReal&        a4    ) 
+  : NVars ( name , title , a1 , a2 , a3 , a4 ) 
+{}
+// ============================================================================
+// constructor with five variables 
+// ============================================================================(
+Ostap::MoreRooFit::Maximal::Maximal
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a1    ,
+  RooAbsReal&        a2    , 
+  RooAbsReal&        a3    ,
+  RooAbsReal&        a4    , 
+  RooAbsReal&        a5    ) 
+  : NVars ( name , title , a1 , a2 , a3 , a4 , a5 ) 
+{}
+// ============================================================================
+// constructor with list of variables 
+// ============================================================================
+Ostap::MoreRooFit::Maximal::Maximal
+( const std::string& name  , 
+  const std::string& title , 
+  const RooArgList&  lst   )
+  : NVars ( name , title , lst ) 
+{
+  Ostap::Assert ( 2 <= ::size( m_vars )        ,
+                  "Invalid var parameter!"     ,
+                  "Ostap::MoreRooFit::Minimal" ) ;
+}
+// ============================================================================
+// constructor with list of variables 
+// ============================================================================
+Ostap::MoreRooFit::Maximal::Maximal
+( const std::string& name  , 
+  const std::string& title , 
+  const RooArgSet&   lst   )
+  : NVars ( name , title , lst ) 
+{
+  Ostap::Assert ( 2 <= ::size( m_vars )        ,
+                  "Invalid var parameter!"     ,
+                  "Ostap::MoreRooFit::Minimal" ) ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::MoreRooFit::Maximal::Maximal
+( const Ostap::MoreRooFit::Maximal& right ,
+  const char*                       name  ) 
+  : NVars ( right , name ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::Maximal::~Maximal (){}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::MoreRooFit::Maximal*
+Ostap::MoreRooFit::Maximal::clone ( const char* newname ) const
+{ return new Ostap::MoreRooFit::Maximal ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ================m===========================================================
+Double_t Ostap::MoreRooFit::Maximal::evaluate () const
+{
+  // ==========================================================================
+  double value = - s_INFINITY ;
+  // ==========================================================================
+  static const std::string s_message { "Invalid variable type!"      } ;
+  static const std::string s_tag     { "Ostap::MoreRooFit::Maximal!" } ;
+  // ==========================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+  //
+  Ostap::Utils::Iterator tmp ( this->m_vars ) ;
+  RooAbsArg* c = 0 ;
+  while ( c = (RooAbsArg*) tmp.next() )
+  {
+    const RooAbsReal* v = dynamic_cast<RooAbsReal*> ( c ) ;
+    Ostap::Assert ( v != nullptr , s_message , s_tag , 510 ) ;
+    value = std::max ( value , v->getVal() ) ;
+  }
+  //
+#else
+  //
+  unsigned ii = 0 ;
+  for ( auto* c : this->m_vars ) 
+  {
+    const RooAbsReal* v = dynamic_cast<RooAbsReal*> ( c ) ;
+    Ostap::Assert ( v != nullptr , s_message , s_tag , 510 ) ;
+    value = std::max ( value , v->getVal() ) ;
+  }
+  //
+#endif 
+  // 
+  return value ; 
+} 
+// ============================================================================
+
+
 
     
 // ============================================================================

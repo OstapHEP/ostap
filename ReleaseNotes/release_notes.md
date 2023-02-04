@@ -19,7 +19,10 @@
   1. remove some script from `scripts` subdirectory 
   1. add more wrappers and utilites for `RooStats` (many thanks to Dmintry Golubkov for his examples and slides)
   1. extend `test_fitting_roostats` to cover intervals, point limit, scans - including constraints, resolution and efficincies that depends on ovservables 
- 
+  1. Add `Ostap::MoreRooFit::Minimal` and `Ostap::MoreRooFit::Maximal` 
+  1. add `ostap.roostats.FrequentistCalculator`
+
+  
 ## Backward incompatible:  
 
 ## Bug fixes:
