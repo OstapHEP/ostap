@@ -202,7 +202,9 @@ def get_i ( what , i , default = None ) :
     elif isinstance ( what , list_types      ) and 0 <= i < len ( what ) : return what[i] 
 
     return default
-        
+
+# =============================================================================
+levels = ( 'DEBUG' , 'INFO' , 'PROGRESS' , 'WARNING' , 'ERRROR' , 'FATAL' )
         
 # =============================================================================
 ## consruct MsgTopic
@@ -213,7 +215,7 @@ def get_i ( what , i , default = None ) :
 #  topic = msgTopic ( 'Fitting' , 'Caching' )
 #  @endcode
 def msg_topic ( *topics ) :
-    """onsruct MsgTopic
+    """Consruct MsgTopic
     >>> topic = msgTopic ( ROOT.RooFit.Fitting ) 
     >>> topic = msgTopic ( ROOT.RooFit.Fitting , ROOT.RooFit.Caching )
     >>> topic = msgTopic ( 'Fitting' , 'Caching' )
@@ -222,7 +224,14 @@ def msg_topic ( *topics ) :
     for i in  topics : 
         if   isinstance ( i , integer_types )  : topic |= i
         elif isinstance ( i , string_types  )  :
-            ii = i.lower() 
+
+            tt = i
+            
+            a, sep, b = i.partition(':')
+            if   sep and b and a.upper() in levels : tt = b
+            elif sep and a and b.upper() in levels : tt = a
+
+            ii = tt.lower() 
             if   ii == 'generation'            : topic |=  ROOT.RooFit.Generation 
             elif ii == 'minimization'          : topic |=  ROOT.RooFit.Minimization
             elif ii == 'minization'            : topic |=  ROOT.RooFit.Minimization
@@ -368,6 +377,7 @@ def add_topic ( topics , stream  = -1 ) :
     return Ostap.Utils.AddTopic ( topics , level , stream ) 
 
 
+
 # =============================================================================
 ## suppress certain message topics
 #  @code
@@ -388,16 +398,32 @@ def suppress_topics ( *topics ) :
             import string
             ws     = string.whitespace 
             node   = CONFIG.config [ 'RooFit' ]
-            data   = node.get('RemoveTopics','(,)' )
             data   = node.get('RemoveTopics','' )
             topics = tuple ( i.strip ( ws ) for i in data.split ( ',' ) if i.strip ( ws ) ) 
 
-    if topics : 
+    if topics :
+        
         svc = ROOT.RooMsgService.instance()
-        svc.saveState () 
-        topic = msg_topic ( *topics ) 
-        num   = svc.numStreams()
-        for i in range ( num ) : ok = Ostap.Utils.remove_topic ( i , topic ) 
+
+        for topic in topics :
+
+            level = ROOT.RooFit.INFO 
+            tt    = topic 
+            a, sep, b = topic.partition(':')
+            if   sep and b and a.upper() in levels :
+                tt    = b
+                level = levels.index ( a.upper() )
+            elif sep and a and b.upper() in levels :
+                tt    = a
+                level = levels.index ( b.upper() )
+
+            svc.saveState ()
+            
+            num   = svc.numStreams()
+            tt    = msg_topic ( tt  )
+            
+            for i in range ( num ) :
+                ok = Ostap.Utils.remove_topic ( i , tt , level ) 
 
 # =============================================================================
 ## and finally suppress exra RooFit topics! 

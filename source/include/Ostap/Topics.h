@@ -43,9 +43,10 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      RemoveTopic ( const unsigned short   topics                 , 
-                    const RooFit::MsgLevel level   = RooFit::INFO ,
-                    const int              stream  =  -1          ) ;
+      RemoveTopic 
+      ( const unsigned short   topics                 , 
+        const RooFit::MsgLevel level   = RooFit::INFO ,
+        const int              stream  =  -1          ) ;
       // ======================================================================
       /// destructor 
       ~RemoveTopic () ;
@@ -66,8 +67,9 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      AddTopic ( const unsigned short   topics                 , 
-                 const int              stream  =  -1          ) ;
+      AddTopic 
+      ( const unsigned short   topics                 , 
+        const int              stream  =  -1          ) ;
       // ======================================================================
       /// destructor 
       ~AddTopic () ;

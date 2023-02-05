@@ -42,7 +42,8 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
-from   ostap.core.ostap_types import string_types, integer_types, sequence_types 
+from   ostap.core.ostap_types import  ( string_types   , integer_types  ,
+                                        sequence_types , dictlike_types ) 
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
 import ROOT, abc, sys  
@@ -62,13 +63,14 @@ class ModelConfig(object):
     - see `ROOT.RooStats.ModelConfig`
     """
     def __init__  ( self                      ,
-                    pdf                       , ## PDF 
-                    poi                       , ## parameter(s) of interest
-                    dataset            = None , ## dataset  (optional)
-                    workspace          = None , ## worspace (optional)
-                    observables        = ()   , ## observables 
-                    global_observables = ()   , ## global observables
-                    constraints        = ()   , ## contraints 
+                    pdf                       ,   ## PDF 
+                    poi                       ,   ## parameter(s) of interest
+                    dataset            = None ,   ## dataset  (optional)
+                    workspace          = None ,   ## worspace (optional)
+                    observables        = ()   ,   ## observables 
+                    global_observables = ()   ,   ## global observables
+                    constraints        = ()   ,   ## contraints 
+                    snapshot           = None ,   ## snapshot 
                     **kwargs                  ) : ## other arguments
 
         params = poi 
@@ -97,27 +99,38 @@ class ModelConfig(object):
         self.__mc = mc
 
 
-        self.__pdf = pdf
+        self.__pdf                       = pdf
+        self.__poi                       = poi
+        self.__input_observables         = observables 
+        self.__intput_global_observables = global_observables 
+        self.__input_constraints         = constraints 
+        self.__input_snapshot            = snapshot 
         
         if   isinstance ( pdf , APDF1          ) :
             self.__raw_pdf = pdf.pdf 
         elif isinstance ( pdf , ROOT.RooAbsPdf ) and observables :
             self.__raw_pdf = pdf
         else :
-            raise TypeError ( "Inavlid seting of pdf/observables!" ) 
+            raise TypeError ( "Invalid setting of pdf/observables!" ) 
 
         ## final pdf? (not yet...) 
         self.__final_pdf = self.__raw_pdf
 
+        lgobs = ROOT.RooArgSet() 
         ## (0) We need to start from constraints and modify our PDF on-fly 
         if constraints :
             if isinstance ( constraints , ROOT.RooAbsReal ) :
                 constraints = [ constraints ]
-            assert all ( [ isinstance ( c , ROOT.RooAbsPdf ) for c in constraints ] ) , \
+            assert all ( [ isinstance ( c , ( ROOT.RooAbsPdf , APDF1 ) ) for c in constraints ] ) , \
                    'Invalid constraints: %s' % str ( constraints ) 
             cnts = ROOT.RooArgSet()
-            for c in constraints : cnts.add ( c )
-
+            for cc in constraints :                
+                c = cc.pdf if isinstance ( cc , APDF1 ) else cc                 
+                cpars = c.getParameters ( dataset ) if dataset else c.getParameters ()
+                for cp in cpars :
+                    if not cp in lgobs : lgobs.add ( cp ) 
+                cnts.add ( c )
+                
             clst = ROOT.RooArgList ()
             clst.add ( self.__raw_pdf )
             for c in cnts : clst.add ( c )
@@ -127,7 +140,7 @@ class ModelConfig(object):
 
             ## attention, redefine/update 
             constraints = cnts
-            
+
         ## propagate PDF to ModelConfig/Workspace 
         if isinstance   ( pdf , ROOT.RooAbsPdf ) and observables :
             ## (3) set PDF  
@@ -165,12 +178,24 @@ class ModelConfig(object):
         self.__ns = pars, nuis 
 
         ## (7) global observables
-        if global_observables :
+        if global_observables or lgobs :
+            
             if isinstance ( global_observables , ROOT.RooAbsReal ) :
                 global_observables = [ global_observables ]                
+
             pars = [ self.pdf_param  ( v , dataset ) for v in global_observables ]
+            
+            for p in lgobs :
+                pn = p.name
+                if     ( not pn in pars        ) \
+                   and ( not pn in observables ) \
+                   and ( not pn in pois        ) \
+                   and ( not pn in nuis        ) : pars.append ( p )
+                
             gobs = ROOT.RooArgSet   () 
-            for p in pars : gobs.add ( p    ) 
+            for p in pars :
+                if not p in gobs : gobs.add ( p    )
+                
             mc.SetGlobalObservables  ( gobs )
             self.__go = global_observables, gobs 
             
@@ -181,9 +206,26 @@ class ModelConfig(object):
         ## (9) define the default dataset 
         self.__dataset = dataset 
 
+        ## (10) use snapshot if provided 
+        if snapshot :
+            self.snapshot = snapshot
+            
+        ## is snapshot
         if kw_args :
             logger.warning ( 'create ModelConfig: Ignore keyword arguments: %s' % [ k for k in kw_args ] )
 
+        ## finally print as tabnales 
+        logger.debug ( 'Created ModelConfig: %s\n%s' % ( self.name , self.table ( prefix = '# ' ) ) ) 
+
+                       
+    @property
+    def name  ( self ) :
+        """'name': the name of the `RooStats.ModelConfig` objxct"""
+        return self.mc.name
+    @property
+    def title ( self ) :
+        """'title': the title of the `RooStats.ModelConfig` objxct"""
+        return self.mc.title
         
     @property
     def ws ( self ) :
@@ -241,7 +283,6 @@ class ModelConfig(object):
         """
         pars = self.mc.GetConstraintParameters()
         return pars if pars and 0 < len ( pars ) else () 
-
     @property
     def snapshot ( self ) :
         """'snapshot' : get/set snapshot fomr the model/workspacee
@@ -253,16 +294,47 @@ class ModelConfig(object):
     @snapshot.setter
     def snapshot ( self , values ) :
         
-        if   isinstance ( values , ROOT.RooArgSet  ) : return self.mc.SetSnapshot (  values ) 
-        elif isinstance ( values , ROOT.RooAbsReal ) : return self.mc.SetSnapshot ( ROOT.RooArgSet ( values ) )
+        if   isinstance ( values , ROOT.RooAbsReal   ) : return self.mc.SetSnapshot ( ROOT.RooArgSet ( values ) )
+        elif isinstance ( values , ROOT.RooArgSet    ) : 
+            return self.mc.SetSnapshot (  values )
+        elif isinstance ( values , ROOT.RooFitResult ) :            
+            vs = ROOT.RooArgSet()
+            for p in values.floatParsFinal () : vs.add ( p )
+            for p in values.constPars      () : vs.add ( p )
+            return self.mc.SetSnapshot ( vs  )
+        
+        elif isinstance ( values , dictlike_types ) :
+
+            vlst = []
+            vdct = {}            
+            for key in values :
+                v = self.var ( key )                
+                assert v , "No valid variable for '%s'" % key                
+                vv = float ( values [ key ] )
+                vars.append ( v )
+                vdct [ v.name ]  = vv
+                
+            vset = ROOT.RooArgSet() 
+            with SETVAL ( *vlst ) :
+                for v in vlst : v.setVal ( vdct [ v.name ] )
+                for v in vlst : vset.add ( v )
+                return self.mc.SetSnapshot ( vset  )
+                
         elif isinstance ( values , sequence_types  ) :
 
-            vv = [ v for v in values ]
-            if  all ( isinstance ( v , ROOT.RooAbsReal ) for v in vv ) :
-                vs = ROOT.RooArgSet()
-                for v in values : vs.add ( vs )
-                return self.mc.SetSnapshot ( vs )
-
+            vs = ROOT.RooArgSet() 
+            for vv in values :
+                if   isinstance ( vv , ROOT.RooAbsReal       ) : vs.add ( vv )
+                elif isinstance ( vv , ROOT.RooRooFitResult  ) :
+                    for p in vv.floatParsFinal () : vs.add ( p )
+                    for p in vv.constPars      () : vs.add ( p )
+                elif isinstance ( v , ROOT.RooAbsCollection ) :
+                    for v in cv : vs.add ( v )
+                else :
+                    raise TypeError ( 'Invalid type for snapshot %s' % type ( vv )  )
+                
+            return self.mc.SetSnapshot ( vs  )
+        
         raise TypeError ( 'Invalid type for snapshot %s' % type ( values )  ) 
 
     # =========================================================================
@@ -311,6 +383,64 @@ class ModelConfig(object):
             return self.var ( variable.name )
         return self.ws.var ( variable ) 
 
+    # ============================================================================
+    ## print model as a table 
+    def table ( self , title = '' , prefix = '' ) : 
+        """Print a model as table
+        """
+
+        rows = [ ( '' , '' ) ]
+
+        row = 'name' , self.mc.name
+        rows.append ( row )
+        
+        row = 'title' , self.mc.title 
+        rows.append ( row )
+        
+        if self.__ws :
+            row  = 'workspace' , self.ws.name
+            rows.append ( row )
+            row  = ''          , self.ws.title 
+            rows.append ( row )
+
+        row = 'PDF (arg)' , str ( self.__pdf )
+        rows.append ( row )
+        if not self.__raw_pdf is self.__pdf :
+            pdf = self.__raw_pdf 
+            row = 'PDF (raw)'   , '%s: %s/%s' % ( type ( pdf ).__name__  , pdf.name , pdf.title )
+            rows.append ( row )            
+        if not self.__final_pdf is self.__raw_pdf :
+            pdf = self.__final_pdf 
+            row = 'PDF (final)' , '%s: %s/%s' % ( type ( pdf ).__name__  , pdf.name , pdf.title )                                       
+            rows.append ( row )
+        
+        row = 'observables'        , ', '.join( v.name for v in self.observables )  
+        rows.append ( row )
+
+        row = 'poi'                , ', '.join( v.name for v in self.poi ) 
+        rows.append ( row )
+
+        row = 'nuisance'           , ', '.join( v.name for v in self.nuisance )
+        rows.append ( row )
+
+        row = 'global observables' , ', '.join( v.name for v in self.global_observables ) 
+        rows.append ( row )
+        
+        for i , c in enumerate ( self.__input_constraints , start = 1 )  :
+            row = 'constraint#%d (input)' % i , '%s: %s/%s' % ( type ( c ).__name__  , c.name , c.title )
+            rows.append ( row )
+
+        for i , c in enumerate ( self.constraints , start = 1 )  :
+            row = 'constraint#%d' % i , '%s: %s/%s' % ( type ( c ).__name__  , c.name , c.title )
+            rows.append ( row )
+            
+        row = 'snapshot' ,  ', '.join ( '%s:%-+5g' % ( v.name , v.getVal() ) for v in self.snapshot )
+        rows.append ( row )
+        
+        import ostap.logger.table as T
+        title = title if title else 'ModelConfig %s' % self.mc.title  
+        return T.table ( rows, title = title , prefix = prefix , alignment = 'lw' )
+        
 # ================================================================================
 ## Helper (abstract) base class for the confidence intervals and limits 
 class CLInterval(ModelConfig)  :

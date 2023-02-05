@@ -274,11 +274,6 @@ def _rfr_results_( self , *vars ) :
 
     return v
 
-
-
-
-
-
     
 # ==============================================================================
 ## Get vector of eigenvalues for the covariance matrix

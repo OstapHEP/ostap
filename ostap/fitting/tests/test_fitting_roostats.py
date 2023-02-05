@@ -17,7 +17,7 @@ __all__    = () ## nothing to import
 from   builtins                 import range
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models
-from   ostap.fitting.variables  import SETVAR 
+from   ostap.fitting.variables  import SETVAR, FIXVAR  
 from   ostap.core.core          import cpp, VE, dsID, hID , rooSilent, Ostap 
 from   ostap.utils.timing       import timing
 from   ostap.utils.utils        import vrange
@@ -168,8 +168,8 @@ def test_intervals () :
 mass    = ROOT.RooRealVar   ('mass','mass-variable', 0 , 10 )
 signal  = Models.Gauss_pdf  ( 'Gauss',
                               xvar  = mass                 ,
-                              mean  = ( 2.5  , 0.5 , 9.5 ) ,
-                              sigma = ( 0.01 , 0.3 , 3.0 ) )
+                              mean  = ( 2.5 , 0.5  , 9.5 ) ,
+                              sigma = ( 0.3 , 0.01 , 3.0 ) )
 signal.mean .fix()
 signal.sigma.fix()
 model   = Models.Fit1D ( signal = signal , background = 'e-' )
@@ -205,7 +205,6 @@ def test_point_limit () :
                              dataset   = data        ,
                              name      = 'S+B'       )
     
-    model_sb.mc.Print('vvv') 
     model_sb.snapshot = the_model.S ## ATTENTION! 
     
     
@@ -217,6 +216,9 @@ def test_point_limit () :
     
     the_model.S = 0 
     model_b.snapshot = the_model.S  ## ATTENTION! 
+    
+    logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
+    logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
     model_sb.mc.Print('vvv')
     model_b .mc.Print('vvv')
@@ -270,7 +272,6 @@ def test_point_limit2 () :
                              constraints = constraints      ,   
                              name        = 'S+B'            )
     
-    model_sb.mc.Print('vvv') 
     model_sb.snapshot = the_model.S ## ATTENTION! 
     
     
@@ -284,6 +285,9 @@ def test_point_limit2 () :
     the_model.S = 0 
     model_b.snapshot = the_model.S  ## ATTENTION! 
     
+    logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
+    logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
+
     model_sb.mc.Print('vvv')
     model_b .mc.Print('vvv')
     
@@ -350,7 +354,6 @@ def test_point_limit3 () :
                              constraints = constraints      ,   
                              name        = 'S+B'            )
     
-    model_sb.mc.Print('vvv') 
     model_sb.snapshot = NS ## ATTENTION! 
     
     
@@ -364,6 +367,9 @@ def test_point_limit3 () :
     NS.setVal ( 0 )
     model_b.snapshot = NS   ## ATTENTION! 
     
+    logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
+    logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
+
     model_sb.mc.Print('vvv')
     model_b .mc.Print('vvv')
     
@@ -431,7 +437,6 @@ def test_scan_limit1 () :
                              constraints = constraints      ,   
                              name        = 'S+B'            )
     
-    model_sb.mc.Print('vvv') 
     model_sb.snapshot = NS ## ATTENTION! 
     
     model_b  = ModelConfig ( pdf         = the_model          ,
@@ -444,10 +449,12 @@ def test_scan_limit1 () :
     NS.setVal ( 0 )
     model_b.snapshot = NS   ## ATTENTION! 
     
+    logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
+    logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
+
     model_sb.mc.Print('vvv')
     model_b .mc.Print('vvv')
 
-    
     ## scan peak positions
     position = model_b.var ( the_signal.mean )
 
@@ -517,7 +524,7 @@ def test_scan_limit2 () :
         p.setVal ( float ( p ) * 0.3 / vn )
         p.fix()
         
-    ## efficiency depends on the peak positiob 
+    ## efficiency depends on the peak position
     eff_fun   = BP ( 'EffFun' , signal.mean , power = 1 , pars = ( 0.95 , 0.35 ) )
     eff_err   = 0.03 
 
@@ -554,31 +561,44 @@ def test_scan_limit2 () :
 
     constraints = sigma_constraint, eff_constraint 
 
-    with use_canvas ( 'test_scan_limit2' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 , constraints = constraints )
-        
+    ## fit with S+B 
+    with use_canvas ( 'test_scan_limit2: S+B'    ) : 
+        r_sb , frame = the_model.fitTo    ( data , draw = True , nbins = 50 , constraints = constraints )
+
+    ## fit with B-obly 
+    with use_canvas ( 'test_scan_limit2: B-only' ) :
+        with FIXVAR ( NS ) :
+            NS.setVal(0) 
+            r_b , frame = the_model.fitTo ( data , draw = True , nbins = 50 , constraints = constraints )
+
+
     model_sb = ModelConfig ( pdf         = the_model        ,
                              poi         = NS               , ## parameter of interest 
                              dataset     = data             ,
                              constraints = constraints      ,   
-                             name        = 'S+B'            )
+                             name        = 'S+B'            ,
+                             snapshot    = r_sb             ) ## ATTENTION HERE!
     
-    model_sb.mc.Print('vvv') 
-    model_sb.snapshot = NS ## ATTENTION! 
+    ## model_sb.snapshot = NS ## ATTENTION! 
+    ## model_sb.snapshot = r_sb ## ATTENTION! 
     
     model_b  = ModelConfig ( pdf         = the_model          ,
                              poi         = NS                 , ## parameter of interest 
                              dataset     = data               ,
                              workspace   = model_sb.workspace , 
                              constraints = constraints        ,   
-                             name        = 'B-only'           )
+                             name        = 'B-only'           ,
+                             snapshot    = r_b                ) ## ATTENTION! 
     
-    NS.setVal ( 0 )
-    model_b.snapshot = NS   ## ATTENTION! 
+    # NS.setVal ( 0 )
+    # model_b.snapshot = NS   ## ATTENTION! 
+    ## model_b.snapshot = r_b    ## ATTENTION! 
     
+    logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
+    logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
+
     model_sb.mc.Print('vvv')
     model_b .mc.Print('vvv')
-
     
     ## scan peak positions
     position = model_b.var ( the_signal.mean )
@@ -621,21 +641,23 @@ def test_scan_limit2 () :
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )
         logger.info ( '%s:\n%s' % ( title , table ) )
         
+    print ( model_b.table() )
 
+    
 # =============================================================================
 if '__main__' == __name__ :
 
     from ostap.core.core    import rooSilent
+    
     with rooSilent ( ) : 
+    
+        test_intervals    ()
         
-        ## test_intervals    ()
+        test_point_limit  () 
+        test_point_limit2 ()
         
-        ## test_point_limit  () 
-        ## test_point_limit2 ()
-        
-        test_scan_limit1 ()
-        
-        ## test_scan_limit2 () 
+        test_scan_limit1  ()
+        test_scan_limit2  () 
         
 
 # =============================================================================
