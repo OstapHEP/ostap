@@ -43,7 +43,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import  ( string_types   , integer_types  ,
-                                        sequence_types , dictlike_types ) 
+                                        sequence_types , dictlike_types )
+from   ostap.core.core        import valid_pointer 
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
 import ROOT, abc, sys  
@@ -254,6 +255,7 @@ class ModelConfig(object):
         - see `ROOT.RooStats.ModelConfig.GetObservables`
         """
         pars = self.mc.GetObservables()
+        if not valid_pointer ( pars ) : return () 
         return pars if pars and 0 < len ( pars ) else () 
     @property
     def poi ( self ) :
@@ -261,6 +263,7 @@ class ModelConfig(object):
         - see `ROOT.RooStats.ModelConfig.GetParametersOfInterest`
         """
         pars = self.mc.GetParametersOfInterest()
+        if not valid_pointer ( pars ) : return () 
         return pars if pars and 0 < len ( pars ) else () 
     @property
     def nuisance ( self ) :
@@ -268,6 +271,7 @@ class ModelConfig(object):
         - see `ROOT.RooStats.ModelConfig.GetNuisanceParameters`
         """
         pars = self.mc.GetNuisanceParameters()
+        if not valid_pointer ( pars ) : return () 
         return pars if pars and 0 < len ( pars ) else () 
     @property
     def global_observables ( self ) :
@@ -275,6 +279,7 @@ class ModelConfig(object):
         - see `ROOT.RooStats.ModelConfig.GetGlobalObservables`
         """
         pars = self.mc.GetGlobalObservables()
+        if not valid_pointer ( pars ) : return () 
         return pars if pars and 0 < len ( pars ) else () 
     @property
     def constraints  ( self ) :
@@ -282,6 +287,7 @@ class ModelConfig(object):
         - see `ROOT.RooStats.ModelConfig.GetConstraintParameters`
         """
         pars = self.mc.GetConstraintParameters()
+        if not valid_pointer ( pars ) : return () 
         return pars if pars and 0 < len ( pars ) else () 
     @property
     def snapshot ( self ) :
@@ -290,6 +296,7 @@ class ModelConfig(object):
         - see `ROOT.RooStats.ModelConfig.SetSnapshot`
         """
         pars = self.mc.GetSnapshot()
+        if not valid_pointer ( pars ) : return () 
         return pars if pars and 0 < len ( pars ) else ()
     @snapshot.setter
     def snapshot ( self , values ) :

@@ -23,7 +23,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import root_info 
-from   ostap.core.core         import Ostap
+from   ostap.core.core         import Ostap, valid_pointer 
 from   ostap.core.ostap_types  import string_types , integer_types
 import ostap.fitting.variables
 import ROOT, sys, random
@@ -105,7 +105,8 @@ def _ral_getitem_ ( self , index ) :
 ROOT.RooArgList . __len__       = lambda s   : s.getSize()
 ROOT.RooArgList . __contains__  = _ral_contains_ 
 ROOT.RooArgList . __iter__      = _ral_iter_
-ROOT.RooArgList . __nonzero__   = lambda s   : 0 != len ( s ) 
+ROOT.RooArgList . __nonzero__   = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
+ROOT.RooArgList . __bool__      = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
 ROOT.RooArgList . __getitem__   = _ral_getitem_
 ROOT.RooArgList . __setitem__   = lambda s,*_ : NotImplemented 
 
@@ -114,6 +115,7 @@ _new_methods_ += [
     ROOT.RooArgList. __contains__  ,
     ROOT.RooArgList. __iter__      ,
     ROOT.RooArgList. __nonzero__   ,
+    ROOT.RooArgList. __bool__      ,
     ROOT.RooArgList. __getitem__   ,
     ROOT.RooArgList. __setitem__   ,
 ]    
@@ -322,7 +324,8 @@ ROOT.RooArgSet . __iter__          = _ras_iter_
 ROOT.RooArgSet . __getattr__       = _ras_getattr_ 
 ROOT.RooArgSet . __getitem__       = _ras_getitem_ 
 ROOT.RooArgSet . __contains__      = _ras_contains_ 
-ROOT.RooArgSet . __nonzero__       = lambda s   : 0 != len ( s ) 
+ROOT.RooArgSet . __nonzero__       = lambda s : valid_pointer ( s ) and 0 != len ( s ) 
+ROOT.RooArgSet . __bool__          = lambda s : valid_pointer ( s ) and 0 != len ( s ) 
         
 ROOT.RooArgSet     . __str__       = lambda s : str ( set   ( _rs_list_ ( s ) ) )  
 ROOT.RooArgSet     . __repr__      = lambda s : str ( set   ( _rs_list_ ( s ) ) )
@@ -332,7 +335,8 @@ ROOT.RooLinkedList . __repr__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) 
 
 ROOT.RooAbsCollection.__iter__     = _ras_iter_
 ROOT.RooAbsCollection.__len__      = lambda s   : s.getSize()
-ROOT.RooAbsCollection. __nonzero__ = lambda s   : 0 != len ( s ) 
+ROOT.RooAbsCollection. __nonzero__ = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
+ROOT.RooAbsCollection. __bool__    = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
 
 
 # =============================================================================
@@ -358,6 +362,7 @@ _new_methods_ += [
     ROOT.RooArgSet . __setattr__  ,
     ROOT.RooArgSet . __contains__ ,
     ROOT.RooArgSet . __nonzero__  ,
+    ROOT.RooArgSet . __bool__     ,
     ROOT.RooArgSet . __str__      ,
     ROOT.RooArgSet . __repr__     ,
     ]
