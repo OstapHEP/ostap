@@ -1,3 +1,4 @@
+
 ## New features:
 
   1. add `+=` and `-=` operators for `Ostap::Math::HermiteSum`
