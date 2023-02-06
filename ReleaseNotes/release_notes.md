@@ -7,13 +7,13 @@
   1. add more constructors to `Ostap::Math::Polynomial`
   1. add conversion from Karlin-Shapley and Karlin-Studden polynomials into regular polynomials 
   1. add more contructors to `Ostap::Math::Polynomial` class 
-  1. unify the key-function for case-insensitive (and noi underscores) dictionaries 
+  1. unify the key-function for case-insensitive (and no underscores) dictionaries 
   1. improve `ostap.fitting.roostats` and corresponding test 
   1. more polishing for `ostap.fitting.roostats` and corresponding test 
-  1. disable plot from FEldman-Cousins for ROOT<6.18
+  1. disable plot from Feldman-Cousins for ROOT<6.18
   1. for ROOT>6.18 for `ROOT.RooArgSet` extend `contains` and `getitem` to accept indices and slices 
   1. add generic fixed shape (no parameters) as `RooAbsReal`
-  1. add fixed shape from histogam (no parmameters) as `RooAbsReal`
+  1. add fixed shape from histogam (no parameters) as `RooAbsReal`
   1. more polishing for `ostap.fitting.roostats` and corresponding test 
   1. add `front`,`back` and `pop` methods 
   1. add Karlin-Shapley and Karlin-Studden parameterisation for histograms 
