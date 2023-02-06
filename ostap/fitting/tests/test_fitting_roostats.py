@@ -38,7 +38,19 @@ else :
 
 
 # ============================================================================
+## Test the confidence intervals for the width of low-statistic gaussian ssignal
+#  
+#  - Profile likelihood confidence interval 
+#  - Feldman-Couisins   confidence interval
+#  - Bayesian           confidence interval
+#  - Markov Chain MC    confidence interval
 def test_intervals () :
+    """Test the confidence intervals for the width of low-statistic gaussian ssignal    
+    - Profile likelihood confidence interval 
+    - Feldman-Couisins   confidence interval
+    - Bayesian           confidence interval
+    - Markov Chain MC    confidence interval
+    """
 
     logger = getLogger("test_intervals ")
 
@@ -181,25 +193,29 @@ model.S.setMax(200)
 data    = model.generate ( 55 + 1000 )
 
 # ============================================================================-
-## Get the limit at given point 
-def test_point_limit () :
-    """Get the limit at given point
+## Get the upper limit limit for small signal at fixed mass
+#  - resolution is fixed
+#  - Asymptotic Calculatoris used 
+def test_point_limit_ac () :
+    """Get the upper limit at given point for small signal at fixed mass
+    - resoltuion is fixed 
+    - Asymptotic Calculatoris used 
     """
 
-    logger = getLogger("test_point_limit")
+    logger = getLogger("test_point_limit_ac")
 
-    logger.info ( "Test Point limits with RooStats" )
+    logger.info ( "Test Point limits with RooStats (Asymptotic Calcultor)" )
 
-    from   ostap.fitting.roostats   import ( ModelConfig          ,
-                                             AsymptoticCalculator ,
-                                             HypoTestInverter     )
+    from   ostap.fitting.roostats   import ( ModelConfig           ,
+                                             AsymptoticCalculator  ,
+                                             HypoTestInverter      )
 
     the_model = model.clone ( name = 'M1' )
 
     with use_canvas ( 'test_point_limit' ) : 
         rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
 
-        
+    ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
                              poi       = the_model.S , ## parameter of interest 
                              dataset   = data        ,
@@ -207,7 +223,7 @@ def test_point_limit () :
     
     model_sb.snapshot = the_model.S ## ATTENTION! 
     
-    
+    ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf       = the_model          ,
                              poi       = the_model.S        , ## parameter of interest 
                              dataset   = data               ,
@@ -222,28 +238,110 @@ def test_point_limit () :
     
     model_sb.mc.Print('vvv')
     model_b .mc.Print('vvv')
-    
-    ac  = AsymptoticCalculator ( model_b          ,
-                                 model_sb         ,
-                                 dataset   = data , 
-                                 one_sided = True )     
-    hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
-    
-    hti.scan ( vrange ( 0 , 150 , 50 )  ) ## scan it!
 
-    with use_canvas ( 'test_pointLimit: HypoTestInverter plot' , wait = 2 ) :
+
+    with timing ( "Using Asymptotic Calculator" , logger = logger ) :
+        ## create the calculator 
+        ac  = AsymptoticCalculator ( model_b           ,
+                                     model_sb          ,
+                                     dataset   = data  ,
+                                     asimov    = False , 
+                                     one_sided = True  )
+        
+        ## create Hypo Test inverter 
+        hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
+        
+        ## make a scan 
+        hti .scan ( vrange ( 0 , 150 , 50 )  ) ## scan it!
+        
+    ## visualize the scan results 
+    with use_canvas ( 'test_pointLimit: HypoTestInverter plot (asymptotic)' , wait = 2 ) :
         plot = hti.plot
-        plot.draw('LCb 2CL')    
-        logger.info ( '90%%CL upper limit = %.1f' % hti.upper_limit )
+        plot .draw('LCb 2CL')                    
+        logger.info ( '90%%CL upper limit (asymptotic)  = %.1f' % hti.upper_limit )
+
 
 
 # ============================================================================-
-## Get the limit at given point
-#  - resolution is known with soem finite precvision 
-def test_point_limit2 () :
-    """Get the limit at given point
-    - resolution is known with soem finite precvision 
+## Get the upper limit limit for small signal at fixed mass
+#  - resolution is fixed
+#  - Frequestist Calculator is used 
+def test_point_limit_fc  () :
+    """Get the upper limit at given point for small signal at fixed mass
+    - resolution is fixed 
+    - Frequestist Calculator is used 
     """
+
+    logger = getLogger("test_point_limit_fc")
+
+    logger.info ( "Test Point limits with RooStats using Frequestist Calculator" )
+
+    from   ostap.fitting.roostats   import ( ModelConfig           ,
+                                             FrequentistCalculator ,
+                                             HypoTestInverter      )
+
+    the_model = model.clone ( name = 'M1' )
+
+    with use_canvas ( 'test_point_limit' ) : 
+        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+
+    ## create ModelConfig  for 'S+B' model
+    model_sb = ModelConfig ( pdf       = the_model   ,
+                             poi       = the_model.S , ## parameter of interest 
+                             dataset   = data        ,
+                             name      = 'S+B'       )
+    
+    model_sb.snapshot = the_model.S ## ATTENTION! 
+    
+    ## create ModelConfig  for 'B-only' model
+    model_b  = ModelConfig ( pdf       = the_model          ,
+                             poi       = the_model.S        , ## parameter of interest 
+                             dataset   = data               ,
+                             workspace = model_sb.workspace , 
+                             name      = 'B-only'           )
+    
+    the_model.S = 0 
+    model_b.snapshot = the_model.S  ## ATTENTION! 
+    
+    logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
+    logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
+    
+    model_sb.mc.Print('vvv')
+    model_b .mc.Print('vvv')
+
+    ## with Frequentist calculator
+    with timing ( "Using Frequentist Calculator" , logger = logger ) :
+        
+        ## create the calculator 
+        fc  = FrequentistCalculator ( model_b          ,
+                                      model_sb         ,
+                                      dataset   = data ,
+                                      ntoys_null = 50  ,
+                                      ntoys_alt  = 50  ,
+                                      ) 
+        
+        
+        ## create Hypo Test inverter 
+        hti = HypoTestInverter ( fc ,  0.90 , use_CLs = True , verbose = False )
+        
+        ## make a scan 
+        hti .scan_with_progress  ( vrange ( 0 , 100 , 20 )  ) ## scan it!
+ 
+    ## visualize the scan results 
+    with use_canvas ( 'test_pointLimit: HypoTestInverter plot (frequentist)' , wait = 2 ) :
+        plot = hti .plot
+        plot .draw('LCb 2CL')    
+        logger.info ( '90%%CL upper limit (frequentist) = %.1f' % hti.upper_limit )
+
+
+# =============================================================================
+## Get the upper limit limit for small signal at fixed mass 
+#  - resolution is known with some finite precision 
+def test_point_limit2 () :
+    """Get the upperlimit limit for small signal at fixed mass 
+    - resolution is known with some finite precision 
+    """
+    
     logger = getLogger("test_point_limit2")
 
     logger.info ( "Test Point limits with RooStats (constrained resolution)" )
@@ -261,6 +359,7 @@ def test_point_limit2 () :
     
     the_model = model.clone ( name = 'M2' , signal = the_signal , signals = () )
 
+    ## all constraints 
     constraints = sigma_constraint, 
 
     with use_canvas ( 'test_point_limit2' ) : 
@@ -306,12 +405,12 @@ def test_point_limit2 () :
 
 
 # ============================================================================-
-## Get the limit at given point
-#  - resolution is known with some finite precvision 
+## Get the upper limit limit for small signal at fixed mass 
+#  - resolution is known with some finite precision 
 #  - efficiency is known with some finite precision 
 def test_point_limit3 () :
-    """Get the limit at given point
-    - resolution is known with some finite precvision 
+    """Get the upper limit limit for small soignal at fixed mass 
+    - resolution is known with some finite precision 
     - efficiency is known with some finite precision 
     """
     logger = getLogger("test_point_limit3")
@@ -388,12 +487,12 @@ def test_point_limit3 () :
 
 
 # ============================================================================-
-## Get the limit for different peak masses 
-#  - resolution is known with some finite precvision 
+## Scan the positon of the peak and get the limit for each peak posiiton peak
+#  - resolution is known with some finite precision 
 #  - efficiency is known with some finite precision 
 def test_scan_limit1 () :
-    """Get the limit for different peak masses 
-    - resolution is known with some finite precvision 
+    """Scan the positon of the peak and get the limit for each peak posiiton peak
+    - resolution is known with some finite precision 
     - efficiency is known with some finite precision 
     """
     logger = getLogger("test_scan_limit1")
@@ -499,47 +598,47 @@ def test_scan_limit1 () :
         
 
 # ============================================================================-
-## Get the limit for different peak masses 
-#  - mass-dependent resolution is known with some finite precvision
+## Scan the positon of the peak and get the limit for each peak posiiton peak
+#  - mass-dependent resolution is known with some finite precision
 #  - mass-dependent efficiency is known with some finite precision 
 def test_scan_limit2 () :
-    """Get the limit for different peak masses 
-    - mass-dependent resolution is known with some finite precvision 
+    """ Scan the positon of the peak and get the limit for each peak posiiton peak
+    - mass-dependent resolution is known with some finite precision 
     - mass-depondent efficiency is known with some finite precision 
     """
     logger = getLogger("test_scan_limit2")
 
     logger.info ( "Scan limits with RooStats (constrained mass-dependent resolution&efficiency)" )
 
-
     from ostap.fitting.roofuncs import BernsteinPoly as BP 
 
-    ## resoltuion depends on the peak position 
+    ## resolution depends on the peak position
     sigma_fun = BP ( 'SigmaFun' , signal.mean , power = 2 , pars = ( 1 , 4 , 1 ) )
-    sigma_err = 0.01
-    
-    ## normalize at m0=2.5 to be 0.3
+    sigma_err = 0.01    
+    ## normalize at m0 = 2.5 to be 0.3
     vn = sigma_fun ( 2.5 )
     for p in sigma_fun.pars :
         p.setVal ( float ( p ) * 0.3 / vn )
         p.fix()
-        
+    
     ## efficiency depends on the peak position
     eff_fun   = BP ( 'EffFun' , signal.mean , power = 1 , pars = ( 0.95 , 0.35 ) )
     eff_err   = 0.03 
-
     for p in eff_fun.pars : p.fix()
 
-    with use_canvas ( 'test_scan_limit2: Resolurion depends on peak position' ) : sigma_fun.draw ()
-    with use_canvas ( 'test_scan_limit2: Efficiency depends on peak position' ) : eff_fun  .draw ()
+    
+    with use_canvas ( 'test_scan_limit2: Resolution depends on the peak position' ) : sigma_fun.draw ()
+    with use_canvas ( 'test_scan_limit2: Efficiency depends on the peak position' ) : eff_fun  .draw ()
 
     from   ostap.fitting.roostats   import ( ModelConfig          ,
                                              AsymptoticCalculator ,
                                              HypoTestInverter     , 
                                              BrasilBand           )
+    
+    ## resolution 
+    sigma      = ROOT.RooRealVar( 'sigma', 'sigma of Gaussian' , 0.3 , 0.1 , 2 )
 
-    sigma = ROOT.RooRealVar( 'sigma', 'sigma of Gaussian' , 0.3 , 0.1 , 2 )
-
+    ## signal 
     the_signal = signal.clone ( sigma = sigma , name = 'S4' )
 
     ## create "soft" constraint for sigma: (0.30+/-0.01)  
@@ -557,21 +656,23 @@ def test_scan_limit2 () :
     ## raw/visible signal yield 
     raw_S = the_signal.vars_multiply ( NS , eff , 'raw_S' , 'raw/observed signal yeild' )
 
+    ## fit models 
     the_model = model.clone ( name = 'M4' , signal = the_signal , signals = () , S = raw_S )
 
+    ## collect constraints 
     constraints = sigma_constraint, eff_constraint 
 
-    ## fit with S+B 
+    ## fit with "S+B" model 
     with use_canvas ( 'test_scan_limit2: S+B'    ) : 
         r_sb , frame = the_model.fitTo    ( data , draw = True , nbins = 50 , constraints = constraints )
 
-    ## fit with B-obly 
+    ## fit with "B-only" model
     with use_canvas ( 'test_scan_limit2: B-only' ) :
         with FIXVAR ( NS ) :
             NS.setVal(0) 
             r_b , frame = the_model.fitTo ( data , draw = True , nbins = 50 , constraints = constraints )
 
-
+    ## Create ModelConfig for "S+B" model 
     model_sb = ModelConfig ( pdf         = the_model        ,
                              poi         = NS               , ## parameter of interest 
                              dataset     = data             ,
@@ -582,6 +683,7 @@ def test_scan_limit2 () :
     ## model_sb.snapshot = NS ## ATTENTION! 
     ## model_sb.snapshot = r_sb ## ATTENTION! 
     
+    ## Create ModelConfig for "B-only" model 
     model_b  = ModelConfig ( pdf         = the_model          ,
                              poi         = NS                 , ## parameter of interest 
                              dataset     = data               ,
@@ -600,39 +702,46 @@ def test_scan_limit2 () :
     model_sb.mc.Print('vvv')
     model_b .mc.Print('vvv')
     
-    ## scan peak positions
+    ## peak positions  (as in workspace)
     position = model_b.var ( the_signal.mean )
 
     ## prepare Brasil-plot 
     bplot = BrasilBand ( sigmas = (1,2,3) ) 
     
     rows = [ ( 'm0' , '90%UL' ) ]
-    
+
+    ## start the scan: 
     for m0 in vrange ( 1 , 9 , 16 ) : 
         
         with SETVAR ( position ) :
             
             position.setVal ( m0  )
-            
+
+            ## 1) create the calculator 
             ac  = AsymptoticCalculator ( model_b          ,
                                          model_sb         ,
                                          dataset   = data , 
                                          one_sided = True )
             ac.calculator.SetPrintLevel ( -1 )
-            
+
+            ## 2) create the Hypo Test inverter 
             hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
-            
+
+            ## define the scan 
             hti.scan ( vrange ( 0 , 150 , 50 )  ) ## scan it!
-            
+
+            ## get the obtained interval & upper limit 
             interval = hti.interval
             limit    = hti.upper_limit
 
             ## fill Brasil plot 
             bplot.fill ( m0 , limit , interval ) 
 
+            ## fill a row in table 
             row = '%.1f' % m0 , '%.1f' % limit
             rows.append ( row ) 
-                
+
+    ## visualize the Brasin plot 
     with use_canvas ( 'test_scan_limit2: Brasil plot' , wait = 2 ) :
         bplot.plot  .draw ( 'a' )
         bplot.legend.draw (     )
@@ -651,14 +760,16 @@ if '__main__' == __name__ :
     
     with rooSilent ( ) : 
     
-        test_intervals    ()
+        ## test_intervals    ()
         
-        test_point_limit  () 
-        test_point_limit2 ()
+        test_point_limit_ac () 
+        test_point_limit_fc ()
         
-        test_scan_limit1  ()
-        test_scan_limit2  () 
+        ## test_point_limit2 ()
         
+        ## test_scan_limit1  ()
+        ## test_scan_limit2  () 
+
 
 # =============================================================================
 ##                                                                      The END 

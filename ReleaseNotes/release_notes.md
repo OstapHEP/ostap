@@ -22,6 +22,7 @@
   1. extend `test_fitting_roostats` to cover intervals, point limit, scans - including constraints, resolution and efficincies that depends on ovservables 
   1. Add `Ostap::MoreRooFit::Minimal` and `Ostap::MoreRooFit::Maximal` 
   1. add `ostap.roostats.FrequentistCalculator`
+  1. extend the test for `FrequentistCalculator` 
 
   
 ## Backward incompatible:  

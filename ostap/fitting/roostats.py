@@ -5,12 +5,12 @@
 #  Set of useful basic utilities to dela with RooStats
 #
 # - confidence interval estimation
-# - confidence interval and limits
+# - confidence intervals and limits
 # - hypothesis tests
 # - Brasilian  plots 
 #
-#  @thanks to Dmitry Golubkov for th egreat heap and examples 
-#  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
+#  @author Vanya BELYAEV   Ivan.Belyaev@itep.ru
+#  @author Dmitry GOLUBKOV Dmitry.Yu.Golubkov@cern.ch
 #  @date 2023-01-17
 # =============================================================================
 """ Set of useful basic utilities to deal with RooStats
@@ -20,11 +20,10 @@
 - hypothesis tests
 - Brasilian  plots 
 
-@thanks to Dmitry Golubkov for
 """
 # =============================================================================
 __version__ = "$Revision:"
-__author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
+__author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru; Dmitry GOLUBKOV Dmitry.Yu.Golubkov@cern.ch"
 __date__    = "2023-01-17"
 __all__     = (
     ##
@@ -38,7 +37,7 @@ __all__     = (
     'FrequentistCalculator'    , ## Frequentist calcualtor for limits and nitervals 
     'HypoTestInverter'         , ## 
     ##
-    'BrasilBand'               , ## utility to porduce Brasil-band plots 
+    'BrasilBand'               , ## utility to produce Brasil-band plots 
     )
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
@@ -288,12 +287,35 @@ class ModelConfig(object):
         """
         pars = self.mc.GetConstraintParameters()
         if not valid_pointer ( pars ) : return () 
-        return pars if pars and 0 < len ( pars ) else () 
+        return pars if pars and 0 < len ( pars ) else ()
+
+    # =========================================================================
+    ## Get/set snapshot from the model/workspacee
+    #  @code 
+    #  model = ...
+    #  s     = model.snapshot
+    # 
+    #   model.snapshot = var                         ## variable
+    #   model.snapshot = var1,var2,var3              ## sequence of variables 
+    #   model.snapshot = ROOT.RooArgSet (... )
+    #   model.snapshot = fit_result                  ## ROOT.RooFitResult
+    #   model.snapshot = { 'var1' : 1 , 'var2' : 2 } ## dictionary 
+    #  @see RooStats::ModelConfig::GetSnapshot
+    #  @see RooStats::ModelConfig::SetSnapshot
     @property
     def snapshot ( self ) :
-        """'snapshot' : get/set snapshot fomr the model/workspacee
+        """'snapshot' : get/set snapshot from  the model/workspacee
+        >>> model = ...
+        >>> s     = model.snapshot
+
+        >>> model.snapshot = var                         ## variable
+        >>> model.snapshot = var1,var2,var3              ## sequence of variables 
+        >>> model.snapshot = ROOT.RooArgSet (... )
+        >>> model.snapshot = fit_result                  ## ROOT.RooFitResult
+        >>> model.snapshot = { 'var1' : 1 , 'var2' : 2 } ## dictionary 
+        
         - see `ROOT.RooStats.ModelConfig.GetSnapshot`
-        - see `ROOT.RooStats.ModelConfig.SetSnapshot`
+        - see `ROOT.RooStats.ModelConfig.SetSnapshot`        
         """
         pars = self.mc.GetSnapshot()
         if not valid_pointer ( pars ) : return () 
@@ -302,8 +324,7 @@ class ModelConfig(object):
     def snapshot ( self , values ) :
         
         if   isinstance ( values , ROOT.RooAbsReal   ) : return self.mc.SetSnapshot ( ROOT.RooArgSet ( values ) )
-        elif isinstance ( values , ROOT.RooArgSet    ) : 
-            return self.mc.SetSnapshot (  values )
+        elif isinstance ( values , ROOT.RooArgSet    ) : return self.mc.SetSnapshot (  values )
         elif isinstance ( values , ROOT.RooFitResult ) :            
             vs = ROOT.RooArgSet()
             for p in values.floatParsFinal () : vs.add ( p )
@@ -318,11 +339,11 @@ class ModelConfig(object):
                 v = self.var ( key )                
                 assert v , "No valid variable for '%s'" % key                
                 vv = float ( values [ key ] )
-                vars.append ( v )
+                vlst.append ( v )
                 vdct [ v.name ]  = vv
-                
-            vset = ROOT.RooArgSet() 
+
             with SETVAL ( *vlst ) :
+                vset = ROOT.RooArgSet() 
                 for v in vlst : v.setVal ( vdct [ v.name ] )
                 for v in vlst : vset.add ( v )
                 return self.mc.SetSnapshot ( vset  )
@@ -994,25 +1015,36 @@ class AsymptoticCalculator (Calculator) :
     - see `ROOT.RooStats.AsymptoticCalculator`
     """
     
-    def __init__ ( self             ,
-                   H1               ,   ## H1 model, e.g. background only
-                   H0               ,   ## H0 model, e.g. signal+background
-                   dataset          ,   ## dataset 
-                   one_sided = True ) : 
+    def __init__ ( self              ,
+                   H1                ,   ## H1 model, e.g. background only
+                   H0                ,   ## H0 model, e.g. signal+background
+                   dataset           ,   ## dataset 
+                   asimov    = False ,   ## nominal Asimov? (not using fitted parameter values but nominal ones)
+                   one_sided = True  ) : 
 
-        self.__one_sided  = one_sided 
+        self.__one_sided  = True if one_sided else False 
+        self.__asimov     = True if asimov    else False        
         Calculator.__init__ ( self , H1 , H0 , dataset )
 
-    ## create and configire the calculator 
+    ## create and configure the Asymptotic calculator 
     def make_calculator ( self ) :
-        calc = ROOT.RooStats.AsymptoticCalculator ( self.dataset , self.h1 , self.h0 ) 
+        """Create and configure the Asymptotic calculator"""
+        calc = ROOT.RooStats.AsymptoticCalculator ( self.dataset , self.h1 , self.h0 , self.asimov ) 
         calc.SetOneSided ( self.one_sided )
         return calc
         
     @property
     def one_sided ( self ) :
-        """'one_sided' : actual RooStats calculator"""
+        """'one_sided' :  parameter for `ROOT.RooStats.AsymptoticCalculator.SetOneSided`"""
         return self.__one_sided
+    
+    @property
+    def asimov    ( self ) :
+        """'asimov' :  parameter for `ROOT.RooStats.AsymptoticCalculator(..., nominalAsimov = ...)`
+        - (not using fitted parameter values but nominal ones)
+        """
+        return self.__asimov 
+
 
 # =============================================================================
 ## @class FrequentistCalculator
@@ -1030,8 +1062,7 @@ class FrequentistCalculator (Calculator) :
                    ntoys_null      = -1   ,
                    ntoys_alt       = -1   ,
                    ntoys_null_tail =  0   ,
-                   ntoys_alt_tail  =  0   ,
-                   ) : 
+                   ntoys_alt_tail  =  0   ) : 
 
         assert isinstance ( ntoys_null , integer_types ) and -1 <= ntoys_null , \
                "Invalid ntoys_null parameter!"
@@ -1050,20 +1081,20 @@ class FrequentistCalculator (Calculator) :
         assert sampler is None or ( sampler and isinstance ( sampler , ROOT.RooStat.TestStatSampler ) ) , \
                'Invalid sampler!'
         
-        slef.__sampler = sampler 
+        self.__sampler = sampler 
     
         Calculator.__init__ ( self , H1 , H0 , dataset )
 
     # ==============================================================================================
-    ## create and configire the calculator 
+    ## Create and configure the calculator 
     def make_calculator ( self ) :
         """Create and configure the calculator"""
-        if self.sampler : calc = ROOT.RooStats.FrequestistCalculator ( self.dataset , self.h1 , self.h0 , self.sampler )
-        else            : calc = ROOT.RooStats.FrequestistCalculator ( self.dataset , self.h1 , self.h0 )
+        if self.sampler : calc = ROOT.RooStats.FrequentistCalculator ( self.dataset , self.h1 , self.h0 , self.sampler )
+        else            : calc = ROOT.RooStats.FrequentistCalculator ( self.dataset , self.h1 , self.h0 )
         
-        if -1 != self.ntoys_null      or -1 != slef.ntoys_alt :
+        if -1 != self.ntoys_null      or -1 != self.ntoys_alt :
             calc.SetToys         ( self.ntoys_null      , self.ntoys_alt      )
-        if  0 != self.ntoys_null_tail or -1 != slef.ntoys_alt_tail  :
+        if  0 != self.ntoys_null_tail or -1 != self.ntoys_alt_tail  :
             calc.SetNToysInTails ( self.ntoys_null_tail , self.ntoys_alt_tail )
             
         return calc
@@ -1154,7 +1185,50 @@ class HypoTestInverter(object) :
             for v in values [ 0 ] : self.__inverter.RunOnePoint ( v )
         else :
             for v in values : self.__inverter.RunOnePoint ( v )
+
+    # =========================================================================
+    ## define (or perform the actual scan)
+    #  @code
+    #  hti = ...
+    #  hti.scan ( 100 , 0.0 , 10.0 )   ## define scan with 100 point between 0 and 10
+    #  hti.scan ()                     ## define auto scan 
+    #  hti.scan (  [ 0, 1, 2, 3, 4 ] ) ## define custom scane    
+    #  @endcode
+    def scan_with_progress ( self , *values ) :
+        """Define (or perform the actual scan)
+        >>> hti = ...
+        >>> hti.scan ( 100 , 0.0 , 10.0 )   ## define scan with 100 point between 0 and 10
+        >>> hti.scan ()                     ## define auto scan 
+        >>> hti.scan (  [ 0, 1, 2, 3, 4 ] ) ## define custom scane    
+        """
+
+        from ostap.utils.utils        import vrange
+        from ostap.utils.progress_bar import progress_bar 
+        
+        if    not values :
             
+            self.__inverter.SetAutoScan  ()
+            if self.__interval : self.__interval = None
+            if self.__plot     : self.__plot = None
+            return
+        
+        elif  3 == len ( values )  and \
+             isinstance ( values [ 0 ] , integer_types ) and \
+             2 <= values                                 and \
+             isinstance ( values [ 1 ] , num_types     ) and \
+             isinstance ( values [ 2 ] , num_types     ) :            
+            return self.scan_with_progress ( vrange ( values[1] , vales[2] , values[0] ) ) 
+
+        elif  1 == len ( values ) and isinstance ( values [ 0 ] , sequence_types  ) :
+
+            for v in progress_bar ( values [ 0 ] ) :
+                self.__inverter.RunOnePoint ( v )
+                
+        else :
+            
+            for v in progress_bar ( values ) :
+                self.__inverter.RunOnePoint ( v )
+
     @property
     def inverter ( self ) :
         """'inverter' : actual `HypoTestInverter` object from `RooStats`"""
