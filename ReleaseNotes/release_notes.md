@@ -23,7 +23,6 @@
   1. add `ostap.roostats.FrequentistCalculator`
   1. extend the test for `FrequentistCalculator` 
 
-  
 ## Backward incompatible:  
 
 ## Bug fixes:
