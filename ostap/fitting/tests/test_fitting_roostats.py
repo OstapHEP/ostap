@@ -191,6 +191,9 @@ model.B = 1000
 model.S.setMax(200)
 
 data    = model.generate ( 55 + 1000 )
+data1   = data.clone()
+data2   = data.clone()
+data3   = data.clone()
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass
@@ -213,12 +216,13 @@ def test_point_limit_ac () :
     the_model = model.clone ( name = 'M1' )
 
     with use_canvas ( 'test_point_limit_ac' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+        logger.info ( 'Dataset is\n%s' % data1.table ( prefix = '# ' ) ) 
+        rr , frame = the_model.fitTo ( data1 , draw = True , nbins = 50 )
 
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
                              poi       = the_model.S , ## parameter of interest 
-                             dataset   = data        ,
+                             dataset   = data1       ,
                              name      = 'S+B'       )
     
     model_sb.snapshot = the_model.S ## ATTENTION! 
@@ -226,7 +230,7 @@ def test_point_limit_ac () :
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf       = the_model          ,
                              poi       = the_model.S        , ## parameter of interest 
-                             dataset   = data               ,
+                             dataset   = data1              ,
                              workspace = model_sb.workspace , 
                              name      = 'B-only'           )
     
@@ -282,12 +286,13 @@ def test_point_limit_fc  () :
     the_model = model.clone ( name = 'M2' )
 
     with use_canvas ( 'test_point_limit_fc' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+        logger.info ( 'Dataset is\n%s' % data2.table ( prefix = '# ' ) ) 
+        rr , frame = the_model.fitTo ( data2 , draw = True , nbins = 50 )
 
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
                              poi       = the_model.S , ## parameter of interest 
-                             dataset   = data        ,
+                             dataset   = data2       ,
                              name      = 'S+B'       )
     
     model_sb.snapshot = the_model.S ## ATTENTION! 
@@ -295,7 +300,7 @@ def test_point_limit_fc  () :
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf       = the_model          ,
                              poi       = the_model.S        , ## parameter of interest 
-                             dataset   = data               ,
+                             dataset   = data2              ,
                              workspace = model_sb.workspace , 
                              name      = 'B-only'           )
     
@@ -353,12 +358,13 @@ def test_point_limit_hc  () :
     the_model = model.clone ( name = 'M3' )
 
     with use_canvas ( 'test_point_limit_hc' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+        logger.info ( 'Dataset is\n%s' % data3.table ( prefix = '# ' ) ) 
+        rr , frame = the_model.fitTo ( data3 , draw = True , nbins = 50 )
 
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
                              poi       = the_model.S , ## parameter of interest 
-                             dataset   = data        ,
+                             dataset   = data3       ,
                              name      = 'S+B'       )
     
     model_sb.snapshot = the_model.S ## ATTENTION! 
@@ -366,7 +372,7 @@ def test_point_limit_hc  () :
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf       = the_model          ,
                              poi       = the_model.S        , ## parameter of interest 
-                             dataset   = data               ,
+                             dataset   = data3              ,
                              workspace = model_sb.workspace , 
                              name      = 'B-only'           )
     
@@ -907,7 +913,7 @@ if '__main__' == __name__ :
         test_point_limit_ac () 
         test_point_limit_fc ()
         test_point_limit_hc ()
-
+        
         ## test_point_limit_pl ()
         
         test_point_limit2   ()
