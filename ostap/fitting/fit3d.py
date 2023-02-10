@@ -246,7 +246,7 @@ class Shape3D_pdf(PDF3) :
     - see Ostap::Models:Shape3D
     """
     
-    def __init__ ( self , name , shape , xvar , yvar , zvar ) :
+    def __init__ ( self , name , shape , xvar , yvar , zvar , tag = 0 ) :
 
         if isinstance ( shape , ROOT.TH3 ) and not xvar :
             xvar = shape.xminmax()
@@ -258,14 +258,21 @@ class Shape3D_pdf(PDF3) :
             zvar = shape.zminmax()
             
         if isinstance ( shape , ROOT.TH3 ) :
+            
             self.histo = shape
-            shape      = Ostap.Math.Histo3D ( shape )
+            shape      = Ostap.Math.Histo3D     ( shape )
+            tag        = Ostap.Utils.hash_histo ( shape ) 
+            
+        elif hasattr ( shape , 'tag' ) and not tag : 
+            tag = shape.tag() 
 
         ##  iniialize the base 
         PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
             
         self.__shape = shape
+        self.__tag   = tag
 
+        
         if isinstance ( self.shape , Ostap.Math.Histo2D ) :
             
             ## create the actual pdf
@@ -284,7 +291,8 @@ class Shape3D_pdf(PDF3) :
                 self.xvar                   ,
                 self.yvar                   ,
                 self.zvar                   ,
-                self.shape                  ) 
+                self.shape                  ,
+                self.tag                    ) 
 
         ## save the configuration
         self.config = {
@@ -293,12 +301,17 @@ class Shape3D_pdf(PDF3) :
             'xvar'    : self.xvar    , 
             'yvar'    : self.yvar    , 
             'zvar'    : self.zvar    , 
+            'tag'     : self.tag     , 
             }
         
     @property
     def shape  ( self ) :
         """'shape' : the actual C++ callable shape"""
         return self.__shape  
+    @property
+    def tag   ( self ) :
+        """'tag' : uqnue tag used for cache-integration"""
+        return self.__tag 
   
 # =============================================================================
 ## simple convertor of 3D-histogram into PDF
@@ -329,7 +342,6 @@ class H3D_pdf(PDF3) :
                             zvar = self.ds.zvar ) 
         
         self.__vset  = ROOT.RooArgSet  ( self.xvar , self.yvar , self.zvar )
-        
         
         #
         ## finally create PDF :

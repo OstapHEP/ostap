@@ -9,6 +9,8 @@
 // ============================================================================
 #include "Ostap/PDFs.h"
 #include "Ostap/Iterator.h"
+#include "Ostap/Integrator.h"
+#include "Ostap/HistoHash.h"
 // ============================================================================
 // ROOT 
 // ============================================================================
@@ -35,8 +37,9 @@ Ostap::Models::Shape1D::Shape1D
 ( const Ostap::Models::Shape1D& right ,
   const char*                   name  )
   : RooAbsPdf ( right , name ) 
-  , m_x        ( "x"  , this , right.m_x ) 
-  , m_function ( right.m_function ) 
+  , m_x         ( "!x"  , this , right.m_x ) 
+  , m_function  ( right.m_function  ) 
+  , m_tag       ( right.m_tag       ) 
 {}
 // ============================================================================
 // clone 
@@ -44,6 +47,34 @@ Ostap::Models::Shape1D::Shape1D
 Ostap::Models::Shape1D*
 Ostap::Models::Shape1D::clone ( const char* name ) const 
 { return new Ostap::Models::Shape1D(*this,name) ; }
+// ============================================================================
+Int_t Ostap::Models::Shape1D::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Shape1D::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  static const Ostap::Math::Integrator s_integrator {} ;
+  //
+  auto fun = [this] ( const double x ) -> double 
+    { return this->func ( x  ) ; } ;
+  //
+  return s_integrator.integrate 
+    ( fun , 
+      m_x.min ( rangeName ) , 
+      m_x.max ( rangeName ) , 
+      m_tag                 ) ;
+}
 // ============================================================================
 //  Shape2D
 // ============================================================================
@@ -53,9 +84,10 @@ Ostap::Models::Shape2D::Shape2D
 ( const Ostap::Models::Shape2D& right ,
   const char*                   name  )
   : RooAbsPdf ( right , name ) 
-  , m_x        ( "x"  , this , right.m_x ) 
-  , m_y        ( "y"  , this , right.m_y ) 
+  , m_x        ( "!x"  , this , right.m_x ) 
+  , m_y        ( "!y"  , this , right.m_y ) 
   , m_function ( right.m_function ) 
+  , m_tag      ( right.m_tag       ) 
 {}
 // ============================================================================
 // clone 
@@ -63,6 +95,66 @@ Ostap::Models::Shape2D::Shape2D
 Ostap::Models::Shape2D*
 Ostap::Models::Shape2D::clone ( const char* name ) const 
 { return new Ostap::Models::Shape2D(*this,name) ; }
+// ============================================================================
+Int_t Ostap::Models::Shape2D::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars , m_y       ) ) { return 3 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Shape2D::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 || code == 2 || code == 3 ) ;
+  //
+  static const Ostap::Math::Integrator s_integrator {} ;
+  //
+  const double xv = m_x ;
+  const double yv = m_y ;
+  //
+  auto fun2 = [this] ( const double x , 
+                       const double y ) -> double 
+    { return this->func ( x  , y ) ; } ;
+  //
+  if ( 1 == code ) 
+  {
+    return s_integrator.integrate2 
+      ( fun2                  , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 2 == code ) 
+  {
+    const double yv = m_y ;    
+    return s_integrator.integrate2X 
+      ( fun2                  , 
+        yv                    , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 3 == code ) 
+  {
+    const double xv = m_x ;    
+    return s_integrator.integrate2Y 
+      ( fun2                  , 
+        xv                    , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  //
+  return  0 ;
+}
 // ============================================================================
 //  Shape3D
 // ============================================================================
@@ -72,10 +164,11 @@ Ostap::Models::Shape3D::Shape3D
 ( const Ostap::Models::Shape3D& right ,
   const char*                   name  )
   : RooAbsPdf ( right , name ) 
-  , m_x        ( "x"  , this , right.m_x ) 
-  , m_y        ( "y"  , this , right.m_y ) 
-  , m_z        ( "z"  , this , right.m_z ) 
+  , m_x        ( "!x"  , this , right.m_x ) 
+  , m_y        ( "!y"  , this , right.m_y ) 
+  , m_z        ( "!z"  , this , right.m_z ) 
   , m_function ( right.m_function ) 
+  , m_tag      ( right.m_tag      )
 {}
 // ============================================================================
 // clone 
@@ -84,11 +177,121 @@ Ostap::Models::Shape3D*
 Ostap::Models::Shape3D::clone ( const char* name ) const 
 { return new Ostap::Models::Shape3D(*this,name) ; }
 // ============================================================================
-
-
-
-
-
+Int_t Ostap::Models::Shape3D::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if      ( matchArgs ( allVars , analVars , m_x , m_y , m_z ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_x , m_y       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars , m_x ,       m_z ) ) { return 3 ; }
+  else if ( matchArgs ( allVars , analVars ,       m_y , m_z ) ) { return 4 ; }
+  else if ( matchArgs ( allVars , analVars , m_x             ) ) { return 5 ; }
+  else if ( matchArgs ( allVars , analVars ,       m_y       ) ) { return 6 ; }
+  else if ( matchArgs ( allVars , analVars ,             m_z ) ) { return 7 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Shape3D::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( 1 <= code && code <= 7 ) ;
+  //
+  static const Ostap::Math::Integrator s_integrator {} ;
+  //
+  auto fun3 = [this] ( const double x , 
+                       const double y , 
+                       const double z ) -> double 
+    { return this->func ( x , y , z ) ; } ;
+  //
+  if ( 1 == code ) 
+  {
+    return s_integrator.integrate3 
+      ( fun3                  , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_z.min ( rangeName ) , 
+        m_z.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 2 == code ) 
+  {
+    const double zv = m_z ;    
+    return s_integrator.integrate3XY
+      ( fun3                  , 
+        zv                    , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 3 == code ) 
+  {
+    const double yv = m_y ;    
+    return s_integrator.integrate3XZ
+      ( fun3                  , 
+        yv                    , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_z.min ( rangeName ) , 
+        m_z.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 4 == code ) 
+  {
+    const double xv = m_x ;    
+    return s_integrator.integrate3YZ
+      ( fun3                  , 
+        xv                    , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_z.min ( rangeName ) , 
+        m_z.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 5 == code ) 
+  {
+    const double yv = m_y ;    
+    const double zv = m_z ;    
+    return s_integrator.integrate3X
+      ( fun3                  , 
+        yv                    , 
+        zv                    , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 6 == code ) 
+  {
+    const double xv = m_x ;    
+    const double zv = m_z ;    
+    return s_integrator.integrate3Y
+      ( fun3                  , 
+        xv                    , 
+        zv                    , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 7 == code ) 
+  {
+    const double xv = m_x ;    
+    const double yv = m_y ;    
+    return s_integrator.integrate3Z
+      ( fun3                  , 
+        xv                    , 
+        yv                    , 
+        m_z.min ( rangeName ) , 
+        m_z.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  //
+  return  0 ;
+}
 // ============================================================================
 //  Histo1D
 // ============================================================================
@@ -100,8 +303,9 @@ Ostap::Models::Histo1D::Histo1D
   RooAbsReal&                 x     ,
   const Ostap::Math::Histo1D& histo ) 
   : RooAbsPdf  (  name ,  title ) 
-  , m_x        ( "x"   , "x-variable" , this , x ) 
+  , m_x        ( "!x"   , "x-variable" , this , x ) 
   , m_histo    ( histo ) 
+  , m_tag      ( Ostap::Utils::hash_histo ( histo ) )
 {}
 // ============================================================================
 // copy constructor 
@@ -110,8 +314,9 @@ Ostap::Models::Histo1D::Histo1D
 ( const Ostap::Models::Histo1D& right ,
   const char*                   name  )
   : RooAbsPdf ( right , name  ) 
-  , m_x       ( "x"  , this , right.m_x ) 
+  , m_x       ( "!x"  , this , right.m_x ) 
   , m_histo   ( right.m_histo ) 
+  , m_tag     ( right.m_tag   )
 {}
 // ============================================================================
 // clone 
@@ -119,6 +324,34 @@ Ostap::Models::Histo1D::Histo1D
 Ostap::Models::Histo1D*
 Ostap::Models::Histo1D::clone ( const char* name ) const 
 { return new Ostap::Models::Histo1D(*this,name) ; }
+// ============================================================================
+Int_t Ostap::Models::Histo1D::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Histo1D::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  static const Ostap::Math::Integrator s_integrator {} ;
+  //
+  auto fun = [this] ( const double x ) -> double 
+    { return this->func ( x  ) ; } ;
+  //
+  return s_integrator.integrate 
+    ( fun , 
+      m_x.min ( rangeName ) , 
+      m_x.max ( rangeName ) , 
+      m_tag                 ) ;
+}
 // ============================================================================
 //  Histo2D
 // ============================================================================
@@ -131,9 +364,10 @@ Ostap::Models::Histo2D::Histo2D
   RooAbsReal&                 y     ,
   const Ostap::Math::Histo2D& histo ) 
   : RooAbsPdf  (  name ,  title ) 
-  , m_x        ( "x"   , "x-variable" , this , x ) 
-  , m_y        ( "y"   , "y-variable" , this , y ) 
+  , m_x        ( "!x"   , "x-variable" , this , x ) 
+  , m_y        ( "!y"   , "y-variable" , this , y ) 
   , m_histo    ( histo ) 
+  , m_tag      ( Ostap::Utils::hash_histo ( histo ) )
 {}
 // ============================================================================
 // copy constructor 
@@ -142,9 +376,10 @@ Ostap::Models::Histo2D::Histo2D
 ( const Ostap::Models::Histo2D& right ,
   const char*                   name  )
   : RooAbsPdf ( right , name  ) 
-  , m_x       ( "x"  , this , right.m_x ) 
-  , m_y       ( "y"  , this , right.m_y ) 
+  , m_x       ( "!x"  , this , right.m_x ) 
+  , m_y       ( "!y"  , this , right.m_y ) 
   , m_histo   ( right.m_histo ) 
+  , m_tag     ( right.m_tag   ) 
 {}
 // ============================================================================
 // clone 
@@ -152,6 +387,66 @@ Ostap::Models::Histo2D::Histo2D
 Ostap::Models::Histo2D*
 Ostap::Models::Histo2D::clone ( const char* name ) const 
 { return new Ostap::Models::Histo2D(*this,name) ; }
+// ============================================================================
+Int_t Ostap::Models::Histo2D::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars , m_y       ) ) { return 3 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Histo2D::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 || code == 2 || code == 3 ) ;
+  //
+  static const Ostap::Math::Integrator s_integrator {} ;
+  //
+  const double xv = m_x ;
+  const double yv = m_y ;
+  //
+  auto fun2 = [this] ( const double x , 
+                       const double y ) -> double 
+    { return this->func ( x  , y ) ; } ;
+  //
+  if ( 1 == code ) 
+  {
+    return s_integrator.integrate2 
+      ( fun2                  , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 2 == code ) 
+  {
+    const double yv = m_y ;    
+    return s_integrator.integrate2X 
+      ( fun2                  , 
+        yv                    , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 3 == code ) 
+  {
+    const double xv = m_x ;    
+    return s_integrator.integrate2Y 
+      ( fun2                  , 
+        xv                    , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  //
+  return  0 ;
+}
 // ============================================================================
 //  Histo3D
 // ============================================================================
@@ -165,10 +460,11 @@ Ostap::Models::Histo3D::Histo3D
   RooAbsReal&                 z     ,
   const Ostap::Math::Histo3D& histo ) 
   : RooAbsPdf  (  name ,  title ) 
-  , m_x        ( "x"   , "x-variable" , this , x ) 
-  , m_y        ( "y"   , "y-variable" , this , y ) 
-  , m_z        ( "z"   , "z-variable" , this , z ) 
+  , m_x        ( "!x"   , "x-variable" , this , x ) 
+  , m_y        ( "!y"   , "y-variable" , this , y ) 
+  , m_z        ( "!z"   , "z-variable" , this , z ) 
   , m_histo    ( histo ) 
+  , m_tag      ( Ostap::Utils::hash_histo ( histo ) )
 {}
 // ============================================================================
 // copy constructor 
@@ -177,10 +473,11 @@ Ostap::Models::Histo3D::Histo3D
 ( const Ostap::Models::Histo3D& right ,
   const char*                   name  )
   : RooAbsPdf ( right , name  ) 
-  , m_x       ( "x"  , this , right.m_x ) 
-  , m_y       ( "y"  , this , right.m_y ) 
-  , m_z       ( "z"  , this , right.m_z ) 
+  , m_x       ( "!x"  , this , right.m_x ) 
+  , m_y       ( "!y"  , this , right.m_y ) 
+  , m_z       ( "!z"  , this , right.m_z ) 
   , m_histo   ( right.m_histo ) 
+  , m_tag     ( right.m_tag   ) 
 {}
 // ============================================================================
 // clone 
@@ -189,9 +486,121 @@ Ostap::Models::Histo3D*
 Ostap::Models::Histo3D::clone ( const char* name ) const 
 { return new Ostap::Models::Histo3D(*this,name) ; }
 // ============================================================================
-
-
-
+Int_t Ostap::Models::Histo3D::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if      ( matchArgs ( allVars , analVars , m_x , m_y , m_z ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_x , m_y       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars , m_x ,       m_z ) ) { return 3 ; }
+  else if ( matchArgs ( allVars , analVars ,       m_y , m_z ) ) { return 4 ; }
+  else if ( matchArgs ( allVars , analVars , m_x             ) ) { return 5 ; }
+  else if ( matchArgs ( allVars , analVars ,       m_y       ) ) { return 6 ; }
+  else if ( matchArgs ( allVars , analVars ,             m_z ) ) { return 7 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Histo3D::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( 1 <= code && code <= 7 ) ;
+  //
+  static const Ostap::Math::Integrator s_integrator {} ;
+  //
+  auto fun3 = [this] ( const double x , 
+                       const double y , 
+                       const double z ) -> double 
+    { return this->func ( x , y , z ) ; } ;
+  //
+  if ( 1 == code ) 
+  {
+    return s_integrator.integrate3 
+      ( fun3                  , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_z.min ( rangeName ) , 
+        m_z.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 2 == code ) 
+  {
+    const double zv = m_z ;    
+    return s_integrator.integrate3XY
+      ( fun3                  , 
+        zv                    , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 3 == code ) 
+  {
+    const double yv = m_y ;    
+    return s_integrator.integrate3XZ
+      ( fun3                  , 
+        yv                    , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_z.min ( rangeName ) , 
+        m_z.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 4 == code ) 
+  {
+    const double xv = m_x ;    
+    return s_integrator.integrate3YZ
+      ( fun3                  , 
+        xv                    , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_z.min ( rangeName ) , 
+        m_z.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 5 == code ) 
+  {
+    const double yv = m_y ;    
+    const double zv = m_z ;    
+    return s_integrator.integrate3X
+      ( fun3                  , 
+        yv                    , 
+        zv                    , 
+        m_x.min ( rangeName ) , 
+        m_x.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 6 == code ) 
+  {
+    const double xv = m_x ;    
+    const double zv = m_z ;    
+    return s_integrator.integrate3Y
+      ( fun3                  , 
+        xv                    , 
+        zv                    , 
+        m_y.min ( rangeName ) , 
+        m_y.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  else if ( 7 == code ) 
+  {
+    const double xv = m_x ;    
+    const double yv = m_y ;    
+    return s_integrator.integrate3Z
+      ( fun3                  , 
+        xv                    , 
+        yv                    , 
+        m_z.min ( rangeName ) , 
+        m_z.max ( rangeName ) , 
+        m_tag                 ) ;
+  }
+  //
+  return  0 ;
+}
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================

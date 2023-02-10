@@ -8612,13 +8612,15 @@ namespace Ostap
       // ======================================================================
       /// templated constructor 
       template <class FUNCTION> 
-        Shape1D ( const char*  name  , 
-                  const char*  title , 
-                  RooAbsReal&  x     ,
-                  FUNCTION     f     )
-        : RooAbsPdf  (  name ,  title ) 
-        , m_x        ( "x"   , "Variable" , this , x ) 
-        , m_function ( f ) 
+        Shape1D ( const char*       name    , 
+                  const char*       title   , 
+                  RooAbsReal&       x       ,
+                  FUNCTION          f       , 
+                  const std::size_t tag = 0 )
+        : RooAbsPdf   (  name ,  title ) 
+        , m_x         ( "x"   , "Variable" , this , x ) 
+        , m_function  ( f   ) 
+        , m_tag       ( tag ) 
       {}
       /// copy constructor 
       Shape1D ( const Shape1D& right , const char* name = nullptr ) ;
@@ -8631,11 +8633,12 @@ namespace Ostap
       template <class FUNCTION> 
         static inline Shape1D 
         create
-        ( const std::string& name  , 
-          const std::string& title , 
-          RooAbsReal&        x     ,
-          FUNCTION           f     ) 
-      { return Shape1D  ( name.c_str () , title.c_str () , x , f ) ; }
+        ( const std::string& name     , 
+          const std::string& title    , 
+          RooAbsReal&        x        ,
+          FUNCTION           f        , 
+          const std::size_t  tag = 0  ) 
+      { return Shape1D  ( name.c_str () , title.c_str () , x , f , tag ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8649,13 +8652,25 @@ namespace Ostap
       double func  ( const double x ) const 
       { return std::max ( m_function ( x ) , 0.0 ) ; }
       // ======================================================================        
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
     private :
       // ======================================================================
       /// variable 
-      RooRealProxy                   m_x        ; // variable 
+      RooRealProxy                   m_x            ; // variable 
       /// the function itself 
-      std::function<double(double)>  m_function ; // function 
-      // ======================================================================      
+      std::function<double(double)>  m_function     ; // function 
+      /// helper (hopefully unique) tag 
+      std::size_t                    m_tag          ; // tag 
+      // ======================================================================
     } ;    
     // ========================================================================
     /** @class Shape2D
@@ -8671,15 +8686,17 @@ namespace Ostap
       // ======================================================================
       /// templated constructor 
       template <class FUNCTION> 
-      Shape2D ( const char*  name  , 
-                const char*  title , 
-                RooAbsReal&  x     ,
-                RooAbsReal&  y     ,
-                FUNCTION     f     )
+      Shape2D ( const char*       name    , 
+                const char*       title   , 
+                RooAbsReal&       x       ,
+                RooAbsReal&       y       ,
+                FUNCTION          f       , 
+                const std::size_t tag = 0 ) 
         : RooAbsPdf  (  name ,  title ) 
         , m_x        ( "x"   , "x-variable" , this , x ) 
         , m_y        ( "y"   , "y-variable" , this , y ) 
-        , m_function ( f ) 
+        , m_function ( f   ) 
+        , m_tag      ( tag ) 
       {}
       /// copy constructor 
       Shape2D ( const Shape2D& right , const char* name = nullptr ) ;
@@ -8692,11 +8709,13 @@ namespace Ostap
       template <class FUNCTION> 
         static inline Shape2D
         create
-        ( const std::string& name  , 
-          const std::string& title , 
-          RooAbsReal&  x     ,
-          RooAbsReal&  y     ,
-          FUNCTION     f     ) { return Shape2D ( name.c_str() , title.c_str () , x , y , f ) ; }
+        ( const std::string& name    ,  
+          const std::string& title   ,  
+          RooAbsReal&        x       ,
+          RooAbsReal&        y       ,
+          FUNCTION           f       ,
+          const std::size_t  tag = 0 ) 
+      { return Shape2D ( name.c_str() , title.c_str () , x , y , f , tag ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8708,6 +8727,16 @@ namespace Ostap
         return std::max ( m_function ( x , y ) , 0.0 ) ; 
       }
       // ======================================================================        
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
     public:
       // ======================================================================
       /// evaluate the function
@@ -8723,6 +8752,8 @@ namespace Ostap
       RooRealProxy                          m_y        ; // y-variable 
       /// the function itself 
       std::function<double(double,double)>  m_function ; // function 
+      /// unique tag 
+      std::size_t                           m_tag      ; // the tag      
       // ======================================================================      
     } ;
     // ========================================================================
@@ -8739,17 +8770,19 @@ namespace Ostap
       // ======================================================================
       /// templated constructor 
       template <class FUNCTION> 
-      Shape3D ( const char*  name  , 
-                const char*  title , 
-                RooAbsReal&  x     ,
-                RooAbsReal&  y     ,
-                RooAbsReal&  z     ,
-                FUNCTION     f     )
+      Shape3D ( const char*       name    , 
+                const char*       title   , 
+                RooAbsReal&       x       ,
+                RooAbsReal&       y       ,
+                RooAbsReal&       z       ,
+                FUNCTION          f       , 
+                const std::size_t tag = 0 )
         : RooAbsPdf  (  name ,  title ) 
         , m_x        ( "x"   , "x-variable" , this , x ) 
         , m_y        ( "y"   , "y-variable" , this , y ) 
         , m_z        ( "z"   , "z-variable" , this , z ) 
         , m_function ( f ) 
+        , m_tag      ( tag ) 
       {}
       /// copy constructor 
       Shape3D ( const Shape3D& right , const char* name = nullptr ) ;
@@ -8762,13 +8795,15 @@ namespace Ostap
       template <class FUNCTION> 
       static inline Shape3D 
       create
-        ( const std::string& name  , 
-          const std::string& title , 
-          RooAbsReal&  x     ,
-          RooAbsReal&  y     ,
-          RooAbsReal&  z     ,
-          FUNCTION     f     ) { return Shape3D ( name.c_str() , title.c_str() ,
-                                                  x , y , z , f ) ; }
+        ( const std::string& name    , 
+          const std::string& title   , 
+          RooAbsReal&        x       ,
+          RooAbsReal&        y       ,
+          RooAbsReal&        z       ,
+          FUNCTION           f       , 
+          const std::size_t  tag = 0 )
+      { return Shape3D ( name.c_str() , title.c_str() ,
+                         x , y , z , f , tag ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8781,6 +8816,16 @@ namespace Ostap
         return std::max ( m_function ( x , y , z ) , 0.0 ) ; 
       }
       // ======================================================================        
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
     public:
       // ======================================================================
       /// evaluate the function
@@ -8799,6 +8844,8 @@ namespace Ostap
       RooRealProxy                          m_z        ; // z-variable 
       /// the function itself 
       std::function<double(double,double,double)>  m_function ; // function 
+      /// unuqie  tag 
+      std::size_t                                  m_tag      ; // unuqire  tag 
       // ======================================================================      
     } ;        
     // ========================================================================
@@ -8834,6 +8881,16 @@ namespace Ostap
       /// evaluate the PDF 
       Double_t evaluate () const override { return func ( m_x ) ; }
       // ======================================================================        
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
     public:
       // ======================================================================
       /// the function itself 
@@ -8842,7 +8899,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate the function
-      double func  ( const double x ) const 
+      double func  
+        ( const double x ) const 
       { return std::max ( m_histo ( x ) , 0.0 ) ; }
       // ======================================================================        
     public:
@@ -8852,9 +8910,11 @@ namespace Ostap
     private :
       // ======================================================================
       /// variable 
-      RooRealProxy                   m_x     ; // variable 
+      RooRealProxy                   m_x            ; // variable 
       /// the function itself 
-      Ostap::Math::Histo1D           m_histo ; // function 
+      Ostap::Math::Histo1D           m_histo        ; // function 
+      /// unique tag 
+      std::size_t                    m_tag          ; // unique tag
       // ======================================================================      
     } ;
     // ========================================================================
@@ -8870,11 +8930,12 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor
-      Histo2D ( const char*                 name  , 
-                const char*                 title , 
-                RooAbsReal&                 x     ,
-                RooAbsReal&                 y     ,
-                const Ostap::Math::Histo2D& histo ) ;
+      Histo2D 
+        ( const char*                 name  , 
+          const char*                 title , 
+          RooAbsReal&                 x     ,
+          RooAbsReal&                 y     ,
+          const Ostap::Math::Histo2D& histo ) ;
       /// copy constructor 
       Histo2D ( const Histo2D& right , const char* name = nullptr ) ;
       /// clone method
@@ -8890,6 +8951,16 @@ namespace Ostap
       /// evaluate the PDF 
       Double_t evaluate () const override { return func ( m_x , m_y ) ; }
       // ======================================================================        
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
     public:
       // ======================================================================        
       /// the function itself 
@@ -8898,8 +8969,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate the function
-      double func  ( const double x , 
-                     const double y ) const 
+      double func
+        ( const double x , 
+          const double y ) const 
       { return std::max ( m_histo ( x , y ) , 0.0 ) ; }
       // ======================================================================        
     public:
@@ -8915,6 +8987,8 @@ namespace Ostap
       RooRealProxy                   m_y     ; // y-variable 
       /// the function itself 
       Ostap::Math::Histo2D           m_histo ; // function 
+      /// unique tag 
+      std::size_t                    m_tag   ; // unique tag
       // ======================================================================      
     } ;
     // ========================================================================
@@ -8930,12 +9004,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor
-      Histo3D ( const char*                 name  , 
-                const char*                 title , 
-                RooAbsReal&                 x     ,
-                RooAbsReal&                 y     ,
-                RooAbsReal&                 z     ,
-                const Ostap::Math::Histo3D& histo ) ;
+      Histo3D
+        ( const char*                 name  , 
+          const char*                 title , 
+          RooAbsReal&                 x     ,
+          RooAbsReal&                 y     ,
+          RooAbsReal&                 z     ,
+          const Ostap::Math::Histo3D& histo ) ;
       /// copy constructor 
       Histo3D ( const Histo3D& right , const char* name = nullptr ) ;
       /// clone method
@@ -8951,12 +9026,23 @@ namespace Ostap
       /// evaluate the PDF 
       Double_t evaluate () const override { return func ( m_x , m_y , m_z ) ; }
       // ======================================================================        
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
     public:
       // ======================================================================
       /// evaluate the function
-      double func  ( const double x , 
-                     const double y , 
-                     const double z ) const 
+      double func 
+        ( const double x , 
+          const double y , 
+          const double z ) const 
       { return std::max ( m_histo ( x , y , z ) , 0.0 ) ; }
       // ======================================================================        
     public:
@@ -8980,6 +9066,8 @@ namespace Ostap
       RooRealProxy                   m_z     ; // z-variable 
       /// the function itself 
       Ostap::Math::Histo3D           m_histo ; // function 
+      /// unique tag 
+      std::size_t                    m_tag   ; // unique tag
       // ======================================================================      
     } ;
     // ========================================================================

@@ -14,6 +14,7 @@
 // ============================================================================
 #include "Ostap/Hash.h"
 #include "Ostap/HistoHash.h"
+#include "Ostap/HistoInterpolators.h"
 // ============================================================================
 // Local 
 // ============================================================================
@@ -99,9 +100,10 @@ std::size_t Ostap::Utils::hash_axis
 {
   if ( nullptr == axis ) { return 0 ; }
   //
-  std::size_t seed = Ostap::Utils::hash_combiner ( axis -> GetNbins () , 
-                                         axis -> GetXmin  () , 
-                                         axis -> GetXmax  () ) ;
+  std::size_t seed = Ostap::Utils::hash_combiner 
+    ( axis -> GetNbins () , 
+      axis -> GetXmin  () , 
+      axis -> GetXmax  () ) ;
   //
   const TArrayD* A = axis->GetXbins() ;
   if ( A ) 
@@ -127,7 +129,10 @@ std::size_t Ostap::Utils::hash_histo
   const Int_t NY = histo -> GetNbinsY () ;
   const Int_t NZ = histo -> GetNbinsZ () ;
   //
-  std::size_t seed = Ostap::Utils::hash_combiner ( histo->Hash() , NX , NY , NZ ) ;
+  std::size_t seed = Ostap::Utils::hash_combiner ( histo -> Hash()          ,
+                                                   histo -> GetDimension () , 
+                                                   histo -> GetEntries   () , 
+                                                   NX , NY , NZ             ) ;
   //
   seed = Ostap::Utils::hash_combiner ( seed , hash_axis ( histo->GetXaxis() ) ) ;
   seed = Ostap::Utils::hash_combiner ( seed , hash_axis ( histo->GetYaxis() ) ) ;
@@ -144,8 +149,63 @@ std::size_t Ostap::Utils::hash_histo
     }
   }
   //
+  // add sumw2 information 
+  const TArrayD* sumw2 = histo->GetSumw2() ;
+  if ( sumw2 ) 
+  {
+    const Double_t* a = sumw2->GetArray() ;
+    if ( a ) {  seed = Ostap::Utils::hash_combiner ( seed , a , a + sumw2 ->GetSize () ) ; }
+  }
+  //
+  // add statistics: 
+  double stats [7];
+  histo->GetStats( stats ) ;
+  seed = Ostap::Utils::hash_combiner ( seed , Ostap::Utils::hash_range ( stats , stats + 7 ) ) ;
+  //
   return seed ;
 }
+// ============================================================================
+/*  get hash for Ostap::Math::Histo1D  object 
+ *  @see Ostap::Math::Histo1D 
+ */
+// ============================================================================
+std::size_t Ostap::Utils::hash_histo 
+( const Ostap::Math::Histo1D& h ) 
+{ return Ostap::Utils::hash_combiner 
+    ( hash_histo ( &h.h() ) , 
+      h.t           () ,
+      h.edges       () , 
+      h.extrapolate () , 
+      h.density     () ) ; }
+// ============================================================================
+/*  get hash for Ostap::Math::Histo2D  object 
+ *  @see Ostap::Math::Histo2D 
+ */
+// ============================================================================
+std::size_t Ostap::Utils::hash_histo 
+( const Ostap::Math::Histo2D& h ) 
+{ return Ostap::Utils::hash_combiner 
+    ( hash_histo ( &h.h() ) , 
+      h.tx          () ,
+      h.ty          () ,
+      h.edges       () , 
+      h.extrapolate () , 
+      h.density     () ) ; }
+// ============================================================================
+/*  get hash for Ostap::Math::Histo3D  object 
+ *  @see Ostap::Math::Histo3D 
+ */
+// ============================================================================
+std::size_t Ostap::Utils::hash_histo 
+( const Ostap::Math::Histo3D& h ) 
+{ return Ostap::Utils::hash_combiner 
+    ( hash_histo ( &h.h() ) , 
+      h.tx          () ,
+      h.ty          () ,
+      h.tz          () ,
+      h.edges       () , 
+      h.extrapolate () , 
+      h.density     () ) ; }
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

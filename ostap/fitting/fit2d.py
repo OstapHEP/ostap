@@ -234,7 +234,7 @@ class Shape2D_pdf(PDF2) :
     - see Ostap::Models:Shape2D
     """
     
-    def __init__ ( self , name , shape , xvar , yvar ) :
+    def __init__ ( self , name , shape , xvar , yvar , tag = 0 ) :
 
         if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) and not xvar :
             xvar = shape.xminmax()
@@ -243,13 +243,19 @@ class Shape2D_pdf(PDF2) :
             yvar = shape.yminmax()
             
         if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) :
+            
             self.histo = shape
-            shape      = Ostap.Math.Histo2D ( shape )
+            shape      = Ostap.Math.Histo2D     ( shape )
+            tag        = Ostap.Utils.hash_histo ( shape ) 
+            
+        elif hasattr ( shape , 'tag' ) and not tag : 
+            tag = shape.tag() 
 
         ##  iniialize the base 
         PDF2.__init__ ( self , name , xvar , yvar ) 
             
         self.__shape = shape
+        self.__tag   = tag
         
         if isinstance ( self.shape , Ostap.Math.Histo2D ) :
             
@@ -267,20 +273,26 @@ class Shape2D_pdf(PDF2) :
                 "Shape-2D %s" % self.name    ,
                 self.xvar                    ,
                 self.yvar                    ,
-                self.shape                   )  
+                self.shape                   ,
+                self.tag                     )  
             
         ## save the configuration
         self.config = {
             'name'    : self.name    , 
             'shape'   : self.shape   , 
             'xvar'    : self.xvar    , 
-            'yvar'    : self.yvar    , 
+            'yvar'    : self.yvar    ,
+            'tag'     : self.tag     , 
             }
         
     @property
     def shape  ( self ) :
         """'shape' : the actual C++ callable shape"""
         return self.__shape 
+    @property
+    def tag   ( self ) :
+        """'tag' : uqnue tag used for cache-integration"""
+        return self.__tag 
  
 # ===================================================it==========================
 ## simple convertor of 2D-histogram into PDF

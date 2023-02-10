@@ -22,6 +22,9 @@
   1. Add `Ostap::MoreRooFit::Minimal` and `Ostap::MoreRooFit::Maximal` 
   1. add `ostap.roostats.FrequentistCalculator`
   1. extend the test for `FrequentistCalculator` 
+  1. add more efficient integration for `Shape1D/Shape2D/Shape3D/Histo1D/Histo2D/Histo3D` classes
+  1. add `tag` parameter for `Shape1D_pdf/Shape2D_pdf/Shape3D_pdf`
+  
 
 ## Backward incompatible:  
 

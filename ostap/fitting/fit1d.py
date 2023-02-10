@@ -483,21 +483,27 @@ class Shape1D_pdf(PDF1) :
     - see Ostap::Models:Shape1D
     """
     
-    def __init__ ( self , name , shape , xvar ) :
+    def __init__ ( self , name , shape , xvar , tag = 0 ) :
 
 
         if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) and not xvar :
             xvar = shape.xminmax() 
 
         if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) :
+            
             self.histo = shape
-            shape      = Ostap.Math.Histo1D ( shape )
+            shape      = Ostap.Math.Histo1D     ( shape )
+            tag        = Ostap.Utils.hash_histo ( shape )
+            
+        elif hasattr ( shape , 'tag' ) and not tag : 
+            tag = shape.tag() 
 
         ##  initialize the base 
         PDF1.__init__ ( self , name , xvar ) 
         
         self.__shape = shape
-
+        self.__tag   = tag
+        
         if isinstance ( self.shape , Ostap.Math.Histo1D ) :
         
             ## create the actual pdf
@@ -514,20 +520,25 @@ class Shape1D_pdf(PDF1) :
                 self.roo_name ( 'shape1_' ) , 
                 "Shape-1D %s" % self.name ,
                 self.xvar                 ,
-                self.shape                ) 
-
+                self.shape                ,
+                self.tag                  ) 
+            
         ## save the configuration
         self.config = {
             'name'    : self.name    , 
             'shape'   : self.shape   , 
-            'xvar'    : self.xvar    , 
+            'xvar'    : self.xvar    ,
+            'tag'     : self.tag     ,
             }
         
     @property
     def shape  ( self ) :
         """'shape': the actual C++ callable shape"""
         return self.__shape 
-            
+    @property
+    def tag   ( self ) :
+        """'tag' : uqnue tag used for cache-integration"""
+        return self.__tag 
 # =============================================================================
 ## simple convertor of 1D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru

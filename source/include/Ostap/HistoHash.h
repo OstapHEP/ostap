@@ -11,6 +11,15 @@ class TGraph ; // ROOT
 namespace Ostap
 {
   // ==========================================================================
+  namespace Math
+  {
+    // ========================================================================
+    class Histo1D ;
+    class Histo2D ;
+    class Histo3D ;
+    // ========================================================================
+  } 
+  // ==========================================================================
   namespace Utils
   {
     // ========================================================================
@@ -31,6 +40,21 @@ namespace Ostap
      *  @return hash value 
      */
     std::size_t hash_axis  ( const TAxis* axis )  ;
+    // ========================================================================    
+    /** get hash for Ostap::Math::Histo1D  object 
+     *  @see Ostap::Math::Histo1D 
+     */
+    std::size_t hash_histo ( const Ostap::Math::Histo1D& h ) ;
+    // ========================================================================    
+    /** get hash for Ostap::Math::Histo2D  object 
+     *  @see Ostap::Math::Histo2D 
+     */
+    std::size_t hash_histo ( const Ostap::Math::Histo2D& h ) ;
+    // ========================================================================
+    /** get hash for Ostap::Math::Histo3D  object 
+     *  @see Ostap::Math::Histo3D 
+     */
+    std::size_t hash_histo ( const Ostap::Math::Histo3D& h ) ;
     // ========================================================================    
   } //                                        The end of namepsace Ostap::Utils 
   // ==========================================================================

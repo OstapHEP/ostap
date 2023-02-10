@@ -96,7 +96,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      inline double operator () ( const double x ) const 
+      inline double operator ()
+      ( const double x ) const 
       {
         return Ostap::Math::HistoInterpolation::interpolate_1D
           ( m_h , x , m_t , 
@@ -148,8 +149,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      inline double operator () ( const double x , 
-                                  const double y ) const 
+      inline double operator ()
+      ( const double x , 
+        const double y ) const 
       {
         return Ostap::Math::HistoInterpolation::interpolate_2D
           ( m_h , x , y , m_tx , m_ty , 
@@ -206,9 +208,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      inline double operator () ( const double x , 
-                                  const double y ,
-                                  const double z ) const 
+      inline double operator () 
+      ( const double x , 
+        const double y ,
+        const double z ) const 
       {
         return Ostap::Math::HistoInterpolation::interpolate_3D
           ( m_h ,  x  ,  y  ,  z  , m_tx  ,  m_ty  ,  m_tz , 
