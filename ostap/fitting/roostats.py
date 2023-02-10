@@ -26,24 +26,30 @@ __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru; Dmitry GOLUBKOV Dmitry.Yu.Golubkov@cern.ch"
 __date__    = "2023-01-17"
 __all__     = (
+    #
+    ## confidence intervals and limits
+    # 
+    'ModelConfig'                 , ## creator of RooStats ModelConfig 
+    'ProfileLikelihoodInterval'   , ## Profile-likelihood confidence interval or upper/lower limit 
+    'FeldmanCousinsInterval'      , ## Feldman-Cousins    confidence interval or upper/lower limit 
+    'BayesianInterval'            , ## Bayesian           confidence interval or upper/lowee limir
+    'MCMCInterval'                , ## MCMC               confidence interval or upper/lower limit 
+    #
+    ## Hypothesis tests
+    # 
+    'AsymptoticCalculator'        , ## AsymptoticCalculator          for limits and intervals
+    'FrequentistCalculator'       , ## Frequentist calcualtor        for limits and intervals 
+    'HybridCalculator'            , ## Hybrid calculator             for limits and intervals 
+    'ProfileLikelihoodCalculator' , ## Profile Likelihood calculator for limits and intervals 
+    'HypoTestInverter'            , ## 
     ##
-    'ModelConfig'              , ## creator of RooStats ModelConfig 
-    'ProfileLikelihoodInterval', ## Profile-likelihood confidence interval or upper/lower limit 
-    'FeldmanCousinsInterval'   , ## Feldman-Cousins    confidence interval or upper/lower limit 
-    'BayesianInterval'         , ## Bayesian           confidence interval or upper/lowee limir
-    'MCMCInterval'             , ## MCMC               confidence interval or upper/lower limit 
-    ##
-    'AsymptoticCalculator'     , ## AsymptoticCalculator   for limits and intervals
-    'FrequentistCalculator'    , ## Frequentist calcualtor for limits and nitervals 
-    'HypoTestInverter'         , ## 
-    ##
-    'BrasilBand'               , ## utility to produce Brasil-band plots 
+    'BrasilBand'                   , ## utility to produce Brasil-band plots 
     )
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import  ( string_types   , integer_types  ,
                                         sequence_types , dictlike_types )
-from   ostap.core.core        import valid_pointer 
+from   ostap.core.core        import valid_pointer, split_string  
 import ostap.fitting.roofit
 from   ostap.fitting.pdfbasic import APDF1
 import ROOT, abc, sys  
@@ -69,15 +75,16 @@ class ModelConfig(object):
                     workspace          = None ,   ## worspace (optional)
                     observables        = ()   ,   ## observables 
                     global_observables = ()   ,   ## global observables
-                    constraints        = ()   ,   ## contraints 
+                    constraints        = ()   ,   ## constraints
+                    conditional        = ()   ,   ## conditional observables 
                     snapshot           = None ,   ## snapshot 
                     **kwargs                  ) : ## other arguments
 
         params = poi 
         if   isinstance ( params , ROOT.RooAbsReal ) : params = [ params ]
-        elif isinstance ( params , string_types    ) : params = [ params ]
+        elif isinstance ( params , string_types    ) : params = split_string ( params , strip = True ) 
 
-        ## allow soem freedom in arguments 
+        ## allow some freedom in arguments 
         from ostap.utils.cidict import cidict
         from ostap.core.core    import cidict_fun
         
@@ -180,7 +187,9 @@ class ModelConfig(object):
         ## (7) global observables
         if global_observables or lgobs :
             
-            if isinstance ( global_observables , ROOT.RooAbsReal ) :
+            if   isinstance ( global_observables , string_types ) :
+                global_observables = split_string ( global_observables , strip = True ) 
+            elif isinstance ( global_observables , ROOT.RooAbsReal ) :
                 global_observables = [ global_observables ]                
 
             pars = [ self.pdf_param  ( v , dataset ) for v in global_observables ]
@@ -198,15 +207,32 @@ class ModelConfig(object):
                 
             mc.SetGlobalObservables  ( gobs )
             self.__go = global_observables, gobs 
+
+        ## (8) conditional observables
+        if conditional :
+
+            if isinstance ( conditional , string_types ) :
+                conditional = split_string ( conditional , strip = True ) 
+            elif isinstance ( conditional , ROOT.RooAbsReal ) :
+                conditional = [ conditional ]
             
-        ## (8) constraints
+            pars = [ self.pdf_param  ( v , dataset ) for v in conditional ]
+            
+            cobs = ROOT.RooArgSet   () 
+            for p in pars :
+                if not p in cobs : cobs.add ( p    )
+            
+            mc.SetConditionalObservables  ( cobs )
+            self.__co = conditional , cobs 
+                
+        ## (9) constraints
         if constraints :
             mc.SetConstraintParameters  ( constraints )
             
-        ## (9) define the default dataset 
+        ## (10) define the default dataset 
         self.__dataset = dataset 
 
-        ## (10) use snapshot if provided 
+        ## (11) use snapshot if provided 
         if snapshot :
             self.snapshot = snapshot
             
@@ -278,6 +304,14 @@ class ModelConfig(object):
         - see `ROOT.RooStats.ModelConfig.GetGlobalObservables`
         """
         pars = self.mc.GetGlobalObservables()
+        if not valid_pointer ( pars ) : return () 
+        return pars if pars and 0 < len ( pars ) else () 
+    @property
+    def conditional ( self ) :
+        """'conditional' : Conditional observables from ModelConfig
+        - see `ROOT.RooStats.ModelConfig.GetConditionalObservables`
+        """
+        pars = self.mc.GetConditionalObservables()
         if not valid_pointer ( pars ) : return () 
         return pars if pars and 0 < len ( pars ) else () 
     @property
@@ -453,7 +487,10 @@ class ModelConfig(object):
 
         row = 'global observables' , ', '.join( v.name for v in self.global_observables ) 
         rows.append ( row )
-        
+
+        row = 'conditional'        , ', '.join( v.name for v in self.conditional ) 
+        rows.append ( row )
+
         for i , c in enumerate ( self.__input_constraints , start = 1 )  :
             row = 'constraint#%d (input)' % i , '%s: %s/%s' % ( type ( c ).__name__  , c.name , c.title )
             rows.append ( row )
@@ -499,7 +536,7 @@ class CLInterval(ModelConfig)  :
         pass
 
     # =========================================================================
-    ## get the confidence interal at certain confidence level
+    ## get the confidence interval at certain confidence level
     #  @code
     #  interval = ...
     #  lower, upper = interval.interval ( 0.90 ) 
@@ -1045,7 +1082,6 @@ class AsymptoticCalculator (Calculator) :
         """
         return self.__asimov 
 
-
 # =============================================================================
 ## @class FrequentistCalculator
 #  @see RooStats::FreqentistCalculator
@@ -1063,7 +1099,7 @@ class FrequentistCalculator (Calculator) :
                    ntoys_alt       = -1   ,
                    ntoys_null_tail =  0   ,
                    ntoys_alt_tail  =  0   ) : 
-
+        
         assert isinstance ( ntoys_null , integer_types ) and -1 <= ntoys_null , \
                "Invalid ntoys_null parameter!"
         assert isinstance ( ntoys_alt  , integer_types ) and -1 <= ntoys_alt  , \
@@ -1120,7 +1156,165 @@ class FrequentistCalculator (Calculator) :
     def ntoys_alt_tail  ( self ) :
         """'ntoys_alt_tail' : the second parameter of `ROOT.RooStats.FrequentistCalculator.SetNToysInTails`"""
         return self.__ntoys_alt_tail 
+
+# =============================================================================
+## @class HybridCalculator
+#  @see RooStats::HybridCalculator
+class HybridCalculator (FrequentistCalculator) :
+    """Hybrid calcualator
+    - see `ROOT.RooStats.HybridCalculator`
+    """
     
+    def __init__ ( self                   ,
+                   H1                     ,   ## H1 model, e.g. background only
+                   H0                     ,   ## H0 model, e.g. signal+background
+                   dataset                ,   ## dataset 
+                   sampler         = None ,
+                   ntoys_null      = -1   ,
+                   ntoys_alt       = -1   ,
+                   ntoys_null_tail =  0   ,
+                   ntoys_alt_tail  =  0   ,
+                   prior_null      = None ,
+                   prior_alt       = None ) : 
+        
+        assert prior_null is None or isinstance ( prior_null , ( APDF1, ROOT.RooAbsPdf ) ) or \
+               isinstance ( prior_null , string_types ) , "Invalid 'prior_null'!"        
+        assert prior_alt  is None or isinstance ( prior_alt  , ( APDF1, ROOT.RooAbsPdf ) ) or \
+               isinstance ( prior_alt  , string_types ) , "Invalid 'prior_alt'!"
+
+        self.__prior_null = prior_null
+        self.__prior_alt  = prior_alt 
+        
+        ## initialize the base class 
+        FrequentistCalculator.__init__ ( self , H1 = H1 , H0 = H0 , dataset = dataset ,
+                                         sampler         = sampler         ,
+                                         ntoys_null      = ntoys_null      ,
+                                         ntoys_alt       = ntoys_alt       ,
+                                         ntoys_null_tail = ntoys_null_tail ,
+                                         ntoys_alt_tail  = ntoys_alt_tail  )  
+        
+        self.__prior_null_raw = None
+        self.__prior_alt_raw  = None
+        
+        if   prior_null is None :  pass 
+        elif isinstance ( prior_null , APDF1          ) : self.__prior_null_raw = prior_null.pdf
+        elif isinstance ( prior_null , ROOT.RooAbsPdf ) : self.__prior_null_raw = prior_null 
+        elif isinstance ( prior_null , string_types   ) :
+            prior =  self.ws.pdf ( prior_null )
+            assert valid_pointer ( prior )  and prior and isinstance ( prior , ROOT.RooAbsPdf ) , \
+                   'Cannot get prior_null from Workspace!'
+            self.__prior_null_raw = prior
+            
+        if   prior_alt is None :  pass 
+        elif isinstance ( prior_alt  , APDF1          ) : self.__prior_alt_raw = prior_alt.pdf
+        elif isinstance ( prior_alt  , ROOT.RooAbsPdf ) : self.__prior_alt_raw = prior_alt 
+        elif isinstance ( prior_alt , string_types   ) :
+            prior =  self.ws.pdf ( prior_alt  )
+            assert valid_pointer ( prior )  and prior and isinstance ( prior , ROOT.RooAbsPdf ) , \
+                   'Cannot get prior_alt from Workspace!'
+            self.__prior_alt_raw = prior
+
+  
+    # ==============================================================================================
+    ## Create and configure the calculator 
+    def make_calculator ( self ) :
+        """Create and configure the calculator"""
+        if self.sampler : calc = ROOT.RooStats.HybridCalculator ( self.dataset , self.h1 , self.h0 , self.sampler )
+        else            : calc = ROOT.RooStats.HybridCalculator ( self.dataset , self.h1 , self.h0 )
+        
+        if -1 != self.ntoys_null      or -1 != self.ntoys_alt :
+            calc.SetToys         ( self.ntoys_null      , self.ntoys_alt      )
+        if  0 != self.ntoys_null_tail or -1 != self.ntoys_alt_tail  :
+            calc.SetNToysInTails ( self.ntoys_null_tail , self.ntoys_alt_tail )
+
+        if self.prior_null_raw : calc.ForcePriorNuisanceNull ( self.prior_null_raw )
+        if self.prior_alt_raw  : calc.ForcePriorNuisanceAlt  ( self.prior_alt_raw  )
+        
+        return calc
+        
+    @property
+    def prior_null ( self ) :
+        """'prior_null' : prior for null-hypothesis"""
+        return self.__prior_null
+    @property
+    def prior_null_raw ( self ) :
+        """'prior_null_raw' : prior for null-hypothesis (as `ROOT.RooAbsPdf`)"""
+        return self.__prior_null_raw    
+    @property
+    def prior_alt ( self ) :
+        """'prior_alt' : prior for alt-hypothesis"""
+        return self.__prior_alt
+    @property
+    def prior_alt_raw ( self ) :
+        """'prior_alt_raw' : prior for alt-hypothesis (as `ROOT.RooAbsPdf`)"""
+        return self.__prior_alt_raw
+
+# =============================================================================
+## @class ProfileLikelihoodCalculator
+#  @see RooStats::ProfileLikelihoodCalculator
+class ProfileLikelihoodCalculator (Calculator) :
+    """Asymptotic calculator
+    - see `ROOT.RooStats.ProfileLikelihoodCalculator`
+    """
+    
+    def __init__ ( self        ,
+                   H0          ,   ## H0 model, e.g. signal+background
+                   dataset     ,   ## dataset
+                   null_params ) : ## null-parameters corresponinsg to background-obnly hypothesis
+
+        Calculator.__init__ ( self , H0 , H0 , dataset )
+
+        assert null_params , 'Invalid null-parameters!'
+        
+        self.__null_params_arg = null_params
+
+        model = self.h0
+        ws    = model.GetWorkspace()
+        
+        if   isinstance ( null_params , ROOT.RooArgSet  ) :
+            self.__null_params = null_params
+            
+        elif isinstance ( null_params , ROOT.RooAbsReal ) :
+            params = ROOT.RooArgSet ( null_params )
+            self.__null_params = params
+            
+        elif isinstance ( null_params , dictlike_types  ) :            
+            vlst = []
+            vdct = {}            
+            for key in null_params :                
+                if   isinstance ( key , string_types ) : v = ws.var ( key      )
+                else                                   : v = ws.var ( key.name )                
+                assert v , "No valid variable for '%s'" % key                
+                vv = float ( null_params [ key ] )
+                vlst.append ( v )
+                vdct [ v.name ]  = vv
+            vset = ROOT.RooArgSet() 
+            for v in vlst : v.setVal ( vdct [ v.name ] )
+            for v in vlst : vset.add ( v )
+            self.__null_params = vset
+
+        elif isinstance ( null_params , sequence_types  ) :
+            params = ROOT.RooArgSet ()
+            for p in null_params : params.add ( p ) 
+            self.__null_params = params 
+
+        else :
+            raise TypeError('Invalid null-params!')
+        
+        sname = 'null_parameters_for_%s' % model.name
+        ws    .defineSet ( sname , self.__null_params )  
+
+    ## create and configure the Profile Likelihood calculator 
+    def make_calculator ( self ) :
+        """Create and configure the Pofile Likelihood calculator"""
+        calc = ROOT.RooStats.ProfileLikelihoodCalculator ( self.dataset ,  self.h0 )
+        calc.SetNullParameters ( self.null_params )        
+        return calc
+
+    @property
+    def null_params ( self ) :
+        """'null_params' : set of parameters that define null-model"""
+        return self.__null_params
 
 # =============================================================================
 # @class HypoTestInverter
@@ -1137,6 +1331,7 @@ class HypoTestInverter(object) :
                    verbose = False ) :
         
         self.__calculator = calculator
+
         self.__inverter   = ROOT.RooStats.HypoTestInverter ( self.calc )
         
         self.__inverter.SetConfidenceLevel   ( level )
@@ -1292,7 +1487,7 @@ class HypoTestInverter(object) :
 ## default color for Brasil-plot bands
 band_colors = ( ROOT.kGreen , ROOT.kYellow  ,
                 ROOT.kCyan  , ROOT.kMagenta ,
-                ROOT.kBlue  , ROOT.kOrange  )
+                ROOT.kPink  , ROOT.kOrange  )
 # =============================================================================
 ## helper class to create and keep the 'Brasil-band' plot
 #  @code
@@ -1340,7 +1535,7 @@ class BrasilBand(object) :
         nb = len ( self.__nsigmas ) // 2
         ic = 31 
         while len ( self.__colors ) < nb :
-            self.__solors.append ( ic  ) 
+            self.__colors.append ( ic  ) 
             ic += 1
 
         self.__colors = tuple ( self.__colors )
@@ -1387,15 +1582,12 @@ class BrasilBand(object) :
         ns  = len ( self.__nsigmas )
         ngb = ns // 2
 
-        ## get sorted data 
-        data = sorted ( self.__data.items() )
-        
         ## create "band-graphs"
         gr_observed = ROOT.TGraph ( np )
         gr_median   = ROOT.TGraph ( np ) 
         gr_bands    = [ ROOT.TGraphAsymmErrors ( np ) for i in range ( ngb ) ]
 
-        for i , x in  enumerate ( sorted ( self.__data ) ) :
+        for i , x in enumerate ( sorted ( self.__data ) ) :
 
             observed , expected = self.__data [ x ] 
 
@@ -1414,7 +1606,6 @@ class BrasilBand(object) :
                 errh = eh - val 
                 
                 g [ i ] = ( x , 0 , 0 ) , ( val, errl , errh )
-
 
         for g,c  in zip ( reversed ( gr_bands ) , self.__colors ) : g.color ( c , marker = 1 , size = 1 )
 

@@ -195,11 +195,11 @@ data    = model.generate ( 55 + 1000 )
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass
 #  - resolution is fixed
-#  - Asymptotic Calculatoris used 
+#  - Asymptotic Calculator is used 
 def test_point_limit_ac () :
     """Get the upper limit at given point for small signal at fixed mass
     - resoltuion is fixed 
-    - Asymptotic Calculatoris used 
+    - Asymptotic Calculator is used 
     """
 
     logger = getLogger("test_point_limit_ac")
@@ -212,7 +212,7 @@ def test_point_limit_ac () :
 
     the_model = model.clone ( name = 'M1' )
 
-    with use_canvas ( 'test_point_limit' ) : 
+    with use_canvas ( 'test_point_limit_ac' ) : 
         rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
 
     ## create ModelConfig  for 'S+B' model
@@ -261,7 +261,6 @@ def test_point_limit_ac () :
         logger.info ( '90%%CL upper limit (asymptotic)  = %.1f' % hti.upper_limit )
 
 
-
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass
 #  - resolution is fixed
@@ -280,9 +279,9 @@ def test_point_limit_fc  () :
                                              FrequentistCalculator ,
                                              HypoTestInverter      )
 
-    the_model = model.clone ( name = 'M1' )
+    the_model = model.clone ( name = 'M2' )
 
-    with use_canvas ( 'test_point_limit' ) : 
+    with use_canvas ( 'test_point_limit_fc' ) : 
         rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
 
     ## create ModelConfig  for 'S+B' model
@@ -333,6 +332,149 @@ def test_point_limit_fc  () :
         plot .draw('LCb 2CL')    
         logger.info ( '90%%CL upper limit (frequentist) = %.1f' % hti.upper_limit )
 
+# ============================================================================-
+## Get the upper limit limit for small signal at fixed mass
+#  - resolution is fixed
+#  - Hybrid Calculator is used 
+def test_point_limit_hc  () :
+    """Get the upper limit at given point for small signal at fixed mass
+    - resolution is fixed 
+    - Hybrid Calculator is used 
+    """
+
+    logger = getLogger("test_point_limit_hc")
+
+    logger.info ( "Test Point limits with RooStats using Hybrid Calculator" )
+
+    from   ostap.fitting.roostats   import ( ModelConfig           ,
+                                             HybridCalculator      ,
+                                             HypoTestInverter      )
+
+    the_model = model.clone ( name = 'M3' )
+
+    with use_canvas ( 'test_point_limit_hc' ) : 
+        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+
+    ## create ModelConfig  for 'S+B' model
+    model_sb = ModelConfig ( pdf       = the_model   ,
+                             poi       = the_model.S , ## parameter of interest 
+                             dataset   = data        ,
+                             name      = 'S+B'       )
+    
+    model_sb.snapshot = the_model.S ## ATTENTION! 
+    
+    ## create ModelConfig  for 'B-only' model
+    model_b  = ModelConfig ( pdf       = the_model          ,
+                             poi       = the_model.S        , ## parameter of interest 
+                             dataset   = data               ,
+                             workspace = model_sb.workspace , 
+                             name      = 'B-only'           )
+    
+    the_model.S = 0 
+    model_b.snapshot = the_model.S  ## ATTENTION! 
+    
+    logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
+    logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
+    
+    model_sb.mc.Print('vvv')
+    model_b .mc.Print('vvv')
+
+    ## with Hybrid calculator
+    with timing ( "Using Hybrid Calculator" , logger = logger ) :
+        
+        ## create the calculator 
+        hc  = HybridCalculator ( model_b          ,
+                                 model_sb         ,
+                                 dataset   = data ,
+                                 ntoys_null = 50  ,
+                                 ntoys_alt  = 50  ,
+                                 ) 
+        
+        
+        ## create Hypo Test inverter 
+        hti = HypoTestInverter ( hc ,  0.90 , use_CLs = True , verbose = False )
+        
+        ## make a scan 
+        hti .scan_with_progress  ( vrange ( 0 , 100 , 20 )  ) ## scan it!
+ 
+    ## visualize the scan results 
+    with use_canvas ( 'test_pointLimit: HypoTestInverter plot (hybrid)' , wait = 2 ) :
+        plot = hti .plot
+        plot .draw('LCb 2CL')    
+        logger.info ( '90%%CL upper limit (hybrid) = %.1f' % hti.upper_limit )
+
+
+# ============================================================================-
+## Get the upper limit limit for small signal at fixed mass
+#  - resolution is fixed
+#  - Profile Likelihoood Calculator is used 
+def test_point_limit_pl () :
+    """Get the upper limit at given point for small signal at fixed mass
+    - resoltuion is fixed 
+    - Profile-Likelihood Calculator is used 
+    """
+
+    logger = getLogger("test_point_limit_pl")
+
+    logger.info ( "Test Point limits with RooStats (Profile Likeloihood Calculator)" )
+
+    from   ostap.fitting.roostats   import ( ModelConfig                 ,
+                                             ProfileLikelihoodCalculator ,
+                                             HypoTestInverter            )
+
+    the_model = model.clone ( name = 'M1' )
+
+    with use_canvas ( 'test_point_limit_ac' ) : 
+        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+
+    ## create ModelConfig  for 'S+B' model
+    model_sb = ModelConfig ( pdf       = the_model   ,
+                             poi       = the_model.S , ## parameter of interest 
+                             dataset   = data        ,
+                             name      = 'S+B'       )
+    
+    model_sb.snapshot = the_model.S ## ATTENTION! 
+    
+    ## create ModelConfig  for 'B-only' model
+    model_b  = ModelConfig ( pdf       = the_model          ,
+                             poi       = the_model.S        , ## parameter of interest 
+                             dataset   = data               ,
+                             workspace = model_sb.workspace , 
+                             name      = 'B-only'           )
+    
+    the_model.S = 0 
+    model_b.snapshot = the_model.S  ## ATTENTION! 
+    
+    logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
+    logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
+    
+    model_sb.mc.Print('vvv')
+    model_b .mc.Print('vvv')
+
+    with timing ( "Using Profile Likelihood Calculator" , logger = logger ) :
+        ## create the calculator 
+        pl  = ProfileLikelihoodCalculator ( model_sb            ,
+                                            dataset     = data  ,
+                                            null_params = { the_model.S : 0.0 } )
+
+        res = pl.calculator.GetHypoTest ()
+        res.Print('vvv')
+        
+                        
+    ##     ## create Hypo Test inverter 
+    ##     hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
+
+
+        
+    ##     ## make a scan 
+    ##     hti .scan ( vrange ( 0 , 150 , 50 )  ) ## scan it!
+        
+    ## ## visualize the scan results 
+    ## with use_canvas ( 'test_pointLimit: HypoTestInverter plot (asymptotic)' , wait = 2 ) :
+    ##     plot = hti.plot
+    ##     plot .draw('LCb 2CL')                    
+    ##     logger.info ( '90%%CL upper limit (asymptotic)  = %.1f' % hti.upper_limit )
+
 
 # =============================================================================
 ## Get the upper limit limit for small signal at fixed mass 
@@ -357,7 +499,7 @@ def test_point_limit2 () :
     ## create "soft" constraint for sigma 
     sigma_constraint = the_signal.soft_constraint ( sigma , VE ( 0.3 , 0.01**2 ) ) 
     
-    the_model = model.clone ( name = 'M2' , signal = the_signal , signals = () )
+    the_model = model.clone ( name = 'M5' , signal = the_signal , signals = () )
 
     ## all constraints 
     constraints = sigma_constraint, 
@@ -440,7 +582,7 @@ def test_point_limit3 () :
     ## raw/visible signal yield 
     raw_S = the_signal.vars_multiply ( NS , eff , 'raw_S' , 'raw/observed signal yeild' )
 
-    the_model = model.clone ( name = 'M3' , signal = the_signal , signals = () , S = raw_S )
+    the_model = model.clone ( name = 'M6' , signal = the_signal , signals = () , S = raw_S )
 
     constraints = sigma_constraint, eff_constraint 
 
@@ -523,7 +665,7 @@ def test_scan_limit1 () :
     ## raw/visible signal yield 
     raw_S = the_signal.vars_multiply ( NS , eff , 'raw_S' , 'raw/observed signal yeild' )
 
-    the_model = model.clone ( name = 'M3' , signal = the_signal , signals = () , S = raw_S )
+    the_model = model.clone ( name = 'M7' , signal = the_signal , signals = () , S = raw_S )
 
     constraints = sigma_constraint, eff_constraint 
 
@@ -657,7 +799,7 @@ def test_scan_limit2 () :
     raw_S = the_signal.vars_multiply ( NS , eff , 'raw_S' , 'raw/observed signal yeild' )
 
     ## fit models 
-    the_model = model.clone ( name = 'M4' , signal = the_signal , signals = () , S = raw_S )
+    the_model = model.clone ( name = 'M8' , signal = the_signal , signals = () , S = raw_S )
 
     ## collect constraints 
     constraints = sigma_constraint, eff_constraint 
@@ -760,16 +902,18 @@ if '__main__' == __name__ :
     
     with rooSilent ( ) : 
     
-        ## test_intervals    ()
+        test_intervals      ()
         
         test_point_limit_ac () 
         test_point_limit_fc ()
-        
-        ## test_point_limit2 ()
-        
-        ## test_scan_limit1  ()
-        ## test_scan_limit2  () 
+        test_point_limit_hc ()
 
+        ## test_point_limit_pl ()
+        
+        test_point_limit2   ()
+        
+        test_scan_limit1    ()
+        test_scan_limit2    () 
 
 # =============================================================================
 ##                                                                      The END 
