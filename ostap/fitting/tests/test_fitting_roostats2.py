@@ -15,6 +15,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                 import range
+from   ostap.core.meta_info     import root_info 
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models
 from   ostap.fitting.variables  import SETVAR, FIXVAR  
@@ -141,6 +142,10 @@ def test_point_limit_fc  () :
 
     logger.info ( "Test Point limits with RooStats using Frequestist Calculator" )
 
+    if root_info < (6,24) :
+        logger.info ( 'Test is disabled for ROOT version %s' % str ( root_info ) )
+        return 
+    
     from   ostap.fitting.roostats   import ( ModelConfig           ,
                                              FrequentistCalculator ,
                                              HypoTestInverter      )
@@ -212,6 +217,10 @@ def test_point_limit_hc  () :
     logger = getLogger("test_point_limit_hc")
 
     logger.info ( "Test Point limits with RooStats using Hybrid Calculator" )
+
+    if root_info < (6,24) :
+        logger.info ( 'Test is disabled for ROOT version %s' % str ( root_info ) )
+        return 
 
     from   ostap.fitting.roostats   import ( ModelConfig           ,
                                              HybridCalculator      ,
@@ -506,8 +515,7 @@ if '__main__' == __name__ :
     
         test_point_limit_ac ()
         
-        ## test_point_limit_fc ()
-
+        test_point_limit_fc ()
         test_point_limit_hc ()
         
         ## test_point_limit_pl ()
