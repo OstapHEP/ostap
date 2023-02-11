@@ -516,7 +516,7 @@ if '__main__' == __name__ :
         test_point_limit_ac ()
         
         test_point_limit_fc ()
-        test_point_limit_hc ()
+        # test_point_limit_hc ()
         
         ## test_point_limit_pl ()
         
