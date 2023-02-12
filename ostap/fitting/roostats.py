@@ -1085,9 +1085,11 @@ class AsymptoticCalculator (Calculator) :
 # =============================================================================
 ## @class FrequentistCalculator
 #  @see RooStats::FreqentistCalculator
+#  @warning FRequentist calculator corrupts  input data set! 
 class FrequentistCalculator (Calculator) :
     """Frequentist calcualator
     - see `ROOT.RooStats.FrequentistCalculator`
+    - warning  Frequentist calculator corrupts input data set! 
     """
     
     def __init__ ( self                   ,

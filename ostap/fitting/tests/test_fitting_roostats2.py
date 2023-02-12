@@ -114,7 +114,7 @@ def test_point_limit_ac () :
         ## create the calculator 
         ac  = AsymptoticCalculator ( model_b           ,
                                      model_sb          ,
-                                     dataset   = data  ,
+                                     dataset   = data1 ,
                                      asimov    = False , 
                                      one_sided = True  )
         
@@ -130,6 +130,7 @@ def test_point_limit_ac () :
         plot .draw('LCb 2CL')                    
         logger.info ( '90%%CL upper limit (asymptotic)  = %.1f' % hti.upper_limit )
 
+    logger.info ( 'Dataset is\n%s' % data1.table ( prefix = '# ' ) ) 
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass
@@ -187,11 +188,11 @@ def test_point_limit_fc  () :
     with timing ( "Using Frequentist Calculator" , logger = logger ) :
         
         ## create the calculator 
-        fc  = FrequentistCalculator ( model_b          ,
-                                      model_sb         ,
-                                      dataset   = data ,
-                                      ntoys_null = 50  ,
-                                      ntoys_alt  = 50  ,
+        fc  = FrequentistCalculator ( model_b            ,
+                                      model_sb           ,
+                                      dataset    = data2 ,
+                                      ntoys_null = 50    ,
+                                      ntoys_alt  = 50    ,
                                       ) 
         
         
@@ -206,6 +207,9 @@ def test_point_limit_fc  () :
         plot = hti .plot
         plot .draw('LCb 2CL')    
         logger.info ( '90%%CL upper limit (frequentist) = %.1f' % hti.upper_limit )
+
+    logger.warning ( 'Frequenstist cclaultor destgroys input dataset') 
+    logger.info    ( 'Dataset is\n%s' % data2.table ( prefix = '# ' ) ) 
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass
@@ -263,11 +267,11 @@ def test_point_limit_hc  () :
     with timing ( "Using Hybrid Calculator" , logger = logger ) :
         
         ## create the calculator 
-        hc  = HybridCalculator ( model_b          ,
-                                 model_sb         ,
-                                 dataset   = data ,
-                                 ntoys_null = 50  ,
-                                 ntoys_alt  = 50  ,
+        hc  = HybridCalculator ( model_b            ,
+                                 model_sb           ,
+                                 dataset    = data3 ,
+                                 ntoys_null = 50    ,
+                                 ntoys_alt  = 50    ,
                                  ) 
         
         
@@ -282,6 +286,8 @@ def test_point_limit_hc  () :
         plot = hti .plot
         plot .draw('LCb 2CL')    
         logger.info ( '90%%CL upper limit (hybrid) = %.1f' % hti.upper_limit )
+
+    logger.info ( 'Dataset is\n%s' % data3.table ( prefix = '# ' ) ) 
 
 
 # ============================================================================-
@@ -427,6 +433,8 @@ def test_point_limit2 () :
         plot.draw('LCb 2CL')    
         logger.info ( '90%%CL upper limit = %.1f' % hti.upper_limit )
 
+    logger.info ( 'Dataset is\n%s' % data5.table ( prefix = '# ' ) ) 
+
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass 
@@ -510,6 +518,7 @@ def test_point_limit3 () :
         plot.draw('LCb 2CL')    
         logger.info ( '90%%CL upper limit = %.1f' % hti.upper_limit )
 
+    logger.info ( 'Dataset is\n%s' % data6.table ( prefix = '# ' ) ) 
 
     
 # =============================================================================
