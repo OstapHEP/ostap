@@ -57,6 +57,9 @@ data    = model.generate ( 55 + 1000 )
 data1   = data.clone()
 data2   = data.clone()
 data3   = data.clone()
+data4   = data.clone()
+data5   = data.clone()
+data6   = data.clone()
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass
@@ -142,9 +145,9 @@ def test_point_limit_fc  () :
 
     logger.info ( "Test Point limits with RooStats using Frequestist Calculator" )
 
-    if root_info < (6,24) :
-        logger.info ( 'Test is disabled for ROOT version %s' % str ( root_info ) )
-        return 
+    ## if root_info < (6,24) :
+    ##    logger.info ( 'Test is disabled for ROOT version %s' % str ( root_info ) )
+    ##    return 
     
     from   ostap.fitting.roostats   import ( ModelConfig           ,
                                              FrequentistCalculator ,
@@ -218,9 +221,9 @@ def test_point_limit_hc  () :
 
     logger.info ( "Test Point limits with RooStats using Hybrid Calculator" )
 
-    if root_info < (6,24) :
-        logger.info ( 'Test is disabled for ROOT version %s' % str ( root_info ) )
-        return 
+    ## if root_info < (6,24) :
+    ##    logger.info ( 'Test is disabled for ROOT version %s' % str ( root_info ) )
+    ##    return 
 
     from   ostap.fitting.roostats   import ( ModelConfig           ,
                                              HybridCalculator      ,
@@ -302,12 +305,13 @@ def test_point_limit_pl () :
     the_model = model.clone ( name = 'M1' )
 
     with use_canvas ( 'test_point_limit_ac' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 )
+        logger.info ( 'Dataset is\n%s' % data4.table ( prefix = '# ' ) ) 
+        rr , frame = the_model.fitTo ( data4 , draw = True , nbins = 50 )
 
     ## create ModelConfig  for 'S+B' model
     model_sb = ModelConfig ( pdf       = the_model   ,
                              poi       = the_model.S , ## parameter of interest 
-                             dataset   = data        ,
+                             dataset   = data4       ,
                              name      = 'S+B'       )
     
     model_sb.snapshot = the_model.S ## ATTENTION! 
@@ -315,7 +319,7 @@ def test_point_limit_pl () :
     ## create ModelConfig  for 'B-only' model
     model_b  = ModelConfig ( pdf       = the_model          ,
                              poi       = the_model.S        , ## parameter of interest 
-                             dataset   = data               ,
+                             dataset   = data4              ,
                              workspace = model_sb.workspace , 
                              name      = 'B-only'           )
     
@@ -382,11 +386,12 @@ def test_point_limit2 () :
     constraints = sigma_constraint, 
 
     with use_canvas ( 'test_point_limit2' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 , constraints = constraints )
+        logger.info ( 'Dataset is\n%s' % data5.table ( prefix = '# ' ) ) 
+        rr , frame = the_model.fitTo ( data5 , draw = True , nbins = 50 , constraints = constraints )
         
     model_sb = ModelConfig ( pdf         = the_model        ,
                              poi         = the_model.S      , ## parameter of interest 
-                             dataset     = data             ,
+                             dataset     = data5            ,
                              constraints = constraints      ,   
                              name        = 'S+B'            )
     
@@ -395,7 +400,7 @@ def test_point_limit2 () :
     
     model_b  = ModelConfig ( pdf         = the_model          ,
                              poi         = the_model.S        , ## parameter of interest 
-                             dataset     = data               ,
+                             dataset     = data5              ,
                              workspace   = model_sb.workspace , 
                              constraints = constraints        ,   
                              name        = 'B-only'           )
@@ -409,10 +414,10 @@ def test_point_limit2 () :
     model_sb.mc.Print('vvv')
     model_b .mc.Print('vvv')
     
-    ac  = AsymptoticCalculator ( model_b          ,
-                                 model_sb         ,
-                                 dataset   = data , 
-                                 one_sided = True )     
+    ac  = AsymptoticCalculator ( model_b           ,
+                                 model_sb          ,
+                                 dataset   = data5 , 
+                                 one_sided = True  )     
     hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
     
     hti.scan ( vrange ( 0 , 150 , 50 )  ) ## scan it!
@@ -464,11 +469,12 @@ def test_point_limit3 () :
     constraints = sigma_constraint, eff_constraint 
 
     with use_canvas ( 'test_point_limit3' ) : 
-        rr , frame = the_model.fitTo ( data , draw = True , nbins = 50 , constraints = constraints )
+        logger.info ( 'Dataset is\n%s' % data6.table ( prefix = '# ' ) ) 
+        rr , frame = the_model.fitTo ( data6 , draw = True , nbins = 50 , constraints = constraints )
         
     model_sb = ModelConfig ( pdf         = the_model        ,
                              poi         = NS               , ## parameter of interest 
-                             dataset     = data             ,
+                             dataset     = data6            ,
                              constraints = constraints      ,   
                              name        = 'S+B'            )
     
@@ -477,7 +483,7 @@ def test_point_limit3 () :
     
     model_b  = ModelConfig ( pdf         = the_model          ,
                              poi         = NS                 , ## parameter of interest 
-                             dataset     = data               ,
+                             dataset     = data6              ,
                              workspace   = model_sb.workspace , 
                              constraints = constraints        ,   
                              name        = 'B-only'           )
@@ -491,10 +497,10 @@ def test_point_limit3 () :
     model_sb.mc.Print('vvv')
     model_b .mc.Print('vvv')
     
-    ac  = AsymptoticCalculator ( model_b          ,
-                                 model_sb         ,
-                                 dataset   = data , 
-                                 one_sided = True )     
+    ac  = AsymptoticCalculator ( model_b           ,
+                                 model_sb          ,
+                                 dataset   = data6 , 
+                                 one_sided = True  )     
     hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
     
     hti.scan ( vrange ( 0 , 150 , 50 )  ) ## scan it!
@@ -515,7 +521,7 @@ if '__main__' == __name__ :
     
         test_point_limit_ac ()
         
-        # test_point_limit_fc ()
+        test_point_limit_fc ()
         test_point_limit_hc ()
         
         ## test_point_limit_pl ()
