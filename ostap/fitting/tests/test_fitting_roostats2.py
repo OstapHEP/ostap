@@ -519,8 +519,7 @@ if '__main__' == __name__ :
     
     with rooSilent ( ) : 
     
-        test_point_limit_ac ()
-        
+        test_point_limit_ac ()        
         test_point_limit_fc ()
         test_point_limit_hc ()
         

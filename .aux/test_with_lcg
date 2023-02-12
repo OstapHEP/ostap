@@ -4,5 +4,5 @@ CMTCONFIG=$2
 source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
 source build/INSTALL/thisostap.sh 
 cd build 
-ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -R roostats-j4 
+ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j6 
 
