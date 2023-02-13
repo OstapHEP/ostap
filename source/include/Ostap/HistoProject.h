@@ -404,6 +404,628 @@ namespace Ostap
       const unsigned long               first      = 0  ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
+  public:
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum object 
+     *  @param data       (INPUT)  input data 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*         data                 , 
+      Ostap::Math::LegendreSum& object               ,
+      const RooAbsReal&         expression           ,
+      const RooAbsReal*         selection  = nullptr ,
+      const unsigned long       first      = 0       ,
+      const unsigned long       last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::LegendreSum&         object               ,
+      const RooAbsReal&                 expression           ,
+      const RooAbsReal*                 selection  = nullptr ,
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into ChebyshevSum object 
+     *  @param data       (INPUT)  input data 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::ChebyshevSum& object               ,
+      const RooAbsReal&          expression           ,
+      const RooAbsReal*          selection  = nullptr ,
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into ChebyshevSum object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::ChebyshevSum&        object               ,
+      const RooAbsReal&                 expression           ,
+      const RooAbsReal*                 selection  = nullptr ,
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein object 
+     *  @param data       (INPUT)  input data 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::Bernstein&    object               ,
+      const RooAbsReal&          expression           ,
+      const RooAbsReal*          selection  = nullptr ,
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::Bernstein&           object               ,
+      const RooAbsReal&                 expression           ,
+      const RooAbsReal*                 selection  = nullptr ,
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum2 object 
+     *  @param data        (INPUT)  input data 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::LegendreSum2& object               ,
+      const RooAbsReal&          xexpression          ,
+      const RooAbsReal&          yexpression          ,
+      const RooAbsReal*          selection  = nullptr ,
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum2 object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param range       (INPUT) selection range  
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::LegendreSum2&        object               ,
+      const RooAbsReal&                 xexpression          ,
+      const RooAbsReal&                 yexpression          ,
+      const RooAbsReal*                 selection  = nullptr ,
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein2D object 
+     *  @param data        (INPUT)  input data 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::Bernstein2D&  object               ,
+      const RooAbsReal&          xexpression          ,
+      const RooAbsReal&          yexpression          ,
+      const RooAbsReal*          selection  = nullptr ,
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein2D object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param range       (INPUT) selection range  
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::Bernstein2D&         object               ,
+      const RooAbsReal&                 xexpression          ,
+      const RooAbsReal&                 yexpression          ,
+      const RooAbsReal*                 selection  = nullptr ,
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum3 object 
+     *  @param data        (INPUT)  input data 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::LegendreSum3& object               ,
+      const RooAbsReal&          xexpression          ,
+      const RooAbsReal&          yexpression          ,
+      const RooAbsReal&          zexpression          ,
+      const RooAbsReal*          selection  = nullptr ,
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum3 object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param range       (INPUT) selection range  
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::LegendreSum3&        object               ,
+      const RooAbsReal&                 xexpression          ,
+      const RooAbsReal&                 yexpression          ,
+      const RooAbsReal&                 zexpression          ,
+      const RooAbsReal*                 selection  = nullptr ,
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein3D object 
+     *  @param data        (INPUT)  input data 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::Bernstein3D&  object               ,
+      const RooAbsReal&          xexpression          ,
+      const RooAbsReal&          yexpression          ,
+      const RooAbsReal&          zexpression          ,
+      const RooAbsReal*          selection  = nullptr ,
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein3D object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param range       (INPUT) selection range  
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::Bernstein3D&         object               ,
+      const RooAbsReal&                 xexpression          ,
+      const RooAbsReal&                 yexpression          ,
+      const RooAbsReal&                 zexpression          ,
+      const RooAbsReal*                 selection  = nullptr ,
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum4 object 
+     *  @param data        (INPUT)  input data 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param uexpression (INPUT) u-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project4
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::LegendreSum4& object               ,
+      const RooAbsReal&          xexpression          ,
+      const RooAbsReal&          yexpression          ,
+      const RooAbsReal&          zexpression          ,
+      const RooAbsReal&          uexpression          ,
+      const RooAbsReal*          selection  = nullptr ,
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum4 object 
+     *  @param data        (INPUT)  input data 
+     *  @param progress    (INPUT)  configuration of progres bar 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param uexpression (INPUT) u-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param range       (INPUT) selection range  
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project4
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::LegendreSum4&        object               ,
+      const RooAbsReal&                 xexpression          ,
+      const RooAbsReal&                 yexpression          ,
+      const RooAbsReal&                 zexpression          ,
+      const RooAbsReal&                 uexpression          ,
+      const RooAbsReal*                 selection  = nullptr ,
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum object 
+     *  @param data       (INPUT)  input data 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*         data                 , 
+      Ostap::Math::LegendreSum& object               ,
+      const std::string&        expression           , 
+      const std::string&        selection  = ""      , 
+      const unsigned long       first      = 0       ,
+      const unsigned long       last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::LegendreSum&         object               ,
+      const std::string&                expression           , 
+      const std::string&                selection  = ""      , 
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into ChebyshevSum object 
+     *  @param data       (INPUT)  input data 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::ChebyshevSum& object               ,
+      const std::string&         expression           , 
+      const std::string&         selection  = ""      , 
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into ChebyshevSum object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::ChebyshevSum&        object               ,
+      const std::string&                expression           , 
+      const std::string&                selection  = ""      , 
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein object 
+     *  @param data       (INPUT)  input data 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*         data                 , 
+      Ostap::Math::Bernstein&   object               ,
+      const std::string&        expression           , 
+      const std::string&        selection  = ""      , 
+      const unsigned long       first      = 0       ,
+      const unsigned long       last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein  object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::Bernstein&           object               ,
+      const std::string&                expression           , 
+      const std::string&                selection  = ""      , 
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;    
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum2 object 
+     *  @param data        (INPUT)  input data 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::LegendreSum2& object               ,
+      const std::string&         xexpression           , 
+      const std::string&         yexpression           , 
+      const std::string&         selection  = ""      , 
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum2 object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::LegendreSum2&        object               ,
+      const std::string&                xexpression          , 
+      const std::string&                yexpression          , 
+      const std::string&                selection  = ""      , 
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein2D object 
+     *  @param data        (INPUT)  input data 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::Bernstein2D&  object               ,
+      const std::string&         xexpression          , 
+      const std::string&         yexpression          , 
+      const std::string&         selection  = ""      , 
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein2D object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param expression (INPUT) expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project2
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::Bernstein2D&         object               ,
+      const std::string&                xexpression          , 
+      const std::string&                yexpression          , 
+      const std::string&                selection  = ""      , 
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================    
+    /** make a projection of RooDataSet into LegendreSum3 object 
+     *  @param data        (INPUT)  input data 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::LegendreSum3& object               ,
+      const std::string&         xexpression          , 
+      const std::string&         yexpression          , 
+      const std::string&         zexpression          , 
+      const std::string&         selection  = ""      , 
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum3 object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::LegendreSum3&        object               ,
+      const std::string&                xexpression          , 
+      const std::string&                yexpression          , 
+      const std::string&                zexpression          , 
+      const std::string&                selection  = ""      , 
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein3D object 
+     *  @param data        (INPUT)  input data 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::Bernstein3D&  object               ,
+      const std::string&         xexpression          , 
+      const std::string&         yexpression          , 
+      const std::string&         zexpression          , 
+      const std::string&         selection  = ""      , 
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into Bernstein3D object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project3
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::Bernstein3D&         object               ,
+      const std::string&                xexpression          , 
+      const std::string&                yexpression          , 
+      const std::string&                zexpression          , 
+      const std::string&                selection  = ""      , 
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================    
+    /** make a projection of RooDataSet into LegendreSum4 object 
+     *  @param data        (INPUT)  input data 
+     *  @param object      (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param uexpression (INPUT) u-expression
+     *  @param selection   (INPUT) selection criteria/weight 
+     *  @param first       (INPUT) the first event to process 
+     *  @param last        (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project4
+    ( const RooAbsData*          data                 , 
+      Ostap::Math::LegendreSum4& object               ,
+      const std::string&         xexpression          , 
+      const std::string&         yexpression          , 
+      const std::string&         zexpression          , 
+      const std::string&         uexpression          , 
+      const std::string&         selection  = ""      , 
+      const unsigned long        first      = 0       ,
+      const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
+    /** make a projection of RooDataSet into LegendreSum4 object 
+     *  @param data       (INPUT)  input data 
+     *  @param progress   (INPUT)  configuration of progres bar 
+     *  @param object     (UPDATE) the object 
+     *  @param xexpression (INPUT) x-expression
+     *  @param yexpression (INPUT) y-expression
+     *  @param zexpression (INPUT) z-expression
+     *  @param selection  (INPUT) selection criteria/weight 
+     *  @param first      (INPUT) the first event to process 
+     *  @param last       (INPUT) the last event to process 
+     */
+    static Ostap::StatusCode project4
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      Ostap::Math::LegendreSum4&        object               ,
+      const std::string&                xexpression          , 
+      const std::string&                yexpression          , 
+      const std::string&                zexpression          , 
+      const std::string&                uexpression          , 
+      const std::string&                selection  = ""      , 
+      const unsigned long               first      = 0       ,
+      const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
+    // ========================================================================
   public:  //   DataFrame 
     // ========================================================================
     /** make a projection of DataFrame into the histogram 

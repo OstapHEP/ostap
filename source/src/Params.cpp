@@ -4,14 +4,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Params.h"
-#include "Ostap/Formula.h"
-#include "Ostap/Notifier.h"
-#include "Ostap/ProgressBar.h"
-#include "Ostap/Parameterization.h"
-#include "Ostap/Polynomials.h"
-#include "Ostap/Bernstein.h"
-#include "Ostap/Bernstein2D.h"
-#include "Ostap/Bernstein3D.h"
+#include "Ostap/HistoProject.h"
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -26,346 +19,6 @@
  *  @date 2019-07-03 
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
  */
-// ============================================================================
-namespace
-{
-  // ==========================================================================  
-  template <class OBJECT> 
-  unsigned long 
-  _param1_
-  ( TTree*                            data       , 
-    const Ostap::Utils::ProgressConf& progress   ,
-    OBJECT&                           obj        ,
-    const std::string&                expression ,
-    const std::string&                selection  ,
-    const unsigned long               first      ,
-    const unsigned long               last       ,
-    const double                      xmin       , 
-    const double                      xmax       )
-  {
-    if ( 0 == data         ) { return 0 ; }
-    //
-    const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
-    if ( nEntries <= first  ) { return 0 ; }
-    //
-    Ostap::Formula xvar ( expression , data ) ;
-    Ostap::Assert ( !(!xvar) && xvar.ok ()    , 
-                    "Invalid expression"      ,   
-                    "Ostap::DataParam::parameterize"  , 310 ) ;
-    //
-    std::unique_ptr<Ostap::Formula> cut { nullptr } ;
-    if  ( !selection.empty() ) 
-    { 
-      cut = std::make_unique<Ostap::Formula>( selection , data ) ; 
-      Ostap::Assert ( !(!cut) && cut->ok () , 
-                      "Invalid selection"   ,
-                      "Ostap::DataParam::parameterize" , 315 ) ;
-    }
-    //
-    unsigned long filled = 0 ;
-    //
-    Ostap::Utils::Notifier notify ( data , &xvar , cut.get() ) ;
-    std::vector<double> results {} ;
-    /// make an explicit loop 
-    Ostap::Utils::ProgressBar bar (  nEntries - first , progress ) ;
-    for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
-    {
-      long ievent = data->GetEntryNumber ( entry ) ;
-      Ostap::Assert ( 0 <= ievent , 
-                      "Errot in TTree::GetEventNumber" , 
-                      "Ostap::DataParam::parameterize" , 316 ) ;
-      //
-      ievent      = data->LoadTree ( ievent ) ;      
-      Ostap::Assert ( 0 <= ievent , 
-                      "Error in TTree::LoadTree " , 
-                      "Ostap::DataParam::parameterize" , 317 ) ;
-      //
-      const double weight = cut ? cut -> evaluate() : 1.0 ;
-      if ( !weight    ) { continue ;}
-      //
-      xvar.evaluate ( results ) ;
-      for ( double x : results ) 
-      { 
-        // check the x-range  & fill 
-        if ( xmin <= x && x <= xmax && obj.Fill ( x , weight ) ) { ++filled ; }
-      }
-    }
-    return filled ;
-  }
-  // ==========================================================================
-  template <class OBJECT>
-  unsigned long 
-  _param2_
-  ( TTree*                            data        , 
-    const Ostap::Utils::ProgressConf& progress    ,
-    OBJECT&                           obj         ,
-    const std::string&                xexpression ,
-    const std::string&                yexpression ,
-    const std::string&                selection   ,
-    const unsigned long               first       ,
-    const unsigned long               last        ,
-    const double                      xmin        , 
-    const double                      xmax        ,
-    const double                      ymin        , 
-    const double                      ymax        )
-  {
-    if ( 0 == data          ) { return 0 ; }
-    //
-    const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
-    if ( nEntries <= first  ) { return 0 ; }
-    //
-    Ostap::Formula xvar ( xexpression , data ) ;
-    Ostap::Assert ( !(!xvar) && xvar.ok () , 
-                    "Invalid xexpression"  , 
-                    "Ostap::DataParam::parameterize" , 310 ) ;
-    //
-    Ostap::Formula yvar ( yexpression , data ) ;
-    Ostap::Assert ( !(!yvar) && yvar.ok () , 
-                    "Invalid yexpression"  ,
-                    "Ostap::DataParam::parameterize" , 311 ) ;
-    //
-    std::unique_ptr<Ostap::Formula> cut { nullptr } ;
-    if  ( !selection.empty() ) 
-    { 
-      cut = std::make_unique<Ostap::Formula>( selection , data ) ; 
-      Ostap::Assert ( !(!cut) && cut->ok () , 
-                      "Invalid selection"   ,
-                      "Ostap::DataParam::parameterize" , 315 ) ;
-    }
-    //
-    unsigned long filled = 0 ;
-    // 
-    Ostap::Utils::Notifier notify ( data , &xvar , &yvar , cut.get() ) ;
-    std::vector<double> xresults {} ;
-    std::vector<double> yresults {} ;
-    /// make an explicit  loop 
-    Ostap::Utils::ProgressBar bar (  nEntries - first , progress ) ;
-    for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
-    {
-      //
-      long ievent = data->GetEntryNumber ( entry ) ;
-      Ostap::Assert ( 0 <= ievent , 
-                      "Errot in TTree::GetEventNumber" , 
-                      "Ostap::DataParam::parameterize" , 316 ) ;
-      //
-      ievent      = data->LoadTree ( ievent ) ;      
-      Ostap::Assert ( 0 <= ievent , 
-                      "Error in TTree::LoadTree " , 
-                      "Ostap::DataParam::parameterize" , 317 ) ;
-      //
-      const double weight = cut ? cut -> evaluate() : 1.0 ;
-      if ( !weight    ) { continue ;}
-      //
-      xvar.evaluate ( xresults ) ;
-      yvar.evaluate ( yresults ) ;
-      for ( double x : xresults )
-      { 
-        if ( xmax < x || x< xmin ) { continue ; }
-        for ( double y : yresults )
-        { 
-          if ( ymin <= y && y <= ymax && obj.fill ( x , y , weight ) ) { ++filled ; }
-        }
-      }
-    }
-    return filled ;
-  }
-  // ==========================================================================
-  template <class OBJECT>
-  Ostap::StatusCode 
-  _param3_
-  ( TTree*                            data        , 
-    const Ostap::Utils::ProgressConf& progress    ,
-    OBJECT&                           obj         ,
-    const std::string&                xexpression ,
-    const std::string&                yexpression ,
-    const std::string&                zexpression ,
-    const std::string&                selection   ,
-    const unsigned long               first       ,
-    const unsigned long               last        , 
-    const double                      xmin        , 
-    const double                      xmax        ,
-    const double                      ymin        , 
-    const double                      ymax        ,
-    const double                      zmin        , 
-    const double                      zmax        )
-  {
-    if ( 0 == data          ) { return 0 ; }
-    //
-    const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
-    if ( nEntries <= first  ) { return 0 ; }
-    //
-    Ostap::Formula xvar ( xexpression , data ) ;
-    Ostap::Assert ( !(!xvar) && xvar.ok () , 
-                    "Invalid xexpression"  , 
-                    "Ostap::DataParam::parameterize" , 310 ) ;
-    //
-    Ostap::Formula yvar ( yexpression , data ) ;
-    Ostap::Assert ( !(!yvar) && yvar.ok () , 
-                    "Invalid yexpression"  , 
-                    "Ostap::DataParam::parameterize" , 311 ) ;
-    //
-    Ostap::Formula zvar ( zexpression , data ) ;
-    Ostap::Assert ( !(!zvar) && zvar.ok () , 
-                    "Invalid zexpression"  , 
-                    "Ostap::DataParam::parameterize" , 312 ) ;
-    //
-    std::unique_ptr<Ostap::Formula> cut { nullptr } ;
-    if  ( !selection.empty() ) 
-    { 
-      cut = std::make_unique<Ostap::Formula>( selection , data ) ; 
-      Ostap::Assert ( !(!cut) && cut->ok () , 
-                      "Invalid selection"  ,
-                      "Ostap::DataParam::parameterize" , 315 ) ;
-    }
-    //
-    unsigned long filled = 0 ;
-    //
-    Ostap::Utils::Notifier notify ( data , &xvar , &yvar , &zvar , cut.get() ) ;
-    std::vector<double> xresults {} ;
-    std::vector<double> yresults {} ;
-    std::vector<double> zresults {} ;
-    /// make an explicit  loop 
-    Ostap::Utils::ProgressBar bar (  nEntries - first , progress ) ;
-    for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
-    {      //
-      long ievent = data->GetEntryNumber ( entry ) ;
-      Ostap::Assert ( 0 <= ievent , 
-                      "Errot in TTree::GetEventNumber" , 
-                      "Ostap::DataParam::parameterize" , 316 ) ;
-      //
-      ievent      = data->LoadTree ( ievent ) ;      
-      Ostap::Assert ( 0 <= ievent , 
-                      "Error in TTree::LoadTree " , 
-                      "Ostap::DataParam::parameterize" , 317 ) ;
-      //
-      const double weight = cut ? cut -> evaluate() : 1.0 ;
-      if ( !weight    ) { continue ;}
-      //
-      xvar.evaluate ( xresults ) ;
-      yvar.evaluate ( yresults ) ;
-      zvar.evaluate ( zresults ) ;
-      for ( double x : xresults )
-      { 
-        if ( xmax < x || x < xmin ) { continue ; }
-        for ( double y : yresults )
-        { 
-          if ( xmax < x || y < ymin ) { continue ; }
-          for ( double z : zresults )
-          { 
-            if ( zmin <= z && z <= zmax && obj.fill ( x , y , z , weight ) ) { ++filled ; }
-          } 
-        } 
-      }
-    }
-    return filled ;
-  }
-  // ==========================================================================
-  template <class OBJECT>
-  Ostap::StatusCode 
-  _param4_
-  ( TTree*                            data        , 
-    const Ostap::Utils::ProgressConf& progress    ,
-    OBJECT&                           obj         ,
-    const std::string&                xexpression ,
-    const std::string&                yexpression ,
-    const std::string&                zexpression ,
-    const std::string&                uexpression ,
-    const std::string&                selection   ,
-    const unsigned long               first       ,
-    const unsigned long               last        ,
-    const double                      xmin        , 
-    const double                      xmax        ,
-    const double                      ymin        , 
-    const double                      ymax        ,
-    const double                      zmin        , 
-    const double                      zmax        ,
-    const double                      umin        , 
-    const double                      umax        )
-  {
-    if ( 0 == data          ) { return 0 ; }
-    //
-    const unsigned long nEntries = std::min ( last , (unsigned long) data->GetEntries() ) ;
-    if ( nEntries <= first  ) { return 0 ; }
-    //
-    Ostap::Formula xvar ( xexpression , data ) ;
-    Ostap::Assert ( !(!xvar) && xvar.ok () , 
-                    "Invalid xexpression"  , 
-                    "Ostap::DataParam::parameterize" , 310 ) ;
-    //
-    Ostap::Formula yvar ( yexpression , data ) ;
-    Ostap::Assert ( !(!yvar) && yvar.ok () , 
-                    "Invalid yexpression"  ,
-                    "Ostap::DataParam::parameterize" , 311 ) ;
-    //
-    Ostap::Formula zvar ( zexpression , data ) ;
-    Ostap::Assert ( !(!zvar) && zvar.ok () , 
-                    "Invalid zexpression"  ,
-                    "Ostap::DataParam::parameterize" , 312 ) ;
-    //
-    Ostap::Formula uvar ( uexpression , data ) ;
-    Ostap::Assert ( !(!uvar) && uvar.ok () , 
-                    "Invalid uexpression"  , 
-                    "Ostap::DataParam::parameterize" , 313 ) ;
-    //
-    std::unique_ptr<Ostap::Formula> cut { nullptr } ;
-    if  ( !selection.empty() ) 
-    { 
-      cut = std::make_unique<Ostap::Formula>( selection , data ) ; 
-      Ostap::Assert ( !(!cut) && cut->ok () , 
-                      "Invalid selection"   ,
-                      "Ostap::DataParam::parameterize" , 315 ) ;
-    }
-    //
-    unsigned long filled = 0 ;
-    //
-    Ostap::Utils::Notifier notify ( data , &xvar , &yvar , &zvar , &uvar , cut.get() ) ;
-    std::vector<double> xresults {} ;
-    std::vector<double> yresults {} ;
-    std::vector<double> zresults {} ;
-    std::vector<double> uresults {} ;
-    /// make an explicit  loop 
-    Ostap::Utils::ProgressBar bar (  nEntries - first , progress ) ;
-    for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )
-    {
-      //
-      long ievent = data->GetEntryNumber ( entry ) ;
-      Ostap::Assert ( 0 <= ievent , 
-                      "Errot in TTree::GetEventNumber" , 
-                      "Ostap::DataParam::parameterize" , 316 ) ;
-      //
-      ievent      = data->LoadTree ( ievent ) ;      
-      Ostap::Assert ( 0 <= ievent , 
-                      "Error in TTree::LoadTree " , 
-                      "Ostap::DataParam::parameterize" , 317 ) ;
-      //
-      const double weight = cut ? cut -> evaluate() : 1.0 ;
-      if ( !weight    ) { continue ;}
-      //
-      xvar.evaluate ( xresults ) ;
-      yvar.evaluate ( yresults ) ;
-      zvar.evaluate ( zresults ) ;
-      uvar.evaluate ( uresults ) ;
-      for ( double x : xresults )
-      { 
-        if ( xmax < x || x < xmin ) { continue ; }
-        for ( double y : yresults )
-        { 
-          if ( xmax < x || y < ymin ) { continue ; }
-          for ( double z : zresults )
-          { 
-            if ( zmax < z || z < zmin ) { continue ; }
-            for ( double u : uresults )
-            { 
-              if ( umin <= u && u <= umax && obj.fill ( x , y , z , u , weight ) ) { ++filled ; }
-            } 
-          }   
-        } 
-      }
-    }
-    return filled ;
-  }
-  // ==========================================================================
-}    
 // ============================================================================
 // 1D stuff 
 // ============================================================================
@@ -386,14 +39,16 @@ namespace
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize 
 ( TTree*                    tree       , 
   Ostap::Math::LegendreSum& sum        , 
   const std::string&        expression , 
   const unsigned long       first      ,
   const unsigned long       last       ) 
-{ return parameterize ( tree , sum , expression , "" ,  first , last ) ; }
+{ 
+  return Ostap::HistoProject::project ( tree , sum , expression , "" , first , last ) ;
+}
 // ============================================================================
 /*  fill Legendre sum with data from the Tree 
  *  @see Ostap::Math::LegendreSum 
@@ -414,7 +69,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                    tree       , 
   Ostap::Math::LegendreSum& sum        , 
@@ -423,19 +78,7 @@ Ostap::DataParam::parameterize
   const unsigned long       first      ,
   const unsigned long       last       ) 
 {
-  /// make a fake progress bar 
-  Ostap::Utils::ProgressConf progress { 0 } ;
-  /// reset the sum 
-  sum *= 0 ;
-  return _param1_ ( tree        , 
-                    progress    , 
-                    sum         , 
-                    expression  , 
-                    selection   , 
-                    first       , 
-                    last        , 
-                    sum.xmin()  ,
-                    sum.xmax()  ) ;
+  return Ostap::HistoProject::project ( tree , sum , expression , selection , first , last ) ;
 }
 // ============================================================================
 /*  fill Chebyshev sum with data from the Tree 
@@ -455,14 +98,16 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree       , 
   Ostap::Math::ChebyshevSum& sum        , 
-  const std::string&        expression , 
-  const unsigned long       first      ,
-  const unsigned long       last       ) 
-{ return parameterize ( tree , sum , expression , "" ,  first , last ) ; }
+  const std::string&         expression , 
+  const unsigned long        first      ,
+  const unsigned long        last       ) 
+{ 
+  return Ostap::HistoProject::project ( tree , sum , expression , "" , first , last ) ;
+}
 // ========================================================================
 /* fill Chebyshev sum with data from the Tree 
  *  @see Ostap::Math::ChebyshevSum 
@@ -482,7 +127,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree       , 
   Ostap::Math::ChebyshevSum& sum        , 
@@ -491,19 +136,7 @@ Ostap::DataParam::parameterize
   const unsigned long        first      ,
   const unsigned long        last       ) 
 {
-  /// make a fake progress bar 
-  Ostap::Utils::ProgressConf progress { 0 } ;
-  /// reset the sum 
-  sum *= 0 ;
-  return _param1_ ( tree        , 
-                    progress    , 
-                    sum         , 
-                    expression  , 
-                    selection   , 
-                    first       , 
-                    last        , 
-                    sum.xmin()  ,
-                    sum.xmax()  ) ;
+  return Ostap::HistoProject::project ( tree , sum , expression , selection , first , last ) ;
 }
 // ============================================================================
 /*  fill Bernstein sum with data from the Tree 
@@ -523,14 +156,16 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree       , 
   Ostap::Math::Bernstein&    sum        , 
   const std::string&        expression , 
   const unsigned long       first      ,
   const unsigned long       last       ) 
-{ return parameterize ( tree , sum , expression , "" ,  first , last ) ; }
+{ 
+  return Ostap::HistoProject::project ( tree , sum , expression , "" , first , last ) ;
+}
 // ========================================================================
 /*  fill Bernstein sum with data from the Tree 
  *  @see Ostap::Math::Bernstein 
@@ -550,7 +185,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree       , 
   Ostap::Math::Bernstein&    sum        , 
@@ -559,19 +194,7 @@ Ostap::DataParam::parameterize
   const unsigned long        first      ,
   const unsigned long        last       ) 
 {
-  /// make a fake progress bar 
-  Ostap::Utils::ProgressConf progress { 0 } ;
-  /// reset the sum 
-  sum *= 0 ;
-  return _param1_ ( tree        , 
-                    progress    , 
-                    sum         , 
-                    expression  , 
-                    selection   , 
-                    first       , 
-                    last        , 
-                    sum.xmin()  ,
-                    sum.xmax()  ) ;
+  return Ostap::HistoProject::project ( tree , sum , expression , selection , first , last ) ;
 }
 // ============================================================================
 // 2D 
@@ -594,7 +217,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree        , 
   Ostap::Math::LegendreSum2& sum         ,
@@ -602,7 +225,11 @@ Ostap::DataParam::parameterize
   const std::string&         yexpression , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
-{ return parameterize ( tree , sum , xexpression , yexpression , "" ,  first , last ) ; }
+{ return Ostap::HistoProject::project2 ( tree , sum  , 
+                                         xexpression , 
+                                         yexpression , 
+                                         ""          ,
+                                         first , last ) ; }
 // ========================================================================
 /*  fill Legendre sum with data from the Tree 
  *  @see Ostap::Math::LegendreSum2 
@@ -623,7 +250,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree        , 
   Ostap::Math::LegendreSum2& sum         , 
@@ -632,24 +259,11 @@ Ostap::DataParam::parameterize
   const std::string&         selection   , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
-{
-  /// make a fake progress bar 
-  Ostap::Utils::ProgressConf progress { 0 } ;
-  /// reset the sum 
-  sum *= 0 ;
-  return _param2_ ( tree        , 
-                    progress    , 
-                    sum         , 
-                    xexpression , 
-                    yexpression , 
-                    selection   , 
-                    first       , 
-                    last        , 
-                    sum.xmin()  ,
-                    sum.xmax()  ,
-                    sum.ymin()  ,
-                    sum.ymax()  ) ;
-}
+{ return Ostap::HistoProject::project2 ( tree , sum  , 
+                                         xexpression , 
+                                         yexpression , 
+                                         selection   , 
+                                         first , last ) ; }
 // ============================================================================
 /** fill Bernstein with data from the Tree 
  *  @see Ostap::Math::Bernstein2D
@@ -672,7 +286,7 @@ Ostap::DataParam::parameterize
  *  @date   2022-12-26
  */
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree        , 
   Ostap::Math::Bernstein2D&  sum         , 
@@ -680,7 +294,11 @@ Ostap::DataParam::parameterize
   const std::string&         yexpression , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
-{ return parameterize ( tree , sum , xexpression , yexpression , "" ,  first , last ) ; }
+{ return Ostap::HistoProject::project2 ( tree , sum  , 
+                                         xexpression , 
+                                         yexpression , 
+                                         ""          ,
+                                         first , last ) ; }
 // ============================================================================
 /*  fill Bernstein with data from the Tree 
  *  @see Ostap::Math::Bernstein2D
@@ -704,7 +322,7 @@ Ostap::DataParam::parameterize
  *  @date   2022-12-26
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree        , 
   Ostap::Math::Bernstein2D&  sum         , 
@@ -713,24 +331,11 @@ Ostap::DataParam::parameterize
   const std::string&         selection   , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
-{
-  /// make a fake progress bar 
-  Ostap::Utils::ProgressConf progress { 0 } ;
-  /// reset the sum 
-  sum *= 0 ;
-  return _param2_ ( tree        , 
-                    progress    , 
-                    sum         , 
-                    xexpression , 
-                    yexpression , 
-                    selection   , 
-                    first       , 
-                    last        , 
-                    sum.xmin()  ,
-                    sum.xmax()  ,
-                    sum.ymin()  ,
-                    sum.ymax()  ) ;
-}
+{ return Ostap::HistoProject::project2 ( tree , sum  , 
+                                         xexpression , 
+                                         yexpression , 
+                                         selection   , 
+                                         first , last ) ; }
 // ============================================================================
 // 3D 
 // ============================================================================`
@@ -753,7 +358,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree        , 
   Ostap::Math::LegendreSum3& sum         , 
@@ -762,7 +367,12 @@ Ostap::DataParam::parameterize
   const std::string&         zexpression , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
-{ return parameterize ( tree , sum , xexpression , yexpression , zexpression , "" ,  first , last ) ; }
+{ return Ostap::HistoProject::project3 ( tree , sum  , 
+                                         xexpression , 
+                                         yexpression , 
+                                         zexpression , 
+                                         ""          ,
+                                         first , last ) ; }
 // ========================================================================
 /*  fill Legendre sum with data from the Tree 
  *  @see Ostap::Math::LegendreSum3 
@@ -784,7 +394,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree        , 
   Ostap::Math::LegendreSum3& sum         , 
@@ -794,27 +404,12 @@ Ostap::DataParam::parameterize
   const std::string&         selection   , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
-{
-  /// make a fake progress bar 
-  Ostap::Utils::ProgressConf progress { 0 } ;
-  /// reset the sum 
-  sum *= 0 ;
-  return _param3_ ( tree        , 
-                    progress    , 
-                    sum         , 
-                    xexpression , 
-                    yexpression , 
-                    zexpression , 
-                    selection   , 
-                    first       , 
-                    last        , 
-                    sum.xmin()  ,
-                    sum.xmax()  ,
-                    sum.ymin()  ,
-                    sum.ymax()  ,
-                    sum.zmin()  ,
-                    sum.zmax()  ) ;
-}
+{ return Ostap::HistoProject::project3 ( tree , sum  , 
+                                         xexpression , 
+                                         yexpression , 
+                                         zexpression , 
+                                         selection   , 
+                                         first , last ) ; }
 // ============================================================================
 /** fill Bernstein with data from the Tree 
  *  @see Ostap::Math::Bernstein3D
@@ -835,7 +430,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree        , 
   Ostap::Math::Bernstein3D&  sum         , 
@@ -844,7 +439,12 @@ Ostap::DataParam::parameterize
   const std::string&         zexpression , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
-{ return parameterize ( tree , sum , xexpression , yexpression , zexpression , "" ,  first , last ) ; }
+{ return Ostap::HistoProject::project3 ( tree , sum  , 
+                                         xexpression , 
+                                         yexpression , 
+                                         zexpression , 
+                                         ""          ,
+                                         first , last ) ; }
 // ========================================================================
 /** fill Bernstein with data from the Tree 
  *  @see Ostap::Math::Bernstein3D
@@ -866,7 +466,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree        , 
   Ostap::Math::Bernstein3D&  sum         , 
@@ -876,27 +476,12 @@ Ostap::DataParam::parameterize
   const std::string&         selection   , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
-{
-  /// make a fake progress bar 
-  Ostap::Utils::ProgressConf progress { 0 } ;
-  /// reset the sum 
-  sum *= 0 ;
-  return _param3_ ( tree        , 
-                    progress    , 
-                    sum         , 
-                    xexpression , 
-                    yexpression , 
-                    zexpression , 
-                    selection   , 
-                    first       , 
-                    last        , 
-                    sum.xmin()  ,
-                    sum.xmax()  ,
-                    sum.ymin()  ,
-                    sum.ymax()  ,
-                    sum.zmin()  ,
-                    sum.zmax()  ) ;
-}
+{ return Ostap::HistoProject::project3 ( tree , sum  , 
+                                         xexpression , 
+                                         yexpression , 
+                                         zexpression , 
+                                         selection   , 
+                                         first , last ) ; }
 // ============================================================================
 // 4D 
 // ============================================================================
@@ -920,7 +505,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree        , 
   Ostap::Math::LegendreSum4& sum         ,
@@ -930,7 +515,13 @@ Ostap::DataParam::parameterize
   const std::string&         uexpression , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
-{ return parameterize ( tree , sum , xexpression , yexpression , zexpression , "" ,  first , last ) ; }
+{ return Ostap::HistoProject::project4 ( tree , sum  , 
+                                         xexpression , 
+                                         yexpression , 
+                                         zexpression , 
+                                         uexpression , 
+                                         ""          ,
+                                         first , last ) ; }
 // ========================================================================
 /*  fill Legendre sum with data from the Tree 
  *  @see Ostap::Math::LegendreSum4 
@@ -953,7 +544,7 @@ Ostap::DataParam::parameterize
  *  @date   2019-07-3
  */ 
 // ============================================================================
-unsigned long 
+Ostap::StatusCode 
 Ostap::DataParam::parameterize
 ( TTree*                     tree        , 
   Ostap::Math::LegendreSum4& sum         , 
@@ -964,27 +555,13 @@ Ostap::DataParam::parameterize
   const std::string&         selection   , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
-{
-  /// make a fake progress bar 
-  Ostap::Utils::ProgressConf progress { 0 } ;
-  /// reset the sum 
-  sum *= 0 ;
-  return _param3_ ( tree        , 
-                    progress    , 
-                    sum         , 
-                    xexpression , 
-                    yexpression , 
-                    zexpression , 
-                    selection   , 
-                    first       , 
-                    last        , 
-                    sum.xmin()  ,
-                    sum.xmax()  ,
-                    sum.ymin()  ,
-                    sum.ymax()  ,
-                    sum.zmin()  ,
-                    sum.zmax()  ) ;
-}
+{ return Ostap::HistoProject::project4 ( tree , sum  , 
+                                         xexpression , 
+                                         yexpression , 
+                                         zexpression , 
+                                         uexpression , 
+                                         selection   , 
+                                         first , last ) ; }
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

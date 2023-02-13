@@ -9,6 +9,8 @@
 // ============================================================================
 // Ostap 
 // ============================================================================
+#include "Ostap/StatusCode.h"
+// ============================================================================
 // Forward desclarations 
 // ============================================================================ 
 // ROOT 
@@ -59,7 +61,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                    tree       , 
       Ostap::Math::LegendreSum& sum        , 
       const std::string&        expression , 
@@ -83,7 +85,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                    tree       , 
       Ostap::Math::LegendreSum& sum        , 
       const std::string&        expression , 
@@ -109,7 +111,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree       , 
       Ostap::Math::ChebyshevSum& sum        , 
       const std::string&         expression , 
@@ -133,7 +135,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree       , 
       Ostap::Math::ChebyshevSum& sum        , 
       const std::string&         expression , 
@@ -159,7 +161,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree       , 
       Ostap::Math::Bernstein&    sum        , 
       const std::string&         expression , 
@@ -183,7 +185,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree       , 
       Ostap::Math::Bernstein&    sum        , 
       const std::string&         expression , 
@@ -210,7 +212,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree        , 
       Ostap::Math::LegendreSum2& sum         , 
       const std::string&         xexpression , 
@@ -236,7 +238,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree        ,  
       Ostap::Math::LegendreSum2& sum         , 
       const std::string&         xexpression , 
@@ -265,7 +267,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2022-12-26
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree        , 
       Ostap::Math::Bernstein2D&  sum         , 
       const std::string&         xexpression , 
@@ -294,7 +296,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2022-12-26
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree        ,  
       Ostap::Math::Bernstein2D&  sum         , 
       const std::string&         xexpression , 
@@ -323,7 +325,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree        , 
       Ostap::Math::LegendreSum3& sum         , 
       const std::string&         xexpression , 
@@ -351,7 +353,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree        ,  
       Ostap::Math::LegendreSum3& sum         , 
       const std::string&         xexpression , 
@@ -379,7 +381,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree        , 
       Ostap::Math::Bernstein3D&  sum         , 
       const std::string&         xexpression , 
@@ -407,7 +409,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree        ,  
       Ostap::Math::Bernstein3D&  sum         , 
       const std::string&         xexpression , 
@@ -438,7 +440,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree        , 
       Ostap::Math::LegendreSum4& sum         , 
       const std::string&         xexpression , 
@@ -468,7 +470,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2019-07-3
      */ 
-    static unsigned long parameterize 
+    static Ostap::StatusCode parameterize 
     ( TTree*                     tree        ,  
       Ostap::Math::LegendreSum4& sum         , 
       const std::string&         xexpression , 

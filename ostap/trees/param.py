@@ -29,7 +29,7 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 _large = 2**64 -1 
 # =============================================================================
-## parameterize 1D unbinned ddistribution from TTree in terms of
+## parameterize 1D unbinned distribution from TTree in terms of
 #  Legendre/chebyshev/Bernstein sums
 #  @code
 #  l = LegendreSum ( 5 , -1.0 , 1.0 )
@@ -50,7 +50,7 @@ def _l1_parameterize_ ( l1   ,
                         tree ,
                         var  ,
                         cut = '' , first = 0 , last = _large ) :
-    """Parameterize 1D unbinned ddistribution from TTree in terms of Legendre or Chebyshev sum
+    """Parameterize 1D unbinned distribution from TTree in terms of Legendre or Chebyshev sum
     
     >>> l = LegendreSum ( 5 , -1.0 , 1.0 )
     >>> tree = ...
@@ -69,7 +69,7 @@ def _l1_parameterize_ ( l1   ,
                                           str ( cut ) , first , last )
 
 # =============================================================================
-## parameterize 2D unbinned ddistribution from TTree in terms of Legendre sum
+## parameterize 2D unbinned distribution from TTree in terms of Legendre sum
 #  @code
 #  tree = ...
 #  l = LegendreSum2 ( 5 , 4 , -1.0 , 1.0 , 0.0 , 1.0 )
@@ -85,7 +85,7 @@ def _l2_parameterize_ ( l2   ,
                         xvar ,
                         yvar ,
                         cut = '' , first = 0 , last = _large ) :
-    """Parameterize 2D unbinned ddistribution from TTree in terms of Legendre sum
+    """Parameterize 2D unbinned distribution from TTree in terms of Legendre sum
     
     >>> tree = ...
     >>> l = LegendreSum2 ( 5 , 3 , -1.0 , 1.0 , 0.0 , 1.0  )
@@ -98,7 +98,7 @@ def _l2_parameterize_ ( l2   ,
                                           str ( cut ) , first , last )
 
 # =============================================================================
-## parameterize 3D unbinned ddistribution from TTree in terms of Legendre sum
+## parameterize 3D unbinned distribution from TTree in terms of Legendre sum
 #  @code
 #  tree = ...
 #  l = LegendreSum3 ( 5 , 4 , 2  , -1.0 , 1.0 , 0.0 , 1.0 , -2.0 , 2.0 )
@@ -114,7 +114,7 @@ def _l3_parameterize_ ( l3   ,
                         yvar ,
                         zvar ,
                         cut = '' , first = 0 , last = _large ) :
-    """Parameterize 3D unbinned ddistribution from TTree in terms of Legendre sum
+    """Parameterize 3D unbinned distribution from TTree in terms of Legendre sum
     
     >>> tree = ...
     >>> l = LegendreSum3 ( 5 , 3 , 2 , -1.0 , 1.0 , 0.0 , 1.0  , 0.0 , 5.0 )
@@ -127,7 +127,7 @@ def _l3_parameterize_ ( l3   ,
                                           str ( cut ) , first , last )
                                           
 # =============================================================================
-## parameterize 4D unbinned ddistribuition from TTree in terms of Legendre sum
+## parameterize 4D unbinned distribution from TTree in terms of Legendre sum
 #  @code
 #  l = LegendreSum4 ( 5 , 4 , 2 , 1  , -1.0 , 1.0 , 0.0 , 1.0 , -2.0 , 2.0 , 0. , 10.0  )
 #  tree = ...
@@ -142,7 +142,7 @@ def _l4_parameterize_ ( l4   ,
                         zvar ,
                         uvar ,
                         cut = '' , first = 0 , last = _large ) :
-    """Parameterize 4D unbinned ddistribuition from TTree in terms of Legendre sum
+    """Parameterize 4D unbinned distribuition from TTree in terms of Legendre sum
     
     >>> l = LegendreSum4 ( 5 , 3 , 2 , 2 , -1.0 , 1.0 , 0.0 , 1.0  , 0.0 , 5.0 , 0.0 , 1.0 )
     >>> tree = ...
