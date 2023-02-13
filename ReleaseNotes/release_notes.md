@@ -2,11 +2,9 @@
 
    1. (re)implement `Ostap::DataParam` in terms of `Ostap::HistpoProject` - reduce code duplication 
 
-
 ## Backward incompatible:  
 
 ## Bug fixes:
-
 
 # v1.9.6.4
 
