@@ -2710,8 +2710,8 @@ class H2D_dset(XVar,YVar,VarMaker) :
 
         ## initialize the XVar base class 
         XVar.__init__ ( self   , xaxis  ,
-                        xname  = 'x_%s'           % self.name ,
-                        xtitle = 'x-observable%s' % self.name )
+                        name  = 'x_%s'           % self.name ,
+                        title = 'x-observable%s' % self.name )
         
         ## initialize the YVar base class 
         YVar.__init__ ( self  , yaxis  ,
