@@ -23,6 +23,7 @@ Four ways to add branch into TTree/Tchain
 """
 # ============================================================================= 
 from   __future__               import print_function
+from   ostap.core.meta_info     import root_info
 import ostap.trees.trees
 import ostap.histos.histos
 from   ostap.core.pyrouts       import Ostap 
@@ -195,17 +196,17 @@ def test_addbranch() :
     if numpy : ## ATTETNION! 
 
         with timing ('numpy float16' , logger = logger ) :
-            adata  = numpy.full ( 10000 , +0.1 , dtype = numpy.float16 )
-            chain  = data.chain
-            chain.add_new_branch ( 'np_f16' , adata )
+           adata  = numpy.full ( 10000 , +0.1 , dtype = numpy.float16 )
+           chain  = data.chain
+           chain.add_new_branch ( 'np_f16' , adata )
         ## reload the chain and check: 
         logger.info ( 'With numpy.float16:\n%s' % data.chain.table ( prefix = '# ' ) )
         assert 'np_f16' in data.chain , "Branch ``np_f16'' is  not here!"
 
         with timing ('numpy float32' , logger = logger ) :
-            adata = numpy.full ( 10000 , -0.2 , dtype = numpy.float32 )
-            chain = data.chain
-            chain.add_new_branch ( 'np_f32' , adata )            
+           adata = numpy.full ( 10000 , -0.2 , dtype = numpy.float32 )
+           chain = data.chain
+           chain.add_new_branch ( 'np_f32' , adata )            
         ## reload the chain and check: 
         logger.info ( 'With numpy.float32:\n%s' % data.chain.table ( prefix = '# ' ) )
         assert 'np_f32' in data.chain , "Branch ``np_f32'' is  not here!"
@@ -227,33 +228,33 @@ def test_addbranch() :
         ## assert 'np_i8' in data.chain , "Branch ``np_i8'' is  not here!"
 
         ## with timing ('numpy uint8 ' , logger = logger ) :  
-        ##     adata  = numpy.full ( 10000 , +2 , dtype = numpy.uint8 )
-        ##     chain  = data.chain            
-        ##     chain.add_new_branch ( 'np_ui8' , adata )
+        ##   adata  = numpy.full ( 10000 , +2 , dtype = numpy.uint8 )
+        ##   chain  = data.chain            
+        ##   chain.add_new_branch ( 'np_ui8' , adata )
         ## ## reload the chain and check: 
         ## logger.info ( 'With numpy.uint8:\n%s' % data.chain.table ( prefix = '# ' ) )
         ## assert 'np_ui8' in data.chain , "Branch ``np_ui8'' is  not here!"
 
         with timing ('numpy int16 ' , logger = logger ) :  
-            adata  = numpy.full ( 10000 , -3 , dtype = numpy.int16 )
-            chain  = data.chain            
-            chain.add_new_branch ( 'np_i16' , adata )
+           adata  = numpy.full ( 10000 , -3 , dtype = numpy.int16 )
+           chain  = data.chain            
+           chain.add_new_branch ( 'np_i16' , adata )
         ## reload the chain and check: 
         logger.info ( 'With numpy.int16:\n%s' % data.chain.table ( prefix = '# ' ) )
         assert 'np_i16' in data.chain , "Branch ``np_i16'' is  not here!"
 
         with timing ('numpy uint16 ' , logger = logger ) :  
-            adata  = numpy.full ( 10000 , +4 , dtype = numpy.uint16 )
-            chain  = data.chain            
-            chain.add_new_branch ( 'np_ui16' , adata )
+           adata  = numpy.full ( 10000 , +4 , dtype = numpy.uint16 )
+           chain  = data.chain            
+           chain.add_new_branch ( 'np_ui16' , adata )
         ## reload the chain and check: 
         logger.info ( 'With numpy.uint16:\n%s' % data.chain.table ( prefix = '# ' ) )
         assert 'np_ui16' in data.chain , "Branch ``np_ui16'' is  not here!"
 
         with timing ('numpy int32 ' , logger = logger ) :  
-            adata  = numpy.full( 10000 , -5 , dtype = numpy.int32 )
-            chain  = data.chain            
-            chain.add_new_branch ( 'np_i32' , adata )
+           adata  = numpy.full( 10000 , -5 , dtype = numpy.int32 )
+           chain  = data.chain            
+           chain.add_new_branch ( 'np_i32' , adata )
         ## reload the chain and check: 
         logger.info ( 'With numpy.int32:\n%s' % data.chain.table ( prefix = '# ' ) )
         assert 'np_i32' in data.chain , "Branch ``np_i32'' is  not here!"
@@ -298,82 +299,79 @@ def test_addbranch() :
         logger.info ( "With array '%s':\n%s" % ( l ,  data.chain.table ( prefix = '# ' ) ) ) 
         assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
 
-    ## add function
-    with timing ('1D-function ' , logger = logger ) :
-        
-        ## use python function 
-        def ftwo ( x ) : return 2 * x
-        fun         =  ( make_fun1 ( ftwo ) , 'pt' )
-
-        chain    = data.chain
-        vname    = 'doubled_pt1'
-        chain.add_new_branch ( vname , fun  )
-
-        logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
-        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
-
-    ## add lambda 
-    with timing ('1D-lambda' , logger = logger ) :
-        
-        ## use python lambda 
-        ftwo     = lambda x : 2 * x 
-        fun      =  ( make_fun1 ( ftwo ) , 'pt' )
-        
-        chain    = data.chain
-        vname    = 'doubled_pt2'
-        chain.add_new_branch ( vname , fun  )
-
-        logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
-        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
-
-
-    ## add callable  
-    with timing ('1D-callable' , logger = logger ) :
-        
-        ## use simple callable class
-
-        class A(object):
-            def __call__ ( self , x ) : return 2.0 * x
-
-        ftwo = A()
-        fun      =  ( make_fun1 ( ftwo ) , 'pt' )
-        
-        chain    = data.chain
-        vname    = 'doubled_pt3'
-        chain.add_new_branch ( vname , fun  )
+    if (6,24) <= root_info : 
+        ## add function
+        with timing ('1D-function ' , logger = logger ) :
+            
+            def ftwo ( x ) : return 2 * x
+            fun         =  ( make_fun1 ( ftwo ) , 'pt' )
+            
+            chain    = data.chain
+            vname    = 'doubled_pt1'
+            chain.add_new_branch ( vname , fun  )
+            
+            logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
+            assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
+            
+    if (6,24) <= root_info : 
+        ## add lambda 
+        with timing ('1D-lambda' , logger = logger ) :
+            
+            ftwo     = lambda x : 2 * x 
+            fun      =  ( make_fun1 ( ftwo ) , 'pt' )
+            
+            chain    = data.chain
+            vname    = 'doubled_pt2'
+            chain.add_new_branch ( vname , fun  )
+            
+            logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
+            assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
+            
+    if (6,24) <= root_info : 
+        ## add callable
+        with timing ('1D-callable' , logger = logger ) :            
+            
+            class A(object):
+                def __call__ ( self , x ) : return 2.0 * x
                 
-        logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
-        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
-
-
-    ## add 2D-function
-    with timing ('2D-function ' , logger = logger ) :
-        
-        ## use python function 
-        def fff ( x , y  ) : return x * y 
-        fun         =  ( make_fun2 ( fff) , 'pt' , 'et')
-
-        chain    = data.chain
-        vname    = 'pt_mult_et'
-        chain.add_new_branch ( vname , fun  )
-
-        logger.info ( "With pt*et:\n%s" % data.chain.table ( prefix = '# ' ) )
-        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
-
-    ## add 3D-function
-    with timing ('3D-function ' , logger = logger ) :
-        
-        ## use python function 
-        def fff ( x , y  , z ) : return x * y * z  
-        fun         =  ( make_fun3 ( fff ) , 'pt' , 'et' , 'et2' )
-
-        chain    = data.chain
-        vname    = 'pt_mult_et_e2'
-        chain.add_new_branch ( vname , fun  )
-
-        logger.info ( "With pt*et*et2:\n%s" % data.chain.table ( prefix = '# ' ) )
-        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
-
+            ftwo = A()
+            fun      =  ( make_fun1 ( ftwo ) , 'pt' )
+            
+            chain    = data.chain
+            vname    = 'doubled_pt3'
+            chain.add_new_branch ( vname , fun  )
+            
+            logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
+            assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
+            
+    if (6,24) <= root_info : 
+        ## add 2D-function
+        with timing ('2D-function ' , logger = logger ) :
+            
+            def fff ( x , y  ) : return x * y 
+            fun         =  ( make_fun2 ( fff) , 'pt' , 'et')
+            
+            chain    = data.chain
+            vname    = 'pt_mult_et'
+            chain.add_new_branch ( vname , fun  )
+            
+            logger.info ( "With pt*et:\n%s" % data.chain.table ( prefix = '# ' ) )
+            assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
+            
+    if (6,24) <= root_info : 
+        ## add 3D-function
+        with timing ('3D-function ' , logger = logger ) :
+            
+            def fff ( x , y  , z ) : return x * y * z  
+            fun         =  ( make_fun3 ( fff ) , 'pt' , 'et' , 'et2' )
+            
+            chain    = data.chain
+            vname    = 'pt_mult_et_e2'
+            chain.add_new_branch ( vname , fun  )
+            
+            logger.info ( "With pt*et*et2:\n%s" % data.chain.table ( prefix = '# ' ) )
+            assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
+            
 # =============================================================================
 if '__main__' ==  __name__  :
 

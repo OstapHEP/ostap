@@ -12,9 +12,9 @@
 # - see https://en.wikipedia.org/wiki/Numerical_integration#Adaptive_algorithms
 # CPU performance is not superb, but it is numerically stable.
 #
-# Also it test Ostap::Math::Integrator
+# Also it tests Ostap::Math::Integrator
 # - 1D,2D&3D integrations
-#  @see Ostap::Math::Ingegraor   
+#  @see Ostap::Math::Integrator   
 # ============================================================================= 
 """ Test module for ostap/math/integral.py
 
@@ -24,7 +24,7 @@ It tests local implementation of numerical integratuon using Romberg's method
 - see https://en.wikipedia.org/wiki/Numerical_integration#Adaptive_algorithms
 CPU performance is not superb, but it is numerically stable.
 
-Also it test Ostap::Math::Integrator
+Also it tests Ostap::Math::Integrator
  - 1D,2D&3D integrations
  
 """

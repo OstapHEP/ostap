@@ -673,7 +673,7 @@ namespace Ostap
      */
     template <class FUNCTION>
     inline Ostap::StatusCode 
-    add_branch 
+    add_branch_ 
     ( TTree*                        tree  , 
       const std::string&            bname , 
       FUNCTION                      fun   ,
@@ -689,7 +689,7 @@ namespace Ostap
      */
     template <class FUNCTION>
     inline Ostap::StatusCode 
-    add_branch 
+    add_branch_ 
     ( TTree*                            tree      , 
       const Ostap::Utils::ProgressConf& progress  , 
       const std::string&                bname     , 
@@ -743,7 +743,7 @@ namespace Ostap
      */
     template <class FUNCTION>
     inline Ostap::StatusCode 
-    add_branch 
+    add_branch_ 
     ( TTree*                        tree  , 
       const std::string&            bname , 
       FUNCTION                      fun   ,
@@ -761,7 +761,7 @@ namespace Ostap
      */
     template <class FUNCTION>
     inline Ostap::StatusCode 
-    add_branch 
+    add_branch_ 
     ( TTree*                            tree      , 
       const Ostap::Utils::ProgressConf& progress  , 
       const std::string&                bname     , 
@@ -821,7 +821,7 @@ namespace Ostap
      */
     template <class FUNCTION>
     inline Ostap::StatusCode 
-    add_branch 
+    add_branch_ 
     ( TTree*                        tree  , 
       const std::string&            bname , 
       FUNCTION                      fun   ,
@@ -841,7 +841,7 @@ namespace Ostap
      */
     template <class FUNCTION>
     inline Ostap::StatusCode 
-    add_branch 
+    add_branch_ 
     ( TTree*                            tree      , 
       const Ostap::Utils::ProgressConf& progress  , 
       const std::string&                bname     , 

@@ -1802,6 +1802,27 @@ ROOT.TTree.topdir = property ( top_dir , None , None )
 # ==============================================================================
 addbranch_types = string_types + num_types + ( ROOT.TH1 , Ostap.IFuncTree )
 # ==============================================================================
+## Is obj a representation of a function?
+#  - (callable, var1, ... )
+#  - (var1, ... , callable)
+def bftype ( obj ) : 
+    """Is obj a representation of a function?
+    - (callable, var1, ... )
+    - (var1, ... , callable)
+    """
+    if isinstance ( obj , sized_types ) and 2 <= len ( obj ) <= 4 :
+        
+        ## ( function, xvar, yvar, ...) 
+        if callable ( obj[ 0] ) and all ( isinstance ( v , string_types ) for v in obj[1:]  ) : return True
+        
+        ## ( xvar, yvar, ..., function ) 
+        if callable ( obj[-1] ) and all ( isinstance ( v , string_types ) for v in obj[:-1] ) : return True 
+                
+    return False 
+    
+
+    
+# ==============================================================================
 ## basic types of objects that can be used for <code>add_new_branch</code> methods
 #  - string formula
 #  - constant number
@@ -1827,16 +1848,9 @@ def btypes ( obj ) :
 
     if   isinstance   ( obj , addbranch_types ) : return True
     elif btypes_array ( obj )                   : return True
-
-    if isinstance ( obj , sized_types ) and 2 <= len ( obj ) <= 4 :
-
-        ## ( function, xvar, yvar, ...) 
-        if callable ( obj[ 0] ) and all ( isinstance ( v , string_types ) for v in obj[1:]  ) : return True
-        
-        ## ( xvar, yvar, ..., function ) 
-        if callable ( obj[-1] ) and all ( isinstance ( v , string_types ) for v in obj[:-1] ) : return True 
-        
-    return callable ( obj ) 
+    elif bftype       ( obj )                   : return True
+    
+    return callable   ( obj ) 
 
 # =============================================================================
 ## basic types of array-line objects that can be used for <code>add_new_branch</code> methods 
@@ -1845,6 +1859,7 @@ def btypes_array ( obj ) :
     """
     
     if   isinstance ( obj, string_types )          : return False
+    elif bftype     ( obj )                        : return False 
 
     ## efficient treatment for ROOT versions from  6/24 
     elif isinstance ( obj , array.array ) and  (6,24)<=root_info and \
@@ -1868,7 +1883,6 @@ def btypes_array ( obj ) :
     ## generic case with array-like structure
     elif isinstance ( obj , sized_types    ) and \
          isinstance ( obj , sequence_types ) and \
-         all ( isinstance ( v , num_types  ) for v in obj ) and \
          hasattr    ( obj , '__getitem__'  ) : return True
 
     return False
@@ -2264,11 +2278,13 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
 
         tfile.cd() 
         ttree    = tfile.Get ( tpath )
-        
+
+        verbose = True
+
         ## add progress bar 
         if verbose : sc    = Ostap.Trees.add_branch ( ttree , progress_conf () , *args )
         else       : sc    = Ostap.Trees.add_branch ( ttree ,                    *args )
-        
+
         if   sc.isFailure     () : logger.error ( "Error from Ostap::Trees::add_branch %s" % sc )
         elif tfile.IsWritable () :
 
