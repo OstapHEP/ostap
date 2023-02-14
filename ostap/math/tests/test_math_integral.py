@@ -37,7 +37,7 @@ from   ostap.math.integral      import ( integral  , romberg     ,
                                          integral2 , genzmalik2  ,  
                                          integral3 , genzmalik3  ,
                                        complex_circle_integral )
-from   ostap.math,make_fun      import make_fun1, make_fun2 , make_fun3
+from   ostap.math.make_fun      import make_fun1, make_fun2 , make_fun3
 import ostap.math.integrator 
 import ostap.logger.table       as     T
 # ============================================================================= 

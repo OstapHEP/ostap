@@ -29,6 +29,7 @@ from   ostap.core.core           import ( Ostap, VE, hID, dsID , strings ,
                                           valid_pointer , split_string   ,
                                           ROOTCWD       , var_separators )
 from   ostap.core.ostap_types    import ( integer_types , string_types   ,
+                                          num_types     , 
                                           list_types    , sequence_types )
 from   ostap.math.base           import islong
 import ostap.trees.cuts     
@@ -1227,7 +1228,10 @@ def add_new_var ( dataset , varname , what , *args ) :
     
     if isinstance ( varname , string_types ) :
         if    isinstance ( what , string_types   ) : pass
-        elif  isinstance ( what , sequence_types ) :
+        elif  isinstance ( what , sequence_types )  and \
+                 len ( what ) == len ( dataset    ) and \
+                 all ( isinstance ( v , num_types ) for v in what ) :
+            
             vvar  = ROOT.RooRealVar ( varname , 'variable %s' % varname , -999.999 )
             vset  = ROOT.RooArgSet  ( vvar )
             dset  = ROOT.RooDataSet ( dsID() , 'dataset with %s' % varname , vset )
