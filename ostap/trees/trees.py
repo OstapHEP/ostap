@@ -1825,9 +1825,17 @@ def btypes ( obj ) :
     - python callable
     """
 
-    if   isinstance ( obj , addbranch_types ) : return True
-    elif btypes_array ( obj )                 : return True
-    
+    if   isinstance   ( obj , addbranch_types ) : return True
+    elif btypes_array ( obj )                   : return True
+
+    if isinstance ( obj , sized_types ) and 2 <= len ( obj ) <= 4 :
+
+        ## ( function, xvar, yvar, ...) 
+        if callable ( obj[ 0] ) and all ( isinstance ( v , string_types ) for v in obj[1:]  ) : return True
+        
+        ## ( xvar, yvar, ..., function ) 
+        if callable ( obj[-1] ) and all ( isinstance ( v , string_types ) for v in obj[:-1] ) : return True 
+        
     return callable ( obj ) 
 
 # =============================================================================
@@ -1842,17 +1850,25 @@ def btypes_array ( obj ) :
     elif isinstance ( obj , array.array ) and  (6,24)<=root_info and \
          obj.typecode in ( 'f' , 'd' ,'i' , 'l' )  : return True 
 
-    ## efficient treatment for ROOT verisons from 6/24 
+    ## efficient treatment for ROOT version from 6/24 
     elif numpy and (6,24)<= root_info       and \
          isinstance ( obj , numpy.ndarray ) and \
-         obj.dtype  in ( numpy.float32 ,
+         obj.dtype  in ( numpy.float16 ,
+                         numpy.float32 ,
                          numpy.float64 ,
+                         ## numpy.int8  ,
+                         numpy.int16   ,
                          numpy.int32   ,
-                         numpy.int64   )           : return True
+                         numpy.int64   ,
+                         ## numpy.uint8 ,
+                         numpy.uint16  ,
+                         numpy.uint32  ,
+                         numpy.uint64  )  : return True
     
     ## generic case with array-like structure
     elif isinstance ( obj , sized_types    ) and \
          isinstance ( obj , sequence_types ) and \
+         all ( isinstance ( v , num_types  ) for v in obj ) and \
          hasattr    ( obj , '__getitem__'  ) : return True
 
     return False
@@ -1867,6 +1883,7 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0
     - see Ostap::Trees::add_branch
     - see Ostap::IFuncTree 
     """
+
     assert isinstance ( chain , ROOT.TChain ), 'Invalid chain!'
 
     if len ( chain.files() ) <= 1 :
@@ -1897,16 +1914,16 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0
                                              verbose   = verbose  ,
                                              value     = value    ) 
 
+
     files = chain.files   ()
     cname = chain.GetName () 
-    
 
     tree_verbose  = verbose and      len ( files ) < 5
     chain_verbose = verbose and 5 <= len ( files )
 
     import ostap.io.root_file
     for fname in progress_bar ( files , len ( files ) , silent = not chain_verbose ) :
-        
+
         logger.debug ('Add_new_branch: processing file %s' % fname )
         with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
             ## get the tree 
@@ -2107,6 +2124,7 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     - see Ostap::IFuncTree
     
     """
+    
     if not tree :
         logger.error (  "add_branch: Invalid Tree!" )
         return
@@ -2167,6 +2185,22 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
 
         args = tuple ( [ n  for n in names ] + [ function ] )
 
+    ## ( callable , var1 , ... ) 
+    elif isinstance ( name     , string_types ) and \
+             isinstance ( function , sized_types  ) and \
+             2 <= len ( function ) <= 4             and \
+             ( callable ( function [0] ) and all ( isinstance ( v , string_types ) for v in function[ 1: ] ) )  :
+        
+        args =  ( name , ) + tuple ( v for v in function [ 1 :] ) + ( function[0] , ) 
+        
+    ## ( var1 , ... , callable ) 
+    elif isinstance ( name     , string_types ) and \
+             isinstance ( function , sized_types  ) and \
+             2 <= len ( function ) <= 4             and \
+             ( callable ( function [-1] ) and all ( isinstance ( v , string_types ) for v in function[:-1] ) ) :
+        
+        args =  ( name , ) + tuple ( v for v in function )
+           
     ## efficient case with array 
     elif ( 6 , 24 ) <= root_info                   and \
              isinstance ( function , array.array ) and \
@@ -2180,9 +2214,11 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
          isinstance ( function , numpy.ndarray )  and \
          function.dtype  in ( numpy.float32 ,
                               numpy.float64 ,
+                              ## numpy.int8    ,
                               numpy.int16   ,
                               numpy.int32   ,
                               numpy.int64   ,
+                              ## numpy.uint8   ,
                               numpy.uint16  ,
                               numpy.uint32  , 
                               numpy.uint64  ) :        
@@ -2221,11 +2257,11 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     branches = set ( tree.branches () ) | set ( tree.leaves() ) 
     exists   = set ( names ) & branches
     if exists : logger.warning ("Branches '%s' already exist(s)!" % exists  ) 
-            
+
     from ostap.io.root_file        import REOPEN 
     from ostap.utils.progress_conf import progress_conf
     with ROOTCWD() , REOPEN ( tdir ) as tfile :
-        
+
         tfile.cd() 
         ttree    = tfile.Get ( tpath )
         

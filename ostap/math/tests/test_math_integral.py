@@ -29,16 +29,17 @@ Also it test Ostap::Math::Integrator
  
 """
 # =============================================================================
-from ostap.core.meta_info     import root_info 
-from ostap.core.pyrouts       import Ostap, SE  
-from ostap.utils.timing       import timing
-from ostap.utils.progress_bar import progress_bar
-from ostap.math.integral      import ( integral  , romberg     , 
-                                       integral2 , genzmalik2  ,  
-                                       integral3 , genzmalik3  ,
+from   ostap.core.meta_info     import root_info 
+from   ostap.core.pyrouts       import Ostap, SE  
+from   ostap.utils.timing       import timing
+from   ostap.utils.progress_bar import progress_bar
+from   ostap.math.integral      import ( integral  , romberg     , 
+                                         integral2 , genzmalik2  ,  
+                                         integral3 , genzmalik3  ,
                                        complex_circle_integral )
+from   ostap.math,make_fun      import make_fun1, make_fun2 , make_fun3
 import ostap.math.integrator 
-import ostap.logger.table     as     T
+import ostap.logger.table       as     T
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -46,63 +47,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_integral' )
 else                       : logger = getLogger ( __name__             )
 # ============================================================================= 
-if ( 6 , 24 ) <= root_info :
-    ## convert python 1D-function into C++ functor 
-    def make_fun1 ( fun ) :
-        """Convert python 1D-function into C++ functor"""
-        assert callable ( fun ) , 'Function must be callable!'
-        return Ostap.Math.Apply  ( fun )
-    ## convert python 2D-function into C++ functor 
-    def make_fun2 ( fun ) :
-        """Convert python 2D-function into C++ functor"""
-        assert callable ( fun ) , 'Function must be callable!'
-        return Ostap.Math.Apply2 ( fun )
-    ## convert python 3D-function into C++ functor 
-    def make_fun3 ( fun ) :
-        """Convert python 3D-function into C++ functor"""
-        assert callable ( fun ) , 'Function must be callable!'
-        return Ostap.Math.Apply3 ( fun )
-elif (6,18) <= root_info :
-    def make_fun1 ( fun ) :
-        """Convert python 1D-function into C++ functor"""
-        assert callable ( fun ) , 'Function must be callable!'        
-        PC  = Ostap.Functions.PyCallable
-        pc  = fun if isinstance ( fun , PC ) else PC ( fun , True ) 
-        res = Ostap.Math.Apply.create     ( pc  )
-        res ._pc = pc,fun 
-        return res 
-    def make_fun2 ( fun ) :
-        """Convert python 2D-function into C++ functor"""
-        assert callable ( fun ) , 'Function must be callable!'
-        PC2 = Ostap.Functions.PyCallable2
-        pc  = fun if isinstance ( fun , PC2 ) else PC2 ( fun , True ) 
-        res = Ostap.Math.Apply2.create     ( pc  )
-        res ._pc = pc,fun 
-        return res 
-    def make_fun3 ( fun ) :
-        """Convert python 3D-function into C++ functor"""
-        assert callable ( fun ) , 'Function must be callable!'
-        PC3 = Ostap.Functions.PyCallable3
-        pc  = fun if isinstance ( fun , PC3 ) else PC3 ( fun , True ) 
-        res = Ostap.Math.Apply3.create     ( pc  )
-        res ._pc = pc,fun 
-        return res 
-else :
-    def make_fun1 ( fun ) :
-        """Convert python 1D-function into C++ functor"""
-        assert callable ( fun ) , 'Function must be callable!'
-        PC = Ostap.Functions.PyCallable
-        return fun if isinstance ( fun , PC ) else PC ( fun , True ) 
-    def make_fun2 ( fun ) :
-        """Convert python 2D-function into C++ functor"""
-        assert callable ( fun ) , 'Function must be callable!'
-        PC2 = Ostap.Functions.PyCallable2
-        return fun if isinstance ( fun , PC2 ) else PC2 ( fun , True ) 
-    def make_fun3 ( fun ) :
-        """Convert python 3D-function into C++ functor"""
-        assert callable ( fun ) , 'Function must be callable!'
-        PC3 = Ostap.Functions.PyCallable3
-        return fun if isinstance ( fun , PC3 ) else PC3 ( fun , True ) 
     
 # =============================================================================
 def test_integral ():

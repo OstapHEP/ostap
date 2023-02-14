@@ -2,6 +2,8 @@
 ## New features:
 
    1. (re)implement `Ostap::DataParam` in terms of `Ostap::HistoProject` - reduce code duplication 
+   1. add few more utilitied to add branch/columns to TTree/RooDataSet
+
 
 ## Backward incompatible:  
 

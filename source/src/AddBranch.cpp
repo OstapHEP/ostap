@@ -3,6 +3,7 @@
 // ============================================================================
 #include <string>
 #include <tuple>
+#include <functional>
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -45,7 +46,7 @@ namespace
 /* add new branch with name <code>name</code> to the tree
  * the value of the branch is taken from  function <code>func</code>
  * @param tree    input tree 
- * @param progress configurtaion of the progress bar
+ * @param progress configuration of the progress bar
  * @param name    the name for new branch 
  * @param func    the function to be used to fill the branch 
  * @return status code 
@@ -658,6 +659,60 @@ Ostap::StatusCode
 Ostap::Trees::add_branch 
 ( TTree*               tree  , 
   const std::string&   vname ,  
+  const char*          data  , 
+  const unsigned long  size  , 
+  const char           value ) 
+{ return _add_branch_ ( tree , vname , "/B" , data , size , value ) ; }
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&   vname ,  
+  const char*          data  , 
+  const unsigned long  size  , 
+  const char           value ) 
+{ return _add_branch_ ( tree , progress , vname , "/B" , data , size , value ) ; }
+// ============================================================================
+/*  copy data from buffer into new branch 
+ *  @param tree   The tree 
+ *  @param data   input data fuffer 
+ *  @param size   length of the buffer
+ *  @param value  default value (used for short buffers) 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*                tree  , 
+  const std::string&    vname ,  
+  const unsigned char*  data  , 
+  const unsigned long   size  , 
+  const unsigned char   value ) 
+{ return _add_branch_ ( tree , vname , "/b" , data , size , value ) ; }
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*                tree  , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&    vname ,  
+  const unsigned char*  data  , 
+  const unsigned long   size  , 
+  const unsigned char   value ) 
+{ return _add_branch_ ( tree , progress , vname , "/b" , data , size , value ) ; }
+// ========================================================================
+/*  copy data from buffer into new branch 
+ *  @param tree   The tree 
+ *  @param data   input data fuffer 
+ *  @param size   length of the buffer
+ *  @param value  default value (used for short buffers) 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const std::string&   vname ,  
   const short*         data  , 
   const unsigned long  size  , 
   const short          value ) 
@@ -698,8 +753,7 @@ Ostap::Trees::add_branch
   const unsigned short* data  , 
   const unsigned long   size  , 
   const unsigned short  value ) 
-{ return _add_branch_ ( tree , vname , "/s" , data , size , value ) ; }
-
+{ return _add_branch_ ( tree , progress , vname , "/s" , data , size , value ) ; }
 // ============================================================================
 /*  copy data from buffer into new branch 
  *  @param tree   The tree 
@@ -854,6 +908,182 @@ Ostap::Trees::add_branch
   const std::string&   vname       ,  
   const int            value       ) 
 { return _add_branch_ ( tree , progress , vname , "/I" , &value , 1 , value ) ; }
+// ============================================================================
+
+
+// ============================================================================
+// Generic 1D-functions 
+// ============================================================================
+/*  add new branch to the tree, calculated from the function  
+ *  @param tree  (INPUT) The tree 
+ *  @param bname (INPUT) branch name 
+ *  @param xname (INPUT) name of input variable 
+ *  @param fun   (INPUT) the function 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch
+( TTree*                        tree  , 
+  const std::string&            bname , 
+  const std::string&            xname , 
+  std::function<double(double)> fun   ) 
+{
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another method 
+  return add_branch  ( tree              ,
+                       progress          , 
+                       bname             , 
+                       xname             , 
+                       std::cref ( fun ) ) ;                     
+}
+// ============================================================================
+/*  add new branch to the tree, calculated from the function  
+ *  @param tree     (INPUT) The tree 
+ *  @param progress (INPUT) configuration of the progress bar
+ *  @param bname    (INPUT) branch name 
+ *  @param xname    (INPUT) name of input variable 
+ *  @param fun      (INPUT) the function 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch
+( TTree*                            tree      , 
+  const Ostap::Utils::ProgressConf& progress  , 
+  const std::string&                bname     , 
+  const std::string&                xname     , 
+  std::function<double(double)>     fun       ) 
+{
+  if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
+  // create the function 
+  const Ostap::Functions::Func1D fun1d { std::cref ( fun ) , xname  , tree } ;
+  //
+  return add_branch ( tree , progress , bname , fun1d ) ;
+}
+// ============================================================================
+// Generic 2D-functions 
+// ============================================================================
+/*  add new branch to the tree, calculated from the function  
+ *  @param tree  (INPUT) The tree 
+ *  @param bname (INPUT) branch name 
+ *  @param xname (INPUT) name of input variable 
+ *  @param yname (INPUT) name of input variable 
+ *  @param fun   (INPUT) the function 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch
+( TTree*                               tree  , 
+  const std::string&                   bname , 
+  const std::string&                   xname , 
+  const std::string&                   yname , 
+  std::function<double(double,double)> fun   ) 
+{
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another method 
+  return add_branch  ( tree              ,
+                       progress          , 
+                       bname             , 
+                       xname             , 
+                       yname             , 
+                       std::cref ( fun ) ) ;                     
+}
+// ============================================================================
+/*  add new branch to the tree, calculated from the function  
+ *  @param tree     (INPUT) The tree 
+ *  @param progress (INPUT) configuration of the progress bar
+ *  @param bname    (INPUT) branch name 
+ *  @param xname    (INPUT) name of input variable 
+ *  @param yname    (INPUT) name of input variable 
+ *  @param fun      (INPUT) the function 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch
+( TTree*                               tree      , 
+  const Ostap::Utils::ProgressConf&    progress  , 
+  const std::string&                   bname     , 
+  const std::string&                   xname     , 
+  const std::string&                   yname     , 
+  std::function<double(double,double)> fun       ) 
+{
+  if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
+  // create the function 
+  const Ostap::Functions::Func2D fun2d { std::cref ( fun ) , xname  , yname , tree } ;
+  //
+  return add_branch ( tree , progress , bname , fun2d ) ;
+}
+// ============================================================================
+// Generic 3D-functions 
+// ============================================================================
+/*  add new branch to the tree, calculated from the function  
+ *  @param tree  (INPUT) The tree 
+ *  @param bname (INPUT) branch name 
+ *  @param xname (INPUT) name of input variable 
+ *  @param yname (INPUT) name of input variable 
+ *  @param zname (INPUT) name of input variable 
+ *  @param fun   (INPUT) the function 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch
+( TTree*                                      tree  , 
+  const std::string&                          bname , 
+  const std::string&                          xname , 
+  const std::string&                          yname , 
+  const std::string&                          zname , 
+  std::function<double(double,double,double)> fun   ) 
+{
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another method 
+  return add_branch  ( tree              ,
+                       progress          , 
+                       bname             , 
+                       xname             , 
+                       yname             , 
+                       zname             , 
+                       std::cref ( fun ) ) ;                     
+}
+// ============================================================================
+/*  add new branch to the tree, calculated from the function  
+ *  @param tree     (INPUT) The tree 
+ *  @param progress (INPUT) configuration of the progress bar
+ *  @param bname    (INPUT) branch name 
+ *  @param xname    (INPUT) name of input variable 
+ *  @param yname    (INPUT) name of input variable 
+ *  @param zname    (INPUT) name of input variable 
+ *  @param fun      (INPUT) the function 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch
+( TTree*                                      tree      , 
+  const Ostap::Utils::ProgressConf&           progress  , 
+  const std::string&                          bname     , 
+  const std::string&                          xname     , 
+  const std::string&                          yname     , 
+  const std::string&                          zname     , 
+  std::function<double(double,double,double)> fun       ) 
+{
+  if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
+  // create the function 
+  const Ostap::Functions::Func3D fun3d { std::cref ( fun ) , xname  , yname , zname , tree } ;
+  //
+  return add_branch ( tree , progress , bname , fun3d ) ;
+}
+
+
+
+
+
 
 // ============================================================================
 //                                                                      The END 

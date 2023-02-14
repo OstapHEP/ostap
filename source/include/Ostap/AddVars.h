@@ -7,6 +7,7 @@
 // STD&STL
 // ============================================================================
 #include <string>
+#include <functional>
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -90,6 +91,102 @@ namespace Ostap
       const std::string&      namey   , 
       const std::string&      namez   , 
       const TH3&              histo   ) ;
+    // ========================================================================
+    // Generic 1D function
+    // ========================================================================
+    /** add new variable to dataset, calculated from generic function 
+     *  @param  dataset input    dataset
+     *  @param  vname   variable name 
+     *  @param  xname   variable name 
+     *  @param  fun     the function 
+     */
+    const RooAbsReal* add_var 
+    ( RooDataSet&                   dataset , 
+      const std::string&            vname   , 
+      const std::string&            xname   , 
+      std::function<double(double)> fun     ) ;
+    // ========================================================================
+    /** add new variable to dataset, calculated from generic function 
+     *  @param  dataset input    dataset
+     *  @param  vname   variable name 
+     *  @param  xname   variable name 
+     *  @param  fun     the function 
+     */
+    template <class FUNCTION>
+    inline const RooAbsReal* add_var 
+    ( RooDataSet&                   dataset , 
+      const std::string&            vname   , 
+      FUNCTION                      fun     , 
+      const std::string&            xname   ) 
+    { return add_var ( dataset , vname , xname , std::cref ( fun ) ) ; }
+    // ========================================================================
+    // Generic 2D function
+    // ========================================================================
+    /** add new variable to dataset, calculated from generic function 
+     *  @param  dataset input    dataset
+     *  @param  vname   variable name 
+     *  @param  xname   variable name 
+     *  @param  yname   variable name 
+     *  @param  fun     the function 
+     */
+    const RooAbsReal* add_var 
+    ( RooDataSet&                          dataset , 
+      const std::string&                   vname   , 
+      const std::string&                   xname   , 
+      const std::string&                   yname   , 
+      std::function<double(double,double)> fun     ) ;
+    // ========================================================================
+    /** add new variable to dataset, calculated from generic function 
+     *  @param  dataset input    dataset
+     *  @param  vname   variable name 
+     *  @param  xname   variable name 
+     *  @param  yname   variable name 
+     *  @param  fun     the function 
+     */
+    template <class FUNCTION>
+    inline const RooAbsReal* add_var 
+    ( RooDataSet&                   dataset , 
+      const std::string&            vname   , 
+      FUNCTION                      fun     , 
+      const std::string&            xname   ,
+      const std::string&            yname   ) 
+    { return add_var ( dataset , vname , xname , yname , std::cref ( fun ) ) ; }
+    // ========================================================================
+    // Generic 3d function
+    // ========================================================================
+    /** add new variable to dataset, calculated from generic function 
+     *  @param  dataset input    dataset
+     *  @param  vname   variable name 
+     *  @param  xname   variable name 
+     *  @param  yname   variable name 
+     *  @param  zname   variable name 
+     *  @param  fun     the function 
+     */
+    const RooAbsReal* add_var 
+    ( RooDataSet&                                 dataset , 
+      const std::string&                          vname   , 
+      const std::string&                          xname   , 
+      const std::string&                          yname   , 
+      const std::string&                          zname   , 
+      std::function<double(double,double,double)> fun     ) ;
+    // ========================================================================
+    /** add new variable to dataset, calculated from generic function 
+     *  @param  dataset input    dataset
+     *  @param  vname   variable name 
+     *  @param  xname   variable name 
+     *  @param  yname   variable name 
+     *  @param  zname   variable name 
+     *  @param  fun     the function 
+     */
+    template <class FUNCTION>
+    inline const RooAbsReal* add_var 
+    ( RooDataSet&                   dataset , 
+      const std::string&            vname   , 
+      FUNCTION                      fun     , 
+      const std::string&            xname   ,
+      const std::string&            yname   ,
+      const std::string&            zname   ) 
+    { return add_var ( dataset , vname , xname , yname , zname , std::cref ( fun ) ) ; }
     // ========================================================================
   } //                                    The end of namespace Ostap::Functions 
   // ==========================================================================

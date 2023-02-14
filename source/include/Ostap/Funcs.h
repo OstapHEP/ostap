@@ -105,9 +105,10 @@ namespace Ostap
     public :
       // ======================================================================
       template <class FUNCTION>
-      Func1D ( FUNCTION           fun             , 
-               const std::string& x               ,
-               const TTree*       tree =  nullptr ) 
+      Func1D 
+      ( FUNCTION           fun             , 
+        const std::string& x               ,
+        const TTree*       tree =  nullptr ) 
         : TObject () 
         , m_fun      ( fun     )
         , m_xvar_exp ( x       ) 
@@ -115,7 +116,7 @@ namespace Ostap
         , m_tree     { tree    }
       {}     
       // ======================================================================
-      /// copy conistructor
+      /// copy constructor
       Func1D ( const Func1D& right ) ;
       // ======================================================================
       /// default constructor, needed for serialization 
@@ -129,9 +130,10 @@ namespace Ostap
       // ======================================================================
       template <class FUNCTION>
       static inline Func1D 
-      create ( FUNCTION           fun             , 
-               const std::string& x               ,
-               const TTree*       tree =  nullptr ) 
+      create 
+      ( FUNCTION           fun             , 
+        const std::string& x               ,
+        const TTree*       tree =  nullptr ) 
       { return Func1D ( fun , x , tree ) ; } 
       // ======================================================================
     public:
@@ -182,10 +184,11 @@ namespace Ostap
     public :
       // ======================================================================
       template <class FUNCTION>
-      Func2D ( FUNCTION           fun             , 
-               const std::string& x               ,
-               const std::string& y               ,
-               const TTree*       tree =  nullptr ) 
+      Func2D 
+      ( FUNCTION           fun             , 
+        const std::string& x               ,
+        const std::string& y               ,
+        const TTree*       tree =  nullptr ) 
         : TObject () 
         , m_fun      ( fun     )
         , m_xvar_exp ( x       ) 
@@ -195,7 +198,7 @@ namespace Ostap
         , m_tree     { tree    }
       {}     
       // ======================================================================
-      /// copy conistructor
+      /// copy constructor
       Func2D ( const Func2D& right ) ;
       // ======================================================================
       /// default constructor, needed for serialization 
@@ -209,10 +212,11 @@ namespace Ostap
       // ======================================================================
       template <class FUNCTION>
       static inline Func2D 
-      create ( FUNCTION           fun             , 
-               const std::string& x               ,
-               const std::string& y               ,
-               const TTree*       tree =  nullptr ) 
+      create
+      ( FUNCTION           fun             , 
+        const std::string& x               ,
+        const std::string& y               ,
+        const TTree*       tree =  nullptr ) 
       { return Func2D ( fun , x , y ,  tree ) ; } 
       // ======================================================================
     public:
@@ -239,8 +243,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate the function 
-      double func ( const double x , 
-                    const double y ) const { return m_fun  ( x , y ) ; }
+      double func 
+      ( const double x , 
+        const double y ) const { return m_fun  ( x , y ) ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -271,11 +276,12 @@ namespace Ostap
     public :
       // ======================================================================
       template <class FUNCTION>
-      Func3D ( FUNCTION           fun             , 
-               const std::string& x               ,
-               const std::string& y               ,
-               const std::string& z               ,
-               const TTree*       tree =  nullptr ) 
+      Func3D 
+      ( FUNCTION           fun             , 
+        const std::string& x               ,
+        const std::string& y               ,
+        const std::string& z               ,
+        const TTree*       tree =  nullptr ) 
         : TObject () 
         , m_fun      ( fun     )
         , m_xvar_exp ( x       ) 
@@ -301,11 +307,12 @@ namespace Ostap
       // ======================================================================
       template <class FUNCTION>
       static inline Func3D 
-      create ( FUNCTION           fun             , 
-               const std::string& x               ,
-               const std::string& y               ,
-               const std::string& z               ,
-               const TTree*       tree =  nullptr ) 
+      create
+      ( FUNCTION           fun             , 
+        const std::string& x               ,
+        const std::string& y               ,
+        const std::string& z               ,
+        const TTree*       tree =  nullptr ) 
       { return Func3D ( fun , x , y , z , tree ) ; } 
       // ======================================================================
     public:
@@ -335,9 +342,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate the function 
-      double func ( const double x , 
-                    const double y , 
-                    const double z ) const { return m_fun  ( x , y , z ) ; }
+      double func
+      ( const double x , 
+        const double y , 
+        const double z ) const { return m_fun  ( x , y , z ) ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -360,9 +368,6 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-
-
-    // ========================================================================
     /** @class FuncRooFormula
      *  simple implementation of 'RooAbsData'-function based on RooFormulaVar
      */
@@ -375,9 +380,10 @@ namespace Ostap
        *  @param data       the data
        *  @param name       the name for the formula 
        */
-      FuncRooFormula ( const std::string& expression            , 
-                       const RooAbsData*  data       =  nullptr ,
-                       const std::string& name       = ""       ) ;
+      FuncRooFormula 
+      ( const std::string& expression            , 
+        const RooAbsData*  data       =  nullptr ,
+        const std::string& name       = ""       ) ;
       // ======================================================================
       /// copy contructor
       FuncRooFormula ( const FuncRooFormula&  right ) ;
@@ -422,9 +428,10 @@ namespace Ostap
     public :
       // ======================================================================
       template <class FUNCTION>
-      FuncRoo1D ( FUNCTION           fun              , 
-                  const std::string& x                ,
-                  const RooAbsData*  data  =  nullptr ) 
+      FuncRoo1D 
+      ( FUNCTION           fun              , 
+        const std::string& x                ,
+        const RooAbsData*  data  =  nullptr ) 
         : Ostap::IFuncData () 
         , m_fun      ( fun     )
         , m_xvar_exp ( x       ) 
@@ -442,9 +449,10 @@ namespace Ostap
       // ======================================================================
       template <class FUNCTION>
       static inline FuncRoo1D 
-      create ( FUNCTION           fun             , 
-               const std::string& x               ,
-               const RooAbsData*  data =  nullptr ) 
+      create 
+      ( FUNCTION           fun             , 
+        const std::string& x               ,
+        const RooAbsData*  data =  nullptr ) 
       { return FuncRoo1D ( fun , x , data ) ; } 
       // ======================================================================
     public:
@@ -487,10 +495,11 @@ namespace Ostap
     public :
       // ======================================================================
       template <class FUNCTION>
-      FuncRoo2D ( FUNCTION           fun              , 
-                  const std::string& x                ,
-                  const std::string& y                ,
-                  const RooAbsData*  data  =  nullptr ) 
+      FuncRoo2D
+      ( FUNCTION           fun              , 
+        const std::string& x                ,
+        const std::string& y                ,
+        const RooAbsData*  data  =  nullptr ) 
         : Ostap::IFuncData () 
         , m_fun      ( fun     )
         , m_xvar_exp ( x       ) 
@@ -510,10 +519,11 @@ namespace Ostap
       // ======================================================================
       template <class FUNCTION>
       static inline FuncRoo2D 
-      create ( FUNCTION           fun             , 
-               const std::string& x               ,
-               const std::string& y               ,
-               const RooAbsData*  data =  nullptr ) 
+      create
+      ( FUNCTION           fun             , 
+        const std::string& x               ,
+        const std::string& y               ,
+        const RooAbsData*  data =  nullptr ) 
       { return FuncRoo2D ( fun , x , y , data ) ; } 
       // ======================================================================
     public:
@@ -536,8 +546,9 @@ namespace Ostap
     public:
       // ======================================================================
       //  evaluate the function 
-      double func ( const double x , 
-                    const double y ) const { return m_fun  ( x , y) ; }
+      double func 
+      ( const double x , 
+        const double y ) const { return m_fun  ( x , y) ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -564,11 +575,12 @@ namespace Ostap
     public :
       // ======================================================================
       template <class FUNCTION>
-      FuncRoo3D ( FUNCTION           fun              , 
-                  const std::string& x                ,
-                  const std::string& y                ,
-                  const std::string& z                ,
-                  const RooAbsData*  data  =  nullptr ) 
+      FuncRoo3D
+      ( FUNCTION           fun              , 
+        const std::string& x                ,
+        const std::string& y                ,
+        const std::string& z                ,
+        const RooAbsData*  data  =  nullptr ) 
         : Ostap::IFuncData () 
         , m_fun      ( fun     )
         , m_xvar_exp ( x       ) 
@@ -590,11 +602,12 @@ namespace Ostap
       // ======================================================================
       template <class FUNCTION>
       static inline FuncRoo3D 
-      create ( FUNCTION           fun             , 
-               const std::string& x               ,
-               const std::string& y               ,
-               const std::string& z               ,
-               const RooAbsData*  data =  nullptr ) 
+      create
+      ( FUNCTION           fun             , 
+        const std::string& x               ,
+        const std::string& y               ,
+        const std::string& z               ,
+        const RooAbsData*  data =  nullptr ) 
       { return FuncRoo3D ( fun , x , y , z , data ) ; } 
       // ======================================================================
     public:
@@ -620,9 +633,10 @@ namespace Ostap
     public:
       // ======================================================================
       //  evaluate the function 
-      double func ( const double x , 
-                    const double y , 
-                    const double z ) const { return m_fun ( x , y , z ) ; }
+      double func 
+      ( const double x , 
+        const double y , 
+        const double z ) const { return m_fun ( x , y , z ) ; }
       // ======================================================================
     protected :
       // ======================================================================

@@ -3,6 +3,7 @@
 // ============================================================================
 // STD&STL
 // ============================================================================
+#include <functional>
 // ============================================================================
 // ROOT&RooFit 
 // ============================================================================
@@ -17,11 +18,12 @@
 // Ostap
 // ============================================================================
 #include "Ostap/IFuncs.h"
+#include "Ostap/Funcs.h"
 #include "Ostap/AddVars.h"
 #include "Ostap/FormulaVar.h"
 // ============================================================================
 /** @file
- *  Implementation fiel for functions from file Ostap/AddVars.h
+ *  Implementation file for functions from file Ostap/AddVars.h
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2019-06-22
  */
@@ -272,6 +274,78 @@ Ostap::Functions::add_var
   if  ( nullptr == nvar ) { return nullptr ; }
   //
   return dynamic_cast<const RooAbsReal*> ( nvar ) ;   
+}
+// ============================================================================
+// Generic 1D function
+// ============================================================================
+/*  add new variable to dataset, calculated from generic function 
+ *  @param  dataset input    dataset
+ *  @param  vname   variable name 
+ *  @param  xname   variable name 
+ *  @param  fun     the function 
+ *  @return the added variable 
+ */
+// ============================================================================
+const RooAbsReal* 
+Ostap::Functions::add_var 
+( RooDataSet&                   dataset , 
+  const std::string&            vname   , 
+  const std::string&            xname   , 
+  std::function<double(double)> fun     ) 
+{
+  // create the function 
+  const Ostap::Functions::FuncRoo1D func { std::cref ( fun ) , xname , &dataset } ;
+  return add_var ( dataset , vname , func ) ;
+}
+// ============================================================================
+// Generic 2D function
+// ============================================================================
+/*  add new variable to dataset, calculated from generic function 
+ *  @param  dataset input    dataset
+ *  @param  vname   variable name 
+ *  @param  xname   variable name 
+ *  @param  yname   variable name 
+ *  @param  fun     the function 
+ *  @return the added variable 
+ */
+// ============================================================================
+const RooAbsReal* 
+Ostap::Functions::add_var 
+( RooDataSet&                          dataset , 
+  const std::string&                   vname   , 
+  const std::string&                   xname   , 
+  const std::string&                   yname   , 
+  std::function<double(double,double)> fun     ) 
+{
+  // create the function 
+  const Ostap::Functions::FuncRoo2D func { std::cref ( fun ) , xname , yname , &dataset } ;
+  return add_var ( dataset , vname , func ) ;
+}
+// ============================================================================
+// Generic 3D function
+// ============================================================================
+/*  add new variable to dataset, calculated from generic function 
+ *  @param  dataset input    dataset
+ *  @param  vname   variable name 
+ *  @param  xname   variable name 
+ *  @param  yname   variable name 
+ *  @param  zname   variable name 
+ *  @param  fun     the function 
+ *  @return the added variable 
+ */
+// ============================================================================
+const RooAbsReal* 
+Ostap::Functions::add_var 
+( RooDataSet&                                 dataset , 
+  const std::string&                          vname   , 
+  const std::string&                          xname   , 
+  const std::string&                          yname   , 
+  const std::string&                          zname   , 
+  std::function<double(double,double,double)> fun     ) 
+{
+  // create thje function 
+  const Ostap::Functions::FuncRoo3D func { std::cref ( fun ) , xname , yname , zname , &dataset } ;
+  return add_var ( dataset , vname , func ) ;
 }
 // ============================================================================
 //                                                                      The END 

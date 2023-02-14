@@ -166,8 +166,8 @@ def test_add_to_dataset ( NEXP =  10 ) :
         
         logger.info ( 'Statistics of pseudoexperiments %s' % counter ) 
         logger.info ( 'Mean/rms: %s[%%]/%.4f[%%]' % ( counter.mean() * 100 ,
-                                                  counter.rms () * 100 ) ) 
-    
+                                                      counter.rms () * 100 ) ) 
+        
 # =============================================================================
 if '__main__' == __name__ :
 
