@@ -49,12 +49,13 @@ else :
     from ostap.utils.basic import has_env as ostap_hasenv 
     if  ostap_hasenv ( env_var ) :
         from ostap.utils.basic import get_env as ostap_getenv 
-        default_style = ostaogetenv ( env_var, default_style )
+        default_style = ostap_getenv ( env_var, default_style )
     else :
         ## get the preferred table style from the configuration file(s)
         import ostap.core.config as OCC
         if 'STYLE' in OCC.tables :
             default_style = OCC.tables.get ( 'STYLE' , fallback = default_style )
+# =============================================================================
 ## finally adjust the style
 default_style = default_style.strip().lower()
 # =============================================================================

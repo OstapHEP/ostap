@@ -9,6 +9,8 @@
 
 ## Bug fixes:
 
+  1. fix a stupid typo in `table.py`. Thanks to Dasha Savrina 
+
 # v1.9.6.4
 
 ## New features:
