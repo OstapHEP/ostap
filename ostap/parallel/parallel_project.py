@@ -174,7 +174,7 @@ class ProjectTask(Task) :
         """Copy target
         """
         import ROOT 
-        if isinstance ( self.target , ROOT.TH1 ) : return self.taget.Clone()
+        if isinstance ( self.target , ROOT.TH1 ) : return self.target.Clone()
         tobj = type ( self.target )
         return tobj ( self.target ) 
     
