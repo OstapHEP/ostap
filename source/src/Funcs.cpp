@@ -113,7 +113,7 @@ double Ostap::Functions::FuncFormula::operator() ( const TTree* tree ) const
   { m_formula.reset( nullptr) ; }
   //
   Ostap::Assert ( nullptr != m_tree                ,
-                  "InvalidTree"                    ,
+                  "Invalid Tree"                   ,
                   "Ostap::Function::FuncFormula"   , 
                   Ostap::StatusCode(701)           ) ;
   //
@@ -235,7 +235,7 @@ Bool_t Ostap::Functions::Func1D::Notify ()
 {  
   /// attention! here  we delete the variable instead of notify/reset 
   m_xvar.reset ( nullptr ) ;
-  return ( m_xvar &&  m_xvar->ok() ) ? m_xvar->Notify() : false ; 
+  return ( m_xvar && m_xvar->ok() ) ? m_xvar->Notify() : false ; 
 }
 // ============================================================================
 // make the formula
@@ -521,9 +521,6 @@ double Ostap::Functions::Func3D::operator() ( const TTree* tree ) const
   //
   return m_fun ( xvar , yvar , zvar ) ;
 }
-
-
-
 // ======================================================================
 /*  constructor from the histogram 
  *  @param histo         (INPUT) the histogram 
