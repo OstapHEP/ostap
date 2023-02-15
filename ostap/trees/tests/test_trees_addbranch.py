@@ -299,79 +299,74 @@ def test_addbranch() :
         logger.info ( "With array '%s':\n%s" % ( l ,  data.chain.table ( prefix = '# ' ) ) ) 
         assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
 
-    if (6,24) <= root_info : 
-        ## add function
-        with timing ('1D-function ' , logger = logger ) :
+    ## add function
+    with timing ('1D-function ' , logger = logger ) :
             
-            def ftwo ( x ) : return 2 * x
-            fun         =  ( make_fun1 ( ftwo ) , 'pt' )
+        def ftwo ( x ) : return 2 * x
+        fun         =  ( make_fun1 ( ftwo ) , 'pt' )
+        
+        chain    = data.chain
+        vname    = 'doubled_pt1'
+        chain.add_new_branch ( vname , fun  )
+        
+        logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
+        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
+        
+    ## add lambda 
+    with timing ('1D-lambda' , logger = logger ) :
+        
+        ftwo     = lambda x : 2 * x 
+        fun      =  ( make_fun1 ( ftwo ) , 'pt' )
+        
+        chain    = data.chain
+        vname    = 'doubled_pt2'
+        chain.add_new_branch ( vname , fun  )
+        
+        logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
+        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
             
-            chain    = data.chain
-            vname    = 'doubled_pt1'
-            chain.add_new_branch ( vname , fun  )
+    ## add callable
+    with timing ('1D-callable' , logger = logger ) :            
+        
+        class A(object):
+            def __call__ ( self , x ) : return 2.0 * x
             
-            logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
-            assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
+        ftwo = A()
+        fun      =  ( make_fun1 ( ftwo ) , 'pt' )
+        
+        chain    = data.chain
+        vname    = 'doubled_pt3'
+        chain.add_new_branch ( vname , fun  )
+        
+        logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
+        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
             
-    if (6,24) <= root_info : 
-        ## add lambda 
-        with timing ('1D-lambda' , logger = logger ) :
+    ## add 2D-function
+    with timing ('2D-function ' , logger = logger ) :
+        
+        def fff ( x , y  ) : return x * y 
+        fun         =  ( make_fun2 ( fff) , 'pt' , 'et')
+        
+        chain    = data.chain
+        vname    = 'pt_mult_et'
+        chain.add_new_branch ( vname , fun  )
+        
+        logger.info ( "With pt*et:\n%s" % data.chain.table ( prefix = '# ' ) )
+        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
             
-            ftwo     = lambda x : 2 * x 
-            fun      =  ( make_fun1 ( ftwo ) , 'pt' )
-            
-            chain    = data.chain
-            vname    = 'doubled_pt2'
-            chain.add_new_branch ( vname , fun  )
-            
-            logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
-            assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
-            
-    if (6,24) <= root_info : 
-        ## add callable
-        with timing ('1D-callable' , logger = logger ) :            
-            
-            class A(object):
-                def __call__ ( self , x ) : return 2.0 * x
-                
-            ftwo = A()
-            fun      =  ( make_fun1 ( ftwo ) , 'pt' )
-            
-            chain    = data.chain
-            vname    = 'doubled_pt3'
-            chain.add_new_branch ( vname , fun  )
-            
-            logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
-            assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
-            
-    if (6,24) <= root_info : 
-        ## add 2D-function
-        with timing ('2D-function ' , logger = logger ) :
-            
-            def fff ( x , y  ) : return x * y 
-            fun         =  ( make_fun2 ( fff) , 'pt' , 'et')
-            
-            chain    = data.chain
-            vname    = 'pt_mult_et'
-            chain.add_new_branch ( vname , fun  )
-            
-            logger.info ( "With pt*et:\n%s" % data.chain.table ( prefix = '# ' ) )
-            assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
-            
-    if (6,24) <= root_info : 
-        ## add 3D-function
-        with timing ('3D-function ' , logger = logger ) :
-            
-            def fff ( x , y  , z ) : return x * y * z  
-            fun         =  ( make_fun3 ( fff ) , 'pt' , 'et' , 'et2' )
-            
-            chain    = data.chain
-            vname    = 'pt_mult_et_e2'
-            chain.add_new_branch ( vname , fun  )
-            
-            logger.info ( "With pt*et*et2:\n%s" % data.chain.table ( prefix = '# ' ) )
-            assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
-            
+    ## add 3D-function
+    with timing ('3D-function ' , logger = logger ) :
+        
+        def fff ( x , y  , z ) : return x * y * z  
+        fun         =  ( make_fun3 ( fff ) , 'pt' , 'et' , 'et2' )
+        
+        chain    = data.chain
+        vname    = 'pt_mult_et_e2'
+        chain.add_new_branch ( vname , fun  )
+        
+        logger.info ( "With pt*et*et2:\n%s" % data.chain.table ( prefix = '# ' ) )
+        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
+        
 # =============================================================================
 if '__main__' ==  __name__  :
 

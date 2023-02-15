@@ -2204,16 +2204,60 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
              isinstance ( function , sized_types  ) and \
              2 <= len ( function ) <= 4             and \
              ( callable ( function [0] ) and all ( isinstance ( v , string_types ) for v in function[ 1: ] ) )  :
-        
-        args =  ( name , ) + tuple ( v for v in function [ 1 :] ) + ( function[0] , ) 
+
+        if   (6,26) <= root_info :
+            
+            args =  ( name , ) + tuple ( v for v in function [ 1 :] ) + ( function[0] , )
+            
+        elif (6,24) <= root_info :
+
+            fa = tuple ( v for v in function ) ## + ( tree , ) 
+            
+            if   2 == len ( function ) : ff = Ostap.Functions.Func1D ( *fa ) 
+            elif 3 == len ( function ) : ff = Ostap.Functions.Func2D ( *fa ) 
+            elif 4 == len ( function ) : ff = Ostap.Functions.Func3D ( *fa )
+            
+            args = name , ff
+            
+        else:
+
+            fa = tuple ( v for v in function ) ## + ( tree , ) 
+
+            if   2 == len ( function ) : ff = Ostap.Functions.Func1D.create ( *fa ) 
+            elif 3 == len ( function ) : ff = Ostap.Functions.Func2D.create ( *fa ) 
+            elif 4 == len ( function ) : ff = Ostap.Functions.Func3D.create ( *fa )
+            
+            args = name , ff            
         
     ## ( var1 , ... , callable ) 
     elif isinstance ( name     , string_types ) and \
              isinstance ( function , sized_types  ) and \
              2 <= len ( function ) <= 4             and \
              ( callable ( function [-1] ) and all ( isinstance ( v , string_types ) for v in function[:-1] ) ) :
-        
-        args =  ( name , ) + tuple ( v for v in function )
+
+        if (6,26) <= root_info :
+            
+            args =  ( name , ) + tuple ( v for v in function )
+            
+        elif (6,24) <= root_info :
+            
+            fs = ( function[-1] , ) + tuple ( v for v in function [:-1] ) ## + ( tree , )
+            
+            if   2 == len ( function ) : ff = Ostap.Functions.Func1D        ( *fs ) 
+            elif 3 == len ( function ) : ff = Ostap.Functions.Func2D        ( *fs ) 
+            elif 4 == len ( function ) : ff = Ostap.Functions.Func3D        ( *fs )
+            
+            args = name , ff
+            
+        else:
+
+            fs = ( function[-1] , ) + tuple ( v for v in function [:-1] ) ## + ( tree , )
+
+            if   2 == len ( function ) : ff = Ostap.Functions.Func1D.create ( *fs ) 
+            elif 3 == len ( function ) : ff = Ostap.Functions.Func2D.create ( *fs ) 
+            elif 4 == len ( function ) : ff = Ostap.Functions.Func3D.create ( *fs )
+            
+            args = name , ff
            
     ## efficient case with array 
     elif ( 6 , 24 ) <= root_info                   and \
