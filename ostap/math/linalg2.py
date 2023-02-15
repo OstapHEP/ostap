@@ -1411,7 +1411,7 @@ class LinAlg(object) :
     #  @code
     #  m     = ...
     #  m_inv = m.inverse () 
-    #  @encode
+    #  @endcode
     @staticmethod 
     def M_INVERSE ( mtrx ) :
         """ Get the inverse matrix
@@ -2203,7 +2203,7 @@ atexit.register ( LinAlg.CLEANUP )
 #  obj1 = ...
 #  obj2 = ...
 #  checkops ( obj1 , obj2 ) 
-#  @encode 
+#  @endcode 
 def checkops ( a , b , logger = logger ) :
     """check what LinAlg operations are defined for these two objects    
     >>> obj1 = ...

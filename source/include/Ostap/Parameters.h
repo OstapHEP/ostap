@@ -91,6 +91,13 @@ namespace Ostap
       /// all parameters are zero ?
       bool           zero   () const ;
       // ======================================================================
+    public: // Reset 
+      // ======================================================================
+      /// reset all parameters to zero 
+      void reset() ;
+      /// reset all parameters to zero 
+      void Reset() { reset () ; }
+      // ======================================================================
     public: // simple  manipulations with parameters 
       // ======================================================================
       /// simple  manipulations with parameters: scale it! 
@@ -135,5 +142,5 @@ namespace Ostap
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
-#endif // OSTAP_POLYNOMIALS_H
+#endif // OSTAP_PARAMETERS_H
 // ============================================================================

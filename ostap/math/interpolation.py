@@ -787,7 +787,7 @@ for t in ( Ostap.Math.Berrut1st   ,
 #  @code
 #  interpolant = ...
 #  interpolant.sumw() 
-#  @encode
+#  @endcode
 def _bi_sumw_ ( self ) :
     """Get sum of weights for barycentric interpolation is muts be zero
     >>> interpolant = ...
@@ -802,7 +802,7 @@ def _bi_sumw_ ( self ) :
 #  @code
 #  interpolant = ...
 #  interpolant.poles() 
-#  @encode
+#  @endcode
 def _bi_poles_ ( self ) :
     """Does barycentric interpolant has poles ?
     >>> interpolant = ...
@@ -965,7 +965,7 @@ class BaseInterpolant(object) :
     #  @code
     #  interpolant = ...
     #  interpolant.poles() 
-    #  @encode
+    #  @endcode
     def poles ( self ) :
         """Does barycentric interpolant has poles ?
         >>> interpolant = ...

@@ -607,7 +607,7 @@ class StatMerger(object) :
 #  for result , stat in jobs :
 #      merger += result
 #  merged = merger.result 
-#  @encode
+#  @endcode
 class TaskMerger(object) :
     """Merge task resuls
     >>> merger = TaskMerger()
@@ -629,7 +629,7 @@ class TaskMerger(object) :
     #  for result , stat in jobs :
     #      merger += result 
     #  merged = merger.result
-    #  @encode 
+    #  @endcode 
     def __iadd__ ( self , result ) :
         """Merge task resuls
         >>> merger = TaskMerger()
@@ -649,7 +649,7 @@ class TaskMerger(object) :
     #  for result , stat in jobs :
     #      merger.merge ( result )
     #  merged = merger.result
-    #  @encode 
+    #  @endcode 
     def merge ( self , result ) :
         """Merge task results
         >>> merger = TaskMerger()

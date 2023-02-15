@@ -657,9 +657,9 @@ draw_combined_component        = False
 # =============================================================================
 
 # =============================================================================
-## Get the drawing options from configuration parser 
+## Get the drawing option from the configuration parser 
 def  get_options ( config , option , default ) :
-    """Get the drawing options from configuration parser
+    """Get the drawing option from the configuration parser
     """
     
     if not option in config : return default
@@ -722,6 +722,7 @@ default_signal_style  = (
     Style ( linecolor = ROOT.kMagenta  , linewidth = 2 , fillcolor = ROOT.kMagenta , fillstyle = 1001 ) ,
     Style ( linecolor = ROOT.kCyan     , linewidth = 2 , fillcolor = ROOT.kCyan    , fillstyle = 1001 ) ,
     Style ( linecolor = ROOT.kYellow   , linewidth = 2 , fillcolor = ROOT.kYellow  , fillstyle = 1001 ) ,
+    Style ( linecolor = ROOT.kPink     , linewidth = 2 , fillcolor = ROOT.kPink    , fillstyle = 1001 ) ,
     ) 
 
 default_background_style = (
@@ -784,13 +785,13 @@ def  get_style ( config , style , default ) :
     opts = opts.replace ('\n', ' ' )
 
     try : 
-        options = eval( opts , globals() )
-        if isinstance ( options , Style ) : options = options ,
-        if isinstance ( options , list  ) : options = tuple ( options )
+        options = eval ( opts , globals() )
+        if isinstance  ( options , Style ) : options = options ,
+        if isinstance  ( options , list  ) : options = tuple ( options )
         if any ( not isinstance ( o , Style ) for o in options ) :
             raise TypeError('Invalid style type for %s : %s' % ( style , opts ) ) 
     except :
-        logger.error("Can't parse %s : %s" % (  style , opts ) , exc_info = True ) 
+        logger.error("Can't parse %s : %s" % ( style , opts ) , exc_info = True ) 
         options = default 
 
     return options

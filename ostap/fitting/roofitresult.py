@@ -26,7 +26,7 @@ import ostap.fitting.variables
 import ostap.fitting.printable
 from   ostap.logger.colorized   import allright, attention
 from   ostap.logger.utils       import pretty_float, pretty_ve, pretty_2ve 
-import ROOT, math
+import ROOT, math, sys 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roofitresult' )
@@ -770,10 +770,13 @@ def _rfr_print_ ( self , opts = 'v' ) :
     ## if the table is narrow enough, print it 
     if 10 < lmax and lmax < width : return table 
 
-    ## otherwise use natibe RooFit print 
-    return self.print_multiline ( content = 1 , verbose = True )
-
-
+    ## otherwise use naive RooFit print 
+    result = self.print_multiline ( content = 1 , verbose = True )
+    if sys.version_info < ( 3 , 0 ) :
+        if isinstance ( result , unicode ) :
+            result = result.encode ('utf-8')
+    return result 
+    
 # =============================================================================
 ## Get global correlation coefficient for the parameter
 #  \f$ \rho_k = \sqrt{    1 - \left[ C_{kk} V_{kk}\right]^{-1} } \f$

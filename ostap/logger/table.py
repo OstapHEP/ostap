@@ -31,7 +31,7 @@ __all__     = (
 # =============================================================================
 from   ostap.logger.colorized import infostr, allright, decolorize        
 from   ostap.utils.basic      import terminal_size 
-import textwrap, os  
+import textwrap, os, sys   
 # =============================================================================    
 try :
     import terminaltables
@@ -351,8 +351,12 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
                 for l , line in enumerate ( table_instance.table_data ) :
                     if width < len ( line [ i ] ) : 
                         table_instance.table_data[l][i] = textwrap. fill ( indent + line [ i ] , wrap_width  )
-                        
-    return add_prefix ( table_instance.table , prefix ) 
+
+    result = add_prefix ( table_instance.table , prefix )
+    if sys.version_info < ( 3 , 0 ) :
+        if isinstance ( result , unicode ) :
+            result = result.encode ('utf-8')
+    return result 
     
 # =============================================================================
 ## get the true  table width 

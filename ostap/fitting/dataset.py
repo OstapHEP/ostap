@@ -644,18 +644,31 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
     - For 2D&3D cases if variables specifed as singel string, the order is Z,Y,X,
     - Otherwide the natural order is used.
     """
-    
-    assert isinstance ( histo , ROOT.TH1 ) , "Invalid type of 'histo' %s" % type ( histo )
 
-    histo.Reset()
+    target = histo
     
+     ## input historgam? 
+    input_histo = isinstance ( target , ROOT.TH1 )
+    
+    from ostap.trees.param import ( param_types_1D , param_types_2D ,
+                                    param_types_3D , param_types_4D )
+    assert input_histo or \
+           isinstance ( target , param_types_1D ) or \
+           isinstance ( target , param_types_2D ) or \
+           isinstance ( target , param_types_3D ) or \
+           isinstance ( target , param_types_4D ) , "Invalid type of 'histo/target' %s" % type ( histo )
+
+    ## reset targer 
+    if input_histo : target.Reset()
+    else           : target *= 0.0
+
     if   isinstance ( histo , ROOT.TProfile2D ) :
         histo.Reset() 
         logger.error ('ds_project: TProfile2D is not (yet) supported')
-        return 0 , histo 
+        return histo 
     elif isinstance ( histo , ROOT.TProfile  ) :
         logger.error ('ds_project: TProfile   is not (yet) supported')
-        return 0 , histo 
+        return histo 
     
     assert not cuts or \
            isinstance ( cuts , string_types    ) or \
@@ -697,7 +710,13 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
 
     assert isinstance ( what , list_types ) and what , "ds_project: invalid 'what' %s" % what 
 
-    hdim = histo.dim()
+    
+    if    input_histo : hdim = target.dim() 
+    elif  isinstance ( target , param_types_1D ) : hdim = 1
+    elif  isinstance ( target , param_types_2D ) : hdim = 2
+    elif  isinstance ( target , param_types_3D ) : hdim = 3
+    elif  isinstance ( target , param_types_4D ) : hdim = 4
+  
     assert len ( what ) == hdim  or ( 1 == hdim and hdim < len ( what ) ) , \
            "ds_project: invalid 'what' %s" % what 
 
@@ -720,51 +739,58 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
         cuts = vcuts 
 
     ## special treatment for 1D histograms: several variables are summed/projected together 
-    if 1 == hdim and hdim < len ( what ) :
+    if 1 == hdim and input_histo and isinstance ( histo , ROOT.TH1 ) and hdim < len ( what ) :
         htmp  = histo.clone()
-        total = 0 
         for w in what :
-            n , htmp = ds_project ( dataset             ,
-                                    histo    = htmp     ,
-                                    what     = w        ,
-                                    cuts     = cuts     ,
-                                    first    = first    ,
-                                    last     = last     , 
-                                    progress = progress )
-            total += n
+            htmp = ds_project ( dataset             ,
+                                histo    = htmp     ,
+                                what     = w        ,
+                                cuts     = cuts     ,
+                                first    = first    ,
+                                last     = last     , 
+                                progress = progress )
             histo += htmp 
         del htmp
-        return total , histo 
+        return histo
+    elif 1 == hdim and hdim < len ( what ) :
+        tobj  = type ( target ) 
+        htmp  = tobj ( target )
+        for w in what :
+            htmp = ds_project ( dataset             ,
+                                histo    = htmp     ,
+                                what     = w        ,
+                                cuts     = cuts     ,
+                                first    = first    ,
+                                last     = last     , 
+                                progress = progress )
+            target += htmp 
+        del htmp
+        return target 
+    
 
-
-    args = ( histo , ) + what  + ( cuts , ) + events
+    args = ( target , ) + what  + ( cuts , ) + events
 
     from   ostap.utils.progress_conf import progress_conf
 
     ## finally fill the histograms 
-    if   3 == hdim :
+    if   4 == hdim :
+        if progress : sc = Ostap.HistoProject.project4 ( dataset , progress_conf () , *args )
+        else        : sc = Ostap.HistoProject.project4 ( dataset ,                    *args )
+        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
+    elif   3 == hdim :
         if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *args )
         else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *args )
-        if not sc.isSuccess() :
-            logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
-            return 0 , None
-        return histo.nEntries () , histo
+        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
     elif 2 == hdim :
         if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf () , *args )
         else        : sc = Ostap.HistoProject.project2 ( dataset ,                    *args )
-        if not sc.isSuccess() :
-            logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
-            return 0 , None
-        return histo.nEntries () , histo
+        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
     elif 1 == hdim :        
         if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *args )
         else        : sc = Ostap.HistoProject.project  ( dataset ,                    *args )
-        if not sc.isSuccess() : 
-            logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
-            return 0 , None
-        return histo.nEntries () , histo
-     
-    raise TypeError ( 'ds_project, invalid case' )
+        if not sc.isSuccess() :  logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
+
+    return target if sc.isSuccess() else None 
 
 # =============================================================================
 ## Helper draw method for RooDataSet
@@ -969,7 +995,7 @@ _new_methods_ += [
 #  @code
 #  data      = ...
 #  min . max = ds_var_range ( data , 'variname' , cuts = ... ) 
-#  @encode
+#  @endcode
 def ds_var_range ( dataset , var , cuts = '' ) :
     """Find suitable range for drawing a variable
     >>> data      = ...
@@ -1091,7 +1117,12 @@ def _ds_print_ ( dataset ) :
     >>> print dataset 
     """
     if not  valid_pointer ( dataset ) : return 'Invalid dataset'
-    return dataset.print_multiline ( verbose = True ) 
+    result = dataset.print_multiline ( verbose = True )
+    if sys.version_info < ( 3 , 0 ) :
+        if isinstance ( result , unicode ) :
+            result = result.encode ('utf-8')
+    return result 
+    
 
 ROOT.RooDataSet.draw        = ds_draw
 ROOT.RooDataSet.project     = ds_project
@@ -1200,7 +1231,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 #  @code
 #  h2 = ...## 2D histogram
 #  dataset.add_new_var ( 'Pt' , 'eta' , h2 ) ## sample from 2D histogram
-#  @encode
+#  @endcode
 #  - Sample  from 3D-histogram
 #  @code
 #  h3 = ...## 3D histogram

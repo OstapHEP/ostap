@@ -83,6 +83,10 @@ export PYTHONPATH=$(        _path_prepend PYTHONPATH      $OSTAPDIR/@OSTAP_PYTHO
 export LD_LIBRARY_PATH=$(   _path_prepend LD_LIBRARY_PATH $OSTAPDIR/lib     )  
 export MANPATH=$(           _path_prepend MANPATH         $OSTAPDIR/doc/man )  
 
+
+## added here... indeed it is needed only for python2. need to solve the issue 
+PYTHONIOENCODING=UTF-8  ; export PYTHONIOENCODING 
+
 unset -f _path_prepend
 unset -f _path_remove 
 

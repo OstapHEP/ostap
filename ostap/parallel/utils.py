@@ -358,7 +358,7 @@ def get_local_port ( expression ) :
 #  @code
 #  with PoolContext ( pool ) :
 #  ...   
-#  @encode
+#  @endcode
 class PoolContext(object) :
     """Context manager for Pathos pools
     >>> with PoolContext ( pool ) :
@@ -391,7 +391,7 @@ class PoolContext(object) :
 #  @code
 #  with pool_context ( pool ) :
 #  ...   
-#  @encode
+#  @endcode
 def pool_context  ( pool ) :
     """Context manager for Pathos pools
     >>> with pool_context ( pool ) :

@@ -1231,7 +1231,7 @@ def checksum_files ( *files ) :
 #  @code
 #  expression = ' .... '
 #  ok = balanced ( expression ) 
-#  @encode 
+#  @endcode 
 def  balanced ( expression , left = '([' , right = ')]' ) :
     """Simple utility to check balanced parenthesis/brackets, etc...
     >>> expression = ' .... '

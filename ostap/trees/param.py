@@ -14,7 +14,11 @@
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
-__all__     = (  
+__all__     = (
+    'param_types_1D' , ## list of valid 1D-types for parameterisation
+    'param_types_2D' , ## list of valid 1D-types for parameterisation
+    'param_types_3D' , ## list of valid 1D-types for parameterisation
+    'param_types_4D' , ## list of valid 1D-types for parameterisation
   ) 
 # =============================================================================
 from   ostap.core.core   import Ostap
@@ -28,6 +32,13 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.param' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 _large = 2**64 -1 
+# =============================================================================
+## valid non-histogram projection types 
+# ============================================================================-
+param_types_1D = Ostap.Math.LegendreSum  , Ostap.Math.Bernstein   , Ostap.Math.ChebyshevSum
+param_types_2D = Ostap.Math.LegendreSum2 , Ostap.Math.Bernstein2D , 
+param_types_3D = Ostap.Math.LegendreSum3 , Ostap.Math.Bernstein3D , 
+param_types_4D = Ostap.Math.LegendreSum4 , 
 # =============================================================================
 ## parameterize 1D unbinned distribution from TTree in terms of
 #  Legendre/chebyshev/Bernstein sums

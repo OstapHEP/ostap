@@ -7595,7 +7595,7 @@ if root_info < ( 3 , 0 ) :
     #  @code
     #  histo
     #  n = histo.nEntries() 
-    #  @encode
+    #  @endcode
     #  @see TH1::GetEntries 
     def _h1_nEntries_ ( histo ) :
         """Number of enbtries (as int)
@@ -7608,7 +7608,7 @@ else :
     #  @code
     #  histo
     #  n = histo.nEntries() 
-    #  @encode
+    #  @endcode
     #  @see TH1::GetEntries 
     def _h1_nEntries_ ( histo ) :
         """Number of enbtries (as int)

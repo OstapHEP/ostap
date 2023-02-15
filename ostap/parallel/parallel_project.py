@@ -39,35 +39,51 @@ class ProjectTask(Task) :
     """The simple task  object for the efficient parallel
     projection of looooooong TChains/TTrees into histograms  
     """
-    ## constructor: histogram 
+    # =========================================================================
+    ## constructor: histogram/target  
     def __init__ ( self , histo , what , cuts = '' ) :
-        """Constructor: the histogram 
+        """Constructor: the histogram/target  
         
         >>> histo = ...
         >>> task  = ProjectTask ( histo ) 
-        """        
-        self.histo = histo
-        self.what  = what 
-        self.cuts  = str  ( cuts ) 
-        self.histo.Reset()
-        
+        """
+        self.target   = histo
+        self.what     = what 
+        self.cuts     = str  ( cuts )
+        self.__output = None
+        ## reset the input 
+        self.target.Reset()
+
+    # =========================================================================
     ## local initialization (executed once in parent process)
     def initialize_local   ( self ) :
         """Local initialization (executed once in parent process)
         """
-        import ROOT,ostap.core.pyrouts
-        self.__output = 0, self.histo.clone()
-    
+        ## import ROOT,ostap.core.pyrouts
+        ## if   isinstance ( self.target , ROOT.TH1 ) :
+        ##     self.__output = self.target.clone()
+        ## else :
+        ##     tobj          = type ( self.target ) 
+        ##     self.__output = tobj ( self.target ) 
+        self.__output = None 
+    # =========================================================================
     ## remote initialization (executed for each sub-processs)
     def initialize_remote  ( self , jobid = -1 ) :
         """Remote initialization (executed for each sub-processs
         """
-        import ROOT,ostap.core.pyrouts
-        self.__output = 0, self.histo.clone()
+        ## import ROOT,ostap.core.pyrouts        
+        ## if   isinstance ( self.target , ROOT.TH1 ) :
+        ##     self.__output = self.target.clone()
+        ## else :
+        ##     tobj          = type ( self.target ) 
+        ##     self.__output = tobj ( self.target ) 
+        self.__output = None 
     
+    # =========================================================================
     ## finalization (executed at the end at parent process)
     def finalize ( self ) : pass 
 
+    # =========================================================================
     ## the actual processing
     #   ``params'' is assumed to be a tuple/list :
     #  - the file name
@@ -112,8 +128,8 @@ class ProjectTask(Task) :
             
             ROOT.gROOT.cd()
 
-            histo = self.histo.Clone ()
-            self.__output = histo 
+            target = self.copy_target() 
+            self.__output = target 
 
             ## from ostap.trees.trees import tree_project_old
             ## self.__output = tree_project_old (
@@ -126,27 +142,41 @@ class ProjectTask(Task) :
             from ostap.trees.trees import tree_project
             self.__output = tree_project (
                 tree  = chain      ,
-                histo = histo      ,
+                histo = target     ,
                 what  = self.what  ,
                 cuts  = self.cuts  ,
                 first = first      ,
                 last  = -1 if nevents < 0 else first + nevents )
             
         return self.__output 
-        
+
+    # =========================================================================
     ## merge results 
     def merge_results ( self , result , jobid ) :
 
         import ostap.histos.histos
-        if not self.__output : self.__output =  result
-        else : 
-            filtered      = self.__output[0] + result[0]            
-            self.__output[1].Add ( result[1] )
-            self.__output = filtered, self.__output[1]
-
+        if   not self.__output : self.__output =  result
+        elif hasattr ( self.__output , 'Add' ) :
+            self.__output.Add ( result )
+            del result 
+        else :
+            self.__output += result 
+            del result
+            
+    # =========================================================================
     ## get the results 
     def results (  self ) :
         return self.__output 
+
+    # =========================================================================
+    ## Copy target
+    def copy_target ( self ) :
+        """Copy target
+        """
+        import ROOT 
+        if isinstance ( self.target , ROOT.TH1 ) : return self.taget.Clone()
+        tobj = type ( self.target )
+        return tobj ( self.target ) 
     
 # =============================================================================  
 ## make a projection of the loooooooong chain into histogram using
@@ -181,18 +211,19 @@ def  cproject ( chain                ,
     #
     from ostap.trees.trees import Chain
     ch    = Chain ( chain , first = first , nevents = nentries )
+
+    histo.Reset()
     
     task  = ProjectTask ( histo , what , cuts )
     wmgr  = WorkManager ( silent = silent , **kwargs )    
     wmgr.process ( task , ch.split ( chunk_size = chunk_size , max_files = max_files ) )
 
     ## unpack results 
-    _f , _h    = task.results ()
-    filtered   = _f
-    histo     += _h
-    del _h 
+    result   = task.results ()
+    histo   += result 
+    del result 
     
-    return filtered , histo 
+    return histo  
 
 ROOT.TChain.cproject = cproject
 ROOT.TChain.pproject = cproject
@@ -246,15 +277,17 @@ def  tproject ( tree                 ,   ## the tree
 
     from ostap.trees.trees import Tree
     ch    = Tree ( tree , first = first , nevents = nentries )
+
+    histo.Reset ()
     
     task  = ProjectTask            ( histo , what , cuts )
     wmgr  = WorkManager            ( silent     = silent , **kwargs )
     wmgr.process ( task, ch.split  ( chunk_size = chunk_size ) )
     
     ## unpack results 
-    _h = task.results ()
-    histo     += _h
-    del _h 
+    result  = task.results ()
+    histo  += result
+    del result 
     
     return histo 
 

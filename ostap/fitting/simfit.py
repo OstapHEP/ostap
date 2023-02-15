@@ -812,12 +812,12 @@ class SimFit (VarMaker,ConfigReducer) :
             
     @property
     def drawpdfs ( self ) :
-        "'drawpdfs' dictionary with PDFs (manily for drawing)"
+        "'drawpdfs' dictionary with PDFs (mainly for drawing)"
         return self.__drawpdfs
 
     @property
     def draw_options ( self ) :
-        """`draw_options' : disctionary with predefined draw-options for this PDF
+        """`draw_options' : dictionary with predefined draw-options for this PDF
         """
         return self.pdf.draw_options
 

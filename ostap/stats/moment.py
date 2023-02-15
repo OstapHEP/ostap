@@ -49,7 +49,7 @@ else                       : logger = getLogger ( __name__             )
 #  @code
 #  m = ...
 #  v = m.mean() 
-#  @encode
+#  @endcode
 #  If order of the moment-counter exceeds 1, the uncertainty is also evaluated 
 def _om_mean ( obj ) :
     """Get a mean for the moment-counter
@@ -66,7 +66,7 @@ def _om_mean ( obj ) :
 #  @code
 #  m = ...
 #  v = m.varinace() 
-#  @encode
+#  @endcode
 #  If order of the moment-counter exceeds 3, the uncertainty is also evaluated 
 def _om_variance ( obj ) :
     """Get a variance for the moment-counter
@@ -83,7 +83,7 @@ def _om_variance ( obj ) :
 #  @code
 #  m = ...
 #  v = m.skewness () 
-#  @encode
+#  @endcode
 def _om_skewness ( obj ) :
     """Get a skewness for the moment-counter
     >>> m = ...
@@ -97,7 +97,7 @@ def _om_skewness ( obj ) :
 #  @code
 #  m = ...
 #  v = m.kurtosis () 
-#  @encode
+#  @endcode
 def _om_kurtosis( obj ) :
     """Get an excess  kurtosis  for the moment-counter
     >>> m = ...
@@ -111,7 +111,7 @@ def _om_kurtosis( obj ) :
 #  @code
 #  m = ...
 #  v = m.unbiased_2nd() 
-#  @encode
+#  @endcode
 def _om_u2nd ( obj ) :
     """Get an unbiased 2nd order moment from the moment-counter 
     >>> m = ...
@@ -125,7 +125,7 @@ def _om_u2nd ( obj ) :
 #  @code
 #  m = ...
 #  v = m.unbiased_3rd() 
-#  @encode
+#  @endcode
 def _om_u3rd ( obj ) :
     """Get an unbiased 3rd order moment fro the moment-counter 
     >>> m = ...
@@ -139,7 +139,7 @@ def _om_u3rd ( obj ) :
 #  @code
 #  m = ...
 #  v = m.unbiased_4th() 
-#  @encode
+#  @endcode
 def _om_u4th ( obj ) :
     """Get an unbiased 4th order moment from the moment-counter 
     >>> m = ...
@@ -153,7 +153,7 @@ def _om_u4th ( obj ) :
 #  @code
 #  m = ...
 #  v = m.unbiased_5th() 
-#  @encode
+#  @endcode
 def _om_u5th ( obj ) :
     """Get an unbiased 5th order moment from the moment-counter 
     >>> m = ...
@@ -168,7 +168,7 @@ def _om_u5th ( obj ) :
 #  m = ...
 #  v = m.central_moment() 
 #  v = m.moment() 
-#  @encode
+#  @endcode
 def _om_cm2 ( obj , order  ) :
     """Get a central moment fro the moment-counter 
     >>> m = ...
@@ -197,7 +197,7 @@ def _om_cm2 ( obj , order  ) :
 #  m = ...
 #  v = m.central_moment() 
 #  v = m.moment() 
-#  @encode
+#  @endcode
 def _om_cm3 ( obj , order  ) :
     """Get a central moment fro the moment-counter 
     >>> m = ...
@@ -225,7 +225,7 @@ def _om_cm3 ( obj , order  ) :
 #  @code
 #  m = ...
 #  v = m.rms  () 
-#  @encode
+#  @endcode
 def _om_rms  ( obj ) :
     """Get a RMS value for the moment-counter
     >>> m = ...

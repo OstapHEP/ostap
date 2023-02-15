@@ -389,9 +389,24 @@ def tree_project ( tree               ,
 
     """
     #
-    assert isinstance ( histo , ROOT.TH1 ) , "Invalid type of 'histo' %s" % type ( histo )
-    histo.Reset()
+
+    target = histo
     
+    ## input historgam? 
+    input_histo = isinstance ( target , ROOT.TH1 )
+    
+    from ostap.trees.param import ( param_types_1D , param_types_2D ,
+                                    param_types_3D , param_types_4D )
+    assert input_histo or \
+           isinstance ( target , param_types_1D ) or \
+           isinstance ( target , param_types_2D ) or \
+           isinstance ( target , param_types_3D ) or \
+           isinstance ( target , param_types_4D ) , "Invalid type of 'histo/target' %s" % type ( histo )
+
+    ## reset targer 
+    target.Reset()
+
+    ## check cuts  
     assert not cuts or \
            isinstance ( cuts , string_types    ) or \
            isinstance ( cuts , ROOT.TCut       ) ,  \
@@ -403,9 +418,8 @@ def tree_project ( tree               ,
     if   isinstance ( tree , Chain           ) : tree = tree.chain 
     elif isinstance ( tree , ROOT.RooAbsData ) :
         from ostap.fitting.dataset import ds_project as _ds_project_
-        result = _ds_project_ ( tree , histo , what , cuts , first , last , progress )
-        return result.nEntries () , result 
-    
+        return _ds_project_ ( tree , histo , what , cuts , first , last , progress )
+
     nevents = len ( tree )
     last    = nevents if last < 0 else min ( nevents , last )
 
@@ -422,70 +436,76 @@ def tree_project ( tree               ,
 
     assert isinstance ( what , list_types ) , "tree_project: invalid 'what' %s" % what 
 
-    hdim = histo.dim()
+    if    input_histo : hdim = target.dim() 
+    elif  isinstance ( target , param_types_1D ) : hdim = 1
+    elif  isinstance ( target , param_types_2D ) : hdim = 2
+    elif  isinstance ( target , param_types_3D ) : hdim = 3
+    elif  isinstance ( target , param_types_4D ) : hdim = 4
+    
     assert len ( what ) == hdim  or ( 1 == hdim and hdim < len ( what ) ) , \
            "tree_project: invalid 'what' %s" % what 
     
-    ## special treatment for 1D histograms: several variables are summed/projected togather 
-    if 1 == hdim and hdim < len ( what ) :
+    ## special treatment for 1D histograms: several variables are summed/projected together 
+    if 1 == hdim and input_histo and hdim < len ( what ) :
         htmp  = histo.clone()
-        total = 0 
         for w in what :
-            n   , htmp = tree_project ( tree , htmp , w , cuts , *tail )
-            total += n
+            htmp  = tree_project ( tree , htmp , w , cuts , *tail )
             histo += htmp 
         del htmp
-        return total , histo 
+        return histo    
+    elif 1 == hdim and hdim < len ( what ) :
+        tobj = type ( target ) 
+        htmp = tobj ( target )
+        for w in what :
+            htmp    = tree_project ( tree , htmp  , w , cuts , *tail )
+            target += htmp 
+        del htmp        
+        return target   ## ATTENTION! 
 
     ## use frame if requested and if/when possible 
-    if use_frame and isinstance ( tree , ROOT.TTree ) and 0 == first and len ( tree ) <= last :
+    if use_frame and input_histo and isinstance ( tree , ROOT.TTree ) and 0 == first and len ( tree ) <= last :
         import ostap.frames.frames as F 
         frame   = F.DataFrame ( tree )
         if progress : counter = F.frame_progress ( frame , len ( tree ) )
         else        : counter = frame.Count()
         fargs   = what + ( cuts , ) 
-        hh      = F.frame_project ( frame , histo , *fargs )
-        return counter.GetValue () , hh 
+        result  = F.frame_project ( frame , histo , *fargs )
+        cnt     = counter.GetValue() 
+        return result  
 
     ## use 'old' method since it is slightly more efficient 
-    if not progress and isinstance ( tree , ROOT.TTree ) : 
+    if not progress and input_histo and isinstance ( tree , ROOT.TTree ) : 
         hname = histo.GetName() 
         what  = ' : '.join ( reversed ( what ) )
         num   = tree.Project ( hname , what , '' , '' , last - first , first )
-        return num , histo 
+        return histo 
         
     active = tree.the_variables ( cuts , *what )
     from   ostap.utils.progress_conf import progress_conf
     with ActiveBranches  ( tree , *active ) :    
         
-        args = ( histo ,) + what + ( cuts , first , last ) 
+        args = ( target , ) + what + ( cuts , first , last ) 
+        if   4 == hdim :
+            if progress : sc = Ostap.HistoProject.project4 ( tree , progress_conf () , *args )
+            else        : sc = Ostap.HistoProject.project4 ( tree ,                    *args )
+            if not sc.isSuccess () : logger.error ( "Error from Ostap.HistoProject.project4 %s" % sc )
         if   3 == hdim :
             if progress : sc = Ostap.HistoProject.project3 ( tree , progress_conf () , *args )
             else        : sc = Ostap.HistoProject.project3 ( tree ,                    *args )
-            if not sc.isSuccess () :
-                logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
-                return 0 , None
-            return histo.nEntrie () , histo
+            if not sc.isSuccess () : logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
         elif 2 == hdim :
             if progress : sc = Ostap.HistoProject.project2 ( tree , progress_conf () , *args )
             else        : sc = Ostap.HistoProject.project2 ( tree ,                    *args )
-            if not sc.isSuccess() :
-                logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
-                return 0 , None
-            return histo.nEntries () , histo 
+            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
         elif 1 == hdim :
             if progress : sc = Ostap.HistoProject.project  ( tree , progress_conf () , *args )
             else        : sc = Ostap.HistoProject.project  ( tree ,                    *args )
-            if not sc.isSuccess() :
-                logger.error ( "Error from Ostap.HistoProject.project1 %s" % sc )
-                return 0 , None
-            return histo.nEntries() , histo
-        
-    raise TypeError ( 'tree_project, invalid case' )
+            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project1 %s" % sc )
+
+        return target if sc.isSuccess() else None 
 
 ROOT.TTree .project = tree_project
 ROOT.TChain.project = tree_project
-
 
 # =============================================================================
 ## help project method for ROOT-trees and chains 
@@ -1154,7 +1174,12 @@ def _rt_print_ ( t ) :
     _b . sort () 
     if _b : res += "\nNon-trivial branches:\n%s" % multicolumn ( _b , indent = 2 ,  pad = 1 )
 
-    return res.replace ('\n','\n# ') 
+    result = res.replace ('\n','\n# ')
+    if sys.version_info < ( 3 , 0 ) :
+        if isinstance ( result , unicode ) :
+            result = result.encode ('utf-8')
+    return result 
+ 
 
 ROOT.TTree.__repr__ = _rt_print_
 ROOT.TTree.__str__  = _rt_print_

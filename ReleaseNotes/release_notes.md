@@ -3,8 +3,12 @@
    1. (re)implement `Ostap::DataParam` in terms of `Ostap::HistoProject` - reduce code duplication 
    1. add few more utilitied to add branch/columns to TTree/RooDataSet
    1. release the limitations for `add_new_branch`
+   1. TEMPORARILY  set `PYTHONIOENCODING=UTF-8` in `thisostapsh` . better solution is needed 
+   1. Update `project` methods for trees and datasets 
 
-## Backward incompatible:  
+## Backward incompatible: 
+
+   1. change an output for `project` methods   
 
 ## Bug fixes:
 

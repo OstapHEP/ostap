@@ -867,7 +867,6 @@ def frame_project ( frame , model , *what ) :
     if ( 6 , 16 ) <= root_info and isinstance ( model , _types_nD ) :
         return _fr_param_ ( frame , model , *what ) 
        
-    
     if 1 <= len ( what ) <= 2 :
         if   isinstance  ( what [ 0 ] , string_types ) :
             ww = split_string ( what [ 0 ] , var_separators , strip = True )
@@ -903,7 +902,6 @@ def frame_project ( frame , model , *what ) :
     elif isinstance ( model , ROOT.TH1 ) and 1 == model.dim () :
         histo = model
         model = model.model ()
-        
             
     if histo : histo.Reset()
 
