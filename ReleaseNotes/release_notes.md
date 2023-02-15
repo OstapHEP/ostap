@@ -1,4 +1,3 @@
-
 ## New features:
 
    1. (re)implement `Ostap::DataParam` in terms of `Ostap::HistoProject` - reduce code duplication 
