@@ -5,6 +5,7 @@
    1. release the limitations for `add_new_branch`
    1. TEMPORARILY  set `PYTHONIOENCODING=UTF-8` in `thisostapsh` . better solution is needed 
    1. Update `project` methods for trees and datasets 
+   1. define PYTHONIOENCODING only for `python2` and only if not set
 
 ## Backward incompatible: 
 

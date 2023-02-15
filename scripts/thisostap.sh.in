@@ -84,9 +84,11 @@ export LD_LIBRARY_PATH=$(   _path_prepend LD_LIBRARY_PATH $OSTAPDIR/lib     )
 export MANPATH=$(           _path_prepend MANPATH         $OSTAPDIR/doc/man )  
 
 
-## added here... indeed it is needed only for python2. need to solve the issue 
-PYTHONIOENCODING=UTF-8  ; export PYTHONIOENCODING 
-
+CURPYVER=$( python -c 'import sys; print( sys.version_info[0])')
+if [ $CURPYVER == '2' ] && ( [ -v $PYTHONIOENCODING ] || [ -z $PYTHONIOENCODING ] ) ; then
+   PYTHONIOENCODING=UTF-8  ; export PYTHONIOENCODING 
+fi 
+ 
 unset -f _path_prepend
 unset -f _path_remove 
 
