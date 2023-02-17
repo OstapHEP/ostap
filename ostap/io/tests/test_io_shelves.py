@@ -156,9 +156,9 @@ def test_shelves():
     logger.info('SQLiteShelve #keys: %s' % len ( list ( db_sql .keys() ) ) ) 
     logger.info('ZipShelve    #keys: %s' % len ( db_zip .keys() ) )
     logger.info('Bz2Shelve    #keys: %s' % len ( db_bz2 .keys() ) )
-    if lzshelve :
+    if lzshelve  :
         logger.info('LzShelve     #keys: %s' % len ( db_lz  .keys() ) )
-    if lzshelve :
+    if zstshelve :
         logger.info('ZstShelve    #keys: %s' % len ( db_zst .keys() ) )
     logger.info('RootShelve   #keys: %s' % len ( db_root.keys() ) )
 
@@ -260,7 +260,7 @@ def test_shelves():
     if lzshelve : 
         with timing('Close LZ'   ) : db_lz  .close()
     if zstshelve : 
-        with timing('Close Zst'  ) : db_zst .close()
+        with timing('Close ZST'  ) : db_zst .close()
     with timing('Close ROOT' ) : db_root.close()
 
     dbases = ( sqliteshelve . tmpdb () ,
