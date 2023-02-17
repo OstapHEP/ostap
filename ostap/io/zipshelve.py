@@ -279,7 +279,7 @@ class ZipShelf(CompressShelf):
 
         ## 3) try old good gzipped (single) file
         import gzip , io, tempfile
-        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-db' )
+        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-zdb' )
         with gzip.open ( filein  , 'rb' ) as fin : 
             with io.open ( fileout , 'wb' ) as fout : 
                 shutil.copyfileobj ( fin , fout )            
@@ -327,12 +327,8 @@ class ZipShelf(CompressShelf):
                             keyencoding = self.keyencoding   )
         
         ## copy the content
-        if keys :
-            for key in self.keys() :
-                if key in keys     : new_db [ key ] = self [ key ]
-        else : 
-            for key in self.keys() : new_db [ key ] = self [ key ]
-            
+        copy = keys if keys else self.keys()
+        for key in copy : new_db [ key ] = self [ key ]
         new_db.sync ()  
         return new_db 
     

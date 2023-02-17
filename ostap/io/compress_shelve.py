@@ -277,7 +277,7 @@ class CompressShelf(shelve.Shelf,object):
             dct  [ 'Created with ROOT version'   ] = meta_info.ROOT 
             dct  [ 'Pickle protocol'             ] = protocol 
             dct  [ 'Compress level'              ] = self.__compresslevel 
-            self [ '__metainfo__' ] = dct
+            self [ '__metainfo__'                ] = dct
             
         if not self.silent :
             self.ls ()

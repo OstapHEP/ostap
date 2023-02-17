@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file lzshelve.py
+# @file zstshelve.py
 # 
-# This is ``LZMA''-version of shelve database.
+# This is `zstandard'-version of shelve database.
 # 
 # Keeping the same interface and functionlity as shelve data base,
-# LzmaShelf allows much more compact file size through the on-flight
+# ZstShelf allows much more compact file size through the on-flight
 # compression of the content
 #
 # The actual code has been inspired by <c>zipshelve</c> ( see Google...)
@@ -14,18 +14,18 @@
 # However is contains several new features:
 # 
 #  - Optionally it is possible to perform the compression
-#    of the whole data base, that can be rather useful for data base
-#    with very large amout of keys 
+#    of the whole data base, that can be rathe useful fo data base
+#    with large amout of keys 
 #
 # The module has been developed and used with great success in
-# ``Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter''
+# `Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter'
 #
 # Create new DB:
 #
 # @code
 #
-# >>> import lzshelve  
-# >>> db = lzshelve.open ('a_db', 'n')    ## create new DB
+# >>> import zstshelve  
+# >>> db = zstshelve.open ('a_db', 'n')    ## create new DB
 # ...
 # >>> abcde = ...
 # >>> db['some_key'] =  abcde              ## add information to DB
@@ -38,8 +38,8 @@
 #
 # @code
 #
-# >>> import lzshelve  
-# >>> db = lzshelve.open ('a_db' , 'r' ) ## access existing dbase in read-only mode
+# >>> import zstshelve  
+# >>> db = zstshelve.open ('a_db' , 'r' ) ## access existing dbase in read-only mode
 # ...
 # >>> for key in db : print(key)
 # ...
@@ -51,8 +51,8 @@
 #
 # @code
 #
-# >>> import lzshelve 
-# >>> db = bz2shelve.open ('a_db' )    ## access existing dbase in update mode
+# >>> import zstshelve 
+# >>> db = zstshelve.open ('a_db' )    ## access existing dbase in update mode
 # ...
 # >>> for key in db : print key
 # ...
@@ -60,8 +60,8 @@
 #
 # @endcode 
 #
-# @attention: In case DB-name has extensions ``.lz'', ``.xz'', the whole data base
-#             will be ``LZMA''-ed ". 
+# @attention: In case DB-name has extension `.zst'  the whole data base
+#             will be `ZST'-ed ". 
 #
 # @attention: When one tries to read the database with pickled ROOT object using newer
 # version of ROOT, one could get a ROOT read error,
@@ -76,10 +76,10 @@
 # @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 # @date   2010-04-30
 # =============================================================================
-"""This is ``LZMA''-version of shelve database.
+"""This is `zstandard'-version of shelve database.
 
 Keeping the same interface and functionlity as shelve data base,
-LzmaShelf allows much more compact file size through the on-flight
+ZstShelf allows much more compact file size through the on-flight
 compression of the content
 
 The actual code has been inspired by zipshelve ( see Google...)
@@ -91,11 +91,11 @@ However is contains several new features:
    with large amout of keys 
    
 The module has been developed and used with great success in
- ``Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter''
+ `Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter'
 
  Create new DB:
 
- >>> import lzshelve as DBASE  
+ >>> import zsthelve as DBASE  
  >>> db = DBASE.open ('a_db', 'n')    ## create new DB
  ...
  >>> abcde = ...
@@ -105,7 +105,7 @@ The module has been developed and used with great success in
 
  Access to DB in read-only mode :
 
- >>> import lzshelve as DBASE  
+ >>> import zstshelve as DBASE  
  >>> db = DBASE.open ('a_db' , 'r' ) ## access existing dbase in read-only mode
  ...
  >>> for key in db : print(key)
@@ -114,18 +114,18 @@ The module has been developed and used with great success in
 
  Access existing DB in update mode :
 
- >>> import lzshelve as DBASE
+ >>> import zstshelve as DBASE
  >>> db = DBASE.open ('a_db' )    ## access existing dbase in update mode
  ...
  >>> for key in db : print(key)
  ...
  >>> abcd = db['some_key']
  
- In case DB-name has extension ``.lz'', ``.xz'', the whole data base will be ``LZMA''-ed
+ In case DB-name has extension `.zst' the whole data base will be `ZST'-ed
 
  Attention: When one tries to read the database with pickled ROOT object using newer
  version of ROOT, one could get a ROOT read error,
- in case of evoltuion in ROOT streamers for some  classes, e.g. ROOT.TH1D
+ in case of evolution in ROOT streamers for some  classes, e.g. ROOT.TH1D
  > Error in <TBufferFile::ReadClassBuffer>: Could not find the StreamerInfo for version 2 of the class TH1D, object skipped at offset 19
  > Error in <TBufferFile::CheckByteCount>: object of class TH1D read too few bytes: 2 instead of 878
  The solution is simple and described in  file ostap.io.dump_root
@@ -134,35 +134,36 @@ The module has been developed and used with great success in
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
-__date__    = "2010-04-30"
+__date__    = "2023-02-17"
 __version__ = "$Revision:$" 
 # =============================================================================
-__all__     = ()
+__all__ = ()
 # =============================================================================
 from sys import version_info as python_version 
 # =============================================================================
-import os, sys, shelve, shutil 
 from   ostap.io.compress_shelve import CompressShelf, ENCODING, PROTOCOL, HIGHEST_PROTOCOL
 from   ostap.io.dbase           import TmpDB 
+import os, sys, shelve, shutil
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.lzshelve' )
+if '__main__' == __name__ : logger = getLogger ( 'ostap.io.zstshelve' )
 else                      : logger = getLogger ( __name__             )
 # =============================================================================
-logger.debug ( "Simple generic (c)Pickle-based ``LZMA''-database"    )
+logger.debug ( "Simple generic (c)Pickle-based `ZST'-database"    )
 # =============================================================================
-if ( 3 , 3 ) <= python_version :
+if ( 3 , 6 )<= python_version :
     try :
-        import lzma
+        import zstandard as zst
     except ImportError :
-        lzma = None
+        zst = None
 else :
-    lzma = None
+    zst = None
+
 # =============================================================================
-if lzma :
+if zst : 
     # =============================================================================
-    ## @class LzShelf
-    #  ``LZMA''-version of ``shelve''-database
+    ## @class ZstShelf
+    #  `ZST'-version of `shelve'-database
     #    Modes: 
     #    - 'r' Open existing database for reading only
     #    - 'w' Open existing database for reading and writing
@@ -170,8 +171,8 @@ if lzma :
     #    - 'n' Always create a new, empty database, open for reading and writing
     #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
     #  @date   2010-04-30
-    class LzShelf(CompressShelf):
-        """LZMA-version of ``shelve''-database
+    class ZstShelf(CompressShelf):
+        """ZST-version of `shelve'-database
         Modes: 
         - 'r'  Open existing database for reading only
         - 'w'  Open existing database for reading and writing
@@ -179,16 +180,17 @@ if lzma :
         - 'n'  Always create a new, empty database, open for reading and writing
         """ 
         ## the known "standard" extensions: 
-        extensions =  '.txz', '.tlz' , '.xz' , '.lz' , '.lzma'  
+        extensions =  '.zst', '.zstd' 
         ## 
         def __init__( self                                   ,
                       filename                               ,
                       mode        = 'c'                      , 
                       protocol    = PROTOCOL                 , 
-                      compress    = lzma.PRESET_DEFAULT      ,
+                      compress    = 3                        , ## level in Zstandard 
                       writeback   = False                    ,
                       silent      = False                    ,
-                      keyencoding = 'utf-8'                  ) :
+                      keyencoding = 'utf-8'                  ,
+                      threads     = -1                       ) :
             
             ## save arguments for pickling....
             self.__init_args = ( filename  ,
@@ -196,7 +198,16 @@ if lzma :
                                  protocol  ,
                                  compress  ,
                                  writeback ,
-                                 silent    )
+                                 silent    ,
+                                 threads   )
+            
+            self.__threads      = threads 
+            self.__compressor   = zst.ZstdCompressor   ( level              = compress ,
+                                                         threads            = threads  ,
+                                                         write_checksum     = True     ,
+                                                         write_content_size = True     ) 
+            self.__decompressor = zst.ZstdDecompressor ( )
+            
             
             ## initialize the base class 
             CompressShelf.__init__ ( self        ,
@@ -208,6 +219,20 @@ if lzma :
                                      silent      ,
                                      keyencoding ) 
             
+            
+        @property
+        def threads ( self ) :
+            """'threads' : now many (C)-thread can be used for compression/decompression?"""
+            return self.__threads
+        @property
+        def compressor ( self ) :
+            """'compressor' : get the actual compressor object"""
+            return self.__compressor
+        @property
+        def decompressor ( self ) :
+            """'decompressor' : get the actual decompressor object"""
+            return self.__decompressor
+        
         ## needed for proper (un)pickling 
         def __getinitargs__ ( self ) :
             """for proper (un_pickling"""
@@ -225,23 +250,22 @@ if lzma :
             pass
         
         # =========================================================================
-        ## compress (LZMA) the file into temporary location, keep original
+        ## compress (zstandard) the file into temporary location, keep original
         def compress_files ( self , files ) :
-            """Compress (LZMA) the file into temporary location, keep original
+            """Compress (zstandard) the file into temporary location, keep original
             """
             output = self.tempfile()
-            
             import tarfile
-            with tarfile.open ( output , 'x:xz' ) as tfile :
+            with tarfile.open ( output , 'x:gz' ) as tfile :
                 for file in files  :
                     _ , name = os.path.split ( file )
                     tfile.add ( file , name  )
-                return output 
+                return output
             
         # =========================================================================
-        ## uncompress (LZMA) the file into temporary location, keep original
+        ## uncompress (zstandard) the file into temporary location, keep original
         def uncompress_file ( self , filein ) :
-            """Uncompress (LZMA) the file into temporary location, keep original
+            """Uncompress (zstandard) the file into temporary location, keep original
             """
             
             items  = []
@@ -254,33 +278,32 @@ if lzma :
                     for item in tfile  :
                         tfile.extract ( item , path = tmpdir )
                         items.append  ( os.path.join ( tmpdir , item.name ) )
-                    items.sort() 
+                        items.sort() 
                     return tuple ( items )
                 
-            ## 2) try compressed file
+            ## 2) single zst-file 
             import tempfile , io   
-            fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-lzdb' )
-            with lzma.open ( filein  , 'rb' ) as fin : 
-                with io.open ( fileout , 'wb' ) as fout : 
-                    shutil.copyfileobj ( fin , fout )                
-                    return fileout , 
-                
+            fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-zstdb' )
+            
+            with io.open ( filein , 'rb' ) as fin :
+                with io.open ( fileout , 'wb' ) as fout :
+                    self.decompressor.copy_stream ( fin , fout )
+                    return fileout ,
+            
         # ==========================================================================
-        ## compress (LZMA)  the item  using <code>lzma.compress</code>
+        ## compress (ZST)  the item  using compressor 
         def compress_item ( self , value ) :
-            """Compress (LZMA) the item using ``bz2.compress''
-            - see lzma.compress
+            """Compress (ZST) the item using compressor 
             """
-            return lzma.compress (  self.pickle ( value ) , preset = self.compresslevel )
+            return self.compressor.compress (  self.pickle ( value ) )
     
         # =========================================================================
-        ## uncompres (LZMA) the item using <code>lzma.decompress</code>
+        ## uncompres (ZST) the item using decompressor 
         def uncompress_item ( self , value ) :
-            """Uncompress (LZMA) the item using ``lzma.decompress''
-            -  see lzma.decompress
+            """Uncompress (ZST) the item using decompressor 
             """        
-            return self.unpickle ( lzma.decompress ( value ) ) 
-
+            return self.unpickle ( self.decompressor.decompress ( value ) ) 
+        
         # =========================================================================
         ## clone the database into new one
         #  @code
@@ -292,31 +315,33 @@ if lzma :
             >>> old_db = ...
             >>> new_db = new_db.clone ( 'new_file.db' )
             """
-            new_db = LzShelf ( new_name                         ,
-                               mode        =  'c'               ,
-                               protocol    = self.protocol      ,
-                               compress    = self.compresslevel , 
-                               writeback   = self.writeback     ,
-                               silent      = self.silent        ,
-                               keyencoding = self.keyencoding   )
-
+            new_db = ZstShelf ( new_name                         ,
+                                mode        =  'c'               ,
+                                protocol    = self.protocol      ,
+                                compress    = self.compresslevel , 
+                                writeback   = self.writeback     ,
+                                silent      = self.silent        ,
+                                keyencoding = self.keyencoding   ,
+                                threads     = self.threads       )
+            
             ## copy the content
             copy = keys if keys else self.keys()
-            for key in copy : new_db [ key ] = self [ key ]
+            for key in copy : new_db [ key ] = self [ key ]            
             new_db.sync ()  
             return new_db 
         
     # =============================================================================
-    ## helper function to access LzShelve data base
+    ## helper function to access ZstShelve data base
     #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    #  @date   2010-04-30
+    #  @date   2023-02-17
     def open ( filename                            ,
                mode          = 'c'                 ,
                protocol      = PROTOCOL            ,
-               compresslevel = lzma.PRESET_DEFAULT , 
+               compresslevel = 3                   , 
                writeback     = False               ,
                silent        = True                ,
-               keyencoding   = ENCODING            ) :
+               keyencoding   = ENCODING            ,
+               threads       = -1                  ) :
         
         """Open a persistent dictionary for reading and writing.
         
@@ -330,61 +355,65 @@ if lzma :
         See the module's __doc__ string for an overview of the interface.
         """
         
-        return LzShelf ( filename      ,
-                         mode          ,
-                         protocol      ,
-                         compresslevel ,
-                         writeback     ,
-                         silent        ,
-                         keyencoding   )
+        return ZstShelf ( filename      ,
+                          mode          ,
+                          protocol      ,
+                          compresslevel ,
+                          writeback     ,
+                          silent        ,
+                          keyencoding   ,
+                          threads       )
     
     # =============================================================================
-    ## @class TmpLzShelf
-    #  TEMPORARY lzma-version of ``shelve''-database
+    ## @class TmpZstShelf
+    #  TEMPORARY zst-version of `shelve'-database
     #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    #  @date   2015-10-31
-    class TmpLzShelf(LzShelf,TmpDB):
+    #  @date   2023-02-17
+    class TmpZstShelf(ZstShelf,TmpDB):
         """
-        TEMPORARY ``LZMA''-version of ``shelve''-database     
+        TEMPORARY `ZST'-version of `shelve'-database     
         """    
         def __init__( self                              ,
                       protocol    = HIGHEST_PROTOCOL    , 
-                      compress    = lzma.PRESET_DEFAULT ,
+                      compress    = 3                   ,
                       silent      = False               ,
                       keyencoding = ENCODING            , 
                       remove      = True                ,
-                      keep        = False               ) :
+                      keep        = False               ,
+                      threads     = -1                  ) :
             
             ## initialize the base: generate the name 
-            TmpDB.__init__ ( self , suffix = '.lzdb' , remove = remove , keep = keep ) 
+            TmpDB.__init__ ( self , suffix = '.zstdb' , remove = remove , keep = keep ) 
             
             ## open DB 
-            LzShelf.__init__ ( self          ,  
-                               self.tmp_name ,
-                               'c'           ,
-                               protocol      ,
-                               compress      , 
-                               False         , ## writeback 
-                               silent        ,
-                               keyencoding   ) 
+            ZstShelf.__init__ ( self          ,  
+                                self.tmp_name ,
+                                'c'           ,
+                                protocol      ,
+                                compress      , 
+                                False         , ## writeback 
+                                silent        ,
+                                keyencoding   ,
+                                threads       ) 
             
         ## close and delete the file 
         def close ( self )  :
             ## close the shelve file
-            LzShelf.close ( self )
+            ZstShelf.close ( self )
             ## delete the file
-            TmpDB  .clean ( self ) 
+            TmpDB  .clean  ( self ) 
             
     # =============================================================================
-    ## helper function to open TEMPORARY ZipShelve data base#
+    ## helper function to open TEMPORARY ZstShelve data base#
     #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    #  @date   2010-04-30
+    #  @date   2023-02-17
     def tmpdb ( protocol      = HIGHEST_PROTOCOL    ,
-                compresslevel = lzma.PRESET_DEFAULT , 
+                compresslevel = 3                   , 
                 silent        = True                ,
                 keyencoding   = ENCODING            ,
-                remove        = True                ,   ## immediate remove 
-                keep          = False               ) : ## keep it 
+                remove        = True                ,  ## immediate remove 
+                keep          = False               ,  ## keep it
+                threads       = -1                  ) : 
         """Open a TEMPORARY persistent dictionary for reading and writing.
         
         The optional protocol parameter specifies the
@@ -392,23 +421,24 @@ if lzma :
         
         See the module's __doc__ string for an overview of the interface.
         """
-        return TmpLzShelf ( protocol      ,
-                            compresslevel ,
-                            silent        ,
-                            keyencoding   ,
-                            remove        ,
-                            keep          ) 
+        return TmpZstShelf ( protocol      ,
+                             compresslevel ,
+                             silent        ,
+                             keyencoding   ,
+                             remove        ,
+                             keep          ,
+                             threads       ) 
 
     # ==========================================================================
     __all__ = (
-        'LzShelf'     , ## database
+        'ZstShelf'    , ## database
         'open'        , ## open the database 
         'tmpdb'       , ## open the temporary database 
         )
 
 # =============================================================================
 if '__main__' == __name__ :
-        
+    
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     

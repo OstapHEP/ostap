@@ -188,13 +188,10 @@ class RootOnlyShelf(shelve.Shelf):
         new_db = RootOnlyShelf ( new_name                         ,
                                  mode        =  'c'               ,
                                  writeback   = self.writeback     )
+
         ## copy the content
-        if keys :
-            for key in self.keys () :
-                if key in keys      : new_db [ key ] = self [ key ]
-        else : 
-            for key in self.keys () : new_db [ key ] = self [ key ]
-         
+        copy = keys if keys else self.keys()
+        for key in copy : new_db [ key ] = self [ key ]
         new_db.sync ()  
         return new_db 
 

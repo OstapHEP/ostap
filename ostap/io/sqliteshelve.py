@@ -461,14 +461,10 @@ class SQLiteShelf(SqliteDict):
                                protocol       = self.protocol     ,
                                compress_level = self.compression  , 
                                journal_mode   = self.journal_mode )
-        
+         
         ## copy the content
-        if keys :
-            for key in self.keys() :
-                if key in keys     : new_db [ key ] = self [ key ]
-        else : 
-            for key in self.keys() : new_db [ key ] = self [ key ]
-        
+        copy = keys if keys else self.keys()
+        for key in copy : new_db [ key ] = self [ key ]
         new_db.sync ()  
         return new_db 
 
@@ -583,7 +579,7 @@ class TmpSQLiteShelf(SQLiteShelf,TmpDB):
                    keep           = False                   ) :
         
         ## initialize the base: generate the name 
-        TmpDB.__init__ ( self , suffix = '.lzdb' , remove = remove , keep = keep ) 
+        TmpDB.__init__ ( self , suffix = '.sqldb' , remove = remove , keep = keep ) 
         
         ## open DB  
         SQLiteShelf.__init__ ( self            ,

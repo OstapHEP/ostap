@@ -69,6 +69,8 @@ message ( "----> (warning) (optional) ipyparallel is NOT found!" )
 endif()
 endif() 
 
+find_python_module ( zstandard QUIET )
+
 ##if  ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
 ## Check for PATHOS & friends
 
@@ -250,6 +252,16 @@ list(FILTER             allfiles EXCLUDE REGEX ".*\\/.*#.*\\.py$")
 if (Python_VERSION VERSION_LESS "3.3")
   list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
 endif() 
+
+if (Python_VERSION VERSION_LESS "3.6")
+  list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
+endif() 
+
+if ( NOT ${PY_zstandard_FOUND} )
+  list(FILTER             allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
+endif()
+
+
 
 set (PREFIX ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ )
 
