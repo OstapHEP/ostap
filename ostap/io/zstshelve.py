@@ -155,8 +155,10 @@ if ( 3 , 6 )<= python_version :
     try :
         import zstandard as zst
     except ImportError :
+        logger.error ( "Cannot import 'zstandard', zstshelve is disabled" )
         zst = None
 else :
+    logger.error ( 'zstshelve is disabled for python %s' % str ( python_version ) )
     zst = None
 
 # =============================================================================

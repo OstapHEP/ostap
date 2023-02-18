@@ -155,8 +155,10 @@ if ( 3 , 3 ) <= python_version :
     try :
         import lzma
     except ImportError :
+        logger.error ( "Cannot import 'lzma', lzshelve is disabled" )
         lzma = None
 else :
+    logger.error ( 'lzshelve is disabled for python %s' % str ( python_version ) )
     lzma = None
 # =============================================================================
 if lzma :
