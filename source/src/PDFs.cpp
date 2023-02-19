@@ -9647,6 +9647,178 @@ Double_t Ostap::Models::KarlinStudden::analyticalIntegral
 // ============================================================================
 
 
+
+// ============================================================================
+// generalised Pareto Distorbution
+// ============================================================================
+Ostap::Models::GenPareto::GenPareto
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          mu        ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shape     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_mu      ( "!mu"    , "mu-parameters"    , this , mu    ) 
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale ) 
+  , m_shape   ( "!shape" , "shape-parameter"  , this , shape ) 
+    //
+  , m_gpd     () 
+{
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::GenPareto::GenPareto
+( const Ostap::Models::GenPareto&  right ,      
+  const char*                      name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_mu     ( "!mu"     , this , right.m_mu    ) 
+  , m_scale  ( "!scale"  , this , right.m_scale ) 
+  , m_shape  ( "!shape"  , this , right.m_shape ) 
+    //
+  , m_gpd ( right.m_gpd) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::GenPareto::~GenPareto (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::GenPareto*
+Ostap::Models::GenPareto::clone( const char* name ) const 
+{ return new Ostap::Models::GenPareto(*this,name) ; }
+// ============================================================================
+void Ostap::Models::GenPareto::setPars () const 
+{
+  m_gpd.setMu    ( m_mu    ) ;
+  m_gpd.setScale ( m_scale ) ;
+  m_gpd.setShape ( m_shape ) ;
+}
+//
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::GenPareto::evaluate() const 
+{
+  setPars () ;
+  return m_gpd ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::GenPareto::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::GenPareto::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_gpd.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+// exponentiated generalised Pareto Distorbution
+// ============================================================================
+Ostap::Models::ExGenPareto::ExGenPareto
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          mu        ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shape     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_mu      ( "!mu"    , "mu-parameters"    , this , mu    ) 
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale ) 
+  , m_shape   ( "!shape" , "shape-parameter"  , this , shape ) 
+    //
+  , m_egpd     () 
+{
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::ExGenPareto::ExGenPareto
+( const Ostap::Models::ExGenPareto&  right ,      
+  const char*                      name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_mu     ( "!mu"     , this , right.m_mu    ) 
+  , m_scale  ( "!scale"  , this , right.m_scale ) 
+  , m_shape  ( "!shape"  , this , right.m_shape ) 
+    //
+  , m_egpd ( right.m_egpd) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::ExGenPareto::~ExGenPareto (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::ExGenPareto*
+Ostap::Models::ExGenPareto::clone( const char* name ) const 
+{ return new Ostap::Models::ExGenPareto(*this,name) ; }
+// ============================================================================
+void Ostap::Models::ExGenPareto::setPars () const 
+{
+  m_egpd.setMu    ( m_mu    ) ;
+  m_egpd.setScale ( m_scale ) ;
+  m_egpd.setShape ( m_shape ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::ExGenPareto::evaluate() const 
+{
+  setPars () ;
+  return m_egpd ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::ExGenPareto::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::ExGenPareto::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_egpd.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
 // ============================================================================
 ClassImp(Ostap::Models::Shape1D            ) 
 ClassImp(Ostap::Models::Shape2D            ) 
@@ -9748,6 +9920,8 @@ ClassImp(Ostap::Models::HORNSdini          )
 ClassImp(Ostap::Models::HILLdini           )
 ClassImp(Ostap::Models::KarlinShapley      )
 ClassImp(Ostap::Models::KarlinStudden      )
+ClassImp(Ostap::Models::GenPareto          )
+ClassImp(Ostap::Models::ExGenPareto        )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

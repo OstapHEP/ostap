@@ -8599,6 +8599,170 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class GenPareto
+     *  Generalized Pareto Distribution
+     *  @see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
+     *  @see Ostap::Math::GenPareto
+     */
+    class GenPareto : public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::GenPareto, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general
+      GenPareto
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          scale     ,
+        RooAbsReal&          shape     ) ;
+      /// copy
+      GenPareto
+      ( const GenPareto&     right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~GenPareto () ;
+      /// clone
+      GenPareto* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      GenPareto  () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::GenPareto& function () const { return m_gpd ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x     .arg () ; }
+      const RooAbsReal& mu     () const { return m_mu    .arg () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg () ; }
+      const RooAbsReal& shape  () const { return m_shape .arg () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_mu    {} ;
+      RooRealProxy m_scale {} ;
+      RooRealProxy m_shape {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::GenPareto  m_gpd {} ;  // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class ExGenPareto
+     *  Reparameterised Exponentiated Generalized Pareto Distribution
+     *  @see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
+     *  @see Ostap::Math::ExGenPareto
+     */
+    class ExGenPareto : public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::ExGenPareto, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general
+      ExGenPareto
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          scale     ,
+        RooAbsReal&          shape     ) ;
+      /// copy
+      ExGenPareto
+      ( const ExGenPareto&   right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~ExGenPareto () ;
+      /// clone
+      ExGenPareto* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      ExGenPareto  () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::ExGenPareto& function () const { return m_egpd ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x     .arg () ; }
+      const RooAbsReal& mu     () const { return m_mu    .arg () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg () ; }
+      const RooAbsReal& shape  () const { return m_shape .arg () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_mu    {} ;
+      RooRealProxy m_scale {} ;
+      RooRealProxy m_shape {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::ExGenPareto  m_egpd {} ;  // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Shape1D
      *  simple generic PDF
      */

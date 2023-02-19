@@ -1108,6 +1108,8 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.IrwinHall              ,
                Ostap.Math.Bates                  ,
                Ostap.Math.BatesShape             ,
+               Ostap.Math.GenPareto              , 
+               Ostap.Math.ExGenPareto            , 
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,

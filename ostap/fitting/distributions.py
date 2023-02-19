@@ -27,7 +27,8 @@
 - QGSM_pdf           : QGSM PDF 
 - Tsallis2_pdf       : 2D Tsallis PDF 
 - Hagedorn_pdf       : Hagedorn PDF 
-
+- GenPareto_pdf      : Generalised Pareto distribution
+- ExGenPareto_pdf    : Exponentiated Generalised Pareto distribution
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -53,6 +54,8 @@ __all__     = (
     'QGSM_pdf'           , ## QGSM PDF 
     'Hagedorn_pdf'       , ## Hagedorn PDF 
     'Tsallis2_pdf'       , ## 2D Tsallis PDF 
+    'GenPareto_pdf'      , ## Generalised Pareto distribution
+    'ExGenPareto_pdf'    , ## Exponentiatd Generalised Pareto distribution
     )
 # =============================================================================
 from   ostap.core.core        import Ostap, VE 
@@ -1720,6 +1723,139 @@ class Hagedorn_pdf(PDF1) :
        
 
 models.append ( Hagedorn_pdf )
+
+
+# =============================================================================
+## @class GenPareto_pdf
+#  Generalized Pareto distribution
+#  @see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
+#  @see Ostap::Models::GenPareto
+#  @see Ostap::Math::GenPareto
+class GenPareto_pdf(PDF1) :
+    """Generalized Parreto Distirbutution
+    - see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
+    - see `Ostap.Models.GenPareto`
+    - see `Ostap.Math.GenPareto`
+    """
+    ## constructor
+    def __init__ ( self         ,
+                   name         ,   ## the name 
+                   xvar         ,   ## the variable
+                   mu           ,   ## location parameter
+                   scale        ,   ## scale parameter
+                   shape        ) : ## shape parameter
+        #
+        PDF1.__init__ ( self , name , xvar )
+        #
+        ##
+        xmnmn = self.xminmax()
+
+        if xmnmx :
+            xmin , xmax = xmnmx 
+            xmid = 0.5 * ( xmin + xmax )
+            limits = xmid , xmin , xmax
+        else :
+            limits = ()
+            
+        self.__mu  = self.make_var ( mu       ,
+                                     'mu_%s'        % name ,
+                                     '#mu(%s)'      % name ,
+                                     None , *limits )
+        
+        self.__scale = self.make_var ( scale ,
+                                       'scale_%s'    % name ,
+                                       'scale(%s)'   % name ,
+                                       None )
+        
+        self.__shape = self.make_var ( shape ,
+                                       'shape_%s'    % name ,
+                                       'shape(%s)'   % name ,
+                                       None , -1+1.e+6 , 100 )
+        
+        self.pdf  = Ostap.Models.GenPareto (
+            self.roo_name ( 'gpd_' ) ,
+            'GenPareto %s' % self.name , 
+            self.x     ,
+            self.mu    ,
+            self.scale ,
+            self.shape )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'mu'    : self.mu    ,            
+            'scale' : self.scale ,            
+            'shape' : self.shape ,            
+            }
+        
+    @property
+    def mu ( self ) :
+        """'mu'- location parameter (xmin)"""
+        return self.__mu
+    @mu.setter 
+    def mu ( self , value ) :
+        self.set_value ( self.__mu , value )
+        
+    @property
+    def scale ( self ) :
+        """'scale'- scale parameter"""
+        return self.__scale
+    @scale.setter 
+    def scale ( self , value ) :
+        self.set_value ( self.__scale , value )
+
+    @property
+    def shape ( self ) :
+        """'shape'- shape parameter"""
+        return self.__shape 
+    @shape.setter 
+    def shape ( self , value ) :
+        self.set_value ( self.__shape , value )
+
+        
+models.append ( GenPareto_pdf ) 
+
+# =============================================================================
+## @class ExGenPareto_pdf
+#  Exponentiated Generalized Pareto distribution
+#  @see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
+#  @see Ostap::Models::ExGenPareto
+#  @see Ostap::Math::ExGenPareto
+class ExGenPareto_pdf(GenPareto_pdf) :
+    """Exponetiated Generalized Parreto Distirbutution
+    - see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
+    - see `Ostap.Models.ExGenPareto`
+    - see `Ostap.Math.ExGenPareto`
+    """
+    ## constructor
+    def __init__ ( self         ,
+                   name         ,   ## the name 
+                   xvar         ,   ## the variable
+                   mu           ,   ## location parameter
+                   scale        ,   ## scale parameter
+                   shape        ) : ## shape parameter
+        #
+        GenPareto_pdf.__init__ ( self , name , xvar )
+        
+        self.pdf  = Ostap.Models.ExGenPareto (
+            self.roo_name ( 'egpd_' ) ,
+            'ExGenPareto %s' % self.name , 
+            self.x     ,
+            self.mu    ,
+            self.scale ,
+            self.shape )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'mu'    : self.mu    ,            
+            'scale' : self.scale ,            
+            'shape' : self.shape ,            
+            }
+        
+models.append ( ExGenPareto_pdf ) 
 
 # =============================================================================
 ## @class Tsallis2_pdf

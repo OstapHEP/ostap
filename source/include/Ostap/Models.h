@@ -2746,6 +2746,178 @@ namespace Ostap
       // ======================================================================      
     } ;
     // ========================================================================
+    /** @class GenPareto
+     *  Generalized Pareto Distribution
+     *  @see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
+     */
+    class GenPareto
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      GenPareto
+      ( const double mu    = 0 , 
+        const double scale = 1 ,
+        const double shape = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // evaluate function 
+      double evaluate   ( const double x ) const ;
+      // evaluate function 
+      double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      // evaluate function 
+      double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public : // getters 
+      // ======================================================================
+      double mu    () const { return m_mu    ; }
+      double scale () const { return m_scale ; }
+      double shape () const { return m_shape ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setMu    ( const double value ) ;
+      bool setScale ( const double value ) ;
+      bool setShape ( const double value ) ;
+      bool setXi    ( const double value ) { return setShape ( value ) ; }
+      // ====================================================================== 
+    public:
+      // ====================================================================== 
+      double xmin  () const { return m_mu    ; }
+      double xi    () const { return m_shape ; }
+      // ======================================================================      
+    public: //properties 
+      // ====================================================================== 
+      /// mean value, defined only for shape<1 
+      double mean       () const ;
+      /// median value,
+      double median     () const ;
+      /// mode  value,
+      double mode       () const { return m_mu         ; }
+      /// variance, defined only for shape<0.5 
+      double variance   () const ;
+      /// dispersion, defined only for shape<0.5 
+      double dispersion () const { return variance ()  ; }
+      /// rms,  defined only for shape<0.5 
+      double rms        () const ;
+      /// skewness  defined only for shape<1/3 
+      double skewness   () const ;
+      /// (ex)skewness  defined only for shape<1/4 
+      double kurtosis   () const ;  
+      // ======================================================================      
+    public:
+      // ====================================================================== 
+      /// get the integral 
+      double integral  () const ;
+      /// get the integral between low and high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      /// get cdf 
+      double cdf ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_mu    { 0 } ;
+      double m_scale { 1 } ;
+      double m_shape { 0 } ;
+      // ======================================================================      
+    } ;  
+    // ========================================================================
+    /** @class ExGenPareto
+     *  reparameterized Expontiated Generalized Pareto Distribution
+     *  @see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
+     *  \f[ f(x;\mu,\sigma,\x0 = 
+     *  \left\{ \begin{array}{ll}
+     *   e^z\left( 1+ \xi e^z)^{-frac{1}{\xi}-1} & \text{for}~\xi\ne0 \ \
+     *   e^{z-e^z} & \text{for}~\xi=0 \                                 \
+     *  \end{array}\right. \f]
+     *  - where \f$ z = \frac{x-mu}{\sigma}\f$ 
+     */
+    class ExGenPareto
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      ExGenPareto
+      ( const double mu    = 0 , 
+        const double scale = 1 ,
+        const double shape = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // evaluate function 
+      double evaluate   ( const double x ) const ;
+      // evaluate function 
+      double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      // evaluate function 
+      double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public : // getters 
+      // ======================================================================
+      double mu    () const { return m_mu    ; }
+      double scale () const { return m_scale ; }
+      double shape () const { return m_shape ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setMu    ( const double value ) ;
+      bool setScale ( const double value ) ;
+      bool setShape ( const double value ) ;
+      bool setXi    ( const double value ) { return setShape ( value ) ; }
+      // ====================================================================== 
+    public:
+      // ====================================================================== 
+      double xi    () const { return m_shape ; }
+      /// mean value
+      double mean       () const ;
+      /// variance 
+      double variance   () const ;
+      /// dispersion
+      double dispersion () const { return variance () ; }
+      /// rms 
+      double rms        () const ;
+      // ======================================================================      
+    public:
+      // ====================================================================== 
+      /// get the integral 
+      double integral  () const ;
+      /// get the integral between low and high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_mu         { 0 } ;
+      double m_scale      { 1 } ;
+      double m_shape      { 0 } ;
+      // ======================================================================
+      /// value of log ( abs ( xi )  ) for xi!=0 
+      double m_alog_xi    { 0 } ; // value of log(abs(xi)) for xi!=0
+      /// bias for mean 
+      double m_bias_mean  { 0 } ; // bias for for mean 
+      /// bias for variance 
+      double m_bias_var   { 0 } ; // bias for for variance
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// workspace
+      Ostap::Math::WorkSpace m_workspace ; // workspace
+      // ======================================================================
+    } ;  
+    // ========================================================================
     /** @class CutOffGauss 
      *  Useful function for smooth Gaussian cut-off:
      *  \f[ f(x;x_0;\sigma) = \left\{ 

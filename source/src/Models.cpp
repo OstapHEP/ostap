@@ -3833,6 +3833,339 @@ std::size_t Ostap::Math::HILLdini::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_a , m_delta , m_phi ) ;
 }
 
+
+// ============================================================================
+// Generalized Pareto Distribution
+// ============================================================================
+Ostap::Math::GenPareto::GenPareto
+( const double mu    , 
+  const double scale ,
+  const double shape ) 
+  : m_mu    ( mu ) 
+  , m_scale ( std::abs ( scale ) ) 
+  , m_shape ( shape  )
+{}
+// ============================================================================
+// evaluate function 
+// ============================================================================
+double Ostap::Math::GenPareto::evaluate 
+( const double x ) const 
+{
+  if ( x < m_mu ) { return 0 ; }
+  //
+  const double z =  ( x - m_mu ) / m_scale ;
+  if ( s_zero ( m_shape ) ) { return std::exp ( -z ) / m_scale ; }
+  //
+  if ( m_shape < 0 && x >= m_mu - m_scale / m_shape ) { return 0 ; }
+  //
+  return std::pow ( 1 + m_shape * z , -1 -1 / m_shape ) / m_scale ;
+}
+// =============================================================================
+// set mu 
+// =============================================================================
+bool Ostap::Math::GenPareto::setMu ( const double value ) 
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu = value ;
+  return true ;    
+}
+// =============================================================================
+// set scale parameter
+// =============================================================================
+bool Ostap::Math::GenPareto::setScale ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_scale , avalue ) ) { return false ; }
+  m_scale = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set shape parameter
+// =============================================================================
+bool Ostap::Math::GenPareto::setShape ( const double value ) 
+{
+  if ( s_equal ( m_shape , value ) ) { return false ; }
+  m_shape = value ;
+  return true ;    
+}
+// =============================================================================
+// get the integral 
+// =============================================================================
+double Ostap::Math::GenPareto::integral  () const { return 1 ; }
+// =============================================================================
+// get cdf 
+// =============================================================================
+double Ostap::Math::GenPareto::cdf ( const double x ) const
+{
+  if ( x <= m_mu ) { return 0 ; }
+  //
+  const double z =  ( x - m_mu ) / m_scale ;
+  if ( s_zero ( m_shape ) ) { return 1.0 - std::exp ( z ) ; }
+  //
+  const double ishape = -1/m_shape ;
+  if ( m_shape < 0 && z >= ishape  ) { return 1 ; }
+  //
+  return 1 - std::pow ( 1 + m_shape * z , ishape ) ;
+}
+// =============================================================================
+// get the integral between low and high
+// =============================================================================
+double Ostap::Math::GenPareto::integral 
+( const double low  ,
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low ,high ) ) { return 0                          ; }
+  else if ( high <  low           ) { return - integral ( high , low  ) ; }
+  else if ( high <= m_mu          ) { return 0 ; }
+  else if ( low  <  m_mu          ) { return   integral ( m_mu , high ) ; }
+  //
+  const double zl = ( low  - m_mu ) / m_scale ;
+  double       zh = ( high - m_mu ) / m_scale ;
+  //
+  if ( s_zero ( m_shape ) ) 
+  { return std::exp ( -zl ) - std::exp ( -zh ) ; }
+  //
+  const double ishape = -1/m_shape ;
+  if ( m_shape < 0 ) 
+  {
+    if ( zl >= ishape ) { return 0 ; }
+    zh = std::min ( zh , ishape ) ;
+  }
+  //
+  return 
+    std::pow ( 1 + m_shape * zl , ishape ) - 
+    std::pow ( 1 + m_shape * zh , ishape ) ;
+}
+// ============================================================================
+// mean value, defined only for shape<1 
+// ============================================================================
+double Ostap::Math::GenPareto::mean       () const 
+{
+  return 
+    m_shape < 1 ? m_mu + m_scale / ( 1 - m_shape ) : std::numeric_limits<double>::quiet_NaN() ;
+}
+// ============================================================================
+// median value
+// ============================================================================
+double Ostap::Math::GenPareto::median () const 
+{ return m_mu + m_scale * ( std::pow ( 2 , m_shape ) - 1 ) / m_shape ; }
+// ============================================================================
+// variance , defined only for shape<1/2 
+// ============================================================================
+double Ostap::Math::GenPareto::variance () const 
+{
+  if ( 0.5 <= m_shape ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  const double a = m_scale / ( 1 - m_shape ) ;
+  return a * a / ( 1 - 2 * m_shape ) ;
+}
+// ============================================================================
+// rms, defined only for shape<1/2 
+// ============================================================================
+double Ostap::Math::GenPareto::rms () const 
+{
+  if ( 0.5 <= m_shape ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  return std::sqrt ( variance () ) ;
+}
+// ============================================================================
+// skewness, defined only for shape<1/3 
+// ============================================================================
+double Ostap::Math::GenPareto::skewness() const 
+{
+  if ( 1 <= 3 * m_shape ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  return 2 * ( 1 + m_shape ) * std::sqrt ( 1 - 2 * m_shape ) / ( 1 - 2 * m_shape ) ;
+}
+// ============================================================================
+// (ex)kurtosis, defined only for shape<1/4 
+// ============================================================================
+double Ostap::Math::GenPareto::kurtosis() const 
+{
+  if ( 1 <= 4 * m_shape ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  return 
+    3 * ( 1 - 2 * m_shape ) * ( 2 * m_shape * m_shape + m_shape + 3 ) /
+    ( ( 1 - 3 * m_shape ) * ( 1 - 4 * m_shape ) ) ;  
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::GenPareto::tag () const 
+{ 
+  static const std::string s_name = "GenPareto" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_scale , m_shape ) ;
+}
+
+
+
+
+
+// ============================================================================
+// Generalized Pareto Distribution
+// ============================================================================
+Ostap::Math::ExGenPareto::ExGenPareto
+( const double mu    , 
+  const double scale ,
+  const double shape ) 
+  : m_mu        ( mu ) 
+  , m_scale     ( std::abs ( scale ) ) 
+  , m_shape     ( shape * 1000 + 1.e+5 ) // gargabe  
+  , m_alog_xi   ( 0 ) 
+  , m_bias_mean ( 0 ) 
+  , m_bias_var  ( 0 ) 
+{
+  setShape ( shape ) ;  
+}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::ExGenPareto::evaluate 
+( const double x ) const 
+{
+  //
+  const double z = ( x - m_mu ) / m_scale ;
+  //
+  if ( s_zero ( m_shape ) ) 
+  { return GSL_LOG_DBL_MAX < z ? 0.0 : std::exp ( z - std::exp ( z ) ) ; }
+  //
+  if ( m_shape < 0 && z >= - m_alog_xi ) { return 0 ; }
+  //
+  return 
+    GSL_LOG_DBL_MAX <= z ? 0.0 : 
+    std::exp ( z - ( 1 / m_shape + 1 ) * std::log ( 1 + m_shape * std::exp ( z ) ) ) ;  
+}
+// =============================================================================
+// set mu 
+// =============================================================================
+bool Ostap::Math::ExGenPareto::setMu ( const double value ) 
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu = value ;
+  return true ;    
+}
+// =============================================================================
+// set scale parameter
+// =============================================================================
+bool Ostap::Math::ExGenPareto::setScale ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_scale , avalue ) ) { return false ; }
+  m_scale = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set shape parameter
+// =============================================================================
+bool Ostap::Math::ExGenPareto::setShape ( const double value ) 
+{
+  if ( s_equal ( m_shape , value ) ) { return false ; }
+  m_shape     = value ;
+  //
+  static const double s_psi1 = Ostap::Math::digamma  ( 1.0 ) ;
+  static const double s_psi2 = Ostap::Math::trigamma ( 1.0 ) ;
+  //
+  if ( s_zero ( value ) )
+  {
+    m_alog_xi   = 0 ;
+    m_bias_mean = -m_alog_xi + s_psi1 ;  
+    m_bias_var  =              s_psi2 ;  
+  }
+  else if ( value < 0 ) 
+  { 
+    m_alog_xi   = std::log ( std::abs ( value ) ) ;
+    m_bias_mean = -m_alog_xi + s_psi1 - Ostap::Math::digamma  ( 1 - 1/m_shape ) ;  
+    m_bias_var  =              s_psi2 - Ostap::Math::trigamma ( 1 - 1/m_shape ) ;  
+  }
+  else if ( value > 0 ) 
+  {
+    m_alog_xi   = std::log ( value ) ;
+    m_bias_mean = -m_alog_xi + s_psi1 - Ostap::Math::digamma  ( 1/m_shape     ) ;  
+    m_bias_var  =              s_psi2 + Ostap::Math::trigamma ( 1/m_shape     ) ;  
+  }
+  //
+  return true ;    
+}
+// =============================================================================
+// get the integral 
+// =============================================================================
+double Ostap::Math::ExGenPareto::integral  () const { return 1 ; }
+// =============================================================================
+// get the integral between low and high
+// =============================================================================
+double Ostap::Math::ExGenPareto::integral 
+( const double low  ,
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low ,high ) ) { return 0                          ; }
+  else if ( high <  low           ) { return - integral ( high , low  ) ; }
+  //
+  if ( m_shape < 0 && !s_zero ( m_shape ) )
+  {
+    const double zl = ( low  - m_mu ) / m_scale ;
+    if ( zl >= -m_alog_xi ) { return 0 ; }                         // RETURN!!
+    const double xmax = m_mu - m_alog_xi * m_scale ;
+    if ( xmax < high      ) { return integral ( low , xmax ) ; }   // RETURN
+  }
+  //
+  const double m0    = mean () ;
+  const double sigma = rms  () ;
+  //
+  // split points 
+  static const std::array<int,9> s_split = {{ -8 , -5 , -3 , -1 , 0 , 1 , 3 , 5 , 8 }} ; 
+  for( const auto p : s_split )
+  {
+    const double xmid = m0 + p * sigma ;
+    if ( low < xmid && xmid < high ) 
+    { return integral ( low , xmid ) + integral ( xmid , high ) ; }
+  }
+  //
+  // in tail?
+  const bool in_tail = high <= ( m0 - 7 * sigma ) || low  >= ( m0 + 7 * sigma ) ;
+  //  
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<ExGenPareto> s_integrator {} ;
+  static char s_message[] = "Integral(ExGenPareto)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag  () , 
+      &F      , 
+      low     , high  ,              // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
+      m_workspace.size()              ,            // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// mean value
+// ============================================================================
+double Ostap::Math::ExGenPareto::mean       () const 
+{ return m_mu + m_scale * m_bias_mean ; }
+// ============================================================================
+// variance
+// ============================================================================
+double Ostap::Math::ExGenPareto::variance () const 
+{ return m_scale * m_scale * m_bias_var ; }
+// ============================================================================
+// rms
+// ============================================================================
+double Ostap::Math::ExGenPareto::rms () const 
+{ return m_scale * std::sqrt ( m_bias_var ) ; }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::ExGenPareto::tag () const 
+{ 
+  static const std::string s_name = "ExGenPareto" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_scale , m_shape ) ;
+}
 // ============================================================================
 //                                                                      The END
 // ============================================================================

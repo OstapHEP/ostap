@@ -1,7 +1,8 @@
 ## New features:
 
   1. add new module `ostap.io.zstshelve` with shelve-like databse using `zstandard` compression 
-
+  1. add generalized Pareto distribution and reparameterised version of the exponentiated generalized Pareto distribution: functions and PDFs
+ 
 ## Backward incompatible: 
 
 ## Bug fixes:

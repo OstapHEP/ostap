@@ -3553,7 +3553,7 @@ Ostap::Math::geometric_mean
  *  @see https://www.johndcook.com/blog/2022/07/30/complex-agm/#:~:text=Complex%20AGM,%E2%88%9A(an%20bn)
  *  @param a the first number 
  *  @param b the second number 
- *  @return geomentric mean 
+ *  @return geometric mean 
  */
 // ============================================================================
 std::complex<double>

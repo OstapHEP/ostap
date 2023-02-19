@@ -1893,7 +1893,7 @@ Ostap.Models.Hat      .__reduce__ = _ratlas_reduce_
 Ostap.Models.Up       .__reduce__ = _ratlas_reduce_ 
 
 # =============================================================================
-## reduce BatesShae  
+## reduce BatesShate  
 def _rbats_reduce_ ( pdf ):
     """Reduce BatesShape"""
     return root_store_factory , ( type ( pdf )   ,
@@ -1905,6 +1905,22 @@ def _rbats_reduce_ ( pdf ):
                                   pdf.n       () )
 
 Ostap.Models.BatesShape .__reduce__ = _rbats_reduce_ 
+
+# =============================================================================
+## reduce GenPareto & ExGenPareto
+def _rgpd1_reduce_ ( pdf ):
+    """Reduce GenPareto & ExGenPareto"""
+    return root_store_factory , ( type ( pdf )   ,
+                                  pdf.name       ,
+                                  pdf.title      ,
+                                  pdf.x       () ,                            
+                                  pdf.mu      () ,
+                                  pdf.scale   () ,
+                                  pdf.shape   () )
+
+Ostap.Models.GenPareto   .__reduce__ = _rgpd1_reduce_ 
+Ostap.Models.ExGenPareto .__reduce__ = _rgpd1_reduce_ 
+
 
 # =============================================================================
 ## reduce Slash
