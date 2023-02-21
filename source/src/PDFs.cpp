@@ -9819,6 +9819,90 @@ Double_t Ostap::Models::ExGenPareto::analyticalIntegral
 }
 // ============================================================================
 
+
+
+// ============================================================================
+Ostap::Models::GEV::GEV
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          mu        ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shape     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_mu      ( "!mu"    , "mu-parameters"    , this , mu    ) 
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale ) 
+  , m_shape   ( "!shape" , "shape-parameter"  , this , shape ) 
+    //
+  , m_gev    () 
+{
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::GEV::GEV
+( const Ostap::Models::GEV&  right ,      
+  const char*                name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_mu     ( "!mu"     , this , right.m_mu    ) 
+  , m_scale  ( "!scale"  , this , right.m_scale ) 
+  , m_shape  ( "!shape"  , this , right.m_shape ) 
+    //
+  , m_gev ( right.m_gev ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::GEV::~GEV (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::GEV*
+Ostap::Models::GEV::clone( const char* name ) const 
+{ return new Ostap::Models::GEV(*this,name) ; }
+// ============================================================================
+void Ostap::Models::GEV::setPars () const 
+{
+  m_gev.setMu    ( m_mu    ) ;
+  m_gev.setScale ( m_scale ) ;
+  m_gev.setShape ( m_shape ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::GEV::evaluate() const 
+{
+  setPars () ;
+  return m_gev ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::GEV::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::GEV::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_gev.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
 // ============================================================================
 ClassImp(Ostap::Models::Shape1D            ) 
 ClassImp(Ostap::Models::Shape2D            ) 
@@ -9922,6 +10006,7 @@ ClassImp(Ostap::Models::KarlinShapley      )
 ClassImp(Ostap::Models::KarlinStudden      )
 ClassImp(Ostap::Models::GenPareto          )
 ClassImp(Ostap::Models::ExGenPareto        )
+ClassImp(Ostap::Models::GEV                )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

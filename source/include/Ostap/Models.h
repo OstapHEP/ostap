@@ -2874,7 +2874,10 @@ namespace Ostap
       // ====================================================================== 
     public:
       // ====================================================================== 
-      double xi    () const { return m_shape ; }
+      /// get xi (same as shape) 
+      double xi         () const { return m_shape ; }
+      /// mode of distribution 
+      double mode       () const ;
       /// mean value
       double mean       () const ;
       /// variance 
@@ -2916,7 +2919,76 @@ namespace Ostap
       /// workspace
       Ostap::Math::WorkSpace m_workspace ; // workspace
       // ======================================================================
-    } ;  
+    } ;
+    // ========================================================================
+    /** @class GEV
+     *  Generalized extreme value distribution 
+     *  https://en.wikipedia.org/wiki/Generalized_extreme_value_distribution
+     */
+    class GEV
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      GEV
+      ( const double mu    = 0 , 
+        const double scale = 1 ,
+        const double shape = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // evaluate function 
+      double evaluate   ( const double x ) const ;
+      // evaluate function 
+      double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      // evaluate function 
+      double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public : // getters 
+      // ======================================================================
+      double mu    () const { return m_mu    ; }
+      double scale () const { return m_scale ; }
+      double shape () const { return m_shape ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setMu    ( const double value ) ;
+      bool setScale ( const double value ) ;
+      bool setShape ( const double value ) ;
+      bool setXi    ( const double value ) { return setShape ( value ) ; }
+      // ====================================================================== 
+    public:
+      // ====================================================================== 
+      /// get xi (same as shape) 
+      double xi         () const { return m_shape ; }
+      /// mode of distribution 
+      double mode       () const ;
+      /// median
+      double median     () const ;
+      // ======================================================================      
+    public:
+      // ====================================================================== 
+      /// get the integral 
+      double integral  () const ;
+      /// get the integral between low and high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      /// get the CDF 
+      double cdf ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_mu         { 0 } ;
+      double m_scale      { 1 } ;
+      double m_shape      { 0 } ;
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class CutOffGauss 
      *  Useful function for smooth Gaussian cut-off:

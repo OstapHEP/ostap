@@ -1110,6 +1110,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.BatesShape             ,
                Ostap.Math.GenPareto              , 
                Ostap.Math.ExGenPareto            , 
+               Ostap.Math.GEV                    , 
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,

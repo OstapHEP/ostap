@@ -1907,9 +1907,9 @@ def _rbats_reduce_ ( pdf ):
 Ostap.Models.BatesShape .__reduce__ = _rbats_reduce_ 
 
 # =============================================================================
-## reduce GenPareto & ExGenPareto
+## reduce GenPareto & ExGenPareto & GEV
 def _rgpd1_reduce_ ( pdf ):
-    """Reduce GenPareto & ExGenPareto"""
+    """Reduce GenPareto & ExGenPareto & GEV"""
     return root_store_factory , ( type ( pdf )   ,
                                   pdf.name       ,
                                   pdf.title      ,
@@ -1920,7 +1920,7 @@ def _rgpd1_reduce_ ( pdf ):
 
 Ostap.Models.GenPareto   .__reduce__ = _rgpd1_reduce_ 
 Ostap.Models.ExGenPareto .__reduce__ = _rgpd1_reduce_ 
-
+Ostap.Models.GEV         .__reduce__ = _rgpd1_reduce_ 
 
 # =============================================================================
 ## reduce Slash

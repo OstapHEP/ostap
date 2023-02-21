@@ -8763,6 +8763,88 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class GEV
+     *  Generalized extreme value distribution
+     *  @see https://en.wikipedia.org/wiki/Generalized_extreme_value_distribution
+     *  @see Ostap::Math::GEV
+     */
+    class GEV : public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::GEV, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general
+      GEV
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          scale     ,
+        RooAbsReal&          shape     ) ;
+      /// copy
+      GEV
+      ( const GEV&           right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~GEV () ;
+      /// clone
+      GEV* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      GEV  () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::GEV& function () const { return m_gev ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x     .arg () ; }
+      const RooAbsReal& mu     () const { return m_mu    .arg () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg () ; }
+      const RooAbsReal& shape  () const { return m_shape .arg () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_mu    {} ;
+      RooRealProxy m_scale {} ;
+      RooRealProxy m_shape {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::GEV  m_gev {} ;  // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Shape1D
      *  simple generic PDF
      */

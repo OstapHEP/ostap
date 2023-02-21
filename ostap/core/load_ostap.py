@@ -28,8 +28,9 @@ import ostap.io.shelve_ext
 
 # =============================================================================
 ## import useful context managers
-from ostap.logger.utils import *
-from ostap.utils.utils  import *
+from ostap.logger.utils       import *
+from ostap.utils.utils        import *
+from ostap.utils.progress_bar import progress_bar
 # ============================================================================= 
 ## prepend the path 
 if '.' not in sys.path :

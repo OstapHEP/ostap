@@ -29,6 +29,7 @@
 - Hagedorn_pdf       : Hagedorn PDF 
 - GenPareto_pdf      : Generalised Pareto distribution
 - ExGenPareto_pdf    : Exponentiated Generalised Pareto distribution
+- GEV_pdf            : Generalised Extreme Value distribution
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -56,6 +57,7 @@ __all__     = (
     'Tsallis2_pdf'       , ## 2D Tsallis PDF 
     'GenPareto_pdf'      , ## Generalised Pareto distribution
     'ExGenPareto_pdf'    , ## Exponentiatd Generalised Pareto distribution
+    'GEV_pdf'            , ## Generalised Extreme Value distribution
     )
 # =============================================================================
 from   ostap.core.core        import Ostap, VE 
@@ -1856,6 +1858,47 @@ class ExGenPareto_pdf(GenPareto_pdf) :
             }
         
 models.append ( ExGenPareto_pdf ) 
+
+# =============================================================================
+## @class GEV_pdf
+#  Generalized Extreme Value distribution
+#  @see https://en.wikipedia.org/wiki/Generalized_extreme_value_distribution
+#  @see Ostap::Models::GEV
+#  @see Ostap::Math::GEV
+class GEV_pdf(GenPareto_pdf) :
+    """Generalized Extreme Value distribution
+    - see https://en.wikipedia.org/wiki/Generalized_extreme_value_distribution
+    - see `Ostap.Models.GEV`
+    - see `Ostap.Math.GEV`
+    """
+    ## constructor
+    def __init__ ( self         ,
+                   name         ,   ## the name 
+                   xvar         ,   ## the variable
+                   mu           ,   ## location parameter
+                   scale        ,   ## scale parameter
+                   shape        ) : ## shape parameter
+        #
+        GenPareto_pdf.__init__ ( self , name , xvar )
+        
+        self.pdf  = Ostap.Models.GEV (
+            self.roo_name ( 'gev_' ) ,
+            'GEV %s' % self.name , 
+            self.x     ,
+            self.mu    ,
+            self.scale ,
+            self.shape )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'mu'    : self.mu    ,            
+            'scale' : self.scale ,            
+            'shape' : self.shape ,            
+            }
+        
+models.append ( GEV_pdf ) 
 
 # =============================================================================
 ## @class Tsallis2_pdf

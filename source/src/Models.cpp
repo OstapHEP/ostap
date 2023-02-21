@@ -4144,6 +4144,11 @@ double Ostap::Math::ExGenPareto::integral
   return result ;
 }
 // ============================================================================
+// mode 
+// ============================================================================
+double Ostap::Math::ExGenPareto::mode () const 
+{ return -1.0 < m_shape ? m_mu : m_mu - m_scale * m_alog_xi ; }
+// ============================================================================
 // mean value
 // ============================================================================
 double Ostap::Math::ExGenPareto::mean       () const 
@@ -4164,6 +4169,121 @@ double Ostap::Math::ExGenPareto::rms () const
 std::size_t Ostap::Math::ExGenPareto::tag () const 
 { 
   static const std::string s_name = "ExGenPareto" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_scale , m_shape ) ;
+}
+
+
+// ============================================================================
+// Generalized extreme value distribution 
+// ============================================================================  
+Ostap::Math::GEV::GEV
+( const double mu    , 
+  const double scale ,
+  const double shape ) 
+  : m_mu ( mu ) 
+  , m_scale ( std::abs ( scale ) )
+  , m_shape ( shape ) 
+{}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::GEV::evaluate 
+( const double x ) const 
+{
+  //
+  const double z = ( x - m_mu ) / m_scale ;
+  //
+  if ( s_zero ( m_shape ) ) 
+  {
+    return -z < GSL_LOG_DBL_MAX ? std::exp ( -z - std::exp ( -z ) ) : 0.0 ;  
+  }
+  else if ( 0 < m_shape && z <= -1 / m_shape ) { return 0.0 ; }
+  else if ( 0 > m_shape && z >= -1 / m_shape ) { return 0.0 ; }
+  //
+  const double tx = std::pow ( 1 + m_shape * z , -1/m_shape ) ;
+  //
+  return std::pow ( tx , m_shape + 1 ) * std::exp ( -tx ) / m_scale ;
+}
+// =============================================================================
+// set mu 
+// =============================================================================
+bool Ostap::Math::GEV::setMu ( const double value ) 
+{
+  if ( s_equal ( m_mu , value ) ) { return false ; }
+  m_mu = value ;
+  return true ;    
+}
+// =============================================================================
+// set scale parameter
+// =============================================================================
+bool Ostap::Math::GEV::setScale ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_scale , avalue ) ) { return false ; }
+  m_scale = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set shape parameter
+// =============================================================================
+bool Ostap::Math::GEV::setShape ( const double value ) 
+{
+  if ( s_equal ( m_shape , value ) ) { return false ; }
+  m_shape     = value ;
+  return true ;    
+}
+// ===========================================================================
+// get the CDF 
+// ===========================================================================
+double Ostap::Math::GEV::cdf ( const double x ) const 
+{
+  //
+  const double z = ( x - m_mu ) / m_scale ;
+  //
+  if ( s_zero ( m_shape ) ) 
+  { return -z < GSL_LOG_DBL_MAX ? std::exp ( - std::exp ( -z ) ) : 0.0 ; }
+  else if ( 0 < m_shape && z <= -1 / m_shape ) { return 0.0 ; }
+  else if ( 0 > m_shape && z >= -1 / m_shape ) { return 1.0 ; }
+  //
+  const double tx = std::pow ( 1 + m_shape * z , -1/m_shape ) ;
+  //
+  return std::exp ( -tx ) ;
+}
+// =============================================================================
+// get the integral 
+// =============================================================================
+double Ostap::Math::GEV::integral  () const { return 1 ; }
+// =============================================================================
+// get the integral between low and high
+// =============================================================================
+double Ostap::Math::GEV::integral 
+( const double low  ,
+  const double high ) const 
+{ return s_equal ( low , high ) ? 0.0 : cdf ( high ) - cdf ( low ) ; }
+// ============================================================================
+// mode of distribution 
+// ============================================================================
+double Ostap::Math::GEV::mode       () const 
+{
+  return s_zero ( m_shape ) ? m_mu :
+    m_mu + m_scale * ( std::pow ( 1 + m_shape , - m_shape ) - 1 ) / m_shape ;
+}
+// ============================================================================
+// median of distribution 
+// ============================================================================
+double Ostap::Math::GEV::median   () const 
+{
+  static const double s_ln2   =            std::log ( 2.0 )   ;
+  static const double s_lnln2 = std::log ( std::log ( 2.0 ) ) ;
+  return s_zero ( m_shape ) ? m_mu - m_scale * s_lnln2 :
+    m_mu + m_scale * ( std::pow ( s_ln2 , - m_shape ) - 1 ) / m_shape ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::GEV::tag () const 
+{ 
+  static const std::string s_name = "GEV" ;
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_scale , m_shape ) ;
 }
 // ============================================================================

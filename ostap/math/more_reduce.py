@@ -972,18 +972,21 @@ def _ombs_reduce_ ( s ) :
 Ostap.Math.BatesShape . __reduce__ = _ombs_reduce_
 
 # =============================================================================
-## reduce Ostap::Math::GenPareto and Ostap::Math::ExGenPareto
+## reduce Ostap::Math::GenPareto, Ostap::Math::ExGenPareto and Ostap::Math::GEV
 #  @see Ostap::Math::GenPareto
 #  @see Ostap::Math::ExGenPareto
+#  @see Ostap::Math::GEV
 def _omgpd_reduce_ ( s ) :
-    """Reduce `Ostap.Math.GenPareto` and `Ostap.Math.ExGenPareto` 
+    """Reduce `Ostap.Math.GenPareto`, `Ostap.Math.ExGenPareto` and `Ostap.Math.GeV`
     - see `Ostap.Math.GenPareto` 
     - see `Ostap.Math.ExGenPareto` 
+    - see `Ostap.Math.GEV` 
     """
     return root_factory , ( type ( s ) , s.mu() , s.scale() , s.shape ()  )
 
 Ostap.Math.GenPareto   . __reduce__ = _omgpd_reduce_
 Ostap.Math.ExGenPareto . __reduce__ = _omgpd_reduce_
+Ostap.Math.GEV         . __reduce__ = _omgpd_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::HORNSdini
