@@ -4,7 +4,6 @@
   1. add generalized Pareto distribution and reparameterised version of the exponentiated generalized Pareto distribution: functions and PDFs
   1. add generalized extreme value distribution: function and PDF
  
-
 ## Backward incompatible: 
 
 ## Bug fixes:
