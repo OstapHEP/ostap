@@ -7,6 +7,7 @@
   1. make more accurate "density" method for histograms  
   1. add `table2` fuction for trees and datasets  
 
+
 ## Backward incompatible: 
 
 ## Bug fixes:
