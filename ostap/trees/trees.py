@@ -772,7 +772,7 @@ def _stat_vars_ ( tree , expressions , *cuts ) :
         return _stat_var_ ( tree , expressions , *cuts ) 
     
     if not expressions : return {}
-    
+
     vct = strings ( *expressions )
     res = std.vector(WSE)() 
 
@@ -1383,6 +1383,98 @@ def _rt_table_0_ ( tree ,
     w  = T.table_width ( t )
     return t , w 
     
+# ==============================================================================
+## print tree as table 
+def _rt_table_1_ ( tree , 
+                   variables      ,
+                   cuts    = ''   ,
+                   prefix  = ''   ,
+                   title   = ''   , *args ) :
+    """
+    """
+    if isinstance ( variables , string_types ) :
+        variables = split_string ( variables , strip = True )
+
+    bbs = tuple ( sorted ( variables ) ) 
+
+    if hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
+    else                             : bbstats = tree. statVar ( bbs , cuts , *args )
+
+    from ostap.stats.counters import WSE 
+    if isinstance ( bbstats , WSE )  : bbstats = { bbs[0] : bbstats } 
+
+    _vars = []
+    
+    for v in bbstats :
+
+        rr = [ v ]        
+        stat = bbstats [ v ] 
+        n    = stat.nEntries() 
+        mnmx = stat.minmax ()
+        mean = stat.mean   () 
+        rms  = stat.rms    ()
+        rr += [ ( '%+.5g' % mean.value() ).strip() , ## 1
+                ( '%.5g'  % rms          ).strip() , ## 2 
+                ( '%+.5g' % mnmx[0]      ).strip() , ## 3
+                ( '%+.5g' % mnmx[1]      ).strip() ] ## 4
+            
+        _vars.append ( tuple  ( rr ) )
+        
+    _vars.sort()
+    
+    name_l  = len ( 'Variable' )  
+    mean_l  = len ( 'mean' ) 
+    rms_l   = len ( 'rms'  ) 
+    min_l   = len ( 'min'  )  
+    max_l   = len ( 'max'  )  
+    for v in _vars :
+        name_l = max ( name_l , len ( v [ 0 ] ) )
+        mean_l = max ( mean_l , len ( v [ 1 ] ) )
+        rms_l  = max ( rms_l  , len ( v [ 2 ] ) )
+        min_l  = max ( min_l  , len ( v [ 3 ] ) )
+        max_l  = max ( max_l  , len ( v [ 4 ] ) )
+    
+
+    index_l =   int ( math.ceil ( math.log10( len ( _vars ) + 1 ) ) )
+        
+    fmt_name  = '%%%ds. %%-%ds' % ( index_l , name_l )
+    fmt_mean  = '%%%ds'         % mean_l
+    fmt_rms   = '%%-%ds'        % rms_l
+    fmt_min   = '%%%ds'         % mean_l
+    fmt_max   = '%%-%ds'        % rms_l
+
+    title_l = index_l + 2 + name_l 
+    header = (
+        ( '{:^%d}' % title_l ).format ( 'Variable' ) ,
+        ( '{:^%d}' % mean_l  ).format ( 'mean'     ) ,
+        ( '{:^%d}' % rms_l   ).format ( 'rms'      ) ,
+        ( '{:^%d}' % min_l   ).format ( 'min'      ) ,
+        ( '{:^%d}' % max_l   ).format ( 'max'      ) )
+               
+    table_data = [ header ] 
+    for i , v in enumerate ( _vars ) :
+        table_data.append ( ( fmt_name  % ( i + 1 , v [ 0 ] ) ,
+                              fmt_mean  %           v [ 1 ] ,
+                              fmt_rms   %           v [ 2 ] ,
+                              fmt_min   %           v [ 3 ] ,
+                              fmt_max   %           v [ 4 ] ) )
+
+    if not title :
+        
+        tt = tree.GetTitle()
+        if tt and tt != tree.GetName() : 
+            title  = '%s("%s","%s") %d entries,' % ( tree.__class__.__name__ , tree.path , tt , len ( tree ) )
+        else :
+            title  = '%s("%s") %d entries,'      % ( tree.__class__.__name__ , tree.path ,      len ( tree ) )
+        
+        if isinstance ( tree , ROOT.TChain ) :
+            nfiles = len ( tree.files() )
+            if 1 < nfiles : title += '/%d files ' % nfiles 
+        
+    import ostap.logger.table as T
+    t  = T.table ( table_data , title , prefix = prefix )
+    w  = T.table_width ( t )
+    return t , w 
 
 # ==============================================================================
 ## get a type of TLeaf object
@@ -1463,7 +1555,7 @@ ROOT.TLeaf . get_type_short = _tl_type_short_
 ROOT.TLeaf . get_short_type = _tl_type_short_
 
 # ==============================================================================
-## print rot-tree in a form of the table
+## print root-tree in a form of the table
 #  @code
 #  data = ...
 #  print dat.table() 
@@ -1478,6 +1570,24 @@ def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , title 
                           cuts   = cuts    ,
                           prefix = prefix  ,
                           title  = title   , *args )[0]
+
+# ==============================================================================
+## print root-tree in a form of the table
+#  @code
+#  data = ...
+#  print dat.table2 () 
+#  @endcode
+def _rt_table2_ (  dataset ,  variables ,   cuts = '' , prefix = '' , title = '' , *args ) :
+    """print dataset in a form of the table
+    >>> dataset = ...
+    >>> print dataset.table()
+    """
+    return _rt_table_1_ ( dataset          ,
+                          variables        ,
+                          cuts   = cuts    ,
+                          prefix = prefix  ,
+                          title  = title   , *args )[0]
+
 
 # =============================================================================
 ##  print DataSet
@@ -1500,6 +1610,7 @@ def _rt_print2_ ( data  , prefix = '' ) :
 ROOT.TTree.__repr__ = _rt_print2_
 ROOT.TTree.__str__  = _rt_print2_
 ROOT.TTree.table    = _rt_table_ 
+ROOT.TTree.table2   = _rt_table2_ 
 
 # =============================================================================
 ## get list of files used for the given chain

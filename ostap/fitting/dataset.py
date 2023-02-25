@@ -1675,7 +1675,8 @@ _new_methods_ += [
     ]
 
 
-# ==============================================================================
+# =============================================================================
+## Print data set as table
 def _ds_table_0_ ( dataset           ,
                    variables = []    ,
                    cuts      = ''    ,
@@ -1890,18 +1891,134 @@ def _ds_table_0_ ( dataset           ,
     w  = T.table_width ( t ) 
     return t , w 
 
+
+# =============================================================================
+## Print data set as table
+def _ds_table_1_ ( dataset           ,
+                   variables = []    ,
+                   cuts      = ''    ,
+                   first     = 0     ,
+                   last      = 2**62 ,
+                   prefix    = ''    ,
+                   title     = ''    ) :
+    """Print data set as table
+    """
+
+    if isinstance ( variables ,  str ) :
+        variables = split_string ( variables , var_separators , strip = True ) 
+
+    _vars = []    
+    vvars = tuple ( sorted ( variables ) )
+    stat = dataset.statVars ( vvars  , cuts , first , last ) 
+    for v in  stat :
+        s   = stat [ v ] 
+        mnmx = s.minmax ()
+        mean = s.mean   ()
+        rms  = s.rms    ()
+
+        r    = ( v                                 ,   ## 0 
+                 ('%+.5g' % mean.value() ).strip() ,   ## 1
+                 ('%.5g'  % rms          ).strip() ,   ## 2 
+                 ('%+.5g' % mnmx[0]      ).strip() ,   ## 3
+                 ('%+.5g' % mnmx[1]      ).strip() )   ## 4            
+        _vars.append ( r )
+    _vars.sort() 
+        
+
+    tt = dataset.GetTitle()
+
+    if not title :
+        
+        if  tt and tt != dataset.GetName()  : 
+            title = '%s("%s","%s"):' % ( dataset.__class__.__name__ , dataset.GetName () , tt ) 
+        else :
+            title = '%s("%s"):'      % ( dataset.__class__.__name__ , dataset.GetName () )
+
+        title =  '%s %d entries, %d variables' %  ( title , len ( dataset ) , len ( varset ) )
+        
+    if not _vars :
+        return title , 120 
+        ## return report , 120 
+
+
+    weight = None
+
+    # ==============================================================================================
+    # build the actual table 
+    # ==============================================================================================
+    
+    name_l  = len ( 'Variable'    ) + 2 
+    mean_l  = len ( 'mean' ) + 2 
+    rms_l   = len ( 'rms'  ) + 2
+    min_l   = len ( 'min'  ) + 2 
+    max_l   = len ( 'max'  ) + 2 
+    for v in _vars :
+        name_l = max ( name_l , len ( v[0] ) )
+        mean_l = max ( mean_l , len ( v[1] ) )
+        rms_l  = max ( rms_l  , len ( v[2] ) )
+        min_l  = max ( min_l  , len ( v[3] ) )
+        max_l  = max ( max_l  , len ( v[4] ) )
+        
+    index_l =   int ( math.ceil ( math.log10( len ( _vars ) + 1 ) ) )
+    
+    fmt_name = '%%%ds. %%-%ds' % ( index_l , name_l )
+    fmt_mean = '%%%ds'  % mean_l
+    fmt_rms  = '%%-%ds' % rms_l
+    fmt_min  = '%%%ds'  % min_l
+    fmt_max  = '%%-%ds' % max_l
+
+    title_l = index_l + 2 + name_l  
+    header = [ ( '{:^%d}' % title_l ).format ( 'Variable'    ) ,
+               ( '{:^%d}' % mean_l  ).format ( 'mean'        ) ,
+               ( '{:^%d}' % rms_l   ).format ( 'rms'         ) ,
+               ( '{:^%d}' % min_l   ).format ( 'min'         ) ,
+               ( '{:^%d}' % max_l   ).format ( 'max'         ) ]
+
+    table_data = [ tuple  ( header ) ]
+
+    vlst = vars
+
+    for i , v in enumerate ( _vars ) :
+                
+        cols = [ fmt_name %  ( i + 1 , v [ 0 ] ) ,
+                 fmt_mean %            v [ 1 ] ,
+                 fmt_rms  %            v [ 2 ] ,
+                 fmt_min  %            v [ 3 ] ,
+                 fmt_max  %            v [ 4 ] ]
+        
+        table_data.append ( tuple ( cols ) ) 
+
+    import ostap.logger.table as T
+    t  = T.table ( table_data , title , prefix =  prefix )
+    w  = T.table_width ( t ) 
+    return t , w 
+
+
 # ==============================================================================
 ## print dataset in a form of the table
 #  @code
 #  dataset = ...
 #  print dataset.table() 
 #  @endcode
-def _ds_table_ (  dataset ,  variables = [] , prefix = '' , title = '' ) :
+def _ds_table_ (  dataset ,  variables = [] , cuts = '' , prefix = '' , title = '' ) :
     """print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _ds_table_0_ ( dataset ,  variables , prefix = prefix , title = title )[0]
+    return _ds_table_0_ ( dataset ,  variables , cuts = cuts , prefix = prefix , title = title )[0]
+
+# ==============================================================================
+## print dataset in a form of the table
+#  @code
+#  dataset = ...
+#  print dataset.table2() 
+#  @endcode
+def _ds_table2_ (  dataset ,  variables , cuts = '' , prefix = '' , title = '' ) :
+    """print dataset in a form of the table
+    >>> dataset = ...
+    >>> print dataset.table()
+    """
+    return _ds_table_1_ ( dataset ,  variables , cuts = cuts , prefix = prefix , title = title )[0]
 
 # =============================================================================
 ##  print DataSet
@@ -1923,6 +2040,7 @@ for t in ( ROOT.RooDataSet , ROOT.RooDataHist ) :
     t.__repr__    = _ds_print2_
     t.__str__     = _ds_print2_
     t.table       = _ds_table_
+    t.table2      = _ds_table2_
     t.pprint      = _ds_print_ 
 
     
