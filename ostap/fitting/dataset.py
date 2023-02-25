@@ -1280,7 +1280,6 @@ def add_new_var ( dataset , varname , what , *args ) :
             del vvar 
             raise TypeError("Invalid type/length of ``what'' argument")
         
-        
     vv = Ostap.Functions.add_var ( dataset , varname , what , *args )
     if not  vv : logger.error('add_new_var: NULLPTR from Ostap.Functions.add_var')
     #
@@ -1324,7 +1323,7 @@ def add_reweighting ( data , weighter , name = 'weight' ) :
     
     ## create the weigthting function 
     wfun = W.W2Data ( weighter  )
-    
+
     return data.add_new_var ( name , wfun ) 
 
 

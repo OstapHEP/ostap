@@ -254,8 +254,8 @@ def test_gbreweight() :
     data = Data ( 'DATA_tree' , testdata )
     mc   = Data ( tag_mc      , testdata ) 
     
-    ddata , wdata = data.chain.slice ( 'x y' , transpose = True )
-    dmc   , wmc   = mc  .chain.slice ( 'x y' , transpose = True )
+    ddata , wdata = data.chain.slice ( 'x , y' , transpose = True )
+    dmc   , wmc   = mc  .chain.slice ( 'x , y' , transpose = True )
 
         
     ## train BDT

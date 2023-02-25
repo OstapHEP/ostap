@@ -1218,7 +1218,11 @@ def _in_types ( t ) :
 
 # ==============================================================================
 ## print tree as table 
-def _rt_table_0_ ( tree , pattern = None , cuts = '' , prefix = '' , title = '' , *args ) :
+def _rt_table_0_ ( tree , 
+                   pattern = None ,
+                   cuts    = ''   ,
+                   prefix  = ''   ,
+                   title   = ''   , *args ) :
     """
     """
     ## get list of branches/leaves  
@@ -1469,8 +1473,11 @@ def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , title 
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _rt_table_0_ ( dataset , variables , cuts , prefix , title , *args )[0]
-
+    return _rt_table_0_ ( dataset          ,
+                          variables        ,
+                          cuts   = cuts    ,
+                          prefix = prefix  ,
+                          title  = title   , *args )[0]
 
 # =============================================================================
 ##  print DataSet

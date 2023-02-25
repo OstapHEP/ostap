@@ -27,7 +27,7 @@ from   ostap.core.ostap_types import string_types, list_types, num_types
 from   ostap.math.operations  import Mul as MULT  ## needed for proper abstract multiplication
 import ostap.io.zipshelve     as     DBASE ## needed to store the weights&histos
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weigth to TTree/RooDataSet
-from   ostap.logger.utils     import pretty_ve 
+from   ostap.logger.utils     import pretty_ve
 import ostap.histos.histos 
 import ostap.histos.compare 
 import ostap.trees.trees
@@ -494,9 +494,18 @@ class WeightingPlot(object) :
         
         self.__what      = str(what)     if isinstance ( what , str ) else what 
         self.__how       = str(how )     if isinstance ( how  , str ) else how 
-        self.__address   = str(address) 
-        self.__data      = data
-        self.__mc        = mc_histo      if mc_histo else data.clone()
+        self.__address   = str(address)
+
+        ## ATTENTION! make a ty to convert data to density!!
+        if isinstance ( data , ROOT.TH1 ) :
+            if not data.is_density() :
+                logger.info ( "Convert 'data' histogram into 'density' for '%s'" % self.what )
+            self.__data = data.density()
+        else :
+            self.__data = data
+
+        self.__mc       = mc_histo      if mc_histo else data.clone()
+        
         assert isinstance ( self.__mc , ROOT.TH1 ), \
                "WPlot: invalid type of `mchisto' %s/%s"  % ( self.__mc , type ( self.__mc ) )
         self.__w         = w
@@ -534,7 +543,7 @@ class WeightingPlot(object) :
     @property
     def  data ( self ) :
         """`data' : the `data' object, or  the `target' for the reweighting procedure
-        Typically it is a histogram. But it could be any kind of callable 
+        Typically it is a histogram. But it could be any kind of callable/function 
         """
         return self.__data 
     @property
@@ -573,39 +582,53 @@ def _cmp_draw_ ( self ) :
     hmc  = self.mc
     hw   = self.weight 
 
-    if isinstance ( hw , ROOT.TH1 ) :
+    if   isinstance ( hw , ROOT.TH3 ) and 3 == hw.dim () :
+        hw.draw  ( copy = True )        
+    elif isinstance ( hw , ROOT.TH2 ) and 2 == hw.dim () :
+        hw.texte ( 'colz' , fmt = '5.3f' , copy = True )        
+    elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
         if hasattr ( hw     , 'red'   ) : hw .red   ()         
         hw.SetMinimum  ( 0 )
         hw.SetMaximum  ( max ( 1.3 , 1.2 * hw.ymax () ) ) 
-        hw.draw ()
+        hw.draw ( copy = True )
         hw.level ( 1.0 , linestyle = 1 , linecolor = ROOT.kRed )
+            
+    if isinstance ( hd , ROOT.TH1 ) and isinstance ( hmc , ROOT.TH1 ) and 1 == hd.dim() :
 
-    if isinstance ( hd , ROOT.TH1 ) and isinstance ( hmc , ROOT.TH1 ) :
+        hd  = hd .clone()
+        hmc = hmc.clone()
+        
         if hasattr ( hd     , 'green'  ) : hd .green   () 
         if hasattr ( hmc    , 'blue'   ) : hmc.blue   () 
         rmax   = 1.2 * max ( hd .GetMaximum () , hmc.GetMaximum() )
         hd .SetMinimum ( 0 )
         hmc.SetMinimum ( 0 )        
-        scale  = ROOT.gPad.GetUymax() / rmax
+        scale  = ROOT.gPad.GetUymax() / rmax        
         hd  .Scale ( scale  )
-        hmc .Scale ( scale  )
-        hd  .draw  ( 'same' )
-        hmc .draw  ( 'same' )
-    elif isinstance ( hd  , ROOT.TH1 ) :
+        hmc .Scale ( scale  )        
+        hd  .draw  ( 'same' , copy = True )
+        hmc .draw  ( 'same' , copy = True )
+        
+    elif isinstance ( hd  , ROOT.TH1 ) and 1 == hd.dim() :
+
+        hd = hd.clone()
         if hasattr ( hd     , 'green'  ) : hd .green   () 
         rmax   = 1.2 *       hd .GetMaximum ()         
         hd .SetMinimum ( 0 )
         scale  = ROOT.gPad.GetUymax() / rmax
         hd  .Scale ( scale  )
-        hd  .draw  ( 'same' )
-    elif isinstance ( hmc , ROOT.TH1 ) :
+        hd  .draw  ( 'same' , copy = True )
+        
+    elif isinstance ( hmc , ROOT.TH1 ) and 1 == hmc.dim() :
+
+        hmc = hmc.clone()
+        
         if hasattr ( hmc    , 'blue'   ) : hmc.blue   () 
         rmax   = 1.2 *       hmc.GetMaximum ()         
         hmc.SetMinimum ( 0 )        
         scale  = ROOT.gPad.GetUymax() / rmax
         hmc .Scale ( scale  )
-        hmc .draw  ( 'same' )
-        
+        hmc .draw  ( 'same' , copy = True )
 
 ComparisonPlot. draw = _cmp_draw_
 
@@ -712,8 +735,10 @@ def makeWeights  ( dataset                    ,
         # normalize the data
         #
         hdata = hdata0
-        if isinstance ( hdata , ROOT.TH1 ) :  hdata = hdata.density ()
-
+        if isinstance ( hdata , ROOT.TH1 ) and not hdata.is_density() : 
+            hdata = hdata.density ()
+            logger.warning ( "'Data histogram converted to density for '%s'" %  what )
+                                                                        
         # =====================================================================
         ## make a plot on (MC) data with the weight
         # =====================================================================
@@ -805,7 +830,6 @@ def makeWeights  ( dataset                    ,
         # =====================================================================
         if compare : compare ( hdata0 , hmc0 , address )
 
-    
     active  = tuple ( [ p[0] for p in save_to_db ] )  
     nactive = len ( active )  
 
@@ -864,7 +888,13 @@ def makeWeights  ( dataset                    ,
     import ostap.logger.table as Table
     logger.info ( '%s, active:#%d \n%s ' % ( tag , nactive , Table.table ( table , title = tag , prefix = '# ' , alignment = 'lccccccc' ) ) )
 
-    cmp_plots = tuple ( cmp_plots ) 
+    cmp_plots = tuple ( cmp_plots )
+
+    if make_plots and cmp_plots and not ROOT.gROOT.IsBatch() :
+        from ostap.plotting.canvas import use_canvas 
+        for item in cmp_plots :
+            with use_canvas ( '%s/%s' % ( tag , item.what ) ) : item.draw()
+                    
     return ( active , cmp_plots ) if make_plots else active
 
 # =============================================================================
@@ -950,3 +980,4 @@ if '__main__' == __name__ :
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
+

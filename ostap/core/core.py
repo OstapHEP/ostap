@@ -511,11 +511,14 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             za = obj.GetZaxis() 
             if za : za.SetLabelOffset ( kw.pop  ( 'ZaxisLabelOffset' ) ) 
                                         
-                
+        ## 
+        copy = kw.pop ( 'copy' , False )        
         if kw : logger.warning('draw: unknown attributes: %s' % kw.keys() )
             
         with rootWarning() , rooSilent ( 2 )  :
-            result = obj.Draw( option , *args )
+            
+            if copy and hasattr ( obj , 'DrawCopy' ): result = obj.DrawCopy ( option , *args )
+            else                                    : result = obj.Draw     ( option , *args )
             
         groot = ROOT.ROOT.GetROOT ()
         pad   = groot.GetSelectedPad()

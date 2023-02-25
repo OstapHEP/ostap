@@ -1793,11 +1793,11 @@ ROOT.TH2D.transpone = _h2_transpose_
 
 # =============================================================================
 ## Draw 2D-histogram as 'colz'
-def _h2_colz_ ( h2 , opts = '' ) :
+def _h2_colz_ ( h2 , opts = '' , *args , **kwargs ) :
     """Draw 2D-histogram as 'colz'    
     >>> h2.colz()    
     """
-    return h2.Draw ( 'colz ' + opts )
+    return h2.draw ( 'colz ' + opts , *args , **kwargs )
 
 
 ROOT.TH2F . colz = _h2_colz_
@@ -1810,24 +1810,24 @@ ROOT.TF2  . colz = _h2_colz_
 
 # =============================================================================
 ## Draw 2D-histogram as 'text'
-def _h2_text_ ( h2 , opts = '' , fmt = '' ) :
+def _h2_text_ ( h2 , opts = '' , fmt = '' , *args , **kwargs ) :
     """Draw 2D-histogram as 'text'    
     >>> h2.text( fmt = '5.3f')    
     """
     if fmt : ROOT.gStyle.SetPaintTextFormat ( fmt )        
-    return h2.Draw ( 'text ' + opts )
+    return h2.draw ( 'text ' + opts , *args , **kwargs )
     
 ROOT.TH2F . text = _h2_text_
 ROOT.TH2D . text = _h2_text_
 
 # =============================================================================
 ## Draw 2D-histogram as 'text'
-def _h2_texte_ ( h2 , opts = '' , fmt = '' ) :
+def _h2_texte_ ( h2 , opts = '' , fmt = '' , *args , **kwargs ) :
     """Draw 2D-histogram as 'texte'    
     >>> h2.texte( fmt = '5.2f')    
     """
     if fmt : ROOT.gStyle.SetPaintTextFormat ( fmt )        
-    return h2.Draw ( 'texte ' + opts )
+    return h2.draw ( 'texte ' + opts , *args , **kwargs )
     
 ROOT.TH2F . texte = _h2_texte_
 ROOT.TH2D . texte = _h2_texte_
@@ -4889,7 +4889,7 @@ def h1_from_model ( model , *args ) :
 def h1_axis ( axis           ,
               title  = '1D'  , 
               name   = None  ,
-              double = False ) :
+              double = True  ) :
     """Make 1D-histogram with binning defined by already created axes    
     >>> axis = ...
     >>> h1 = h1_axes ( axis , title = 'MyHisto' )     
@@ -4919,7 +4919,7 @@ def h2_axes ( x_axis            ,
               y_axis            ,
               title  = '2D'     , 
               name   = None     ,
-              double = False    ) :
+              double = True     ) :
     """Make 2D-histogram with binning deifned by already created axes    
     >>> x_axis = ...
     >>> y_axis = ...
@@ -4955,7 +4955,7 @@ def h3_axes ( x_axis            ,
               z_axis            ,
               title  = '3D'     , 
               name   = None     ,
-              double = False    ) :
+              double = True     ) :
     """Make 3D-histogram with binning deifned by already created axes    
     >>> x_axis = ...
     >>> y_axis = ...
@@ -7470,29 +7470,95 @@ def _h_hash_ ( histo) :
 ROOT.TH1.__hash__ = _h_hash_ 
 # =============================================================================
 
+
+# =============================================================================
+## Get "Riemann sum" of the histogram 
+#  \f$ \sum_{i} f_i \Delta x_i\f$ 
+def _h1_riemann_sum_ ( h1 ) :
+    """Get 'Riemann sum' of the historgam
+    """
+    ax     = h1.GetXaxis()
+    result = 0.0
+    for ix in h1 :
+        volume  = ax.GetBinWidth   ( ix )        
+        content = h1.GetBinContent ( ix )  
+        result += content * volume 
+    return result
+
+# =============================================================================
+## Get "Riemann sum" of the histogram 
+#  \f$ \sum_{i} f_i \Delta x_i \Delta y_i\f$ 
+def _h2_riemann_sum_ ( h2 ) :
+    """Get 'Riemann sum' of the historgam
+    """
+    ax     = h2.GetXaxis()
+    ay     = h2.GetYaxis()
+    result = 0.0
+    for ix, iy in h2 :
+        volume  = ax.GetBinWidth   ( ix      ) * ay.GetBinWidth ( iy )        
+        content = h2.GetBinContent ( ix , iy ) 
+        result += content * volume 
+    return result
+
+# =============================================================================
+## Get "Riemann sum" of the histogram 
+#  \f$ \sum_{i} f_i \Delta x_i \Delta y_i \Delta z_i \f$ 
+def _h3_riemann_sum_ ( h3 ) :
+    """Get 'Riemann sum' of the historgam
+    """
+    ax     = h3.GetXaxis()
+    ay     = h3.GetYaxis()
+    az     = h3.GetZaxis()
+    result = 0.0
+    for ix, iy, iz  in h3 :
+        volume  = ax.GetBinWidth   ( ix ) * ay.GetBinWidth ( iy ) * az.GetBinWidth ( iz )        
+        content = h3.GetBinContent ( ix , iy , iz ) 
+        result += content * volume 
+    return result
+
+ROOT.TH1.riemann_sum = _h1_riemann_sum_
+ROOT.TH2.riemann_sum = _h2_riemann_sum_
+ROOT.TH3.riemann_sum = _h3_riemann_sum_
+
+from ostap.math.base import isequalf 
+# =============================================================================
+## does this histogram reprsent the density?
+def _h_isDensity_ ( h1 ) :
+    """Does this histogram reprsent the density?
+    """
+    return isequalf ( h1.riemann_sum () , 1.0 ) 
+    
 # =============================================================================
 ## represent histogram as ``density''
 #  - the function with unit integral over the range
 def _h_density_ ( h1 ) :
-    """Represent histogram as  ``density''
+    """Represent histogram as  `density'
     - the function with unit integral over the range
     """
-    ii = h1.integrate().value()
-    if isequal ( ii , 1.0 ) :
-        ## it is already density!, return the clone 
+    if h1.is_density () :
+        ## it is already density!, return the clone
         return h1.clone()
     
     ## take into account bin width
-    h  = h1.rescale_bins(1)
+    hh  = h1.rescale_bins ( 1 )
+    
     ##  rescale to unit integral in range
-    h /= h.integrate().value()
-    return h
+    rs  = hh.riemann_sum  () 
+    hh /= rs
+
+    ## check if properly rescaled: 
+    rs  = hh.riemann_sum  () 
+    if not isequal ( rs , 1.0 ) : hh /= rs
+        
+    return hh
 
 for t in ( ROOT.TH1F , ROOT.TH1D ,
            ROOT.TH2F , ROOT.TH2D ,
            ROOT.TH3F , ROOT.TH3D ) :
-    t.density = _h_density_
-
+    t.density    = _h_density_
+    t.isDensity  = _h_isDensity_
+    t.is_density = _h_isDensity_
+    
 # =============================================================================
 ## Fill the histogram from iterable/generator/...
 #  @code
