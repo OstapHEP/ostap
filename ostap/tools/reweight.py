@@ -23,7 +23,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.pyrouts     import VE, SE
 from   ostap.math.base        import iszero
-from   ostap.core.ostap_types import string_types, list_types, num_types  
+from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types   
 from   ostap.math.operations  import Mul as MULT  ## needed for proper abstract multiplication
 import ostap.io.zipshelve     as     DBASE ## needed to store the weights&histos
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weigth to TTree/RooDataSet
@@ -721,6 +721,7 @@ def makeWeights  ( dataset                    ,
                    power      = None          , ## auto-determination
                    debug      = True          , ## save intermediate information in DB
                    make_plots = True          , ## make comparison plots (and draw them)
+                   wtruncate  = ( 0.5 , 1.0 ) , ## truncate too small/large weights 
                    tag        = "Reweighting" ) :
     """The main  function: perform one re-weighting iteration 
     and reweight `MC'-data set to looks as `data'(reference) dataset
@@ -752,6 +753,14 @@ def makeWeights  ( dataset                    ,
     assert 0 < delta  , "makeWeights(%s): Invalid value for `delta'  %s" % ( tag , delta  )
     assert 0 < minmax , "makeWeights(%s): Invalid value for `minmax' %s" % ( tag , minmax ) 
 
+    if wtruncate and isinstance ( wtruncate , sized_types ) and 2 == len ( wtruncate ) \
+       and isinstance ( wtruncate [ 0 ] , num_types ) \
+       and isinstance ( wtruncate [ 1 ] , num_types ) \
+       and wtruncate [0] < 1.0 and 1.0 < wtruncate [1] : pass
+    else :
+        logger.warning  ( "Invalid 'wtruncate' parameter '%s', use (0.5,2.0)" % ( str ( wtruncate ) ) )
+        wtruncate = 0.5 , 2.0 
+    
     from ostap.logger.colorized   import allright , attention , infostr 
     from ostap.utils.basic        import isatty
 
@@ -853,6 +862,21 @@ def makeWeights  ( dataset                    ,
               (wvar * 100).toString('%6.2f+-%-6.2f') , \
               allright ( '+' ) if good1 else attention ( '-' ) , '%6.2f' % c2ndf 
 
+        ## apply weight truncation:
+        wmin , wmax = wtruncate
+        truncated = False 
+        for i in w  :
+            we = w [ i ]
+            if   we.value() < wmin :
+                w [ i ] = VE ( wmin , we.cov2 () )
+                truncated    = True 
+            elif we.value() > wmax :
+                w [ i ] = VE ( wmax , we.cov2 () ) 
+                truncated    = True
+                
+        if truncated :
+            logger.info ( "%s: weights for '%s' are truncated to be %.3f<w<%.3f" % ( tag , what , wmin , wmax ) )
+            
         ## make plots at the start of  each iteration? 
         if make_plots : 
             item = ComparisonPlot ( what , hdata , hmc , w ) 
@@ -877,7 +901,11 @@ def makeWeights  ( dataset                    ,
     active  = tuple ( [ p[0] for p in save_to_db ] )  
     nactive = len ( active )  
 
-    if power and callable ( power ) : 
+    if   power is None :
+        power   = lambda n : 0.5 * ( 1.0 / max ( n , 1 ) + 1 )
+        ## average between 100% uncorrelated and 100% correlated 
+        eff_exp = 0.5 * ( 1.0 / max ( nactive , 1 ) + 1.0 )
+    elif power and callable ( power ) : 
         eff_exp = power ( nactive ) 
     elif isinstance ( power , num_types ) and 0 < power <= 1.5 :
         eff_exp = 1.0 * power 
@@ -897,14 +925,6 @@ def makeWeights  ( dataset                    ,
         cnt = weight.stat()
         mnw, mxw = cnt.minmax()
 
-        ## avoid too large or too small  weights
-        for i in weight :
-            w = weight [ i ]
-            if   w.value() < 0.5 :
-                weight [ i ] = VE ( 0.5 , w.cov2 () ) 
-            elif w.value() > 2.0 :
-                weight [ i ] = VE ( 2.0 , w.cov2 () ) 
-    
         if 1 < nactive and 1 != ww :
             eff_exp *= ww
             logger.info  ("%s: apply `effective exponent' of %.3f for `%s'" % ( tag , eff_exp  , address ) )

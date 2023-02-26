@@ -253,7 +253,7 @@ def _ve_ne_ ( self , other ) :
     """
     try: 
         return not self == other
-    except NotImplemented :
+    except NotImplementedError :
         raise NotImplementedError ( ' Inequality for %s and  %s is not implemented' % ( self , other ) ) 
 
 VE . __eq__ = _ve_eq_

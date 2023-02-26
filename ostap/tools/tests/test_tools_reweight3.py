@@ -52,10 +52,10 @@ tag_mc      = 'MC_tree'
 
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
 
-NDATA1      = 1000000
-NDATA2      = 500000
-NDATA3      = 500000
-NMC         = 200000
+NDATA1      = 500000
+NDATA2      = 100000
+NDATA3      = 100000
+NMC         = 500000
 
 xmax        = 15.0
 ymax        = 12.0 
@@ -117,15 +117,14 @@ def prepare_data ( ) :
 
             while not 0 <= x < xmax or not 0 <= y < ymax or not 0 <= z < zmax :
                 
-                v1 = random.gauss   (  0 , 7 )
-                v2 = random.gauss   (  0 , 6 )
-                v3 = random.uniform ( -6 , 6 ) 
+                v1 = random.gauss   ( 0 , 9 )
+                v2 = random.gauss   ( 0 , 7 )
+                v3 = random.gauss   ( 0 , 5 ) 
                 
-                x  = 0.45 * xmax + 1.7 * v1 + 1.7 * v2 -     v3 
-                y  = 0.50 * ymax +       v1 -       v2 -     v3 
-                z  = 0.55 * zmax -       v1 - 2.0 * v2 + 2 * v3 
+                x  = 0.40 * xmax + 1.5 * v1 + 1.0 * v2 - 1.0 * v3 
+                y  = 0.50 * ymax +       v1 - 1.5 * v2 - 1.0 * v3 
+                z  = 0.60 * zmax -       v1 - 1.0 * v2 + 1.5 * v3 
                 
-
             h3_histo .Fill ( x , y , z )
             
             hxy_histo.Fill ( x , y )
@@ -146,9 +145,9 @@ def prepare_data ( ) :
             
             x , y, z  = -1, -1, -1 
 
-            while not 0 < x < xmax : x = random.expovariate ( 2.0 / xmax ) 
-            while not 0 < y < ymax : y = random.expovariate ( 2.0 / ymax ) 
-            while not 0 < z < zmax : z = random.expovariate ( 2.0 / zmax ) 
+            while not 0 < x < xmax : x = random.expovariate ( 1.0 / xmax ) 
+            while not 0 < y < ymax : y = random.expovariate ( 1.0 / ymax ) 
+            while not 0 < z < zmax : z = random.expovariate ( 1.0 / zmax ) 
                 
             h3_histo .Fill ( x , y , z )
             
@@ -170,10 +169,14 @@ def prepare_data ( ) :
             
             x , y, z  = -1, -1, -1 
 
-            while not 0 < x < xmax : x = random.expovariate ( 1.5 / xmax ) 
-            while not 0 < y < ymax : y = random.expovariate ( 1.5 / ymax ) 
-            while not 0 < z < zmax : z = random.expovariate ( 1.5 / zmax ) 
+            ## while not 0 < x < xmax : x = random.expovariate ( 0.5 / xmax ) 
+            ## while not 0 < y < ymax : y = random.expovariate ( 0.5 / ymax ) 
+            ## while not 0 < z < zmax : z = random.expovariate ( 0.5 / zmax ) 
                 
+            xv = random.uniform ( 0 , xmax )
+            yv = random.uniform ( 0 , ymax ) 
+            zv = random.uniform ( 0 , zmax )
+
             h3_histo .Fill ( x , y , z )
             
             hxy_histo.Fill ( x , y )
@@ -219,18 +222,16 @@ def prepare_data ( ) :
         
         for i in  range ( NMC ) :
 
-            ## xv = random.uniform ( 0 , xmax )
-            ## yv = random.uniform ( 0 , ymax ) 
-            ## zv = random.uniform ( 0 , zmax )
+            xv = random.uniform ( 0 , xmax )
+            yv = random.uniform ( 0 , ymax ) 
+            zv = random.uniform ( 0 , zmax )
             
-            xv = random.expovariate ( 1.0 / xmax )
-            while not 0 < xv < xmax : xv = xmax - random.expovariate ( 1.0 / xmax )
-
-            yv = random.expovariate ( 1.0 / ymax )
-            while not 0 < yv < ymax : yv = ymax - random.expovariate ( 1.0 / ymax )
-
-            zv = random.expovariate ( 1.0 / zmax )
-            while not 0 < zv < ymax : zv = zmax - random.expovariate ( 1.0 / zmax )
+            ## xv = random.expovariate ( 1.0 / xmax )
+            ## while not 0 < xv < xmax : xv = xmax - random.expovariate ( 0.5 / xmax )
+            ## yv = random.expovariate ( 1.0 / ymax )
+            ## while not 0 < yv < ymax : yv = ymax - random.expovariate ( 0.5 / ymax )
+            ## zv = random.expovariate ( 1.0 / zmax )
+            ## while not 0 < zv < ymax : zv = zmax - random.expovariate ( 0.5 / zmax )
             
             xvar [ 0 ] = xv 
             yvar [ 0 ] = yv
@@ -373,27 +374,31 @@ for iter in range ( 1 , maxIter + 1 ) :
     # =========================================================================
     ## 2) update weights
     
-    power = lambda n : 1.0 if n <= 1 else 0.5 * ( 1.0 / max ( n , 1.0 ) + 1.0 ) 
+    power = lambda n : 1.0 if n <= 1 else 0.6666 / n + 0.3333 
 
-    if   iter < 5 : the_plots = plots [ : 1 ]
-    elif iter < 6 : the_plots = plots [ : 4 ]
+    if   iter < 3 : the_plots = plots [ : 1 ]
+    elif iter < 4 : the_plots = plots [ : 4 ]
     else          : the_plots = plots
 
+    ## weigth truncation: avoid very large change of weights for  single iteration 
+    wtruncate = ( 0.1 , 10 ) if iter < 5 else ( 0.5 , 2.0 )  
+    
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
         # =========================================================================
         ## 2a) the most important line: perform single iteration step  
         active , _ = makeWeights (
-            mcds               , ## what to be reweighted
-            the_plots          , ## reweighting plots/setup
-            dbname             , ## DBASE with reweigting constant 
-            delta      = 0.02  , ## stopping criteria
-            minmax     = 0.08  , ## stopping criteria  
-            power      = power , ## tune: effective power
-            make_plots = True  , 
-            tag        = tag   ) ## tag for printout
+            mcds                   , ## what to be reweighted
+            the_plots              , ## reweighting plots/setup
+            dbname                 , ## DBASE with reweighting constant 
+            delta      = 0.02      , ## stopping criteria
+            minmax     = 0.08      , ## stopping criteria  
+            power      = power     , ## tune: effective power
+            wtruncate  = wtruncate , ## truncate weights 
+            make_plots = True      , ## make control plots 
+            tag        = tag       ) ## tag for printout
 
-    if not active and 6 < iter : 
+    if not active and 5 < iter : 
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
         title = 'Reweighted dataset after #%d iterations' % iter 
         logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
@@ -414,9 +419,10 @@ del selector
 
 
 with timing ( "Add weight column to MC-tree" , logger = logger ) : 
-    mctree     = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
+    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
     weighter = Weight ( dbname , weightings )
     mctree   = mctree.add_reweighting ( weighter ,  name = 'weight' )
+    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
 
 # =============================================================================
 ## compare DATA  and MC before and after reweighting
@@ -440,13 +446,6 @@ logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 
                                                       title     = title    ,
                                                       cuts      = 'weight' , 
                                                       prefix    = '# '     ) ) )
-
-# =============================================================================
-logger.info('Reweighting DBASE %s' % dbname ) 
-with DBASE.open ( dbname , 'r' ) as db :  db.ls() 
-        
-time.sleep(5)
-
 
 # =============================================================================
 ##                                                                      The END 
