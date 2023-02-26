@@ -44,11 +44,9 @@ if os.path.exists ( dbname   ) : os.remove ( dbname   )
 
 import ostap.parallel.kisa
 
-N1 = 1000000
-N2 = 100000
 
-N1 = 100000
-N2 = 10000
+N1 = 1000000
+N2 = 50000
 
 xmax     = 20.0
 ymax     = 15.0 
@@ -77,6 +75,7 @@ def prepare_data ( ) :
     assert hydata.xmax() == ymax , 'XMAX is invalid!'
 
     with ROOT.TFile.Open ( testdata ,'recreate') as mc_file:
+        
         mc_file.cd() 
         
         datatree  = ROOT.TTree ( 'DATA_tree', 'data-tree' )
@@ -238,14 +237,15 @@ datastat = datatree.statCov('x','y')
 ## prebook MC histograms
 # =============================================================================
 ix , iy  = 45 , 25  # #DATA
-ix , iy  = 30 , 30 
+ix , iy  = 25 , 25 
 ## ix , iy  = 35 , 22
 ## ix , iy  = 60 , 40
 hmc  = h2_axes ( [ 20.0/ix*i for i in range ( ix + 1 ) ] ,
                  [ 15.0/iy*i for i in range ( iy + 1 ) ] )
 ## hmc = hdata.clone()
 
-ix , iy  = 65 , 60 
+ix , iy  = 65 , 60
+ix , iy  = 50 , 50
 hmcx = h1_axis ( [ 20.0/ix*i for i in range ( ix + 1 ) ] )
 hmcy = h1_axis ( [ 15.0/iy*i for i in range ( iy + 1 ) ] )
 
@@ -296,6 +296,15 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
     mcds_ = selector.data             ## dataset
 
 # =============================================================================
+## Configurtaion of reweighting plots 
+# =
+plots  = [
+    WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hxdata , hmcx ) ,  
+    WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hydata , hmcy ) , 
+    WeightingPlot ( 'y:x'   , 'weight' , '2D-reweight' , hdata  , hmc  ) , 
+    ]
+
+# =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
 
@@ -319,29 +328,24 @@ for iter in range ( 1 , maxIter + 1 ) :
     
     # =========================================================================
     ## 2) update weights
-    plots  = [
-        WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hxdata , hmcx ) ,  
-        WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hydata , hmcy ) , 
-        WeightingPlot ( 'y:x'   , 'weight' , '2D-reweight' , hdata  , hmc  ) , 
-        ]
     
     if    iter <=  3 : power = 0.75
-    elif  iter <= 10 : power = lambda nactive : 1.5 / nactive if 1 < nactive else 0.90
-    elif  iter <= 15 : power = lambda nactive : 1.3 / nactive if 1 < nactive else 0.90 
-    else             : power = lambda nactive : 1.1 / nactive if 1 < nactive else 0.90 
+    elif  iter <= 10 : power = lambda nactive : 1.5 / nactive if 1 < nactive else 1.05
+    elif  iter <= 15 : power = lambda nactive : 1.3 / nactive if 1 < nactive else 1.05 
+    else             : power = lambda nactive : 1.1 / nactive if 1 < nactive else 1.05 
     
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
         # =========================================================================
         ## 2a) the most important line: perform single iteration step  
-        active = makeWeights (
+        active , _  = makeWeights (
             mcds               , ## what to be reweighted
             plots              , ## reweighting plots/setup
             dbname             , ## DBASE with reweigting constant 
-            delta      = 0.01  , ## stopping criteria
-            minmax     = 0.05  , ## stopping criteria  
+            delta      = 0.02  , ## stopping criteria
+            minmax     = 0.10  , ## stopping criteria  
             power      = power , ## tune: effective power
-            make_plots = False , 
+            make_plots = True  , 
             tag        = tag   ) ## tag for printout
         
     with timing ( tag + ': project weighted MC-dataset:' , logger = logger ) : 
@@ -350,7 +354,6 @@ for iter in range ( 1 , maxIter + 1 ) :
         mcds .project  ( hmcx , 'x'   , 'weight'  )
         mcds .project  ( hmcy , 'y'   , 'weight'  )
         mcds .project  ( hmc  , 'y:x' , 'weight'  )
-
 
     rows = [] 
     with timing ( tag + ': compare DATA and MC distributions:' , logger = logger ) :
@@ -382,35 +385,13 @@ for iter in range ( 1 , maxIter + 1 ) :
         logger.info  ( tag + ': x/y covariance DATA (unbinned):\n# %s' % ( str ( datastat [2] ).replace ( '\n' , '\n# ' ) ) )
         logger.info  ( tag + ': x/y covariance MC   (unbinned):\n# %s' % ( str (   mcstat [2] ).replace ( '\n' , '\n# ' ) ) )
         
-    # =========================================================================
-    ## prepare the plot of weighted MC for the given iteration
-    
-    ## final density on data 
-    datax_density = hxdata.density()
-    ## final density on mc 
-    mcx_density   = hmcx.density()
-
-    ## final density on data 
-    datay_density = hydata.density()
-    ## final density on mc 
-    mcy_density   = hmcy.density()
-    
-    datax_density.red   ()
-    mcx_density  .blue  ()
-    
-    datay_density.green ()
-    mcy_density  .yellow()
-
-    datax_density.SetMinimum(0.00)
-    datax_density.SetMaximum(0.12)
-    datax_density.draw ('e1')
-    mcx_density  .draw ('e1 same')
-    datay_density.draw ('e1 same')
-    mcy_density  .draw ('e1 same')
-    time.sleep ( 2 )
-
-    if not active and iter > 6 : 
+    if not active and 3 < iter : 
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
+        title = 'Reweighted dataset after #%d iterations' % iter 
+        logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' , 'y' ] ,
+                                                          title     = title    ,
+                                                          cuts      = 'weight' , 
+                                                          prefix    = '# '     ) ) )
         break
     
     mcds.clear()
@@ -422,52 +403,38 @@ else :
 
     
 del selector   
-logger.info ('MCSTAT:\nx=%s\ny=%s\ncov2:\n%s'   %mcstat  [:3] ) 
-logger.info ('DATASTAT:\nx=%s\ny=%s\ncov2:\n%s' %datastat[:3] ) 
 
 with ROOT.TFile.open ( testdata , 'r' ) as dbroot : 
     logger.info ( 'Test data is picked from DBASE "%s" for reweighting' % testdata )   
     dbroot.ls()
-    mctree   = dbroot [ tag_mc      ]    
+    mctree   = dbroot [ tag_mc ]    
     ## 0) The weighter object
     with timing ( "Add weight column to MC-tree" , logger = logger ) : 
         weighter = Weight ( dbname , weightings )
         mctree.add_reweighting ( weighter ,  name = 'weight' )
 
-dbroot = ROOT.TFile.open ( testdata , 'r' )
-logger.info ( 'Reweighted data is fetched from DBASE "%s"' % testdata )   
-hdata  = dbroot [ tag_data    ]
-hxdata = dbroot [ tag_datax   ]
-hydata = dbroot [ tag_datay   ]
-mctree = dbroot [ tag_mc      ]
-logger.info ('reweighted MCDATA \n%s:' % mctree.table() ) 
+# =============================================================================
+data_tree = ROOT.TChain  ( 'DATA_tree' ) ; data_tree.Add ( testdata ) 
+mc_tree   = ROOT.TChain  ( tag_mc      ) ;   mc_tree.Add ( testdata ) 
 
-datax_density.draw ('e1')
-mcx_density  .draw ('e1 same')
-datay_density.draw ('e1 same')
-mcy_density  .draw ('e1 same')
+# =============================================================================
+title = 'Data/target dataset'
+logger.info ( '%s:\n%s' % ( title , data_tree.table2 ( variables = [ 'x' , 'y' ] ,
+                                                       title     = title    ,
+                                                       prefix    = '# '     ) ) )
+# =============================================================================
+title = 'MC dataset before reweighting' 
+logger.info ( '%s:\n%s' % ( title , mc_tree.table2   ( variables = [ 'x' , 'y' ] ,
+                                                       title     = title    ,
+                                                       prefix    = '# '     ) ) )
+# =============================================================================
+title = 'MC dataset after reweighting' 
+logger.info ( '%s:\n%s' % ( title , mc_tree.table2   ( variables = [ 'x' , 'y' ] ,
+                                                       title     = title    ,
+                                                       cuts      = 'weight' , 
+                                                       prefix    = '# '     ) ) )
 
-time.sleep(2)
-
-ix, iy =       50, 50 
-hh1 = h2_axes ( [ xmax/ix*i for i in range ( ix + 1 ) ] ,
-                [ ymax/iy*i for i in range ( iy + 1 ) ] )
-
-mctree.project ( hh1 , 'y : x'           )
-hh1.SetMinimum(0)
-logger.info ( 'MC BEFORE reweighting' )
-hh1.draw ('colz')
-
-time.sleep(2)
-
-hh2 = hh1.clone()
-mctree.project ( hh2 , 'y : x' , 'weight')
-hh2.SetMinimum(0)
-logger.info ( 'MC AFTER  reweighting' )
-hh2.draw ('colz')
-
-time.sleep(2)
-
+time.sleep(5)
 
 
 # =============================================================================

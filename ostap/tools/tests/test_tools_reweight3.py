@@ -32,7 +32,7 @@ if '__main__' == __name__  or '__builtin__'  == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================    
-logger.info ( 'Test for 2D-Reweighting machinery')
+logger.info ( 'Test for 3D-Reweighting machinery')
 # ============================================================================
 from ostap.utils.cleanup import CleanUp
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight3-' )
@@ -50,9 +50,7 @@ tag_data_z  = 'DATA_Z_histogram'
 tag_data    = 'DATA_tree'
 tag_mc      = 'MC_tree'
 
-## dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
-dbname      = 'reweight3.db' 
-
+dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
 
 NDATA1      = 1000000
 NDATA2      = 500000
@@ -148,11 +146,9 @@ def prepare_data ( ) :
             
             x , y, z  = -1, -1, -1 
 
-            while not 0 <= x < xmax or not 0 <= y < ymax or not 0 <= z < zmax :
-                
-                x = random.expovariate ( 2.0/xmax ) 
-                y = random.expovariate ( 2.0/ymax ) 
-                z = random.expovariate ( 2.0/zmax )
+            while not 0 < x < xmax : x = random.expovariate ( 2.0 / xmax ) 
+            while not 0 < y < ymax : y = random.expovariate ( 2.0 / ymax ) 
+            while not 0 < z < zmax : z = random.expovariate ( 2.0 / zmax ) 
                 
             h3_histo .Fill ( x , y , z )
             
@@ -174,11 +170,9 @@ def prepare_data ( ) :
             
             x , y, z  = -1, -1, -1 
 
-            while not 0 <= x < xmax or not 0 <= y < ymax or not 0 <= z < zmax :
-                
-                x = xmax - random.expovariate ( 2.0/xmax ) 
-                y = ymax - random.expovariate ( 2.0/ymax ) 
-                z = zmax - random.expovariate ( 2.0/zmax )
+            while not 0 < x < xmax : x = random.expovariate ( 1.5 / xmax ) 
+            while not 0 < y < ymax : y = random.expovariate ( 1.5 / ymax ) 
+            while not 0 < z < zmax : z = random.expovariate ( 1.5 / zmax ) 
                 
             h3_histo .Fill ( x , y , z )
             
@@ -225,9 +219,18 @@ def prepare_data ( ) :
         
         for i in  range ( NMC ) :
 
-            xv = random.uniform ( 0 , xmax ) 
-            yv = random.uniform ( 0 , ymax ) 
-            zv = random.uniform ( 0 , zmax ) 
+            ## xv = random.uniform ( 0 , xmax )
+            ## yv = random.uniform ( 0 , ymax ) 
+            ## zv = random.uniform ( 0 , zmax )
+            
+            xv = random.expovariate ( 1.0 / xmax )
+            while not 0 < xv < xmax : xv = xmax - random.expovariate ( 1.0 / xmax )
+
+            yv = random.expovariate ( 1.0 / ymax )
+            while not 0 < yv < ymax : yv = ymax - random.expovariate ( 1.0 / ymax )
+
+            zv = random.expovariate ( 1.0 / zmax )
+            while not 0 < zv < ymax : zv = zmax - random.expovariate ( 1.0 / zmax )
             
             xvar [ 0 ] = xv 
             yvar [ 0 ] = yv
@@ -332,7 +335,20 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
         '0<x && x<%s && 0<y && y<%s && 0<z && z<%s' % ( xmax , ymax, zmax ) , silence = True )
     mctree.process ( selector , silent = True )
     mcds_ = selector.data             ## dataset
-    
+
+# =============================================================================
+## Configuration of reweighting plots 
+# =============================================================================
+plots  = [
+    WeightingPlot ( 'z:y:x' , 'weight' , '3D-reweight' , h3d_data , mc_3d ) , 
+    WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hx_data  , mc_x  ) ,  
+    WeightingPlot ( 'z'     , 'weight' , 'z-reweight'  , hz_data  , mc_z  ) ,  
+    WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hy_data  , mc_y  ) ,  
+    WeightingPlot ( 'z:x'   , 'weight' , 'XZ-reweight' , hxz_data , mc_xz ) , 
+    WeightingPlot ( 'z:y'   , 'weight' , 'YZ-reweight' , hyz_data , mc_yz ) , 
+    WeightingPlot ( 'y:x'   , 'weight' , 'XY-reweight' , hxy_data , mc_xy ) , 
+    ]
+
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
@@ -356,19 +372,10 @@ for iter in range ( 1 , maxIter + 1 ) :
     
     # =========================================================================
     ## 2) update weights
-    plots  = [
-        WeightingPlot ( 'z:y:x' , 'weight' , '3D-reweight' , h3d_data , mc_3d ) , 
-        WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hx_data  , mc_x  ) ,  
-        WeightingPlot ( 'z'     , 'weight' , 'z-reweight'  , hz_data  , mc_z  ) ,  
-        WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hy_data  , mc_y  ) ,  
-        WeightingPlot ( 'z:x'   , 'weight' , 'XZ-reweight' , hxz_data , mc_xz ) , 
-        WeightingPlot ( 'z:y'   , 'weight' , 'YZ-reweight' , hyz_data , mc_yz ) , 
-        WeightingPlot ( 'y:x'   , 'weight' , 'XY-reweight' , hxy_data , mc_xy ) , 
-        ]
     
-    power = lambda n : 1.0 if n <= 1 else max ( 2.0 / n , 0.6 )
+    power = lambda n : 1.0 if n <= 1 else 0.5 * ( 1.0 / max ( n , 1.0 ) + 1.0 ) 
 
-    if   iter < 3 : the_plots = plots [ : 1 ]
+    if   iter < 5 : the_plots = plots [ : 1 ]
     elif iter < 6 : the_plots = plots [ : 4 ]
     else          : the_plots = plots
 
@@ -376,19 +383,23 @@ for iter in range ( 1 , maxIter + 1 ) :
         
         # =========================================================================
         ## 2a) the most important line: perform single iteration step  
-        active = makeWeights (
+        active , _ = makeWeights (
             mcds               , ## what to be reweighted
             the_plots          , ## reweighting plots/setup
             dbname             , ## DBASE with reweigting constant 
             delta      = 0.02  , ## stopping criteria
-            minmax     = 0.06  , ## stopping criteria  
+            minmax     = 0.08  , ## stopping criteria  
             power      = power , ## tune: effective power
-            make_plots = False , 
+            make_plots = True  , 
             tag        = tag   ) ## tag for printout
 
-        
-    if not active and iter > 10 : 
+    if not active and 6 < iter : 
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
+        title = 'Reweighted dataset after #%d iterations' % iter 
+        logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                          title     = title    ,
+                                                          cuts      = 'weight' , 
+                                                          prefix    = '# '     ) ) )        
         break
     
     mcds.clear()
@@ -402,21 +413,40 @@ else :
 del selector   
 
 
-## mctree     = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
+with timing ( "Add weight column to MC-tree" , logger = logger ) : 
+    mctree     = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
+    weighter = Weight ( dbname , weightings )
+    mctree   = mctree.add_reweighting ( weighter ,  name = 'weight' )
 
-## with timing ( "Add weight column to MC-tree" , logger = logger ) : 
-##     weighter = Weight ( dbname , weightings )
-##     mctree   = mctree.add_reweighting ( weighter ,  name = 'weight' )
+# =============================================================================
+## compare DATA  and MC before and after reweighting
+# =============================================================================
 
-## datatree   = ROOT.TChain ( tag_data ) ; datatree.Add ( testdata )  
+datatree   = ROOT.TChain ( tag_data ) ; datatree.Add ( testdata )  
+mctree     = ROOT.TChain ( tag_mc   ) ; mctree  .Add ( testdata )  
+# =============================================================================
+title = 'Data/target dataset'
+logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                      title     = title    ,
+                                                      prefix    = '# '     ) ) )
+# =============================================================================
+title = 'MC dataset before reweighting' 
+logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                      title     = title    ,
+                                                      prefix    = '# '     ) ) )
+# =============================================================================
+title = 'MC dataset after reweighting' 
+logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                      title     = title    ,
+                                                      cuts      = 'weight' , 
+                                                      prefix    = '# '     ) ) )
 
-## logger.info ( 'DATA-tree\n%s' % datatree.table ( prefix = '# ' ) )
-## logger.info ( 'MC-tree\n%s'   % mctree  .table ( prefix = '# ' ) )
-
+# =============================================================================
 logger.info('Reweighting DBASE %s' % dbname ) 
-with DBASE.open ( dbname , 'r' ) as db : 
-    db.ls() 
+with DBASE.open ( dbname , 'r' ) as db :  db.ls() 
         
+time.sleep(5)
+
 
 # =============================================================================
 ##                                                                      The END 

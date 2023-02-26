@@ -2931,6 +2931,97 @@ ROOT.TH1 . maxv    = _h_maxv_
 ROOT.TH1 . minmax  = _h_minmax_
 
 # ============================================================================
+## get the first bin with the minimum content
+def _h1_minimum_bin_ ( h1 ) :
+    """Get the first bin with the minimum content
+    """
+    value = None
+    bin   = 0
+    for i in h1 :
+        v = h1.GetBinContent ( i )
+        if value is None or v < value :
+            value = v
+            bin   = i
+    return bin
+
+# ============================================================================
+## get the first bin with the maximal content
+def _h1_maximum_bin_ ( h1 ) :
+    """Get the first bin with the maximal content
+    """
+    value = None
+    bin   = 0
+    for i in h1 :
+        v = h1.GetBinContent ( i )
+        if value is None or value < v :
+            value = v
+            bin   = i
+    return bin
+
+# =============================================================================
+## get the first bin with the minimum content
+def _h2_minimum_bin_ ( h2 ) :
+    """Get the first bin with the minimum content
+    """
+    value = None
+    bin   = 0,0
+    for i in h2 :
+        v = h2.GetBinContent ( *i )
+        if value is None or v < value :
+            value = v
+            bin   = i 
+    return bin
+
+# =============================================================================
+## get the first bin with the maximal content
+def _h2_maximum_bin_ ( h2 ) :
+    """Get the first bin with the maximal content
+    """
+    value = None
+    bin   = 0,0
+    for i in h2 :
+        v = h2.GetBinContent ( *i )
+        if value is None or value < v :
+            value = v
+            bin   = i 
+    return bin
+
+# =============================================================================
+## get the first bin with the minimum content
+def _h3_minimum_bin_ ( h3 ) :
+    """Get the first bin with the minimum content
+    """
+    value = None
+    bin   = 0,0
+    for i in h3 :
+        v = h3.GetBinContent ( *i )
+        if value is None or v < value :
+            value = v
+            bin   = i 
+    return bin
+
+# =============================================================================
+## get the first bin with the maximal content
+def _h3_maximum_bin_ ( h3 ) :
+    """Get the first bin with the maximal content
+    """
+    value = None
+    bin   = 0,0
+    for i in h3 :
+        v = h3.GetBinContent ( *i )
+        if value is None or value < v :
+            value = v
+            bin   = i 
+    return bin
+
+ROOT.TH1.minimum_bin = _h1_minimum_bin_
+ROOT.TH1.maximum_bin = _h1_maximum_bin_
+ROOT.TH2.minimum_bin = _h2_minimum_bin_
+ROOT.TH2.maximum_bin = _h2_maximum_bin_
+ROOT.TH3.minimum_bin = _h3_minimum_bin_
+ROOT.TH3.maximum_bin = _h3_maximum_bin_
+
+# ============================================================================
 ## get the minimum value for X-axis 
 def _ax_min_ ( self ) :
     """Get the minimum value for X-axis
@@ -8264,7 +8355,14 @@ _new_methods_   = (
     ROOT.TH1F  . split       ,
     ROOT.TH1F  . split_bins  ,
     #
-    ROOT.TH1   . nEntries 
+    ROOT.TH1   . nEntries    , 
+    # 
+    ROOT.TH1   . minimum_bin , 
+    ROOT.TH1   . maximum_bin , 
+    ROOT.TH2   . minimum_bin , 
+    ROOT.TH2   . maximum_bin , 
+    ROOT.TH3   . minimum_bin , 
+    ROOT.TH3   . maximum_bin , 
     )
 
 # =============================================================================

@@ -146,15 +146,15 @@ for iter in range ( 1 , maxIter + 1  ) :
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         # ==============================================================================
         ## 2) update weights
-        plots   = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
-        more    = makeWeights ( mcds               ,
-                                plots              ,
-                                dbname             ,
-                                delta      = 0.005 ,
-                                minmax     = 0.01  ,
-                                power      = 1.05  , ## tiny ``overreweighting''
-                                make_plots = False , 
-                                tag        = tag   )
+        plots      = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
+        active , _ = makeWeights ( mcds               ,
+                                   plots              ,
+                                   dbname             ,
+                                   delta      = 0.005 ,
+                                   minmax     = 0.01  ,
+                                   power      = 1.05  , ## tiny ``overreweighting''
+                                   make_plots = True  , 
+                                   tag        = tag   )
         
     with timing ( tag + ': project weighted MC-dataset:' , logger = logger ) : 
        # ==============================================================================
@@ -177,43 +177,28 @@ for iter in range ( 1 , maxIter + 1  ) :
         title = tag + ': DATA vs MC difference'
         logger.info ( '%s:\n%s' % ( title , hdata.cmp_diff_prnt
                                     ( hmc , density = True , title = title , prefix = '# ' ) ) )
-        
-    # =========================================================================
-    ## prepare the plot of weighted MC for the given iteration
 
-    ## final density on data 
-    data_density = hdata.density()
-    
-    ## final density on mc 
-    mc_density   = hmc.density()
-    
-    data_density.red  ()
-    mc_density  .blue ()
-    data_density.draw ('e1')
-    mc_density  .draw ('e1 same')
-    time.sleep ( 5 ) 
-    
-    if not more and iter > 3 :
+    if not active and iter > 3 :
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
+        title = 'Reweighted dataset after #%d iterations' % iter 
+        logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' ]  ,
+                                                          title     = title    ,
+                                                          cuts      = 'weight' , 
+                                                          prefix    = '# '     ) ) )
+        ## dump data as CVS file 
+        cvs_file = CleanUp.tempfile ( suffix = '.csv' , prefix ='ostap-test-tools-reweight-' )
+        mcds.to_csv ( cvs_file , dialect = 'excel-tab' )
         break
-
-    cvs_file = CleanUp.tempfile ( suffix = '.csv' , prefix ='ostap-test-tools-reweight-' )
-    mcds.to_csv ( cvs_file , dialect = 'excel-tab' )
-
-
+    
     mcds.clear () 
     del mcds , selector
-
     
 else :
 
     logger.error ( "No convergency!" )
 
 
-
-data_density.draw ('e1')
-mc_density  .draw ('e1 same')
-time.sleep(10)
+time.sleep ( 5 )
 
 # =============================================================================
 ##                                                                      The END 

@@ -573,6 +573,7 @@ class WeightingPlot(object) :
 from collections import namedtuple 
 ComparisonPlot = namedtuple ( 'ComparisonPlot' , ( 'what' , 'data' , 'mc' , 'weight' ) )
 
+_store = set() 
 # =============================================================================
 ## draw comparison plots
 def _cmp_draw_ ( self ) :
@@ -585,7 +586,55 @@ def _cmp_draw_ ( self ) :
     if   isinstance ( hw , ROOT.TH3 ) and 3 == hw.dim () :
         hw.draw  ( copy = True )        
     elif isinstance ( hw , ROOT.TH2 ) and 2 == hw.dim () :
-        hw.texte ( 'colz' , fmt = '5.3f' , copy = True )        
+
+        zmin,zmax = hw.zminmax()
+
+        if   0.95 <= zmin and zmax <= 1.05 :
+            hw.SetMinimum  ( 0.95 )
+            hw.SetMaximum  ( 1.05 )
+            hw.SetContour  ( 50   ) 
+        elif 0.90 <= zmin and zmax <= 1.10 :
+            hw.SetMinimum  ( 0.90 )
+            hw.SetMaximum  ( 1.10 )
+            hw.SetContour  ( 40   ) 
+        elif 0.80 <= zmin and zmax <= 1.20 :
+            hw.SetMinimum  ( 0.80 )
+            hw.SetMaximum  ( 1.20 )
+            hw.SetContour  ( 40   ) 
+        elif 0.75 <= zmin and zmax <= 1.25 :
+            hw.SetMinimum  ( 0.75 )
+            hw.SetMaximum  ( 1.25 )
+            hw.SetContour  ( 50   ) 
+        elif 0.50 <= zmin and zmax <= 1.50 :
+            hw.SetMinimum  ( 0.50 )
+            hw.SetMaximum  ( 1.50 )
+            hw.SetContour  ( 50   )
+        else :
+            hw.SetMinimum  ( 0.50 )
+            hw.SetMaximum  ( 2.00 )
+            hw.SetContour  ( 50   ) 
+
+        nx = hw.binsx()
+        ny = hw.binsy()
+        if   10 <  nx and 10 < ny : hw.draw  ( 'cont4z' ,                copy = True )
+        elif 10 <  nx or  10 < ny : hw.draw  ( 'cont4z' ,                copy = True )
+        else                      : hw.texte ( 'colz'   , fmt = '5.3f' , copy = True )
+
+        minx, miny = hw.minimum_bin()
+        maxx, maxy = hw.maximum_bin()
+
+        ax = hw.GetXaxis()
+        ay = hw.GetXaxis()
+
+        pmin = ROOT.TMarker ( ax.GetBinCenter ( minx ) , ay.GetBinCenter ( miny ) , 43 )
+        pmax = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) , 20 )
+        pmin.SetMarkerColor ( 2 )
+        pmax.SetMarkerColor ( 2 )
+        pmin.SetMarkerSize  ( 1 )
+        pmax.SetMarkerSize  ( 1 )
+        pmin.DrawClone() 
+        pmax.DrawClone()
+        
     elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
         if hasattr ( hw     , 'red'   ) : hw .red   ()         
         hw.SetMinimum  ( 0 )
@@ -671,7 +720,7 @@ def makeWeights  ( dataset                    ,
                    minmax     = 0.03          , ## delta for `minmax' weight variation
                    power      = None          , ## auto-determination
                    debug      = True          , ## save intermediate information in DB
-                   make_plots = False         , ## make plots 
+                   make_plots = True          , ## make comparison plots (and draw them)
                    tag        = "Reweighting" ) :
     """The main  function: perform one re-weighting iteration 
     and reweight `MC'-data set to looks as `data'(reference) dataset
@@ -707,11 +756,6 @@ def makeWeights  ( dataset                    ,
     from ostap.utils.basic        import isatty
 
     nplots  = len ( plots )
-    ## if 1 < nplots :
-    ##     import  math
-    ##     fudge_factor = math.sqrt ( 1.0 / max ( 2.0 , nplots -  1.0 ) )
-    ##     delta   = delta  * fudge_factor
-    ##     minmax  = minmax * fudge_factor
 
     ## list of plots to compare 
     cmp_plots  = []
@@ -737,7 +781,7 @@ def makeWeights  ( dataset                    ,
         hdata = hdata0
         if isinstance ( hdata , ROOT.TH1 ) and not hdata.is_density() : 
             hdata = hdata.density ()
-            logger.warning ( "'Data histogram converted to density for '%s'" %  what )
+            logger.warning ( "'Data' histogram converted to 'density' for '%s'" %  what )
                                                                         
         # =====================================================================
         ## make a plot on (MC) data with the weight
