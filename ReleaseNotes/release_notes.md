@@ -6,7 +6,7 @@
   1. impoetant improvements for classical reweigting 
   1. make more accurate "density" method for histograms  
   1. add `table2` fuction for trees and datasets  
-
+  1. add progress bar to `add_reweighting` method 
 
 ## Backward incompatible: 
 

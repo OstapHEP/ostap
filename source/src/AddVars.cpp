@@ -21,6 +21,7 @@
 #include "Ostap/Funcs.h"
 #include "Ostap/AddVars.h"
 #include "Ostap/FormulaVar.h"
+#include "Ostap/ProgressBar.h"
 // ============================================================================
 /** @file
  *  Implementation file for functions from file Ostap/AddVars.h
@@ -37,9 +38,30 @@
 // ============================================================================
 const RooAbsReal* 
 Ostap::Functions::add_var 
-( RooDataSet&             dataset , 
-  const std::string&      name    , 
-  const Ostap::IFuncData& func    ) 
+( RooDataSet&                       dataset  , 
+  const std::string&                name     , 
+  const Ostap::IFuncData&           func     ) 
+{
+  /// create fake progress bar
+  Ostap::Utils::ProgressConf progress { 0 } ;
+  /// delegate to another mehtod 
+  return add_var ( dataset , name , func , progress ) ;
+}
+// ============================================================================
+/*  add new variable to dataset
+ *  @param  dataset input    dataset
+ *  @param  name    variable name 
+ *  @param  func    rule to  calculate new variable
+ *  @param progress configuration of the progress bar
+ *  @return the added variable 
+ */
+// ============================================================================
+const RooAbsReal* 
+Ostap::Functions::add_var 
+( RooDataSet&                       dataset  , 
+  const std::string&                name     , 
+  const Ostap::IFuncData&           func     , 
+  const Ostap::Utils::ProgressConf& progress ) 
 {  
   //
   RooRealVar var         { name.c_str() , ""        , 0.0 } ;
@@ -48,7 +70,8 @@ Ostap::Functions::add_var
   //
   // loop over events in the input data set 
   const unsigned long nEntries = dataset.numEntries() ;
-  for ( unsigned long entry = 0 ; entry < nEntries ; ++entry )   
+  Ostap::Utils::ProgressBar bar ( nEntries , progress  ) ;
+  for ( unsigned long entry = 0 ; entry < nEntries ; ++entry , ++bar )   
   {
     //
     if ( 0 == dataset.get( entry)  ) { break ; }                    // BREAK
@@ -72,6 +95,7 @@ Ostap::Functions::add_var
   //
   return dynamic_cast<const RooAbsReal*> ( nvar ) ;   
 }
+
 // ============================================================================
 /*  add new variable to dataset
  *  @param  dataset input dataset

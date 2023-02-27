@@ -124,13 +124,12 @@ class Weight(object) :
         
         ## open database
 
-
         self.__table = [ ( 'Reweighting' , 'accessor' , '#' , 'merged?' , 'skip') ] 
         rows = []
         
         with DBASE.open ( dbase , 'r' ) as db : ## READONLY
 
-            logger.debug ( 'Reweigting database: \n%s' % db.table ( prefix = '# ' ) ) 
+            logger.debug ( 'Weight: Reweigting database: \n%s' % db.table ( prefix = '# ' ) ) 
                 
             ## loop over the weighting factors and build the function
             for wvar in factors :
@@ -158,7 +157,7 @@ class Weight(object) :
                 ## 
                 functions  = db.get ( funname , [] ) ## db[ funname ]
                 if not functions :
-                    logger.warning ( "No reweighting is available for `%s', skip it" % funname )
+                    logger.warning ( "Weight: No reweighting is available for `%s', skip it" % funname )
                     continue
                                 
                 if not isinstance (  functions , ( list , tuple ) ) :
@@ -166,15 +165,15 @@ class Weight(object) :
                 
                 flen = len(functions) 
                 if   0 < skip and skip      < flen :
-                    logger.info  ("Use only %d first iterations for `%s'" % ( skip , funname ) )
+                    logger.info  ("Weight: Use only %d first iterations for `%s'" % ( skip , funname ) )
                     functions = functions[:skip] 
                 elif 0 > skip and abs(skip) < flen :
-                    logger.info  ("Skip last %d iterations for `%s'" % ( skip , funname ) )
+                    logger.info  ("Weight: Skip last %d iterations for `%s'" % ( skip , funname ) )
                     functions = functions[:skip] 
                 elif 0 == skip :
                     pass
                 else :
-                    logger.error("Invalid `skip' parameter %s/%d for `%s'" % ( skip , flen , funname ) )
+                    logger.error("Weight: Invalid `skip' parameter %s/%d for `%s'" % ( skip , flen , funname ) )
                 row.append ( '%d' % flen ) 
                 
                 ## nullify the uncertainties except for the last histogram
@@ -219,27 +218,27 @@ class Weight(object) :
 
     @property
     def dbase ( self ) :
-        """`dbase' : the name of the database for storage of reweigting information
+        """'dbase' : the name of the database for storage of reweigting information
         """
         return self.__dbase
     
     @property
     def variables ( self ) :
-        """``variables' - the structure of reweighting variables/machinery"""
+        """'variables' - the structure of reweighting variables/machinery"""
         return self.__vars 
         
     @property 
     def stat    ( self ) :
-        """`stat' : get the statistic of used weights"""
+        """'stat' : get the statistic of used weights"""
         return self.__counter
     @property 
     def nZeroes ( self ) :
-        """`nZeroes': Number of null weights"""
+        """'nZeroes': Number of null weights"""
         return self.__nzeroes
     
     ## calculate the weight for the given "event"
     def __call__ ( self , s ) :
-        """   Calculate the weigth for the given `event' (==record in TTree/TChain or RooDataSet):
+        """Calculate the weigth for the given `event' (==record in TTree/TChain or RooDataSet):
         >>> weight = Weight ( ... )
         >>> tree   = ...
         >>> w = weight ( tree )
@@ -499,7 +498,7 @@ class WeightingPlot(object) :
         ## ATTENTION! make a ty to convert data to density!!
         if isinstance ( data , ROOT.TH1 ) :
             if not data.is_density() :
-                logger.info ( "Convert 'data' histogram into 'density' for '%s'" % self.what )
+                logger.info ( "WeightingPlot: Convert 'data' histogram into 'density' for '%s'" % self.what )
             self.__data = data.density()
         else :
             self.__data = data
@@ -519,7 +518,7 @@ class WeightingPlot(object) :
         
     @property
     def  what ( self ) :
-        """`what' : the variable/expression to be used for `weighting-plot'
+        """'what' : the variable/expression to be used for `weighting-plot'
         Used  as the second argument of `dataset.project' method to produce
         `weighted-plot':
         >>> dataset.project ( mchisto , WHAT , how , ... ) 
@@ -527,7 +526,7 @@ class WeightingPlot(object) :
         return self.__what
     @property
     def  how  ( self ) :
-        """`how' : the `weight' expression to be used for `weighed-plots'
+        """'how' : the `weight' expression to be used for `weighed-plots'
         Used  as the third argument of `dataset.project' method to produce
         `weighted-plot':
         >>> dataset.project ( mchisto , what , HOW , ... )
@@ -536,37 +535,37 @@ class WeightingPlot(object) :
         return self.__how 
     @property
     def  address ( self ) :
-        """`address' : the address in `weighting-database'
+        """'address' : the address in `weighting-database'
         where to store the obtained weights
         """
         return self.__address
     @property
     def  data ( self ) :
-        """`data' : the `data' object, or  the `target' for the reweighting procedure
+        """'data' : the `data' object, or  the `target' for the reweighting procedure
         Typically it is a histogram. But it could be any kind of callable/function 
         """
         return self.__data 
     @property
     def  mc_histo ( self ) :
-        """`mc_histo' : template/shape for the mc-histogram, to be used for reweighting.
+        """'mc_histo' : template/shape for the mc-histogram, to be used for reweighting.
         It is used as the  first argument of `dataset.project' method 
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
         return self.__mc
     @property
     def projector ( self ) :
-        """`projector' :  callable function to build MC distribution:
+        """'projector' :  callable function to build MC distribution:
         hmc = projector ( dataset , hmc ) 
         """
         return self.__projector
     
     @property
     def w  ( self )   :
-        """`w'  - relative weight (relative importance is this variable)"""
+        """'w'  - relative weight (relative importance is this variable)"""
         return self.__w 
     @property
     def ignore ( self ) :
-        """`ignore' : do not use variable in reweights, but use for comparsion"""
+        """'ignore' : do not use variable in reweights, but use for comparsion"""
         return self.__ignore
     
 # =============================================================================
@@ -584,7 +583,29 @@ def _cmp_draw_ ( self ) :
     hw   = self.weight 
 
     if   isinstance ( hw , ROOT.TH3 ) and 3 == hw.dim () :
-        hw.draw  ( copy = True )        
+        hw.draw  ( copy = True )
+
+        minx, miny, minz = hw.minimum_bin()
+        maxx, maxy, maxz = hw.maximum_bin()
+        
+        ax = hw.GetXaxis()
+        ay = hw.GetYaxis()
+        az = hw.GetZaxis()
+
+        minv = hw [ minx, miny, minz ]
+        maxv = hw [ maxx, maxy, maxz ]
+        
+        logger.info ( "ComparisonPlot('%s'): min-weight %+.3f at (%.5g,%.5g,%.5g)" % ( self.what ,
+                                                                                       minv      ,
+                                                                                       ax.GetBinCenter ( minx ) ,
+                                                                                       ay.GetBinCenter ( miny ) ,
+                                                                                       az.GetBinCenter ( minz ) ) )
+        logger.info ( "ComparisonPlot('%s'): max-weight %+.3f at (%.5g,%.5g,%.5g)" % ( self.what ,
+                                                                                       maxv      ,
+                                                                                       ax.GetBinCenter ( maxx ) ,
+                                                                                       ay.GetBinCenter ( maxy ) ,
+                                                                                       az.GetBinCenter ( maxz ) ) )
+                
     elif isinstance ( hw , ROOT.TH2 ) and 2 == hw.dim () :
 
         zmin,zmax = hw.zminmax()
@@ -624,16 +645,28 @@ def _cmp_draw_ ( self ) :
         maxx, maxy = hw.maximum_bin()
 
         ax = hw.GetXaxis()
-        ay = hw.GetXaxis()
+        ay = hw.GetYaxis()
 
         pmin = ROOT.TMarker ( ax.GetBinCenter ( minx ) , ay.GetBinCenter ( miny ) , 43 )
         pmax = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) , 20 )
         pmin.SetMarkerColor ( 2 )
         pmax.SetMarkerColor ( 2 )
-        pmin.SetMarkerSize  ( 1 )
-        pmax.SetMarkerSize  ( 1 )
+        pmin.SetMarkerSize  ( 3 )
+        pmax.SetMarkerSize  ( 3 )
         pmin.DrawClone() 
         pmax.DrawClone()
+        
+        minv = hw [ minx, miny ]
+        maxv = hw [ maxx, maxy ]
+        
+        logger.info ( "ComparisonPlot('%s'): min-weight %+.3f at (%.5g,%.5g)" % ( self.what ,
+                                                                                  minv      ,
+                                                                                  ax.GetBinCenter ( minx ) ,
+                                                                                  ay.GetBinCenter ( miny ) ) ) 
+        logger.info ( "ComparisonPlot('%s'): max-weight %+.3f at (%.5g,%.5g)" % ( self.what ,
+                                                                                  maxv      ,
+                                                                                  ax.GetBinCenter ( maxx ) ,
+                                                                                  ay.GetBinCenter ( maxy ) ) ) 
         
     elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
         if hasattr ( hw     , 'red'   ) : hw .red   ()         
@@ -950,7 +983,7 @@ def makeWeights  ( dataset                    ,
     for   row in   rows  : table.append ( rows[row] )
         
     import ostap.logger.table as Table
-    logger.info ( '%s, active:#%d \n%s ' % ( tag , nactive , Table.table ( table , title = tag , prefix = '# ' , alignment = 'lccccccc' ) ) )
+    logger.info ( '%s: %d active reweightings\n%s' % ( tag , nactive , Table.table ( table , title = tag , prefix = '# ' , alignment = 'lccccccc' ) ) )
 
     cmp_plots = tuple ( cmp_plots )
 

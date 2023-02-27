@@ -25,6 +25,14 @@ class RooAbsReal ; // from RooFit
 namespace Ostap
 {
   // ==========================================================================
+  namespace Utils 
+  {
+    // ========================================================================
+    /// progress bar configrutaion 
+    class ProgressConf ; // progress bar configuration 
+    // ========================================================================
+  }
+  // ==========================================================================
   namespace Functions
   {
     // ========================================================================
@@ -38,6 +46,19 @@ namespace Ostap
     ( RooDataSet&             dataset , 
       const std::string&      name    , 
       const Ostap::IFuncData& func    ) ;
+    // ========================================================================    
+    /** add new variable to dataset
+     *  @param  dataset input    dataset
+     *  @param  name    variable name 
+     *  @param  func    rule to  calculate new variable
+     *  @param progress configuration of the progress bar
+     *  @return the added variable 
+     */
+    const RooAbsReal* add_var 
+    ( RooDataSet&                       dataset  , 
+      const std::string&                name     , 
+      const Ostap::IFuncData&           func     , 
+      const Ostap::Utils::ProgressConf& progress ) ;
     // ========================================================================    
     /** add new variable to dataset
      *  @param  dataset input dataset

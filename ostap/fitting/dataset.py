@@ -1256,7 +1256,6 @@ def add_new_var ( dataset , varname , what , *args ) :
     >>> dataset.add_new_var ( 'Pt' , 'eta' , 'A' , h3 ) ## sample from 3D histogram
     
     """
-    
     if isinstance ( varname , string_types ) :
         if    isinstance ( what , string_types   ) : pass
         elif  isinstance ( what , sequence_types )  and \
@@ -1278,7 +1277,7 @@ def add_new_var ( dataset , varname , what , *args ) :
             del dset
             del vset
             del vvar 
-            raise TypeError("Invalid type/length of ``what'' argument")
+            raise TypeError("Invalid type/length of 'what' argument")
         
     vv = Ostap.Functions.add_var ( dataset , varname , what , *args )
     if not  vv : logger.error('add_new_var: NULLPTR from Ostap.Functions.add_var')
@@ -1306,7 +1305,7 @@ _new_methods_ += [
 #  data = ...
 #  data.add_reweighting ( w ) 
 #  @endcode 
-def add_reweighting ( data , weighter , name = 'weight' ) :
+def add_reweighting ( data , weighter , name = 'weight' , progress = False ) :
     """Add specific re-weighting information into dataset
     
     >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
@@ -1324,8 +1323,11 @@ def add_reweighting ( data , weighter , name = 'weight' ) :
     ## create the weigthting function 
     wfun = W.W2Data ( weighter  )
 
+    if progress :
+        from ostap.utils.progress_conf import progress_conf
+        return data.add_new_var ( name , wfun , progress_conf() )
+    
     return data.add_new_var ( name , wfun ) 
-
 
 ROOT.RooDataSet.add_reweighting = add_reweighting
 _new_methods_ += [

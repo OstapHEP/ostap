@@ -15,7 +15,7 @@ __date__    = "2023-01-20"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
 from   builtins               import range
-import ostap.core.pyrouts     
+from   ostap.core.pyrouts     import Ostap 
 import ostap.io.root_file 
 import ostap.parallel.kisa
 import ostap.io.zipshelve     as     DBASE
@@ -53,8 +53,8 @@ tag_mc      = 'MC_tree'
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
 
 NDATA1      = 500000
-NDATA2      = 100000
-NDATA3      = 100000
+NDATA2      = 400000
+NDATA3      = 400000
 NMC         = 500000
 
 xmax        = 15.0
@@ -110,21 +110,15 @@ def prepare_data ( ) :
         datatree.Branch ( 'x' , xvar , 'x/F' )
         datatree.Branch ( 'y' , yvar , 'y/F' )
         datatree.Branch ( 'z' , zvar , 'z/F' )
-    
-        for i in range ( NDATA1 ) :
 
-            x , y, z  = -1, -1, -1 
+        ## Gaussian 3D-component with correlations 
+        
+        g3d = Ostap.Math.Gauss3D ( 0.1 * xmax  , 0.5 * ymax  , 0.8 * zmax  ,
+                                   8           , 5           , 4           ,
+                                   math.pi / 5 , math.pi / 5 , math.pi / 5 )
+        
+        for x, y , z in g3d.random ( NDATA1 , 0 , xmax , 0 , ymax , 0 , zmax ) : 
 
-            while not 0 <= x < xmax or not 0 <= y < ymax or not 0 <= z < zmax :
-                
-                v1 = random.gauss   ( 0 , 9 )
-                v2 = random.gauss   ( 0 , 7 )
-                v3 = random.gauss   ( 0 , 5 ) 
-                
-                x  = 0.40 * xmax + 1.5 * v1 + 1.0 * v2 - 1.0 * v3 
-                y  = 0.50 * ymax +       v1 - 1.5 * v2 - 1.0 * v3 
-                z  = 0.60 * zmax -       v1 - 1.0 * v2 + 1.5 * v3 
-                
             h3_histo .Fill ( x , y , z )
             
             hxy_histo.Fill ( x , y )
@@ -145,9 +139,9 @@ def prepare_data ( ) :
             
             x , y, z  = -1, -1, -1 
 
-            while not 0 < x < xmax : x = random.expovariate ( 1.0 / xmax ) 
-            while not 0 < y < ymax : y = random.expovariate ( 1.0 / ymax ) 
-            while not 0 < z < zmax : z = random.expovariate ( 1.0 / zmax ) 
+            while not 0 < x < xmax : x = xmax - random.expovariate ( 1.0 / xmax ) 
+            while not 0 < y < ymax : y =        random.expovariate ( 1.0 / ymax ) 
+            while not 0 < z < zmax : z =        random.expovariate ( 1.0 / zmax ) 
                 
             h3_histo .Fill ( x , y , z )
             
@@ -169,14 +163,10 @@ def prepare_data ( ) :
             
             x , y, z  = -1, -1, -1 
 
-            ## while not 0 < x < xmax : x = random.expovariate ( 0.5 / xmax ) 
-            ## while not 0 < y < ymax : y = random.expovariate ( 0.5 / ymax ) 
-            ## while not 0 < z < zmax : z = random.expovariate ( 0.5 / zmax ) 
+            x = random.uniform ( 0 , xmax ) 
+            y = random.uniform ( 0 , ymax ) 
+            z = random.uniform ( 0 , zmax ) 
                 
-            xv = random.uniform ( 0 , xmax )
-            yv = random.uniform ( 0 , ymax ) 
-            zv = random.uniform ( 0 , zmax )
-
             h3_histo .Fill ( x , y , z )
             
             hxy_histo.Fill ( x , y )
@@ -222,16 +212,9 @@ def prepare_data ( ) :
         
         for i in  range ( NMC ) :
 
-            xv = random.uniform ( 0 , xmax )
-            yv = random.uniform ( 0 , ymax ) 
-            zv = random.uniform ( 0 , zmax )
-            
-            ## xv = random.expovariate ( 1.0 / xmax )
-            ## while not 0 < xv < xmax : xv = xmax - random.expovariate ( 0.5 / xmax )
-            ## yv = random.expovariate ( 1.0 / ymax )
-            ## while not 0 < yv < ymax : yv = ymax - random.expovariate ( 0.5 / ymax )
-            ## zv = random.expovariate ( 1.0 / zmax )
-            ## while not 0 < zv < ymax : zv = zmax - random.expovariate ( 0.5 / zmax )
+            xv = random.uniform  ( 0 , xmax )
+            yv = random.uniform  ( 0 , ymax )
+            zv = random.uniform  ( 0 , zmax )
             
             xvar [ 0 ] = xv 
             yvar [ 0 ] = yv
@@ -240,7 +223,6 @@ def prepare_data ( ) :
             mctree.Fill()
             
         mctree.Write()
-        mc_file.ls_table()
 
 if not os.path.exists( testdata ) :
     with timing ( "Prepare input data" , logger = logger ) :
@@ -302,7 +284,7 @@ else :
 ## make reweighting iterations
 
 from   ostap.tools.reweight           import Weight, makeWeights,  WeightingPlot, W2Data  
-from   ostap.fitting.pyselectors      import SelectorWithVars, Variable 
+from   ostap.fitting.pyselectors      import Variable 
 import ostap.parallel.parallel_fill
 
 # =============================================================================
@@ -326,28 +308,39 @@ variables  = [
     Variable ( 'z' , 'z-var'  , 0  , zmax ) ,
     ]
 
-with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
 
-    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
-    logger.info ( 'MC-tree\n%s'    % mctree  .table ( prefix = '# ' ) )
-    
-    selector = SelectorWithVars (
-        variables ,
-        '0<x && x<%s && 0<y && y<%s && 0<z && z<%s' % ( xmax , ymax, zmax ) , silence = True )
-    mctree.process ( selector , silent = True )
-    mcds_ = selector.data             ## dataset
+# =============================================================================
+datatree   = ROOT.TChain ( tag_data ) ; datatree.Add ( testdata )  
+title = 'Data/target dataset'
+logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                      title     = title    ,
+                                                      prefix    = '# '     ) ) )
+
+# =============================================================================
+with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
+    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )
+    ## fill dataset from input MC tree
+    mcds_ , _ = mctree.make_dataset ( variables = variables ,
+                                      selection = '0<x && x<%s && 0<y && y<%s && 0<z && z<%s' % ( xmax , ymax, zmax ) )
+                                  
+##    selector = SelectorWithVars (
+##        variables ,
+##        '0<x && x<%s && 0<y && y<%s && 0<z && z<%s' % ( xmax , ymax, zmax ) , silence = True )
+##    mctree.process ( selector , silent = True )
+##    mcds_ = selector.data             ## dataset
+
 
 # =============================================================================
 ## Configuration of reweighting plots 
 # =============================================================================
 plots  = [
     WeightingPlot ( 'z:y:x' , 'weight' , '3D-reweight' , h3d_data , mc_3d ) , 
-    WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hx_data  , mc_x  ) ,  
-    WeightingPlot ( 'z'     , 'weight' , 'z-reweight'  , hz_data  , mc_z  ) ,  
-    WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hy_data  , mc_y  ) ,  
     WeightingPlot ( 'z:x'   , 'weight' , 'XZ-reweight' , hxz_data , mc_xz ) , 
     WeightingPlot ( 'z:y'   , 'weight' , 'YZ-reweight' , hyz_data , mc_yz ) , 
     WeightingPlot ( 'y:x'   , 'weight' , 'XY-reweight' , hxy_data , mc_xy ) , 
+    WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hx_data  , mc_x  ) ,  
+    WeightingPlot ( 'z'     , 'weight' , 'z-reweight'  , hz_data  , mc_z  ) ,  
+    WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hy_data  , mc_y  ) ,  
     ]
 
 # =============================================================================
@@ -357,31 +350,34 @@ for iter in range ( 1 , maxIter + 1 ) :
     tag = 'Reweighting iteration #%d' % iter
     logger.info ( allright ( tag ) ) 
     
-    with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
-        # =========================================================================
-        ## 0) The weighter object
-        weighter = Weight ( dbname , weightings )
-        
-        # =========================================================================
-        ## 1a) create new "weighted" mcdataset
-        mcds = mcds_.Clone()
-
+    # =========================================================================
+    ## 0) The weighter object
+    weighter = Weight ( dbname , weightings )
+    ## 1a) create new "weighted" mcdataset
+    mcds = mcds_.Clone()
+    
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
+        # =========================================================================
         ## 1b) add  "weight" variable to dataset 
-        mcds.add_reweighting ( weighter ,  name = 'weight' ) 
-        if 1 == iter % 10  : logger.info ( ( tag + ' MCDATA:\n%s' ) %  mcds )
+        mcds.add_reweighting ( weighter ,  name = 'weight' , progress = True )
+        title = 'Reweighted dataset at iteration #%d' % iter 
+        logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                          title     = title    ,
+                                                          cuts      = 'weight' , 
+                                                          prefix    = '# '     ) ) )        
     
     # =========================================================================
     ## 2) update weights
-    
-    power = lambda n : 1.0 if n <= 1 else 0.6666 / n + 0.3333 
+
+    pmax  = 1.0 if iter <= 4 else 0.66 + 0.34 * math.exp ( - ( iter - 4.0 ) / 4.0 )
+    power = lambda n : pmax if n <= 1 else pmax * ( 0.66666 / n + 0.33333 )
 
     if   iter < 3 : the_plots = plots [ : 1 ]
     elif iter < 4 : the_plots = plots [ : 4 ]
     else          : the_plots = plots
 
     ## weigth truncation: avoid very large change of weights for  single iteration 
-    wtruncate = ( 0.1 , 10 ) if iter < 5 else ( 0.5 , 2.0 )  
+    wtruncate = ( 0.1 , 10 ) if iter < 4 else ( 0.5 , 2.0 )  
     
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
@@ -398,13 +394,8 @@ for iter in range ( 1 , maxIter + 1 ) :
             make_plots = True      , ## make control plots 
             tag        = tag       ) ## tag for printout
 
-    if not active and 5 < iter : 
+    if not active and 5 <= iter : 
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
-        title = 'Reweighted dataset after #%d iterations' % iter 
-        logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                          title     = title    ,
-                                                          cuts      = 'weight' , 
-                                                          prefix    = '# '     ) ) )        
         break
     
     mcds.clear()
@@ -414,11 +405,8 @@ else :
 
     logger.error ( "No convergency!" )
 
-    
-del selector   
-
-
-with timing ( "Add weight column to MC-tree" , logger = logger ) : 
+# =============================================================================
+with timing ( "Add weight column to initial MC-tree" , logger = logger ) : 
     mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
     weighter = Weight ( dbname , weightings )
     mctree   = mctree.add_reweighting ( weighter ,  name = 'weight' )
@@ -436,12 +424,12 @@ logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 
                                                       title     = title    ,
                                                       prefix    = '# '     ) ) )
 # =============================================================================
-title = 'MC dataset before reweighting' 
+title = 'MC-tree before reweighting' 
 logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
                                                       title     = title    ,
                                                       prefix    = '# '     ) ) )
 # =============================================================================
-title = 'MC dataset after reweighting' 
+title = 'MC-tree after reweighting' 
 logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
                                                       title     = title    ,
                                                       cuts      = 'weight' , 

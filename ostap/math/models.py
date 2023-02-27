@@ -27,7 +27,7 @@ from    ostap.core.ostap_types import num_types, integer_types
 import  ostap.math.polynomials 
 import  ostap.math.reduce   
 import  ostap.math.derivative  as     D  
-import  ROOT 
+import  ROOT, random  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -2222,7 +2222,68 @@ for p in ( Ostap.Math.Const    ,
            p. __acosh__     = _prims_acosh_
            p. __atanh__     = _prims_atanh_
 
+# =============================================================================
+## generate 2D random distribution using Gauss2D
+#  @see Ostap::Math::Gauss2D
+#  @code
+#  g2d = ...
+#  for x,y in g2d.random ( 1000 , xmin = .. , xmax = ... , ymin = ... , ymax = ... ) :
+#  ... 
+#  @endcode 
+def _g2d_random_ ( g2d , N , xmin , xmax , ymin , ymax ) :
+    """Generate 2D random distribution using Gauss2D
+    >>> g2d = ...
+    >>> for x,y in g2d.random ( 1000 , xmin = .. , xmax = ... , ymin = ... , ymax = ... ) :
+    >>> ... 
+    - see `Ostap.Math.Gauss2D`
+    """
+    assert isinstance ( N , integer_types ) and 0 <= N , "Invalid 'N'"
+    assert xmin < xmax , "Invalid 'xmin/xmax'"
+    assert ymin < ymax , "Invalid 'ymin/ymax'"
     
+    fmax = g2d ( g2d.muX() , g2d.muY() )
+    num  = 0
+    while num < N :
+        x = random.uniform ( xmin , xmax )
+        y = random.uniform ( ymin , ymax )
+        if random.uniform ( 0 , fmax ) <= g2d ( x , y ) : 
+            num += 1
+            yield x , y
+
+# =============================================================================
+## generate 3D random distribution using Gauss3D
+#  @see Ostap::Math::Gauss3D
+#  @code
+#  g3d = ...
+#  for x,y,z in g3d.random ( 1000 , xmin = .. , xmax = ... , ymin = ... , ymax = ... , zmin = ... , zmax = ... ) :
+#  ... 
+#  @endcode 
+def _g3d_random_ ( g3d , N , xmin , xmax , ymin , ymax , zmin , zmax ) :
+    """Generate 3D random distribution using Gauss2D
+    >>> g2d = ...
+    >>> for x,y in g2d.random ( 1000 , xmin = .. , xmax = ... , ymin = ... , ymax = ... ) :
+    >>> ... 
+    - see `Ostap.Math.Gauss2D`
+    """
+    assert isinstance ( N , integer_types ) and 0 <= N , "Invalid 'N'"
+    assert xmin < xmax , "Invalid 'xmin/xmax'"
+    assert ymin < ymax , "Invalid 'ymin/ymax'"
+    assert zmin < zmax , "Invalid 'zmin/zmax'"
+    
+    fmax = g3d ( g3d.muX() , g3d.muY() , g3d.muZ() )
+    num  = 0
+    while num < N :
+        x = random.uniform ( xmin , xmax )
+        y = random.uniform ( ymin , ymax )
+        z = random.uniform ( zmin , zmax )
+        if random.uniform ( 0 , fmax ) <= g3d ( x , y , z ) : 
+            num += 1
+            yield x , y, z 
+    
+Ostap.Math.Gauss2D.random = _g2d_random_
+Ostap.Math.Gauss3D.random = _g3d_random_
+
+
 # =============================================================================
 _decorated_classes_ = set( [
     ##
@@ -2525,7 +2586,7 @@ _decorated_classes_ = set( [
     Ostap.Math.Piecewise              , 
     Ostap.Math.ChebyshevApproximation ,
     D.Derivative                      ,
-    
+    ## 
     Ostap.Math.Multiply               ,
     Ostap.Math.Divide                 ,
     Ostap.Math.Const                  ,
@@ -2537,7 +2598,7 @@ _decorated_classes_ = set( [
     Ostap.Math.Min                    ,
     Ostap.Math.Max                    ,
     Ostap.Math.Apply                  ,
-    Ostap.Math.KramersKronig          ,
+    Ostap.Math.KramersKronig          ,    
     ])
 
 # ============================================================================
