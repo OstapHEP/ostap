@@ -1,3 +1,5 @@
+# v1.9.6.8
+
 ## New features:
 
   1. add new module `ostap.io.zstshelve` with shelve-like databse using `zstandard` compression 
@@ -11,7 +13,6 @@
 ## Backward incompatible: 
 
 ## Bug fixes:
-
 
 # v1.9.6.6
 
