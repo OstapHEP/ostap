@@ -181,7 +181,42 @@ class LinAlgT(LA.LinAlg) :
             
         return m 
 
+    # =========================================================================
+    ## convert TVector to SVector
+    @staticmethod
+    def TV_SV ( obj ) :
+        """Convert TVector to SVector"""
+        N      = len ( obj )
+        result = Ostap.SVector( N )()
+        for i in range ( N ) :
+            result [ i ] = obj[i]
+        return result 
 
+    # =========================================================================
+    ## convert TMatrix to SMatrix
+    @staticmethod
+    def TM_SM ( obj ) :
+        """Convert TMatrix to SMatrix"""
+        nr, nc = obj.shape        
+        result = Ostap.SMatrix( nr , nc )()
+        for i in range ( nr ) :
+            for j in range ( nc ) : 
+                result [ i,j ] = obj[i,j]                
+        return result 
+
+    # =========================================================================
+    ## convert TMatrixTSym to SMatrixSym
+    @staticmethod
+    def TMS_SMS ( obj ) :
+        """Convert TMatrixTSym to SMatrixSym"""
+        nr, nc = obj.shape        
+        result = Ostap.SymMatrix ( nr )()
+        for i in range ( nr ) :
+            for j in range ( i , nr ) :                
+                result [ i,j ] = 0.5 * ( obj[i,j] + obj[j,i] )                
+        return result 
+
+        
     # =========================================================================
     ## Decorate TVector 
     @staticmethod
@@ -242,7 +277,9 @@ class LinAlgT(LA.LinAlg) :
         
         if LinAlgT.with_numpy : 
             t.to_numpy  = LinAlgT.V_NUMPY ## numpy array
-            
+
+        ## convert TVector to SVector 
+        t.svector       = LinAlgT.TV_SV 
             
         t.shape         = property ( LinAlgT.V_SHAPE , None , None )
         t.kSize         = property ( LinAlgT.T_KSIZE , None , None ) 
@@ -314,6 +351,9 @@ class LinAlgT(LA.LinAlg) :
         
         m.inverse       = LinAlgT.M_INVERSE            
 
+        ## convert TMatrix to SMatrix 
+        m.smatrix       = LinAlgT.TM_SM
+
         if LinAlgT.with_numpy : 
             m.to_numpy  = LinAlgT.M_NUMPY ## numpy array
             
@@ -328,7 +368,6 @@ class LinAlgT(LA.LinAlg) :
             m.Vector = ROOT.TVectorT ( m.Element ) 
 
         return m
-
     
     # =========================================================================
     ## decorate TMatrixTSym class
@@ -340,6 +379,12 @@ class LinAlgT(LA.LinAlg) :
 
         LinAlgT.deco_tmatrix( m ) 
         
+        ## convert TMatrixSym to SymMatrix 
+        m.smatrix       = LinAlgT.TMS_SMS
+
+        m.__str__       = LinAlgT.MS_STR 
+        m.__repr__      = LinAlgT.MS_STR 
+
         ## m.__str__       = LinAlgT.TS_STR
         ## m.__repr__      = LinAlgT.TS_STR
 
@@ -348,10 +393,10 @@ class LinAlgT(LA.LinAlg) :
         m.SimT           = LinAlgT.SIMT
         m.simT           = LinAlgT.SIMT
 
-        m._old_call_    = m.__call__
-        m._old_setitem_ = m.__setitem__
+        m._old_call_     = m.__call__
+        m._old_setitem_  = m.__setitem__
         
-        m.__setitem__   = LinAlgT.TS_SETITEM 
+        m.__setitem__    = LinAlgT.TS_SETITEM 
         
         return m
     

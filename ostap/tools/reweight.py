@@ -754,7 +754,7 @@ def makeWeights  ( dataset                    ,
                    power      = None          , ## auto-determination
                    debug      = True          , ## save intermediate information in DB
                    make_plots = True          , ## make comparison plots (and draw them)
-                   wtruncate  = ( 0.5 , 1.0 ) , ## truncate too small/large weights 
+                   wtruncate  = ( 0.5 , 1.5 ) , ## truncate too small/large weights 
                    tag        = "Reweighting" ) :
     """The main  function: perform one re-weighting iteration 
     and reweight `MC'-data set to looks as `data'(reference) dataset

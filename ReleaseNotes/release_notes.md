@@ -1,5 +1,9 @@
 ## New features:
 
+  1. rewrite `statCovs` method to get statistics and covariances for trees and datastes  
+  1. add `smattrix` method to `linalgt`-objects 
+  1. improve printout of marices 
+
 ## Backward incompatible: 
 
 ## Bug fixes:

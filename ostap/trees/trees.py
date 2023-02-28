@@ -870,58 +870,42 @@ def _stat_covs_ ( tree        ,
     >>> stats , cov2 , len = tree.statCovs( [ 'x' , 'y' , 'z' ], 'z>0' , 100 , 10000 )
     """
     ##
-    if isinstance ( expressions , str ) : expressions = [ expressions ]
+    if isinstance ( expressions , string_types ) :
+        expressions = split_string ( expressions , strip = True ) 
     ##
-    
-    import ostap.math.linalg 
-    
-    _SV    = std.vector('std::string')
-    _vars  = _SV()
-    vars   = expressions
-    for e in vars : _vars.push_back( e )
+        
+    vars = strings ( expressions ) 
+    N      = len   ( vars )
+
+    assert N , "Invalid 'expressions' %s" % str ( expressions ) 
+
     
     WSE    = Ostap.WStatEntity
-    _WV    = std.vector( WSE )
-    _stats = _WV()
-    _DV    =  std.vector('double')
-    _cov2  = _DV()
+    WV     = std.vector( WSE )
+    stats  = WV ()    
 
-    if cuts : 
-        length = Ostap.StatVar.statCov ( tree   ,
-                                         _vars  ,
-                                         cuts   ,
-                                         _stats ,
-                                         _cov2  ,
-                                         *args  ) 
-    else :
-        length = Ostap.StatVar.statCov ( tree   ,
-                                         _vars  ,
-                                         _stats ,
-                                         _cov2  ,
-                                         *args  )
+    import ostap.math.linalg 
+    import ostap.math.linalgt 
+
+    cov2   = Ostap.TMatrixSymD     ( N ) 
         
-    l = len(_vars)
-    if 0 == length : 
-        return None , None , 0 
-    elif l != len ( _stats ) or l*(l+1)/2 != len( _cov2 ):
-        logger.error("statCovs: unexpected output %d/%s/%s" % ( l           ,
-                                                                len(_stats) ,
-                                                                len(_cov2 ) ) )
-        return None, None, length
-
-
-    ## get the statistics of variables
-    stats = tuple ( [ WSE(s) for s in _stats ] ) 
+    length = Ostap.StatVar.statCov ( tree  ,
+                                     vars  ,
+                                     cuts  ,
+                                     stats , 
+                                     cov2  , *args )
     
-    import ostap.math.linalg
-    COV2 = Ostap.Math.SymMatrix ( l )
-    cov2 = COV2 () 
+    assert N == len ( stats )   , "Invalid size 'stats'   from 'Ostap.StatVar.statCov'"
+    assert cov2.IsValid()       , "Invalid 'cov2'         from 'Ostap.StatVar.statCov'"
+    assert N == cov2.GetNrows() , "Invalid size of 'cov2' from 'Ostap.StatVar.statCov'"
+    assert N == cov2.GetNcols() , "Invalid size of 'cov2' from 'Ostap.StatVar.statCov'"
 
-    for i in range( l ) :
-        for j in range ( i + 1 ) :
-            ij = i * ( i + 1 ) / 2 + j
-            cov2[i,j] = _cov2[ ij ]
-            
+    ## covert to tuple 
+    stats = tuple ( WSE ( s ) for s in stats )
+    
+    ## convert to S-matrix
+    cov2 = cov2.smatrix()
+
     return stats, cov2 , length
 
 ROOT.TTree     . statCovs = _stat_covs_

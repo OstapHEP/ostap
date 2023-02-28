@@ -27,13 +27,14 @@ from   builtins  import range
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger
+from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg2' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-from ostap.math.base        import isequal   , iszero, std , Ostap, typename 
-from ostap.core.ostap_types import num_types , integer_types
-from ostap.utils.clsgetter  import classgetter 
+from   ostap.math.base        import isequal   , iszero, std , Ostap, typename 
+from   ostap.core.ostap_types import num_types , integer_types
+from   ostap.utils.clsgetter  import classgetter
+import ostap.logger.table     as     T 
 # =============================================================================
 try :
     import numpy as np
@@ -1322,21 +1323,33 @@ class LinAlg(object) :
     #   print matrix
     #   @endcode
     @staticmethod 
-    def M_STR ( mtrx , fmt = ' %+11.4g') :
+    def M_STR ( mtrx , fmt = '') :
         """Self-printout of matrices
         >>> matrix = ...
         >>> print matrix 
         """
         rows = mtrx.kRows
         cols = mtrx.kCols
-        line = ''
 
+        if   fmt       : pass
+        elif cols <= 9 : fmt =  '%+.4g'
+        else           : fmt = ' %+11.4g'
+
+        if cols <= 9 :            
+            header = tuple ( [ '' ] + [ '%d' % i for i in range ( cols ) ] ) 
+            table  = [ header ] 
+            for i in range ( rows ) :
+                row = [ '%d' % i ] + [ fmt % mtrx ( i , j ) for j in range ( cols ) ]
+                table.append ( row )
+            return T.table  ( table , alignment = 'r'+cols*'l' ) 
+            
+        line = ''
         for i in range ( rows ) :
             line += ' |'
             for j in range ( cols ) :
                 line += fmt % mtrx ( i , j )
-            line += ' |'
-            if ( rows - 1 )  != i : line += '\n'
+                line += ' |'
+                if ( rows - 1 )  != i : line += '\n'
         return line
 
     # =============================================================================
@@ -1346,21 +1359,37 @@ class LinAlg(object) :
     #   print matrix
     #   @endcode
     @staticmethod 
-    def MS_STR ( mtrx , fmt = ' %+11.4g' , width = 12 ) :
+    def MS_STR ( mtrx , fmt = '' , width = 12 ) :
         """Self-printout of symmetric matrices
         >>> matrix = ...
         >>> print matrix 
         """
         rows = mtrx.kRows
         cols = mtrx.kCols
+
+        if   fmt       : pass
+        elif cols <= 9 : fmt =  '%+.4g'
+        else           : fmt = ' %+11.4g'
+
+        if cols <= 9 :
+            header = tuple ( [ '' ] + [ '%d' % i for i in range ( cols ) ] ) 
+            table  = [ header ] 
+            for i in range ( rows ) :
+                row = [ '%d' % i ]
+                for j in range ( cols ) : 
+                    if j < i : row.append ( '' )
+                    else     : row.append ( fmt % mtrx ( i , j ) )                    
+                table.append ( row )
+            return T.table  ( table , alignment = 'r'+cols*'l' ) 
+            
         line = ''
         for i in range ( rows ) :
             line += ' |'
             for j in range ( cols  ) :
                 if    j < i : line += width*' '
                 else        : line += fmt % mtrx ( i , j )
-            line += ' |'
-            if ( rows - 1 ) != i : line += '\n'
+                line += ' |'
+                if ( rows - 1 ) != i : line += '\n'
         return line
 
     # =========================================================================

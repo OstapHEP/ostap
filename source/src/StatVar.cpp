@@ -8,12 +8,14 @@
 #include <algorithm>
 #include <set>
 #include <random>
+#include <tuple>
 // ============================================================================
 // ROOT
 // ============================================================================
 #include "RVersion.h"
 #include "TTree.h"
 #include "TCut.h"
+#include "TMatrixTSym.h"
 #include "RooDataSet.h"
 #include "RooAbsReal.h"
 // ============================================================================
@@ -1372,14 +1374,14 @@ unsigned long Ostap::StatVar::statVars
 // ============================================================================
 unsigned long
 Ostap::StatVar::statCov
-( TTree*               tree    ,
-  const std::string&   exp1    ,
-  const std::string&   exp2    ,
-  Ostap::StatVar::Statistic& stat1 ,
-  Ostap::StatVar::Statistic& stat2 ,
-  Ostap::SymMatrix2x2& cov2    ,
-  const unsigned long  first   ,
-  const unsigned long  last    )
+( TTree*                     tree    ,
+  const std::string&         exp1    ,
+  const std::string&         exp2    ,
+  Ostap::StatVar::Statistic& stat1   ,
+  Ostap::StatVar::Statistic& stat2   ,
+  Ostap::SymMatrix2x2&       cov2    ,
+  const unsigned long        first   ,
+  const unsigned long        last    )
 {
   //
   stat1.reset () ;
@@ -1457,15 +1459,15 @@ Ostap::StatVar::statCov
 // ============================================================================
 unsigned long
 Ostap::StatVar::statCov
-( TTree*               tree    ,
-  const std::string&   exp1    ,
-  const std::string&   exp2    ,
-  const std::string&   cuts    ,
+( TTree*                     tree  ,
+  const std::string&         exp1  ,
+  const std::string&         exp2  , 
+  const std::string&         cuts  ,
   Ostap::StatVar::Statistic& stat1 ,
   Ostap::StatVar::Statistic& stat2 ,
-  Ostap::SymMatrix2x2& cov2    ,
-  const unsigned long  first   ,
-  const unsigned long  last    )
+  Ostap::SymMatrix2x2&       cov2  ,
+  const unsigned long        first ,
+  const unsigned long        last  )
 {
   if ( cuts.empty() ) 
   { return statCov ( tree , exp1 , exp2 , stat1 , stat2 , cov2 , first , last ) ; }
@@ -1568,7 +1570,169 @@ Ostap::StatVar::statCov
                    first , last    ) ;
 }
 // ============================================================================
-
+/*  calculate the covariance of two expressions 
+ *  @param tree  (INPUT)  the inpout tree 
+ *  @param vars  (INPUT)  expressions 
+ *  @param cuts  (INPUT)  the selection criteria 
+ *  @param stats (UPDATE) the statistics 
+ *  @param cov2  (UPDATE) the covariance matrix 
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2023-02-28
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statCov
+( TTree*                          tree  , 
+  const std::vector<std::string>& vars  , 
+  const std::string&              cuts  ,
+  std::vector<Statistic>&         stats ,  
+  TMatrixTSym<double>&            cov2  , 
+  const unsigned long             first ,
+  const unsigned long             last  ) 
+{
+  //
+  if ( 0 == tree || last <= first ) { stats.clear() ; return 0 ; }//
+  std::vector< std::unique_ptr<Ostap::Formula> > formulas ;
+  std::vector< std::vector<double> >             results  ;
+  std::vector< TObject*>                         objects  ;
+  //
+  formulas.reserve ( vars.size() ) ;
+  results .reserve ( vars.size() ) ;
+  //
+  for ( std::vector<std::string>::const_iterator ie = vars.begin() ; vars.end() != ie ; ++ie ) 
+  {
+    std::unique_ptr<Ostap::Formula> expr { new Ostap::Formula ( *ie , tree ) } ;
+    if ( !expr || !expr->ok() ) { stats.clear() ; return 0 ; }
+    formulas.push_back ( std::move ( expr )    ) ;
+    results.push_back  ( std::vector<double>() ) ;
+    objects.push_back  ( formulas.back().get() ) ;
+  }
+  //
+  const unsigned int N = formulas.size() ;
+  if ( N < 1 ) { stats.clear() ; return 0 ; }
+  //
+  std::unique_ptr<Ostap::Formula> selection ;
+  if ( !cuts.empty() ) 
+  {
+    selection.reset ( new Ostap::Formula ( cuts , tree ) ) ;
+    if ( !selection || !selection->ok() ) { stats.clear() ; return 0 ; }
+    objects.push_back ( selection.get() ) ;
+  }
+  //
+  Ostap::Utils::Notifier notify ( objects.begin() , objects.end() , tree ) ;
+  //
+  const unsigned long nEntries =
+    std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  cov2 = TMatrixTSym<double>( N ) ; 
+  stats.resize( N ) ;
+  const bool with_cuts = selection && selection->ok () ;
+  for ( std::vector<Statistic>::iterator s = stats.begin() ; stats.end() != s ; ++s ) { s->reset() ; }
+  //
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
+  {
+    //
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { break ; }                              // RETURN
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { break ; }                              // RETURN
+    //
+    const double w = with_cuts ? selection->evaluate() : 1.0 ;
+    //
+    if ( !w ) { continue ; }                                   // ATTENTION
+    //
+    for ( unsigned int i = 0 ; i < N ; ++i ) 
+    { formulas[i]->evaluate( results[i] ) ; }
+    //
+    for ( unsigned int i = 0 ; i < N ; ++i ) 
+    {
+      for ( const double ri : results[i] ) 
+      {
+        stats[i].add ( ri , w ) ;
+        for ( unsigned int j = i  ; j < N ; ++j ) 
+        {
+          for ( const double rj : results[j] ) 
+          { 
+            const double val = w * ri * rj ;
+            cov2 ( i , j ) += val ;
+          }  
+        }
+      }
+    }
+  }
+  //
+  if ( 0 == stats[0].nEntries() ) { return 0 ; }
+  //
+  cov2 *= 1.0 / stats[0].weights().sum()  ;
+  //
+  for  (unsigned int i = 0 ; i < N ; ++i ) 
+  {
+    const double vi_mean = stats[i].mean() ;
+    for  (unsigned int j = i ; j < N ; ++j ) 
+    {
+      const double vj_mean = stats[j].mean() ;
+      const double val  = vi_mean * vj_mean ;
+      cov2 ( i , j ) -= val ;
+    }
+  }
+  //
+  /// strange lines.... due to ROOT 
+  for ( unsigned int i = 0 ; i < N ; ++i ) 
+  { for ( unsigned int j = 0 ; j < i ; ++j ) 
+    { if ( !cov2 ( i , j ) ) { cov2 ( i , j ) = cov2 ( j , i ) ; } } }
+  //
+  return stats[0].nEntries() ;
+}
+// ============================================================================
+/*  calculate the covariance of two expressions 
+ *  @param tree  (INPUT)  the inpout tree 
+ *  @param vars  (INPUT)  expressions 
+ *  @param cuts  (INPUT)  the selection criteria 
+ *  @param stats (UPDATE) the statistics 
+ *  @param cov2  (UPDATE) the covariance matrix 
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2023-02-28
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statCov
+( TTree*                          tree  , 
+  const std::vector<std::string>& vars  , 
+  const TCut&                     cuts  ,
+  std::vector<Statistic>&         stats ,  
+  TMatrixTSym<double>&            cov2  , 
+  const unsigned long             first ,
+  const unsigned long             last  ) 
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return statCov ( tree , vars , _cuts , stats , cov2 , first , last  ) ;
+}
+// ============================================================================
+/*  calculate the covariance of two expressions 
+ *  @param tree  (INPUT)  the inpout tree 
+ *  @param vars  (INPUT)  expressions 
+ *  @param stats (UPDATE) the statistics 
+ *  @param cov2  (UPDATE) the covariance matrix 
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2023-02-28
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statCov
+( TTree*                          tree  , 
+  const std::vector<std::string>& vars  , 
+  std::vector<Statistic>&         stats ,  
+  TMatrixTSym<double>&            cov2  , 
+  const unsigned long             first ,
+  const unsigned long             last  ) 
+{
+  static const std::string cuts{} ;
+  return statCov ( tree , vars ,  cuts , stats , cov2 , first , last  ) ;
+}
 // ============================================================================
 Ostap::StatVar::Statistic
 Ostap::StatVar::statVar
@@ -1776,83 +1940,6 @@ Ostap::StatVar::statVars
  *  @param tree  (INPUT)  the input tree
  *  @param exp1  (INPUT)  the first  expresiion
  *  @param exp2  (INPUT)  the second expresiion
- *  @param stat1 (UPDATE) the statistic for the first  expression
- *  @param stat2 (UPDATE) the statistic for the second expression
- *  @param cov2  (UPDATE) the covariance matrix
- *  @return number of processed events
- *
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2014-03-27
- */
-// ============================================================================
-unsigned long
-Ostap::StatVar::statCov
-( const RooAbsData*             data      ,
-  const std::string&            exp1      ,
-  const std::string&            exp2      ,
-  Ostap::StatVar::Statistic& stat1     ,
-  Ostap::StatVar::Statistic& stat2     ,
-  Ostap::SymMatrix2x2&          cov2      ,
-  const std::string&            cut_range ,
-  const unsigned long           first     ,
-  const unsigned long           last      )
-{
-  //
-  stat1.reset () ;
-  stat2.reset () ;
-  Ostap::Math::setToScalar ( cov2 , 0.0 ) ;
-  //
-  if ( 0 == data || last <= first ) { return 0 ; }               // RETURN
-  //
-  const std::unique_ptr<Ostap::FormulaVar> formula1 { make_formula ( exp1 , *data ) } ;
-  const std::unique_ptr<Ostap::FormulaVar> formula2 { make_formula ( exp2 , *data ) } ;
-  //
-  const bool  weighted = data->isWeighted() ;
-  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
-  //
-  const unsigned long nEntries = std::min ( last , (unsigned long) data->numEntries() ) ;
-  //
-  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
-  {
-    //
-    const RooArgSet* vars = data->get( entry ) ;
-    if ( nullptr == vars  )                             { break    ; } // BREAK
-    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE    
-    //
-    // apply weight:
-    const long double w = weighted  ? data->weight()        : 1.0L ;
-    if ( !w ) { continue ; }                                   // CONTINUE    
-    //
-    const double v1 = formula1->getVal() ;
-    const double v2 = formula2->getVal() ;
-    //
-    stat1.add ( v1 , w ) ;
-    stat2.add ( v2 , w ) ;
-    //
-    cov2 ( 0 , 0 ) += w * v1 * v1 ;
-    cov2 ( 0 , 1 ) += w * v1 * v2 ;
-    cov2 ( 1 , 1 ) += w * v2 * v2 ;
-    //
-  }
-  //
-  if ( 0 == stat1.nEntries() || 0 == stat1.nEff () ) { return 0 ; }
-  //
-  cov2 /= stat1.weights().sum()  ;
-  //
-  const double v1_mean = stat1.mean() ;
-  const double v2_mean = stat2.mean() ;
-  //
-  cov2 ( 0 , 0 ) -= v1_mean * v1_mean ;
-  cov2 ( 0 , 1 ) -= v1_mean * v2_mean ;
-  cov2 ( 1 , 1 ) -= v2_mean * v2_mean ;
-  //
-  return stat1.nEntries() ;
-}
-// ============================================================================
-/*  calculate the covariance of two expressions
- *  @param tree  (INPUT)  the input tree
- *  @param exp1  (INPUT)  the first  expresiion
- *  @param exp2  (INPUT)  the second expresiion
  *  @param cuts  (INPUT)  selection
  *  @param stat1 (UPDATE) the statistic for the first  expression
  *  @param stat2 (UPDATE) the statistic for the second expression
@@ -1933,6 +2020,149 @@ Ostap::StatVar::statCov
   cov2 ( 1 , 1 ) -= v2_mean * v2_mean ;
   //
   return stat1.nEntries() ;
+}
+// ============================================================================
+/*  calculate the covariance of several expressions 
+ *  @param tree      (INPUT)  the inpout tree 
+ *  @param vars      (INPUT)  expressions 
+ *  @param cuts      (INPUT)  the selection criteria 
+ *  @param stats     (UPDATE) the statistics 
+ *  @param cov2      (UPDATE) the covariance matrix 
+ *  @param cut_range (INPUT)  range  
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2023-02-28
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statCov
+( const RooAbsData*               data      , 
+  const std::vector<std::string>& vars      ,  
+  const std::string&              cuts      ,
+  std::vector<Statistic>&         stats     ,  
+  TMatrixTSym<double>&            cov2      , 
+  const std::string&              cut_range ,
+  const unsigned long             first     ,
+  const unsigned long             last      ) 
+{
+  //
+  if ( 0 == data || last <= first ) { stats.clear() ; return 0 ; }
+  //
+  const bool  weighted = data->isWeighted() ;
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  std::vector<std::unique_ptr<Ostap::FormulaVar> > formulas ;
+  //
+  for ( std::vector<std::string>::const_iterator ie = vars.begin() ; vars.end() != ie ; ++ie ) 
+  { formulas.push_back ( make_formula ( *ie , *data ) ) ; }
+  //
+  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data ,  true ) } ;
+  
+  const unsigned int N = formulas.size() ;
+  if ( 1 > N ) { stats.clear() ; return 0 ; }
+  //
+  cov2 = TMatrixTSym<double>( N ) ; 
+  stats.resize( N ) ;
+  //
+  std::vector<double> results ( N , 0.0 ) ;
+  //
+  const bool with_cuts  = !(!selection) ;
+  const unsigned long nEntries = std::min ( last , (unsigned long) data->numEntries() ) ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
+  {
+    //
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars  )                           { break    ; } // BREAK
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE    
+    //
+    // apply weight:
+    const long double w = weighted  ? data->weight()        : 1.0L ;
+    if ( !w      ) { continue ; }                                   // CONTINUE    
+    //
+    const double weight = with_cuts ? w * selection->getVal() : w ;
+    if ( !weight ) { continue ; }                                   // CONTINUE    
+    
+    //
+    for ( unsigned int i = 0 ; i < N ; ++i ) 
+    { results [i] = formulas[i]->getVal() ; }
+    
+    for ( unsigned int i = 0 ; i < N ; ++i ) 
+    {
+      const double ri = results [i] ;
+      stats[i].add ( ri , weight ) ;
+      for ( unsigned int j = i ; j < N ; ++j ) 
+      { cov2 ( i , j ) += weight * ri * results [ j ] ; }
+    }
+    //
+  }
+  //
+  if ( 0 == stats[0].nEntries() ) { return 0 ; }
+  //
+  cov2 *= 1.0 / stats[0].weights().sum()  ;
+  //
+  for  (unsigned int i = 0 ; i < N ; ++i ) 
+  {
+    const double vi_mean = stats[i].mean() ;
+    for  (unsigned int j = i ; j < N ; ++j ) 
+    {
+      const double vj_mean = stats[j].mean() ;
+      cov2 ( i , j ) -= vi_mean * vj_mean ;
+    }
+  }
+  //
+  return stats[0].nEntries() ;
+}
+// ============================================================================
+/*  calculate the covariance of several expressions 
+ *  @param tree      (INPUT)  the inpout tree 
+ *  @param vars      (INPUT)  expressions 
+ *  @param cuts      (INPUT)  the selection criteria 
+ *  @param stats     (UPDATE) the statistics 
+ *  @param cov2      (UPDATE) the covariance matrix 
+ *  @param cut_range (INPUT)  range  
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2023-02-28
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statCov
+( const RooAbsData*               data      , 
+  const std::vector<std::string>& vars      ,  
+  const TCut&                     cuts      ,
+  std::vector<Statistic>&         stats     ,  
+  TMatrixTSym<double>&            cov2      ,  
+  const std::string&              cut_range ,
+  const unsigned long             first     ,
+  const unsigned long             last      )
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return statCov ( data , vars , _cuts , stats , cov2 , cut_range , first , last ) ;  
+}
+// ============================================================================
+/*  calculate the covariance of several expressions 
+ *  @param tree      (INPUT)  the inpout tree 
+ *  @param vars      (INPUT)  expressions 
+ *  @param stats     (UPDATE) the statistics 
+ *  @param cov2      (UPDATE) the covariance matrix 
+ *  @param cut_range (INPUT)  range  
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2023-02-28
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statCov
+( const RooAbsData*               data      , 
+  const std::vector<std::string>& vars      ,  
+  std::vector<Statistic>&         stats     ,  
+  TMatrixTSym<double>&            cov2      ,  
+  const std::string&              cut_range ,
+  const unsigned long             first     ,
+  const unsigned long             last      )
+{
+  static const std::string _cuts{} ;
+  return statCov ( data , vars , _cuts , stats , cov2 , cut_range , first , last ) ;  
 }
 // ============================================================================
 /*  get the number of equivalent entries 

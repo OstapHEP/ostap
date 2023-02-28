@@ -22,6 +22,10 @@ class RooAbsData ; // RooFit
 #include "Ostap/SymmetricMatrixTypes.h"
 #include "Ostap/DataFrame.h"
 // ============================================================================
+// forward declarations 
+// ============================================================================
+template <class SCALAR> class TMatrixTSym ; // ROOT 
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -638,6 +642,61 @@ namespace Ostap
       const unsigned long  first = 0    ,
       const unsigned long  last  = LAST ) ;
     // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param vars  (INPUT)  expressions 
+     *  @param cuts  (INPUT)  the selection criteria 
+     *  @param stats (UPDATE) the statistics 
+     *  @param cov2  (UPDATE) the covariance matrix 
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    static unsigned long statCov 
+    ( TTree*                          tree         ,
+      const std::vector<std::string>& vars         , 
+      const std::string&              cuts         ,
+      std::vector<Statistic>&         stats        ,  
+      TMatrixTSym<double>&            cov2         , 
+      const unsigned long             first = 0    ,
+      const unsigned long             last  = LAST ) ;
+    // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param vars  (INPUT)  expressions 
+     *  @param cuts  (INPUT)  the selection criteria 
+     *  @param stats (UPDATE) the statistics 
+     *  @param cov2  (UPDATE) the covariance matrix 
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    static unsigned long statCov 
+    ( TTree*                          tree         ,
+      const std::vector<std::string>& vars         , 
+      const TCut&                     cuts         ,
+      std::vector<Statistic>&         stats        ,  
+      TMatrixTSym<double>&            cov2         , 
+      const unsigned long             first = 0    ,
+      const unsigned long             last  = LAST ) ;
+    // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param vars  (INPUT)  expressions 
+     *  @param stats (UPDATE) the statistics 
+     *  @param cov2  (UPDATE) the covariance matrix 
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    static unsigned long statCov 
+    ( TTree*                          tree         ,
+      const std::vector<std::string>& vars         , 
+      std::vector<Statistic>&         stats        ,  
+      TMatrixTSym<double>&            cov2         , 
+      const unsigned long             first = 0    ,
+      const unsigned long             last  = LAST ) ;
+    // ========================================================================
   public:
     // ========================================================================
     /** calculate the covariance of two expressions 
@@ -687,6 +746,67 @@ namespace Ostap
       const std::string&   cut_range = ""   ,
       const unsigned long  first     = 0    ,
       const unsigned long  last      = LAST ) ;
+    // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param tree      (INPUT)  the inpout tree 
+     *  @param vars      (INPUT)  expressions 
+     *  @param cuts      (INPUT)  the selection criteria 
+     *  @param stats     (UPDATE) the statistics 
+     *  @param cov2      (UPDATE) the covariance matrix 
+     *  @param cut_range (INPUT)  range  
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    static unsigned long statCov 
+    ( const RooAbsData*    tree             , 
+      const std::vector<std::string>& vars           ,  
+      const std::string&              cuts           ,
+      std::vector<Statistic>&         stats          ,  
+      TMatrixTSym<double>&            cov2           , 
+      const std::string&              cut_range = "" ,
+      const unsigned long             first = 0      ,
+      const unsigned long             last  = LAST   ) ;
+    // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param tree      (INPUT)  the inpout tree 
+     *  @param vars      (INPUT)  expressions 
+     *  @param cuts      (INPUT)  the selection criteria 
+     *  @param stats     (UPDATE) the statistics 
+     *  @param cov2      (UPDATE) the covariance matrix 
+     *  @param cut_range (INPUT)  range  
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    static unsigned long statCov 
+    ( const RooAbsData*               tree           , 
+      const std::vector<std::string>& vars           ,  
+      const TCut&                     cuts           ,
+      std::vector<Statistic>&         stats          ,  
+      TMatrixTSym<double>&            cov2           , 
+      const std::string&              cut_range = "" ,
+      const unsigned long             first = 0      ,
+      const unsigned long             last  = LAST   ) ;
+    // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param tree      (INPUT)  the inpout tree 
+     *  @param vars      (INPUT)  expressions 
+     *  @param stats     (UPDATE) the statistics 
+     *  @param cov2      (UPDATE) the covariance matrix 
+     *  @param cut_range (INPUT)  range  
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    static unsigned long statCov 
+    ( const RooAbsData*    tree             , 
+      const std::vector<std::string>& vars           ,  
+      std::vector<Statistic>&         stats          ,  
+      TMatrixTSym<double>&            cov2           , 
+      const std::string&              cut_range = "" ,
+      const unsigned long             first = 0      ,
+      const unsigned long             last  = LAST   ) ;
     // ========================================================================
   public:
     // ========================================================================
@@ -1410,13 +1530,14 @@ namespace Ostap
      *  @param last  last entry 
      */
     static unsigned long 
-    get_table ( const RooAbsData*                  data         , 
-                const Names&                       vars         , 
-                const std::string&                 cuts         , 
-                Table&                             table        ,
-                Column&                            weights      , 
-                const unsigned long                first = 0    ,
-                const unsigned long                last  = LAST ) ;
+    get_table 
+    ( const RooAbsData*                  data         , 
+      const Names&                       vars         , 
+      const std::string&                 cuts         , 
+      Table&                             table        ,
+      Column&                            weights      , 
+      const unsigned long                first = 0    ,
+      const unsigned long                last  = LAST ) ;
     // ========================================================================
     /** get variables from dataset in form of the table 
      *  @param data input dataset
@@ -1428,13 +1549,14 @@ namespace Ostap
      *  @param last  last entry 
      */
     static unsigned long 
-    get_table ( const RooAbsData*                  data         ,  
-                const Names&                       vars         , 
-                const TCut&                        cuts         , 
-                Table&                             table        ,
-                Column&                            weights      , 
-                const unsigned long                first = 0    ,
-                const unsigned long                last  = LAST ) ;
+    get_table
+    ( const RooAbsData*                  data         ,  
+      const Names&                       vars         , 
+      const TCut&                        cuts         , 
+      Table&                             table        ,
+      Column&                            weights      , 
+      const unsigned long                first = 0    ,
+      const unsigned long                last  = LAST ) ;
     // ========================================================================
     /** get variables from dataset in form of the table 
      *  @param data input dataset
@@ -1445,12 +1567,13 @@ namespace Ostap
      *  @param last  last entry 
      */
     static unsigned long 
-    get_table ( const RooAbsData*                  data         , 
-                const Names&                       vars         , 
-                Table&                             table        ,
-                Column&                            weights      , 
-                const unsigned long                first = 0    ,
-                const unsigned long                last  = LAST ) ;    
+    get_table 
+    ( const RooAbsData*                  data         , 
+      const Names&                       vars         , 
+      Table&                             table        ,
+      Column&                            weights      , 
+      const unsigned long                first = 0    ,
+      const unsigned long                last  = LAST ) ;    
     // ========================================================================
   public:
     // ========================================================================    
@@ -1465,14 +1588,15 @@ namespace Ostap
      *  @param last  last entry 
      */
     static unsigned long 
-    get_table ( const RooAbsData*                  data         , 
-                const Names&                       vars         , 
-                const std::string&                 cuts         , 
-                Table&                             table        ,
-                Column&                            weights      , 
-                const std::string&                 cutrange     ,
-                const unsigned long                first = 0    ,
-                const unsigned long                last  = LAST ) ;
+    get_table
+    ( const RooAbsData*                  data         , 
+      const Names&                       vars         , 
+      const std::string&                 cuts         , 
+      Table&                             table        ,
+      Column&                            weights      , 
+      const std::string&                 cutrange     ,
+      const unsigned long                first = 0    ,
+      const unsigned long                last  = LAST ) ;
     // ========================================================================
     /** get variables from dataset in form of the table 
      *  @param data input dataset
@@ -1485,14 +1609,15 @@ namespace Ostap
      *  @param last  last entry 
      */
     static unsigned long 
-    get_table ( const RooAbsData*                  data         ,  
-                const Names&                       vars         , 
-                const TCut&                        cuts         , 
-                Table&                             table        ,
-                Column&                            weights      , 
-                const std::string&                 cutrange     ,
-                const unsigned long                first = 0    ,
-                const unsigned long                last  = LAST ) ;
+    get_table
+    ( const RooAbsData*                  data         ,  
+      const Names&                       vars         , 
+      const TCut&                        cuts         , 
+      Table&                             table        ,
+      Column&                            weights      , 
+      const std::string&                 cutrange     ,
+      const unsigned long                first = 0    ,
+      const unsigned long                last  = LAST ) ;
     // ========================================================================
   } ;  
   // ==========================================================================
