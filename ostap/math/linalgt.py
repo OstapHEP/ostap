@@ -213,7 +213,7 @@ class LinAlgT(LA.LinAlg) :
         result = Ostap.SymMatrix ( nr )()
         for i in range ( nr ) :
             for j in range ( i , nr ) :                
-                result [ i,j ] = 0.5 * ( obj[i,j] + obj[j,i] )                
+                result [ i,j ] = 0.5 * ( obj (i,j) + obj(j,i) )                
         return result 
 
         
