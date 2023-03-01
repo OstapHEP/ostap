@@ -19,6 +19,7 @@ from   ostap.core.pyrouts     import Ostap
 import ostap.io.root_file 
 import ostap.parallel.kisa
 import ostap.io.zipshelve     as     DBASE
+import ostap.logger.table     as     T 
 from   ostap.histos.histos    import h1_axis, h2_axes, h3_axes 
 from   ostap.utils.timing     import timing
 from   ostap.logger.colorized import attention, allright  
@@ -316,13 +317,16 @@ logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 
                                                       title     = title    ,
                                                       prefix    = '# '     ) ) )
 
+vct_data  = datatree.statVct ( 'x,y,z' )
+## table of global statistics 
+glob_stat = [ ( '#' , 'Mahhalanobis' , 'KL/DATA-MC' , 'KL/MC-DATA' , 'KL-sym' ) ] 
 # =============================================================================
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
     mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )
     ## fill dataset from input MC tree
     mcds_ , _ = mctree.make_dataset ( variables = variables ,
                                       selection = '0<x && x<%s && 0<y && y<%s && 0<z && z<%s' % ( xmax , ymax, zmax ) )
-                                  
+
 ##    selector = SelectorWithVars (
 ##        variables ,
 ##        '0<x && x<%s && 0<y && y<%s && 0<z && z<%s' % ( xmax , ymax, zmax ) , silence = True )
@@ -365,7 +369,17 @@ for iter in range ( 1 , maxIter + 1 ) :
                                                           title     = title    ,
                                                           cuts      = 'weight' , 
                                                           prefix    = '# '     ) ) )        
-    
+        ## get MC data in a form of vector 
+        vct_mc = mcds.statVct ( 'x,y,z', 'weight' )
+        trow = ( '%d'   % iter ,
+                 '%.4g' % vct_mc  .mahalanobis                 ( vct_data ) , 
+                 '%.4g' % vct_mc  .asymmetric_kullback_leibler ( vct_data ) , 
+                 '%.4g' % vct_data.asymmetric_kullback_leibler ( vct_mc   ) , 
+                 '%.4g' % vct_data.           kullback_leibler ( vct_mc   ) )
+        glob_stat.append ( trow )
+        ## title = 'MC-data as vector at #%s' % iter
+        ## logger.info ( '%s\n%s' % ( title , vct_mc.table ( title = title , prefix = '# ' , correlations =True ) ) ) 
+        
     # =========================================================================
     ## 2) update weights
 
@@ -434,6 +448,13 @@ logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 
                                                       title     = title    ,
                                                       cuts      = 'weight' , 
                                                       prefix    = '# '     ) ) )
+
+# =============================================================================
+title = 'Global DATA/MC similarity'
+table = T.table ( glob_stat , title = title , prefix = '# ' ) 
+logger.info ( '%s\n%s' % ( title , table ) ) 
+
+
 
 # =============================================================================
 ##                                                                      The END 

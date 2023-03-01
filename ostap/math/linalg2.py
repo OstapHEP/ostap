@@ -21,9 +21,9 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-import ROOT, re, ctypes, array  
 from   sys       import version_info as python_version
 from   builtins  import range
+import ROOT, math, re, ctypes, array, random 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1169,20 +1169,54 @@ class LinAlg(object) :
     #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
     #  @date 2020-05-15
     @staticmethod
-    def VE_STR ( vct , fmt = ' %g' ) :
-        """Self-printout of SVectorsWithError: (...)
+    def VE_STR ( vct , fmt = '' , prefix = '' , title = '' , correlations = False ) :
+        """Self-printout of SVectorWithError: (...)
         """
-
+        
         v = vct.value      ()
+    
         c = vct.covariance ()
-        return "%s\n%s" % ( v , c )
 
+        if correlations :
+            c   = c.correlations () 
+            fmt = '%+.3f'
+            
+        N = len ( v )
+
+        ## no nice prins for huge vectors 
+        if 10 <= N :  return "%s\n%s" % ( v , c )
+
+        cols = N
+        rows = N
+                
+        if   fmt       : pass
+        elif cols <= 9 : fmt =  '%+.4g'
+        else           : fmt = ' %+11.4g'
+
+        header = tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) 
+        table  = [ header ] 
+        ## 1st row : values
+        row    = [ 'V' ]
+        for i in range ( N ) :
+            value  = v [ i ]
+            cov2   = c ( i , i )
+            error  = math.sqrt ( cov2 ) if 0 <= cov2 else -math.sqrt ( abs ( cov2 ) )
+            row.append (  '%+.4g +/- %.4g' % ( value , error ) )
+        table.append ( row )
+        for i in range ( rows ) :
+            row = [ '%d' % i ]
+            for j in range ( cols ) : 
+                if j < i : row.append ( '' )
+                else     : row.append ( fmt % c ( i , j ) )                    
+            table.append ( row )
+        return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
+            
     # =============================================================================
     ## Transform vector-with-errors to another variable
     #  for \f[ y = y ( x ) , C(y) = J C(x) J^T, \f]
     #  where  \f$ J = \left( \frac{\partial y}{\partial x }\right) \f$.
     #
-    #  Transofrm to (r,phi)-varibales: 
+    #  Transform to (r,phi)-variables 
     #  @code
     #  vct = ...  ##
     #  r   = lambda x,y : (x*x+y*y)**0.5
@@ -1323,7 +1357,7 @@ class LinAlg(object) :
     #   print matrix
     #   @endcode
     @staticmethod 
-    def M_STR ( mtrx , fmt = '') :
+    def M_STR ( mtrx , fmt = '' , prefix = '' , title = '' ) :
         """Self-printout of matrices
         >>> matrix = ...
         >>> print matrix 
@@ -1336,12 +1370,12 @@ class LinAlg(object) :
         else           : fmt = ' %+11.4g'
 
         if cols <= 9 :            
-            header = tuple ( [ '' ] + [ '%d' % i for i in range ( cols ) ] ) 
+            header = tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) 
             table  = [ header ] 
             for i in range ( rows ) :
                 row = [ '%d' % i ] + [ fmt % mtrx ( i , j ) for j in range ( cols ) ]
                 table.append ( row )
-            return T.table  ( table , alignment = 'r'+cols*'l' ) 
+            return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
             
         line = ''
         for i in range ( rows ) :
@@ -1359,7 +1393,7 @@ class LinAlg(object) :
     #   print matrix
     #   @endcode
     @staticmethod 
-    def MS_STR ( mtrx , fmt = '' , width = 12 ) :
+    def MS_STR ( mtrx , fmt = '' , width = 12 , prefix = '' , title = '' ) :
         """Self-printout of symmetric matrices
         >>> matrix = ...
         >>> print matrix 
@@ -1372,7 +1406,7 @@ class LinAlg(object) :
         else           : fmt = ' %+11.4g'
 
         if cols <= 9 :
-            header = tuple ( [ '' ] + [ '%d' % i for i in range ( cols ) ] ) 
+            header = tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) 
             table  = [ header ] 
             for i in range ( rows ) :
                 row = [ '%d' % i ]
@@ -1380,7 +1414,7 @@ class LinAlg(object) :
                     if j < i : row.append ( '' )
                     else     : row.append ( fmt % mtrx ( i , j ) )                    
                 table.append ( row )
-            return T.table  ( table , alignment = 'r'+cols*'l' ) 
+            return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
             
         line = ''
         for i in range ( rows ) :
@@ -1622,7 +1656,42 @@ class LinAlg(object) :
     def VE_REDUCE ( vct ) :
         """reduce SVectorWithErrors"""
         return svcte_factory , ( vct.value() , vct.cov2() ) 
+
+    # =========================================================================
+    @staticmethod
+    def VE_RANDOM ( vct , N , use_numpy = True ) :
+        """Generate random numbers from the vector
+        >>> vct = ...
+        >>> for x in vct.random ( 1000 ) :
+        >>> ... 
+        """
         
+        assert isinstance ( N , integer_types ) and 0 <= N , 'Invalid number of shoots!'
+        
+        v  = vct.value ()
+        c2 = vct.cov2  ()
+        n  = len ( v )
+        
+        L  = Ostap.Matrix ( n , n , vct._scalar_)() 
+        ok = Ostap.Math.cholesky ( vct , L )
+        assert ok , 'random: Cholesky decomposition failed!'
+
+        ## use numpy if/when available
+        if np and use_numpy :
+            
+            v = v.to_numpy() 
+            l = L.to_numpy()
+            for i in range  ( N ) : 
+                u = np.random.normal ( loc=0 , scale=1, size = n) 
+                yield v + np.dot ( l , u )
+                
+        else :
+            
+            x = Ostap.Vector ( n , v._scalar_ )()
+            for i in range ( N ) :                
+                for i in range ( n ) : x [ i ] = random.gauss ( 0 , 1 )                
+                yield v + L * x
+                
     # =========================================================================
     ## Convert matrix to TMatrix, vector to TVector 
     #  @code
@@ -1772,6 +1841,7 @@ class LinAlg(object) :
 
         m.__str__       = LinAlg.M_STR
         m.__repr__      = LinAlg.M_STR
+        m.table         = LinAlg.M_STR
 
         m.__iter__      = LinAlg.M_ITER 
         m.iteritems     = LinAlg.M_ITEMS 
@@ -1833,6 +1903,8 @@ class LinAlg(object) :
         
         m.__str__        = LinAlg.MS_STR
         m.__repr__       = LinAlg.MS_STR
+        m.table          = LinAlg.MS_STR
+
         m.correlations   = LinAlg.MS_CORR
         
         m.Sim            = LinAlg.SIM
@@ -1865,6 +1937,7 @@ class LinAlg(object) :
         
         t. __str__      = LinAlg.VE_STR
         t. __repr__     = LinAlg.VE_STR
+        t. table        = LinAlg.VE_STR
 
         t. __len__      = lambda s : s.kSize 
         t. __contains__ = lambda s, i : 0 <= i < s.kSize
@@ -1873,7 +1946,9 @@ class LinAlg(object) :
         t.transform     = LinAlg.VE_TRANSFORM
 
         t.__reduce__    = LinAlg.VE_REDUCE 
-                
+
+        t.random        = LinAlg.VE_RANDOM
+        
         return t
 
 
@@ -1896,6 +1971,8 @@ class LinAlg(object) :
         v  = LinAlg.known_svectors.get ( tt , None )
         if  v is None :
             v = ROOT.ROOT.Math.SVector ( t , n )
+            v._scalar_ = t
+            
             LinAlg.known_svectors [ tt ] = v
             LinAlg.deco_vector    ( v )
             ##
@@ -1907,8 +1984,9 @@ class LinAlg(object) :
             ## create also all smaller vectors 
             for i in range ( 2 , n ) :
                 ti = i , t
-                if not ti in LinAlg.known_svectors : LinAlg.Vector ( i ,  t )                
+                if not ti in LinAlg.known_svectors : LinAlg.Vector ( i ,  t )
                 
+            
         return v 
     
     # =========================================================================
@@ -1933,8 +2011,10 @@ class LinAlg(object) :
         if m is None :
             
             m = ROOT.ROOT.Math.SMatrix ( t , k , n )
+            m._scalar_ = t
+            
             LinAlg.known_smatrices [ tt ] = m
-            LinAlg.deco_matrix ( m )
+            LinAlg.deco_matrix     ( m )
 
             ## check k-dimension 
             tt1 = k , t
@@ -1946,9 +2026,10 @@ class LinAlg(object) :
             if not tt2 in LinAlg.known_svectors     : LinAlg.   Vector ( n , t )
             if not tt2 in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( n , t )    
 
-            ## check transposed matrix 
-            tt3 = n , k , t
-            if not tt3 in LinAlg.known_smatrices    : LinAlg.   Matrix ( n , k , t ) 
+            ## check transposed matrix
+            if n != k : 
+                tt3 = n , k , t
+                if not tt3 in LinAlg.known_smatrices    : LinAlg.   Matrix ( n , k , t ) 
 
             ## create also smaller vectors 
             for i in range ( 2 , max ( k , n )  ):
@@ -1981,8 +2062,11 @@ class LinAlg(object) :
 
         tt = n , t
         m = LinAlg.known_ssymmatrices.get ( tt , None )
-        if  m is None  : 
+        if  m is None  :
+            
             m = ROOT.ROOT.Math.SMatrix('%s,%d,%d,ROOT::Math::MatRepSym<%s,%d>' %  ( t , n , n , t , n ) )
+            m._scalar_ = t
+
             LinAlg.known_ssymmatrices [ tt ] = m
             LinAlg.deco_symmatrix  ( m )
             ##
@@ -2027,15 +2111,18 @@ class LinAlg(object) :
         v = LinAlg.known_svectorse.get ( tt , None )
         if  v is None :
             v = Ostap.Math.SVectorWithError ( n , t )
+            v._scalar_ = t
+                        
             LinAlg.known_svectorse [ tt ] = v
             LinAlg.deco_vectore    ( v )
             ##
             if not tt  in LinAlg.known_svectors     : LinAlg.   Vector ( n ,     t )    
-            if not tt  in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( n ,     t )    
+            if not tt  in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( n ,     t )
+            
             tt1 = n , n , t 
             if not tt1 in LinAlg.known_smatrices    : LinAlg.   Matrix ( n , n , t )
 
-            for i in range ( 2 , n ) :
+            for i in range ( 1 , n ) :
                 ti = i , t
                 if not ti in LinAlg.known_svectorse  : LinAlg. VectorE ( i , t )                
                 

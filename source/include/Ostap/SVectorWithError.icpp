@@ -30,7 +30,7 @@ Ostap::Math::SVectorWithError<N,SCALAR>::chi2
   const bool ok = s_cov2.InvertChol() ;
   if  ( !ok ) { return -1 ; }                                        // RETURN  
   /// calculate chi2 
-  return ROOT::Math::Similarity ( value() - right.value() , s_cov2 ) ;
+  return ROOT::Math::Similarity ( this->value() - right.value() , s_cov2 ) ;
 }
 // ============================================================================
 template <unsigned int N, class SCALAR>
@@ -43,7 +43,7 @@ Ostap::Math::SVectorWithError<N,SCALAR>::chi2
   const bool ok = s_cov2.InvertChol() ;
   if  ( !ok ) { return -1 ; }                                        // RETURN  
   /// calculate chi2 
-  return ROOT::Math::Similarity ( value() - right , s_cov2 ) ;
+  return ROOT::Math::Similarity ( this->value() - right , s_cov2 ) ;
 }
 // ============================================================================
 template <unsigned int N, class SCALAR>
@@ -57,7 +57,7 @@ Ostap::Math::SVectorWithError<N,SCALAR>::chi2
   const bool ok = s_cov2.InvertChol() ;
   if  ( !ok ) { return -1 ; }                                        // RETURN  
   /// calculate chi2 
-  return ROOT::Math::Similarity ( value() - right , s_cov2 ) ;
+  return ROOT::Math::Similarity ( this->value() - right , s_cov2 ) ;
 }
 // ============================================================================
 template <unsigned int N, class SCALAR>
@@ -102,6 +102,15 @@ Ostap::Math::SVectorWithError<N,SCALAR>::__rsub__
 ( const ROOT::Math::SVector<SCALAR,N>& right  ) const 
 { return ( right - (*this) ) ; }
 // ============================================================================
+template <unsigned int N, class SCALAR>
+template <unsigned int K, typename R> 
+Ostap::Math::SVectorWithError<K,SCALAR>
+Ostap::Math::SVectorWithError<N,SCALAR>::__rmul__ 
+( const ROOT::Math::SMatrix<SCALAR,K,N,R>& M ) const 
+{
+  return SVectorWithError<K,SCALAR> ( M * m_value , m_cov2.Similarity ( M ) ) ;
+}  
+// ============================================================================
 // conversion to string
 // ============================================================================
 template <unsigned int N, class SCALAR>
@@ -123,7 +132,7 @@ Ostap::Math::SVectorWithError<N,SCALAR>::fillStream ( std::ostream& s ) const
   for ( unsigned int i = 0 ; i < N ; ++i ) 
   {
     if ( 0 != i ) { s << " , " ; }
-    s << value()(i) << " +- " ;
+    s << this->value()(i) << " +- " ;
     const double d = m_cov2(i,i) ;
     s <<  ( 0 <= d ? std::sqrt ( d ) : -std::sqrt(-d) ) ;
   }
@@ -144,12 +153,12 @@ inline SCALAR Ostap::Math::SVectorWithError<N,SCALAR>::corr
 {
   static const SCALAR s_bad = -10000 ;
   //
-  const SCALAR sii = cov2( i , i ) ;
-  const SCALAR sjj = cov2( j , j ) ;
+  const SCALAR sii = this->cov2( i , i ) ;
+  const SCALAR sjj = this->cov2( j , j ) ;
   //
   if ( 0 >= sii || 0 >= sjj ) { return s_bad ; }                      // RETURN  
   //
-  return cov2( i , j ) / std::sqrt ( sii * sjj ) ;                    // RETURN 
+  return this->cov2( i , j ) / std::sqrt ( sii * sjj ) ;              // RETURN 
 }
 // ============================================================================
 /*  get the full correlation matrix 
@@ -166,15 +175,15 @@ inline bool Ostap::Math::SVectorWithError<N,SCALAR>::corr
   {
     corrm ( i , i ) = 1 ;
     //
-    const SCALAR sii = cov2 ( i , i ) ;
+    const SCALAR sii = this->cov2 ( i , i ) ;
     if   ( 0 >= sii ) { OK = false ; break ; }                       // BREAK
     //
     for ( unsigned int j =  i + 1 ; j < N && OK ; ++j ) 
     {
-      const SCALAR sjj = cov2 ( j , j ) ;
+      const SCALAR sjj = this->cov2 ( j , j ) ;
       if ( 0 >= sjj ) { OK = false ; break ; }                        // BREAK
       //
-      corrm ( i , j ) = cov2 (i , j ) / std::sqrt ( sii * sjj ) ;   
+      corrm ( i , j ) = this->cov2 (i , j ) / std::sqrt ( sii * sjj ) ;   
       //
     }
   }
@@ -194,7 +203,7 @@ Ostap::Math::SVectorWithError<N,SCALAR>::mean
 {
   int ifail1 = 0 ;  
   int ifail2 = 0 ;  
-  const Covariance ic1 (       cov2().InverseChol ( ifail1 ) ) ;
+  const Covariance ic1 ( this->cov2().InverseChol ( ifail1 ) ) ;
   const Covariance ic2 ( right.cov2().InverseChol ( ifail2 ) );
   // calculate the covariance matrix 
   Covariance        c  ( ic1 + ic2 ) ;
@@ -203,9 +212,8 @@ Ostap::Math::SVectorWithError<N,SCALAR>::mean
     std::fill   ( c.begin() , c.end  () , -1.0 ) ;
     return Self ( c ) ;
   }
-  //
   // calculate the weighted average
-  return Self ( c * ( ic1 * value() + ic2 * right.value() ) , c ) ;
+  return Self ( c * ( ic1 * this->value() + ic2 * right.value() ) , c ) ;
 }
 // ============================================================================
 /*  Get symmetrized Kullback-Leibler divergency for two objects 
@@ -220,7 +228,7 @@ Ostap::Math::SVectorWithError<N,SCALAR>::kullback_leibler
 ( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
 {
   return Ostap::Math::kullback_leibler 
-    ( value () , cov2 () , right.value () , right.cov2 () ) ; 
+    ( this->value () , this->cov2 () , right.value () , right.cov2 () ) ; 
 }
 // ============================================================================
 /*  Get asymmetric Kullback-Leibler divergency for two objects 
@@ -235,8 +243,41 @@ Ostap::Math::SVectorWithError<N,SCALAR>::asymmetric_kullback_leibler
 ( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
 {
   return Ostap::Math::asymmetric_kullback_leibler 
-    ( value () , cov2 () , right.value () , right.cov2 () ) ; 
+    ( this->value () , this->cov2 () , right.value () , right.cov2 () ) ; 
 }
+// ============================================================================
+/*  get Mahalanobis distance 
+ *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+ *  @return Mahalanobis distance (-1 in case of error)
+ */
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::mahalanobis  
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
+{
+  const double c2 = this->chi2 ( right ) ;
+  return 0 <= c2 ? std::sqrt ( c2 ) : c2 ;
+}
+// ============================================================================
+/*  get Mahalanobis distance 
+ *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+ *  @return Mahalanobis distance (-1 in case of error)
+ */
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::mahalanobis  
+( const ROOT::Math::SVector<SCALAR,N>& right ) const
+{
+  const double c2 = this->chi2 ( right ) ;
+  return 0 <= c2 ? std::sqrt ( c2 ) : c2 ;
+}
+// ============================================================================
+
+
 // ============================================================================
 //                                                                     The END 
 // ============================================================================

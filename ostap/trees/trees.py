@@ -911,6 +911,36 @@ def _stat_covs_ ( tree        ,
 ROOT.TTree     . statCovs = _stat_covs_
 ROOT.TChain    . statCovs = _stat_covs_
 
+
+# ============================================================================
+## get the effectove vector of mean-values with covarinaces for the dataset
+#  @code
+#  ds  =...
+#  vct = ds.statVct('a,b,c') 
+#  @endcode 
+def _stat_vct_ ( ds         ,
+                 variables  ,
+                 cuts  = '' ) :
+    """Get the effective vector of mean-values with covariances for the dataset
+    >>> ds =...
+    >>> vct = ds.statVct()
+    """
+    
+    if isinstance ( variables , string_types ) :
+        variables = split_string ( variables , strip = True )
+
+    stats, cov2, length  = ds.statCovs ( variables , cuts )
+    
+    N  = len ( stats )
+    v  = Ostap.Vector ( N ) ()
+    for i in range ( N ) : v[i] = stats[i].mean()
+    
+    return Ostap.VectorE ( N ) ( v , cov2 ) 
+
+
+ROOT.TTree     . statVct = _stat_vct_
+ROOT.TChain    . statVct = _stat_vct_
+
 # =============================================================================
 ## Get min/max for the certain variable in chain/tree
 #  @code  
@@ -3354,6 +3384,8 @@ _new_methods_       = (
     ROOT.TChain.statCov   ,
     ROOT.TTree .statCovs  ,
     ROOT.TChain.statCovs  ,
+    ROOT.TTree .statVct   ,
+    ROOT.TChain.statVct   ,
     #
     ROOT.TTree .vminmax   ,
     ROOT.TChain.vminmax   ,

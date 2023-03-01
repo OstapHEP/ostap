@@ -202,9 +202,12 @@ namespace Ostap
       /// calculate the weighted average for two vectors 
       inline Self average ( const Self& right ) const { return mean ( right ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
       /** Get symmetrized Kullback-Leibler divergency for two objects 
        *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
        *  @see Ostap::Math::kullback_leibler 
+       *  @return symmetrised KL-divergency (-1 in case of error)
        */
       double kullback_leibler 
       ( const SVectorWithError& a ) const ;
@@ -212,9 +215,26 @@ namespace Ostap
       /** Get asymmetric Kullback-Leibler divergency for two objects 
        *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
        *  @see Ostap::Math::asymmetric_kullback_leibler 
+       *  @return KL-divergency (-1 in case of error)
        */
       double asymmetric_kullback_leibler 
       ( const SVectorWithError& a ) const ;
+      // ========================================================================
+    public:
+      // ========================================================================
+      /** get Mahalanobis distance 
+       *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+       *  @return Mahalanobis distance (-1 in case of error)
+       */
+      double mahalanobis 
+      ( const SVectorWithError& a ) const ;
+      // ========================================================================
+      /** get Mahalanobis distance 
+       *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+       *  @return Mahalanobis distance (-1 in case of error)
+       */
+      double mahalanobis 
+      ( const Value& a ) const ;
       // ========================================================================
     public: //  helper functions for pythonizations
       // ======================================================================
@@ -234,7 +254,30 @@ namespace Ostap
       Self& __idiv__    ( const double v     )       { return (*this) /= v ; }
       Self& __iadd__    ( const double v     )       { return (*this) += v ; }
       Self& __isub__    ( const double v     )       { return (*this) -= v ; }
+      Self& __iadd__    ( const Self&  v     )       { return (*this) += v ; }
+      Self& __isub__    ( const Self&  v     )       { return (*this) -= v ; }
+      Self& __iadd__    ( const Value& v     )       { return (*this) += v ; }
+      Self& __isub__    ( const Value& v     )       { return (*this) -= v ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /** "transform" vector withj uncertaintie susnig matrix 
+       *   @param M (INPUT)
+       *   @return transformed vector
+       */
+      template <unsigned int K, typename R> 
+      SVectorWithError<K,SCALAR>
+      __rmul__ 
+      ( const ROOT::Math::SMatrix<SCALAR,K,N,R>& M ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// transform it 
+      // template <unsigned int K, typename R>
+      // Ostap::Math::SVectorWithError<K,SCALAR>
+      // transform ( )
+      // const ROOT::Math::SMatrix<SCALAR,K,N,R>& L ) const      
+      // ======================================================================      
     public: //  printout 
       // ======================================================================
       /// printpout 
@@ -520,6 +563,30 @@ namespace Ostap
       return tmp *= v2 ;
     }
     // ========================================================================
+    /** "transform" vector with uncertainties using matrix 
+     *   @param M (INPUT)
+     *   @return transformed vector
+     */
+    template <unsigned int K, unsigned int N, typename SCALAR> 
+    SVectorWithError<K,SCALAR>
+    operator*
+    ( const  ROOT::Math::SMatrix<SCALAR,K,N,ROOT::Math::MatRepStd<SCALAR,K,N> >& M , 
+      const  SVectorWithError<N,SCALAR>&        v ) 
+    { return SVectorWithError<K,SCALAR> ( M * v.value() , v.cov2().Similarity ( M ) ) ; }
+    // ========================================================================
+    /** "transform" vector with uncertainties using matrix 
+     *   @param M (INPUT)
+     *   @return transformed vector
+     */
+    template <unsigned int N, typename SCALAR> 
+    SVectorWithError<N,SCALAR>
+    operator*
+    ( const  ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& M , 
+      const  SVectorWithError<N,SCALAR>&        v ) 
+    { return SVectorWithError<N,SCALAR> ( M * v.value() , v.cov2().Similarity ( M ) ) ; }
+    // ========================================================================
+    
+    // ========================================================================
     /// evaluate the mean of a and b 
     template <unsigned int N, class SCALAR>
     inline 
@@ -554,7 +621,78 @@ namespace Ostap
     ( const SVectorWithError<N,SCALAR>& v1 , 
       const SVectorWithError<N,SCALAR>& v2 ) 
     { return v1.asymmetric_kullback_leibler  ( v2 ) ; }
-    // ======================================================================
+    // ========================================================================
+    /**  get Mahalanobis distance 
+     *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+     *  @return Mahalanobis distance (-1 in case of error)
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    mahalanobis  
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& a , 
+      const Ostap::Math::SVectorWithError<N,SCALAR>& b )
+    { return a.mahalanobis ( b ) ; }
+    // ========================================================================    
+    /**  get Mahalanobis distance 
+     *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+     *  @return Mahalanobis distance (-1 in case of error)
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    mahalanobis  
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& a ,
+      const ROOT::Math::SVector<SCALAR,N>&           b ) 
+    { return a.mahalanobis ( b ) ; }
+    // ========================================================================    
+    /**  get Mahalanobis distance 
+     *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+     *  @return Mahalanobis distance (-1 in case of error)
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    mahalanobis  
+    ( const ROOT::Math::SVector<SCALAR,N>&           a ,  
+      const Ostap::Math::SVectorWithError<N,SCALAR>& b )
+    { return b.mahalanobis ( a ) ; }
+    // ========================================================================
+    /** get Cholesky decomposition for the covarance matrix 
+     *  @param v (INPUT)  vector with uncrtainties 
+     *  @param L (UPDATE) Cholesky decomposition of the covariance matrix 
+     *  @return true if decomposition OK (matrix is positive definite) else false 
+     */
+    template <unsigned int N, class SCALAR>
+    inline bool 
+    cholesky 
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>&                      v , 
+      ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepStd<SCALAR,N,N> >& L ) 
+    { return cholesky ( v.cov2() , L ) ; }
+    // ========================================================================
+    /** "transform" vector with uncertainties using matrix 
+     *   @param M (INPUT)
+     *   @return transformed vector
+     */
+    template <unsigned int K, unsigned int N, typename SCALAR> 
+    SVectorWithError<K,SCALAR>
+    transform 
+    ( const  ROOT::Math::SMatrix<SCALAR,K,N,ROOT::Math::MatRepStd<SCALAR,K,N> > & M , 
+      const  Ostap::Math::SVectorWithError<N,SCALAR>&                             v ) 
+    {
+      return SVectorWithError<K,SCALAR> ( M * v.value() , v.cov2().Similarity ( M ) ) ;
+    }
+    // ========================================================================
+    /** "transform" vector with uncertainties using matrix 
+     *   @param M (INPUT)
+     *   @return transformed vector
+     */
+    template <unsigned int N, typename SCALAR> 
+    SVectorWithError<N,SCALAR>
+    transform 
+    ( const  ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > & M , 
+      const  Ostap::Math::SVectorWithError<N,SCALAR>&                           v ) 
+    {
+      return SVectorWithError<N,SCALAR> ( M * v.value() , v.cov2().Similarity ( M ) ) ;
+    }
+    // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap 

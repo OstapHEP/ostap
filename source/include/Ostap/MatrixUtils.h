@@ -1366,7 +1366,8 @@ namespace Ostap
      *  @return asymmetric Kullback-Leibler divergency, or -999 
      */
     template <unsigned int N, typename SCALAR>
-    inline double asymmetric_kullback_leibler
+    inline double 
+    asymmetric_kullback_leibler
     ( const ROOT::Math::SVector<SCALAR,N>&                                    v0 , 
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c0 , 
       const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
@@ -1400,13 +1401,31 @@ namespace Ostap
      *  @return asymmetric Kullback-Leibler divergency, or -999 
      */
     template <unsigned int N, typename SCALAR>
-    inline double asymmetric_kullback_leibler
+    inline double 
+    asymmetric_kullback_leibler
     ( const ROOT::Math::SVector<SCALAR,N>&                                    v0 , 
       const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c0 , 
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 )
     { return asymmetric_kullback_leibkler ( v0 , c0 , v1 , c1 ) ; }
     // ========================================================================
+    /*  get Cholesky decomposition for the covarance matrix 
+     *  @param M (INPUT)  input symmetric positive definite matrix 
+     *  @param L (OUTPUT) Cholesky decomposition of the covariance matrix 
+     *  @return true if decomposition OK (matrix is positive definite) else false 
+     */
+    // ============================================================================
+    template <unsigned int N, class SCALAR>
+    inline bool 
+    cholesky 
+    ( const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& M , 
+      ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepStd<SCALAR,N,N> >    & L )
+    {
+      const ROOT::Math::CholeskyDecomp<SCALAR,N> decomp ( M ) ;
+      return decomp.getL ( L ) ;
+    }
+    // ========================================================================
+
     // helper functions to allow proper operations in PyROOT
     // - need to avoid expressions  (no easy way to use them in PyROOT)
     // ========================================================================
