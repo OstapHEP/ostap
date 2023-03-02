@@ -81,6 +81,15 @@ jobs:
     LCG: 'LCG_102rc1_LHCB_7'
     CMTCONFIG: 'x86_64-centos7-gcc11-opt'
     artifact: 'test_cs7_lcg102_gcc11_python3'
+
+ - template: template-pipelines.yml  # Template reference
+   parameters:
+    name: cs7_lcg_103_gcc12_python3
+    vmImage:  'ubuntu-latest'
+    dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
+    LCG: 'LCG_103'
+    CMTCONFIG: 'x86_64-centos7-gcc12-opt'
+    artifact: 'test_cs7_lcg103_gcc12_python3'
     
 # - template: template-pipelines.yml  # Template reference
 #   parameters:
