@@ -698,7 +698,7 @@ namespace Ostap
     ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
     {
       T result = m ( 0 , 0 ) ;
-      for ( unsigned int i = 1 ; i < D ; ++i ) { result += m(i,i) ; }
+      for ( unsigned int i = 1 ; i < D ; ++i ) { result += m ( i , i ) ; }
       return result ;
     }
     // ========================================================================
@@ -1304,6 +1304,41 @@ namespace Ostap
       return ifail ;  
     }
     // ========================================================================
+    /** Get the asymmetrical  Kullback-Leibler divergency for two objects 
+     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+     *  @param v0 the first  data vector 
+     *  @param c0 the first  covariance matrix 
+     *  @param v1 the second data vector 
+     *  @param c1 the second covariance matrix 
+     *  @return asymmetric Kullback-Leibler divergency, or -999 
+     */
+    template <unsigned int N, typename SCALAR>
+    inline double 
+    asymmetric_kullback_leibler
+    ( const ROOT::Math::SVector<SCALAR,N>&                                    v0 , 
+      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c0 , 
+      const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
+      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 )
+    {
+      /// the actual type of covariance matrix
+      typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
+      ///
+      static const double bad = -999 ;
+      ///
+      SCALAR det0 = 1 ;
+      if ( !c0.Det2 ( det0 ) ) { return bad ; }
+      SCALAR det1 = 1 ;
+      if ( !c1.Det2 ( det1 ) ) { return bad ; }
+      //
+      /// try to invert matrices 
+      COV g1 { c1 } ;
+      if  ( !g1.InvertChol () ) { return bad ; }
+      //
+      return 0.5 * ( Ostap::Math::trace       ( g1 * c0 ) - N  
+                     + ROOT::Math::Similarity ( g1 , v1 - v0 ) 
+                     + std::log ( det1 / det0 ) )  ;
+    }
+    // ========================================================================
     /** Get the symmetrized Kullback-Leibler divergency for two objects 
      *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
      *  \f[ f(v_1, C_1, v_2, C_2) = 
@@ -1326,7 +1361,7 @@ namespace Ostap
       /// the actual type of covariance matrix
       typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
       ///
-      double bad = -999 ;
+      static const double bad = -999 ;
       /// try to invert matrices 
       COV g1 { c1 } ;
       if  ( !g1.InvertChol () ) { return bad ; }
@@ -1334,80 +1369,8 @@ namespace Ostap
       if  ( !g2.InvertChol () ) { return bad ; }
       ///
       return ROOT::Math::Similarity ( g1 + g2 , v1 - v2 )
-        + trace ( ( c1 - c2 ) * ( g2 - g1 ) ) ;
+        + Ostap::Math::trace ( ( c1 - c2 ) * ( g2 - g1 ) ) ;
     }
-    // ========================================================================
-    /** Get the symmetrized Kullback-Leibler divergency for two objects 
-     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
-     *  \f[ f(v_1, C_1, v_2, C_2) = 
-     *  (v_1-v_2)^{T} \left  ( C_1^{-1} + C_2^{-1} \right) (v_1 - v_2)  
-     *   + Sp \left ( C_1 - C_2 \right ) 
-     *    \times  \left ( C_2^{-1} - C_1^{-1} \right ) \f] 
-     *  @param v1 the first  data vector 
-     *  @param v2 the second data vector 
-     *  @param c1 the first  covariance matrix 
-     *  @param c2 the second covariance matrix 
-     *  @return Symmetrised Kullback =Leibler divergency, or -999 
-     */
-    template <unsigned int N, typename SCALAR>
-    inline double kullback_leibler 
-    ( const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
-      const ROOT::Math::SVector<SCALAR,N>&                                    v2 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 )
-    { return kullback_leibler ( v1 , c1 , v2 , c2 ) ; }
-    // ========================================================================
-    /** Get the asymmetrical  Kullback-Leibler divergency for two objects 
-     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
-     *  @param v0 the first  data vector 
-     *  @param c0 the first  covariance matrix 
-     *  @param v1 the second data vector 
-     *  @param c1 the second covariance matrix 
-     *  @return asymmetric Kullback-Leibler divergency, or -999 
-     */
-    template <unsigned int N, typename SCALAR>
-    inline double 
-    asymmetric_kullback_leibler
-    ( const ROOT::Math::SVector<SCALAR,N>&                                    v0 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c0 , 
-      const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 )
-    {
-      /// the actual type of covariance matrix
-      typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
-      ///
-      double bad = -999 ;
-      ///
-      SCALAR det0 = 1 ;
-      if ( !c0.Det2 ( det0 ) ) { return bad ; }
-      SCALAR det1 = 1 ;
-      if ( !c1.Det2 ( det1 ) ) { return bad ; }
-      //
-      /// try to invert matrices 
-      COV g1 { c1 } ;
-      if  ( !g1.InvertChol () ) { return bad ; }
-      ///
-      return ( trace ( g1 * c0 ) - N 
-               + ROOT::Math::Similarity ( g1 , v0 - v1 ) , 
-               + std::log ( det1 / det0 ) ) / 2 ;
-    }
-    // ========================================================================
-    /** Get the asymmetrical  Kullback-Leibler divergency for two objects 
-     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
-     *  @param v0 the first  data vector 
-     *  @param c0 the first  covariance matrix 
-     *  @param v1 the second data vector 
-     *  @param c1 the second covariance matrix 
-     *  @return asymmetric Kullback-Leibler divergency, or -999 
-     */
-    template <unsigned int N, typename SCALAR>
-    inline double 
-    asymmetric_kullback_leibler
-    ( const ROOT::Math::SVector<SCALAR,N>&                                    v0 , 
-      const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c0 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 )
-    { return asymmetric_kullback_leibkler ( v0 , c0 , v1 , c1 ) ; }
     // ========================================================================
     /*  get Cholesky decomposition for the covarance matrix 
      *  @param M (INPUT)  input symmetric positive definite matrix 
@@ -1426,6 +1389,7 @@ namespace Ostap
     }
     // ========================================================================
 
+    // ========================================================================
     // helper functions to allow proper operations in PyROOT
     // - need to avoid expressions  (no easy way to use them in PyROOT)
     // ========================================================================

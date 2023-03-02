@@ -12,9 +12,10 @@
 
 ## Bug fixes:
 
-  1. fix the bug/feature for `statCovs` for datasets  
+  1. fix a the bug/feature for `statCovs` for datasets  
+  1. fix a bug/typo in `asymmetric_kullback_leibler` 
 
-
+ 
 # v1.9.6.8
 
 ## New features:
