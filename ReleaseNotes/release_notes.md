@@ -6,10 +6,14 @@
   1. improve printout of marices 
   1. add `mahalanobis` distance 
   1. improve `SVectorWithErrors`
+  1. more improvements/fixes to weighting machinery 
 
 ## Backward incompatible: 
 
 ## Bug fixes:
+
+  1. fix the bug/feature for `statCovs` for datasets  
+
 
 # v1.9.6.8
 

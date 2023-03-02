@@ -2509,7 +2509,6 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
 
     return newc
 
-
 ROOT.TTree.add_new_branch = add_new_branch 
 
 # =============================================================================
@@ -2522,7 +2521,7 @@ ROOT.TTree.add_new_branch = add_new_branch
 #  tree = ...
 #  tree.add_reweighting ( w ) 
 #  @endcode 
-def add_reweighting ( tree , weighter , name = 'weight' , verbose = False ) :
+def add_reweighting ( tree , weighter , name = 'weight' , progress = False ) :
     """Add specific re-weighting information into ROOT.TTree
     
     >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
@@ -2540,10 +2539,9 @@ def add_reweighting ( tree , weighter , name = 'weight' , verbose = False ) :
     ## create the weighting function 
     wfun = W.W2Tree ( weighter )
     
-    return tree.add_new_branch (  name , wfun , verbose = verbose ) 
+    return tree.add_new_branch (  name , wfun , verbose = progress ) 
 
-ROOT.TTree.add_reweighting = add_reweighting
-    
+ROOT.TTree.add_reweighting = add_reweighting    
 
 # =============================================================================
 ## Get the effective entries in data frame

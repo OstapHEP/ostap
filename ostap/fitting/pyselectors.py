@@ -1831,9 +1831,6 @@ def make_dataset_old ( tree              ,
 
 ROOT.TTree.make_dataset_old = make_dataset_old
 
-
-
-
 # =============================================================================
 ## Create RooDataset from the tree using Tree->Frame->Dataset transformation 
 #  @code 
@@ -1852,7 +1849,9 @@ def make_dataset ( tree              ,
     >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
     """
     if not title : title = 'Dataset from %s' % tree.GetName()
-        
+
+    if isinstance ( selection , ROOT.TCut ) : selection = str ( selection )
+    
     if not DataSet_NEW_FILL :
         return make_dataset_old ( tree      = tree      ,
                                   variables = variables ,

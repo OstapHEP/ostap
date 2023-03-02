@@ -319,20 +319,13 @@ logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 
 
 vct_data  = datatree.statVct ( 'x,y,z' )
 ## table of global statistics 
-glob_stat = [ ( '#' , 'Mahhalanobis' , 'KL/DATA-MC' , 'KL/MC-DATA' , 'KL-sym' ) ] 
+glob_stat = [ ( '#' , 'Mahalanobis' , 'KL/DATA-MC' , 'KL/MC-DATA' , 'KL-sym' ) ] 
 # =============================================================================
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
     mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )
     ## fill dataset from input MC tree
     mcds_ , _ = mctree.make_dataset ( variables = variables ,
                                       selection = '0<x && x<%s && 0<y && y<%s && 0<z && z<%s' % ( xmax , ymax, zmax ) )
-
-##    selector = SelectorWithVars (
-##        variables ,
-##        '0<x && x<%s && 0<y && y<%s && 0<z && z<%s' % ( xmax , ymax, zmax ) , silence = True )
-##    mctree.process ( selector , silent = True )
-##    mcds_ = selector.data             ## dataset
-
 
 # =============================================================================
 ## Configuration of reweighting plots 

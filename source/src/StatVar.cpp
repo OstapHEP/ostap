@@ -1592,6 +1592,8 @@ Ostap::StatVar::statCov
   const unsigned long             last  ) 
 {
   //
+  cov2 *= 0.0 ;
+  //
   if ( 0 == tree || last <= first ) { stats.clear() ; return 0 ; }//
   std::vector< std::unique_ptr<Ostap::Formula> > formulas ;
   std::vector< std::vector<double> >             results  ;
@@ -2046,6 +2048,8 @@ Ostap::StatVar::statCov
   const unsigned long             last      ) 
 {
   //
+  cov2 *= 0.0 ;
+  //
   if ( 0 == data || last <= first ) { stats.clear() ; return 0 ; }
   //
   const bool  weighted = data->isWeighted() ;
@@ -2109,6 +2113,11 @@ Ostap::StatVar::statCov
       cov2 ( i , j ) -= vi_mean * vj_mean ;
     }
   }
+  //
+  /// strange lines.... due to ROOT 
+  for ( unsigned int i = 0 ; i < N ; ++i ) 
+  { for ( unsigned int j = 0 ; j < i ; ++j ) 
+    { if ( !cov2 ( i , j ) ) { cov2 ( i , j ) = cov2 ( j , i ) ; } } }
   //
   return stats[0].nEntries() ;
 }

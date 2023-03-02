@@ -651,8 +651,8 @@ def _cmp_draw_ ( self ) :
         pmax = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) , 20 )
         pmin.SetMarkerColor ( 2 )
         pmax.SetMarkerColor ( 2 )
-        pmin.SetMarkerSize  ( 3 )
-        pmax.SetMarkerSize  ( 3 )
+        pmin.SetMarkerSize  ( 2 )
+        pmax.SetMarkerSize  ( 2 )
         pmin.DrawClone() 
         pmax.DrawClone()
         
