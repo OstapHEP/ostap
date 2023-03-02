@@ -231,7 +231,8 @@ Ostap::Math::SVectorWithError<N,SCALAR>::asymmetric_kullback_leibler
     ( this->value () , this->cov2 () , right.value () , right.cov2 () ) ; 
 }
 // ============================================================================
-/*  Get symmetrized Kullback-Leibler divergency for two objects 
+/*  Get symmetrized Kullback-Leibler divergency, 
+ *  aka Jeffrey's divernecy, for two objects 
  *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *  @see Ostap::Math::kullback_leibler 
  */

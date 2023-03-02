@@ -204,7 +204,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /** Get symmetrized Kullback-Leibler divergency for two objects 
+      /** Get symmetrized Kullback-Leibler divergency,
+       *  aka Jewffrey's divergency, for two objects 
        *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
        *  @see Ostap::Math::kullback_leibler 
        *  @return symmetrised KL-divergency (-1 in case of error)

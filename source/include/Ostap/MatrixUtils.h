@@ -1334,12 +1334,13 @@ namespace Ostap
       COV g1 { c1 } ;
       if  ( !g1.InvertChol () ) { return bad ; }
       //
-      return 0.5 * ( Ostap::Math::trace       ( g1 * c0 ) - N  
-                     + ROOT::Math::Similarity ( g1 , v1 - v0 ) 
-                     + std::log ( det1 / det0 ) )  ;
+      return 0.5 * ( Ostap::Math::trace     ( g1 * c0 ) - N  + 
+                     ROOT::Math::Similarity ( g1 , v1 - v0 ) + 
+                     std::log ( det1 / det0 )                ) ;
     }
     // ========================================================================
-    /** Get the symmetrized Kullback-Leibler divergency for two objects 
+    /** Get the symmetrized Kullback-Leibler divergency,
+     *  aka Jeffrey's divergence, for two objects 
      *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
      *  \f[ f(v_1, C_1, v_2, C_2) = 
      *  (v_1-v_2)^{T} \left  ( C_1^{-1} + C_2^{-1} \right) (v_1 - v_2)  
@@ -1368,8 +1369,8 @@ namespace Ostap
       COV g2 { c2 } ;
       if  ( !g2.InvertChol () ) { return bad ; }
       ///
-      return ROOT::Math::Similarity ( g1 + g2 , v1 - v2 )
-        + Ostap::Math::trace ( ( c1 - c2 ) * ( g2 - g1 ) ) ;
+      return 0.5 * ( ROOT::Math::Similarity (   g1 + g2   ,   v1 - v2 )   + 
+                     Ostap::Math::trace     ( ( c1 - c2 ) * ( g2 - g1 ) ) ) ;
     }
     // ========================================================================
     /*  get Cholesky decomposition for the covarance matrix 

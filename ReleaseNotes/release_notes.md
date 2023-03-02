@@ -14,8 +14,8 @@
 
   1. fix a the bug/feature for `statCovs` for datasets  
   1. fix a bug/typo in `asymmetric_kullback_leibler` 
+  1. fix missing factor 1/2 in `kullback_leibler` 
 
- 
 # v1.9.6.8
 
 ## New features:
