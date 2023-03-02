@@ -585,26 +585,26 @@ def _cmp_draw_ ( self ) :
     if   isinstance ( hw , ROOT.TH3 ) and 3 == hw.dim () :
         hw.draw  ( copy = True )
 
-        minx, miny, minz = hw.minimum_bin()
-        maxx, maxy, maxz = hw.maximum_bin()
+        ## minx, miny, minz = hw.minimum_bin()
+        ## maxx, maxy, maxz = hw.maximum_bin()
         
-        ax = hw.GetXaxis()
-        ay = hw.GetYaxis()
-        az = hw.GetZaxis()
+        ## ax = hw.GetXaxis()
+        ## ay = hw.GetYaxis()
+        ## az = hw.GetZaxis()
 
-        minv = hw [ minx, miny, minz ]
-        maxv = hw [ maxx, maxy, maxz ]
+        ## minv = hw [ minx, miny, minz ]
+        ## maxv = hw [ maxx, maxy, maxz ]
         
-        logger.info ( "ComparisonPlot('%s'): min-weight %+.3f at (%.5g,%.5g,%.5g)" % ( self.what ,
-                                                                                       minv      ,
-                                                                                       ax.GetBinCenter ( minx ) ,
-                                                                                       ay.GetBinCenter ( miny ) ,
-                                                                                       az.GetBinCenter ( minz ) ) )
-        logger.info ( "ComparisonPlot('%s'): max-weight %+.3f at (%.5g,%.5g,%.5g)" % ( self.what ,
-                                                                                       maxv      ,
-                                                                                       ax.GetBinCenter ( maxx ) ,
-                                                                                       ay.GetBinCenter ( maxy ) ,
-                                                                                       az.GetBinCenter ( maxz ) ) )
+        ## logger.info ( "ComparisonPlot('%s'): min-weight %+.3f at (%.5g,%.5g,%.5g)" % ( self.what ,
+        ##                                                                                minv      ,
+        ##                                                                                ax.GetBinCenter ( minx ) ,
+        ##                                                                                ay.GetBinCenter ( miny ) ,
+        ##                                                                                az.GetBinCenter ( minz ) ) )
+        ## logger.info ( "ComparisonPlot('%s'): max-weight %+.3f at (%.5g,%.5g,%.5g)" % ( self.what ,
+        ##                                                                                maxv      ,
+        ##                                                                                ax.GetBinCenter ( maxx ) ,
+        ##                                                                                ay.GetBinCenter ( maxy ) ,
+        ##                                                                                az.GetBinCenter ( maxz ) ) )
                 
     elif isinstance ( hw , ROOT.TH2 ) and 2 == hw.dim () :
 
@@ -656,17 +656,17 @@ def _cmp_draw_ ( self ) :
         pmin.DrawClone() 
         pmax.DrawClone()
         
-        minv = hw [ minx, miny ]
-        maxv = hw [ maxx, maxy ]
+        ## minv = hw [ minx, miny ]
+        ## maxv = hw [ maxx, maxy ]
         
-        logger.info ( "ComparisonPlot('%s'): min-weight %+.3f at (%.5g,%.5g)" % ( self.what ,
-                                                                                  minv      ,
-                                                                                  ax.GetBinCenter ( minx ) ,
-                                                                                  ay.GetBinCenter ( miny ) ) ) 
-        logger.info ( "ComparisonPlot('%s'): max-weight %+.3f at (%.5g,%.5g)" % ( self.what ,
-                                                                                  maxv      ,
-                                                                                  ax.GetBinCenter ( maxx ) ,
-                                                                                  ay.GetBinCenter ( maxy ) ) ) 
+        ## logger.info ( "ComparisonPlot('%s'): min-weight %+.3f at (%.5g,%.5g)" % ( self.what ,
+        ##                                                                           minv      ,
+        ##                                                                           ax.GetBinCenter ( minx ) ,
+        ##                                                                           ay.GetBinCenter ( miny ) ) ) 
+        ## logger.info ( "ComparisonPlot('%s'): max-weight %+.3f at (%.5g,%.5g)" % ( self.what ,
+        ##                                                                           maxv      ,
+        ##                                                                           ax.GetBinCenter ( maxx ) ,
+        ##                                                                           ay.GetBinCenter ( maxy ) ) ) 
         
     elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
         if hasattr ( hw     , 'red'   ) : hw .red   ()         
@@ -889,35 +889,46 @@ def makeWeights  ( dataset                    ,
         c2ndf /= ( len ( w ) - 1 ) 
 
         ## build  the row in the summary table 
-        row = address  ,  \
-              '%-5.3f/%5.3f' % ( cnt.minmax()[0]    , cnt.minmax()[1] ) , \
-              allright ( '+' ) if good2 else attention ( '-' ) , \
-              (wvar * 100).toString('%6.2f+-%-6.2f') , \
-              allright ( '+' ) if good1 else attention ( '-' ) , '%6.2f' % c2ndf 
+        row = [ address  , '%-5.3f/%5.3f' % ( cnt.minmax()[0]    , cnt.minmax()[1] ) ] 
+
+        if   ignore : row.append ( ''                )
+        elif good2  : row.append ( allright  ( '+' ) )
+        else        : row.append ( attention ( '-' ) )
+        
+        row.append ( (wvar * 100).toString('%6.2f+-%-6.2f') )
+
+        if   ignore : row.append ( ''                )
+        elif good1  : row.append ( allright  ( '+' ) )
+        else        : row.append ( attention ( '-' ) )
+        
+        row.append (  '%6.2f' % c2ndf  ) 
+
 
         ## apply weight truncation:
-        wmin , wmax = wtruncate
-        truncated = False 
-        for i in w  :
-            we = w [ i ]
-            if   we.value() < wmin :
-                w [ i ] = VE ( wmin , we.cov2 () )
-                truncated    = True 
-            elif we.value() > wmax :
-                w [ i ] = VE ( wmax , we.cov2 () ) 
-                truncated    = True
-                
-        if truncated :
-            logger.info ( "%s: weights for '%s' are truncated to be %.3f<w<%.3f" % ( tag , what , wmin , wmax ) )
+        if not ignore : 
+            wmin , wmax = wtruncate
+            truncated = False 
+            for i in w  :
+                we = w [ i ]
+                if   we.value() < wmin :
+                    w [ i ] = VE ( wmin , we.cov2 () )
+                    truncated    = True 
+                elif we.value() > wmax :
+                    w [ i ] = VE ( wmax , we.cov2 () ) 
+                    truncated    = True
+                    
+            if truncated :
+                logger.info ( "%s: weights for '%s' are truncated to be %.3f<w<%.3f" % ( tag , what , wmin , wmax ) )
             
         ## make plots at the start of  each iteration? 
         if make_plots : 
             item = ComparisonPlot ( what , hdata , hmc , w ) 
             cmp_plots.append ( item )
-            
-        row = tuple ( list ( row ) + [ '%4.3f' % ww if 1 != ww  else '' ] ) 
-        
-        rows [ address ] = row
+
+        if ignore : row.append ( '' ) 
+        else      : row.append ( '%4.3f' % ww if 1 != ww  else '' ) 
+
+        rows [ address ] = tuple ( row ) 
         
         #
         ## make decision based on the variance of weights 
