@@ -33,7 +33,7 @@ namespace Ostap
   {
   public :
     // ========================================================================
-    /// evaluate the function from TTree 
+    /// evaluate the function from RooAbsData 
     virtual double operator ()  ( const RooAbsData* tree ) const = 0 ;
     /// virtual destructor 
     virtual ~IFuncData () ;

@@ -1,5 +1,8 @@
 ## New features:
 
+  1. add `Ostap::Functions::Expression` - "universal" function (for `TTree` and `RooAbsData`)
+  1. add helper `CallThem` utility 
+
 ## Backward incompatible: 
 
 ## Bug fixes:

@@ -2625,18 +2625,17 @@ def _rfth3_reduce_ ( fun ):
                             fun.y     () ,
                             fun.z     () )
 # =============================================================================
-## reduce Ostap::Functions::FuncRooFormula
+## reduce Ostap::Functions::FuncRooFormula & Ostap::Functions::Expression
 def _rfff_reduce_ ( fun ):
-    """Reduce Ostap.Functions.FuncRooFormula"""
+    """Reduce Ostap.Functions.FuncRooFormula & Ostap.Functions.Expression
+    """
     return root_factory , ( type ( fun ) , fun.expression() )
 
 Ostap.Functions.FuncRooTH1     . __reduce__ = _rfth1_reduce_
 Ostap.Functions.FuncRooTH2     . __reduce__ = _rfth2_reduce_
 Ostap.Functions.FuncRooTH3     . __reduce__ = _rfth3_reduce_
 Ostap.Functions.FuncRooFormula . __reduce__ =  _rfff_reduce_
-
-
-
+Ostap.Functions.Expression     . __reduce__ =  _rfff_reduce_
 
 # =============================================================================
 

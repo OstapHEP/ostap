@@ -70,7 +70,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the expressoon
-      const std::string& expression() const { return m_expression ; }
+      const std::string& expression () const { return m_expression ; }
+      /// function name 
+      const std::string& fun_name   () const { return m_name ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -396,7 +398,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const std::string& expression() const { return m_expression ; }
+      /// expression
+      const std::string& expression () const { return m_expression ; }
+      /// function name 
+      const std::string& fun_name   () const { return m_name       ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -656,6 +661,72 @@ namespace Ostap
       mutable std::unique_ptr<RooFormulaVar> m_zvar { nullptr } ; //!
       /// the tree itself 
       mutable const RooAbsData*              m_data { nullptr } ; //!
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Expression
+     *  "Universal" formula that is simultanepously 
+     *  - Ostap::IFuncTree 
+     *  - Ostap::IFuncData
+     *  @see  Ostap::Functions::FuncFormula
+     *  @see  Ostap::Functions::FuncRooFormula
+     *  @see Ostap::IFuncTree 
+     *  @see Ostap::IFuncData
+     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+     *  @date 2023-03-03
+     */
+    class Expression: public FuncFormula, public Ostap::IFuncData 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Functions::Expression,1) ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /** constructor from the formula expression 
+       *  @param expression the  formula expression 
+       *  @param tree       the tree 
+       *  @param name       the name for the formula 
+       */
+      Expression
+      ( const std::string& expression            , 
+        const TTree*       tree       =  nullptr ,
+        const std::string& name       = ""       ) ;
+      // ======================================================================
+      /** constructor from the formula expression 
+       *  @param expression the formula expression 
+       *  @param data       the data 
+       *  @param name       the name for the formula 
+       */
+      Expression
+      ( const std::string& expression            , 
+        const RooAbsData*  data                  ,
+        const std::string& name       = ""       ) ;
+      // ======================================================================
+      /// copy constructor 
+      Expression ( const Expression& right )  ;
+      // ======================================================================
+      /// default constructor, needed for serialization 
+      Expression () = default ;
+      /// destructor 
+      virtual ~Expression() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      Expression* Clone ( const char* newname = "" ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function from TTree 
+      double operator ()  ( const TTree*      tree ) const override ;
+      /// evaluate the function from RooAbsData 
+      double operator ()  ( const RooAbsData* data ) const override ;
+      // ======================================================================
+    private:      
+      // ======================================================================
+      /// Ostap::IFuncData  for Roo-stuff 
+      FuncRooFormula m_roofun{} ; // IFuncData  for Roo-stuff 
       // ======================================================================
     } ;
     // ========================================================================

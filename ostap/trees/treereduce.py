@@ -53,26 +53,30 @@ def _ofth3_reduce_ ( fun ):
 # =============================================================================
 ## reduce Ostap::Functions::FuncFormula
 def _offf_reduce_ ( fun ):
-    """Reduce Ostap.Functions.FuncFormula"""
+    """Reduce Ostap.Functions.FuncFormula & Ostap.Functions.Expression
+    """
     return root_factory , ( type ( fun ) , fun.expression() )
 
-Ostap.Functions.FuncTH1     . __reduce__ = _ofth1_reduce_
-Ostap.Functions.FuncTH2     . __reduce__ = _ofth2_reduce_
-Ostap.Functions.FuncTH3     . __reduce__ = _ofth3_reduce_
-Ostap.Functions.FuncFormula . __reduce__ =  _offf_reduce_
+Ostap.Functions.FuncTH1        . __reduce__ = _ofth1_reduce_
+Ostap.Functions.FuncTH2        . __reduce__ = _ofth2_reduce_
+Ostap.Functions.FuncTH3        . __reduce__ = _ofth3_reduce_
+Ostap.Functions.FuncFormula    . __reduce__ =  _offf_reduce_
+Ostap.Functions.Expression     . __reduce__ =  _offf_reduce_
 
 _decorated_classes = (
-    Ostap.Functions.FuncTH1     ,
-    Ostap.Functions.FuncTH2     ,
-    Ostap.Functions.FuncTH3     ,
-    Ostap.Functions.FuncFormula ,
+    Ostap.Functions.FuncTH1        ,
+    Ostap.Functions.FuncTH2        ,
+    Ostap.Functions.FuncTH3        ,
+    Ostap.Functions.FuncFormula    ,
+    Ostap.Functions.Expression     ,
     )
 
 _new_methods_ = ( 
-    Ostap.Functions.FuncTH1     . __reduce__ , 
-    Ostap.Functions.FuncTH2     . __reduce__ , 
-    Ostap.Functions.FuncTH3     . __reduce__ , 
-    Ostap.Functions.FuncFormula . __reduce__ ,
+    Ostap.Functions.FuncTH1        . __reduce__ , 
+    Ostap.Functions.FuncTH2        . __reduce__ , 
+    Ostap.Functions.FuncTH3        . __reduce__ , 
+    Ostap.Functions.FuncFormula    . __reduce__ ,
+    Ostap.Functions.Expression     . __reduce__ ,
     )
 
 # =============================================================================

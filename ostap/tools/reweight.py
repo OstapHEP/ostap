@@ -23,10 +23,11 @@ __all__     = (
 # =============================================================================
 from   ostap.core.pyrouts     import VE, SE
 from   ostap.math.base        import iszero
-from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types   
+from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types, sequence_types    
 from   ostap.math.operations  import Mul as MULT  ## needed for proper abstract multiplication
 import ostap.io.zipshelve     as     DBASE ## needed to store the weights&histos
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weigth to TTree/RooDataSet
+from   ostap.utils.utils      import CallThem 
 from   ostap.logger.utils     import pretty_ve
 import ostap.histos.histos 
 import ostap.histos.compare 
@@ -160,10 +161,10 @@ class Weight(object) :
                     logger.warning ( "Weight: No reweighting is available for `%s', skip it" % funname )
                     continue
                                 
-                if not isinstance (  functions , ( list , tuple ) ) :
+                if not isinstance (  functions , sequence_types ) :
                     functions = [ functions ]                    
                 
-                flen = len(functions) 
+                flen = len ( functions ) 
                 if   0 < skip and skip      < flen :
                     logger.info  ("Weight: Use only %d first iterations for `%s'" % ( skip , funname ) )
                     functions = functions[:skip] 
@@ -361,8 +362,11 @@ class Weight(object) :
 
             if   isinstance ( accessor , string_types ) :
                 ## accessor = operator.attrgetter (  accessor )
-                accessor = AttrGetter (  accessor )
-            elif isinstance ( accessor , list_types   ) and accessor and \
+                accessor = AttrGetter (  accessor )                
+            elif accessor and isinstance ( accessor , sequence_types   ) and \
+                     all ( callable ( i ) for i in accessor ) :
+                accessor = CallThem ( accessor ) 
+            elif accessor and isinstance ( accessor , sequence_types   ) and \
                      all ( isinstance ( i , string_types ) for i in accessor ) : 
                 ## accessor = operator.attrgetter ( *accessor )
                 accessor = AttrGetter ( *accessor )

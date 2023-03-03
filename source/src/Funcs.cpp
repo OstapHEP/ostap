@@ -35,6 +35,7 @@ ClassImp(Ostap::Functions::Func3D)
 ClassImp(Ostap::Functions::FuncTH1)
 ClassImp(Ostap::Functions::FuncTH2)
 ClassImp(Ostap::Functions::FuncTH3)
+ClassImp(Ostap::Functions::Expression)
 // ============================================================================
 /*  constructor from the formula expression 
  *  @param expression the  formula expression 
@@ -141,7 +142,7 @@ Ostap::Functions::FuncRooFormula::FuncRooFormula
   , m_data       ( data       )
   , m_formula    ( nullptr    )
   , m_expression ( expression ) 
-  , m_name       ( name       )
+  , m_name       ( !name.empty() ? name : Ostap::tmp_name ( "expr_" , expression ) ) 
 {
   if ( m_data && !make_formula() )
   { throw Ostap::Exception ( "Invalid Formula '" + m_expression + "'" , 
@@ -1125,6 +1126,74 @@ Ostap::Functions::FuncRooTH3::FuncRooTH3
   : FuncRoo3D ( histo , xvar , yvar , zvar , data )
   , m_histo   ( histo )
 {}
+// ============================================================================
+
+
+
+// ============================================================================
+/*  constructor from the formula expression 
+ *  @param expression the formula expression 
+ *  @param tree       the tree 
+ *  @param name       the name for the formula 
+ */
+// ============================================================================
+Ostap::Functions::Expression::Expression
+( const std::string& expression , 
+  const TTree*       tree       ,
+  const std::string& name       ) 
+  :  FuncFormula ( expression , tree    , name ) 
+  ,  m_roofun    ( expression , nullptr , name )
+{}
+// ============================================================================
+/*  constructor from the formula expression 
+ *  @param expression the formula expression 
+ *  @param data       the data 
+ *  @param name       the name for the formula 
+ */
+// ============================================================================
+Ostap::Functions::Expression::Expression
+( const std::string& expression , 
+  const RooAbsData*  data       ,
+  const std::string& name       ) 
+  :  FuncFormula ( expression , nullptr , name ) 
+  ,  m_roofun    ( expression , data    , name )
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::Expression::Expression 
+( const Ostap::Functions::Expression& right )
+  : FuncFormula ( right          ) 
+  , m_roofun    ( right.m_roofun ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Functions::Expression::~Expression(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Functions::Expression* 
+Ostap::Functions::Expression::Clone ( const char* /* newname */ ) const 
+{ return new Ostap::Functions::Expression (*this ) ; }
+// ============================================================================
+// evaluate the function from TTree
+// ============================================================================
+double Ostap::Functions::Expression::operator () 
+  ( const TTree* tree ) const 
+{
+  // const Ostap::Functions::FuncFormula& formula = *this ;
+  // return formula ( tree ) ; 
+  return Ostap::Functions::FuncFormula::operator() ( tree ) ;
+}
+// ============================================================================
+// evaluate the function from RooAbsData 
+// ============================================================================
+double Ostap::Functions::Expression::operator () 
+  ( const RooAbsData* data ) const { return m_roofun ( data ) ; }
+// ============================================================================
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

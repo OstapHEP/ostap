@@ -100,7 +100,9 @@ __all__     = (
     'num_fds'            , ## get number of opened file descriptors 
     'get_open_fds'       , ## get list of opened file descriptors
     ##
-    'slow'               , ## "slow" looping with delays at each step 
+    'slow'               , ## "slow" looping with delays at each step
+    ##
+    'CallThem'           , ## convert sequence of callables into singel callable 
     )
 
 # =============================================================================
@@ -1422,6 +1424,50 @@ else :
         def __get__(self, inst, cls):
             return self.fget(cls)
 
+
+# =============================================================================
+## @class CallThem
+#  Use sequence of callabels as singel callable
+#  @code
+#  fun1, fun2 , func3 = ....
+#  new_fun1 = CallThem ( fun1, fun2, fun3 )
+#  print ( new_fun ( x ) ) 
+#  new_fun2 = CallThem ( [ fun1, fun2, fun3 ]  )
+#  print ( new_fun2 ( x ) ) 
+#  @endcode
+class CallThem(object) :
+    """ Use sequence of callabels as singel callable
+    >>> fun1, fun2 , func3 = ....
+    >>> new_fun1 = CallThem ( fun1, fun2, fun3 )
+    >>> print ( new_fun1 ( x ) )
+    >>> new_fun2 = CallThem ( [ fun1, fun2, fun3 ] )
+    >>> print ( new_fun2 ( x ) )
+    """
+    # ========================================================================
+    def __init__ ( self , *callables ) :
+        
+        from ostap.core.ostap_types import sequence_types
+        if 1 == len ( callables ) and \
+           ( not callable ( callables [ 0 ] ) ) and \
+           isinstance ( callables [0] , sequence_types ) : 
+            
+            callables = tuple ( c for c in callables [ 0 ] )
+
+        ## here all arguments must be callables! 
+        assert all ( callable ( c ) for c in callables ) , \
+               'All parameters must be callables!'
+        
+        self.__callables = callables
+        
+    ## call all callables! 
+    def __call__ ( self , *args , **kwargs ) :
+        """call all callables!"""
+        return tuple ( c ( *args , **kwargs ) for c in self.__callables ) 
+
+    @property
+    def callables ( self ) :
+        """'callables' : get all callables"""
+        return self.__callables 
 
 # =============================================================================
 ## @class NumCalls
