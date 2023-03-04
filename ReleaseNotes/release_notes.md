@@ -2,6 +2,7 @@
 
   1. add `Ostap::Functions::Expression` - "universal" function (for `TTree` and `RooAbsData`)
   1. add helper `CallThem` utility 
+  1. more improvements for classic reweighting machinery 
 
 ## Backward incompatible: 
 

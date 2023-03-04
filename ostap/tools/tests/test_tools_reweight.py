@@ -16,7 +16,8 @@ import ostap.io.root_file
 import ostap.trees.trees
 import ostap.parallel.kisa 
 from   ostap.utils.timing     import timing
-from   ostap.logger.colorized import attention, allright  
+from   ostap.logger.colorized import attention, allright
+from   ostap.plotting.canvas  import use_canvas
 import ROOT, random, math, os, time  
 # =============================================================================
 # logging 
@@ -87,7 +88,8 @@ dbroot = ROOT.TFile.open ( testdata , 'r' )
 logger.info ( 'Test data is fetched from "%s"' % testdata )   
 dbroot.ls()
 hdata  = dbroot[ tag_data ]
-mctree = dbroot[ tag_mc   ]
+
+mctree = ROOT.TChain ( tag_mc ) ; mctree.Add ( testdata ) 
 
 ## prepare template histogram for MC 
 hmc = ROOT.TH1D('hMC','histo-template for MC', 77 ,0,100 ) ; hmc.Sumw2() 
@@ -98,11 +100,10 @@ maxIter = 10
 ## check database 
 import os
 if not os.path.exists( dbname ) :
-    logger.info('Create new weights DBASE') 
-    db = DBASE.open ( dbname , 'c' ) ##  create new empty db 
-    db.close()
+    with DBASE.open ( dbname , 'c' ) :
+        logger.info("Create new weights DBASE '%s'" % dbname ) 
 else :
-    logger.info('Existing weights DBASE will be used') 
+    logger.info("Existing weights DBASE '%s' will be used" % dbname ) 
 
 #
 ## make reweighting iterations
@@ -132,10 +133,17 @@ for iter in range ( 1 , maxIter + 1  ) :
         weighter = Weight ( dbname , weighting )
         
         # ===============================================================================
-        ## 1a) create mcdataset
-        selector = SelectorWithVars ( variables , '0<x && x<100 ' , silence = True )
-        mctree.process ( selector , silent = True )
-        mcds     = selector.data ## dataset
+        ## 1a) create MC-dataset
+        
+        ## fill dataset from input CONTROL tree
+        mcds , _ = mctree.make_dataset ( variables = variables      ,
+                                         selection = '0<x && x<100' , 
+                                         silent    = True           ) 
+        
+        
+        ## selector = SelectorWithVars ( variables , '0<x && x<100 ' , silence = True )
+        ## mctree.process ( selector , silent = True )
+        ## mcds     = selector.data ## dataset
         
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
       
@@ -178,7 +186,7 @@ for iter in range ( 1 , maxIter + 1  ) :
         logger.info ( '%s:\n%s' % ( title , hdata.cmp_diff_prnt
                                     ( hmc , density = True , title = title , prefix = '# ' ) ) )
 
-    if not active and iter > 3 :
+    if not active and 3 < iter :
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
         title = 'Reweighted dataset after #%d iterations' % iter 
         logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' ]  ,
@@ -191,11 +199,25 @@ for iter in range ( 1 , maxIter + 1  ) :
         break
     
     mcds.clear () 
-    del mcds , selector
+    del mcds 
     
 else :
 
     logger.error ( "No convergency!" )
+
+
+# ===========================================================================
+title = 'Weighter object'
+logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
+# ============================================================================
+## draw the convergency graphs 
+graphs = weighter.graphs ()
+for key in graphs : 
+    with use_canvas ( "Convergency graph for '%s'" % key ) :
+        graph = graphs [ key ]
+        graph.draw ( 'a' )
+# =============================================================================
+
 
 
 time.sleep ( 5 )

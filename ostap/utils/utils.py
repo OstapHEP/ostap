@@ -102,7 +102,9 @@ __all__     = (
     ##
     'slow'               , ## "slow" looping with delays at each step
     ##
-    'CallThem'           , ## convert sequence of callables into singel callable 
+    'CallThem'           , ## convert sequence of callables into singel callable
+    'has_symbol'         , ## Has any of the symbols?
+    'is_formula'         , ## Is this string expression represend math formula?
     )
 
 # =============================================================================
@@ -1469,6 +1471,10 @@ class CallThem(object) :
         """'callables' : get all callables"""
         return self.__callables 
 
+    def __str__ ( self ) :
+        return ','.join ( str ( c ) for c in self.__callables )
+    __repr__ = __str__
+
 # =============================================================================
 ## @class NumCalls
 #  Count a number of  times a callable object is invoked
@@ -1534,6 +1540,19 @@ def copy_with_progress ( source  , destination ) :
     
     return os.path.realpath ( destination )
 
+
+# =========================================================================
+## Has any of the symbols?
+def has_symbol ( expression , symbols ) :
+    """Has any of the symbols?"""
+    return any ( s in expression for s in symbols ) 
+# =========================================================================
+## markers of the math formulas 
+math_symbols = ' +-*/=><()[]^%&|'
+## Is this string expression represend math formula?
+def is_formula ( expr , symbols = math_symbols ) :
+    """Is this string expression represend math formula?"""
+    return has_symbol ( expr.strip() , symbols ) 
 
 # =========================================================================
 ## merge all files using <code>hadd</code> script from ROOT

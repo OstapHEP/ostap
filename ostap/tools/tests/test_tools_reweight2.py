@@ -19,6 +19,8 @@ from   ostap.core.pyrouts     import *
 import ostap.io.zipshelve     as     DBASE
 from   ostap.utils.timing     import timing
 from   ostap.logger.colorized import attention, allright  
+from   ostap.plotting.canvas  import use_canvas
+import ostap.logger.table     as     T 
 import ROOT, random, math, os, time 
 # =============================================================================
 # logging 
@@ -230,8 +232,9 @@ dbroot.ls()
 hdata    = dbroot [ tag_data    ]
 hxdata   = dbroot [ tag_datax   ]
 hydata   = dbroot [ tag_datay   ]
-mctree   = dbroot [ tag_mc      ]
-datatree = dbroot [ 'DATA_tree' ]
+
+datatree = ROOT.TChain ( 'DATA_tree' ) ; datatree.Add ( testdata ) 
+mctree   = ROOT.TChain ( tag_mc      ) ; mctree.Add   ( testdata ) 
 datastat = datatree.statCov('x','y')
 # =============================================================================
 ## prebook MC histograms
@@ -260,17 +263,16 @@ maxIter = 15
 ## check database 
 import os
 if not os.path.exists( dbname ) :
-    logger.info('Create new weights DBASE') 
-    db = DBASE.open ( dbname , 'c' ) ##  create new empty db 
-    db.close()
+    with DBASE.open ( dbname , 'c' ) : ##  create new empty db 
+        logger.info("Create new weights DBASE '%s'" % dbname ) 
 else :
-    logger.info('Existing weights DBASE will be used') 
+    logger.info("Existing weights DBASE '%s' will be used" % dbname ) 
     
 # =============================================================================
 ## make reweighting iterations
 
 from   ostap.tools.reweight           import Weight, makeWeights,  WeightingPlot, W2Data  
-from   ostap.fitting.pyselectors      import SelectorWithVars, Variable 
+from   ostap.fitting.pyselectors      import Variable 
 import ostap.parallel.parallel_fill
 
 # =============================================================================
@@ -291,9 +293,9 @@ variables  = [
 
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
     
-    selector = SelectorWithVars ( variables , '0<x && x<20 && 0<y && y<20' , silence = True )
-    mctree.process ( selector , silent = True )
-    mcds_ = selector.data             ## dataset
+    mcds_ , _ = mctree.make_dataset ( variables = variables      ,
+                                      selection = '0<x && x<20 && 0<y && y<20' ,
+                                      silent    = True           ) 
 
 # =============================================================================
 ## Configurtaion of reweighting plots 
@@ -303,6 +305,19 @@ plots  = [
     WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hydata , hmcy ) , 
     WeightingPlot ( 'y:x'   , 'weight' , '2D-reweight' , hdata  , hmc  ) , 
     ]
+
+# ============================================================================
+## table of global statistics 
+glob_stat   = [ ( '#' , 'Mahalanobis' , 'KL/S-C' , 'KL/C-S' , 'KL-sym' ) ] 
+vct_data    = datatree.statVct ( 'x,y' )
+vct_init    = mctree  .statVct ( 'x,y' )
+trow = ( '%d'    % 0 ,
+         '%.4g'  % vct_init.mahalanobis                 ( vct_data ) , 
+         '%+.4g' % vct_init.asymmetric_kullback_leibler ( vct_data ) , 
+         '%+.4g' % vct_data.asymmetric_kullback_leibler ( vct_init ) , 
+         '%+.4g' % vct_data.           kullback_leibler ( vct_init ) )
+glob_stat.append ( trow )
+# =============================================================================
 
 # =============================================================================
 ## start reweighting iterations:
@@ -354,7 +369,16 @@ for iter in range ( 1 , maxIter + 1 ) :
         mcds .project  ( hmcx , 'x'   , 'weight'  )
         mcds .project  ( hmcy , 'y'   , 'weight'  )
         mcds .project  ( hmc  , 'y:x' , 'weight'  )
-
+        
+        ## 3.1) compare control and signal samples  
+        vct_i = mcds.statVct ( 'x,y' , 'weight' )      
+        trow = ( '%d'    % iter ,
+                 '%.4g'  % vct_i   .mahalanobis                 ( vct_data ) , 
+                 '%+.4g' % vct_i   .asymmetric_kullback_leibler ( vct_data ) , 
+                 '%+.4g' % vct_data.asymmetric_kullback_leibler ( vct_i    ) , 
+                 '%+.4g' % vct_data.           kullback_leibler ( vct_i    ) )
+        glob_stat.append ( trow )
+  
     rows = [] 
     with timing ( tag + ': compare DATA and MC distributions:' , logger = logger ) :
         
@@ -401,9 +425,19 @@ else :
 
     logger.error ( "No convergency!" )
 
-    
-del selector   
 
+# ===========================================================================
+title = 'Weighter object'
+logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
+# ============================================================================
+## draw the convergency graphs 
+graphs = weighter.graphs ()
+for key in graphs : 
+    with use_canvas ( "Convergency graph for '%s'" % key ) :
+        graph = graphs [ key ]
+        graph.draw ( 'a' )
+# =============================================================================
+    
 with ROOT.TFile.open ( testdata , 'r' ) as dbroot : 
     logger.info ( 'Test data is picked from DBASE "%s" for reweighting' % testdata )   
     dbroot.ls()
@@ -416,6 +450,19 @@ with ROOT.TFile.open ( testdata , 'r' ) as dbroot :
 # =============================================================================
 data_tree = ROOT.TChain  ( 'DATA_tree' ) ; data_tree.Add ( testdata ) 
 mc_tree   = ROOT.TChain  ( tag_mc      ) ;   mc_tree.Add ( testdata ) 
+
+# =============================================================================
+vct_final = mc_tree.statVct ( 'x,y' , 'weight' ) 
+trow = ( '*' ,
+         '%.4g'  % vct_final .mahalanobis                 ( vct_data  ) , 
+         '%+.4g' % vct_final .asymmetric_kullback_leibler ( vct_data  ) , 
+         '%+.4g' % vct_data  .asymmetric_kullback_leibler ( vct_final ) , 
+         '%+.4g' % vct_data  .           kullback_leibler ( vct_final ) )
+glob_stat.append ( trow )
+
+title = 'Global DATA/MCL similarity '
+table = T.table ( glob_stat , title = title , prefix = '# ' ) 
+logger.info ( '%s\n%s' % ( title , table ) ) 
 
 # =============================================================================
 title = 'Data/target dataset'
@@ -433,9 +480,6 @@ logger.info ( '%s:\n%s' % ( title , mc_tree.table2   ( variables = [ 'x' , 'y' ]
                                                        title     = title    ,
                                                        cuts      = 'weight' , 
                                                        prefix    = '# '     ) ) )
-
-time.sleep(5)
-
 
 # =============================================================================
 ##                                                                      The END 

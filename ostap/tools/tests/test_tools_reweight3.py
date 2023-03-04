@@ -22,7 +22,9 @@ import ostap.io.zipshelve     as     DBASE
 import ostap.logger.table     as     T 
 from   ostap.histos.histos    import h1_axis, h2_axes, h3_axes 
 from   ostap.utils.timing     import timing
-from   ostap.logger.colorized import attention, allright  
+from   ostap.logger.colorized import attention, allright
+from   ostap.plotting.canvas  import use_canvas
+import ostap.logger.table     as     T 
 import ROOT, random, math, os, time 
 # =============================================================================
 # logging 
@@ -411,6 +413,19 @@ for iter in range ( 1 , maxIter + 1 ) :
 else :
 
     logger.error ( "No convergency!" )
+
+
+# ===========================================================================
+title = 'Weighter object'
+logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
+# ============================================================================
+## draw the convergency graphs 
+graphs = weighter.graphs ()
+for key in graphs : 
+    with use_canvas ( "Convergency graph for '%s'" % key ) :
+        graph = graphs [ key ]
+        graph.draw ( 'a' )
+# =============================================================================
 
 # =============================================================================
 with timing ( "Add weight column to initial MC-tree" , logger = logger ) : 

@@ -21,13 +21,14 @@ __all__     = (
     'W2Data'          , ## helper to add the clacualted weight to ROOT.RooAbsData
     ) 
 # =============================================================================
-from   ostap.core.pyrouts     import VE, SE
+from   ostap.core.pyrouts     import VE, SE, Ostap 
 from   ostap.math.base        import iszero
+from   ostap.core.core        import split_string 
 from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types, sequence_types    
 from   ostap.math.operations  import Mul as MULT  ## needed for proper abstract multiplication
 import ostap.io.zipshelve     as     DBASE ## needed to store the weights&histos
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weigth to TTree/RooDataSet
-from   ostap.utils.utils      import CallThem 
+from   ostap.utils.utils      import CallThem, is_formula  
 from   ostap.logger.utils     import pretty_ve
 import ostap.histos.histos 
 import ostap.histos.compare 
@@ -59,7 +60,10 @@ class AttrGetter(object):
         """`attributes': the actual attributes
         """
         return self.__attributes
-    
+    # print attributes 
+    def __str__ ( self ) :
+        return ','.join ( self.__attributes )
+    __repr__ = __str__ 
 # =============================================================================
 ## @class Weight
 #  helper class for semiautomatic reweighting of data 
@@ -135,7 +139,7 @@ class Weight(object) :
             ## loop over the weighting factors and build the function
             for wvar in factors :
 
-                funval  = wvar.accessor  ## accessor to the variable 
+                funval  = wvar.accessor  ## accessor to the variable(s) 
                 funname = wvar.address   ## address  in database 
                 merge   = wvar.merge     ## merge sequence of callables?
                 skip    = wvar.skip      ## skip   some of them?
@@ -146,15 +150,14 @@ class Weight(object) :
 
                 if isinstance ( funval , str ) :
                     row.append ( funval ) 
-                    ## funval = operator.attrgetter( funval ) 
                     funval = AttrGetter( funval )
-                elif isinstance ( funval , AttrGetter ) :
-                    atts = funval.attributes
-                    if 1 == len ( atts ) : atts = atts[0]
-                    row.append ( str ( atts ) )
+                ## elif isinstance ( funval , AttrGetter ) :
+                ##    atts = funval.attributes
+                ##    if 1 == len ( atts ) : atts = atts[0]
+                ##    row.append ( str ( atts ) )
                 else :
-                    row.append ( '' ) 
-
+                    row.append ( str ( funval ) ) 
+                    
                 ## 
                 functions  = db.get ( funname , [] ) ## db[ funname ]
                 if not functions :
@@ -184,12 +187,12 @@ class Weight(object) :
                     if isinstance ( f , ROOT.TH1 ) and _first : 
                         ff = f.clone()
                         for i in ff :
-                            v     = float ( ff[i] )
-                            ff[i] = VE(v,0)
+                            v        = float ( ff [ i ] )
+                            ff [ i ] = VE ( v , 0 )
                         _functions.append ( ff  )                        
                         _first = False 
                     else :
-                        _functions.append ( f  )
+                        _functions.append ( f   )
                         
                 _functions.reverse() 
                 functions = _functions
@@ -284,11 +287,11 @@ class Weight(object) :
     def table ( self , title = None , prefix = ' ' ) :
         """Format weighting information as table
         """
-        import ostap.logger.table as Table
-        if title is None : title = 'Weighter(%s)' % self.__dbase 
-        return Table.table ( self.__table , title = title , prefix = prefix ,
-                             alignment = 'llcc' )
-
+        import ostap.logger.table as T
+        if title is None : title = "Weight('%s')" % self.__dbase 
+        return T.table ( self.__table , title = title , prefix = prefix ,
+                         alignment = 'llcc' )
+    
     # ===============================================================================
     ## get the dictionary of graphs
     #  for the regular case, it will be graphs that illustrates the convergency
@@ -297,7 +300,7 @@ class Weight(object) :
         """Get the dictionary of graphs
         """
         grphs = {}
-        
+
         import ostap.histos.graphs 
         with DBASE.open ( self.dbase , 'r' ) as db : ## READONLY
             
@@ -306,19 +309,50 @@ class Weight(object) :
                 address   = i[0]
                 functions = db.get ( address , () )
                 if not functions : continue
-                
-                graph = ROOT.TGraphAsymmErrors ( len ( functions )  )
-                for n , w  in enumerate ( functions ) :
-                    if not hasattr ( w  ,'stat' ) : continue
 
-                    cnt = w.stat() 
-                    wmn , wmx =   cnt.minmax()
-                    graph [ n ] = n , 0 , 0 , 1 , 1 - wmn , wmx - 1  
+                ## grpah with the spread(min/max) weights 
+                gr1 = ROOT.TGraphAsymmErrors ( len ( functions )  )
+                ## graph with the rms weights 
+                gr2 = ROOT.TGraphErrors      ( len ( functions )  )
+
+                has_points = False 
+                for n , w  in enumerate ( functions , start = 1 ) :
                     
-                grphs [ address ] = graph
-                
+                    if not hasattr ( w  ,'stat' ) : continue
+                    
+                    cnt = w.stat()
+                    wmean       = cnt.mean  ().value()
+                    wrms        = cnt.rms   ()
+                    wmn , wmx   = cnt.minmax()
+                    gr1 [ n - 1 ] =      n , 0 , 0 , wmean , wmn - wmean , wmx - wmean  
+                    gr2 [ n - 1 ] = VE ( n , 0.0 ) , VE ( wmean , wrms ** 2) 
+                    has_points = True
+
+                if has_points :
+                    
+                    gr1.SetMarkerStyle ( 1  )
+                    gr1.SetFillColor   ( ROOT.kOrange )
+                    gr1.SetFillStyle   ( 1001 )
+                    gr1.SetLineColor   ( ROOT.kOrange )
+                    gr1.SetMarkerColor ( ROOT.kOrange )
+                    
+                    gr2.SetMarkerStyle ( 20 )
+                    gr2.SetLineColor   ( 2  )
+                    gr2.SetMarkerColor ( 2  )
+                    
+                    ## combine two graphs togather 
+                    graph = ROOT.TMultiGraph ()
+                    graph.Add      ( gr1 , '3'  )
+                    graph.Add      ( gr2 , 'pl' )
+                    graph.SetTitle ( '%s;iteration;weights' % address )
+                    
+                    grphs [ address ] = graph
+
         return grphs     
-        
+
+    def __str__  ( self ) : return self.table()
+    def __repr__ ( self ) : return self.table()
+
     # =========================================================================
     ## @class WeightingVar
     #  Helper class to keep information about single reweighting
@@ -335,7 +369,7 @@ class Weight(object) :
         - `accessor'  : an accessor function that extracts the variable(s) from  TTree/TChain/RooDataSet
         - `address'   : the  address in DBASE, where reweigftjnig callable(s) is/are stored
         - `merge'     : merge list of callables from DB into the single callable ?
-        - ``skip'     : use only certain elements from the list of callables from DBASE
+        - `skip'      : use only certain elements from the list of callables from DBASE
         
         Schematic data flow to get the weigth for the given event 
         - tree/chain/dataset -> accessor -> database(address) -> weight
@@ -360,18 +394,39 @@ class Weight(object) :
             - tree/chain/dataset -> accessor -> database(address) -> weight
             """
 
-            if   isinstance ( accessor , string_types ) :
+            if isinstance ( accessor , string_types ) :
+                accessor = split_string ( accessor , strip = True )
+                if 1 == len ( accessor ) : accessor = accessor [ 0 ]
+
+            if   accessor and isinstance ( accessor , string_types ) and is_formula ( accessor ) :
+                ## use exporession here (suitable both for for TTree/RooAbsData)
+                accessor = Ostap.Functions.Expression ( accessor )
+                
+            elif accessor and isinstance ( accessor , string_types ) :
                 ## accessor = operator.attrgetter (  accessor )
-                accessor = AttrGetter (  accessor )                
+                accessor = AttrGetter (  accessor )
+                
             elif accessor and isinstance ( accessor , sequence_types   ) and \
                      all ( callable ( i ) for i in accessor ) :
-                accessor = CallThem ( accessor ) 
-            elif accessor and isinstance ( accessor , sequence_types   ) and \
+                ## merge into single callable 
+                accessor = CallThem ( accessor )
+                
+            elif accessor and isinstance ( accessor , sequence_types   )       and \
+                     all ( isinstance ( i , string_types ) for i in accessor ) and \
+                     any ( is_formula ( i ) for i in accessor  ) :
+
+                ## convert to universal function for TTree/RooAbsData 
+                accessor = tuple ( Ostap.Functions.Expression ( i ) for i in accessor )
+                ## merge into single callable                 
+                accessor = CallThem ( accessor )
+                
+            elif accessor and isinstance ( accessor , sequence_types   )       and \
                      all ( isinstance ( i , string_types ) for i in accessor ) : 
+                
                 ## accessor = operator.attrgetter ( *accessor )
                 accessor = AttrGetter ( *accessor )
-            
-            assert callable ( accessor ) , \
+
+            assert accessor and callable ( accessor ) , \
                    "Invalid type of `accessor' %s/%s" % ( accessor , type( accessor ) )
             
             self.__accessor = accessor ,
@@ -723,15 +778,16 @@ ComparisonPlot. draw = _cmp_draw_
 #  and reweight "MC"-data set to looks as "data"(reference) dataset
 #  @code
 #  results = makeWeights (
-#   dataset           , ## data source to be  reweighted (DataSet, TTree, abstract source)
-#   plots             , ## reweighting plots
-#   database          , ## datadabse to store/update reweigting results
-#   delta             , ## stopping criteria for "mean"    weight variation
-#   minmax            , ## stopping criteria for "min/max" weight variation
-#   power             , ## effective power to apply to the weigths
-#   debug      = True , ## store debuig information in database
-#   make_plots = True , ## produce useful comparison plots
-#   tag        = 'RW' ) ## tag for better printout 
+#   dataset              , ## data source to be  reweighted (DataSet, TTree, abstract source)
+#   plots                , ## reweighting plots
+#   database             , ## datadabse to store/update reweigting results
+#   delta                , ## stopping criteria for "mean"    weight variation
+#   minmax               , ## stopping criteria for "min/max" weight variation
+#   power                , ## effective power to apply to the weigths
+#   debug        = True  , ## store debuig information in database
+#   make_plots   = True  , ## produce useful comparison plots
+#   force_update = False , ## force DB update even for "good" results 
+#   tag          = 'RW'  ) ## tag for better printout 
 #  @endcode
 #  If <code>make_plots = False</code> function returns the tuple of active reweitings:
 #  @code
@@ -750,16 +806,17 @@ ComparisonPlot. draw = _cmp_draw_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-05-10
 def makeWeights  ( dataset                    ,
-                   plots      = []            , 
-                   database   = "weights.db"  ,
-                   compare    = None          , ## comparison function 
-                   delta      = 0.01          , ## delta for `mean'  weight variation
-                   minmax     = 0.03          , ## delta for `minmax' weight variation
-                   power      = None          , ## auto-determination
-                   debug      = True          , ## save intermediate information in DB
-                   make_plots = True          , ## make comparison plots (and draw them)
-                   wtruncate  = ( 0.5 , 1.5 ) , ## truncate too small/large weights 
-                   tag        = "Reweighting" ) :
+                   plots        = []            , 
+                   database     = "weights.db"  ,
+                   compare      = None          , ## comparison function 
+                   delta        = 0.01          , ## delta for `mean'  weight variation
+                   minmax       = 0.03          , ## delta for `minmax' weight variation
+                   power        = None          , ## auto-determination
+                   debug        = True          , ## save intermediate information in DB
+                   make_plots   = True          , ## make comparison plots (and draw them)
+                   wtruncate    = ( 0.5 , 1.5 ) , ## truncate too small/large weights
+                   force_update = False         , ## force DB update  ven for "good" results 
+                   tag          = "Reweighting" ) :
     """The main  function: perform one re-weighting iteration 
     and reweight `MC'-data set to looks as `data'(reference) dataset
     >>> results = makeWeights (
@@ -803,13 +860,13 @@ def makeWeights  ( dataset                    ,
 
     nplots  = len ( plots )
 
+    for_update   = 0 
     ## list of plots to compare 
-    cmp_plots  = []
+    cmp_plots    = []
     ## reweighting summary table
     header       = ( 'Reweighting' , 'wmin/wmax' , 'OK?' , 'wrms[%]' , 'OK?' , 'chi2/ndf' , 'ww' , 'exp' )
-    
     rows         = {}
-    save_to_db = [] 
+    save_to_db   = [] 
     ## number of active plots for reweighting
     for wplot in plots  :
         
@@ -907,7 +964,6 @@ def makeWeights  ( dataset                    ,
         
         row.append (  '%6.2f' % c2ndf  ) 
 
-
         ## apply weight truncation:
         if not ignore : 
             wmin , wmax = wtruncate
@@ -938,20 +994,23 @@ def makeWeights  ( dataset                    ,
         ## make decision based on the variance of weights 
         #
         mnw , mxw = cnt.minmax()
-        if ( not good )  and ( not ignore ) : ## small variance?
-            save_to_db.append ( ( address , ww , hdata0 , hmc0 , hdata , hmc , w ) )
+        if not ignore  :
+            ## update DB for "not-good" or "forced" entries 
+            if force_update or not good :
+                if not good : for_update += 1
+                save_to_db.append ( ( address , ww , hdata0 , hmc0 , hdata , hmc , w ) )
 
         # =====================================================================
         ## make a comparison (if needed)
         # =====================================================================
         if compare : compare ( hdata0 , hmc0 , address )
 
-    active  = tuple ( [ p[0] for p in save_to_db ] )  
+    active  = tuple ( [ p [ 0 ] for p in save_to_db ] )  
     nactive = len ( active )  
 
     if   power is None :
         power   = lambda n : 0.5 * ( 1.0 / max ( n , 1 ) + 1 )
-        ## average between 100% uncorrelated and 100% correlated 
+        ## average between 100% correlated and 100% uncorrelated 
         eff_exp = 0.5 * ( 1.0 / max ( nactive , 1 ) + 1.0 )
     elif power and callable ( power ) : 
         eff_exp = power ( nactive ) 
@@ -1007,7 +1066,8 @@ def makeWeights  ( dataset                    ,
         for item in cmp_plots :
             with use_canvas ( '%s/%s' % ( tag , item.what ) ) : item.draw()
                     
-    return ( active , cmp_plots ) if make_plots else active
+    ## return ( active , cmp_plots ) if make_plots else active
+    return ( for_update , cmp_plots ) if make_plots else for_update 
 
 # =============================================================================
 ## @class W2Tree

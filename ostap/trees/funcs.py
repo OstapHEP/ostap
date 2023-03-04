@@ -239,7 +239,21 @@ def pyfun_data ( function , data = None ) :
     return PyDataFunction ( function , tree ) 
     
 
-# =================================================================================
+# =============================================================================
+## print for FuncFormula 
+def _pff_str_ ( f ) : return "FuncFormula('%s')"     % f.expression()
+def _pfe_str_ ( f ) : return "Expression('%s')"      % f.expression()
+def _pfr_str_ ( f ) : return "FuncRooFormula('%s')"  % f.expression()
+
+Ostap.Functions.FuncFormula   .__str__  = _pff_str_ 
+Ostap.Functions.FuncFormula   .__repr__ = _pff_str_ 
+Ostap.Functions.FuncRooFormula.__str__  = _pfr_str_ 
+Ostap.Functions.FuncRooFormula.__repr__ = _pfr_str_ 
+Ostap.Functions.Expression    .__str__  = _pfe_str_ 
+Ostap.Functions.Expression    .__repr__ = _pfe_str_ 
+# =============================================================================
+
+# =============================================================================
 ## the ITreeFunc based on TTree formula expression 
 FuncFormula    = Ostap.Functions.FuncFormula
 
