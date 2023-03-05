@@ -55,9 +55,9 @@ Ostap::Functions::FuncFormula::FuncFormula
   , m_expression ( expression )  
   , m_name       ( name       )  
 {
-  if ( m_tree )
+  if ( nullptr != tree )
   {
-    const TChain* chain = dynamic_cast<const TChain*>( m_tree ) ;
+    const TChain* chain = dynamic_cast<const TChain*>( tree ) ;
     if ( chain ) { m_tree = chain->GetTree() ; }
   } 
   //
@@ -113,7 +113,7 @@ double Ostap::Functions::FuncFormula::operator() ( const TTree* tree ) const
   //
   if ( nullptr != tree ) 
   {
-    const TChain* chain = dynamic_cast<const TChain*>( m_tree ) ;
+    const TChain* chain = dynamic_cast<const TChain*> ( tree ) ;
     if ( chain ) { tree = chain->GetTree() ; }
   }
   //
@@ -272,7 +272,7 @@ double Ostap::Functions::Func1D::operator() ( const TTree* tree ) const
   //
   if ( nullptr != tree ) 
   {
-    const TChain* chain = dynamic_cast<const TChain*>( m_tree ) ;
+    const TChain* chain = dynamic_cast<const TChain*>( tree ) ;
     if ( chain ) { tree = chain->GetTree() ; }
   }
   //
@@ -372,7 +372,7 @@ double Ostap::Functions::Func2D::operator() ( const TTree* tree ) const
   //
   if ( nullptr != tree ) 
   {
-    const TChain* chain = dynamic_cast<const TChain*>( m_tree ) ;
+    const TChain* chain = dynamic_cast<const TChain*> ( tree ) ;
     if ( chain ) { tree = chain->GetTree() ; }
   }
   //
@@ -502,7 +502,7 @@ double Ostap::Functions::Func3D::operator() ( const TTree* tree ) const
   //
   if ( nullptr != tree ) 
   {
-    const TChain* chain = dynamic_cast<const TChain*>( m_tree ) ;
+    const TChain* chain = dynamic_cast<const TChain*> ( tree ) ;
     if ( chain ) { tree = chain->GetTree() ; }
   }
   // the tree 

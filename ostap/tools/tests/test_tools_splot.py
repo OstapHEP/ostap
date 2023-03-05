@@ -91,7 +91,7 @@ def prepare_data ( nfiles = 50 ,  nentries = 500  ) :
 # - fill histogram for Ttree 
 # - fit the histogram
 # - make sPlot
-# - write sPlot results into oroigin Ttree
+# - write sPlot results into origin TTree
 def test_splotting  () : 
     """ Test sPlotting macheinery (outside of RooFit)
     - fill histogram from TTree 
@@ -100,7 +100,7 @@ def test_splotting  () :
     - write sPlot results into oroigin Ttree
     """
     
-    files = prepare_data ( 200 , 5000 )
+    files = prepare_data ( 200 , 50000 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )
@@ -136,6 +136,7 @@ def test_splotting  () :
     ds  = model.histo_data.dset
 
     with DBASE.tmpdb()  as db :
+        
         for fast in ( True , False ) :
             
             sp  = sPlot1D ( model , ds  , nbins = 100 , fast = fast ) ## SPLOT IT! 
@@ -147,8 +148,6 @@ def test_splotting  () :
                 assert 0.7 < value < 1.5 , "Something totally wrong here, fast=%s!" % fast 
                 
             fnsp = Ostap.Functions.FuncTH1 ( sph , 'mass' )
-            
-        for fast in ( True , False ) :
             
             db ['histo;fast=%s'   % fast ] = histo 
             db ['splot;fast=%s'   % fast ] = sp    

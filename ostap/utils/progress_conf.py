@@ -32,8 +32,10 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 ## configuration of the progress bar
 #  @see Ostap::Utils::Pr
-def progress_conf() :
+def progress_conf ( show = True ) :
     """configuration of the progress bar"""
+    if not show : return Ostap.Utils.ProgressConf ( 0 )
+    
     tty = isatty () 
     twidth        = terminal_size () [ 1 ] if tty else 110 
     return Ostap.Utils.ProgressConf (

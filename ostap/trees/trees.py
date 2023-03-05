@@ -253,7 +253,9 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 , progress 
     last  = min ( last , len ( tree ) )
     first = max ( 0    , first        ) 
     
-    if isinstance ( variables , string_types ) : variables = split_string ( variables , var_separators , strip = True )
+    if isinstance ( variables , string_types ) :
+        variables = split_string ( variables , var_separators , strip = True )
+        
     vars = []
     for v in variables :
         vars += split_string ( v , var_separators , strip = True )
@@ -1976,9 +1978,7 @@ def bftype ( obj ) :
         if callable ( obj[-1] ) and all ( isinstance ( v , string_types ) for v in obj[:-1] ) : return True 
                 
     return False 
-    
-
-    
+        
 # ==============================================================================
 ## basic types of objects that can be used for <code>add_new_branch</code> methods
 #  - string formula
@@ -2049,12 +2049,16 @@ def btypes_array ( obj ) :
 ## add new branch to the chain
 #  @see Ostap::Trees::add_branch
 #  @see Ostap::IFuncTree   
-def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0 ) :
+def _chain_add_new_branch ( chain          ,
+                            name           ,
+                            function       ,
+                            verbose = True ,
+                            report  = True , 
+                            value   = 0    ) :
     """ Add new branch to the tree
     - see Ostap::Trees::add_branch
     - see Ostap::IFuncTree 
     """
-
     assert isinstance ( chain , ROOT.TChain ), 'Invalid chain!'
 
     if len ( chain.files() ) <= 1 :
@@ -2062,6 +2066,7 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0
                                 name     = name     ,
                                 function = function , 
                                 verbose  = verbose  ,
+                                report   = report   , 
                                 value    = value    ) 
     
     if isinstance ( function , dictlike_types ) :
@@ -2069,7 +2074,7 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0
         name , function = function , None 
         
     names = name
-    if isinstance ( names , string_types )  : names =  [ names ]    
+    if isinstance ( names , string_types )  : names = split_string ( names , strip = True ) 
     for n in names : 
         assert not n in chain.branches() ,'Branch %s already exists!' % n 
         
@@ -2083,11 +2088,14 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0
                                              name      = name     ,
                                              the_array = function ,
                                              verbose   = verbose  ,
+                                             report    = report   , 
                                              value     = value    ) 
 
 
     files = chain.files   ()
     cname = chain.GetName () 
+
+    branches = set ( chain.branches () ) | set ( chain.leaves() )
 
     tree_verbose  = verbose and      len ( files ) < 5
     chain_verbose = verbose and 5 <= len ( files )
@@ -2104,12 +2112,24 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0
                                 name     = name         ,
                                 function = function     ,
                                 verbose  = tree_verbose ,
+                                ## verbose  = False        ,
+                                report   = False        , 
                                 value    = value        )
             
     ## recollect the chain 
     newc = ROOT.TChain ( cname )
     for f in files : newc.Add ( f  )
     
+    if report :
+        all_branches = set ( newc.branches() ) | set ( newc.leaves() ) 
+        new_branches = sorted ( all_branches - branches )        
+        if new_branches :
+            n = len ( new_branches )
+            if 1 == n : title = 'Added %s branch to TChain'   % n 
+            else      : title = 'Added %s branches to TChain' % n 
+            table = newc.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+            
     return newc 
 
 # ==============================================================================
@@ -2120,6 +2140,7 @@ def _chain_add_new_branch_array ( chain           ,
                                   name            ,
                                   the_array       ,
                                   verbose = True  ,
+                                  report  = True  , 
                                   value   = 0     ) : 
     """ Add new branch to the tree
     - see Ostap::Trees::add_branch
@@ -2137,12 +2158,13 @@ def _chain_add_new_branch_array ( chain           ,
            hasattr    ( the_array , '__getitem__'  ) ,   \
            "Invalid type of ``the_array'' %s/%s" % ( the_array , type ( the_array ) ) 
     
+
     files = chain.files   ()
     cname = chain.GetName () 
     
     from ostap.utils.progress_bar import progress_bar
 
-    verbose = verbose and 1 < len ( files )
+    branches = set ( chain.branches () ) | set ( chain.leaves() )
     
     import ostap.io.root_file
 
@@ -2169,13 +2191,25 @@ def _chain_add_new_branch_array ( chain           ,
                                 name     = name         ,
                                 function = what         ,
                                 verbose  = tree_verbose ,
+                                ## verbose  = False        ,
+                                report   = False        , 
                                 value    = value        ) 
             start += size
 
     ## recollect the chain 
     newc = ROOT.TChain ( cname )
     for f in files : newc.Add ( f  )
-    
+
+    if report :
+        all_branches = set ( newc.branches() ) | set ( newc.leaves() ) 
+        new_branches = sorted ( all_branches - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 == n : title = 'Added %s data array branch to TChain'   % n 
+            else      : title = 'Added %s data array branches to TChain' % n 
+            table = newc.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+                                           
     return newc 
 
 
@@ -2244,7 +2278,12 @@ from ostap.utils.utils import implicitMT
 #
 #  @see Ostap::Trees::add_branch
 #  @see Ostap::IFuncTree 
-def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
+def add_new_branch ( tree           ,
+                     name           ,
+                     function       ,
+                     verbose = True ,
+                     report  = True ,
+                     value   = 0    ) :
     """ Add new branch to the tree
 
     - Using formula:
@@ -2304,6 +2343,7 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
                                        name                ,
                                        function = function ,
                                        verbose  = verbose  ,
+                                       report   = report   , 
                                        value    = value    )
     
     if isinstance ( function , dictlike_types ) :
@@ -2318,7 +2358,6 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
 
     assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
            "add_branch: invalid type of ``function'': %s/%s" % ( function , type ( function ) )  
-
 
     treepath =  tree.path
     the_file = tree.topdir
@@ -2468,10 +2507,11 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     tdir  = tree.GetDirectory ()
     tpath = tree.path
     
-
     branches = set ( tree.branches () ) | set ( tree.leaves() ) 
     exists   = set ( names ) & branches
-    if exists : logger.warning ("Branches '%s' already exist(s)!" % exists  ) 
+    
+    ## if exists : logger.warning ("Branches '%s' already exist(s)!" % exists ) 
+    assert not exists , "Branches '%s' already exist(s)!" % list ( exists ) 
 
     from ostap.io.root_file        import REOPEN 
     from ostap.utils.progress_conf import progress_conf
@@ -2480,12 +2520,12 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
         tfile.cd() 
         ttree    = tfile.Get ( tpath )
 
-        verbose = True
-
-        ## add progress bar 
-        if verbose : sc    = Ostap.Trees.add_branch ( ttree , progress_conf () , *args )
-        else       : sc    = Ostap.Trees.add_branch ( ttree ,                    *args )
-
+        ## add progress bar
+        
+        pconf = progress_conf ( verbose ) 
+        if verbose : sc = Ostap.Trees.add_branch ( ttree , pconf , *args )
+        else       : sc = Ostap.Trees.add_branch ( ttree ,         *args )
+        
         if   sc.isFailure     () : logger.error ( "Error from Ostap::Trees::add_branch %s" % sc )
         elif tfile.IsWritable () :
 
@@ -2507,6 +2547,16 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     newc = ROOT.TChain ( treepath )
     newc.Add ( the_file )
 
+    if report :
+        all_branches = set ( newc.branches() ) | set ( newc.leaves() ) 
+        new_branches = sorted ( all_branches - branches )        
+        if new_branches :
+            n = len ( new_branches )
+            if 1 == n : title = 'Added %s branch to TTree'   % n 
+            else      : title = 'Added %s branches to TTree' % n 
+            table = newc.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+            
     return newc
 
 ROOT.TTree.add_new_branch = add_new_branch 
@@ -2521,7 +2571,10 @@ ROOT.TTree.add_new_branch = add_new_branch
 #  tree = ...
 #  tree.add_reweighting ( w ) 
 #  @endcode 
-def add_reweighting ( tree , weighter , name = 'weight' , progress = False ) :
+def add_reweighting ( tree                 ,
+                      weighter             ,
+                      name      = 'weight' ,
+                      progress  = False    ) :
     """Add specific re-weighting information into ROOT.TTree
     
     >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
