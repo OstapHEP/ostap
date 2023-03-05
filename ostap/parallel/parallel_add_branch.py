@@ -42,13 +42,12 @@ class AddBranch(Task) :
 
         import ostap.trees.trees
 
-        files = set () 
-        tree.chain.add_new_branch ( self.branch_name , self.function , verbose = False ) 
-        for f in tree.files : files.add ( f )
+        files = []  
+        tree.chain.add_new_branch ( self.branch_name , self.function , verbose = False , report = False ) 
+        for f in tree.files :
+            if not f in files : files.add ( f )
 
         ## list of processed  files
-        files =  list ( files )
-        files.sort()
         self.__output = tuple ( files )
 
         return self.__output 
@@ -56,14 +55,10 @@ class AddBranch(Task) :
     ## merge results/datasets 
     def merge_results( self , result , jobid = -1 ) :
         
-        if not  self.__output : self.__output = result
-        else :
-            s = set()
-            for r in self.__output : s.add ( r )
-            for r in      result   : s.add ( r )
-            s = list ( s )
-            s.sort()
-            self.__output = tuple( s )
+        if not self.__output : self.__output = result
+        else                 :
+            processed = sorted ( self.__output + result ) 
+            self.__output = tuple ( processed ) 
             
     ## get the results 
     def results ( self ) : return self.__output
@@ -75,7 +70,11 @@ class AddBranch(Task) :
 #  chain = ....
 #  chain.padd_new_branch ( 'new_branch' , 'px*py' ) 
 #  @endcode
-def add_new_branch ( chain , branch_name , function , verbose = True , **kwargs ) :
+def add_new_branch ( chain          ,
+                     branch_name    ,
+                     function       , 
+                     verbose = True ,
+                     report  = True , **kwargs ) :
     """Add new branch for loong chain in parallel
     - see ROOT.TTree.add_new_branch
     >>> chain = ....
@@ -86,10 +85,10 @@ def add_new_branch ( chain , branch_name , function , verbose = True , **kwargs 
     
     if   isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass 
     elif isinstance ( chain , ROOT.TTree  ) : 
-        return _add_branch_ ( chain , branch_name , function , verbose = False ) 
+        return _add_branch_ ( chain , branch_name , function , verbose = verbose , report = report  ) 
     
     ch       = Chain ( chain ) 
-    branches = set   ( chain.branches() )
+    branches = set   ( chain.branches() ) | set ( chain.leaves() ) 
     
     task     = AddBranch   ( branch_name ,  function  )
     wmgr     = WorkManager ( silent = not verbose , **kwargs )
@@ -99,12 +98,17 @@ def add_new_branch ( chain , branch_name , function , verbose = True , **kwargs 
     
     nc = ROOT.TChain ( chain.name )
     for f in ch.files :  nc.Add ( f )
-    
-    nb = list ( set ( nc.branches () ) - branches ) 
-    if nb : logger.info ( 'Added branches:\n%s' % nc.table ( variables = nb , prefix = '# ' ) ) 
 
+    if report : 
+        new_branches = sorted ( set ( nc.branches () ) + set ( nc.leaves() ) - branches )
+        if new_branches : 
+            n = len ( new_branches )  
+            if 1 == n  : title = 'Added %s branch to TChain'   % n
+            else       : title = 'Added %s branches to TChain' % n
+            table = nc.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+            
     return nc 
-
 
 ROOT.TTree .padd_new_branch = add_new_branch 
 ROOT.TChain.padd_new_branch = add_new_branch

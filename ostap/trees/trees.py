@@ -2574,7 +2574,8 @@ ROOT.TTree.add_new_branch = add_new_branch
 def add_reweighting ( tree                 ,
                       weighter             ,
                       name      = 'weight' ,
-                      progress  = False    ) :
+                      progress  = True     ,
+                      report    = True     ) :
     """Add specific re-weighting information into ROOT.TTree
     
     >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
@@ -2587,15 +2588,56 @@ def add_reweighting ( tree                 ,
     
     import ostap.tools.reweight as W
     
-    assert isinstance ( weighter , W.Weight ), "Invalid type of ``weighting''!"
+    assert isinstance ( weighter , W.Weight ), "Invalid type of `weighter'!"
     
     ## create the weighting function 
     wfun = W.W2Tree ( weighter )
     
-    return tree.add_new_branch (  name , wfun , verbose = progress ) 
+    return tree.add_new_branch (  name , wfun , verbose = progress , report = report ) 
 
 ROOT.TTree.add_reweighting = add_reweighting    
 
+# =============================================================================
+## Add specific re-weighting information into <code>ROOT.TTree</code> using parallel machinery 
+#  @see ostap.tools.reweight
+#  @see ostap.tools.reweight.Weight 
+#  @see ostap.tools.reweight.W2Tree 
+#  @code
+#  w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+#  tree = ...
+#  tree.add_reweighting ( w ) 
+#  @endcode 
+def padd_reweighting ( tree                 ,
+                       weighter             ,
+                       name      = 'weight' ,
+                       progress  = True     ,
+                       report    = True     , *kwargs ) :
+    """Add specific re-weighting information into ROOT.TTree using parallel machinery 
+    
+    >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+    >>> data = ...
+    >>> data.padd_reweighting ( w )
+    - see ostap.tools.reweight
+    - see ostap.tools.reweight.Weight 
+    - see ostap.tools.reweight.W2Tree 
+    """
+    
+    import ostap.tools.reweight as W
+    
+    assert isinstance ( weighter , W.Weight ), "Invalid type of `weighter'!"
+    
+    ## create the weighting function 
+    wfun = W.W2Tree ( weighter )
+
+    if not hasattr ( tree , 'padd_new_branch' )  :
+        logger.warning ( "No 'padd_new_branch' method found, switch to sequential processing" )
+        return tree.add_new_branch (  name , wfun , verbose = progress , report = report ) 
+
+    ## use parallel machinery 
+    return tree.padd_new_branch (  name , wfun , verbose = progress , report = report , **kwargs ) 
+
+ROOT.TTree.padd_reweighting = padd_reweighting    
+                     
 # =============================================================================
 ## Get the effective entries in data frame
 #  @code
