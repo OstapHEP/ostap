@@ -100,7 +100,7 @@ def test_splotting  () :
     - write sPlot results into oroigin Ttree
     """
     
-    files = prepare_data ( 200 , 50000 )
+    files = prepare_data ( 100 , 5000 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )
