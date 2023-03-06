@@ -84,24 +84,30 @@ def _h1_cmp_fit_ ( h1              ,
 
     if density : 
         h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1 
-        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2
         cmp = _h1_cmp_fit_ ( h1_ , h2_ ,  density = False , opts = opts )
-        if h1_ is not h1 : del h1_
-        if h2_ is not h2 : del h2_
         return cmp
 
     from ostap.fitting.param import C1Fun 
-    f2 = C1Fun  ( h2 , *h1.xminmax() ) 
-    f2.release  ( 0     )
-    f2.set      ( 0 , 1 )
-    f2.fix      ( 1 , 0 )
-    f2.fix      ( 2 , 1 )
+    f2 = C1Fun    ( h2 , *h1.xminmax() ) 
+    f2.release    ( 0     )
+    c  = float    ( h1.integrate() ) / float ( h2.integrate() )
+    f2.set        ( 0 , c , 0.1 * c )
+    f2.set_limits ( 0 , 1.e-6 * c , 1.e+3 * c ) 
+    f2.fix        ( 1 , 0 )
+    f2.fix        ( 2 , 1 )
 
     while 100 < len ( __fun_cache ) :
         __fun_cache.pop ()   
     __fun_cache.insert ( 0 , ( f2 , h1 , h2 ) )
-    
-    rf  = f2.Fit ( h1 , 'S' + opts )
+
+    ## from ostap.plotting.canvas import use_canvas
+    ## with use_canvas ( 'plot them!' ) :
+    ##     h1.draw ( copy = True )
+    ##     h1.SetMinimum ( 0 ) 
+    ##     f2.draw ('same' , copy = True )
+        
+    rf = f2.Fit ( h1 , 'S' + opts )
     if 0 == rf.Status() and not '0' in opts :
         cnv  = ROOT.gPad.GetCanvas() if ROOT.gPad else None
         if cnv : cnv.Update()
@@ -1492,13 +1498,14 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
                          dangle          = 'angle/D'    ,
                          chi2ndf         = 'chi2/ndf'   ,
                          probchi2        = 'prob(chi2)' ,
-                         probfit         = 'prob(fit)'  ,
+                         ## probfit         = 'prob(fit)'  ,
+                         probfit         = ''  ,
                          prefix          = ''           ) : 
     """ Calculate and print some statistic information for two 1D-histos
     >>> h1 , h2 = ...
     >>> h1.cmp_diff_prnt ( h2 ) 
     """
-    
+
     assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.dim () , \
            "cmp_diff_prnt: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
     
@@ -1522,8 +1529,6 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
                                    probchi2  = probchi2  ,
                                    probfit   = probfit   ,
                                    prefix    = prefix    ) 
-        if h1_ is not h1 : del h1_
-        if h2_ is not h2 : del h2_
         return cmp
 
     rows = [ ('Quantity' , '' , 'value' ) ]
@@ -1615,7 +1620,8 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         v , n = pretty_float ( value )
         row   = allright ( chi2ndf ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )        
-            
+        
+    val_prchi_1 = -1 
     if probchi2 : 
         chi2, prob = h1.cmp_chi2 ( h2 , density = density )
 
@@ -1623,7 +1629,9 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         v , n = pretty_float ( value )
         row   = allright ( probchi2 ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
+        val_prchi_1 = prob  
 
+    val_prchi_2 = -1 
     if probchi2 and histo2 :
         
         chi2, prob = h2.cmp_chi2 ( h1 , density = density )
@@ -1632,31 +1640,25 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         v , n = pretty_float ( value )
         row   = allright ( probchi2 ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
+        val_prchi_2 = prob  
 
     if probfit and histo2 :
 
-        if (6,26)<= root_info :
-            
-            logger.warning ('H1_CMP_DIFF_PRNT: cmp_fit is teporarily disabled %s' % str ( root_info ) )
-            
-        else : 
-
-            rf1   = h1.cmp_fit ( h2 , density = density ) 
-            prob  = rf1.Prob()        
-            
-            value = prob 
-            v , n = pretty_float ( value )
-            row   = allright ( probfit ) , '[10^%d]' %n if  n  else  '' , v 
-            rows.append ( row  )
-            
-            rf2   = h2.cmp_fit ( h1 , density = density ) 
-            prob  = rf2.Prob()
-            
-            value = prob 
-            v , n = pretty_float ( value )
-            row   = allright ( probfit ) , '[10^%d]' %n if  n  else  '' , v 
-            rows.append ( row  )
-
+        rf1   = h1.cmp_fit ( h2 , density = density ) 
+        prob  = rf1.Prob()                    
+        value = prob 
+        v , n = pretty_float ( value )
+        row   = allright ( probfit ) , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )                
+        
+        rf2   = h2.cmp_fit ( h1 , density = density ) 
+        prob  = rf2.Prob()
+        
+        value = prob 
+        v , n = pretty_float ( value )
+        row   = allright ( probfit ) , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+        
     import ostap.logger.table as T
     return T.table ( rows , title =  title , prefix = prefix , alignment = 'lcl' )
 

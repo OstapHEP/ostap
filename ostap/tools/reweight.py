@@ -1046,11 +1046,20 @@ def makeWeights  ( dataset                    ,
         with DBASE.open ( database ) as db :
             
             db [ address ] = db.get( address , [] ) + [ weight ]
-            
+
+            ## save more information to database 
             if debug :
                 addr        = address + ':REWEIGHTING'
-                db [ addr ] = db.get ( addr , [] ) + list ( entry[2:] )
-                
+                db [ addr ] = db.get ( addr , [] ) + [ entry [ 2 : ]  ] 
+                ## if make_plots :
+                ##     found = False
+                ##     for c in cmp_plots :
+                ##         if c.what == address :
+                ##             found = c
+                ##             break 
+                ##     if found :
+                        
+                        
         del hd0, hm0 , hd , hm , weight , entry 
 
     table = [  header ]

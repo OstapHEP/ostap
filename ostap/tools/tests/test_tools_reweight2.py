@@ -226,13 +226,13 @@ if not os.path.exists( testdata ) :
 # =============================================================================
 ## Read data from DB
 # =============================================================================
-dbroot = ROOT.TFile.open ( testdata , 'r' )
-logger.info ( 'Test data is fetched from DBASE "%s"' % testdata )   
-dbroot.ls()
-hdata    = dbroot [ tag_data    ]
-hxdata   = dbroot [ tag_datax   ]
-hydata   = dbroot [ tag_datay   ]
-
+with ROOT.TFile.open ( testdata , 'r' ) as dbroot : 
+    logger.info ( 'Test data is fetched from DBASE "%s"' % testdata )   
+    dbroot.ls()
+    hdata    = dbroot [ tag_data  ].clone() 
+    hxdata   = dbroot [ tag_datax ].clone()
+    hydata   = dbroot [ tag_datay ].clone()
+    
 datatree = ROOT.TChain ( 'DATA_tree' ) ; datatree.Add ( testdata ) 
 mctree   = ROOT.TChain ( tag_mc      ) ; mctree.Add   ( testdata ) 
 datastat = datatree.statCov('x','y')
@@ -353,7 +353,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         
         # =========================================================================
         ## 2a) the most important line: perform single iteration step  
-        active , _  = makeWeights (
+        active , cmp_plots  = makeWeights (
             mcds               , ## what to be reweighted
             plots              , ## reweighting plots/setup
             dbname             , ## DBASE with reweigting constant 
@@ -385,16 +385,12 @@ for iter in range ( 1 , maxIter + 1 ) :
         # ==============================================================================
         ## 4) compare "Data" and "MC"  after the reweighting on the given iteration    
         logger.info    ( tag + ': compare DATA and MC for iteration #%d' % iter )
-
         
         ## 4a) compare the basic properties: mean, rms, skewness and kurtosis&moments
-        logger.info ( tag + ': DATA(x)   vs MC(x)  comparison:\n%s' % hxdata.cmp_prnt ( hmcx , 'DATA' , 'MC' , 'DATA(x)  vs MC(x)'  , prefix = '# ' , density = True ) )
-
-        logger.info ( tag + ': DATA(y)   vs MC(y)  comparison:\n%s' % hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y)  vs MC(y)'  , prefix = '# ' , density = True ) )
-        
+        logger.info ( tag + ': DATA(x)   vs MC(x)  comparison:\n%s'  % hxdata.cmp_prnt ( hmcx , 'DATA' , 'MC' , 'DATA(x)  vs MC(x)'  , prefix = '# ' , density = True ) )
+        logger.info ( tag + ': DATA(y)   vs MC(y)  comparison:\n%s'  % hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y)  vs MC(y)'  , prefix = '# ' , density = True ) )        
         logger.info ( tag + ': DATA(x,y) vs MC(x,y) comparison:\n%s' % hdata .cmp_prnt ( hmc  , 'DATA' , 'MC' , 'DATA(xy) vs MC(xy)' , prefix = '# ' , density = True ) )
-        
-        
+                
         title = tag + ': DATA(x)   vs MC(x) difference'
         logger.info ( '%s:\n%s' % ( title , hxdata.cmp_diff_prnt ( hmcx , density = True , title = title , prefix = '# ' ) ) )
         
@@ -408,7 +404,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         mcstat = mcds.statCov('x','y','weight')
         logger.info  ( tag + ': x/y covariance DATA (unbinned):\n# %s' % ( str ( datastat [2] ).replace ( '\n' , '\n# ' ) ) )
         logger.info  ( tag + ': x/y covariance MC   (unbinned):\n# %s' % ( str (   mcstat [2] ).replace ( '\n' , '\n# ' ) ) )
-        
+
     if not active and 3 < iter : 
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
         title = 'Reweighted dataset after #%d iterations' % iter 

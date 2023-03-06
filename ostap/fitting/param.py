@@ -55,9 +55,8 @@ class C1Fun(object) :
         self.__tf1.FixParameter ( 2 , 1 )
 
     ## the actual call 
-    def __call__ ( self , x , pars = [ 1 , 0 , 1 ] ) :
-        """Call method"""
-        
+    def __call__ ( self , x , pars = ( 1.0 , 0.0 , 1.0 ) ) :
+        """Call method"""       
         x0    = x if isinstance ( x , num_types ) else x [ 0 ]
         #
         norm  = float ( pars [ 0 ] ) ## NORM 
@@ -90,15 +89,27 @@ class C1Fun(object) :
         self.__tf1.FixParameter ( index , value )
 
     ## set parameter 
-    def set ( self , index , value ) :
+    def set ( self , index , value , error = None ) :
         """Set parameter 
         """
         assert isinstance ( index , integer_types ) and 0 <= index <= 2 , 'Invalid index %s' % index
         value = float ( value ) 
         self.__tf1.SetParameter ( index , value )
-
+        if not error is None and 0 < error :
+            self.__tf1.SetParError ( index , error )
+            
+    ## set limits for the parameter 
+    def set_limits ( self , index , minv , maxv ) :
+        """Set limits for the parameter
+        """
+        assert isinstance ( index , integer_types ) and 0 <= index <= 2 , 'Invalid index %s' % index
+        minv = float ( minv )
+        maxv = float ( maxv )
+        assert minv < maxv , "Min-value must be smaller mas-value!"
+        self.__tf1.SetParLimits ( index , minv , maxv ) 
+        
     ## set parameter 
-    def __setitem__  ( self , index , valie ) :
+    def __setitem__  ( self , index , value ) :
         if not isinstance ( index , integer_types ) : raise IndexError ("Invalid index %s" % index )
         if not 0 <= index <= 2                      : raise IndexError ("Invalid index %s" % index )
         self.__tf1.SetParameter ( index , value )
