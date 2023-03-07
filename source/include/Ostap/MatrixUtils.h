@@ -1373,6 +1373,38 @@ namespace Ostap
                      Ostap::Math::trace     ( ( c1 - c2 ) * ( g2 - g1 ) ) ) ;
     }
     // ========================================================================
+    /** get Hotelling's t-squared statistics 
+     *  @see https://en.wikipedia.org/wiki/Hotelling%27s_T-squared_distribution#Two-sample_statistic
+     *  \f[ t^2 = \frac{n_1 n_2}{n_1+n_2} \left(v_1-v_2\right)^T \Sigma^{-1} \left( v1-v2) \sim
+     *   T^2 ( p , n_1 + n_2 -2 \f] 
+     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+     *  @date 2023-03-07
+     */
+    template <unsigned int N, typename SCALAR>
+    inline double hotelling 
+    ( const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
+      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 , 
+      const unsigned long long                                                n1 ,  
+      const ROOT::Math::SVector<SCALAR,N>&                                    v2 , 
+      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 , 
+      const unsigned long long                                                n2 ) 
+    {
+      //
+      static const double bad = -999 ;
+      //
+      if ( n1 <= 1 || n2 <= 2 ) { return bad ; } 
+      /// the actual type of covariance matrix
+      typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
+      //
+      const double f1 = ( n1 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
+      const double f2 = ( n2 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
+      //
+      COV si { f1 * c1 + f2 * c2 } ;
+      if ( !si.InvertChol () ) { return bad ; }      
+      //
+      return n1 * n2 / ( n1 + n2 ) * ROOT::Math::Similarity ( si , v1 - v2 ) ;
+    }
+    // ========================================================================
     /*  get Cholesky decomposition for the covarance matrix 
      *  @param M (INPUT)  input symmetric positive definite matrix 
      *  @param L (OUTPUT) Cholesky decomposition of the covariance matrix 

@@ -2639,19 +2639,20 @@ def padd_reweighting ( tree                 ,
 ROOT.TTree.padd_reweighting = padd_reweighting    
                      
 # =============================================================================
-## Get the effective entries in data frame
+## Get the effective entries in data set 
 #  @code
 #  data = ...
 #  neff = data.nEff('b1*b1')
 #  @endcode
-def _rt_nEff_  ( self , cuts = '' , *args ) :
-    """Get the effective entries in data frame 
+def _stat_nEff_  ( self , cuts = '' , *args ) :
+    """Get the effective entries in data set 
     >>> data = ...
     >>> neff = data.nEff('b1*b1')
     """
+    if isinstance ( cuts , ROOT.TCut ) : cuts = str ( cuts ) 
     return Ostap.StatVar.nEff ( self , cuts , *args )
 
-ROOT.TTree.nEff = _rt_nEff_ 
+ROOT.TTree.nEff = _stat_nEff_ 
 # =============================================================================
 
 from  ostap.stats.statvars import data_decorate as _dd

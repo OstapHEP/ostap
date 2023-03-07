@@ -700,6 +700,35 @@ namespace Ostap
 // ============================================================================
 #include "SVectorWithError.icpp"
 // ============================================================================
+namespace Ostap 
+{
+  // ==========================================================================
+  namespace Math 
+  {
+    // =======================================================================
+    /** get Hotelling's t-squared statistics 
+     *  @see https://en.wikipedia.org/wiki/Hotelling%27s_T-squared_distribution#Two-sample_statistic
+     *  \f[ t^2 = \frac{n_1 n_2}{n_1+n_2} \left(v_1-v_2\right)^T \Sigma^{-1} \left( v1-v2) \sim
+     *   T^2 ( p , n_1 + n_2 -2 \f] 
+     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+     *  @date 2023-03-07
+     */
+    template <unsigned int N, typename SCALAR>
+    inline double hotelling 
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& x  , 
+      const unsigned long                            nx ,  
+      const Ostap::Math::SVectorWithError<N,SCALAR>& y  , 
+      const unsigned long                            ny )
+    {
+      return Ostap::Math::hotelling 
+        ( x.value () , x.cov2 () , nx , 
+          y.value () , y.cov2 () , ny ) ;      
+    }
+    // ========================================================================
+  }
+  // ==========================================================================
+}
+// ============================================================================
 // The END
 // ============================================================================
 #endif // OSTAP_SVECTORWITHERROR_H

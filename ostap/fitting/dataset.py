@@ -566,7 +566,9 @@ ROOT.RooAbsData . __truediv__   = ROOT.RooAbsData . __div__
 ROOT.RooAbsData . sample        = _rad_sample_
 ROOT.RooAbsData . shuffle       = _rad_shuffle_
 
-from ostap.trees.trees import _stat_var_, _stat_vars_ , _stat_cov_ , _stat_covs_ , _sum_var_, _sum_var_old_, _stat_vct_ 
+from ostap.trees.trees import  ( _stat_var_ , _stat_vars_   ,
+                                 _stat_cov_ , _stat_covs_   , _stat_nEff_ , 
+                                 _sum_var_  , _sum_var_old_ , _stat_vct_  )
 ROOT.RooAbsData . sumVar        = _sum_var_ 
 ROOT.RooAbsData . sumVar_       = _sum_var_old_ 
 ROOT.RooAbsData . statVar       = _stat_var_ 
@@ -574,6 +576,7 @@ ROOT.RooAbsData . statVars      = _stat_vars_
 ROOT.RooAbsData . statCov       = _stat_cov_ 
 ROOT.RooAbsData . statCovs      = _stat_covs_ 
 ROOT.RooAbsData . statVct       = _stat_vct_ 
+ROOT.RooAbsData . nEff          = _stat_nEff_ 
 
 ROOT.RooDataSet . __sub__       = _rds_sub_
 ROOT.RooDataSet . jackknife     = _rds_jackknife_

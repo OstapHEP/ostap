@@ -320,8 +320,9 @@ logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 
                                                       prefix    = '# '     ) ) )
 
 vct_data  = datatree.statVct ( 'x,y,z' )
+n_data    = len ( datatree ) 
 ## table of global statistics 
-glob_stat = [ ( '#' , 'Mahalanobis' , 'KL/DATA-MC' , 'KL/MC-DATA' , 'KL-sym' ) ] 
+glob_stat = [ ( '#' , 'Mahalanobis' , 'Hotelling' , 'KL/DATA-MC' , 'KL/MC-DATA' , 'KL-sym' ) ] 
 # =============================================================================
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
     mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )
@@ -366,8 +367,10 @@ for iter in range ( 1 , maxIter + 1 ) :
                                                           prefix    = '# '     ) ) )        
         ## get MC data in a form of vector 
         vct_mc = mcds.statVct ( 'x,y,z', 'weight' )
+        n_mc   = int ( mcds.nEff('weight') )  
         trow = ( '%d'   % iter ,
-                 '%.4g' % vct_mc  .mahalanobis                 ( vct_data ) , 
+                 '%.4g' % vct_mc  .mahalanobis                 ( vct_data ) ,
+                 '%.4g' % Ostap.Math.hotelling ( vct_mc , n_mc , vct_data , n_data ) ,                 
                  '%.4g' % vct_mc  .asymmetric_kullback_leibler ( vct_data ) , 
                  '%.4g' % vct_data.asymmetric_kullback_leibler ( vct_mc   ) , 
                  '%.4g' % vct_data.           kullback_leibler ( vct_mc   ) )
@@ -458,6 +461,17 @@ logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 
                                                       prefix    = '# '     ) ) )
 
 # =============================================================================
+vct_final = mctree.statVct ( 'x,y,z' , 'weight' )
+n_mc = int ( mctree.nEff('weight')  )
+trow = ( '*' ,
+         '%.4g'  % vct_final .mahalanobis                 ( vct_data  ) , 
+         '%.4g'  % Ostap.Math.hotelling ( vct_final , n_mc ,  vct_data  , n_data ) ,         
+         '%+.4g' % vct_final .asymmetric_kullback_leibler ( vct_data  ) , 
+         '%+.4g' % vct_data  .asymmetric_kullback_leibler ( vct_final ) , 
+         '%+.4g' % vct_data  .           kullback_leibler ( vct_final ) )
+glob_stat.append ( trow )
+
+
 title = 'Global DATA/MC similarity'
 table = T.table ( glob_stat , title = title , prefix = '# ' ) 
 logger.info ( '%s\n%s' % ( title , table ) ) 

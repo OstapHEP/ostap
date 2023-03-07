@@ -308,11 +308,14 @@ plots  = [
 
 # ============================================================================
 ## table of global statistics 
-glob_stat   = [ ( '#' , 'Mahalanobis' , 'KL/S-C' , 'KL/C-S' , 'KL-sym' ) ] 
+glob_stat   = [ ( '#' , 'Mahalanobis' , 'Hotelling' , 'KL/S-C' , 'KL/C-S' , 'KL-sym' ) ]
+n_data      = len ( datatree ) 
+n_mc        = len ( mctree   ) 
 vct_data    = datatree.statVct ( 'x,y' )
 vct_init    = mctree  .statVct ( 'x,y' )
 trow = ( '%d'    % 0 ,
-         '%.4g'  % vct_init.mahalanobis                 ( vct_data ) , 
+         '%.4g'  % vct_init.mahalanobis                 ( vct_data ) ,
+         '%.4g'  % Ostap.Math.hotelling ( vct_init, n_mc , vct_data , n_data ) ,         
          '%+.4g' % vct_init.asymmetric_kullback_leibler ( vct_data ) , 
          '%+.4g' % vct_data.asymmetric_kullback_leibler ( vct_init ) , 
          '%+.4g' % vct_data.           kullback_leibler ( vct_init ) )
@@ -371,9 +374,11 @@ for iter in range ( 1 , maxIter + 1 ) :
         mcds .project  ( hmc  , 'y:x' , 'weight'  )
         
         ## 3.1) compare control and signal samples  
-        vct_i = mcds.statVct ( 'x,y' , 'weight' )      
+        vct_i = mcds.statVct ( 'x,y' , 'weight' )
+        n_mc  = int ( mcds.nEff('weight') ) 
         trow = ( '%d'    % iter ,
-                 '%.4g'  % vct_i   .mahalanobis                 ( vct_data ) , 
+                 '%.4g'  % vct_i   .mahalanobis                 ( vct_data ) ,
+                 '%.4g'  % Ostap.Math.hotelling ( vct_i , n_mc  , vct_data , n_data ) ,         
                  '%+.4g' % vct_i   .asymmetric_kullback_leibler ( vct_data ) , 
                  '%+.4g' % vct_data.asymmetric_kullback_leibler ( vct_i    ) , 
                  '%+.4g' % vct_data.           kullback_leibler ( vct_i    ) )
@@ -448,15 +453,17 @@ data_tree = ROOT.TChain  ( 'DATA_tree' ) ; data_tree.Add ( testdata )
 mc_tree   = ROOT.TChain  ( tag_mc      ) ;   mc_tree.Add ( testdata ) 
 
 # =============================================================================
-vct_final = mc_tree.statVct ( 'x,y' , 'weight' ) 
+vct_final = mc_tree.statVct ( 'x,y' , 'weight' )
+n_mc = int ( mc_tree.nEff('weight')  )
 trow = ( '*' ,
          '%.4g'  % vct_final .mahalanobis                 ( vct_data  ) , 
+         '%.4g'  % Ostap.Math.hotelling ( vct_final , n_mc ,  vct_data  , n_data ) ,         
          '%+.4g' % vct_final .asymmetric_kullback_leibler ( vct_data  ) , 
          '%+.4g' % vct_data  .asymmetric_kullback_leibler ( vct_final ) , 
          '%+.4g' % vct_data  .           kullback_leibler ( vct_final ) )
 glob_stat.append ( trow )
 
-title = 'Global DATA/MCL similarity '
+title = 'Global DATA/MC similarity '
 table = T.table ( glob_stat , title = title , prefix = '# ' ) 
 logger.info ( '%s\n%s' % ( title , table ) ) 
 
