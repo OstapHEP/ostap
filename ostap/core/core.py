@@ -1003,35 +1003,59 @@ def rootException () :
 
 # =============================================================================
 ## defalt separators for the string expressions
-var_separators = ':,;'
-rx_separators  = re.compile ( r'[ ,:;]\s*(?![^()]*\))' )
+var_separators = ',:;'
+## rx_separators  = re.compile ( r'[,:;]\s*(?![^()]*\))' )
+## rx_separators  = re.compile ( '[ ,:;](?!(?:[^(]*\([^)]*\))*[^()]*\))')
+# =============================================================================
+## split string using separators and respecting the (),[] and {} groups.
+#  - group can be nested
+def split_string_respect  ( text , separators = ',;:' , strip = True ) :
+    """Split string using separators and respecting the (),[] and {} groups.
+    - groups can be nested
+    """
+    flag1  = 0
+    flag2  = 0
+    flag3  = 0
+    item   = ''
+    items  = []
+    for c in text:
+        if   c == '(' : flag1 += 1
+        elif c == ')' : flag1 -= 1
+        elif c == '[' : flag2 += 1
+        elif c == ']' : flag2 -= 1
+        elif c == '{' : flag3 += 1
+        elif c == '}' : flag3 -= 1
+        elif 0 == flag1 and 0 == flag2 and 0 == flag3 and c in separators :
+            items .append ( item )
+            item = ''
+            continue
+        item += c
+        
+    if item : items.append ( item  )
+
+    ## strip items if required 
+    if strip : items = [ item.strip() for item in items ] 
+    ## remove empty items 
+    return  [ item for item in items if item ]
+
 # =============================================================================
 ## split string using separators:
 #  @code
 #  split_string ( ' a b cde,fg;jq', ',;:' )
 #  @endcode
-def split_string ( line                        ,
+def split_string ( line                            ,
                    separators     = var_separators ,
                    strip          = False          ,
-                   respect_groups = True           ) :
+                   respect_groups = False          ) :
     """Split the string using separators
     >>> split_string ( ' a b cde,fg;jq', ',;:' )
     """
     if respect_groups :
-        if separators == var_separators : rx = rx_separators 
-        else :
-            _seps = r'[%s]\s*(?![^()]*\))'
-            _seps = _seps % separators
-            rx   = re.compile ( seps )
-        items = rx.split ( line )
-        if strip :
-            items = [ item.strip() for item in items          ]
-        items = [ item for item in items if item ]
-        return items
-    
-    if ' ' in separators : items = line.split()
-    else                 : items = [ line ]
-    
+        return split_string_respect ( line                    ,
+                                      separators = separators ,
+                                      strip      = strip      )
+    ## 
+    items = [ line ]
     for s in separators :
         result = []
         for item in items :
@@ -1041,12 +1065,8 @@ def split_string ( line                        ,
 
     ## strip items if required 
     if strip : items = [ i.strip() for i in items ] 
-
     ## remove empty items 
-    items = [ item for item in items if item ]
-    
-    return items 
-
+    return [ item for item in items if item ]
 
 # =============================================================================
 _decorated_classes_ = (
