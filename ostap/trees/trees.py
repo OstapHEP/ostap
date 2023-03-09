@@ -254,11 +254,11 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 , progress 
     first = max ( 0    , first        ) 
     
     if isinstance ( variables , string_types ) :
-        variables = split_string ( variables , var_separators , strip = True )
+        variables = split_string ( variables , var_separators , strip = True , respect_groups = True )
         
     vars = []
     for v in variables :
-        vars += split_string ( v , var_separators , strip = True )
+        vars += split_string ( v , var_separators , strip = True , respect_groups = True )
     
     if active :
         
@@ -433,7 +433,7 @@ def tree_project ( tree               ,
     if isinstance ( what , string_types ) :
         
         ## ATTENTION reverse here! 
-        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True ) ] ) ) 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True , respect_groups = True ) ] ) ) 
         return tree_project ( tree , histo , what , cuts , *tail )
 
     assert isinstance ( what , list_types ) , "tree_project: invalid 'what' %s" % what 
@@ -592,7 +592,7 @@ def tree_project_old ( tree               ,
     ## comma, column or semicolumn separated list
     if isinstance ( what , string_types ) :
         ## attention! note reversed here! 
-        what = [ w.strip() for w in reversed ( split_string ( what , var_separators , strip = True ) ) ] ## attention! 
+        what = [ w.strip() for w in reversed ( split_string ( what , var_separators , strip = True , respect_groups = True ) ) ] ## attention! 
         
     assert isinstance ( what , sequence_types  ) and \
            isinstance ( what , sized_types     ) and 1 <= len ( what ) ,\
@@ -735,7 +735,7 @@ def _stat_var_ ( tree , expression , *cuts ) :
     
     if isinstance ( expression , string_types ) :
         
-        explist = split_string ( expression , var_separators , strip = True )
+        explist = split_string ( expression , var_separators , strip = True , respect_groups = True )
         if 1 != len ( explist ) :
             return _stat_vars_ ( tree , explist , *cuts )  ## RETURRN
         
@@ -873,7 +873,7 @@ def _stat_covs_ ( tree        ,
     """
     ##
     if isinstance ( expressions , string_types ) :
-        expressions = split_string ( expressions , strip = True ) 
+        expressions = split_string ( expressions , strip = True , respect_groups = True ) 
     ##
         
     vars = strings ( expressions ) 
@@ -929,7 +929,7 @@ def _stat_vct_ ( ds         ,
     """
     
     if isinstance ( variables , string_types ) :
-        variables = split_string ( variables , strip = True )
+        variables = split_string ( variables , strip = True , respect_groups = True )
 
     stats, cov2, length  = ds.statCovs ( variables , cuts )
     
@@ -1409,7 +1409,7 @@ def _rt_table_1_ ( tree ,
     """
     """
     if isinstance ( variables , string_types ) :
-        variables = split_string ( variables , strip = True )
+        variables = split_string ( variables , strip = True , respect_groups = True )
 
     bbs = tuple ( sorted ( variables ) ) 
 
@@ -1770,10 +1770,11 @@ def _rt_slice_ ( tree , varname , cut = '' , weight = '' , transpose = False , f
     >>> print ( varr )  
     """
 
-    if isinstance ( varname , string_types ) : varname = split_string ( varname , var_separators , strip = True )
+    if isinstance ( varname , string_types ) :
+        varname = split_string ( varname , var_separators , strip = True , respect_groups = True )
     names = []
     for v in varname :
-        names += split_string ( v , var_separators, strip = True )
+        names += split_string ( v , var_separators, strip = True , respect_groups = True )
               
     if weight : names.append ( weight )
         
@@ -2074,7 +2075,8 @@ def _chain_add_new_branch ( chain          ,
         name , function = function , None 
         
     names = name
-    if isinstance ( names , string_types )  : names = split_string ( names , strip = True ) 
+    if isinstance ( names , string_types )  :
+        names = split_string ( names , strip = True ) 
     for n in names : 
         assert not n in chain.branches() ,'Branch %s already exists!' % n 
         

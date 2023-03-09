@@ -424,7 +424,7 @@ def _fr_param_ ( frame , poly , *expressions ) :
     
     items = []
     for e in expressions :
-        items += split_string ( e , ',:;' , strip = True )
+        items += split_string ( e , ',:;' , strip = True , respect_groups = True )
         
     ## get the list of currently known names
     vars     = frame_columns ( node ) 
@@ -869,7 +869,7 @@ def frame_project ( frame , model , *what ) :
        
     if 1 <= len ( what ) <= 2 :
         if   isinstance  ( what [ 0 ] , string_types ) :
-            ww = split_string ( what [ 0 ] , var_separators , strip = True )
+            ww = split_string ( what [ 0 ] , var_separators , strip = True, respect_groups = True  )
             if 1 < len ( ww ) : ww.reverse()                ## ATTENTION HERE: REVERSE!! 
             what = tuple ( ww ) + what [1:]                                              
         elif isinstance ( what [ 0 ] , sequence_types ) :

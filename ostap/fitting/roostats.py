@@ -82,7 +82,8 @@ class ModelConfig(object):
 
         params = poi 
         if   isinstance ( params , ROOT.RooAbsReal ) : params = [ params ]
-        elif isinstance ( params , string_types    ) : params = split_string ( params , strip = True ) 
+        elif isinstance ( params , string_types    ) :
+            params = split_string ( params , strip = True , respect_groups = True ) 
 
         ## allow some freedom in arguments 
         from ostap.utils.cidict import cidict

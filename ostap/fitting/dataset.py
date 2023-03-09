@@ -704,7 +704,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
     if isinstance ( what , string_types ) :
 
         ## ATTENTION reverse here! 
-        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True ) ] ) ) 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True , respect_groups = True ) ] ) ) 
         return ds_project ( dataset , histo , what , cuts , *events , progress = progress  )
     
     elif isinstance ( what , ROOT.RooArgList ) and isinstance ( dataset , ROOT.RooAbsData ) :
@@ -839,7 +839,7 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args , **kwargs ) :
     if isinstance ( what , string_types ) :
         
         ## ATTENTION reverse here! 
-        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True ) ] ) ) 
+        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True , respect_groups = True ) ] ) ) 
         return ds_draw ( dataset , what , cuts , opts , *args , **kwargs )
 
     elif isinstance ( what , ROOT.RooArgList ) :
@@ -1698,7 +1698,7 @@ def _ds_table_0_ ( dataset           ,
         return ''
 
     if isinstance ( variables ,  str ) :
-        variables = split_string ( variables , var_separators , strip = True ) 
+        variables = split_string ( variables , var_separators , strip = True , respect_groups = True ) 
         
     if 1 == len ( variables ) : variables = variables [0]
 
@@ -1911,7 +1911,7 @@ def _ds_table_1_ ( dataset           ,
     """
 
     if isinstance ( variables ,  str ) :
-        variables = split_string ( variables , var_separators , strip = True ) 
+        variables = split_string ( variables , var_separators , strip = True , respect_groups = True ) 
 
     _vars = []    
     vvars = tuple ( sorted ( variables ) )
@@ -2426,11 +2426,12 @@ def _rda_slice_ ( dataset , variables , cuts = '' , transpose = False , cut_rang
     >>> varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
     """
     
-    if isinstance ( variables , string_types ) : variables = split_string ( variables , var_separators , strip = True )
+    if isinstance ( variables , string_types ) :
+        variables = split_string ( variables , var_separators , strip = True , respect_groups = True )
     
     names = []
     for v in variables :
-        names += split_string ( v , var_separators , strip = True )
+        names += split_string ( v , var_separators , strip = True , respect_groups = True )
 
     names = strings ( names )
     
@@ -2851,10 +2852,11 @@ def _rad_rows_ ( dataset , variables = [] , cuts = '' , cutrange = '' , first = 
     last  = min ( last , len ( dataset ) )
     first = max ( 0    , first           ) 
 
-    if isinstance ( variables , string_types ) : variables = split_string ( variables , var_separators , strip = True )
+    if isinstance ( variables , string_types ) :
+        variables = split_string ( variables , var_separators , strip = True , respect_groups = True )
     vars = []
     for v in variables :
-        vars += split_string ( v , var_separators , strip = True )
+        vars += split_string ( v , var_separators , strip = True , respect_groups = True )
     vars = strings ( vars ) 
 
     formulas = []

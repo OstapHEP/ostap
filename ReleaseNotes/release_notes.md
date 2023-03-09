@@ -4,7 +4,8 @@
   1. `fit1d` : add suffin to the name for automatically created backgronus component 
   1. add `Ostap::Math::hotelling` function to estgimate Hotelling t2-statistics 
   1. make use of `Ostap::Math::hotelling` function in reweighting tests  
- 
+  1. add new argument `respect_groups` for `split_string` function 
+  
 ## Backward incompatible: 
 
 ## Bug fixes:

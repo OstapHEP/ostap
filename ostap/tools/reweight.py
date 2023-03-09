@@ -395,7 +395,7 @@ class Weight(object) :
             """
 
             if isinstance ( accessor , string_types ) :
-                accessor = split_string ( accessor , strip = True )
+                accessor = split_string ( accessor , strip = True , respect_groups = True )
                 if 1 == len ( accessor ) : accessor = accessor [ 0 ]
 
             if   accessor and isinstance ( accessor , string_types ) and is_formula ( accessor ) :

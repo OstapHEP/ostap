@@ -75,7 +75,7 @@ __all__     = (
     'cidict_fun'          , ## key transformation for case-insensitive keys ingoring underscores
     )
 # =============================================================================
-import math, sys, os 
+import math, sys, os, re  
 from   sys                    import version_info  as python_version 
 from   builtins               import range
 from   ostap.math.base        import ( Ostap    , std     , cpp ,  
@@ -1004,18 +1004,30 @@ def rootException () :
 # =============================================================================
 ## defalt separators for the string expressions
 var_separators = ':,;'
-# =============================================================================
-
-
+rx_separators  = re.compile ( r'[ ,:;]\s*(?![^()]*\))' )
 # =============================================================================
 ## split string using separators:
 #  @code
 #  split_string ( ' a b cde,fg;jq', ',;:' )
 #  @endcode
-def split_string ( line , separators = var_separators , strip = False ) :
+def split_string ( line                        ,
+                   separators     = var_separators ,
+                   strip          = False          ,
+                   respect_groups = True           ) :
     """Split the string using separators
     >>> split_string ( ' a b cde,fg;jq', ',;:' )
     """
+    if respect_groups :
+        if separators == var_separators : rx = rx_separators 
+        else :
+            _seps = r'[%s]\s*(?![^()]*\))'
+            _seps = _seps % separators
+            rx   = re.compile ( seps )
+        items = rx.split ( line )
+        if strip :
+            items = [ item.strip() for item in items          ]
+        items = [ item for item in items if item ]
+        return items
     
     if ' ' in separators : items = line.split()
     else                 : items = [ line ]
@@ -1031,9 +1043,8 @@ def split_string ( line , separators = var_separators , strip = False ) :
     if strip : items = [ i.strip() for i in items ] 
 
     ## remove empty items 
-    while '' in items: items.remove ( '' )
+    items = [ item for item in items if item ]
     
-
     return items 
 
 
