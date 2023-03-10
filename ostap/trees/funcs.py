@@ -241,9 +241,12 @@ def pyfun_data ( function , data = None ) :
 
 # =============================================================================
 ## print for FuncFormula 
-def _pff_str_ ( f ) : return "FuncFormula('%s')"     % f.expression()
-def _pfe_str_ ( f ) : return "Expression('%s')"      % f.expression()
-def _pfr_str_ ( f ) : return "FuncRooFormula('%s')"  % f.expression()
+## def _pff_str_ ( f ) : return "FuncFormula('%s')"     % f.expression()
+## def _pfe_str_ ( f ) : return "Expression('%s')"      % f.expression()
+## def _pfr_str_ ( f ) : return "FuncRooFormula('%s')"  % f.expression()
+def _pff_str_ ( f ) : return f.expression()
+def _pfe_str_ ( f ) : return f.expression()
+def _pfr_str_ ( f ) : return f.expression()
 
 Ostap.Functions.FuncFormula   .__str__  = _pff_str_ 
 Ostap.Functions.FuncFormula   .__repr__ = _pff_str_ 
