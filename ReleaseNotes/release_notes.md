@@ -5,6 +5,7 @@
   1. add `Ostap::Math::hotelling` function to estgimate Hotelling t2-statistics 
   1. make use of `Ostap::Math::hotelling` function in reweighting tests  
   1. add new argument `respect_groups` for `split_string` function 
+  1. insert `rootException` for several stat-related functions 
   
 ## Backward incompatible: 
 

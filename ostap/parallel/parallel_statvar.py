@@ -125,19 +125,14 @@ def pStatVar ( chain               ,
     """
     ## few special/trivial cases
 
-    print ( 'I am pStatVar' )
-    
     last = min ( n_large , first + nevents if 0 < nevents else n_large )
     
     if 0 <= first and 0 < nevents < chunk_size :
-        print ( 'I am pStatVar/0' )
         return chain.statVar ( what , cuts , first , last )
     elif isinstance ( chain , ROOT.TChain ) :
         if 1 == chain.nFiles() and len ( chain ) < chunk_size :
-            print ( 'I am pStatVar/1' )
             return chain.statVar ( what , cuts , first , last )                         
     elif isinstance ( chain , ROOT.TTree  ) and len ( chain ) < chunk_size :
-        print ( 'I am pStatVar/2' )
         return chain.statVar ( what , cuts , first , last ) 
     
     from ostap.trees.trees import Chain
@@ -148,7 +143,6 @@ def pStatVar ( chain               ,
 
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 
-    print ( 'statvar-pprocess', chain.GetName() , len(trees) ) 
     wmgr.process ( task , trees )
 
     del trees

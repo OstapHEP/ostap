@@ -49,8 +49,8 @@ __all__     = (
     ## 
     ) 
 # =============================================================================
-from   ostap.core.core           import ( cpp , Ostap,
-                                          strings, split_string, var_separators )
+from   ostap.core.core           import ( cpp     , Ostap        ,
+                                          strings , split_string , var_separators )
 from   ostap.core.meta_info      import root_info 
 from   ostap.core.ostap_types    import integer_types, string_types, sequence_types   
 from   ostap.logger.utils        import multicolumn
@@ -228,7 +228,7 @@ def frame_nEff ( frame , cuts = '' ) :
     >>> data = ...
     >>> neff = data.nEff('b1*b1')
     """
-    node  = as_rnode ( frame ) 
+    node  = as_rnode ( frame )    
     return Ostap.StatVar.nEff ( node , cuts )
 
 # =============================================================================

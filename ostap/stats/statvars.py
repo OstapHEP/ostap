@@ -51,7 +51,7 @@ __all__     = (
     )
 # =============================================================================
 from   builtins           import range
-from   ostap.core.core    import Ostap
+from   ostap.core.core    import Ostap, rootException
 import ostap.stats.moment 
 # =============================================================================
 # logging 
@@ -81,11 +81,12 @@ def data_get_moment ( data , order , center , expression , cuts = '' , *args ) :
     - see Ostap::StatVar::get_moment
     """
     assert isinstance ( order  , int ) and 0<= order , 'Invalid order  %s'  % order
-    return StatVar.get_moment ( data       ,
-                                order      ,
-                                expression ,
-                                center     ,
-                                cuts       , *args )
+    with rootException() : 
+        return StatVar.get_moment ( data       ,
+                                    order      ,
+                                    expression ,
+                                    center     ,
+                                    cuts       , *args )
 
 # =============================================================================
 ## get the moment (with uncertainty) of order 'order' 
@@ -103,11 +104,12 @@ def  data_moment ( data , order , expression , cuts  = ''  , *args ) :
     - see Ostap::StatVar::moment
     """
     assert isinstance ( order  , int ) and 0<= order , 'Invalid order  %s'  % order
-    return StatVar.moment ( data       ,
-                            order      ,
-                            expression ,
-                            cuts       , *args )
-
+    with rootException() : 
+        return StatVar.moment ( data       ,
+                                order      ,
+                                expression ,
+                                cuts       , *args )
+    
 # =============================================================================
 ## get the central moment (with uncertainty) of order 'order' 
 #  @code
@@ -130,11 +132,12 @@ def  data_central_moment ( data , order , expression , cuts  = '' , *args ) :
     - see Ostap::StatVar::central_moment
     """
     assert isinstance ( order  , int ) and 0<= order , 'Invalid order  %s'  % order
-    return StatVar.central_moment ( data       ,
-                                    order      ,
-                                    expression ,
-                                    cuts       , *args )
-
+    with rootException() : 
+        return StatVar.central_moment ( data       ,
+                                        order      ,
+                                        expression ,
+                                        cuts       , *args )
+    
 # =============================================================================
 ## get the  skewness (with uncertainty)
 #  @code
@@ -150,7 +153,8 @@ def data_skewness ( data , expression , cuts  = '' , *args ) :
     >>> print data.skewness (        'mass' , 'pt>1' ) ## ditto
     - see Ostap::StatVar::skewness
     """
-    return StatVar.skewness ( data , expression , cuts , *args )
+    with rootException() : 
+        return StatVar.skewness ( data , expression , cuts , *args )
 
 # =============================================================================
 ## get the (excess) kurtosis (with uncertainty)
@@ -167,7 +171,8 @@ def data_kurtosis ( data , expression , cuts  = '' , *args ) :
     >>> print data.kurtosis (        'mass' , 'pt>1' ) ## ditto
     - see Ostap::StatVar::kurtosis
     """
-    return StatVar.kurtosis ( data , expression , cuts , *args )
+    with rootException() : 
+        return StatVar.kurtosis ( data , expression , cuts , *args )
 
 # =============================================================================
 ## get the  quantile 
@@ -190,19 +195,23 @@ def  data_quantile ( data , q , expression , cuts  = '' , exact = QEXACT , *args
 
     if   exact is True  :
         ##  exact slow algorithm 
-        qn = StatVar.  quantile ( data , q , expression , cuts , *args )
+        with rootException() : 
+            qn = StatVar.  quantile ( data , q , expression , cuts , *args )
 
     elif exact is False :
         ## approximate fast formula 
-        qn = StatVar.p2quantile ( data , q , expression , cuts , *args )
-
+        with rootException() : 
+            qn = StatVar.p2quantile ( data , q , expression , cuts , *args )
+            
     elif isinstance ( exact , int ) and len ( data ) <= exact  :
         ## exact slow algorithm 
-        qn = StatVar.  quantile ( data , q , expression , cuts , *args )
+        with rootException() : 
+            qn = StatVar.  quantile ( data , q , expression , cuts , *args )
 
     else :
         ## approximate fast algorithm 
-        qn = StatVar.p2quantile ( data , q , expression , cuts , *args )
+        with rootException() : 
+            qn = StatVar.p2quantile ( data , q , expression , cuts , *args )
 
     return qn
 
@@ -229,19 +238,23 @@ def data_interval ( data , qmin ,  qmax , expression , cuts = '' , exact = QEXAC
     
     if   exact is True  :
         ##  exact slow algorithm 
-        rn = StatVar.  interval ( data , qmin , qmax  , expression , cuts , *args )
+        with rootException() : 
+            rn = StatVar.  interval ( data , qmin , qmax  , expression , cuts , *args )
 
     elif exact is False :
         ## approximate fast formula 
-        rn = StatVar.p2interval ( data , qmin , qmax , expression , cuts , *args )
+        with rootException() : 
+            rn = StatVar.p2interval ( data , qmin , qmax , expression , cuts , *args )
 
     elif isinstance ( exact , int ) and len ( data ) <= exact  :
         ## exact slow algorithm 
-        rn = StatVar.  interval ( data , qmin , qmax  , expression , cuts , *args )
+        with rootException() : 
+            rn = StatVar.  interval ( data , qmin , qmax  , expression , cuts , *args )
 
     else :
         ## approximate fast formula 
-        rn = StatVar.p2interval ( data , qmin , qmax , expression , cuts , *args )
+        with rootException() : 
+            rn = StatVar.p2interval ( data , qmin , qmax , expression , cuts , *args )
 
     ## x
     return rn
@@ -261,7 +274,8 @@ def data_median ( data , expression , cuts = '' , exact = QEXACT , *args ) :
     >>> print data.median (        'mass' , 'pt>1' ) ##  ditto
     - see Ostap::StatVar::quantile
     """
-    return data_quantile ( data , 0.5 , expression , cuts  , exact , *args ) 
+    with rootException() : 
+        return data_quantile ( data , 0.5 , expression , cuts  , exact , *args ) 
 
 # =============================================================================
 ## get the  quantiles 
@@ -303,19 +317,23 @@ def data_quantiles ( data , quantiles , expression , cuts  = '' , exact = QEXACT
 
     if   exact is True  :
         ##  exact slow algorithm 
-        qn = StatVar.  quantiles ( data , qqq , expression , cuts , *args )
+        with rootException() : 
+            qn = StatVar.  quantiles ( data , qqq , expression , cuts , *args )
 
     elif exact is False :
         ## approximate fast formula 
-        qn = StatVar.p2quantiles ( data , qqq , expression , cuts , *args )
-
+        with rootException() : 
+            qn = StatVar.p2quantiles ( data , qqq , expression , cuts , *args )
+            
     elif isinstance ( exact , int ) and len ( data ) <= exact  :
         ## exact slow algorithm 
-        qn = StatVar.  quantiles ( data , qqq , expression , cuts , *args )
+        with rootException() : 
+            qn = StatVar.  quantiles ( data , qqq , expression , cuts , *args )
 
     else :
         ## approximate fast algorithm 
-        qn = StatVar.p2quantiles ( data , qqq , expression , cuts , *args )
+        with rootException() : 
+            qn = StatVar.p2quantiles ( data , qqq , expression , cuts , *args )
 
     return qn 
 

@@ -21,6 +21,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info      import root_info
 from   ostap.core.core           import ( std , Ostap , VE  , WSE , hID ,
+                                          rootException     , 
                                           ROOTCWD , strings  ,
                                           split_string , var_separators , 
                                           valid_pointer           ) 
@@ -743,7 +744,8 @@ def _stat_var_ ( tree , expression , *cuts ) :
         
         return _stat_vars_ ( tree ,  expression , *cuts ) ## RETURN 
     
-    return Ostap.StatVar.statVar ( tree , expression , *cuts )
+    with rootException() : 
+        return Ostap.StatVar.statVar ( tree , expression , *cuts )
     
 ROOT.TTree     . statVar = _stat_var_
 ROOT.TChain    . statVar = _stat_var_
@@ -778,7 +780,8 @@ def _stat_vars_ ( tree , expressions , *cuts ) :
     vct = strings ( *expressions )
     res = std.vector(WSE)() 
 
-    ll  = Ostap.StatVar.statVars ( tree , res , vct , *cuts )
+    with rootException() : 
+        ll  = Ostap.StatVar.statVars ( tree , res , vct , *cuts )
 
     assert res.size() == vct.size(), 'stat_vars: Invalid size of structures!'
 
@@ -825,23 +828,22 @@ def _stat_cov_ ( tree        ,
     stat2  = Ostap.WStatEntity       ()
     cov2   = Ostap.Math.SymMatrix(2) ()
 
-    if cuts : 
-        length = Ostap.StatVar.statCov ( tree        ,
-                                         expression1 ,
-                                         expression2 ,
-                                         cuts        ,
-                                         stat1       ,
-                                         stat2       ,
-                                         cov2        , 
-                                         *args       )
-    else :
-        length = Ostap.StatVar.statCov ( tree        ,
-                                         expression1 ,
-                                         expression2 ,
-                                         stat1       ,
-                                         stat2       ,
-                                         cov2        ,
-                                         *args       )
+    with rootException() : 
+        if cuts : length = Ostap.StatVar.statCov ( tree        ,
+                                                   expression1 ,
+                                                   expression2 ,
+                                                   cuts        ,
+                                                   stat1       ,
+                                                   stat2       ,
+                                                   cov2        , 
+                                                   *args       )
+        else    : length = Ostap.StatVar.statCov ( tree        ,
+                                                   expression1 ,
+                                                   expression2 ,
+                                                   stat1       ,
+                                                   stat2       ,
+                                                   cov2        ,
+                                                   *args       )
         
     return stat1 , stat2 , cov2, length
 
@@ -890,13 +892,14 @@ def _stat_covs_ ( tree        ,
     import ostap.math.linalgt 
 
     cov2   = Ostap.TMatrixSymD     ( N ) 
+
+    with rootException() : 
+        length = Ostap.StatVar.statCov ( tree  ,
+                                         vars  ,
+                                         cuts  ,
+                                         stats , 
+                                         cov2  , *args )
         
-    length = Ostap.StatVar.statCov ( tree  ,
-                                     vars  ,
-                                     cuts  ,
-                                     stats , 
-                                     cov2  , *args )
-    
     assert N == len ( stats )   , "Invalid size 'stats'   from 'Ostap.StatVar.statCov'"
     assert cov2.IsValid()       , "Invalid 'cov2'         from 'Ostap.StatVar.statCov'"
     assert N == cov2.GetNrows() , "Invalid size of 'cov2' from 'Ostap.StatVar.statCov'"
@@ -2652,7 +2655,8 @@ def _stat_nEff_  ( self , cuts = '' , *args ) :
     >>> neff = data.nEff('b1*b1')
     """
     if isinstance ( cuts , ROOT.TCut ) : cuts = str ( cuts ) 
-    return Ostap.StatVar.nEff ( self , cuts , *args )
+    with rootException() : 
+        return Ostap.StatVar.nEff ( self , cuts , *args )
 
 ROOT.TTree.nEff = _stat_nEff_ 
 # =============================================================================
