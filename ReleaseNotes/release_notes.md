@@ -1,4 +1,3 @@
-
 ## New features:
   1. add new test/example `test_fitting_simfit7` to compre simultenoud fit versus fit with constraints 
   1. `fit1d` : add suffin to the name for automatically created backgronus component 
