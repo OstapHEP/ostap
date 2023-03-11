@@ -254,7 +254,7 @@ class Trainer(object) :
                ( isinstance ( prescale_signal     , float         ) and 0 <  prescale_signal     < 1 )  , \
                "Invalid 'prescale_signal'"
         assert ( isinstance ( prescale_background , integer_types ) and 1 <= prescale_background     ) or \
-               ( isinstance ( prescale_background , floa          ) and 0 <  prescale_background < 1 )  , \
+               ( isinstance ( prescale_background , float         ) and 0 <  prescale_background < 1 )  , \
                "Invalid 'prescale_background'"
         
         self.__prescale_signal     = prescale_signal
