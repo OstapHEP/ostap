@@ -1,4 +1,3 @@
-
 ## New features:
   1. add new test/example `test_fitting_simfit7` to compre simultenoud fit versus fit with constraints 
   1. `fit1d` : add suffin to the name for automatically created backgronus component 
@@ -6,6 +5,7 @@
   1. make use of `Ostap::Math::hotelling` function in reweighting tests  
   1. add new argument `respect_groups` for `split_string` function 
   1. insert `rootException` for several stat-related functions 
+  1. improve printout for `Ostap::Functions::Expression` and friends 
   
 ## Backward incompatible: 
 
