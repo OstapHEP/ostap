@@ -7,8 +7,8 @@
 quiet        = False
 verbose      = False
 threadsafety = True 
-implicitmt   = True 
-parallel     = PATHOS
+##implicitmt   = True 
+##parallel     = PATHOS
 
 [Canvas]
 width        = 1000
