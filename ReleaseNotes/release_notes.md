@@ -6,6 +6,8 @@
   1. add new argument `respect_groups` for `split_string` function 
   1. insert `rootException` for several stat-related functions 
   1. improve printout for `Ostap::Functions::Expression` and friends 
+  1. add posssibility to enable global thread safety and implicit MC via .ostaprc configuirtaion file 
+
   
 ## Backward incompatible: 
 

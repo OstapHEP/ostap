@@ -56,6 +56,7 @@ from   ostap.core.ostap_types    import integer_types, string_types, sequence_ty
 from   ostap.logger.utils        import multicolumn
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.basic         import isatty
+import ostap.core.config         as     OCC 
 import ostap.stats.statvars      as     SV
 import ostap.logger.table        as     T 
 import ostap.histos.histos
@@ -132,6 +133,10 @@ def var_name ( prefix , used_names , *garbage ) :
     return name
 
 # ==============================================================================
+## Is impliti MC globally enabled? 
+mt_global = OCC.general.getboolean ( 'ImplicitMT' , fallback = False )
+    
+# ==============================================================================
 ## modify constructor for RDataFrame to enable/disable Implicit multithreading
 #  @code
 #  f1 = DataFrame ( ... , enable = True  ) ## default
@@ -150,7 +155,7 @@ def _fr_new_init_ ( self , name , *args , **kwargs ) :
     >>> f = DataFrame ( .... , enable = False )
     """
         
-    mt = kwargs.pop ( 'enable' , True )
+    mt = kwargs.pop ( 'enable' , mt_global ) and mt_global 
     
     if       mt and not ROOT.ROOT.IsImplicitMTEnabled() :
         ROOT.ROOT.EnableImplicitMT  ()

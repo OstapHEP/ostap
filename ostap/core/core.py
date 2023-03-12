@@ -597,7 +597,6 @@ def _rd_valid_ ( rdir ) :
 ROOT.TDirectory.__bool__     = _rd_valid_
 ROOT.TDirectory.__nonzero__  = _rd_valid_
 
-
 # =============================================================================
 ## check that list is sorted 
 def is_sorted ( lst ) :
@@ -605,11 +604,6 @@ def is_sorted ( lst ) :
     """
     l = len ( lst )  
     return all ( lst [ i ] <= lst [ i + 1 ] for i in range ( l - 1 ) ) if lst else True 
-
-
-# =============================================================================
-## define the build directory for ROOT 
-import ostap.core.build_dir 
 
 # =============================================================================
 ## "Contains" method for <code>TCollection</code> object
@@ -678,7 +672,6 @@ def _rtc_getitem_ ( lst , item ) :
         raise KeyError("No such key is found: %s" % str ( item ) )
     return obj 
     
-
 # =============================================================================
 ## "Get-item " method for <code>TSeqCollection</code> object
 #   @code
@@ -776,7 +769,6 @@ def _rtl_get_ ( lst , item , default = None ) :
 
 ROOT.TCollection    . get = _rtc_get_
 ROOT.TSeqCollection . get = _rtl_get_
-
 
 # =============================================================================
 ## Add/append element (or elements) to <code>TCollection</code> container
@@ -1068,6 +1060,30 @@ def split_string ( line                            ,
     ## remove empty items 
     return [ item for item in items if item ]
 
+
+
+
+# =============================================================================
+## define the build directory for ROOT 
+import ostap.core.build_dir
+
+# =============================================================================
+## come general configuration 
+import ostap.core.config as _OCC
+
+if _OCC.general.getboolean ( 'ThreadSafety' , fallback = False )  :
+    logger.debug ("Thread safety is enabled via 'ROOT::ROOT::EnableThreadSAfety' call") 
+    ROOT.ROOT.EnableThreadSafety()
+
+if _OCC.general.getboolean ( 'ImplicitMT' , fallback = False )  :
+    if not ROOT.ROOT.IsImplicitMTEnabled() : 
+        logger.debug ("Implicit MT is enabled")
+        ROOT.ROOT.EnableImplicitMT  ()
+else :
+    if ROOT.ROOT.IsImplicitMTEnabled() : 
+        logger.debug ("Implicit MT is disabled")
+        ROOT.ROOT.DisableImplicitMT ()
+        
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TObject        ,

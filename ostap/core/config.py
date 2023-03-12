@@ -50,9 +50,9 @@ type(config).__repr__ = _cp_str_
 
 ## Define the major sections
 config [ 'General'  ] = {
-    'Quiet'     : str ( default_config.quiet   ) ,
-    'Verbose'   : str ( default_config.verbose ) ,
-    'Parallel'  : 'PATHOS'                       ,
+    'Quiet'              : str ( default_config.quiet   ) ,
+    'Verbose'            : str ( default_config.verbose ) ,
+    'Parallel'           : 'PATHOS'                       ,
     }
 
 ## generic TCanvas configuration

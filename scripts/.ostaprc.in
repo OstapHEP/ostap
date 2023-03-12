@@ -6,6 +6,8 @@
 [General]
 quiet        = False
 verbose      = False
+threadsafety = True 
+implicitmt   = True 
 parallel     = PATHOS
 
 [Canvas]
