@@ -1075,14 +1075,14 @@ import ostap.core.config as _OCC
 ##     logger.debug ("Thread safety is enabled via 'ROOT::ROOT::EnableThreadSAfety' call") 
 ##     ROOT.ROOT.EnableThreadSafety()
 
-## if _OCC.general.getboolean ( 'ImplicitMT' , fallback = False )  :
-##     if not ROOT.ROOT.IsImplicitMTEnabled() : 
-##         logger.debug ("Implicit MT is enabled")
-##         ROOT.ROOT.EnableImplicitMT  ()
-## else :
-##     if ROOT.ROOT.IsImplicitMTEnabled() : 
-##         logger.debug ("Implicit MT is disabled")
-##         ROOT.ROOT.DisableImplicitMT ()
+if _OCC.general.getboolean ( 'ImplicitMT' , fallback = False )  :
+    if not ROOT.ROOT.IsImplicitMTEnabled() : 
+        logger.debug ("Implicit MT is enabled")
+        ROOT.ROOT.EnableImplicitMT  ()
+else :
+    if ROOT.ROOT.IsImplicitMTEnabled() : 
+        logger.debug ("Implicit MT is disabled")
+        ROOT.ROOT.DisableImplicitMT ()
         
 # =============================================================================
 _decorated_classes_ = (

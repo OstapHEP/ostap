@@ -654,6 +654,8 @@ namespace Ostap
       // ======================================================================
       /// get the threshold 
       double         threshold  () const { return m_threshold ; }
+      /// low-edge 
+      double         lowEdge    () const { return m_threshold ; }
       /// get the number of particles 
       unsigned short N          () const { return m_num       ; }
       /// get the scale 

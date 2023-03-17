@@ -926,7 +926,8 @@ class PSLeftExpoPol_pdf(PolyBase) :
                    power    = 2     ,  ## degree of the polynomial
                    tau      = None  ,  ## the exponent 
                    scale    = 1     ,  ## the exponent 
-                   the_phis = None  ) :         
+                   the_phis = None  ) :
+
         #
         ## check the type of phasespace 
         assert isinstance ( phasespace , PSL ) or ( isinstance ( phasespce , integer_types ) and 2 <= ps ) , \
@@ -2278,8 +2279,9 @@ class PSSmear2_pdf ( PDF1 ) :
 
         ## keep the template 
         self.__pdf0 = pdf0
+
+        vals = list ( set ( [ v for v in values ] ) )
         
-        vals = list ( set ( [ v for v in values ] ) ) 
         vals.sort()
         self.__values = tuple ( vals )
         
@@ -2332,6 +2334,9 @@ class PSSmear2_pdf ( PDF1 ) :
         self.__pdfs = []
         self.__ws   = []
 
+        xminmax     = self.xminmax() 
+
+        
         nn = len ( self.values )        
         for i , v in enumerate ( self.values ) : 
 
@@ -2351,11 +2356,18 @@ class PSSmear2_pdf ( PDF1 ) :
             wv   = iint
             
             psv  = PS ( v )
+            
+            ## skip this component
+            if xminmax and xminmax[1] <= psv.lowEdge() : continue 
+            
             pdfv = self.pdf0.clone ( name = self.generate_name ( self.name + '%dv' % i ) , phasespace = psv )
 
             self.__pdfs.append ( pdfv )
             self.__ws  .append ( wv   )
-            
+
+
+        assert 2 <= len ( self.__pdfs ) , 'Not enough valid components!'
+
         self.__pdfs = tuple ( self.__pdfs )
 
         ## normalize fractions
