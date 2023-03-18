@@ -8,8 +8,10 @@
   1. insert `rootException` for several stat-related functions 
   1. improve printout for `Ostap::Functions::Expression` and friends 
   1. add posssibility to enable global thread safety and implicit MC via .ostaprc configuirtaion file 
+  1. update/modify/fix  `Ostap::Math::Moment_<>` and `Ostap::Math::WMoment_<>`
+  1. add `Ostap::StatVar::the_moment` 
 
-  
+
 ## Backward incompatible: 
 
 ## Bug fixes:

@@ -35,7 +35,7 @@ __all__     = (
     'frame_skewness'       , ## skewness for the variable 
     'frame_kurtosis'       , ## kurtosos for the variable 
     'frame_get_moment'     , ## get the moment 
-    'frame_moment'         , ## momnt relative to zero 
+    'frame_moment'         , ## moment relative to zero 
     'frame_central_moment' , ## central moment 
     ## 
     'frame_quantile'       , ## quantile 

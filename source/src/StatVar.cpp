@@ -30,6 +30,7 @@
 #include "Ostap/P2Quantile.h"
 #include "Ostap/Moments.h"
 #include "Ostap/GetWeight.h"
+#include "Ostap/Moments.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -45,19 +46,32 @@
 namespace
 {
   // ==========================================================================
+  enum {
+    INVALID_DATA       = 760 , 
+    INVALID_EXPRESSION = 761 , 
+    INVALID_SELECTION  = 762 , 
+    INVALID_ENTRY      = 763 , 
+    INVALID_LOAD       = 764 , 
+  } ;
+  // ==========================================================================
   static_assert ( std::numeric_limits<unsigned long>::is_specialized   ,
                   "Numeric_limist<unsigned long> are not specialized!" ) ;
   // ==========================================================================
   /// make FormulaVar 
   std::unique_ptr<Ostap::FormulaVar>
-  make_formula ( const std::string& expression           , 
-                 const RooAbsData&  data                 , 
-                 const bool         allow_empty = false  ) 
+  make_formula 
+  ( const std::string& expression           , 
+    const RooAbsData&  data                 , 
+    const bool         allow_empty = false  , 
+    const bool         allow_null  = false  ) 
   { 
     if ( allow_empty && expression.empty() ) { return nullptr ; }  // RETURN!
     //
     RooArgList        alst ;
     const RooArgSet*  aset = data.get() ;
+    //
+    if ( allow_null && nullptr == aset     ) { return nullptr ; }
+    //
     Ostap::Assert ( nullptr != aset                ,  
                     "Invalid varset"               , 
                     "Ostap::StatVar::make_formula" ) ;
@@ -68,6 +82,9 @@ namespace
     while ( ( coef = (RooAbsArg*) iter.next() ) ) { alst.add ( *coef ); }
     //
     auto result = std::make_unique<Ostap::FormulaVar> ( expression , alst , false ) ;
+    //
+    if ( allow_null && ( !result || !result->ok() ) ) { return nullptr ; } 
+    //
     Ostap::Assert ( result && result->ok()                   , 
                     "Invalid formula:\"" + expression + "\"" , 
                     "Ostap::StatVar::make_formula"           ) ;
@@ -4496,9 +4513,207 @@ Ostap::StatVar::get_table
   }
   return NN ;
 }
-
-
-
+// ============================================================================
+/*  get the moment as Ostap::Math::Moment_<N>
+ *  @see Ostap::Math::Moment_
+ *  @see Ostap::Math::Moment
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::StatVar::the_moment
+( TTree*               tree       , 
+  Ostap::Math::Moment& moment     , 
+  const std::string&   expression , 
+  const unsigned long  first      ,
+  const unsigned long  last       ) 
+{
+  if ( nullptr == tree    ) { return Ostap::StatusCode ( INVALID_DATA       ) ; }
+  //
+  Ostap::Formula formula ( expression , tree ) ;
+  if ( !formula.ok()      ) { return Ostap::StatusCode ( INVALID_EXPRESSION ) ; }
+  //
+  if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
+  //  
+  Ostap::Utils::Notifier notify ( tree , &formula ) ;
+  //
+  const unsigned long nEntries =
+    std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  std::vector<double>  results {} ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
+  {
+    //
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { return Ostap::StatusCode ( INVALID_ENTRY  )  ; }
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { return Ostap::StatusCode ( INVALID_LOAD   )  ; } 
+    //
+    formula.evaluate ( results ) ;
+    for  ( const double r : results ) { moment.update ( r ) ; }
+  }
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
+// ========================================================================    
+/*  get the moment as Ostap::Math::WMoment_<N>
+ *  @see Ostap::Math::WMoment_
+ *  @see Ostap::Math::WMoment
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::StatVar::the_moment
+( TTree*                tree       , 
+  Ostap::Math::WMoment& moment     , 
+  const std::string&    expression , 
+  const std::string&    selection  , 
+  const unsigned long   first      ,
+  const unsigned long   last       ) 
+{
+  if ( nullptr == tree    ) { return Ostap::StatusCode ( INVALID_DATA       ) ; }
+  //
+  Ostap::Formula formula ( expression , tree ) ;
+  if ( !formula.ok()      ) { return Ostap::StatusCode ( INVALID_EXPRESSION ) ; }
+  //
+  std::unique_ptr<Ostap::Formula> cuts { nullptr } ;
+  if  ( !selection.empty() ) 
+  { 
+    cuts = std::make_unique<Ostap::Formula>( selection , tree ) ; 
+    if ( !cuts || !cuts->ok() ) { return Ostap::StatusCode ( INVALID_SELECTION ) ; }
+  }
+  //
+  const bool with_cuts = !(!cuts) ;
+  //
+  if ( last <= first      ) { return Ostap::StatusCode::SUCCESS ; }
+  //  
+  Ostap::Utils::Notifier notify ( tree , &formula ) ;
+  //
+  const unsigned long nEntries =
+    std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  std::vector<double>  results {} ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
+  {
+    //
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { return Ostap::StatusCode ( INVALID_ENTRY ) ; }
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { return Ostap::StatusCode ( INVALID_LOAD  ) ; } 
+    //
+    const long double w = with_cuts ? cuts->evaluate() : 1.0L ;
+    //
+    if ( !w ) { continue ; } // ATTENTION! 
+    //
+    formula.evaluate ( results ) ;
+    for  ( const double r : results ) { moment.update ( r , w ) ; }
+  }
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
+// ========================================================================
+/*  get the moment as Ostap::Math::WMoment_<N>
+ *  @see Ostap::Math::WMoment_
+ *  @see Ostap::Math::WMoment
+ */
+// ========================================================================
+Ostap::StatusCode 
+Ostap::StatVar::the_moment
+( const RooAbsData*     data       , 
+  Ostap::Math::WMoment& moment     , 
+  const std::string&    expression , 
+  const std::string&    selection  , 
+  const std::string&    cutrange   ,      
+  const unsigned long   first      ,
+  const unsigned long   last       ) 
+{
+  if ( nullptr == data ) { return Ostap::StatusCode ( INVALID_DATA       ) ; }
+  //
+  const std::unique_ptr<Ostap::FormulaVar> expr { ::make_formula ( expression , *data , false , true ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cuts { ::make_formula ( selection  , *data , true  , true ) } ;
+  //
+  if ( !expr || !expr->ok() )                          { return Ostap::StatusCode ( INVALID_EXPRESSION ) ; }
+  if ( selection.empty() && ( !cuts || !cuts->ok() ) ) { return Ostap::StatusCode ( INVALID_SELECTION  ) ; }
+  //
+  if ( last <= first ) { return Ostap::StatusCode::SUCCESS ; }
+  //
+  const char* cut_range = cutrange.empty() ?  nullptr : cutrange.c_str() ;
+  //
+  const bool weighted = data->isWeighted() ;
+  //
+  const unsigned long the_last = std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  // start the loop
+  for ( unsigned long entry = first ; entry < the_last ; ++entry )
+  {
+    //
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars  ) { return Ostap::StatusCode ( INVALID_ENTRY ) ; }
+    if ( cut_range && !vars->allInRange ( cut_range ) ) { continue ; } // CONTINUE    
+    //
+    // apply cuts:
+    const long double wc = cuts      ? cuts->getVal() : 1.0L ;
+    if ( !wc ) { continue ; }                                   // CONTINUE  
+    // apply weight:
+    const long double wd = weighted  ? data->weight()        : 1.0L ;
+    if ( !wd ) { continue ; }                                   // CONTINUE    
+    // cuts & weight:
+    const long double w  = wd *  wc ;
+    if ( !w  ) { continue ; }                                   // CONTINUE        
+    //
+    const double v = expr->getVal () ;
+    //
+    moment.update ( v , w ) ;
+  }
+  //
+  return Ostap::StatusCode::SUCCESS ;
+  // ==========================================================================
+}
+// ========================================================================
+/*  get the moment as Ostap::Math::WMoment_<N>
+ *  @see Ostap::Math::WMoment_
+ *  @see Ostap::Math::WMoment
+ */
+// ========================================================================
+Ostap::StatusCode 
+Ostap::StatVar::the_moment
+( const RooAbsData*     data       , 
+  Ostap::Math::WMoment& moment     , 
+  const std::string&    expression , 
+  const std::string&    selection  , 
+  const unsigned long   first      ,
+  const unsigned long   last       ) 
+{
+  return the_moment ( data       , 
+                      moment     , 
+                      expression , 
+                      selection  ,
+                      ""         , 
+                      first      , 
+                      last       ) ;
+}
+// ========================================================================
+/*  get the moment as Ostap::Math::WMoment_<N>
+ *  @see Ostap::Math::WMoment_
+ *  @see Ostap::Math::WMoment
+ */
+// ========================================================================
+Ostap::StatusCode 
+Ostap::StatVar::the_moment
+( const RooAbsData*     data       , 
+  Ostap::Math::WMoment& moment     , 
+  const std::string&    expression , 
+  const unsigned long   first      ,
+  const unsigned long   last       ) 
+{
+  return the_moment ( data       , 
+                      moment     , 
+                      expression ,
+                      ""         , 
+                      ""         , 
+                      first      , 
+                      last       ) ;
+}
 // ============================================================================
 //                                                                      The END
 // ============================================================================

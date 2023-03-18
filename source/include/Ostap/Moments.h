@@ -86,14 +86,16 @@ namespace  Ostap
     public: // basic operations for the counter 
       // ======================================================================
       /// increment with some value 
-      Moment_& operator+= ( const double   x ) ;      
+      Moment_& operator+= ( const double   x ) { return add ( x ) ; } 
       /// increment with other moment 
-      Moment_& operator+= ( const Moment_& x ) ;
+      Moment_& operator+= ( const Moment_& x ) { return add ( x ) ; }
       // ======================================================================
     public: // add more values to the counter 
       // ======================================================================
       /// add single value 
-      void  add ( const double x ){ *this += x ; }
+      inline Moment_& add ( const double   x ) ;
+      /// add another moment 
+      inline Moment_& add ( const Moment_& x ) ;
       /// add sequence of values  
       template <class ITERATOR>
       void add ( ITERATOR begin , ITERATOR end   )
@@ -103,11 +105,11 @@ namespace  Ostap
       // ======================================================================
       Moment_   __add__ ( const double   x ) const { Moment_ r (*this) ; r += x ; return r ; }
       Moment_  __radd__ ( const double   x ) const { return __add__ ( x ) ; }
-      Moment_& __iadd__ ( const double   x )       { (*this) += x ; return *this ; }
+      Moment_& __iadd__ ( const double   x )       { return   add   ( x ) ; }
       // ======================================================================
       Moment_   __add__ ( const Moment_& x ) const { Moment_ r (*this) ; r += x ; return r ; }
       Moment_  __radd__ ( const Moment_& x ) const { return __add__ ( x ) ; }
-      Moment_& __iadd__ ( const Moment_& x )       { (*this) += x ; return *this ; }
+      Moment_& __iadd__ ( const Moment_& x )       { return   add   ( x ) ; }
       // ======================================================================
     public:      
       // ======================================================================
@@ -150,20 +152,24 @@ namespace  Ostap
     // ========================================================================
     /// increment with some value
     template <unsigned short N>
-    Moment_<N>& Moment_<N>::operator+= ( const double  x )
+    inline Moment_<N>& Moment_<N>::add ( const double  x )
     {
+      //
       const auto nA = this->size() ;
+      const unsigned long long nB =      1 ;
+      const unsigned long long nN = nA + 1 ;
+      //
       const long double delta = x - this->mu() ;
-      const long double b_n =      -1.0L / ( nA + 1 ) ;
-      const long double a_n =  nA * 1.0L / ( nA + 1 ) ;
-      const long double d_n = - delta    / ( nA + 1 ) ;
+      const long double b_n =      -1.0L / nN ;
+      const long double a_n =  nA * 1.0L / nN ;
+      const long double d_n = - delta    / nN ;
       //
       m_M += ( nA * std::pow ( b_n , N ) + std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
       long double d = 1 ;
       for ( unsigned int k = 1 ; k + 2 <= N ; ++k )
       {
         d   *= d_n ;
-        m_M +=  s_Ck [ k ] * this-> M ( N - k ) * d   ;
+        m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
       }
       /// update previous 
       this->m_prev += x ; // update previous
@@ -173,18 +179,18 @@ namespace  Ostap
     // ========================================================================
     /// increment with some other counter 
     template <unsigned short N>
-    Moment_<N>& Moment_<N>::operator+= ( const Moment_<N>&  x )
+    inline Moment_<N>& Moment_<N>::add ( const Moment_<N>&  x )
     {
       //
-      if      ( 0 == x     . size () ) {               return (*this) ; }
-      else if ( 0 == this -> size () ) { (*this) = x ; return (*this) ; }
+      if      ( 0 == x     . size () ) {               return *this ; }
+      else if ( 0 == this -> size () ) { (*this) = x ; return *this ; }
       //
       const unsigned long long nA    = this->size () ;
       const unsigned long long nB    =    x. size () ;
-      const unsigned long long n     = nA + nB       ;
+      const unsigned long long nN    = nA + nB       ;
       const long double        delta = x.mu() - this->mu() ;
-      const long double        b_n   =  ( -1.0L * nB ) / ( nA + nB ) ;
-      const long double        a_n   =  (  1.0L * nA ) / ( nA + nB ) ;
+      const long double        b_n   =  ( -1.0L * nB ) / nN ;
+      const long double        a_n   =  (  1.0L * nA ) / nN ;
       //
       m_M += x.m_M ;
       m_M += nA * std::pow ( b_n * delta , N ) + nB * std::pow ( a_n * delta , N ) ;
@@ -237,14 +243,16 @@ namespace  Ostap
     public: // basic operations 
       // ======================================================================
       /// increment with some value 
-      Moment_& operator+= ( const double /* x */ ) { ++m_size           ; return *this ; }
+      Moment_& operator+= ( const double    x ) { add ( x ) ; return *this ; }
       /// increment with other moment 
-      Moment_& operator+= ( const Moment_&  x    ) { m_size += x.m_size ; return *this ; }
+      Moment_& operator+= ( const Moment_&  x ) { add ( x ) ; return *this ; }
       // ======================================================================
     public:
       // ======================================================================
       /// add single value
-      void add ( const double /* x */ ){ ++m_size ; }
+      void add ( const double   /* x */ ) { ++m_size           ; }
+      /// add single value
+      void add ( const Moment_&    x    ) { m_size += x.m_size ; }
       /// add sequence of values  
       template <class ITERATOR>
       void add ( ITERATOR begin , ITERATOR end   )
@@ -318,19 +326,25 @@ namespace  Ostap
     public: // basic operations 
       // ======================================================================
       /// increment with some value 
-      Moment_& operator+= ( const double  x )
+      Moment_& operator+= ( const double  x ) { return add ( x ) ; }
+      /// increment with other moment 
+      Moment_& operator+= ( const Moment_ x ) { return add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// add single value 
+      Moment_& add ( const double x )
       {
         const auto n = m_prev.size() ;
         m_mu = ( n * m_mu + x ) /  ( n + 1 );  // calculate new mean value 
         m_prev += x ;                          // updated previous  
         return *this ;
       }
-      /// increment with other moment 
-      Moment_& operator+= ( const Moment_ x )
+      /// add the moment 
+      Moment_& add ( const Moment_& x )
       {
-        //
-        if      ( 0 == x     . size () ) {               return (*this) ; }
-        else if ( 0 == this -> size () ) { (*this) = x ; return (*this) ; }
+        if      ( 0 == x     . size () ) {               return *this ; }
+        else if ( 0 == this -> size () ) { (*this) = x ; return *this ; }
         //
         const unsigned long long n1 =   m_prev.size() ;
         const unsigned long long n2 = x.m_prev.size() ;
@@ -338,13 +352,8 @@ namespace  Ostap
         m_mu = ( n1 * m_mu + n2 * x.m_mu ) / ( n1 + n2 ) ; // update mean 
         m_prev += x.m_prev ;                               // update previous
         //
-        return *this ;  
+        return *this ;
       }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// add single value 
-      void add ( const double x ){ (*this) += x ; }
       /// add sequence of values  
       template <class ITERATOR>
       void add ( ITERATOR begin , ITERATOR end   )
@@ -354,11 +363,11 @@ namespace  Ostap
       // ======================================================================
       Moment_   __add__ ( const double   x ) const { Moment_ r (*this) ; r += x ; return r ; }
       Moment_  __radd__ ( const double   x ) const { return __add__ ( x ) ; }
-      Moment_& __iadd__ ( const double   x )       { (*this) += x ; return *this ; }
+      Moment_& __iadd__ ( const double   x )       { return   add   ( x ) ; }
       // ======================================================================
       Moment_   __add__ ( const Moment_& x ) const { Moment_ r (*this) ; r += x ; return r ; }
       Moment_  __radd__ ( const Moment_& x ) const { return __add__ ( x ) ; }
-      Moment_& __iadd__ ( const Moment_& x )       { (*this) += x ; return *this ; }
+      Moment_& __iadd__ ( const Moment_& x )       { return   add   ( x ) ; }
       // ======================================================================
     public:      
       // ======================================================================
@@ -480,18 +489,20 @@ namespace  Ostap
     public: // basic operations for the counter 
       // ======================================================================
       /// increment with other moment 
-      inline WMoment_& operator+= ( const WMoment_& x ) ;
+      inline WMoment_& operator+= ( const WMoment_& x ) { return add  ( x ) ; }
       // ======================================================================
     public: // add more values to the counter 
       // ======================================================================
       /// add single value 
-      inline void add ( const double x , const double w = 1 ) ;
+      inline WMoment_& add ( const double x , const double w = 1 ) ;
+      /// add aother moment   
+      inline WMoment_& add ( const WMoment_& x ) ;
       // ======================================================================
     public: // python operations 
       // ======================================================================
       WMoment_   __add__ ( const WMoment_& x ) const { WMoment_ r (*this) ; r += x ; return r ; }
       WMoment_  __radd__ ( const WMoment_& x ) const { return __add__ ( x ) ; }
-      WMoment_& __iadd__ ( const WMoment_& x )       { (*this) += x ; return *this ; }
+      WMoment_& __iadd__ ( const WMoment_& x )       { return   add   ( x ) ; }
       // ======================================================================
     public:      
       // ======================================================================
@@ -533,39 +544,45 @@ namespace  Ostap
     // ========================================================================
     /// increment with some value
     template <unsigned short N>
-    inline void WMoment_<N>::add ( const double  x , const double w )
+    inline WMoment_<N>& WMoment_<N>::add ( const double  x , const double w )
     {
-      const auto nA = this->size() ;
-      const long double delta = x - this->mu() ;
-      const long double b_n =      -1.0L / ( nA + 1 ) ;
-      const long double a_n =  nA * 1.0L / ( nA + 1 ) ;
-      const long double d_n = - delta    / ( nA + 1 ) ;
       //
-      m_M += ( nA * std::pow ( b_n , N ) + std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
+      const long double wA    = this->w () ;
+      const long double wB    =       w    ;
+      const long double wW    = wA + wB    ;
+      const long double delta = x - this->mu() ;
+      //
+      const long double b_n =  -1.0L * wB / wW ;
+      const long double a_n =   1.0L * wA / wW ;
+      const long double d_n = - delta     / wW ;
+      //
+      m_M += ( wA * std::pow ( b_n , N ) + wB * std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
       long double d = 1 ;
       for ( unsigned int k = 1 ; k + 2 <= N ; ++k )
       {
         d   *= d_n ;
-        m_M +=  s_Ck [ k ] * this-> M ( N - k ) * d   ;
+        m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
       }
       /// update previous 
-      this->m_prev.add ( x , w ) ; 
+      this->m_prev.add ( x , w ) ; // update previous
+      //
+      return *this ;
     }
     // ========================================================================
     /// increment with some other counter 
     template <unsigned short N>
-    inline WMoment_<N>& WMoment_<N>::operator+= ( const WMoment_<N>&  x )
+    inline WMoment_<N>& WMoment_<N>::add ( const WMoment_<N>&  x )
     {
       //
-      if      ( 0 == x     . size () ) {               return (*this) ; }
-      else if ( 0 == this -> size () ) { (*this) = x ; return (*this) ; }
+      if      ( 0 == x     . size () ) {               return *this ; }
+      else if ( 0 == this -> size () ) { (*this) = x ; return *this ; }
       //
-      
       const long double wA    = this->w () ;
       const long double wB    =    x. w () ;
-      const long double        delta = x.mu() - this->mu() ;
-      const long double        b_n   =  ( -1.0L * wB ) / ( wA + wB ) ;
-      const long double        a_n   =  (  1.0L * wA ) / ( wA + wB ) ;
+      const long double wW    = wA + wB    ;
+      const long double delta = x.mu() - this->mu()  ;
+      const long double b_n   =  ( -1.0L * wB ) / wW ;
+      const long double a_n   =  (  1.0L * wA ) / wW ;
       //
       m_M += x.m_M ;
       m_M += wA * std::pow ( b_n * delta , N ) + wB * std::pow ( a_n * delta , N ) ;
@@ -579,7 +596,7 @@ namespace  Ostap
         a   *= a_n   ;
         b   *= b_n   ;
         d   *= delta ;        
-        m_M += s_Ck [ k ] * d * ( this-> M( N -k ) * b + x. M ( N - k ) * a ) ;
+        m_M += s_Ck [ k ] * d * ( this-> M( N - k ) * b + x. M ( N - k ) * a ) ;
       }
       /// update previous 
       this->m_prev += x.m_prev ; // update previous
@@ -624,20 +641,27 @@ namespace  Ostap
     public: // basic operations 
       // ======================================================================
       /// increment with other moment 
-      inline WMoment_& operator+= ( const WMoment_&  x )
-      { m_size += x.m_size ; m_w  += x.m_w ; m_w2 += x.m_w2 ; return *this ; }
+      inline WMoment_& operator+= ( const WMoment_&  x ) { return add ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
-      /// add single value
-      inline void add ( const double /* x */ , const double w = 1 )
-      { ++m_size ; m_w += w ; m_w2 += w * w ; }
+      /// add a single value
+      inline WMoment_& add ( const double /* x */ , const double w = 1 )
+      { ++m_size ; m_w += w ; m_w2 += w * w ; return *this ; }
+      /// add a single value
+      inline WMoment_& add ( const WMoment_& x )
+      {
+        m_size += x.m_size ;
+        m_w    += x.m_w    ;
+        m_w2   += x.m_w2   ;
+        return *this ;
+      }
       // ======================================================================
     public: // python operations 
       // ======================================================================
       WMoment_   __add__ ( const WMoment_& x ) const { WMoment_ r (*this) ; r += x ; return r ; }
       WMoment_  __radd__ ( const WMoment_& x ) const { return __add__ ( x ) ; }
-      WMoment_& __iadd__ ( const WMoment_& x )       { (*this) += x ; return *this ; }
+      WMoment_& __iadd__ ( const WMoment_& x )       { return   add   ( x ) ; }
       // ======================================================================
     public:      
       // ======================================================================
@@ -708,24 +732,12 @@ namespace  Ostap
     public: // basic operations 
       // ======================================================================
       /// increment with other moment 
-      inline WMoment_& operator+= ( const WMoment_ x )
-      {
-        if      ( 0 == x     . size () ) {               return (*this) ; }
-        else if ( 0 == this -> size () ) { (*this) = x ; return (*this) ; }
-        //
-        const long double wA =   m_prev.size() ;
-        const long double wB = x.m_prev.size() ;
-        m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
-        //
-        m_prev += x.m_prev ;                               // update previous
-        //
-        return *this ;  
-      }
+      inline WMoment_& operator+= ( const WMoment_ x ) { return add ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// add single value 
-      inline void add ( const double x , const double w = 1 )
+      inline WMoment_& add ( const double x , const double w = 1 )
       {
         const long double wA = this -> w() ;
         const long double wB = w ;
@@ -733,13 +745,29 @@ namespace  Ostap
         m_mu = ( wA * m_mu + wB * x ) / ( wA + wB ) ; // update mean
         //
         this->m_prev.add ( x , w ) ;
+        //
+        return *this ;
+      }
+      /// add anoher moment 
+      inline WMoment_& add ( const WMoment_& x )  
+      {
+        if      ( 0 == x     . size () ) {               return *this ; }
+        else if ( 0 == this -> size () ) { (*this) = x ; return *this ; }
+        //
+        const long double wA =   m_prev.size() ;
+        const long double wB = x.m_prev.size() ;
+        m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
+        //
+        m_prev += x.m_prev ;                               // update previous
+        //
+        return *this ;
       }
       // ======================================================================
     public: // python operations 
       // ======================================================================
       WMoment_   __add__ ( const WMoment_& x ) const { WMoment_ r (*this) ; r += x ; return r ; }
       WMoment_  __radd__ ( const WMoment_& x ) const { return __add__ ( x ) ; }
-      WMoment_& __iadd__ ( const WMoment_& x )       { (*this) += x ; return *this ; }
+      WMoment_& __iadd__ ( const WMoment_& x )       { return   add   ( x ) ; }
       // ======================================================================
     public:      
       // ======================================================================

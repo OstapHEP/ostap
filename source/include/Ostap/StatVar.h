@@ -21,10 +21,14 @@ class RooAbsData ; // RooFit
 #include "Ostap/ValueWithError.h"
 #include "Ostap/SymmetricMatrixTypes.h"
 #include "Ostap/DataFrame.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // forward declarations 
 // ============================================================================
 template <class SCALAR> class TMatrixTSym ; // ROOT 
+// ============================================================================
+namespace Ostap { namespace Math { class Moment  ; } }
+namespace Ostap { namespace Math { class WMoment ; } }
 // ============================================================================
 namespace Ostap
 {
@@ -1511,6 +1515,67 @@ namespace Ostap
       const std::string&  expr         , 
       const std::string&  cuts  = ""   ) ;
     // ========================================================================    
+  public:  
+    // ========================================================================
+    /** get the moment as Ostap::Math::Moment_<N>
+     *  @see Ostap::Math::Moment_
+     *  @see Ostap::Math::Moment
+     */
+    static Ostap::StatusCode the_moment
+    ( TTree*               tree          , 
+      Ostap::Math::Moment& moment        , 
+      const std::string&   expression    , 
+      const unsigned long  first  = 0    ,
+      const unsigned long  last   = LAST ) ;
+    // ========================================================================    
+    /** get the moment as Ostap::Math::WMoment_<N>
+     *  @see Ostap::Math::WMoment_
+     *  @see Ostap::Math::WMoment
+     */
+    static Ostap::StatusCode the_moment
+    ( TTree*                tree          , 
+      Ostap::Math::WMoment& moment        , 
+      const std::string&    expression    , 
+      const std::string&    selection     , 
+      const unsigned long   first  = 0    ,
+      const unsigned long   last   = LAST ) ;
+    // ========================================================================    
+    /** get the moment as Ostap::Math::WMoment_<N>
+     *  @see Ostap::Math::WMoment_
+     *  @see Ostap::Math::WMoment
+     */
+    static Ostap::StatusCode the_moment
+    ( const RooAbsData*     data , 
+      Ostap::Math::WMoment& moment              , 
+      const std::string&    expression          , 
+      const std::string&    selection = ""      , 
+      const std::string&    cutrange  = ""      ,      
+      const unsigned long   first     = 0       ,
+      const unsigned long   last      = LAST    ) ;
+    // ========================================================================
+    /** get the moment as Ostap::Math::WMoment_<N>
+     *  @see Ostap::Math::WMoment_
+     *  @see Ostap::Math::WMoment
+     */
+    static Ostap::StatusCode the_moment
+    ( const RooAbsData*     data , 
+      Ostap::Math::WMoment& moment              , 
+      const std::string&    expression          , 
+      const std::string&    selection           , 
+      const unsigned long   first               ,
+      const unsigned long   last      = LAST    ) ;
+    // ========================================================================
+    /** get the moment as Ostap::Math::WMoment_<N>
+     *  @see Ostap::Math::WMoment_
+     *  @see Ostap::Math::WMoment
+     */
+    static Ostap::StatusCode the_moment
+    ( const RooAbsData*     data , 
+      Ostap::Math::WMoment& moment              , 
+      const std::string&    expression          , 
+      const unsigned long   first               ,
+      const unsigned long   last      = LAST    ) ;
+    // ========================================================================
   public:
     // ========================================================================
     /// data column 
