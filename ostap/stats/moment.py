@@ -368,7 +368,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
                 row = "kurtosis"  , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
                 
-        elif 5 == order and 5 <= size and obj.order < 10 and not standard :
+        elif 5 == order and 5 <= size and obj.order < 10 and False and not standard :
             
             v = obj.unbiased_5th ()
             
