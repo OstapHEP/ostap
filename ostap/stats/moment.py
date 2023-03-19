@@ -306,7 +306,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
             if hasattr  ( obj , 'nEff' ) :
                 
                 neff = obj.nEff()
-                if neff != size and 0 < neff and isfinite ( v ) :
+                if neff != size and 0 < neff and isfinite ( neff ) :
                     field , n = pretty_float ( neff ) 
                     row = "nEff" , '' if not n else '[10^%+d]' % n , field 
                     rows.append ( row )
