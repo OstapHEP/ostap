@@ -32,7 +32,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2020-06-08"
 __all__     = ()
 # =============================================================================
-from   ostap.core.ostap_types import integer_types, num_types 
+from   ostap.core.ostap_types import integer_types, num_types
+from   ostap.math.base        import isfinite 
 from   ostap.core.core        import Ostap, VE
 from   ostap.core.meta_info   import root_version_int 
 import ROOT 
@@ -163,6 +164,29 @@ def _om_u5th ( obj ) :
     return Ostap.Math.Moments.unbiased_5th ( obj )  
 
 # =============================================================================
+## get a standardized moment 
+#  @code
+#  m = ...
+#  v = m.std_moment ( 5 ) 
+#  @endcode
+def _om_stdmoment ( obj , order ) :
+    """Get a standartized moment 
+    >>> m = ...
+    >>> v = m/.std_moment ( 5 ) 
+    """
+    assert isinstance ( order , int ) and 1 <= order and order <= obj.order , \
+           'std_moment: invalid order!'
+    
+    if   root_version_int >= 62200 :
+        T = Ostap.Math.Moments.std_moment [ order , obj.order ]
+        return T ( obj ) 
+    elif root_version_int >= 62000 : T = Ostap.Math.Moments.std_moment [ order , obj.order ]
+    else                           : T = Ostap.Math.Moments.std_moment ( order , obj.order )
+    ## 
+    M = Ostap.Math.Moments()
+    return T ( M , obj )
+
+# =============================================================================
 ## get central moment 
 #  @code
 #  m = ...
@@ -184,7 +208,7 @@ def _om_cm2 ( obj , order  ) :
             T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
             return T ( obj ) 
         elif root_version_int >= 62000 : T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
-        else                       : T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
+        else                           : T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
         ## 
         M = Ostap.Math.Moments()
         return T ( M , obj )
@@ -245,78 +269,151 @@ def _om_rms  ( obj ) :
 #  m = ...
 #  t = m.table()
 #  @endcode  
-def _om_table ( obj , title = '' , prefix = '' ) :
+def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
     """Print object as a table
     >>> m = ...
     >>> t = m.table()
     """
-    rows = []
+
+    from ostap.logger.utils import pretty_float, pretty_ve 
+
+    IM = Ostap.Math.Moments.invalid_moment() 
+    
+    rows  = []
     item  = obj
     while 1 < 2 :
         
         order  = item.order
-        moment = item.moment()  
+        moment = item.moment ()  
+        size   = item.size   ()
         
         if   0 == order :
+            
             if hasattr  ( obj , 'w2' ) :
-                row = "sum(w^2)" , "%d" % obj.w2 () 
+                
+                w2 = obj.w2 ()
+                field , n = pretty_float ( w2 ) 
+                row = "sum(w^2)" , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
+                
             if hasattr  ( obj , 'w' ) :
-                row = "sum(w)" , "%d" % obj.w () 
+                
+                w = obj.w ()
+                field , n = pretty_float ( w ) 
+                row = "sum(w)" , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
+
             if hasattr  ( obj , 'nEff' ) :
-                row = "nEff" , "%d" % obj.nEff () 
-                rows.append ( row )
-            row = "#"        , "%d" % obj.size() 
+                
+                neff = obj.nEff()
+                if neff != size and 0 < neff and isfinite ( v ) :
+                    field , n = pretty_float ( neff ) 
+                    row = "nEff" , '' if not n else '[10^%+d]' % n , field 
+                    rows.append ( row )
+
+            s = obj.size() 
+            if 1.e+6 < s :
+                field , n = pretty_float ( s * 1.0 ) 
+                row = "#entries" , '' if not n else '[10^%+d]' % n , field 
+            else :                
+                row = "#entries" , '' , '%d' % s 
+                
             rows.append ( row )
                 
         elif 1 == order :
-            v = obj.mean()
-            if  isinstance ( v , VE ) : field = v.toString( "%.6g +/- %.6g" )
-            else                      : field = "%.6g" % v 
-            row = "Mean"     , field 
-            rows.append ( row )
-        elif 2 == order :
-            v = obj.variance ()
-            if  isinstance ( v , VE ) : field = v.toString( "%.6g +/- %.6g" )
-            else                      : field = "%.6g" % v            
-            row = "Variance" , field 
-            rows.append ( row )
-            ##
-            v = obj.rms  ()
-            if  isinstance ( v , VE ) : field = v.toString( "%.6g +/- %.6g" )
-            else                      : field = "%.6g" % v            
-            row = "RMS" , field 
-            rows.append ( row )
-        elif 3 == order :
-            v = obj.skewness ()
-            if  isinstance ( v , VE ) : field = v.toString( "%.6g +/- %.6g" )
-            else                      : field = "%.6g" % v            
-            row = "Skewness" , field 
-            rows.append ( row )
-        elif 4 == order :
-            v = obj.kurtosis ()
-            if  isinstance ( v , VE ) : field = v.toString( "%.6g +/- %.6g" )
-            else                      : field = "%.6g" % v            
-            row = "Kurtosis" , field 
-            rows.append ( row )
-        else :
-            v = obj.cmoment ( order )
-            if  isinstance ( v , VE ) : field = v.toString( "%.6g +/- %.6g" )
-            else                      : field = "%.6g" % v            
-            row = "M<%d>" % order , field 
-            rows.append ( row )
+            
+            v = obj.mean     ()
+            
+            if IM != float ( v ) and isfinite ( v ) : 
+                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                else                     : field , n = pretty_float ( v )
+                row = "mean" , '' if not n else '[10^%+d]' % n , field 
+                rows.append ( row )
+                
+        elif 2 == order and 2 <= size :
 
+            v = obj.variance ()
+            
+            if IM != float ( v ) and isfinite ( v ) :
+                
+                ## if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                ## else                     : field , n = pretty_float ( v )
+                ## row = "variance" , '' if not n else '[10^%+d]' % n , field 
+                ## rows.append ( row )
+
+                v = obj.rms      ()
+            
+                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                else                     : field , n = pretty_float ( v )
+                row = "rms"  , '' if not n else '[10^%+d]' % n , field 
+                rows.append ( row )
+
+        elif 3 == order and 3 <= size :
+
+            v = obj.skewness ()
+            
+            if IM != float ( v ) and isfinite ( v ) :
+                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                else                     : field , n = pretty_float ( v )
+                row = "skewness"  , '' if not n else '[10^%+d]' % n , field 
+                rows.append ( row )
+            
+        elif 4 == order and 4 <= size :
+            
+            v = obj.kurtosis ()
+            
+            if IM != float ( v ) and isfinite ( v ) :
+                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                else                     : field , n = pretty_float ( v )
+                row = "kurtosis"  , '' if not n else '[10^%+d]' % n , field 
+                rows.append ( row )
+                
+        elif 5 == order and 5 <= size and obj.order < 10 and not standard :
+            
+            v = obj.unbiased_5th ()
+            
+            if IM != float ( v ) and isfinite ( v ) :
+                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                else                     : field , n = pretty_float ( v )
+                row = "M[5](unb)" , '' if not n else '[10^%+d]' % n , field 
+                rows.append ( row )
+                
+        elif standard : 
+
+            v = obj.std_moment ( order )
+
+            if IM != float ( v ) and isfinite ( v ) :
+                
+                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                else                     : field , n = pretty_float ( v )
+                row = "std-M[%s]"  % order , '' if not n else '[10^%+d]' % n , field 
+                rows.append ( row )
+                
+        else : 
+
+            v = obj.cmoment ( order )
+
+            if IM != float ( v ) and isfinite ( v ) :
+                
+                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                else                     : field , n = pretty_float ( v )
+                row = "M[%s]"  % order , '' if not n else '[10^%+d]' % n , field 
+                rows.append ( row )
+                
         if hasattr ( item , 'previous' ) : item = item.previous()
         else                             : break
         
         
-    rows = tuple ( [ ('', 'Value') ] +  [ r for r in reversed ( rows ) ] )
+    rows = tuple ( [ ( '' , '' , 'value') ] +  [ r for r in reversed ( rows ) ] )
         
     import ostap.logger.table as T
-        
-    return T.table ( rows  , title = title , prefix = prefix )
 
+    tit = title 
+    if not title :
+        if   isinstance ( obj , Ostap.Math. Moment ) : tit =  'Moment_[%d]' % obj.order 
+        elif isinstance ( obj , Ostap.Math.WMoment ) : tit = 'WMoment_[%d]' % obj.order 
+    
+    return T.table ( rows  , title = tit , prefix = prefix )
 
 Ostap.Math.Moment.unbiased_2nd   = _om_u2nd 
 Ostap.Math.Moment.unbiased_3rd   = _om_u3rd
@@ -330,6 +427,7 @@ Ostap.Math.Moment.skewness       = _om_skewness
 Ostap.Math.Moment.kurtosis       = _om_kurtosis
 Ostap.Math.Moment.cmoment        = _om_cm2
 Ostap.Math.Moment.central_moment = _om_cm2
+Ostap.Math.Moment.std_moment     = _om_stdmoment
 Ostap.Math.Moment.table          = _om_table
 
 Ostap.Math.WMoment.mean           = _om_mean    
@@ -340,6 +438,12 @@ Ostap.Math.WMoment.kurtosis       = _om_kurtosis
 Ostap.Math.WMoment.cmoment        = _om_cm3
 Ostap.Math.WMoment.central_moment = _om_cm3
 Ostap.Math.WMoment.table          = _om_table
+
+
+for t in ( Ostap.Math.WMoment ,
+           Ostap.Math. Moment ) :
+    t.__str__  = _om_table
+    t.__repr__ = _om_table
 
 M0  = Ostap.Math.Moment_(0)
 M1  = Ostap.Math.Moment_(1)

@@ -578,6 +578,10 @@ ROOT.RooAbsData . statCovs      = _stat_covs_
 ROOT.RooAbsData . statVct       = _stat_vct_ 
 ROOT.RooAbsData . nEff          = _stat_nEff_ 
 
+from ostap.stats.statvars import data_the_moment
+ROOT.RooAbsData. the_moment = data_the_moment 
+
+
 ROOT.RooDataSet . __sub__       = _rds_sub_
 ROOT.RooDataSet . jackknife     = _rds_jackknife_
 ROOT.RooDataSet . bootstrap     = _rds_bootstrap_

@@ -750,6 +750,7 @@ def _stat_var_ ( tree , expression , *cuts ) :
 ROOT.TTree     . statVar = _stat_var_
 ROOT.TChain    . statVar = _stat_var_
 
+
 # =============================================================================
 ## get the statistic for certain expressions in Tree/Dataset
 #  @code
@@ -945,6 +946,15 @@ def _stat_vct_ ( ds         ,
 
 ROOT.TTree     . statVct = _stat_vct_
 ROOT.TChain    . statVct = _stat_vct_
+
+
+# =============================================================================
+
+from ostap.stats.statvars import data_the_moment
+
+ROOT.TTree     . the_moment = data_the_moment 
+ROOT.TChain    . the_moment = data_the_moment 
+
 
 # =============================================================================
 ## Get min/max for the certain variable in chain/tree

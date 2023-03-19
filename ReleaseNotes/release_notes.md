@@ -10,6 +10,7 @@
   1. add posssibility to enable global thread safety and implicit MC via .ostaprc configuirtaion file 
   1. update/modify/fix  `Ostap::Math::Moment_<>` and `Ostap::Math::WMoment_<>`
   1. add `Ostap::StatVar::the_moment` 
+  1. add `the_moment` fnuction for `TTree`, `RooAbsData` and `DataFrame` 
 
 
 ## Backward incompatible: 

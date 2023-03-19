@@ -364,6 +364,60 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
     return results 
 
 
+# ==================================================================================
+## get statistics of variable(s)
+#  @code
+#  frame = ....
+#  stat  = frame.the_moment ( 5 , 'pt'           )
+#  stat  = frame.the_moment ( 5 , 'pt' , 'eta>0' )
+#  @endcode
+def _fr_the_moment_ ( frame , N , expression , cuts = '' ) :
+    """Get statistics of variable(s)
+    >>> frame = ....
+    >>> stat  = frame.the_moment ( 5 , 'pt'           )
+    >>> stat  = frame.the_moment ( 5 , 'pt' , 'eta>0' )
+    """
+
+    assert isinstance ( N , int ) and 0 <= N , 'Invalid order!'
+    assert isinstance ( expression , str )   , 'Invalid expression type!'
+    
+    if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )
+        
+    node = as_rnode ( frame ) 
+
+    ## get the list of currently known names
+    vars     = frame_columns ( node ) 
+    all_vars = set ( vars ) 
+
+    current  = node
+    
+    vname = expression 
+    if not expression in all_vars :
+        
+        used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
+        vn      = var_name ( 'var_' , used , expression , *vars )
+        all_vars.add ( vn )
+        current = current.Define ( vn , expression )
+        vname = expression
+        
+    cuts  = str ( cuts )
+    cname = cuts 
+    if cuts and not cuts in vars :
+        used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
+        vn      = var_name ( 'cut_' , used , cuts , *vars )
+        all_vars.add ( vn )
+        current = current.Define ( vn , cuts )
+        cname   = vn
+
+    if cname :
+        TT = ROOT.Detail.RDF.WMoment_(N) 
+        return current.Book( ROOT.std.move ( TT () ) , CNT ( [ vname , cname ] ) ) 
+    else :
+        TT = ROOT.Detail.RDF.Moment_(N)             
+        return current.Book( ROOT.std.move ( TT () ) , CNT ( 1 , vname ) ) 
+
+    return results 
+
 # ============================================================================
 _types_1D = Ostap.Math.LegendreSum  , Ostap.Math.Bernstein   , Ostap.Math.ChebyshevSum , 
 _types_2D = Ostap.Math.LegendreSum2 , Ostap.Math.Bernstein2D ,
@@ -1338,22 +1392,29 @@ except AttributeError :
 if ( 6 , 25 ) <= root_info and has_std_move :
     frame_statVar       = _fr_statVar_new_
     frame_statVars      = _fr_statVar_new_
-    frame_table         = _fr_table_ 
+    frame_table         = _fr_table_
+    frame_the_moment    = _fr_the_moment_ 
     for f in frames : 
-        f.statVars  = frame_statVars  
-        f.statVars  = frame_statVars  
-        _new_methods_ .append ( f.statVars )
+        f.statVars   = frame_statVars  
+        _new_methods_ .append ( f.statVars    )
         f.table     = frame_table   
         _new_methods_ .append ( f.table    )
-    _new_methods_ .append ( frame_statVars ) 
-    _new_methods_ .append ( frame_table    ) 
-    __all__ = __all__ + ( 'frame_statVars' ,  'frame_table' ) 
+        f.the_moment = frame_the_moment  
+        _new_methods_ .append ( f.the_moment  )
 
-    ROOT.TTree. fstatVars = frame_statVars
-    _new_methods_ .append ( ROOT.TTree. fstatVars ) 
+    _new_methods_ .append ( frame_statVars   ) 
+    _new_methods_ .append ( frame_table      ) 
+    _new_methods_ .append ( frame_the_moment ) 
+    __all__ = __all__ + ( 'frame_statVars' ,
+                          'frame_table'    ,
+                          'frame_the_moment' ) 
+
+    ROOT.TTree. fstatVars   = frame_statVars
+    ROOT.TTree. fthe_moment = frame_statVars
     
-ROOT.TTree. fstatVar  = frame_statVar 
-_new_methods_ .append ( ROOT.TTree. fstatVar ) 
+    _new_methods_ .append ( ROOT.TTree. fstatVars   ) 
+    _new_methods_ .append ( ROOT.TTree. fthe_moment ) 
+
 
 for f in frames :
     

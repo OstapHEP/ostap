@@ -119,7 +119,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.moments' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
 ## @class BaseMoment
-#  Base class for calcualtionof varosu momnet
+#  Base class for calculation of variosu moments 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06

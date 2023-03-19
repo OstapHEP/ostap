@@ -67,7 +67,7 @@ namespace  Ostap
        *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
        *  @return the value of the Nth central moment
        */
-      double moment () const { return this->M ( N ) / this->size () ; }
+      inline double moment () const { return this->M ( N ) / this->size () ; }
       // ======================================================================
       /** get value of the kth moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
@@ -75,20 +75,20 @@ namespace  Ostap
        *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
-      double moment ( const unsigned short k ) const
+      inline double moment ( const unsigned short k ) const
       { return N <  k ? 0 : 0 == k ? 1 : 1 == k ? 0 : ( this->M ( k ) / this->size() ) ; }
       // ======================================================================
       /// get number of entries
-      unsigned long long size  () const { return m_prev.size () ; }
+      inline unsigned long long size  () const { return m_prev.size () ; }
       /// get the mean value (if \f$ 1 \le N \$4)
-      long double        mu    () const { return m_prev.mu   () ; } 
+      inline long double        mu    () const { return m_prev.mu   () ; } 
       // ======================================================================
     public: // basic operations for the counter 
       // ======================================================================
       /// increment with some value 
-      Moment_& operator+= ( const double   x ) { return add ( x ) ; } 
+      inline Moment_& operator+= ( const double   x ) { return add ( x ) ; } 
       /// increment with other moment 
-      Moment_& operator+= ( const Moment_& x ) { return add ( x ) ; }
+      inline Moment_& operator+= ( const Moment_& x ) { return add ( x ) ; }
       // ======================================================================
     public: // add more values to the counter 
       // ======================================================================
@@ -98,7 +98,7 @@ namespace  Ostap
       inline Moment_& add ( const Moment_& x ) ;
       /// add sequence of values  
       template <class ITERATOR>
-      void add ( ITERATOR begin , ITERATOR end   )
+      inline void add ( ITERATOR begin , ITERATOR end   )
       { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
       // ======================================================================
     public: // python operations 
@@ -119,7 +119,7 @@ namespace  Ostap
     public:      
       // ======================================================================
       /// get "previos" moment 
-      const Moment_<N-1>& previous () const { return this->m_prev ; }
+      inline const Moment_<N-1>& previous () const { return this->m_prev ; }
       // ======================================================================
     public:      
       // ======================================================================
@@ -159,10 +159,10 @@ namespace  Ostap
       const unsigned long long nB =      1 ;
       const unsigned long long nN = nA + 1 ;
       //
-      const long double delta = x - this->mu() ;
-      const long double b_n =      -1.0L / nN ;
-      const long double a_n =  nA * 1.0L / nN ;
-      const long double d_n = - delta    / nN ;
+      const long double delta = x - this -> mu () ;
+      const long double b_n   =      -1.0L / nN ;
+      const long double a_n   =  nA * 1.0L / nN ;
+      const long double d_n   = - delta    / nN ;
       //
       m_M += ( nA * std::pow ( b_n , N ) + std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
       long double d = 1 ;
@@ -227,7 +227,7 @@ namespace  Ostap
        *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
        *  @return the value of the Nth central moment
        */
-      double moment () const { return 1 ; }
+      inline double moment () const { return 1 ; }
       // ======================================================================
       /** get value of the kth moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
@@ -235,27 +235,27 @@ namespace  Ostap
        *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
-      double moment ( const unsigned short k ) const { return 0 < k ? 0 : 1 ; }
+      inline double moment ( const unsigned short k ) const { return 0 < k ? 0 : 1 ; }
       // ======================================================================
       /// get number of entries
-      unsigned long long size  () const { return m_size ; }
+      inline unsigned long long size  () const { return m_size ; }
       // ======================================================================
     public: // basic operations 
       // ======================================================================
       /// increment with some value 
-      Moment_& operator+= ( const double    x ) { add ( x ) ; return *this ; }
+      inline Moment_& operator+= ( const double    x ) { add ( x ) ; return *this ; }
       /// increment with other moment 
-      Moment_& operator+= ( const Moment_&  x ) { add ( x ) ; return *this ; }
+      inline Moment_& operator+= ( const Moment_&  x ) { add ( x ) ; return *this ; }
       // ======================================================================
     public:
       // ======================================================================
       /// add single value
-      void add ( const double   /* x */ ) { ++m_size           ; }
+      inline void add ( const double   /* x */ ) { ++m_size           ; }
       /// add single value
-      void add ( const Moment_&    x    ) { m_size += x.m_size ; }
+      inline void add ( const Moment_&    x    ) { m_size += x.m_size ; }
       /// add sequence of values  
       template <class ITERATOR>
-      void add ( ITERATOR begin , ITERATOR end   )
+      inline void add ( ITERATOR begin , ITERATOR end   )
       { m_size += std::distance  ( begin , end ) ; }
       // ======================================================================
     public: // python operations 
@@ -309,7 +309,7 @@ namespace  Ostap
        *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
        *  @return the value of the Nth central moment
        */
-      double moment () const { return 0 ; }
+      inline double moment () const { return 0 ; }
       // ======================================================================
       /** get value of the kth moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
@@ -317,23 +317,23 @@ namespace  Ostap
        *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
-      double moment ( const unsigned short k ) const { return 1 <= k ? 0 : 1 ; }
+      inline double moment ( const unsigned short k ) const { return 1 <= k ? 0 : 1 ; }
       /// get number of entries
-      unsigned long long size  () const { return m_prev.size()  ; }
+      inline unsigned long long size  () const { return m_prev.size()  ; }
       // get the mean value
-      long double        mu    () const { return m_mu ; } 
+      inline long double        mu    () const { return m_mu ; } 
       // ======================================================================
     public: // basic operations 
       // ======================================================================
       /// increment with some value 
-      Moment_& operator+= ( const double  x ) { return add ( x ) ; }
+      inline Moment_& operator+= ( const double  x ) { return add ( x ) ; }
       /// increment with other moment 
-      Moment_& operator+= ( const Moment_ x ) { return add ( x ) ; }
+      inline Moment_& operator+= ( const Moment_ x ) { return add ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// add single value 
-      Moment_& add ( const double x )
+      inline Moment_& add ( const double x )
       {
         const auto n = m_prev.size() ;
         m_mu = ( n * m_mu + x ) /  ( n + 1 );  // calculate new mean value 
@@ -341,7 +341,7 @@ namespace  Ostap
         return *this ;
       }
       /// add the moment 
-      Moment_& add ( const Moment_& x )
+      inline Moment_& add ( const Moment_& x )
       {
         if      ( 0 == x     . size () ) {               return *this ; }
         else if ( 0 == this -> size () ) { (*this) = x ; return *this ; }
@@ -356,7 +356,7 @@ namespace  Ostap
       }
       /// add sequence of values  
       template <class ITERATOR>
-      void add ( ITERATOR begin , ITERATOR end   )
+      inline void add ( ITERATOR begin , ITERATOR end   )
       { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
       // ======================================================================
     public: // python operations 
@@ -377,18 +377,18 @@ namespace  Ostap
     public:      
       // ======================================================================
       /// get "previos" moment 
-      const Moment_<0>& previous () const { return this->m_prev ; }
+      inline const Moment_<0>& previous () const { return this->m_prev ; }
       // ======================================================================
     public: 
       // ======================================================================
       inline long double M ( const unsigned short k ) const
       { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
       // ======================================================================
-    private:    private:
+    private:
       // ======================================================================
-      Moment_<0>  m_prev { } ;
+      Moment_<0>  m_prev {   } ;
       /// mean value
-      long double m_mu   {0} ; // mean value
+      long double m_mu   { 0 } ; // mean value
       // ======================================================================
     private:
       // ======================================================================
@@ -547,21 +547,24 @@ namespace  Ostap
     inline WMoment_<N>& WMoment_<N>::add ( const double  x , const double w )
     {
       //
-      const long double wA    = this->w () ;
-      const long double wB    =       w    ;
-      const long double wW    = wA + wB    ;
-      const long double delta = x - this->mu() ;
-      //
-      const long double b_n =  -1.0L * wB / wW ;
-      const long double a_n =   1.0L * wA / wW ;
-      const long double d_n = - delta     / wW ;
-      //
-      m_M += ( wA * std::pow ( b_n , N ) + wB * std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
-      long double d = 1 ;
-      for ( unsigned int k = 1 ; k + 2 <= N ; ++k )
+      if ( w ) 
       {
-        d   *= d_n ;
-        m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
+        const long double wA    = this->w () ;
+        const long double wB    =       w    ;
+        const long double wW    = wA + wB    ;
+        const long double delta = x - this->mu() ;
+        //
+        const long double b_n =  -1.0L * wB / wW ;
+        const long double a_n =   1.0L * wA / wW ;
+        const long double d_n = - delta     / wW ;
+        //
+        m_M += ( wA * std::pow ( b_n , N ) + wB * std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
+        long double d = 1 ;
+        for ( unsigned int k = 1 ; k + 2 <= N ; ++k )
+        {
+          d   *= d_n ;
+          m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
+        }
       }
       /// update previous 
       this->m_prev.add ( x , w ) ; // update previous
@@ -577,26 +580,29 @@ namespace  Ostap
       if      ( 0 == x     . size () ) {               return *this ; }
       else if ( 0 == this -> size () ) { (*this) = x ; return *this ; }
       //
-      const long double wA    = this->w () ;
       const long double wB    =    x. w () ;
-      const long double wW    = wA + wB    ;
-      const long double delta = x.mu() - this->mu()  ;
-      const long double b_n   =  ( -1.0L * wB ) / wW ;
-      const long double a_n   =  (  1.0L * wA ) / wW ;
-      //
-      m_M += x.m_M ;
-      m_M += wA * std::pow ( b_n * delta , N ) + wB * std::pow ( a_n * delta , N ) ;
-      //
-      long double a = 1 ;
-      long double b = 1 ;
-      long double d = 1 ;
-      //
-      for ( unsigned short k = 1 ; k + 2 <= N ; ++k )
+      if ( wB ) 
       {
-        a   *= a_n   ;
-        b   *= b_n   ;
-        d   *= delta ;        
-        m_M += s_Ck [ k ] * d * ( this-> M( N - k ) * b + x. M ( N - k ) * a ) ;
+        const long double wA    = this->w () ;
+        const long double wW    = wA + wB    ;
+        const long double delta = x.mu() - this->mu()  ;
+        const long double b_n   =  ( -1.0L * wB ) / wW ;
+        const long double a_n   =  (  1.0L * wA ) / wW ;
+        //
+        m_M += x.m_M ;
+        m_M += wA * std::pow ( b_n * delta , N ) + wB * std::pow ( a_n * delta , N ) ;
+        //
+        long double a = 1 ;
+        long double b = 1 ;
+        long double d = 1 ;
+        //
+        for ( unsigned short k = 1 ; k + 2 <= N ; ++k )
+        {
+          a   *= a_n   ;
+          b   *= b_n   ;
+          d   *= delta ;        
+          m_M += s_Ck [ k ] * d * ( this-> M( N - k ) * b + x. M ( N - k ) * a ) ;
+        }
       }
       /// update previous 
       this->m_prev += x.m_prev ; // update previous
@@ -632,7 +638,7 @@ namespace  Ostap
       /// get number of entries
       inline unsigned long long size  () const { return m_size ; }
       /// get effective number of entries \f$  \frac{(\sum w_i)^2}{\sum w_i^2} \f$
-      inline long double        nEff  () const { return m_w * m_w / m_w2 ; }
+      inline long double        nEff  () const { return m_w2 ? m_w * m_w / m_w2 : -1.0 ; }
       /// get sum of weights  \f$  \sum w_i \f$  
       inline long double        w     () const { return m_w    ; }
       /// get sum of weights squared  \f$  \sum w_i^2 \f$  
@@ -801,7 +807,6 @@ namespace  Ostap
     template <unsigned short N>
     inline WMoment_<N> operator+ ( const WMoment_<N>&  a , const WMoment_<N>&  b  )
     { WMoment_<N> r  ( a ) ; r += b ; return r ; }
-
     
     // ========================================================================
     // Weighted moments 
@@ -825,6 +830,11 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the value of invalid momment 
+      static double invalid_moment () { return s_INVALID_MOMENT ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /** get the unbiased estimator for the 2nd order moment:
        *  \f[ \hat{\mu}_2 \equiv \frac{n}{n-1} \mu_2 \f] 
        *  @param  m input counter
@@ -844,12 +854,12 @@ namespace  Ostap
        *  @return the unbiased estimate (if number of entries exceeds 3) and 
        *   <code>s_INVALID_MOMENT</code> otherwise 
        */
-      template <unsigned short N, typename std::enable_if<(2<N),int>::type = 0 >
-      static inline double unbiased_3rd ( const Moment_<N>& m )
+        template <unsigned short N, typename std::enable_if<(2<N),int>::type = 0 >
+        static inline double unbiased_3rd ( const Moment_<N>& m )
       {
         const unsigned long long n = m.size() ;
         return  n < 3 ? s_INVALID_MOMENT : m.M ( 3 ) * n / ( ( n - 1.0L ) * (  n - 2.0L  ) ) ;  
-      }    
+      }
       // ======================================================================
       /** get the unbiased estimator for the 4th  order moment:
        *  \f[ \hat{\mu}_4 \equiv  \frac{(n-1)(n^2-3n+3)}{n^3}\mu_4 + 
@@ -862,7 +872,7 @@ namespace  Ostap
        *  @return the unbiased estimate (if number of entries exceeds 4) and 
        *   <code>s_INVALID_MOMENT</code> otherwise
        */
-      template <unsigned short N, typename std::enable_if<(3<N),int>::type = 0 >
+      template <unsigned short N, typename std::enable_if<(3<N),int>::type = 0 > 
       static inline double unbiased_4th ( const Moment_<N>& m )
       {
         const unsigned long long n =  m.size() ;
@@ -882,7 +892,7 @@ namespace  Ostap
        *   <code>s_INVALID_MOMENT</code> otherwise
        */
         template <unsigned short N, typename std::enable_if<(4<N),int>::type = 0 >
-      static inline double unbiased_5th ( const Moment_<N>& m )
+        static inline double unbiased_5th ( const Moment_<N>& m )
       {
         const unsigned long long n =  m.size() ;
         if ( 5 > n ) { return s_INVALID_MOMENT  ; }
@@ -891,9 +901,8 @@ namespace  Ostap
         const long double m3 = m.M ( 3 ) / n ;
         const auto n4 = std::pow ( n * 1.0L , 4 ) ;
         //
-        return 
-          ( n - 1.0L  ) * ( n - 2.0L  ) / n4 *
-                   ( 10 * ( n - 2.0L ) * m2 * m3 + ( 1.0L * n * n - 2.0L * n +2 ) * m5 ) ;
+        return ( n - 1.0L ) * ( n - 2.0L  ) / n4 *
+                  ( 10 * ( n - 2.0L ) * m2 * m3 + ( 1.0L * n * n - 2.0L * n +2 ) * m5 ) ;
       }
       // ======================================================================
       /// get the mean
@@ -971,7 +980,7 @@ namespace  Ostap
       // ======================================================================
       /** get the central moment of order \f$ N \f$  with 
        *  the estimate of the uncertainty (with \f$O(n^{-2})\f$~precision
-       *  - the error estimaet is possible only when \f$ 2N \le K \f$!
+       *  - the error estimate is possible only when \f$ 2N \le K \f$!
        *  @aparam m counter 
        *  @return moment with uncertainty for non-empty counter 
        *          <code>s_INVALID_MOMENT</code> for empty counters 
@@ -1011,6 +1020,26 @@ namespace  Ostap
       static inline VE _central_moment_2 ( const Moment_<K>& m )
       { return central_moment<N> ( m ) ; }
       // ======================================================================
+      /** get the standartized moment of order 1 
+       */
+      template <unsigned short N, unsigned short K,
+                 typename std::enable_if< (1==N) && (N<=K) ,int>::type = 1 > 
+      static inline double std_moment ( const Moment_<K>& /* m */ ) { return 0 ; }
+      // =======================================================
+      /** get the standartized moment of order 2 
+       */
+      template <unsigned short N, unsigned short K,
+                 typename std::enable_if< (2==N) && (N<=K) ,int>::type = 1 > 
+      static inline double std_moment ( const Moment_<K>& /* m */ ) { return 1 ; }   
+      /** get the standartized moment of order N
+       */
+      template <unsigned short N, unsigned short K,
+                 typename std::enable_if< (2<N) && (N<=K) ,int>::type = 1 > 
+      static inline double std_moment ( const Moment_<K>& m ) 
+      { 
+        const double m2 = m.moment ( 2 ) ;
+        return m2 ? m.moment ( N ) / std::pow ( m2 , 0.5 * N ) : s_INVALID_MOMENT ;
+      }
 
       // ======================================================================
       // Weighted
@@ -1032,12 +1061,12 @@ namespace  Ostap
       // ======================================================================
       /// get the variance  
       static inline double variance ( const WMoment_<2>& m )
-      { return m.size() < 2  ? s_INVALID_MOMENT :m.moment ( 2 ) ; }
+      { return m.size() < 2  ? s_INVALID_MOMENT : m.moment ( 2 ) ; }
       /// get the variance  
       static inline double variance ( const WMoment_<3>& m )
-      { return m.size() < 2  ? s_INVALID_MOMENT :m.moment ( 2 ) ; }
+      { return m.size() < 2  ? s_INVALID_MOMENT : m.moment ( 2 ) ; }
       // ======================================================================
-      /// get the unbiased sample variance with uncertainty
+      /// get the  sample variance with uncertainty
       template <unsigned short N, typename std::enable_if<(3<N),int>::type = 0 >
       static inline VE variance ( const WMoment_<N>& m )
       {
@@ -1076,7 +1105,7 @@ namespace  Ostap
         const auto n = m.nEff () ;
         const double m4 = m.moment ( 4 ) ;
         const double m2 = m.moment ( 2 ) ;
-        const double k  =  m4 / ( m2  * m2  ) - 3  ;
+        const double k  = m4 / ( m2  * m2  ) - 3  ;
         double cov2 = 6.0L * n * ( n - 1 ) / ( ( n - 2.0L ) * ( n + 1.0L ) * ( n + 3.0L ) ) ;
         cov2 *= 4.0L * ( n * 1.0L * n -1 ) / ( ( n - 3.0L ) * ( n + 5.0L ) ) ;
         return VE  ( k , cov2 ) ;
@@ -1133,6 +1162,27 @@ namespace  Ostap
                 typename std::enable_if<(1<N)&&(2*N<=K),int>::type = 0 >
       static inline VE _central_moment_3 ( const WMoment_<K>& m )
       { return central_moment<N> ( m ) ; }
+      // ======================================================================
+      /** get the standartized moment of order 1 
+       */
+      template <unsigned short N, unsigned short K,
+                 typename std::enable_if< (1==N) && (N<=K) ,int>::type = 1 > 
+      static inline double std_moment ( const WMoment_<K>& /* m */ ) { return 0 ; }
+      // =======================================================
+      /** get the standartized moment of order 2 
+       */
+      template <unsigned short N, unsigned short K,
+                 typename std::enable_if< (2==N) && (N<=K) ,int>::type = 1 > 
+      static inline double std_moment ( const WMoment_<K>& /* m */ ) { return 1 ; }   
+      /** get the standartized moment of order N
+       */
+      template <unsigned short N, unsigned short K,
+                 typename std::enable_if< (2<N) && (N<=K) ,int>::type = 1 > 
+      static inline double std_moment ( const WMoment_<K>& m ) 
+      { 
+        const double m2 = m.moment ( 2 ) ;
+        return m2 ? m.moment ( N ) / std::pow ( m2 , 0.5 * N ) : s_INVALID_MOMENT ;
+      }
       // ======================================================================
     } ; //                                The end of class Ostap::Math::Moments 
     // ========================================================================

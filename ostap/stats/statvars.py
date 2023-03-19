@@ -9,6 +9,7 @@
 """Functions to collect statistics for trees and  datasets
 - data_get_moment      - calculate the moment 
 - data_moment          - get the moment            (with uncertainty)
+- data_the_moment      - get the (central) moment   
 - data_central_moment  - get the central moment    (with uncertainty)
 - data_mean            - get the mean              (with uncertainty)
 - data_variance        - get the variance          (with uncertainty)
@@ -32,6 +33,7 @@ __date__    = "2014-06-06"
 __all__     = (
     'data_get_moment'     , ##  calculate the moment 
     'data_moment'         , ## get the moment            (with uncertainty)
+    'data_the_moment'     , ## get the cental  moment         
     'data_central_moment' , ## get the central moment    (with uncertainty)
     'data_mean'           , ## get the mean              (with uncertainty)
     'data_variance'       , ## get the variance          (with uncertainty)
@@ -53,6 +55,7 @@ __all__     = (
 from   builtins           import range
 from   ostap.core.core    import Ostap, rootException
 import ostap.stats.moment 
+import ostap.logger.table as     T 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -63,7 +66,7 @@ else                       : logger = getLogger ( __name__               )
 StatVar = Ostap.StatVar 
 # =============================================================================
 ## @var QEXACT
-#  use it as threshold for exact/slow vs approximate/fast quanitle calcualtion 
+#  use it as threshold for exact/slow vs approximate/fast quantile calcualtion 
 QEXACT = 10000
 # =============================================================================
 ## get the moment of order 'order' relative to 'center'
@@ -109,6 +112,8 @@ def  data_moment ( data , order , expression , cuts  = ''  , *args ) :
                                 order      ,
                                 expression ,
                                 cuts       , *args )
+
+
     
 # =============================================================================
 ## get the central moment (with uncertainty) of order 'order' 
@@ -137,6 +142,38 @@ def  data_central_moment ( data , order , expression , cuts  = '' , *args ) :
                                         order      ,
                                         expression ,
                                         cuts       , *args )
+
+# =============================================================================
+## Get the moments or order <code>order</code> as <code>Ostap::Math::(W)Moment_<order></code>
+#  @code
+#  data = ...
+#  moment = data.the_momemnt ( 5 , 'x/y+z' , '0<qq' )
+#  @endcode 
+#  @see Ostap::Math::Moment 
+#  @see Ostap::Math::WMoment
+def data_the_moment ( data , order , expression , cuts = '' , *args ) :
+    """Get the moments or order <code>order</code> as <code>Ostap::Math::(W)Moment_<order></code>
+    >>> data = ...
+    >>> moment = data.the_momemnt ( 5 , 'x/y+z' , '0<qq' )
+    - see Ostap.Math.Moment 
+    - see Ostap.Math.WMoment 
+    """
+    assert isinstance ( order  , int ) and 0<= order , 'Invalid order  %s'  % order
+    
+    if ( not cuts ) and isinstance ( data , Tree ) :
+        M      = Ostap.Math. Moment_(order)
+        moment = M ()
+        with rootException() : 
+            sc = StatVar.the_moment ( data , moment , *args )
+            assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
+            return moment 
+
+    M      = Ostap.Math.WMoment_(order)
+    moment = M ()
+    with rootException() :
+        sc = StatVar.the_moment ( data , moment , cuts , *args )
+        assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
+        return moment 
     
 # =============================================================================
 ## get the  skewness (with uncertainty)
@@ -562,6 +599,10 @@ Interval  .__str__  = _i_str_
 Interval  .__repr__ = _i_str_
 QInterval .__str__  = _qi_str_
 QInterval .__repr__ = _qi_str_
+
+
+    
+# =============================================================================
 
 
 # =============================================================================

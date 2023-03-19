@@ -25,6 +25,7 @@
 #include "Ostap/Bernstein2D.h"
 #include "Ostap/Bernstein3D.h"
 #include "Ostap/Parameterization.h"
+#include "Ostap/Moments.h"
 // ============================================================================
 /// ONLY starting from ROOT 6.16
 // ============================================================================
@@ -84,7 +85,7 @@ namespace ROOT
         template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
 #endif 
         void Exec ( unsigned int slot , const T &vs )
-        { Ostap::StatEntity& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e += v ; } }
+        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e += v ; } }
         // ====================================================================
       public:
         // ====================================================================
@@ -96,11 +97,11 @@ namespace ROOT
       private:
         // ====================================================================
         /// the final result 
-        const std::shared_ptr<Ostap::StatEntity> m_result {}    ;
+        const std::shared_ptr<Result_t> m_result {   } ;
         /// size of m_slots 
-        unsigned long                            m_N      { 1 } ;
+        unsigned long                   m_N      { 1 } ;
         /// (current) results per  slot 
-        std::vector<Ostap::StatEntity>           m_slots  { 1 } ;
+        std::vector<Result_t>           m_slots  { 1 } ;
         // ====================================================================
       } ; //                        The end of class ROOT::Detail::RDF::StatVar
       // ======================================================================
@@ -150,7 +151,7 @@ namespace ROOT
 #endif 
         void Exec ( unsigned int slot , const T &vs , const double weight = 1 )
         {
-          Ostap::WStatEntity& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e.add ( v , weight ) ; } 
+          Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e.add ( v , weight ) ; } 
         }
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of weight 
@@ -160,7 +161,7 @@ namespace ROOT
         template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
 #endif
         void Exec ( unsigned int slot , const double value , const T &ws )
-        { Ostap::WStatEntity& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.add ( value , w   ) ; } }
+        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.add ( value , w   ) ; } }
         // ====================================================================
       public:
         // ====================================================================
@@ -172,13 +173,178 @@ namespace ROOT
       private:
         // ====================================================================
         /// the final result 
-        const std::shared_ptr<Ostap::WStatEntity> m_result {}    ;
+        const std::shared_ptr<Result_t> m_result {}    ;
         /// size of m_slots 
-        unsigned long                             m_N      { 1 } ;
+        unsigned long                   m_N      { 1 } ;
         /// (current) results per  slot 
-        std::vector<Ostap::WStatEntity>           m_slots  { 1 } ;
+        std::vector<Result_t>           m_slots  { 1 } ;
         // ====================================================================
       } ; //                       The end of class ROOT::Detail::RDF::WStatVar
+      // ======================================================================
+      /** @class Moment_
+       *  Helper class to get statitsics for the column in DataFrame 
+       *  @see Ostap::Math::Moment_
+       */
+      template <unsigned short N>
+      class Moment_ : public RActionImpl<Moment_<N> > 
+      {
+      public:
+        // ====================================================================
+        /// define the result type 
+        using Result_t = Ostap::Math::Moment_<N> ;
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// default constructor 
+        Moment_ () 
+          : m_result ( std::make_shared<Result_t>() ) 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+          , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
+#else 
+          , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
+#endif
+          , m_slots  ( this->m_N ) 
+        {}
+        /// Move constructor 
+        Moment_ (       Moment_&& ) = default ;
+        /// Copy constructor is disabled 
+        Moment_ ( const Moment_&  ) = delete ;
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// initialize (empty) 
+        void InitTask   ( TTreeReader * , unsigned int ) {} ;
+        /// initialize (empty) 
+        void Initialize () {} ;
+        /// finalize : sum over the slots 
+        void Finalize   () 
+        { 
+          Result_t sum { m_slots [ 0 ] } ;
+          for ( unsigned int i = 1 ; i < m_N ; ++i ) { sum += m_slots [ i ] ; }
+          *m_result = sum ;
+        }
+        /// who am I ?
+        std::string GetActionName() { return "Moment_" ; }
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// The basic method: increment the counter 
+        void Exec ( unsigned int slot , double value ) 
+        { m_slots [ slot % m_N ].add ( value ) ; } 
+        // ====================================================================
+        /// The basic method: increment the counter for the vector-like columns       
+#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
+        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+#else 
+        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+#endif 
+        void Exec ( unsigned int slot , const T &vs )
+        { Result_t& m = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { m.add ( v ) ; } }
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// Get the result 
+        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
+        /// get partial result for the given slot 
+        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
+        // ====================================================================
+      private:
+        // ====================================================================
+        /// the final result 
+        const std::shared_ptr<Result_t> m_result {   } ;
+        /// size of m_slots 
+        unsigned long                   m_N      { 1 } ;
+        /// (current) results per  slot 
+        std::vector<Result_t>           m_slots  { 1 } ;
+        // ====================================================================
+      } ; //                        The end of class ROOT::Detail::RDF::Moment_
+      // ======================================================================
+      /** @class WMoment_
+       *  Helper class to get statitsics for the column in DataFrame 
+       *  @see Ostap::Math::WMoment_
+       */
+      template <unsigned short N>
+      class WMoment_ : public RActionImpl<WMoment_<N> > 
+      {
+      public:
+        // ====================================================================
+        /// define the result type 
+        using Result_t = Ostap::Math::WMoment_<N> ;
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// default constructor 
+        WMoment_ () 
+          : m_result ( std::make_shared<Result_t>() ) 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+          , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
+#else 
+          , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
+#endif
+          , m_slots  ( this->m_N ) 
+        {}
+        /// Move constructor 
+        WMoment_ (       WMoment_&& ) = default ;
+        /// Copy constructor is disabled 
+        WMoment_ ( const WMoment_&  ) = delete ;
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// initialize (empty) 
+        void InitTask   ( TTreeReader * , unsigned int ) {} ;
+        /// initialize (empty) 
+        void Initialize () {} ;
+        /// finalize : sum over the slots 
+        void Finalize   () 
+        { 
+          Result_t sum { m_slots [ 0 ] } ;
+          for ( unsigned int i = 1 ; i < m_N ; ++i ) { sum += m_slots [ i ] ; }
+          *m_result = sum ;
+        }
+        /// who am I ?
+        std::string GetActionName() { return "WMoment_" ; }
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// The basic method: increment the counter 
+        void Exec ( unsigned int slot , double value , double weight ) 
+        { m_slots [ slot % m_N ].add ( value , weight ) ; } 
+        // ====================================================================
+        /// The basic method: increment the counter for the vector-like columns       
+#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
+        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+#else 
+        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+#endif 
+        void Exec ( unsigned int slot , const T &vs , double weight )
+        { Result_t& m = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { m.add ( v ) ; } }
+        // ====================================================================
+        /// The basic method: increment the counter for the vector-like column of weight 
+#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
+        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+#else 
+        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+#endif
+        void Exec ( unsigned int slot , const double value , const T &ws )
+        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.add ( value , w   ) ; } }
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// Get the result 
+        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
+        /// get partial result for the given slot 
+        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
+        // ====================================================================
+      private:
+        // ====================================================================
+        /// the final result 
+        const std::shared_ptr<Result_t> m_result {   } ;
+        /// size of m_slots 
+        unsigned long                   m_N      { 1 } ;
+        /// (current) results per  slot 
+        std::vector<Result_t>           m_slots  { 1 } ;
+        // ====================================================================
+      } ; //                        The end of class ROOT::Detail::RDF::Moment_
       // ======================================================================
       /** @class LegendrePoly
        *  Helper class to parameterise data as 1D Legendre polynomial
@@ -914,8 +1080,6 @@ namespace ROOT
         std::vector<Result_t>           m_slots  { 1 } ;
         // ====================================================================
       } ; //                  The end of class ROOT::Detail::RDF::LegendrePoly3
-
-
       // ======================================================================
     } //                                 The end of namespace ROOT::Detail::RDF
     // ========================================================================
@@ -943,6 +1107,11 @@ namespace Ostap
     using BernsteinPoly3 = ROOT::Detail::RDF::BernsteinPoly3 ;
     //
     using LegendrePoly4  = ROOT::Detail::RDF::LegendrePoly4  ;
+    //
+    template <unsigned short N> 
+    using Moment_        = ROOT::Detail::RDF::Moment_<N>     ;
+    template <unsigned short N> 
+    using WMoment_       = ROOT::Detail::RDF::WMoment_<N>    ;
     // ========================================================================
   }
   // ==========================================================================
