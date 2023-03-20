@@ -361,6 +361,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
         elif 4 == order and 4 <= size :
             
             v  = obj.kurtosis ()
+            vv = float   ( v )                                     
             if isfinite ( vv ) and IM != float ( v ) :
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
@@ -370,6 +371,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
         elif 5 == order and 5 <= size and obj.order < 10 and hasattr ( obj , 'unbiased_5th' ) and not standard :
             
             v  = obj.unbiased_5th ()
+            vv = float   ( v )                         
             if isfinite ( vv ) and IM != float ( v ) :
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
@@ -379,6 +381,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
         elif standard : 
 
             v  = obj.std_moment ( order )
+            vv = float   ( v )                         
             if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
@@ -388,6 +391,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
         else : 
 
             v  = obj.cmoment ( order )
+            vv = float   ( v )                         
             if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
