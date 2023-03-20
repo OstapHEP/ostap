@@ -745,26 +745,32 @@ namespace  Ostap
       /// add single value 
       inline WMoment_& add ( const double x , const double w = 1 )
       {
-        const long double wA = this -> w() ;
-        const long double wB = w ;
-        //
-        m_mu = ( wA * m_mu + wB * x ) / ( wA + wB ) ; // update mean
+        if ( w ) 
+        {
+          const long double wA = this -> w() ;
+          const long double wB = w ;
+          //
+          m_mu = ( wA * m_mu + wB * x ) / ( wA + wB ) ; // update mean
+        }
         //
         this->m_prev.add ( x , w ) ;
         //
         return *this ;
       }
-      /// add anoher moment 
+      /// add another moment 
       inline WMoment_& add ( const WMoment_& x )  
       {
         if      ( 0 == x     . size () ) {               return *this ; }
         else if ( 0 == this -> size () ) { (*this) = x ; return *this ; }
         //
-        const long double wA =   m_prev.size() ;
-        const long double wB = x.m_prev.size() ;
-        m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
+        const long double   wB = x.m_prev.w () ;
+        if ( wB ) 
+        {
+          const long double wA = m_prev.w   () ;
+          m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
+        }
         //
-        m_prev += x.m_prev ;                               // update previous
+        m_prev += x.m_prev ;                                 // update previous
         //
         return *this ;
       }
@@ -1089,7 +1095,7 @@ namespace  Ostap
       static inline VE skewness ( const WMoment_<N>& m ) 
       {
         if ( m.size() < 3 ) { return VE  ( s_INVALID_MOMENT , -1 )  ; }
-        const auto n = m.nEff () ;
+        const auto   n    = m.nEff () ;
         const double m3   = m.moment ( 3 ) ;
         const double m2   = m.moment ( 2 ) ;
         const double skew =  m3 / std::pow ( m2 , 3.0/2 ) ;
@@ -1102,7 +1108,7 @@ namespace  Ostap
       static inline VE kurtosis ( const WMoment_<N>& m ) 
       {
         if ( m.size() < 4 ) { return VE  ( s_INVALID_MOMENT , -1 )  ; }
-        const auto n = m.nEff () ;
+        const auto   n  = m.nEff () ;
         const double m4 = m.moment ( 4 ) ;
         const double m2 = m.moment ( 2 ) ;
         const double k  = m4 / ( m2  * m2  ) - 3  ;

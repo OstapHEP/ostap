@@ -43,7 +43,8 @@ from   ostap.core.core import ( cpp      , Ostap     ,
 from   ostap.math.base          import frexp10 
 from   ostap.core.ostap_types   import integer_types, num_types , long_type, sequence_types
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.core.meta_info     import root_info, python_info  
+from   ostap.core.meta_info     import root_info, python_info
+import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
 import ROOT, sys, math, ctypes, array 
 # =============================================================================
@@ -5825,6 +5826,34 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
 ROOT.TH1.nEff = ROOT.TH1.GetEffectiveEntries 
 
 
+
+
+
+# =============================================================================
+## Get the histogram moments
+#  @code
+#  histo = ....
+#  m     = histo.the_moment ( 10 ) 
+#  @edncode 
+def _h1_the_moment_ ( h1 , N ) :
+    """Get the histogram moments
+    >>> histo = ....
+    >>> m     = histo.the_moment ( 10 ) 
+    """
+    assert isinstance ( N , int ) and 0 <= N , 'Invalid order!'
+
+    M = Ostap.Math.WMoment_(N)
+    m = M()
+
+    for i , x , y in h1.items() :
+        m.add ( x.value() , y.value() )
+        
+    return m 
+                
+    
+ROOT.TH1F.the_moment = _h1_the_moment_
+ROOT.TH1D.the_moment = _h1_the_moment_
+
 # =============================================================================
 ## calculate bin-by-bin moments
 #  \f$ m(k_x,k_y; x , y  ) \equiv 
@@ -8362,7 +8391,11 @@ _new_methods_   = (
     ROOT.TH2   . minimum_bin , 
     ROOT.TH2   . maximum_bin , 
     ROOT.TH3   . minimum_bin , 
-    ROOT.TH3   . maximum_bin , 
+    ROOT.TH3   . maximum_bin ,
+    #
+    ROOT.TH1F.the_moment     , 
+    ROOT.TH1D.the_moment     , 
+    #
     )
 
 # =============================================================================

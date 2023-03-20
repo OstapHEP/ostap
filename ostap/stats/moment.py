@@ -322,9 +322,9 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
                 
         elif 1 == order :
             
-            v = obj.mean     ()
-            
-            if IM != float ( v ) and isfinite ( v ) : 
+            v  = obj.mean ()
+            vv = float   ( v ) 
+            if IM != float ( v ) and isfinite ( vv ) : 
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
                 row = "mean" , '' if not n else '[10^%+d]' % n , field 
@@ -332,9 +332,9 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
                 
         elif 2 == order and 2 <= size :
 
-            v = obj.variance ()
-            
-            if IM != float ( v ) and isfinite ( v ) :
+            v  = obj.variance ()
+            vv = float   ( v )             
+            if isfinite ( vv ) and IM != vv and 0 <= vv :
                 
                 ## if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 ## else                     : field , n = pretty_float ( v )
@@ -350,9 +350,9 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
 
         elif 3 == order and 3 <= size :
 
-            v = obj.skewness ()
-            
-            if IM != float ( v ) and isfinite ( v ) :
+            v  = obj.skewness ()
+            vv = float   ( v )                         
+            if isfinite ( vv ) and IM != vv :
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
                 row = "skewness"  , '' if not n else '[10^%+d]' % n , field 
@@ -360,9 +360,8 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
             
         elif 4 == order and 4 <= size :
             
-            v = obj.kurtosis ()
-            
-            if IM != float ( v ) and isfinite ( v ) :
+            v  = obj.kurtosis ()
+            if isfinite ( vv ) and IM != float ( v ) :
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
                 row = "kurtosis"  , '' if not n else '[10^%+d]' % n , field 
@@ -370,9 +369,8 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
                 
         elif 5 == order and 5 <= size and obj.order < 10 and hasattr ( obj , 'unbiased_5th' ) and not standard :
             
-            v = obj.unbiased_5th ()
-            
-            if IM != float ( v ) and isfinite ( v ) :
+            v  = obj.unbiased_5th ()
+            if isfinite ( vv ) and IM != float ( v ) :
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
                 row = "M[5](unb)" , '' if not n else '[10^%+d]' % n , field 
@@ -380,10 +378,8 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
                 
         elif standard : 
 
-            v = obj.std_moment ( order )
-
-            if IM != float ( v ) and isfinite ( v ) :
-                
+            v  = obj.std_moment ( order )
+            if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
                 row = "std-M[%s]"  % order , '' if not n else '[10^%+d]' % n , field 
@@ -391,10 +387,8 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
                 
         else : 
 
-            v = obj.cmoment ( order )
-
-            if IM != float ( v ) and isfinite ( v ) :
-                
+            v  = obj.cmoment ( order )
+            if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
                 row = "M[%s]"  % order , '' if not n else '[10^%+d]' % n , field 

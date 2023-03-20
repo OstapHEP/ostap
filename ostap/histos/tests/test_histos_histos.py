@@ -45,7 +45,7 @@ def test_basic_1D() :
     h1[1] = 1.55
     h1[2] = VE(1,0.2**2)
 
-    ## get content from certaom bins:
+    ## get content from certain bins:
     a = h1[3]
 
     h1 += VE(3,0.5**2)
@@ -190,9 +190,20 @@ def test_basic_1D() :
     logger.info ( '  minmax  %20s' % str( h1. minmax() ) )
     logger.info ( 'x-minmax  %20s' % str( h1.xminmax() ) )
     logger.info ( 'y-minmax  %20s' % str( h1.yminmax() ) )
-                  
 
 
+    hh = ROOT.TH1D ( hID() , 'Gaussian' , 500 , -5 , 5 )
+    for i in range ( 1000000 ) : hh.Fill ( random.gauss ( 0 , 1 ) ) 
+    
+    title = 'Histogram moments'
+    m     = hh.the_moment ( 24 ) 
+    logger.info ( '%s:\n%s' % ( title , m.table  ( title = title , prefix = '# ' ) ) ) 
+    logger.info ( 'neff       %-20s' % hh.nEff     () )
+    logger.info ( 'mean       %-20s' % hh.mean     () )
+    logger.info ( 'rms        %-20s' % hh.rms      () )
+    logger.info ( 'skewness   %-20s' % hh.skewness () )
+    logger.info ( 'kurtosis   %-20s' % hh.kurtosis () )
+                     
 # =============================================================================
 ## Test for very basic operations with 2D-histograms
 def test_basic_2D   () :
@@ -318,12 +329,9 @@ def test_efficiency() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    pass
-
-    ## test_basic_1D   ()
     
+    test_basic_1D   ()
     ## test_basic_2D   ()
-    
     ## test_efficiency () 
     
 # =============================================================================

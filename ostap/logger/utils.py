@@ -49,12 +49,14 @@ __all__     = (
 # =============================================================================
 import time, os, sys, math  ## attention here!!
 from   ostap.logger.logger    import logVerbose,  logDebug, logInfo, logWarning, logError
+from   ostap.math.base        import isfinite 
 from   ostap.logger.mute      import ( mute   , mute_py ,
                                        tee_py , tee_cpp ,
                                        output , silence , silence_py ,
                                        MuteC  , MutePy  ,
                                        TeeCpp , TeePy   , OutputC    )
 from   ostap.utils.basic      import NoContext
+import math 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -300,8 +302,12 @@ def fmt_pretty_2ve ( value              ,
 def pretty_float ( value , width = 8 , precision = 6 ) :
     """Nice printout of the floating number
     - return nice string and the separate exponent 
-    >>> s , n = pretty_float ( number ) 
+    >>> s , n = pretty_float ( number )
     """
+    ##
+    if   math.isinf ( value ) : return '+inf' if 0 < value else '-inf' , 0 
+    elif math.isnan ( value ) : return 'NaN' , 0
+    ##
     fmt , n = fmt_pretty_float ( value , width , precision )
     return  fmt % ( value / 10**n ) , n 
 
@@ -318,12 +324,30 @@ def pretty_ve ( value , width = 8 , precision = 6 , parentheses = True ) :
     """
     from ostap.math.ve          import VE
     value =  VE ( value )
-    
-    fmt , fmtv , fmte , n = fmt_pretty_ve ( value , width , precision , parentheses )
-    
+
     v =           value.value ()   
     e = max ( 0 , value.error () ) 
 
+
+    finv = isfinite ( v )
+    fine = isfinite ( e )
+    if not finv and not fine :
+        fmt = '%%+%ds +/- %%-%ds' % ( width , width ) 
+        if parentheses : fmt = '( ' + fmt + ' )'
+        return fmt % ( v , e ) , 0 
+    elif not finv  :
+        fe , ne = pretty_float ( e , width = width , precision = precision ) 
+        fmt = '%%+%ds +/- %%-%ds' % ( width , width ) 
+        if parentheses : fmt = '( ' + fmt + ' )'
+        return fmt % ( v , fe ) , ne 
+    elif not fine  :
+        fv , nv = pretty_float ( v , width = width , precision = precision ) 
+        fmt = '%%%ds +/- %%-%ds' % ( width , width ) 
+        if parentheses : fmt = '( ' + fmt + ' )'
+        return fmt % ( fv , e ) , nv
+    
+    fmt , fmtv , fmte , n = fmt_pretty_ve ( value , width , precision , parentheses )
+    
     return fmt % ( v / 10**n , e / 10**n ) , n
 
 # ===============================================================================
