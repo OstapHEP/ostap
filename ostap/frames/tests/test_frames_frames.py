@@ -38,8 +38,8 @@ else :
     # A simple helper function to fill a test tree
     def fill_tree ( tname , fname ) :
         
-        tdf  = DataFrame        ( 1000 )
-        a    = tdf.ProgressBar  ( 1000 )
+        tdf  = DataFrame        ( 10000 )
+        a    = tdf.ProgressBar  ( 10000 )
         tdf.Define   ("one", "1.0"                    )\
                    .Define   ("b1" , "(double) tdfentry_ + 1 ") \
                    .Define   ("b2" , "(1.0+b1)*(1.0+b1)"      ) \
@@ -282,6 +282,41 @@ def test_frame7 () :
         polc.draw ( 'same' , linecolor = 4 ) 
         polb.draw ( 'same' , linecolor = 8 ) 
 
+
+# =============================================================================
+def test_frame8 () :
+
+    logger = getLogger ( 'test_frame8' ) 
+    if root_info < (6,16) or not has_std_move : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
+        return
+    
+    if not has_std_move : 
+        logger.warning ( "Test is disabled (no std::move)" )
+        return     
+    
+    frame = DataFrame      ( tname        , fname        )
+    tree  = Tree           ( name = tname , file = fname ).chain
+    
+    pb    = frame_progress ( frame  , len ( tree ) )
+
+    from ostap.frames.frames   import frame_the_moment
+
+    m1    = frame_the_moment ( frame , 20 , 'b6'          )  ## simple 
+    m2    = frame_the_moment ( frame , 20 , 'b6' , '0<b4' )  ## cut 
+    m3    = frame_the_moment ( frame , 20 , 'b6' , 'b4'   )  ## weight 
+
+    mm1 = m1.GetValue()
+    mm2 = m2.GetValue()
+    mm3 = m3.GetValue()
+
+    title = 'Simple moments'
+    logger.info ( '%s:\n%s' % ( title , mm1.table ( title = title , prefix = '# ' ) ) ) 
+    title = 'moments with cuts'
+    logger.info ( '%s:\n%s' % ( title , mm2.table ( title = title , prefix = '# ' ) ) ) 
+    title = 'moments with weights'
+    logger.info ( '%s:\n%s' % ( title , mm3.table ( title = title , prefix = '# ' ) ) ) 
+    
 # =============================================================================
 if '__main__' == __name__ :
 
@@ -295,6 +330,7 @@ if '__main__' == __name__ :
         test_frame5 ()   
         test_frame6 ()
         test_frame7 ()
+        test_frame8 ()
         
     else :
         

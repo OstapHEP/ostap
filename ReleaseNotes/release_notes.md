@@ -12,7 +12,6 @@
   1. add `Ostap::StatVar::the_moment` 
   1. add `the_moment` method for `TTree`, `RooAbsData` and `DataFrame` 
 
-
 ## Backward incompatible: 
 
 ## Bug fixes:
