@@ -35,7 +35,7 @@ __all__     = ()
 from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.math.base        import isfinite 
 from   ostap.core.core        import Ostap, VE
-from   ostap.core.meta_info   import root_version_int 
+from   ostap.core.meta_info   import root_version_int, root_info 
 import ROOT 
 # =============================================================================
 # logging 
@@ -77,7 +77,7 @@ def _om_variance ( obj ) :
     """
     o = obj.order
     assert 2 <= o , 'variance: the order must be >=2!'
-    return Ostap.Math.Moments.variance ( obj )  
+    return Ostap.Math.Moments.variance ( obj )
 
 # =============================================================================
 ## get a skewness for the moment-counter
@@ -177,11 +177,11 @@ def _om_stdmoment ( obj , order ) :
     assert isinstance ( order , int ) and 1 <= order and order <= obj.order , \
            'std_moment: invalid order!'
     
-    if   root_version_int >= 62200 :
+    if ( 6 , 22 ) <= root_info :
         T = Ostap.Math.Moments.std_moment [ order , obj.order ]
         return T ( obj ) 
-    elif root_version_int >= 62000 : T = Ostap.Math.Moments.std_moment [ order , obj.order ]
-    else                           : T = Ostap.Math.Moments.std_moment ( order , obj.order )
+    elif ( 6 , 20 ) <= root_info : T = Ostap.Math.Moments.std_moment [ order , obj.order ]
+    else                         : T = Ostap.Math.Moments.std_moment ( order , obj.order )
     ## 
     M = Ostap.Math.Moments()
     return T ( M , obj )
@@ -204,11 +204,11 @@ def _om_cm2 ( obj , order  ) :
 
     if order * 2  <= obj.order :
         ##
-        if   root_version_int >= 62200 :
+        if  ( 6 , 22 ) <=  root_info :
             T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
             return T ( obj ) 
-        elif root_version_int >= 62000 : T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
-        else                           : T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
+        elif ( 6 , 20 ) <= root_info : T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
+        else                         : T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
         ## 
         M = Ostap.Math.Moments()
         return T ( M , obj )
@@ -233,11 +233,14 @@ def _om_cm3 ( obj , order  ) :
 
     if order * 2  <= obj.order :
         ##
-        if   root_version_int >= 62200 :
+        if  ( 6 , 22 ) <=  root_info :
             T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
             return T ( obj ) 
-        elif root_version_int >= 62000 : T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
-        else                     : T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
+        elif ( 6 , 20 ) <= root_info : 
+             T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+        else                         :
+            T = Ostap.Math.Moments._central_moment_3  ( order , obj.order )
+            return T ( obj )
         ##
         M = Ostap.Math.Moments()
         return T ( M , obj )
@@ -320,7 +323,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
                 
             rows.append ( row )
                 
-        elif 1 == order :
+        elif 1 == order and 1 <= size :
             
             v  = obj.mean ()
             vv = float   ( v ) 
@@ -336,18 +339,14 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
             vv = float   ( v )             
             if isfinite ( vv ) and IM != vv and 0 <= vv :
                 
-                ## if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
-                ## else                     : field , n = pretty_float ( v )
-                ## row = "variance" , '' if not n else '[10^%+d]' % n , field 
-                ## rows.append ( row )
-
-                v = obj.rms      ()
-            
-                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
-                else                     : field , n = pretty_float ( v )
-                row = "rms"  , '' if not n else '[10^%+d]' % n , field 
-                rows.append ( row )
-
+                v  = obj.rms (    )
+                vv = float   ( v  )                             
+                if isfinite  ( vv ) and IM != vv and 0 <= vv :                    
+                    if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                    else                     : field , n = pretty_float ( v )
+                    row = "rms"  , '' if not n else '[10^%+d]' % n , field 
+                    rows.append ( row )
+                    
         elif 3 == order and 3 <= size :
 
             v  = obj.skewness ()
@@ -378,7 +377,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
                 row = "M[5](unb)" , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
                 
-        elif standard : 
+        elif order <= size and standard : 
 
             v  = obj.std_moment ( order )
             vv = float   ( v )                         
@@ -388,7 +387,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
                 row = "std-M[%s]"  % order , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
                 
-        else : 
+        elif order <= size : 
 
             v  = obj.cmoment ( order )
             vv = float   ( v )                         
