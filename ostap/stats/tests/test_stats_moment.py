@@ -22,6 +22,7 @@ root_version = ROOT.gROOT.GetVersionInt()
 # ============================================================================= 
 def test_moment1() :
 
+    logger = getLogger ( 'test_moment1' )
     
     m0  = Ostap.Math.Moment_( 0)()
     m1  = Ostap.Math.Moment_( 1)()
@@ -34,17 +35,14 @@ def test_moment1() :
 
     m = m0, m1, m2 , m3, m4, m5 , m10, m20
     
-    for i in range ( 10000 ) :
+    for i in range ( 100000 ) :
         v = random.gauss ( 0 , 1 ) 
         for i in m : i += v
 
-    if root_version < 61800 :
-        logger.warning ( "It does not work for ancient ROOT versions")
-        return
-
     for i in m :
         t = 'Moment counter-%2d' % i.order 
-        logger.info ( "%s\n%s" % ( t , i.table ( title = t , prefix = '# ' ) ) )
+        logger.info ( "%s\n%s" % ( t , i.table ( title = t , prefix = '# '                   ) ) )
+        logger.info ( "%s\n%s" % ( t , i.table ( title = t , prefix = '# ' , standard = True ) ) )
 
     for i in m :
         t = 'Moment counter-%2d' % i.order 
@@ -62,9 +60,7 @@ def test_moment1() :
 
 def test_moment2() :
 
-    if root_version < 61800 :
-        logger.warning ( "does not work for ancient ROOT versions")
-        return
+    logger = getLogger ( 'test_moment2' )
 
     m0  = Ostap.Math.WMoment_( 0)()
     m1  = Ostap.Math.WMoment_( 1)()
@@ -82,13 +78,10 @@ def test_moment2() :
         w = random.gauss ( 1 , 0.1 ) 
         for i in m : i.add ( v , w )  
 
-    if root_version < 61800 :
-        logger.warning ( "It does not work for ancient ROOT versions")
-        return
-
     for i in m :
         t = 'Moment counter-%2d' % i.order 
-        logger.info ( "%s\n%s" % ( t , i.table ( title = t , prefix = '# ' ) ) )
+        logger.info ( "%s\n%s" % ( t , i.table ( title = t , prefix = '# '                   ) ) )
+        logger.info ( "%s\n%s" % ( t , i.table ( title = t , prefix = '# ' , standard = True ) ) )
 
     for i in m :
         t = 'Moment counter-%2d' % i.order 

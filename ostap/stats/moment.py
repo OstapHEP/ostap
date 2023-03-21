@@ -60,6 +60,8 @@ def _om_mean ( obj ) :
     """
     o = obj.order
     assert 1 <= o , 'mean: the order must be >=1!'
+    if root_info < ( 6, 18 ) :
+        return obj.mu () 
     return Ostap.Math.Moments.mean ( obj )  
 
 # =============================================================================
@@ -77,6 +79,8 @@ def _om_variance ( obj ) :
     """
     o = obj.order
     assert 2 <= o , 'variance: the order must be >=2!'
+    if root_info < ( 6 , 18 ) :
+        return obj.moment ( 2 )
     return Ostap.Math.Moments.variance ( obj )
 
 # =============================================================================
@@ -91,10 +95,14 @@ def _om_skewness ( obj ) :
     >>> v = m.skewness() 
     """    
     assert 3 <= obj.order , 'skewness: the order must be >=3!' 
+    if root_info < ( 6 , 18 ) :
+        m3 = obj.moment ( 3 )
+        m2 = obj.moment ( 2 )        
+        return m3 / pow ( m2 , 0.5 * 3 )
     return Ostap.Math.Moments.skewness ( obj )  
 
 # =============================================================================
-## get an excess  kurtosis for the moment-counter
+## get an excess kurtosis for the moment-counter
 #  @code
 #  m = ...
 #  v = m.kurtosis () 
@@ -104,7 +112,11 @@ def _om_kurtosis( obj ) :
     >>> m = ...
     >>> v = m.kurtosis () 
     """    
-    assert 4 <= obj.order , 'kurtosis: the order must be >=4!' 
+    assert 4 <= obj.order , 'kurtosis: the order must be >=4!'
+    if root_info < ( 6 , 18 ) :
+        m4 = obj.moment ( 4 )
+        m2 = obj.moment ( 2 )        
+        return m4 / ( m2 * m2 ) - 3.0 
     return Ostap.Math.Moments.kurtosis ( obj )  
 
 # =============================================================================
@@ -118,7 +130,9 @@ def _om_u2nd ( obj ) :
     >>> m = ...
     >>> v = m.unbiased_3nd() 
     """    
-    assert 2 <= obj.order , 'unbiased 2nd moment: the order must be >=2!' 
+    assert 2 <= obj.order , 'unbiased 2nd moment: the order must be >=2!'
+    if root_info < ( 6 , 18 ) :
+        return obj.moment ( 2 )    
     return Ostap.Math.Moments.unbiased_2nd ( obj )  
 
 # =============================================================================
@@ -133,6 +147,8 @@ def _om_u3rd ( obj ) :
     >>> v = m.unbiased_3rd() 
     """    
     assert 3 <= obj.order , 'unbiased 3rd moment: the order must be >=3!' 
+    if root_info < ( 6 , 18 ) :
+        return obj.moment ( 3 )    
     return Ostap.Math.Moments.unbiased_3rd ( obj )  
 
 # =============================================================================
@@ -147,6 +163,8 @@ def _om_u4th ( obj ) :
     >>> v = m.unbiased_4th() 
     """    
     assert 4 <= obj.order , 'unbiased 4th moment the order must be >=4!' 
+    if root_info < ( 6 , 18 ) :
+        return obj.moment ( 4 )    
     return Ostap.Math.Moments.unbiased_4th ( obj )  
 
 # =============================================================================
@@ -161,6 +179,8 @@ def _om_u5th ( obj ) :
     >>> v = m.unbiased_5th() 
     """    
     assert 5 <= obj.order  , 'unbiased 5th moment: the order must be >=4!' 
+    if root_info < ( 6 , 18 ) :
+        return obj.moment ( 5 )    
     return Ostap.Math.Moments.unbiased_5th ( obj )  
 
 # =============================================================================
@@ -202,7 +222,7 @@ def _om_cm2 ( obj , order  ) :
     assert isinstance  ( order , integer_types ) and 2<= order , 'Invalid order %s'% order
     assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
 
-    if order * 2  <= obj.order :
+    if order * 2  <= obj.order and ( 6 , 18) <= root_info :
         ##
         if  ( 6 , 22 ) <=  root_info :
             T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
@@ -231,7 +251,7 @@ def _om_cm3 ( obj , order  ) :
     assert isinstance  ( order , integer_types ) and 2<= order , 'Invalid order %s'% order
     assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
 
-    if order * 2  <= obj.order :
+    if order * 2  <= obj.order and ( 6 , 18 ) <= root_info :
         ##
         if  ( 6 , 22 ) <=  root_info :
             T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]

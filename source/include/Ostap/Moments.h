@@ -78,6 +78,15 @@ namespace  Ostap
       inline double moment ( const unsigned short k ) const
       { return N <  k ? 0 : 0 == k ? 1 : 1 == k ? 0 : ( this->M ( k ) / this->size() ) ; }
       // ======================================================================
+      /// get value of the kth standartized moment for \f$  k \le N \f$
+      inline double std_moment ( const unsigned short k ) const
+      { return 
+          N <  k ? 0 : 
+          0 == k ? 1 : 
+          1 == k ? 0 :
+          2 == k ? 1 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
+      }
+      // ======================================================================
       /// get number of entries
       inline unsigned long long size  () const { return m_prev.size () ; }
       /// get the mean value (if \f$ 1 \le N \$4)
@@ -236,6 +245,10 @@ namespace  Ostap
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
       inline double moment ( const unsigned short k ) const { return 0 < k ? 0 : 1 ; }
+      // ========================================================================
+      /// get value of the kth standartized moment for \f$  k \le N \f$
+      inline double std_moment ( const unsigned short k ) const
+      { return 0 == k || 2 == k ? 1 : 0 ; }
       // ======================================================================
       /// get number of entries
       inline unsigned long long size  () const { return m_size ; }
@@ -318,6 +331,10 @@ namespace  Ostap
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
       inline double moment ( const unsigned short k ) const { return 1 <= k ? 0 : 1 ; }
+      /// get value of the kth standartized moment for \f$  k \le N \f$
+      inline double std_moment ( const unsigned short k ) const
+      { return 0 == k || 2 == k ? 1 : 0 ; }
+      // ======================================================================
       /// get number of entries
       inline unsigned long long size  () const { return m_prev.size()  ; }
       // get the mean value
@@ -474,6 +491,20 @@ namespace  Ostap
        */
       inline double moment ( const unsigned short k ) const
       { return N <  k ? 0 : 0 == k ? 1 : 1 == k ? 0 : ( this->M ( k ) / this-> w () ) ; }
+      // ======================================================================
+      /** get value of the kth standartized moment for \f$  k \le N \f$
+       *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
+       *  for \f$  k > N\f$ null is returned 
+       *  @param k  the cenral moment order  \f$  0 \le k \le N \f$
+       *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
+       */
+      inline double std_moment ( const unsigned short k ) const
+      { return 
+          N <  k ? 0 : 
+          0 == k ? 1 : 
+          1 == k ? 0 :
+          2 == k ? 1 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
+      }
       // ======================================================================
       /// get number of entries
       inline unsigned long long size  () const { return m_prev.size () ; }
@@ -635,6 +666,10 @@ namespace  Ostap
        */
       inline double moment ( const unsigned short k ) const { return 0 < k ? 0 : 1 ; }
       // ======================================================================
+      /// get value of the kth standartized moment for \f$  k \le N \f$
+      inline double std_moment ( const unsigned short k ) const
+      { return 0 == k || 2 == k ? 1 : 0 ; }
+      // ======================================================================
       /// get number of entries
       inline unsigned long long size  () const { return m_size ; }
       /// get effective number of entries \f$  \frac{(\sum w_i)^2}{\sum w_i^2} \f$
@@ -724,6 +759,11 @@ namespace  Ostap
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
       inline double moment ( const unsigned short k ) const { return 1 <= k ? 0 : 1 ; }
+      // ======================================================================
+      /// get value of the kth standartized moment for \f$  k \le N \f$
+      inline double std_moment ( const unsigned short k ) const
+      { return 0 == k || 2 == k ? 1 : 0 ; }
+      // ======================================================================
       /// get number of entries
       inline unsigned long long size  () const { return m_prev.size ()  ; }
       /// get effective number of entries \f$  \frac{(\sum w_i)^2}{\sum w_i^2} \f$
