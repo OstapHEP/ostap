@@ -200,12 +200,16 @@ def _om_cm2 ( obj , order  ) :
     assert isinstance  ( order , integer_types ) and 2<= order , 'Invalid order %s'% order
     assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
 
-    if order * 2  <= obj.order and ( 6 , 18) <= root_info :
+    if order * 2 <= obj.order :
         ##
         
-        if root_info < ( 6 , 18 )  : ## well, actaully 6.14
+        if   root_info < ( 6 , 18 ) : ## well, actually 6.14
             T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
-            return T ( obj ) 
+            return T ( obj )
+        elif root_info < ( 6 , 20 ) : 
+            T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
+            M = Ostap.Math.Moments() 
+            return T ( M , obj ) 
         
         if  ( 6 , 22 ) <=  root_info :
             T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
@@ -234,13 +238,16 @@ def _om_cm3 ( obj , order  ) :
     assert isinstance  ( order , integer_types ) and 2<= order , 'Invalid order %s'% order
     assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
 
-    if order * 2  <= obj.order and ( 6 , 18 ) <= root_info :
+    if order * 2 <= obj.order :
         ##
 
-        if root_info < ( 6 , 18 )  : ## well, actaully 6.14
+        if   root_info < ( 6 , 18 )  : ## well, actaully 6.14
             T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
             return T ( obj ) 
-
+        elif root_info < ( 6 , 20 )  : ## well, actaully 6.14
+            T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
+            M = Ostap.Math.Moments() 
+            return T ( M , obj ) 
 
         if  ( 6 , 22 ) <=  root_info :
             T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
