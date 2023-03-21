@@ -183,32 +183,6 @@ def _om_u5th ( obj ) :
         return obj.moment ( 5 )    
     return Ostap.Math.Moments.unbiased_5th ( obj )  
 
-# =============================================================================
-## get a standardized moment 
-#  @code
-#  m = ...
-#  v = m.std_moment ( 5 ) 
-#  @endcode
-def _om_stdmoment ( obj , order ) :
-    """Get a standartized moment 
-    >>> m = ...
-    >>> v = m/.std_moment ( 5 ) 
-    """
-    assert isinstance ( order , int ) and 1 <= order and order <= obj.order , \
-           'std_moment: invalid order!'
-
-    if root_info < ( 6 , 18 )  : ## well, actually 6.14
-        T = Ostap.Math.Moments.std_moment ( order , obj.order )
-        return T ( obj )
-    
-    if ( 6 , 22 ) <= root_info :
-        T = Ostap.Math.Moments.std_moment [ order , obj.order ]
-        return T ( obj ) 
-    elif ( 6 , 20 ) <= root_info : T = Ostap.Math.Moments.std_moment [ order , obj.order ]
-    else                         : T = Ostap.Math.Moments.std_moment ( order , obj.order )
-    ## 
-    M = Ostap.Math.Moments()
-    return T ( M , obj )
 
 # =============================================================================
 ## get central moment 
@@ -459,7 +433,6 @@ Ostap.Math.Moment.skewness       = _om_skewness
 Ostap.Math.Moment.kurtosis       = _om_kurtosis
 Ostap.Math.Moment.cmoment        = _om_cm2
 Ostap.Math.Moment.central_moment = _om_cm2
-Ostap.Math.Moment.std_moment     = _om_stdmoment
 Ostap.Math.Moment.table          = _om_table
 
 Ostap.Math.WMoment.mean           = _om_mean    
