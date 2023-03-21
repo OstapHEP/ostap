@@ -1,3 +1,4 @@
+# v1.9.7.4
 
 ## New features:
   1. add new test/example `test_fitting_simfit7` to compre simultenoud fit versus fit with constraints 
