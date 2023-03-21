@@ -14,11 +14,12 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   ostap.math.ve        import VE 
-from   ostap.core.core      import hID 
-from   ostap.histos.histos  import h1_axis, h2_axes
-from   ostap.core.meta_info import root_info 
-from   builtins             import range
+from   ostap.math.ve         import VE 
+from   ostap.core.core       import hID 
+from   ostap.histos.histos   import h1_axis, h2_axes
+from   ostap.core.meta_info  import root_info 
+from   builtins              import range
+from   ostap.plotting.canvas import use_canvas 
 import ROOT, random, math 
 # =============================================================================
 # logging 
@@ -250,7 +251,7 @@ def test_basic_2D   () :
 # =============================================================================
 ## Test for "efficiencies
 def test_efficiency() :
-
+    
     logger.info ( 'Test for "efficiencies" ')
 
     hA = ROOT.TH1F ( hID() , 'accepted' , 10 , 0 , 10 )
@@ -302,40 +303,51 @@ def test_efficiency() :
     geff_13 = hA.eff_jeffreys                ( hR )
     geff_14 = hA.eff_clopper_pearson         ( hR )
 
-    for e,n in [ ( eff_0   , 'Naive'                                      ) ,
-                 ( eff_1   , 'General'                                    ) ,
-                 ( eff_2   , 'Zech'                                       ) ,
-                 ( eff_3   , 'Zech/Operator'                              ) ,
-                 ( eff_4   , 'Binomial: Simple'                           ) ,
-                 ( eff_5   , 'Binomial: Simple/Operator'                  ) ,
-                 ( eff_6   , 'Binomial: Agresti-Coull'                    ) ,
-                 ( eff_7   , 'Binomial: Wilson'                           ) ,
-                 ( geff_8  , 'Binomial: Wald interval'                    ) ,
-                 ( geff_9  , 'Binomial: Wilson score interval'            ) ,
-                 ( geff_10 , 'Binomial: Wilson score/continuity interval' ) ,
-                 ( geff_11 , 'Binomial: Arcsin interval'                  ) ,
-                 ( geff_12 , 'Binomial: Agresti-Coull interval'           ) ,
-                 ( geff_13 , 'Binomial: Jeffreys interval'                ) , 
-                 ( geff_14 , 'Binomial: Clopper-Pearson interval'         ) ] :
+    with use_canvas ( 'Intervals' , wait = 5 ) :
+
+        eff_0.draw ()
+        eff_0.SetMinimum ( 0    )
+        eff_0.SetMaximum ( 0.05 ) 
         
-        
-        if isinstance ( e , ROOT.TH1 ) :
-            logger.info ( "%43s: %s" % ( n , [ e[i]*100 for i in e[:4] ] )  )
-        else :
-            vals = [ (e[i][3]-abs(e[i][4]),e[i][3]+e[i][5]) for i in e[:3] ]
-            vals = [  "(%7.4f,%7.4f)" % ( e[0]*100 , e[1]*100 ) for e in vals  ]
-            logger.info ( "%43s: %s" % ( n , vals ) ) 
+        for e,n in [ ( eff_0   , 'Naive'                                      ) ,
+                     ( eff_1   , 'General'                                    ) ,
+                     ( eff_2   , 'Zech'                                       ) ,
+                     ( eff_3   , 'Zech/Operator'                              ) ,
+                     ( eff_4   , 'Binomial: Simple'                           ) ,
+                     ( eff_5   , 'Binomial: Simple/Operator'                  ) ,
+                     ( eff_6   , 'Binomial: Agresti-Coull'                    ) ,
+                     ( eff_7   , 'Binomial: Wilson'                           ) ,
+                     ( geff_8  , 'Binomial: Wald interval'                    ) ,
+                     ( geff_9  , 'Binomial: Wilson score interval'            ) ,
+                     ( geff_10 , 'Binomial: Wilson score/continuity interval' ) ,
+                     ( geff_11 , 'Binomial: Arcsin interval'                  ) ,
+                     ( geff_12 , 'Binomial: Agresti-Coull interval'           ) ,
+                     ( geff_13 , 'Binomial: Jeffreys interval'                ) , 
+                     ( geff_14 , 'Binomial: Clopper-Pearson interval'         ) ] :
             
-                    
+
+            if isinstance ( e , ROOT.TH1 ) : e.draw ( 'same' )
+            else                           : e.draw ( 'p'    ) 
+                
+            if isinstance ( e , ROOT.TH1 ) :
+                logger.info ( "%43s: %s" % ( n , [ e [ i ] * 100 for i in e[:5] ] )  )
+            else :
+
+                vals = [ ( e[i][1].value + e[i][1].neg_error ,
+                           e[i][1].value + e[i][1].pos_error ) for i in e[:4] ] 
+                vals = [  "[%7.4f,%7.4f]" % ( e[0]*100 , e[1]*100  ) for e in vals  ]
+                vals = ' '.join ( vals ) 
+                logger.info ( "%43s: %s" % ( n , vals ) ) 
+    
+        
             
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    
     test_basic_1D   ()
-    ## test_basic_2D   ()
-    ## test_efficiency () 
+    test_basic_2D   ()
+    test_efficiency () 
     
 # =============================================================================
 ##                                                                      The END 

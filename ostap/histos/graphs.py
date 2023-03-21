@@ -923,7 +923,7 @@ def _grae_getitem_ ( graph , ipoint ) :
     if isinstance ( ipoint , slice ) :
         points = []
         N      = len ( graph ) 
-        for point in range ( *slice.indices ( N ) ) :
+        for point in range ( *ipoint.indices ( N ) ) :
             points.append ( graph [ point ] )
         klass = type ( graph )
         new_graph = klass ()
