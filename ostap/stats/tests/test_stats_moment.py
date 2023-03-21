@@ -57,7 +57,8 @@ def test_moment1() :
         if 3 <= i.order : logger.info (' %s : u3rd     %s ' % ( t , i.unbiased_3rd () ) )
         if 4 <= i.order : logger.info (' %s : u4th     %s ' % ( t , i.unbiased_4th () ) )
         if 5 <= i.order : logger.info (' %s : u5th     %s ' % ( t , i.unbiased_5th () ) )
-
+        if 3 <= i.order : logger.info (' %s : skewness %s ' % ( t , i.skewness     () ) )
+        if 4 <= i.order : logger.info (' %s : kurtosis %s ' % ( t , i.kurtosis     () ) )
 
 def test_moment2() :
 
