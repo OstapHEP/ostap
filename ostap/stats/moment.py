@@ -196,6 +196,10 @@ def _om_stdmoment ( obj , order ) :
     """
     assert isinstance ( order , int ) and 1 <= order and order <= obj.order , \
            'std_moment: invalid order!'
+
+    if root_info < ( 6 , 18 )  : ## well, actually 6.14
+        T = Ostap.Math.Moments.std_moment ( order , obj.order )
+        return T ( obj )
     
     if ( 6 , 22 ) <= root_info :
         T = Ostap.Math.Moments.std_moment [ order , obj.order ]
@@ -224,6 +228,11 @@ def _om_cm2 ( obj , order  ) :
 
     if order * 2  <= obj.order and ( 6 , 18) <= root_info :
         ##
+        
+        if root_info < ( 6 , 18 )  : ## well, actaully 6.14
+            T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
+            return T ( obj ) 
+        
         if  ( 6 , 22 ) <=  root_info :
             T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
             return T ( obj ) 
@@ -253,6 +262,12 @@ def _om_cm3 ( obj , order  ) :
 
     if order * 2  <= obj.order and ( 6 , 18 ) <= root_info :
         ##
+
+        if root_info < ( 6 , 18 )  : ## well, actaully 6.14
+            T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
+            return T ( obj ) 
+
+
         if  ( 6 , 22 ) <=  root_info :
             T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
             return T ( obj ) 
