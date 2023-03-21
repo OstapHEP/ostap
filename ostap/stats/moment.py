@@ -210,15 +210,13 @@ def _om_cm2 ( obj , order  ) :
             T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
             M = Ostap.Math.Moments() 
             return T ( M , obj ) 
-        
-        if  ( 6 , 22 ) <=  root_info :
+        elif root_info < ( 6 , 22 ) : 
             T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
-            return T ( obj ) 
-        elif ( 6 , 20 ) <= root_info : T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
-        else                         : T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
-        ## 
-        M = Ostap.Math.Moments()
-        return T ( M , obj )
+            M = Ostap.Math.Moments() 
+            return T ( M , obj ) 
+        
+        T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
+        return T ( obj ) 
 
     return obj.moment ( order ) 
 
@@ -240,26 +238,21 @@ def _om_cm3 ( obj , order  ) :
 
     if order * 2 <= obj.order :
         ##
-
         if   root_info < ( 6 , 18 )  : ## well, actaully 6.14
             T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
             return T ( obj ) 
         elif root_info < ( 6 , 20 )  : ## well, actaully 6.14
             T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
-            M = Ostap.Math.Moments() 
+            M = Ostap.Math.Moments () 
             return T ( M , obj ) 
-
-        if  ( 6 , 22 ) <=  root_info :
+        elif root_info < ( 6 , 22 ) : 
             T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
-            return T ( obj ) 
-        elif ( 6 , 20 ) <= root_info : 
-             T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
-        else                         :
-            T = Ostap.Math.Moments._central_moment_3  ( order , obj.order )
-            return T ( obj )
-        ##
-        M = Ostap.Math.Moments()
-        return T ( M , obj )
+            M = Ostap.Math.Moments () 
+            return T ( M , obj ) 
+        
+        T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+        return T ( obj ) 
+
 
     return obj.moment ( order ) 
 
