@@ -578,24 +578,23 @@ namespace  Ostap
     inline WMoment_<N>& WMoment_<N>::add ( const double  x , const double w )
     {
       //
-      if ( w ) 
+      if ( !w ) { return *this ; }
+      //
+      const long double wA    = this->w () ;
+      const long double wB    =       w    ;
+      const long double wW    = wA + wB    ;
+      const long double delta = x - this->mu() ;
+      //
+      const long double b_n =  -1.0L * wB / wW ;
+      const long double a_n =   1.0L * wA / wW ;
+      const long double d_n = - delta     / wW ;
+      //
+      m_M += ( wA * std::pow ( b_n , N ) + wB * std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
+      long double d = 1 ;
+      for ( unsigned int k = 1 ; k + 2 <= N ; ++k )
       {
-        const long double wA    = this->w () ;
-        const long double wB    =       w    ;
-        const long double wW    = wA + wB    ;
-        const long double delta = x - this->mu() ;
-        //
-        const long double b_n =  -1.0L * wB / wW ;
-        const long double a_n =   1.0L * wA / wW ;
-        const long double d_n = - delta     / wW ;
-        //
-        m_M += ( wA * std::pow ( b_n , N ) + wB * std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
-        long double d = 1 ;
-        for ( unsigned int k = 1 ; k + 2 <= N ; ++k )
-        {
-          d   *= d_n ;
-          m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
-        }
+        d   *= d_n ;
+        m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
       }
       /// update previous 
       this->m_prev.add ( x , w ) ; // update previous
@@ -612,28 +611,27 @@ namespace  Ostap
       else if ( 0 == this -> size () ) { (*this) = x ; return *this ; }
       //
       const long double wB    =    x. w () ;
-      if ( wB ) 
+      if ( !wB ) { return *this ; }                    // RETURN! 
+      //
+      const long double wA    = this->w () ;
+      const long double wW    = wA + wB    ;
+      const long double delta = x.mu() - this->mu()  ;
+      const long double b_n   =  ( -1.0L * wB ) / wW ;
+      const long double a_n   =  (  1.0L * wA ) / wW ;
+      //
+      m_M += x.m_M ;
+      m_M += wA * std::pow ( b_n * delta , N ) + wB * std::pow ( a_n * delta , N ) ;
+      //
+      long double a = 1 ;
+      long double b = 1 ;
+      long double d = 1 ;
+      //
+      for ( unsigned short k = 1 ; k + 2 <= N ; ++k )
       {
-        const long double wA    = this->w () ;
-        const long double wW    = wA + wB    ;
-        const long double delta = x.mu() - this->mu()  ;
-        const long double b_n   =  ( -1.0L * wB ) / wW ;
-        const long double a_n   =  (  1.0L * wA ) / wW ;
-        //
-        m_M += x.m_M ;
-        m_M += wA * std::pow ( b_n * delta , N ) + wB * std::pow ( a_n * delta , N ) ;
-        //
-        long double a = 1 ;
-        long double b = 1 ;
-        long double d = 1 ;
-        //
-        for ( unsigned short k = 1 ; k + 2 <= N ; ++k )
-        {
-          a   *= a_n   ;
-          b   *= b_n   ;
-          d   *= delta ;        
-          m_M += s_Ck [ k ] * d * ( this-> M( N - k ) * b + x. M ( N - k ) * a ) ;
-        }
+        a   *= a_n   ;
+        b   *= b_n   ;
+        d   *= delta ;        
+        m_M += s_Ck [ k ] * d * ( this-> M( N - k ) * b + x. M ( N - k ) * a ) ;
       }
       /// update previous 
       this->m_prev += x.m_prev ; // update previous
@@ -688,13 +686,24 @@ namespace  Ostap
       // ======================================================================
       /// add a single value
       inline WMoment_& add ( const double /* x */ , const double w = 1 )
-      { ++m_size ; m_w += w ; m_w2 += w * w ; return *this ; }
+      { 
+        if ( !w ) { return *this ; }
+        //
+        ++m_size ; 
+        m_w  += w     ; 
+        m_w2 += w * w ;
+        //
+        return *this ; 
+      }
       /// add a single value
       inline WMoment_& add ( const WMoment_& x )
       {
+        if ( !x.m_w ) { return *this ; }
+        //
         m_size += x.m_size ;
         m_w    += x.m_w    ;
         m_w2   += x.m_w2   ;
+        //
         return *this ;
       }
       // ======================================================================
@@ -785,13 +794,12 @@ namespace  Ostap
       /// add single value 
       inline WMoment_& add ( const double x , const double w = 1 )
       {
-        if ( w ) 
-        {
-          const long double wA = this -> w() ;
-          const long double wB = w ;
-          //
-          m_mu = ( wA * m_mu + wB * x ) / ( wA + wB ) ; // update mean
-        }
+        if ( !w ) { return *this ; }
+        //
+        const long double wA = this -> w() ;
+        const long double wB = w ;
+        //
+        m_mu = ( wA * m_mu + wB * x ) / ( wA + wB ) ; // update mean
         //
         this->m_prev.add ( x , w ) ;
         //
@@ -803,12 +811,11 @@ namespace  Ostap
         if      ( 0 == x     . size () ) {               return *this ; }
         else if ( 0 == this -> size () ) { (*this) = x ; return *this ; }
         //
-        const long double   wB = x.m_prev.w () ;
-        if ( wB ) 
-        {
-          const long double wA = m_prev.w   () ;
-          m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
-        }
+        const long double wB = x.m_prev.w () ;
+        if ( !wB ) { return *this ; }
+        //
+        const long double wA = m_prev.w   () ;
+        m_mu = ( wA * m_mu + wB * x.m_mu ) / ( wA + wB ) ; // update mean
         //
         m_prev += x.m_prev ;                                 // update previous
         //

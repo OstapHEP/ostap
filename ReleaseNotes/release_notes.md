@@ -1,6 +1,8 @@
 
 ## New features:
 
+  1. fix `Ostap::Math::WMoment_` - zero weigths are totally ignored 
+
 ## Backward incompatible: 
 
 ## Bug fixes:
