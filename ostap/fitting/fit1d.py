@@ -557,7 +557,10 @@ class H1D_pdf(PDF1) :
         assert isinstance ( order, integer_types ) and 0 <= order ,\
                'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
 
-        self.__ds = H1D_dset ( histo , xvar = xvar , density = density ,  silent = silent )
+        self.__ds = H1D_dset ( histo             ,
+                               xaxis   = xvar    ,
+                               density = density ,
+                               silent  = silent  )
         
         PDF1    .__init__ ( self , name  , self.ds.xaxis ) 
 
@@ -585,7 +588,6 @@ class H1D_pdf(PDF1) :
             'order'   : self.order   ,
             }
 
-        
     @property
     def ds ( self ) :
         """'ds' : the H1D_dset object"""

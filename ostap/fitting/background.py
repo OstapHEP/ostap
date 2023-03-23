@@ -2650,31 +2650,31 @@ class RooKeys1D_pdf(PDF1) :
 
     @property
     def data   ( self ) :
-        """``data'' : the actual data set for RooNDKeysPdf"""
+        """`data' : the actual data set for RooNDKeysPdf"""
         return self.__data
     @property
     def options ( self ) :
-        """``options'' : ``options'' string for RooNDKeysPdf"""
+        """`options' : `options' string for RooNDKeysPdf"""
         return self.__options        
     @property
     def rho    ( self )  :
-        """``rho'' : ``rho'' parameter for RooNDKeysPdf"""
+        """`rho' : `rho' parameter for RooNDKeysPdf"""
         return self.__rho 
     @property
     def rotate    ( self )  :
-        """``rotate'' : ``rotate'' flag for RooNDKeysPdf"""
+        """`rotate' : `rotate' flag for RooNDKeysPdf"""
         return self.__rotate
     @property
     def sort      ( self )  :
-        """``sort'' : ``sort'' flag for RooNDKeysPdf"""
+        """`sort' : `sort' flag for RooNDKeysPdf"""
         return self.__sort 
     @property
     def nsigma    ( self )  :
-        """``nsigma'' : ``nsigma'' parameter for RooNDKeysPdf"""
+        """`nsigma' : `nsigma' parameter for RooNDKeysPdf"""
         return self.__nsigma
     
 # =============================================================================
-## create popular 1D ``background''  function
+## create popular 1D `background'  function
 #  @param bkg  the type of background function/PDF
 #  @param name the name of background function/PDF
 #  @param xvar the observable

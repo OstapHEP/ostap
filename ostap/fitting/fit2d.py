@@ -313,7 +313,11 @@ class H2D_pdf(PDF2) :
         assert isinstance ( order, integer_types ) and 0 <= order ,\
                'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
 
-        self.__ds = H2D_dset ( histo , xvar = xvar , yvar = yvar , density = density ,  silent = silent )
+        self.__ds = H2D_dset ( histo             ,
+                               xaxis   = xvar    ,
+                               yaxis   = yvar    , 
+                               density = density ,  
+                               silent  = silent  )
         
         PDF2    .__init__ ( self , name  , self.ds.xaxis , self.ds.yaxis ) 
         

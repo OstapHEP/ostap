@@ -778,7 +778,7 @@ class RooKeys3D_pdf(PDF3) :
         PDF3.__init__ (  self , name , xvar , yvar , zvar )
 
         self.__data    = data
-        self.__options = mirror
+        self.__options = options 
         self.__rho     = rho 
         self.__options = options 
         self.__nsigma  = nsigma 
@@ -786,9 +786,9 @@ class RooKeys3D_pdf(PDF3) :
         self.__sort    = True if sort   else False 
 
         self.__keys_vlst = ROOT.RooArgList()
-        self.__keys_vlst.Add ( self.xvar )
-        self.__keys_vlst.Add ( self.yvar )
-        self.__keys_vlst.Add ( self.zvar )
+        self.__keys_vlst.add ( self.xvar )
+        self.__keys_vlst.add ( self.yvar )
+        self.__keys_vlst.add ( self.zvar )
         
         ## create PDF
         self.pdf = ROOT.RooNDKeysPdf (
@@ -823,7 +823,7 @@ class RooKeys3D_pdf(PDF3) :
     @property
     def options ( self ) :
         """'options' : 'ootions' string for RooNDKeysPdf"""
-        return self.__mirror        
+        return self.__options 
     @property
     def rho    ( self )  :
         """'rho' : 'rho' parameter for RooNDKeysPdf"""

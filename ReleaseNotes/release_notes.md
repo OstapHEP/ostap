@@ -1,3 +1,4 @@
+# v1.9.7.6
 
 ## New features:
 
@@ -6,6 +7,8 @@
 ## Backward incompatible: 
 
 ## Bug fixes:
+
+  1. set of tiny fixes for several 2D&3D-fit models 
 
 # v1.9.7.4
 

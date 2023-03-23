@@ -333,8 +333,12 @@ class H3D_pdf(PDF3) :
         assert isinstance ( order, integer_types ) and 0 <= order ,\
                'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
 
-        self.__ds = H3D_dset ( histo , xvar = xvar , yvar = yvar , zvar = zvar ,
-                               density = density ,  silent = silent )
+        self.__ds = H3D_dset ( histo ,
+                               xaxis   = xvar    ,
+                               yaxis   = yvar    ,
+                               zaxis   = zvar    ,
+                               density = density ,
+                               silent  = silent  )
         
         PDF3    .__init__ ( self , name = name  ,
                             xvar = self.ds.xvar ,
