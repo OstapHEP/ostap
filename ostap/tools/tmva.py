@@ -1359,6 +1359,10 @@ class Trainer(object):
 ## make selected standard TMVA plots 
 def make_Plots ( name , output , show_plots = True ) :
     """Make selected standard TMVA plots"""
+
+    if (6,29) <= root_info :
+        logger.warning ("fnuction is disabled")
+        return 
     
     if not output :
         self.logger.warning ('No output file is specified!')
