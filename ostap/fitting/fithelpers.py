@@ -879,7 +879,14 @@ class FitHelper(VarMaker) :
                           1<= len ( a ) <= 3                   and (6,27) <= root_info :
                 
                 _args.append   (  ROOT.RooFit.Parallelize ( *a ) )
-
+                
+            elif key in ( 'recover'                     ,
+                          'recoverfromundefined'        ,
+                          'recoverfromundefinedregions' ) and \
+                          isinstance ( a , num_types )    and ( 6, 24 ) <= root_info :
+                
+                _args.append   ( ROOT.RooFit.RecoverFromUndefinedRegions ( 1.0 * float ( a ) ) ) 
+                          
             elif key in ( 'maxcall'  ,
                           'maxcalls' ,
                           'callmax'  ,

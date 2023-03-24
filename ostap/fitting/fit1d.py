@@ -537,8 +537,9 @@ class Shape1D_pdf(PDF1) :
         return self.__shape 
     @property
     def tag   ( self ) :
-        """'tag' : uqnue tag used for cache-integration"""
-        return self.__tag 
+        """'tag' : unique tag used for cache-integration"""
+        return self.__tag
+    
 # =============================================================================
 ## simple convertor of 1D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru

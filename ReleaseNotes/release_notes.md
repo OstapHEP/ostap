@@ -1,5 +1,9 @@
 ## New features:
 
+  1. tweak `D-integration  for `Ostap::Models::Shape(1,2,3)D` objects
+  1. add new test for 2D -sahpes `test_fitting_shapes2.py`
+  1. add new keyword `recover = ...` for `PDF.fitTo` that is expanded to `ROOT.RooFit.REcoverFomrUdnefinedRegions ( ... )`
+
 ## Backward incompatible: 
 
 ## Bug fixes:

@@ -22,6 +22,7 @@
 // Local
 // ============================================================================
 #include "local_roofit.h"
+#include "local_gsl.h"
 // ============================================================================
 /** @file 
  *  Implementation file for namespace Ostap::Models
@@ -347,10 +348,14 @@ Double_t Ostap::Models::Histo1D::analyticalIntegral
     { return this->func ( x  ) ; } ;
   //
   return s_integrator.integrate 
-    ( fun , 
+    ( fun                   , 
       m_x.min ( rangeName ) , 
       m_x.max ( rangeName ) , 
-      m_tag                 ) ;
+      m_tag                 , 
+      0                     , // no rescale 
+      s_APRECISION_QAG      , 
+      s_RPRECISION_QAG      , 
+      GSL_INTEG_GAUSS15     ) ; // use low-order 
 }
 // ============================================================================
 //  Histo2D
@@ -432,7 +437,10 @@ Double_t Ostap::Models::Histo2D::analyticalIntegral
         yv                    , 
         m_x.min ( rangeName ) , 
         m_x.max ( rangeName ) , 
-        m_tag                 ) ;
+        m_tag                 , 
+        s_APRECISION_QAG      , 
+        s_RPRECISION_QAG      , 
+        GSL_INTEG_GAUSS15     ) ; // use low-order 
   }
   else if ( 3 == code ) 
   {
@@ -442,7 +450,10 @@ Double_t Ostap::Models::Histo2D::analyticalIntegral
         xv                    , 
         m_y.min ( rangeName ) , 
         m_y.max ( rangeName ) , 
-        m_tag                 ) ;
+        m_tag                 ,
+        s_APRECISION_QAG      , 
+        s_RPRECISION_QAG      ,
+        GSL_INTEG_GAUSS15     ) ; // use low-order 
   }
   //
   return  0 ;
@@ -572,7 +583,10 @@ Double_t Ostap::Models::Histo3D::analyticalIntegral
         zv                    , 
         m_x.min ( rangeName ) , 
         m_x.max ( rangeName ) , 
-        m_tag                 ) ;
+        m_tag                 ,
+        s_APRECISION_QAG      , 
+        s_RPRECISION_QAG      , 
+        GSL_INTEG_GAUSS15     ) ; // use low-order 
   }
   else if ( 6 == code ) 
   {
@@ -584,7 +598,11 @@ Double_t Ostap::Models::Histo3D::analyticalIntegral
         zv                    , 
         m_y.min ( rangeName ) , 
         m_y.max ( rangeName ) , 
-        m_tag                 ) ;
+        m_tag                 ,
+        m_tag                 ,
+        s_APRECISION_QAG      , 
+        s_RPRECISION_QAG      , 
+        GSL_INTEG_GAUSS15     ) ; // use low-order 
   }
   else if ( 7 == code ) 
   {
@@ -596,7 +614,10 @@ Double_t Ostap::Models::Histo3D::analyticalIntegral
         yv                    , 
         m_z.min ( rangeName ) , 
         m_z.max ( rangeName ) , 
-        m_tag                 ) ;
+        m_tag                 ,
+        s_APRECISION_QAG      , 
+        s_RPRECISION_QAG      , 
+        GSL_INTEG_GAUSS15     ) ; // use low-order 
   }
   //
   return  0 ;
