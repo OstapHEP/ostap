@@ -551,8 +551,8 @@ if ( 6 , 18 ) <= root_info :
             elif hasattr ( shape , 'tag' ) and not tag : 
                 tag = shape.tag() 
                 
-                ##  initialize the base 
-                PDF1.__init__ ( self , name , xvar ) 
+            ##  initialize the base 
+            PDF1.__init__ ( self , name , xvar ) 
                 
             self.__shape = shape
             self.__tag   = tag
