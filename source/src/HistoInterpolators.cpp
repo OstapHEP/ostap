@@ -53,7 +53,7 @@ Ostap::Math::Histo1D::Histo1D
   , m_t ( t ) 
 {
   const TH1* h = &histo ;
-  Ostap::Assert  ( nullptr == dynamic_cast<const TH2*>( h ) , 
+  Ostap::Assert  ( h && 1 == h->GetDimension()  , 
                    "Invalid type of ROOT::TH1"  , 
                    "Ostap::Math::Histo1D"       ) ;
   histo.Copy ( m_h ) ;
@@ -90,7 +90,7 @@ Ostap::Math::Histo2D::Histo2D
   , m_ty ( ty ) 
 {
   const TH2* h = &histo ;
-  Ostap::Assert  ( nullptr == dynamic_cast<const TH3*>( h ) , 
+  Ostap::Assert  ( h && 2 == h->GetDimension()  ,  
                    "Invalid type of ROOT::TH2"  , 
                    "Ostap::Math::Histo2D"       ) ;
   histo.Copy ( m_h ) ;
@@ -116,6 +116,9 @@ Ostap::Math::Histo3D::Histo3D
   , m_ty ( ty ) 
   , m_tz ( tz ) 
 {
+  Ostap::Assert  ( 3 == histo.GetDimension()   ,  
+                   "Invalid type of ROOT::TH3" , 
+                   "Ostap::Math::Histo3D"      ) ;
   histo.Copy ( m_h ) ;
   m_h.SetDirectory ( nullptr ) ;
 }

@@ -298,7 +298,7 @@ if root_info < (6,18) :
                                    points           , 
                                    tag        = 0   ,
                                    aprecision = 0.0 ,
-                                        rprecision = 0.0 ) :
+                                   rprecision = 0.0 ) :
         """Integrate python callable using Ostap.Math.Integrator
         - see Ostap.Math.py_integrate_singular 
         - see Ostap.Functions.PyCallable        

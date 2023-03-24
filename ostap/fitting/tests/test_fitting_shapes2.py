@@ -14,6 +14,7 @@ from   __future__               import print_function
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
+from   ostap.core.meta_info     import root_info
 from   ostap.core.pyrouts    import hID, dsID, Ostap 
 import ostap.fitting.models  as     Models
 from   ostap.plotting.canvas import use_canvas
@@ -117,9 +118,9 @@ def test_shapes2_histos () :
         pdf = Models.H2D_pdf       ( 'R2D_%02d%02d' % ( nx , ny ) , h2 , xvar = xvar , yvar = yvar , order = 2 )
         pdfs1.append ( pdf )
         
-        ## rely on Shape2D_pdf 
+        ## rely on Histo2D_pdf 
         shape = Ostap.Math.Histo2D ( h2 , 3 , 3 )          
-        pdf   = Models.Shape2D_pdf ( 'H2D_%02d%02d' % ( nx , ny ) , shape = shape , xvar = xvar , yvar = yvar )
+        pdf   = Models.Histo2D_pdf ( 'H2D_%02d%02d' % ( nx , ny ) , histo = shape , xvar = xvar , yvar = yvar )
         pdfs1.append ( pdf )
 
 
@@ -145,14 +146,17 @@ def test_shapes2_histos () :
                 fy    = pdf.draw2 ( ds2 , nbins = 50 )
                 frames.append ( fy )
                     
-    pdfs.append ( pdfs1 )
-        
 # =========================================================================================
 ## (2) use non-parametric polynomials and convert them to the shapes
 # =========================================================================================
 def test_shapes2_poly () :
 
     logger = getLogger('test_shapes2_poly')
+
+
+    if root_info < (6,18) :
+        logger.warning ( "Test is disabled for ROOT version %s" % str ( root_info ) )
+        return 
 
     pdfs2 = []
     
@@ -189,8 +193,6 @@ def test_shapes2_poly () :
                 fy    = pdf.draw2 ( ds2 , nbins = 50 )
                 frames.append ( fy )
                 
-    pdfs.append ( pdfs2 )
-
 
 # =========================================================================================
 ## (3) Use RooKeysPDF 
@@ -226,9 +228,6 @@ def test_shapes2_keys () :
                 fy    = pdf.draw2 ( ds2 , nbins = 50 )
                 frames.append ( fy )
                 
-
-    pdfs.append ( pdfs3 )
-
     
 # =============================================================================
 if '__main__' == __name__ :

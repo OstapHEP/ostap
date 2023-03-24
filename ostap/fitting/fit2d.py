@@ -17,7 +17,7 @@ __all__     = (
     'Model2D'       , ## helper class to construct 2D-models. 
     'Sum2D'         , ## non-extended sum of two PDFs
     'H2D_pdf'       , ## convertor of 1D-histo to RooDataPdf
-    'Shape2D_pdf'   , ## simple PDF from C++ shape     
+    'Histo2D_pdf'   , ## simple PDF from the histogram  
     ## 
     'Fit2D'         , ## the model for 2D-fit: signal + background + optional components
     'Fit2DSym'      , ## the model for 2D-fit: signal + background + optional components
@@ -25,6 +25,7 @@ __all__     = (
     )
 # =============================================================================
 from   builtins                 import range
+from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import Ostap , valid_pointer, roo_silent 
 from   ostap.core.ostap_types   import integer_types, num_types, list_types, iterable_types   
 from   ostap.fitting.funbasic   import FUN2
@@ -225,75 +226,128 @@ class Flat2D(PDF2) :
             }                   
 
 # =============================================================================
-## Generic 2D-shape from C++ callable
-#  @see Ostap::Models:Shape2D
+## Use histogram as PDF
+#  @see Ostap::Models::Histo2D
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2020-07-20
-class Shape2D_pdf(PDF2) :
-    """ Generic 2D-shape from C++ callable
-    - see Ostap::Models:Shape2D
+class Histo2D_pdf(PDF2) :
+    """Use histgram as PDF
+    - see `Ostap.Models.Histo2D
     """
-    
-    def __init__ ( self , name , shape , xvar , yvar , tag = 0 ) :
-
-        if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) and not xvar :
-            xvar = shape.xminmax()
-            
-        if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) and not yvar :
-            yvar = shape.yminmax()
-            
-        if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) :
-            
-            self.histo = shape
-            shape      = Ostap.Math.Histo2D     ( shape )
-            tag        = Ostap.Utils.hash_histo ( shape ) 
-            
-        elif hasattr ( shape , 'tag' ) and not tag : 
-            tag = shape.tag() 
-
-        ##  iniialize the base 
-        PDF2.__init__ ( self , name , xvar , yvar ) 
-            
-        self.__shape = shape
-        self.__tag   = tag
         
-        if isinstance ( self.shape , Ostap.Math.Histo2D ) :
-            
-            ## create the actual pdf
-            self.pdf = Ostap.Models.Histo2D ( self.roo_name ( 'histo2_' ) , 
-                                              "Histo-2D %s" % self.name   ,
-                                              self.xvar                   ,
-                                              self.yvar                   ,
-                                              self.shape                  )            
-        else : 
-            
-            ## create the actual pdf
-            self.pdf = Ostap.Models.Shape2D.create  (
-                self.roo_name  ( 'shape2_' ) , 
-                "Shape-2D %s" % self.name    ,
-                self.xvar                    ,
-                self.yvar                    ,
-                self.shape                   ,
-                self.tag                     )  
-            
+    def __init__ ( self , name , histo , xvar , yvar ) :
+
+        assert isinstance ( histo , Ostap.Math.Histo2D ) or  \
+               ( isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim()  ) , 'Invalid histogram object'
+        
+        th2 = histo if isinstance ( histo , ROOT.TH2 ) else histo.h ()         
+        if not xvar : xvar = th2.xminmax ()
+        if not yvar : yvar = th2.yminmax ()
+        
+        ##  initialize the base 
+        PDF2.__init__ ( self , name , xvar , yvar ) 
+
+        shape = histo 
+        if not isinstance ( shape , Ostap.Math.Histo2D ) :
+            shape = Ostap.Math.Histo2D ( shape )
+
+        self.__shape = shape 
+        
+        ## create the actual pdf
+        self.pdf = Ostap.Models.Histo2D (
+            self.roo_name ( 'histo2_' ) , 
+            "Histo-2D %s" % self.name   ,
+            self.xvar                   ,
+            self.yvar                   ,
+            self.shape                  )            
+        
         ## save the configuration
         self.config = {
             'name'    : self.name    , 
-            'shape'   : self.shape   , 
+            'histo'   : self.shape   , 
             'xvar'    : self.xvar    , 
             'yvar'    : self.yvar    ,
-            'tag'     : self.tag     , 
             }
         
     @property
     def shape  ( self ) :
-        """'shape' : the actual C++ callable shape"""
-        return self.__shape 
-    @property
-    def tag   ( self ) :
-        """'tag' : uqnue tag used for cache-integration"""
-        return self.__tag 
- 
+        """'shape' : the actual C++ callable shape for TH2"""
+        return self.__shape
+
+# ============================================================================= 
+if ( 6 , 18 ) <= root_info : 
+    # =========================================================================
+    ## Generic 2D-shape from C++ callable
+    #  @see Ostap::Models:Shape2D
+    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+    #  @date 2020-07-20
+    class Shape2D_pdf(PDF2) :
+        """ Generic 2D-shape from C++ callable
+        - see Ostap::Models:Shape2D
+        """
+        
+        def __init__ ( self , name , shape , xvar , yvar , tag = 0 ) :
+            
+            if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) and not xvar :
+                xvar = shape.xminmax()
+                
+            if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) and not yvar :
+                yvar = shape.yminmax()
+                
+            if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) :
+                
+                self.histo = shape
+                shape      = Ostap.Math.Histo2D     ( shape )
+                tag        = Ostap.Utils.hash_histo ( shape ) 
+                
+            elif hasattr ( shape , 'tag' ) and not tag : 
+                tag = shape.tag() 
+
+            ##  iniialize the base 
+            PDF2.__init__ ( self , name , xvar , yvar ) 
+            
+            self.__shape = shape
+            self.__tag   = tag
+            
+            if isinstance ( self.shape , Ostap.Math.Histo2D ) :
+                
+                ## create the actual pdf
+                self.pdf = Ostap.Models.Histo2D ( self.roo_name ( 'histo2_' ) , 
+                                                  "Histo-2D %s" % self.name   ,
+                                                  self.xvar                   ,
+                                                  self.yvar                   ,
+                                                  self.shape                  )            
+            else : 
+                
+                ## create the actual pdf
+                self.pdf = Ostap.Models.Shape2D.create  (
+                    self.roo_name  ( 'shape2_' ) , 
+                    "Shape-2D %s" % self.name    ,
+                    self.xvar                    ,
+                    self.yvar                    ,
+                    self.shape                   ,
+                    self.tag                     )
+
+            ## save the configuration
+            self.config = {
+                'name'    : self.name    , 
+                'shape'   : self.shape   , 
+                'xvar'    : self.xvar    , 
+                'yvar'    : self.yvar    ,
+                'tag'     : self.tag     , 
+                }
+            
+        @property
+        def shape  ( self ) :
+            """'shape' : the actual C++ callable shape"""
+            return self.__shape 
+        @property
+        def tag   ( self ) :
+            """'tag' : unique tag used for cache-integration"""
+            return self.__tag 
+
+    __all__ = __all__ + ( 'Shape2D_pdf' , ) ## simple PDF from C++ shape     
+
 # ===================================================it==========================
 ## simple convertor of 2D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
