@@ -233,9 +233,9 @@ def test_shapes2_keys () :
 # =============================================================================
 if '__main__' == __name__ :
     
-    ## test_shapes2_histos  () 
+    test_shapes2_histos  () 
     test_shapes2_poly    () 
-    ## test_shapes2_keys    () 
+    test_shapes2_keys    () 
     
 # =============================================================================
 ##                                                                      The END 

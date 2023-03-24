@@ -108,7 +108,7 @@ double  Ostap::Math::Voigt::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( &F , 
       low , high          ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      
@@ -446,7 +446,7 @@ double  Ostap::Math::PseudoVoigt::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( &F , 
       low , high          ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      

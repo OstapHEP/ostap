@@ -1281,7 +1281,7 @@ double  Ostap::Math::BW::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low    , high       ,          // low & high edges
@@ -1319,7 +1319,7 @@ double  Ostap::Math::BW::integral () const
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaqiu_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qagiu_integrate
     ( tag () , 
       &F     , 
       x_high               ,          // low edge
@@ -2074,7 +2074,7 @@ std::size_t Ostap::Math::FlatteBugg::tag () const
 //   int    ierror   =  0 ;
 //   double result   =  1 ;
 //   double error    = -1 ;
-//   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+//   std::tie ( ierror , result , error ) = s_integrator.qag_integrate
 //     ( &F , 
 //       low , high          ,          // low & high edges
 //       workspace ( m_workspace ) ,    // workspace      
@@ -2300,7 +2300,7 @@ std::size_t Ostap::Math::FlatteBugg::tag () const
 //   int    ierror   =  0 ;
 //   double result   =  1 ;
 //   double error    = -1 ;
-//   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+//   std::tie ( ierror , result , error ) = s_integrator.qag_integrate
 //     ( &F , 
 //       low , high          ,          // low & high edges
 //       workspace ( m_workspace ) ,    // workspace      
@@ -3072,7 +3072,7 @@ double Ostap::Math::BWPS::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  () , 
       &F      , 
       xlow    , xhigh     ,          // low & high edges
@@ -3206,7 +3206,7 @@ double Ostap::Math::BW3L::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  () , 
       &F      , 
       xlow    , xhigh     ,          // low & high edges

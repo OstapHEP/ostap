@@ -111,7 +111,7 @@ namespace
     int    ierror    =  0   ;
     double result    =  1.0 ;
     double error     = -1.0 ;
-    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    std::tie ( ierror , result , error ) = s_integrator.qag_integrate
       ( tag                  , 
         &F                   ,   // the function
         xlow   , xhigh       ,   // low & high edges
@@ -656,7 +656,7 @@ double Ostap::Math::PS2DPol2::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     (Ostap::Utils::hash_combiner ( tag() , 'X' , x )                   , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
@@ -698,7 +698,7 @@ double Ostap::Math::PS2DPol2::integrateX
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     (Ostap::Utils::hash_combiner ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
@@ -856,7 +856,7 @@ double Ostap::Math::PS2DPol2Sym::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'X' , x )                   , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
@@ -1047,7 +1047,7 @@ double Ostap::Math::PS2DPol3::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  ()                   , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
@@ -1086,7 +1086,7 @@ double Ostap::Math::PS2DPol3::integrateX
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     (Ostap::Utils::hash_combiner ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
@@ -1224,7 +1224,7 @@ double Ostap::Math::PS2DPol3Sym::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'X' , x )                  , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
@@ -2056,7 +2056,7 @@ double Ostap::Math::Gauss2D::integrateX
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'Y' , y ) , 
       &F                        ,   // the function
       xlow    , xhigh           ,   // low & high edges
@@ -2133,7 +2133,7 @@ double Ostap::Math::Gauss2D::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'X' , x ) , 
       &F                        ,   // the function
       ylow    , yhigh           ,   // low & high edges
@@ -2293,7 +2293,7 @@ double Ostap::Math::Tsallis2::integrate_y
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'P' , pt )                   , 
       &F                        ,   // the function
       ylow    , yhigh           ,   // low & high edges
@@ -2332,7 +2332,7 @@ double Ostap::Math::Tsallis2::integrate_pt
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       pt_min , pt_max           ,   // low & high edges

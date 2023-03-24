@@ -80,7 +80,7 @@ double  Ostap::Math::PhaseSpace2::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( &F , 
       xlow , xhigh        ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
@@ -414,7 +414,7 @@ double Ostap::Math::PhaseSpace3::evaluate  ( const double x ) const
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( Ostap::Utils::hash_combiner ( tag () , x ) , 
       &F     , 
       low    , high ,                // low & high edges
@@ -511,7 +511,7 @@ double  Ostap::Math::PhaseSpace3::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low , high          ,          // low & high edges
@@ -615,7 +615,7 @@ double Ostap::Math::PhaseSpace3s::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       xlow   , xhigh ,               // low & high edges
@@ -689,7 +689,7 @@ double Ostap::Kinematics::phasespace3i
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag    ,                       // unique tag 
       &F     , 
       s2_low , s2_high    ,          // low & high edges
@@ -861,7 +861,7 @@ double Ostap::Math::PhaseSpaceLeft::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       xlow   , xhigh ,               // low & high edges
@@ -1155,7 +1155,7 @@ double  Ostap::Math::PhaseSpaceNL::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag ()        ,
       &F            , 
       low           , high      ,    // low & high edges
@@ -1239,7 +1239,7 @@ double  Ostap::Math::PSDalitz::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag ()        ,
       &F            , 
       low           ,  high     ,    // low & high edges
@@ -1372,7 +1372,7 @@ double  Ostap::Math::PhaseSpace23L::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low    , high      ,           // low & high edges

@@ -2327,7 +2327,7 @@ double Ostap::Math::carlson_RF_int
   int    ierror   = 0   ;
   double result1  = 0.0 ;
   double error1   = 1.0 ;
-  std::tie ( ierror , result1 , error1 ) = s_integrator.gaqiu_integrate
+  std::tie ( ierror , result1 , error1 ) = s_integrator.qagiu_integrate
     ( &F     ,
       a2     ,                       // low limit 
       workspace ( s_workspace ) ,    // workspace
@@ -2339,7 +2339,7 @@ double Ostap::Math::carlson_RF_int
   //
   double result2  = 0.0 ;
   double error2   = 1.0 ;
-  std::tie ( ierror , result2 , error2 ) = s_integrator.gaqp_integrate
+  std::tie ( ierror , result2 , error2 ) = s_integrator.qagp_integrate
     ( &F     ,
       0      ,  a1              ,    // integrtaion limits 
       std::vector<double>()     ,    // no internal singular points 
@@ -2352,7 +2352,7 @@ double Ostap::Math::carlson_RF_int
   //
   double result3  = 0.0 ;
   double error3   = 1.0 ;
-  std::tie ( ierror , result3 , error3 ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result3 , error3 ) = s_integrator.qag_integrate
     ( &F     ,
       a1     , a2         ,          // integration limits 
       workspace ( s_workspace ) ,    // workspace
@@ -2395,7 +2395,7 @@ double Ostap::Math::carlson_RJ_int
   int    ierror   = 0   ;
   double result1  = 0.0 ;
   double error1   = 1.0 ;
-  std::tie ( ierror , result1 , error1 ) = s_integrator.gaqiu_integrate
+  std::tie ( ierror , result1 , error1 ) = s_integrator.qagiu_integrate
     ( &F     ,
       a2     ,                       // low limit 
       workspace ( s_workspace ) ,    // workspace
@@ -2407,7 +2407,7 @@ double Ostap::Math::carlson_RJ_int
   //
   double result2  = 0.0 ;
   double error2   = 1.0 ;
-  std::tie ( ierror , result2 , error2 ) = s_integrator.gaqp_integrate
+  std::tie ( ierror , result2 , error2 ) = s_integrator.qagp_integrate
     ( &F     ,
       0      ,  a1              ,    // integrtaion limits 
       std::vector<double>()     ,    // no internal singular points 
@@ -2420,7 +2420,7 @@ double Ostap::Math::carlson_RJ_int
   //
   double result3  = 0.0 ;
   double error3   = 1.0 ;
-  std::tie ( ierror , result3 , error3 ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result3 , error3 ) = s_integrator.qag_integrate
     ( &F     ,
       a1     , a2         ,          // integration limits 
       workspace ( s_workspace ) ,    // workspace
@@ -2464,7 +2464,7 @@ double Ostap::Math::carlson_RC_int
   int    ierror   = 0   ;
   double result1  = 0.0 ;
   double error1   = 1.0 ;
-  std::tie ( ierror , result1 , error1 ) = s_integrator.gaqiu_integrate
+  std::tie ( ierror , result1 , error1 ) = s_integrator.qagiu_integrate
     ( &F     ,
       a2     ,                       // low limit 
       workspace ( s_workspace ) ,    // workspace
@@ -2476,7 +2476,7 @@ double Ostap::Math::carlson_RC_int
   //
   double result2  = 0.0 ;
   double error2   = 1.0 ;
-  std::tie ( ierror , result2 , error2 ) = s_integrator.gaqp_integrate
+  std::tie ( ierror , result2 , error2 ) = s_integrator.qagp_integrate
     ( &F     ,
       0      ,  a1              ,    // integrtaion limits 
       std::vector<double>()     ,    // no internal singular points 
@@ -2489,7 +2489,7 @@ double Ostap::Math::carlson_RC_int
   //
   double result3  = 0.0 ;
   double error3   = 1.0 ;
-  std::tie ( ierror , result3 , error3 ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result3 , error3 ) = s_integrator.qag_integrate
     ( &F     ,
       a1     , a2         ,          // integration limits 
       workspace ( s_workspace ) ,    // workspace
@@ -2530,7 +2530,7 @@ double Ostap::Math::carlson_RD_int
   int    ierror   = 0   ;
   double result1  = 0.0 ;
   double error1   = 1.0 ;
-  std::tie ( ierror , result1 , error1 ) = s_integrator.gaqiu_integrate
+  std::tie ( ierror , result1 , error1 ) = s_integrator.qagiu_integrate
     ( &F     ,
       a2     ,                       // low limit 
       workspace ( s_workspace ) ,    // workspace
@@ -2542,7 +2542,7 @@ double Ostap::Math::carlson_RD_int
   //
   double result2  = 0.0 ;
   double error2   = 1.0 ;
-  std::tie ( ierror , result2 , error2 ) = s_integrator.gaqp_integrate
+  std::tie ( ierror , result2 , error2 ) = s_integrator.qagp_integrate
     ( &F     ,
       0      ,  a1              ,    // integrtaion limits 
       std::vector<double>()     ,    // no internal singular points 
@@ -2555,7 +2555,7 @@ double Ostap::Math::carlson_RD_int
   //
   double result3  = 0.0 ;
   double error3   = 1.0 ;
-  std::tie ( ierror , result3 , error3 ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result3 , error3 ) = s_integrator.qag_integrate
     ( &F     ,
       a1     , a2         ,          // integration limits 
       workspace ( s_workspace ) ,    // workspace
@@ -2597,7 +2597,7 @@ double Ostap::Math::carlson_RG_int
   int    ierror   = 0   ;
   double result1  = 0.0 ;
   double error1   = 1.0 ;
-  std::tie ( ierror , result1 , error1 ) = s_integrator.gaqiu_integrate
+  std::tie ( ierror , result1 , error1 ) = s_integrator.qagiu_integrate
     ( &F     ,
       a2     ,                       // low limit 
       workspace ( s_workspace ) ,    // workspace
@@ -2609,7 +2609,7 @@ double Ostap::Math::carlson_RG_int
   //
   double result2  = 0.0 ;
   double error2   = 1.0 ;
-  std::tie ( ierror , result2 , error2 ) = s_integrator.gaqp_integrate
+  std::tie ( ierror , result2 , error2 ) = s_integrator.qagp_integrate
     ( &F     ,
       0      ,  a1              ,    // integrtaion limits 
       std::vector<double>()     ,    // no internal singular points 
@@ -2622,7 +2622,7 @@ double Ostap::Math::carlson_RG_int
   //
   double result3  = 0.0 ;
   double error3   = 1.0 ;
-  std::tie ( ierror , result3 , error3 ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result3 , error3 ) = s_integrator.qag_integrate
     ( &F     ,
       a1     , a2         ,          // integration limits 
       workspace ( s_workspace ) ,    // workspace

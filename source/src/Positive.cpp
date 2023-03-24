@@ -271,7 +271,7 @@ double Ostap::Math::KarlinShapley::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () ,                        // unique tag 
       &F     ,                        // the function 
       xmin   , xmax       ,           // low & high edges
@@ -531,7 +531,7 @@ double Ostap::Math::KarlinStudden::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () ,                        // unique tag 
       &F     ,                        // the function 
       xmin   , xmax       ,           // low & high edges

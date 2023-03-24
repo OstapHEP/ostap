@@ -1420,7 +1420,7 @@ double Ostap::Math::Bukin::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     ,  
       low    , high  ,               // low & high edges
@@ -1451,7 +1451,7 @@ double Ostap::Math::Bukin::integral () const
   int    ierror1  =  0 ;
   double result1  =  1 ;
   double error1   = -1 ;
-  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate
+  std::tie ( ierror1 , result1 , error1 ) = s_integrator.qagil_integrate
     ( tag () , 
       &F     , 
       m_x1   ,                       // low edges
@@ -1465,7 +1465,7 @@ double Ostap::Math::Bukin::integral () const
   int    ierror2  =  0 ;
   double result2  =  1 ;
   double error2   = -1 ;
-  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate
+  std::tie ( ierror2 , result2 , error2 ) = s_integrator.qagiu_integrate
     ( tag () , 
       &F     , 
       m_x2   ,                       // high edges
@@ -1622,7 +1622,7 @@ double Ostap::Math::Novosibirsk::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low    , high             ,    // low & high edges
@@ -1660,7 +1660,7 @@ double Ostap::Math::Novosibirsk::integral () const
   int    ierror1  =  0 ;
   double result1  =  1 ;
   double error1   = -1 ;
-  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate
+  std::tie ( ierror1 , result1 , error1 ) = s_integrator.qagil_integrate
     ( tag () , 
       &F     , 
       x_low  ,                       // low edges
@@ -1674,7 +1674,7 @@ double Ostap::Math::Novosibirsk::integral () const
   int    ierror2  =  0 ;
   double result2  =  1 ;
   double error2   = -1 ;
-  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate
+  std::tie ( ierror2 , result2 , error2 ) = s_integrator.qagiu_integrate
     ( tag () , 
       &F     , 
       x_high ,                       // high edges
@@ -2413,7 +2413,7 @@ double Ostap::Math::Apollonios::integral
     int    ierror   =  0 ;
     double result   =  1 ;
     double error    = -1 ;
-    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    std::tie ( ierror , result , error ) = s_integrator.qag_integrate
       ( tag () , 
         &F     , 
         low    , high  ,               // low & high edges
@@ -2570,7 +2570,7 @@ double Ostap::Math::Apollonios2::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low , high  ,                  // low & high edges
@@ -2676,7 +2676,7 @@ double Ostap::Math::Atlas::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low    , high  ,               // low & high edges
@@ -2892,7 +2892,7 @@ double Ostap::Math::Losev::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low    , high  ,               // low & high edges
@@ -3446,7 +3446,7 @@ double Ostap::Math::PearsonIV::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
              ( tag () , 
                &F     , 
                low    , high  ,               // low & high edges
@@ -4270,7 +4270,7 @@ double Ostap::Math::QGaussian::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low    , high  ,               // low & high edges
@@ -4450,7 +4450,7 @@ double Ostap::Math::KGaussian::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low    , high  ,               // low & high edges
@@ -4763,7 +4763,7 @@ double Ostap::Math::Hyperbolic::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     ,  
       low    , high  ,               // low & high edges
@@ -4968,7 +4968,7 @@ double Ostap::Math::GenHyperbolic::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     ,  
       low    , high  ,               // low & high edges
@@ -5381,7 +5381,7 @@ double Ostap::Math::SkewGenT::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low    , high             ,    // low & high edges
@@ -5638,7 +5638,7 @@ double Ostap::Math::SkewGenError::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
       low    , high             ,                  // low & high edges
@@ -5743,7 +5743,7 @@ double Ostap::Math::Hat::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     ,  
       xmn    , xmx              , // low & high edges
@@ -5869,7 +5869,7 @@ double Ostap::Math::Up::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     ,  
       xmn    , xmx              , // low & high edges
@@ -6034,7 +6034,7 @@ double Ostap::Math::FupN::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     ,  
       xmn    , xmx              , // low & high edges

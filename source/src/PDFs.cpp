@@ -74,7 +74,11 @@ Double_t Ostap::Models::Shape1D::analyticalIntegral
     ( fun , 
       m_x.min ( rangeName ) , 
       m_x.max ( rangeName ) , 
-      m_tag                 ) ;
+      m_tag                 ,
+      0                     , // no rescale 
+      s_APRECISION_QAG      , 
+      s_RPRECISION_QAG      , 
+      GSL_INTEG_GAUSS31     ) ; // use intermediate order 
 }
 // ============================================================================
 //  Shape2D
@@ -141,7 +145,10 @@ Double_t Ostap::Models::Shape2D::analyticalIntegral
         yv                    , 
         m_x.min ( rangeName ) , 
         m_x.max ( rangeName ) , 
-        m_tag                 ) ;
+        m_tag                 ,
+        s_APRECISION_QAG      , 
+        s_RPRECISION_QAG      , 
+        GSL_INTEG_GAUSS31     ) ; // use intermediate order 
   }
   else if ( 3 == code ) 
   {
@@ -151,7 +158,10 @@ Double_t Ostap::Models::Shape2D::analyticalIntegral
         xv                    , 
         m_y.min ( rangeName ) , 
         m_y.max ( rangeName ) , 
-        m_tag                 ) ;
+        m_tag                 ,
+        s_APRECISION_QAG      , 
+        s_RPRECISION_QAG      , 
+        GSL_INTEG_GAUSS31     ) ; // use intermediate order 
   }
   //
   return  0 ;
@@ -264,7 +274,10 @@ Double_t Ostap::Models::Shape3D::analyticalIntegral
         zv                    , 
         m_x.min ( rangeName ) , 
         m_x.max ( rangeName ) , 
-        m_tag                 ) ;
+        m_tag                 ,
+        s_APRECISION_QAG      , 
+        s_RPRECISION_QAG      , 
+        GSL_INTEG_GAUSS31     ) ; // use intermediate order 
   }
   else if ( 6 == code ) 
   {
@@ -276,7 +289,10 @@ Double_t Ostap::Models::Shape3D::analyticalIntegral
         zv                    , 
         m_y.min ( rangeName ) , 
         m_y.max ( rangeName ) , 
-        m_tag                 ) ;
+        m_tag                 ,
+        s_APRECISION_QAG      , 
+        s_RPRECISION_QAG      , 
+        GSL_INTEG_GAUSS31     ) ; // use intermediate order 
   }
   else if ( 7 == code ) 
   {
@@ -288,7 +304,10 @@ Double_t Ostap::Models::Shape3D::analyticalIntegral
         yv                    , 
         m_z.min ( rangeName ) , 
         m_z.max ( rangeName ) , 
-        m_tag                 ) ;
+        m_tag                 ,
+        s_APRECISION_QAG      , 
+        s_RPRECISION_QAG      , 
+        GSL_INTEG_GAUSS31     ) ; // use intermediate order 
   }
   //
   return  0 ;

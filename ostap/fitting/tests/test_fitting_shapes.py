@@ -3,12 +3,9 @@
 # =============================================================================
 # Copyright (c) Ostap developers.
 # ============================================================================= 
-# @file test_fitting_models.py
-# Test module for ostap/fitting/models.py
-# - It tests various ``signal-like''/``peak-like'' shapes
+# @file test_fitting_shapes.py
 # ============================================================================= 
-""" Test module for ostap/fitting/models.py
-- It tests various ``signal-like''/``peak-like'' shapes 
+""" Test module for ostap/fitting/models..py
 """
 # ============================================================================= 
 from   __future__               import print_function

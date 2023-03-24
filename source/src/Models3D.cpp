@@ -749,7 +749,7 @@ double Ostap::Math::Gauss3D::integrateX
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'Y' , 'Z' , y , z  ) , 
       &F                        ,   // the function
       xlow    , xhigh           ,   // low & high edges
@@ -844,7 +844,7 @@ double Ostap::Math::Gauss3D::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'X' , 'Z' , x , z ) , 
       &F                        ,   // the function
       ylow    , yhigh           ,   // low & high edges
@@ -939,7 +939,7 @@ double Ostap::Math::Gauss3D::integrateZ
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'X' , 'Y' , x , y ) , 
       &F                        ,   // the function
       zlow    , zhigh           ,   // low & high edges

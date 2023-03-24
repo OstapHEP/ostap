@@ -47,10 +47,11 @@ namespace Ostap
           double     max [3] ;
         } ;  
         // ====================================================================
-        Fun make_function ( const FUNCTION* f                     , 
-                            const double xmin , const double xmax , 
-                            const double ymin , const double ymax , 
-                            const double zmin , const double zmax ) const 
+        Fun make_function 
+        ( const FUNCTION* f                     , 
+          const double xmin , const double xmax , 
+          const double ymin , const double ymax , 
+          const double zmin , const double zmax ) const 
         {
           Fun F ;
           F.fdata   = const_cast<FUNCTION*>( f ) ;
@@ -69,8 +70,8 @@ namespace Ostap
         Result cubature 
         ( const Fun*          fun                  , 
           const unsigned      maxcalls   = 50000   ,
-          const double        aprecision = s_APRECISION , 
-          const double        rprecision = s_RPRECISION ,
+          const double        aprecision = s_APRECISION_CUBE3D , 
+          const double        rprecision = s_RPRECISION_CUBE3D ,
           const char*         reason     = nullptr ,       // message 
           const char*         file       = nullptr ,       // file name 
           const unsigned long line       = 0       ,       // line number 
@@ -104,8 +105,8 @@ namespace Ostap
         ( const std::size_t   tag                  ,
           const Fun*          fun                  , 
           const unsigned      maxcalls   = 50000   ,
-          const double        aprecision = s_APRECISION , 
-          const double        rprecision = s_RPRECISION ,
+          const double        aprecision = s_APRECISION_CUBE3D , 
+          const double        rprecision = s_RPRECISION_CUBE3D ,
           const char*         reason     = nullptr ,       // message 
           const char*         file       = nullptr ,       // file name 
           const unsigned long line       = 0       ) const // line number 

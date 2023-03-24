@@ -53,7 +53,7 @@ namespace Ostap
        *  double result ;
        *  double error  ;
        *  std::tie( ierror, result , error ) = 
-       *    integrator.gaq_integrate ( &F    , 
+       *    integrator.qag_integrate ( &F    , 
        *                               0 , 1 , // low & high edges 
        *                               workspace ( *this ) ) ;
        *  @endcode
@@ -67,8 +67,10 @@ namespace Ostap
       public :
         //  ===================================================================
         /// make a function for integration 
-        gsl_function make_function ( const FUNCTION* f ) const 
-       { 
+        gsl_function 
+        make_function 
+        ( const FUNCTION* f ) const 
+        { 
           gsl_function F ;
           F.params   = const_cast<FUNCTION*>( f )  ;
           F.function = &adapter ;
@@ -78,7 +80,7 @@ namespace Ostap
       public :
         //  ===================================================================
         /// adaptive integrator 
-        Result gaq_integrate   
+        Result qag_integrate   
         ( const gsl_function*        func                 ,           // the function
           const double               xlow                 ,           // low integration edge 
           const double               xhigh                ,           // high integration edge 
@@ -93,7 +95,7 @@ namespace Ostap
           const std::size_t          tag        = 0                 ) const  // tag/label 
         {
           // cache? 
-          if ( 0 != tag ) { return gaq_integrate ( tag        , 
+          if ( 0 != tag ) { return qag_integrate ( tag        , 
                                                    func       , 
                                                    xlow       , 
                                                    xhigh      , 
@@ -130,7 +132,7 @@ namespace Ostap
         }
         // ====================================================================
         /// adaptive integrator 
-        Result gaqi_integrate   
+        Result qagi_integrate   
         ( const gsl_function*        func                 ,           // the function
           gsl_integration_workspace* workspace            ,           // workspace
           const double               aprecision = s_APRECISION_QAGI , // absolute precision
@@ -142,7 +144,7 @@ namespace Ostap
           const std::size_t          tag        = 0       ) const     // tag/label 
         {          
           // cache? 
-          if ( 0 != tag ) { return gaqi_integrate ( tag        , 
+          if ( 0 != tag ) { return qagi_integrate ( tag        , 
                                                     func       , 
                                                     workspace  ,
                                                     aprecision , 
@@ -174,7 +176,7 @@ namespace Ostap
         }
         // ====================================================================
         /// adaptive integrator 
-        Result gaqiu_integrate   
+        Result qagiu_integrate   
         ( const gsl_function*        func                 ,            // the function
           const double               xlow                 ,            // low integration edge 
           gsl_integration_workspace* workspace            ,            // workspace
@@ -187,7 +189,7 @@ namespace Ostap
           const std::size_t          tag        = 0       ) const      // tag/label 
         {          
           // cache? 
-          if ( 0 != tag ) { return gaqiu_integrate ( tag        , 
+          if ( 0 != tag ) { return qagiu_integrate ( tag        , 
                                                      func       , 
                                                      xlow       ,
                                                      workspace  , 
@@ -221,7 +223,7 @@ namespace Ostap
         }
         // ====================================================================
         /// adaptive integrator 
-        Result gaqil_integrate   
+        Result qagil_integrate   
         ( const gsl_function*        func                 ,            // the function
           const double               xhigh                ,            // high integration edge 
           gsl_integration_workspace* workspace            ,            // workspace
@@ -234,7 +236,7 @@ namespace Ostap
           const std::size_t          tag        = 0       ) const      // tag/label 
         {
           // cache? 
-          if ( 0 != tag ) { return gaqil_integrate ( tag        , 
+          if ( 0 != tag ) { return qagil_integrate ( tag        , 
                                                      func       , 
                                                      xhigh      ,
                                                      workspace  ,
@@ -267,7 +269,7 @@ namespace Ostap
         }
         // ====================================================================        
         /// adaptive integrator 
-        Result gaqp_integrate   
+        Result qagp_integrate   
         ( const gsl_function*        func                 ,           // the  function
           const double               xlow                 ,           // low  integration edge 
           const double               xhigh                ,           // high integration edge 
@@ -282,7 +284,7 @@ namespace Ostap
           const std::size_t          tag        = 0       ) const     // tag/label 
         {
           // cache? 
-          if ( 0 != tag ) { return gaqp_integrate ( tag        , 
+          if ( 0 != tag ) { return qagp_integrate ( tag        , 
                                                     func       , 
                                                     xlow       ,
                                                     xhigh      ,
@@ -322,7 +324,7 @@ namespace Ostap
         }
         // ====================================================================
         /// Cauchy principal value adaptive integrator 
-        Result gawc_integrate   
+        Result qawc_integrate   
         ( const gsl_function*        func                 ,           // the  function
           const double               xlow                 ,           // low  integration edge 
           const double               xhigh                ,           // high integration edge 
@@ -337,7 +339,7 @@ namespace Ostap
           const std::size_t          tag        = 0       ) const     // tag/label 
         {
           // cache? 
-          if ( 0 != tag ) { return gawc_integrate ( tag        , 
+          if ( 0 != tag ) { return qawc_integrate ( tag        , 
                                                     func       , 
                                                     xlow       ,
                                                     xhigh      ,
@@ -467,7 +469,7 @@ namespace Ostap
       public: // integration with cache 
         // ====================================================================
         /// adaptive integrator with cache 
-        Result gaq_integrate   
+        Result qag_integrate   
         ( const std::size_t          tag                  ,  
           const gsl_function*        func                 ,          // the function
           const double               xlow                 ,          // low integration edge 
@@ -496,7 +498,7 @@ namespace Ostap
           } // ================================================================
           // ==================================================================
           // perform numerical integration using GSL 
-          Result result = gaq_integrate ( func ,
+          Result result = qag_integrate ( func ,
                                           xlow ,  xhigh , 
                                           workspace     , 
                                           aprecision    , rprecision  ,
@@ -516,7 +518,7 @@ namespace Ostap
         }
         // ====================================================================
         /// adaptive integrator with cache 
-        Result gaqi_integrate
+        Result qagi_integrate
         ( const std::size_t          tag                  ,
           const gsl_function*        func                 ,           // the function
           gsl_integration_workspace* workspace            ,           // workspace
@@ -543,7 +545,7 @@ namespace Ostap
           } // ================================================================
           // ==================================================================
           // perform numerical inntegration using GSL 
-          Result result = gaqi_integrate ( func       ,
+          Result result = qagi_integrate ( func       ,
                                            workspace  , 
                                            aprecision , rprecision  , 
                                            limit      , 
@@ -562,7 +564,7 @@ namespace Ostap
         }
         // ====================================================================
         /// adaptive integrator with cache 
-        Result gaqiu_integrate
+        Result qagiu_integrate
         ( const std::size_t          tag                  ,
           const gsl_function*        func                 ,            // the function
           const double               xlow                 ,            // low integration edge 
@@ -590,7 +592,7 @@ namespace Ostap
           } // ================================================================
           // ==================================================================
           // perform numerical inntegration using GSL 
-          Result result = gaqiu_integrate ( func       ,
+          Result result = qagiu_integrate ( func       ,
                                             xlow       ,
                                             workspace  , 
                                             aprecision , rprecision  , 
@@ -610,7 +612,7 @@ namespace Ostap
         }
         // ====================================================================
         /// adaptive integrator 
-        Result gaqil_integrate
+        Result qagil_integrate
         ( const std::size_t          tag                  ,
           const gsl_function*        func                 ,            // the function
           const double               xhigh                ,            // upper integration edge 
@@ -638,7 +640,7 @@ namespace Ostap
           } // ================================================================
           // ==================================================================
           // perform numerical inntegration using GSL 
-          Result result = gaqil_integrate ( func       ,
+          Result result = qagil_integrate ( func       ,
                                             xhigh      ,
                                             workspace  , 
                                             aprecision , rprecision  , 
@@ -658,7 +660,7 @@ namespace Ostap
         }
         // ====================================================================
         /// adaptive integrator with cache 
-        Result gaqp_integrate   
+        Result qagp_integrate   
         ( const std::size_t          tag                  ,           // tag/label
           const gsl_function*        func                 ,           // the  function
           const double               xlow                 ,           // low  integration edge 
@@ -688,7 +690,7 @@ namespace Ostap
           } // ================================================================
           // ==================================================================
           // perform numerical inntegration using GSL 
-          Result result = gaqp_integrate ( func       ,
+          Result result = qagp_integrate ( func       ,
                                            xlow       ,
                                            xhigh      ,
                                            pnts       ,
@@ -713,7 +715,7 @@ namespace Ostap
         }
         // ====================================================================
         /// Cauchy principal value adaptive integrator 
-        Result gawc_integrate   
+        Result qawc_integrate   
         ( const std::size_t          tag                  ,           // tag/label    
           const gsl_function*        func                 ,           // the  function
           const double               xlow                 ,           // low  integration edge 
@@ -743,7 +745,7 @@ namespace Ostap
           } // ================================================================
           // ==================================================================
           // perform numerical integration using GSL 
-          Result result = gawc_integrate ( func       ,
+          Result result = qawc_integrate ( func       ,
                                            xlow       ,
                                            xhigh      ,
                                            c          ,

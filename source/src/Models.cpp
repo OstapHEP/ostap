@@ -271,7 +271,7 @@ double Ostap::Math::GramCharlierA::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  () , 
       &F      , 
       low     , high ,                                        // low & high edges
@@ -469,7 +469,7 @@ double  Ostap::Math::PhaseSpacePol::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () ,  
       &F     , 
       xlow   , xhigh      ,          // low & high edges
@@ -668,7 +668,7 @@ double Ostap::Math::PhaseSpaceLeftExpoPol::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () ,  
       &F     , 
       xlow   , xhigh      ,          // low & high edges
@@ -2008,7 +2008,7 @@ double Ostap::Math::Sigmoid::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  () , 
       &F      , 
       low     , high ,               // low & high edges
@@ -2403,7 +2403,7 @@ double Ostap::Math::Tsallis::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  () , 
       &F      , 
       low     , high  ,              // low & high edges
@@ -2514,7 +2514,7 @@ double Ostap::Math::QGSM::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  () , 
       &F      , 
       low     , high      ,          // low & high edges
@@ -2610,7 +2610,7 @@ double Ostap::Math::Hagedorn::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  ()                   , 
       &F                        , 
       xmin    , xmax            ,   // low & high edges
@@ -2956,7 +2956,7 @@ double Ostap::Math::Rice::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  () , 
       &F      , 
       low     , high ,                             // low & high edges
@@ -3139,7 +3139,7 @@ double Ostap::Math::GenInvGauss::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  () , 
       &F      , 
       low     , high ,                             // low & high edges
@@ -4130,7 +4130,7 @@ double Ostap::Math::ExGenPareto::integral
   int    ierror   = 0   ;
   double result   = 1.0 ;
   double error    = 1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag  () , 
       &F      , 
       low     , high  ,              // low & high edges

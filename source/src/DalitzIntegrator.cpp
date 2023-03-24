@@ -128,18 +128,18 @@ double Ostap::Math::DalitzIntegrator::integrate_s
   double  result =  1 ;
   double  error  = -1 ;
   std::tie ( ierror , result , error ) =
-    s_DI1.gaq_integrate 
+    s_DI1.qag_integrate 
     ( &F                , 
       smin              ,   // lower integration edge  
       smax              ,   // upper integration edge
       workspace ( ws )  ,   // workspace 
-      s_APRECISION      ,   // absolute precision 
-      s_RPRECISION      ,   // relative precision 
+      s_APRECISION_QAG  ,   // absolute precision 
+      s_RPRECISION_QAG  ,   // relative precision 
       -1                ,   // limit 
       s_MESSAGE1        ,   // reason of failure 
       __FILE__          ,   // the file 
       __LINE__          ,   // the line 
-      GSL_INTEG_GAUSS51 ,   // rule 
+      GSL_INTEG_GAUSS61 ,   // rule 
       0 == tag ? tag : Ostap::Utils::hash_combiner ( tag , d.tag () ) ) ; // tag/label 
   //
   return result ;  
@@ -206,18 +206,18 @@ double Ostap::Math::DalitzIntegrator::integrate_s1
   double  result =  1 ;
   double  error  = -1 ;
   std::tie ( ierror , result , error ) =
-    s_DI1.gaq_integrate 
+    s_DI1.qag_integrate 
     ( &F                , 
       s1mn              ,   // lower integration edge  
       s1mx              ,   // upper integration edge
       workspace ( ws )  ,   // workspace 
-      s_APRECISION       ,   // absolute precision 
-      s_RPRECISION       ,   // relative precision 
+      s_APRECISION_QAG  ,   // absolute precision 
+      s_RPRECISION_QAG  ,   // relative precision 
       -1                ,   // limit 
       s_MESSAGE1        ,   // reason of failure 
       __FILE__          ,   // the file 
       __LINE__          ,   // the line 
-      GSL_INTEG_GAUSS51 ,   // rule 
+      GSL_INTEG_GAUSS61 ,   // rule 
       0 == tag ? tag : Ostap::Utils::hash_combiner (  tag , d.tag() ) ) ; // tag/label 
   //
   return result ;

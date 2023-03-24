@@ -232,7 +232,7 @@ void Ostap::Math::Integrator::set_qag_rule ( const int rule )
 {
   m_qag_rule = 
     GSL_INTEG_GAUSS15 <= rule && rule <= GSL_INTEG_GAUSS61 <= rule ? rule :
-    GSL_INTEG_GAUSS61 ;
+    GSL_INTEG_GAUSS41 ; 
 } 
 // =============================================================================
 /*  calculate the integral 
@@ -289,7 +289,7 @@ Ostap::Math::Integrator::integrate_
   static const char s_message[] = "Ostap::Math::Integrator/integrate(1D)" ;
   //
   std::tie ( ierror, value , error ) = 
-    integrator.gaq_integrate    
+    integrator.qag_integrate    
     ( &F                , 
       xmin              ,   // lower integration edge  
       xmax              ,   // upper integration edge
@@ -330,7 +330,7 @@ Ostap::Math::Integrator::integrate_infinity_
   double error  ;
   static const char s_message[] = "Ostap::Math::Integrator/integrate_infinity" ;
   std::tie ( ierror, value , error ) = 
-    integrator.gaqi_integrate 
+    integrator.qagi_integrate 
     ( &F                , 
       workspace ( ws )  ,   // workspace 
       0 < aprecision ? aprecision : s_APRECISION_QAGI ,   // absolute precision 
@@ -369,7 +369,7 @@ Ostap::Math::Integrator::integrate_to_infinity_
   double error  ;
   static const char s_message[] = "Ostap::Math::Integrator/integrate_to_infinity" ;
   std::tie ( ierror, value , error ) = 
-    integrator.gaqiu_integrate 
+    integrator.qagiu_integrate 
     ( &F                 , 
       xmin               ,   // lower integration edge  
       workspace ( ws )   ,   // workspace 
@@ -409,7 +409,7 @@ Ostap::Math::Integrator::integrate_from_infinity_
   double error  ;
   static const char s_message[] = "Ostap::Math::Integrator/integrate_to_infinity" ;
   std::tie ( ierror , value , error ) = 
-    integrator.gaqil_integrate 
+    integrator.qagil_integrate 
     ( &F                 , 
       xmax               ,   // lower integration edge  
       workspace ( ws )   ,   // workspace 
@@ -517,7 +517,7 @@ Ostap::Math::Integrator::cauchy_pv_
   double error  ;
   static const char s_message[] = "Ostap::Math::Integrator/integrate_cauchy_pv" ;
   std::tie ( ierror, value , error ) = 
-    integrator.gawc_integrate 
+    integrator.qawc_integrate 
     ( &F                , 
       xlow , xhigh      ,   // low and high integration edges 
       c                 ,   // Cauchy's point 
@@ -734,7 +734,7 @@ Ostap::Math::Integrator::integrate_singular_
   double error  ;
   static const char s_message[] = "Ostap::Math::Integrator/integrate_singular" ;
   std::tie ( ierror, value , error ) = 
-    integrator.gaqp_integrate 
+    integrator.qagp_integrate 
     ( &F                    , 
       xmin                  ,   // lower integration edge
       xmax                  ,   // high integration edge
