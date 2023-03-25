@@ -18,6 +18,7 @@ __all__     = (
     'Sum3D'         , ## non-extended sum two PDFs 
     'H3D_pdf'       , ## convertor of 1D-histo to RooDataPdf
     'Histo3D_pdf'   , ## simple PDF from the histogram  
+    'Shape3D_pdf'   , ## simple PDF from generic function  
     ##
     'Fit3D'         , ## the model for                3D-fit
     'Fit3DSym'      , ## the model for      symmetric 3D-fit
@@ -288,89 +289,84 @@ class Histo3D_pdf(PDF3) :
     def shape  ( self ) :
         """'shape' : the actual C++ callable shape for TH3"""
         return self.__shape
-    @property
-    def histo  ( self ) :
-        """'histo' : the actual TH3 object"""
-        return self.shape.h() 
             
 # ============================================================================= 
-if ( 6 , 18 ) <= root_info : 
-    # =========================================================================
-    ## Generic 3D-shape from C++ callable
-    #  @see Ostap::Models:Shape3D
-    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-    #  @date 2020-07-20
-    class Shape3D_pdf(PDF3) :
-        """ Generic 3D-shape from C++ callable
-        - see Ostap::Models:Shape3D
-        """
-        
-        def __init__ ( self , name , shape , xvar , yvar , zvar , tag = 0 ) :
-            
-            if isinstance ( shape , ROOT.TH3 ) and not xvar :
-                xvar = shape.xminmax()                
-            if isinstance ( shape , ROOT.TH3 ) and not yvar :
-                yvar = shape.yminmax()                
-            if isinstance ( shape , ROOT.TH3 ) and not zvar :
-                zvar = shape.zminmax()
-                
-            if isinstance ( shape , ROOT.TH3 ) :
-                
-                self.histo = shape
-                shape      = Ostap.Math.Histo3D     ( shape )
-                tag        = Ostap.Utils.hash_histo ( shape ) 
-                
-            elif hasattr ( shape , 'tag' ) and not tag : 
-                tag = shape.tag() 
-                
-            ##  iniialize the base 
-            PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
-            
-            self.__shape = shape
-            self.__tag   = tag
+## Generic 3D-shape from C++ callable
+#  @see Ostap::Models:Shape3D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape3D_pdf(PDF3) :
+    """ Generic 3D-shape from C++ callable
+    - see Ostap::Models:Shape3D
+    """
+    
+    def __init__ ( self , name , shape , xvar , yvar , zvar , tag = 0 ) :
 
-            if isinstance ( self.shape , Ostap.Math.Histo2D ) :
+        th3 = None 
+        if   isinstance ( shape , ROOT.TH3           ) and 3 == shape.dim() : th3 = shape
+        elif isinstance ( shape , Ostap.Math.Histo3D )                      : th3 = shape.h ()
+        
+        if th3 and not xvar : xvar = th3.xminmax()
+        if th3 and not yvar : yvar = th3.yminmax()
+        if th3 and not zvar : zvar = th3.zminmax()
                 
-                ## create the actual pdf
-                self.pdf = Ostap.Models.Histo3D ( self.roo_name ( 'histo3_' ) , 
-                                                  "Histo-3D %s" % self.name   ,
-                                                  self.xvar                   ,
-                                                  self.yvar                   ,
-                                                  self.zvar                   ,
-                                                  self.shape                  )
-            else :
-                
-                ## create the actual pdf
-                self.pdf = Ostap.Models.Shape3D.create  (
+        if isinstance ( shape , ROOT.TH3 ) :
+            
+            self.histo = shape
+            shape      = Ostap.Math.Histo3D     ( shape )
+            tag        = Ostap.Utils.hash_histo ( shape ) 
+            
+        elif hasattr ( shape , 'tag' ) and not tag : 
+            tag = shape.tag() 
+            
+        ##  iniialize the base 
+        PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
+        
+        self.__shape = shape
+        self.__tag   = tag
+        
+        if isinstance ( self.shape , Ostap.Math.Histo2D ) :
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Histo3D ( self.roo_name ( 'histo3_' ) , 
+                                              "Histo-3D %s" % self.name   ,
+                                              self.xvar                   ,
+                                              self.yvar                   ,
+                                              self.zvar                   ,
+                                              self.shape                  )
+        else :
+            
+            assert (6,18) <= root_info , 'Shape3D_pdf with generic function requires ROOT>=6.18!'
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Shape3D.create  (
                     self.roo_name ( 'shape3_' ) , 
                     "Shape-3D %s" % self.name   ,
                     self.xvar                   ,
                     self.yvar                   ,
                     self.zvar                   ,
                     self.shape                  ,
-                    self.tag                    ) 
-                
-            ## save the configuration
-            self.config = {
-                'name'    : self.name    , 
-                'shape'   : self.shape   , 
-                'xvar'    : self.xvar    , 
-                'yvar'    : self.yvar    , 
-                'zvar'    : self.zvar    , 
-                'tag'     : self.tag     , 
-                }
+                    self.tag                    )
             
-        @property
-        def shape  ( self ) :
-            """'shape' : the actual C++ callable shape"""
-            return self.__shape  
-        @property
-        def tag   ( self ) :
-            """'tag' : uqnue tag used for cache-integration"""
-            return self.__tag
-        
-    __all__ = __all__ + ( 'Shape3D_pdf' , ) ## simple PDF from C++ shape     
-
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            'yvar'    : self.yvar    , 
+            'zvar'    : self.zvar    , 
+            'tag'     : self.tag     , 
+            }
+            
+    @property
+    def shape  ( self ) :
+        """'shape' : the actual C++ callable shape"""
+        return self.__shape  
+    @property
+    def tag   ( self ) :
+        """'tag' : unique tag used for cache-integration"""
+        return self.__tag
+    
 # =============================================================================
 ## simple convertor of 3D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru

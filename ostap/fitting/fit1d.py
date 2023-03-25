@@ -17,6 +17,7 @@ __all__     = (
     'Sum1D'         , ## helper pdf: a non-extensive sum of 1D PDFs 
     'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf
     'Histo1D_pdf'   , ## simple PDF from the histogram  
+    'Shape1D_pdf'   , ## simple PDF from generic function  
     ## 
     'PEAKMEAN'      , ## useful base class to create "signal" PDFs for peak-like fits
     'PEAK'          , ## useful base class to create "signal" PDFs for peak-like fits
@@ -519,81 +520,78 @@ class Histo1D_pdf(PDF1) :
     def shape  ( self ) :
         """'shape' : the actual C++ callable shape for TH1"""
         return self.__shape
-    @property
-    def histo  ( self ) :
-        """'histo' : the actual TH1 object"""
-        return self.shape.h() 
     
-# ============================================================================= 
-if ( 6 , 18 ) <= root_info : 
-    # =========================================================================
-    ## Generic 1D-shape from C++ callable
-    #  @see Ostap::Models:Shape1D
-    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-    #  @date 2020-07-20
-    class Shape1D_pdf(PDF1) :
-        """ Generic 1D-shape from C++ callable
-        - see Ostap::Models:Shape1D
-        """
-        
-        def __init__ ( self , name , shape , xvar , tag = 0 ) :
-            
-            
-            if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) and not xvar :
-                xvar = shape.xminmax() 
-                
-            if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) :
-                
-                self.histo = shape
-                shape      = Ostap.Math.Histo1D     ( shape )
-                tag        = Ostap.Utils.hash_histo ( shape )
-                
-            elif hasattr ( shape , 'tag' ) and not tag : 
-                tag = shape.tag() 
-                
-                ##  initialize the base 
-                PDF1.__init__ ( self , name , xvar ) 
-                
-            self.__shape = shape
-            self.__tag   = tag
-                
-            if isinstance ( self.shape , Ostap.Math.Histo1D ) :
-                
-                ## create the actual pdf
-                self.pdf = Ostap.Models.Histo1D (
-                    self.roo_name ( 'histo1_' ) , 
-                    "Histo-1D %s" % self.name   ,
-                    self.xvar                   ,
-                    self.shape                  )
-                
-            else :
-                
-                ## create the actual pdf
-                self.pdf = Ostap.Models.Shape1D.create  (
-                    self.roo_name ( 'shape1_' ) , 
-                    "Shape-1D %s" % self.name ,
-                    self.xvar                 ,
-                    self.shape                ,
-                    self.tag                  ) 
-                
-            ## save the configuration
-            self.config = {
-                'name'    : self.name    , 
-                'shape'   : self.shape   , 
-                'xvar'    : self.xvar    ,
-                'tag'     : self.tag     ,
-                }
-            
-        @property
-        def shape  ( self ) :
-            """'shape': the actual C++ callable shape"""
-            return self.__shape 
-        @property
-        def tag   ( self ) :
-            """'tag' : unique tag used for cache-integration"""
-            return self.__tag
+# =============================================================================
+## Generic 1D-shape from C++ callable
+#  @see Ostap::Models:Shape1D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape1D_pdf(PDF1) :
+    """ Generic 1D-shape from C++ callable
+    - see Ostap::Models:Shape1D
+    """
+    
+    def __init__ ( self , name , shape , xvar , tag = 0 ) :
 
-    __all__ = __all__ + ( 'Shape1D_pdf' , ) ## simple PDF from C++ shape     
+        
+        th1 = None 
+        if   isinstance ( shape , ROOT.TH1           ) and 1 == shape.dim() : th1 = shape
+        elif isinstance ( shape , Ostap.Math.Histo3D )                      : th1 = shape.h ()
+        
+        if th1 and not xvar : xvar = th1.xminmax()
+        
+        if isinstance ( shape , ROOT.TH1 ) and 1 == shape.dim() :
+            
+            shape      = Ostap.Math.Histo1D     ( shape )
+            tag        = Ostap.Utils.hash_histo ( shape )
+            
+        elif hasattr ( shape , 'tag' ) and not tag :
+            
+            tag = shape.tag() 
+            
+        ##  initialize the base 
+        PDF1.__init__ ( self , name , xvar ) 
+        
+        self.__shape = shape
+        self.__tag   = tag
+        
+        if isinstance ( self.shape , Ostap.Math.Histo1D ) :
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Histo1D (
+                self.roo_name ( 'histo1_' ) , 
+                "Histo-1D %s" % self.name   ,
+                self.xvar                   ,
+                self.shape                  )
+            
+        else :
+
+            assert (6,18) <= root_info , 'Shape1D_pdf with generic function requires ROOT>=6.18!'
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Shape1D.create  (
+                self.roo_name ( 'shape1_' ) , 
+                "Shape-1D %s" % self.name ,
+                self.xvar                 ,
+                self.shape                ,
+                self.tag                  ) 
+            
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    ,
+            'tag'     : self.tag     ,
+            }
+        
+    @property
+    def shape  ( self ) :
+        """'shape': the actual C++ callable shape"""
+        return self.__shape 
+    @property
+    def tag   ( self ) :
+        """'tag' : unique tag used for cache-integration"""
+        return self.__tag
  
 # =============================================================================
 ## simple convertor of 1D-histogram into PDF
