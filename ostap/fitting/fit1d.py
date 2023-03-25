@@ -545,8 +545,8 @@ class Shape1D_pdf(PDF1) :
             shape      = Ostap.Math.Histo1D     ( shape )
             tag        = Ostap.Utils.hash_histo ( shape )
             
-        elif hasattr ( shape , 'tag' ) and not tag :
-            
+        elif hasattr ( shape , 'tag' ) and not tag : 
+
             tag = shape.tag() 
             
         ##  initialize the base 
