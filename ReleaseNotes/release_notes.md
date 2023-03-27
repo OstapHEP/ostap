@@ -9,7 +9,6 @@
   1. extent printout for `RooPlot` objects 
   1. `H(1,2m3)D_pdf - do not declare themselves as `signal` components
 
-
 ## Backward incompatible: 
 
 ## Bug fixes:
