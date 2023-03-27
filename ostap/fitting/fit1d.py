@@ -630,7 +630,7 @@ class H1D_pdf(PDF1) :
                 order       )
             
         ## and declare it be be a "signal"
-        self.signals.add ( self.pdf ) 
+        ## self.signals.add ( self.pdf ) 
         
         ## save the configuration
         self.config = {

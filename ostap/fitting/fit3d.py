@@ -413,7 +413,7 @@ class H3D_pdf(PDF3) :
                 order        )
 
         ## and declare it be be a "signal"
-        self.signals.add ( self.pdf ) 
+        ## self.signals.add ( self.pdf ) 
             
         ## save the configuration
         self.config = {

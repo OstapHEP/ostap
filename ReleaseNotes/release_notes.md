@@ -6,6 +6,9 @@
   1. fix the names for internal integration functions to be coherent with underlying GSL methods 
   1. disable `Shape(1,2,3)D_pdf` for old versions of ROOT 
   1. add `Histo(1,2,3)D_pdf` objects 
+  1. extent printout for `RooPlot` objects 
+  1. `H(1,2m3)D_pdf - do not declare themselves as `signal` components
+
 
 ## Backward incompatible: 
 

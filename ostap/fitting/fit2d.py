@@ -393,7 +393,7 @@ class H2D_pdf(PDF2) :
                 order       )
             
         ## and declare it be be a "signal"
-        self.signals.add ( self.pdf ) 
+        ## self.signals.add ( self.pdf ) 
 
         ## save the configuration
         self.config = {

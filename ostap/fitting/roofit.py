@@ -277,7 +277,7 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
     
     if not title  :
         title = 'RooPlot %s' % plot.name
-    table = [ ( 'Index' , 'Type' , 'Option' , 'Name' ) ]
+    table = [ ( 'Index' , 'Type' , 'Option' , 'Line' , 'Marker' , 'Fill' , 'Name' ) ]
 
     names = set() 
     for index , obj in enumerate ( plot )  :
@@ -288,9 +288,34 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
         ## Trick! 
         if invisible :
             if not name in names : options = options + ":I"
-            names.add  ( name ) 
-        row  = '%2d' % index , _name ( obj ) , options , name 
+            names.add  ( name )
+            
+        row  = [ '%2d' % index , _name ( obj ) , options ]
 
+        ## line attributes 
+        if isinstance ( obj , ROOT.TAttLine ) : 
+            row.append ( '%2d/%d/%d' % ( obj.GetLineStyle () ,
+                                         obj.GetLineColor () ,
+                                         obj.GetLineWidth () ) ) 
+        else : row.append ('')
+
+        ## marker attributes 
+        if isinstance ( obj , ROOT.TAttMarker ) : 
+            row.append ( '%2d/%d/%s' % ( obj.GetMarkerStyle () ,
+                                         obj.GetMarkerColor () ,
+                                         obj.GetMarkerSize  () ) )
+        else : row.append ('')
+
+        ## Fill attributes 
+        if isinstance ( obj , ROOT.TAttFill ) : 
+            row.append ( '%4d/%-3d' % ( obj.GetFillStyle () ,
+                                        obj.GetFillColor () ) )
+        else : row.append ('')
+        
+        ## 
+        row.append  ( name )
+        row = tuple ( row  )
+        
         table.append ( row )
 
     import ostap.logger.table as T
