@@ -910,8 +910,9 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      IntegrateX2 ( const FUNCTION2D* f2d , 
-                   const double      y   ) 
+      IntegrateX2 
+      ( const FUNCTION2D* f2d , 
+        const double      y   ) 
         : m_f2d  ( f2d ) 
         , m_y    ( y   ) 
       {}
@@ -935,8 +936,9 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      IntegrateY2 ( const FUNCTION2D* f2d , 
-                    const double      x   ) 
+      IntegrateY2
+      ( const FUNCTION2D* f2d , 
+        const double      x   ) 
         : m_f2d  ( f2d ) 
         , m_x    ( x   ) 
       {}
@@ -960,9 +962,10 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      IntegrateX3 ( const FUNCTION3D* f3d ,
-                    const double       y  , 
-                    const double       z  ) 
+      IntegrateX3
+      ( const FUNCTION3D* f3d ,
+        const double       y  , 
+        const double       z  ) 
         : m_f3d  ( f3d ) 
         , m_y    ( y   ) 
         , m_z    ( z   ) 
@@ -988,9 +991,10 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      IntegrateY3 ( const FUNCTION3D* f3d , 
-                    const double      x   , 
-                    const double      z   ) 
+      IntegrateY3 
+      ( const FUNCTION3D* f3d , 
+        const double      x   , 
+        const double      z   ) 
         : m_f3d  ( f3d ) 
         , m_x    ( x   ) 
         , m_z    ( z   ) 
@@ -1016,9 +1020,10 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      IntegrateZ3 ( const FUNCTION3D* f3d , 
-                    const double      x   , 
-                    const double      y   ) 
+      IntegrateZ3
+      ( const FUNCTION3D* f3d , 
+        const double      x   , 
+        const double      y   ) 
         : m_f3d  ( f3d ) 
         , m_x    ( x   ) 
         , m_y    ( y   ) 

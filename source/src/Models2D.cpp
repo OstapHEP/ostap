@@ -699,7 +699,7 @@ double Ostap::Math::PS2DPol2::integrateX
   double result    =  1.0 ;
   double error     = -1.0 ;
   std::tie ( ierror , result , error ) = s_integrator.qag_integrate
-    (Ostap::Utils::hash_combiner ( tag() , 'Y' , y )                   , 
+    ( Ostap::Utils::hash_combiner ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace

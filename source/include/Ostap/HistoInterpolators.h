@@ -15,6 +15,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/HistoInterpolation.h"
+#include "Ostap/Workspace.h"
 // ============================================================================
 namespace Ostap 
 {
@@ -104,10 +105,24 @@ namespace Ostap
             edges () , extrapolate () , density () );                    
       }
       // ======================================================================
+    public: // integrals 
+      // ======================================================================
+      /// integral over whole histogram range 
+      double integral ()    const ;
+      /// integral between low and high
+      double integral 
+      ( const double low  , 
+        const double high ) const ;
+      // ======================================================================
     public:
       // ======================================================================
       const TH1D&                           h () const  { return m_h ; }
       Ostap::Math::HistoInterpolation::Type t () const  { return m_t ; }      
+      // ======================================================================
+    public:
+      // ======================================================================      
+      /// get unique tag 
+      std::size_t                           tag () const { return m_tag ; }
       // ======================================================================
     private :
       // ======================================================================
@@ -116,6 +131,11 @@ namespace Ostap
       // ======================================================================
       /// interpolation type 
       Ostap::Math::HistoInterpolation::Type m_t { Ostap::Math::HistoInterpolation::Default };
+      // ======================================================================
+      // unique tag 
+      std::size_t                           m_tag       { 0 } ;
+      /// integration workspace 
+      Ostap::Math::WorkSpace                m_workspace {   } ;
       // ======================================================================
     };
     // ========================================================================
@@ -164,6 +184,34 @@ namespace Ostap
       Ostap::Math::HistoInterpolation::Type tx () const  { return m_tx ; }      
       Ostap::Math::HistoInterpolation::Type ty () const  { return m_ty ; }      
       // ======================================================================
+    public: 
+      // ======================================================================
+      /// integral over whole histogram range 
+      double integral ()    const ;
+      /// integral between xmin, xmax, ymin, ymax 
+      double integral 
+      ( const double xmin  , 
+        const double xmax  ,
+        const double ymin  , 
+        const double ymax  ) const ;
+      double integrateX
+      ( const double y     ) const ;
+      double integrateX 
+      ( const double y     , 
+        const double xmin  , 
+        const double xmax  ) const ;
+      double integrateY 
+      ( const double x     ) const ;
+      double integrateY 
+      ( const double x     , 
+        const double ymin  , 
+        const double ymax  ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================      
+      /// get unique tag 
+      std::size_t                           tag () const { return m_tag ; }
+      // ======================================================================
     private :
       // ======================================================================
       // the histogram itself 
@@ -173,6 +221,11 @@ namespace Ostap
       Ostap::Math::HistoInterpolation::Type m_tx { Ostap::Math::HistoInterpolation::Default };
       /// interpolation type 
       Ostap::Math::HistoInterpolation::Type m_ty { Ostap::Math::HistoInterpolation::Default };
+      // ======================================================================
+      // unique tag 
+      std::size_t                           m_tag       { 0 } ;
+      /// integration workspace 
+      Ostap::Math::WorkSpace                m_workspace {   } ;
       // ======================================================================
     };
     // ========================================================================
@@ -225,6 +278,78 @@ namespace Ostap
       Ostap::Math::HistoInterpolation::Type ty () const  { return m_ty ; }      
       Ostap::Math::HistoInterpolation::Type tz () const  { return m_tz ; }      
       // ======================================================================
+    public: // integrals 
+      // ======================================================================
+      /// integral over whole histogram range 
+      double integral ()    const ;
+      /// integral between xmin, xmax, ymin, ymax 
+      double integral 
+      ( const double xmin  , 
+        const double xmax  ,
+        const double ymin  , 
+        const double ymax  ,
+        const double zmin  , 
+        const double zmax  ) const ;
+      // ======================================================================
+      double integrateXY
+      ( const double z     ) const ;
+      double integrateXY 
+      ( const double z     , 
+        const double xmin  , 
+        const double xmax  ,
+        const double ymin  , 
+        const double ymax  ) const ;
+      // ======================================================================
+      double integrateXZ
+      ( const double y     ) const ;
+      double integrateXZ 
+      ( const double y     , 
+        const double xmin  , 
+        const double xmax  ,
+        const double zmin  , 
+        const double zmax  ) const ;
+      // ======================================================================
+      double integrateYZ
+      ( const double x     ) const ;
+      double integrateYZ 
+      ( const double y     , 
+        const double ymin  , 
+        const double ymax  ,
+        const double zmin  , 
+        const double zmax  ) const ;
+      // ======================================================================
+      double integrateX 
+      ( const double y     , 
+        const double z     ) const ;
+      double integrateX 
+      ( const double y     , 
+        const double z     , 
+        const double xmin  , 
+        const double xmax  ) const ;
+      // ======================================================================
+      double integrateY 
+      ( const double x     , 
+        const double z     ) const ;
+      double integrateY 
+      ( const double x     , 
+        const double z     , 
+        const double ymin  , 
+        const double ymax  ) const ;
+      // ======================================================================
+      double integrateZ 
+      ( const double x     , 
+        const double y     ) const ;
+      double integrateZ 
+      ( const double x     , 
+        const double y     , 
+        const double zmin  , 
+        const double zmax  ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================      
+      /// get unique tag 
+      std::size_t                           tag () const { return m_tag ; }
+      // ======================================================================
     private :
       // ======================================================================
       // the histogram itself 
@@ -236,6 +361,11 @@ namespace Ostap
       Ostap::Math::HistoInterpolation::Type m_ty { Ostap::Math::HistoInterpolation::Default };
       /// interpolation type 
       Ostap::Math::HistoInterpolation::Type m_tz { Ostap::Math::HistoInterpolation::Default };
+      // ======================================================================
+      // unique tag 
+      std::size_t                           m_tag       { 0 } ;
+      /// integration workspace 
+      Ostap::Math::WorkSpace                m_workspace {   } ;
       // ======================================================================
     };
     // ========================================================================

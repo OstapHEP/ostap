@@ -326,7 +326,7 @@ class H1Func(object) :
 
     ## get corresponding ROOT.TF1 object 
     def tf1  ( self ) :
-        """Get corresponsing ROOT.TF1 object 
+        """Get corresponding ROOT.TF1 object 
         """
         if not hasattr ( self , '_tf1' ) : 
             
