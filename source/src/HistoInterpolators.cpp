@@ -35,7 +35,42 @@ namespace
 {
   // ==========================================================================
   /// split histogram if number of bins too large
-  const unsigned short s_MAX_BINS = 25 ;
+  const unsigned short s_MAX_BINS = 25   ;
+  const double         s_TINY_BIN = 0.01 ;
+  // ==========================================================================
+  /// has it very tiny bins between xmin and xmax ? 
+  inline bool tiny_bin
+  ( const TAxis& axis , 
+    const double xmin , 
+    const double xmax ) 
+  {
+    const double bw    = s_TINY_BIN * std::abs ( xmax - xmin ) ;
+    const double range = axis.GetXmax() - axis.GetXmin() ; 
+    const int    nbins = axis.GetNbins () ;
+    //
+    const TArrayD* a = axis.GetXbins() ;
+    if ( !a || 0 == a->GetSize() )
+    {
+      // here we have uniform bins 
+      const double binw = range / nbins ;
+      return binw < bw ;                                        // RETURN 
+    }
+    //
+    const int n1   = axis.FindFixBin ( xmin ) ;
+    const int n2   = axis.FindFixBin ( xmax ) ;
+    if ( n1 == n2 ) { return false ; }                          // RETURN
+    //
+    const int nmin = std::max ( std::min ( n1 , n2 ) , 1     ) ;
+    if ( nbins < nmin ) { return false ; }                      // RETURN
+    //
+    const int nmax = std::min ( std::max ( n1 , n2 ) , nbins ) ;
+    if ( nmax < 1     ) { return false ; }                      // RETURN
+    //
+    for ( int ibin = nmin ; ibin <= nmax ; ++ibin ) 
+    { if ( axis.GetBinWidth ( ibin ) < bw ) { return true ; } } // RETURN 
+    //
+    return false ;
+  }
   // ==========================================================================
 }
 // ============================================================================
@@ -70,8 +105,7 @@ Ostap::Math::Histo1D::Histo1D
   , m_h (   ) 
   , m_t ( t )
 {
-  const TH1* h = &histo ;
-  Ostap::Assert  ( h && 1 == h->GetDimension()  , 
+  Ostap::Assert  ( 1 == histo.GetDimension()  , 
                    "Invalid type of ROOT::TH1"  , 
                    "Ostap::Math::Histo1D"       ) ;
   histo.Copy ( m_h ) ;
@@ -109,8 +143,7 @@ Ostap::Math::Histo2D::Histo2D
   , m_tx ( tx ) 
   , m_ty ( ty ) 
 {
-  const TH2* h = &histo ;
-  Ostap::Assert  ( h && 2 == h->GetDimension()  ,  
+  Ostap::Assert  ( 2 == histo.GetDimension()  ,  
                    "Invalid type of ROOT::TH2"  , 
                    "Ostap::Math::Histo2D"       ) ;
   histo.Copy ( m_h ) ;
@@ -206,7 +239,7 @@ double Ostap::Math::Histo1D::integral
   // split it if too large
   const unsigned int bin_min = xa->FindFixBin ( x_min ) ;
   const unsigned int bin_max = xa->FindFixBin ( x_max ) ;
-  if ( bin_max > s_MAX_BINS + bin_min ) 
+  if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *xa , x_min , x_max ) )
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
     const double x_mid   = xa->GetBinCenter ( bin_mid ) ;
@@ -285,7 +318,7 @@ double Ostap::Math::Histo2D::integrateX
   // split it if too large
   const unsigned int bin_min = xa->FindFixBin ( x_min ) ;
   const unsigned int bin_max = xa->FindFixBin ( x_max ) ;
-  if ( bin_max > s_MAX_BINS + bin_min ) 
+  if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *xa , x_min , x_max ) ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
     const double x_mid   = xa->GetBinCenter ( bin_mid ) ;
@@ -341,7 +374,7 @@ double Ostap::Math::Histo2D::integrateY
   // split it if interval too large 
   const unsigned int bin_min = ya->FindFixBin ( y_min ) ;
   const unsigned int bin_max = ya->FindFixBin ( y_max ) ;
-  if ( bin_max > s_MAX_BINS + bin_min ) 
+  if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *ya , y_min , y_max ) ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
     const double y_mid   = ya->GetBinCenter ( bin_mid ) ;
@@ -706,7 +739,7 @@ double Ostap::Math::Histo3D::integrateX
   // split it if too large
   const unsigned int bin_min = xa->FindFixBin ( x_min ) ;
   const unsigned int bin_max = xa->FindFixBin ( x_max ) ;
-  if ( bin_max > s_MAX_BINS + bin_min ) 
+  if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *xa , x_min , x_max ) ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
     const double x_mid   = xa->GetBinCenter ( bin_mid ) ;
@@ -769,7 +802,7 @@ double Ostap::Math::Histo3D::integrateY
   // split it if too large
   const unsigned int bin_min = ya->FindFixBin ( y_min ) ;
   const unsigned int bin_max = ya->FindFixBin ( y_max ) ;
-  if ( bin_max > s_MAX_BINS + bin_min ) 
+  if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *ya , y_min , y_max ) ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
     const double y_mid   = ya->GetBinCenter ( bin_mid ) ;
@@ -832,7 +865,7 @@ double Ostap::Math::Histo3D::integrateZ
   // split it if too large
   const unsigned int bin_min = za->FindFixBin ( z_min ) ;
   const unsigned int bin_max = za->FindFixBin ( z_max ) ;
-  if ( bin_max > s_MAX_BINS + bin_min ) 
+  if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *za , z_min , z_max ) ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
     const double z_mid   = za->GetBinCenter ( bin_mid ) ;

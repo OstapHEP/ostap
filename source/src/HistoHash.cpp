@@ -106,10 +106,10 @@ std::size_t Ostap::Utils::hash_axis
       axis -> GetXmax  () ) ;
   //
   const TArrayD* A = axis->GetXbins() ;
-  if ( A ) 
+  if ( A && A->GetSize() ) 
   {
     const Double_t* a = A->GetArray() ;
-    if ( a ) {  seed = Ostap::Utils::hash_combiner ( seed , a , a + A ->GetSize () ) ; }
+    if ( a ) {  seed = Ostap::Utils::hash_combiner ( seed , Ostap::Utils::hash_range ( a , a + A ->GetSize () ) ) ; }
   }
   //
   return seed ;
@@ -129,38 +129,36 @@ std::size_t Ostap::Utils::hash_histo
   const Int_t NY = histo -> GetNbinsY () ;
   const Int_t NZ = histo -> GetNbinsZ () ;
   //
-  std::size_t seed = Ostap::Utils::hash_combiner ( histo -> Hash()          ,
-                                                   histo -> GetDimension () , 
-                                                   histo -> GetEntries   () , 
-                                                   NX , NY , NZ             ) ;
-  //
-  seed = Ostap::Utils::hash_combiner ( seed , hash_axis ( histo->GetXaxis() ) ) ;
-  seed = Ostap::Utils::hash_combiner ( seed , hash_axis ( histo->GetYaxis() ) ) ;
-  seed = Ostap::Utils::hash_combiner ( seed , hash_axis ( histo->GetZaxis() ) ) ;
+  std::size_t seed = Ostap::Utils::hash_combiner ( histo -> GetDimension ()        , 
+                                                   histo -> GetEntries   ()        , 
+                                                   NX , NY , NZ                    ,
+                                                   hash_axis ( histo -> GetXaxis() ) , 
+                                                   hash_axis ( histo -> GetYaxis() ) , 
+                                                   hash_axis ( histo -> GetZaxis() ) ) ;
   //
   for ( int ix = 1 ; ix <= NX ; ++ix ) 
   { for ( int iy = 1 ; iy <= NY ; ++iy ) 
     { for ( int iz = 1 ; iz <= NZ ; ++iz ) 
       { seed = Ostap::Utils::hash_combiner 
           ( seed , 
-            histo->GetBinContent ( ix , iy , iz ) ,
-            histo->GetBinError   ( ix , iy , iz ) ) ;  
+            histo -> GetBinContent ( ix , iy , iz ) ,
+            histo -> GetBinError   ( ix , iy , iz ) ) ;  
       }
     }
   }
   //
   // add sumw2 information 
   const TArrayD* sumw2 = histo->GetSumw2() ;
-  if ( sumw2 ) 
+  if ( sumw2 && sumw2->GetSize() ) 
   {
     const Double_t* a = sumw2->GetArray() ;
-    if ( a ) {  seed = Ostap::Utils::hash_combiner ( seed , a , a + sumw2 ->GetSize () ) ; }
+    if ( a ) { seed = Ostap::Utils::hash_combiner ( seed , Ostap::Utils::hash_range ( a , a + sumw2 ->GetSize () ) ) ; }
   }
   //
-  // add statistics: 
-  double stats [7];
-  histo->GetStats( stats ) ;
-  seed = Ostap::Utils::hash_combiner ( seed , Ostap::Utils::hash_range ( stats , stats + 7 ) ) ;
+  // // add statistics: 
+  // double stats [7];
+  // histo -> GetStats ( stats ) ;
+  // seed = Ostap::Utils::hash_combiner ( seed , Ostap::Utils::hash_range ( stats , stats + 7 ) ) ;
   //
   return seed ;
 }
