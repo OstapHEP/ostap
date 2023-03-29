@@ -236,9 +236,27 @@ double Ostap::Math::Histo1D::integral
   const double x_min = std::max ( low  , xmin ) ;
   const double x_max = std::min ( high , xmax ) ;
   //
+  const unsigned int bin_min = std::max ( xa->FindFixBin ( x_min ) , 1              ) ;
+  const unsigned int bin_max = std::min ( xa->FindFixBin ( x_max ) , xa->GetNbins() ) ;
+  //
+  if ( Ostap::Math::HistoInterpolation::Nearest == m_t ) 
+  {
+    double result = 0 ;
+    if ( bin_min == bin_max  ) { result = m_h.GetBinContent ( bin_min ) * ( x_max - x_min ) ; }  
+    else 
+    {
+      // regular sum 
+      for ( int ibin = bin_min + 1 ; ibin < bin_max ; ++ibin ) 
+      { result += xa->GetBinWidth ( ibin ) * m_h.GetBinContent ( ibin ) ; }
+      // first bin
+      result   += ( xa -> GetBinUpEdge ( bin_min ) - x_min ) * m_h.GetBinContent ( bin_min ) ; 
+      /// last bin 
+      result   += ( x_max - xa->GetBinLowEdge ( bin_max )  ) * m_h.GetBinContent ( bin_max ) ; 
+    }
+    return result ;
+  }
+  //
   // split it if too large
-  const unsigned int bin_min = xa->FindFixBin ( x_min ) ;
-  const unsigned int bin_max = xa->FindFixBin ( x_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *xa , x_min , x_max ) )
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
@@ -314,10 +332,28 @@ double Ostap::Math::Histo2D::integrateX
   //
   const double x_min = std::max ( xmin , xa->GetXmin () ) ;
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
+  // 
+  const unsigned int bin_min = std::max ( xa->FindFixBin ( x_min ) , 1              ) ;
+  const unsigned int bin_max = std::min ( xa->FindFixBin ( x_max ) , xa->GetNbins() ) ;
+  //
+  if ( Ostap::Math::HistoInterpolation::Nearest == m_tx ) 
+  {
+    double result = 0 ;
+    if ( bin_min == bin_max  ) { result = (*this) ( xa->GetBinCenter ( bin_min ) , y )  * ( x_max - x_min ) ; }  
+    else 
+    {
+      // regular sum 
+      for ( int ibin = bin_min + 1 ; ibin < bin_max ; ++ibin ) 
+      { result += (*this) ( xa -> GetBinCenter ( ibin    ) , y ) *   xa -> GetBinWidth  ( ibin )  ; }
+      // first bin
+      result   += (*this) ( xa -> GetBinCenter ( bin_min ) , y ) * ( xa -> GetBinUpEdge ( bin_min ) - x_min ) ;
+      /// last bin 
+      result   += (*this) ( xa -> GetBinCenter ( bin_max ) , y ) * ( x_max - xa->GetBinLowEdge ( bin_max )  ) ;
+    }
+    return result ;
+  }
   //
   // split it if too large
-  const unsigned int bin_min = xa->FindFixBin ( x_min ) ;
-  const unsigned int bin_max = xa->FindFixBin ( x_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *xa , x_min , x_max ) ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
@@ -371,9 +407,27 @@ double Ostap::Math::Histo2D::integrateY
   const double y_min = std::max ( ymin , ya->GetXmin () ) ;
   const double y_max = std::min ( ymax , ya->GetXmax () ) ;
   //
+  const unsigned int bin_min = std::max ( ya->FindFixBin ( y_min ) , 1              ) ;
+  const unsigned int bin_max = std::min ( ya->FindFixBin ( y_max ) , ya->GetNbins() ) ;
+  //
+  if ( Ostap::Math::HistoInterpolation::Nearest == m_ty ) 
+  {
+    double result = 0 ;
+    if ( bin_min == bin_max  ) { result = (*this) ( x , ya->GetBinCenter ( bin_min ) )  * ( y_max - y_min ) ; }  
+    else 
+    {
+      // regular sum 
+      for ( int ibin = bin_min + 1 ; ibin < bin_max ; ++ibin ) 
+      { result += (*this) ( x , ya -> GetBinCenter ( ibin    ) ) *   ya -> GetBinWidth  ( ibin )  ; }
+      // first bin
+      result   += (*this) ( x , ya -> GetBinCenter ( bin_min ) ) * ( ya -> GetBinUpEdge ( bin_min ) - y_min ) ;
+      /// last bin 
+      result   += (*this) ( x , ya -> GetBinCenter ( bin_max ) ) * ( y_max - ya->GetBinLowEdge ( bin_max )  ) ;
+    }
+    return result ;
+  }
+  //
   // split it if interval too large 
-  const unsigned int bin_min = ya->FindFixBin ( y_min ) ;
-  const unsigned int bin_max = ya->FindFixBin ( y_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *ya , y_min , y_max ) ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
@@ -736,9 +790,27 @@ double Ostap::Math::Histo3D::integrateX
   const double x_min = std::max ( xmin , xa->GetXmin () ) ;
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
   //
+  const unsigned int bin_min = std::max ( xa->FindFixBin ( x_min ) , 1              ) ;
+  const unsigned int bin_max = std::min ( xa->FindFixBin ( x_max ) , xa->GetNbins() ) ;
+  //
+  if ( Ostap::Math::HistoInterpolation::Nearest == m_tx ) 
+  {
+    double result = 0 ;
+    if ( bin_min == bin_max  ) { result = (*this) ( xa->GetBinCenter ( bin_min ) , y , z )  * ( x_max - x_min ) ; }  
+    else 
+    {
+      // regular sum 
+      for ( int ibin = bin_min + 1 ; ibin < bin_max ; ++ibin ) 
+      { result += (*this) ( xa -> GetBinCenter ( ibin    ) , y , z ) *   xa -> GetBinWidth  ( ibin )  ; }
+      // first bin
+      result   += (*this) ( xa -> GetBinCenter ( bin_min ) , y , z ) * ( xa -> GetBinUpEdge ( bin_min ) - x_min ) ;
+      /// last bin 
+      result   += (*this) ( xa -> GetBinCenter ( bin_max ) , y , z ) * ( x_max - xa->GetBinLowEdge ( bin_max )  ) ;
+    }
+    return result ;
+  }
+  //
   // split it if too large
-  const unsigned int bin_min = xa->FindFixBin ( x_min ) ;
-  const unsigned int bin_max = xa->FindFixBin ( x_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *xa , x_min , x_max ) ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
@@ -799,9 +871,27 @@ double Ostap::Math::Histo3D::integrateY
   const double y_min = std::max ( ymin , ya->GetXmin () ) ;
   const double y_max = std::min ( ymax , ya->GetXmax () ) ;
   //
+  const unsigned int bin_min = std::max ( ya->FindFixBin ( y_min ) , 1              ) ;
+  const unsigned int bin_max = std::min ( ya->FindFixBin ( y_max ) , ya->GetNbins() ) ;
+  //
+  if ( Ostap::Math::HistoInterpolation::Nearest == m_ty ) 
+  {
+    double result = 0 ;
+    if ( bin_min == bin_max  ) { result = (*this) ( x , ya->GetBinCenter ( bin_min ) , z )  * ( y_max - y_min ) ; }  
+    else 
+    {
+      // regular sum 
+      for ( int ibin = bin_min + 1 ; ibin < bin_max ; ++ibin ) 
+      { result += (*this) ( x , ya -> GetBinCenter ( ibin    ) , z ) *   ya -> GetBinWidth  ( ibin )  ; }
+      // first bin
+      result   += (*this) ( x , ya -> GetBinCenter ( bin_min ) , z ) * ( ya -> GetBinUpEdge ( bin_min ) - y_min ) ;
+      /// last bin 
+      result   += (*this) ( x , ya -> GetBinCenter ( bin_max ) , z ) * ( y_max - ya->GetBinLowEdge ( bin_max )  ) ;
+    }
+    return result ;
+  }
+  //
   // split it if too large
-  const unsigned int bin_min = ya->FindFixBin ( y_min ) ;
-  const unsigned int bin_max = ya->FindFixBin ( y_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *ya , y_min , y_max ) ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
@@ -862,9 +952,27 @@ double Ostap::Math::Histo3D::integrateZ
   const double z_min = std::max ( zmin , za->GetXmin () ) ;
   const double z_max = std::min ( zmax , za->GetXmax () ) ;
   //
+  const unsigned int bin_min = std::max ( za->FindFixBin ( z_min ) , 1              ) ;
+  const unsigned int bin_max = std::min ( za->FindFixBin ( z_max ) , za->GetNbins() ) ;
+  //
+  if ( Ostap::Math::HistoInterpolation::Nearest == m_ty ) 
+  {
+    double result = 0 ;
+    if ( bin_min == bin_max  ) { result = (*this) ( x , y , za->GetBinCenter ( bin_min ) )  * ( z_max - z_min ) ; }  
+    else 
+    {
+      // regular sum 
+      for ( int ibin = bin_min + 1 ; ibin < bin_max ; ++ibin ) 
+      { result += (*this) ( x , y , za -> GetBinCenter ( ibin    ) ) *   za -> GetBinWidth  ( ibin )  ; }
+      // first bin
+      result   += (*this) ( x , y , za -> GetBinCenter ( bin_min ) ) * ( za -> GetBinUpEdge ( bin_min ) - z_min ) ;
+      /// last bin 
+      result   += (*this) ( x , y , za -> GetBinCenter ( bin_max ) ) * ( z_max - za->GetBinLowEdge ( bin_max )  ) ;
+    }
+    return result ;
+  }
+  //
   // split it if too large
-  const unsigned int bin_min = za->FindFixBin ( z_min ) ;
-  const unsigned int bin_max = za->FindFixBin ( z_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min || tiny_bin ( *za , z_min , z_max ) ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
