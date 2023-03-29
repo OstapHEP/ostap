@@ -204,8 +204,8 @@ double Ostap::Math::Histo1D::integral
   const double x_max = std::min ( high , xmax ) ;
   //
   // split it if too large
-  const int bin_min = xa->FindBin ( x_min ) ;
-  const int bin_max = xa->FindBin ( x_max ) ;
+  const unsigned int bin_min = xa->FindFixBin ( x_min ) ;
+  const unsigned int bin_max = xa->FindFixBin ( x_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
@@ -283,8 +283,8 @@ double Ostap::Math::Histo2D::integrateX
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
   //
   // split it if too large
-  const int bin_min = xa->FindBin ( x_min ) ;
-  const int bin_max = xa->FindBin ( x_max ) ;
+  const unsigned int bin_min = xa->FindFixBin ( x_min ) ;
+  const unsigned int bin_max = xa->FindFixBin ( x_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
@@ -339,8 +339,8 @@ double Ostap::Math::Histo2D::integrateY
   const double y_max = std::min ( ymax , ya->GetXmax () ) ;
   //
   // split it if interval too large 
-  const int bin_min = ya->FindBin ( y_min ) ;
-  const int bin_max = ya->FindBin ( y_max ) ;
+  const unsigned int bin_min = ya->FindFixBin ( y_min ) ;
+  const unsigned int bin_max = ya->FindFixBin ( y_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
@@ -704,8 +704,8 @@ double Ostap::Math::Histo3D::integrateX
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
   //
   // split it if too large
-  const int bin_min = xa->FindBin ( x_min ) ;
-  const int bin_max = xa->FindBin ( x_max ) ;
+  const unsigned int bin_min = xa->FindFixBin ( x_min ) ;
+  const unsigned int bin_max = xa->FindFixBin ( x_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
@@ -767,8 +767,8 @@ double Ostap::Math::Histo3D::integrateY
   const double y_max = std::min ( ymax , ya->GetXmax () ) ;
   //
   // split it if too large
-  const int bin_min = ya->FindBin ( y_min ) ;
-  const int bin_max = ya->FindBin ( y_max ) ;
+  const unsigned int bin_min = ya->FindFixBin ( y_min ) ;
+  const unsigned int bin_max = ya->FindFixBin ( y_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;
@@ -830,8 +830,8 @@ double Ostap::Math::Histo3D::integrateZ
   const double z_max = std::min ( zmax , za->GetXmax () ) ;
   //
   // split it if too large
-  const int bin_min = za->FindBin ( z_min ) ;
-  const int bin_max = za->FindBin ( z_max ) ;
+  const unsigned int bin_min = za->FindFixBin ( z_min ) ;
+  const unsigned int bin_max = za->FindFixBin ( z_max ) ;
   if ( bin_max > s_MAX_BINS + bin_min ) 
   {
     const int    bin_mid = ( bin_max + bin_min ) / 2 ;

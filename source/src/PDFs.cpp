@@ -325,7 +325,6 @@ Ostap::Models::Histo1D::Histo1D
   : RooAbsPdf  (  name ,  title ) 
   , m_x        ( "!x"   , "x-variable" , this , x ) 
   , m_histo    ( histo ) 
-  , m_tag      ( Ostap::Utils::hash_histo ( histo ) )
 {}
 // ============================================================================
 // copy constructor 
@@ -336,7 +335,6 @@ Ostap::Models::Histo1D::Histo1D
   : RooAbsPdf ( right , name  ) 
   , m_x       ( "!x"  , this , right.m_x ) 
   , m_histo   ( right.m_histo ) 
-  , m_tag     ( right.m_tag   )
 {}
 // ============================================================================
 // clone 
