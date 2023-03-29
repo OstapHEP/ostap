@@ -9159,8 +9159,6 @@ namespace Ostap
       RooRealProxy                   m_x            ; // variable 
       /// the function itself 
       Ostap::Math::Histo1D           m_histo        ; // function 
-      /// unique tag 
-      std::size_t                    m_tag          ; // unique tag
       // ======================================================================      
     } ;
     // ========================================================================
@@ -9233,8 +9231,6 @@ namespace Ostap
       RooRealProxy                   m_y     ; // y-variable 
       /// the function itself 
       Ostap::Math::Histo2D           m_histo ; // function 
-      /// unique tag 
-      std::size_t                    m_tag   ; // unique tag
       // ======================================================================      
     } ;
     // ========================================================================
@@ -9312,8 +9308,6 @@ namespace Ostap
       RooRealProxy                   m_z     ; // z-variable 
       /// the function itself 
       Ostap::Math::Histo3D           m_histo ; // function 
-      /// unique tag 
-      std::size_t                    m_tag   ; // unique tag
       // ======================================================================      
     } ;
     // ========================================================================

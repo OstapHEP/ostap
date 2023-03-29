@@ -361,20 +361,7 @@ Double_t Ostap::Models::Histo1D::analyticalIntegral
   assert ( code == 1 ) ;
   if ( 1 != code ) {}
   //
-  static const Ostap::Math::Integrator s_integrator {} ;
-  //
-  auto fun = [this] ( const double x ) -> double 
-    { return this->func ( x  ) ; } ;
-  //
-  return s_integrator.integrate 
-    ( fun                   , 
-      m_x.min ( rangeName ) , 
-      m_x.max ( rangeName ) , 
-      m_tag                 , 
-      0                     , // no rescale 
-      s_APRECISION_QAG      , 
-      s_RPRECISION_QAG      , 
-      GSL_INTEG_GAUSS15     ) ; // use low-order 
+  return m_histo.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
 //  Histo2D
@@ -391,7 +378,6 @@ Ostap::Models::Histo2D::Histo2D
   , m_x        ( "!x"   , "x-variable" , this , x ) 
   , m_y        ( "!y"   , "y-variable" , this , y ) 
   , m_histo    ( histo ) 
-  , m_tag      ( Ostap::Utils::hash_histo ( histo ) )
 {}
 // ============================================================================
 // copy constructor 
@@ -403,7 +389,6 @@ Ostap::Models::Histo2D::Histo2D
   , m_x       ( "!x"  , this , right.m_x ) 
   , m_y       ( "!y"  , this , right.m_y ) 
   , m_histo   ( right.m_histo ) 
-  , m_tag     ( right.m_tag   ) 
 {}
 // ============================================================================
 // clone 
@@ -429,8 +414,6 @@ Double_t Ostap::Models::Histo2D::analyticalIntegral
 {
   assert ( code == 1 || code == 2 || code == 3 ) ;
   //
-  static const Ostap::Math::Integrator s_integrator {} ;
-  //
   const double xv = m_x ;
   const double yv = m_y ;
   //
@@ -440,40 +423,25 @@ Double_t Ostap::Models::Histo2D::analyticalIntegral
   //
   if ( 1 == code ) 
   {
-    return s_integrator.integrate2 
-      ( fun2                  , 
-        m_x.min ( rangeName ) , 
-        m_x.max ( rangeName ) , 
-        m_y.min ( rangeName ) , 
-        m_y.max ( rangeName ) , 
-        m_tag                 ) ;
+    return m_histo.integral   ( m_x.min ( rangeName ) , 
+                                m_x.max ( rangeName ) , 
+                                m_y.min ( rangeName ) , 
+                                m_y.max ( rangeName ) ) ;
   }
   else if ( 2 == code ) 
   {
     const double yv = m_y ;    
-    return s_integrator.integrate2X 
-      ( fun2                  , 
-        yv                    , 
-        m_x.min ( rangeName ) , 
-        m_x.max ( rangeName ) , 
-        m_tag                 , 
-        s_APRECISION_QAG      , 
-        s_RPRECISION_QAG      , 
-        GSL_INTEG_GAUSS15     ) ; // use low-order 
+    return m_histo.integrateX ( yv , 
+                                m_x.min ( rangeName ) , 
+                                m_x.max ( rangeName ) ) ;
   }
   else if ( 3 == code ) 
   {
     const double xv = m_x ;    
-    return s_integrator.integrate2Y 
-      ( fun2                  , 
-        xv                    , 
-        m_y.min ( rangeName ) , 
-        m_y.max ( rangeName ) , 
-        m_tag                 ,
-        s_APRECISION_QAG      , 
-        s_RPRECISION_QAG      ,
-        GSL_INTEG_GAUSS15     ) ; // use low-order 
-  }
+    return m_histo.integrateY ( xv ,
+                                m_y.min ( rangeName ) , 
+                                m_y.max ( rangeName ) ) ;
+  }    
   //
   return  0 ;
 }
@@ -494,7 +462,6 @@ Ostap::Models::Histo3D::Histo3D
   , m_y        ( "!y"   , "y-variable" , this , y ) 
   , m_z        ( "!z"   , "z-variable" , this , z ) 
   , m_histo    ( histo ) 
-  , m_tag      ( Ostap::Utils::hash_histo ( histo ) )
 {}
 // ============================================================================
 // copy constructor 
@@ -507,7 +474,6 @@ Ostap::Models::Histo3D::Histo3D
   , m_y       ( "!y"  , this , right.m_y ) 
   , m_z       ( "!z"  , this , right.m_z ) 
   , m_histo   ( right.m_histo ) 
-  , m_tag     ( right.m_tag   ) 
 {}
 // ============================================================================
 // clone 
@@ -537,106 +503,68 @@ Double_t Ostap::Models::Histo3D::analyticalIntegral
 {
   assert ( 1 <= code && code <= 7 ) ;
   //
-  static const Ostap::Math::Integrator s_integrator {} ;
-  //
-  auto fun3 = [this] ( const double x , 
-                       const double y , 
-                       const double z ) -> double 
-    { return this->func ( x , y , z ) ; } ;
-  //
   if ( 1 == code ) 
   {
-    return s_integrator.integrate3 
-      ( fun3                  , 
-        m_x.min ( rangeName ) , 
-        m_x.max ( rangeName ) , 
-        m_y.min ( rangeName ) , 
-        m_y.max ( rangeName ) , 
-        m_z.min ( rangeName ) , 
-        m_z.max ( rangeName ) , 
-        m_tag                 ) ;
+    return m_histo.integral    ( m_x.min ( rangeName ) , 
+                                 m_x.max ( rangeName ) , 
+                                 m_y.min ( rangeName ) , 
+                                 m_y.max ( rangeName ) , 
+                                 m_z.min ( rangeName ) , 
+                                 m_z.max ( rangeName ) ) ;
   }
   else if ( 2 == code ) 
   {
     const double zv = m_z ;    
-    return s_integrator.integrate3XY
-      ( fun3                  , 
-        zv                    , 
-        m_x.min ( rangeName ) , 
-        m_x.max ( rangeName ) , 
-        m_y.min ( rangeName ) , 
-        m_y.max ( rangeName ) , 
-        m_tag                 ) ;
+    return m_histo.integrateXY ( zv                    , 
+                                 m_x.min ( rangeName ) , 
+                                 m_x.max ( rangeName ) , 
+                                 m_y.min ( rangeName ) , 
+                                 m_y.max ( rangeName ) ) ;
   }
   else if ( 3 == code ) 
   {
     const double yv = m_y ;    
-    return s_integrator.integrate3XZ
-      ( fun3                  , 
-        yv                    , 
-        m_x.min ( rangeName ) , 
-        m_x.max ( rangeName ) , 
-        m_z.min ( rangeName ) , 
-        m_z.max ( rangeName ) , 
-        m_tag                 ) ;
+    return m_histo.integrateXZ ( yv                    , 
+                                 m_x.min ( rangeName ) , 
+                                 m_x.max ( rangeName ) , 
+                                 m_z.min ( rangeName ) , 
+                                 m_z.max ( rangeName ) ) ;
   }
   else if ( 4 == code ) 
   {
     const double xv = m_x ;    
-    return s_integrator.integrate3YZ
-      ( fun3                  , 
-        xv                    , 
-        m_y.min ( rangeName ) , 
-        m_y.max ( rangeName ) , 
-        m_z.min ( rangeName ) , 
-        m_z.max ( rangeName ) , 
-        m_tag                 ) ;
+    return m_histo.integrateYZ ( xv                    , 
+                                 m_y.min ( rangeName ) , 
+                                 m_y.max ( rangeName ) , 
+                                 m_z.min ( rangeName ) , 
+                                 m_z.max ( rangeName ) ) ;
   }
   else if ( 5 == code ) 
   {
     const double yv = m_y ;    
     const double zv = m_z ;    
-    return s_integrator.integrate3X
-      ( fun3                  , 
-        yv                    , 
-        zv                    , 
-        m_x.min ( rangeName ) , 
-        m_x.max ( rangeName ) , 
-        m_tag                 ,
-        s_APRECISION_QAG      , 
-        s_RPRECISION_QAG      , 
-        GSL_INTEG_GAUSS15     ) ; // use low-order 
+    return m_histo.integrateX  ( yv                    , 
+                                 zv                    , 
+                                 m_x.min ( rangeName ) , 
+                                 m_x.max ( rangeName ) ) ;
   }
   else if ( 6 == code ) 
   {
     const double xv = m_x ;    
     const double zv = m_z ;    
-    return s_integrator.integrate3Y
-      ( fun3                  , 
-        xv                    , 
-        zv                    , 
-        m_y.min ( rangeName ) , 
-        m_y.max ( rangeName ) , 
-        m_tag                 ,
-        m_tag                 ,
-        s_APRECISION_QAG      , 
-        s_RPRECISION_QAG      , 
-        GSL_INTEG_GAUSS15     ) ; // use low-order 
+    return m_histo.integrateY  ( xv                    , 
+                                 zv                    , 
+                                 m_y.min ( rangeName ) , 
+                                 m_y.max ( rangeName ) ) ;
   }
   else if ( 7 == code ) 
   {
     const double xv = m_x ;    
     const double yv = m_y ;    
-    return s_integrator.integrate3Z
-      ( fun3                  , 
-        xv                    , 
-        yv                    , 
-        m_z.min ( rangeName ) , 
-        m_z.max ( rangeName ) , 
-        m_tag                 ,
-        s_APRECISION_QAG      , 
-        s_RPRECISION_QAG      , 
-        GSL_INTEG_GAUSS15     ) ; // use low-order 
+    return m_histo.integrateZ  ( xv                    , 
+                                 yv                    , 
+                                 m_z.min ( rangeName ) , 
+                                 m_z.max ( rangeName ) ) ;
   }
   //
   return  0 ;

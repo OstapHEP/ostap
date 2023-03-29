@@ -31,6 +31,14 @@
  *  @date   2019-11-16
  */
 // ============================================================================
+namespace 
+{
+  // ==========================================================================
+  /// split histogram if number of bins too large
+  const unsigned short s_MAX_BINS = 25 ;
+  // ==========================================================================
+}
+// ============================================================================
 /*  constructor with full  specification 
  *  @see Ostap::Math::HistoInterpolation
  *  @see Ostap::Math::HistoInterpolation::interpolate_1D
@@ -195,6 +203,16 @@ double Ostap::Math::Histo1D::integral
   const double x_min = std::max ( low  , xmin ) ;
   const double x_max = std::min ( high , xmax ) ;
   //
+  // split it if too large
+  const int bin_min = xa->FindBin ( x_min ) ;
+  const int bin_max = xa->FindBin ( x_max ) ;
+  if ( bin_max > s_MAX_BINS + bin_min ) 
+  {
+    const int    bin_mid = ( bin_max + bin_min ) / 2 ;
+    const double x_mid   = xa->GetBinCenter ( bin_mid ) ;
+    return integral ( x_min , x_mid ) + integral ( x_mid , x_max ) ;
+  }
+  //
   // use GSL to evaluate the integral
   //
   static const Ostap::Math::GSL::Integrator1D<Histo1D> s_integrator {} ;
@@ -204,23 +222,20 @@ double Ostap::Math::Histo1D::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+  //
+  std::tie ( ierror , result , error ) = s_integrator.romberg_integrate
     ( tag () ,  
       &F     ,  
-      x_min  , x_max ,              // low & high edges
-      workspace ( m_workspace ) ,   // workspace
-      2 * s_APRECISION_QAG      ,   // absolute precision
-      2 * s_RPRECISION_QAG      ,   // relative precision
-      m_workspace.size ()       ,   // size of workspace
-      s_message                 , 
-      __FILE__                  , 
-      __LINE__                  , 
-      GSL_INTEG_GAUSS15         ) ; // low-roder integration rule 
+      x_min  , x_max ,                      // low & high edges
+      workspace_romberg ( m_workspace ) ,   // workspace
+      s_APRECISION_ROMBERG              ,   // absolute precision
+      s_RPRECISION_ROMBERG              ,   // relative precision
+      s_message                         , 
+      __FILE__                          , 
+      __LINE__                          ) ;
   //
   return result ;
 }
-
-
 // ============================================================================
 // integral over whole histogram range 
 // ============================================================================
@@ -267,6 +282,16 @@ double Ostap::Math::Histo2D::integrateX
   const double x_min = std::max ( xmin , xa->GetXmin () ) ;
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
   //
+  // split it if too large
+  const int bin_min = xa->FindBin ( x_min ) ;
+  const int bin_max = xa->FindBin ( x_max ) ;
+  if ( bin_max > s_MAX_BINS + bin_min ) 
+  {
+    const int    bin_mid = ( bin_max + bin_min ) / 2 ;
+    const double x_mid   = xa->GetBinCenter ( bin_mid ) ;
+    return integrateX ( y , x_min , x_mid ) + integrateX ( y , x_mid , x_max ) ;
+  }
+  //
   // use GSL to evaluate the integral
   typedef Ostap::Math::IntegrateX2<Histo2D> IX ;
   static const Ostap::Math::GSL::Integrator1D<IX> s_integrator ;
@@ -277,18 +302,17 @@ double Ostap::Math::Histo2D::integrateX
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+  //
+  std::tie ( ierror , result , error ) = s_integrator.romberg_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'Y' , y )                   , 
       &F     ,  
-      x_min  , x_max ,              // low & high edges
-      workspace ( m_workspace ) ,   // workspace
-      2 * s_APRECISION_QAG      ,   // absolute precision
-      2 * s_RPRECISION_QAG      ,   // relative precision
-      m_workspace.size ()       ,   // size of workspace
-      s_message                 , 
-      __FILE__                  , 
-      __LINE__                  , 
-      GSL_INTEG_GAUSS15         ) ; // low-roder integration rule 
+      x_min  , x_max ,                      // low & high edges
+      workspace_romberg ( m_workspace ) ,   // workspace
+      s_APRECISION_ROMBERG              ,   // absolute precision
+      s_RPRECISION_ROMBERG              ,   // relative precision
+      s_message                         , 
+      __FILE__                          , 
+      __LINE__                          ) ;
   //
   return result ;
 }
@@ -314,6 +338,16 @@ double Ostap::Math::Histo2D::integrateY
   const double y_min = std::max ( ymin , ya->GetXmin () ) ;
   const double y_max = std::min ( ymax , ya->GetXmax () ) ;
   //
+  // split it if interval too large 
+  const int bin_min = ya->FindBin ( y_min ) ;
+  const int bin_max = ya->FindBin ( y_max ) ;
+  if ( bin_max > s_MAX_BINS + bin_min ) 
+  {
+    const int    bin_mid = ( bin_max + bin_min ) / 2 ;
+    const double y_mid   = ya->GetBinCenter ( bin_mid ) ;
+    return integrateY ( x , y_min , y_mid ) + integrateY ( x , y_mid , y_max ) ;
+  }
+  //
   // use GSL to evaluate the integral
   typedef Ostap::Math::IntegrateY2<Histo2D> IY ;
   static const Ostap::Math::GSL::Integrator1D<IY> s_integrator ;
@@ -324,18 +358,17 @@ double Ostap::Math::Histo2D::integrateY
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+  //
+  std::tie ( ierror , result , error ) = s_integrator.romberg_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'X' , x )                   , 
       &F     ,  
-      y_min  , y_max ,              // low & high edges
-      workspace ( m_workspace ) ,   // workspace
-      2 * s_APRECISION_QAG      ,   // absolute precision
-      2 * s_RPRECISION_QAG      ,   // relative precision
-      m_workspace.size ()       ,   // size of workspace
-      s_message                 , 
-      __FILE__                  , 
-      __LINE__                  , 
-      GSL_INTEG_GAUSS15         ) ; // low-roder integration rule 
+      y_min  , y_max ,                      // low & high edges
+      workspace_romberg ( m_workspace ) ,   // workspace
+      s_APRECISION_ROMBERG              ,   // absolute precision
+      s_RPRECISION_ROMBERG              ,   // relative precision
+      s_message                         , 
+      __FILE__                          , 
+      __LINE__                          ) ;
   //
   return result ;
 }
@@ -670,6 +703,16 @@ double Ostap::Math::Histo3D::integrateX
   const double x_min = std::max ( xmin , xa->GetXmin () ) ;
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
   //
+  // split it if too large
+  const int bin_min = xa->FindBin ( x_min ) ;
+  const int bin_max = xa->FindBin ( x_max ) ;
+  if ( bin_max > s_MAX_BINS + bin_min ) 
+  {
+    const int    bin_mid = ( bin_max + bin_min ) / 2 ;
+    const double x_mid   = xa->GetBinCenter ( bin_mid ) ;
+    return integrateX ( y , z , x_min , x_mid ) + integrateX ( y , z , x_mid , x_max ) ;
+  }
+  //
   // use 1D integration
   //
   typedef Ostap::Math::IntegrateX3<Histo3D> FX ;
@@ -682,18 +725,17 @@ double Ostap::Math::Histo3D::integrateX
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+  //
+  std::tie ( ierror , result , error ) = s_integrator.romberg_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'Y' , 'Z' , y , z  ) , 
-      &F                        ,   // the function
-      x_min    , x_max          ,   // low & high edges
-      workspace ( m_workspace ) ,   // workspace
-      2 * s_APRECISION_QAG      , // absolute precision 
-      2 * s_RPRECISION_QAG      , // relative precision
-      m_workspace.size()        ,   // maximum number of subintervals
-      s_message                 ,   // message 
-      __FILE__                  ,
-      __LINE__                  ,  // filename & line number 
-      GSL_INTEG_GAUSS15         ) ; // low order integration rule 
+      &F                                ,   // the function
+      x_min    , x_max                  ,   // low & high edges
+      workspace_romberg ( m_workspace ) ,   // workspace
+      s_APRECISION_ROMBERG              ,   // absolute precision
+      s_RPRECISION_ROMBERG              ,   // relative precision
+      s_message                         , 
+      __FILE__                          , 
+      __LINE__                          ) ;
   //
   return  result ;
 }
@@ -724,6 +766,16 @@ double Ostap::Math::Histo3D::integrateY
   const double y_min = std::max ( ymin , ya->GetXmin () ) ;
   const double y_max = std::min ( ymax , ya->GetXmax () ) ;
   //
+  // split it if too large
+  const int bin_min = ya->FindBin ( y_min ) ;
+  const int bin_max = ya->FindBin ( y_max ) ;
+  if ( bin_max > s_MAX_BINS + bin_min ) 
+  {
+    const int    bin_mid = ( bin_max + bin_min ) / 2 ;
+    const double y_mid   = ya->GetBinCenter ( bin_mid ) ;
+    return integrateY ( x , z , y_min , y_mid ) + integrateY ( x , z , y_mid , y_max ) ;
+  }
+  //
   // use 1D integration
   //
   typedef Ostap::Math::IntegrateY3<Histo3D> FY ;
@@ -736,18 +788,17 @@ double Ostap::Math::Histo3D::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+  // 
+  std::tie ( ierror , result , error ) = s_integrator.romberg_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'X' , 'Z' , x , z  ) , 
-      &F                        ,   // the function
-      y_min    , y_max          ,   // low & high edges
-      workspace ( m_workspace ) ,   // workspace
-      2 * s_APRECISION_QAG      , // absolute precision 
-      2 * s_RPRECISION_QAG      , // relative precision
-      m_workspace.size()        ,   // maximum number of subintervals
-      s_message                 ,   // message 
-      __FILE__                  ,
-      __LINE__                  ,  // filename & line number 
-      GSL_INTEG_GAUSS15         ) ; // low order integration rule 
+      &F                                ,   // the function
+      y_min    , y_max                  ,   // low & high edges
+      workspace_romberg ( m_workspace ) ,   // workspace
+      s_APRECISION_ROMBERG              ,   // absolute precision
+      s_RPRECISION_ROMBERG              ,   // relative precision
+      s_message                         , 
+      __FILE__                          , 
+      __LINE__                          ) ;
   //
   return  result ;
 }
@@ -778,6 +829,16 @@ double Ostap::Math::Histo3D::integrateZ
   const double z_min = std::max ( zmin , za->GetXmin () ) ;
   const double z_max = std::min ( zmax , za->GetXmax () ) ;
   //
+  // split it if too large
+  const int bin_min = za->FindBin ( z_min ) ;
+  const int bin_max = za->FindBin ( z_max ) ;
+  if ( bin_max > s_MAX_BINS + bin_min ) 
+  {
+    const int    bin_mid = ( bin_max + bin_min ) / 2 ;
+    const double z_mid   = za->GetBinCenter ( bin_mid ) ;
+    return integrateZ ( x , y , z_min , z_mid ) + integrateZ ( x , y , z_mid , z_max ) ;
+  }
+  //
   // use 1D integration
   //
   typedef Ostap::Math::IntegrateZ3<Histo3D> FZ ;
@@ -790,33 +851,24 @@ double Ostap::Math::Histo3D::integrateZ
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+  //
+  std::tie ( ierror , result , error ) = s_integrator.romberg_integrate
     ( Ostap::Utils::hash_combiner ( tag() , 'X' , 'Y' , x , y  ) , 
-      &F                        ,   // the function
-      z_min    , z_max          ,   // low & high edges
-      workspace ( m_workspace ) ,   // workspace
-      2 * s_APRECISION_QAG      ,   // absolute precision 
-      2 * s_RPRECISION_QAG      ,   // relative precision
-      m_workspace.size()        ,   // maximum number of subintervals
-      s_message                 ,   // message 
-      __FILE__                  ,
-      __LINE__                  ,   // filename & line number 
-      GSL_INTEG_GAUSS15         ) ; // low order integration rule 
+      &F                                ,   // the function
+      z_min    , z_max                  ,   // low & high edges
+      workspace_romberg ( m_workspace ) ,   // workspace
+      s_APRECISION_ROMBERG              ,   // absolute precision
+      s_RPRECISION_ROMBERG              ,   // relative precision
+      s_message                         , 
+      __FILE__                          , 
+      __LINE__                          ) ;
   //
   return  result ;
 }
+// ============================================================================
 
 
 
-
-
-
-
-
-
-
-
-  
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

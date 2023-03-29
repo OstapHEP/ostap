@@ -8,6 +8,7 @@
   1. add `Histo(1,2,3)D_pdf` objects 
   1. extent printout for `RooPlot` objects 
   1. `H(1,2m3)D_pdf - do not declare themselves as `signal` components
+  1. replace Gauss-Kronrod integration by Romberg integration for `Histo(1,2,3)D` objects 
 
 ## Backward incompatible: 
 

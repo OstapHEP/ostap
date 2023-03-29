@@ -459,7 +459,29 @@ namespace Ostap
               workspace                          ) ; // workspace
           if ( ierror ) { gsl_error ( reason , file , line , ierror ) ; }
           //
-          /// fake to keep the interface mor eor less coherent 
+          // imitate the adaptive integration
+          if ( GSL_EMAXITER == ierror )
+          {
+            // split into 3 intervals 
+            const double x1 = xlow  + 0.35 * ( xhigh - xlow ) ;
+            const double x2 = xhigh - 0.35 * ( xhigh - xlow ) ;
+            //
+            Result r1 = romberg_integrate ( func , xlow , x1         , workspace , 
+                                            0.5 * aprecision  , rprecision , 
+                                            reason , file , line     , tag ) ;
+            Result r2 = romberg_integrate ( func , x1   , x2         , workspace , 
+                                            0.5 * aprecision  , rprecision , 
+                                            reason , file , line     , tag ) ;
+            Result r3 = romberg_integrate ( func , x2   , xhigh      , workspace , 
+                                            0.5 * aprecision  , rprecision , 
+                                            reason      , file       , line , tag ) ;
+            //
+            return Result { std::max ( std::get<0> ( r1 ) , std::max ( std::get<0> ( r2 ) , std::get<0> ( r3 ) ) ) , 
+                std::get<1> ( r1 ) + std::get<1> ( r2 ) + std::get<1> ( r3 ) , 
+                std::get<2> ( r1 ) + std::get<2> ( r2 ) + std::get<2> ( r3 ) } ;
+          }
+          //
+          /// fake to keep the interface more or less coherent 
           const double error = std::max ( abs ( aprecision          ) , 
                                           abs ( rprecision * result ) ) ;
           //
