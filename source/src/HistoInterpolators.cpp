@@ -202,6 +202,19 @@ Ostap::Math::Histo3D::Histo3D ()
 { m_h.SetDirectory ( nullptr ) ; }
 // ============================================================================
 
+double Ostap::Math::Histo1D::xmin () const { return m_h.GetXaxis()->GetXmin() ; }
+double Ostap::Math::Histo1D::xmax () const { return m_h.GetXaxis()->GetXmax() ; }
+double Ostap::Math::Histo2D::xmin () const { return m_h.GetXaxis()->GetXmin() ; }
+double Ostap::Math::Histo2D::xmax () const { return m_h.GetXaxis()->GetXmax() ; }
+double Ostap::Math::Histo2D::ymin () const { return m_h.GetYaxis()->GetXmin() ; }
+double Ostap::Math::Histo2D::ymax () const { return m_h.GetYaxis()->GetXmax() ; }
+double Ostap::Math::Histo3D::xmin () const { return m_h.GetXaxis()->GetXmin() ; }
+double Ostap::Math::Histo3D::xmax () const { return m_h.GetXaxis()->GetXmax() ; }
+double Ostap::Math::Histo3D::ymin () const { return m_h.GetYaxis()->GetXmin() ; }
+double Ostap::Math::Histo3D::ymax () const { return m_h.GetYaxis()->GetXmax() ; }
+double Ostap::Math::Histo3D::zmin () const { return m_h.GetZaxis()->GetXmin() ; }
+double Ostap::Math::Histo3D::zmax () const { return m_h.GetZaxis()->GetXmax() ; }
+
 // ============================================================================
 //  Integration 
 // ============================================================================
