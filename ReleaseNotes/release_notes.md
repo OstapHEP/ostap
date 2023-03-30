@@ -1,4 +1,3 @@
-
 ## New features:
 
   1. tweak `D-integration  for `Ostap::Models::Shape(1,2,3)D` objects
