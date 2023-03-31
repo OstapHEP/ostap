@@ -144,8 +144,9 @@ def test_histo3_integration () :
     cnts = {} 
     for i in range ( 4 ) :
         for j in range ( 4 ) :
-            for e in ( True , False ) : 
-                cnts [ i,j,e ]  = SE()
+            for k in range ( 4 ) :
+                for e in ( True , False ) : 
+                    cnts [ i,j,k,e ]  = SE()
                 
     N          = 5000
     NX         = 20
@@ -155,7 +156,7 @@ def test_histo3_integration () :
     ymin, ymax = -5 , 5 
     zmin, zmax = -5 , 5 
 
-    for k in progress_bar ( 20 ) :
+    for k in progress_bar ( 10 ) :
         
         h3  = ROOT.TH3D ( hID() , '' ,
                           NX , xmin , xmax  ,

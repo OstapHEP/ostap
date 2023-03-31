@@ -246,16 +246,26 @@ double Ostap::Math::Histo1D::integral
   const double xmax = xa->GetXmax ()  ;  
   if ( low  >= xmax ) { return 0 ; }
   //
+  if ( Ostap::Math::HistoInterpolation::Nearest == m_t && low <= xmin && xmax <= high ) 
+  {
+    // regular sum 
+    double result = 0 ;
+    const int nbins = xa->GetNbins() ;
+    for ( int ibin = 1 ; ibin <= nbins ; ++ibin ) 
+    { result += xa->GetBinWidth ( ibin ) * m_h.GetBinContent ( ibin ) ; }
+    return result ;
+  }
+  //
   const double x_min = std::max ( low  , xmin ) ;
   const double x_max = std::min ( high , xmax ) ;
   //
-  const unsigned int bin_min = std::max ( xa->FindFixBin ( x_min ) , 1              ) ;
-  const unsigned int bin_max = std::min ( xa->FindFixBin ( x_max ) , xa->GetNbins() ) ;
+  const unsigned int bin_min = std::max ( xa -> FindFixBin ( x_min ) , 1              ) ;
+  const unsigned int bin_max = std::min ( xa -> FindFixBin ( x_max ) , xa->GetNbins() ) ;
   //
   if ( Ostap::Math::HistoInterpolation::Nearest == m_t ) 
   {
     double result = 0 ;
-    if ( bin_min == bin_max  ) { result = m_h.GetBinContent ( bin_min ) * ( x_max - x_min ) ; }  
+    if ( bin_min == bin_max  ) { return m_h.GetBinContent ( bin_min ) * ( x_max - x_min ) ; }  
     else 
     {
       // regular sum 
@@ -307,6 +317,7 @@ double Ostap::Math::Histo2D::integral () const
 {
   const TAxis* xa = m_h.GetXaxis()  ;
   const TAxis* ya = m_h.GetYaxis()  ;
+  //
   return integral ( xa->GetXmin() , xa->GetXmax() , 
                     ya->GetXmin() , ya->GetXmax() ) ;
 }
@@ -495,6 +506,27 @@ double Ostap::Math::Histo2D::integral
   if      ( ymax <= ya->GetXmin () ) { return 0 ; }
   else if ( ymin >= ya->GetXmax () ) { return 0 ; }
   //
+  if ( Ostap::Math::HistoInterpolation::Nearest == m_tx && 
+       Ostap::Math::HistoInterpolation::Nearest == m_ty && 
+       xmin <= xa->GetXmin() && xa->GetXmax() <= xmax   && 
+       ymin <= ya->GetXmin() && ya->GetXmax() <= ymax   ) 
+  {
+    // regular sum 
+    double result = 0 ;
+    const int nbx = xa->GetNbins() ;
+    const int nby = ya->GetNbins() ;
+    for ( int ix = 1 ; ix <= nbx ; ++ix ) 
+    {
+      const double bwx = xa -> GetBinWidth ( ix ) ;     
+      for ( int iy = 1 ; iy <= nby ; ++iy ) 
+      {
+        const double bwy = ya -> GetBinWidth ( iy ) ;     
+        result += m_h.GetBinContent ( ix , iy ) * bwx * bwy ;
+      }
+    }
+    return result ;
+  }
+  //
   const double x_min = std::max ( xmin , xa->GetXmin () ) ;
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
   const double y_min = std::max ( ymin , ya->GetXmin () ) ;
@@ -530,6 +562,7 @@ double Ostap::Math::Histo3D::integral () const
   const TAxis* xa = m_h.GetXaxis ()  ;
   const TAxis* ya = m_h.GetYaxis ()  ;
   const TAxis* za = m_h.GetZaxis ()  ;
+  //
   return integral ( xa -> GetXmin () , xa -> GetXmax () , 
                     ya -> GetXmin () , ya -> GetXmax () ,
                     za -> GetXmin () , za -> GetXmax () ) ;
@@ -630,7 +663,34 @@ double Ostap::Math::Histo3D::integral
   const TAxis* za = m_h.GetZaxis ()  ;
   if      ( zmax <= za->GetXmin () ) { return 0 ; }
   else if ( zmin >= za->GetXmax () ) { return 0 ; }
-
+  //
+  if ( Ostap::Math::HistoInterpolation::Nearest == m_tx && 
+       Ostap::Math::HistoInterpolation::Nearest == m_ty && 
+       Ostap::Math::HistoInterpolation::Nearest == m_tz && 
+       xmin <= xa->GetXmin() && xa->GetXmax() <= xmax   && 
+       ymin <= ya->GetXmin() && ya->GetXmax() <= ymax   &&
+       zmin <= za->GetXmin() && za->GetXmax() <= zmax   ) 
+  {
+    // regular sum 
+    double result = 0 ;
+    const int nbx = xa -> GetNbins () ;
+    const int nby = ya -> GetNbins () ;
+    const int nbz = za -> GetNbins () ;
+    for ( int ix = 1 ; ix <= nbx ; ++ix ) 
+    {
+      const double bwx = xa -> GetBinWidth ( ix ) ;     
+      for ( int iy = 1 ; iy <= nby ; ++iy ) 
+      {
+        const double bwy = ya -> GetBinWidth ( iy ) ;     
+        for ( int iz = 1 ; iz <= nbz ; ++iz ) 
+        {
+          const double bwz = za -> GetBinWidth ( iz ) ;     
+          result += m_h.GetBinContent ( ix , iy , iz ) * bwx * bwy * bwz ;
+        }
+      }
+    }
+    return result ;
+  }
   //
   const double x_min = std::max ( xmin , xa->GetXmin () ) ;
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
