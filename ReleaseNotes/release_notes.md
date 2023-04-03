@@ -16,7 +16,6 @@
 
   1. fix `Ostap::Utils::hahs_histo` and `Ostap::Utils::hahs_axis`
 
-
 # v1.9.7.6
 
 ## New features:
