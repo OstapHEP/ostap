@@ -365,15 +365,18 @@ def _omskg_reduce_ ( peak ) :
 Ostap.Math.SkewGauss. __reduce__ = _omskg_reduce_
 
 # =============================================================================
-## Reduce Ostap::Math::ExGauss
+## Reduce Ostap::Math::ExGauss & Ostap::Math::ExGauss2
 #  @see Ostap::Math::ExGauss
+#  @see Ostap::Math::ExGauss2
 def _omexg_reduce_ ( peak ) :
-    """Reduce `Ostap.Math.ExGauss`
+    """Reduce `Ostap.Math.ExGauss` & `Ostap.Math.ExGauss2` 
     - see `Ostap.Math.ExGauss`
+    - see `Ostap.Math.ExGauss2`
     """
     return root_factory , ( type ( peak ) , peak.mu() , peak.varsigma() , peak.k () )
 
-Ostap.Math.ExGauss. __reduce__ = _omexg_reduce_
+Ostap.Math.ExGauss . __reduce__ = _omexg_reduce_
+Ostap.Math.ExGauss2. __reduce__ = _omexg_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::NormalLaplace

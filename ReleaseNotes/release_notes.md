@@ -1,5 +1,9 @@
 ## New features:
 
+  1. add `Ostap::Math::ExGauss2` function, `Ostap::Models::ExGauss2` and `ExGauss2_pdf` PDFs for the 
+     variant of exponentially modified gaussuan distribution, but parameterise din terms of the mode 
+
+
 ## Backward incompatible: 
 
 ## Bug fixes:

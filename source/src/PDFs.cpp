@@ -2636,6 +2636,94 @@ Double_t Ostap::Models::ExGauss::analyticalIntegral
 // ============================================================================
 
 
+// ============================================================================
+//         ExGauss2
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::ExGauss2::ExGauss2
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         , 
+  RooAbsReal&          mu        , 
+  RooAbsReal&          varsigma  , 
+  RooAbsReal&          k         )  
+  : RooAbsPdf ( name , title ) 
+//
+  , m_x        ( "!x"         , "Observable" , this , x        ) 
+  , m_mu       ( "!mu"        , "mu"         , this , mu       ) 
+  , m_varsigma ( "!varsigma"  , "varsigma"   , this , varsigma ) 
+  , m_k        ( "!k"         , "k"          , this , k        ) 
+  //
+  , m_eg       () 
+{
+  setPars () ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::ExGauss2::ExGauss2
+( const Ostap::Models::ExGauss2& right , 
+  const char*                        name   ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x         ( "!x"        , this , right.m_x        ) 
+  , m_mu        ( "!mu"       , this , right.m_mu       ) 
+  , m_varsigma  ( "!varsigma" , this , right.m_varsigma ) 
+  , m_k         ( "!k"        , this , right.m_k        ) 
+    //
+  , m_eg     ( right.m_eg ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::ExGauss2::~ExGauss2 (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::ExGauss2*
+Ostap::Models::ExGauss2::clone( const char* name ) const 
+{ return new Ostap::Models::ExGauss2 ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::ExGauss2::setPars () const 
+{
+  m_eg . setMu       ( m_mu       ) ;
+  m_eg . setVarsigma ( m_varsigma ) ;
+  m_eg . setK        ( m_k        ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::ExGauss2::evaluate() const 
+{
+  setPars () ;
+  return m_eg ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::ExGauss2::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::ExGauss2::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_eg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
 
 
 // ============================================================================
@@ -9962,6 +10050,7 @@ ClassImp(Ostap::Models::CutOffStudent      )
 ClassImp(Ostap::Models::Rice               )
 ClassImp(Ostap::Models::GenInvGauss        )
 ClassImp(Ostap::Models::ExGauss            )
+ClassImp(Ostap::Models::ExGauss2           )
 ClassImp(Ostap::Models::NormalLaplace      )
 ClassImp(Ostap::Models::PearsonIV          )
 ClassImp(Ostap::Models::SkewGenT           )

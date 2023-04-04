@@ -255,7 +255,13 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Error_function
      *  @see https://en.wikipedia.org/wiki/Dowson_function
      */
-    double dowson     ( const double                x ) ;
+    double dowson     ( const double  x ) ;    
+    // ========================================================================
+    /** Inverse scaled error function for \f$ 0 < x \f$ 
+     *  @return value of the inverse scaled error function 
+     *  @see Ostap::Math:::erfcx 
+     */
+    double erfcxinv   ( const double  x  ) ;
     // ========================================================================
     /** Mill's ratio for normal distribution
      *  - \f$ m (x) = \frac{1 - \Phi(x)}{\phi(x)}\f$  

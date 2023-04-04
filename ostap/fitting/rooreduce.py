@@ -1397,7 +1397,7 @@ Ostap.Models.SkewGauss.__reduce__ = _rskg_reduce_
 # =============================================================================
 ## reduce ExGauss
 def _rexg_reduce_ ( pdf ):
-    """Reduce ExGauss"""
+    """Reduce ExGauss&ExGauss2"""
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -1406,7 +1406,8 @@ def _rexg_reduce_ ( pdf ):
                                   pdf.varsigma () ,                            
                                   pdf.k        () )
 
-Ostap.Models.ExGauss.__reduce__ = _rexg_reduce_ 
+Ostap.Models.ExGauss .__reduce__ = _rexg_reduce_ 
+Ostap.Models.ExGauss2.__reduce__ = _rexg_reduce_ 
 
 # =============================================================================
 ## reduce NormalLaplace

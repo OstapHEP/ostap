@@ -934,14 +934,17 @@ Ostap::Math::ExGauss::ExGauss
   const double k        ) 
   : m_mu ( mu ) 
   , m_varsigma ( std::abs ( varsigma ) )
-  , m_k  ( k  )
-{}
+  , m_k  ( 0  )
+  , m_mk ( 0  )
+{
+  setK ( k ) ;
+}
 // ============================================================================
 double Ostap::Math::ExGauss::evaluate          ( const double x ) const 
 {
   //
   const double z     = ( x - m_mu ) / m_varsigma ;
-  const bool k_zero  = s_zero ( m_k ) ;
+  const bool k_zero  = s_zero   ( m_k ) ;
   //
   const double kk    = std::abs ( m_k ) ;
   //
@@ -970,7 +973,26 @@ bool Ostap::Math::ExGauss::setVarsigma ( const double value )
 bool Ostap::Math::ExGauss::setK ( const double value ) 
 {
   if ( s_equal ( m_k , value ) ) { return false ; }
-  m_k = s_zero ( value ) ? 0.0 : value ;
+  //
+  if ( s_zero ( value ) ) 
+  {
+    m_k  = 0 ;
+    m_mk = 0 ;
+  }
+  else 
+  {
+    m_k = value ;
+    if    ( std::abs ( value ) < 1.e-4 ) { m_mk = m_k ; }
+    else 
+    {
+      //
+      const double kk = 1.0 / m_k ;
+      static const double s_C2 = std::sqrt ( 2.0 / M_PI ) ;
+      const double aa = s_SQRT2 * Ostap::Math::erfcxinv ( s_C2 / std::abs ( kk ) ) ;
+      //
+      m_mk = 0 < m_k ? kk - aa : kk + aa ;
+    }
+  } 
   return true ;
 }
 // ============================================================================
@@ -1002,8 +1024,8 @@ double Ostap::Math::ExGauss::cdf ( const double x ) const
   //
   return 
     k_zero  ? gauss  :
-    m_k > 0 ? gauss - Ostap::Math::gauss_mills ( z , 1 / kk - z ) :
-    m_k < 0 ? gauss + Ostap::Math::gauss_mills ( z , 1 / kk + z ) :
+    m_k > 0 ? gauss - Ostap::Math::gauss_mills ( z , 1.0 / kk - z ) :
+    m_k < 0 ? gauss + Ostap::Math::gauss_mills ( z , 1.0 / kk + z ) :
     gauss ;
 }
 // ============================================================================
@@ -1050,6 +1072,11 @@ double Ostap::Math::ExGauss::cumulant    ( const unsigned short r ) const
     std::tgamma ( r ) * std::pow ( m_k * m_varsigma , r ) ;  
 }
 // ============================================================================
+// get the mode
+// ============================================================================
+double Ostap::Math::ExGauss::mode () const 
+{ return m_mu + m_varsigma * m_mk ; }
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::ExGauss::tag () const 
@@ -1058,6 +1085,95 @@ std::size_t Ostap::Math::ExGauss::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_varsigma , m_k  ) ; 
 }
 // ============================================================================
+
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Math::ExGauss2::ExGauss2
+( const double mu       , // the mode 
+  const double varsigma , 
+  const double k        )
+  : m_emg ( mu , varsigma , k ) 
+{
+  setMu ( mu  ) ;  
+}
+// ============================================================================
+// set new mode 
+// ============================================================================
+bool Ostap::Math::ExGauss2::setMu ( const double value ) 
+{ 
+  return m_emg.setMu ( value - m_emg.delta () ) ;
+}
+// ============================================================================
+// set new k
+// ============================================================================
+bool Ostap::Math::ExGauss2::setK ( const double value ) 
+{
+  const double m1      = m_emg.mode () ;
+  const bool   changed = m_emg.setK   ( value ) ;
+  if ( !changed ) { return false ; }
+  //
+  const double m2    = m_emg.mode () ;
+  if ( !s_equal ( m1 , m2 ) ) { setMu ( m1    ) ; }
+  //
+  return true ;
+}
+// ============================================================================
+// set new sigma 
+// ============================================================================
+bool Ostap::Math::ExGauss2::setVarsigma ( const double value ) 
+{
+  const double m1      = m_emg.mode () ;
+  const bool   changed = m_emg.setVarsigma ( value ) ;
+  if ( !changed ) { return false ; }
+  //
+  const double m2      = m_emg.mode () ;
+  if ( !s_equal ( m1 , m2 ) ) { setMu ( m1 ) ; }
+  //
+  return true ;
+}
+// ============================================================================
+// evaluate it 
+// ============================================================================
+double Ostap::Math::ExGauss2::evaluate ( const double x ) const 
+{ return m_emg ( x ) ; }
+// ============================================================================
+// get the CDF
+// ============================================================================
+double Ostap::Math::ExGauss2::cdf 
+( const double x ) const 
+{ return m_emg.cdf ( x ) ; }
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::ExGauss2::integral   () const 
+{ return m_emg.integral () ; }
+// ============================================================================
+/// get the integral between low and high limits
+// ============================================================================
+double Ostap::Math::ExGauss2::integral
+( const double low  ,
+  const double high ) const 
+{ return m_emg.integral ( low , high ) ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::ExGauss2::tag () const 
+{ 
+  static const std::string s_name = "ExGauss2" ;
+  return Ostap::Utils::hash_combiner ( s_name , mu () , varsigma () , k () ) ; 
+}
+// ============================================================================
+
+
+
+
+
+
+
+
+
 
 // ============================================================================
 // constructor 

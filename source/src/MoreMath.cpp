@@ -734,7 +734,7 @@ Ostap::Math::faddeeva_w ( const std::complex<double>& x )
 // ============================================================================
 /*  complex error function (the error function of complex arguments)
  *  @param x  the argument 
- *  @return the value of the coplmex error function 
+ *  @return the value of the complex error function 
  *  The actual implementation is copied from http://ab-initio.mit.edu/Faddeeva
  *  @see http://ab-initio.mit.edu/Faddeeva
  *  @see https://en.wikipedia.org/wiki/Error_function
@@ -782,6 +782,30 @@ double Ostap::Math::erfi ( const double x )
 // ============================================================================
 std::complex<double> Ostap::Math::erfi ( const std::complex<double>& x ) 
 { return Faddeeva::erfi ( x ) ; }  
+// ============================================================================
+/** Inverse scaled error function for \f$ 0 < x \f$ 
+ *  @return value of the inverse scaled error function 
+ *  @see Ostap::Math:::erfcx 
+ */
+// ============================================================================
+double Ostap::Math::erfcxinv   ( const double  x  ) 
+{
+  if ( x <= 0 ) { std::numeric_limits<double>::quiet_NaN (); }
+  //
+  static const double s_C = 2.0 / std::sqrt ( M_PI ) ;
+  //
+  double v =  ( x <= 1 ) ? s_SQRTPIi / x : - std::sqrt ( std::log ( x ) ) ;
+  //
+  for ( unsigned short i = 0 ; i < 25 ; ++i ) 
+  {
+    const double ev = Ostap::Math::erfcx ( v ) ;
+    const double dv = ( ev - x ) / ( 2 * v * ev - s_C ) ;
+    if  ( 1 < i && s_equal ( v , v - dv ) ) { return v - dv ; }
+    v -= dv ;
+  }
+  //
+  return v ;
+}
 // ============================================================================
 /*  compute sech fuction 
  *  \$f f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f$

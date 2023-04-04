@@ -567,7 +567,7 @@ namespace Ostap
      *  Exponentially modified Gaussian function, EMG
      *  @see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
      *
-     *  It is a distibutiin for the varibale that is a 
+     *  It is a distibution for the variable that is a 
      *  sum (or difference for negative \f$ k\f$) 
      *  of a Gaussian and exponential variables: \f$ X \sim Y + sign(k) Z \f$,  
      *  where 
@@ -576,12 +576,12 @@ namespace Ostap
      *  
      *  For \f$ k=0\f$ one gets a Gaussian distribution
      *  - \f$ k>0\f$ corresponds to the rigth tail  
-     *  - \f$ kM0\f$ corresponds to the left tail  
+     *  - \f$ k<0\f$ corresponds to the left tail  
      *
      *  It can be considered as "single-tail" version of the Normal Laplace distribution:
      *  - \f$ k = 0 \f$ corresponds to Gaussian distribution
      *  - \f$ k > 0 \f$ corresponds to Normal Laplace \f$ NL(\mu,\sigma,0,k)\f$ 
-     *  - \f$ k < 0 \f$ corresponds to Normal Laplace \f$ NL(\mu,\sigma,\left|\tau\right|,0)\f$ 
+     *  - \f$ k < 0 \f$ corresponds to Normal Laplace \f$ NL(\mu,\sigma,\left|k\right|,0)\f$ 
      *
      *  @see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
      *       In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
@@ -624,12 +624,14 @@ namespace Ostap
     public:  // integrals
       // ======================================================================
       /// get CDF
-      double cdf        ( const double x ) const ;
+      double cdf 
+      ( const double x ) const ;
       /// get the integral
       double integral   () const ;
       /// get the integral between low and high limits
-      double integral   ( const double low  ,
-                          const double high ) const ;
+      double integral  
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public: // properties 
       // ======================================================================
@@ -647,6 +649,13 @@ namespace Ostap
       double kurtosis    () const ;      
       /// get cumulant 
       double cumulant    ( const unsigned short r ) const ;
+      /// mode 
+      double mode        () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // difference between mode and mu 
+      double delta       () const { return m_varsigma * m_mk ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -661,6 +670,91 @@ namespace Ostap
       double m_varsigma { 1 } ; // parameter varsigma 
       /// parameter k 
       double m_k        { 0 } ; // parameter k 
+      /// mode-related (cache) parameter 
+      double m_mk       { 0 } ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /* @class ExGauss2 
+     * Raparameterization of Exponentiallymodified Gaussian distribution
+     * using the mode as parameters
+     * @see Ostap::Math::ExGauss 
+     */
+    class ExGauss2 
+    {
+    public:
+      // ======================================================================
+      /// constructor from all parameters 
+      ExGauss2
+      ( const double mode     = 0 , // the mode 
+        const double varsigma = 1 , 
+        const double k        = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      double evaluate          ( const double x ) const ; 
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// parameter mu
+      double mu       () const { return m_emg.mode     () ; }
+      /// parameter varsigma
+      double varsigma () const { return m_emg.varsigma () ; }
+      /// parameter k 
+      double k        () const { return m_emg.k        () ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setMu       ( const double value ) ;
+      bool setVarsigma ( const double value ) ; 
+      bool setK        ( const double value ) ;
+      // ======================================================================      
+    public:  // integrals
+      // ======================================================================
+      /// get CDF
+      double cdf ( const double x ) const ; 
+      /// get the integral
+      double integral   ()          const ; 
+      /// get the integral between low and high limits
+      double integral  
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public: // properties 
+      // ======================================================================
+      /// mean value 
+      double mean        () const { return m_emg.mean     () ; }
+      /// variance 
+      double variance    () const { return m_emg.variance () ; }
+      /// RMS 
+      double rms         () const { return m_emg.rms      () ; }
+      /// dispersion 
+      double dispersion  () const { return m_emg.variance () ; }
+      /// skewness 
+      double skewness    () const { return m_emg.skewness () ; }
+      /// kurtosis 
+      double kurtosis    () const { return m_emg.kurtosis () ; }      
+      /// get cumulant 
+      double cumulant    ( const unsigned short r ) const 
+      { return m_emg.cumulant ( r ) ; }
+      /// mode 
+      double mode        () const { return m_emg.mode     () ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+      const Ostap::Math::ExGauss& emg() const { return m_emg ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the function 
+      Ostap::Math::ExGauss  m_emg {} ; // the function      
       // ======================================================================
     } ;
     // ========================================================================

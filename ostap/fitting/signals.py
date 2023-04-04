@@ -52,6 +52,7 @@ Empricial PDFs to describe narrow peaks
   - GenHyperbolic_pdf
   - Das_pdf
   - ExGauss_pdf
+  - ExGauss2_pdf
   - NormalLaplace_pdf
   - Hypatia_pdf
   - PearsonIV_pdf
@@ -116,6 +117,7 @@ __all__ = (
     'Das_pdf'                , ## Das: Gaussian with exponentrial tails 
     'Hypatia_pdf'            , ## Generalised Hyperbolic distribution
     'ExGauss_pdf'            , ## ExGauss distribution 
+    'ExGauss2_pdf'           , ## ExGauss distribution parameterised in terms of the mode 
     'NormalLaplace_pdf'      , ## Normal Laplace distribution 
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
@@ -3675,6 +3677,92 @@ class ExGauss_pdf(PEAK) :
     
 models.append ( ExGauss_pdf )      
 
+
+# =============================================================================
+## @class ExGauss2_pdf
+#  Varianit of Exponentially modified Gaussian function
+#  parameterised in terms of the mode
+#  @see Ostap::Math::NormalLaplace 
+#  @see Ostap::Mdoels::NormalLaplace 
+#  @see Ostap::Mdoels::ExGauss2
+#  @see Ostap::Mdoels::ExGauss
+class ExGauss2_pdf(PEAK) :
+    """ Variant Exponentially modified Gaussian function, EMG
+    parameterized in terms of the mode 
+    - see https://doi.org/10.1007/0-8176-4487-3_4
+    - see Ostap::Math::NormalLaplace 
+    - see Ostap::Mdoels::NormalLaplace 
+    - see Ostap::Mdoels::ExGauss2
+    - see Ostap::Mdoels::ExGauss
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu        = None ,   ## related to mode 
+                   varsigma  =  1   ,   ## relatd  to width
+                   k         =  0   ) :
+        # 
+        ## initialize the base
+        #        
+        PEAK.__init__  ( self , name , xvar                  , 
+                         mean        = mu                    ,
+                         sigma       = varsigma              ,
+                         mean_name   = 'mode_%s'      % name ,
+                         mean_title  = 'mode(%s)'     % name ,
+                         sigma_name  = 'varsigma_%s'  % name ,
+                         sigma_title = 'varsigma(%s)' % name )
+        
+        self.__mu       = self.mean 
+        self.__varsigma = self.sigma
+        
+        ## k 
+        self.__k= self.make_var ( k              ,
+                                  'k_%s'  % name ,
+                                  'k(%s)' % name ,
+                                  None , 0 , -200 , 200 ) 
+        
+        ## create PDF 
+        self.pdf = Ostap.Models.ExGauss2 (
+            self.roo_name ( 'exgauss2_' ) , 
+            "ExGauss2 %s" % self.name ,
+            self.xvar      ,
+            self.mu        ,
+            self.varsigma  , 
+            self.k         ) 
+        
+        
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'mu'       : self.mu       ,
+            'varsigma' : self.varsigma ,
+            'k'        : self.k        }
+
+    @property
+    def varsigma    ( self ) :
+        """'varsigma' : varsigma parameter for ExGauss2 function (same as 'sigma')"""
+        return self.sigma
+    @varsigma.setter
+    def varsigma    ( self , value ) :
+        self.set_value ( self.__varfsigma , value )
+
+    @property
+    def mu ( self ) :
+        """'mu' : mode of the distribution (same as 'mean')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :    
+        self.set_value ( self.__mu , value )
+
+    @property 
+    def k  ( self ) :
+        """'k' :  (dimensioneless) k-parameter"""
+        return self.__k
+    @k.setter  
+    def k ( self , value ) :
+        self.set_value ( self.__k , value )
+    
+models.append ( ExGauss2_pdf )      
 
 # =============================================================================
 ## @class NormalLaplace_pdf 

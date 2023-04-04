@@ -1929,6 +1929,91 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class ExGauss2
+     *  Variant of 
+     *  Exponentially modified Gaussian function
+     *  with mu parameter being the mode of th edistribution 
+     *  @see Ostap::Math::ExGauss
+     *  @see Ostap::Math::ExGauss2
+     *  @see Ostap::Math::NormalLaplace 
+     *  @see Ostap::Models::ExGauss
+     */
+    class ExGauss2: public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::ExGauss2, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      ExGauss2
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          varsigma  , 
+        RooAbsReal&          k         ) ;
+      /// "copy" constructor
+      ExGauss2 ( const ExGauss2& right , const char* name = 0  ) ;
+      /// virtual destructor
+      virtual ~ExGauss2 () ;
+      /// clone
+      ExGauss2* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      ExGauss2 () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::ExGauss2& function () const { return m_eg ; }
+      const Ostap::Math::ExGauss2& exgauss  () const { return m_eg ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& mu       () const { return m_mu       .arg() ; }
+      const RooAbsReal& varsigma () const { return m_varsigma .arg() ; }
+      const RooAbsReal& k        () const { return m_k        .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        {} ;
+      RooRealProxy m_mu       {} ;
+      RooRealProxy m_varsigma {} ;
+      RooRealProxy m_k        {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::ExGauss2 m_eg ;                     // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class NormalLaplace 
      *  Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
      *  It behaves line core Gaussian with exponential tails 
