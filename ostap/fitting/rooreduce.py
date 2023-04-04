@@ -1409,6 +1409,24 @@ def _rexg_reduce_ ( pdf ):
 Ostap.Models.ExGauss .__reduce__ = _rexg_reduce_ 
 Ostap.Models.ExGauss2.__reduce__ = _rexg_reduce_ 
 
+
+# =============================================================================
+## reduce Bukin2
+def _rbk2_reduce_ ( pdf ):
+    """Reduce Bukin2"""
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.x         () , 
+                                  pdf.mu        () ,
+                                  pdf.varsigmaA () ,                            
+                                  pdf.varsigmaB () ,                            
+                                  pdf.kA        () ,
+                                  pdf.kB        () ,
+                                  pdf.phi      () )
+
+Ostap.Models.Bukin2.__reduce__ = _rbk2_reduce_ 
+
 # =============================================================================
 ## reduce NormalLaplace
 def _rnl_reduce_ ( pdf ):

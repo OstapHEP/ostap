@@ -53,6 +53,7 @@ Empricial PDFs to describe narrow peaks
   - Das_pdf
   - ExGauss_pdf
   - ExGauss2_pdf
+  - Bukin2_pdf
   - NormalLaplace_pdf
   - Hypatia_pdf
   - PearsonIV_pdf
@@ -118,6 +119,7 @@ __all__ = (
     'Hypatia_pdf'            , ## Generalised Hyperbolic distribution
     'ExGauss_pdf'            , ## ExGauss distribution 
     'ExGauss2_pdf'           , ## ExGauss distribution parameterised in terms of the mode 
+    'Bukin2_pdf'             , ## Bukin-2 function 
     'NormalLaplace_pdf'      , ## Normal Laplace distribution 
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
@@ -3763,6 +3765,152 @@ class ExGauss2_pdf(PEAK) :
         self.set_value ( self.__k , value )
     
 models.append ( ExGauss2_pdf )      
+
+
+
+# =============================================================================
+## @class Bukin2_pdf
+#  Sum of  two exponentially modified Gaussian functions
+#  parameterised in terms of the mode
+#  @see Ostap::Math::NormalLaplace 
+#  @see Ostap::Mdoels::NormalLaplace 
+#  @see Ostap::Mdoels::Bukin2
+#  @see Ostap::Mdoels::ExGauss2
+#  @see Ostap::Mdoels::ExGauss
+class Bukin2_pdf(PEAK) :
+    """ Sum of two Exponentially modified Gaussian function, EMG
+    parameterized in terms of the mode 
+    - see https://doi.org/10.1007/0-8176-4487-3_4
+    - see Ostap::Math::NormalLaplace 
+    - see Ostap::Mdoels::NormalLaplace 
+    - see Ostap::Mdoels::Bukin22
+    - see Ostap::Mdoels::ExGauss2
+    - see Ostap::Mdoels::ExGauss
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu        = None ,   ## related to mode 
+                   varsigmaA =  1   ,   ## relatd  to width
+                   varsigmaB =  1   ,   ## relatd  to width
+                   kA        = -1   ,   ## relatd  to width
+                   kB        = +1   ,   ## relatd  to width
+                   phi       =  0   ) :
+        # 
+        ## initialize the base
+        #        
+        PEAK.__init__  ( self , name , xvar                   , 
+                         mean        = mu                     ,
+                         sigma       = varsigmaA              ,
+                         mean_name   = 'mode_%s'      % name  ,
+                         mean_title  = 'mode(%s)'      % name ,
+                         sigma_name  = 'varsigmaA_%s'  % name ,
+                         sigma_title = 'varsigmaA(%s)' % name )
+        
+        self.__mu        = self.mean 
+        self.__varsigmaA = self.sigmaA
+
+        
+        ## varsigmaB 
+        self.__varsigmaB = self.make_var ( varsigmaB              ,
+                                           'varsigmaB_%s'  % name ,
+                                           'varsigmaB(%s)' % name ,
+                                           None , varsigmaB ) 
+        
+
+        ## kA 
+        self.__kA= self.make_var ( kB              ,
+                                   'kA_%s'  % name ,
+                                   'kA(%s)' % name ,
+                                   None , kA , -1.e+4 , -1.e-4 ) 
+        ## kB 
+        self.__kB= self.make_var ( kB              ,
+                                   'kA_%s'  % name ,
+                                   'kA(%s)' % name ,
+                                   None , kB , 1.e-4 , +1.e+4 ) 
+
+
+        ## phi 
+        self.__phi = self.make_var ( phi    ,
+                                     'phi_%s'  % name ,
+                                     'phi(%s)' % name ,
+                                     None , phi , -2 * math.pi , +3 * math.pi ) 
+        
+
+
+        ## create PDF 
+        self.pdf = Ostap.Models.Bukin2 (
+            self.roo_name ( 'bukin2_' ) , 
+            "Bukin2 %s" % self.name ,
+            self.xvar      ,
+            self.mu        ,
+            self.varsigmaA , 
+            self.varsigmaB , 
+            self.kA        , 
+            self.kB        , 
+            self.phi       ) 
+        
+        
+        self.config = {
+            'name'      : self.name     ,
+            'xvar'      : self.xvar     ,
+            'mu'        : self.mu       ,
+            'varsigmaA' : self.varsigma ,
+            'varsigmaB' : self.varsigma ,
+            'kA'        : self.kB       ,
+            'kB'        : self.kA       ,
+            'phi'       : self.phi      }
+
+    @property
+    def varsigmaA    ( self ) :
+        """'varsigmaA' : varsigmaA parameter for Bukin2 function (same as 'sigma')"""
+        return self.sigma
+    @varsigmaA.setter
+    def varsigmaA  ( self , value ) :
+        self.set_value ( self.__varfsigmaA , value )
+
+    @property
+    def varsigmaB    ( self ) :
+        """'varsigmaB' : varsigmaB parameter for Bukin2 function"""
+        return self.__varsigmaB 
+    @varsigmaB.setter
+    def varsigmaB  ( self , value ) :
+        self.set_value ( self.__varfsigmaB , value )
+
+    @property
+    def mu ( self ) :
+        """'mu' : mode of the distribution (same as 'mean')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :    
+        self.set_value ( self.__mu , value )
+
+    @property 
+    def kA ( self ) :
+        """'kA' :  (dimensioneless) kA-parameter"""
+        return self.__kA
+    @kA.setter  
+    def kA ( self , value ) :
+        self.set_value ( self.__kA , value )
+
+    @property 
+    def kB ( self ) :
+        """'kB' :  (dimensioneless) kB-parameter"""
+        return self.__kB
+    @kB.setter  
+    def kB ( self , value ) :
+        self.set_value ( self.__kB , value )
+
+    @property 
+    def phi ( self ) :
+        """'phi' :  phase phi"""
+        return self.__phi
+    @phi.setter  
+    def phi ( self , value ) :
+        self.set_value ( self.__phi , value )
+
+
+models.append ( Bukin2_pdf )      
 
 # =============================================================================
 ## @class NormalLaplace_pdf 

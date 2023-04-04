@@ -2726,6 +2726,109 @@ Double_t Ostap::Models::ExGauss2::analyticalIntegral
 
 
 
+
+// ============================================================================
+//         Bukin2
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Bukin2::Bukin2
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         , 
+  RooAbsReal&          mu        , 
+  RooAbsReal&          varsigmaA , 
+  RooAbsReal&          varsigmaB , 
+  RooAbsReal&          kA        ,   
+  RooAbsReal&          kB        ,  
+  RooAbsReal&          phi       ) 
+  : RooAbsPdf ( name , title ) 
+//
+  , m_x         ( "!x"         , "Observable" , this , x         ) 
+  , m_mu        ( "!mu"        , "mu"         , this , mu        ) 
+  , m_varsigmaA ( "!varsigmaA" , "varsigmaA"  , this , varsigmaA ) 
+  , m_varsigmaB ( "!varsigmaB" , "varsigmaB"  , this , varsigmaB ) 
+  , m_kA        ( "!kA"        , "kA"         , this , kA        ) 
+  , m_kB        ( "!kA"        , "kB"         , this , kB        ) 
+  , m_phi       ( "!phi"       , "phi"        , this , phi       ) 
+  //
+  , m_b2       () 
+{
+  setPars () ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Bukin2::Bukin2
+( const Ostap::Models::Bukin2& right , 
+  const char*                        name   ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x         ( "!x"         , this , right.m_x         ) 
+  , m_mu        ( "!mu"        , this , right.m_mu        ) 
+  , m_varsigmaA ( "!varsigmaA" , this , right.m_varsigmaA ) 
+  , m_varsigmaB ( "!varsigmaB" , this , right.m_varsigmaB ) 
+  , m_kA        ( "!kA"        , this , right.m_kA        ) 
+  , m_kB        ( "!kB"        , this , right.m_kB        ) 
+  , m_phi       ( "!phi"       , this , right.m_phi       ) 
+    //
+  , m_b2     ( right.m_b2 ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::Bukin2::~Bukin2 (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Bukin2*
+Ostap::Models::Bukin2::clone( const char* name ) const 
+{ return new Ostap::Models::Bukin2 ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::Bukin2::setPars () const 
+{
+  m_b2 . setMu        ( m_mu        ) ;
+  m_b2 . setVarsigmaA ( m_varsigmaA ) ;
+  m_b2 . setVarsigmaB ( m_varsigmaB ) ;
+  m_b2 . setKA        ( m_kA        ) ;
+  m_b2 . setKB        ( m_kB        ) ;
+  m_b2 . setPhi       ( m_phi       ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Bukin2::evaluate() const 
+{
+  setPars () ;
+  return m_b2 ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Bukin2::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Bukin2::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_b2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+
+
 // ============================================================================
 //        NormalLaplace 
 // ============================================================================
@@ -10051,6 +10154,7 @@ ClassImp(Ostap::Models::Rice               )
 ClassImp(Ostap::Models::GenInvGauss        )
 ClassImp(Ostap::Models::ExGauss            )
 ClassImp(Ostap::Models::ExGauss2           )
+ClassImp(Ostap::Models::Bukin2             )
 ClassImp(Ostap::Models::NormalLaplace      )
 ClassImp(Ostap::Models::PearsonIV          )
 ClassImp(Ostap::Models::SkewGenT           )

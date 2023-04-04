@@ -1147,8 +1147,7 @@ double Ostap::Math::ExGauss2::cdf
 // ============================================================================
 // get the integral
 // ============================================================================
-double Ostap::Math::ExGauss2::integral   () const 
-{ return m_emg.integral () ; }
+double Ostap::Math::ExGauss2::integral   () const { return 1 ; }
 // ============================================================================
 /// get the integral between low and high limits
 // ============================================================================
@@ -1165,6 +1164,93 @@ std::size_t Ostap::Math::ExGauss2::tag () const
   return Ostap::Utils::hash_combiner ( s_name , mu () , varsigma () , k () ) ; 
 }
 // ============================================================================
+
+
+// ============================================================================
+// constructor from all parameters
+// ============================================================================
+Ostap::Math::Bukin2::Bukin2
+( const double mu        ,
+  const double varsigmaA , 
+  const double varsigmaB , 
+  const double kA        , 
+  const double kB        , 
+  const double phi       )
+  : m_A   ( mu , varsigmaA , kA )
+  , m_B   ( mu , varsigmaB , kB )
+  , m_phi ( 0   )
+  , m_fA  ( 0.5 ) 
+  , m_fB  ( 0.5 ) 
+{
+  setPhi ( phi ) ;
+}
+// ============================================================================
+// set new value for parameter mu 
+// ============================================================================
+bool Ostap::Math::Bukin2::setMu ( const double value )
+{
+  const bool changedA = m_A.setMu ( value ) ;
+  const bool changedB = m_B.setMu ( value ) ;
+  return changedA || changedB ;
+}
+// ============================================================================
+// set new value for parameter phi 
+// ============================================================================
+bool Ostap::Math::Bukin2::setPhi ( const double value )
+{
+  if ( s_equal ( value  , m_phi  ) ) { return false ; }
+  //
+  m_phi = value ;
+  //
+  static const double pi4 = M_PI * 0.25 ;
+  const        double s   = std::sin ( value + pi4 ) ;
+  m_fA = s * s  ;
+  m_fB = 1.0 - m_fA ;
+  return true ;
+}
+// ============================================================================
+// evaluate the function
+// ============================================================================
+double  Ostap::Math::Bukin2::evaluate ( const double x  ) const
+{ return m_fA * m_A ( x ) + m_fB * m_B ( x  ) ; }
+// ============================================================================
+// get the mean value 
+// ============================================================================
+double  Ostap::Math::Bukin2::mean () const
+{ return m_fA * m_A.mean() + m_fB * m_B.mean() ; }
+// ============================================================================
+// get the integral 
+// ============================================================================
+double  Ostap::Math::Bukin2::integral () const { return 1 ; }
+// ============================================================================
+// get the cdf  
+// ============================================================================
+double  Ostap::Math::Bukin2::cdf ( const double x  ) const
+{ return m_fA * m_A.cdf ( x ) + m_fB * m_B.cdf ( x ) ; }
+// ============================================================================
+// get the  integral 
+// ============================================================================
+double  Ostap::Math::Bukin2::integral
+( const double low  ,
+  const double high ) const
+{
+  return
+    m_fA * m_A.integral ( low , high ) +
+    m_fB * m_B.integral ( low , high ) ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Bukin2::tag () const 
+{ 
+  static const std::string s_name = "Bukin2" ;
+  return Ostap::Utils::hash_combiner ( s_name    , mu () , m_phi ,  
+                                       varsigmaA() , kA () ,  
+                                       varsigmaB() , kB () ) ;
+}
+// ============================================================================
+
+
 
 
 

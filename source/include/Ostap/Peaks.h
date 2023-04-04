@@ -1,4 +1,4 @@
-// ============================================================================
+//exgauss2 ============================================================================
 #ifndef OSTAP_PEAKS_H 
 #define OSTAP_PEAKS_H 1
 // ============================================================================
@@ -744,10 +744,6 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const Ostap::Math::ExGauss& emg() const { return m_emg ; }
-      // ======================================================================
-    public:
-      // ======================================================================
       /// get the tag 
       std::size_t tag () const ;
       // ======================================================================
@@ -757,6 +753,104 @@ namespace Ostap
       Ostap::Math::ExGauss  m_emg {} ; // the function      
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class Bukin2
+     *  Varinant of \f$ f_{2B1}\f$ function
+     *  Essentially it is a sum of two ExGauss2 functionn with the same mode.
+     *  It is more flexible that NormalLaplace (2 more parameters) 
+     *  \f[ f(x; \mu , \sigma_A, \sigma_B , k_A , k_B , \phi ) = 
+     *   \sin^2 ( \phi + \frac{\pi}{4} ) \times E ( \mu , \sigma_A , k_A  ) + 
+     *   \cos^2 ( ]phi + \frac{\pi}{4} ) \times E ( \mu , \sigma_B , k_B ) \f]
+     *  = where \f$ E \f$  stands for exponential modified Gaussian functions
+     *  parameterized with the mode parameter..
+     *  @see  A.Bukin, "Fitting function for asymmetric peaks}",
+     *                 https://arxiv.org/abs/0711.4449
+     *  @see https://arxiv.org/abs/0711.4449
+     *  @see Ostap::Math::ExGauss2
+     *  @see Ostap::Math::ExGauss
+     *  @see Ostap::Math::NormalLaplace
+     */
+    class Bukin2
+    {
+    public:
+      // ======================================================================
+      /// constructor with all parameters
+      Bukin2
+      ( const double mu        =  0.0 ,   // the mode 
+        const double varsigmaA =  1.0 ,
+        const double varsigmaB =  1.0 ,
+        const double kA        = -1.0 ,   // left taiil 
+        const double kB        = +1.0 ,   // right tail
+        const double phi       =  0.0 ) ; // equal fractionsn 
+      // ======================================================================
+    public:
+      // ======================================================================
+      double        evaluate   ( const double x  ) const ;
+      inline double operator() ( const double x  ) const { return evaluate ( x ) ; } 
+      inline double pdf        ( const double x  ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public: // getters  
+      // ======================================================================
+      double mu        () const { return m_A.mu       () ; }
+      double varsigmaA () const { return m_A.varsigma () ; }
+      double varsigmaB () const { return m_B.varsigma () ; }
+      double kA        () const { return m_A.k        () ; }
+      double kB        () const { return m_B.k        () ; }
+      double phi       () const { return m_phi           ; }
+      // ======================================================================
+    public: // derived parameters 
+      // ======================================================================
+      /// fraction of "A" componet 
+      double fA        ()  const { return m_fA ; }
+      /// fraction of "B" componet 
+      double fB        ()  const { return m_fB ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setMu         ( const double value  ) ;
+      bool setVarsigmaA  ( const double value  ) { return m_A.setVarsigma ( value ) ; }
+      bool setVarsigmaB  ( const double value  ) { return m_B.setVarsigma ( value ) ; }
+      bool setKA         ( const double value  ) { return m_A.setK        ( value ) ; }
+      bool setKB         ( const double value  ) { return m_B.setK        ( value ) ; }
+      bool setPhi        ( const double value  ) ;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      /// get CDF
+      double cdf ( const double x ) const ; 
+      /// get the integral
+      double integral   ()          const ; 
+      /// get the integral between low and high limits
+      double integral  
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public: // properties 
+      // ======================================================================
+      /// mean value 
+      double mean        () const ;
+      /// mode 
+      double mode        () const { return mu () ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// "A" component
+      Ostap::Math::ExGauss2 m_A   {}      ; // "A" component      
+      /// "B" component
+      Ostap::Math::ExGauss2 m_B   {}      ; // "B" component
+      /// angle phi
+      double                m_phi { 0 }   ; // angle phi
+      /// fraction of "A" component
+      double                m_fA  { 0.5 } ; // fraction of "A" component
+      /// fraction of "B" component
+      double                m_fB  { 0.5 } ; // fraction of "B" component      
+      // ======================================================================
+    };
     // ========================================================================
     /** @class NormalLaplace 
      *  Distribution for a sum of Gaussian and (asymmertric) Laplace variables 

@@ -1991,7 +1991,7 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::ExGauss2& function () const { return m_eg ; }
-      const Ostap::Math::ExGauss2& exgauss  () const { return m_eg ; }
+      const Ostap::Math::ExGauss2& exgauss2 () const { return m_eg ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2011,6 +2011,99 @@ namespace Ostap
       // ======================================================================
       /// the actual function
       mutable Ostap::Math::ExGauss2 m_eg ;                     // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Bukin2 
+     *  Compound PDF - sum of two ExGauss2 pdfs with common mode 
+     *  @see Ostap::Math::Bukin2
+     *  @see Ostap::Math::ExGauss
+     *  @see Ostap::Math::ExGauss2
+     *  @see Ostap::Math::NormalLaplace 
+     *  @see Ostap::Models::ExGauss
+     */
+    class Bukin2: public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Bukin2, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      Bukin2
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mu        ,
+        RooAbsReal&          varsigmaA , 
+        RooAbsReal&          varsigmaB , 
+        RooAbsReal&          kA        , 
+        RooAbsReal&          kB        , 
+        RooAbsReal&          phi       ) ;
+      /// "copy" constructor
+      Bukin2 ( const Bukin2& right , const char* name = 0  ) ;
+      /// virtual destructor
+      virtual ~Bukin2 () ;
+      /// clone
+      Bukin2* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Bukin2 () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&     allVars      ,
+          RooArgSet&     analVars     ,
+          const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+        ( Int_t          code         ,
+          const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Bukin2& function () const { return m_b2 ; }
+      const Ostap::Math::Bukin2& bukin2   () const { return m_b2 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x         () const { return m_x        .arg() ; }
+      const RooAbsReal& mu        () const { return m_mu       .arg() ; }
+      const RooAbsReal& varsigmaA () const { return m_varsigmaA.arg() ; }
+      const RooAbsReal& varsigmaB () const { return m_varsigmaB.arg() ; }
+      const RooAbsReal& kA        () const { return m_kA       .arg() ; }
+      const RooAbsReal& kB        () const { return m_kB       .arg() ; }
+      const RooAbsReal& phi       () const { return m_phi      .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x         {} ;
+      RooRealProxy m_mu        {} ;
+      RooRealProxy m_varsigmaA {} ;
+      RooRealProxy m_varsigmaB {} ;
+      RooRealProxy m_kA        {} ;
+      RooRealProxy m_kB        {} ;
+      RooRealProxy m_phi       {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Bukin2 m_b2 ;                     // the function
       // ======================================================================
     } ;
     // ========================================================================

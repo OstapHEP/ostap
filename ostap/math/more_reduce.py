@@ -379,6 +379,23 @@ Ostap.Math.ExGauss . __reduce__ = _omexg_reduce_
 Ostap.Math.ExGauss2. __reduce__ = _omexg_reduce_
 
 # =============================================================================
+## Reduce Ostap::Math::Bukin2
+#  @see Ostap::Math::Bukin2
+def _ombk2_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.Bukin2`
+    - see `Ostap.Math.Bukin2`
+    """
+    return root_factory , ( type ( peak )     ,
+                            peak.mu        () ,
+                            peak.varsigmaA () ,
+                            peak.varsigmaB () ,
+                            peak.kA        () ,
+                            peak.kB        () ,
+                            peak.phi       () ) 
+
+Ostap.Math.Bukin2 . __reduce__ = _ombk2_reduce_
+
+# =============================================================================
 ## Reduce Ostap::Math::NormalLaplace
 #  @see Ostap::Math::NormalLaplace
 def _omnl_reduce_ ( peak ) :
