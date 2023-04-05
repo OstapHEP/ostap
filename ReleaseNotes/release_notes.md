@@ -3,7 +3,8 @@
   1. add `Ostap::Math::ExGauss2` function, `Ostap::Models::ExGauss2` and `ExGauss2_pdf` PDFs for the 
      variant of exponentially modified gaussuan distribution, but parameterise din terms of the mode 
   1. add `Ostap::Math::Bukin2`, `Ostap::Models::Bukin2` and  `Bukin2_pdf`
-  
+  1. add `ResoBukin2` resolution model
+  1. add more tests    
   
 ## Backward incompatible: 
 

@@ -8,7 +8,7 @@
 # - It tests various resoltuion models
 # ============================================================================= 
 """Test module for ostap/fitting/resolution.py
-- It tests various resoltuion models
+- It tests various resolution models
 """
 # ============================================================================= 
 from   __future__               import print_function
@@ -574,6 +574,33 @@ def test_bates_shape() :
         models.add ( reso  )
         plots .add ( frame ) 
                 
+# =============================================================================
+## Bukin2
+# =============================================================================
+def test_bukin2 () :
+    
+    logger = getLogger ( 'test_bukin2' )
+
+    logger.info ('Test Bukin2 : Gaussian with symmetric exponential tails ' )
+    from   ostap.fitting.resolution import ResoBukin2
+    reso = ResoBukin2 ( 'Bk2' , mass ,
+                        kA       = ( -1.e-3 , -1000  , -1.e-5 ) , 
+                        kB       = None , 
+                        varsigma = ( 0.1 , 0.01 , 5.0 ) ) 
+    
+    result, frame = reso. fitTo ( dataset , silent = True  )    
+    result, frame = reso. fitTo ( dataset , silent = True  )
+
+    with wait ( 1 ) , use_canvas ( 'test_bukin2' ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        make_print ( reso , result , 'Bukin2', logger )
+ 
+    models.add ( reso)
 
 # =============================================================================
 ## Normal Laplace 
@@ -697,6 +724,9 @@ if '__main__' == __name__ :
     
     with timing ("Das"        , logger ) :  
         test_das           ()   ## Das resolution model
+
+    with timing ("Bukin2" , logger ) :  
+        test_bukin2         ()   ## Bukin2 resolution model
 
     with timing ("NormalLaplace" , logger ) :  
         test_normlapl      ()   ## Normal Laplace resolution model

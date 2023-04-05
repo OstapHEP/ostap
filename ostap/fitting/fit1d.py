@@ -294,8 +294,8 @@ class PEAK(PEAKMEAN) :
         self.__limits_sigma = ()        
         if  self.xminmax() and not isinstance ( sigma , ROOT.RooAbsReal ) :            
             mn , mx   = self.xminmax()
-            dm        =  mx - mn
-            sigma_max =  2 * dm / math.sqrt(12)  
+            dm        = mx - mn
+            sigma_max = 3 * dm / math.sqrt(12)  
             self.__limits_sigma = 1.e-4 * sigma_max , sigma_max 
 
         ## sigma

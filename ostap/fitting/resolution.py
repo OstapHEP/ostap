@@ -35,7 +35,8 @@
 - Hyperbolic                          (tails are exponential)
 - generalized Hyperbolic              (tails are exponential or heavier)
 - Hypatia model                       (tails are exponential or heavier)
-- Normal Laplace model                 (gaussian with exponential tails) 
+- Normal Laplace model                (gaussian with exponential tails) 
+- Buin2  model                        (gaussian with exponential tails) 
 - Das model                           (gaussian with exponential tails)
 - Generalized Gaussian v1             (family that included Gaussian, Laplace, uniform etc...)
 - PearsonIV model                     (power-law tails+asymmetry)
@@ -64,6 +65,7 @@ __all__     = (
     'ResoGenHyperbolic' , ## Generalised Hyperbolic resolution model
     'ResoHypatia'       , ## Hypatia resoltuion model
     'ResoDas'           , ## Das resolution model
+    'ResoBukin2'        , ## Bukin2 resolution model
     'ResoNormalLaplace' , ## Normal Laplace resolution model
     'ResoGenGaussV1'    , ## Generalized  Gaussian v1
     'ResoBatesShape'    , ## Bates-shape models (spline-like finite model)
@@ -73,7 +75,7 @@ __all__     = (
 from   ostap.core.core        import Ostap
 from   ostap.fitting.pdfbasic import Generic1D_pdf 
 from   ostap.fitting.fit1d    import RESOLUTION, CheckMean 
-import ROOT
+import ROOT, math 
 # =============================================================================    
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.resolution' )
@@ -2338,6 +2340,177 @@ class ResoNormalLaplace(RESOLUTION) :
     def kappa ( self , value ) :
         self.set_value ( self.__kappa , value )
 
+
+# =============================================================================
+## @class ResoBukin2
+#  Resolution function based on Buni2_pdf: sum of two
+#  exponental modified Gaussina functions
+class ResoBukin2(RESOLUTION) :
+    """Resolution function based on Buni2_pdf: sum of two
+    exponental modified Gaussina functions
+    """
+    def __init__ ( self            ,
+                   name            ,
+                   xvar            ,
+                   varsigma = None ,
+                   kA       = 0    ,  ## k = 0 gives gaussian Resolution
+                   kB       = None ,  ## k = 0 gives gaussian Resolution
+                   phi      = None , 
+                   fudge    = 1    , 
+                   mean     = None ,
+                   kappa    = None ) : ## sigma symmetry parameter 
+        
+        ## initialize the base
+        super(ResoBukin2,self).__init__( name        = name     ,
+                                         xvar        = xvar     ,
+                                         sigma       = varsigma ,                                     
+                                         mean        = mean     ,
+                                         fudge       = fudge    ,
+                                         sigma_name  = 'varsigma_%s'   % name ,                                               
+                                         sigma_title = '#varsigma(%s)' % name )
+        
+        ## asymmetry parameter 
+        self.__kappa = self.make_var ( ZERO if kappa is None else kappa , 
+                                       'kappa_%s'   % self.name ,
+                                       '#kappa(%s)' % self.name ,
+                                       None , 0 , -1 , +1 )
+
+
+        if kappa is None :
+
+            self.__varsigmaA = self.sigma_corr
+            self.__varsigmaB = self.sigma_corr
+
+        else :
+            
+            self.__varsigmaA , self.__varsigmaB = self.vars_from_asymmetry (
+                self.sigma_corr                                   , ## mean/average sigma
+                self.kappa                                        , ## asymmetry parametet
+                v1name  =  self.roo_name ( 'varsigmaA' , self.name ) ,
+                v2name  =  self.roo_name ( 'varsigmaB' , self.name ) ,
+                v1title = '#sigma_A: #sigma #times (1+#kappa)'    , 
+                v2title = '#sigma_B: #sigma #times (1-#kappa)'    )
+                #
+                
+        ## k-parameters 
+        if   kA is None and kB is None :
+            
+            self.__kA , self.__kB = ZERO, ZERO 
+            
+        elif kA is None :
+            
+            self.__kB  = self.make_var      ( kB,
+                                              'kB_%s'  % self.name ,
+                                              'kB(%s)' % self.name ,
+                                              None  , 0 , -1000 , +1000 ) 
+            self.__kA  = self.vars_multiply ( self.kB , -1.0 ,
+                                              'kA_%s'  % self.name ,
+                                              'kA(%s)' % self.name )
+        elif kB is None :
+            
+            self.__kA  = self.make_var      ( kA,
+                                              'kA_%s'  % self.name ,
+                                              'kA(%s)' % self.name ,
+                                              None  , 0 , -1000 , +1000 ) 
+            self.__kB  = self.vars_multiply ( self.kA , -1.0 ,
+                                              'kB_%s'  % self.name ,
+                                              'kB(%s)' % self.name )
+            
+        else :
+            
+            self.__kA  = self.make_var     ( kA,
+                                             'kA_%s'  % self.name ,
+                                             'kA(%s)' % self.name ,
+                                             None  , -1.e-5 , -1000 , 0     ) 
+            self.__kB  = self.make_var     ( kB,
+                                             'kB_%s'  % self.name ,
+                                             'kB(%s)' % self.name ,
+                                             None  , +1.e-5 , 0     , +1000 ) 
+            
+        ## phi parameter 
+        self.__phi = self.make_var ( ZERO if phi is None else phi , 
+                                     'phi_%s'   % self.name ,
+                                     '#phi(%s)' % self.name ,
+                                     None , 0 , -4 * math.pi , +4 * math.pi )
+        
+        #
+        ## finally build PDF
+        #
+        self.pdf = Ostap.Models.Bukin2 (
+            self.roo_name ( 'bukin2_' ) , 
+            "Resolution Bukin2 %s" % self.name ,
+            self.xvar       ,
+            self.mean       ,            
+            self.varsigmaA  , ## attention
+            self.varsigmaB  , ## attention
+            self.kA         ,
+            self.kB         ,
+            self.phi        )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name     ,
+            'xvar'      : self.xvar     ,
+            'mean'      : self.mean     ,
+            'varsigma'  : self.sigma    ,
+            'kappa'     : self.kappa    ,
+            'kA'        : self.kA       ,
+            'kB'        : self.kB       ,
+            'phi'       : self.phi      ,
+            'fudge'     : self.fudge 
+            }
+        
+    @property
+    def varsigma    ( self ) :
+        """'varsigma' : varsigma parameter for Bukin2 function (same as 'sigma')"""
+        return self.sigma
+    @varsigma.setter
+    def varsigma    ( self , value ) :
+        self.set_value ( self.__varsigma , value )
+
+    @property
+    def kappa ( self ) :
+        """'kappa' : sigma asymmetry parameter
+        """
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def varsigmaA   ( self ) :
+        """'varsigmaA' : varsigmaA parameter for Bukin2 function"""
+        return self.__varsigmaA 
+
+    @property
+    def varsigmaB   ( self ) :
+        """'varsigmaB' : varsigmaB parameter for Bukin2 function"""
+        return self.__varsigmaB 
+
+    @property 
+    def kA  ( self ) :
+        """'kA' :  (dimensioneless) kA-parameter"""
+        return self.__kA
+    @kA.setter  
+    def kA ( self , value ) :
+        self.set_value ( self.__kA , value )
+
+    @property 
+    def kB  ( self ) :
+        """'kB' :  (dimensioneless) kB-parameter"""
+        return self.__kB
+    @kB.setter  
+    def kB ( self , value ) :
+        self.set_value ( self.__kB , value )
+
+    @property
+    def phi ( self ) :
+        """'phi' : phi parameter
+        """
+        return self.__phi
+    @phi.setter
+    def phi ( self , value ) :
+        self.set_value ( self.__phi , value )
 
 # =============================================================================
 ## @class ResoBateShape 

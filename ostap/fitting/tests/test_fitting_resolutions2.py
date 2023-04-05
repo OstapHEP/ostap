@@ -424,6 +424,41 @@ def test_normlapl () :
 
 
 # =============================================================================
+## Bukin2
+# =============================================================================
+def test_bukin2 () :
+    
+    logger = getLogger ( 'test_bukin2' )
+
+    logger.info ('Test Bukin2 : Gaussian with asymmetric exponential tails ' )
+    from   ostap.fitting.resolution import ResoBukin2
+    reso = ResoBukin2 ( 'Bk2' , mass ,
+                        kA       = ( -1.e-3 , -1000  , -1.e-5 ) , 
+                        kB       = ( +1.e-3 , +1.e-5 , +1000  ) , 
+                        varsigma = ( 0.1 , 0.01 , 5.0 ) ,                               
+                        kappa    = ( 0.1 , -1 , 1 ) ,
+                        phi      = ( 0 , -10 , +10 ) )
+    
+    reso.kappa.fix() 
+    result, frame = reso. fitTo ( dataset , silent = True  )    
+
+    reso.kappa.release() 
+    result, frame = reso. fitTo ( dataset , silent = True  )
+
+    
+    with wait ( 1 ) , use_canvas ( 'test_bukin2' ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        make_print ( reso , result , 'Bukin2', logger )
+ 
+    models.add ( reso)
+
+
+# =============================================================================
 ## PearsonIV 
 # =============================================================================
 def test_pearsonIV () :
@@ -616,6 +651,9 @@ if '__main__' == __name__ :
         
     with timing ("Das"      , logger ) :  
         test_das           ()   ## Das resolution model
+
+    with timing ("Bukin2"  , logger ) :  
+        test_bukin2      ()   ## Bukin2 resolution model
 
     with timing ("Normal Laplace"  , logger ) :  
         test_normlapl      ()   ## Normal Laplace resolution model

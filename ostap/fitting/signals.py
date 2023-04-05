@@ -3718,10 +3718,10 @@ class ExGauss2_pdf(PEAK) :
         self.__varsigma = self.sigma
         
         ## k 
-        self.__k= self.make_var ( k              ,
-                                  'k_%s'  % name ,
-                                  'k(%s)' % name ,
-                                  None , 0 , -200 , 200 ) 
+        self.__k        = self.make_var ( k              ,
+                                          'k_%s'  % name ,
+                                          'k(%s)' % name ,
+                                          None , 0 , -200 , 200 ) 
         
         ## create PDF 
         self.pdf = Ostap.Models.ExGauss2 (
@@ -3791,10 +3791,10 @@ class Bukin2_pdf(PEAK) :
                    name             ,
                    xvar             ,
                    mu        = None ,   ## related to mode 
-                   varsigmaA =  1   ,   ## relatd  to width
-                   varsigmaB =  1   ,   ## relatd  to width
-                   kA        = -1   ,   ## relatd  to width
-                   kB        = +1   ,   ## relatd  to width
+                   varsigmaA =  1   ,   ## related to width
+                   varsigmaB =  1   ,   ## related to width
+                   kA        = -1   ,   ## related to shape
+                   kB        = +1   ,   ## related to shape
                    phi       =  0   ) :
         # 
         ## initialize the base
@@ -3802,41 +3802,42 @@ class Bukin2_pdf(PEAK) :
         PEAK.__init__  ( self , name , xvar                   , 
                          mean        = mu                     ,
                          sigma       = varsigmaA              ,
-                         mean_name   = 'mode_%s'      % name  ,
+                         mean_name   = 'mode_%s'       % name ,
                          mean_title  = 'mode(%s)'      % name ,
                          sigma_name  = 'varsigmaA_%s'  % name ,
                          sigma_title = 'varsigmaA(%s)' % name )
         
-        self.__mu        = self.mean 
-        self.__varsigmaA = self.sigmaA
+        self.__mu        = self.mean
+        self.__varsigmaA = self.sigma
 
-        
-        ## varsigmaB 
-        self.__varsigmaB = self.make_var ( varsigmaB              ,
+        ## varsigmaB
+        limits = () 
+        if self.xminmax () :
+            xmn , xmx = self.xminmax()
+            sigma_max = 3 * ( xmx - xmn ) / math.sqrt ( 12 ) 
+            limits    = 1.e-4 * sigma_max , sigma_max
+            
+        self.__varsigmaB = self.make_var ( varsigmaB ,
                                            'varsigmaB_%s'  % name ,
                                            'varsigmaB(%s)' % name ,
-                                           None , varsigmaB ) 
-        
-
+                                           None , *limits ) 
         ## kA 
-        self.__kA= self.make_var ( kB              ,
-                                   'kA_%s'  % name ,
-                                   'kA(%s)' % name ,
-                                   None , kA , -1.e+4 , -1.e-4 ) 
+        self.__kA = self.make_var ( kA              ,
+                                    'kA_%s'  % name ,
+                                    'kA(%s)' % name ,
+                                    None , -1.e-3 , -1.e+4 , -1.e-5 ) 
         ## kB 
-        self.__kB= self.make_var ( kB              ,
-                                   'kA_%s'  % name ,
-                                   'kA(%s)' % name ,
-                                   None , kB , 1.e-4 , +1.e+4 ) 
-
-
+        self.__kB = self.make_var ( kB              ,
+                                    'kB_%s'  % name ,
+                                    'kB(%s)' % name ,
+                                    None , +1.e-3 , 1.e-5  , +1.e+4 ) 
+        
         ## phi 
         self.__phi = self.make_var ( phi    ,
                                      'phi_%s'  % name ,
                                      'phi(%s)' % name ,
-                                     None , phi , -2 * math.pi , +3 * math.pi ) 
+                                     None , 0.0 , -3 * math.pi , +3 * math.pi ) 
         
-
 
         ## create PDF 
         self.pdf = Ostap.Models.Bukin2 (
@@ -3852,14 +3853,14 @@ class Bukin2_pdf(PEAK) :
         
         
         self.config = {
-            'name'      : self.name     ,
-            'xvar'      : self.xvar     ,
-            'mu'        : self.mu       ,
-            'varsigmaA' : self.varsigma ,
-            'varsigmaB' : self.varsigma ,
-            'kA'        : self.kB       ,
-            'kB'        : self.kA       ,
-            'phi'       : self.phi      }
+            'name'      : self.name      ,
+            'xvar'      : self.xvar      ,
+            'mu'        : self.mu        ,
+            'varsigmaA' : self.varsigmaA ,
+            'varsigmaB' : self.varsigmaB ,
+            'kA'        : self.kB        ,
+            'kB'        : self.kA        ,
+            'phi'       : self.phi       }
 
     @property
     def varsigmaA    ( self ) :
@@ -3867,7 +3868,7 @@ class Bukin2_pdf(PEAK) :
         return self.sigma
     @varsigmaA.setter
     def varsigmaA  ( self , value ) :
-        self.set_value ( self.__varfsigmaA , value )
+        self.set_value ( self.__varsigmaA , value )
 
     @property
     def varsigmaB    ( self ) :
@@ -3875,7 +3876,7 @@ class Bukin2_pdf(PEAK) :
         return self.__varsigmaB 
     @varsigmaB.setter
     def varsigmaB  ( self , value ) :
-        self.set_value ( self.__varfsigmaB , value )
+        self.set_value ( self.__varsigmaB , value )
 
     @property
     def mu ( self ) :

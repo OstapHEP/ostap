@@ -1482,6 +1482,80 @@ def test_exgauss () :
     results.append ( result )
 
 # ==========================================================================
+## ExGauss2
+# ==========================================================================
+def test_exgauss2 () :
+    
+    logger = getLogger ( 'test_ExGauss2' )
+       
+    
+    logger.info ('Test ExGauss2_pdf: single tail pdf ' ) 
+    model = Models.Fit1D (
+        signal = Models.ExGauss2_pdf ( name = 'ExGauss2' , 
+                                       xvar      = mass               ,
+                                       mu        = signal_gauss.mean  ,
+                                       varsigma  = signal_gauss.sigma ,
+                                       k         = ( 1 , -10 , 10.0 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+    
+
+    signal = model.signal
+    model.S = NS 
+    model.B = NB
+
+    with rooSilent() :
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.mu    .release()
+        signal.sigma.release()        
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        
+    make_print ( model , result , "ExGauss2 model" , logger )        
+
+    models.add     ( model  )
+    results.append ( result )
+
+# ==========================================================================
+## Bukin22
+# ==========================================================================
+def test_bukin2 () :
+    
+    logger = getLogger ( 'test_Bukin2' )
+       
+    
+    logger.info ('Test Bukin2_pdf: double tail pdf ' ) 
+    model = Models.Fit1D (
+        signal = Models.Bukin2_pdf ( name = 'Bukin2' , 
+                                     xvar      = mass               ,
+                                     mu        = signal_gauss.mean  ,
+                                     varsigmaA = signal_gauss.sigma ,
+                                     varsigmaB = signal_gauss.sigma ,
+                                     kA        = ( -1 , -1000  , -1.e-5 ) ,
+                                     kB        = (  1 , +1.e-5 , +1000  ) ,
+                                     phi       = ( 0 , -6 , 6 )  ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+    
+    signal = model.signal
+    model.S = NS 
+    model.B = NB
+
+    with rooSilent() :
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.mu    .release()
+        signal.sigma.release()        
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        
+        make_print ( model , result , "Bukin2 model" , logger )        
+
+    models.add     ( model  )
+    results.append ( result )
+
+# ==========================================================================
 ## NormalLaplace 
 # ==========================================================================
 def test_normlapl () :
@@ -2018,6 +2092,14 @@ if '__main__' == __name__ :
     ## ExGauss                                       + background 
     with timing ('test_ExGauss'             , logger ) :
         test_exgauss            () 
+
+    ## ExGauss2                                      + background 
+    with timing ('test_ExGauss2'             , logger ) :
+        test_exgauss2           ()
+        
+    ## Bukin2                                       + background 
+    with timing ('test_Bukin22'             , logger ) :
+        test_bukin2            () 
 
     ## Normal Laplace                                       + background
     with timing ('test_NormalLaplas'        , logger ) :
