@@ -76,6 +76,7 @@ class ModelConfig(object):
                     observables        = ()   ,   ## observables 
                     global_observables = ()   ,   ## global observables
                     constraints        = ()   ,   ## constraints
+                    constrained        = ()   ,   ## constrained                     
                     conditional        = ()   ,   ## conditional observables 
                     snapshot           = None ,   ## snapshot 
                     **kwargs                  ) : ## other arguments
@@ -113,13 +114,13 @@ class ModelConfig(object):
         self.__intput_global_observables = global_observables 
         self.__input_constraints         = constraints 
         self.__input_snapshot            = snapshot 
-        
-        if   isinstance ( pdf , APDF1          ) :
-            self.__raw_pdf = pdf.pdf 
-        elif isinstance ( pdf , ROOT.RooAbsPdf ) and observables :
+
+        if   isinstance ( pdf , ROOT.RooAbsPdf ) and observables :
             self.__raw_pdf = pdf
+        elif hasattr    ( pdf , 'roo_pdf' ) :  ## PDF & SimFit 
+            self.__raw_pdf = pdf.roo_pdf 
         else :
-            raise TypeError ( "Invalid setting of pdf/observables!" ) 
+            raise TypeError ( "Invalid setting of pdf" )
 
         ## final pdf? (not yet...) 
         self.__final_pdf = self.__raw_pdf
@@ -153,7 +154,7 @@ class ModelConfig(object):
         if isinstance   ( pdf , ROOT.RooAbsPdf ) and observables :
             ## (3) set PDF  
             mc.SetPdf         ( self.__final_pdf ) ## note: we use bare RooAbsPdf here 
-        elif isinstance ( pdf , APDF1 ) :  
+        elif hasattr    ( pdf , 'observables'  ) : 
             ## (3/4) set PDF and observables 
             mc.SetPdf         ( self.__final_pdf ) ## note: we use bare RooAbsPdf here 
             mc.SetObservables ( pdf.observables  )
@@ -226,9 +227,12 @@ class ModelConfig(object):
             mc.SetConditionalObservables  ( cobs )
             self.__co = conditional , cobs 
                 
-        ## (9) constraints
-        if constraints :
-            mc.SetConstraintParameters  ( constraints )
+        ## (9) constrained parameters 
+        self.__constrained = ROOT.RooArgSet() 
+        if constrained :
+            if isinstance ( constrained , ROOT.RooAbsReal ) : constrained = constrained , 
+            for c in constrained : self.__constrained.add ( s )
+            mc.SetConstraintParameters  ( self.__constrained )
             
         ## (10) define the default dataset 
         self.__dataset = dataset 
@@ -1058,17 +1062,25 @@ class AsymptoticCalculator (Calculator) :
                    H0                ,   ## H0 model, e.g. signal+background
                    dataset           ,   ## dataset 
                    asimov    = False ,   ## nominal Asimov? (not using fitted parameter values but nominal ones)
-                   one_sided = True  ) : 
+                   one_sided = True  ,
+                   silent    = True  , 
+                   verbose   = False ) : 
 
         self.__one_sided  = True if one_sided else False 
-        self.__asimov     = True if asimov    else False        
+        self.__asimov     = True if asimov    else False
+        ## 
+        if   silent  : self.__level = 0
+        elif verbose : self.__level = 2
+        else         : self.__level = 1
+        ##
         Calculator.__init__ ( self , H1 , H0 , dataset )
 
     ## create and configure the Asymptotic calculator 
     def make_calculator ( self ) :
         """Create and configure the Asymptotic calculator"""
+        ROOT.RooStats.AsymptoticCalculator.SetPrintLevel ( self.__level ) 
         calc = ROOT.RooStats.AsymptoticCalculator ( self.dataset , self.h1 , self.h0 , self.asimov ) 
-        calc.SetOneSided ( self.one_sided )
+        calc.SetOneSided   ( self.one_sided )
         return calc
         
     @property

@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright (c) Ostap developers.
 # ============================================================================= 
-# @file test_fitting_roostats.py
+# @file test_fitting_roostats3.py
 # Test module for RooStats 
 # ============================================================================= 
 """ Test module for RooStats 

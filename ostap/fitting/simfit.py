@@ -650,7 +650,7 @@ class SimFit (VarMaker,ConfigReducer) :
         self.__sample       = sample 
 
         ## observables 
-        self.__observables  = ROOT.RooArgSet()
+        self.__observables  = ROOT.RooArgSet( self.__sample )
         
         # =====================================================================
         ## components
@@ -686,14 +686,7 @@ class SimFit (VarMaker,ConfigReducer) :
             for v in pdf.observables :
                 if not v in self.__observables :
                     self.__observables.add ( v )
-                    
-        ## print ( 'CONFIG/BEFORE:', sim_pdf.config )
-        ## cnf = sim_pdf.config
-        ## del cnf['pdf']
-        ## sim_pdf.config = cnf 
-        ## print ( 'CONFIG/AFTER:', sim_pdf.config )
-        
-        
+              
         keys = self.categories.keys()
         for key in sorted ( keys ) :
             sim_pdf.pdf.addPdf ( self.categories[key].pdf , key )

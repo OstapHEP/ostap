@@ -54,12 +54,12 @@ model.B = 1000
 model.S.setMax(200)
 
 data    = model.generate ( 55 + 1000 )
-data1   = data.clone()
-data2   = data.clone()
-data3   = data.clone()
-data4   = data.clone()
-data5   = data.clone()
-data6   = data.clone()
+data1   = data.clone ()
+data2   = data.clone ()
+data3   = data.clone ()
+data4   = data.clone ()
+data5   = data.clone ()
+data6   = data.clone ()
 
 # ============================================================================-
 ## Get the upper limit limit for small signal at fixed mass

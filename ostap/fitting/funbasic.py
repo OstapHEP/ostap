@@ -594,11 +594,12 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         ## get config 
         conf = {}
         
-        ## check for the special keys 
-        for k in kwargs :
-            if k in self.checked_keys :
-                if not hasattr ( self , k ) or getattr ( self, k ) != kwargs [ k ] :
-                    raise AttributeError ("Class %s cannot be cloned with '%s' key" % ( self.__class__.__name__ , k ) )
+        ## check for the special keys
+        if hasattr ( self , 'checked_keys' ) and self.checked_keys : 
+            for k in kwargs :
+                if k in self.checked_keys :
+                    if not hasattr ( self , k ) or getattr ( self, k ) != kwargs [ k ] :
+                        raise AttributeError ("Class %s cannot be cloned with '%s' key" % ( self.__class__.__name__ , k ) )
 
         ## two very special keys:
         if   'fun' in self.config                              : self.config.update ( { 'fun' : self.fun } ) 

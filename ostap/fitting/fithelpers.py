@@ -127,9 +127,17 @@ class ConfigReducer(object) :
         conf.update ( value )
         self.__config = conf
 
-        
-        
-
+    ## oversimplified placeholder for the clone method 
+    def clone ( self , **kwargs ) :
+        """Oversimplified placeolder for clone method
+        - actual cloning for PDFs are a bit more sophistocated 
+        """        
+        ## get config 
+        conf = {}
+        conf.update ( self.config ) 
+        conf.update ( kwargs      )
+        ## 
+        return self.factory ( conf ) 
 
 # =============================================================================
 ## @class VarMaker
