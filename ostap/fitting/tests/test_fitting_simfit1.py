@@ -119,6 +119,7 @@ sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
 
 models  = set()
 results = []
+graphs  = [] 
 # =============================================================================
 def test_simfit1 () :
 ## if 1 < 2 :
@@ -147,21 +148,18 @@ def test_simfit1 () :
     model2.S = NS2
     model2.B = NB2 
     
-    with use_canvas ( 'test_simfit1: fit dataset1' ) : 
+    with use_canvas ( 'test_simfit1: fit dataset1' , wait = 2 ) : 
         # =========================================================================
         ## fit 1
-        with wait ( 1 ) : 
-            r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
-            title = 'Results of fit to dataset1'
-            logger.info ( '%s\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
-
+        r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
+        title = 'Results of fit to dataset1'
+        logger.info ( '%s\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
         
-    with use_canvas ( 'test_simfit1: fit dataset2' ) : 
+    with use_canvas ( 'test_simfit1: fit dataset2' , wait = 2 ) : 
         ## fit 2
-        with wait ( 1 ) : 
-            r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
-            title = 'Results of fit to dataset2'
-            logger.info ( '%s\n%s' % ( title , r2.table ( title = title , prefix = '# ' ) ) )
+        r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
+        title = 'Results of fit to dataset2'
+        logger.info ( '%s\n%s' % ( title , r2.table ( title = title , prefix = '# ' ) ) )
         # =========================================================================
 
     ## combine data
@@ -185,9 +183,16 @@ def test_simfit1 () :
     
     with use_canvas ( 'test_simfit1: fit both datasets & draw A' , wait = 2 ) :        
         fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
+        graphs.append ( fA )
     with use_canvas ( 'test_simfit1: fit both datasets & draw B' , wait = 2 ) :        
         fB = model_sim.draw ( 'B' , dataset , nbins = 50 )            
-
+        graphs.append ( fB )
+    with use_canvas ( 'test_simfit1: graph-profile for S_M2' , wait = 2 ) :
+        from ostap.utils.utils import vrange 
+        grs = model_sim.graph_profile ( 'S_M2' , vrange ( 0 , 1000 , 100 ) , dataset , draw = True )
+        grs.draw('apl')
+        graphs.append ( grs )
+        
     models.add ( model1        )
     models.add ( model2        )
     models.add ( model_sim     )

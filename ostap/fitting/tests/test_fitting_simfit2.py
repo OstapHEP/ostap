@@ -24,7 +24,7 @@ from   builtins    import range
 from   ostap.core.core          import dsID, rooSilent 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, vrange  
 import ROOT, random
 # =============================================================================
 # logging 
@@ -83,6 +83,7 @@ for i in range (NB2 ) :
         mass2.setVal ( v2 )
         dataset2.add ( varset2 )
 
+graphs = [] 
 # =============================================================================
 def test_simfit2 ( ) :
 
@@ -110,20 +111,20 @@ def test_simfit2 ( ) :
     model2.S = NS2
     model2.B = NB2 
 
-    with use_canvas ( 'test_simfit2' ) : 
+    with use_canvas ( 'test_simfit2' , wait = 3 ) : 
         # =========================================================================
         ## fit 1
-        with wait ( 1 ) : 
-            r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )        
-            title = 'Results of fit to dataset1'
-            logger.info ( '%s\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
+        r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )        
+        title = 'Results of fit to dataset1'
+        logger.info ( '%s\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
         ## fit 2
-        with wait ( 1 ) : 
-            r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
-            title = 'Results of fit to dataset2'
-            logger.info ( '%s\n%s' % ( title , r2.table ( title = title , prefix = '# ' ) ) )
+        r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
+        title = 'Results of fit to dataset2'
+        logger.info ( '%s\n%s' % ( title , r2.table ( title = title , prefix = '# ' ) ) )
         # =========================================================================
-    
+        graphs.append ( f1 )
+        graphs.append ( f2 )
+        
     ## combine data
     sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
     
@@ -145,14 +146,19 @@ def test_simfit2 ( ) :
     title = 'Results of simultaneous fit'
     logger.info ( '%s\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
 
-    with use_canvas ( 'test_simfit2' ) : 
-        with wait ( 1 ) : fA    = model_sim.draw ( 'A' , dataset , nbins = 50 )
-        with wait ( 1 ) : fB    = model_sim.draw ( 'B' , dataset , nbins = 50 )
+    with use_canvas ( 'test_simfit2:A ' ) : fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
+    with use_canvas ( 'test_simfit2:B ' ) : fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
+    with use_canvas ( 'test_simfit2: profile ' ) :
+        grs   = model_sim.graph_profile ( 'S_M2' , vrange ( 0 , 1000 , 50 ) , dataset , draw = True )
+        grs.draw('apl')
+        graphs.append ( fA  )
+        graphs.append ( fB  )
+        graphs.append ( grs )
         
-    ## fNLL  = model_sim.draw_nll ( 'SM2' , dataset , range =   (0,1000)  )
     ## significance 
-    ## wilks = model_sim.wilks    ( 'SM2' , dataset  )
-    
+    wilks  = model_sim.wilks    ( 'S_M2' , dataset  )
+    wilks2 = model_sim.wilks2   ( 'S_M2' , dataset  , fix = ( 'mean_G1' , 'sigma_G1' ) ) 
+    logger.info ( 'Significane: %.1f and %.1f ' % ( wilks , wilks2 ) ) 
 
 
 # =============================================================================
