@@ -24,7 +24,7 @@ from   builtins                 import range
 from   ostap.core.core          import dsID, rooSilent 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, vrange 
 import ROOT, random
 # =============================================================================
 # logging 
@@ -104,6 +104,7 @@ for i in range (NC2) :
          dataset2.add ( varset2 )
 
          
+graphs = []
 # =============================================================================
 def test_simfit3() : 
 
@@ -137,10 +138,17 @@ def test_simfit3() :
     title = 'Results of fit to signal sample only'
     logger.info ( '%s\n%s' % ( title , rS.table ( title = title , prefix = '# ' ) ) )
     
-    with use_canvas ( 'test_simfit3' ) : 
-        with wait ( 1 ) : rS , fx = model_S.fitTo ( dataset2 , draw = 'X'  , nbins = 50 , silent = True )
-        with wait ( 1 ) : rS , fy = model_S.fitTo ( dataset2 , draw = 'Y'  , nbins = 50 , silent = True )
-    
+    with use_canvas ( 'test_simfit3 : X' ) : 
+        rS , fx = model_S.fitTo ( dataset2 , draw = 'X'  , nbins = 50 , silent = True )
+    with use_canvas ( 'test_simfit3 : Y' ) : 
+        rS , fy = model_S.fitTo ( dataset2 , draw = 'Y'  , nbins = 50 , silent = True )
+        graphs.append ( fx )
+        graphs.append ( fy )
+    with use_canvas ( 'test_simfit3: profile ' ) :
+        grs = model_S.graph_profile ( 'SSM2' , vrange ( 100 , 1000 , 50 ) , dataset2 , draw = True )
+        grs.draw('apl')
+        graphs.append ( grs )
+                                       
     # =========================================================================
     ## high statistic, low-background "control/normalization channel"
     mean_N   = signal2.vars_subtract ( signal2.mean  , 10.0 )
@@ -157,11 +165,11 @@ def test_simfit3() :
     
     ## fit 1 
     rN , fN = model_N.fitTo ( dataset1 , draw = False , nbins = 50 , silent = True )
-    with use_canvas ( 'test_simfit3' ) , wait ( 1 ) :
+    with use_canvas ( 'test_simfit3' , wait = 1 ) :
         rN , fN = model_N.fitTo ( dataset1 , draw = True  , nbins = 50 , silent = True )
         title = 'Results of fit to normalization sample only'
         logger.info ( '%s\n%s' % ( title , rN.table ( title = title , prefix = '# ' ) ) )
-  
+        
     # =========================================================================
     ## combine data
     
@@ -184,17 +192,25 @@ def test_simfit3() :
     title = 'Results of simultaneous fit'
     logger.info ( '%s\n%s' % ( title , rC.table ( title = title , prefix = '# ' ) ) )
 
-    with use_canvas ( 'test_simfit3' ) , wait ( 1 ) :
-        with wait ( 1 ) : fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
-        with wait ( 1 ) : fSx = model_sim.draw ( 'S/x' , dataset , nbins = 50 )
-        with wait ( 1 ) : fSy = model_sim.draw ( 'S/y' , dataset , nbins = 50 )
-        
+    with use_canvas ( 'test_simfit3:simfit N'   ) : fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
+    with use_canvas ( 'test_simfit3:simfit S/x' ) : fSx = model_sim.draw ( 'S/x' , dataset , nbins = 50 )
+    with use_canvas ( 'test_simfit3:simfit S/y' ) : fSy = model_sim.draw ( 'S/y' , dataset , nbins = 50 )
+    graphs.append ( fN  )
+    graphs.append ( fSx )
+    graphs.append ( fSy )
+    
     logger.info ( ' Value |        Simple fit         |    Combined fit ' )
     logger.info ( ' #N    | %25s | %-25s '  % ( rS.SSM2     * 1 , rC.SSM2     * 1 ) )
     logger.info ( ' mean  | %25s | %-25s '  % ( rS.mean_G2  * 1 , rC.mean_G2  * 1 ) )
     logger.info ( ' sigma | %25s | %-25s '  % ( rS.sigma_G2 * 1 , rC.sigma_G2 * 1 ) )
+    
+    with use_canvas ( 'test_simfit3:  profile-sim' , wait = 3 ) :
+        
+        grs = model_sim.graph_profile ( 'SSM2' , vrange ( 100 , 1000 , 50 ) , dataset , draw = True )
+        grs.draw('apl')
+        graphs.append ( grs )
 
-
+        
 # =============================================================================
 if '__main__' == __name__ :
 

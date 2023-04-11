@@ -25,7 +25,7 @@ from   ostap.fitting.fithelpers import FitHelper
 from   ostap.core.core          import dsID, rooSilent
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait, vrange  
 import ROOT, random
 # =============================================================================
 # logging 
@@ -84,6 +84,7 @@ for i in range (NB2 ) :
         mass2.setVal ( v2 )
         dataset2.add ( varset2 )
 
+graphs = [] 
 # =============================================================================
 def test_simfit4() :
 
@@ -140,10 +141,11 @@ def test_simfit4() :
     # =========================================================================
     ## make fit for thew normalization channel only 
     # =========================================================================
-    with use_canvas ( 'test_simfit4' ) : 
+    with use_canvas ( 'test_simfit4: norm' ) : 
         rN , fN = model_N.fitTo ( dataset1 , draw = None ,              silent = True )
         rN , fN = model_N.fitTo ( dataset1 , draw = None ,              silent = True )
         rN , fN = model_N.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
+        graphs.append ( fN )
     
     title = 'Fit to high-statistic normalisation sample'
     logger.info ( 'Fit results for normalization sample only: %s' % rN.table ( title = title ,
@@ -152,10 +154,16 @@ def test_simfit4() :
     # =========================================================================
     ## make fit for the low-statistic signal channel only 
     # =========================================================================
-    with use_canvas ( 'test_simfit4' ) : 
+    with use_canvas ( 'test_simfit4: signal' ) : 
         rS , fS = model_S.fitTo ( dataset2 , draw = None ,              silent = True )
         rS , fS = model_S.fitTo ( dataset2 , draw = None ,              silent = True )
         rS , fS = model_S.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
+        graphs.append ( fS )
+        
+    with use_canvas ( 'test_simfit4: profile ' ) :
+        grs = model_S.graph_profile ( 'S_S' , vrange ( 50 , 1200 , 100 ) , dataset2 , draw = True )
+        grs.draw('apl')
+        graphs.append ( grs )
         
     title = 'Fit to low-statistics sample'
     logger.info ( 'Fit results for low-statistic signal only:\n%s' % rS.table ( title  = title ,
@@ -183,12 +191,15 @@ def test_simfit4() :
     rC , fC = model_sim.fitTo ( dataset , silent = True )
     rC , fC = model_sim.fitTo ( dataset , silent = True )
     
-    with use_canvas ( 'test_simfit4' ) : 
-        with wait ( 1 ) : fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
-        with wait ( 1 ) : fS  = model_sim.draw ( 'S'   , dataset , nbins = 50 )
-        
-    title = 'Simultaneous fit'
-    logger.info ( 'Combined fit  results are:\n%s ' % rC.table ( title  = title ,
+    with use_canvas ( 'test_simfit4: N' ) : fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
+    with use_canvas ( 'test_simfit4: S' ) : fS  = model_sim.draw ( 'S'   , dataset , nbins = 50 )
+    
+    with use_canvas ( 'test_simfit4: profile-sim' , wait = 3 ) :       
+       grs = model_sim.graph_profile ( 'S_S' , vrange ( 100 , 1000 , 50 ) , dataset , draw = True )
+       grs.draw('apl')
+       graphs.append ( grs )
+       title = 'Simultaneous fit'
+       logger.info ( 'Combined fit  results are:\n%s ' % rC.table ( title  = title ,
                                                                  prefix = '#'   )  )
     
 # =============================================================================
