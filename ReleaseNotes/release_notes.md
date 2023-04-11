@@ -1,3 +1,5 @@
+# v1.9.8.0
+
 ## New features:
 
   1. add `Ostap::Math::ExGauss2` function, `Ostap::Models::ExGauss2` and `ExGauss2_pdf` PDFs for the 
