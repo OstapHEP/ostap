@@ -27,6 +27,7 @@ __all__     = (
     'psi'        , 'polygamma'  , 'digamma' , 'trigamma' ,
     'beta'       , 'lnbeta'     ,
     'gd'         , 'gd_inv'     ,
+    'Ai'         , 'Bi'         ,
     'exp2'       , 'log2'       ,
     'bessel_J'   , 'bessel_Y'   , 
     'bessel_I'   , 'bessel_K'   , 
@@ -441,6 +442,34 @@ def gd_inv ( x ) :
     return _gd_inv_ ( x )
 
 
+_Ai_ = Ostap.Math.Ai
+# =============================================================================
+##  Airy function Ai 
+#   @see https://en.wikipedia.org/wiki/Airy_function
+#   @parameter x argument 
+#   @return value of Airy fuinction Ai 
+def Ai ( x ) :
+    """ Airy function Ai 
+    - see https://en.wikipedia.org/wiki/Airy_function
+    """
+    fun = getattr ( x , '__Ai__' , None )
+    if fun : return fun ()
+    return _Ai_ ( x )
+
+_Bi_ = Ostap.Math.Bi
+# =============================================================================
+##  Airy function Bi 
+#   @see https://en.wikipedia.org/wiki/Airy_function
+#   @parameter x argument 
+#   @return value of Airy fuinction Bi 
+def Bi ( x ) :
+    """ Airy function Ai 
+    - see https://en.wikipedia.org/wiki/Airy_function
+    """
+    fun = getattr ( x , '__Bi__' , None )
+    if fun : return fun ()
+    return _Bi_ ( x )
+
 _sech_ = Ostap.Math.sech 
 # =============================================================================
 ## define 'sech' function 
@@ -701,7 +730,21 @@ def gauss_cdf ( x , mu = 0.0 , sigma = 1.0 ) :
     """
     y =  VE ( x ) 
     return _gauss_cdf_ ( y if 0 < y.cov2() else y.value () , mu , sigma )
-        
+
+_FD_ = Ostap.Math.fermi_dirac 
+# =============================================================================
+## Complete Fermi-Dirac integral
+#  \f$ F_j(x) = \frac{1}{\Gamma(j+1)}\int^{+\infty}_{0} \frac{t^j}{ \exp ( t-x) + 1 } dt \f$ 
+#  @param j parameter
+#  @param x argument 
+#  @return return value of complete Fermi-Dirac integral 
+def fermi_dirac ( j , x ) :
+    """Complete Fermi-Dirac integral
+    """
+    assert isinstance ( j , integer_types ) and 0 <= j , 'Invalid value of j!'
+    ## 
+    return _FD_ ( j , x )
+
 # =============================================================================
 ## FIX
 #  @see https://sft.its.cern.ch/jira/browse/ROOT-6627'
@@ -733,10 +776,11 @@ if '__main__' == __name__ :
               sinc   ,
               probit ,
               gd     , gd_inv  , 
+              Ai     , Bi      , 
               gamma  , tgamma  , lgamma   , igamma ,
               psi    , digamma , trigamma ,
               gauss_pdf ,
-              gauss_cdf ]
+              gauss_cdf ] 
     
     from ostap.math.derivative import EvalVE
     funcs += [ EvalVE ( math.sin , math.cos ) ,

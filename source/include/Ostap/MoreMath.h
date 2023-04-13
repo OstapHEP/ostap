@@ -1311,7 +1311,51 @@ namespace Ostap
     ( const double q , 
       const double x ) ;
     // ========================================================================
+
+
+    // ========================================================================
+    /** Airy function Ai 
+     *  @see https://en.wikipedia.org/wiki/Airy_function
+     *  @parameter x argument 
+     *  @return value of Airy fuinction Ai 
+     */
+    double Ai     ( const double x ) ;
+    // ========================================================================
+    /** Airy function Bi 
+     *  @see https://en.wikipedia.org/wiki/Airy_function
+     *  @parameter x argument 
+     *  @return value of Airy fuinction Bi 
+     */
+    double Bi     ( const double x ) ;
+    // ========================================================================
+    /** derivative of Airy function Ai 
+     *  @see https://en.wikipedia.org/wiki/Airy_function
+     *  @parameter x argument 
+     *  @return value of dervative Airy fuinction Ai 
+     */
+    double der_Ai ( const double x ) ;
+    // ========================================================================
+    /** derivative Airy function Bi 
+     *  @see https://en.wikipedia.org/wiki/Airy_function
+     *  @parameter x argument 
+     *  @return value of derivative Airy fuinction Bi 
+     */
+    double der_Bi ( const double x ) ;
+    // ========================================================================
+
     
+    // ========================================================================
+    /** complete Fermi-Dirac integral 
+     *  \f$ F_j(x) = \frac{1}{\Gamma(j+1)}\int^{+\infty}_{0} \frac{t^j}{ \exp ( t-x) + 1 } dt \f$ 
+     *  @param j parameter
+     *  @param x argument 
+     *  @return return value of complete Fermi-Dirac integral 
+     */
+    double fermi_dirac 
+    ( const unsigned short j , 
+      const double         x ) ;
+    // ========================================================================
+
     // ========================================================================
     // clenshaw summation algorithms 
     // ========================================================================

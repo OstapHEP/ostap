@@ -1106,6 +1106,22 @@ namespace Ostap
      *  @return value of inverse Gudermannian function 
      */
     ValueWithError gd_inv ( const ValueWithError& x  ) ;
+    // ========================================================================
+    /** Airy function Ai 
+     *  @see https://en.wikipedia.org/wiki/Airy_function
+     *  @parameter x argument 
+     *  @return value of Airy fuinction Ai 
+     */
+    ValueWithError Ai     ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** Airy function Bi 
+     *  @see https://en.wikipedia.org/wiki/Airy_function
+     *  @parameter x argument 
+     *  @return value of Airy fuinction Bi 
+     */
+    ValueWithError Bi     ( const ValueWithError& x ) ;
+    // ========================================================================
+
     // ========================================================================    
     /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 

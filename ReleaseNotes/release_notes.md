@@ -2,6 +2,7 @@
 
    1. add Gudermannian function and its inverse 
    1. fix the issue with removed `RooMomentMorphND` for new version of ROOT 
+   1. Add Airy functions and Fermi-Dirac integral 
 
 ## Backward incompatible: 
 

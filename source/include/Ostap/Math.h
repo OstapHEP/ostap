@@ -814,17 +814,17 @@ namespace Ostap
     } ;
     // ========================================================================
     /** round to nearest integer, rounds half integers to nearest even integer 
-     *  @author Vanya BELYAEV Ivan.BElyaev
+     *  @author Vanya BELYAEV Ivan.Belyaev
      */
     long round ( const double x ) ;
     // ========================================================================
     /** round to nearest integer, rounds half integers to nearest even integer 
-     *  @author Vanya BELYAEV Ivan.BElyaev
+     *  @author Vanya BELYAEV Ivan.Belyaev
      */
     inline long round ( const long double x ) { return round ( double ( x ) ) ; }
     // ========================================================================
     /** round to nearest integer, rounds half integers to nearest even integer 
-     *  @author Vanya BELYAEV Ivan.BElyaev
+     *  @author Vanya BELYAEV Ivan.Belyaev
      */
     inline long round ( const float  x ) { return round ( double ( x ) ) ; }
     // ========================================================================

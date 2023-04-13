@@ -14,6 +14,8 @@
 // ============================================================================
 #include "gsl/gsl_errno.h"
 #include "gsl/gsl_math.h"
+#include "gsl/gsl_sf_airy.h"
+#include "gsl/gsl_sf_fermi_dirac.h"
 #include "gsl/gsl_sf_hyperg.h"
 #include "gsl/gsl_sf_gamma.h"
 #include "gsl/gsl_sf_exp.h"
@@ -3688,6 +3690,111 @@ double Ostap::Math::gd_inv ( const double x )
 }                     
 // ============================================================================
 
+
+// ============================================================================
+/*  Airy function Ai 
+ *  @see https://en.wikipedia.org/wiki/Airy_function
+ *  @parameter x argument 
+ *  @return value of Airy fuinction Ai 
+ */
+// ============================================================================
+double Ostap::Math::Ai ( const double x ) 
+{ 
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_airy_Ai_e ( x , GSL_PREC_DOUBLE , &result ) ;
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_airy_Ai_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/*  Airy function Bi 
+ *  @see https://en.wikipedia.org/wiki/Airy_function
+ *  @parameter x argument 
+ *  @return value of Airy fuinction Bi 
+ */
+// ============================================================================
+double Ostap::Math::Bi ( const double x ) 
+{
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_airy_Bi_e ( x , GSL_PREC_DOUBLE , &result ) ;
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_airy_Bi_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/*  derivative Airy function Ai 
+ *  @see https://en.wikipedia.org/wiki/Airy_function
+ *  @parameter x argument 
+ *  @return value of derivative of Airy fuinction Ai 
+ */
+// ============================================================================
+double Ostap::Math::der_Ai ( const double x ) 
+{ 
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_airy_Ai_deriv_e ( x , GSL_PREC_DOUBLE , &result ) ;
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_airy_Ai_deriv_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/*  derivative Airy function Bi 
+ *  @see https://en.wikipedia.org/wiki/Airy_function
+ *  @parameter x argument 
+ *  @return value of derivative Airy fuinction Bi 
+ */
+// ============================================================================
+double Ostap::Math::der_Bi ( const double x ) 
+{
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_airy_Bi_deriv_e ( x , GSL_PREC_DOUBLE , &result ) ;
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_airy_Bi_deriv_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+
+
+// ============================================================================
+/*  complete Fermi-Dirac integral 
+ *  \f$ F_j(x) = \frac{1}{\Gamma(j+1)}\int^{+\infty}_{0} 
+ *   \frac{t^j}{ \exp ( t-x) + 1 } dt \f$ 
+ *  @param j parameter
+ *  @param x argument 
+ *  @return return value of complete Fermi-Dirac integral 
+ */
+// ============================================================================
+double Ostap::Math::fermi_dirac 
+( const unsigned short j , 
+  const double         x ) 
+{
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_fermi_dirac_int_e ( j , x , &result ) ;
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_fermi_diract_int_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ========================================================================
 
 // ============================================================================
 /* smoothstep (polynomial) function

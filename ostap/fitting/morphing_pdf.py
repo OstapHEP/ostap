@@ -236,6 +236,7 @@ class MorphingN1_pdf (PDF1) :
 #  Wrapper for <code>RooMomentMorph</code> PDF
 #  - 1D morphing/2D  PDF   
 #  @see RooMomentMorphND
+#  @see RooMomentMorphFuncND
 #  @see Baak, M., Gadatsch, S., Harrington, R., & Verkerke, W. (2015).
 #       "Interpolation between multi-dimensional histograms using
 #       a new non-linear moment morphing method".
@@ -246,6 +247,7 @@ class MorphingN2_pdf (PDF1) :
     """ Wrapper for ROOT.RooMomentMorphND PDF for N = 2 
     - 1D morphing/2D PDF
     - see ROOT.RooMomentMorphND
+    - see ROOT.RooMomentMorphFuncND
     - see Baak, M., Gadatsch, S., Harrington, R., & Verkerke, W. (2015).
     'Interpolation between multi-dimensional histograms using
     a new non-linear moment morphing method'.
@@ -430,6 +432,7 @@ class MorphingN2_pdf (PDF1) :
 #  Wrapper for <code>RooMomentMorph</code> PDF
 #  - 1D morphing/3D  PDF   
 #  @see RooMomentMorphND
+#  @see RooMomentMorphFuncND
 #  @see Baak, M., Gadatsch, S., Harrington, R., & Verkerke, W. (2015).
 #       "Interpolation between multi-dimensional histograms using
 #       a new non-linear moment morphing method".
@@ -440,6 +443,7 @@ class MorphingN3_pdf (PDF1) :
     """ Wrapper for ROOT.RooMomentMorphND PDF for N = 2 
     - 1D morphing/3D PDF
     - see ROOT.RooMomentMorphND
+    - see ROOT.RooMomentMorphFuncND
     - see Baak, M., Gadatsch, S., Harrington, R., & Verkerke, W. (2015).
     'Interpolation between multi-dimensional histograms using
     a new non-linear moment morphing method'.

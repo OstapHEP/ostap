@@ -1579,6 +1579,53 @@ Ostap::Math::gd_inv
   return ValueWithError ( r , c2 ) ;  
 }
 // ============================================================================
+/*  Airy function Ai 
+ *  @see https://en.wikipedia.org/wiki/Airy_function
+ *  @parameter x argument 
+ *  @return value of Airy fuinction Ai 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::Ai 
+( const Ostap::Math::ValueWithError& x ) 
+{
+  //
+  const bool x0 = 0 >= x.cov2() || _zero ( x.cov2() ) ;
+  //
+  const double r    = Ostap::Math::Ai ( x.value() ) ; 
+  if ( x0 ) { return r ; }
+  //
+  const double dfdx = Ostap::Math::der_Ai ( x.value() )  ;
+  const double c2   = x.cov2() * dfdx * dfdx ;
+  //
+  return ValueWithError ( r , c2 ) ;  
+}
+// ============================================================================
+/*  Airy function Bi 
+ *  @see https://en.wikipedia.org/wiki/Airy_function
+ *  @parameter x argument 
+ *  @return value of Airy fuinction Bi 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::Bi 
+( const Ostap::Math::ValueWithError& x ) 
+{
+  //
+  const bool x0 = 0 >= x.cov2() || _zero ( x.cov2() ) ;
+  //
+  const double r    = Ostap::Math::Bi ( x.value() ) ; 
+  if ( x0 ) { return r ; }
+  //
+  const double dfdx = Ostap::Math::der_Bi ( x.value() )  ;
+  const double c2   = x.cov2() * dfdx * dfdx ;
+  //
+  return ValueWithError ( r , c2 ) ;  
+}
+// ============================================================================
+
+
+// ============================================================================
 /* evaluate fma(x,y,z) = x*y+x 
  *  @param y    (INPUT) the parameter 
  *  @param x    (INPUT) the parameter 
