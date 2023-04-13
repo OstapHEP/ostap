@@ -25,7 +25,8 @@ __all__     = (
     'probit'     , 'pochhammer' , 
     'gamma'      , 'tgamma'     , 'lgamma'  , 'igamma'   ,
     'psi'        , 'polygamma'  , 'digamma' , 'trigamma' ,
-    'beta'       , 'lnbeta'     , 
+    'beta'       , 'lnbeta'     ,
+    'gd'         , 'gd_inv'     ,
     'exp2'       , 'log2'       ,
     'bessel_J'   , 'bessel_Y'   , 
     'bessel_I'   , 'bessel_K'   , 
@@ -415,6 +416,31 @@ def lnbeta ( x , y ) :
     if fun : return fun ( x )
     return _lnbeta_ ( x , y )
 
+_gd_ = Ostap.Math.gd
+# =============================================================================
+## define Gudermannian function
+#  @see https://en.wikipedia.org/wiki/Gudermannian_function
+def gd ( x ) :
+    """Gudermannian function
+    - see https://en.wikipedia.org/wiki/Gudermannian_function
+    """    
+    fun = getattr ( x , '__gd__' , None )
+    if fun : return fun ()
+    return _gd_ ( x )
+
+_gd_inv_ = Ostap.Math.gd_inv
+# =============================================================================
+## define inverse Gudermannian function
+#  @see https://en.wikipedia.org/wiki/Gudermannian_function
+def gd_inv ( x ) :
+    """Inverse Gudermannian function
+    - see https://en.wikipedia.org/wiki/Gudermannian_function
+    """    
+    fun = getattr ( x , '__gd_inv__' , None )
+    if fun : return fun ()
+    return _gd_inv_ ( x )
+
+
 _sech_ = Ostap.Math.sech 
 # =============================================================================
 ## define 'sech' function 
@@ -706,6 +732,7 @@ if '__main__' == __name__ :
               erf    , erfc    , erfi     , erfcx  ,
               sinc   ,
               probit ,
+              gd     , gd_inv  , 
               gamma  , tgamma  , lgamma   , igamma ,
               psi    , digamma , trigamma ,
               gauss_pdf ,

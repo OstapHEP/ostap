@@ -492,6 +492,24 @@ namespace Ostap
     ( const std::complex<double>& a , 
       const std::complex<double>& b ) ;
     // ========================================================================
+    
+    // ========================================================================
+    /** Gudermannian function 
+     *  @see https://en.wikipedia.org/wiki/Gudermannian_function
+     *  @param x argument 
+     *  @return value of Gudermannian function 
+     */
+    double gd     ( const double x ) ;
+    // ========================================================================
+    /** inverse Gudermannian function 
+     *  @see https://en.wikipedia.org/wiki/Gudermannian_function
+     *  @param x argument 
+     *  @return value of inverse Gudermannian function 
+     */
+    double gd_inv ( const double x ) ;
+    // ========================================================================
+
+    // ========================================================================
     /** get the standard gaussian pdf 
      *  @see https://en.wikipedia.org/wiki/Normal_distribution
      *  @param x x-value  

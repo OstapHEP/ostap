@@ -1093,6 +1093,20 @@ namespace Ostap
     ( const ValueWithError& x , 
       const unsigned short  n ) { return psi ( x , n ) ; }
     // ========================================================================    
+    /** Gudermannian function 
+     *  @see https://en.wikipedia.org/wiki/Gudermannian_function
+     *  @param x argument 
+     *  @return value of Gudermannian function 
+     */
+    ValueWithError gd     ( const ValueWithError& x  ) ;
+    // ========================================================================
+    /** inverse Gudermannian function 
+     *  @see https://en.wikipedia.org/wiki/Gudermannian_function
+     *  @param x argument 
+     *  @return value of inverse Gudermannian function 
+     */
+    ValueWithError gd_inv ( const ValueWithError& x  ) ;
+    // ========================================================================    
     /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 
      *  @param x    (INPUT) the parameter 

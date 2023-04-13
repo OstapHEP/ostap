@@ -1535,6 +1535,50 @@ Ostap::Math::psi
   return ValueWithError ( r , c2 ) ;  
 }
 // ============================================================================
+/* Gudermannian function 
+ *  @see https://en.wikipedia.org/wiki/Gudermannian_function
+ *  @param x argument 
+ *  @return value of Gudermannian function 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::gd
+( const Ostap::Math::ValueWithError& x )
+{
+  //
+  const bool x0 = 0 >= x.cov2() || _zero ( x.cov2() ) ;
+  //
+  const double r    = Ostap::Math::gd   ( x.value() ) ; 
+  if ( x0 ) { return r ; }
+  //
+  const double dfdx = Ostap::Math::sech ( x.value() ) ;
+  const double c2   = x.cov2() * dfdx * dfdx ;
+  //
+  return ValueWithError ( r , c2 ) ;  
+}
+// ============================================================================
+/*  inverse Gudermannian function 
+ *  @see https://en.wikipedia.org/wiki/Gudermannian_function
+ *  @param x argument 
+ *  @return value of inverse Gudermannian function 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::gd_inv
+( const Ostap::Math::ValueWithError& x ) 
+{
+  //
+  const bool x0 = 0 >= x.cov2() || _zero ( x.cov2() ) ;
+  //
+  const double r    = Ostap::Math::gd_inv ( x.value() ) ; 
+  if ( x0 ) { return r ; }
+  //
+  const double dfdx = 1.0 / std::cos ( x.value() ) ;
+  const double c2   = x.cov2() * dfdx * dfdx ;
+  //
+  return ValueWithError ( r , c2 ) ;  
+}
+// ============================================================================
 /* evaluate fma(x,y,z) = x*y+x 
  *  @param y    (INPUT) the parameter 
  *  @param x    (INPUT) the parameter 

@@ -3662,6 +3662,34 @@ Ostap::Math::agm
   return 0.5 * ( a + b ) ; 
 }
 // ============================================================================
+
+
+// ============================================================================
+/*  Gudermannian function 
+ *  @see https://en.wikipedia.org/wiki/Gudermannian_function
+ *  @param x argument 
+ *  @return value of Gudermannian function 
+ */
+// ============================================================================
+double Ostap::Math::gd     ( const double x ) 
+{ return 2 * std::atan  ( std::tanh ( 0.5L * x ) ) ; }
+// ============================================================================
+/*  inverse Gudermannian function 
+ *  @see https://en.wikipedia.org/wiki/Gudermannian_function
+ *  @param x argument 
+ *  @return value of inverse Gudermannian function 
+ */
+// ============================================================================
+double Ostap::Math::gd_inv ( const double x ) 
+{ return
+    std::abs ( x ) < 0.5 * M_PI ? 
+                     2 * std::atanh ( std::tan ( 0.5L * x ) ) : 
+    std::numeric_limits<double>::quiet_NaN() ;
+}                     
+// ============================================================================
+
+
+// ============================================================================
 /* smoothstep (polynomial) function
  *  @see https://en.wikipedia.org/wiki/Smoothstep
  *  Transition function for \f$ 0 \le x \le 1\f$ 
