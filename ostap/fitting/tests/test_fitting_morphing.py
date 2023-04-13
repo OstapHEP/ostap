@@ -133,9 +133,7 @@ def test_morphing2 () :
         shapes [ mean ] = gauss
         
     ## create morphing PDF 
-    pdf  = MorphingN1_pdf ( 'M2'    , shapes , 
-                            xvar    =  mass ,
-                            setting = ROOT.RooMomentMorphND.Linear )
+    pdf  = MorphingN1_pdf ( 'M2', shapes , xvar    =  mass ) 
     
     r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
     r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
@@ -168,9 +166,7 @@ def test_morphing3 () :
             shapes [ mean , sigma ] = gauss
 
     ## create morphing PDF 
-    pdf  = MorphingN2_pdf ( 'M3'    , shapes , 
-                            xvar    =  mass ,
-                            setting = ROOT.RooMomentMorphND.Linear )
+    pdf  = MorphingN2_pdf ( 'M3' , shapes , xvar    =  mass )
             
     r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
     r , f = pdf.fitHisto ( h1 , draw = False , silent = True )

@@ -3440,7 +3440,16 @@ def _rplot_add_ ( plot1 , plot2 ) :
     return result
 
         
-ROOT.RooPlot.__add__ = _rplot_add_
+ROOT.RooPlot.__add__  = _rplot_add_
+
+# =============================================================================
+## increment is disabled 
+def _rplot_iadd_ ( rp , other ) :
+    """Increment is disabled"""
+    return NotImplemented
+
+ROOT.RooPlot.__iadd__ = _rplot_iadd_ 
+
 
 # =============================================================================
 

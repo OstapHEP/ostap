@@ -1,6 +1,7 @@
 ## New features:
 
    1. add Gudermannian function and its inverse 
+   1. fix the issue with removed `RooMomentMorphND` for new version of ROOT 
 
 ## Backward incompatible: 
 

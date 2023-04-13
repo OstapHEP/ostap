@@ -21,6 +21,7 @@ __all__     = (
     ##
     )
 # =============================================================================
+from   ostap.core.meta_info   import root_info 
 from   ostap.fitting.pdfbasic import PDF1, Generic1D_pdf
 from   ostap.core.ostap_types import integer_types 
 import ROOT
@@ -263,8 +264,10 @@ class MorphingN2_pdf (PDF1) :
         assert pdfs and 4 <= len ( pdfs ) , \
                "Invalid dictionary of morphing PDFs!"
         
-        if setting is None : setting = ROOT.RooMomentMorphND.Linear 
-
+        if setting is None :
+            if root_info < ( 6 , 29 ) : setting = ROOT.RooMomentMorphND.Linear
+            else                      : setting = ROOT.RooMomentMorphFuncND.Linear
+            
         assert isinstance ( setting , integer_types ) and 0 <= setting < 5,\
                'Invalid value for the setting %s/%s' %  ( setting , type ( setting ) )
 
@@ -329,9 +332,11 @@ class MorphingN2_pdf (PDF1) :
         from ostap.fitting.variables import binning
         
         bins_v1     = binning ( v1ps , name = 'morph1' ) 
-        bins_v2     = binning ( v2ps , name = 'morph2' ) 
-        self.__grid = ROOT.RooMomentMorphND.Grid ( bins_v1 , bins_v2 ) 
-        
+        bins_v2     = binning ( v2ps , name = 'morph2' )
+
+        if root_info < ( 6, 29 ) : self.__grid = ROOT.RooMomentMorphND    .Grid ( bins_v1 , bins_v2 ) 
+        else                     : self.__grid = ROOT.RooMomentMorphFuncND.Grid ( bins_v1 , bins_v2 ) 
+            
         for k in self.pdfdict :
 
             p       = self.pdfdict [ k ]
@@ -352,15 +357,31 @@ class MorphingN2_pdf (PDF1) :
         self.__morph_vars        = ROOT.RooArgList ( self.mu1 , self.mu2 )
         self.__morph_observables = ROOT.RooArgList ( self.xvar )
 
-        ## create the PDF  
-        self.pdf = ROOT.RooMomentMorphND (
-            self.roo_name ( 'morph2_' )   ,
-            "Morphing 2D %s" % self.name  , 
-            self.__morph_vars         , ## morphing variables 
-            self.__morph_observables  , ## observables 
-            self.grid               , ## morphing grid 
-            self.setting            ) ## morphing setting 
-
+        if root_info < ( 6 , 29 ) : 
+            ## create the PDF  
+            self.pdf = ROOT.RooMomentMorphND (
+                self.roo_name ( 'morph2_' )   ,
+                "Morphing 2D %s" % self.name  , 
+                self.__morph_vars         , ## morphing variables 
+                self.__morph_observables  , ## observables 
+                self.grid               , ## morphing grid 
+                self.setting            ) ## morphing setting 
+        else :
+            self.__morph = ROOT.RooMomentMorphFuncND (
+                self.roo_name ( 'morph2f_' )   ,
+                "Morphing 2D %s" % self.name  , 
+                self.__morph_vars         , ## morphing variables 
+                self.__morph_observables  , ## observables 
+                self.grid               , ## morphing grid 
+                self.setting            ) ## morphing setting 
+            self.__morph.setPdfMode()
+            ## create the PDF  
+            self.pdf = ROOT.RooWrapperPdf (
+                self.roo_name ( 'morph2_' )   ,
+                "Morphing 2D %s" % self.name  ,
+                self.__morph , True 
+                )
+            
         #
         self.config = {
             'name'       : self.name    ,
@@ -438,8 +459,10 @@ class MorphingN3_pdf (PDF1) :
         assert pdfs and 6 <= len ( pdfs ) , \
                "Invalid dictionary of morphing PDFs!"
         
-        if setting is None : setting = ROOT.RooMomentMorphND.Linear 
-
+        if setting is None :
+            if root_info < ( 6 , 29 ) : setting = ROOT.RooMomentMorphND.Linear
+            else                      : setting = ROOT.RooMomentMorphFuncND.Linear
+            
         assert isinstance ( setting , integer_types ) and 0 <= setting < 5,\
                'Invalid value for the setting %s/%s' %  ( setting , type ( setting ) )
 
@@ -516,8 +539,10 @@ class MorphingN3_pdf (PDF1) :
         
         bins_v1     = binning ( v1ps , name = 'morph1' ) 
         bins_v2     = binning ( v2ps , name = 'morph2' ) 
-        bins_v3     = binning ( v3ps , name = 'morph3' ) 
-        self.__grid = ROOT.RooMomentMorphND.Grid ( bins_v1 , bins_v2 . bins_v3 ) 
+        bins_v3     = binning ( v3ps , name = 'morph3' )
+
+        if root_info < ( 6, 29 ) : self.__grid = ROOT.RooMomentMorphND    .Grid ( bins_v1 , bins_v2 , bins_v3 ) 
+        else                     : self.__grid = ROOT.RooMomentMorphFuncND.Grid ( bins_v1 , bins_v2 , bins_v3 ) 
         
         for k in self.pdfdict :
 
@@ -541,14 +566,30 @@ class MorphingN3_pdf (PDF1) :
         self.__morph_vars         = ROOT.RooArgList ( self.mu1 , self.mu2 , self.mu3 )
         self.__morth__observables = ROOT.RooArgList ( self.xvar )
 
-        ## create the PDF  
-        self.pdf = ROOT.RooMomentMorphND (
-            self.roo_name ( 'morph3_' )   ,
-            "Morphing 3D %s" % self.name  , 
-            self.__morph_vars        , ## morphing variables 
-            self.__morth_observables , ## observables 
-            self.grid                , ## morphing grid 
-            self.setting             ) ## morphing setting 
+        ## create the PDF
+        if Rooit_info < ( 6 , 29 ) : 
+            self.pdf = ROOT.RooMomentMorphND (
+                self.roo_name ( 'morph3_' )   ,
+                "Morphing 3D %s" % self.name  , 
+                self.__morph_vars        , ## morphing variables 
+                self.__morth_observables , ## observables 
+                self.grid                , ## morphing grid 
+                self.setting             ) ## morphing setting 
+        else :
+            self.__morph = ROOT.RooMomentMorphFuncND (
+                self.roo_name ( 'morph3f_' )  ,
+                "Morphing 3D %s" % self.name  , 
+                self.__morph_vars         , ## morphing variables 
+                self.__morph_observables  , ## observables 
+                self.grid                 , ## morphing grid 
+                self.setting              ) ## morphing setting 
+            self.__morph.setPdfMode()
+            ## create the PDF  
+            self.pdf = ROOT.RooWrapperPdf (
+                self.roo_name ( 'morph3_' )   ,
+                "Morphing 3D %s" % self.name  ,
+                self.__morph , True 
+                )
 
         #
         self.config = {
