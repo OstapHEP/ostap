@@ -1,4 +1,3 @@
-
 ## New features:
 
    1. add Gudermannian function and its inverse 
