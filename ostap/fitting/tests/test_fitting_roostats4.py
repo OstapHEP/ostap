@@ -49,11 +49,17 @@ signal2   = Models.Gauss_pdf   ( 'G2',
                                  sigma = signal1.sigma       )
 
 ## S1/S2 
-f1      = ROOT.RooRealVar ( 'f1' , 'N1/N2 ratio' , 0.05  , 0 , 1 )
+f1         = ROOT.RooRealVar ( 'f1'        , 'N1/N2 ratio' , 0.05    , 0 , 1 )
+## Ratio of efficinecies
+eff_ratio  = ROOT.RooRealVar ( 'eff_ratio' , 'ratio of efficiencies' ,  1.0 , 0.2 , 3.0 )                             
+## constraint for efficieency ratio 
+eff_constraint = signal1.soft_constraint ( eff_ratio , VE ( 1.0 , 0.05**2 ) )
 ## S2 
-N2      = ROOT.RooRealVar ( 'S2' , 'S2-signal'   , 1000 , 0 , 100000 )
-## S1 
-N1      = signal1.vars_multiply ( f1 , N2 )
+N2         = ROOT.RooRealVar ( 'S2'        , 'S2-signal'   , 1000 , 0 , 100000 )
+## S1
+f1r        = signal1.vars_multiply ( f1   , eff_ratio )
+N1         = signal1.vars_multiply ( f1r , N2 ) 
+##
 model   = Models.Fit1D ( signals = ( signal1 , signal2 ) , background = 'e-' , S = ( N1 , N2 ) , suffix = 'RD' )
 model.B = 1000
 model.background.tau = -0.25 
@@ -63,11 +69,14 @@ mcsignal = Models.Gauss_pdf    ( 'MC',
                                  mean  = signal1.vars_add( signal1.mean , 1.0 ) ,                                
                                  sigma = signal1.sigma  )
 
+
+
+        
 # ==========================================================================
 ## data sets
 # ==========================================================================
 N_DATA   = 200
-rd_data  = model    .generate ( N_DATA )
+rd_data  = model   .generate ( N_DATA )
 
 N_MC     = 10 * N_DATA 
 mc_data  = mcsignal.generate ( N_MC )
@@ -100,8 +109,8 @@ logger.info ( '%s\n%s' % ( title , rMC.table ( title = title , prefix = '# ' ) )
 # ===========================================================================
 ## Fit RD data only
 # ===========================================================================
-rRD , fRF = model.fitTo ( rd_data , silent = True )
-rRD , fRD = model.fitTo ( rd_data , silent = True )
+rRD , fRF = model.fitTo ( rd_data , silent = True , constraints = eff_constraint )
+rRD , fRD = model.fitTo ( rd_data , silent = True , constraints = eff_constraint )
 with use_canvas ( 'RD-sample' ) :  fRD = model.draw  ( rd_data , nbins = 100 )
 title = 'Results of the RD-fit'
 logger.info ( '%s\n%s' % ( title , rRD.table ( title = title , prefix = '# ' ) ) )
@@ -136,28 +145,32 @@ def test_limit_ac_1 () :
     
     the_model = model  .clone ( name = 'M1' )
     the_data  = rd_data.clone()
+
+    constraints = eff_constraint ,
     
     logger.info ( 'Dataset is\n%s' % the_data.table ( prefix = '# ' ) ) 
-    rr , frame = the_model.fitTo ( the_data , nbins = 100  )
+    rr , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = eff_constraint )
     with use_canvas ( 'test_limit_ac_1:data' ) : the_model.draw ( the_data , nbins = 100 )
     title = 'Results of the fit'
     logger.info ( '%s\n%s' % ( title , rr.table ( title = title , prefix = '# ' ) ) )
     
     
     ## create ModelConfig  for 'S+B' model
-    model_sb = ModelConfig ( pdf       = the_model   ,
-                             poi       = f1          , ## parameter of interest 
-                             dataset   = the_data    ,
-                             name      = 'S+B'       )
+    model_sb = ModelConfig ( pdf         = the_model       ,
+                             poi         = f1              , ## parameter of interest 
+                             dataset     = the_data        ,
+                             constraints = constraints  ,
+                             name        = 'S+B'           )
     
     model_sb.snapshot = f1 ## ATTENTION! 
 
     ## create ModelConfig  for 'B-only' model
-    model_b  = ModelConfig ( pdf       = the_model          ,
-                             poi       = f1                 , ## parameter of interest 
-                             dataset   = the_data           ,
-                             workspace = model_sb.workspace , 
-                             name      = 'B-only'           )
+    model_b  = ModelConfig ( pdf         = the_model          ,
+                             poi         = f1                 , ## parameter of interest 
+                             dataset     = the_data           ,
+                             constraints = constraints        ,
+                             workspace   = model_sb.workspace , 
+                             name        = 'B-only'           )
     
     f1.setVal ( 0 ) 
     model_b.snapshot = f1 ## ATTENTION! 
@@ -202,13 +215,15 @@ def test_limit_ac_2 () :
                                              AsymptoticCalculator  ,
                                              HypoTestInverter      )
     
-    the_model = model  .clone ( name = 'M2' )
-    the_data  = rd_data.clone()
+    the_model   = model  .clone ( name = 'M2' )
+    the_data    = rd_data.clone()
 
-    constraint = mcsignal.soft_multivar_constraint ( ( 'mean_G1' , 'sigma_G1' ) , rMC ) , 
-    
+    constraint  = mcsignal.soft_multivar_constraint ( ( 'mean_G1' , 'sigma_G1' ) , rMC ) 
+
+    constraints = constraint , eff_constraint 
+
     logger.info ( 'Dataset is\n%s' % the_data.table ( prefix = '# ' ) ) 
-    rr , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = constraint  )
+    rr , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = constraints )
     with use_canvas ( 'test_limit_ac_2:data' ) : the_model.draw ( the_data , nbins = 100 )
     title = 'Results of the fit'
     logger.info ( '%s\n%s' % ( title , rr.table ( title = title , prefix = '# ' ) ) )
@@ -218,7 +233,7 @@ def test_limit_ac_2 () :
     model_sb = ModelConfig ( pdf         = the_model   ,
                              poi         = f1          , ## parameter of interest 
                              dataset     = the_data    ,
-                             constraints = constraint  ,  
+                             constraints = constraints ,
                              name        = 'S+B'       )
     
     model_sb.snapshot = f1 ## ATTENTION! 
@@ -228,7 +243,7 @@ def test_limit_ac_2 () :
                              poi         = f1                 , ## parameter of interest 
                              dataset     = the_data           ,
                              workspace   = model_sb.workspace ,
-                             constraints = constraint  ,                               
+                             constraints = constraints        ,                               
                              name        = 'B-only'           )
     
     f1.setVal ( 0 ) 
@@ -277,10 +292,11 @@ def test_limit_fc_1 () :
     the_model = model  .clone ( name = 'M3' )
     the_data  = rd_data.clone()
 
-    constraint = mcsignal.soft_multivar_constraint ( ( 'mean_G1' , 'sigma_G1' ) , rMC ) , 
+    constraint  = mcsignal.soft_multivar_constraint ( ( 'mean_G1' , 'sigma_G1' ) , rMC ) 
+    constraints = constraint , eff_constraint 
     
     logger.info ( 'Dataset is\n%s' % the_data.table ( prefix = '# ' ) ) 
-    rr , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = constraint  )
+    rr , frame = the_model.fitTo ( the_data , nbins = 100 , constraints = constraints )
     with use_canvas ( 'test_limit_ac_2:data' ) : the_model.draw ( the_data , nbins = 100 )
     title = 'Results of the fit'
     logger.info ( '%s\n%s' % ( title , rr.table ( title = title , prefix = '# ' ) ) )
@@ -290,7 +306,7 @@ def test_limit_fc_1 () :
     model_sb = ModelConfig ( pdf         = the_model   ,
                              poi         = f1          , ## parameter of interest 
                              dataset     = the_data    ,
-                             constraints = constraint  ,  
+                             constraints = constraints ,  
                              name        = 'S+B'       )
     
     model_sb.snapshot = f1 ## ATTENTION! 
@@ -300,7 +316,7 @@ def test_limit_fc_1 () :
                              poi         = f1                 , ## parameter of interest 
                              dataset     = the_data           ,
                              workspace   = model_sb.workspace ,
-                             constraints = constraint  ,                               
+                             constraints = constraints        ,                               
                              name        = 'B-only'           )
     
     f1.setVal ( 0 ) 
@@ -338,7 +354,7 @@ if '__main__' == __name__ :
 
     test_limit_ac_1 () 
     test_limit_ac_2 ()    
-    test_limit_fc_1 () 
+    ## test_limit_fc_1 () 
     
 # =============================================================================
 ##                                                                      The END 
