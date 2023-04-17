@@ -18,6 +18,7 @@ __all__     = (
     'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf
     'Histo1D_pdf'   , ## simple PDF from the histogram  
     'Shape1D_pdf'   , ## simple PDF from generic function  
+    'Constrained1D' , ## 1D pdf with constraints 
     ## 
     'PEAKMEAN'      , ## useful base class to create "signal" PDFs for peak-like fits
     'PEAK'          , ## useful base class to create "signal" PDFs for peak-like fits
@@ -35,7 +36,7 @@ from   ostap.core.ostap_types   import ( is_integer     , string_types   ,
                                          list_types     , all_numerics   ) 
 from   ostap.fitting.fithelpers import H1D_dset, Fractions  
 from   ostap.fitting.funbasic   import FUN1
-from   ostap.fitting.pdfbasic   import PDF1
+from   ostap.fitting.pdfbasic   import PDF1, APDF1 
 from   ostap.fitting.utils      import make_name
 import ROOT, math,  random
 # =============================================================================
@@ -688,7 +689,90 @@ class H1D_pdf(PDF1) :
         assert isinstance ( value , integer_types ) and 0 <= value,\
                'Invalid interpolation order %s/%s' % ( value , type ( value ) )
         self.pdf.setInterpolationOrder ( value )
+
+
+# =============================================================================
+## @class Constrained1D
+#  PDF1 with constraints
+#  @code
+#  opdf1 = ...
+#  constrains = cpdf1, cpdf2, cpdf3
+#  cpdf = Constrained1D ( opdf1 , consraints )
+#  @endcode
+class Constrained1D(PDF1) :
+    """PDF1 with constraints
+    >>> opdf1 = ...
+    >>> constrains = cpdf1, cpdf2, cpdf3
+    >>> cpdf = Constrained1D ( opdf1 , consraints )
+    """
+    
+    def __init__ ( self         ,
+                   original     ,
+                   constraints  ,
+                   name    = '' ) :
+
+        assert isinstance ( original , PDF1 ) , '"original" must be PDF1!'
+        assert constrains , '"constraints" are not cpecified!'
         
+        name = name if name else 'Constr1D_%s' % original.name
+
+        if   isinstance ( constraints , ROOT.RooAbsPdf )  :
+            cnts = [ constraints ] 
+        elif isinstance ( constraints , APDF1 )  :
+            cnts = [ constraints.pdf ]
+        else :
+            cnts = [ c for c in constraints ]
+                        
+        cnts1 = [ c         for c in constraints if isinstance ( c , ROOT.RooAbsPdf ) ]
+        cnts2 = [ c.roo_pdf for c in constraints if isinstance ( c , APDF1          ) ]
+        assert len ( cnts1 ) + len ( cnts2 ) == len ( cnts ) , \
+               'Invalid constraints are specified %s' % str ( constraints ) 
+            
+        ## initialize the base 
+        PDF1.__init__ ( self , name , original.xvar )
+
+        
+        self.__original_pdf    = original        
+        self.__constraints     = tuple ( cnts1 + cnts2   )  
+        self.__arg_constraints = tuple ( c for c in cnts )
+
+        ## 
+        self.__pdflst = ROOT.RooArgList ( self.original_pdf.roo_pdf )
+        for c in self.constraints : self.__pdflst.add ( c )
+        
+        ## create the actual PDF 
+        self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'constrained_' ) ,
+                                     "Constrained %s" % self.name     ,
+                                     self.__pdflst                    )
+        
+        ## save the configuration
+        self.config = {
+            'name'        : self.name             ,
+            'original'    : self.original_pdf     ,
+            'constraints' : self.arg_constraints 
+            }
+        
+    @property
+    def original_pdf ( self ) :
+        """'original_pdf' : get the original PDF (unconstrained)"""
+        return self.__original_pdf
+
+    @property
+    def constraints  ( self ) :
+        """'constraints' : get the constrainsts (as list of RooAbsPdf)"""
+        return self.__constraints
+
+    @property
+    def args_constraints  ( self ) :
+        """'arg_constraints' : get the constrainsts (as specified in constructor)"""
+        return self.__arg_constraints
+
+    ## access to attribute 
+    def __getattr__ ( self , attr ) :
+        """Delegate the access to missing attribite to the original (uconstrained) PDF"""
+        return getattr ( self.__original_pdf , attr ) 
+
+                         
 # =============================================================================
 ## @class Fit1D
 #  The actual model for 1D-mass fits

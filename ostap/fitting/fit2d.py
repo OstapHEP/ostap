@@ -18,7 +18,8 @@ __all__     = (
     'Sum2D'         , ## non-extended sum of two PDFs
     'H2D_pdf'       , ## convertor of 1D-histo to RooDataPdf
     'Histo2D_pdf'   , ## simple PDF from the histogram  
-    'Shape2D_pdf'   , ## simple PDF from generic function  
+    'Shape2D_pdf'   , ## simple PDF from generic function
+    'Constrained2D' , ## 2D pdf with constraints 
     ## 
     'Fit2D'         , ## the model for 2D-fit: signal + background + optional components
     'Fit2DSym'      , ## the model for 2D-fit: signal + background + optional components
@@ -30,7 +31,7 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import Ostap , valid_pointer, roo_silent 
 from   ostap.core.ostap_types   import integer_types, num_types, list_types, iterable_types   
 from   ostap.fitting.funbasic   import FUN2
-from   ostap.fitting.pdfbasic   import PDF2, Generic2D_pdf 
+from   ostap.fitting.pdfbasic   import PDF2, APDF2, Generic2D_pdf 
 from   ostap.fitting.utils      import component_similar , component_clone 
 from   ostap.fitting.fithelpers import H2D_dset, Fractions  
 import ROOT, random
@@ -456,6 +457,88 @@ class H2D_pdf(PDF2) :
         assert isinstance ( value , integer_types ) and 0 <= value,\
                'Invalid interpolation order %s/%s' % ( value , type ( value ) )
         self.pdf.setInterpolationOrder ( value )
+
+
+# =============================================================================
+## @class Constrained2D
+#  PDF2 with constraints
+#  @code
+#  opdf2 = ...
+#  constrains = cpdf1, cpdf2, cpdf3
+#  cpdf = Constrained2D ( opdf2 , consraints )
+#  @endcode
+class Constrained2D(PDF2) :
+    """PDF1 with constraints
+    >>> opdf2 = ...
+    >>> constrains = cpdf1, cpdf2, cpdf3
+    >>> cpdf = Constrained2D ( opdf2 , consraints )
+    """
+    
+    def __init__ ( self         ,
+                   original     ,
+                   constraints  ,
+                   name    = '' ) :
+
+        assert isinstance ( original , PDF2 ) , '"original" must be PDF2!'
+        assert constrains , '"constraints" are not cpecified!'
+        
+        name = name if name else 'Constr2D_%s' % original.name
+
+        if   isinstance ( constraints , ROOT.RooAbsPdf )  :
+            cnts = [ constraints ] 
+        elif isinstance ( constraints , APDF2 )  :
+            cnts = [ constraints.pdf ]
+        else :
+            cnts = [ c for c in constraints ]
+            
+        cnts1 = [ c         for c in constraints if isinstance ( c , ROOT.RooAbsPdf ) ]
+        cnts2 = [ c.roo_pdf for c in constraints if isinstance ( c , APDF2          ) ]
+        assert len ( cnts1 ) + len ( cnts2 ) == len ( cnts ) , \
+               'Invalid constraints are specified %s' % str ( constraints ) 
+            
+        ## initialize the base 
+        PDF1.__init__ ( self , name , original.xvar , original.yvar )
+
+        
+        self.__original_pdf    = original        
+        self.__constraints     = tuple ( cnts1 + cnts2   )  
+        self.__arg_constraints = tuple ( c for c in cnts )
+
+        ## 
+        self.__pdflst = ROOT.RooArgList ( self.original_pdf.roo_pdf )
+        for c in self.constraints : self.__pdflst.add ( c )
+        
+        ## create the actual PDF 
+        self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'constrained_' ) ,
+                                     "Constrained %s" % self.name     ,
+                                     self.__pdflst                    )
+        
+        ## save the configuration
+        self.config = {
+            'name'        : self.name             ,
+            'original'    : self.original_pdf     ,
+            'constraints' : self.arg_constraints 
+            }
+        
+    @property
+    def original_pdf ( self ) :
+        """'original_pdf' : get the original PDF (unconstrained)"""
+        return self.__original_pdf
+
+    @property
+    def constraints  ( self ) :
+        """'constraints' : get the constrainsts (as list of RooAbsPdf)"""
+        return self.__constraints
+
+    @property
+    def args_constraints  ( self ) :
+        """'arg_constraints' : get the constrainsts (as specified in constructor)"""
+        return self.__arg_constraints
+
+    ## access to attribute 
+    def __getattr__ ( self , attr ) :
+        """Delegate the access to missing attribite to the original (uconstrained) PDF"""
+        return getattr ( self.__original_pdf , attr ) 
 
 
 # =============================================================================

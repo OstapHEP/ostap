@@ -5,7 +5,7 @@
    1. Add Airy functions and Fermi-Dirac integral 
    1. add more arguments to `PDF.sPlot` method, namely position and kewworkd arguments for the 1st fit (e.g. constraints...)
    1. add `ATTENTION` level for logger, corresponding `attention` method and `logAttention` context manager 
- 
+   1. add `Constrained(1,2,3)D` classes  to create constrained `PDF(1,2,3)`
 
 ## Backward incompatible: 
 

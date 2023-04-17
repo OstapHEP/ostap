@@ -19,6 +19,7 @@ __all__     = (
     'H3D_pdf'       , ## convertor of 1D-histo to RooDataPdf
     'Histo3D_pdf'   , ## simple PDF from the histogram  
     'Shape3D_pdf'   , ## simple PDF from generic function  
+    'Constrained3D' , ## 3D pdf with constraints 
     ##
     'Fit3D'         , ## the model for                3D-fit
     'Fit3DSym'      , ## the model for      symmetric 3D-fit
@@ -32,7 +33,7 @@ from   ostap.core.core          import Ostap , valid_pointer, roo_silent
 from   ostap.core.ostap_types   import integer_types
 from   ostap.fitting.utils      import component_similar , component_clone
 from   ostap.fitting.fit2d      import Model2D 
-from   ostap.fitting.pdfbasic   import PDF2,PDF3, Generic3D_pdf
+from   ostap.fitting.pdfbasic   import PDF2,PDF3, APDF3,Generic3D_pdf
 from   ostap.fitting.fithelpers import H3D_dset, Fractions  
 import ROOT, random
 # =============================================================================
@@ -483,6 +484,89 @@ class H3D_pdf(PDF3) :
                'Invalid interpolation order %s/%s' % ( value , type ( value ) )
         self.pdf.setInterpolationOrder ( value )
       
+
+
+# =============================================================================
+## @class Constrained3D
+#  PDF3 with constraints
+#  @code
+#  opdf3 = ...
+#  constrains = cpdf1, cpdf2, cpdf3
+#  cpdf = Constrained3D ( opdf3 , consraints )
+#  @endcode
+class Constrained3D(PDF3) :
+    """PDF1 with constraints
+    >>> opdf3 = ...
+    >>> constrains = cpdf1, cpdf2, cpdf3
+    >>> cpdf = Constrained3D ( opdf3 , consraints )
+    """
+    
+    def __init__ ( self         ,
+                   original     ,
+                   constraints  ,
+                   name    = '' ) :
+
+        assert isinstance ( original , PDF3 ) , '"original" must be PDF3!'
+        assert constrains , '"constraints" are not cpecified!'
+        
+        name = name if name else 'Constr3D_%s' % original.name
+
+        if   isinstance ( constraints , ROOT.RooAbsPdf )  :
+            cnts = [ constraints ] 
+        elif isinstance ( constraints , APDF3 )  :
+            cnts = [ constraints.pdf ]
+        else :
+            cnts = [ c for c in constraints ]
+                        
+        cnts1 = [ c         for c in constraints if isinstance ( c , ROOT.RooAbsPdf ) ]
+        cnts2 = [ c.roo_pdf for c in constraints if isinstance ( c , APDF3          ) ]
+        assert len ( cnts1 ) + len ( cnts2 ) == len ( cnts ) , \
+               'Invalid constraints are specified %s' % str ( constraints ) 
+            
+        ## initialize the base 
+        PDF1.__init__ ( self , name , original.xvar , original.yvar )
+
+        self.__original_pdf    = original        
+        self.__constraints     = tuple ( cnts1 + cnts2   )  
+        self.__arg_constraints = tuple ( c for c in cnts )
+
+        ## 
+        self.__pdflst = ROOT.RooArgList ( self.original_pdf.roo_pdf )
+        for c in self.constraints : self.__pdflst.add ( c )
+        
+        ## create the actual PDF 
+        self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'constrained_' ) ,
+                                     "Constrained %s" % self.name     ,
+                                     self.__pdflst                    )
+        
+        ## save the configuration
+        self.config = {
+            'name'        : self.name             ,
+            'original'    : self.original_pdf     ,
+            'constraints' : self.arg_constraints 
+            }
+        
+    @property
+    def original_pdf ( self ) :
+        """'original_pdf' : get the original PDF (unconstrained)"""
+        return self.__original_pdf
+
+    @property
+    def constraints  ( self ) :
+        """'constraints' : get the constrainsts (as list of RooAbsPdf)"""
+        return self.__constraints
+
+    @property
+    def args_constraints  ( self ) :
+        """'arg_constraints' : get the constrainsts (as specified in constructor)"""
+        return self.__arg_constraints
+
+    ## access to attribute 
+    def __getattr__ ( self , attr ) :
+        """Delegate the access to missing attribite to the original (uconstrained) PDF"""
+        return getattr ( self.__original_pdf , attr ) 
+
+
 # =============================================================================
 # Compound models for 3D-fit
 # =============================================================================
