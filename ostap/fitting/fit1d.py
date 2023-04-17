@@ -744,6 +744,19 @@ class Constrained1D(PDF1) :
         self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'constrained_' ) ,
                                      "Constrained %s" % self.name     ,
                                      self.__pdflst                    )
+
+        ##  
+        for c in self.original_pdf.signals              : self.signals               .add ( c )
+        for c in self.original_pdf.backgrounds          : self.backgrounds           .add ( c )
+        for c in self.original_pdf.components           : self.components            .add ( c )
+        for c in self.original_pdf.crossterms1          : self.crossterms1           .add ( c )
+        for c in self.original_pdf.crossterms2          : self.crossterms2           .add ( c )
+        for c in self.original_pdf.combined_signals     : self.combined_signals      .add ( c )
+        for c in self.original_pdf.combined_backgrounds : self.combined_backgrounds  .add ( c )
+        for c in self.original_pdf.combined_components  : self.combined_components   .add ( c )
+        ## 
+        for c in self.original_pdf.alist1               : self.alist1                .add ( c )
+        for c in self.original_pdf.alist2               : self.alist2                .add ( c )
         
         ## save the configuration
         self.config = {
