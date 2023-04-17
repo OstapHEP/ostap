@@ -1641,7 +1641,14 @@ class APDF1 ( object ) :
 
         ## parse additional options 
         opts = self.parse_args ( dataset , *args , **kwargs )
-        nopts = len ( opts ) 
+
+        if opts and root_info < ( 6, 20 ) :
+            opts = tuple ( o for o in opts if not o.name == 'NumCPU' )
+            if opts : 
+                logger.error ( 'No options are allowed: %s ' % str ( opts ) ) 
+                opts = ()
+            
+        nopts = len ( opts )
         if   nopts <= 4  : copts = opts
         elif nopps <= 8  : copts = ROOT.RooFit.MultiArg ( *opts ) ,  ## note comma...
         elif nopts <= 32 :
@@ -1654,6 +1661,7 @@ class APDF1 ( object ) :
         if opts and not silent :
             logger.info ( 'sPlot options: %s' % str ( copts ) )  
 
+        
         vars = set ( ( v.name for v in dataset.varset() ) )    
         with roo_silent ( True ) :
 
