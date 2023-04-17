@@ -1642,12 +1642,18 @@ class APDF1 ( object ) :
         ## parse additional options 
         opts = self.parse_args ( dataset , *args , **kwargs )
 
+        
         if opts and root_info < ( 6, 20 ) :
-            opts = tuple ( o for o in opts if not o.name == 'NumCPU' )
+            vok  = ( 'Extended' , 'SumW2Error' , 'PrintLevel' , 'PrintEvalLevel' , 'NumCPU' ) 
+            opts = tuple ( o for o in opts if not o.name in vok  )
             if opts : 
                 logger.error ( 'No options are allowed: %s ' % str ( opts ) ) 
                 opts = ()
-            
+        elif opts :
+            ## those can be duplicated 
+            vok  = ( 'Extended' , 'SumW2Error' , 'PrintLevel' , 'PrintEvalLevel' ) 
+            opts = tuple ( o for o in opts if not o.name in vok  )
+                                   
         nopts = len ( opts )
         if   nopts <= 4  : copts = opts
         elif nopps <= 8  : copts = ROOT.RooFit.MultiArg ( *opts ) ,  ## note comma...
