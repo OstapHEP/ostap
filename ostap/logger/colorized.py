@@ -18,6 +18,7 @@ __all__     = (
     'attention'        , ## make "attention" string
     'allright'         , ## make "allright" string
     'infostr'          , ## just for information
+    'attstr'           , ## just for information/attenttion 
     #
     'with_colors'      , ## Is colorization enabled?
     'set_with_colors'  , ## Enable/Disable colorization 
@@ -139,6 +140,19 @@ def attention ( what ) :
                             underline  = True   ,
                             fg_bright  = True   ,
                             bg_bright  = True   )
+
+# =====-=======================================================================
+## attention!
+def attstr ( what ) :
+    """Attention string """
+    return colored_string ( what                ,
+                            foreground = WHITE  ,
+                            background = BLUE   ,
+                            bold       = True   ,
+                            blink      = True   ,
+                            underline  = False  ,
+                            fg_bright  = False  ,
+                            bg_bright  = False  )
 
 # =============================================================================
 ## allright 

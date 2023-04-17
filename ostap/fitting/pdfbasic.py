@@ -1614,7 +1614,9 @@ class APDF1 ( object ) :
     #  @code
     #  r,f = model.fitTo ( dataset )
     #  model.sPlot ( dataset ) 
-    #  @endcode 
+    #  @endcode
+    #  @attention: since internally it performs the fit, all additional fit options,
+    #              like ranges, constraints, etc. must be specified!
     def sPlot ( self                            ,
                 dataset                         ,
                 silent       = False            ,
@@ -1623,7 +1625,10 @@ class APDF1 ( object ) :
                 *args       , **kwargs          ) :
         """ Make sPlot analysis
         >>> r,f = model.fitTo ( dataset )
-        >>> model.sPlot ( dataset ) 
+        >>> model.sPlot ( dataset )
+        
+        Attention: since internally it performs the fit, all addtional fit options,
+        like ranges, constraints, etc. must be specified!
         """
         assert self.alist2,\
                "PDF(%s) has empty 'alist2'/(list of components)" + \

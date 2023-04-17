@@ -19,6 +19,7 @@ __all__ = (
     'logVerbose'     , ## helper function to control output level
     'logDebug'       , ## helper function to control output level
     'logInfo'        , ## helper function to control output level
+    'logAttention'   , ## helper function to control output level
     'logWarning'     , ## helper function to control output level
     'logError'       , ## helper function to control output level
     'logFatal'       , ## helper function to control output level
@@ -50,6 +51,7 @@ from   ostap.logger.colorized import ( isatty         ,
                                        with_colors    ,
                                        colored_string ,
                                        attention      ,
+                                       attstr         , 
                                        allright       ,
                                        infostr        ,
                                        decolorize     )
@@ -65,15 +67,16 @@ ERROR   = 5
 FATAL   = 6
 # =============================================================================
 ## some manipulations with logging module
-if not hasattr ( logging , 'VERBOSE' ) : logging.VERBOSE = 5
+if not hasattr ( logging , 'VERBOSE'   ) : logging.VERBOSE   = 5
+if not hasattr ( logging , 'ATTENTION' ) : logging.ATTENTION = logging.INFO + 2 
+if not hasattr ( logging , 'FATAL'     ) : logging.FATAL     = logging.CRITICAL 
 # =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose1_(self, msg, *args, **kwargs):
     """Log 'msg % args' with severity 'VERBOSE'.
     """
     if self.isEnabledFor(logging.VERBOSE):
-        self._log(logging.VERBOSE, msg, args, **kwargs)
-        
+        self._log(logging.VERBOSE, msg, args, **kwargs)        
 # =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose2_(msg, *args, **kwargs):
@@ -81,34 +84,59 @@ def _verbose2_(msg, *args, **kwargs):
     """
     if not logging.root.handlers : logging.basicConfig()
     logging.root.verbose ( msg , *args , **kwargs )
-
-# =============================================================================
+# ==============================================================================
 # add method 'verbose' to logger 
 logging.Logger.verbose = _verbose1_
-
 # =============================================================================
 ## add method 'verbose' to root logger 
 logging.verbose        = _verbose2_
+# =============================================================================
+## Log message with severity 'ATTENTION'
+def _attention1_(self, msg, *args, **kwargs):
+    """Log 'msg % args' with severity 'ATTENTION'.
+    """
+    if self.isEnabledFor(logging.ATTENTION):
+        if with_colors () : amsg = attstr ( msg ) 
+        else              : amsg = msg
+        self._log ( logging.ATTENTION , amsg , args, **kwargs)
+# =============================================================================
+## Log message with severity 'ATTENTION'
+def _attention2_(msg, *args, **kwargs):
+    """Log a message with severity 'ATTENTIONE' on the root logger.
+    """
+    if not logging.root.handlers : logging.basicConfig()
+    logging.root.attention ( msg, *args , **kwargs )
+    
+# ==============================================================================
+# add method 'attention' to logger 
+logging.Logger.attention = _attention1_
+# =============================================================================
+## add method 'attention' to root logger 
+logging.attention        = _attention2_
+# =============================================================================
+
 # =============================================================================
 ## convert MSG::Level into logging level 
 def setLogging ( output_level ) :
     """Convert MSG::Level into logging level 
     """
-    if   FATAL   <= output_level : logging.disable ( logging.FATAL   - 1 )
-    elif ERROR   <= output_level : logging.disable ( logging.ERROR   - 1 )
-    elif WARNING <= output_level : logging.disable ( logging.WARNING - 1 )
-    elif INFO    <= output_level : logging.disable ( logging.INFO    - 1 )
-    elif DEBUG   <= output_level : logging.disable ( logging.DEBUG   - 1 )
-    elif VERBOSE <= output_level : logging.disable ( logging.VERBOSE - 1 )
+    if   FATAL   <= output_level : logging.disable ( logging.CRITICAL - 1 )
+    elif ERROR   <= output_level : logging.disable ( logging.ERROR    - 1 )
+    elif WARNING <= output_level : logging.disable ( logging.WARNING  - 1 )
+    elif INFO    <= output_level : logging.disable ( logging.INFO     - 1 )
+    elif DEBUG   <= output_level : logging.disable ( logging.DEBUG    - 1 )
+    elif VERBOSE <= output_level : logging.disable ( logging.VERBOSE  - 1 )
 
 # =============================================================================
 ## define standard logging names
-logging_levels = { logging.CRITICAL : 'FATAL  ' ,
-                   logging.WARNING  : 'WARNING' ,
-                   logging.DEBUG    : 'DEBUG  ' ,
-                   logging.INFO     : 'INFO   ' ,
-                   logging.ERROR    : 'ERROR  ' ,
-                   logging.VERBOSE  : 'VERBOSE' }
+logging_levels = { logging.CRITICAL  : 'FATAL    '  ,
+                   logging.ERROR     : 'ERROR    '  ,                   
+                   logging.WARNING   : 'WARNING  '  ,                   
+                   logging.ATTENTION : 'ATTENTION'  ,
+                   logging.INFO      : 'INFO     '  ,
+                   logging.DEBUG     : 'DEBUG    '  ,
+                   logging.VERBOSE   : 'VERBOSE  '  }
+
 for a in logging_levels : logging.addLevelName ( a ,  logging_levels[a]  )
 # =============================================================================
 logging_format      = '# %(name)-30s %(levelname)-7s %(message)s'
@@ -307,7 +335,7 @@ def logVerbose () :
 # =============================================================================
 #  Temporarily enable/disable all loggers with level less then DEBUG 
 #  @code
-#  with logInfo() :
+#  with logDebug() :
 #       ...do something... 
 #  @endcode
 def logDebug   () :
@@ -316,6 +344,7 @@ def logDebug   () :
     >>>  ...do something...
     """    
     return logLevel (  logging.DEBUG   - 1 )
+
 # =============================================================================
 #  Temporarily enable/disable all loggers with level less then INFO 
 #  @code
@@ -328,6 +357,19 @@ def logInfo    () :
     >>>  ...do something...
     """
     return logLevel (  logging.INFO    - 1 )
+
+# =============================================================================
+#  Temporarily enable/disable all loggers with level less then ATTENTION
+#  @code
+#  with logAttention() :
+#       ...do something... 
+#  @endcode
+def logAttention () :
+    """Temporarily disable all loggers with level less then ATTENTION
+    >>> with logAttention() :
+    >>>  ...do something...
+    """
+    return logLevel (  logging.ATTENTION - 1 )
 
 # =============================================================================
 #  Temporarily enable/disable all loggers with level less then WARNING
@@ -409,12 +451,13 @@ def make_colors () :
 
     from ostap.logger.colorized import RED , BLUE , YELLOW , GREEN , WHITE
     
-    logging.addLevelName ( logging.CRITICAL ,  makeName ( logging.CRITICAL , fg = RED    , bg  = BLUE   , blink     = True ) )
-    logging.addLevelName ( logging.WARNING  ,  makeName ( logging.WARNING  , fg = RED    , bg  = YELLOW , underline = True , bgb = True ) )
-    logging.addLevelName ( logging.ERROR    ,  makeName ( logging.ERROR    , fg = YELLOW , bg  = RED    , blink     = True , bgb = True , fgb = True ) )
-    logging.addLevelName ( logging.INFO     ,  makeName ( logging.INFO     , bg = BLUE   , fg  = WHITE  ) )
-    logging.addLevelName ( logging.DEBUG    ,  makeName ( logging.DEBUG    , bg = GREEN  , fg  = WHITE  ) )
-    logging.addLevelName ( logging.VERBOSE  ,  makeName ( logging.VERBOSE  , bg = YELLOW , fg  = WHITE  , bgb = True , fgb = True ) )
+    logging.addLevelName ( logging.CRITICAL  ,  makeName ( logging.CRITICAL  , fg = RED    , bg  = BLUE   , blink     = True ) )
+    logging.addLevelName ( logging.ERROR     ,  makeName ( logging.ERROR     , fg = YELLOW , bg  = RED    , blink     = True , bgb = True , fgb = True ) )
+    logging.addLevelName ( logging.WARNING   ,  makeName ( logging.WARNING   , fg = RED    , bg  = YELLOW , underline = True , bgb = True ) )
+    logging.addLevelName ( logging.ATTENTION ,  makeName ( logging.ATTENTION , bg = BLUE   , fg  = WHITE  , blink     = True )) ## , bgb = True , fgb = True ) ) 
+    logging.addLevelName ( logging.INFO      ,  makeName ( logging.INFO      , bg = BLUE   , fg  = WHITE  ) )
+    logging.addLevelName ( logging.DEBUG     ,  makeName ( logging.DEBUG     , bg = GREEN  , fg  = WHITE  ) )
+    logging.addLevelName ( logging.VERBOSE   ,  makeName ( logging.VERBOSE   , bg = YELLOW , fg  = WHITE  , bgb = True , fgb = True ) )
 
     __colored_logger.append ( 1 ) 
     return with_colors() 
@@ -595,112 +638,134 @@ if __name__ == '__main__' :
     
     with noColor() : pass
     
-    logger.verbose  ( 'This is VERBOSE  message'  ) 
-    logger.debug    ( 'This is DEBUG    message'  ) 
-    logger.info     ( 'This is INFO     message'  ) 
-    logger.warning  ( 'This is WARNING  message'  ) 
-    logger.error    ( 'This is ERROR    message'  ) 
-    logger.fatal    ( 'This is FATAL    message'  ) 
-    logger.critical ( 'This is CRITICAL message'  ) 
+    logger.verbose   ( 'This is VERBOSE   message'  ) 
+    logger.debug     ( 'This is DEBUG     message'  ) 
+    logger.info      ( 'This is INFO      message'  ) 
+    logger.attention ( 'This is ATTENTION message'  )
+    logger.warning   ( 'This is WARNING   message'  ) 
+    logger.error     ( 'This is ERROR     message'  ) 
+    logger.fatal     ( 'This is FATAL     message'  ) 
+    logger.critical  ( 'This is CRITICAL  message'  ) 
 
     with logColor() : 
         
-        logger.verbose  ( 'This is VERBOSE  message'  ) 
-        logger.debug    ( 'This is DEBUG    message'  ) 
-        logger.info     ( 'This is INFO     message'  )
-        logger.warning  ( 'This is WARNING  message'  ) 
-        logger.error    ( 'This is ERROR    message'  ) 
-        logger.fatal    ( 'This is FATAL    message'  ) 
-        logger.critical ( 'This is CRITICAL message'  )
+        logger.verbose   ( 'This is VERBOSE   message'  ) 
+        logger.debug     ( 'This is DEBUG     message'  ) 
+        logger.info      ( 'This is INFO      message'  )
+        logger.attention ( 'This is ATTENTION message'  )
+        logger.warning   ( 'This is WARNING   message'  ) 
+        logger.error     ( 'This is ERROR     message'  ) 
+        logger.fatal     ( 'This is FATAL     message'  ) 
+        logger.critical  ( 'This is CRITICAL  message'  )
 
         with noColor () : 
-            logger.verbose  ( 'This is VERBOSE  message'  ) 
-            logger.debug    ( 'This is DEBUG    message'  ) 
-            logger.info     ( 'This is INFO     message'  )
-            logger.warning  ( 'This is WARNING  message'  ) 
-            logger.error    ( 'This is ERROR    message'  ) 
-            logger.fatal    ( 'This is FATAL    message'  ) 
-            logger.critical ( 'This is CRITICAL message'  )
+            logger.verbose   ( 'This is VERBOSE   message'  ) 
+            logger.debug     ( 'This is DEBUG     message'  ) 
+            logger.info      ( 'This is INFO      message'  )
+            logger.attention ( 'This is ATTENTION message'  )
+            logger.warning   ( 'This is WARNING   message'  ) 
+            logger.error     ( 'This is ERROR     message'  ) 
+            logger.fatal     ( 'This is FATAL     message'  ) 
+            logger.critical  ( 'This is CRITICAL  message'  )
             
-        logger.verbose  ( 'This is VERBOSE  message'  ) 
-        logger.debug    ( 'This is DEBUG    message'  ) 
-        logger.info     ( 'This is INFO     message'  )
-        logger.warning  ( 'This is WARNING  message'  ) 
-        logger.error    ( 'This is ERROR    message'  ) 
-        logger.fatal    ( 'This is FATAL    message'  ) 
-        logger.critical ( 'This is CRITICAL message'  )
+        logger.verbose   ( 'This is VERBOSE   message'  ) 
+        logger.debug     ( 'This is DEBUG     message'  ) 
+        logger.info      ( 'This is INFO      message'  )
+        logger.attention ( 'This is ATTENTION message'  )
+        logger.warning   ( 'This is WARNING   message'  ) 
+        logger.error     ( 'This is ERROR     message'  ) 
+        logger.fatal     ( 'This is FATAL     message'  ) 
+        logger.critical  ( 'This is CRITICAL  message'  )
 
     with keepColor() :
-        logger.verbose  ( 'This is VERBOSE  message'  ) 
-        logger.debug    ( 'This is DEBUG    message'  ) 
-        logger.info     ( 'This is INFO     message'  ) 
-        logger.warning  ( 'This is WARNING  message'  )
+        logger.verbose   ( 'This is VERBOSE   message'  ) 
+        logger.debug     ( 'This is DEBUG     message'  ) 
+        logger.info      ( 'This is INFO      message'  ) 
+        logger.attention ( 'This is ATTENTION message'  )
+        logger.warning   ( 'This is WARNING   message'  )
 
         make_colors()
         
-        logger.error    ( 'This is ERROR    message'  ) 
-        logger.fatal    ( 'This is FATAL    message'  ) 
-        logger.critical ( 'This is CRITICAL message'  ) 
+        logger.error     ( 'This is ERROR     message'  ) 
+        logger.fatal     ( 'This is FATAL     message'  ) 
+        logger.critical  ( 'This is CRITICAL  message'  ) 
 
     logger.info ( " -----> With VERBOSE threshold") 
     with logVerbose() : 
-        logger.verbose  ( 'This is VERBOSE  message'  ) 
-        logger.debug    ( 'This is DEBUG    message'  ) 
-        logger.info     ( 'This is INFO     message'  ) 
-        logger.warning  ( 'This is WARNING  message'  ) 
-        logger.error    ( 'This is ERROR    message'  ) 
-        logger.fatal    ( 'This is FATAL    message'  ) 
-        logger.critical ( 'This is CRITICAL message'  )
+        logger.verbose   ( 'This is VERBOSE   message'  ) 
+        logger.debug     ( 'This is DEBUG     message'  ) 
+        logger.info      ( 'This is INFO      message'  ) 
+        logger.attention ( 'This is ATTENTION message'  )
+        logger.warning   ( 'This is WARNING   message'  ) 
+        logger.error     ( 'This is ERROR     message'  ) 
+        logger.fatal     ( 'This is FATAL     message'  ) 
+        logger.critical  ( 'This is CRITICAL  message'  )
 
     logger.info ( " -----> With DEBUG   threshold") 
     with logDebug () : 
-        logger.verbose  ( 'This is VERBOSE  message'  ) 
-        logger.debug    ( 'This is DEBUG    message'  ) 
-        logger.info     ( 'This is INFO     message'  ) 
-        logger.warning  ( 'This is WARNING  message'  ) 
-        logger.error    ( 'This is ERROR    message'  ) 
-        logger.fatal    ( 'This is FATAL    message'  ) 
-        logger.critical ( 'This is CRITICAL message'  )
+        logger.verbose   ( 'This is VERBOSE   message'  ) 
+        logger.debug     ( 'This is DEBUG     message'  ) 
+        logger.info      ( 'This is INFO      message'  ) 
+        logger.attention ( 'This is ATTENTION message'  )
+        logger.warning   ( 'This is WARNING   message'  ) 
+        logger.error     ( 'This is ERROR     message'  ) 
+        logger.fatal     ( 'This is FATAL     message'  ) 
+        logger.critical  ( 'This is CRITICAL  message'  )
 
     logger.info ( " -----> With INFO    threshold") 
     with logInfo () : 
-        logger.verbose  ( 'This is VERBOSE  message'  ) 
-        logger.debug    ( 'This is DEBUG    message'  ) 
-        logger.info     ( 'This is INFO     message'  ) 
-        logger.warning  ( 'This is WARNING  message'  ) 
-        logger.error    ( 'This is ERROR    message'  ) 
-        logger.fatal    ( 'This is FATAL    message'  ) 
-        logger.critical ( 'This is CRITICAL message'  )
+        logger.verbose   ( 'This is VERBOSE   message'  ) 
+        logger.debug     ( 'This is DEBUG     message'  ) 
+        logger.info      ( 'This is INFO      message'  ) 
+        logger.attention ( 'This is ATTENTION message'  )
+        logger.warning   ( 'This is WARNING   message'  ) 
+        logger.error     ( 'This is ERROR     message'  ) 
+        logger.fatal     ( 'This is FATAL     message'  ) 
+        logger.critical  ( 'This is CRITICAL  message'  )
+
+    logger.info ( " -----> With ATTENTION threshold") 
+    with logAttention () : 
+        logger.verbose   ( 'This is VERBOSE   message'  ) 
+        logger.debug     ( 'This is DEBUG     message'  ) 
+        logger.info      ( 'This is INFO      message'  ) 
+        logger.attention ( 'This is ATTENTION message'  )
+        logger.warning   ( 'This is WARNING   message'  ) 
+        logger.error     ( 'This is ERROR     message'  ) 
+        logger.fatal     ( 'This is FATAL     message'  ) 
+        logger.critical  ( 'This is CRITICAL  message'  )
 
     logger.info ( " -----> With WARNING threshold") 
     with logWarning () : 
-        logger.verbose  ( 'This is VERBOSE  message'  ) 
-        logger.debug    ( 'This is DEBUG    message'  ) 
-        logger.info     ( 'This is INFO     message'  ) 
-        logger.warning  ( 'This is WARNING  message'  ) 
-        logger.error    ( 'This is ERROR    message'  ) 
-        logger.fatal    ( 'This is FATAL    message'  ) 
-        logger.critical ( 'This is CRITICAL message'  )
+        logger.verbose   ( 'This is VERBOSE   message'  ) 
+        logger.debug     ( 'This is DEBUG     message'  ) 
+        logger.info      ( 'This is INFO      message'  ) 
+        logger.attention ( 'This is ATTENTION message'  )
+        logger.warning   ( 'This is WARNING   message'  ) 
+        logger.error     ( 'This is ERROR     message'  ) 
+        logger.fatal     ( 'This is FATAL     message'  ) 
+        logger.critical  ( 'This is CRITICAL  message'  )
 
     logger.info ( " -----> With ERROR   threshold") 
     with logError () : 
-        logger.verbose  ( 'This is VERBOSE  message'  ) 
-        logger.debug    ( 'This is DEBUG    message'  ) 
-        logger.info     ( 'This is INFO     message'  ) 
-        logger.warning  ( 'This is WARNING  message'  ) 
-        logger.error    ( 'This is ERROR    message'  ) 
-        logger.fatal    ( 'This is FATAL    message'  ) 
-        logger.critical ( 'This is CRITICAL message'  )
+        logger.verbose   ( 'This is VERBOSE   message'  ) 
+        logger.debug     ( 'This is DEBUG     message'  ) 
+        logger.info      ( 'This is INFO      message'  ) 
+        logger.attention ( 'This is ATTENTION message'  )
+        logger.warning   ( 'This is WARNING   message'  ) 
+        logger.error     ( 'This is ERROR     message'  ) 
+        logger.fatal     ( 'This is FATAL     message'  ) 
+        logger.critical  ( 'This is CRITICAL  message'  )
 
     logger.info ( " -----> With FATAL   threshold") 
     with logFatal () : 
-        logger.verbose  ( 'This is VERBOSE  message'  ) 
-        logger.debug    ( 'This is DEBUG    message'  ) 
-        logger.info     ( 'This is INFO     message'  ) 
-        logger.warning  ( 'This is WARNING  message'  ) 
-        logger.error    ( 'This is ERROR    message'  ) 
-        logger.fatal    ( 'This is FATAL    message'  ) 
-        logger.critical ( 'This is CRITICAL message'  )
+        logger.verbose   ( 'This is VERBOSE   message'  ) 
+        logger.debug     ( 'This is DEBUG     message'  ) 
+        logger.info      ( 'This is INFO      message'  ) 
+        logger.attention ( 'This is ATTENTION message'  )
+        logger.warning   ( 'This is WARNING   message'  ) 
+        logger.error     ( 'This is ERROR     message'  ) 
+        logger.fatal     ( 'This is FATAL     message'  ) 
+        logger.critical  ( 'This is CRITICAL  message'  )
 
         
     logger.info ( 80*'*'  )
