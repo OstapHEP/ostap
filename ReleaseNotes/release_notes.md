@@ -1,10 +1,10 @@
-
 ## New features:
 
    1. add Gudermannian function and its inverse 
    1. fix the issue with removed `RooMomentMorphND` for new version of ROOT 
    1. Add Airy functions and Fermi-Dirac integral 
-
+   1. add more arguments to `PDF.sPlot` method, namely position and kewworkd arguments for the 1st fit (e.g. constraints...)
+ 
 ## Backward incompatible: 
 
 ## Bug fixes:
@@ -27,8 +27,8 @@
 
 ## New features:
 
-  1. tweak `D-integration  for `Ostap::Models::Shape(1,2,3)D` objects
-  1. add new test for 2D -sahpes `test_fitting_shapes2.py`
+  1. tweak `1D-integration`  for `Ostap::Models::Shape(1,2,3)D` objects
+  1. add new test for 2D-sahpes `test_fitting_shapes2.py`
   1. add new keyword `recover = ...` for `PDF.fitTo` that is expanded to `ROOT.RooFit.RecoverFomrUdnefinedRegions ( ... )`
   1. fix the names for internal integration functions to be coherent with underlying GSL methods 
   1. disable `Shape(1,2,3)D_pdf` for old versions of ROOT 

@@ -978,20 +978,20 @@ class APDF1 ( object ) :
             xminmax = dataset.xminmax() 
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
-                silent  = kwargs.pop ( 'silent'  , True  )                
                 self.histo_data   = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset          = self.histo_data.dset
                 kwargs [ 'ncpu' ] = 2   
                 return self.draw_nll ( var     = var      ,
                                        dataset = hdataset ,
-                                       profile = profile  ,
+                                       profile = profile  ,                                       
                                        draw    = draw     ,
+                                       silent  = silent   , 
                                        args    = args     , **kwargs )
             
         ## convert if needed 
         if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
             dataset = dataset.dset
-            
+
         ## get all parametrs
         pars = self.params ( dataset )
         assert var in pars , "Variable %s is not a parameter"   % var
@@ -1000,8 +1000,8 @@ class APDF1 ( object ) :
         ##
         fargs = []
         ##
-        bins  = kwargs.pop ( 'nbins' , 25 if profile else 200 )
-        if bins   : fargs.append ( ROOT.RooFit.Bins      ( bins  ) )
+        nbins  = kwargs.pop ( 'nbins' , 25 if profile else 200 )
+        if nbins  : fargs.append ( ROOT.RooFit.Bins      ( nbins  ) )
         ## 
         rng   = kwargs.pop ( 'range' , None )
         if rng    : fargs.append ( ROOT.RooFit.Range     ( *rng  ) ) 
@@ -1190,7 +1190,7 @@ class APDF1 ( object ) :
                 res = v , n
                 results.append ( res )
                 vmin = n if vmin is None else min ( vmin , n )
-                if draw :
+                if draw and graph :
                     graph.SetPoint ( len ( graph ) , v , n ) ## add the point 
                     if 1 == len ( graph ) : graph.draw ( "ap" )  
 
@@ -1213,7 +1213,7 @@ class APDF1 ( object ) :
             self.info ('graph_nll: apply scale factor of %.5g due to dataset weights' % sf )
             graph *= sf 
             
-        if draw : graph.draw ('ap')
+        if draw : graph.draw ('apl')
 
         return graph 
 
@@ -1308,7 +1308,7 @@ class APDF1 ( object ) :
             self.info ('graph_profile: apply scale factor of %.5g due to dataset weights' % sf )
             graph *= sf 
 
-        if draw : graph.draw ('ap')
+        if draw : graph.draw ('apl')
         
         return graph 
         
@@ -1582,7 +1582,8 @@ class APDF1 ( object ) :
                 if scale : scale_errdef = sf
                 else     : self.warning("minuit: no FCN scaling for the weighted dataset is defined!")
             self.aux_keep.append ( nLL )
-            
+
+        ## create the the minimizer 
         m    = ROOT.RooMinimizer ( nLL )
 
         if  silent : m.setPrintLevel ( -1 ) 
@@ -1602,8 +1603,8 @@ class APDF1 ( object ) :
         if 1 != scale_errdef :
             old_errdef = nLL.defaultErrorLevel ()
             new_errdef = old_errdef / scale_errdef
-            self.info ("minuit: Error Level is redefined from %.1f to %.4g" %  ( old_errdef ,
-                                                                                   new_errdef ) )
+            self.info ("minuit: Error Level is redefined from %.3f to %.4g" %  ( old_errdef ,
+                                                                                 new_errdef ) )
             m.setErrorLevel ( new_errdef ) 
 
         return m  
@@ -1614,7 +1615,12 @@ class APDF1 ( object ) :
     #  r,f = model.fitTo ( dataset )
     #  model.sPlot ( dataset ) 
     #  @endcode 
-    def sPlot ( self , dataset , silent = False ) : 
+    def sPlot ( self                            ,
+                dataset                         ,
+                silent       = False            ,
+                proj_deps    = ()               , 
+                use_weights  = True             ,
+                *args       , **kwargs          ) :
         """ Make sPlot analysis
         >>> r,f = model.fitTo ( dataset )
         >>> model.sPlot ( dataset ) 
@@ -1622,16 +1628,40 @@ class APDF1 ( object ) :
         assert self.alist2,\
                "PDF(%s) has empty 'alist2'/(list of components)" + \
                "no sPlot is possible" % self.name 
+        
+        projdeps = proj_deps if proj_deps else ROOT.RooArgSet()
+        if dataset.isWeighted() and not silent : 
+            if use_weight : logger.info( 'sPlot: internal weight will be used!') 
+            else          : logger.info( 'sPlot: internal weight will *not* be used!')
 
+        ## parse additional options 
+        opts = self.parse_args ( dataset , *args , **kwargs )
+        nopts = len ( opts ) 
+        if   nopts <= 4  : copts = opts
+        elif nopps <= 8  : copts = ROOT.RooFit.MultiArg ( *opts ) ,  ## note comma...
+        elif nopts <= 32 :
+            from ostap.utils.utils import divide
+            split = divide ( 4 , opts )
+            copts = tuple ( ROOT.RooFit.MultiArg  ( *[ a for a in s ] ) for s in split )
+        else :
+            raise TypeError( "Too many RooCmdArgs (>32)! Merge them with ROOT.RooFit.MultiArg" ) 
 
-        vars = set ( ( v.name for v in dataset.varset() ) ) 
+        if opts and not silent :
+            logger.info ( 'sPlot options: %s' % str ( copts ) )  
+
+        vars = set ( ( v.name for v in dataset.varset() ) )    
         with roo_silent ( True ) :
-            
-            splot = ROOT.RooStats.SPlot ( rootID( "sPlot_" ) ,
-                                          "sPlot"            ,
-                                          dataset            ,
-                                          self.pdf           ,
-                                          self.alist2        )
+
+            splot = ROOT.RooStats.SPlot ( rootID ( "sPlot_" ) ,
+                                          "sPlot"             ,
+                                          dataset             ,
+                                          self.pdf            ,
+                                          self.alist2         ,
+                                          projdeps            ,
+                                          use_weights         ,
+                                          False               , ## clone data 
+                                          ''                  , ## neew name 
+                                          *copts              )
         
             ## self.__splots += [ splot ]
 
@@ -1639,7 +1669,7 @@ class APDF1 ( object ) :
             vars = set ( ( v.name for v in dataset.varset() ) ) - vars
             if vars :  self.info ( 'sPlot: %d variables are added to dataset:\n%s' % (
                 len ( vars ) ,
-                dataset.table ( title     = 'Variables added by the sPlot' ,
+                dataset.table ( title     = 'Variables added by sPlot' ,
                                 prefix    = '# ' ,
                                 variables = list ( vars ) ) ) )
             
