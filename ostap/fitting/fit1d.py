@@ -36,7 +36,7 @@ from   ostap.core.ostap_types   import ( is_integer     , string_types   ,
                                          list_types     , all_numerics   ) 
 from   ostap.fitting.fithelpers import H1D_dset, Fractions  
 from   ostap.fitting.funbasic   import FUN1
-from   ostap.fitting.pdfbasic   import PDF1, APDF1 
+from   ostap.fitting.pdfbasic   import PDF1, APDF1, Constrained  
 from   ostap.fitting.utils      import make_name
 import ROOT, math,  random
 # =============================================================================
@@ -699,7 +699,7 @@ class H1D_pdf(PDF1) :
 #  constrains = cpdf1, cpdf2, cpdf3
 #  cpdf = Constrained1D ( opdf1 , consraints )
 #  @endcode
-class Constrained1D(PDF1) :
+class Constrained1D(PDF1,Constrained) :
     """PDF1 with constraints
     >>> opdf1 = ...
     >>> constrains = cpdf1, cpdf2, cpdf3
@@ -711,52 +711,22 @@ class Constrained1D(PDF1) :
                    constraints  ,
                    name    = '' ) :
 
-        assert isinstance ( original , PDF1 ) , '"original" must be PDF1!'
-        assert constrains , '"constraints" are not cpecified!'
+        assert isinstance  ( original , PDF1 ) , '"original" must be PDF1!'
+        assert constraints , '"constraints" are not specified!'
         
         name = name if name else 'Constr1D_%s' % original.name
 
-        if   isinstance ( constraints , ROOT.RooAbsPdf )  :
-            cnts = [ constraints ] 
-        elif isinstance ( constraints , APDF1 )  :
-            cnts = [ constraints.pdf ]
-        else :
-            cnts = [ c for c in constraints ]
-                        
-        cnts1 = [ c         for c in constraints if isinstance ( c , ROOT.RooAbsPdf ) ]
-        cnts2 = [ c.roo_pdf for c in constraints if isinstance ( c , APDF1          ) ]
-        assert len ( cnts1 ) + len ( cnts2 ) == len ( cnts ) , \
-               'Invalid constraints are specified %s' % str ( constraints ) 
-            
-        ## initialize the base 
-        PDF1.__init__ ( self , name , original.xvar )
-
+        ## initialize the 1st base 
+        PDF1.__init__        ( self , name , original.xvar )
+        ## initialize the 2nd base
+        Constrained.__init__ ( self , original , constraints ) 
         
-        self.__original_pdf    = original        
-        self.__constraints     = tuple ( cnts1 + cnts2   )  
-        self.__arg_constraints = tuple ( c for c in cnts )
-
-        ## 
-        self.__pdflst = ROOT.RooArgList ( self.original_pdf.roo_pdf )
-        for c in self.constraints : self.__pdflst.add ( c )
-        
-        ## create the actual PDF 
-        self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'constrained_' ) ,
-                                     "Constrained %s" % self.name     ,
-                                     self.__pdflst                    )
-
-        ##  
-        for c in self.original_pdf.signals              : self.signals               .add ( c )
-        for c in self.original_pdf.backgrounds          : self.backgrounds           .add ( c )
-        for c in self.original_pdf.components           : self.components            .add ( c )
-        for c in self.original_pdf.crossterms1          : self.crossterms1           .add ( c )
-        for c in self.original_pdf.crossterms2          : self.crossterms2           .add ( c )
-        for c in self.original_pdf.combined_signals     : self.combined_signals      .add ( c )
-        for c in self.original_pdf.combined_backgrounds : self.combined_backgrounds  .add ( c )
-        for c in self.original_pdf.combined_components  : self.combined_components   .add ( c )
-        ## 
-        for c in self.original_pdf.alist1               : self.alist1                .add ( c )
-        for c in self.original_pdf.alist2               : self.alist2                .add ( c )
+        ## copy structural elements 
+        self.copy_structures     ( self.original_pdf )
+        ## copy drawing options 
+        self.draw_options.update ( self.original_pdf.draw_options )
+        ## copy fit options 
+        self.fit_options = self.original_pdf.fit_options 
         
         ## save the configuration
         self.config = {
@@ -765,27 +735,12 @@ class Constrained1D(PDF1) :
             'constraints' : self.arg_constraints 
             }
         
-    @property
-    def original_pdf ( self ) :
-        """'original_pdf' : get the original PDF (unconstrained)"""
-        return self.__original_pdf
-
-    @property
-    def constraints  ( self ) :
-        """'constraints' : get the constrainsts (as list of RooAbsPdf)"""
-        return self.__constraints
-
-    @property
-    def args_constraints  ( self ) :
-        """'arg_constraints' : get the constrainsts (as specified in constructor)"""
-        return self.__arg_constraints
-
-    ## access to attribute 
+    ## access to attributes of original PDF
     def __getattr__ ( self , attr ) :
-        """Delegate the access to missing attribite to the original (uconstrained) PDF"""
-        return getattr ( self.__original_pdf , attr ) 
+        """Delegate the access to missing attribite to the original (unconstrained) PDF"""
+        return getattr ( self.original_pdf , attr ) 
 
-                         
+
 # =============================================================================
 ## @class Fit1D
 #  The actual model for 1D-mass fits

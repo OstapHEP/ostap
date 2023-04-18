@@ -33,7 +33,7 @@ from   ostap.core.core          import Ostap , valid_pointer, roo_silent
 from   ostap.core.ostap_types   import integer_types
 from   ostap.fitting.utils      import component_similar , component_clone
 from   ostap.fitting.fit2d      import Model2D 
-from   ostap.fitting.pdfbasic   import PDF2,PDF3, APDF3,Generic3D_pdf
+from   ostap.fitting.pdfbasic   import PDF2,PDF3, APDF3,Generic3D_pdf, Constrained
 from   ostap.fitting.fithelpers import H3D_dset, Fractions  
 import ROOT, random
 # =============================================================================
@@ -494,91 +494,46 @@ class H3D_pdf(PDF3) :
 #  constrains = cpdf1, cpdf2, cpdf3
 #  cpdf = Constrained3D ( opdf3 , consraints )
 #  @endcode
-class Constrained3D(PDF3) :
+class Constrained3D(PDF3,Constrained) :
     """PDF1 with constraints
     >>> opdf3 = ...
     >>> constrains = cpdf1, cpdf2, cpdf3
     >>> cpdf = Constrained3D ( opdf3 , consraints )
-    """
-    
+    """    
     def __init__ ( self         ,
                    original     ,
                    constraints  ,
                    name    = '' ) :
 
-        assert isinstance ( original , PDF3 ) , '"original" must be PDF3!'
-        assert constrains , '"constraints" are not cpecified!'
+        assert isinstance  ( original , PDF3 ) , '"original" must be PDF3!'
+        assert constraints , '"constraints" are not specified!'
         
         name = name if name else 'Constr3D_%s' % original.name
 
-        if   isinstance ( constraints , ROOT.RooAbsPdf )  :
-            cnts = [ constraints ] 
-        elif isinstance ( constraints , APDF3 )  :
-            cnts = [ constraints.pdf ]
-        else :
-            cnts = [ c for c in constraints ]
-                        
-        cnts1 = [ c         for c in constraints if isinstance ( c , ROOT.RooAbsPdf ) ]
-        cnts2 = [ c.roo_pdf for c in constraints if isinstance ( c , APDF3          ) ]
-        assert len ( cnts1 ) + len ( cnts2 ) == len ( cnts ) , \
-               'Invalid constraints are specified %s' % str ( constraints ) 
-            
-        ## initialize the base 
+        ## initialize the 1st base base 
         PDF1.__init__ ( self , name , original.xvar , original.yvar )
 
-        self.__original_pdf    = original        
-        self.__constraints     = tuple ( cnts1 + cnts2   )  
-        self.__arg_constraints = tuple ( c for c in cnts )
-
-        ## 
-        self.__pdflst = ROOT.RooArgList ( self.original_pdf.roo_pdf )
-        for c in self.constraints : self.__pdflst.add ( c )
+        ## initialize the 2nd base
+        Constrained.__init__ ( self , original , constraints ) 
         
-        ## create the actual PDF 
-        self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'constrained_' ) ,
-                                     "Constrained %s" % self.name     ,
-                                     self.__pdflst                    )
+        ## copy structural elements 
+        self.copy_structures     ( self.original_pdf )
+        ## copy drawing options 
+        self.draw_options.update ( self.original_pdf.draw_options )
+        ## copy fit options 
+        self.fit_options = self.original_pdf.fit_options 
         
-        ##  
-        for c in self.original_pdf.signals              : self.signals               .add ( c )
-        for c in self.original_pdf.backgrounds          : self.backgrounds           .add ( c )
-        for c in self.original_pdf.components           : self.components            .add ( c )
-        for c in self.original_pdf.crossterms1          : self.crossterms1           .add ( c )
-        for c in self.original_pdf.crossterms2          : self.crossterms2           .add ( c )
-        for c in self.original_pdf.combined_signals     : self.combined_signals      .add ( c )
-        for c in self.original_pdf.combined_backgrounds : self.combined_backgrounds  .add ( c )
-        for c in self.original_pdf.combined_components  : self.combined_components   .add ( c )
-        ## 
-        for c in self.original_pdf.alist1               : self.alist1                .add ( c )
-        for c in self.original_pdf.alist2               : self.alist2                .add ( c )
-
         ## save the configuration
         self.config = {
             'name'        : self.name             ,
             'original'    : self.original_pdf     ,
             'constraints' : self.arg_constraints 
             }
-        
-    @property
-    def original_pdf ( self ) :
-        """'original_pdf' : get the original PDF (unconstrained)"""
-        return self.__original_pdf
 
-    @property
-    def constraints  ( self ) :
-        """'constraints' : get the constrainsts (as list of RooAbsPdf)"""
-        return self.__constraints
-
-    @property
-    def args_constraints  ( self ) :
-        """'arg_constraints' : get the constrainsts (as specified in constructor)"""
-        return self.__arg_constraints
-
-    ## access to attribute 
+    ## access to  attributes of original PDF 
     def __getattr__ ( self , attr ) :
-        """Delegate the access to missing attribite to the original (uconstrained) PDF"""
+        """Delegate the access to missing attribite to the original (unconstrained) PDF"""
         return getattr ( self.__original_pdf , attr ) 
-
 
 # =============================================================================
 # Compound models for 3D-fit

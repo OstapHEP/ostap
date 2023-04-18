@@ -25,6 +25,7 @@ __all__     = (
     'Generic2D_pdf' , ## wrapper over imported RooFit (2D)-pdf
     'Generic3D_pdf' , ## wrapper over imported RooFit (3D)-pdf
     ##
+    'Constrained'   , ## mixin for creation of constrained PDFs
     'make_pdf'      , ## helper function to make PDF
     'all_args'      , ## check that all arguments has correct type 
     ##
@@ -85,31 +86,37 @@ def all_args ( *args ) :
              all_numerics ( *a )          : pass
         else                              : return False 
         
-    return True 
+    return True
 
 # =============================================================================
-## @class APDF1
-#  The helper MIXIN class for implementation of various PDF-wrappers
-#  - it relies on <code>xvar</code> method
-#  - it relies on <code>parse_args</code> method
-#  - it relies on <code>warning</code> method
-#  - it relies on <code>info</code> method
-#  - it relies on <code>error</code> method
-#  - it relies on <code>fun</code> attribute 
-
+## @class Components
+#  Helper base class that keeps the major fit-pdf components\
+#
+#  - signals
+#  - backgrounds 
+#  - other components 
+#  - cross-terms1
+#  - cross-terms2
+#  - combined signals
+#  - combined backgrounds 
+#  - combined components 
+# 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2014-08-21
-class APDF1 ( object ) :
-    """Useful helper base class for implementation of various PDF-wrappers 
-    - it relies on `xvar`       method
-    - it relies on `parse_args` method
-    - it relies on `warning`    method
-    - it relies on `info`       method
-    - it relies on `error`      method
-    - it relies on `fun`        attribute 
+#  @date 2023-04-18
+class Components(object) :
+    """Helper base class that keeps the major fit-pdf components
+    - signals
+    - backgrounds 
+    - other components 
+    - cross-terms1
+    - cross-terms2
+    - combined signals
+    - combined backgrounds 
+    - combined components 
     """
     def __init__ ( self ) :
 
+        ## major components 
         self.__signals               = ROOT.RooArgList ()
         self.__backgrounds           = ROOT.RooArgList ()
         self.__components            = ROOT.RooArgList ()
@@ -119,79 +126,45 @@ class APDF1 ( object ) :
         self.__combined_backgrounds  = ROOT.RooArgList ()
         self.__combined_components   = ROOT.RooArgList ()
 
-        ## take care about sPlots 
-        self.__splots                = []
-        self.__histo_data            = None
-        self.__fit_options           = () ## predefined fit options for this PDF
+        ## needed for sPlot
+        self.__alist1                = ROOT.RooArgList ()
+        self.__alist2                = ROOT.RooArgList ()
+
+    # =========================================================================
+    ## copy (some) structural elements 
+    def copy_structures ( self , source ) :
+        """Copy (some) structural elements"""
         
-        self.__alist1                = ROOT.RooArgList()
-        self.__alist2                = ROOT.RooArgList()
+        for c in source.signals :
+            if not c in self.signals :
+                self.signals              .add ( c ) 
+        for c in source.backgrounds :
+            if not c in self.backgrounds :
+                self.backgrounds          .add ( c ) 
+        for c in source.components :
+            if not c in self.components  :
+                self.components           .add ( c ) 
+        for c in source.crossterms1 :
+            if not c in self.crossterms1 :
+                self.crossterms1          .add ( c ) 
+        for c in source.crossterms2 :
+            if not c in self.crossterms2 :
+                self.crossterms2          .add ( c ) 
+        for c in source.combined_signals :
+            if not c in self.combined_signals :
+                self.combined_signals     .add ( c ) 
+        for c in source.combined_backgrounds :
+            if not c in self.combined_backgrounds :
+                self.combined_backgrounds .add ( c ) 
+        for c in source.combined_components  :
+            if not c in self.combined_components  :
+                self.combined_components  .add ( c ) 
+        ##
+        for c in source.alist1 :
+            if not c in self.alist1  : self.alist1.add ( c ) 
+        for c in source.alist2 :
+            if not c in self.alist2  : self.alist2.add ( c ) 
         
-        self.__fit_result   = None
-
-    @property
-    def pdf  ( self ) :
-        """The actual PDF (ROOT.RooAbsPdf)"""
-        return self.fun 
-    @pdf.setter
-    def pdf  ( self , value ) :
-        if value is None : self.fun = value
-        else : 
-            assert value and isinstance ( value , ROOT.RooAbsPdf ) , "'pdf' is not ROOT.RooAbsPdf"
-            self.fun = value
-
-    @property
-    def roo_pdf ( self ) :
-        """'roo_pdf' : get the underlying RooFit `RooAbsPdf` object (same as `pdf` here)"""
-        return self.pdf
-
-    @property
-    def pdf_name ( self ) :
-        """'pdf_name' : get the name of the underlying `RooAbsPdf` (same as 'fun_name') """
-        return  self.fun_name 
-
-    @property
-    def value ( self ) :
-        """'value'  :  get the value of PDF"""
-        v = float ( self )
-        if self.fit_result :
-            e = self.pdf.getPropagatedError ( self.fit_result )
-            if 0 <= e : return  VE ( v ,  e * e )           ## RETURN
-        return  v
-    
-    @property
-    def special ( self ) :
-        """'special' : is this PDF 'special' (does nor conform some requirements)?"""
-        return ( not self.__pdf ) or not isinstance ( self.__pdf , ROOT.RooAbsPdf )
-    
-    @property
-    def alist1 ( self ) :
-        """list/RooArgList of PDF components for compound PDF"""
-        return self.__alist1
-    @alist1.setter
-    def alist1 ( self , value ) :
-        assert isinstance ( value , ROOT.RooArgList ) , "Value must be RooArgList, %s/%s is  given" % ( value , type(value) )
-        self.__alist1 = value
-        
-    @property
-    def alist2 ( self ) :
-        """list/RooArgList of PDF  component's fractions (or yields for exteded fits) for compound PDF"""        
-        return self.__alist2
-    @alist2.setter
-    def alist2 ( self , value ) :
-        assert isinstance ( value , ROOT.RooArgList ) , "Value must be RooArgList, %s/%s is  given" % ( value , type(value) )
-        self.__alist2 = value                    
-
-    @property
-    def fit_result ( self ) :
-        """'fit_result' : result of the latest call to `fitTo` method (or `None`"""
-        return self.__fit_result
-    @fit_result.setter
-    def fit_result ( self , value ) :
-        assert ( value is None ) or ( value and isinstance ( value , ROOT.RooFitResult ) and valid_pointer ( value ) ) , \
-               "Invalid value for 'fit-result' object! %s/%s" %( value , type ( value ) ) 
-        self.__fit_result = value
-            
     @property
     def signals     ( self ) :
         """The list/ROOT.RooArgList of all 'signal' components,
@@ -241,6 +214,103 @@ class APDF1 ( object ) :
         return self.__crossterms2
         
     @property
+    def alist1 ( self ) :
+        """list/RooArgList of PDF components for compound PDF"""
+        return self.__alist1
+    @alist1.setter
+    def alist1 ( self , value ) :
+        assert isinstance ( value , ROOT.RooArgList ) , "Value must be RooArgList, %s/%s is  given" % ( value , type(value) )
+        self.__alist1 = value
+        
+    @property
+    def alist2 ( self ) :
+        """list/RooArgList of PDF  component's fractions (or yields for exteded fits) for compound PDF"""        
+        return self.__alist2
+    @alist2.setter
+    def alist2 ( self , value ) :
+        assert isinstance ( value , ROOT.RooArgList ) , "Value must be RooArgList, %s/%s is  given" % ( value , type(value) )
+        self.__alist2 = value                    
+
+
+
+# =============================================================================
+## @class APDF1
+#  The helper MIXIN class for implementation of various PDF-wrappers
+#  - it relies on <code>xvar</code> method
+#  - it relies on <code>parse_args</code> method
+#  - it relies on <code>warning</code> method
+#  - it relies on <code>info</code> method
+#  - it relies on <code>error</code> method
+#  - it relies on <code>fun</code> attribute 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-08-21
+class APDF1 ( Components ) :
+    """Useful helper base class for implementation of various PDF-wrappers 
+    - it relies on `xvar`       method
+    - it relies on `parse_args` method
+    - it relies on `warning`    method
+    - it relies on `info`       method
+    - it relies on `error`      method
+    - it relies on `fun`        attribute 
+    """
+    def __init__ ( self ) :
+
+        ## initialize the base class 
+        Components.__init__ ( self )
+        
+        ## take care about sPlots 
+        self.__splots                = []
+        self.__histo_data            = None
+        self.__fit_options           = () ## predefined fit options for this PDF
+        
+        self.__fit_result   = None
+
+    @property
+    def pdf  ( self ) :
+        """The actual PDF (ROOT.RooAbsPdf)"""
+        return self.fun 
+    @pdf.setter
+    def pdf  ( self , value ) :
+        if value is None : self.fun = value
+        else : 
+            assert value and isinstance ( value , ROOT.RooAbsPdf ) , "'pdf' is not ROOT.RooAbsPdf"
+            self.fun = value
+
+    @property
+    def roo_pdf ( self ) :
+        """'roo_pdf' : get the underlying RooFit `RooAbsPdf` object (same as `pdf` here)"""
+        return self.pdf
+
+    @property
+    def pdf_name ( self ) :
+        """'pdf_name' : get the name of the underlying `RooAbsPdf` (same as 'fun_name') """
+        return  self.fun_name 
+
+    @property
+    def value ( self ) :
+        """'value'  :  get the value of PDF"""
+        v = float ( self )
+        if self.fit_result :
+            e = self.pdf.getPropagatedError ( self.fit_result )
+            if 0 <= e : return  VE ( v ,  e * e )           ## RETURN
+        return  v
+    
+    @property
+    def special ( self ) :
+        """'special' : is this PDF 'special' (does nor conform some requirements)?"""
+        return ( not self.__pdf ) or not isinstance ( self.__pdf , ROOT.RooAbsPdf )
+    
+    @property
+    def fit_result ( self ) :
+        """'fit_result' : result of the latest call to `fitTo` method (or `None`"""
+        return self.__fit_result
+    @fit_result.setter
+    def fit_result ( self , value ) :
+        assert ( value is None ) or ( value and isinstance ( value , ROOT.RooFitResult ) and valid_pointer ( value ) ) , \
+               "Invalid value for 'fit-result' object! %s/%s" %( value , type ( value ) ) 
+        self.__fit_result = value
+            
+    @property
     def histo_data  ( self ):
         """Histogram representation as DataSet (RooDataSet)"""
         return self.__histo_data
@@ -270,7 +340,8 @@ class APDF1 ( object ) :
             assert isinstance ( v , ROOT.RooCmdArg ), 'Invalid fitTo-option %s' % v
             _opts.append ( v )
         self.__fit_options = tuple ( _opts ) 
-            
+
+        
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
     #  @code
@@ -5027,6 +5098,78 @@ class Flat3D(PDF3) :
             'title'    : title     ,             
             }
         
+
+
+# =============================================================================
+## @class Constrained
+#  Helper mixin/base class for creation of constrained PDFs
+#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+#  @date 2023-04-18
+class Constrained(object) :
+    """Helper mixin/base class for ceation of constrained PDFs"""
+    def __init__  ( self , original , constraints ) :
+
+        assert isinstance  ( original , APDF1 ) , '"original" must be APDF1!'
+        assert constraints , '"constraints" are not specified!'
+        
+        self.__original_pdf     = original        
+        self.__constraints      = ()
+        self.__arg_constraints  = ()
+        self.__pdflist          = ROOT.RooArgList() 
+        
+        ## add constraints 
+        self.add_constraints ( constraints )
+        
+    # =========================================================================
+    ## add more constraints  
+    def add_constraints ( self , constraints ) :
+        """Add more constraints"""
+        
+        assert constraints , '"constraints" are not specified!'
+        
+        if   isinstance ( constraints , ROOT.RooAbsPdf )  :
+            cnts = [ constraints ] 
+        elif isinstance ( constraints , APDF1 )  :
+            cnts = [ constraints.pdf ]
+        else :
+            cnts = [ c for c in constraints ]
+     
+        cnts1 = [ c         for c in cnts if isinstance ( c , ROOT.RooAbsPdf ) ]
+        cnts2 = [ c.roo_pdf for c in cnts if isinstance ( c , APDF1          ) ]
+        assert len ( cnts1 ) + len ( cnts2 ) == len ( cnts ) , \
+               'Invalid constraints are specified %s' % str ( constraints ) 
+        
+        ## safe/preserve the previous PDF 
+        if self.pdf       : self.aux_keep.append ( self.pdf       ) 
+        if self.__pdflist : self.aux_keep.append ( self.__pdflist )
+
+        self.__constraints     = self.constraints     + tuple ( cnts1 + cnts2 )
+        self.__arg_constraints = self.arg_constraints + tuple ( cnts          )
+        
+        
+        self.__pdflst = ROOT.RooArgList ( self.original_pdf.roo_pdf )
+        for c in self.constraints : self.__pdflst.add ( c )
+        
+        ## create the actual PDF
+        nc = len ( self.constraints ) 
+        self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'constrained%d_' % nc ) ,
+                                     "Constrained %s [#%d]" % ( self.name , nc ),
+                                     self.__pdflst                    )
+        
+    @property
+    def original_pdf ( self ) :
+        """'original_pdf' : get the original PDF (unconstrained)"""
+        return self.__original_pdf
+    
+    @property
+    def constraints  ( self ) :
+        """'constraints' : get the constrainsts (as list of RooAbsPdf)"""
+        return self.__constraints
+
+    @property
+    def arg_constraints  ( self ) :
+        """'arg_constraints' : get the constrainsts (as specified in constructor)"""
+        return self.__arg_constraints
 
 # =============================================================================
 if '__main__' == __name__ :

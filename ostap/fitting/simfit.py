@@ -378,22 +378,25 @@ class Sim1D(PDF1) :
             self.pdf.addPdf ( self.categories[key].pdf , key )
 
         for k , pdf in items_loop ( self.categories ) :
+
+            self.copy_structures ( pdf )
             
-            for c in pdf.signals              : self.signals             .add ( c ) 
-            for c in pdf.backgrounds          : self.backgrounds         .add ( c ) 
-            for c in pdf.crossterms1          : self.crossterms1         .add ( c ) 
-            for c in pdf.crossterms2          : self.crossterms2         .add ( c ) 
-            for c in pdf.combined_signals     : self.combined_signals    .add ( c ) 
-            for c in pdf.combined_backgrounds : self.combined_background .add ( c ) 
-            for c in pdf.combined_components  : self.combined_components .add ( c ) 
+            ## for c in pdf.signals              : self.signals             .add ( c ) 
+            ## for c in pdf.backgrounds          : self.backgrounds         .add ( c ) 
+            ## for c in pdf.crossterms1          : self.crossterms1         .add ( c ) 
+            ## for c in pdf.crossterms2          : self.crossterms2         .add ( c ) 
+            ## for c in pdf.combined_signals     : self.combined_signals    .add ( c ) 
+            ## for c in pdf.combined_backgrounds : self.combined_background .add ( c ) 
+            ## for c in pdf.combined_components  : self.combined_components .add ( c ) 
+
+            ## ## copy "components" (needed for e.g. splot) 
+            ## for c in pdf.alist1      : self.alist1.add ( c ) 
+            ## for c in pdf.alist2      : self.alist2.add ( c ) 
 
             ## copy draw options 
             for k in pdf.draw_options :
                 self.draw_options [ k ] = pdf.draw_options [ k ]
 
-            ## copy "components" (needed for e.g. splot) 
-            for c in pdf.alist1      : self.alist1.add ( c ) 
-            for c in pdf.alist2      : self.alist2.add ( c ) 
 
         self.config = {
             'name'       : self.name       ,
@@ -694,20 +697,22 @@ class SimFit (VarMaker,ConfigReducer) :
         self.__pdf = sim_pdf 
         
         for k , cmp in items_loop ( self.categories ) :
+
+            self.pdf.copy_structures ( cmp )
             
-            for c in cmp.signals              : self.pdf.signals             .add ( c ) 
-            for c in cmp.backgrounds          : self.pdf.backgrounds         .add ( c ) 
-            for c in cmp.crossterms1          : self.pdf.crossterms1         .add ( c ) 
-            for c in cmp.crossterms2          : self.pdf.crossterms2         .add ( c )
-            for c in cmp.combined_signals     : self.pdf.combined_signals    .add ( c )
-            for c in cmp.combined_backgrounds : self.pdf.combined_backgrounds.add ( c )
-            for c in cmp.combined_components  : self.pdf.combined_components .add ( c )
+            ## for c in cmp.signals              : self.pdf.signals             .add ( c ) 
+            ## for c in cmp.backgrounds          : self.pdf.backgrounds         .add ( c ) 
+            ## for c in cmp.crossterms1          : self.pdf.crossterms1         .add ( c ) 
+            ## for c in cmp.crossterms2          : self.pdf.crossterms2         .add ( c )
+            ## for c in cmp.combined_signals     : self.pdf.combined_signals    .add ( c )
+            ## for c in cmp.combined_backgrounds : self.pdf.combined_backgrounds.add ( c )
+            ## for c in cmp.combined_components  : self.pdf.combined_components .add ( c )
+            
+            ## ## copy "components" (needed for e.g. splot) 
+            ## for c in cmp.alist1               : self.pdf.alist1 . add ( c ) 
+            ## for c in cmp.alist2               : self.pdf.alist2 . add ( c )
             
             self.pdf.draw_options.update ( cmp.draw_options )
-            
-            ## copy "components" (needed for e.g. splot) 
-            for c in cmp.alist1               : self.pdf.alist1 . add ( c ) 
-            for c in cmp.alist2               : self.pdf.alist2 . add ( c ) 
 
         # =====================================================================
         ##  drawing helpers
@@ -736,21 +741,9 @@ class SimFit (VarMaker,ConfigReducer) :
                                        name           = sim_pdf.name + '_draw_' + key , 
                                        add_to_signals = False  )
                 
-            for c in cmp.signals :
-                if not c in dpdf.signals              : dpdf.signals             .add ( c )
-            for c in cmp.backgrounds :
-                if not c in dpdf.backgrounds          : dpdf.backgrounds         .add ( c ) 
-            for c in cmp.crossterms1 :
-                if not c in dpdf.crossterms1          : dpdf.crossterms1         .add ( c )
-            for c in cmp.crossterms2 :
-                if not c in dpdf.crossterms2          : dpdf.crossterms2         .add ( c )
-            for c in cmp.combined_signals :
-                if not c in dpdf.combined_signals     : dpdf.combined_signals    .add ( c ) 
-            for c in cmp.combined_backgrounds :
-                if not c in dpdf.combined_backgrounds : dpdf.combined_backgrounds.add ( c ) 
-            for c in cmp.combined_components :
-                if not c in dpdf.combined_components  : dpdf.combined_components .add ( c ) 
-
+            ## copy structural elements 
+            dpdf.copy_structures ( cmp )
+            ## update copy draw options 
             dpdf.draw_options.update ( cmp.draw_options )
                         
             self.__drawpdfs [ key ]  = dpdf
@@ -1377,6 +1370,79 @@ class SimFit (VarMaker,ConfigReducer) :
         """
         return self.pdf.graph_profile ( *args , **kwargs )
          
+    # =========================================================================
+    ## access to all signal components
+    @property
+    def signals ( self ) :
+        """'signals' : get all signal components"""
+        return self.pdf.signals
+    # =========================================================================
+    ## access to all background  components
+    @property
+    def backgrounds ( self ) :
+        """'backgrounds' : get all background components"""
+        return self.pdf.backgrounds
+    # =========================================================================
+    ## access to all "other" componets
+    @property
+    def components  ( self ) :
+        """'components' : get all 'other' components"""
+        return self.pdf.components
+    # =========================================================================
+    ## access to all 'crossterms1' components
+    @property
+    def crossterms1 ( self ) :
+        """'crossterms1' : get all 'crossterms1' components"""
+        return self.pdf.crossterms1
+    # =========================================================================
+    ## access to all 'crossterms2' componets
+    @property
+    def crossterms2 ( self ) :
+        """'crossterms2' : get all 'crossterms2' components"""
+        return self.pdf.crossterms2
+    # =========================================================================
+    ## access to all 'combined-signal' components
+    @property
+    def combined_signals ( self ) :
+        """'combined_signals' : get all combined-signal components"""
+        return self.pdf.combined_signals
+    # =========================================================================
+    ## access to all 'combined-backgrounds' components
+    @property
+    def combined_backgrunds ( self ) :
+        """'combined_backgrounds' : get all combined-background components"""
+        return self.pdf.combined_background
+    # =========================================================================
+    ## access to all 'combined-backgrounds' components
+    @property
+    def combined_components ( self ) :
+        """'combined_components' : get all combined  components"""
+        return self.pdf.combined_components
+    # =========================================================================
+    ## access to 'alist1' structure (crucial for sPlot)
+    @property
+    def alist1 ( self ) :
+        """'alist1' : get 'alist1' structure (crucial for sPlot)"""
+        return self.pdf.alist1 
+    # =========================================================================
+    ## access to 'alist2' structure (crucial for sPlot)
+    @property
+    def alist2 ( self ) :
+        """'alist2' : get 'alist2' structure (crucial for sPlot)"""
+        return self.pdf.alist2
+    # =========================================================================
+    @property
+    def fit_options ( self ) :
+        """'fit_options' : the predefined 'fitTo'-options for this PDF
+        - tuple of ROOT.RooArgCmd
+        pdf = ...
+        pdf.fit_options = ROOT.RooFit.Optimize ( 1 )
+        pdf.fit_options = ROOT.RooFit.Optimize ( 1 ) , ROOT.RooFit.PrintEvalError ( 2 ) 
+        """
+        return self.pdf.fit_options 
+    @fit_options.setter
+    def fit_options ( self , value )  :
+        self.pdf.fit_options = value 
     
 # =============================================================================
 if '__main__' == __name__ :

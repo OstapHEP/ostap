@@ -1,4 +1,3 @@
-
 ## New features:
 
    1. add Gudermannian function and its inverse 
@@ -7,6 +6,8 @@
    1. add more arguments to `PDF.sPlot` method, namely position and kewworkd arguments for the 1st fit (e.g. constraints...)
    1. add `ATTENTION` level for logger, corresponding `attention` method and `logAttention` context manager 
    1. add `Constrained(1,2,3)D` classes  to create constrained `PDF(1,2,3)`
+   1. introduce helper `Constrained` and `Components` classes to reduce code duplication
+   1. reogranize `Constrained(1,2,3)D` classed to decrease code duplication 
 
 ## Backward incompatible: 
 

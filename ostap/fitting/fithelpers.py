@@ -2950,7 +2950,6 @@ class H3D_dset(XVar,YVar,ZVar,VarMaker) :
         """'weight' : get weight variable if defined, None otherwise"""
         return self.__wvar
     
-
 # =============================================================================
 ## @class ParamsPoly
 #  Helper MIXIN class to implement polynomials
