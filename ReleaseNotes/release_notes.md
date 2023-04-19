@@ -15,7 +15,6 @@
 
 ## Bug fixes:
 
-
 # v1.9.8.0
 
 ## New features:
