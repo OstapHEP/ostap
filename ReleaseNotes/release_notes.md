@@ -48,7 +48,7 @@
 
 ## Bug fixes:
 
-  1. fix `Ostap::Utils::hahs_histo` and `Ostap::Utils::hahs_axis`
+  1. fix `Ostap::Utils::hash_histo` and `Ostap::Utils::hash_axis`
 
 # v1.9.7.6
 
