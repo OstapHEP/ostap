@@ -5,7 +5,7 @@
    1. add Gudermannian function and its inverse 
    1. fix the issue with removed `RooMomentMorphND` for new version of ROOT 
    1. Add Airy functions and Fermi-Dirac integral 
-   1. add more arguments to `PDF.sPlot` method, namely position and kewworkd arguments for the 1st fit (e.g. constraints...)
+   1. add more arguments to `PDF.sPlot` method, namely position and keyword arguments for the 1st fit (e.g. constraints...)
    1. add `ATTENTION` level for logger, corresponding `attention` method and `logAttention` context manager 
    1. add `Constrained(1,2,3)D` classes  to create constrained `PDF(1,2,3)`
    1. introduce helper `Constrained` and `Components` classes to reduce code duplication
@@ -14,6 +14,7 @@
 ## Backward incompatible: 
 
 ## Bug fixes:
+
 
 # v1.9.8.0
 
