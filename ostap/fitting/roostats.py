@@ -1048,7 +1048,12 @@ class Calculator (object) :
     def dataset ( self ) :
         """'dataset' : dataset used for calculations"""
         return self.__dataset
-    
+
+    @property
+    def hypo_test ( self )  :
+        """'hypo_test' : get `HypoTestResult` from calculator"""
+        return self.calculator.GetHypoTest() 
+
 # =============================================================================
 ## @class AsymptoticCalculator
 #  @see RooStats::AsymptoticCalculator
@@ -1062,16 +1067,14 @@ class AsymptoticCalculator (Calculator) :
                    H0                ,   ## H0 model, e.g. signal+background
                    dataset           ,   ## dataset 
                    asimov    = False ,   ## nominal Asimov? (not using fitted parameter values but nominal ones)
-                   one_sided = True  ,
                    silent    = True  , 
                    verbose   = False ) : 
 
-        self.__one_sided  = True if one_sided else False 
         self.__asimov     = True if asimov    else False
         ## 
-        if   silent  : self.__level = 0
-        elif verbose : self.__level = 2
-        else         : self.__level = 1
+        if   silent  : self.__level = -1
+        elif verbose : self.__level =  2
+        else         : self.__level =  1
         ##
         Calculator.__init__ ( self , H1 , H0 , dataset )
 
@@ -1080,13 +1083,7 @@ class AsymptoticCalculator (Calculator) :
         """Create and configure the Asymptotic calculator"""
         ROOT.RooStats.AsymptoticCalculator.SetPrintLevel ( self.__level ) 
         calc = ROOT.RooStats.AsymptoticCalculator ( self.dataset , self.h1 , self.h0 , self.asimov ) 
-        calc.SetOneSided   ( self.one_sided )
         return calc
-        
-    @property
-    def one_sided ( self ) :
-        """'one_sided' :  parameter for `ROOT.RooStats.AsymptoticCalculator.SetOneSided`"""
-        return self.__one_sided
     
     @property
     def asimov    ( self ) :
@@ -1275,7 +1272,7 @@ class ProfileLikelihoodCalculator (Calculator) :
     def __init__ ( self        ,
                    H0          ,   ## H0 model, e.g. signal+background
                    dataset     ,   ## dataset
-                   null_params ) : ## null-parameters corresponinsg to background-obnly hypothesis
+                   null_params ) : ## null-parameters corresponding to background-only hypothesis
 
         Calculator.__init__ ( self , H0 , H0 , dataset )
 
@@ -1657,7 +1654,7 @@ class BrasilBand(object) :
         return self.__plot
 
     # =========================================================================
-    ## get standard legend for the plot
+    ## get the standard legend for the plot
     #  @code 
     #  bp = BrasilBand ( ... ) 
     #  for .... :
@@ -1667,7 +1664,7 @@ class BrasilBand(object) :
     #  @endcode 
     @property
     def legend ( self )  :
-        """'legend' : get standarde legend for the plot
+        """'legend' : get the standarde legend for the plot
         >>> bp = BrasilBand ( ... ) 
         >>> for .... :
         >>>    bp.fill ( ... ) 
@@ -1676,6 +1673,99 @@ class BrasilBand(object) :
         """
         if not self.__legend : plot = self.plot
         return self.__legend
+
+    # ===========================================================================
+    ## number of points in the graph 
+    def __len__ ( self ) :
+        """Number of points in the graph
+        """
+        return len ( self.__data ) 
+
+# =============================================================================
+## @class P0Plot
+#  Helper class to create graphs(s) for p0-scan plot
+#  @code
+#  plot = P0Plot() 
+#  for ,,, :
+#      value       = ...
+#      p0          = ...
+#      p0_expected = 
+#      plot.fill ( value , p0 , p0_expected )
+#  ## plot p-values 
+#  plot.p0.draw          ( 'ac')
+#  ## plot expected p-values 
+#  plot.p0_expected .draw( 'c')
+#  ## plot #sigmas  
+#  plot.sigmas.draw      ( 'ac')
+#  @endcode
+class P0Plot(object) :
+    """Helper class to create graphs(s) for p0-scan plot
+    >>> plot = P0Plot() 
+    >>> for ,,, :
+    ...    value       = ...
+    ...    p0          = ...
+    ...    p0_expected = 
+    ...    plot.fill ( value , p0 , p0_expected )
+    
+    >>> plot.p0         .draw ( 'ac') ## plot p-values 
+    >>> plot.p0_expected.draw ( 'c' ) ## plot expected p-values 
+    >>> plot.sigmas     .draw ( 'ac') ## plot #sigmas  
+    """
+    def __init__ ( self ) :
+
+        self.__p0           = ROOT.TGraph() 
+        self.__sigmas       = ROOT.TGraph() 
+        self.__p0_expected  = None
+        
+        self.__p0      .blue ()
+        self.__sigmas  .red  ()
+        self.__p0    .SetLineWidth(2) 
+        self.__sigmas.SetLineWidth(2) 
+        
+    # ==========================================================================
+    ## add the point to TGraph(s)
+    def fill ( self , value , p0 , p0_expected = None ) :
+        """Add the point to TGraph(s
+        """
+        
+        n1 = len ( self.__p0  )
+        ns = ROOT.RooStats.PValueToSignificance ( p0 )
+        
+        self.__p0    .SetPoint ( n1 , value , p0 )
+        self.__sigmas.SetPoint ( n1 , value , ns )
+
+        if not p0_expected is None :
+            if not self.__p0_expected :
+                self.__p0_expected = ROOT.TGraph()
+                self.__p0_expected.green ()
+                self.__p0_expected.SetLineWidth(2) 
+                
+            n2 = len ( self.__p0_expected )
+            self.__p0_expected.SetPoint ( n2 , value , p0_expected )
+
+    ## number of points in the graph 
+    def __len__ ( self ) :
+        """Number of points in the graph
+        """
+        return len ( self.__graph_p0  )
+    
+    @property
+    def sigmas ( self ) :
+        """'sigmas' : graph of significances """
+        return self.__sigmas 
+
+    @property
+    def p0 ( self ) :
+        """'p0' : graph of p0-values """
+        return self.__p0 
+    
+    @property
+    def p0_expected ( self ) :
+        """'p0_expected' : graph of expected  p0-values """
+        return self.__p0_expected 
+        
+# =============================================================================
+
     
 # =============================================================================
 if '__main__' == __name__ :

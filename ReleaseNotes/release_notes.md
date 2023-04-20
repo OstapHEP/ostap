@@ -1,6 +1,11 @@
 ## New features:
 
+  1. add new example on making p-value scan
+
 ## Backward incompatible: 
+
+  1. remove `use_onesided`  argument frpm `AsymptoticCalcualtor` constructor
+
 
 ## Bug fixes:
 

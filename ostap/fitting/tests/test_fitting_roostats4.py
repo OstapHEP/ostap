@@ -185,8 +185,8 @@ def test_limit_ac_1 () :
         ac  = AsymptoticCalculator ( model_b              ,
                                      model_sb             ,
                                      dataset   = the_data ,
-                                     asimov    = False    , 
-                                     one_sided = True     )
+                                     asimov    = False    )
+        ac.calculator.SetOneSided ( True ) 
         ## create Hypo Test inverter 
         hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
         
@@ -259,8 +259,9 @@ def test_limit_ac_2 () :
         ac  = AsymptoticCalculator ( model_b              ,
                                      model_sb             ,
                                      dataset   = the_data ,
-                                     asimov    = False    , 
-                                     one_sided = True     )
+                                     asimov    = False    ) 
+        ac.calculator.SetOneSided ( True ) 
+
         ## create Hypo Test inverter 
         hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
         

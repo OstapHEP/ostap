@@ -106,17 +106,13 @@ def test_point_limit_ac () :
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
-    model_sb.mc.Print('vvv')
-    model_b .mc.Print('vvv')
-
-
     with timing ( "Using Asymptotic Calculator" , logger = logger ) :
         ## create the calculator 
         ac  = AsymptoticCalculator ( model_b           ,
                                      model_sb          ,
                                      dataset   = data1 ,
-                                     asimov    = False , 
-                                     one_sided = True  )
+                                     asimov    = False )
+        ac.calculator.SetOneSided ( True ) 
         
         ## create Hypo Test inverter 
         hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
@@ -181,9 +177,6 @@ def test_point_limit_fc  () :
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
-    model_sb.mc.Print('vvv')
-    model_b .mc.Print('vvv')
-
     ## with Frequentist calculator
     with timing ( "Using Frequentist Calculator" , logger = logger ) :
         
@@ -260,9 +253,6 @@ def test_point_limit_hc  () :
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
-    model_sb.mc.Print('vvv')
-    model_b .mc.Print('vvv')
-
     ## with Hybrid calculator
     with timing ( "Using Hybrid Calculator" , logger = logger ) :
         
@@ -335,9 +325,6 @@ def test_point_limit_pl () :
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
     
-    model_sb.mc.Print('vvv')
-    model_b .mc.Print('vvv')
-
     with timing ( "Using Profile Likelihood Calculator" , logger = logger ) :
         ## create the calculator 
         pl  = ProfileLikelihoodCalculator ( model_sb            ,
@@ -345,7 +332,6 @@ def test_point_limit_pl () :
                                             null_params = { the_model.S : 0.0 } )
 
         res = pl.calculator.GetHypoTest ()
-        res.Print('vvv')
         
                         
     ##     ## create Hypo Test inverter 
@@ -417,13 +403,11 @@ def test_point_limit2 () :
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
 
-    model_sb.mc.Print('vvv')
-    model_b .mc.Print('vvv')
-    
     ac  = AsymptoticCalculator ( model_b           ,
                                  model_sb          ,
-                                 dataset   = data5 , 
-                                 one_sided = True  )     
+                                 dataset   = data5 )
+    ac.calculator.SetOneSided ( True ) 
+
     hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
     
     hti.scan ( vrange ( 0 , 150 , 50 )  ) ## scan it!
@@ -502,13 +486,12 @@ def test_point_limit3 () :
     logger.info ( 'Model config %s\n%s'  % ( model_sb.name , model_sb.table ( prefix = '# ' ) ) ) 
     logger.info ( 'Model config %s\n%s'  % ( model_b.name  , model_b .table ( prefix = '# ' ) ) )
 
-    model_sb.mc.Print('vvv')
-    model_b .mc.Print('vvv')
-    
     ac  = AsymptoticCalculator ( model_b           ,
                                  model_sb          ,
-                                 dataset   = data6 , 
-                                 one_sided = True  )     
+                                 dataset   = data6 )
+    ac.calculator.SetOneSided ( True )
+    
+
     hti = HypoTestInverter ( ac ,  0.90 , use_CLs = True , verbose = False )
     
     hti.scan ( vrange ( 0 , 150 , 50 )  ) ## scan it!
