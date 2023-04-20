@@ -1,3 +1,9 @@
+## New features:
+
+## Backward incompatible: 
+
+## Bug fixes:
+
 # v1.9.8.2
 
 ## New features:
@@ -14,7 +20,6 @@
 ## Backward incompatible: 
 
 ## Bug fixes:
-
 
 # v1.9.8.0
 
