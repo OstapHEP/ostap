@@ -1112,6 +1112,9 @@ class FrequentistCalculator (Calculator) :
                    ntoys_null_tail =  0   ,
                    ntoys_alt_tail  =  0   ) : 
         
+        assert sampler is None or ( sampler and isinstance ( sampler , ROOT.RooStat.TestStatSampler ) ) , \
+               'Invalid sampler!'
+        
         assert isinstance ( ntoys_null , integer_types ) and -1 <= ntoys_null , \
                "Invalid ntoys_null parameter!"
         assert isinstance ( ntoys_alt  , integer_types ) and -1 <= ntoys_alt  , \
@@ -1126,19 +1129,68 @@ class FrequentistCalculator (Calculator) :
         self.__ntoys_null_tail = ntoys_null_tail
         self.__ntoys_alt_tail  = ntoys_alt_tail
         
-        assert sampler is None or ( sampler and isinstance ( sampler , ROOT.RooStat.TestStatSampler ) ) , \
-               'Invalid sampler!'
-        
         self.__sampler = sampler 
-    
-        Calculator.__init__ ( self , H1 , H0 , dataset )
 
+        Calculator.__init__ ( self , H1 , H0 , dataset )
+        self.__cloned_dataset = dataset.clone()   
+
+    ## Frequentist/Hybrid calculators can destroy their input dataset... Try to fix the problem 
+    def __del__ ( self ) :
+
+        if self.cloned_dataset :
+            
+            ds1 = self.dataset
+            ds2 = self.__cloned_dataset
+            
+            vars1 = tuple ( v.name for v in ds1.varset () )
+            
+            s1 = ds1.statVars ( vars1 )
+            s2 = ds2.statVars ( vars1 )
+
+            from ostap.math.base import isequal
+            
+            diffs = [] 
+            for k in s1 :
+                ss1     = s1 [ k ]
+                ss2     = s2 [ k ]
+                mean1   = float ( ss1.mean() ) 
+                mean2   = float ( ss2.mean() ) 
+                rms1    = ss1.rms()
+                rms2    = ss2.rms()
+                mn1,mx1 = ss1.minmax()
+                mn2,mx2 = ss2.minmax()
+                if isequal ( mean1 , mean2 ) and \
+                   isequal ( rms1  , rms2  ) and \
+                   isequal ( mn1   , mn2   ) and \
+                   isequal ( mx1   , mx2   ) :  pass
+                else :
+                    diffs.append ( k ) 
+
+            if diffs :
+                title = 'ORIGINAL dataset'
+                logger.warning ("Frequentist calculator %s :\n%s" % ( title , ds1.table ( diffs , prefix = '# ' , title = title ) ) ) 
+                title = 'CLONED   dataset'
+                logger.warning ("Frequentist calculator %s :\n%s" % ( title , ds2.table ( diffs , prefix = '# ' , title = title ) ) ) 
+            else :
+                logger.info    ("Frequentist calculator: datasets are fine" )
+                
+            ds2.erase () 
+            del self.__cloned_dataset
+            self.__cloned_dataset = None 
+            logger.info ( 'Frequentist calculator: CLONED dataset is deleted' )
+
+    @property
+    def cloned_dataset ( self ) :
+        """'cloned_dataset' : get the CLONED dataset (actually used in calcualtor)"""
+        return self.__cloned_dataset
+    
     # ==============================================================================================
     ## Create and configure the calculator 
     def make_calculator ( self ) :
         """Create and configure the calculator"""
-        if self.sampler : calc = ROOT.RooStats.FrequentistCalculator ( self.dataset , self.h1 , self.h0 , self.sampler )
-        else            : calc = ROOT.RooStats.FrequentistCalculator ( self.dataset , self.h1 , self.h0 )
+        ##
+        if self.sampler : calc = ROOT.RooStats.FrequentistCalculator ( self.cloned_dataset , self.h1 , self.h0 , self.sampler )
+        else            : calc = ROOT.RooStats.FrequentistCalculator ( self.cloned_dataset , self.h1 , self.h0 )
         
         if -1 != self.ntoys_null      or -1 != self.ntoys_alt :
             calc.SetToys         ( self.ntoys_null      , self.ntoys_alt      )
@@ -1193,18 +1245,23 @@ class HybridCalculator (FrequentistCalculator) :
                isinstance ( prior_null , string_types ) , "Invalid 'prior_null'!"        
         assert prior_alt  is None or isinstance ( prior_alt  , ( APDF1, ROOT.RooAbsPdf ) ) or \
                isinstance ( prior_alt  , string_types ) , "Invalid 'prior_alt'!"
-
-        self.__prior_null = prior_null
-        self.__prior_alt  = prior_alt 
         
-        ## initialize the base class 
-        FrequentistCalculator.__init__ ( self , H1 = H1 , H0 = H0 , dataset = dataset ,
+        self.__prior_null      = prior_null
+        self.__prior_alt       = prior_alt 
+
+        ## initialize the base 
+        FrequentistCalculator.__init__ ( self                              ,
+                                         H1              = H1              ,
+                                         H0              = H0              ,
+                                         dataset         = dataset         ,
                                          sampler         = sampler         ,
                                          ntoys_null      = ntoys_null      ,
                                          ntoys_alt       = ntoys_alt       ,
                                          ntoys_null_tail = ntoys_null_tail ,
                                          ntoys_alt_tail  = ntoys_alt_tail  )  
-        
+
+
+        # 
         self.__prior_null_raw = None
         self.__prior_alt_raw  = None
         
@@ -1226,13 +1283,13 @@ class HybridCalculator (FrequentistCalculator) :
                    'Cannot get prior_alt from Workspace!'
             self.__prior_alt_raw = prior
 
-  
     # ==============================================================================================
     ## Create and configure the calculator 
     def make_calculator ( self ) :
         """Create and configure the calculator"""
-        if self.sampler : calc = ROOT.RooStats.HybridCalculator ( self.dataset , self.h1 , self.h0 , self.sampler )
-        else            : calc = ROOT.RooStats.HybridCalculator ( self.dataset , self.h1 , self.h0 )
+        
+        if self.sampler : calc = ROOT.RooStats.HybridCalculator ( self.cloned_dataset , self.h1 , self.h0 , self.sampler )
+        else            : calc = ROOT.RooStats.HybridCalculator ( self.cloned_dataset , self.h1 , self.h0 )
         
         if -1 != self.ntoys_null      or -1 != self.ntoys_alt :
             calc.SetToys         ( self.ntoys_null      , self.ntoys_alt      )
@@ -1243,6 +1300,10 @@ class HybridCalculator (FrequentistCalculator) :
         if self.prior_alt_raw  : calc.ForcePriorNuisanceAlt  ( self.prior_alt_raw  )
         
         return calc
+
+    ## # =========================================================================
+    ## def __del__ ( self ) :
+    ##    FrequentistCalculator.__del__ ( self )
         
     @property
     def prior_null ( self ) :
