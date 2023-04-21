@@ -6,7 +6,6 @@
 
   1. remove `use_onesided`  argument frpm `AsymptoticCalcualtor` constructor
 
-
 ## Bug fixes:
 
 # v1.9.8.2
