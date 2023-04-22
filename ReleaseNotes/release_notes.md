@@ -3,7 +3,6 @@
   1. add new example on making p-value scan (thanks to Dima Golubkov) 
   1. Fix `FrequentistsCalcualtor` and `HybridCalculator` to use cloned datasets. (They can destriy/corrupt input dataset). Clone ddatatsets ar deleted after usage 
 
-
 ## Backward incompatible: 
 
   1. remove `use_onesided`  argument frpm `AsymptoticCalcualtor` constructor
