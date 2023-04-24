@@ -1,12 +1,12 @@
 ## New features:
 
   1. add new example on making p-value scan (thanks to Dima Golubkov) 
-  1. Fix `FrequentistsCalcualtor` and `HybridCalculator` to use cloned datasets. (They can destriy/corrupt input dataset). Clone ddatatsets ar deleted after usage 
+  1. Fix `FrequentistsCalcualtor` and `HybridCalculator` to use cloned datasets. (They can destriy/corrupt input dataset). Clone ddatatsets are deleted after usage 
+  1. simplifyu cuinterface for `P0Plot.fill`
 
 ## Backward incompatible: 
 
   1. remove `use_onesided`  argument frpm `AsymptoticCalculator` constructor
-
 
 ## Bug fixes:
 

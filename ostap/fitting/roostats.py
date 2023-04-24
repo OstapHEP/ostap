@@ -43,11 +43,13 @@ __all__     = (
     'ProfileLikelihoodCalculator' , ## Profile Likelihood calculator for limits and intervals 
     'HypoTestInverter'            , ## 
     ##
-    'BrasilBand'                   , ## utility to produce Brasil-band plots 
+    'BrasilBand'                  , ## utility to produce Brasil-band plots 
+    'P0Plot'                      , ## utility to produce p0-plots 
     )
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import  ( string_types   , integer_types  ,
+                                        num_types      , 
                                         sequence_types , dictlike_types )
 from   ostap.core.core        import valid_pointer, split_string  
 import ostap.fitting.roofit
@@ -1759,6 +1761,7 @@ class BrasilBand(object) :
 #  ## plot #sigmas  
 #  plot.sigmas.draw      ( 'ac')
 #  @endcode
+#  @thanks Dima Golubkov 
 class P0Plot(object) :
     """Helper class to create graphs(s) for p0-scan plot
     >>> plot = P0Plot() 
@@ -1771,30 +1774,94 @@ class P0Plot(object) :
     >>> plot.p0         .draw ( 'ac') ## plot p-values 
     >>> plot.p0_expected.draw ( 'c' ) ## plot expected p-values 
     >>> plot.sigmas     .draw ( 'ac') ## plot #sigmas  
+    - thanks to Dima Golubkov 
     """
     def __init__ ( self ) :
 
         self.__p0           = ROOT.TGraph() 
         self.__sigmas       = ROOT.TGraph() 
         self.__p0_expected  = None
+        self.__rows         = [ ( 'value' , 'p0' , '#sigma' , 'p0(exp)' ) ] 
         
         self.__p0      .blue ()
         self.__sigmas  .red  ()
         self.__p0    .SetLineWidth(2) 
         self.__sigmas.SetLineWidth(2) 
-        
+
     # ==========================================================================
     ## add the point to TGraph(s)
-    def fill ( self , value , p0 , p0_expected = None ) :
+    #  Full version 
+    #  @code
+    #  plot = P0Plot() 
+    #  for value in ...  :
+    #     calculator = ...
+    #     hypo_test  = calcualtor.hypo_test
+    #     p0    = ht.     NullPValue () 
+    #     p0alt = ht.AlternatePValue ()
+    #     p0exp = ROOT.RooStats.AsymptoticCalculator.GetExpectedPValues (  p0 , p0alt , 0 , False ) 
+    #     plot.fill ( value ,p0 , p0exp ) 
+    #  @endcode
+    #  Alternative version:
+    #  @code
+    #  plot = P0Plot() 
+    #  for value in ...  :
+    #     calculator = ...
+    #     plot.fill ( value , calculator ) 
+    #  @endcode
+    def fill ( self , value , *what ) :
         """Add the point to TGraph(s
-        """
         
+        - Full version 
+        >>> plot = P0Plot() 
+        >>> for value in ...  :
+        ...     calculator = ...
+        ...     hypo_test  = calcualtor.hypo_test
+        ...     p0    = ht.     NullPValue () 
+        ...     p0alt = ht.AlternatePValue ()
+        ...     p0exp = ROOT.RooStats.AsymptoticCalculator.GetExpectedPValues (  p0 , p0alt , 0 , False ) 
+        ...     plot.fill ( value ,p0 , p0exp ) 
+        - Alternative version:
+        >>> plot = P0Plot() 
+        >>> for value in ...  :
+        ...     calculator = ...
+        ...     plot.fill ( value , calculator ) 
+        """
+        n = len ( what )
+        if n == 1 and isinstance ( what [0] , num_types ) and 0 <= what [ 0 ] <= 1 :
+            p0          = what
+            p0_expected = None 
+        elif n == 1 and isinstance ( what [0] , Calculator ) :
+            calculator  = what [ 0 ] 
+            ht          = calculator.hypo_test
+            p0          = ht.     NullPValue ()
+            p0alt       = ht.AlternatePValue ()
+            p0_expected = ROOT.RooStats.AsymptoticCalculator.GetExpectedPValues (  p0 , p0alt , 0 , False ) 
+        elif n == 1 and isinstance ( what [0] , ROOT.RooStats.HypoTestCalculator ) :
+            calculator  = what [ 0 ] 
+            ht          = calculator.GetHypoTest() 
+            p0          = ht.     NullPValue ()
+            p0alt       = ht.AlternatePValue ()
+            p0_expected = ROOT.RooStats.AsymptoticCalculator.GetExpectedPValues (  p0 , p0alt , 0 , False ) 
+        elif n == 1 and isinstance ( what [0] , ROOT.RooStats.HypoTestResult  ) :
+            ht          = what [ 0 ] 
+            p0          = ht.     NullPValue ()
+            p0alt       = ht.AlternatePValue ()
+            p0_expected = ROOT.RooStats.AsymptoticCalculator.GetExpectedPValues (  p0 , p0alt , 0 , False ) 
+        elif n == 2 and  all ( ( isinstance ( i , num_types ) and 0 <= i <= 1 )  for i in what ) :
+            p0          = float ( what [ 0 ] ) 
+            p0_expected = float ( what [ 1 ] ) 
+        else :
+            raise TypeError ( "Unknown 'what' %s" % str ( what ) ) 
+
+
         n1 = len ( self.__p0  )
         ns = ROOT.RooStats.PValueToSignificance ( p0 )
         
         self.__p0    .SetPoint ( n1 , value , p0 )
         self.__sigmas.SetPoint ( n1 , value , ns )
 
+        row = '%s' % value , '%.4g' % p0 , '%.1f' % ns 
+        
         if not p0_expected is None :
             if not self.__p0_expected :
                 self.__p0_expected = ROOT.TGraph()
@@ -1803,6 +1870,9 @@ class P0Plot(object) :
                 
             n2 = len ( self.__p0_expected )
             self.__p0_expected.SetPoint ( n2 , value , p0_expected )
+            row = row + ( '%.4g' % p0_expected , )
+            
+        self.__rows.append ( row )
 
     ## number of points in the graph 
     def __len__ ( self ) :
@@ -1823,10 +1893,15 @@ class P0Plot(object) :
     @property
     def p0_expected ( self ) :
         """'p0_expected' : graph of expected  p0-values """
-        return self.__p0_expected 
-        
-# =============================================================================
-
+        return self.__p0_expected
+    
+    # =============================================================================
+    ## get the summary table 
+    def table ( self , title = '' , prefix = '' ) :
+        """'Get the sumamry table'"""
+        import ostap.logger.table as T
+        title = title if title else 'p0-scan'
+        return T.table ( self.__rows , title = title , prefix = prefix , alignment = 'lccc' )
     
 # =============================================================================
 if '__main__' == __name__ :

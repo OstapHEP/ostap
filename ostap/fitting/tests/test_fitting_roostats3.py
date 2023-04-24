@@ -329,6 +329,7 @@ def test_scan_p0_1 () :
     """Scan the positon of the peak and get p0 for each peak position peak
     - resolution is known with some finite precision 
     - efficiency is known with some finite precision 
+    - thanks to Dima Golubkov 
     """
     logger = getLogger("test_scan_p0_1")
 
@@ -388,9 +389,7 @@ def test_scan_p0_1 () :
     ## scan peak positions
     position = model_b.var ( the_signal.mean )
 
-    rows = [ ( 'm0' , 'p0' , '#sigma' , 'p0 expected ') ]
-
-
+    ## get p0-plot 
     plot = P0Plot()
     
     for m0 in progress_bar ( vrange ( 1 , 9 , 200  ) ) : 
@@ -406,24 +405,23 @@ def test_scan_p0_1 () :
 
             ## attention!!! 
             ac.calculator.SetOneSidedDiscovery ( True )
-            
-            ht    = ac.hypo_test 
 
-            p0    = ht.     NullPValue () 
-            p0alt = ht.AlternatePValue ()
-            p0exp = ROOT.RooStats.AsymptoticCalculator.GetExpectedPValues (  p0 , p0alt , 0 , False ) 
+            ## shortcut:
+            # 
+            plot.fill ( m0 , ac )
 
-            ## add values to the plot
-            plot.fill ( m0 , p0 , p0exp )
+            ## full machinery:
+            ## 
+            ## ht    = ac.hypo_test 
+            ## p0    = ht.     NullPValue () 
+            ## p0alt = ht.AlternatePValue ()
+            ## p0exp = ROOT.RooStats.AsymptoticCalculator.GetExpectedPValues (  p0 , p0alt , 0 , False ) 
+            ## ## add values to the plot
+            ## plot.fill ( m0 , p0 , p0exp )            
+            ## del ht
+            ## del ac
             
-            ns    = ROOT.RooStats.PValueToSignificance ( p0 ) 
-            row   = '%.1f' % m0 , '%.4g' % p0, '%.1f' % ns , '%.4g' % p0exp
-            rows.append ( row ) 
-
-            del ht
-            del ac
-            
-    ## visualize the Brasil plot 
+    ## visualize the P0 plot 
     with use_canvas  ( 'test_scan_p0_1: p0-plot'     , wait = 3 ) as cnv :
         plot.p0.draw ( 'ac' )
         cnv.SetLogy  ( True )
@@ -434,11 +432,10 @@ def test_scan_p0_1 () :
         plot.sigmas.draw ( 'ac' )
 
     title = 'p0-value scan'
-    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lccc' )
+    table = plot.table ( title = title , prefix = '# ' )
     logger.info ( '%s:\n%s' % ( title , table ) )
         
     graphs.append ( plot ) 
-
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -447,8 +444,8 @@ if '__main__' == __name__ :
     
     with rooSilent ( ) : 
     
-        test_scan_limit1    ()
-        test_scan_limit2    ()
+        ## test_scan_limit1    ()
+        ## test_scan_limit2    ()
         
         test_scan_p0_1      ()
 
