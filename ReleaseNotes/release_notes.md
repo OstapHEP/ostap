@@ -3,7 +3,7 @@
   1. add new example on making p-value scan (thanks to Dima Golubkov) 
   1. Fix `FrequentistsCalcualtor` and `HybridCalculator` to use cloned datasets. (They can destriy/corrupt input dataset). Clone ddatatsets are deleted after usage 
   1. simplify interface for `P0Plot.fill`
-  1. `ostap.utils.utils` : add `CRange` and `crange` - helper utilityed to generate range between vmin and vmax accoring to Chebyshev nodes 
+  1. `ostap.utils.utils` : add `CRange` and `crange` - helper utilities to generate range of values between vmin and vmax according to Chebyshev nodes 
 
 ## Backward incompatible: 
 
