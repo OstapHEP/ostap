@@ -74,6 +74,8 @@ __all__     = (
     ## 
     'lrange'             , ## helper loop over values between xmin and xmax in log
     ##
+    'crange'             , ## helper loop over values between xmin and xmax using Chebyshev nodes 
+    ##
     'split_range'        , ## helper generator to splti large range into smaller chunks
     ##
     'chunked'            , ## break *iterable* into chunks of length *n*:
@@ -118,7 +120,7 @@ from   ostap.utils.basic      import isatty, with_ipython, NoContext
 from   ostap.core.ostap_types import integer_types 
 ## ... and more useful stuff 
 from   ostap.utils.memory     import memory, virtualMemory, Memory 
-import ROOT, time, os , sys, math, time, functools, abc, random ## attention here!!
+import ROOT, time, os , sys, math, time, functools, abc, array, random ## attention here!!
 # =============================================================================
 try :
     from string import ascii_letters, digits 
@@ -919,6 +921,56 @@ def lrange ( vmin , vmax , n = 100 ) :
     >>>      print (v) 
     """
     return LRange ( vmin , vmax , n )
+
+# =============================================================================
+## @class CRange
+#  Generate sequence of numbers between vmin and vmax accrording to Chebyshev nodes
+#  It can be useful for e.g. interpolation nodes
+#  @code
+#  for c in CRange(-1,1,10) : print ( c ) 
+#  @endcode 
+class CRange(VRange):
+    """ Generate sequence of numbers between vmin and vmax accrording to Chebyshev nodes
+    It can be useful for e.g. interpolation nodes
+    >>> for c in CRange(-1,1,10) : print ( c ) 
+    """
+    __nodes = {}
+    
+    ## number of nodes 
+    def __len__     ( self ) : return self.n 
+    ## 
+    def __iter__    ( self ) :
+
+        n     = self.n
+        
+        if not n in self.__nodes :
+            nodes = array.array ( 'd' , n * [ 0.0 ] )
+            n2    = n // 2 
+            pn    = math.pi / ( 2 * n )
+            for k in range ( n2 ) :
+                vv  = math.cos ( ( 2 * k + 1 ) * pn )
+                nodes [     k     ] =  vv
+                nodes [ n - k - 1 ] = -vv
+            self.__nodes [ n ] = nodes 
+
+        nodes = self.__nodes [ n ]        
+        mid   = 0.5 * ( self.vmin + self.vmax )
+        scale = 0.5 * ( self.vmin - self.vmax )              
+        for x in nodes :             
+            yield mid + scale * x
+
+# =============================================================================
+### Generate sequence of numbers between vmin and vmax accrording to Chebyshev nodes
+#  It can be useful for e.g. interpolation nodes
+#  @code
+#  for c in crange(-1,1,10) : print ( c ) 
+#  @endcode 
+def crange ( vmin , vmax , n = 10 ) :
+    """ Generate sequence of numbers between vmin and vmax accrording to Chebyshev nodes
+    It can be usefor for e.g. interpolation nodes
+    >>> for c in crange(-1,1,10) : print ( c ) 
+    """
+    return CRange ( vmin , vmax , n )
 
 # =============================================================================
 ## split range into smaller chunks:
