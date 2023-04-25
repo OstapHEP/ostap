@@ -23,13 +23,13 @@ __all__     = (
     'DPlotRM' , ## vizialize Dalitz density as "rectangular mass plot" 
     )
 # =============================================================================
-import ROOT, random, math
 from   builtins             import range
 import ostap.math.kinematic
 from   ostap.core.core      import Ostap, fID 
 import ostap.math.base
 import ostap.math.reduce 
 import ostap.histos.graphs  
+import ROOT, random, math
 # =============================================================================
 # logging 
 # =============================================================================
@@ -123,10 +123,8 @@ def _dp0_points_ ( dp , M , npoints = 250 ) :
     y0 = 0.5 * ( s2_min + s2_max )
     ## find another point if needed 
     while not dp.inside ( s , x0 , y0 ) :
-        import random 
         x0 = random.uniform ( s1_min , s1_max ) 
         y0 = random.uniform ( s2_min , s2_max ) 
-
 
     ## collect, eliminate the duplicates and ogranize all points according to phi
         
@@ -817,8 +815,8 @@ def _d0_random_ ( self , s , N ) :
     >>> for s1,s2,s3 in dalitz0.random ( s , 100 ) :
     ,,,     print( s1,s2,s3 ) 
     """
-    assert self.s_min() < s , "``s'' is too small!"
-    assert isinstance ( N , int ) and 0 <= N , "``N'' must be non-negative integer!"
+    assert self.s_min() < s , "`s' is too small!"
+    assert isinstance ( N , int ) and 0 <= N , "`N' must be non-negative integer!"
 
     M = math.sqrt ( s )
     s1mn , s1mx = self.s1_min () , self.s1_max ( M )
@@ -834,7 +832,6 @@ def _d0_random_ ( self , s , N ) :
             yield s1, s2, self.s3 ( s , s1 , s2 ) 
             n += 1
             
-
 # =============================================================================   
 ## Generate random point in Dalitz plot 
 #  @code
@@ -848,7 +845,7 @@ def _d_random_ ( self , N ) :
     >>> for s1,s2,s3 in dalitz0.random ( 100 ) :
     ,,,     print( s1,s2,s3 ) 
     """
-    assert isinstance ( N , int ) and 0 <= N , "``N'' must be non-negative integer!"
+    assert isinstance ( N , int ) and 0 <= N , "`N' must be non-negative integer!"
 
     s1mn , s1mx = self.s1_min () , self.s1_max ()
     s2mn , s2mx = self.s2_min () , self.s2_max ()
@@ -866,6 +863,131 @@ def _d_random_ ( self , N ) :
                    
 Ostap.Kinematics.Dalitz0.random  = _d0_random_
 Ostap.Kinematics.Dalitz .random  = _d_random_
+
+# =============================================================================   
+## Generate random point in (x1,x2) Dalitz plot 
+#  @code
+#  dalitz0 = Ostap.Math.Dalitz0 ( ... )
+#  s = ...     ## s-variable 
+#  for x1,x2,J in dalitz0.random_x ( s , 100 ) :
+#       print ( x1 , x2 , J ) 
+#  @endcode
+def _d0_random_x_ ( self , s , N ) :
+    """Generate random point in (x1,x2) Dalitz plot 
+    >>> dalitz0 = Ostap.Math.Dalitz0 ( ... )
+    >>> s = ...     ## s-variable 
+    >>> for x1,x2,J in dalitz0.random_x ( s , 100 ) :
+    ,,,     print( x2 , x2 , J ) 
+    """
+    assert self.s_min() < s , "``s'' is too small!"
+    assert isinstance ( N , int ) and 0 <= N , "`N' must be non-negative integer!"
+
+    M = math.sqrt ( s )
+    x1mn , x1mx = self.x1_min () , self.x1_max () 
+    x2mn , x2mx = self.x2_min () , self.x2_max ( M )
+    
+    for n in range ( N ) : 
+
+        x1 = random.uniform ( x1mn , x1mx )
+        x2 = random.uniform ( x2mn , x2mx )
+
+        s1 , s2 = self.x2s  (  s, x1 , x2 )
+
+        yield x1 , x2 , self.J ( s , s1 , s2 ) 
+
+# =============================================================================   
+## Generate random point in (x1,x2) Dalitz plot 
+#  @code
+#  dalitz = Ostap.Math.Dalitz ( ... )
+#  for x1,x2,J in dalitz.random_x ( 100 ) :
+#       print ( x1 , x2 , J ) 
+#  @endcode
+def _d_random_x_ ( self , N ) :
+    """Generate random point in (x1,x2) Dalitz plot 
+    >>> dalitz = Ostap.Math.Dalitz ( ... )
+    >>> for x1,x2,J in dalitz0.random_x ( 100 ) :
+    ,,,     print ( x1 , x2 , J ) 
+    """
+    assert isinstance ( N , int ) and 0 <= N , "`N' must be non-negative integer!"
+
+    x1mn , x1mx = self.x1_min () , self.x1_max () 
+    x2mn , x2mx = self.x2_min () , self.x2_max ()
+    
+    for n in range ( N ) :
+        
+        x1 = random.uniform ( x1mn , x1mx )
+        x2 = random.uniform ( x2mn , x2mx )
+
+        s1 , s2 = self.x2s  ( x1   , x2   )
+
+        yield x1 , x2 , self.J ( s1 , s2 ) 
+
+
+Ostap.Kinematics.Dalitz0.random_x  = _d0_random_x_
+Ostap.Kinematics.Dalitz .random_x  = _d_random_x_
+
+
+# =============================================================================   
+## Generate random point in (z1,z2) Dalitz plot 
+#  @code
+#  dalitz0 = Ostap.Math.Dalitz0 ( ... )
+#  s = ...     ## s-variable 
+#  for z1,z2,Jz in dalitz0.random_z ( s , 100 ) :
+#       print ( z1 , z2 , Jz ) 
+#  @endcode
+def _d0_random_z_ ( self , s , N ) :
+    """Generate random point in (z1,z2) Dalitz plot 
+    >>> dalitz0 = Ostap.Math.Dalitz0 ( ... )
+    >>> s = ...     ## s-variable 
+    >>> for z1,z2,Jz in dalitz0.random_z ( s , 100 ) :
+    ,,,     print( x2 , x2 , Jz ) 
+    """
+    assert self.s_min() < s , "``s'' is too small!"
+    assert isinstance ( N , int ) and 0 <= N , "`N' must be non-negative integer!"
+
+    M = math.sqrt ( s )
+    z1mn , z1mx = self.z1_min () , self.z1_max () 
+    z2mn , z2mx = self.z2_min () , self.z2_max ( M )
+    
+    for n in range ( N ) : 
+
+        z1 = random.uniform ( z1mn , z1mx )
+        z2 = random.uniform ( z2mn , z2mx )
+
+        s1 , s2 = self.z2s  (  s, z1 , z2 )
+
+        yield z1 , z2 , self.Jz ( s , s1 , s2 ) 
+
+# =============================================================================   
+## Generate random point in (z1,z2) Dalitz plot 
+#  @code
+#  dalitz = Ostap.Math.Dalitz ( ... )
+#  for z1,z2,Jz in dalitz.random_z ( 100 ) :
+#       print ( z1 , z2 , Jz ) 
+#  @endcode
+def _d_random_z_ ( self , N ) :
+    """Generate random point in (z1,z2) Dalitz plot 
+    >>> dalitz = Ostap.Math.Dalitz ( ... )
+    >>> for z1,z2,Jz in dalitz0.random ( 100 ) :
+    ,,,     print ( z1 , z2 , Jz ) 
+    """
+    assert isinstance ( N , int ) and 0 <= N , "`N' must be non-negative integer!"
+
+    z1mn , z1mx = self.z1_min () , self.z1_max () 
+    z2mn , z2mx = self.z2_min () , self.z2_max ()
+    
+    for n in range ( N ) :
+        
+        z1 = random.uniform ( z1mn , z1mx )
+        z2 = random.uniform ( z2mn , z2mx )
+
+        s1 , s2 = self.z2s  ( z1   , z2   )
+
+        yield z1 , z2 , self.Jz ( s1 , s2 ) 
+
+
+Ostap.Kinematics.Dalitz0.random_z  = _d0_random_z_
+Ostap.Kinematics.Dalitz .random_z  = _d_random_z_
 
 # =============================================================================   
 ## decorated classes 

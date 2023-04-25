@@ -34,7 +34,7 @@ namespace Ostap
       // ======================================================================
       /** constructor from three masses 
        *  - m1 : the mass of the first particle  \f$ m_1 \f$;
-       *  - m2 : the mass of the second particle  \f$ m_2 \f$;
+       *  - m2 : the mass of the second particle \f$ m_2 \f$;
        *  - m3 : the mass of the third particle  \f$ m_3 \f$;
        */
       Dalitz0
@@ -775,9 +775,9 @@ namespace Ostap
       // =====================================================================
     public:
       // ======================================================================
-      /// variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s,x_1,x_2) \f$
+      /// The first useful variable transformation: \f$ (s,s_1,s_2) \leftrigtharrow (s,x_1,x_2) \f$
       // ======================================================================
-      /// the first x-varible is just \f$ x_1 = \cos_{R23}(12) \f$ 
+      /// the first x-variable is just \f$ x_1 = \cos_{R23}(12) \f$ 
       double x1 ( const double    s    , const double    s1    , const double s2 ) const ;
       /// the second x-variable is  \f$  x_2 = s_2 \f$ 
       double x2 ( const double /* s */ , const double /* s1 */ , const double s2 ) const
@@ -814,7 +814,61 @@ namespace Ostap
         const double s1 ,
         const double s2 ) const ;
       // ======================================================================
-      /// variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s_2,y_1,y_2) \f$
+      inline double x1_min ()                 const { return -1 ; }
+      inline double x1_max ()                 const { return +1 ; }
+      inline double x2_min ()                 const { return s2_min ()    ; }
+      inline double x2_max ( const double M ) const { return s2_max ( M ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// The second useful variable transformation: \f$ (s,s_1,s_2) \leftrigtharrow (s,z_1,z_2) \f$
+      // ======================================================================
+      /// the first z-variable is just \f$ z_1 = x_1 = \cos_{R23}(12) \f$ 
+      inline double z1 ( const double    s    , const double    s1    , const double s2 ) const 
+      { return x1 ( s , s1 , s2 ) ; }
+      /// the second z-variable is  \f$  z_2 = \sqrt { s_2} = \sqrt{x_2} \f$ 
+      inline double z2 ( const double /* s */ , const double /* s1 */ , const double s2 ) const
+      { return s2 <=0 ? 0.0 : std::sqrt ( s2 ) ; }
+      /** (inverse) variable transformation  
+       *   \f[ \begin{array{l} 
+       *        s_1 = f_1 ( z_1 ,z_2  )  \\ 
+       *        s_2 = f_2 ( z_1 ,z_2  )
+       *       \end{array}\f]
+       *   where 
+       *   \f[ \begin{array{l} 
+       *        z_1 = \cos_{R23)(12)  \\ 
+       *        z_2 = \sqrt { s_2} 
+       *       \end{array} \f]
+       *  @code
+       *  Dalitz d = ... ;
+       *  const double z1 = 0.1  ;
+       *  const double z2 = 14.5 ;
+       *  double s1, s2 ;
+       *   std::tie ( s1, s2 ) = d.z2s ( s , z1 , z2 ) ; 
+       *  @endcode  
+       */
+      inline std::pair<double,double> z2s
+      ( const double s  ,
+        const double z1 ,
+        const double z2 ) const { return x2s ( s , z1 , z2 * z2 ) ; }
+      // ======================================================================
+      /**  absolute value of the jacobian  
+       *   \f$ J_z( s,s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(z_1,z_2)} \right| \f$ 
+       */
+      inline double Jz
+      ( const double s  ,
+        const double s1 ,
+        const double s2 ) const 
+      { return J ( s , s1 , s2 ) * 2 * z2 ( s , s1 , s2 ) ; }
+      // ======================================================================
+      inline double z1_min ()                 const { return -1 ; }
+      inline double z1_max ()                 const { return +1 ; }
+      inline double z2_min ()                 const { return m2 () + m3 () ; }
+      inline double z2_max ( const double M ) const { return M - m1 () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// The second useful: variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s_2,y_1,y_2) \f$
       // ======================================================================
       /// the first  y-varible is just \f$ y_1 = s \f$ 
       double y1 ( const double s , const double /* s1 */ , const double /* s2 */ ) const
@@ -1550,6 +1604,101 @@ namespace Ostap
           m23 < ( m2 () + m3 () ) ? 0 : m23 > ( m_M  - m1 () ) ? 0 : 
           4 * m12 * m23 * density ( m12 * m12 , m23 * m23 ) ;
       }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// The first useful variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s,x_1,x_2) \f$
+      // ======================================================================
+      using Dalitz0::x1     ;
+      using Dalitz0::x2     ;
+      using Dalitz0::x2s    ; 
+      using Dalitz0::J      ; 
+      using Dalitz0::x2_max ;
+      // ======================================================================
+      /// the first x-variable is just \f$ x_1 = \cos_{R23}(12) \f$ 
+      inline double x1 ( const double s1 , const double s2 ) const 
+      { return x1 ( s () , s1 , s2 ) ; }
+      /// the second x-variable is  \f$  x_2 = s_2 \f$ 
+      inline double x2 ( const double s1 , const double s2 ) const
+      { return x2 ( s () , s1 , s2 ) ; }
+      /** (inverse) variable transformation  
+       *   \f[ \begin{array{l} 
+       *        s_1 = f_1 ( x_1 ,x_2  )  \\ 
+       *        s_2 = f_2 ( x_1 ,x_2  )
+       *       \end{array}\f]
+       *   where 
+       *   \f[ \begin{array{l} 
+       *        x_1 = \cos_{R23)(12)  \\ 
+       *        x_2 = s_2 
+       *       \end{array} \f]
+       *  @code
+       *  Dalitz d = ... ;
+       *  const double x1 = 0.1  ;
+       *  const double x2 = 14.5 ;
+       *  double s1, s2 ;
+       *   std::tie ( s1, s2 ) = d.x2s ( x1 , x2 ) ; 
+       *  @endcode  
+       */
+      inline std::pair<double,double> x2s
+      ( const double x1 ,
+        const double x2 ) const 
+      { return x2s ( s () , x1 , x2 ) ; }
+      /**  absolute value of the jacobian  
+       *   \f$ J_x(s,s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(x_1,x_2)} \right| \f$ 
+       */
+      inline double J
+      ( const double s1 ,
+        const double s2 ) const 
+      { return J ( s () , s1 , s2 ) ; }
+      /// maximal value for x2 
+      inline double x2_max () const { return s2_max () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// The second useful variable transformation: \f$ (s,s_1,s_2) \leftrigtharrow (s,z_1,z_2) \f$
+      // ======================================================================
+      using Dalitz0::z1     ;
+      using Dalitz0::z2     ;
+      using Dalitz0::z2s    ;
+      using Dalitz0::Jz     ;
+      using Dalitz0::z2_max ;
+      // ======================================================================
+      /// the first z-variable is just \f$ z_1 = x_1 = \cos_{R23}(12) \f$ 
+      inline double z1 ( const double s1 , const double s2 ) const 
+      { return z1 ( s () , s1 , s2 ) ; }
+      /// the second z-variable is  \f$  z_2 = \sqrt { s_2} = \sqrt{x_2} \f$ 
+      inline double z2 ( const double s1 , const double s2 ) const
+      { return z2 ( s () , s1 , s2 ) ; }
+      /** (inverse) variable transformation  
+       *   \f[ \begin{array{l} 
+       *        s_1 = f_1 ( z_1 ,z_2  )  \\ 
+       *        s_2 = f_2 ( z_1 ,z_2  )
+       *       \end{array}\f]
+       *   where 
+       *   \f[ \begin{array{l} 
+       *        z_1 = \cos_{R23)(12)  \\ 
+       *        z_2 = \sqrt { s_2} 
+       *       \end{array} \f]
+       *  @code
+       *  Dalitz d = ... ;
+       *  const double z1 = 0.1  ;
+       *  const double z2 = 14.5 ;
+       *  double s1, s2 ;
+       *   std::tie ( s1, s2 ) = d.z2s ( s , z1 , z2 ) ; 
+       *  @endcode  
+       */
+      inline std::pair<double,double> z2s
+      ( const double z1 ,
+        const double z2 ) const { return z2s ( s () , z1 , z2 ) ; }
+      // ======================================================================
+      /**  absolute value of the jacobian  
+       *   \f$ J_z( s,s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(z_1,z_2)} \right| \f$ 
+       */
+      inline double Jz
+      ( const double s1 ,
+        const double s2 ) const { return Jz ( s () , s1 , s2 ) ; }
+      // ======================================================================
+      inline double z2_max () const { return M ()  - m1 () ; }
       // ======================================================================
     public:   // 1-dimension 
       // ======================================================================

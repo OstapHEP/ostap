@@ -4,6 +4,8 @@
   1. Fix `FrequentistsCalcualtor` and `HybridCalculator` to use cloned datasets. (They can destriy/corrupt input dataset). Clone ddatatsets are deleted after usage 
   1. simplify interface for `P0Plot.fill`
   1. `ostap.utils.utils` : add `CRange` and `crange` - helper utilities to generate range of values between vmin and vmax according to Chebyshev nodes 
+  1. add `z1,z2` variables (and corresponding transformations) for `Ostap::Kinematics::Dalitz0/Dalitz` classes 
+  1. add functionality to generate (weighted) x1/x2 and z1/z2 distributions for Dalitz configurations 
 
 ## Backward incompatible: 
 

@@ -11,13 +11,15 @@
 - see Ostap.Kinematics.Dalitz
 """
 # ============================================================================= 
-from   ostap.core.core        import Ostap, hID 
+from   ostap.core.core          import Ostap, hID 
 import ostap.math.kinematic
 import ostap.math.dalitz
 import ostap.histos.histos 
-import ostap.logger.table     as     T
-from   ostap.utils.utils      import wait
-from   ostap.plotting.canvas  import use_canvas
+import ostap.logger.table       as     T
+from   ostap.utils.utils        import wait
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.plotting.style     import useStyle as use_style
+from   ostap.utils.progress_bar import progress_bar 
 import ROOT, random, time  
 # ============================================================================= 
 # logging 
@@ -56,6 +58,7 @@ d7 = Ostap.Kinematics.Dalitz ( 1 , 0.2 , 0.2 , 0.2 )
 
 plots = d0 , d1 , d2 , d3 , d4 , d5 , d6 , d7 
 
+graphs = set() 
 # =============================================================================
 def test_dalitz1 () : 
 
@@ -216,7 +219,6 @@ def test_dalitz4 () :
 
     logger = getLogger  ('test_dalitz4' )
 
-
     histos = [] 
     for p in plots :
         
@@ -233,7 +235,192 @@ def test_dalitz4 () :
             gr.draw  ( 'l' , linecolor = 2, linewidth = 5 )            
             histos.append ( ( h , gr ) )
             
-            
+
+# =============================================================================
+def test_dalitz5 () :
+    
+    logger = getLogger  ('test_dalitz5' )
+
+    dd = Ostap.Kinematics.Dalitz ( 1 , 0.20 , 0.15 , 0.10  )
+
+    NBX, NBY = 15, 15
+    
+    h1 = ROOT.TH2F ( hID() , 'Dalitz plot in s2,s1 varibales' ,
+                     NBX , dd.s2_min () ,  dd.s2_max () , 
+                     NBY , dd.s1_min () ,  dd.s1_max () )
+    h2 = ROOT.TH2F ( hID() , 'Dalitz plot in x2,x1 variables' ,
+                     NBX , dd.x2_min () ,  dd.x2_max () , 
+                     NBY , dd.x1_min () ,  dd.x1_max () )
+    h3 = ROOT.TH2F ( hID() , 'Dalitz plot in x2,x1 variables (weighted)' ,
+                     NBX , dd.x2_min () ,  dd.x2_max () , 
+                     NBY , dd.x1_min () ,  dd.x1_max () )
+    
+    ## s1,s2,s3 -> x1,x2
+
+    N = 1000000
+    for s1,s2,s3 in progress_bar ( dd.random ( N ) , max_value = N ) :
+
+        h1.Fill ( s2 , s1 )
+        
+        x1 = dd.x1 ( s1 , s2 )
+        x2 = dd.x2 ( s1 , s2 )
+
+        h2.Fill ( x2 , x1 )
+        J  = dd.J ( s1 , s2 )
+        
+        h3.Fill ( x2 , x1 , 1./J )
+
+    with use_style ( 'Z' ) : 
+        with use_canvas( 'test_dalitz5 Dalitz(s2,s1)'          , wait = 2 ) : h1.colz ()
+        with use_canvas( 'test_dalitz5 Dalitz(x2,x1)'          , wait = 2 ) : h2.colz ()
+        with use_canvas( 'test_dalitz5 Dalitz(x2,x1) weighted' , wait = 2 ) : h3.colz ()
+        
+    graphs.add ( h1 )
+    graphs.add ( h2 )
+    graphs.add ( h3 )
+
+
+# =============================================================================
+def test_dalitz6 () :
+    
+    logger = getLogger  ('test_dalitz6' )
+
+    dd = Ostap.Kinematics.Dalitz ( 1 , 0.20 , 0.15 , 0.10  )
+
+    NBX, NBY = 20, 20
+    
+    h1 = ROOT.TH2F ( hID() , 'Dalittz plot in x2,x1 variables (flat)'    ,
+                     NBX , dd.x2_min () ,  dd.x2_max () , 
+                     NBY , dd.x1_min () ,  dd.x1_max () )
+    h2 = ROOT.TH2F ( hID() , 'Dalitz plot in x2,x1 variables (weighted)' ,
+                     NBX , dd.x2_min () ,  dd.x2_max () , 
+                     NBY , dd.x1_min () ,  dd.x1_max () )
+    h3 = ROOT.TH2F ( hID() , 'Dalitz plot in s2,s1 variable' ,
+                     NBX , dd.s2_min () ,  dd.s2_max () , 
+                     NBY , dd.s1_min () ,  dd.s1_max () )
+    h4 = ROOT.TH2F ( hID() , 'Dalitz plot in s2,s1 variable (weighted)' ,
+                     NBX , dd.s2_min () ,  dd.s2_max () , 
+                     NBY , dd.s1_min () ,  dd.s1_max () )
+    
+    ## x1,x2 -> s1 , s2 
+
+    N = 2000000
+    for x1,x2,J in progress_bar ( dd.random_x ( N ) , max_value = N ) :
+
+        h1.Fill ( x2 , x1     )
+        h2.Fill ( x2 , x1 , J )
+
+        s1 , s2 = dd.x2s ( x1 , x2 ) 
+
+        h3.Fill ( s2 , s1 )
+        h4.Fill ( s2 , s1 , J )
+
+    with use_style ( 'Z' ) : 
+        with use_canvas( 'test_dalitz6 Dalitz(x1,x1)'          , wait = 2 ) : h1.colz ()
+        with use_canvas( 'test_dalitz6 Dalitz(x2,x1)'          , wait = 2 ) : h2.colz ()
+        with use_canvas( 'test_dalitz6 Dalitz(s2,s1)'          , wait = 2 ) : h3.colz ()
+        with use_canvas( 'test_dalitz6 Dalitz(s2,s1) weighted' , wait = 2 ) : h4.colz ()
+        
+    graphs.add ( h1 )
+    graphs.add ( h2 )
+    graphs.add ( h3 )
+    graphs.add ( h4 )
+
+
+
+# =============================================================================
+def test_dalitz7 () :
+    
+    logger = getLogger  ('test_dalitz7' )
+
+    dd = Ostap.Kinematics.Dalitz ( 1 , 0.20 , 0.15 , 0.10  )
+
+    NBX, NBY = 15, 15
+    
+    h1 = ROOT.TH2F ( hID() , 'Dalitz plot in s2,s1 varibales' ,
+                     NBX , dd.s2_min () ,  dd.s2_max () , 
+                     NBY , dd.s1_min () ,  dd.s1_max () )
+    h2 = ROOT.TH2F ( hID() , 'Dalitz plot in z2,z1 variables' ,
+                     NBX , dd.z2_min () ,  dd.z2_max () , 
+                     NBY , dd.z1_min () ,  dd.z1_max () )
+    h3 = ROOT.TH2F ( hID() , 'Dalitz plot in x2,x1 variables (weighted)' ,
+                     NBX , dd.z2_min () ,  dd.z2_max () , 
+                     NBY , dd.z1_min () ,  dd.z1_max () )
+    
+    ## s1,s2,s3 -> z1,z2
+
+    N = 1000000
+    for s1,s2,s3 in progress_bar ( dd.random ( N ) , max_value = N ) :
+
+        h1.Fill ( s2 , s1 )
+        
+        z1 = dd.z1 ( s1 , s2 )
+        z2 = dd.z2 ( s1 , s2 )
+
+        h2.Fill ( z2 , z1 )
+        
+        Jz  = dd.Jz ( s1 , s2 )
+        
+        h3.Fill ( z2 , z1 , 1./Jz )
+        
+
+    with use_style ( 'Z' ) : 
+        with use_canvas( 'test_dalitz7 Dalitz(s2,s1)'          , wait = 2 ) : h1.colz ()
+        with use_canvas( 'test_dalitz7 Dalitz(z2,z1)'          , wait = 2 ) : h2.colz ()
+        with use_canvas( 'test_dalitz7 Dalitz(z2,z1) weighted' , wait = 2 ) : h3.colz ()
+        
+    graphs.add ( h1 )
+    graphs.add ( h2 )
+    graphs.add ( h3 )
+
+# =============================================================================
+def test_dalitz8 () :
+    
+    logger = getLogger  ('test_dalitz8' )
+
+    dd = Ostap.Kinematics.Dalitz ( 1 , 0.20 , 0.15 , 0.10  )
+
+    NBX, NBY = 20, 20
+    
+    h1 = ROOT.TH2F ( hID() , 'Dalittz plot in z2,z1 variables (flat)'    ,
+                     NBX , dd.z2_min () ,  dd.z2_max () , 
+                     NBY , dd.z1_min () ,  dd.z1_max () )
+    h2 = ROOT.TH2F ( hID() , 'Dalitz plot in z2,z1 variables (weighted)' ,
+                     NBX , dd.z2_min () ,  dd.z2_max () , 
+                     NBY , dd.z1_min () ,  dd.z1_max () )
+    h3 = ROOT.TH2F ( hID() , 'Dalitz plot in s2,s1 variable' ,
+                     NBX , dd.s2_min () ,  dd.s2_max () , 
+                     NBY , dd.s1_min () ,  dd.s1_max () )
+    h4 = ROOT.TH2F ( hID() , 'Dalitz plot in s2,s1 variable (weighted)' ,
+                     NBX , dd.s2_min () ,  dd.s2_max () , 
+                     NBY , dd.s1_min () ,  dd.s1_max () )
+    
+    ## x1,x2 -> s1 , s2 
+
+    N = 2000000
+    for z1,z2,Jz in progress_bar ( dd.random_z ( N ) , max_value = N ) :
+
+        h1.Fill ( z2 , z1     )
+        h2.Fill ( z2 , z1 , Jz )
+
+        s1 , s2 = dd.z2s ( z1 , z2 ) 
+
+        h3.Fill ( s2 , s1 )
+        h4.Fill ( s2 , s1 , Jz )
+
+    with use_style ( 'Z' ) : 
+        with use_canvas( 'test_dalitz8 Dalitz(z1,z1)'          , wait = 2 ) : h1.colz ()
+        with use_canvas( 'test_dalitz8 Dalitz(z2,z1)'          , wait = 2 ) : h2.colz ()
+        with use_canvas( 'test_dalitz8 Dalitz(s2,s1)'          , wait = 2 ) : h3.colz ()
+        with use_canvas( 'test_dalitz8 Dalitz(s2,s1) weighted' , wait = 2 ) : h4.colz ()
+        
+    graphs.add ( h1 )
+    graphs.add ( h2 )
+    graphs.add ( h3 )
+    graphs.add ( h4 )
+
+
+
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -241,6 +428,13 @@ if '__main__' == __name__ :
     test_dalitz2 ()
     test_dalitz3 ()
     test_dalitz4 ()
+
+    test_dalitz5 ()
+    test_dalitz6 ()    
+    test_dalitz7 ()
+    
+    test_dalitz8 ()
+    
 
 # =============================================================================
 ##                                                                      The END 

@@ -50,7 +50,7 @@
 #    http://code.activestate.com/recipes/168639/
 #
 # =============================================================================
-""" Simple utilities for ``progrees bar'' 
+""" Simple utilities for `progrees bar'
 
 - ProgressBar
 

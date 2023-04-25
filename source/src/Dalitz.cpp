@@ -377,7 +377,7 @@ std::pair<double,double> Ostap::Kinematics::Dalitz0::x2s
 {
   if ( s  < sqsumm () ) { return std::make_pair ( -1 , -1  ) ; }
   // adjust to the allowed boundaries 
-  const double s2 = std::min ( std::max ( x2 , s2_min () ) , s2_max ( std::sqrt( s ) ) ) ;
+  const double s2 = std::min ( std::max ( x2 , s2_min () ) , s2_max ( std::sqrt ( s ) ) ) ;
   const double ct = std::min ( std::max ( x1 , -1.0      ) , 1.0       ) ;
   //
   const double f1 = Ostap::Kinematics::triangle ( s  , s2      , m1sq () ) ;
