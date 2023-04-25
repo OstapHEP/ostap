@@ -783,14 +783,33 @@ namespace Ostap
       double x2 ( const double /* s */ , const double /* s1 */ , const double s2 ) const
       { return s2 ;}
       // ======================================================================
-      /** (inverse) variable transformation  
+      /** (direct) variable transformation (s1,s2)->(x1,x2)
+       *   \f[ \begin{array{l} 
+       *        x_1 = g_1 ( s_1 ,s_2  ) = \cos_{R23}(12) \\ 
+       *        x_2 = g_2 ( s_1 ,s_2  ) = s_2
+       *       \end{array}\f]
+       *  @code
+       *  Dalitz d = ... ;
+       *  const double s1 = ... ;
+       *  const double s2 = ///;
+       *  double s1, s2 ;
+       *   std::tie ( x1, x2 ) = d.s2x ( s , s1 , s2 ) ; 
+       *  @endcode  
+       */
+      inline std::pair<double,double> s2x
+      ( const double s  ,
+        const double s1 ,
+        const double s2 ) const 
+      { return std::make_pair ( x1 ( s , s1 , s2 ) , x2 ( s , s1 , s2 ) ) ; }
+      // ======================================================================
+      /** (inverse) variable transformation  (x1,x2)->(s1,s2)
        *   \f[ \begin{array{l} 
        *        s_1 = f_1 ( x_1 ,x_2  )  \\ 
        *        s_2 = f_2 ( x_1 ,x_2  )
        *       \end{array}\f]
        *   where 
        *   \f[ \begin{array{l} 
-       *        x_1 = \cos_{R23)(12)  \\ 
+       *        x_1 = \cos_{R23}(12)  \\ 
        *        x_2 = s_2 
        *       \end{array} \f]
        *  @code
@@ -829,7 +848,27 @@ namespace Ostap
       /// the second z-variable is  \f$  z_2 = \sqrt { s_2} = \sqrt{x_2} \f$ 
       inline double z2 ( const double /* s */ , const double /* s1 */ , const double s2 ) const
       { return s2 <=0 ? 0.0 : std::sqrt ( s2 ) ; }
-      /** (inverse) variable transformation  
+      // ======================================================================
+      /** (direct) variable transformation (s1,s2)->(z1,z1)
+       *   \f[ \begin{array{l} 
+       *        z_1 = g_1 ( s_1 ,s_2  ) = \cos_{R23}(12) \\ 
+       *        z_2 = g_2 ( s_1 ,s_2  ) = \sqrt{s_2}
+       *       \end{array}\f]
+       *  @code
+       *  Dalitz d = ... ;
+       *  const double s1 = ... ;
+       *  const double s2 = ///;
+       *  double s1, s2 ;
+       *   std::tie ( z1, z2 ) = d.s2z ( s , s1 , s2 ) ; 
+       *  @endcode  
+       */
+      inline std::pair<double,double> s2z
+      ( const double s  ,
+        const double s1 ,
+        const double s2 ) const 
+      { return std::make_pair ( z1 ( s , s1 , s2 ) , z2 ( s , s1 , s2 ) ) ; }
+      // ======================================================================
+      /** (inverse) variable transformation  (z1,z2)->(s1,s2)
        *   \f[ \begin{array{l} 
        *        s_1 = f_1 ( z_1 ,z_2  )  \\ 
        *        s_2 = f_2 ( z_1 ,z_2  )
@@ -1614,6 +1653,7 @@ namespace Ostap
       using Dalitz0::x2s    ; 
       using Dalitz0::J      ; 
       using Dalitz0::x2_max ;
+      using Dalitz0::s2x    ;
       // ======================================================================
       /// the first x-variable is just \f$ x_1 = \cos_{R23}(12) \f$ 
       inline double x1 ( const double s1 , const double s2 ) const 
@@ -1621,7 +1661,25 @@ namespace Ostap
       /// the second x-variable is  \f$  x_2 = s_2 \f$ 
       inline double x2 ( const double s1 , const double s2 ) const
       { return x2 ( s () , s1 , s2 ) ; }
-      /** (inverse) variable transformation  
+      // ======================================================================
+      /** (direct) variable transformation  (s1,s2)->(x1,x2)
+       *   \f[ \begin{array{l} 
+       *        x_1 = g_1 ( s_1 ,s_2  ) = \cos_{R23}(12) \\ 
+       *        x_2 = g_2 ( s_1 ,s_2  ) = s_2
+       *       \end{array}\f]
+       *  @code
+       *  Dalitz d = ... ;
+       *  const double s1 = ... ;
+       *  const double s2 = ///;
+       *  double s1, s2 ;
+       *   std::tie ( x1, x2 ) = d.s2x ( s , s1 , s2 ) ; 
+       *  @endcode  
+       */
+      inline std::pair<double,double> s2x
+      ( const double s1 ,
+        const double s2 ) const { return s2x ( s () , s1 , s2 ) ; }
+      // ======================================================================
+      /** (inverse) variable transformation  (x1,x2)->(s1,s2)
        *   \f[ \begin{array{l} 
        *        s_1 = f_1 ( x_1 ,x_2  )  \\ 
        *        s_2 = f_2 ( x_1 ,x_2  )
@@ -1643,6 +1701,7 @@ namespace Ostap
       ( const double x1 ,
         const double x2 ) const 
       { return x2s ( s () , x1 , x2 ) ; }
+      // ======================================================================
       /**  absolute value of the jacobian  
        *   \f$ J_x(s,s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(x_1,x_2)} \right| \f$ 
        */
@@ -1662,6 +1721,7 @@ namespace Ostap
       using Dalitz0::z2s    ;
       using Dalitz0::Jz     ;
       using Dalitz0::z2_max ;
+      using Dalitz0::s2z    ;
       // ======================================================================
       /// the first z-variable is just \f$ z_1 = x_1 = \cos_{R23}(12) \f$ 
       inline double z1 ( const double s1 , const double s2 ) const 
@@ -1669,7 +1729,25 @@ namespace Ostap
       /// the second z-variable is  \f$  z_2 = \sqrt { s_2} = \sqrt{x_2} \f$ 
       inline double z2 ( const double s1 , const double s2 ) const
       { return z2 ( s () , s1 , s2 ) ; }
-      /** (inverse) variable transformation  
+      // ======================================================================
+      /** (direct) variable transformation (s1,s2)->(z1,z1)
+       *   \f[ \begin{array{l} 
+       *        z_1 = g_1 ( s_1 ,s_2  ) = \cos_{R23}(12) \\ 
+       *        z_2 = g_2 ( s_1 ,s_2  ) = \sqrt{s_2}
+       *       \end{array}\f]
+       *  @code
+       *  Dalitz d = ... ;
+       *  const double s1 = ... ;
+       *  const double s2 = ///;
+       *  double s1, s2 ;
+       *   std::tie ( z1, z2 ) = d.s2z ( s , s1 , s2 ) ; 
+       *  @endcode  
+       */
+      inline std::pair<double,double> s2z
+      ( const double s1 ,
+        const double s2 ) const { return s2z ( s () , s1 , s2 ) ; }
+      // ========================================================================
+      /** (inverse) variable transformation  (z1,z2)->(s1,s2)
        *   \f[ \begin{array{l} 
        *        s_1 = f_1 ( z_1 ,z_2  )  \\ 
        *        s_2 = f_2 ( z_1 ,z_2  )

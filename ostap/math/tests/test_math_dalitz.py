@@ -262,12 +262,10 @@ def test_dalitz5 () :
 
         h1.Fill ( s2 , s1 )
         
-        x1 = dd.x1 ( s1 , s2 )
-        x2 = dd.x2 ( s1 , s2 )
+        x1,x2 = dd.s2x ( s1 , s2 )
+        J     = dd.J   ( s1 , s2 )
 
-        h2.Fill ( x2 , x1 )
-        J  = dd.J ( s1 , s2 )
-        
+        h2.Fill ( x2 , x1 )        
         h3.Fill ( x2 , x1 , 1./J )
 
     with use_style ( 'Z' ) : 
@@ -353,14 +351,11 @@ def test_dalitz7 () :
     for s1,s2,s3 in progress_bar ( dd.random ( N ) , max_value = N ) :
 
         h1.Fill ( s2 , s1 )
-        
-        z1 = dd.z1 ( s1 , s2 )
-        z2 = dd.z2 ( s1 , s2 )
 
-        h2.Fill ( z2 , z1 )
-        
-        Jz  = dd.Jz ( s1 , s2 )
-        
+        z1,z2 = dd.s2z ( s1 , s2 ) 
+        Jz    = dd.Jz  ( s1 , s2 )
+
+        h2.Fill ( z2 , z1 )             
         h3.Fill ( z2 , z1 , 1./Jz )
         
 
@@ -432,7 +427,6 @@ if '__main__' == __name__ :
     test_dalitz5 ()
     test_dalitz6 ()    
     test_dalitz7 ()
-    
     test_dalitz8 ()
     
 
