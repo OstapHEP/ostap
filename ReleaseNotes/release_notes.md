@@ -7,7 +7,7 @@
 
 ## Backward incompatible: 
 
-  1. remove `use_onesided`  argument frpm `AsymptoticCalculator` constructor
+  1. remove `use_onesided`  argument from `AsymptoticCalculator` constructor
 
 ## Bug fixes:
 
