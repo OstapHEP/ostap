@@ -7,7 +7,8 @@
   1. add `z1,z2` variables (and corresponding transformations) for `Ostap::Kinematics::Dalitz0/Dalitz` classes 
   1. add functionality to generate (weighted) x1/x2 and z1/z2 distributions for Dalitz configurations 
   1. add `s2x` and `s2z` methods for `Ostap::Kinematics::Dalitz0/Dalitz` classes for better unificaton of interfaces 
-
+  1. add more tests for Dalitz< in parituclar (s1,s2)<->(z1,z2) mapping 
+ 
 ## Backward incompatible: 
 
   1. remove `use_onesided`  argument from `AsymptoticCalculator` constructor

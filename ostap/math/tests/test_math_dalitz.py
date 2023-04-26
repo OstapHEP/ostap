@@ -20,7 +20,7 @@ from   ostap.utils.utils        import wait
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.plotting.style     import useStyle as use_style
 from   ostap.utils.progress_bar import progress_bar 
-import ROOT, random, time  
+import ROOT, random, time, math  
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -415,20 +415,198 @@ def test_dalitz8 () :
     graphs.add ( h4 )
 
 
+# =============================================================================
+def test_dalitz9 () :
+    
+    logger = getLogger  ('test_dalitz9' )
+
+    dd = Ostap.Kinematics.Dalitz ( 1 , 0.20 , 0.15 , 0.10  )
+
+    NBX, NBY = 50, 50
+
+    s1mn, s1mx = dd.s1_min() , dd.s1_max()
+    s2mn, s2mx = dd.s2_min() , dd.s2_max()
+    s3mn, s3mx = dd.s3_min() , dd.s3_max()
+
+    d1 = s1mx - s1mn
+    d2 = s2mx - s2mn
+    d3 = s3mx - s3mn
+
+    s1mn += 0.1 * d1
+    s1mx -= 0.1 * d1
+    s2mn += 0.1 * d2
+    s2mx -= 0.1 * d2
+    s3mn += 0.1 * d3
+    s3mx -= 0.1 * d3
+    
+    regions = [
+        lambda s1 , s2 :  s1 < s1mn ,
+        lambda s1 , s2 :  s1 > s1mx ,
+        lambda s1 , s2 :  s2 < s2mn ,
+        lambda s1 , s2 :  s2 > s2mx ,
+        lambda s1 , s2 :  s3 < s3mn ,
+        lambda s1 , s2 :  s3 > s3mx ,
+        ]
+    
+    histos = tuple ( 
+        ( ROOT.TH2F ( hID() , 'Dalitz plot in s2,s1 variables' ,
+                      NBX , dd.s2_min () ,  dd.s2_max () , 
+                      NBY , dd.s1_min () ,  dd.s1_max () ) ,
+          ROOT.TH2F ( hID() , 'Dalitz plot in z2,z1 variables (weighted)' ,
+                      NBX , dd.z2_min () ,  dd.z2_max () , 
+                      NBY , dd.z1_min () ,  dd.z1_max () )
+          ) for i in regions        
+        )
+
+    colors = ( 2 , 4 , 6, 7, 8, 5 )
+    for hh , c in zip ( histos , colors ) :
+        for h in hh :
+            h.SetLineColor (c)
+            h.SetFillColor (c)
+
+    ## s1,s2,s3 -> z1,z2
+    N = 1000000
+    for s1,s2,s3 in progress_bar ( dd.random ( N ) , max_value = N ) :
+        
+        z1,z2 = dd.s2z ( s1 , s2 ) 
+        Jz    = dd.Jz  ( s1 , s2 )
+
+        wz    = 1/Jz
+
+        for r, hh in zip ( regions , histos ) :
+            h1, h2 = hh 
+            if r ( s1 , s2 ) :
+                h1.Fill ( s2 , s1      )
+                h2.Fill ( z2 , z1 , wz )
+                
+
+    with use_style ( 'Z' ) :
+
+        with use_canvas( 'test_dalitz9 Dalitz(s2,s1)'          , wait = 2 ) :
+
+            histos[0][0].draw('box') 
+            for h1,h2 in histos[1:] : 
+                h1.draw ( 'box same' )
+
+            g1  = dd.graph21 ()
+            g2  = g1.T()
+            g2.SetLineWidth(2)
+            g2.draw('c')
+                
+        with use_canvas( 'test_dalitz9 Dalitz(z2,z1)'          , wait = 2 ) :
+
+            histos[0][1].draw('box') 
+            for h1,h2 in histos[1:] : 
+                h2.draw ( 'box same' )
+                
+    graphs.add ( histos )
+    graphs.add ( g1     )
+    graphs.add ( g2     )
+
+# =============================================================================
+def test_dalitz10 () :
+    
+    logger = getLogger  ('test_dalitz10' )
+
+    dd = Ostap.Kinematics.Dalitz ( 1 , 0.20 , 0.15 , 0.10  )
+
+    NBX, NBY = 50, 50
+
+    s1mn, s1mx = dd.s1_min() , dd.s1_max()
+    s2mn, s2mx = dd.s2_min() , dd.s2_max()
+    s3mn, s3mx = dd.s3_min() , dd.s3_max()
+
+    d1 = s1mx - s1mn
+    d2 = s2mx - s2mn
+    d3 = s3mx - s3mn
+
+    m1 , g1 = math.sqrt ( s1mn + 0.3 * d1 ) , math.sqrt ( d1 ) / 20 
+    m2 , g2 = math.sqrt ( s1mx - 0.3 * d1 ) , math.sqrt ( d1 ) / 20 
+    m3 , g3 = math.sqrt ( s2mn + 0.3 * d2 ) , math.sqrt ( d2 ) / 20 
+    m4 , g4 = math.sqrt ( s2mx - 0.3 * d2 ) , math.sqrt ( d2 ) / 20 
+    m5 , g5 = math.sqrt ( s3mn + 0.3 * d3 ) , math.sqrt ( d3 ) / 20 
+    m6 , g6 = math.sqrt ( s3mx - 0.3 * d3 ) , math.sqrt ( d3 ) / 20 
+
+    regions = [
+        lambda s1 , s2 , s3 :  abs (  math.sqrt ( s1 ) - m1 ) < g1 ,
+        lambda s1 , s2 , s3 :  abs (  math.sqrt ( s1 ) - m2 ) < g2 ,
+        lambda s1 , s2 , s3 :  abs (  math.sqrt ( s2 ) - m3 ) < g3 ,
+        lambda s1 , s2 , s3 :  abs (  math.sqrt ( s2 ) - m4 ) < g4 ,
+        lambda s1 , s2 , s3 :  abs (  math.sqrt ( s3 ) - m5 ) < g5 ,
+        lambda s1 , s2 , s3 :  abs (  math.sqrt ( s3 ) - m6 ) < g6 ,
+        ]
+    
+    histos = tuple ( 
+        ( ROOT.TH2F ( hID() , 'Dalitz plot in s2,s1 variables' ,
+                      NBX , dd.s2_min () ,  dd.s2_max () , 
+                      NBY , dd.s1_min () ,  dd.s1_max () ) ,
+          ROOT.TH2F ( hID() , 'Dalitz plot in z2,z1 variables (weighted)' ,
+                      NBX , dd.z2_min () ,  dd.z2_max () , 
+                      NBY , dd.z1_min () ,  dd.z1_max () )
+          ) for i in regions        
+        )
+
+    colors = ( 2 , 4 , 6, 7, 8, 5 )
+    for hh , c in zip ( histos , colors ) :
+        for h in hh :
+            h.SetLineColor (c)
+            h.SetFillColor (c)
+
+    ## s1,s2,s3 -> z1,z2
+    N = 1000000
+    for s1,s2,s3 in progress_bar ( dd.random ( N ) , max_value = N ) :
+        
+        z1,z2 = dd.s2z ( s1 , s2 ) 
+        Jz    = dd.Jz  ( s1 , s2 )
+
+        wz    = 1/Jz
+
+        for r, hh in zip ( regions , histos ) :
+            h1, h2 = hh 
+            if r ( s1 , s2 , s3 ) :
+                h1.Fill ( s2 , s1      )
+                h2.Fill ( z2 , z1 , wz )
+                
+
+    with use_style ( 'Z' ) :
+
+        with use_canvas( 'test_dalitz10  Dalitz(s2,s1)'          , wait = 2 ) :
+
+            histos[0][0].draw('box') 
+            for h1,h2 in histos[1:] : 
+                h1.draw ( 'box same' )
+
+            g1  = dd.graph21 ()
+            g2  = g1.T()
+            g2.SetLineWidth(2)
+            g2.draw('c')
+                
+        with use_canvas( 'test_dalitz10 Dalitz(z2,z1)'          , wait = 2 ) :
+
+            histos[0][1].draw('box') 
+            for h1,h2 in histos[1:] : 
+                h2.draw ( 'box same' )
+                
+    graphs.add ( histos )
+    graphs.add ( g1     )
+    graphs.add ( g2     )
 
 # =============================================================================
 if '__main__' == __name__ :
     
-    test_dalitz1 ()
-    test_dalitz2 ()
-    test_dalitz3 ()
-    test_dalitz4 ()
+    test_dalitz1  ()
+    test_dalitz2  ()
+    test_dalitz3  ()
+    test_dalitz4  ()
 
-    test_dalitz5 ()
-    test_dalitz6 ()    
-    test_dalitz7 ()
-    test_dalitz8 ()
-    
+    test_dalitz5  ()
+    test_dalitz6  ()    
+    test_dalitz7  ()
+    test_dalitz8  ()
+
+    test_dalitz9  ()
+    test_dalitz10 ()
+
 
 # =============================================================================
 ##                                                                      The END 
