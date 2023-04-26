@@ -1,4 +1,3 @@
-
 ## New features:
 
   1. add new example on making p-value scan (thanks to Dima Golubkov) 
