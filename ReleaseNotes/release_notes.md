@@ -2,10 +2,11 @@
 
   1. add `operatoir()`, `density`  and `density_mass` methods for `Ostap::Kinematics::Dalitz0` and `Ostap::Kinematics::Dalitz` classes 
 
-
 ## Backward incompatible: 
 
 ## Bug fixes:
+
+    1. Fix the typo in `Ostap::Kinematics::phasespace3` for the special configurations with zero masses 
 
 # v1.9.8.4
 

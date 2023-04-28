@@ -966,9 +966,13 @@ double Ostap::Kinematics::phasespace3
 {
   //
   if ( x <=  m1       ) { return 0 ; }
+  //
   const double am1 = std::max ( m1 , 0.0 ) ;
+  //
   if ( x <= am1       ) { return 0 ; }
-  if ( s_zero ( am1 ) ) { return phasespace3 ( x ) ; }
+  //
+  if ( s_zero  ( am1 )         ) { return phasespace3 ( x ) ; }
+  if ( s_equal ( x , x + am1 ) ) { return phasespace3 ( x ) ; }
   //
   { // Treat tiny masses 
     const double xmax = x * 1.e-12 ;
@@ -976,7 +980,6 @@ double Ostap::Kinematics::phasespace3
     if ( am1 < xmax   ) { return phasespace3 ( x ) ; }
   }
   //
-  
   const double s      = x   * x   ;
   const double m1sq   = am1 * am1 ;
   const double m2sq   = 0  ;
@@ -987,10 +990,10 @@ double Ostap::Kinematics::phasespace3
   const double sqlam = std::sqrt ( lambda ) ;
   //
   const double s2    = s * s ;  
-  const double sm1m2 = s + m1sq + m2sq ;
+  const double sm1m2 = s * (  m1sq + m2sq ) ;
   const double dm    = m1sq - m2sq ;
   //
-  const double A     = sm1m2 * sqlam                   / s2 ;
+  const double A     =  ( s + m1sq + m2sq )  * sqlam                   / s2 ;
   const double B     = 2 * std::abs ( dm )             / s  ;
   const double C     = 2 * ( sm1m2 - 2 * m1sq * m2sq ) / s2 ;
   //
@@ -1014,12 +1017,22 @@ double Ostap::Kinematics::phasespace3
   const double m2 ) 
 {
   //
-  if ( x < m1 + m2     ) { return 0 ; }
+  if ( x <= 0 || m1 < 0 || m2 < 0 ) { return 0.0 ; }
+  //
+  if ( x <= m1 + m2     ) { return 0 ; }
+  //
   const double am1 = std::max ( m1 , 0.0 ) ;
   if ( s_zero ( am1 )  ) { return phasespace3 ( x ,  m2 ) ; }
+  //
   const double am2 = std::max ( m2 , 0.0 ) ;
   if ( s_zero ( am2 )  ) { return phasespace3 ( x , am1 ) ; }
+  //
   if ( x <= am1 + am2  ) { return 0 ; }
+  //
+  if      ( s_equal ( am1 , am1 + am2 ) ) { return phasespace3 ( x , am1 ) ; }
+  else if ( s_equal ( am2 , am1 + am2 ) ) { return phasespace3 ( x , am2 ) ; }
+  else if ( s_equal ( x   , x   + am1 ) ) { return phasespace3 ( x , am2 ) ; }
+  else if ( s_equal ( x   , x   + am2 ) ) { return phasespace3 ( x , am1 ) ; }
   //
   { // Treat tiny masses 
     const double xmax = x * 1.e-12 ;
@@ -1044,11 +1057,11 @@ double Ostap::Kinematics::phasespace3
   const double sqlam = std::sqrt ( lambda ) ;
   //
   const double s2    = s * s ;  
-  const double sm1m2 = s + m1sq + m2sq ;
+  const double sm1m2 = s * ( m1sq + m2sq ) ;
   const double dm    = m1sq - m2sq ;
   //
-  const double A     = sm1m2 * sqlam                   / s2 ;
-  const double B     = 2 * std::abs ( dm )             / s  ;
+  const double A     = ( s + m1sq + m2sq ) * sqlam                   / s2 ;
+  const double B     = 2 * std::abs ( dm )                           / s  ;
   const double C     = 2 * ( sm1m2 - 2 * m1sq * m2sq ) / s2 ;
   //
   const double D     =  ( sm1m2 - dm * dm + std::abs ( dm ) * sqlam ) / ( 2 * am1 * am2 * s ) ;
