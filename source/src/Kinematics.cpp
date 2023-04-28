@@ -959,7 +959,6 @@ double Ostap::Kinematics::phasespace3
  *  @param m1 the mass of the 1st particle 
  */
 // ========================================================================
-#include <iostream>
 double Ostap::Kinematics::phasespace3 
 ( const double x  , 
   const double m1 ) 
