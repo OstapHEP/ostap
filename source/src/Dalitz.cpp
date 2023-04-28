@@ -100,6 +100,37 @@ double Ostap::Kinematics::Dalitz0::distance
   return Ostap::Kinematics::triangle ( scale * p1 , scale * p2 , scale * p3 );
 }
 // ============================================================================
+/*  density of Dalitz plot 
+ *  \f$ \frac{d^2}{ds_1 ds_2} R_3  = \frac{\pi^2}{4s} \f$ 
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::density 
+( const double s  ,
+  const double s1 , 
+  const double s2 ) const 
+{
+  static const double s_dens = 0.25 * M_PI * M_PI ;
+  return
+    s  <= s_min  () ? 0.0 : 
+    s1 <= s1_min () ? 0,0 : 
+    s2 <= s2_min () ? 0,0 : 
+    !inside ( s , s1 , s2 ) ? 0.0 : s_dens / s ;
+}
+// ============================================================================
+/*  density of Dalitz plot as function of masses 
+ *  \f$ \frac{d^2}{dm_{12} dm_{23}} R_3  = \frac{\pi^2}{4s} \f$ 
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::density_mass
+( const double M   ,
+  const double m12 , 
+  const double m23 ) const 
+{
+  return 
+    M <= 0 || m12 <= 0 || m23 <= 0 ? 0.0 :
+    density ( M * M , m12 * m12 , m23 * m23 ) * 4 * m12 * m23 ;  
+}
+// ============================================================================
 // maximal value of momenta of the first  particle for the given s 
 // ============================================================================
 double Ostap::Kinematics::Dalitz0::p1_max 
@@ -1113,28 +1144,6 @@ bool Ostap::Kinematics::Dalitz::inside
     0 >= Ostap::Kinematics::G ( s1 , s2 , s () , m2sq() , m1sq (), m3sq () ) ;
 }
 // ============================================================================
-/*  Dalitz plot density:
- *  \f$ R_3 = 
- *  \frac{1}{32s} \int \deriv s_1 \deriv s_2 \deriv Omega \deriv \phi_3 
- *  \Theta { -G \left( s_1, s_2 , s , m_2^2, m_1^2, m_3^2 \right) } \f$
- *  Here we take 
- *  \f$ \int \deriv \Omega = 4\pi\f$ and \f$ \int \deriv \phi_3 = 2\pi\f$. 
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::density ( const double s1 , const double s2 ) const 
-{
-  static const double s_norm = 0.25 * M_PI * M_PI ;
-  //
-  if ( s1  < s1_min () || s1  > s1_max () ) { return 0 ; }
-  if ( s2  < s2_min () || s2  > s2_max () ) { return 0 ; }
-  const double s3_ =  s3 ( s1 , s2  ) ;
-  if ( s3_ < s3_min () || s3_ > s3_max () ) { return 0 ; }
-  //
-  const double g = Ostap::Kinematics::G ( s1 , s2 , s () , m2sq () , m1sq () , m3sq () ) ;
-  //
-  return g < 0 ? s_norm / s ()  : 0.0 ;  
-}
-// ============================================================================
 /** Dalitz density in 1-dimension:
  *  \f$  \frac{d R_3}{d_s2} = 
  *  \frac{\pi^2}{2ss_2}
@@ -1204,7 +1213,33 @@ double Ostap::Kinematics::Dalitz::dRds1   ( const double s1 ) const
   return 0 < f1 && 0 < f2 ? s_norm * std::sqrt ( f1 * f2 ) / ( s () * s1 ) : 0.0 ; 
 }
 // ============================================================================
-
+/*  density of Dalitz plot 
+ *  \f$ \frac{d^2}{ds_1 ds_2} R_3  = \frac{\pi^2}{4s} \f$ 
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz::density 
+( const double s1 , 
+  const double s2 ) const 
+{
+  static const double s_dens = 0.25 * M_PI * M_PI ;
+  return
+    s1 <= s1_min ()     ? 0,0 : 
+    s2 <= s2_min ()     ? 0,0 : 
+    !inside ( s1 , s2 ) ? 0.0 : s_dens / s () ;
+}
+// ============================================================================
+/*  density of Dalitz plot as function of masses 
+ *  \f$ \frac{d^2}{dm_{12} dm_{23}} R_3  = \frac{\pi^2}{4s} \f$ 
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz::density_mass
+( const double m12 , 
+  const double m23 ) const 
+{
+  return 
+    m12 <= 0 || m23 <= 0 ? 0.0 :
+    density ( m12 * m12 , m23 * m23 ) * 4 * m12 * m23 ;  
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

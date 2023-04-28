@@ -124,6 +124,33 @@ namespace Ostap
       inline double s3 ( const double s , const double s1 , const double s2 ) const 
       { return s + summ2  () - s1 - s2 ; }
       // ======================================================================
+    public :  // Dalitz plot density 
+      // ======================================================================
+      /** density of Dalitz plot 
+       *  \f$ \frac{d^2}{ds_1 ds_2} R_3  = \frac{\pi^2}{4s} \f$ 
+       */
+      double density 
+      ( const double s  ,
+        const double s1 , 
+        const double s2 ) const ;
+      // ======================================================================
+      /** density of Dalitz plot 
+       *  \f$ \frac{d^2}{ds_1 ds_2} R_3  = \frac{\pi^2}{4s} \f$ 
+       */
+      inline double operator() 
+      ( const double s  ,
+        const double s1 , 
+        const double s2 ) const 
+      { return density ( s , s1 , s2 ) ; }
+      // =======================================================================
+      /** density of Dalitz plot as function of masses 
+       *  \f$ \frac{d^2}{dm_{12} dm_{23}} R_3  = \frac{\pi^2}{4s} \f$ 
+       */
+      double density_mass
+      ( const double M   ,
+        const double m12 , 
+        const double m23 ) const ;
+      // ======================================================================
     public :  // geometry of Dalitz plot 
       // ======================================================================
       /** Is the point \f$ (s, s_1,s_2)\f$ "inside" the Dalitz plot?
@@ -1127,6 +1154,33 @@ namespace Ostap
       inline double s3 ( const double s1 , const double s2 ) const 
       { return sums () - s1 - s2 ; }
       // ======================================================================
+    public :  // Dalitz plot density 
+      // ======================================================================
+      using Dalitz0::density      ;
+      using Dalitz0::density_mass ;
+      // ======================================================================      
+      /** density of Dalitz plot 
+       *  \f$ \frac{d^2}{ds_1 ds_2} R_3  = \frac{\pi^2}{4s} \f$ 
+       */
+      double density 
+      ( const double s1 , 
+        const double s2 ) const ;
+      // ======================================================================
+      /** density of Dalitz plot 
+       *  \f$ \frac{d^2}{ds_1 ds_2} R_3  = \frac{\pi^2}{4s} \f$ 
+       */
+      inline double operator() 
+      ( const double s1 , 
+        const double s2 ) const 
+      { return density ( s1 , s2 ) ; }
+      // =======================================================================
+      /** density of Dalitz plot as function of masses 
+       *  \f$ \frac{d^2}{dm_{12} dm_{23}} R_3  = \frac{\pi^2}{4s} \f$ 
+       */
+      double density_mass
+      ( const double m12 , 
+        const double m23 ) const ;
+      // ======================================================================
     public: //invariants 
       // ======================================================================
       using Dalitz0::p1p2 ;
@@ -1623,27 +1677,6 @@ namespace Ostap
       inline double cos_zeta123 ( const double s1 , const double s2 ) const 
       { return cos_zeta123 ( s () , s1 , s2 ) ; }
       // =====================================================================
-    public:
-      // ======================================================================
-      /** Dalitz plot density:
-       *  \f$ R_3 = 
-       *  \frac{1}{32s} \int {\mathrm{d}} s_1 {\mathrm{d}} s_2 {\mathrm{d}} Omega {\mathrm{d}} \phi_3 
-       *  \Theta { -G \left( s_1, s_2 , s , m_2^2, m_1^2, m_3^2 \right) } \f$
-       *  Here we take 
-       *  \f$ \int {\mathrm{d}} \Omega = 4\pi\f$ and \f$ \int {\mathrm{d}} \phi_3 = 2\pi\f$. 
-       */
-      double density       ( const double s1  , const double s2  ) const ;
-      // ======================================================================
-      /** Dalitz density as  function of masses 
-       *  \f$m_{12},m_{23}=\sqrt{s_1},\sqrt{s_2} \f$
-       */
-      inline double density_mass  ( const double m12 , const double m23 ) const 
-      { return 
-          m12 < ( m1 () + m2 () ) ? 0 : m12 > ( m_M  - m3 () ) ? 0 :
-          m23 < ( m2 () + m3 () ) ? 0 : m23 > ( m_M  - m1 () ) ? 0 : 
-          4 * m12 * m23 * density ( m12 * m12 , m23 * m23 ) ;
-      }
-      // ======================================================================
     public:
       // ======================================================================
       /// The first useful variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s,x_1,x_2) \f$
