@@ -1,6 +1,7 @@
 ## New features:
 
   1. add `operatoir()`, `density`  and `density_mass` methods for `Ostap::Kinematics::Dalitz0` and `Ostap::Kinematics::Dalitz` classes 
+  1. tiny fix 
 
 ## Backward incompatible: 
 
@@ -63,7 +64,7 @@
 ## New features:
 
   1. tweak `1D-integration`  for `Ostap::Models::Shape(1,2,3)D` objects
-  1. add new test for 2D-sahpes `test_fitting_shapes2.py`
+  1. add new test for 2D-shapes `test_fitting_shapes2.py`
   1. add new keyword `recover = ...` for `PDF.fitTo` that is expanded to `ROOT.RooFit.RecoverFomrUdnefinedRegions ( ... )`
   1. fix the names for internal integration functions to be coherent with underlying GSL methods 
   1. disable `Shape(1,2,3)D_pdf` for old versions of ROOT 

@@ -1321,9 +1321,11 @@ elif ( 3 , 2) <= sys.version_info :
     def memoize ( user_function ):
         """Simple lightweight unbounded cache"""
         return functools.lru_cache(maxsize=None)(user_function)
-    
+
 else :
-        
+
+    from ostap.utils.basic import loop_items
+    
     # =========================================================================
     ## Simple lightweight unbounded cache
     class memoize(object):
@@ -1335,15 +1337,15 @@ else :
             self.cache = {}
             functools.update_wrapper ( self , func ) 
             
-        def __call__(self, *args, **kwargs ):
-            
-            all_args = tuple ( args ) , tuple ( kwargs.iteritems() )
-                
+        def __call__ ( self, *args, **kwargs ):
+
+            all_args = args , tuple ( loop_items ( kwargs ) ) 
+
             if all_args in self.cache:    
                 return self.cache [ all_args ]
             
-            value = self.func( *args , **kwargs )
-            self.cache [ all_args] = value
+            value = self.func ( *args , **kwargs )
+            self.cache [ all_args ] = value
             
             return value
         
@@ -1351,7 +1353,7 @@ else :
             return self.func.__doc__
         def __get__(self, obj, objtype):
           return functools.partial(self.__call__, obj)
-   
+      
     
 # ============================================================================
 ## abstract prpoperty
@@ -1359,7 +1361,7 @@ else :
 #  @absproperty
 #  def A ( self ) : ...  
 #  @endcode
-if (3,3) <= sys.version_info  :
+if ( 3 , 3 ) <= sys.version_info  :
     
     # =========================================================================
     ## absract property decorator
@@ -1387,7 +1389,7 @@ else :
 
     
 # =============================================================================
-if (3,9) <= sys.version_info :
+if  ( 3 , 9 ) <= sys.version_info :
     
     # =========================================================================
     ## class property decorator
@@ -1402,7 +1404,7 @@ if (3,9) <= sys.version_info :
         """
         return classmethod ( property ( func ) ) 
         
-elif (3,0) <= sys.version_info : 
+elif ( 3 , 0 ) <= sys.version_info : 
 
     # =========================================================================
     ## class @classproperty
@@ -1478,10 +1480,9 @@ else :
         def __get__(self, inst, cls):
             return self.fget(cls)
 
-
 # =============================================================================
 ## @class CallThem
-#  Use sequence of callabels as singel callable
+#  Use sequence of callables as single callable
 #  @code
 #  fun1, fun2 , func3 = ....
 #  new_fun1 = CallThem ( fun1, fun2, fun3 )
@@ -1490,7 +1491,7 @@ else :
 #  print ( new_fun2 ( x ) ) 
 #  @endcode
 class CallThem(object) :
-    """ Use sequence of callabels as singel callable
+    """ Use sequence of callables as a single callable
     >>> fun1, fun2 , func3 = ....
     >>> new_fun1 = CallThem ( fun1, fun2, fun3 )
     >>> print ( new_fun1 ( x ) )
