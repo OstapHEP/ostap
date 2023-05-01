@@ -1,4 +1,3 @@
-
 ## New features:
 
   1. add `operatoir()`, `density`  and `density_mass` methods for `Ostap::Kinematics::Dalitz0` and `Ostap::Kinematics::Dalitz` classes 
