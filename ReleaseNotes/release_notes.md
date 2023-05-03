@@ -9,7 +9,6 @@
 
     1. Fix the typo in `Ostap::Kinematics::phasespace3` for the special configurations with zero masses 
 
-
 # v1.9.8.4
 
 ## New features:
