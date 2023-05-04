@@ -36,30 +36,31 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-06"
 __all__     = (
     #
-    "integral"       , ## (1D) numerical integration (as function, using scipy when/if possible)
-    "integral2"      , ## (2D) numerical integration (as function, using scipy when/if possible)
-    "integral3"      , ## (3D) numerical integration (as function, using scipy when/if possible)
+    "integral"        , ## (1D) numerical integration (as function, using scipy when/if possible)
+    "integral2"       , ## (2D) numerical integration (as function, using scipy when/if possible)
+    "integral3"       , ## (3D) numerical integration (as function, using scipy when/if possible)
     #
-    "Integral"       , ## (1D) numerical integration (as as object, using scipy when/if possible)
-    "Integral2"      , ## (2D) numerical integration (as as object, using scipy when/if possible)
-    "Integral3"      , ## (3D) numerical integration (as as object, using scipy when/if possible)
+    "Integral"        , ## (1D) numerical integration (as as object, using scipy when/if possible)
+    "Integral2"       , ## (2D) numerical integration (as as object, using scipy when/if possible)
+    "Integral3"       , ## (3D) numerical integration (as as object, using scipy when/if possible)
     #
-    'Integrate2D_X'  , ## partial integration of 2D-function over x-range  
-    'Integrate2D_Y'  , ## partial integration of 2D-function over y-range
+    'Integrate2D_X'   , ## partial integration of 2D-function over x-range  
+    'Integrate2D_Y'   , ## partial integration of 2D-function over y-range
     #
-    'Integrate3D_X'  , ## partial integration of 3D-function over x-range  
-    'Integrate3D_Y'  , ## partial integration of 3D-function over y-range
-    'Integrate3D_Z'  , ## partial integration of 3D-function over z-range
+    'Integrate3D_X'   , ## partial integration of 3D-function over x-range  
+    'Integrate3D_Y'   , ## partial integration of 3D-function over y-range
+    'Integrate3D_Z'   , ## partial integration of 3D-function over z-range
     #
-    'Integrate3D_XY' , ## partial integration of 3D-function over xy-range  
-    'Integrate3D_XZ' , ## partial integration of 3D-function over xz-range
-    'Integrate3D_YZ' , ## partial integration of 3D-function over yz-range
+    'Integrate3D_XY'  , ## partial integration of 3D-function over xy-range  
+    'Integrate3D_XZ'  , ## partial integration of 3D-function over xz-range
+    'Integrate3D_YZ'  , ## partial integration of 3D-function over yz-range
     #
-    "romberg"        , ## (1D) numerical integration using romberg's method 
-    'genzmalik2'     , ## (2D) numerical integration using Genz&Malik's method
-    'genzmalik3'     , ## (3D) numerical integration using Genz&Malik's method
+    'romberg'         , ## (1D) numerical integration using Romberg's method
+    'clenshaw_curtis' , ## (1D) numerical integration using Clenshaw-Curtis adaptive quadrature
+    'genzmalik2'      , ## (2D) numerical integration using Genz&Malik's method
+    'genzmalik3'      , ## (3D) numerical integration using Genz&Malik's method
     #
-    "IntegralCache"  , ## (1D) numerical integration (as object, using scipy is if ssible)
+    "IntegralCache"   , ## (1D) numerical integration (as object, using scipy when/if possible)
     #
     'complex_integral'         , ## integrate complex function over the contour in complex plance 
     'complex_line_integral'    , ## integrate complex function over the line    in complex plance 
@@ -68,11 +69,12 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-from   builtins        import range
-from   ostap.math.ve   import VE
-from   ostap.math.base import isequal, iszero
-from   ostap.core.core import items_loop 
-import ROOT, warnings, math 
+from   builtins          import range
+from   ostap.math.ve     import VE
+from   ostap.math.base   import isequal, iszero
+from   ostap.core.core   import items_loop
+from   ostap.utils.utils import memoize 
+import ROOT, warnings, math, array 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -91,16 +93,15 @@ else                       : logger = getLogger ( __name__              )
 #  @endcode 
 #  CPU performance is not superb, but it is numerically stable.
 def romberg ( fun                 ,
-              x0                  ,
-              x                   ,
+              xmin                ,
+              xmax                ,
               err      = False    , 
               epsabs   = 1.49e-8  ,
               epsrel   = 1.49e-8  ,
-              limit    = 10       , # ignored, kept to mimic consistency with 
               args     = ()       ,
               nmax     = 20       , # steps in Richardson's extrapolation
-              maxdepth = 200        # the maxmal depth 
-              ) : 
+              maxdepth = 200      , # the maxmal depth
+              **kwargs            ) : 
     """Straw-man replacement of scipy.integrate.quad when it is not available.
     Actually it is a primitive form of Romberg's adaptive integration
     - see https://en.wikipedia.org/wiki/Romberg's_method
@@ -111,6 +112,8 @@ def romberg ( fun                 ,
     >>> func = lambda x : x*x 
     >>> v    = romberg ( func , 0 , 1 ) 
     """
+    if kwargs :
+        logger.warning ( "Romberg integration: ignored parameters: %s" % list ( kwargs.keys() ) )
     # =========================================================================
     ## internal recursive function
     #  Romberg's adaptive integration with Richardson's extrapolation
@@ -200,8 +203,8 @@ def romberg ( fun                 ,
 
     # adjust input data
     
-    a  = float ( x0     ) 
-    b  = float ( x      ) 
+    a  = float ( xmin   ) 
+    b  = float ( xmax   ) 
     ea = float ( epsabs ) * 100 
     er = float ( epsrel ) * 100 
     
@@ -226,6 +229,180 @@ def romberg ( fun                 ,
     return VE ( v , e * e ) if err else v 
 
 # =============================================================================
+## Clenshaw-Curtis quadratures 
+# =============================================================================
+## Calculate abscissas and weights for
+#  the N-th order Clenshaw-Curtis quadratire (N+1 points)
+@memoize 
+def clenshaw_curtis_rule ( N ) :
+    """Calculate abscissas and weights for
+    the N-th order Clenshaw-Curtis quadratire (N+1 points)
+    """
+    
+    assert isinstance ( N , int ) and 0 <= N , "Invalid rule order: 'N'!"
+
+    ## trivial rule 
+    if 0 == N :
+        
+        x = array.array ( 'd' ,  ( 0.0 , ) )
+        w = array.array ( 'd' ,  ( 2.0 , ) )
+        
+        return x , w             ## RETURN
+
+    ## number of points 
+    Np = N + 1 
+    
+    x = array.array ( 'd' , Np * [ 0 ] ) 
+    w = array.array ( 'd' , Np * [ 0 ] )
+
+
+    J , r = divmod ( N , 2 )
+    N2    = J + r 
+
+    fN = float ( N )
+
+    from fractions import Fraction as FR 
+
+    c2 = 2 / fN
+        
+    for k in range ( N2 + 1 ) :
+
+        i = N - k
+        
+        theta_k = math.pi * float ( FR ( k , N ) )
+        
+        ## 
+        xx = 0.0 if i == k else math.cos ( theta_k ) 
+        
+        if i < k : break 
+
+        x [ k     ] = - xx
+        x [ N - k ] =   xx   
+
+        ww    = 1.0        
+        for jj in range ( 0 , J ) :
+
+            j = jj + 1
+            
+            if ( 2 * j == N ) : b = FR ( 1 , 4 * j * j - 1 ) 
+            else              : b = FR ( 2 , 4 * j * j - 1 ) 
+
+            theta_j = 2 * j * theta_k
+            
+            ww -= float ( b ) * math.cos ( theta_j )
+
+        ww *= c2         
+        if k == 0 or i == 0 : ww /= 2 
+        
+        w [ k ] = ww
+        w [ i ] = ww
+
+    w [ 0 ] = w [ -1 ] = 1.0 / ( N * N + r - 1.0 )
+    
+    return x , w
+
+# =============================================================================
+## Single step of Clenshaw-Curtis quadrature of order N (N+1 points)
+def clenshaw_curtis_step ( f , xmin , xmax , N ) :
+    """Single step of Clenshaw-Curtis quadrature of order N (N+1 points)
+    """
+
+    mid     = 0.5 * ( xmin + xmax )
+    half    = 0.5 * ( xmax - xmin )
+    
+    ## get abscissas and weights 
+    xx , ww = clenshaw_curtis_rule ( N )
+    
+    result  = 0.0
+    for abscissa , weight in zip ( xx , ww ) :
+        result += weight * f ( mid + half * abscissa )
+        
+    result *= half
+        
+    return result
+
+# =============================================================================
+## Clenshaw-Curtis quadratures 
+#  @code
+#  func = lambda x : x*x 
+#  v    = clenshaw_curtis ( func , 0 , 1 ) 
+#  @endcode 
+def clenshaw_curtis ( fun                 ,
+                      xmin                ,
+                      xmax                ,
+                      err      = False    , 
+                      epsabs   = 1.49e-8  ,
+                      epsrel   = 1.49e-8  ,
+                      args     = ()       ,
+                      nmax     = 30       , 
+                      maxdepth = 100      , # the maxmal depth
+                      **kwargs            ) : 
+
+    assert isinstance  ( nmax     , int   ) and 0 <= nmax     , "Invalid 'nmax'!"
+    assert isinstance  ( maxdepth , int   ) and 5 <  maxdepth , "Invalid 'maxdepth'!"
+    assert isinstance  ( epsabs   , float ) and 0 <  epsabs   , "Invalid 'epsabs'!"
+    assert isinstance  ( epsrel   , float ) and 0 <  epsrel   , "Invalid 'epsrel'!"
+
+    if kwargs :
+        logger.warning ( "Clenshaw-Curtis integration: ignored parameters: %s" % list ( kwargs.keys() ) )
+        
+    # =========================================================================
+    ## the  actual adaptive quadrature  
+    def _clenshaw_curtis_ ( f , a  , b , ea , er , n0 , depth = 0 ) :
+        
+        n1 = n0 
+        n2 = 2 * n1 if n1 else n1 + 2 
+        
+        ## 1st estimate for the integral 
+        r1 = clenshaw_curtis_step ( f , a , b , n1 )
+        
+        ## 2nd estimate for the integral 
+        r2 = clenshaw_curtis_step ( f , a , b , n2 )
+
+        dr = abs ( r2 - r1 )
+        
+        tolerance = max ( ea , er * max ( abs ( r1 ) , abs ( r2 ) ) )
+        
+        if dr <= tolerance :
+            ## success!!
+            return r2, dr, n2 , depth                         ## RETURN!
+        
+        ## maximal depth is reached 
+        if maxdepth <= depth :
+            return r2 , dr , n2 , depth 
+            
+        ## split the interval and start the recursion
+        m = 0.5 * ( a + b ) 
+        rl, el, nl , dl = _clenshaw_curtis_ ( f , a , m , 0.5 * ea , er , n0 , depth = depth + 1 )
+        rr, er, nr , dr = _clenshaw_curtis_ ( f , m , b , 0.5 * ea , er , n0 , depth = depth + 1 )
+        
+        return rl + rr, el + er, max ( nl, nr ) , max ( dl , dr ) 
+
+    ## get the actual order 
+    n0 , _ = divmod ( nmax , 2 )
+
+    ## ensure the function rreturns floating values
+    flfun = lambda x, *args : float ( fun ( x , *args ) ) 
+
+    ## Clenshaw_Curtis quadrature is a nested one, here momoization helps a lot 
+    ## memfun = memoize ( flfun ) 
+    memfun = fun 
+    
+    ## perform the integration 
+    r , e , k , d = _clenshaw_curtis_ ( memfun , xmin , xmax , epsabs , epsrel , n0 )
+
+    tolerance = max (  epsabs , epsrel * abs ( r ) ) 
+    
+    if e <= tolerance :
+        pass 
+    elif maxdepth <= d :
+        logger.warning ("Clenshaw-Curtis: maximal depth is reached: %d vs %s" % ( d , maxdepth ) )
+    else : 
+        logger.warning ("Clenshaw-Curtis: required precision is not achieved: %.3g vs %.3g" % ( e , tolerance ) )  
+        
+    return VE ( r , e * e ) if err else r 
+
+# =============================================================================
 ## 1D integration 
 # =============================================================================
 try :
@@ -241,10 +418,12 @@ try :
     #  @endcode 
     #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
     #  @date   2014-06-06
-    def integral ( fun , xmin , xmax ,
-                   args  = ()        , 
-                   err   = False     ,
-                   **kwargs          ) :
+    def integral ( fun            ,
+                   xmin           ,
+                   xmax           ,
+                   args  = ()     , 
+                   err   = False  ,
+                   **kwargs       ) :
         """Calculate the integral for the 1D-function using scipy
         
         >>> func = lambda x : x * x 
@@ -260,8 +439,20 @@ try :
 except ImportError :
     # =========================================================================
     ## logger.warning ("scipy.integrate is not available, use local ``romberg''-replacement")
-    ## use romberg integration as default method when scipy is not available 
-    integral = romberg
+    ## Use Romberg integration as default method when scipy is not available
+    def integral ( fun                 ,
+                   xmin                ,
+                   xmax                ,
+                   args     = ()       ,
+                   err      = False    , 
+                   **kwargs            ) :
+        """Use Romberg integration as default method when scipy is not available
+        """
+        return romberg ( func          ,
+                         xmin   = xmin ,
+                         xmax   = xmax ,
+                         args   = args ,
+                         err    = err  , **kwargs )
 # =============================================================================
 
 
@@ -767,7 +958,6 @@ except ImportError :
 # =============================================================================
 
 
-
 # =============================================================================
 ## @class IntegralBase
 #  Helper class to implement numerical integration 
@@ -1161,7 +1351,7 @@ class Integrate2D_Y(IntegralBase) :
         """
         ## create the helper function 
         _funy_ = lambda y , *_ : self.func ( x , y , *_ )
-        ## make intergation
+        ## make integration
         return self._integrate_1D_ ( _funy_ , self.ymin , self.ymax , args = args )
     
     @property 

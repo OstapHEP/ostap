@@ -2,6 +2,8 @@
 
   1. add `operatoir()`, `density`  and `density_mass` methods for `Ostap::Kinematics::Dalitz0` and `Ostap::Kinematics::Dalitz` classes 
   1. tiny fix 
+  1. add `clenshaw-curtis` adapotive quadrature. It apprear to be better that Romberg' method.
+  1. extedn tests form Clenshaw-Curtis quadrature 
 
 ## Backward incompatible: 
 

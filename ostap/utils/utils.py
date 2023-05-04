@@ -1331,7 +1331,7 @@ else :
     class memoize(object):
         """Simple lightweight unbounded cache
         """
-        def __init__(self, func):
+        def __init__ ( self, func ) :
             
             self.func  = func
             self.cache = {}
@@ -1339,8 +1339,9 @@ else :
             
         def __call__ ( self, *args, **kwargs ):
 
-            all_args = args , tuple ( loop_items ( kwargs ) ) 
-
+            if kwargs : all_args = args , tuple ( loop_items ( kwargs ) ) 
+            else      : all_args = args 
+                    
             if all_args in self.cache:    
                 return self.cache [ all_args ]
             

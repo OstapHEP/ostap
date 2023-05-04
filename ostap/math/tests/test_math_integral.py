@@ -33,7 +33,8 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.pyrouts       import Ostap, SE  
 from   ostap.utils.timing       import timing
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.math.integral      import ( integral  , romberg     , 
+from   ostap.math.integral      import ( integral  , romberg     ,
+                                         clenshaw_curtis         , 
                                          integral2 , genzmalik2  ,  
                                          integral3 , genzmalik3  ,
                                        complex_circle_integral )
@@ -60,29 +61,38 @@ def test_integral ():
         ( sin , 0      , pi , 2   ) ,
         ( cos , 0      , pi , 0   ) ,
         ( exp , 0      , 1  , e-1 ) ,
-        ( log , 1.e-16 , 1  , -1  )
+        ( log , 1.e-8  , 1  , -1  )
         ]
 
     scale = 1.e+12    
-    rows  = [  ( 'Function' , 'I' , 'R' , \
-                 'd(I) [%.0e]' % ( 1.0 / scale )  , \
-                 'd(R) [%.0e]' % ( 1.0 / scale )  , 'r(I)' , 'r(R)' ) ]
+    rows  = [  ( 'Function' ,  'I' , 'R' , 'CC'    , \
+                 'd(I) [%.0e]'  % ( 1.0 / scale )  , \
+                 'd(R) [%.0e]'  % ( 1.0 / scale )  , \
+                 'd(CC) [%.0e]' % ( 1.0 / scale )  , \
+                 'r(I)' , 'r(R)' , 'r(CC)' ) ]
     
     for entry in funcs :
 
         args = entry[:3]
-        vi   = integral ( *entry[:3] , err = True )
-        vr   = romberg  ( *entry[:3] , err = True , maxdepth = 200 , epsrel = 1.e-12 , epsabs = 1.e-12 )
+        vi   = integral        ( *entry[:3] , err = True )
+        vr   = romberg         ( *entry[:3] , err = True , maxdepth = 200 , epsrel = 1.e-8 , epsabs = 1.e-8 )
+        vc   = clenshaw_curtis ( *entry[:3] , err = True , maxdepth = 200 , epsrel = 1.e-8 , epsabs = 1.e-8 )
         
         value   = entry[ 3]
         
         func    = 'int(%s,%+.5f,%+.5f)' % ( entry[0].__name__ , entry[1] , entry[2] )
 
-        row = func                                                                            , \
-              '%+.5f'  % vi                             , '%+.5f'  % vr                         , \
-              '%+.5f'  % ( ( vi - value) * scale )      , '%+.5f'  % ( ( vr - value ) * scale ) , \
-              '%+5.3f' % ( ( vi - value) / vi.error() ) , '%+3.3f' % ( ( vr - value ) / vr.error() )
-
+        row = func                                       , \
+              '%+.5f'  % vi                              , \
+              '%+.5f'  % vr                              , \
+              '%+.5f'  % vc                              , \
+              '%+.5f'  % ( ( vi - value ) * scale )      , \
+              '%+.5f'  % ( ( vr - value ) * scale )      , \
+              '%+.5f'  % ( ( vc - value ) * scale )      , \
+              '%+5.3f' % ( ( vi - value ) / vi.error() ) , \
+              '%+3.3f' % ( ( vr - value ) / vr.error() ) , \
+              '%+3.3f' % ( ( vc - value ) / vr.error() )
+        
         rows.append ( row )
         
     title = '1D integrations '
@@ -155,7 +165,6 @@ def test_inf_integrals ():
     title = '1D integrations'
     table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
     logger.info ( '%s\n%s' % ( title , table ) ) 
-
 
 
 # =============================================================================
@@ -241,17 +250,15 @@ def test_integrators ():
     f1 = make_fun1 ( ff ) 
 
 
-    cnt1 = SE ()
-    cnt2 = SE ()
-    cnt3 = SE ()
-    cnt4 = SE ()
-    cnt5 = SE ()
     N    = 100000
     
     scale = 1.e+12
 
-    def my_romberg ( *args ) :
-        return romberg ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 ) 
+    def my_romberg         ( *args ) :
+        return romberg ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 )
+    
+    def my_clenshaw_curtis ( *args ) :
+        return clenshaw_curtis ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 ) 
     
     results = []
 
@@ -262,15 +269,17 @@ def test_integrators ():
     ##                  ( 'Romberg/2' , ff ,  my_romberg         ) )
     ## else :
     I = Ostap.Math.Integrator() 
-    for_test = ( ( 'QAG'       , f1 , I.integrate         ) ,
-                 ( 'CQUAD'     , f1 , I.integrate_cquad   ) ,
-                 ( 'Romberg'   , f1 , I.integrate_romberg ) ,
-                 ( 'Native/1'  , f1 ,   integral          ) ,
-                 ( 'Native/2'  , ff ,   integral          ) ,
-                 ( 'Romberg/1' , f1 ,  my_romberg         ) ,
-                 ( 'Romberg/2' , ff ,  my_romberg         ) )
-    
-        
+    for_test = ( ( 'QAG'              , f1 , I.integrate         ) ,
+                 ( 'CQUAD'            , f1 , I.integrate_cquad   ) ,
+                 ( 'Romberg'          , f1 , I.integrate_romberg ) ,
+                 ( 'Native/1'         , f1 ,   integral          ) ,
+                 ( 'Native/2'         , ff ,   integral          ) ,
+                 ( 'Romberg/1'        , f1 ,  my_romberg         ) ,
+                 ( 'Romberg/2'        , ff ,  my_romberg         ) , 
+                 ( 'ClenshawCurtis/1' , f1 ,  my_clenshaw_curtis ) ,
+                 ( 'ClenshawCurtis/2' , ff ,  my_clenshaw_curtis ) )
+                 
+            
     for name , fun , func in for_test : 
         cnt = SE()
         with timing ( '%9s integrator' % name , logger = logger ) as t :  
@@ -279,14 +288,13 @@ def test_integrators ():
 
     rows = [ ( 'Integrator' , 'CPU [s]' , 'delta [%.0e]' % ( 1.0/scale ) , 'max [%.0e]' % ( 1.0/scale ) ) ]
 
-    for name , cnt, td in results :
-        
-        row = name , '%.2f' % td , \
+    for name , cnt, td in results :        
+        row = name                         , \
+              '%.2f'  % td                 , \
               '%+.4f' % cnt.mean().value() , \
-              '%+.3f' % ( cnt.max() )
+              '%+.4f' % ( cnt.max() )
         rows.append ( row )
 
-    
     title = 'Compare different integrators'
     table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
     logger.info ( '%s\n%s' % ( title , table ) ) 
