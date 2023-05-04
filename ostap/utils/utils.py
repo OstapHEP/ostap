@@ -106,7 +106,8 @@ __all__     = (
     ##
     'CallThem'           , ## convert sequence of callables into singel callable
     'has_symbol'         , ## Has any of the symbols?
-    'is_formula'         , ## Is this string expression represend math formula?
+    'is_formula'         , ## Is this string expression represent math formula?
+    ##
     )
 
 # =============================================================================
@@ -1543,7 +1544,7 @@ class NumCalls (object):
         return self.__func ( *cargs , **kwargs )
     @property
     def count ( self ) :
-        """``count'': number of times the function was invoked"""
+        """'count': number of times the function was invoked"""
         return self.__count
     
 # ==============================================================================        

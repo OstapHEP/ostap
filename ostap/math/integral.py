@@ -322,11 +322,19 @@ def clenshaw_curtis_step ( f , xmin , xmax , N ) :
     return result
 
 # =============================================================================
-## Clenshaw-Curtis quadratures 
+## Clenshaw-Curtis adaptive quadrature
 #  @code
 #  func = lambda x : x*x 
 #  v    = clenshaw_curtis ( func , 0 , 1 ) 
-#  @endcode 
+#  @endcode
+#  Since cLenshaw-Curtis is a nested quadratire, for
+#  complicated funcrtions oen ca get significant gain with fnuction cache
+#  @code
+#  func = ....
+#  from ostap.utils.utils import memoize 
+#  cache_func = memoize ( func )
+#  v    = clenshaw_curtis ( func , 0 , 1 ) 
+#  @endcode
 def clenshaw_curtis ( fun                 ,
                       xmin                ,
                       xmax                ,
@@ -336,8 +344,18 @@ def clenshaw_curtis ( fun                 ,
                       args     = ()       ,
                       nmax     = 30       , 
                       maxdepth = 100      , # the maxmal depth
-                      **kwargs            ) : 
-
+                      **kwargs            ) :
+    """Clenshaw-Curtis adaptive quadrature
+    >>> func = lambda x : x*x 
+    >>> v    = clenshaw_curtis ( func , 0 , 1 ) 
+    - Since cLenshaw-Curtis is a nested quadratire, for
+    complicated funcrtions oen ca get significant gain with fnuction cache
+    >>> func = ....
+    >>> from ostap.utils.utils import memoize 
+    >>> cache_func = memoize ( func )
+    >>> v = clenshaw_curtis ( cache_func , 0 , 1 ) 
+    """
+    
     assert isinstance  ( nmax     , int   ) and 0 <= nmax     , "Invalid 'nmax'!"
     assert isinstance  ( maxdepth , int   ) and 5 <  maxdepth , "Invalid 'maxdepth'!"
     assert isinstance  ( epsabs   , float ) and 0 <  epsabs   , "Invalid 'epsabs'!"
@@ -381,12 +399,10 @@ def clenshaw_curtis ( fun                 ,
     ## get the actual order 
     n0 , _ = divmod ( nmax , 2 )
 
-    ## ensure the function rreturns floating values
-    flfun = lambda x, *args : float ( fun ( x , *args ) ) 
-
+    from ostap.utils.utils import numcalls
+    
     ## Clenshaw_Curtis quadrature is a nested one, here momoization helps a lot 
-    ## memfun = memoize ( flfun ) 
-    memfun = fun 
+    memfun = fun ## memoize ( fun )
     
     ## perform the integration 
     r , e , k , d = _clenshaw_curtis_ ( memfun , xmin , xmax , epsabs , epsrel , n0 )
@@ -399,8 +415,9 @@ def clenshaw_curtis ( fun                 ,
         logger.warning ("Clenshaw-Curtis: maximal depth is reached: %d vs %s" % ( d , maxdepth ) )
     else : 
         logger.warning ("Clenshaw-Curtis: required precision is not achieved: %.3g vs %.3g" % ( e , tolerance ) )  
-        
+
     return VE ( r , e * e ) if err else r 
+
 
 # =============================================================================
 ## 1D integration 
