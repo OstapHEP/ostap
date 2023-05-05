@@ -1,9 +1,8 @@
 ## New features:
 
   1. add `operatoir()`, `density`  and `density_mass` methods for `Ostap::Kinematics::Dalitz0` and `Ostap::Kinematics::Dalitz` classes 
-  1. tiny fix 
-  1. add `clenshaw-curtis` adapotive quadrature. It apprear to be better that Romberg' method.
-  1. extedn tests form Clenshaw-Curtis quadrature 
+  1. add `clenshaw-curtis` adaptive quadrature. It apprears to be better than Romberg' method.
+  1. extend tests for Clenshaw-Curtis quadrature 
 
 ## Backward incompatible: 
 
