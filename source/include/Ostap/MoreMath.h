@@ -388,7 +388,7 @@ namespace Ostap
     { return psi ( x , n ) ; }
     // ========================================================================
     /** beta function for 
-     *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
      *  - \f$ 0<x\f$
      *  - \f$ 0<y\f$ 
      *  @return value of beta function 
@@ -396,12 +396,26 @@ namespace Ostap
     double beta  ( const double x , const double y ) ;
     // ========================================================================
     /** natural logarith of beta function 
-     *  \f$ \log B(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
      *  - \f$ 0<x\f$
      *  - \f$ 0<y\f$ 
      *  @return value of logarith of beta function 
      */
     double lnbeta ( const double x , const double y ) ;
+    // ========================================================================
+    /** Normalized incomplete Beta function  
+     *  \f$ f ( \alpha_1,\alpha_2, z ) = 
+     *      I_z( \alpha_1, \alpha_2 ) = 
+     *      \frac{\Beta_z(\alpha_1,\alpha_2}}
+     *           {\Beta  (\alpha_1,\alpha_2}
+     *  - \f$ 0<z<1\f$
+     *  - \f$ 0<\alpha_1\f$
+     *  - \f$ 0<\alpha_2\f$ 
+     */
+    double beta_inc 
+    ( const double alpha1 , 
+      const double alpha2 , 
+      const double z      ) ;
     // ========================================================================
     /** Pochhammer symbol, aka "rising factorial"
      *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 

@@ -10061,6 +10061,112 @@ Double_t Ostap::Models::GEV::analyticalIntegral
 // ============================================================================
 
 // ============================================================================
+Ostap::Models::MPERT::MPERT
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          xi        ,
+  RooAbsReal&          gamma     ,
+  const double         xmin      , 
+  const double         xmax      )
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"      , "Observable"             , this , x     ) 
+  , m_xi      ( "!xi"     , "mode-parameters"        , this , xi    ) 
+  , m_gamma   ( "!gamma"  , "gamma/shape-parameters" , this , gamma )
+    //
+  , m_mpert    ( xmin , xmax ) 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::MPERT::MPERT
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsRealLValue&    x         ,
+  RooAbsReal&          xi        ,
+  RooAbsReal&          gamma     )
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"      , "Observable"             , this , x     ) 
+  , m_xi      ( "!xi"     , "mode-parameters"        , this , xi    ) 
+  , m_gamma   ( "!gamma"  , "gamma/shape-parameters" , this , gamma )
+    //
+  , m_mpert   () 
+{
+  Ostap::Assert ( x.hasMin () && x.hasMax() , 
+                  "Variable must have xmin/xmax!" , 
+                  "Ostap::Models::MPERT"   ) ;
+  //
+  const double xmn = x.getMin () ;
+  const double xmx = x.getMax () ;
+  //
+  m_mpert = Ostap::Math::MPERT ( xmn , xmx ) ;
+  //
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::MPERT::MPERT
+( const Ostap::Models::MPERT&  right ,      
+  const char*                name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_xi     ( "!xi"     , this , right.m_xi    ) 
+  , m_gamma  ( "!gamma"  , this , right.m_gamma ) 
+    //
+  , m_mpert ( right.m_mpert ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::MPERT::~MPERT (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::MPERT*
+Ostap::Models::MPERT::clone( const char* name ) const 
+{ return new Ostap::Models::MPERT(*this,name) ; }
+// ============================================================================
+void Ostap::Models::MPERT::setPars () const 
+{
+  m_mpert.setXi    ( m_xi    ) ;
+  m_mpert.setGamma ( m_gamma ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::MPERT::evaluate() const 
+{
+  setPars () ;
+  return m_mpert ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::MPERT::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::MPERT::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_mpert.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
 ClassImp(Ostap::Models::Shape1D            ) 
 ClassImp(Ostap::Models::Shape2D            ) 
 ClassImp(Ostap::Models::Shape3D            ) 
@@ -10166,6 +10272,7 @@ ClassImp(Ostap::Models::KarlinStudden      )
 ClassImp(Ostap::Models::GenPareto          )
 ClassImp(Ostap::Models::ExGenPareto        )
 ClassImp(Ostap::Models::GEV                )
+ClassImp(Ostap::Models::MPERT              )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

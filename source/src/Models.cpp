@@ -4287,6 +4287,166 @@ std::size_t Ostap::Math::GEV::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_scale , m_shape ) ;
 }
 // ============================================================================
+
+
+
+// ============================================================================
+// constructor from two parametersO
+// ============================================================================
+Ostap::Math::MPERT::MPERT
+( const double xmin , 
+  const double xmax ) 
+  : MPERT ( xmin , xmax , 0.5 * ( xmin + xmax ) ) 
+{}
+// ============================================================================
+// constructor from all parameters
+// ============================================================================
+Ostap::Math::MPERT::MPERT
+( const double xmin  , 
+  const double xmax  ,
+  const double xi    , 
+  const double gamma ) 
+  : m_xmin  ( std::min ( xmin , xmax ) ) 
+  , m_xmax  ( std::max ( xmin , xmax ) ) 
+  , m_xi    ( xi  ) 
+  , m_gamma ( std::abs ( gamma ) )
+{
+  Ostap::Assert ( m_xmin < m_xmax , 
+                  "Invalid setting of xmin/xmax"      ,
+                  "Ostap::Math::MPERT" ) ;
+  //  
+  if      ( m_xi   < m_xmin ) { m_xi = m_xmin ; }
+  else if ( m_xmax < m_xi   ) { m_xi = m_xmax ; }
+  //
+  setXi    ( m_xi  ) ;
+  setGamma ( gamma ) ;
+}
+// ============================================================================
+/// set mode 
+// ============================================================================
+bool Ostap::Math::MPERT::setXi  ( const double value ) 
+{
+  const double v = 
+    value  < m_xmin ? m_xmin :
+    m_xmax < value  ? m_xmax : value ;
+  if ( s_equal ( v , m_xi ) && 0 < m_alpha1 && 0 < m_alpha2 && 0 < m_N ) 
+  { return false ; }
+  //
+  m_xi     = v ;
+  m_alpha1 = 1 + m_gamma * ( m_xi   - m_xmin ) / ( m_xmax - m_xmin ) ; 
+  m_alpha2 = 1 + m_gamma * ( m_xmax - m_xi   ) / ( m_xmax - m_xmin ) ; 
+  //
+  m_N = 1.0 / ( Ostap::Math::beta ( m_alpha1 , m_alpha2 ) *
+                std::pow ( m_xmax - m_xmin , m_alpha1 + m_alpha2 - 1 ) ) ;
+  //
+  return true ;
+}
+// ============================================================================
+/// set gamma/shape
+// ============================================================================
+bool Ostap::Math::MPERT::setGamma ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_gamma ) && 0 < m_alpha1 && 0 < m_alpha2 && 0 < m_N ) 
+  { return false ; }
+  //
+  m_gamma  = v ;
+  m_alpha1 = 1 + m_gamma * ( m_xi   - m_xmin ) / ( m_xmax - m_xmin ) ; 
+  m_alpha2 = 1 + m_gamma * ( m_xmax - m_xi   ) / ( m_xmax - m_xmin ) ; 
+  //
+  m_N = 1.0 / ( Ostap::Math::beta ( m_alpha1 , m_alpha2 ) *
+                std::pow ( m_xmax - m_xmin , m_alpha1 + m_alpha2 - 1 ) ) ;
+  //
+  return true ;
+} 
+// ============================================================================
+// get the value of MPERT distribution 
+// ============================================================================
+double Ostap::Math::MPERT::evaluate ( const double x ) const 
+{
+  if ( x < m_xmin || m_xmax < x ) { return 0 ; }
+  return m_N * 
+           std::pow ( x - m_xmin , m_alpha1 - 1 ) * 
+           std::pow ( m_xmax - x , m_alpha2 - 1 ) ;
+}
+// ============================================================================
+// get the variance 
+// ============================================================================
+double Ostap::Math::MPERT::variance () const 
+{
+  const double m = mu () ;
+  return ( m - m_xmin ) * ( m_xmax - m ) / ( m_gamma + 3 ) ;
+}
+// ============================================================================
+// get the skewness 
+// ============================================================================
+double Ostap::Math::MPERT::skewness () const 
+{
+  const double m = mu () ;
+  const double a = 0.25 * ( m_xmin + m_xmax + 2 * m ) ;
+  const double b = ( m - m_xmin ) * ( m_xmax - m    ) / 7 ;
+  return a / std::sqrt ( b ) ;
+}
+// ============================================================================
+// get the (excess) kurtosis 
+// ============================================================================
+double Ostap::Math::MPERT::kurtosis() const 
+{
+  const double a1 = m_alpha1 ;
+  const double a2 = m_alpha2 ;
+  //
+  return 3 * ( a1 + a2 + 1 ) 
+    * ( 2 * ( a1 + a2 ) * ( a1 + a2 ) + a1 * a2 * ( a1 + a2 - 6 ) )
+    / ( a1 * a2 * ( a1 + a2 + 2 ) * ( a1 + a2 + 3 ) ) - 3 ;
+}
+// ============================================================================
+// get the itegral 
+// ============================================================================
+double Ostap::Math::MPERT::integral () const { return 1 ; }
+// ============================================================================
+// get the CDF value 
+// ============================================================================
+double Ostap::Math::MPERT::cdf ( const double x ) const 
+{
+  //
+  if      ( x       <= m_xmin ) { return 0 ; }
+  else if ( m_xmax  <= x      ) { return 1 ; }
+  //
+  const double z = ( x - m_xmin ) / ( m_xmax - m_xmin ) ;
+  return Ostap::Math::beta_inc ( m_alpha1 , m_alpha2 , z ) ;
+}  
+// ============================================================================
+// get the integral between xlow and xhigh 
+// ============================================================================
+double Ostap::Math::MPERT::integral
+( const double xlow  , 
+  const double xhigh ) const 
+{
+  //
+  if      ( s_equal ( xlow , xhigh )  ) { return 0 ; }
+  else if ( xhigh  < xlow             ) { return - integral ( xhigh , xlow ) ; }
+  else if ( xhigh  <= m_xmin          ) { return 0 ; }
+  else if ( m_xmax <= xlow            ) { return 0 ; }
+  //
+  const double xmn = std::max ( m_xmin , xlow  ) ;
+  const double xmx = std::min ( m_xmax , xhigh ) ;
+  //
+  if ( s_equal ( xmn , xmx ) ) { return 0 ; }
+  //
+  return cdf ( xmx ) - cdf ( xmn ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::MPERT::tag () const 
+{ 
+  static const std::string s_name = "MPERT" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_xmin , m_xmax , m_xi , m_gamma ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
 //                                                                      The END
 // ============================================================================
 

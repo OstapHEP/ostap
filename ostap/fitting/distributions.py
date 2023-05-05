@@ -30,6 +30,7 @@
 - GenPareto_pdf      : Generalised Pareto distribution
 - ExGenPareto_pdf    : Exponentiated Generalised Pareto distribution
 - GEV_pdf            : Generalised Extreme Value distribution
+- MPERT_pdf          : Modified PERT distribution
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -58,9 +59,11 @@ __all__     = (
     'GenPareto_pdf'      , ## Generalised Pareto distribution
     'ExGenPareto_pdf'    , ## Exponentiatd Generalised Pareto distribution
     'GEV_pdf'            , ## Generalised Extreme Value distribution
+    'MPERT_pdf'          , ## Modified PERT distribution
     )
 # =============================================================================
 from   ostap.core.core        import Ostap, VE 
+from   ostap.math.base        import isfinite, pos_infinity, neg_infinity 
 from   ostap.fitting.pdfbasic import PDF1, PDF2 
 import ROOT, math
 # =============================================================================
@@ -1750,8 +1753,7 @@ class GenPareto_pdf(PDF1) :
         PDF1.__init__ ( self , name , xvar )
         #
         ##
-        xmnmn = self.xminmax()
-
+        xmnmx = self.xminmax()
         if xmnmx :
             xmin , xmax = xmnmx 
             xmid = 0.5 * ( xmin + xmax )
@@ -1899,6 +1901,108 @@ class GEV_pdf(GenPareto_pdf) :
             }
         
 models.append ( GEV_pdf ) 
+
+# =============================================================================
+## @class MPERT_pdf
+#  Modified PERT distribution 
+#  @see https://en.wikipedia.org/wiki/PERT_distribution
+#  @see https://www.vosesoftware.com/riskwiki/ModifiedPERTdistribution.php
+#  @see Ostap::Models::MPERT
+#  @see Ostap::Math::MPERT
+class MPERT_pdf(PDF1) :
+    """  Modified PERT distribution 
+    - see https://en.wikipedia.org/wiki/PERT_distribution
+    - see https://www.vosesoftware.com/riskwiki/ModifiedPERTdistribution.php
+    - see `Ostap.Models.MPERT`
+    - see `Ostap.Math.MPERT`
+    """
+    ## constructor
+    def __init__ ( self                  ,
+                   name                  ,   ## the name 
+                   xvar                  ,   ## the variable
+                   xi                    ,   ## mode parameyter 
+                   gamma  = 4            ,   ## gamma/shape 
+                   Xmin   = pos_infinity ,   ## xmin 
+                   Xmax   = neg_infinity ) : ## xmax
+        #
+        PDF1.__init__ ( self , name , xvar )
+        #
+        xmnmx = self.xminmax()
+        if xmnmx :
+            xmn , xmx = xmnmx
+            if isfinite ( Xmin ) and xmn <= Xmin <= xmx : xmn = Xmin
+            if isfinite ( Xmax ) and xmn <= Xmax <= xmx : xmx = Xmax
+            assert xmn < xmx , 'Invalid setting xmn/xmx/Xmin/Xmax: %s/%s/%s/%s' % ( xmn , xmx , Xmin , Xmax ) 
+            xmid        = 0.5 * ( xmn + xmx )
+            limits      = xmid , xmn , xmx
+            Xmin , Xmax = xmn  , xmx 
+        elif isfinite ( Xmin ) and isfinite ( Xmax ) and Xmin < Xmax :
+            xmid        = 0.5 * ( Xmin + Xmax )
+            limits      = xmid , Xmin , Xmax        
+        else :
+            raise TypeError ( "Cannot deduce Xmin/Xmax parameters!" )
+                
+        ## the mode 
+        self.__xi    = self.make_var ( xi                   ,
+                                       'xi_%s'       % name ,
+                                       '#xi(%s)'     % name ,
+                                       None , *limits )
+        
+        self.__gamma = self.make_var ( gamma                   ,
+                                       'gamma_%s'       % name ,
+                                       '#gamma(%s)'     % name ,
+                                       None , 0 , 100 )
+        
+        self.__Xmin = Xmin
+        self.__Xmax = Xmax
+
+        self.pdf  = Ostap.Models.MPERT (
+            self.roo_name ( 'mpert_' ) ,
+            'MPERT %s' % self.name     , 
+            self.x                     ,
+            self.xi                    ,
+            self.gamma                 , 
+            self.Xmin                  ,
+            self.Xmax                  )
+        
+        ## save the configuration:
+        self.config = {
+            'name'   : self.name  ,
+            'xvar'   : self.xvar  ,
+            'xi'     : self.xi    , 
+            'gamma'  : self.gamma ,            
+            'Xmin'   : self.Xmin  ,
+            'Xmax'   : self.Xmax  ,         
+            }
+        
+    @property
+    def xi ( self ) :
+        """'xi'- mode parameter"""
+        return self.__xi
+    @xi.setter 
+    def xi ( self , value ) :
+        self.set_value ( self.__xi , value )
+
+    @property
+    def gamma ( self ) :
+        """gamma'- shape parameter"""
+        return self.__gamma
+    @gamma.setter 
+    def gamma ( self , value ) :
+        self.set_value ( self.__gamma , value )
+
+    @property
+    def Xmin ( self ) :
+        """'xmin'- parameter"""
+        return self.__Xmin
+    
+    @property
+    def Xmax ( self ) :
+        """'xmin'- parameter"""
+        return self.__Xmax 
+        
+models.append ( MPERT_pdf ) 
+
 
 # =============================================================================
 ## @class Tsallis2_pdf

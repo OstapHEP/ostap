@@ -1942,6 +1942,21 @@ Ostap.Models.ExGenPareto .__reduce__ = _rgpd1_reduce_
 Ostap.Models.GEV         .__reduce__ = _rgpd1_reduce_ 
 
 # =============================================================================
+## reduce MPERT
+def _rmpert_reduce_ ( pdf ):
+    """Reduce MPERT"""
+    return root_store_factory , ( type ( pdf )   ,
+                                  pdf.name       ,
+                                  pdf.title      ,
+                                  pdf.x       () ,                            
+                                  pdf.xi      () ,
+                                  pdf.gamma   () ,
+                                  pdf.xmin    () ,
+                                  pdf.xmax    () )
+
+Ostap.Models.MPERT        .__reduce__ = _rmpert_reduce_ 
+
+# =============================================================================
 ## reduce Slash
 def _rslash_reduce_ ( pdf ):
     """Reduce Slasj"""

@@ -2990,6 +2990,118 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class MPERT
+     *  Modified PERT distribution 
+     *  @see https://en.wikipedia.org/wiki/PERT_distribution
+     *  @see https://www.vosesoftware.com/riskwiki/ModifiedPERTdistribution.php
+     */
+    class MPERT 
+    {
+    public: 
+      // ======================================================================
+      /// constructor from two parameters
+      MPERT
+      ( const double xmin  = 0   , 
+        const double xmax  = 1   ) ;
+      /// constructor from four parameters
+      MPERT
+      ( const double xmin        , 
+        const double xmax        , 
+        const double xi          , // mode parameter 
+        const double gamma = 4   ) ;
+      // ======================================================================      
+    public:
+      // ======================================================================      
+      /// get the value of MPERT distribution 
+      double evaluate ( const double x ) const ;
+      /// get the value of MPERT distribution 
+      inline double pdf        ( const double x ) const 
+      { return evaluate ( x ) ; }
+      /// get the value of MPERT distribution 
+      inline double operator() ( const double x ) const 
+      { return evaluate ( x ) ; }
+      // ======================================================================      
+    public: // getters 
+      // ======================================================================      
+      /// xmin 
+      inline double xmin  () const { return m_xmin  ; }
+      /// xmax 
+      inline double xmax  () const { return m_xmax  ; }
+      /// xi - mode parameter 
+      inline double xi    () const { return m_xi    ; }
+      /// gamma/shape 
+      inline double gamma () const { return m_gamma ; }
+      // ======================================================================      
+    public: // shape parameters 
+      // ======================================================================      
+      /// shape parameter alpha1 
+      inline double alpha1 () const { return m_alpha1 ; }
+      /// shape parameter alpha2 
+      inline double alpha2 () const { return m_alpha2 ; }
+      // ======================================================================      
+    public: // setters 
+      // ======================================================================      
+      /// set xi parameter/mode 
+      bool setXi    ( const double value ) ;
+      /// set gamma 
+      bool setGamma ( const double gamma ) ;
+      // ======================================================================      
+    public: // derived quantities 
+      // ======================================================================      
+      /// mode 
+      inline double mode  () const { return m_xi  ; }
+      /// mean value/mu  
+      inline double mu    () const 
+      { return ( m_xmin + m_gamma * m_xi + m_xmax ) / ( m_gamma + 2 ) ; }  
+      /// mean value/mu 
+      inline double mean () const { return mu  () ; }
+      /// variance 
+      double variance () const ;
+      /// dispersion 
+      inline double dispersion () const { return variance () ; }
+      /// rms 
+      double rms      () const ;
+      /// skewness 
+      double skewness () const ;
+      /// (excess) kurtosis
+      double kurtosis () const ;
+      // ======================================================================      
+    public: // integrals 
+      // ======================================================================
+      /// get the intergral between xmin and xmax 
+      double integral () const ;
+      /// get the integral 
+      double integral
+      ( const double xlow , 
+        const double xhigh ) const ;
+      /// get the CDF value 
+      double cdf ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// low edge 
+      double m_xmin   { 0   } ; // low edge 
+      /// high edge 
+      double m_xmax   { 1   } ; // high edge 
+      /// xi mode parameter 
+      double m_xi     { 0.5 } ; // xi - mode parameter 
+      /// gamma/shape  
+      double m_gamma  { 4   } ; // gamma/shape
+      // ======================================================================
+      /// shape parameter alpha1 
+      double m_alpha1 { -1 } ; // shape parameter alpha2 
+      /// shape parameter alpha1 
+      double m_alpha2 { -1 } ; // shape parameter alpha2 
+      /// normalization constant
+      double m_N      { -1 } ;
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class CutOffGauss 
      *  Useful function for smooth Gaussian cut-off:
      *  \f[ f(x;x_0;\sigma) = \left\{ 

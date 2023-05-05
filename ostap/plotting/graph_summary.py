@@ -69,7 +69,8 @@ from   ostap.core.ostap_types import num_types, string_types
 from   ostap.core.core        import VE, hID, cidict_fun 
 from   ostap.utils.cidict     import cidict 
 from   ostap.utils.utils      import vrange  
-from   ostap.histos.graphs    import pos_infinity, neg_infinity
+from   ostap.math.base        import pos_infinity, neg_infinity
+import ostap.histos.graphs  
 import ROOT
 # =============================================================================
 ## Helper function to decode/pack/unpack/transform  errors and value

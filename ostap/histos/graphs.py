@@ -37,7 +37,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.core                import cpp, VE, grID
-from   ostap.math.base                import isint 
+from   ostap.math.base                import isint, pos_infinity, neg_infinity 
 from   ostap.core.meta_info           import root_info
 from   ostap.core.ostap_types         import num_types, integer_types, sized_types   
 from   builtins                       import range
@@ -56,9 +56,6 @@ else                       : logger = getLogger( __name__              )
 logger.debug ( '(T)Graph-related decorations')
 _new_methods_       = () 
 _decorated_classes_ = ()
-# =============================================================================
-pos_infinity = float('+inf')
-neg_infinity = float('-inf')
 # =============================================================================
 ## make graph from data 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

@@ -106,7 +106,10 @@ __all__     = (
     ##
     'typename'       , ## get typename for the instance
     ##
-    'complex_types'  , ## list of complex & complex-like types 
+    'complex_types'  , ## list of complex & complex-like types
+    ##
+    'pos_infinity'   , ## positive infinity  
+    'neg_infinity'   , ## negative infinity 
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import root_version_int 
@@ -123,8 +126,8 @@ else                              : from collections     import Iterable
 # =============================================================================
 if ( 3 , 5 ) > sys.version_info  :
     import math
-    math.inf = float('inf' )
-    math.nan = float('nan' )
+    if not hasattr ( math , 'inf' ) : math.inf = float('inf' )
+    if not hasattr ( math , 'nan' ) : math.nan = float('nan' )
     
 ## get global C++ namespace
 cpp = cppyy.gbl
@@ -132,6 +135,10 @@ cpp = cppyy.gbl
 std = cpp.std
 ## C++ namespace Ostap
 Ostap = cpp.Ostap 
+
+## positive and negative infinities 
+pos_infinity = float('+inf')
+neg_infinity = float('-inf')
 
 # =============================================================================
 ## Get the type name

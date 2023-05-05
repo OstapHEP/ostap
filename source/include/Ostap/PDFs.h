@@ -9023,6 +9023,98 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class MPERT
+     *  Modified PERT distribution 
+     *  @see https://en.wikipedia.org/wiki/PERT_distribution
+     *  @see https://www.vosesoftware.com/riskwiki/ModifiedPERTdistribution.php
+     *  @see Ostap::Math::MPERT
+     */
+    class MPERT: public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::MPERT, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general
+      MPERT
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          xi        ,
+        RooAbsReal&          gamma     , 
+        const double         xmin      , 
+        const double         xmax      ) ;
+      /// get xmin/xmax from variable limits 
+      MPERT
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsRealLValue&    x         ,
+        RooAbsReal&          xi        ,
+        RooAbsReal&          gamma     ) ;
+      /// copy
+      MPERT
+      ( const MPERT&         right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~MPERT () ;
+      /// clone
+      MPERT* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      MPERT  () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::MPERT& function () const { return m_mpert ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& xi     () const { return m_xi    .arg  () ; }
+      const RooAbsReal& gamma  () const { return m_gamma .arg  () ; }
+      double            xmin   () const { return m_mpert .xmin () ; }
+      double            xmax   () const { return m_mpert .xmax () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_xi    {} ;
+      RooRealProxy m_gamma {} ;
+      RooRealProxy m_shape {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::MPERT  m_mpert {} ;  // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Shape1D
      *  simple generic PDF
      */

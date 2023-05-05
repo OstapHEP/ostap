@@ -24,6 +24,7 @@ __all__     = (
 from    ostap.core.meta_info   import root_info
 from    ostap.core.core        import cpp, Ostap, funID
 from    ostap.core.ostap_types import num_types, integer_types
+from    ostap.math.base        import pos_infinity, neg_infinity
 import  ostap.math.polynomials 
 import  ostap.math.reduce   
 import  ostap.math.derivative  as     D  
@@ -58,9 +59,6 @@ class _WO3_ (object)  :
     def __call__ ( self , x , pars  = [] ) : return self.__callme ( x [0] , x [1] , x [2] )
     @property
     def callme   ( self ) : return self.__callme 
-# =============================================================================
-pos_infinity = float('+inf')
-neg_infinity = float('-inf')
 # =============================================================================
 ## convert the model/function into TF1
 def tf1  ( self                 ,
@@ -1113,6 +1111,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.GenPareto              , 
                Ostap.Math.ExGenPareto            , 
                Ostap.Math.GEV                    , 
+               Ostap.Math.MPERT                  , 
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,

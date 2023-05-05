@@ -1009,6 +1009,21 @@ Ostap.Math.ExGenPareto . __reduce__ = _omgpd_reduce_
 Ostap.Math.GEV         . __reduce__ = _omgpd_reduce_
 
 # =============================================================================
+## reduce Ostap::Math::MPERT
+#  @see Ostap::Math::MPERT
+def _ommpert_reduce_ ( s ) :
+    """Reduce `Ostap.Math.MPERT`
+    - see `Ostap.Math.MPERT
+    """
+    return root_factory , ( type ( s ) ,
+                            s.xmin  () ,
+                            s.xmax  () ,
+                            s.xi    () ,
+                            s.gamma () )
+
+Ostap.Math.MPERT . __reduce__ = _ommpert_reduce_
+
+# =============================================================================
 ## Reduce Ostap::Math::HORNSdini
 #  @see Ostap::Math::HORNSdini
 def _omdini_reduce_ ( s ) :

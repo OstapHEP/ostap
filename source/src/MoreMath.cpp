@@ -1206,6 +1206,40 @@ double Ostap::Math::student_cdf
   return t >= 0 ? 1 - value : value ;
 }
 // ============================================================================
+/* Normalized incomplete Beta function  
+ *  \f$ f(\alpha_1,\alpha_2, z ) = 
+ *      I_z( \alpha_1, \alpha_2 ) = 
+ *      \frac{\Beta_z(\alpha_1,\alpha_2}}
+ *           {\Beta  (\alpha_1,\alpha_2}
+ *  - \f$ 0<\alpha_1\f$
+ *  - \f$ 0<\alpha_2\f$ 
+ *  - \f$ 0<z<1\f$
+ */
+// ============================================================================
+double Ostap::Math::beta_inc 
+( const double alpha1 , 
+  const double alpha2 , 
+  const double z      ) 
+{
+  if ( z < 0 || 1 < z ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if ( alpha1 <= 0    ) { return std::numeric_limits<double>::quiet_NaN(); }
+  if ( alpha2 <= 0    ) { return std::numeric_limits<double>::quiet_NaN(); }
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_beta_inc_e ( alpha1 , alpha2 , z , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_beta_inc_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  return result.val ;         
+}
+// ============================================================================
 namespace 
 {
   // ==========================================================================
