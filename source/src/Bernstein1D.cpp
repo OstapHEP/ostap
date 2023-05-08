@@ -411,7 +411,8 @@ bool Ostap::Math::Positive::updateBernstein ()
 // get the integral between low and high 
 // =============================================================================
 double Ostap::Math::Positive::integral
-( const double low , const double high ) const 
+( const double low  , 
+  const double high ) const 
 { 
   return 
     s_equal ( low  , xmin() ) && s_equal ( high , xmax() ) ? 1 :
@@ -432,9 +433,152 @@ std::vector<double> Ostap::Math::Positive::pars  () const
   //
   return r  ;  
 }
-   
+// ============================================================================
+// Positive polynom as PDF 
+// ============================================================================
+// get a mean value for this PDF
+// ============================================================================
+double Ostap::Math::Positive::mean () const
+{
+  if ( 0 == degree () ) { return 0.5 * ( xmin () + xmax () ) ; } 
+  //
+  Bernstein px { m_bernstein * 
+      Bernstein ( xmin() , xmax() , std::vector<double>( 1u , 0.0 ) ) } ;
+  return px.integral() * ( xmax () - xmin () ) ;
+}
+// ============================================================================
+// get a moment 
+// ============================================================================
+double Ostap::Math::Positive::moment ( const unsigned short k ) const
+{
+  if      ( 0 == k ) { return 1       ; }
+  else if ( 1 == k ) { return mean () ; }
+  //
+  Bernstein px { m_bernstein * 
+      Bernstein ( xmin() , xmax() , std::vector<double> ( k , 0.0 ) ) } ;
+  return px.integral() * std::pow ( xmax() - xmin() , k ) ;
+}
+// ============================================================================
+// get a central moment 
+// ============================================================================
+double Ostap::Math::Positive::central_moment 
+( const unsigned short k ) const
+{
+  if      ( 0 == k ) { return 1 ; }
+  else if ( 1 == k ) { return 0 ; }
+  //
+  const double mu = mean () ;
+  Bernstein px { m_bernstein * 
+      Bernstein ( xmin() , xmax() , std::vector<double> ( k , mu ) ) } ;
+  return px.integral() * std::pow ( xmax() - xmin() , k ) ;
+}
+// ============================================================================
+// get a standartized moment 
+// ============================================================================
+double Ostap::Math::Positive::std_moment 
+( const unsigned short k ) const
+{
+  if      ( 0 == k ) { return 1 ; }
+  else if ( 1 == k ) { return 0 ; }
+  else if ( 2 == k ) { return 1 ; }
+  //
+  const double mk    = central_moment ( k ) ;
+  const double sigma = rms            () ;
+  //
+  return mk / std::pow ( sigma , k ) ;
+}
+// ============================================================================
+// get a variance
+// ============================================================================
+double Ostap::Math::Positive::variance () const
+{ 
+  if ( 0 == degree () ) { return std::pow ( xmax() - xmin() , 2 ) / 12 ; }
+  return central_moment ( 2 ) ; 
+}
+// ============================================================================
+// get a RMS
+// ============================================================================
+double Ostap::Math::Positive::rms () const
+{ return std::sqrt ( variance () ) ; }
+// ============================================================================
+// get skewness
+// ============================================================================
+double Ostap::Math::Positive::skewness () const 
+{ return std_moment ( 3 ) ; }
+// ============================================================================
+// get (excess) kurtosis 
+// ============================================================================
+double Ostap::Math::Positive::kurtosis () const 
+{ return std_moment ( 4 ) - 3 ; }
+// ============================================================================
+// get quantile p: \f$ 0 \le p \le 1 \f$  
+// ============================================================================
+double Ostap::Math::Positive::quantile         
+( const double p ) const 
+{
+  if ( 0 == degree () && 0 <= p && p <= 1 ) 
+  { return xmin() * ( 1 - p ) + xmax () * p ; }
+  //
+  if      ( s_equal ( p , 0 ) ) { return xmin () ; }
+  else if ( s_equal ( p , 1 ) ) { return xmax () ; }
+  //
+  Ostap::Assert ( 0 < p && p < 1 , "Invalid quantile!" , "Ostap::Math::Positive" ) ;
+  //
+  const Bernstein Fi { m_bernstein.indefinite_integral() } ;
+  //
+  // make a few simple bisection steps to find a good initial approximation 
+  const unsigned int N = Ostap::Math::round ( std::ceil ( std::log2 ( degree () + 1 ) ) ) + 1 ;
+  //
+  double a = xmin () ;
+  double b = xmax () ;
+  for ( unsigned k = 0 ; k <= N ; ++k ) 
+  {
+    const double xx = 0.5 * ( a + b ) ;
+    if ( Fi ( xx ) <= p ) { a = xx ; }
+    else                  { b = xx ; }
+  }
+  //
+  // tolerance 
+  const double tolerance = std::abs ( b - a ) * 1.e-10  ;
+  //
+  // Newton' iterations 
+  auto Fn = [p,this,&Fi] ( const double x ) -> double 
+    { return x  - ( Fi ( x ) - p ) / ( (*this) ( x ) ) ; } ;
+  // initial value
+  double x = 0.5 * ( a + b ) ;
+  for ( unsigned short i = 0 ; i < 100 ; ++i ) 
+  {    
+    const double xn = Fn ( x ) ;
+    // outside the interval ?
+    if ( !std::isfinite ( xn ) || xn < a || b < xn ) 
+    {
+      // make a simple bisection step 
+      if ( Fi ( x ) <= p ) { a = x ; }
+      else                 { b = x ; }
+      //
+      x = 0.5 * ( a + b ) ;
+      continue ;
+    }
+    else if ( std::abs ( xn - x ) <= tolerance ) { return xn ; }              // RETURN 
+    else if ( std::abs ( a  - b ) <= tolerance ) { return 0.5 * ( a + b ) ; } // RETURN 
+    //
+    x = xn ;  
+  }
+  //
+  return x ;
+}
+// ============================================================================
+// get median 
+// ============================================================================
+double Ostap::Math::Positive::median () const 
+{ return quantile ( 0.5 ) ; }
 
 
+
+
+ 
+ 
+ 
 
 
 

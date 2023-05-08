@@ -266,7 +266,7 @@ namespace Ostap
         const std::vector<std::complex<double> > & roots_complex ,
         const std::vector<double>&                 roots_real    = std::vector<double> () ) ;
       // ======================================================================
-    public: // constructors from different plynomial types 
+    public: // constructors from different polynomial types 
       // ======================================================================
       /** constructor from Legendre polynomial
        *  @see http://www.sciencedirect.com/science/article/pii/S0377042700003769 eq.20

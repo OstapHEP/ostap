@@ -454,7 +454,34 @@ namespace Ostap
       /// get the integral between xmin and xmax
       double integral   () const { return 1 ; }
       /// get the integral between low and high
-      double integral   ( const double low , const double high ) const ;
+      double integral  
+      ( const double low , 
+        const double high ) const ;
+      // ======================================================================
+    public: // Positive polynomial as PDF on the interval [xmin,xmax]
+      // ======================================================================
+      /// get a mean value for this PDF 
+      double mean     () const ;
+      /// get a variance 
+      double variance () const ;
+      /// get a dispersion  
+      double dispersion        () const { return variance () ; }
+      /// get RMS 
+      double rms               () const ;
+      /// get a moment      
+      double moment            ( const unsigned short k ) const ;
+      /// get a central moment 
+      double central_moment    ( const unsigned short k ) const ;
+      /// get a standartized moment 
+      double std_moment        ( const unsigned short k ) const ;
+      /// get skewness 
+      double skewness          ()  const ; 
+      /// get (excess) kurtosis 
+      double kurtosis          ()  const ; 
+      /// get quantile p: \f$ 0 \le p \le 1 \f$  
+      double quantile          ( const double p ) const ;
+      /// get median 
+      double median            () const ;
       // ======================================================================
     public:
       // ======================================================================
