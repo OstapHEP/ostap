@@ -1822,7 +1822,7 @@ namespace Ostap
      *  Slightly modified version of Argus distribution, with 
      *  support in the interval  \f$ \mu - c \le x \le \mu \f$
      *  @see https://en.wikipedia.org/wiki/ARGUS_distribution
-     *  @see ARGUS Collab oration, H. Albrecht et al., 
+     *  @see ARGUS Collaboration, H. Albrecht et al., 
      *      "Measurement of the polarization in the decay B → J/ψK*". 
      *      Physics Letters B. 340 (3): 217–220.
      *  @see doi:10.1016/0370-2693(94)01302-0.
@@ -1885,8 +1885,9 @@ namespace Ostap
       /// get the integral 
       double integral   () const ;
       /// get the integral between low and high
-      double integral   ( const double low  ,
-                          const double high ) const ;
+      double integral  
+      ( const double low  ,
+        const double high ) const ;
       /// get CDF 
       double cdf        ( const double x ) const ;
       // ======================================================================

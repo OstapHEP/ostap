@@ -5,14 +5,15 @@
   1. extend tests for Clenshaw-Curtis quadrature 
   1. Add modified PERT fuction and corresponding PDF
   1. Add more methods to `Ostap::Math::Positive`, considering the positive polynomial like PDF 
+  1. add new test for `ostap.fitting.distributions` 
 
 ## Backward incompatible: 
 
 ## Bug fixes:
 
     1. Fix the typo in `Ostap::Kinematics::phasespace3` for the special configurations with zero masses 
-
-
+    1. Fix few monir bugs/typos in `ostap.fitting.distributions`
+ 
 # v1.9.8.4
 
 ## New features:

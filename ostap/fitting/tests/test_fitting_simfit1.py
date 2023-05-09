@@ -9,9 +9,7 @@
 # ============================================================================= 
 """ Test module for ostap/fitting/simfit.py
 - It tests the most simple ``Simultaneous fit'' :
-
-Simultannepous fit of two 1D-distributions
-
+Simultaneous fit of two 1D-distributions
 """
 # ============================================================================= 
 __author__ = "Ostap developers"

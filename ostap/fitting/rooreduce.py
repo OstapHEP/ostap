@@ -2156,12 +2156,12 @@ Ostap.Models.Weibull.__reduce__ = _rweibull_reduce_
 ## reduce Rice
 def _rrice_reduce_ ( pdf ):
     """Reduce Rice"""
-    return root_store_factory , ( type ( pdf )    ,
+    return root_store_factory , ( type ( pdf )     ,
                                   pdf.name         ,
                                   pdf.title        ,
                                   pdf.x         () ,                            
                                   pdf.nu        () ,                            
-                                  pdf.varshigma () ,
+                                  pdf.varsigma  () ,
                                   pdf.shift     () )
 
 Ostap.Models.Rice.__reduce__ = _rrice_reduce_ 

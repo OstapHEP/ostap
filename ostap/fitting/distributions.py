@@ -145,29 +145,22 @@ class GammaDist_pdf(PDF1) :
 
     @property
     def k ( self ) :
-        """``k''-parameter of Gamma distribution   (k>0)"""
+        """`k'-parameter of Gamma distribution   (k>0)"""
         return self.__k
     @k.setter 
     def k ( self , value ) :
-        value = float ( value )
-        assert 0 < value, '``k''-value must be positive'
-        self.__k.setVal ( value ) 
-        return self.__k.getVal() 
+        self.set_value ( self.__k , value ) 
 
     @property
     def theta ( self ) :
-        """``theta''-parameter of Gamma distribution   (theta>0)"""
+        """'theta'-parameter of Gamma distribution   (theta>0)"""
         return self.__theta
     @theta.setter 
     def theta ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``theta''-value must be positive"
-        self.__theta.setVal ( value ) 
-        return self.__theta.getVal() 
-
+        self.set_value ( self.__theta , value ) 
    
+models.append ( GammaDist_pdf )
 
-models.append ( GammaDist_pdf ) 
 # =============================================================================
 ## @class GenGammaDist_pdf 
 #  Generalized Gamma-distribution with additional shift parameter 
@@ -208,12 +201,12 @@ class GenGammaDist_pdf(PDF1) :
                                        None , 1 , 1.e-3 , 100 )
         self.__theta = self.make_var ( theta   ,
                                        'theta_%s'            % name ,
-                                       '#theta_{#Gamma}(%s)' % name , theta ,
+                                       '#theta_{#Gamma}(%s)' % name ,
                                        None , 1.e-3 , 100 )
         self.__p     = self.make_var ( p       ,
                                        'p_%s'                % name ,
                                        'p_{#Gamma}(%s)'      % name ,
-                                       NNone , 1 , 1.e-3 ,   6 )
+                                       None , 1 , 1.e-3 ,   6 )
 
         limits_low = ()
         if   self.xminmax() :
@@ -246,23 +239,19 @@ class GenGammaDist_pdf(PDF1) :
 
     @property
     def k ( self ) :
-        """``k''-parameter of generalized Gamma distribution   (k>0)"""
+        """`k'-parameter of generalized Gamma distribution   (k>0)"""
         return self.__k
     @k.setter 
     def k ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``k''-value must be positive"
-        self.__k.setVal ( value ) 
+        self.set_value ( self.__k , value ) 
     
     @property
     def theta ( self ) :
-        """``theta''-parameter of generalized Gamma distribution   (theta>0)"""
+        """`theta'-parameter of generalized Gamma distribution   (theta>0)"""
         return self.__theta
     @theta.setter 
     def theta ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``theta''-value must be positive"
-        self.__theta.setVal ( value ) 
+        self.set_value ( self.__theta , value ) 
 
     @property
     def p ( self ) :
@@ -270,9 +259,7 @@ class GenGammaDist_pdf(PDF1) :
         return self.__p
     @p.setter 
     def p ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``p''-value must be positive"
-        self.__p.setVal ( value ) 
+        self.set_value ( self.__p , value ) 
 
     @property
     def low ( self ) :
@@ -280,8 +267,7 @@ class GenGammaDist_pdf(PDF1) :
         return self.__low
     @low.setter 
     def low ( self , value ) :
-        value = float ( value )
-        self.__low.setVal ( value ) 
+        self.set_value ( self.__low , value ) 
 
 models.append ( GenGammaDist_pdf ) 
 # =============================================================================
@@ -347,44 +333,35 @@ class Amoroso_pdf(PDF1) :
                                      
     @property
     def theta ( self ) :
-        """``theta''-parameter of Amoroso function (theta>0)"""
+        """`theta'-parameter of Amoroso function (theta>0)"""
         return self.__theta
     @theta.setter 
     def theta ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``theta''-value must be positive"
-        self.__theta.setVal ( value ) 
+        self.set_value ( self.__theta , value )
 
     @property
     def alpha ( self ) :
-        """``alpha''-parameter of Amoroso function (alpha>0)"""
+        """`alpha'-parameter of Amoroso function (alpha>0)"""
         return self.__alpha
     @alpha.setter 
     def alpha ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``alpha''-value must be positive"
-        self.__alpha.setVal ( value ) 
+        self.set_value ( self.__alpha , value )
 
     @property
     def beta ( self ) :
-        """``beta''-parameter of Amoroso function (beta>0)"""
+        """`beta'-parameter of Amoroso function (beta>0)"""
         return self.__beta
     @beta.setter 
     def beta ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``beta''-value must be positive"
-        self.__beta.setVal ( value ) 
+        self.set_value ( self.__beta , value )
 
     @property
     def a ( self ) :
-        """``a''-parameter of Amoroso function"""
+        """`a'-parameter of Amoroso function"""
         return self.__a
     @a.setter 
     def a ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``a''-value must be positive"
-        self.__a.setVal ( value ) 
-
+        self.set_value ( self.__a , value )
 
 models.append ( Amoroso_pdf ) 
 # =============================================================================
@@ -436,23 +413,19 @@ class LogGammaDist_pdf(PDF1) :
 
     @property
     def k ( self ) :
-        """``k''-parameter of log(Gamma) distribution   (k>0)"""
+        """`k'-parameter of log(Gamma) distribution   (k>0)"""
         return self.__k
     @k.setter 
     def k ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``k''-value must be positive"
-        self.__k.setVal ( value ) 
+        self.set_value ( self.__k , value )
 
     @property
     def theta ( self ) :
-        """``theta''-parameter of log(Gamma) distribution   (theta>0)"""
+        """`theta'-parameter of log(Gamma) distribution   (theta>0)"""
         return self.__theta
     @theta.setter 
     def theta ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``theta''-value must be positive"
-        self.__theta.setVal ( value ) 
+        self.set_value ( self.__theta , value )
 
 models.append ( LogGammaDist_pdf ) 
 # =============================================================================
@@ -506,23 +479,19 @@ class Log10GammaDist_pdf(PDF1) :
     
     @property
     def k ( self ) :
-        """``k''-parameter of log10(Gamma) distribution   (k>0)"""
+        """`k'-parameter of log10(Gamma) distribution   (k>0)"""
         return self.__k
     @k.setter 
     def k ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``k''-value must be positive"
-        self.__k.setVal ( value )
+        self.set_value ( self.__k , value )
 
     @property
     def theta ( self ) :
-        """``theta''-parameter of log10(Gamma) distribution   (theta>0)"""
+        """`theta'-parameter of log10(Gamma) distribution   (theta>0)"""
         return self.__theta
     @theta.setter 
     def theta ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``theta''-value must be positive"
-        self.__theta.setVal ( value ) 
+        self.set_value ( self.__theta , value )
 
 models.append ( Log10GammaDist_pdf ) 
 # =============================================================================
@@ -554,9 +523,9 @@ class LogGamma_pdf(PDF1) :
     def __init__ ( self         ,
                    name         ,   ## the name 
                    xvar         ,   ## the variable
-                   nu    = None ,   ## nu-parameter
-                   lambd = None ,   ## lambda-parameter
-                   alpha = None ) : ## nu-parameter
+                   nu    = 0    ,   ## nu-parameter
+                   lambd = 1    ,   ## lambda-parameter
+                   alpha = 1    ) : ## nu-parameter
         #
         PDF1.__init__ ( self , name , xvar )
         #
@@ -600,36 +569,30 @@ class LogGamma_pdf(PDF1) :
     
     @property
     def nu ( self ) :
-        """``nu''-parameter (location) of log-Gamma distribution"""
+        """`nu'-parameter (location) of log-Gamma distribution"""
         return self.__nu
     @nu.setter 
     def nu ( self , value ) :
-        value = float ( value )
-        self.__nu.setVal ( value ) 
-        return self.__nu.getVal() 
+        self.set_value ( self.__nu , value )
     
     @property
     def lambd ( self ) :
-        """``lambda''-parameter (scale) of log-Gamma distribution"""
+        """`lambda'-parameter (scale) of log-Gamma distribution"""
         return self.__lambd
     @lambd.setter 
     def lambd ( self , value ) :
-        value = float ( value )
-        self.__lambd.setVal ( value ) 
-        return self.__lambd.getVal() 
+        self.set_value ( self.__lambd , value )
 
     @property
     def alpha  ( self ) :
-        """``alpha-parameter'' of log-Gamma distribution   (alpha>0)"""
+        """`alpha'-parameter of log-Gamma distribution   (alpha>0)"""
         return self.__alpha
     @alpha.setter 
     def alpha ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``alpha''-value must be positive"
-        self.__alpha.setVal ( value ) 
-        return self.__alpha.getVal() 
+        self.set_value ( self.__alpha , value )
 
-models.append ( LogGamma_pdf ) 
+models.append ( LogGamma_pdf )
+
 # =============================================================================
 ## @class BetaPrime_pdf
 #  http://en.wikipedia.org/wiki/Beta_prime_distribution
@@ -701,9 +664,7 @@ class BetaPrime_pdf(PDF1) :
         return self.__alpha
     @alpha.setter 
     def alpha ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``alpha''-value must be positive"
-        self.__alpha.setVal ( value ) 
+        self.set_value ( self.__alpha , value )
 
     @property
     def beta ( self ) :
@@ -711,9 +672,7 @@ class BetaPrime_pdf(PDF1) :
         return self.__beta
     @beta.setter 
     def beta ( self , value ) :
-        value = float ( value )
-        assert 0 < value, "``beta''-value must be positive"
-        self.__beta.setVal ( value ) 
+        self.set_value ( self.__beta , value )
 
     @property
     def scale ( self ) :
@@ -721,8 +680,7 @@ class BetaPrime_pdf(PDF1) :
         return self.__scale
     @scale.setter 
     def scale ( self , value ) :
-        value = float ( value )
-        self.__scale.setVal ( value ) 
+        self.set_value ( self.__scale , value )
 
     @property
     def delta ( self ) :
@@ -730,8 +688,7 @@ class BetaPrime_pdf(PDF1) :
         return self.__delta
     @delta.setter 
     def delta ( self , value ) :
-        value = float ( value )
-        self.__delta.setVal ( value ) 
+        self.set_value ( self.__delta , value )
 
 models.append ( BetaPrime_pdf ) 
 # =============================================================================
@@ -791,8 +748,7 @@ class Landau_pdf(PDF1) :
         return self.__scale
     @scale.setter 
     def scale ( self , value ) :
-        value = float ( value )
-        self.__scale.setVal ( value ) 
+        self.set_value ( self.__scale , value )
 
     @property
     def delta ( self ) :
@@ -800,9 +756,7 @@ class Landau_pdf(PDF1) :
         return self.__delta
     @delta.setter 
     def delta ( self , value ) :
-        value = float ( value )
-        self.__delta.setVal ( value ) 
-
+        self.set_value ( self.__delta , value )
 
 models.append ( Landau_pdf )
 
@@ -865,7 +819,7 @@ class Argus_pdf(PDF1) :
 
     @property
     def mu ( self ) :
-        """``mu''-parameter of Argus distribution"""
+        """`mu'-parameter of Argus distribution"""
         return self.__mu
     @mu.setter 
     def mu ( self , value ) :
@@ -873,18 +827,18 @@ class Argus_pdf(PDF1) :
         
     @property
     def c  ( self ) :
-        """``c''-parameter of Argus distribution"""
+        """`c'-parameter of Argus distribution"""
         return self.__c
     @c.setter 
-    def mu ( self , value ) :
+    def c  ( self , value ) :
         self.set_value ( self.__c , value )
 
     @property
     def chi ( self ) :
-        """``chi''-parameter of Argus distribution"""
+        """`chi'-parameter of Argus distribution"""
         return self.__chi
     @chi.setter 
-    def mu ( self , value ) :
+    def chi ( self , value ) :
         self.set_value ( self.__chi , value )
 
 models.append ( Argus_pdf ) 
@@ -947,7 +901,7 @@ class GenArgus_pdf(Argus_pdf) :
 
     @property
     def dp ( self ) :
-        """``dp''-parameter of Generalized Argus distribution (p=dp-1)"""
+        """`dp'-parameter of Generalized Argus distribution (p=dp-1)"""
         return self.__dp
     @dp.setter 
     def dp ( self , value ) :
@@ -1020,32 +974,27 @@ class TwoExpos_pdf(PDF1) :
 
     @property
     def alpha ( self ) :
-        """``alpha''-parameter (slope of leading exponnet) of the TwoExpo function"""
+        """`alpha'-parameter (slope of leading exponent) of the TwoExpo function"""
         return self.__alpha
     @alpha.setter
     def alpha ( self , value ) :
-        value = float ( value )
-        assert 0 <= value, "``alpha''-parameter must be non-negative"
-        self.alpha.setVal ( value ) 
+        self.set_value ( self.__alpha , value )
     
     @property
     def delta ( self ) :
-        """``delta''-parameter (second exponent slope is ``alpha+delta'') of the TwoExpo function"""
+        """`delta'-parameter (second exponent slope is `alpha+delta') of the TwoExpo function"""
         return self.__delta
     @delta.setter
     def delta ( self , value ) :
-        value = float ( value )
-        assert 0 <= value, "``delta''-parameter must be non-negative"
-        self.delta.setVal ( value ) 
+        self.set_value ( self.__delta , value )
     
     @property
     def x0 ( self ) :
-        """x0-parameter of the TwoExpo function  (f(x)=0 for x<x0)"""
+        """'x0'-parameter of the TwoExpo function  (f(x)=0 for x<x0)"""
         return self.__x0
     @x0.setter
     def x0 ( self , value ) :
-        value = float ( value )
-        self.x0.setVal ( value ) 
+        self.set_value ( self.__x0 , value )
   
 models.append ( TwoExpos_pdf )
 
@@ -1108,21 +1057,19 @@ class Gumbel_pdf(PDF1) :
         
     @property
     def mu ( self ) :
-        """``mu''-parameter (shift) of the Gumbel function"""
+        """`mu'-parameter (shift) of the Gumbel function"""
         return self.__mu
     @mu.setter
     def mu ( self , value ) :
-        value = float ( value )
-        self.__mu.setVal ( value ) 
+        self.set_value ( self.__mu , value )
 
     @property
     def beta ( self ) :
-        """``beta''-parameter (scale) of the Gumbel function"""
+        """`beta'-parameter (scale) of the Gumbel function"""
         return self.__beta
     @beta.setter
     def mu ( self , value ) :
-        value = float ( value )
-        self.__beta.setVal ( value ) 
+        self.set_value ( self.__beta , value )
   
 models.append ( Gumbel_pdf ) 
 
@@ -1189,7 +1136,7 @@ class Rice_pdf(PDF1) :
         
     @property
     def nu ( self ) :
-        """``nu''-parameter of Rice function"""
+        """`nu'-parameter of Rice function"""
         return self.__nu
     @nu.setter
     def nu ( self , value ) :
@@ -1197,7 +1144,7 @@ class Rice_pdf(PDF1) :
 
     @property
     def varsigma ( self ) :
-        """``varsigma''-parameter of Rice function"""
+        """`varsigma'-parameter of Rice function"""
         return self.__varsigma
     @varsigma.setter
     def varsigma ( self , value ) :
@@ -1205,7 +1152,7 @@ class Rice_pdf(PDF1) :
 
     @property
     def shift ( self ) :
-        """``shift''-parameter of Rice function"""
+        """`shift'-parameter of Rice function"""
         return self.__shift
     @shift.setter
     def shift ( self , value ) :
@@ -1282,7 +1229,7 @@ class GenInvGauss_pdf(PDF1) :
         
     @property
     def theta ( self ) :
-        """``theta''-parameter of Generilized Inverse Gaussian  function"""
+        """`theta'-parameter of Generalized Inverse Gaussian  function"""
         return self.__theta
     @theta.setter
     def theta ( self , value ) :
@@ -1290,7 +1237,7 @@ class GenInvGauss_pdf(PDF1) :
 
     @property
     def eta ( self ) :
-        """``eta''-parameter of Generilized Inverse Gaussian  function"""
+        """`eta'-parameter of Generalized Inverse Gaussian  function"""
         return self.__eta
     @eta.setter
     def eta ( self , value ) :
@@ -1298,7 +1245,7 @@ class GenInvGauss_pdf(PDF1) :
 
     @property
     def p   ( self ) :
-        """``p''-parameter of Generilized Inverse Gaussian  function"""
+        """`p'-parameter of Generalized Inverse Gaussian  function"""
         return self.__p
     @p.setter
     def p ( self , value ) :
@@ -1306,7 +1253,7 @@ class GenInvGauss_pdf(PDF1) :
 
     @property
     def shift ( self ) :
-        """``shift''-parameter of Rice function"""
+        """`shift'-parameter of GIG function"""
         return self.__shift
     @shift.setter
     def shift ( self , value ) :
@@ -1395,17 +1342,15 @@ class Weibull_pdf(PDF1) :
 
     @property
     def scale ( self ) :
-        """``scale''-parameter, scale>0"""
+        """`scale'-parameter, scale>0"""
         return self.__scale
     @scale.setter
     def scale ( self, value ) :
-        value = float ( value ) 
-        assert 0 < value , "``scale''-parameter must be positive"
-        self.__scale.setVal ( value )
+        self.set_value ( self.__scale , value )
         
     @property
     def shape ( self ) :
-        """``shape''-parameter, shape>0
+        """`shape'-parameter, shape>0
         - for ``shape''>2   : peak-like, signal-like shape
         - for 1<``shape'<2  : 'threshold'-like
         - for ``shape''k<1  : smooth decreasing         
@@ -1413,21 +1358,15 @@ class Weibull_pdf(PDF1) :
         return self.__shape    
     @shape.setter
     def shape ( self, value ) :
-        value = float ( value ) 
-        assert 0 < value , "``shape''-parameter must be positive"
-        self.__shape.setVal ( value )         
+        self.set_value ( self.__shape , value )
 
     @property
     def shift ( self ) :
-        """``shift''-parameter, function is   zero for x<``shift''"""
+        """`shift'-parameter, function is   zero for x<``shift''"""
         return self.__shift
     @shift.setter
     def scale ( self, value ) :
-        value = float ( value )
-        if self.xminmax() :
-            mn , mx = self.xminmax() 
-            assert value <= mx, "``shift''-parameter must be smaller ``xmax''"
-        self.__shift.setVal ( value )
+        self.set_value ( self.__shift , value )
         
 models.append ( Weibull_pdf )      
 
@@ -1469,11 +1408,11 @@ class Tsallis_pdf(PDF1) :
     is transverse kinetic energy 
     """
     def __init__ ( self                   ,
+                   name                   , 
                    xvar                   ,   ## pT-variable (for fitting) 
                    m0        = 0          ,   ## particle mass (may be fixed)
                    n         = None       ,   ## shape parameter
-                   T         = None       ,   ## temperature parameter                   
-                   name      = ''         ) :
+                   T         = None       ) : ## temperature parameter                   
 
         ## initialize the base 
         PDF1.__init__  ( self , name , xvar )
@@ -1512,35 +1451,32 @@ class Tsallis_pdf(PDF1) :
     
     @property
     def pt ( self ) :
-        """``pt''-variable for Tsallis distribution (the same as ``x'')"""
+        """`pt'-variable for Tsallis distribution (the same as ``x'')"""
         return self.xvar
     
     @property
     def m0 ( self ) :
-        """``m0''-parameter of Tsallis' function"""
+        """`m0'-parameter of Tsallis' function"""
         return self.__m0
     @m0.setter
     def m0 ( self , value ) :
-        value = float ( value )
-        self.__m0.setVal ( value ) 
+        self.set_value ( self.__m0 , value )
 
     @property
     def n ( self ) :
-        """``n''-parameter of Tsallis' function"""
+        """`n'-parameter of Tsallis' function"""
         return self.__n
     @n.setter
     def n ( self , value ) :
-        value = float ( value )
-        self.__n.setVal ( value ) 
+        self.set_value ( self.__n , value )
 
     @property
     def T ( self ) :
-        """``T''-parameter of Tsallis' function"""
+        """`T'-parameter of Tsallis' function"""
         return self.__T
     @T.setter
     def T ( self , value ) :
-        value = float ( value )
-        self.__T.setVal ( value ) 
+        self.set_value ( self.__T , value )
  
         
 models.append ( Tsallis_pdf ) 
@@ -1578,10 +1514,10 @@ class QGSM_pdf(PDF1) :
     where transverse mass is defined as \f$m_T = \sqrt{p_T^2+m^2}\f$
     """
     def __init__ ( self             ,
+                   name             , 
                    xvar             ,   ## pT-variable (for fitting) 
                    m0        = 0    ,   ## particle mass (may be fixed)
-                   b         = None ,   ## slope parameter
-                   name      = ''   ) :
+                   b         = None ) : ## slope parameter
         
         ## initialize the base 
         PDF1.__init__  ( self , name , xvar )
@@ -1614,12 +1550,12 @@ class QGSM_pdf(PDF1) :
     
     @property
     def pt ( self ) :
-        """``pt''-variable for QGSM distribution (the same as ``x'')"""
+        """`pt'-variable for QGSM distribution (the same as ``x'')"""
         return self.xvar
     
     @property
     def m0 ( self ) :
-        """``m0''-parameter of QGSM function"""
+        """`m0'-parameter of QGSM function"""
         return self.__m0
     @m0.setter
     def m0 ( self , value ) :
@@ -1627,7 +1563,7 @@ class QGSM_pdf(PDF1) :
 
     @property
     def b ( self ) :
-        """``b''-parameter of QGSM function"""
+        """`b'-parameter of QGSM function"""
         return self.__b
     @b.setter
     def b ( self , value ) :
@@ -1658,8 +1594,8 @@ models.append ( QGSM_pdf )
 class Hagedorn_pdf(PDF1) :
     r"""Useful function to describe pT-spectra of particles 
     
-    - see R.Hagedorn, "Multiplicities, p_T distributions and the 
-    expected hadron \to Quark - Gluon Phase Transition", 
+    - see R.Hagedorn, 'Multiplicities, p_T distributions and the 
+    expected hadron \to Quark - Gluon Phase Transition', 
     Riv.Nuovo Cim. 6N10 (1983) 1-50
     - see https://doi.org/10.1007/BF02740917 
     - see https://inspirehep.net/literature/193590
@@ -1671,10 +1607,10 @@ class Hagedorn_pdf(PDF1) :
     \f$ \beta = \frac{1}{T} f$ 
     """
     def __init__ ( self             ,
+                   name             , 
                    xvar             ,   ## pT-variable (for fitting) 
                    m0        = 0    ,   ## particle mass (may be fixed)
-                   beta      = None ,   ## inverse temperature
-                   name      = ''   ) :
+                   beta      = None ) : ## inverse temperature
         
         ## initialize the base 
         PDF1.__init__  ( self , name , xvar )
@@ -1726,9 +1662,7 @@ class Hagedorn_pdf(PDF1) :
     def beta ( self , value ) :
         self.set_value ( self.__beta , value )
        
-
 models.append ( Hagedorn_pdf )
-
 
 # =============================================================================
 ## @class GenPareto_pdf
@@ -1737,7 +1671,7 @@ models.append ( Hagedorn_pdf )
 #  @see Ostap::Models::GenPareto
 #  @see Ostap::Math::GenPareto
 class GenPareto_pdf(PDF1) :
-    """Generalized Parreto Distirbutution
+    """Generalized Pareto Distirbutution
     - see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
     - see `Ostap.Models.GenPareto`
     - see `Ostap.Math.GenPareto`
@@ -1761,10 +1695,10 @@ class GenPareto_pdf(PDF1) :
         else :
             limits = ()
             
-        self.__mu  = self.make_var ( mu       ,
-                                     'mu_%s'        % name ,
-                                     '#mu(%s)'      % name ,
-                                     None , *limits )
+        self.__mu  = self.make_var   ( mu       ,
+                                       'mu_%s'        % name ,
+                                       '#mu(%s)'      % name ,
+                                       None , *limits )
         
         self.__scale = self.make_var ( scale ,
                                        'scale_%s'    % name ,
@@ -1774,7 +1708,7 @@ class GenPareto_pdf(PDF1) :
         self.__shape = self.make_var ( shape ,
                                        'shape_%s'    % name ,
                                        'shape(%s)'   % name ,
-                                       None , -1+1.e+6 , 100 )
+                                       None , -1+1.e-6 , 100 )
         
         self.pdf  = Ostap.Models.GenPareto (
             self.roo_name ( 'gpd_' ) ,
@@ -1827,7 +1761,7 @@ models.append ( GenPareto_pdf )
 #  @see Ostap::Models::ExGenPareto
 #  @see Ostap::Math::ExGenPareto
 class ExGenPareto_pdf(GenPareto_pdf) :
-    """Exponetiated Generalized Parreto Distirbutution
+    """Exponetiated Generalized Pareto Distirbutution
     - see https://en.wikipedia.org/wiki/Generalized_Pareto_distribution
     - see `Ostap.Models.ExGenPareto`
     - see `Ostap.Math.ExGenPareto`
@@ -1840,7 +1774,7 @@ class ExGenPareto_pdf(GenPareto_pdf) :
                    scale        ,   ## scale parameter
                    shape        ) : ## shape parameter
         #
-        GenPareto_pdf.__init__ ( self , name , xvar )
+        GenPareto_pdf.__init__ ( self , name , xvar , mu = mu , scale = scale , shape = shape )
         
         self.pdf  = Ostap.Models.ExGenPareto (
             self.roo_name ( 'egpd_' ) ,
@@ -1881,7 +1815,7 @@ class GEV_pdf(GenPareto_pdf) :
                    scale        ,   ## scale parameter
                    shape        ) : ## shape parameter
         #
-        GenPareto_pdf.__init__ ( self , name , xvar )
+        GenPareto_pdf.__init__ ( self , name , xvar , mu = mu , scale = scale , shape = shape )
         
         self.pdf  = Ostap.Models.GEV (
             self.roo_name ( 'gev_' ) ,
