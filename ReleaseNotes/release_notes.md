@@ -6,6 +6,7 @@
   1. Add modified PERT fuction and corresponding PDF
   1. Add more methods to `Ostap::Math::Positive`, considering the positive polynomial like PDF 
   1. add new test for `ostap.fitting.distributions` 
+  1. Add Generalized Logistyc Type IV model with location/sclae family and corresponding PDF 
 
 ## Backward incompatible: 
 

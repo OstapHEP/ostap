@@ -2513,6 +2513,104 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class GenLogisticIV
+     *  GeneraliZed Logistic Type IV distribution with location/scale 
+     *  https://en.wikipedia.org/wiki/Generalized_logistic_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2023-05-09
+     */
+    class  GenLogisticIV
+    {
+    public:
+      // ======================================================================
+      /** constructor with all parameters
+       *  @param mu    \f$\mu  \f$-parameter
+       *  @param sigma \f$sigma\f$-parameter
+       *  @param alpha \f$alpha\f$-parameter
+       *  @param beta  \f$beta\f$-parameter
+       */
+      GenLogisticIV
+      ( const double mu    = 0 ,   // location 
+        const double sigma = 1 ,   // scale 
+        const double alpha = 1 ,   // expo tail 
+        const double beta  = 1 ) ; // expo tail 
+      /// destructor
+      ~GenLogisticIV () ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function
+      double evaluate          ( const double x ) const ;
+      /// evaluate the function
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ;  }
+      /// evaluate the function
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public: // direct getters
+      // ======================================================================
+      /// get parameter mu 
+      inline double mu     () const { return m_mu     ; }
+      /// get parameter "sigma"
+      inline double sigma  () const { return m_sigma  ; }
+      /// get parameter "alpha"
+      inline double alpha  () const { return m_alpha  ; }
+      /// get parameter "beta"
+      inline double beta   () const { return m_beta   ; }
+      // ======================================================================
+    public: // direct setters
+      // ======================================================================
+      bool   setMu    ( const double value ) ;
+      bool   setSigma ( const double value ) ;
+      bool   setAlpha ( const double value ) ;
+      bool   setBeta  ( const double value ) ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// get integral from low to high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      /// integral from -infinity to +infinity
+      double integral () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the helper variable y 
+      double y ( const double z ) const ;
+      /// get z from the y 
+      double z ( const double y ) const ;
+      /// get the "standard" generalized Type IV Logistic distribution 
+      double std_type4 ( const double t ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// parameteter "mu"
+      double m_mu          ; // parameter mu,mean,mode
+      /// parameter   "sigma"
+      double m_sigma       ; // parameter sigma
+      /// parameter   "alpha"
+      double m_alpha       ; // parameter alpha
+      /// parameter   "beta"
+      double m_beta        ; // parameter beta
+      /// tilda-mu 
+      double m_tilda_mu    ;
+      /// tilda-s2  
+      double m_tilda_s     ;
+      ///  normalization : 1 / B(alpha,beta)
+      double m_norm { -1 } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// workspace
+      Ostap::Math::WorkSpace m_workspace ;
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Losev 
      *  ``Losev distribution'' - asymmetric variant of Hyperbolic secant/Sech-function
      *  \f[ f(x;\mu,\alpha,\beta) \equiv 

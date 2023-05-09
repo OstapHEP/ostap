@@ -6826,6 +6826,101 @@ Double_t Ostap::Models::Logistic::analyticalIntegral
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
+Ostap::Models::GenLogisticIV::GenLogisticIV
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          mu     ,
+  RooAbsReal&          sigma  ,
+  RooAbsReal&          alpha  ,
+  RooAbsReal&          beta   )
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x       ( "!x"      , "Observable" , this , x      ) 
+  , m_mu      ( "!mu"     , "location"   , this , mu     ) 
+  , m_sigma   ( "!sigma"  , "sigma"      , this , sigma  ) 
+  , m_alpha   ( "!alpha"  , "alpha"      , this , alpha  ) 
+  , m_beta    ( "!beta"   , "beta"       , this , beta   ) 
+    //
+  , m_gl4     ( 0 , 1 , 1 , 1 ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::GenLogisticIV::GenLogisticIV
+( const Ostap::Models::GenLogisticIV&  right ,
+  const char*                        name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_mu     ( "!mu"     , this , right.m_mu     )
+  , m_sigma  ( "!sigma"  , this , right.m_sigma  )
+  , m_alpha  ( "!alpha"  , this , right.m_alpha  )
+  , m_beta   ( "!beta"   , this , right.m_beta   )
+    //
+  , m_gl4  ( right.m_gl4 ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::GenLogisticIV::~GenLogisticIV () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::GenLogisticIV*
+Ostap::Models::GenLogisticIV::clone( const char* name ) const 
+{ return new Ostap::Models::GenLogisticIV( *this , name) ; }
+// ============================================================================
+void Ostap::Models::GenLogisticIV::setPars () const 
+{
+  //
+  m_gl4.setMu    ( m_mu    ) ;
+  m_gl4.setSigma ( m_sigma ) ;
+  m_gl4.setAlpha ( m_alpha ) ;
+  m_gl4.setBeta  ( m_beta  ) ;
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::GenLogisticIV::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_gl4 ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::GenLogisticIV::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::GenLogisticIV::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_gl4.integral ( m_x.min( rangeName ) , m_x.max( rangeName ) ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
 Ostap::Models::Argus::Argus
 ( const char*          name   , 
   const char*          title  ,
@@ -10229,6 +10324,7 @@ ClassImp(Ostap::Models::Atlas              )
 ClassImp(Ostap::Models::Sech               ) 
 ClassImp(Ostap::Models::Losev              ) 
 ClassImp(Ostap::Models::Logistic           ) 
+ClassImp(Ostap::Models::GenLogisticIV      ) 
 ClassImp(Ostap::Models::Argus              ) 
 ClassImp(Ostap::Models::GenArgus           ) 
 ClassImp(Ostap::Models::Slash              ) 

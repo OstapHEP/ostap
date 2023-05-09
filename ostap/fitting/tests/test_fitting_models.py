@@ -1312,6 +1312,50 @@ def test_logistic () :
     results.append ( result )
 
 # =============================================================================
+## Test  LOGISTIC
+# =============================================================================
+def test_genlogistic4 () :
+    
+    logger = getLogger ( 'test_genlogistic4' )
+ 
+    logger.info("Test GenLogistciIV: Generalized Logistic Type IV distribution")
+    model = Models.Fit1D (
+        signal = Models.GenLogisticIV_pdf( 'GenLogisticIV'          ,
+                                           xvar = mass              ,
+                                           alpha = ( 3 , 0.5 , 10 ) , 
+                                           beta  = ( 3 , 0.5 , 10 ) , 
+                                           mean = signal_gauss.mean ) ,
+        background = background   ,
+        S = S , B = B 
+        )
+    
+    signal = model.signal
+    model.S = NS 
+    model.B = NB
+    
+    with rooSilent() : 
+        signal.alpha.fix()
+        signal.beta .fix()        
+        result, frame = model.fitTo ( dataset0 , silent = True )
+        result, frame = model.fitTo ( dataset0 , silent = True )  
+        signal.mean  .release()
+        signal.sigma .release()
+        result, frame = model.fitTo ( dataset0 , silent = True )
+        signal.mean  .fix ()
+        signal.sigma .fix ()
+        signal.alpha.release()
+        signal.beta .release()
+        result, frame = model.fitTo ( dataset0 , silent = True )
+        signal.mean  .release()
+        signal.sigma .release()
+        result, frame = model.fitTo ( dataset0 , silent = True )
+
+    make_print ( model , result , "GenLogisticIV model" , logger )        
+    
+    models.add     ( model  )
+    results.append ( result )
+
+# =============================================================================
 ## Test  LOSEV
 # =============================================================================
 def test_losev() :
@@ -2072,6 +2116,10 @@ if '__main__' == __name__ :
     ## Logistic distribution                     + background 
     with timing ('test_logistic'       , logger ) :
         test_logistic       () 
+
+    ## GenLogisticIV distribution                     + background 
+    with timing ('test_genlogistic4'       , logger ) :
+        test_genlogistic4    () 
 
     ## Asymmetric hyperbolic secant distribution + background         
     with timing ('test_losev'          , logger ) :

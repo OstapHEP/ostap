@@ -45,6 +45,7 @@ Empricial PDFs to describe narrow peaks
   - Sech_pdf   
   - Losev_pdf   
   - Logistic_pdf   
+  - GenLogisticIV_pdf   
   - RaisingCosine_pdf
   - QGaussian_pdf
   - KGaussian_pdf
@@ -125,6 +126,7 @@ __all__ = (
     'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
     'Losev_pdf'              , ## asymmetric hyperbolic secant
     'Logistic_pdf'           , ## Logistic aka "sech-squared"   
+    'GenLogisticIV_pdf'      , ## Generalized Logistic Type IV with location/scale 
     'BatesShape_pdf'         , ## Bates-shape
     'Hat_pdf'                , ## hat function (smoth&finite)
     'Up_pdf'                 , ## finite atomin fnuction up
@@ -2806,6 +2808,89 @@ class Logistic_pdf(PEAK) :
     
 models.append ( Logistic_pdf )      
 
+# =============================================================================
+## @class GenLogisticIV_pdf
+#  Generalized Logistic Type IV with location/scale
+#  @see https://en.wikipedia.org/wiki/Generalized_logistic_distribution
+
+#  @see Ostap::Math::Logistic
+#  @see Ostap::Models::Logistic
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2016-06-14
+class GenLogisticIV_pdf(PEAK) :
+    """Genrealized Logistic Type IV with location/scale
+    - see https://en.wikipedia.org/wiki/Generalized_logistic_distribution
+    - see Ostap::Math::GenLogisticIV
+    - see Ostap::Models::GenLogisticIV
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mean      = None ,   ## related to mean 
+                   sigma     = None ,   ## related to sigma 
+                   alpha     = 1    ,   ## tails ...
+                   beta      = 1    ) : ## tails ..
+
+        #
+        ## initialize the base
+        #
+        
+        PEAK.__init__  ( self , name , xvar , mean , sigma  )
+        
+        ## alpha
+        self.__alpha = self.make_var ( alpha               ,
+                                       'alpha_%s'   % name ,
+                                       '#alpha(%s)' % name ,
+                                       None , 1 , 0.1 , 10 ) 
+        
+        ## beta 
+        self.__beta  = self.make_var ( beta                ,
+                                       'beta_%s'   % name  ,
+                                       '#beta(%s)' % name  ,
+                                       None , 1 , 0.1 , 10 ) 
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.GenLogisticIV (
+            self.roo_name ( 'll4_' ) , 
+            "GenLogisticIV %s" % self.name ,
+            self.xvar      ,
+            self.mean      ,
+            self.sigma     , 
+            self.alpha     , 
+            self.beta      ) 
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'alpha'     : self.alpha ,
+            'beta'      : self.beta  ,
+            }
+
+        
+    @property
+    def alpha ( self ) :
+        """`alpha'- parameter for Generalized Logistic Type IV distributution
+        """
+        return self.__alpha
+    @alpha.setter 
+    def alpha ( self , value ) :
+        self.set_value ( self.__alpha , value ) 
+
+    @property
+    def beta ( self ) :
+        """`beta'- parameter for Generalized Logistic Type IV distributution
+        """
+        return self.__beta
+    @beta.setter 
+    def beta ( self , value ) :
+        self.set_value ( self.__beta , value ) 
+
+    
+models.append ( GenLogisticIV_pdf )      
 
 # =============================================================================
 ## @class BatesShapoe_pdf

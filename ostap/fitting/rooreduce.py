@@ -1911,6 +1911,22 @@ Ostap.Models.Logistic .__reduce__ = _ratlas_reduce_
 Ostap.Models.Hat      .__reduce__ = _ratlas_reduce_ 
 Ostap.Models.Up       .__reduce__ = _ratlas_reduce_ 
 
+
+# =============================================================================
+## reduce GenLogisticVF 
+def _rgl4_reduce_ ( pdf ):
+    """Reduce GenLogisticIV"""
+    return root_store_factory , ( type ( pdf )   ,
+                                  pdf.name       ,
+                                  pdf.title      ,
+                                  pdf.x       () ,                            
+                                  pdf.mu      () ,
+                                  pdf.sigma   () ,
+                                  pdf.alpha   () ,
+                                  pdf.beta    () )
+
+Ostap.Models.GenLogisticIV .__reduce__ = _rgl4_reduce_ 
+
 # =============================================================================
 ## reduce BatesShate  
 def _rbats_reduce_ ( pdf ):
@@ -2772,6 +2788,7 @@ _decorated_classes_ = (
     Ostap.Models.Atlas                 , 
     Ostap.Models.Sech                  , 
     Ostap.Models.Logistic              ,
+    Ostap.Models.GenLogisticIV         ,
     Ostap.Models.Hat                   , 
     Ostap.Models.Up                    , 
     Ostap.Models.Slash                 , 

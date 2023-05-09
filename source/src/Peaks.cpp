@@ -3198,6 +3198,197 @@ std::size_t Ostap::Math::Logistic::tag () const
 
 
 
+// ============================================================================
+/*  constructor with all parameters
+ *  @param mu    \f$\mu  \f$-parameter
+ *  @param sigma \f$sigma\f$-parameter
+ *  @param alpha \f$alpha\f$-parameter
+ *  @param beta  \f$beta\f$-parameter
+ */
+// ============================================================================
+Ostap::Math::GenLogisticIV::GenLogisticIV
+( const double mu    ,
+  const double sigma , 
+  const double alpha , 
+  const double beta  ) 
+  : m_mu    (            mu      ) 
+  , m_sigma ( std::abs ( sigma ) ) 
+  , m_alpha ( std::abs ( alpha ) ) 
+  , m_beta  ( std::abs ( beta  ) ) 
+  , m_tilda_mu (  0 ) 
+  , m_tilda_s  (  1 ) 
+  , m_norm     ( -1 )
+{
+  setAlpha ( alpha ) ;
+  setBeta  ( beta  ) ;
+}
+// ============================================================================
+// Destructor
+// ============================================================================
+Ostap::Math::GenLogisticIV::~GenLogisticIV(){}
+// ============================================================================
+// set parameter mu 
+// ============================================================================
+bool Ostap::Math::GenLogisticIV::setMu ( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  m_mu = value ;
+  return true ;  
+}
+// ============================================================================
+// set parameter sigma
+// ============================================================================
+bool Ostap::Math::GenLogisticIV::setSigma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  m_sigma = avalue ;
+  return true ;  
+}
+// ============================================================================
+// set parameter alpha
+// ============================================================================
+bool Ostap::Math::GenLogisticIV::setAlpha ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_alpha ) && 0 < m_norm ) { return false ; }
+  //
+  m_alpha    = avalue ;
+  //
+  m_tilda_mu =             Ostap::Math::psi ( m_alpha     ) - Ostap::Math::psi ( m_beta     )   ;
+  m_tilda_s  = std::sqrt ( Ostap::Math::psi ( m_alpha , 1 ) + Ostap::Math::psi ( m_beta , 1 ) ) ;
+  m_norm     = 1.0/Ostap::Math::beta ( m_alpha , m_beta ) ;
+  //
+  return true ;  
+}
+// ============================================================================
+// set parameter beta 
+// ============================================================================
+bool Ostap::Math::GenLogisticIV::setBeta ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_beta ) && 0 < m_norm ) { return false ; }
+  //
+  m_beta     = avalue ;
+  //
+  m_tilda_mu =             Ostap::Math::psi ( m_alpha     ) - Ostap::Math::psi ( m_beta     )   ;
+  m_tilda_s  = std::sqrt ( Ostap::Math::psi ( m_alpha , 1 ) + Ostap::Math::psi ( m_beta , 1 ) ) ;
+  m_norm     = 1.0/Ostap::Math::beta ( m_alpha , m_beta ) ;
+  //
+  return true ;  
+}
+// ============================================================================
+// get the "standard" Generalized Type IV Logistic distribution 
+// ============================================================================
+double  Ostap::Math::GenLogisticIV::std_type4 ( const double t ) const 
+{
+  const double tt = std::tanh ( 0.5 * t ) ;
+  const double s1 = 0.5 * ( 1 + tt ) ;
+  const double s2 = 0.5 * ( 1 - tt ) ;
+  //
+  return m_norm * std::pow ( s1 , m_alpha ) * std::pow ( s2 , m_beta ) ;
+}
+// ============================================================================
+// get the helper variable y 
+// ============================================================================
+double Ostap::Math::GenLogisticIV::y ( const double z ) const 
+{ return m_mu      + m_sigma    * ( z - m_tilda_mu ) / m_tilda_s ; }
+// ============================================================================
+// get the helper variable z 
+// ============================================================================
+double Ostap::Math::GenLogisticIV::z ( const double y ) const 
+{ return m_tilda_mu + m_tilda_s * ( y - m_mu       ) / m_sigma ; }
+// ============================================================================
+//  evaluate the function
+// ============================================================================
+double  Ostap::Math::GenLogisticIV::evaluate ( const double x ) const 
+{
+  const double r = m_tilda_s / m_sigma ;
+  const double t = m_tilda_mu + r * ( x - m_mu ) ;
+  return std_type4 ( t ) * r ;
+}
+// ============================================================================
+// integral from -infinity to +infinity
+// ============================================================================
+double Ostap::Math::GenLogisticIV::integral () const { return 1 ; }
+// ============================================================================
+// get integral from low to high
+// ============================================================================
+double Ostap::Math::GenLogisticIV::integral 
+( const double low  ,
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low             ) { return - integral ( high , low ) ; }
+  //
+  // split into reasonable subintervals 
+  //
+  if ( low < m_mu && m_mu < high ) 
+  { return integral ( low , m_mu ) + integral ( m_mu , high ) ; }
+  //
+  {
+    const double x1 = m_mu +  3 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_mu -  3 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }  
+  //
+  {
+    const double x1 = m_mu +  6 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_mu -  6 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }  
+  //
+  {
+    const double x1 = m_mu + 10 * m_sigma ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2 = m_mu - 10 * m_sigma ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+  }  
+  //
+  const double x1     = m_mu - 10 * m_sigma  ;
+  const double x2     = m_mu + 10 * m_sigma  ;
+  const double x_low  = std::min ( x1 , x2 ) ;
+  const double x_high = std::max ( x1 , x2 ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<GenLogisticIV> s_integrator {} ;
+  static char s_message[] = "Integral(GenLogisticIV)" ;
+  //
+  const bool in_tail = high <= x_low || x_high <= low ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+    ( tag () , 
+      &F     , 
+      low    , high             ,    // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
+      m_workspace.size()              ,           // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ===========================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::GenLogisticIV::tag () const 
+{ 
+  static const std::string s_name = "GenLogisticIV" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mu , m_sigma , m_alpha , m_beta ) ;
+}
+// ============================================================================
+
+
+
 
 
 

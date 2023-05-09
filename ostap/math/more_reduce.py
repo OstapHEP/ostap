@@ -449,7 +449,7 @@ def _ommatt_reduce_ ( peak ) :
     - see `Ostap.Math.Needham`
     """
     return root_factory , ( type ( peak ) , peak.m0 () , peak.sigma() ,
-                            peka.a0 ()    , peak.a1 () , peak.a2   () ) 
+                            peak.a0 ()    , peak.a1 () , peak.a2   () ) 
 
 Ostap.Math.Needham  . __reduce__ = _ommatt_reduce_
 
@@ -597,9 +597,25 @@ def _omlosev_reduce_ ( peak ) :
     """Reduce `Ostap.Math.Losev`
     - see `Ostap.Math.Losev`
     """
-    return root_factory , ( type ( peak ) , peak.mu () , peak.alpha () , peka.beta () )
+    return root_factory , ( type ( peak ) , peak.mu () , peak.alpha () , peak.beta () )
 
 Ostap.Math.Losev   . __reduce__ = _omlosev_reduce_
+
+
+# =============================================================================
+## Reduce Ostap::Math::GenLogisticIV 
+#  @see Ostap::Math::GenLogistic4
+def _omgl4_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.GenLogisticIV`
+    - see `Ostap.Math.GenLogisticIV`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.mu    () ,
+                            peak.sigma () ,
+                            peak.alpha () ,
+                            peak.beta  () )
+
+Ostap.Math.GenLogisticIV   . __reduce__ = _omgl4_reduce_
 
 
 # =============================================================================
@@ -677,7 +693,7 @@ def _omghyp_reduce_ ( peak ) :
     - see `Ostap.Math.GenHyperbolic`
     """
     return root_factory , ( type ( peak ) , peak.mu   () ,
-                            peak.sigma()  , peak.zeta ()  , peak.kappa () , peka.lambd () )
+                            peak.sigma()  , peak.zeta ()  , peak.kappa () , peak.lambd () )
 
 Ostap.Math.GenHyperbolic. __reduce__ = _omghyp_reduce_
 

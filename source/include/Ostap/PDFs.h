@@ -5425,6 +5425,91 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class GenLogisticIV
+     *  @see Ostap::Math::GenLogisticIV
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2016-06-14
+     */
+    class  GenLogisticIV: public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::GenLogisticIV, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      GenLogisticIV
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           mu        ,
+        RooAbsReal&           sigma     , 
+        RooAbsReal&           alpha     ,
+        RooAbsReal&           beta      ) ;
+      /// "copy constructor"
+      GenLogisticIV
+      ( const GenLogisticIV&  right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~GenLogisticIV () ;
+      /// clone
+      GenLogisticIV* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      GenLogisticIV () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::GenLogisticIV& function() const { return m_gl4 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x       () const { return m_x       .arg() ; }
+      const RooAbsReal& mu      () const { return m_mu      .arg() ; }
+      const RooAbsReal& sigma   () const { return m_sigma   .arg() ; }
+      const RooAbsReal& alpha   () const { return m_alpha   .arg() ; }
+      const RooAbsReal& beta    () const { return m_beta    .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        ;
+      RooRealProxy m_mu       ;
+      RooRealProxy m_sigma    ;
+      RooRealProxy m_alpha    ;
+      RooRealProxy m_beta     ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::GenLogisticIV m_gl4 ; // the actual function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Argus
      *  http://en.wikipedia.org/wiki/ARGUS_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

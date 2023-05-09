@@ -50,6 +50,7 @@ Empricial PDFs to describe narrow peaks :
   - Sech  shape
   - Losev  shape
   - Logistic, aka 'sech-squared' shape
+  - Generalized Logistic Type IV
   
 PDF to describe 'wide' peaks : 
 
@@ -110,6 +111,7 @@ __all__ = (
     'Sech_pdf'               , ## hyperbolic secant (inverse-cosh) distribution
     'Losev_pdf'              , ## asymmetric hyperbolic secant distribution
     'Logistic_pdf'           , ## Logistic aka 'sech-squared' PDF
+    'GenLogisticIV_pdf'      , ## generalized Logistic Type IV with location/scale 
     #
     ## specializations:
     # 
