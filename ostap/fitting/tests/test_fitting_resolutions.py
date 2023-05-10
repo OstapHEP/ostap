@@ -312,6 +312,31 @@ def test_logistic () :
     plots .add ( frame ) 
 
 # =============================================================================
+## Logistic 
+# =============================================================================
+def test_genlogistic4 () :
+    
+    logger = getLogger ( 'test_genlogistic4' )
+
+    logger.info ('Test ResoGenLogisticIV: Generalized Logistic type IV resolution' )
+    from   ostap.fitting.resolution import ResoGenLogisticIV
+    reso = ResoGenLogisticIV ( 'GenLogisticIV' , mass ,  sigma = ( 0.4 , 0.01 , 5.0 ) ,)
+            
+    result, frame = reso. fitTo ( dataset , silent = True  )
+    result, frame = reso. fitTo ( dataset , silent = True  )    
+    with wait ( 1 ) , use_canvas ( 'test_logistic' ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        make_print ( reso , result , 'GenLogisticIV', logger )
+ 
+    models.add ( reso  )
+    plots .add ( frame ) 
+
+# =============================================================================
 ## symmetric Bukin
 # =============================================================================
 def test_bukin () :
@@ -699,8 +724,11 @@ if '__main__' == __name__ :
         test_sech           () ## hyperbolic secant resolution model
 
     with timing ("Logistic"  , logger ) :  
-        test_logistic       () ## logistic resolution model
-        
+        test_logistic        () ## logistic resolution model
+
+    with timing ("GenLogisticIV"  , logger ) :  
+        test_genlogistic4    () ## logistic resolution model
+
     with timing ("Bukin"     , logger ) :  
         test_bukin          () ## Bukin resolution model
     

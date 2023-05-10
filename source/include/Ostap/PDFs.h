@@ -5426,6 +5426,9 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class GenLogisticIV
+     *  - Type I   : beta  = 1 
+     *  - Type II  : alpha = 1 
+     *  - Type III : alpha = beta         
      *  @see Ostap::Math::GenLogisticIV
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2016-06-14

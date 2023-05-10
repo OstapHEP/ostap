@@ -27,6 +27,7 @@
 - Apollonios-2                        (exponential tails)
 - Sech/hyperbolic  secant             (exponential tails)
 - Logistic/Sech-squared               (exponential tails) 
+- GenLogisticIV                       (exponential tails+asymmetry) 
 - Bukin                               (exponential or gaussian tails)
 - double-sided Crystal Ball           (power-law  tails)
 - Student-T                           (power-law  tails)
@@ -57,7 +58,8 @@ __all__     = (
     'ResoSkewGenT'      , ## Skewed Generalized t-distribution 
     'ResoSkewGenError'  , ## Skewed Generalized Error-distribution 
     'ResoSech'          , ## Sech/hyperbolic secant  resolution model
-    'ResoLogistic'      , ## Logistic ("sech-squared") resoltuion model
+    'ResoLogistic'      , ## Logistic ("sech-squared") resolution model
+    'ResoGenLogisticIV' , ## Generalized Logistic Type IV resolution model
     'ResoBukin'         , ## Bukin resolution model
     'ResoJohnsonSU'     , ## Jonnson's SU resolution model 
     'ResoSinhAsinh'     , ## Sinh-Asinh resolution model
@@ -550,8 +552,6 @@ class ResoCB2(RESOLUTION) :
         """'alphaR' : parameter 'alpha' for right tail
         """
         return self.__alphaR
-
-    
 
 models.add ( ResoCB2 )
 
@@ -1548,6 +1548,128 @@ class ResoLogistic(RESOLUTION) :
             }
 
 # =============================================================================
+## @class ResoGenLogisticIV
+#  Generalized Logistic Type IV 
+#  Type I   : beta  = 1 
+#  Type II  : alpha = 1 
+#  Type III : alpha = beta         
+#  @see https://en.wikipedia.org/wiki/Generalized_logistic_distribution
+#  @see Ostap::Math::GenLogisticIV
+#  @see Ostap::Models::GenLogisticIV
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2016-06-14
+class ResoGenLogisticIV(RESOLUTION) :
+    """Generalized Logistic Type IV
+    - Type I   : beta  = 1 
+    - Type II  : alpha = 1 
+    - Type III : alpha = beta
+    - see https://en.wikipedia.org/wiki/Generalized_logistic_distribution
+    - see Ostap::Math::GenLogisticIV
+    - see Ostap::Models::GenLogisticIV
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   sigma     = None ,   ## related to sigma
+                   gamma     = 1    ,   ## "mean"-tail: 0.5*(alpha+gamma)
+                   fudge     = 1    , 
+                   mean      = None ,   ## related to mean
+                   kappa     = None ) : ## related to asymmetry 0.5*(alpha-gamma)
+        
+        
+        ## initialize the base 
+        super(ResoGenLogisticIV,self).__init__ ( name  = name  ,
+                                                 xvar  = xvar  ,
+                                                 sigma = sigma ,
+                                                 mean  = mean  ,
+                                                 fudge = fudge )
+        
+        ## asymmetry parameter 
+        self.__kappa = self.make_var ( ZERO if kappa is None else kappa , 
+                                       'kappa_%s'   % self.name ,
+                                       '#kappa(%s)' % self.name ,
+                                       None  , 0 , -1 , +1 ) 
+        ## tail 
+        self.__gamma = self.make_var ( gamma               ,
+                                       'gamma_%s'   % name ,
+                                       '#gamma(%s)' % name ,
+                                       None , 1 , 1.e-5 , 100 ) 
+        
+        if kappa is None :
+            
+            self.__alpha = self.gamma
+            self.__beta  = self.gamma
+            
+        else :
+            
+            self.__alpha , self.__beta = self.vars_from_asymmetry (
+                self.gamma                                       , ## mean/average tail
+                self.kappa                                       , ## asymmetry parametet
+                v1name  =  self.roo_name ( 'alpha' , self.name ) ,
+                v2name  =  self.roo_name ( 'beta'  , self.name ) ,
+                v1title = '#alpha: #gamma #times (1+#kappa)'     , 
+                v2title = '#beta : #gamma #times (1-#kappa)'     )
+                      
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.GenLogisticIV (
+            self.roo_name ( 'rgl4_' ) , 
+            "Resolution GenLogisticIV %s" % self.name ,
+            self.xvar      ,
+            self.mean      ,
+            self.sigma     , 
+            self.alpha     , 
+            self.beta      ) 
+
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'gamma'     : self.gamma ,
+            'kappa'     : self.kappa ,
+            'fudge'     : self.fudge ,
+            }
+
+    @property
+    def mu ( self ) :
+        """'mu' : location parameter (same as 'mean')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :
+        self.mean = value
+    
+    @property
+    def kappa ( self ) :
+        """'kappa' : dimensionless parameter, related to asymmetry"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def gamma ( self ) :
+        """'gamma' : mean tail-parameter: 0.5 * alpha + beta )"""
+        return self.__gamma
+    @gamma.setter
+    def gamma ( self , value ) :
+        self.set_value ( self.__gamma , value )
+
+    @property
+    def alpha ( self ) :
+        """`alpha'- parameter for Generalized Logistic Type IV distribution
+        """
+        return self.__alpha
+
+    @property
+    def beta ( self ) :
+        """`beta'- parameter for Generalized Logistic Type IV distribution
+        """
+        return self.__beta
+
+# =============================================================================
 ## @class ResoHyperbolic
 #  @see Ostap::Math::Hyperbolic
 #  @see Ostap::Models::Hyperbolic
@@ -1954,13 +2076,12 @@ class ResoHypatia(ResoGenHyperbolic) :
         """'cnvpars' : parameters for convolution"""
         return self.__cnvpars 
 
-
 # =============================================================================
 ## @class ResoDas
 #  @see Ostap::Math::Das
 #  @see Ostap::Models::Das
 class ResoDas(RESOLUTION) :
-    """Das resoltuoonmodel: gaussian with exponential tails 
+    """Das resoltuon model: gaussian with exponential tails 
     - see Ostap::Math::Das
     - see Ostap::Models::Das
     - see Das_pdf 
@@ -2518,7 +2639,7 @@ class ResoBukin2(RESOLUTION) :
 #  @see Ostap::Math::Bates
 #  @see Ostap::Math::IrwinHall
 #  @see Ostap::Models::BatesShape
-#  For good fits parmaeter n showul be large. e.g.  n>10 
+#  For good fits parameter n shoul be rather large. e.g.  n>10 
 class ResoBatesShape(RESOLUTION) :
     """BatesShape resolution model (spline-like finite model) 
     - see Ostap::Math::BatesShape
@@ -2526,7 +2647,7 @@ class ResoBatesShape(RESOLUTION) :
     - see Ostap::Math::IrwinHall
     - see Ostap::Models::BatesShape 
     - see BatesShape_pdf 
-    For good fits parmaeter n showul be large. e.g.  n>10 
+    For good fits parameter n should be large. e.g.  n>10 
     """
     def __init__ ( self             ,
                    name             ,

@@ -2516,6 +2516,9 @@ namespace Ostap
     /** @class GenLogisticIV
      *  GeneraliZed Logistic Type IV distribution with location/scale 
      *  https://en.wikipedia.org/wiki/Generalized_logistic_distribution
+     *  - Type I   : beta  = 1 
+     *  - Type II  : alpha = 1 
+     *  - Type III : alpha = beta 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2023-05-09
      */
@@ -2563,6 +2566,25 @@ namespace Ostap
       bool   setSigma ( const double value ) ;
       bool   setAlpha ( const double value ) ;
       bool   setBeta  ( const double value ) ;
+      // ======================================================================
+    public: // properties 
+      // ======================================================================
+      /// get the mean value 
+      inline double mean       () const { return m_mu ; }
+      /// get the variance 
+      inline double variance   () const { return m_sigma * m_sigma  ; }
+      /// get the dispersion 
+      inline double dispersion () const { return variance ()   ; }
+      /// get the RMS
+      inline double rms        () const { return m_sigma ; }
+      /// get the skewness 
+      double skewness          () const ;
+      /// get the (Excess) kurtosis 
+      double kurtosis          () const ;
+      /// get the mode
+      double mode              () const ;
+      /// get cumulant 
+      double cumulant          ( const unsigned short k ) const ;
       // ======================================================================
     public: // integrals
       // ======================================================================

@@ -3282,11 +3282,16 @@ bool Ostap::Math::GenLogisticIV::setBeta ( const double value )
 // ============================================================================
 double  Ostap::Math::GenLogisticIV::std_type4 ( const double t ) const 
 {
-  const double tt = std::tanh ( 0.5 * t ) ;
-  const double s1 = 0.5 * ( 1 + tt ) ;
-  const double s2 = 0.5 * ( 1 - tt ) ;
   //
-  return m_norm * std::pow ( s1 , m_alpha ) * std::pow ( s2 , m_beta ) ;
+  // const double tt = std::tanh ( 0.5 * t ) ;
+  // const double s1 = 0.5 * ( 1 + tt ) ;
+  // const double s2 = 0.5 * ( 1 - tt ) ;
+  // return m_norm * std::pow ( s1 , m_alpha ) * std::pow ( s2 , m_beta ) ;
+  //
+  // better numeraicla properties :
+  return 0 <= t ? 
+    m_norm * std::exp ( - m_beta  * t ) / std::pow ( 1 + std::exp  ( -t ) , m_alpha + m_beta ) :
+    m_norm * std::exp (   m_alpha * t ) / std::pow ( 1 + std::exp  (  t ) , m_alpha + m_beta ) ;  
 }
 // ============================================================================
 // get the helper variable y 
@@ -3378,6 +3383,38 @@ double Ostap::Math::GenLogisticIV::integral
   return result ;
 }
 // ===========================================================================
+// get the mode
+// ============================================================================
+double Ostap::Math::GenLogisticIV::mode() const 
+{ return y ( std::log ( m_alpha / m_beta ) ) ; }
+// ===========================================================================
+// get the skewness
+// ============================================================================
+double Ostap::Math::GenLogisticIV::skewness () const 
+{ return cumulant ( 3 ) / std::pow ( m_sigma , 3 ) ; }
+// ===========================================================================
+// get the (excess) kurtosis
+// ============================================================================
+double Ostap::Math::GenLogisticIV::kurtosis () const 
+{
+  const double mu4 = cumulant ( 4 ) + 3 * std::pow ( variance () , 2 ) ;
+  return mu4 / std::pow ( m_sigma , 4 ) - 3 ; 
+}
+// ===========================================================================
+// get the cumulant 
+// ============================================================================
+double Ostap::Math::GenLogisticIV::cumulant
+( const unsigned short k ) const 
+{ 
+  return 
+    0 == k ? 0.0         :
+    1 == k ? mean     () :
+    2 == k ? variance () :
+    ( Ostap::Math::psi ( m_alpha , k - 1 )
+      + ( 0 == k % 2 ? 1 : -1 ) * Ostap::Math::psi ( m_beta , k - 1 ) ) 
+    * std::pow ( m_sigma / m_tilda_s , k ) ;
+}
+// ===========================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::GenLogisticIV::tag () const 
@@ -3386,11 +3423,6 @@ std::size_t Ostap::Math::GenLogisticIV::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_sigma , m_alpha , m_beta ) ;
 }
 // ============================================================================
-
-
-
-
-
 
 // ============================================================================
 // Student-T 

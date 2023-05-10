@@ -2812,13 +2812,18 @@ models.append ( Logistic_pdf )
 ## @class GenLogisticIV_pdf
 #  Generalized Logistic Type IV with location/scale
 #  @see https://en.wikipedia.org/wiki/Generalized_logistic_distribution
-
+#  - Type I   : beta  = 1 
+#  - Type II  : alpha = 1 
+#  - Type III : alpha = beta         
 #  @see Ostap::Math::Logistic
 #  @see Ostap::Models::Logistic
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
 class GenLogisticIV_pdf(PEAK) :
     """Genrealized Logistic Type IV with location/scale
+    - Type I   : beta  = 1 
+    - Type II  : alpha = 1 
+    - Type III : alpha = beta
     - see https://en.wikipedia.org/wiki/Generalized_logistic_distribution
     - see Ostap::Math::GenLogisticIV
     - see Ostap::Models::GenLogisticIV
@@ -2841,18 +2846,18 @@ class GenLogisticIV_pdf(PEAK) :
         self.__alpha = self.make_var ( alpha               ,
                                        'alpha_%s'   % name ,
                                        '#alpha(%s)' % name ,
-                                       None , 1 , 0.1 , 10 ) 
+                                       None , 1 , 1.e-5 , 100 ) 
         
         ## beta 
         self.__beta  = self.make_var ( beta                ,
                                        'beta_%s'   % name  ,
                                        '#beta(%s)' % name  ,
-                                       None , 1 , 0.1 , 10 ) 
+                                       None , 1 , 1.e-5 , 100 ) 
         #
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.GenLogisticIV (
-            self.roo_name ( 'll4_' ) , 
+            self.roo_name ( 'gl4_' ) , 
             "GenLogisticIV %s" % self.name ,
             self.xvar      ,
             self.mean      ,
@@ -2873,7 +2878,7 @@ class GenLogisticIV_pdf(PEAK) :
         
     @property
     def alpha ( self ) :
-        """`alpha'- parameter for Generalized Logistic Type IV distributution
+        """`alpha'- parameter for Generalized Logistic Type IV distribution
         """
         return self.__alpha
     @alpha.setter 
@@ -2882,14 +2887,13 @@ class GenLogisticIV_pdf(PEAK) :
 
     @property
     def beta ( self ) :
-        """`beta'- parameter for Generalized Logistic Type IV distributution
+        """`beta'- parameter for Generalized Logistic Type IV distribution
         """
         return self.__beta
     @beta.setter 
     def beta ( self , value ) :
         self.set_value ( self.__beta , value ) 
 
-    
 models.append ( GenLogisticIV_pdf )      
 
 # =============================================================================

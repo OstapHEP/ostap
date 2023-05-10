@@ -7,6 +7,9 @@
   1. Add more methods to `Ostap::Math::Positive`, considering the positive polynomial like PDF 
   1. add new test for `ostap.fitting.distributions` 
   1. Add Generalized Logistyc Type IV model with location/sclae family and corresponding PDF 
+  1. Improve evaluation of Generalized Logistic Type IV function, add more methods: `mode`, 'skewness', `kurtosis`, 'cumulant'
+  1. Add `ResoGenLogisticIV` resoluton model and corresponding tests 
+
 
 ## Backward incompatible: 
 
