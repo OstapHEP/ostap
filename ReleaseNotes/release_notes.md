@@ -1,15 +1,16 @@
+# v1.9.8.6
+
 ## New features:
 
-  1. add `operatoir()`, `density`  and `density_mass` methods for `Ostap::Kinematics::Dalitz0` and `Ostap::Kinematics::Dalitz` classes 
+  1. add `operator()`, `density`  and `density_mass` methods for `Ostap::Kinematics::Dalitz0` and `Ostap::Kinematics::Dalitz` classes 
   1. add `clenshaw-curtis` adaptive quadrature. It apprears to be better than Romberg' method.
   1. extend tests for Clenshaw-Curtis quadrature 
   1. Add modified PERT fuction and corresponding PDF
   1. Add more methods to `Ostap::Math::Positive`, considering the positive polynomial like PDF 
   1. add new test for `ostap.fitting.distributions` 
-  1. Add Generalized Logistyc Type IV model with location/sclae family and corresponding PDF 
+  1. Add Generalized Logistyc Type IV model with location/scale family and corresponding PDF 
   1. Improve evaluation of Generalized Logistic Type IV function, add more methods: `mode`, 'skewness', `kurtosis`, 'cumulant'
   1. Add `ResoGenLogisticIV` resoluton model and corresponding tests 
-
 
 ## Backward incompatible: 
 
@@ -59,7 +60,7 @@
 ## New features:
 
   1. add `Ostap::Math::ExGauss2` function, `Ostap::Models::ExGauss2` and `ExGauss2_pdf` PDFs for the 
-     variant of exponentially modified gaussuan distribution, but parameterise din terms of the mode 
+     variant of exponentially modified gaussuan distribution, but parameterised in terms of mode 
   1. add `Ostap::Math::Bukin2`, `Ostap::Models::Bukin2` and  `Bukin2_pdf`
   1. add `ResoBukin2` resolution model
   1. add more tests    
