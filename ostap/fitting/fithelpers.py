@@ -808,6 +808,12 @@ class FitHelper(VarMaker) :
             elif key in ( 'minos'    ,       ) and isinstance ( a , ROOT.RooArgSet ) :
                 
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
+
+            elif key in ( 'minos'    ,       ) and isinstance ( a , ROOT.RooAbsReal ) and a in self : 
+
+                vset = ROOT.RooArgSet( a    )
+                self.aux_keep.append ( vset ) 
+                _args.append   (  ROOT.RooFit.Minos        ( vset )  )
                 
             elif key in ( 'minos'    ,       ) and isinstance ( a , string_types   ) \
                      and hasattr  ( self , 'params' ) and a in self.params ( dataset ) :
@@ -817,7 +823,7 @@ class FitHelper(VarMaker) :
                 self.aux_keep.append ( _s ) 
                 _args.append   (  ROOT.RooFit.Minos        ( _s )  )
                 
-            elif key in ( 'MINOS'    ,       ) and not isinstance ( a , string_types ) :
+            elif key in ( 'minos'  ,       ) and not isinstance ( a , string_types ) :
 
                 _s     = ROOT.RooArgSet()
                 _pars = self.params ( dataset ) if hasattr  ( self , 'params' ) else ROOT.RooArgSet() 
@@ -1876,14 +1882,14 @@ class FitHelper(VarMaker) :
     #  @code
     #  vars       = ...
     #  fit_result = ...
-    #  constraint = pdf.soft_multivar_constraint ( vars , fitresult , True )
+    #  constraint = pdf.soft_multivar_constraint ( vars , fitresult )
     #  @endcode
-    #  - use valees and covariance matrix 
+    #  - use values and covariance matrix 
     #  @code
     #  vars       = ...
     #  values     = ...
     #  cov2       = ... 
-    #  constraint = pdf.soft_multivar_constraint ( vars , values , cov2 )    
+    #  constraint = pdf.soft_multivar_constraint ( vars , ( values , cov2 ) )    
     #  @see RooMultiVarGaussian 
     def soft_multivar_constraint ( self , vars , config , name = '' , title = '' ) :
         """Create multivariate Gaussian constraint
@@ -1894,7 +1900,6 @@ class FitHelper(VarMaker) :
         >>> vars       = ...
         >>> fit_result = ...
         >>> constraint = pdf.soft_multivar_constraint ( vars , fitresult )
-
         
         - use values and covariance matrix 
         >>> vars       = ...
@@ -1946,7 +1951,7 @@ class FitHelper(VarMaker) :
 
         if   isinstance ( second , Ostap.Math.SymMatrix ( N ) ) : second = second.tmatrix() 
 
-        ## 1) most iseful case : values and covariances are provdeid throught RooFitResult obkect
+        ## 1) the most useful case : values and covariances are provdeid throught RooFitResult obkect
         if isinstance ( first , ROOT.RooFitResult ) :
             
             fitres     = first 
@@ -1955,7 +1960,7 @@ class FitHelper(VarMaker) :
                 assert v in float_pars , \
                        'FitResult object does not depend on parameter %s/%s' % ( v , type ( v ) )
 
-        ## 2) values and covarinaces are provided explicitely 
+        ## 2) values and covariances are provided explicitely 
         elif isinstance ( first , ROOT.TVectorD ) and isinstance ( second , ROOT.TMatrixDSym ) :
 
             vals = first
@@ -1967,7 +1972,7 @@ class FitHelper(VarMaker) :
             
             raise TypeError ( "Invalid 'config' (%s,%s)/(%s,%s)" % (
                 first , second , type ( first ) , type ( second ) ) )
-         
+
         ## create multivariate gaussian constraint  
         mgauss = ROOT.RooMultiVarGaussian ( name , title , vlist , first , second )
         
@@ -1976,9 +1981,7 @@ class FitHelper(VarMaker) :
         
         self.info ('Multivariate (%s) constraint is created %s' % ( [ v.name for v in variables ] , mgauss ) ) 
         return mgauss 
-            
-            
-            
+                        
     # ==========================================================================
     ## Helper function to  create soft Gaussian constraint
     #  to the ratio of <code>a</code> and <code>b</code>

@@ -82,7 +82,7 @@ def test_simfit6() :
     title   = 'Fit for MC data (histo)'
     logger.info ( '%s:\n%s' % ( title , rmch.table ( title = title , prefix = '# ' ) ) )
     
-    ## create the constrains accornui to MC
+    ## create the constrains according to MC
     mc_constraint = model_mc.soft_multivar_constraint ( ( model_mc.mean  ,
                                                           model_mc.sigma ,
                                                           model_mc.beta  ,

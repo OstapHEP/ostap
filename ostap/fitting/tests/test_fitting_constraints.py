@@ -59,10 +59,9 @@ def test_constraint () :
                                 minos = ( 'S', 'mean_Gauss' , 'sigma_Gauss' ) )  
         logger.info ( "Uncontrained fit\n%s" % r0.table ( prefix = '# ' ) )
 
-
     ## prepare asymmetric constraints 
-    a0 = model.soft_constraint2 ( signal.sigma , 1 , -0.7  , 0.05 ) 
-    a1 = model.soft_constraint2 ( signal.mean  , 5 , -0.05 , 5    )
+    a0 = model.soft_constraint2 ( signal.sigma , 1 , -0.7  , 0.05 , name = 'constraint_asym_sigma') 
+    a1 = model.soft_constraint2 ( signal.mean  , 5 , -0.05 , 5    , name = 'constraint_asym_mean' )
     
     with wait ( 1 ) , use_canvas ( "Constrained (asymmetric) fit" ) : 
         r1 , f1 = model.fitTo ( data , silent = True ,
@@ -72,10 +71,9 @@ def test_constraint () :
                                 minos = ( 'S', 'mean_Gauss' , 'sigma_Gauss' ) )  
         logger.info ( "Constrained (asymmetric) fit\n%s" % r1.table ( prefix = '# ' ) )
 
-
     ## prepare symmetric constrains 
-    s0 = model.soft_constraint ( signal.sigma , VE ( 1 , 0.15**2 ) )
-    s1 = model.soft_constraint ( signal.mean  , VE ( 5 , 0.10**2 ) )
+    s0 = model.soft_constraint ( signal.sigma , VE ( 1 , 0.15**2 ) , name = 'constraint_sym_sigma') 
+    s1 = model.soft_constraint ( signal.mean  , VE ( 5 , 0.10**2 ) , name = 'constraint_sym_mean' )
     
     with wait ( 1 ) , use_canvas ( "Constrained (symmetric) fit" ) : 
         r2 , f2 = model.fitTo ( data , silent = True ,
