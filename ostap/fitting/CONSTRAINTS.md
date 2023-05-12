@@ -31,6 +31,12 @@ dataset = ...
 result , frame = model.fitTo ( dataset , constraints = [ constraint ] )
 ```
 
+Constraint can be also created with asymmetric uncertainties, e.g. $1.1_{-0.1}^{+0.3}$
+
+```
+constraint = gauss.soft_constraint2 ( gauss.sigma , -0.1  , 0.3 )
+```
+
 ## Multivariate Gaussian constraint
 
 In case one knows several parameters with their covarinace matrix, one can create multivarinate 
@@ -81,7 +87,7 @@ value of scale factor:
 result1 , _ = corrected_model.fitTo ( dataset , constraints = [ constraint ] )
 ```
 In case one know the scale factor, e.g $1.0\pm0.1$, 
-this knowledge can be explointed via the external constraint
+this knowledge can be added to the fit via the additional external constraint:
 ```
 scale_constraint = gauss.soft_constraint ( scale , VE ( 1.0 , 0.1**2 ) ) ## create consraint for scale parameter 
 
