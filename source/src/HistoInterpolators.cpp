@@ -552,8 +552,6 @@ double Ostap::Math::Histo2D::integral
   //
   return result ;
 }
-
-
 // ============================================================================
 // integral over whole histogram range 
 // ============================================================================
@@ -826,6 +824,63 @@ double Ostap::Math::Histo3D::integrateYZ
   double  error  = -1 ;
   std::tie ( ierror , result , error ) = s_cubature.cubature
     ( Ostap::Utils::hash_combiner ( tag () , 'X' , x ) , 
+      &F , 
+      50000 , 
+      s_APRECISION_CUBE3D  , // absolute precision
+      s_RPRECISION_CUBE3D  , // relative precision
+      s_message            ,
+      __FILE__             ,
+      __LINE__             ) ;
+  //
+  return  result ;
+}
+// ============================================================================
+// integral between low and high
+// ============================================================================
+double Ostap::Math::Histo3D::integrateXZ 
+( const double y    ,                          
+  const double xmin , const double xmax ,
+  const double zmin , const double zmax  ) const 
+{
+  //
+  if      ( s_equal ( zmin , xmax ) ) { return 0 ; }
+  else if ( s_equal ( zmin , zmax ) ) { return 0 ; }
+  else if ( xmax < xmin ) { return - integrateXZ ( y , xmax , xmin , zmin , zmax ) ; }
+  else if ( zmax < zmin ) { return - integrateXZ ( y , xmin , xmax , zmax , zmin ) ; }
+  //
+  const TAxis* xa = m_h.GetXaxis ()  ;
+  if      ( xmax <= xa->GetXmin () ) { return 0 ; }
+  else if ( xmin >= xa->GetXmax () ) { return 0 ; }
+  //
+  const TAxis* za = m_h.GetZaxis ()  ;
+  if      ( zmax <= za->GetXmin () ) { return 0 ; }
+  else if ( zmin >= za->GetXmax () ) { return 0 ; }
+  //
+  const TAxis* ya = m_h.GetYaxis ()  ;
+  if      ( y    <= ya->GetXmin () ) { return 0 ; }
+  else if ( y    >= ya->GetXmax () ) { return 0 ; }
+  //
+  const double x_min = std::max ( xmin , xa->GetXmin () ) ;
+  const double x_max = std::min ( xmax , xa->GetXmax () ) ;
+  const double z_min = std::max ( zmin , za->GetXmin () ) ;
+  const double z_max = std::min ( zmax , za->GetXmax () ) ;
+  //
+  // use 2D-cubature   
+  //
+  typedef Ostap::Math::IntegrateXY<Histo3D> FXZ ;
+  const FXZ fxz ( this , y ) ;
+  //
+  static const Ostap::Math::GSL::Integrator2D<FXZ> s_cubature{} ;
+  static const char s_message[] = "IntegralXZ(Histo3D)" ;
+  const auto F = s_cubature.make_function ( &fxz  , 
+                                            x_min , x_max , 
+                                            z_min , z_max ) ;
+  //
+  int    ierror  =  0 ;
+  double  result =  1 ;
+  double  error  = -1 ;
+  std::tie ( ierror , result , error ) = s_cubature.cubature
+    ( Ostap::Utils::hash_combiner ( tag () , 'Y' , y ) , 
       &F , 
       50000 , 
       s_APRECISION_CUBE3D  , // absolute precision
