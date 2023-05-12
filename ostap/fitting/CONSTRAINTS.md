@@ -31,11 +31,12 @@ dataset = ...
 result , frame = model.fitTo ( dataset , constraints = [ constraint ] )
 ```
 
+### Asymmetric uncertainties
 Constraint can be also created with asymmetric uncertainties, e.g. $1.1_{-0.1}^{+0.3}$
-
 ```
 constraint = gauss.soft_constraint2 ( gauss.sigma , -0.1  , 0.3 )
 ```
+
 
 ## Multivariate Gaussian constraint
 
