@@ -75,13 +75,13 @@ corrected_model = M.Fit1D ( signal = corrected_gauss , background = 'flat' , suf
  
 ``` 
 And then one can fit to the nominal dataset with constrains 
-from the reference/consyrl dataset to get 
+from the reference/control dataset to get 
 value of scale factor:
 ```
 result1 , _ = corrected_model.fitTo ( dataset , constraints = [ constraint ] )
 ```
-In case one has knowdlegd for the scale factor, e.g $1.0\pm0.1$, 
-this knowldge can be explointed via the external constraint
+In case one know the scale factor, e.g $1.0\pm0.1$, 
+this knowledge can be explointed via the external constraint
 ```
 scale_constraint = gauss.soft_constraint ( scale , VE ( 1.0 , 0.1**2 ) ) ## create consraint for scale parameter 
 
