@@ -1088,7 +1088,7 @@ class FitHelper(VarMaker) :
     #  @code
     #  var1 = ...
     #  var2 = ...
-    #  var3 = xxx.vars_multiply ( var2 )
+    #  var3 = xxx.vars_multiply ( var1 , var2 )
     #  var4 = xxx.vars_multiply ( var1 , 2.0  )    
     #  var3 = xxx.vars_product  ( var2 )
     #  var4 = xxx.vars_product  ( var1 , 2.0  )    
