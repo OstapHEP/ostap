@@ -396,7 +396,7 @@ Ostap::usedVariables
                                                      expression.c_str () , 
                                                      variables           ) } ;  
   if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
-  return usedVariables ( *ptr , variables ) ;
+  return ::usedVariables ( *ptr , variables ) ;
   //
 #elif ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
   //
@@ -421,7 +421,7 @@ Ostap::usedVariables
                                                      variables           , 
                                                      false               ) } ;  
   if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
-  return usedVariables ( *ptr , variables ) ;
+  return ::usedVariables ( *ptr , variables ) ;
   //
 #elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
