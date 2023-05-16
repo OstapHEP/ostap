@@ -125,6 +125,8 @@ Ostap::makeFormula
   std::unique_ptr<RooFormulaVar> ptr {} ;
 #endif 
   //
+  RooArgList used{} ;
+  //
   try 
   {
   // ========================================================================
@@ -135,6 +137,8 @@ Ostap::makeFormula
   ptr.reset (  new RooFormula ( vname      .c_str () ,
     expression.c_str  () , 
     dependents           ) ) ;
+  if ( !ptr || !ptr->ok() ) { return nullptr ; }
+  used = ::usedVariables ( *ptr , dependents ) ;
   //
 #elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
@@ -142,6 +146,8 @@ Ostap::makeFormula
     expression.c_str () , 
     dependents          , 
     false             ) ) ;
+  if ( !ptr || !ptr->ok() ) { return nullptr ; }
+  used = ::usedVariables ( *ptr , dependents ) ;
   //
 #else
   //
@@ -150,9 +156,11 @@ Ostap::makeFormula
     expression.c_str () , 
     dependents          , 
     false             ) ) ;
+  if ( !ptr || !ptr->ok() ) { return nullptr ; }
+  used = usedVariables ( *ptr , dependents ) ;
   // ========================================================================
 #endif
-   }
+}
   // ==========================================================================
   catch ( ... )             { return nullptr ; }    // RETURN 
   //
@@ -162,7 +170,7 @@ Ostap::makeFormula
   { new Ostap::FormulaVar ( name       , 
     title      , 
     expression , 
-    usedVariables ( *ptr , dependents ) , 
+    used       , 
     true       ) } ;
   //
   if ( !result || !result->ok() ) { return nullptr ; }
@@ -299,6 +307,9 @@ Ostap::usedVariables
                      formula.c_str () , 
                      variables        ) } ;
   //
+  if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
+  return ::usedVariables ( *ptr , variables ) ;
+  //
 #elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
   std::unique_ptr<RooFormula> ptr 
@@ -306,6 +317,9 @@ Ostap::usedVariables
     formula.c_str () , 
     variables        , 
     false            ) };
+  //
+  if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
+  return ::usedVariables ( *ptr , variables ) ;
   //
 #else 
   //
@@ -315,11 +329,11 @@ Ostap::usedVariables
     variables        , 
     false            ) };
   //
+  if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
+  return usedVariables ( *ptr , variables ) ;
+  //
 #endif
   //
-  if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
-  //
-  return usedVariables ( *ptr , variables ) ;
 }
 // ============================================================================
 /* get the list of used variables for the given formula
@@ -407,7 +421,7 @@ Ostap::usedVariables
   //
 #elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
-  return usedVariables ( formula.formula() , variables ) ; 
+  return ::usedVariables ( formula.formula() , variables ) ; 
   //
 #else 
   // ==========================================================================
