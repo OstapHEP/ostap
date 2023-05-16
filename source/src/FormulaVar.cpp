@@ -113,7 +113,7 @@ Ostap::makeFormula
                        expression.c_str  () , 
                        dependents           ) } ;
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
-  RoooArgList used { ::usedVariables ( *ptr , dependents ) } ;
+  RooArgList used { ::usedVariables ( *ptr , dependents ) } ;
   //
 #elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
