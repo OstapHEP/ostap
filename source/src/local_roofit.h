@@ -40,14 +40,35 @@ namespace
 #endif
   }
   // ==========================================================================
-  /** copy RooAbsReal from list to proxy
+  /** copy from list to list
+   *  @param from objects to be copied from this list 
+   *  @param to   objects to be copied to this proxy 
+   */
+  inline void copy 
+  ( const RooAbsCollection&  from ,
+    RooArgList&              to   ) 
+  {
+    //
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+    //
+    Ostap::Utils::Iterator tmp ( from ) ;
+    RooAbsArg* c = 0 ;
+    while ( c = (RooAbsArg*) tmp.next() ) { to.add ( *c ) ; }
+    //
+#else
+    //
+    for ( auto* c : from ) { to.add ( *c ) ; }
+    //
+#endif 
+    //
+  }
+  // ==========================================================================
+  /** copy RooAbsReal from list to list
    *  @param from objects to be copied from this list 
    *  @param to   objects to be copied to this proxy 
    */
   inline unsigned   int copy_real 
-  ( // const RooArgList&  from ,
-    const RooAbsCollection&  from ,
-    // RooListProxy&      to   , 
+  ( const RooAbsCollection&  from ,
     RooArgList&        to   , 
     const std::string& message = "Variable is not RooAbsReal!" ,
     const std::string& tag     = "Ostap::copy_real"            )

@@ -24,6 +24,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "local_utils.h"
+#include "local_roofit.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::FormulaVar
@@ -92,8 +93,9 @@ namespace
   usedVariables
   ( const RooFormula&       formula    , 
     const RooAbsCollection& variables  ) 
-  {  
-    const RooArgList vlst  { variables } ;
+  { 
+    RooArgList vlst {} ; 
+    ::copy ( variables , vlst ) ;
     return usedVariables ( formula , vlst ) ;
   }
   //
@@ -193,7 +195,8 @@ Ostap::makeFormula
   const std::string&      expression  , 
   const RooAbsCollection& dependents  ) 
 {
-  const RooArgList vlst { dependents } ;
+  RooArgList vlst {} ; 
+  ::copy ( dependents , vlst ) ;
   return makeFormula ( name , title , expression , vlst ) ;
 }
 // ============================================================================
@@ -350,7 +353,8 @@ Ostap::usedVariables
 ( const std::string&      formula    ,
   const RooAbsCollection& variables  ) 
 {
-  const RooArgList vlst { variables } ;
+  RooArgList vlst {} ; 
+  ::copy ( variables , vlst ) ;
   return usedVariables ( formula , vlst ) ;
 }
 // ============================================================================
@@ -447,7 +451,8 @@ Ostap::usedVariables
 ( const RooFormulaVar&    formula    , 
   const RooAbsCollection& variables  )
 {
-  const RooArgList vlst { variables } ;
+  RooArgList vlst {} ; 
+  ::copy ( variables , vlst ) ;
   return usedVariables ( formula , vlst ) ;
 }
 // ============================================================================
