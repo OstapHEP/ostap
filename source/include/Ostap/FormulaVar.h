@@ -11,6 +11,7 @@
 // ============================================================================
 // ROOT/RooFit 
 // ============================================================================
+#include "RVersion.h"
 #include "RooFormulaVar.h"
 // ============================================================================
 namespace Ostap 
@@ -27,9 +28,9 @@ namespace Ostap
    */
   RooArgList 
   usedVariables
-  ( const std::string& formula    , 
-    const RooArgList&  variables  ) ;     
-  // ============================================================================
+  ( const std::string&      formula    , 
+    const RooArgList&       variables  ) ;     
+  // ==========================================================================
   /** get the list of used variables for the given formula
    *  @code
    *  @endcode 
@@ -41,8 +42,8 @@ namespace Ostap
    */
   RooArgList 
   usedVariables
-  ( const RooFormula&  formula    , 
-    const RooArgList&  variables  ) ;     
+  ( const std::string&      formula    , 
+    const RooAbsCollection& variables  ) ;     
   // ============================================================================
   /** get the list of used variables for the given formula
    *  @code
@@ -55,8 +56,22 @@ namespace Ostap
    */
   RooArgList 
   usedVariables
-  ( const RooFormulaVar& formula    , 
-    const RooArgList&    variables  ) ;     
+  ( const RooFormulaVar&    formula    , 
+    const RooArgList&       variables  ) ;     
+  // ============================================================================
+  /** get the list of used variables for the given formula
+   *  @code
+   *  @endcode 
+   *  @param formula the actual formula 
+   *  @param variables list of variables 
+   *  @return list of actually used variables (subset of <code>variables</code>
+   *  @see RooFormulaVar
+   *  @see RooFormulaVar::formula  
+   */
+  RooArgList 
+  usedVariables
+  ( const RooFormulaVar&    formula    , 
+    const RooAbsCollection& variables  ) ;     
   // ============================================================================
   /** @class FormulaVar Ostap/FormulaVar.h
    *  Tiny extension of class FormulaVar 
@@ -78,11 +93,12 @@ namespace Ostap
      *  @param dependent  formula dependents 
      *  @param check      check dependents?
      */
-    FormulaVar ( const std::string& name         , 
-                 const std::string& /* title */  , 
-                 const std::string& expression   , 
-                 const RooArgList & dependents   ,
-                 const bool 	      check = true ) ;
+    FormulaVar
+    ( const std::string& name         , 
+      const std::string& /* title */  , 
+      const std::string& expression   , 
+      const RooArgList & dependents   ,
+      const bool 	       check = true ) ;
     // ========================================================================
     /** full constructor 
      *  @param name       formula name 
@@ -90,27 +106,31 @@ namespace Ostap
      *  @param dependent  formula dependents 
      *  @param check      check dependents?
      */
-    FormulaVar ( const std::string& name         , 
-                 const std::string& expression   , 
-                 const RooArgList & dependents   ,
-                 const bool 	      check = true ) ;
+    FormulaVar
+    ( const std::string& name         , 
+      const std::string& expression   , 
+      const RooArgList & dependents   ,
+      const bool 	       check = true ) ;
     // ========================================================================
     /** full constructor 
      *  @param expression formula expression 
      *  @param dependent  formula dependents 
      *  @param check      check dependents?
      */    
-    FormulaVar ( const std::string& expression   , 
-                 const RooArgList & dependents   ,
-                 const bool 	      check = true ) ;
+    FormulaVar
+    ( const std::string& expression   , 
+      const RooArgList & dependents   ,
+      const bool 	       check = true ) ;
     // ========================================================================
     /// copy constructor 
-    FormulaVar ( const FormulaVar&    right , 
-                 const char*          name = nullptr ) ;
+    FormulaVar
+    ( const FormulaVar&    right , 
+      const char*          name = nullptr ) ;
     // =========================================================================
     /// copy constructor 
-    FormulaVar ( const RooFormulaVar& right , 
-                 const char*          name = nullptr ) ;
+    FormulaVar
+    ( const RooFormulaVar& right , 
+      const char*          name = nullptr ) ;
     // =========================================================================
     ///  destructor 
     virtual ~FormulaVar() ;
@@ -131,10 +151,24 @@ namespace Ostap
    */
   std::unique_ptr<FormulaVar>  
   makeFormula 
-  ( const std::string& name       , 
-    const std::string& title      , 
-    const std::string& expression , 
-    const RooArgList & dependents ) ;
+  ( const std::string&      name       , 
+    const std::string&      title      , 
+    const std::string&      expression , 
+    const RooArgList&       dependents ) ;
+  // ===========================================================================
+  /** make formula (skip unnesessary dependents)
+   *  @param name  formula name 
+   *  @param title formula title 
+   *  @param expression formula expression
+   *  @param dependent  formula dependents 
+   *  @return the formula  
+   */
+  std::unique_ptr<FormulaVar>  
+  makeFormula 
+  ( const std::string&      name       , 
+    const std::string&      title      , 
+    const std::string&      expression , 
+    const RooAbsCollection& dependents ) ;
   // ===========================================================================
   /** make formula (skip unnesessary dependents)
    *  @param name  formula name 
@@ -144,9 +178,21 @@ namespace Ostap
    */
   std::unique_ptr<FormulaVar>  
   makeFormula 
-  ( const std::string& name       , 
-    const std::string& expression , 
-    const RooArgList & dependents ) ;
+  ( const std::string&      name       , 
+    const std::string&      expression , 
+    const RooArgList&       dependents ) ;
+  // ===========================================================================
+  /** make formula (skip unnesessary dependents)
+   *  @param name  formula name 
+   *  @param expression formula expression
+   *  @param dependent  formula dependents 
+   *  @return the formula  
+   */
+  std::unique_ptr<FormulaVar>  
+  makeFormula 
+  ( const std::string&      name       , 
+    const std::string&      expression , 
+    const RooAbsCollection& dependents ) ;
   // ===========================================================================
   /** make formula (skip unnesessary dependents)
    *  @param expression formula expression
@@ -155,8 +201,18 @@ namespace Ostap
    */
   std::unique_ptr<FormulaVar>  
   makeFormula
-  ( const std::string& expression , 
-    const RooArgList & dependents ) ;
+  ( const std::string&      expression , 
+    const RooArgList&       dependents ) ;
+  // ===========================================================================
+  /** make formula (skip unnesessary dependents)
+   *  @param expression formula expression
+   *  @param dependent  formula dependents 
+   *  @return the formula  
+   */
+  std::unique_ptr<FormulaVar>  
+  makeFormula
+  ( const std::string&      expression , 
+    const RooAbsCollection& dependents ) ;
   // ===========================================================================
   /** valid formula expression ?
    *  @param expression formula expression
@@ -165,8 +221,18 @@ namespace Ostap
    */
   bool 
   validFormula 
-  ( const std::string& expression , 
-    const RooArgList & dependents ) ;
+  ( const std::string&      expression , 
+    const RooArgList&       dependents ) ;
+  // ===========================================================================
+  /** valid formula expression ?
+   *  @param expression formula expression
+   *  @param dependent  formula dependents 
+   *  @return true for valid formula
+   */
+  bool 
+  validFormula 
+  ( const std::string&      expression , 
+    const RooAbsCollection& dependents ) ;
   // ===========================================================================
 } //                                                  The end of namespace Ostap 
 // =============================================================================
