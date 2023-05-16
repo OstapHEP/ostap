@@ -631,24 +631,15 @@ def valid_formula ( expression , varset ) :
     
     expression = expression.strip()
     if not expression : return True
-    
-    if isinstance  ( varset  , ROOT.RooArgSet ) :
+
+    if   isinstance ( varset , ROOT.RooAbsData ) :
+        return valid_formula ( expression , varset.varset )
+    elif not isinstance ( varset , ROOT.RooArgList ) :
         vlst = ROOT.RooArgList()
-        for v in varset : vlst.add ( v  )
-        result = valid_formula ( expression , vlst )
-        del vlst
-        return result
-
-    assert isinstance ( varset  , ROOT.RooArgList ), 'Invalid type %s' % type (varset)
-
+        for v in varset : vlst.add  ( v )
+        return valid_formula ( expression , vlst ) 
     
-    ## from ostap.logger.utils import rooSilent, rootErro
-    ## with rooSilent ( ROOT.RooFit.FATAL + 1 , True ) :
-    ## with rootError( ROOT.kError + 1 ) :
-    
-    from ostap.logger.utils import mute 
-    with mute ( True , True ) :
-        return Ostap.validFormula ( expression , varset )
+    return Ostap.validFormula ( expression , varset )
             
 # ==============================================================================
 ## @class SelStat
