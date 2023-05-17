@@ -55,7 +55,6 @@ namespace
   {
     RooArgList used {};
     //
-    //
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
     if ( !const_cast<RooFormula&>(formula).ok() ) { return used; }   // RETURN 
 #else 
@@ -109,32 +108,32 @@ Ostap::makeFormula
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,20,0)
   //
   std::unique_ptr<RooFormula> ptr
-    { new RooFormula ( vname      .c_str () ,
-                       expression.c_str  () , 
-                       dependents           ) } ;
+  { new RooFormula ( vname      .c_str () ,
+                     expression.c_str  () , 
+                     dependents           ) } ;
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
-  RooArgList used { ::usedVariables ( *ptr , dependents ) } ;
+  const RooArgList used { ::usedVariables ( *ptr , dependents ) } ;
   //
 #elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
   std::unique_ptr<RooFormula> ptr
-    { new RooFormula ( vname      .c_str () ,                                                        
-                       expression.c_str () , 
-                       dependents          , 
-                       false             ) } ;
+  { new RooFormula ( vname      .c_str () ,                                                        
+                     expression.c_str () , 
+                     dependents          , 
+                     false             ) } ;
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
-  RooArgList used { ::usedVariables ( *ptr , dependents ) } ;
+  const RooArgList used { ::usedVariables ( *ptr , dependents ) } ;
   //
 #else
   //
   std::unique_ptr<RooFormulaVar> ptr
-    { new RooFormula ( vname      .c_str () ,                                                        
-                       expression.c_str () , 
-                       expression.c_str () , 
-                       dependents          , 
-                       false             ) } ;
+  { new RooFormulaVar ( vname      .c_str () ,                                                        
+                        expression.c_str () , 
+                        expression.c_str () , 
+                        dependents          , 
+                        false             ) } ;
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
-  RooArgList used { usedVariables ( *ptr , dependents ) } ;
+  const RooArgList used { usedVariables ( *ptr , dependents ) } ;
   // ========================================================================
 #endif
   // ==========================================================================
@@ -142,11 +141,11 @@ Ostap::makeFormula
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
   //
   std::unique_ptr<Ostap::FormulaVar> result
-    { new Ostap::FormulaVar ( name       , 
-                              title      , 
-                              expression , 
-                              used       , 
-                              true       ) } ;
+  { new Ostap::FormulaVar ( name       , 
+                            title      , 
+                            expression , 
+                            used       , 
+                            true       ) } ;
   //
   if ( !result || !result->ok() ) { return nullptr ; }
   //
@@ -162,10 +161,13 @@ Ostap::makeFormula
 // ============================================================================
 std::unique_ptr<Ostap::FormulaVar>  
 Ostap::makeFormula 
-( const std::string&      name       , 
-  const std::string&      expression , 
-  const RooArgList&       dependents ) 
-{ return makeFormula ( name , expression , expression , dependents ) ; }
+( const std::string&   name       , 
+  const std::string&   expression , 
+  const RooArgList&    dependents ) 
+{ return makeFormula ( name       ,
+                       expression , 
+                       expression , 
+                       dependents ) ; }
 // ============================================================================
 /** make formula (skip unnesessary dependents)
  *  @param expression formula expression
@@ -175,10 +177,12 @@ Ostap::makeFormula
 // ============================================================================
 std::unique_ptr<Ostap::FormulaVar>  
 Ostap::makeFormula 
-( const std::string&      expression ,
-  const RooArgList&       dependents ) 
+( const std::string&   expression ,
+  const RooArgList&    dependents ) 
 { return makeFormula ( Ostap::tmp_name (  "formula_" , expression ) ,
-                       expression , expression  , dependents ) ; }
+                       expression , 
+                       expression , 
+                       dependents ) ; }
 // ============================================================================
 /** valid formula expression ?
  *  @param expression formula expression
@@ -192,11 +196,11 @@ Ostap::validFormula
   const RooArgList&  dependents ) 
 {
   const std::unique_ptr<Ostap::FormulaVar> ptr
-    { makeFormula ( expression , dependents ) } ;
+  { makeFormula ( expression , dependents ) } ;
   return ptr && ptr->ok () ;
 }
 // ============================================================================
-/* get the list of used variables for the given formula
+/*  get the list of used variables for the given formula
  *  @code
  *  @endcode 
  *  @param formula the actual formula 
@@ -208,7 +212,7 @@ Ostap::validFormula
 RooArgList 
 Ostap::usedVariables
 ( const std::string& formula    ,
-  const RooArgList& variables  ) 
+  const RooArgList&  variables  ) 
 {
   //
   const std::string vname { Ostap::tmp_name ( "formula2_" , formula ) } ;
@@ -227,9 +231,9 @@ Ostap::usedVariables
   //
   std::unique_ptr<RooFormula> ptr 
   { new RooFormula ( vname  .c_str () ,
-    formula.c_str () , 
-    variables        , 
-    false            ) };
+                     formula.c_str () , 
+                     variables        , 
+                     false            ) };
   //
   if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
   return ::usedVariables ( *ptr , variables ) ;
@@ -238,9 +242,9 @@ Ostap::usedVariables
   //
   std::unique_ptr<RooFormulaVar> ptr 
   { new RooFormulaVar ( vname.c_str () ,
-    formula.c_str () , 
-    variables        , 
-    false            ) };
+                        formula.c_str () , 
+                        variables        , 
+                        false            ) };
   //
   if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
   return usedVariables ( *ptr , variables ) ;
@@ -337,22 +341,35 @@ Ostap::usedVariables
 // ============================================================================
 Ostap::FormulaVar::FormulaVar
 ( const std::string& name          , 
-  const std::string& title         , 
+#if    ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
+  const std::string& /* title */   , 
+#elif  ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
+  const std::string&    title      , 
+#else        
+  const std::string& /* title */   , 
+#endif 
   const std::string& expression    , 
   const RooArgList & dependents    ,
-  const bool         check         ) 
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,20,0)
+  const bool         /* check */   
+#else 
+  const bool            check         
+#endif 
+  )
   : RooFormulaVar ( name       . c_str () , 
 #if    ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
-                    expression . c_str () , 
-#else 
-                    title      . c_str () , 
+  expression . c_str () , 
+#elif  ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
+  title      . c_str () , 
+#else        
+  expression . c_str () , 
 #endif 
-                    expression . c_str () , 
-                    dependents            
+  expression . c_str () , 
+  dependents            
 #if ROOT_VERSION(6,20,0) <= ROOT_VERSION_CODE
-                    , check
+  , check
 #endif 
-                    ) 
+  ) 
 {}
 // ============================================================================
 /*  full constructor 
@@ -366,20 +383,20 @@ Ostap::FormulaVar::FormulaVar
 ( const std::string& name       , 
   const std::string& expression , 
   const RooArgList & dependents ,
-  const bool 	      check       )
-: FormulaVar ( name ,  expression , expression ,  dependents , check )
+  const bool 	       check      )
+  : FormulaVar ( name ,  expression , expression ,  dependents , check )
 {}
 // ============================================================================
 /*  full constructor 
  *  @param expression formula expression 
  *  @param dependent  formula dependents 
  *  @param check      check dependents?
- */
+*/
 // ============================================================================
 Ostap::FormulaVar::FormulaVar
 ( const std::string& expression , 
   const RooArgList & dependents ,
-  const bool 	      check       )
+  const bool         check      ) 
   : FormulaVar ( Ostap::tmp_name ( "formula_" , expression ) , 
                  expression , 
                  expression ,

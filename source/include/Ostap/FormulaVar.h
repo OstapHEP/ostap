@@ -66,11 +66,11 @@ namespace Ostap
      *  @param check      check dependents?
      */
     FormulaVar
-    ( const std::string& name         , 
-      const std::string& /* title */  , 
-      const std::string& expression   , 
-      const RooArgList & dependents   ,
-      const bool 	       check = true ) ;
+    ( const std::string& name             , 
+      const std::string& /* title */      , 
+      const std::string& expression       , 
+      const RooArgList & dependents       ,
+      const bool 	       check    = true  ) ;
     // ========================================================================
     /** full constructor 
      *  @param name       formula name 
@@ -79,10 +79,10 @@ namespace Ostap
      *  @param check      check dependents?
      */
     FormulaVar
-    ( const std::string& name         , 
-      const std::string& expression   , 
-      const RooArgList & dependents   ,
-      const bool 	       check = true ) ;
+    ( const std::string& name             , 
+      const std::string& expression       , 
+      const RooArgList & dependents       ,
+      const bool 	       check    = true  ) ;
     // ========================================================================
     /** full constructor 
      *  @param expression formula expression 
@@ -90,9 +90,9 @@ namespace Ostap
      *  @param check      check dependents?
      */    
     FormulaVar
-    ( const std::string& expression   , 
-      const RooArgList & dependents   ,
-      const bool 	       check = true ) ;
+    ( const std::string& expression       ,   
+      const RooArgList & dependents       ,
+      const bool 	       check    = true  ) ;
     // ========================================================================
     /// copy constructor 
     FormulaVar
