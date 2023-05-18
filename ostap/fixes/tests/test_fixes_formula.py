@@ -48,15 +48,15 @@ def test_formula() :
     
     used1 = Ostap.usedVariables ( 'a+1' , vlst )    
     assert 1 == len ( used1 ) , \
-           'Invalid "used1" stuff %s for ROOT %s' %  ( used , root_version )
+           'Invalid "used1" stuff %s for ROOT %s' % ( used1 , root_version )
     
     used2 = Ostap.usedVariables ( 'a+b' , vlst )    
     assert 2 == len ( used2 ) , \
-           'Invalid "used2" stuff %s for ROOT %s' %  ( used , root_version )
+           'Invalid "used2" stuff %s for ROOT %s' % ( used2 , root_version )
     
     used3 = Ostap.usedVariables ( 'a+b+c' , vlst )    
     assert 3 == len ( used3 ) , \
-           'Invalid "used3" stuff %s for ROOT %s' %  ( used , root_version )
+           'Invalid "used3" stuff %s for ROOT %s' % ( used3 , root_version )
     
 # =============================================================================
 if '__main__' == __name__ :
