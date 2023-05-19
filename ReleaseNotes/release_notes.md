@@ -1,5 +1,7 @@
 ## New features:
 
+  1. improve and simplify `test_tools_chopping`
+
 ## Backward incompatible: 
 
 ## Bug fixes:
