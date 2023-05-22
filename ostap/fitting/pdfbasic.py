@@ -457,23 +457,21 @@ class APDF1 ( Components ) :
         ##                         silent = False ,
         ##                         refit  = refit ,
         ##                         args   = args  , **kwargs )
-        
+         
         for_refit = False
         if 0 != st   :
             for_refit = 'status' 
             self.warning ( 'fitTo: Fit status is %s ' % fit_status ( st ) )
         #
         qual = result.covQual()
-        if   -1 == qual and dataset.isWeighted() : pass
-        elif  3 != qual :
-            for_refit = 'covariance'
+        cov2_good = ( qual == 3 ) or ( dataset.isWeighted() and qual == -1 )
+        if not cov2_good : 
             self.warning ( 'fitTo: covQual    is %s ' % cov_qual ( qual ) )
 
         #
         ## check the integrals (if/when possible)
         #
         if hasattr ( self , 'yields' ) and self.yields  :
-            
             nsum = VE()            
             for i in self.yields:
                 nsum += i.value
@@ -519,14 +517,12 @@ class APDF1 ( Components ) :
                                  refit  = refit  ,
                                  args   = args   , **kwargs ) 
 
-        cov2_good = ( qual == 3 ) or ( dataset.isWeighted() and qual == -1 )
-        
         if   result and 0 == result.status() and not silent :
             self.info      ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
         elif result and ( not cov2_good ) and not silent : 
             self.warning   ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
         elif result and not silent :
-            self.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
+            self.warning  ( "Fit result is\n%s" % result.table  ( prefix = "# " ) )
 
         frame = None
         
