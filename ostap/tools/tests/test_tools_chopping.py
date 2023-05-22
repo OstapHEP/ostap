@@ -214,6 +214,11 @@ with timing ( "Add TMVA/Chopping response to input TTree" , logger = logger ) as
     addChoppingResponse ( cSignal  , **config ) 
     addChoppingResponse ( cBkg     , **config )
 
+    cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
+    cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
+
+    logger.info ('TTree   SIG (with TMVA decisions):\n%s' % cSignal.table ( prefix = '# ') ) 
+    logger.info ('TTree   BKG (with TMVA decisions):\n%s' % cBkg   .table ( prefix = '# ') ) 
 
 # =============================================================================
 ## B) Add TMVA/Choppnig desision to (existing) RooDataSet 
@@ -278,9 +283,8 @@ with timing ( "Add TMVA/Chopping response to (newly created) RooDataSet " , logg
         weights_files = tar_file )
 
     extended_vars = list ( variables )
-    methods = reader.methods[:]
 
-    for m in methods :
+    for m in reader.methods :
         extended_vars += [ Variable ( 'tmva_%s_response' % m , 'TMVA response (%s)' % m , accessor = reader[m] ) ]
                 
     cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
@@ -292,12 +296,17 @@ with timing ( "Add TMVA/Chopping response to (newly created) RooDataSet " , logg
     logger.info ('dataset SIG (with TMVA decisions):\n%s' % dsS2.table ( prefix = '# ') ) 
     logger.info ('dataset BKG (with TMVA decisions):\n%s' % dsB2.table ( prefix = '# ') ) 
 
+    decisions = [ 'tmva_%s_response' % m for m in reader.methods ]
 
+    del extended_vars
+    del reader 
 
+# =============================================================================
+## Check TMVA results 
+# =============================================================================
 cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
 cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
     
-decisions = [ 'tmva_%s_response' % m for m in methods ]
 s_stats   = cSignal.statVars ( decisions )
 b_stats   = cBkg   .statVars ( decisions )
 s1_stats  = dsS1   .statVars ( decisions )

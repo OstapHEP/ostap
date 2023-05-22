@@ -2,24 +2,24 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/tools/chopping.py
-#  ``TMVA Chopper'' - helper utility to train/use  TMVA using ``chopping''
+#  `TMVA Chopper' - helper utility to train/use  TMVA using `chopping'
 #
-# ``Chopping'' is a jargon name for k-fold cross-validation technique
+# `Chopping' is a jargon name for k-fold cross-validation technique
 # @see https://machinelearningmastery.com/k-fold-cross-validation
 # 
 # The most frequest case:
-# - TMVA is trained using the simulated events as ``Signal'' and realtively
-# limited sample of data events (e.g. sidebands)  as ``Backrgound''.
+# - TMVA is trained using the simulated events as `Signal' and realatively
+# limited sample of data events (e.g. sidebands)  as `Backrgound'.
 # To avoid using the same backrgound events for training and the final evaluation,
-# ``background'' sample is split into ``N'' independent categories and
-# ``N''-independent TMVA trainings are performed.
+# `background' sample is split into `N' independent categories and
+# `N'-independent TMVA trainings are performed.
 # - For each training the corresponding category of backroung events is
 # not used for this training.
-# - For the final TMVA evaluation, for the events from category ``i''
+# - For the final TMVA evaluation, for the events from category `i'
 # the corresponding trained TMVA is used [By construction,  these events have
 # not been used for the training of corresponding TMVA].
 # 
-# @attention For the large number of categories ``N'' it could be rather slow,
+# @attention For the large number of categories `N' it could be rather slow,
 #            since too many TMVA's need to be trained)
 #
 # The interface is very similaer to TMVATrainer/TMVAReader, but one needs to specify
@@ -38,21 +38,21 @@
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2017-09-10
 # =============================================================================
-"""``TMVAChopper'' - helper utility to train/use  TMVA using ``chopping''
+"""`TMVAChopper' - helper utility to train/use  TMVA using `chopping'
 
-``Chopping'' is a jargon name for k-fold cross-validation technique.
+`Chopping' is a jargon name for k-fold cross-validation technique.
  - see e.g. https://machinelearningmastery.com/k-fold-cross-validation
 
 Most frequest case:
 
-TMVA is trained using the simulated events as ``Signal'' and realtively
-limited sample of data events (e.g. sidebands)  as ``Backrgound''.
+TMVA is trained using the simulated events as `Signal' and realatively
+limited sample of data events (e.g. sidebands)  as `Backrgound'.
 To avoid using the same backrgound events for training and the final evaluation,
-``background'' sample is split into ``N'' independent categories and
-``N''-independent TMVA trainings are performed.
+`background' sample is split into `N' independent categories and
+`N'-independent TMVA trainings are performed.
 For each training the corresponding category of backroung events is not
 used for this training.
-For the final TMVA evaluation, for the events from category ``i'' the corresponding
+For the final TMVA evaluation, for the events from category `i' the corresponding
 trained TMVA is used [By construction,  these events have not been used for
 the training of corresponding TMVA].
 
@@ -82,9 +82,9 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2017-09-10"
 __all__     = (
     ##
-    "Trainer"              , ## the ``chopper'' trainer for TMVA 
-    "Reader"               , ## the ``chopper'' reader  for TMVA
-    'addChoppingResponse'  , ## add ``chopping'' response to RooDataSet
+    "Trainer"              , ## the `chopper' trainer for TMVA 
+    "Reader"               , ## the `chopper' reader  for TMVA
+    'addChoppingResponse'  , ## add `chopping' response to TTree or RooDataSet
     )
 # =============================================================================
 from   ostap.tools.tmva       import Trainer as TMVATrainer
@@ -105,7 +105,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.chopping' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
 ## @class Trainer
-#  The ``chopping''  trainer. Th einterface is very similar to TMVA Trainer
+#  The `chopping'  trainer. The interface is very similar to TMVA Trainer
 #  with two   additional mandatory parameters:
 #  -  <code>N</code>        : number of categories 
 #  -  <code>category</code> : the string/expression with TTree variables 
@@ -127,8 +127,8 @@ else                       : logger = getLogger ( __name__               )
 # ...      ( ROOT.TMVA.Types.kFisher     , 'Fisher'     , 'H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10' ),
 # ...      ( ROOT.TMVA.Types.kLikelihood , 'Likelihood' , 'H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50' ) ] ,
 # ... variables  = [ 'var1' , 'var2' ,  'var3' ] ,  ## Variables to use in the training
-# ... signal     = signal_tree      , ## TTree/TChain with ``signal'' sample   
-# ... background = background_tree  , ## TTree/TChain with ``background'' sample   
+# ... signal     = signal_tree      , ## TTree/TChain with `signal' sample   
+# ... background = background_tree  , ## TTree/TChain with `background' sample   
 # ... name       = 'TMVAChopper'    ,
 # ... verbose    = False )
 # @endcode
@@ -146,10 +146,10 @@ else                       : logger = getLogger ( __name__               )
 # >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
 # @endcode
 class Trainer(object) :
-    """The ``chopping''  trainer. The interface is very similar to TMVA Trainer
+    """The `chopping'  trainer. The interface is very similar to TMVA Trainer
     with two   additional mandatory parameters:
-    1. ``N''        : number of categories 
-    2. ``category'' : the string/expression with TTree variables 
+    1. `N'        : number of categories 
+    2. `category' : the string/expression with TTree variables 
     that used to construct the category, e.g.  'event'.
     The actual expression used to get the category number is constructed as
     '(category)%N'
@@ -166,8 +166,8 @@ class Trainer(object) :
     ...      ( ROOT.TMVA.Types.kFisher     , 'Fisher'     , 'H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10' ),
     ...      ( ROOT.TMVA.Types.kLikelihood , 'Likelihood' , 'H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50' ) ] ,
     ... variables  = [ 'var1' , 'var2' ,  'var3' ] ,  ## Variables to use in the training
-    ... signal     = signal_tree      , ## TTree/TChain with ``signal'' sample   
-    ... background = background_tree  , ## TTree/TChain with ``background'' sample   
+    ... signal     = signal_tree      , ## TTree/TChain with `signal' sample   
+    ... background = background_tree  , ## TTree/TChain with `background' sample   
     ... name       = 'TMVAChopper'    ,
     ... verbose    = False )
 
@@ -214,7 +214,7 @@ class Trainer(object) :
                    parallel_conf     = {}                    ,   # parallel configuration ?
                    logger            = None                  ) : # logger to be used 
         
-        """Create TMVA ``chopping'' trainer
+        """Create TMVA `chopping' trainer
         
         >>> N = 11 
         >>> trainer = Trainer (
@@ -227,8 +227,8 @@ class Trainer(object) :
         ...      ( ROOT.TMVA.Types.kFisher     , 'Fisher'     , 'H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10' ),
         ...      ( ROOT.TMVA.Types.kLikelihood , 'Likelihood' , 'H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50' ) ] ,
         ... variables  = [ 'var1' , 'var2' ,  'var3' ] ,  ## Variables to use in the training
-        ... signal     = signal_tree      , ## TTree/TChain with ``signal'' sample   
-        ... background = background_tree  , ## TTree/TChain with ``background'' sample   
+        ... signal     = signal_tree      , ## TTree/TChain with `signal' sample   
+        ... background = background_tree  , ## TTree/TChain with `background' sample   
         ... name       = 'TMVAChopper'    ,
         ... verbose    = False )
         
@@ -429,7 +429,7 @@ class Trainer(object) :
                 ## there are negative weights :
                 for m in self.methods :
                     if not m[0] in good_for_negative :
-                        self.logger.error ( 'Method ``%s'' does not support negative (signal) weights' % m[1] )
+                        self.logger.error ( "Method `%s' does not support negative (signal) weights" % m[1] )
             
         # =====================================================================
         ## check for backgrund weigths
@@ -446,7 +446,7 @@ class Trainer(object) :
                 ## there are negative weights :
                 for m in self.methods :
                     if not m[0] in good_for_negative :
-                        self.logger.error ( 'Method ``%s'' does not support negative (background) weights' % m[1] )
+                        self.logger.error ( "Method `%s' does not support negative (background) weights" % m[1] )
                         
         # =====================================================================
         ## Category population:
@@ -581,7 +581,7 @@ class Trainer(object) :
         
     ## create the trainer for category "i"
     def create_trainer ( self , i , verbose = True ) :
-        """Create the trainer for category ``i''
+        """Create the trainer for category `i'
         """
         cat       = '(%s)%%%d' % ( self.category , self.N  )
         nam       =  '%s_%03d' % ( self.name , i )
@@ -635,200 +635,200 @@ class Trainer(object) :
     
     @property
     def name    ( self ) :
-        """``name''    : the name of TMVA chopper"""
+        """`name'    : the name of TMVA chopper"""
         return self.__name
 
     @property
     def logger ( self ) :
-        """``logger'' : logger instance for the trainer"""
+        """`logger' : logger instance for the trainer"""
         return self.__logger
     
     @property
     def dirname  ( self ) :
-        """``dirname''  : the output directory name"""
+        """`dirname'  : the output directory name"""
         return str(self.__dirname) 
 
     @property
     def trainers ( self ) :
-        """``trainers'' - the  actual list of N-TMVA  trainers for N-categories"""
+        """`trainers' - the  actual list of N-TMVA  trainers for N-categories"""
         return self.__trainers 
 
     @property
     def trainer_dirs ( self ) :
-        """``trainer_dirs'' - list of direcorries with trainer's output"""
+        """`trainer_dirs' - list of direcorries with trainer's output"""
         return tuple(self.__trainer_dirs)
 
     @property
     def category ( self ) :
-        """``category'' -  the accessor(string) to the category"""
+        """`category' -  the accessor(string) to the category"""
         return self.__category 
 
     @property
     def parallel ( self ) :
-        """``parallel'' : use parallelisation for training"""
+        """`parallel' : use parallelisation for training"""
         return self.__parallel
 
     @property
     def parallel_conf ( self ) :
-        """``parallel_conf'' : configuration for parallel processing"""
+        """`parallel_conf' : configuration for parallel processing"""
         return self.__parallel_conf
     
     @property
     def logging  ( self ) :
-        """``logging'' : create the log-files"""
+        """`logging' : create the log-files"""
         return self.__logging
     
     @property
     def make_plots ( self ) :
-        """``make_plots'' : make standard TMVA plots?"""
+        """`make_plots' : make standard TMVA plots?"""
         return self.__make_plots
     
     @property
     def N        ( self ) :
-        """``N'' - number of categories for chopping"""
+        """`N' - number of categories for chopping"""
         return self.__N
 
     @property
     def chop_signal ( self ) :
-        """``chop_signal'' : use chopping for signal?"""
+        """`chop_signal' : use chopping for signal?"""
         return self.__chop_signal
     
     @property
     def chop_background ( self ) :
-        """``chop_background'' : use chopping for background?"""
+        """`chop_background' : use chopping for background?"""
         return self.__chop_background
     
     @property
     def methods ( self ) :
-        """``methods'' : the list of TMVA methods to be used"""
+        """`methods' : the list of TMVA methods to be used"""
         return tuple(self.__methods)
     
     @property
     def variables ( self ) :
-        """``variables'' : the list of variables  to be used for training"""
+        """`variables' : the list of variables  to be used for training"""
         return tuple(self.__variables)
 
     @property
     def spectators ( self ) :
-        """``spectators'' : the list of spectators to be used"""
+        """`spectators' : the list of spectators to be used"""
         return tuple(self.__spectators)
 
     @property
     def signal ( self ) :
-        """``signal'' :  TTree for signal events"""
+        """`signal' :  TTree for signal events"""
         return self.__signal.chain
     
     @property
     def signal_cuts ( self ) :
-        """``signal_cuts'' :  cuts to be applied for ``signal'' sample"""
+        """`signal_cuts' :  cuts to be applied for `signal' sample"""
         return ROOT.TCut(self.__signal_cuts)
 
     @property
     def signal_weight ( self ) :
-        """``signal_weight'' : weight to be applied for ``signal'' sample"""
+        """`signal_weight' : weight to be applied for `signal' sample"""
         return self.__signal_weight
  
     @property
     def background ( self ) :
-        """``background'' :  TTree for background events"""
+        """`background' :  TTree for background events"""
         return self.__background.chain 
     
     @property
     def background_cuts ( self ) :
-        """``background_cuts'' :  cuts to be applied for ``backgroud'' sample """
+        """`background_cuts' :  cuts to be applied for `backgroud' sample """
         return ROOT.TCut(self.__background_cuts)
     
     @property
     def background_weight ( self ) :
-        """``background_weight'' : weight to be applied for ``background'' sample"""
+        """`background_weight' : weight to be applied for `background' sample"""
         return self.__background_weight
 
     @property
     def prefilter ( self ) :
-        """``prefilter'' : cuts ot be applied/prefilter before processing"""
+        """`prefilter' : cuts ot be applied/prefilter before processing"""
         return self.__prefilter
     
     @property
     def bookingoptions ( self ) :
-        """``bookingoptions'' : options used to book TMVA::Factory"""
+        """`bookingoptions' : options used to book TMVA::Factory"""
         return str(self.__bookingoptions)
     
     @property
     def configuration ( self ) :
-        """``configuration'' : options used to book TMVA"""
+        """`configuration' : options used to book TMVA"""
         return str(self.__configuration)
     
     @property
     def verbose ( self ) :
-        """``verbose'' : verbosity  flag"""
+        """`verbose' : verbosity  flag"""
         return self.__verbose
 
     @property
     def silent ( self ) :
-        """``silent'' : verbosity  flag"""
+        """`silent' : verbosity  flag"""
         return not self.verbose
 
     @property
     def signal_categories ( self ) :
-        """``signal_categories'' - two histograms(different binning) with signal category population"""
+        """`signal_categories' - two histograms(different binning) with signal category population"""
         return self.__sig_histos
     
     @property
     def signal_train_fraction ( self ) :
-        """``signal_train_fraction'': if non-negative, fraction of signal events used for training"""
+        """`signal_train_fraction': if non-negative, fraction of signal events used for training"""
         return self.__signal_train_fraction
 
     @property
     def background_train_fraction ( self ) :
-        """``background_train_fraction'': if non-negative, fraction of background events used for training"""
+        """`background_train_fraction': if non-negative, fraction of background events used for training"""
         return self.__background_train_fraction
     
     @property
     def prescale_signal ( self ) :
-        """``prescale_signal'': prescale the signal sample"""
+        """`prescale_signal': prescale the signal sample"""
         return self.__prescale_signal
     
     @property
     def prescale_background ( self ) :
-        """``prescale_background'': prescale the background sample"""
+        """`prescale_background': prescale the background sample"""
         return self.__prescale_background
 
     @property
     def background_categories ( self ) :
-        """``background_categories'' - two histograms(different binning) with background category population"""
+        """`background_categories' - two histograms(different binning) with background category population"""
         return self.__bkg_histos
     
     @property
     def weights_files ( self ) :
-        """``weights_files'': the list/tuple of final files with TMVA weights"""
+        """`weights_files': the list/tuple of final files with TMVA weights"""
         return tuple(self.__weights_files)
     @property
     def class_files ( self ) :
-        """``class_files'' : the list/tuple of final files with TMVA classes"""
+        """`class_files' : the list/tuple of final files with TMVA classes"""
         return tuple(self.__class_files)
     @property
     def output_files ( self ) :
-        """``output_files'': the output files """
+        """`output_files': the output files """
         return tuple(self.__output_files)
 
     @property
     def tar_file ( self ) :
-        """``tar_file'': the compressed tar file"""
+        """`tar_file': the compressed tar file"""
         return str(self.__tar_file) if self.__tar_file else None
     
     @property
     def log_file ( self ) :
-        """``log_file'': the compressed tar file with tarinng log-files"""
+        """`log_file': the compressed tar file with tarinng log-files"""
         return str(self.__log_file) if self.__log_file else None 
 
     @property 
     def multithread ( self ) :
-        """``multithread'' : make try to use multithreading in TMVA"""
+        """`multithread' : make try to use multithreading in TMVA"""
         return self.__multithread 
 
     @property
     def workdir ( self ) :
-        """``workdir'' : working directory"""
+        """`workdir' : working directory"""
         return self.__workdir
 
 
@@ -1043,7 +1043,7 @@ class Trainer(object) :
 
         from ostap.utils.progress_bar import progress_bar
         for t in progress_bar ( self.trainers , silent = self.verbose ) :
-            if self.verbose : self.logger.info  ( "Train the trainer ``%s''" % ( t.name ) ) 
+            if self.verbose : self.logger.info  ( "Train the trainer `%s'" % ( t.name ) ) 
             t.train() 
             weights  += [ t.weights_files ] 
             classes  += [ t.  class_files ] 
@@ -1181,12 +1181,12 @@ class WeightsFiles(CleanUp) :
 
     @property
     def files   ( self ) :
-        "``files'': the weights file"
+        "`files': the weights file"
         import copy
         return copy.deepcopy ( self.__weights_files ) 
 # =============================================================================
 ## @class Reader
-#  The ``chopping'' TMVA reader.
+#  The `chopping' TMVA reader.
 #  The interface is very similar to TMVA Trainer
 #  with two   additional mandatory parameters:
 #  - <code>N</code>           : number of categories (must be the  same as for training) 
@@ -1233,11 +1233,11 @@ class WeightsFiles(CleanUp) :
 # @endcode 
 # - It it natually merges with Ostap's <code>SelectorWithVars</code> utility
 class Reader(object) :
-    """The ``chopping'' TMVA reader.
+    """The `chopping' TMVA reader.
     The interface is very similar to TMVA Trainer
     with two   additional mandatory parameters:
-    1. ``N''           : number of categories (must be the  same as for training) 
-    2. ``categoryfun'' : python callable that gets category number from TTree, e.g.:
+    1. `N'           : number of categories (must be the  same as for training) 
+    2. `categoryfun' : python callable that gets category number from TTree, e.g.:
 
     >>> N = 11 
     >>> categoryfun = lambda s : int(137*s.evt+813*s.run)%N
@@ -1252,9 +1252,9 @@ class Reader(object) :
     ...                      ('var3' , lambda s : s.var3 ) ] ,
     ..     weights_files = weights_files  )
     
-    ``weights_files'' can be :
-    - single tar/tgz/tar.gz-file with weights files (output from ``Trainer.tar_file'')
-    - the structure of xml-files with weights       (output from ``Trainer.weights_files'')
+    `weights_files' can be :
+    - single tar/tgz/tar.gz-file with weights files (output from `Trainer.tar_file')
+    - the structure of xml-files with weights       (output from `Trainer.weights_files')
     
     - Use the reader
     >>> tree =  ....  ## TTree/TChain/RooDataSet with data
@@ -1272,7 +1272,7 @@ class Reader(object) :
     ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
     ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     
-    - It it natually merges with Ostap's ``SelectorWithVars'' utility     
+    - It it natually merges with Ostap's `SelectorWithVars' utility     
     """
     def __init__ ( self                           ,
                    categoryfunc                   ,
@@ -1293,12 +1293,12 @@ class Reader(object) :
         ...                      ('var3' , lambda s : s.var3 ) ] ,
         ..     weights_files = weights_files  )
         
-        ``weights_files'' can be :
-        - single tar/tgz/tar.gz-file with weights files (output from ``Trainer.tar_file'')
-        - the structure of xml-files with weights       (output from ``Trainer.weights_files'')
+        `weights_files' can be :
+        - single tar/tgz/tar.gz-file with weights files (output from `Trainer.tar_file')
+        - the structure of xml-files with weights       (output from `Trainer.weights_files')
         """
 
-        assert isinstance ( N , integer_types ) and 1 <= N , "``N'' is illegal %s/%s"  % ( N , type(N) )
+        assert isinstance ( N , integer_types ) and 1 <= N , "`N' is illegal %s/%s"  % ( N , type(N) )
 
         self.__name          = str(name)
         self.__logger        = logger if logger else getLogger ( self.name )
@@ -1315,7 +1315,7 @@ class Reader(object) :
         files = self.weights.files
 
         self.__weights_files = copy.deepcopy ( files )
-        assert len ( self.weights_files ) == N , "Invalid length of ``weights_files''"
+        assert len ( self.weights_files ) == N , "Invalid length of `weights_files'"
 
         self.__readers   = []
         for i in range ( self.N ) :
@@ -1341,27 +1341,27 @@ class Reader(object) :
         
     @property
     def name ( self ) :
-        """```name'' - the name of Chopper Reader"""
+        """`name' - the name of Chopper Reader"""
         return self.__name
 
     @property
     def logger ( self ) :
-        """``logger'' : the logger instace for this Trainer"""
+        """`logger' : the logger instace for this Trainer"""
         return self.__logger
     
     @property
     def N ( self ) :
-        """```N'' - number of categories"""
+        """`N' - number of categories"""
         return self.__N
      
     @property
     def methods ( self ) :
-        """``methods'' - the list/tuple of booked TMVA methods"""
+        """`methods' - the list/tuple of booked TMVA methods"""
         return tuple (self.__methods ) 
 
     @property
     def variables ( self ) :
-        """```variables'' - the list variables with accessor functions, e.g.
+        """`variables' - the list variables with accessor functions, e.g.
         >>> variables = [ ## name      accessor  
         ...              ( 'pt'   , lambda s : s.pt ) ,
         ...              ( 'ip'   , lambda s : s.ip ) ,
@@ -1372,22 +1372,22 @@ class Reader(object) :
     
     @property
     def weights_files( self ) :
-        """```weight_files'' - TMVA weight files"""
+        """`weight_files' - TMVA weight files"""
         return tuple(self.__weights_files)
 
     @property
     def weights ( self ) :
-        """``weigths'' : input structure of weigth  files """
+        """`weights' : input structure of weigth  files """
         return self.__weights
     
     @property
     def readers ( self ) :
-        """``readers'' -  the actual list/tuple of readers"""
+        """`readers' -  the actual list/tuple of readers"""
         return self.__readers
 
     @property
     def categoryfunc ( self ) :
-        """``categoryfunc'' - the actual callable for the category classification, 
+        """`categoryfunc' - the actual callable for the category classification, 
         e.g. for 11 categories:
         >>> categoryfun = lambda s : int(137*s.evt+813*s.run)%11          
         """
@@ -1395,18 +1395,18 @@ class Reader(object) :
 
     @property
     def histo ( self ) :
-        """``histo'': histogram with the category populations statistic"""
+        """`histo': histogram with the category populations statistic"""
         return self.__histo 
 
     # =========================================================================
-    ## Helper class to get the decision of ``chopper''
+    ## Helper class to get the decision of `chopper'
     #  @code 
     #  reader = ...
     #  var = reader[ method ]
     #  val = var ( entry )
     #  @endcode
     class Method(TMVAReader.Var) :
-        """Helper class to get the decision of ``chopper''
+        """Helper class to get the decision of `chopper'
         >>> reader = ...
         >>> var = reader[ method ]
         >>> val = var ( entry )
@@ -1557,7 +1557,7 @@ class Reader(object) :
     #  @endcode 
     #  @attention it is *not* CPU efficient
     #  Ugly trick with arrays is needed due to some technical problems
-    #  (actually TMVA reader needs the address of ``float''(in C++ sense) variable
+    #  (actually TMVA reader needs the address of `float'(in C++ sense) variable
     def __call__ ( self , method , entry , cut_efficiency = 0.90 ) :
         """The main method - evaluate of TMVA from the certain category reader 
         
@@ -1572,7 +1572,7 @@ class Reader(object) :
         ic       = icatfunc ( entry )
                  
         assert isinstance ( ic , integer_types ) and 0 <= ic < self.__N, \
-               "Invalid ``category'' %s/%s" % ( ic ,  type ( ic ) )
+               "Invalid `category' %s/%s" % ( ic ,  type ( ic ) )
         return self.__readers[ ic ] ( method ,  entry , cut_efficiency ) 
         
     # ========================================================================
@@ -1590,7 +1590,7 @@ class Reader(object) :
         >>> print('MLP response is: ', reader.evaluate ( category , 'MLP' , pt , y ))
         """
         assert isinstance ( category , integer_types ) and 0 <= category < self.__N, \
-               "Invalid ``category'' %s/%s" % ( category ,  type ( category ) )
+               "Invalid `category' %s/%s" % ( category ,  type ( category ) )
         return self.__readers[ category ].evaluate ( method , *args ) 
                                 
 
@@ -1752,7 +1752,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
             for v in varset : varlist.add ( v )
             
             chop  = Ostap.FormulaVar       ( 'chopping' , chopper , varlist , False )
-            assert chop.ok() , 'Chopping: invalid ``chopper'' expression: %s' % chopper
+            assert chop.ok() , "Chopping: invalid `chopper' expression: %s" % chopper
             del chop 
             used    = Ostap.usedVariables ( chopper    , varlist  )            
             chopper = Ostap.FormulaVar    ( 'chopping' , chopper  , used    ,  True )
