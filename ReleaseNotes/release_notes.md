@@ -8,7 +8,6 @@
 
   1. Fix typo for treatment of `minos` argument for `PDF.fitTo` method 
 
-
 # v1.9.8.8
 
 ## New features:
