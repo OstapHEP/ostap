@@ -1978,7 +1978,7 @@ models.append ( SkewGenT_pdf )
 
 # =============================================================================
 ## @class SkewGenTError_pdf
-#  Skewed gheneralised error districbution 
+#  Skewed gheneralised error distribution 
 #  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
 #
 #  The Special  case of Skewwed Generaliaed T-distribution 
@@ -3703,7 +3703,7 @@ class ExGauss_pdf(PEAK) :
                    name             ,
                    xvar             ,
                    mu        = None ,   ## related to mean
-                   varsigma  =  1   ,   ## relatd  to width
+                   varsigma  =  1   ,   ## related to width
                    k         =  0   ) :
         # 
         ## initialize the base
@@ -3790,7 +3790,7 @@ class ExGauss2_pdf(PEAK) :
                    name             ,
                    xvar             ,
                    mu        = None ,   ## related to mode 
-                   varsigma  =  1   ,   ## relatd  to width
+                   varsigma  =  1   ,   ## related to width
                    k         =  0   ) :
         # 
         ## initialize the base
@@ -4031,12 +4031,12 @@ models.append ( Bukin2_pdf )
 class NormalLaplace_pdf(PEAK) :
     """Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
     It behaves line core Gaussian with exponential tails 
-    - see Wiliam J. Reed, "The Normal-Laplace Distribution Relatives", October, 2004
+    - see Wiliam J. Reed, 'The Normal-Laplace Distribution Relatives', October, 2004
     - see https://www.math.uvic.ca/faculty/reed/NL.draft.1.pdf
-    - see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
+    - see Reed, W.J, 'The Normal-Laplace Distribution and Its Relatives'. 
     In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
-    "Advances in Distribution Theory, Order Statistics, and Inference. 
-    Statistics for Industry and Technology". Birkhäuser Boston. 
+    'Advances in Distribution Theory, Order Statistics, and Inference. 
+    Statistics for Industry and Technology'. Birkhäuser Boston. 
     - see https://doi.org/10.1007/0-8176-4487-3_4
     
     - see Ostap::Math::nills_normal 
