@@ -1,6 +1,7 @@
 ## New features:
 
   1. improve and simplify `test_tools_chopping`
+  1. tiny adjustment of printout format for class `Ostap::Math::ValueWithError`
 
 ## Backward incompatible: 
 

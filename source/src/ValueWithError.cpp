@@ -274,7 +274,9 @@ Ostap::Math::ValueWithError::operator-() const                        // unary-
 // ============================================================================
 std::ostream&
 Ostap::Math::ValueWithError::fillStream ( std::ostream& s ) const
-{ return s << "( " << m_value << " +- " << error() << " )" ; }
+{ return s << "( " 
+           << std::showpos   << m_value  << " +- "
+           << std::noshowpos << error () << " )" ; }
 // ============================================================================
 // printout using format
 // ============================================================================
