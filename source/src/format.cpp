@@ -15,60 +15,73 @@
 // ============================================================================
 // format single number ..
 // ============================================================================
-std::string Ostap::format ( const std::string& fmt    ,
-                            double             value1 ) 
+std::string Ostap::format 
+( const std::string& fmt    ,
+  double             value1 ) 
 {
-  const unsigned int  s_LEN = 256 ;
-  static char s_buffer[ s_LEN ] ;
-  const int result = snprintf ( s_buffer , s_LEN , fmt.c_str() , value1 ) ;
+  const  std::size_t s_LEN = 1024 ;
+  static char        s_buffer[ s_LEN ] ;
+  const int result = snprintf ( s_buffer    , 
+                                s_LEN       , 
+                                fmt.c_str() , 
+                                value1      ) ;
   return 
-    0 <= result && (unsigned int) result < s_LEN ?  
-    std::string ( s_buffer , s_buffer + result ) : 
+    0 <= result && (unsigned int) result < s_LEN ? std::string ( s_buffer , s_buffer + result ) : 
     fmt + std::to_string ( value1 ) ;
 }
 // ============================================================================
 // format single number ..
 // ============================================================================
-std::string Ostap::format ( const std::string& fmt    ,
-                            long               value1 ) 
+std::string Ostap::format 
+( const std::string& fmt    ,
+  long               value1 ) 
 {
-  const unsigned int  s_LEN = 256 ;
-  static char s_buffer[ s_LEN ] ;
-  const int result = snprintf ( s_buffer , s_LEN , fmt.c_str() , value1 ) ;
+  const  std::size_t  s_LEN  = 1024 ;
+  static char         s_buffer[ s_LEN ] ;
+  const  int          result = snprintf ( s_buffer    , 
+                                          s_LEN       ,
+                                          fmt.c_str() , 
+                                          value1      ) ;
   return 
-    0 <= result && (unsigned int) result < s_LEN ?
-    std::string ( s_buffer , s_buffer + result ) : 
+    0 <= result && (unsigned int) result < s_LEN ? std::string ( s_buffer , s_buffer + result ) : 
     fmt + std::to_string ( value1 ) ;
 }
 // ============================================================================
 // format two numbers ..
 // ============================================================================
-std::string Ostap::format ( const std::string& fmt    ,
-                            double             value1 , 
-                            double             value2 ) 
+std::string Ostap::format 
+( const std::string& fmt    ,
+  double             value1 , 
+  double             value2 ) 
 {
-  const size_t s_LEN = 256 ;
-  static char s_buffer[ s_LEN ] ;
-  const int result = snprintf ( s_buffer , s_LEN , fmt.c_str() , 
-                                value1 , value2 ) ;
+  const  std::size_t s_LEN  = 1024 ;
+  static char        s_buffer [ s_LEN ] ;
+  const  int         result = snprintf ( s_buffer    , 
+                                         s_LEN       , 
+                                         fmt.c_str() , 
+                                         value1      , 
+                                         value2      ) ;
   return 
-    0 < result && (unsigned int) result < s_LEN ?  
-    std::string ( s_buffer , s_buffer + result ) : 
-    fmt + std::to_string ( value1 ) + 
-    " " + std::to_string ( value2 ) ;
+    0 < result && (unsigned int) result < s_LEN ? std::string ( s_buffer , s_buffer + result ) : 
+    fmt + std::to_string ( value1 ) + " " + std::to_string ( value2 ) ;
 }
 // ============================================================================
 // format three numbers ..
 // ============================================================================
-std::string Ostap::format ( const std::string& fmt    ,
-                            double             value1 , 
-                            double             value2 ,
-                            double             value3 ) 
+std::string Ostap::format
+( const std::string& fmt    ,
+  double             value1 , 
+  double             value2 ,
+  double             value3 ) 
 {
-  const std::size_t s_LEN = 256 ;
-  static char s_buffer[ s_LEN ] ;
-  const int result = snprintf ( s_buffer , s_LEN , fmt.c_str() , 
-                                value1 , value2 , value3 ) ;
+  const  std::size_t s_LEN  = 1024 ;
+  static char        s_buffer [ s_LEN ] ;
+  const  int         result = snprintf ( s_buffer    , 
+                                         s_LEN       , 
+                                         fmt.c_str() , 
+                                         value1      , 
+                                         value2      , 
+                                         value3      ) ;
   return 
     0 < result && (unsigned int) result < s_LEN ? std::string ( s_buffer , s_buffer + result ) : 
     ( fmt + std::to_string ( value1 ) + 
@@ -78,16 +91,22 @@ std::string Ostap::format ( const std::string& fmt    ,
 // ============================================================================
 // format four numbers ..
 // ============================================================================
-std::string Ostap::format ( const std::string& fmt    ,
-                            double             value1 ,
-                            double             value2 , 
-                            double             value3 ,
-                            double             value4 ) 
+std::string Ostap::format
+( const std::string& fmt    ,
+  double             value1 ,
+  double             value2 , 
+  double             value3 ,
+  double             value4 ) 
 {
-  const std::size_t s_LEN = 512 ;
-  static char s_buffer[ s_LEN ] ;
-  const int result = snprintf ( s_buffer , s_LEN , fmt.c_str() , 
-                                value1 , value2 , value3 , value4 ) ;
+  const  std::size_t s_LEN = 1024 ;
+  static char        s_buffer[ s_LEN ] ;
+  const  int         result = snprintf ( s_buffer    , 
+                                         s_LEN       , 
+                                         fmt.c_str() , 
+                                         value1      , 
+                                         value2      , 
+                                         value3      , 
+                                         value4      ) ;
   //
   return 
     0 < result && (unsigned int) result < s_LEN ? std::string ( s_buffer , s_buffer + result ) : 
@@ -99,17 +118,24 @@ std::string Ostap::format ( const std::string& fmt    ,
 // ============================================================================
 // format five numbers ..
 // ============================================================================
-std::string Ostap::format ( const std::string& fmt    ,
-                            double       value1 , 
-                            double       value2 , 
-                            double       value3 ,
-                            double       value4 , 
-                            double       value5 ) 
+std::string Ostap::format 
+( const std::string& fmt    ,
+  double       value1 , 
+  double       value2 , 
+  double       value3 ,
+  double       value4 , 
+  double       value5 ) 
 {
-  const std::size_t s_LEN = 512 ;
-  static char s_buffer[ s_LEN ] ;
-  const int result = snprintf ( s_buffer , s_LEN  , fmt.c_str() , 
-                                value1   , value2 , value3 , value4 , value5 ) ;
+  const  std::size_t s_LEN  = 1024 ;
+  static char        s_buffer[ s_LEN ] ;
+  const  int         result = snprintf ( s_buffer    , 
+                                         s_LEN       , 
+                                         fmt.c_str() , 
+                                         value1      , 
+                                         value2      , 
+                                         value3      , 
+                                         value4      , 
+                                         value5      ) ;
   //
   return 
     0 < result && ( unsigned int) result < s_LEN ? std::string ( s_buffer , s_buffer + result ) :
