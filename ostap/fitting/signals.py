@@ -305,18 +305,42 @@ class CrystalBall_pdf(PEAK) :
 
     @property
     def alpha ( self ) :
-        """Alpha-parameter for Crystal Ball tail"""
+        """Alpha-parameter for Crystal Ball tail (same as alphaL,aL"""
         return self.__alpha
     @alpha.setter
     def alpha ( self, value ) :
         self.set_value ( self.__alpha , value ) 
     
     @property
+    def alphaL ( self ) :
+        """Alpha-parameter for Crystal Ball tail (same as alpha,aL)"""
+        return self.__alpha
+    @alphaL.setter
+    def alphaL ( self, value ) :
+        self.set_value ( self.__alpha , value ) 
+
+    @property
+    def aL ( self ) :
+        """Alpha-parameter for Crystal Ball tail (same as alpha,alphaL)"""
+        return self.__alpha
+    @aL.setter
+    def aL ( self, value ) :
+        self.set_value ( self.__alpha , value ) 
+        
+    @property
     def n ( self ) :
-        """N-parameter for Crystal Ball tail (actually 'n+1' is used)"""
+        """N-parameter for Crystal Ball tail (actually 'n+1' is used), same as nL"""
         return self.__n
     @n.setter
     def n ( self, value ) :
+        self.set_value ( self.__n , value ) 
+
+    @property
+    def nL ( self ) :
+        """N-parameter for Crystal Ball tail (actually 'n+1' is used), same as n"""
+        return self.__n
+    @nL.setter
+    def nL ( self, value ) :
         self.set_value ( self.__n , value ) 
 
 models.append ( CrystalBall_pdf )    
@@ -328,7 +352,7 @@ models.append ( CrystalBall_pdf )
 #  @see Ostap::Math::CrystalBallRS
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class CrystalBallRS_pdf(CrystalBall_pdf) :
+class CrystalBallRS_pdf(PEAK) :
     """Right-side CrystalBall    
     """
     def __init__ ( self              ,
@@ -340,8 +364,18 @@ class CrystalBallRS_pdf(CrystalBall_pdf) :
                    n        = None   ) : 
                    
         ##  the base 
-        CrystalBall_pdf.__init__  ( self , name , xvar , mean , sigma , alpha , n )
+        PEAK.__init__  ( self , name , xvar , mean , sigma )
         #
+        self.__alpha = self.make_var ( alpha ,
+                                       'alpha_%s'        % name ,
+                                       '#alpha_{CB}(%s)' % name ,
+                                       None , 2.0 , 0.05 , 5 )
+        
+        self.__n     = self.make_var ( n   ,
+                                       'n_%s'            % name ,
+                                       'n_{CB}(%s)'      % name ,
+                                       None , 5.0 , 1.e-6 , 100 )
+        
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.CrystalBallRS (
@@ -362,7 +396,47 @@ class CrystalBallRS_pdf(CrystalBall_pdf) :
             'alpha' : self.alpha ,
             'n'     : self.n     ,
             }
-      
+
+    @property
+    def alpha ( self ) :
+        """Alpha-parameter for Crystal Ball tail"""
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self, value ) :
+        self.set_value ( self.__alpha , value ) 
+    
+    @property
+    def alphaR ( self ) :
+        """Alpha-parameter for Crystal Ball tail (same as alpha,aR)"""
+        return self.__alpha
+    @alphaR.setter
+    def alphaR ( self, value ) :
+        self.set_value ( self.__alpha , value ) 
+
+    @property
+    def aR ( self ) :
+        """Alpha-parameter for Crystal Ball tail (same as alpha,alphaR)"""
+        return self.__alpha
+    @aR.setter
+    def aR ( self, value ) :
+        self.set_value ( self.__alpha , value ) 
+        
+    @property
+    def n ( self ) :
+        """N-parameter for Crystal Ball tail (actually 'n+1' is used)"""
+        return self.__n
+    @n.setter
+    def n ( self, value ) :
+        self.set_value ( self.__n , value ) 
+
+    @property
+    def nR ( self ) :
+        """N-parameter for Crystal Ball tail (actually 'n+1' is used), same as n"""
+        return self.__n
+    @nR.setter
+    def nR ( self, value ) :
+        self.set_value ( self.__n , value ) 
+
 models.append ( CrystalBallRS_pdf )    
 # =============================================================================
 ## @class CB2_pdf
@@ -398,7 +472,11 @@ class CB2_pdf(PEAK) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name , xvar , mean , sigma )
+        PEAK.__init__  ( self ,
+                         name  = name  ,
+                         xvar  = xvar  ,
+                         mean  = mean  , 
+                         sigma = sigma ) 
         #
         ## treat the specific parameters
         #
@@ -473,6 +551,22 @@ class CB2_pdf(PEAK) :
     @nR.setter
     def nR ( self, value ) :
         self.set_value ( self.__nR , value ) 
+
+    @property
+    def alphaL ( self ) :
+        """(left) Alpha-parameter for Crystal Ball tail (same as aL)"""
+        return self.__aL
+    @alphaL.setter
+    def alphaL ( self, value ) :
+        self.set_value ( self.__aL , value ) 
+
+    @property
+    def alphaR ( self ) :
+        """(right) Alpha-parameter for Crystal Ball tail (same as aR)"""
+        return self.__aR
+    @alphaR.setter
+    def alphaR ( self, value ) :
+        self.set_value ( self.__aR , value ) 
         
 models.append ( CB2_pdf )    
 # =============================================================================
