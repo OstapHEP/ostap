@@ -87,17 +87,18 @@ __all__     = (
     'addChoppingResponse'  , ## add `chopping' response to TTree or RooDataSet
     )
 # =============================================================================
-from   ostap.tools.tmva       import Trainer as TMVATrainer
-from   ostap.tools.tmva       import Reader  as TMVAReader
-from   ostap.tools.tmva       import ( dir_name     , good_for_negative,
-                                       trivial_opts ) 
-from   ostap.core.core        import WSE 
-from   ostap.core.pyrouts     import hID, h1_axis, Ostap 
-from   ostap.core.ostap_types import integer_types 
+from   ostap.core.meta_info    import root_info
+from   ostap.tools.tmva        import Trainer as TMVATrainer
+from   ostap.tools.tmva        import Reader  as TMVAReader
+from   ostap.tools.tmva        import ( dir_name     , good_for_negative,
+                                        trivial_opts ) 
+from   ostap.core.core         import WSE 
+from   ostap.core.pyrouts      import hID, h1_axis, Ostap 
+from   ostap.core.ostap_types  import integer_types 
 import ostap.trees.trees 
 import ostap.trees.cuts
-import ostap.utils.utils      as     Utils 
-from   ostap.core.meta_info   import root_version_int, root_info 
+import ostap.utils.utils       as     Utils 
+from   ostap.fitting.variables import make_formula 
 import ROOT, os, shutil, tarfile  
 # =============================================================================
 from ostap.logger.logger      import getLogger
@@ -338,7 +339,7 @@ class Trainer(object) :
         self.__dirname           = dirname 
         self.__trainer_dirs      = [] 
 
-        self.__multithread       = multithread and 61800 <= root_version_int 
+        self.__multithread       = multithread and (6,18)<= root_info
 
         if not workdir : workdir = os.getcwd()
 
@@ -1748,30 +1749,22 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
         else :
             
             varset  = dataset.get()
-            varlist = ROOT.RooArgList()
-            for v in varset : varlist.add ( v )
+            chopper = make_formula ( 'chopping' , chopper , varset )
             
-            chop  = Ostap.FormulaVar       ( 'chopping' , chopper , varlist , False )
-            assert chop.ok() , "Chopping: invalid `chopper' expression: %s" % chopper
-            del chop 
-            used    = Ostap.usedVariables ( chopper    , varlist  )            
-            chopper = Ostap.FormulaVar    ( 'chopping' , chopper  , used    ,  True )
-
-
     assert isinstance ( chopper , ROOT.RooAbsReal ), 'Invalid chopper type %s' % chopper 
 
 
     category = ROOT.RooCategory ( category_name ,
-                                  'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) ) 
-    for i in range ( N ) :
-        ##
-        if   N <    10 : cn = category_name + '_%d'    % i
-        if   N <   100 : cn = category_name + '_%02d'  % i
-        elif N <  1000 : cn = category_name + '_%03d'  % i
-        elif N < 10000 : cn = category_name + '_%04d'  % i
-        else           : cn = category_name + '_%d'    % i
-        ##
-        category.defineType ( cn , i )
+                                  'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) )
+
+    
+    if   N <    10 : fmt = category_name + '_%d'    
+    if   N <   100 : fmt = category_name + '_%02d'  
+    elif N <  1000 : fmt = category_name + '_%03d'  
+    elif N < 10000 : fmt = category_name + '_%04d'  
+    else           : fmt = category_name + '_%d'   
+    ## 
+    for i in range ( N ) : category.defineType ( fmt % i  , i )
 
     args = chopper , category , N , _inputs , _maps , options , prefix , suffix , aux
     

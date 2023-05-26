@@ -939,13 +939,9 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__roo_cuts    = ''
         self.__roo_formula = None
 
-        if roo_cuts :
+        if roo_cuts :            
             varlist = self.__data.varlist() 
-            roosel  = Ostap.FormulaVar    ( roo_cuts, varlist , False )          
-            assert roosel .ok() , "SelectorWithVars: invalid 'roo_cuts': %s" % roo_cuts
-            del    roosel
-            used    = Ostap.usedVariables ( roo_cuts , varlist  )            
-            roosel  = Ostap.FormulaVar    ( roo_cuts , used     , True )
+            roosel  = make_formula ( roo_cuts , roo_cuts , varlist )
             self.__roo_formula = roosel 
             self.__roo_cuts    = roo_cuts 
     
@@ -1338,14 +1334,10 @@ class SelectorWithVars(SelectorWithCuts) :
 
         # reset Roo-formula (if specified) 
         if self.roo_cuts :
-            roo_cuts = self.roo_cuts 
+            roo_cuts = self.roo_cuts            
             del self.__roo_formula 
             varlist = self.__data.varlist() 
-            roosel  = Ostap.FormulaVar    ( roo_cuts, varlist , False )          
-            assert roosel .ok() , "SelectorWithVars: invalid 'roo_cuts': %s" % roo_cuts
-            del    roosel
-            used    = Ostap.usedVariables ( roo_cuts , varlist  )            
-            roosel  = Ostap.FormulaVar    ( roo_cuts , used     , True )
+            roosel  = make_formula ( roo_cuts , roo_cuts , varlist )
             self.__roo_formula = roosel 
             
         ## take care on the progress bar 
@@ -1376,11 +1368,7 @@ class SelectorWithVars(SelectorWithCuts) :
             roo_cuts = self.roo_cuts 
             del self.__roo_formula 
             varlist = self.__data.varlist() 
-            roosel  = Ostap.FormulaVar    ( roo_cuts, varlist , False )          
-            assert roosel .ok() , "SelectorWithVars: invalid 'roo_cuts': %s" % roo_cuts
-            del    roosel
-            used    = Ostap.usedVariables ( roo_cuts , varlist  )            
-            roosel  = Ostap.FormulaVar    ( roo_cuts , used     , True )
+            roosel  = make_formula ( roo_cuts , roo_cuts , varlist ) 
             self.__roo_formula = roosel 
             
         ## take care on the progress bar 
@@ -1746,10 +1734,8 @@ def make_dataset_old ( tree              ,
 
         ffs   = []
         fcuts = []
-        for f in formulas :
-
-            fv = Ostap.FormulaVar ( f.name , f.description , f.formula , vlst , False )
-            assert fv.ok() , 'Invalid formula: %s' % f.formula 
+        for f in formulas :            
+            fv = make_formula ( f.name , f.description , f.formula , ds  )
             ffs.append ( fv )
             fcols.add  ( fv )
             mn , mx = f.minmax            

@@ -32,8 +32,8 @@ from   ostap.core.ostap_types    import ( integer_types , string_types   ,
                                           num_types     , 
                                           list_types    , sequence_types )
 from   ostap.math.base           import islong
+from   ostap.fitting.variables   import make_formula 
 import ostap.trees.cuts     
-import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ROOT, random, math, sys, ctypes  
@@ -508,12 +508,8 @@ def _rad_subset_ ( dset , vars = [] , cuts = '' ) :
     
     if   isinstance ( cuts , ROOT.TCut ) :   cuts = str ( cuts )
 
-    if cuts and isinstance ( cuts , string_types ) : 
-        cuts0 = Ostap.FormulaVar ( cuts , cuts , dset.varlist() , False )            
-        assert cuts0.ok() , 'ds_subset: invalid formula %s' % cuts
-        del cuts0
-        used  = Ostap.usedVariables ( cuts , dset.varlist() )            
-        cuts  = Ostap.FormulaVar    ( cuts , cuts , used , True )
+    if cuts and isinstance ( cuts , string_types ) :
+        cuts  = make_formula ( cuts , cuts , dset.varlist() )
 
     if   isinstance ( vars , ROOT.RooArgSet  ) : return dset.reduce ( vars , cuts )
     elif isinstance ( vars , string_types    ) : vars = [ vars ]
@@ -738,12 +734,8 @@ def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , p
     if ok2 : ## need to have RooFit version of cuts 
         if  not cuts                               : vcuts = ROOT.nullptr
         elif isinstance ( cuts , ROOT.RoOAbsReal ) : vcuts = cuts 
-        else :
-            cuts_ = Ostap.FormulaVar ( cuts , cuts , dataset.varlist() , False )            
-            assert cuts_.ok() , 'ds_project: invalid formula %s' % cuts
-            del cuts_ 
-            used  = Ostap.usedVariables ( cuts , dataset.varlist()  )            
-            vcuts = Ostap.FormulaVar    ( cuts , cuts , used , True )
+        else                                       : vcuts = make_formula ( cuts , cuts , dataset.get() )
+        
         cuts = vcuts 
 
     ## special treatment for 1D histograms: several variables are summed/projected together 
@@ -1201,19 +1193,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 
     >>> dataset.addVar ( 'ratio' , 'pt/pz' )
     """
-    vlst     = ROOT.RooArgList()
-    vset     = dataset.get()
-    for   v     in vset : vlst.add ( v )
-    #
-
-
-    tmp_name = 'var_%d' % hash ( ( vname , formula ) )    
-    vcom     = Ostap.FormulaVar ( tmp_name , formula , formula , vlst , False )    
-    assert vcom.ok() , 'addVar: invalid formula %s' % formula 
-    del vcom    
-    used = Ostap.usedVariables ( formula , vlst )
-    vcol = Ostap.FormulaVar ( vname , formula , formula , used , True  )
-
+    vcol = make_formula    ( vname , formula , dataset.get() )
     dataset.addColumn ( vcol )
     del vcol 
     #
@@ -2252,15 +2232,8 @@ def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' ,
     mvars = []
     for v in more_vars :
         if   isinstance ( v , ROOT.RooAbsReal ) : mvars.append ( v )
-        elif isinstance ( v , string_types    ) :
-            
-            vv = v.strip()
-            
-            vvar = Ostap.FormulaVar ( vv , vv , dataset.varlist() , False )            
-            assert vvar.ok() , 'ds_to_csv: invalid formula %s' % v 
-            del vvar             
-            used = Ostap.usedVariables ( vv , dataset.varlist() )            
-            vvar = Ostap.FormulaVar    ( vv , vv , used , True )
+        elif isinstance ( v , string_types    ) :            
+            vvar = make_formula ( vv , vv , dataset.get() )
             mvars.append ( vvar )
         else :
             raise TypeError('ds_to_csv: invalid variable %s/%s' % ( v , type(v) ) ) 
@@ -2866,20 +2839,11 @@ def _rad_rows_ ( dataset , variables = [] , cuts = '' , cutrange = '' , first = 
     formulas = []
     varlist  = dataset.varlist () 
     for v in vars :
-        f0    = Ostap.FormulaVar ( v , v , varlist , False )
-        assert f0.ok () , 'rows: invalid formula %s' % v
-        del f0
-        used  = Ostap.usedVariables ( v , varlist )            
-        f0    = Ostap.FormulaVar    ( v , v , used , True )
+        f0 = make_formula     ( v , v , varlist  ) 
         formulas.append ( f0 ) 
 
     fcuts = None 
-    if cuts :
-        f0    = Ostap.FormulaVar ( cuts , cuts , varlist , False )
-        assert f0.ok () , 'rows: invalid formula %s' % cuts
-        del f0
-        used  = Ostap.usedVariables ( cuts , varlist )            
-        fcuts = Ostap.FormulaVar ( cuts , cuts , used , True )
+    if cuts : fcuts = make_formula ( cuts , cuts , varlist  )
 
     weighted = dataset.isWeighted()
     

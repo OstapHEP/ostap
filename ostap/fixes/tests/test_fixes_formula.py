@@ -18,7 +18,7 @@ from   ostap.core.meta_info         import root_version
 from   ostap.core.core              import Ostap
 import ostap.fitting.roofit 
 import ostap.fitting.roocollections 
-import ostap.fitting.variables
+from   ostap.fitting.variables      import make_formula
 import ROOT
 # =============================================================================
 # logging 
@@ -41,11 +41,18 @@ def test_formula() :
     f1   = Ostap.FormulaVar    ( 'f1'  , 'a+1'   , vlst , True  ) 
     f2   = Ostap.FormulaVar    ( 'f2'  , 'a+b'   , vlst , True  ) 
     f3   = Ostap.FormulaVar    ( 'f3'  , 'a+b+c' , vlst , True  ) 
-
+    f4   = Ostap.FormulaVar    ( 'f4'  , 'c+a'   , vlst , True  ) 
+    
     f11  = Ostap.FormulaVar    ( 'f11' , 'a+1'   , vlst , False ) 
     f21  = Ostap.FormulaVar    ( 'f21' , 'a+b'   , vlst , False ) 
     f31  = Ostap.FormulaVar    ( 'f31' , 'a+b+c' , vlst , False ) 
+    f41  = Ostap.FormulaVar    ( 'f41' , 'c+a'   , vlst , False ) 
     
+    f12  = make_formula        ( 'f12' , 'a+1'   , vlst ) 
+    f22  = make_formula        ( 'f22' , 'a+b'   , vlst ) 
+    f32  = make_formula        ( 'f32' , 'a+b+c' , vlst ) 
+    f42  = make_formula        ( 'f42' , 'c+a'   , vlst ) 
+
     used1 = Ostap.usedVariables ( 'a+1' , vlst )    
     assert 1 == len ( used1 ) , \
            'Invalid "used1" stuff %s for ROOT %s' % ( used1 , root_version )
@@ -57,6 +64,8 @@ def test_formula() :
     used3 = Ostap.usedVariables ( 'a+b+c' , vlst )    
     assert 3 == len ( used3 ) , \
            'Invalid "used3" stuff %s for ROOT %s' % ( used3 , root_version )
+
+    
     
 # =============================================================================
 if '__main__' == __name__ :

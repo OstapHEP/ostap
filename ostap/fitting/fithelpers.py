@@ -41,7 +41,7 @@ from   ostap.core.ostap_types  import ( string_types   , num_types   ,
                                         is_good_number , is_integer  ,
                                         sequence_types , sized_types )
 from   ostap.utils.utils       import make_iterable
-from   ostap.fitting.variables import SETVAR 
+from   ostap.fitting.variables import SETVAR, make_formula 
 from   ostap.fitting.utils     import make_name, numcpu, ncpu, get_i  
 from   ostap.fitting.roocmdarg import check_arg 
 from   ostap.math.random_ext   import ve_gauss, poisson
@@ -1593,8 +1593,7 @@ class FitHelper(VarMaker) :
         name  = name  if name  else 'Formula_%s '    % self.name 
         title = title if title else 'Formula:%s/%s'  % ( formula , self.name )
         
-        ## rfv = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula_ , vlst )
-        rfv = Ostap.FormulaVar ( self.var_name ( name ) , title , formula_ , vlst )
+        rfv = make_formula ( self.var_name ( name ) , formula_ , vlst ) )
         
         self.aux_keep.append ( vlst )
         self.aux_keep.append ( rvf  )
