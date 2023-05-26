@@ -722,27 +722,36 @@ class APDF1 ( Components ) :
                 commands = data_options 
                 commands = data_options + args +  ( ROOT.RooFit.Invisible() , ) 
                 self.plot_on ( dataset , frame , *commands ) 
-                
-            ## draw various "background" terms
-            boptions     = self.draw_option ( 'background_options' , **kwargs ) 
-            bbstyle      = self.draw_option (   'background_style' , **kwargs )
-            self._draw( self.backgrounds , frame , boptions , bbstyle )
-            used_options.add ( 'background_options' ) 
-            used_options.add ( 'background_style'   ) 
 
-            ## draw combined "background" components 
-            if self.combined_backgrounds :
+
+            # ================================================================-
+            ## (1) Draw "signal" components
+            # =================================================================
+            
+            ## draw combined "signals" components
+            if self.combined_signals :
+                drawit    = self.draw_option ( 'draw_combined_signal'     , **kwargs )
+                doptions  = self.draw_option ( 'combined_signal_options'  , **kwargs ) 
+                dstyle    = self.draw_option ( 'combined_signal_style'    , **kwargs )
+                if drawit : self._draw ( self.combined_signals , frame , doptions , dstyle , args )
                 
-                drawit   = self.draw_option ( 'draw_combined_background'    , **kwargs )
-                doptions = self.draw_option ( 'combined_background_options' , **kwargs ) 
-                dstyle   = self.draw_option ( 'combined_background_style'   , **kwargs )
-                
-                if drawit : self._draw ( self.combined_backgrounds , frame , doptions , dstyle , args )
-                
-            used_options.add ( 'draw_combined_background'    ) 
-            used_options.add ( 'combined_background_options' ) 
-            used_options.add ( 'combined_background_style  ' )
-                
+            used_options.add ( 'draw_combined_signal'    ) 
+            used_options.add ( 'combined_signal_options' ) 
+            used_options.add ( 'combined_combined_style' )
+            
+            ## draw "signal" components
+            soptions     = self.draw_option (    'signal_options'  , **kwargs )
+            sbstyle      = self.draw_option (      'signal_style'  , **kwargs ) 
+            self._draw( self.signals , frame , soptions , sbstyle , args )
+
+            used_options.add ( 'signal_options' ) 
+            used_options.add ( 'signal_style'   )
+
+
+            # ================================================================-
+            ## (2) Draw "cross-term" components
+            # =================================================================
+
             ## ugly :-(
             ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs )
             ct1bstyle    = self.draw_option ( 'crossterm1_style'   , **kwargs ) 
@@ -762,6 +771,22 @@ class APDF1 ( Components ) :
             used_options.add ( 'crossterm2_options' ) 
             used_options.add ( 'crossterm2_style'   ) 
 
+            # ================================================================-
+            ## (3) Draw "other" components
+            # =================================================================
+
+            ## draw combined "other" components 
+            if self.combined_components :
+                
+                drawit   = self.draw_option ( 'draw_combined_component'    , **kwargs )
+                doptions = self.draw_option ( 'combined_component_options' , **kwargs ) 
+                dstyle   = self.draw_option ( 'combined_component_style'   , **kwargs )                
+                if drawit : self._draw ( self.combined_components , frame , doptions , dstyle , args )
+                
+            used_options.add ( 'draw_combined_component'    ) 
+            used_options.add ( 'combined_component_options' ) 
+            used_options.add ( 'combined_component_style'   )
+            
             ## draw "other" components
             coptions     = self.draw_option ( 'component_options' , **kwargs )
             cbstyle      = self.draw_option ( 'component_style'   , **kwargs )
@@ -770,38 +795,30 @@ class APDF1 ( Components ) :
             used_options.add ( 'component_options' ) 
             used_options.add ( 'component_style'   ) 
 
-            ## draw combined "other" components 
-            if self.combined_components :
-                
-                drawit   = self.draw_option ( 'draw_combined_component'    , **kwargs )
-                doptions = self.draw_option ( 'combined_component_options' , **kwargs ) 
-                dstyle   = self.draw_option ( 'combined_component_style'   , **kwargs )
-                
-                if drawit : self._draw ( self.combined_components , frame , doptions , dstyle , args )
-                
-            used_options.add ( 'draw_combined_component'    ) 
-            used_options.add ( 'combined_component_options' ) 
-            used_options.add ( 'combined_component_style'   )
-            
-            ## draw "signal" components
-            soptions     = self.draw_option (    'signal_options'  , **kwargs )
-            sbstyle      = self.draw_option (      'signal_style'  , **kwargs ) 
-            self._draw( self.signals , frame , soptions , sbstyle , args )
 
-            used_options.add ( 'signal_options' ) 
-            used_options.add ( 'signal_style'   )
-
-            ## draw combined "signals" components 
-            if self.combined_signals :
-                drawit    = self.draw_option ( 'draw_combined_signal'     , **kwargs )
-                doptions  = self.draw_option ( 'combined_signal_options'  , **kwargs ) 
-                dstyle    = self.draw_option (   'combined_signal_style'  , **kwargs )
-                if drawit : self._draw ( self.combined_signals , frame , doptions , dstyle , args )
+            # ================================================================-
+            ## (4) Draw "background" components
+            # =================================================================
                 
-            used_options.add ( 'draw_combined_signal'    ) 
-            used_options.add ( 'combined_signal_options' ) 
-            used_options.add ( 'combined_combined_style' )
-            
+            ## draw combined "background" components 
+            if self.combined_backgrounds :
+                
+                drawit   = self.draw_option ( 'draw_combined_background'    , **kwargs )
+                doptions = self.draw_option ( 'combined_background_options' , **kwargs ) 
+                dstyle   = self.draw_option ( 'combined_background_style'   , **kwargs )                
+                if drawit : self._draw ( self.combined_backgrounds , frame , doptions , dstyle , args )
+                
+            used_options.add ( 'draw_combined_background'    ) 
+            used_options.add ( 'combined_background_options' ) 
+            used_options.add ( 'combined_background_style  ' )
+                
+            ## draw various "background" terms
+            boptions     = self.draw_option ( 'background_options' , **kwargs ) 
+            bbstyle      = self.draw_option (   'background_style' , **kwargs )
+            self._draw( self.backgrounds , frame , boptions , bbstyle )
+            used_options.add ( 'background_options' ) 
+            used_options.add ( 'background_style'   ) 
+
             #
             ## the total fit curve
             #

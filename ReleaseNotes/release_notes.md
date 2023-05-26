@@ -4,6 +4,8 @@
   1. tiny adjustment of printout format for class `Ostap::Math::ValueWithError`
   1. hide explicit manipulations with `Ostap::FormulaVar` into new function `make_formula`
   1. add alias methods/properties for `CB2_pdf`
+  1. imporve a bit drawing is combined signals/components/backgrounds
+
 
 ## Backward incompatible: 
 

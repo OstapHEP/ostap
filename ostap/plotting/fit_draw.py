@@ -157,6 +157,8 @@ __all__     = (
     'default_crossterm2_style'     , ## style for "crossterm2"    component(s)
     'default_component_style'      , ## style for "other"         component(s)
     ##
+    'separate_signal_style'        , ## style for "separate-signal" component(s)
+    ##
     'Style'                        , ## helper class to define the style for the component
     'Line'                         , ## helper class to define the style for the component
     'Area'                         , ## helper class to define the style for the component
@@ -723,6 +725,17 @@ default_signal_style  = (
     Style ( linecolor = ROOT.kCyan     , linewidth = 2 , fillcolor = ROOT.kCyan    , fillstyle = 1001 ) ,
     Style ( linecolor = ROOT.kYellow   , linewidth = 2 , fillcolor = ROOT.kYellow  , fillstyle = 1001 ) ,
     Style ( linecolor = ROOT.kPink     , linewidth = 2 , fillcolor = ROOT.kPink    , fillstyle = 1001 ) ,
+    ) 
+
+## useful when 'draw_combined_signal' is activated 
+separate_signal_style  = (
+    Line  ( linecolor = ROOT.kBlue     , linewidth = 2 ) , 
+    Line  ( linecolor =    8           , linewidth = 2 ) ,
+    Line  ( linecolor = ROOT.kMagenta  , linewidth = 2 ) ,
+    Line  ( linecolor = ROOT.kCyan     , linewidth = 2 ) ,
+    Line  ( linecolor = ROOT.kYellow   , linewidth = 2 ) ,
+    Line  ( linecolor = ROOT.kPink     , linewidth = 2 ) ,
+    Line  ( linecolor = ROOT.kRed      , linewidth = 2 ) ,
     ) 
 
 default_background_style = (

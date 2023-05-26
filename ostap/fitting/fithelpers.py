@@ -633,16 +633,21 @@ class FitHelper(VarMaker) :
         verbose = None
 
         from ostap.core.core import cidict_fun as key_transform 
-
+        transformed_draw_options = tuple ( key_transform ( k ) for k in drawing_options )
+        
         for k , a in items_loop ( kwargs ) :
             
             key  = key_transform ( k )             
             
             ## skip "drawing" options 
-            if   key in drawing_options       : continue 
-            if   key in ( 'draw'            ,
-                          'drawoption'      ,
-                          'drawoptions'     ) : continue 
+            if   k   in drawing_options          : continue
+            if   key in drawing_options          : continue
+            elif k   in transformed_draw_options : continue
+            elif key in transformed_draw_options : continue
+            
+            elif key in ( 'draw'                 ,
+                          'drawoption'           ,
+                          'drawoptions'          ) : continue 
             
             if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )            
             elif key in ( 'verbose' ,       ) and isinstance ( a , bool ) :
