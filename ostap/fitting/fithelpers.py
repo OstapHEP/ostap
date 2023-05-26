@@ -1593,7 +1593,7 @@ class FitHelper(VarMaker) :
         name  = name  if name  else 'Formula_%s '    % self.name 
         title = title if title else 'Formula:%s/%s'  % ( formula , self.name )
         
-        rfv = make_formula ( self.var_name ( name ) , formula_ , vlst ) )
+        rfv = make_formula ( self.var_name ( name ) , formula_ , vlst )
         
         self.aux_keep.append ( vlst )
         self.aux_keep.append ( rvf  )
