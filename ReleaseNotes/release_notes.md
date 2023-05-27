@@ -5,7 +5,7 @@
   1. hide explicit manipulations with `Ostap::FormulaVar` into new function `make_formula`
   1. add alias methods/properties for `CB2_pdf`
   1. imporve a bit drawing is combined signals/components/backgrounds
-
+  1. add more drawing options, `draw_order`, `draw_singals`, `draw_corssterm1` , draw_crossterm2`, `draw_components`, `draw_backgrounds`
 
 ## Backward incompatible: 
 

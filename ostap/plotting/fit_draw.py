@@ -230,6 +230,13 @@ keys = (
     'draw_combined_background'    ,
     'draw_combined_component'     ,
     ##
+    'draw_signals'                ,
+    'draw_components'             ,
+    'draw_backgrounds'            ,
+    'draw_crossterm1'             ,
+    'draw_crossterm2'             ,
+    ##
+    'draw_order'                  , ## order of drawing components 
     )
 # =============================================================================
 ## get draw options:
@@ -645,18 +652,42 @@ default_crossterm2_options      = ROOT.RooFit.Precision ( precision  ) ,
 default_background2D_options    = default_background_options
 
 # ==============================================================================
-## @var draw_combined_signals
+## @var draw_combined_signal
 #  Should one draw the combined signals    (if any?)
 draw_combined_signal            = False
 # =============================================================================
-## @var draw_combined_backgrounds    
+## @var draw_combined_background
 #  Should one draw the combined signals    (if any?)
 draw_combined_background        = True
 # =============================================================================
-## @var draw_combined_components
+## @var draw_combined_component
 #  Should one draw the combined components (if any?)
 draw_combined_component        = False 
 # =============================================================================
+## @var draw_signals
+#  Should one draw individual signal components?    (if any?)
+draw_signals           = True
+# ==============================================================================
+## @var draw_components 
+#  Should one draw individual "other" components?    (if any?)
+draw_components         = True
+# ==============================================================================
+## @var draw_backgrounds
+#  Should one draw individual "background" components?    (if any?)
+draw_backgrounds        = True
+# ==============================================================================
+## @var draw_crossterm1
+#  Should one draw "crossterm1" components?   
+draw_crossterm1        = True
+# ==============================================================================
+## @var draw_crossterm2
+#  Should one draw "crossterm2" components?   
+draw_crossterm2        = True
+# ==============================================================================
+## @var draw_order 
+#  Order of drawing components 
+draw_order             = 'SXCBTD' ## signal,crossterms,other,background,total,data 
+
 
 # =============================================================================
 ## Get the drawing option from the configuration parser 
@@ -666,14 +697,14 @@ def  get_options ( config , option , default ) :
     
     if not option in config : return default
 
-    opts = config.get ( option , fallback = '()' )
+    opts = config.get   ( option , fallback = '()' )
     opts = opts.strip   ( ) 
     opts = opts.replace ('\n', ' ' )
 
     try : 
-        options = eval( opts , globals() )
-        if isinstance ( options , ROOT.RooCmdArg ) : options = options ,
-        if isinstance ( options , list           ) : options = tuple ( options )
+        options = eval ( opts , globals() )
+        if isinstance  ( options , ROOT.RooCmdArg ) : options = options ,
+        if isinstance  ( options , list           ) : options = tuple ( options )
         if any ( not isinstance ( o , ROOT.RooCmdArg ) for o in options ) :
             raise TypeError('Invalid type  for %s : %s' % ( option , opts ) ) 
     except :
@@ -812,25 +843,55 @@ def  get_style ( config , style , default ) :
 # =============================================================================
 ## the actual styles 
 # =============================================================================
-signal_style       = get_style (
-    CONFIG.fit_draw , 'signal_style'       , default_signal_style       )
-background_style   = get_style (
-    CONFIG.fit_draw , 'background_style'   , default_background_style   )
-component_style    = get_style (
-    CONFIG.fit_draw , 'component_style'    , default_component_style    )
-crossterm1_style   = get_style (
-    CONFIG.fit_draw , 'crossterm1_style'   , default_crossterm1_style   )
-crossterm2_style   = get_style (
-    CONFIG.fit_draw , 'crossterm2_style'   , default_crossterm2_style   )
-background2D_style = get_style (
-    CONFIG.fit_draw , 'background2D_style' , default_background2D_style )
+signal_style              = get_style (
+    CONFIG.fit_draw , 'signal_style'              , default_signal_style       )
+background_style          = get_style (
+    CONFIG.fit_draw , 'background_style'          , default_background_style   )
+component_style           = get_style (
+    CONFIG.fit_draw , 'component_style'           , default_component_style    )
+crossterm1_style          = get_style (
+    CONFIG.fit_draw , 'crossterm1_style'          , default_crossterm1_style   )
+crossterm2_style          = get_style (
+    CONFIG.fit_draw , 'crossterm2_style'          , default_crossterm2_style   )
+background2D_style        = get_style (
+    CONFIG.fit_draw , 'background2D_style'        , default_background2D_style )
 # ==============================================================================
 combined_signal_style     = get_style (
-    CONFIG.fit_draw , 'combined_signal_style'      , default_combined_signal_style     )
+    CONFIG.fit_draw , 'combined_signal_style'     , default_combined_signal_style     )
 combined_background_style = get_style (
-    CONFIG.fit_draw , 'combined_background_style'  , default_combined_background_style )
+    CONFIG.fit_draw , 'combined_background_style' , default_combined_background_style )
 combined_component_style  = get_style (
-    CONFIG.fit_draw , 'combined_component_style'   , default_combined_component_style  )
+    CONFIG.fit_draw , 'combined_component_style'  , default_combined_component_style  )
+
+# ============================================================================
+## Get drawing order:
+#  - 'S' stands for signal-like components
+#  - 'X' stands for crossterm-like components
+#  - 'B' stands for background-like components
+#  - 'C' stands for other  components
+#  - 'T' stands for the total fit curve 
+#  - 'D' stands for the data component 
+def get_draw_order ( order ) :
+    """Get drawing order:
+    - 'S' stands for signal-like components
+    - 'X' stands for crossterm-like components
+    - 'B' stands for background-like components
+    - 'C' stands for other  components
+    - 'T' stands for the total fit curve 
+    - 'D' stands for the data component 
+    """
+    
+    symbols = 'SXCBTD'
+    result  = ''
+    upper   = order.upper()
+    for s in upper :
+        if not s in symbols : continue
+        if     s in result  : continue
+        result += s
+    return result
+
+## get the default drawing order 
+draw_order = get_draw_order ( draw_order )
 
 # =============================================================================
 if '__main__' == __name__ :

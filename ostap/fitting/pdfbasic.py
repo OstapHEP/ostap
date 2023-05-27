@@ -570,6 +570,7 @@ class APDF1 ( Components ) :
         return model.fitTo ( data , cmd  )
 
 
+    # ================================================================================
     ## helper method to draw set of components 
     def _draw ( self , what , frame , options , style = None , args = () ) :
         """ Helper method to draw set of components
@@ -595,6 +596,128 @@ class APDF1 ( Components ) :
             self.plot_on ( self.pdf , frame , component , *atup  )
             
     # ================================================================================
+    ## helper method to draw "signal-like" components
+    def _draw_signals ( self , frame , *args , **kwargs ) :
+        """Helper method to draw `signal-like' components
+        """
+
+        if self.combined_signals or self.signals :
+            drawit1   = self.draw_option ( 'draw_combined_signal'    , **kwargs )
+            drawit2   = self.draw_option ( 'draw_signals'            , **kwargs )
+            if ( not drawit1 ) and ( not  drawit2 ) : 
+                self.warning ( "Plotting of `signal-like' components is disabled!")
+                
+        ## draw "combined-signal"
+        if self.combined_signals and drawit1 :
+            doptions  = self.draw_option ( 'combined_signal_options'  , **kwargs ) 
+            dstyle    = self.draw_option ( 'combined_signal_style'    , **kwargs )
+            self._draw ( self.combined_signals , frame , doptions , dstyle , args )            
+            
+        ## draw "signal" components
+        if self.signals and drawit2 : 
+            soptions     = self.draw_option (    'signal_options'  , **kwargs )
+            sbstyle      = self.draw_option (      'signal_style'  , **kwargs ) 
+            self._draw( self.signals , frame , soptions , sbstyle , args )
+            
+        return set ( ( 'draw_combined_signal'    , 
+                       'combined_signal_options' , 
+                       'combined_combined_style' ,
+                       'draw_signals'            , 
+                       'signal_options'          , 
+                       'signal_style'            ) )
+
+    # ================================================================================
+    ## helper method to draw "crossterm-like" components
+    def _draw_crossterms ( self , frame , *args , **kwargs ) :
+        """Helper method to draw `crossterm-like' components
+        """
+
+        if self.crossterms1 or self.crossterms2 : 
+            drawit1   = self.draw_option ( 'draw_crossterm1'    , **kwargs )
+            drawit2   = self.draw_option ( 'draw_crossterm2'    , **kwargs )
+            if ( not drawit1 ) and ( not  drawit2 ) : 
+                self.warning ( "Plotting of `crossterm-like' components is disabled!")
+                
+        if self.crossterms1 and drawit1 : 
+            ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs )
+            ct1bstyle    = self.draw_option ( 'crossterm1_style'   , **kwargs ) 
+            self._draw( self.crossterms1 , frame , ct1options , ct1bstyle , args )
+            
+        if self.crossterms2 and drawit2 :
+            ct2options   = self.draw_option ( 'crossterm2_options' , **kwargs )
+            ct2bstyle    = self.draw_option ( 'crossterm2_style'   , **kwargs )        
+            self._draw( self.crossterms2 , frame , ct2options , ct2bstyle , args )
+                
+        return set ( ( 'draw_crossterm1'    ,
+                       'crossterm1_options' ,  
+                       'crossterm1_style'   ,
+                       'draw_crossterm2'    ,
+                       'crossterm2_options' , 
+                       'crossterm2_style'   ) )
+    
+    # ================================================================================
+    ## helper method to draw "other" components
+    def _draw_components ( self , frame , *args , **kwargs ) :
+        """Helper method to draw `other' components
+        """
+
+        if self.combined_components or self.components :
+            drawit1   = self.draw_option ( 'draw_combined_component'    , **kwargs )
+            drawit2   = self.draw_option ( 'draw_components'            , **kwargs )
+            if ( not drawit1 ) and ( not  drawit2 ) : 
+                self.warning ( "Plotting of `other' components is disabled!")
+        
+        ## draw combined "other" components 
+        if self.combined_components  and drawit1 :
+            doptions = self.draw_option ( 'combined_component_options' , **kwargs ) 
+            dstyle   = self.draw_option ( 'combined_component_style'   , **kwargs )                
+            self._draw ( self.combined_components , frame , doptions , dstyle , args )
+            
+        ## draw "other" components
+        if self.components and drawit2 : 
+            coptions     = self.draw_option ( 'component_options' , **kwargs )
+            cbstyle      = self.draw_option ( 'component_style'   , **kwargs )
+            self._draw( self.components , frame , coptions , cbstyle , args )
+
+        return set ( ( 'draw_combined_component'    , 
+                       'combined_component_options' , 
+                       'combined_component_style'   ,
+                       'draw_components'            , 
+                       'component_options'          , 
+                       'component_style'            ) ) 
+
+    # ================================================================================
+    ## helper method to draw "backgriund" components
+    def _draw_backgrounds ( self , frame , *args , **kwargs ) :
+        """Helper method to draw `backgrouns' components
+        """
+        
+        if self.combined_backgrounds or self.backgrounds :
+            drawit1   = self.draw_option ( 'draw_combined_background'   , **kwargs )
+            drawit2   = self.draw_option ( 'draw_backgrounds'           , **kwargs )
+            if ( not drawit1 ) and ( not  drawit2 ) : 
+                self.warning ( "Plotting of `background-like' components is disabled!")
+        
+        ## draw combined "background" components 
+        if self.combined_backgrounds and drawit1 :
+            doptions = self.draw_option ( 'combined_background_options' , **kwargs ) 
+            dstyle   = self.draw_option ( 'combined_background_style'   , **kwargs )                
+            self._draw ( self.combined_backgrounds , frame , doptions , dstyle , args )
+
+        ## draw various "background" terms
+        if self.backgrounds and drawit2 :
+            boptions     = self.draw_option ( 'background_options' , **kwargs ) 
+            bbstyle      = self.draw_option (   'background_style' , **kwargs )
+            self._draw( self.backgrounds , frame , boptions , bbstyle )
+            
+        return set ( ( 'draw_combined_background'     , 
+                       'combined_background_options'  , 
+                       'combined_background_style  '  ,
+                       'draw_backgrounds'             , 
+                       'background_options'           ,  
+                       'background_style'             ) ) 
+    
+    # ================================================================================
     ## draw fit results
     #  @code
     #  r,f = model.fitTo ( dataset )
@@ -603,20 +726,29 @@ class APDF1 ( Components ) :
     #  @param dataset  dataset to be drawn 
     #  @param nbins    binning scheme for frame/RooPlot 
     #  @param silent   silent mode ?
-    #  @param data_options          drawing options for dataset
-    #  @param signal_options        drawing options for `signal'        components    
-    #  @param background_options    drawing options for `background'    components 
-    #  @param crossterm1_options    drawing options for `crossterm-1'   components 
-    #  @param crossterm2_options    drawing options for `crossterm-2'   components 
-    #  @param background2D_options  drawing options for `background-2D' components 
-    #  @param component_options     drawing options for 'other'         components 
-    #  @param fit_options           drawing options for fit curve    
-    #  @param signal_style          style(s) for signal components 
-    #  @param background_style      style(s) for background components
-    #  @param component_style       style(s) for other components
-    #  @param crossterm1_style      style(s) for "crossterm-1"   components
-    #  @param crossterm2_style      style(s) for "crossterm-2"   components
-    #  @param background2D_style    style(s) for "background-2D" components
+    #  @param data_options             drawing options for dataset
+    #  @param signal_options           drawing options for `signal'        components    
+    #  @param background_options       drawing options for `background'    components 
+    #  @param crossterm1_options       drawing options for `crossterm-1'   components 
+    #  @param crossterm2_options       drawing options for `crossterm-2'   components 
+    #  @param background2D_options     drawing options for `background-2D' components 
+    #  @param component_options        drawing options for 'other'         components 
+    #  @param fit_options              drawing options for fit curve    
+    #  @param signal_style             style(s) for signal components 
+    #  @param background_style         style(s) for background components
+    #  @param component_style          style(s) for other components
+    #  @param crossterm1_style         style(s) for "crossterm-1"   components
+    #  @param crossterm2_style         style(s) for "crossterm-2"   components
+    #  @param background2D_style       style(s) for "background-2D" components
+    #  @param draw_order               order of drawing components
+    #  @param draw_combined_signal     flag to draw combined signal component
+    #  @param draw_signals             flag to draw signal components 
+    #  @param draw_crossterm1          flag to draw crossterm-like components
+    #  @param draw_crossterm2          flag to draw crossterm-like components
+    #  @param draw_combined_component  flag to draw combined 'other' component
+    #  @param draw_components          flag to draw 'other' components
+    #  @param draw_combined_background flag to draw combined 'background-like' component
+    #  @param draw_background          flag to draw 'background-like' components
     #  @see ostap.plotting.fit_draw
     #
     #  Drawing options can be specified as keyword arguments:
@@ -671,7 +803,20 @@ class APDF1 ( Components ) :
         Other options:
         -  residual               ## make also residual frame
         -  pull                   ## make also residual frame
+        -  draw_order             ## order of drawing components
+
+        Flags:
         
+        - draw_combined_signal     ## flag to draw combined signal component
+        - draw_signals             ## flag to draw signal components 
+        - draw_crossterm1          ## flag to draw crossterm-like components
+        - draw_crossterm2          ## flag to draw crossterm-like components
+        - draw_combined_component  ## flag to draw combined 'other' component
+        - draw_components          ## flag to draw 'other' components
+        - draw_combined_background ## flag to draw combined 'background-like' component
+        - draw_background          ## flag to draw 'background-like' components
+
+
         For default values see ostap.plotting.fit_draw
         
         - Drawing options can be specified as keyword arguments:
@@ -723,116 +868,42 @@ class APDF1 ( Components ) :
                 commands = data_options + args +  ( ROOT.RooFit.Invisible() , ) 
                 self.plot_on ( dataset , frame , *commands ) 
 
+            ## drawing order
+            from ostap.plotting.fit_draw import get_draw_order 
+            draw_order = self.draw_option ( 'draw_order' , **kwargs )
+            draw_order = get_draw_order ( draw_order )
 
-            # ================================================================-
-            ## (1) Draw "signal" components
-            # =================================================================
-            
-            ## draw combined "signals" components
-            if self.combined_signals :
-                drawit    = self.draw_option ( 'draw_combined_signal'     , **kwargs )
-                doptions  = self.draw_option ( 'combined_signal_options'  , **kwargs ) 
-                dstyle    = self.draw_option ( 'combined_signal_style'    , **kwargs )
-                if drawit : self._draw ( self.combined_signals , frame , doptions , dstyle , args )
+            if ( self.signals or self.combined_signals         ) and not 'S' in draw_order :
+                self.info ( "Plotting of `signal-like'    components is omitted" )  
+            if ( self.crossterms1 or self.crossterms2          ) and not 'X' in draw_order :
+                self.info ( "Plotting of `crossterm-like' components is omitted" )  
+            if ( self.components or self.combined_components   ) and not 'C' in draw_order :
+                self.info ( "Plotting of `other'          components is omitted" )  
+            if ( self.backgrounds or self.combined_backgrounds ) and not 'B' in draw_order :
+                self.info ( "Plotting of `other'          components is omitted" )  
+            if not 'T' in draw_order :
+                self.info ( "Plotting of `total' curve               is omitted" )  
+            if dataset  and not 'D' in draw_order :
+                self.info ( "Plotting of `data'                      is omitted" )  
                 
-            used_options.add ( 'draw_combined_signal'    ) 
-            used_options.add ( 'combined_signal_options' ) 
-            used_options.add ( 'combined_combined_style' )
-            
-            ## draw "signal" components
-            soptions     = self.draw_option (    'signal_options'  , **kwargs )
-            sbstyle      = self.draw_option (      'signal_style'  , **kwargs ) 
-            self._draw( self.signals , frame , soptions , sbstyle , args )
-
-            used_options.add ( 'signal_options' ) 
-            used_options.add ( 'signal_style'   )
-
-
-            # ================================================================-
-            ## (2) Draw "cross-term" components
-            # =================================================================
-
-            ## ugly :-(
-            ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs )
-            ct1bstyle    = self.draw_option ( 'crossterm1_style'   , **kwargs ) 
-            if hasattr ( self , 'crossterms1' ) and self.crossterms1 : 
-                self._draw( self.crossterms1 , frame , ct1options , ct1bstyle , args )
-                
-            used_options.add ( 'crossterm1_options' ) 
-            used_options.add ( 'crossterm1_style'   ) 
-
-            ## ugly :-(
-            ct2options   = self.draw_option ( 'crossterm2_options' , **kwargs )
-            ct2bstyle    = self.draw_option ( 'crossterm2_style'   , **kwargs )
-            
-            if hasattr ( self , 'crossterms2' ) and self.crossterms2 :
-                self._draw( self.crossterms2 , frame , ct2options , ct2bstyle , args )
-                
-            used_options.add ( 'crossterm2_options' ) 
-            used_options.add ( 'crossterm2_style'   ) 
-
-            # ================================================================-
-            ## (3) Draw "other" components
-            # =================================================================
-
-            ## draw combined "other" components 
-            if self.combined_components :
-                
-                drawit   = self.draw_option ( 'draw_combined_component'    , **kwargs )
-                doptions = self.draw_option ( 'combined_component_options' , **kwargs ) 
-                dstyle   = self.draw_option ( 'combined_component_style'   , **kwargs )                
-                if drawit : self._draw ( self.combined_components , frame , doptions , dstyle , args )
-                
-            used_options.add ( 'draw_combined_component'    ) 
-            used_options.add ( 'combined_component_options' ) 
-            used_options.add ( 'combined_component_style'   )
-            
-            ## draw "other" components
-            coptions     = self.draw_option ( 'component_options' , **kwargs )
-            cbstyle      = self.draw_option ( 'component_style'   , **kwargs )
-            self._draw( self.components , frame , coptions , cbstyle , args )
-
-            used_options.add ( 'component_options' ) 
-            used_options.add ( 'component_style'   ) 
-
-
-            # ================================================================-
-            ## (4) Draw "background" components
-            # =================================================================
-                
-            ## draw combined "background" components 
-            if self.combined_backgrounds :
-                
-                drawit   = self.draw_option ( 'draw_combined_background'    , **kwargs )
-                doptions = self.draw_option ( 'combined_background_options' , **kwargs ) 
-                dstyle   = self.draw_option ( 'combined_background_style'   , **kwargs )                
-                if drawit : self._draw ( self.combined_backgrounds , frame , doptions , dstyle , args )
-                
-            used_options.add ( 'draw_combined_background'    ) 
-            used_options.add ( 'combined_background_options' ) 
-            used_options.add ( 'combined_background_style  ' )
-                
-            ## draw various "background" terms
-            boptions     = self.draw_option ( 'background_options' , **kwargs ) 
-            bbstyle      = self.draw_option (   'background_style' , **kwargs )
-            self._draw( self.backgrounds , frame , boptions , bbstyle )
-            used_options.add ( 'background_options' ) 
-            used_options.add ( 'background_style'   ) 
-
-            #
-            ## the total fit curve
-            #
-            totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
-            self.plot_on ( self.pdf , frame , *totoptions ) 
-            used_options.add ( 'total_fit_options'    ) 
-
-            #
-            ## draw data once more
-            #
-            if dataset :
-                commands = data_options + args
-                self.plot_on ( dataset , frame , *commands )
-
+            ## now draw the classified components 
+            for c in draw_order :
+                if   'S' == c : used_options != self._draw_signals     ( frame , *args , **kwargs ) 
+                elif 'X' == c : used_options != self._draw_crossterms  ( frame , *args , **kwargs ) 
+                elif 'C' == c : used_options != self._draw_components  ( frame , *args , **kwargs ) 
+                elif 'B' == c : used_options != self._draw_backgrounds ( frame , *args , **kwargs ) 
+                elif 'T' == c :
+                    ## the total fit curve
+                    totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
+                    self.plot_on ( self.pdf , frame , *totoptions ) 
+                    used_options.add ( 'total_fit_options'    ) 
+                elif 'D' == c and dataset : 
+                    ## draw data once more
+                    commands = data_options + args
+                    self.plot_on ( dataset , frame , *commands )
+                else :
+                    self.warning ( "Invalid draw-order component `%s', skip it!" % c )
+                    
             #
             ## suppress ugly axis labels
             #
