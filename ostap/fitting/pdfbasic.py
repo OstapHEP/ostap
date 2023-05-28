@@ -619,13 +619,6 @@ class APDF1 ( Components ) :
             sbstyle      = self.draw_option (      'signal_style'  , **kwargs ) 
             self._draw( self.signals , frame , soptions , sbstyle , args )
             
-        return set ( ( 'draw_combined_signal'    , 
-                       'combined_signal_options' , 
-                       'combined_combined_style' ,
-                       'draw_signals'            , 
-                       'signal_options'          , 
-                       'signal_style'            ) )
-
     # ================================================================================
     ## helper method to draw "crossterm-like" components
     def _draw_crossterms ( self , frame , *args , **kwargs ) :
@@ -648,13 +641,6 @@ class APDF1 ( Components ) :
             ct2bstyle    = self.draw_option ( 'crossterm2_style'   , **kwargs )        
             self._draw( self.crossterms2 , frame , ct2options , ct2bstyle , args )
                 
-        return set ( ( 'draw_crossterm1'    ,
-                       'crossterm1_options' ,  
-                       'crossterm1_style'   ,
-                       'draw_crossterm2'    ,
-                       'crossterm2_options' , 
-                       'crossterm2_style'   ) )
-    
     # ================================================================================
     ## helper method to draw "other" components
     def _draw_components ( self , frame , *args , **kwargs ) :
@@ -678,13 +664,6 @@ class APDF1 ( Components ) :
             coptions     = self.draw_option ( 'component_options' , **kwargs )
             cbstyle      = self.draw_option ( 'component_style'   , **kwargs )
             self._draw( self.components , frame , coptions , cbstyle , args )
-
-        return set ( ( 'draw_combined_component'    , 
-                       'combined_component_options' , 
-                       'combined_component_style'   ,
-                       'draw_components'            , 
-                       'component_options'          , 
-                       'component_style'            ) ) 
 
     # ================================================================================
     ## helper method to draw "backgriund" components
@@ -710,13 +689,6 @@ class APDF1 ( Components ) :
             bbstyle      = self.draw_option (   'background_style' , **kwargs )
             self._draw( self.backgrounds , frame , boptions , bbstyle )
             
-        return set ( ( 'draw_combined_background'     , 
-                       'combined_background_options'  , 
-                       'combined_background_style  '  ,
-                       'draw_backgrounds'             , 
-                       'background_options'           ,  
-                       'background_style'             ) ) 
-    
     # ================================================================================
     ## draw fit results
     #  @code
@@ -869,9 +841,9 @@ class APDF1 ( Components ) :
                 self.plot_on ( dataset , frame , *commands ) 
 
             ## drawing order
-            from ostap.plotting.fit_draw import get_draw_order 
+            import ostap.plotting.fit_draw as FD 
             draw_order = self.draw_option ( 'draw_order' , **kwargs )
-            draw_order = get_draw_order ( draw_order )
+            draw_order = FD.get_draw_order ( draw_order )
 
             if ( self.signals or self.combined_signals         ) and not 'S' in draw_order :
                 self.info ( "Plotting of `signal-like'    components is omitted" )  
@@ -888,10 +860,10 @@ class APDF1 ( Components ) :
                 
             ## now draw the classified components 
             for c in draw_order :
-                if   'S' == c : used_options != self._draw_signals     ( frame , *args , **kwargs ) 
-                elif 'X' == c : used_options != self._draw_crossterms  ( frame , *args , **kwargs ) 
-                elif 'C' == c : used_options != self._draw_components  ( frame , *args , **kwargs ) 
-                elif 'B' == c : used_options != self._draw_backgrounds ( frame , *args , **kwargs ) 
+                if   'S' == c : self._draw_signals     ( frame , *args , **kwargs ) 
+                elif 'X' == c : self._draw_crossterms  ( frame , *args , **kwargs ) 
+                elif 'C' == c : self._draw_components  ( frame , *args , **kwargs ) 
+                elif 'B' == c : self._draw_backgrounds ( frame , *args , **kwargs ) 
                 elif 'T' == c :
                     ## the total fit curve
                     totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
@@ -903,7 +875,9 @@ class APDF1 ( Components ) :
                     self.plot_on ( dataset , frame , *commands )
                 else :
                     self.warning ( "Invalid draw-order component `%s', skip it!" % c )
-                    
+                                
+            for k in FD.keys : used_options.add ( k ) 
+
             #
             ## suppress ugly axis labels
             #
