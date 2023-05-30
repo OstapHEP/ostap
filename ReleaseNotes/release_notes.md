@@ -1,5 +1,7 @@
 ## New features:
 
+  1. add new test for exteding drawing 
+
 ## Backward incompatible: 
 
 ## Bug fixes:

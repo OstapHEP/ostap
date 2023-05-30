@@ -857,7 +857,7 @@ class APDF1 ( Components ) :
                 self.info ( "Plotting of `total' curve               is omitted" )  
             if dataset  and not 'D' in draw_order :
                 self.info ( "Plotting of `data'                      is omitted" )  
-                
+
             ## now draw the classified components 
             for c in draw_order :
                 if   'S' == c : self._draw_signals     ( frame , *args , **kwargs ) 
@@ -869,10 +869,11 @@ class APDF1 ( Components ) :
                     totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
                     self.plot_on ( self.pdf , frame , *totoptions ) 
                     used_options.add ( 'total_fit_options'    ) 
-                elif 'D' == c and dataset : 
+                elif 'D' == c :
+                    if dataset : 
                     ## draw data once more
-                    commands = data_options + args
-                    self.plot_on ( dataset , frame , *commands )
+                        commands = data_options + args
+                        self.plot_on ( dataset , frame , *commands )
                 else :
                     self.warning ( "Invalid draw-order component `%s', skip it!" % c )
                                 
