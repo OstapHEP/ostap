@@ -2759,11 +2759,11 @@ class H2D_dset(XVar,YVar,VarMaker) :
                 
                 self.__wvar = ROOT.RooRealVar  ( wname , "weight-variable" , 1 , self.w_min , self.w_max )
                 self.__vset = ROOT.RooArgSet   ( self.xaxis ,  self.yaxis , self.__wvar )
-                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar )
+                self.__wset = ROOT.RooArgSet   ( self.__wvar )
+                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar ) , ROOT.RooFit.StoreError ( self.__wset )
                 self.__dset = ROOT.RooDataSet (
                     rootID ( 'whds_' )  , "Weighted data set for the histogram '%s'" % histo.GetTitle() ,
-                    self.__vset ,
-                    self.__warg )
+                    self.__vset , *self.__warg )
 
                 xvar = self.xvar
                 yvar = self.yvar
@@ -2888,11 +2888,11 @@ class H3D_dset(XVar,YVar,ZVar,VarMaker) :
                 
                 self.__wvar = ROOT.RooRealVar  ( wname , "weight-variable" , 1 , self.w_min , self.w_max )
                 self.__vset = ROOT.RooArgSet   ( self.xaxis ,  self.yaxis , self.zaxis, self.__wvar )
-                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar )
+                self.__wset = ROOT.RooArgSet   ( self.__wvar )
+                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar ) , ROOT.RooFit.StoreError ( self.__wset )
                 self.__dset = ROOT.RooDataSet  (
                     rootID ( 'whds_' )  , "Weighted data set for the histogram '%s'" % histo.GetTitle() ,
-                    self.__vset ,
-                    self.__warg )
+                    self.__vset , *self.__warg )
 
                 xvar = self.xvar
                 yvar = self.yvar

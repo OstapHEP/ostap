@@ -34,7 +34,7 @@ from   ostap.core.ostap_types    import ( integer_types , string_types   ,
                                           num_types     , 
                                           list_types    , sequence_types )
 from   ostap.math.base           import islong
-from   ostap.fitting.variables   import make_formula 
+from   ostap.fitting.variables   import valid_formula, make_formula 
 import ostap.trees.cuts     
 import ostap.fitting.roocollections
 import ostap.fitting.printable
