@@ -2769,7 +2769,7 @@ class H2D_dset(XVar,YVar,VarMaker) :
                 yvar = self.yvar
                 wvar = self.__wvar 
                 with SETVAR ( xvar ) :
-                    for i, x , y , v in histo.items () :
+                    for ix , iy , x , y , v in histo.items () :
                         if skip_zero and 0 == v.value() and 0 == v.error () : continue 
                         xvar.setVal     ( x.value () )
                         yvar.setVal     ( y.value () )
@@ -2899,7 +2899,7 @@ class H3D_dset(XVar,YVar,ZVar,VarMaker) :
                 zvar = self.zvar 
                 wvar = self.__wvar 
                 with SETVAR ( xvar ) :
-                    for i, x , y , z , v in histo.items () :
+                    for ix , iy , iz , x , y , z , v in histo.items () :
                         if skip_zero and 0 == v.value() and 0 == v.error () : continue 
                         xvar.setVal     ( x.value () )
                         yvar.setVal     ( y.value () )
