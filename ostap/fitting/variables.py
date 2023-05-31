@@ -62,6 +62,8 @@ __all__     = (
     'fraction_var'   , ## var_fraction
     'asymmetry_var'  , ## var_asymmetry
     ##
+    'make_formula'   , ## crfeate Ostap::FormulaVar 
+    'valid_formula'  , ## valid formula expression? 
     ) 
 # =============================================================================
 from   builtins                 import range
@@ -2249,6 +2251,45 @@ _new_methods_ = tuple ( _new_methods_ )
 
 
 # =============================================================================
+## Vali formula expression?
+#  @code
+#  variables = ...
+#  ok        = valid_formula ( 'a+b' , variables )
+#  @endcode
+#  @see Ostap::FormulaVar 
+def valid_formula ( formula , *variables ) :
+    """Valid formula expression and list of variables
+    >>> variables = ...
+    >>> ok       = valid_formula ( 'a+b' , variables )
+    """
+    
+    if  variables and 1 == len ( variables ) and isinstance  ( variables [ 0 ] , ROOT.RooArgList ) :
+        
+        varlist = variables  [ 0 ]
+        
+    else :
+        
+        varlist = ROOT.RooArgList()
+        
+        for i, var in enumerate ( variables ) :
+            if   isinstance ( var , ROOT.RooAbsArg        ) : varlist.add ( var )
+            if   isinstance ( var , ROOT.RooAbsData       ) :
+                for v in var.get () : varlist.add ( v )
+            elif isinstance ( var , ROOT.RooAbsCollection ) :
+                for vv in var : varlist.add ( vv )
+            elif isinstance ( variables , sequence_types ) :                    
+                vlst = [ v for v in var ]
+                assert all ( isinstance ( vv , ROOT.RooAbsArg ) for vv in vlst ) , \
+                       "Invalid element in 'variables[%d]': %s" % ( i . str ( vlst ) )
+                for vv in vlst : varlist.add ( v )
+            else :
+                raise TypeError ( "Invalid type for 'variables[%d]' %s/%s" % ( i ,
+                                                                               type ( var ) ,
+                                                                               str  ( var ) ) )
+
+    return Ostap.validFormula ( formula , varlist )
+
+# =============================================================================
 ## Make formula from expression and list of variables
 #  @code
 #  variables = ...
@@ -2286,7 +2327,8 @@ def make_formula ( name , formula , *variables ) :
                                                                                str  ( var ) ) )
             
     # =====================================================================
-    name   = name.strip() 
+    name   = name.strip()
+    if not name : name = 'formula_%s' % ( hash ( formula ) )
     result = Ostap.FormulaVar ( name , formula , varlist , False )
     assert result.ok() , "Invalid formula '%s'" % formula
     

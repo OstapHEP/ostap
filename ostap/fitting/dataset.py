@@ -25,9 +25,11 @@ __all__     = (
     )
 # =============================================================================
 from   builtins                  import range
+from   collections               import defaultdict 
 from   ostap.core.core           import ( Ostap, VE, hID, dsID , strings , 
                                           valid_pointer , split_string   ,
-                                          ROOTCWD       , var_separators )
+                                          ROOTCWD       , var_separators ,
+                                          loop_items    )
 from   ostap.core.ostap_types    import ( integer_types , string_types   ,
                                           num_types     , 
                                           list_types    , sequence_types )
@@ -525,6 +527,182 @@ def _rad_subset_ ( dset , vars = [] , cuts = '' ) :
 
     return dset.reduce ( aset , cuts ) if aset else dset.reduce ( cuts )
 
+
+# =============================================================================
+## helper technical method to seek for unique or duplicated entries
+def _rds_seek_for_duplicates_ ( dataset          , 
+                                entrytag         , 
+                                criterium = ''   ) : 
+    """Helper technical method to seek for unique or duplicated entries
+    """
+    
+    if   isinstance ( entrytag , ROOT.RooAbsArg ) : entrytag = [ entrytag ]
+    elif isinstance ( entrytag , string_types   ) : entrytag = [ entrytag ]
+    
+    assert isinstance ( entrytag , sequence_types ) , 'Invalid "enttytag" %s' % str ( entrytag )
+
+    fields = [] 
+    for e in entrytag :
+        if   isinstance ( e , ROOT.RooAbsArg  ) and e in dataset : fields.append ( e )
+        elif isinstance ( e , string_types    ) and e in dataset :
+            fields.append ( getattr ( dataset , e ) )
+        elif isinstance ( e , string_types    ) and valid_formula ( e , dataset ) :
+            fields.append ( make_formula ( '' , e , dataset ) )            
+        elif isinstance ( e , ROOT.RooAbsReal ) : fields.append ( e )
+        else :
+            logger.error ( 'Unknown entry %s, skip!' % e )
+            
+    tag = tuple ( fields )
+
+    if  criterium :        
+        if   isinstance ( criterium , ROOT.RooAbsArg ) and criterium in dataset : crit_var = criterum
+        elif isinstance ( criterium , string_types   ) and criterium in dataset :
+            crit_var = getattr ( dataset , criterium )
+        elif isinstance ( criterium  , string_types    ) and valid_formula ( criterium , dataset ) :
+            crit_var = make_formula ( '' , criterium  , dataset ) 
+        elif isinstance ( e , ROOT.RooAbsReal ) :
+            crit_var = criterium
+        else :
+            raise TypeError ( 'Invalid criterium type!' ) 
+    else :
+        crit_var = None
+    
+    snapshot = defaultdict(list)
+
+    if crit_var : content = lambda i : ( float ( crit_var ) , i )
+    else        : content = lambda i : ( 0                  , i )
+    
+    ## make a loop over dataset 
+    for i, e in enumerate ( dataset ) :
+
+        entry = tuple (  float ( v ) for v in tag ) 
+        snapshot [ entry ].append ( content ( i )  ) 
+
+    return snapshot
+
+# =============================================================================
+## Iterator over the duplicated groups 
+#  @code
+#  for group in dataset.duplicates ( ( 'evt' , 'run' ) ) :
+#  ... for entry in group :
+#  ... ...
+def _rds_duplicates_ ( dataset  ,
+                       entrytag ) :
+    """Iterator over the duplicated groups 
+    >>> for group in dataset.duplicats ( ( 'evt' , 'run' ) ) :
+    >>> ... for entry in group :
+    >>> ... ...
+    """
+    snapshot = _rds_seek_for_duplicates_ ( dataset              ,
+                                           entrytag  = entrytag ,
+                                           criterium = ''       ) 
+    for e, lst in loop_items ( snapshot ) :
+        if len ( lst ) <= 2 : continue        
+        yield tuple ( l[1] for l in lst )
+
+
+# =============================================================================        
+## Iterator over the unique entries in dataset
+#  @code
+#  dataset = ...
+#  for ientry in dataset.unique_entries ( ( 'evt' , 'run' ) , choice = 'random' ) :
+#  ...
+#  for ientry in dataset.unique_entries ( ( 'evt' , 'run' ) , choice = 'first'  ) :
+#  ...
+#  for ientry in dataset.unique_entries ( ( 'evt' , 'run' ) , choice = 'last'    ) :
+#  ...
+#  for ientry in dataset.unique_entries ( ( 'evt' , 'run' ) , choice = 'max'  , criterium = 'PT') :
+#  ...
+#  for ientry in dataset.unique_entries ( ( 'evt' , 'run' ) , choice = 'min'  , criterium = 'PT') :
+#  ...
+#  @endcode
+def _rds_unique_entries_ ( dataset          ,
+                           entrytag         ,
+                           choice           , 
+                           criterium = ''   , 
+                           seed      = None ) :
+    
+    if criterium  :
+        assert choice in ( 'min' , 'max' , 'minimal' , 'maximal' , 'minimum' , 'maximum' ) , \
+               "Invalid 'choice' for criterium!"
+    else : 
+        assert choice in ( 'first' , 'last' , 'random' , 'rndm'  , 'rand' ) , \
+               "Invalid 'choice'"
+ 
+    snapshot = _rds_seek_for_duplicates_ ( dataset               ,
+                                           entrytag  = entrytag  ,
+                                           criterium = criterium ) 
+
+    choice = choice.lower()
+    
+    first  = 'first'  == choice
+    last   = 'last'   == choice
+    rand   = choice in ( 'random' , 'rndm'  , 'rand' ) 
+    minv   = criterium and choice in ( 'min' , 'minimal' , 'minimum' )
+    maxv   = criterium and choice in ( 'max' , 'maximal' , 'maximum' )
+
+    from ostap.utils.utils import random_seed
+
+    with random_seed ( seed ) :
+        
+        for e, lst in loop_items ( snapshot ):
+            
+            if   1 == len ( lst ) : yield lst [  0 ] [ 1 ]        
+            elif first            : yield lst [  0 ] [ 1 ]
+            elif last             : yield lst [ -1 ] [ 1 ]
+            elif rand             : yield random.choice ( lst ) [ 1 ] ## seed is needed here! 
+            elif minv             :
+                lst.sort ()
+                yield lst [ 0  ][  1 ]
+            elif maxv             :
+                lst.sort ()
+                yield lst [ -1 ][  1 ]
+
+# =============================================================================        
+## Make a copy of dataset only with unique  entries 
+#  @code
+#  dataset = ...
+#  unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'random' )
+#  unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'first'  )
+#  unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'last'    )
+#  unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'min' , criterium = 'PT' )
+#  unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'max' , criterium = 'PT' )
+#  @endcode
+#  - CPU performance is more or less reasonable up to dataset with 10^7 entries 
+def _rds_make_unique_ ( dataset          ,
+                        entrytag         ,
+                        choice           , 
+                        criterium = ''   , 
+                        seed      = None ) :
+    """Make a copy of dataset only with unique  entries 
+    >>> dataset = ...
+    >>> unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'random' )
+    >>> unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'first'  )
+    >>> unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'last'    )
+    >>> unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'min' , criterium = 'PT' )
+    >>> unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'max' , criterium = 'PT' )
+    - CPU performance is more or less reasonable up to dataset with 10^7 entries 
+    """
+    
+    ds = dataset.emptyClone()
+    for i in dataset.unique_entries ( entrytag  = entrytag  ,
+                                      choice    = choice    ,
+                                      criterium = criterium ,
+                                      seed      = seed      ) :
+        ds.add ( dataset [ i ] )
+
+    return ds
+
+
+ROOT.RooAbsData.make_unique     = _rds_make_unique_
+ROOT.RooAbsData.unique_entries  = _rds_unique_entries_
+ROOT.RooAbsData.duplicates      = _rds_duplicates_ 
+
+_new_methods_ += [
+   ROOT.RooAbsData . make_unique    , 
+   ROOT.RooAbsData . unique_entries , 
+   ROOT.RooAbsData . duplicates     ,
+   ]
 
 # =============================================================================
 ## some decoration over RooDataSet 

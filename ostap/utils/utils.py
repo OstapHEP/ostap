@@ -108,6 +108,8 @@ __all__     = (
     'has_symbol'         , ## Has any of the symbols?
     'is_formula'         , ## Is this string expression represent math formula?
     ##
+    'RandomSeed'         , ## context manager to set/keep seed for the random generator
+    'randomSeed'         , ## context manager to set/keep seed for the random generator
     )
 
 # =============================================================================
@@ -1552,7 +1554,70 @@ class NumCalls (object):
 numcalls = NumCalls
 
 
-# =============================================================================
+# ==============================================================================
+## @class RandomSeed 
+#  Context manager to set/keep seed/state of random generator
+#  @code
+#  import random 
+#  with RandomSeed ( 'this is seed' ) :
+#  ... for i in rnage ( 10 ) : print ( i, random.uniform (0,1) )
+#  @endcode
+#  Seed can be None, int,float,string, bytes, .
+class RandomSeed(object) :
+    """Context manager to set/keep seed/state of random generator
+    >>> import random 
+    >>> with RandomSeed ( 'this is seed' ) :
+    >>> ... for i in range ( 10 ) : print ( i, random.uniform (0,1) )
+    - Seed can be None, int,float,string, bytes, .
+    """
+    def __init__ ( self , seed = None )  :
+        
+        self.__seed  = seed
+        self.__state = None  
+
+    def __enter__  ( self ) :
+        
+        self.__state = random.getstate ()
+        random.seed ( self.__seed )
+        return self
+    
+    def __exit__   ( self , *_ ) :
+        random.setstate ( self.__state )
+        
+    @property
+    def seed ( self ) :
+        """'seed' : the seed for random
+        """
+        return self.__seed 
+    
+# ==============================================================================
+## Context manager to set/keep seed/state of random generator
+#  @code
+#  import random 
+#  with randomSeed ( 'this is seed' ) :
+#  ... for i in range ( 10 ) : print ( i, random.uniform (0,1) )
+#  @endcode
+#  Seed can be None, int,float,string, bytes, ... 
+def randomSeed ( seed = None ) :
+    """Context manager to set/keep seed/state of random generator
+    >>> import random 
+    >>> with randomSeed ( 'this is seed' ) :
+    >>> ... for i in rnage ( 10 ) : print ( i, random.uniform (0,1) )
+    - Seed can be None, int,float,string, bytes, ...
+    """
+    return RandomSeed ( seed )
+
+# ==============================================================================
+## Context manager to set/keep seed/state of random generator
+#  @code
+#  import random 
+#  with random_seed ( 'this is seed' ) :
+#  ... for i in range ( 10 ) : print ( i, random.uniform (0,1) )
+#  @endcode
+#  Seed can be None, int,float,string, bytes, ...
+random_seed = randomSeed     
+
+# ==============================================================================
 ## Copy file with the progress
 #  @code
 #  copy_with_progress ( 'inputfilename.ext' , 'outputfilename.ext' ) 
