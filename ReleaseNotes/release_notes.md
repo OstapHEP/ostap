@@ -11,6 +11,7 @@
 
  1. fix the bug in the `H2D_dset` and `H3D_dset` for `weighted=True` case 
 
+
 # v1.9.9.0
 
 ## New features:
