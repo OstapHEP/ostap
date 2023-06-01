@@ -54,12 +54,13 @@ __date__    = "2015-09-29"
 __version__ = "$Revision$"
 # =============================================================================
 __all__     = (
-    'Combine',
+    'Combine'   , ## the actual combiner object
+    'covMatrix' , ## create 100% correlated or uncorrelated covariance matrices
     ) 
 # =============================================================================
 import ostap.math.linalg
-from   ostap.math.ve import VE,Ostap  
-import ROOT
+from   ostap.math.ve          import VE, Ostap
+from   ostap.core.ostap_types import num_types 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -219,8 +220,48 @@ class Combine(object) :
         """``errors'' : get error components"""
         return self.errComponents()
     
+# =============================================================================
+## helper method to create 100% correlated or unncorrelated covariance matrix
+#  @code
+#
+#  cov2  = covMatrix ( True   , 0.1 , 0.2 ) ## create fully corrleated matrix
+#  print( 'Corrletae    covariance matrix\n%s' % cov2 )
+#
+#  cov2  = covMatrix ( False  , 0.1 , 0.2 ) ## create fully corrleated (diagonal) matrix
+#  print( 'Uncorrelated (diagonal) covariance matrix\n%s' % cov2 )
+#  @encode
+def covMatrix ( correlated , error1 , error2 , *errors ) :
+    """Helper method to create 100% correlated or uncorrelated covariance matrix 
+    
+    >>> cov2  = covMatrix ( True   , 0.1 , 0.2 ) ## create fully corrleated matrix
+    >>> print( 'Corrletae    covariance matrix:%s' % cov2 )
 
-        
+    >>> cov2  = covMatrix ( False  , 0.1 , 0.2 ) ## create fully corrleated (diagonal) matrix
+    >>> print( 'Uncorrelated (diagonal) covariance matrix:%s' % cov2 )
+    """
+    assert isinstance ( correlated , bool ) , "'correlated' must be boolean!"
+
+    ## all errors 
+    errs = ( error1 , error2 ) + errors
+    
+    assert all ( isinstance ( e , num_types ) and ( 0 <= e ) for e in errs ) , \
+           "Invalid error: %s" % str ( errs )
+    
+    N    = len ( errs )
+    COV2 = Ostap.SymMatrix    ( N ) 
+    cov2 = COV2()
+
+    ## 
+    for i , e in enumerate ( errs ) :        
+        ## diagonal elements 
+        cov2 [ i , i ] = e * e
+        ## if correlated, add also non-diagonal elements 
+        if correlated :
+            for j , e2 in enumerate ( errs [ i + 1 : ] , start = i + 1 ) :
+                cov2 [ i , j ] = e * e2 
+
+    return cov2 
+    
 # =============================================================================
 if '__main__' == __name__ :
 
@@ -232,60 +273,57 @@ if '__main__' == __name__ :
     x = VE ( 0.95 , 0.08**2 )
     y = VE ( 1.08 , 0.08**2 )
 
-
     COV2 = Ostap.Math.SymMatrix(2)
 
-    syst1 = COV2 ()
-    syst1[0,0] = 0.08**2
-    syst1[1,1] = 0.08**2
-
-    syst2 = COV2 ()
-    syst2[0,0] = 0.08**2
-    syst2[0,1] = 0.08**2
-    syst2[1,1] = 0.08**2
-
+    ## uncorrelated systematic 
+    syst1 = covMatrix ( False , 0.08 , 0.08 )
     c1 = Combine( [x,y] , syst1 )
+
+    
+    ## correlated systematic 
+    syst2 = covMatrix ( True  , 0.08 , 0.08 )    
     c2 = Combine( [x,y] , syst2 )
 
+    
     r1 = c1.result
     e1 = c1.errors 
 
     r2 = c2.result
     e2 = c2.errors
 
-    logger.info ( 'CORRELATED  : %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r2.value() , r2.error()  , r2.value() , e2[0] , e2[1] ) ) 
-    logger.info ( 'UNCORRELATED: %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r1.value() , r1.error()  , r1.value() , e1[0] , e1[1] ) ) 
+    logger.info ( 'CORRELATED  : %+.3f +/- %-.3f = %+.3f +/- %-.3f +/- %-.3f' % ( r2.value() ,
+                                                                                  r2.error() ,
+                                                                                  r2.value() , e2[0] , e2[1] ) ) 
+    logger.info ( 'UNCORRELATED: %+.3f +/- %-.3f = %+.3f +/- %-.3f +/- %-.3f' % ( r1.value() ,
+                                                                                  r1.error() ,
+                                                                                  r1.value() , e1[0] , e1[1] ) ) 
     
     logger.info ( ' - Lambda_b mass average:' ) 
 
     x = VE(5619.44 , 0.70**2 )
     y = VE(5619.44 , 0.13**2 )
 
-    syst1 = COV2 ()
-    syst1[0,0] = 0.30**2
-    syst1[1,1] = 0.45**2
+    syst1 = covMatrix ( False , 0.30 , 0.45 )     
+    syst2 = covMatrix ( True  , 0.30 , 0.45 ) 
     
-    
-    syst2 = COV2 ()
-    syst2[0,0] = 0.30**2
-    syst2[1,1] = 0.45**2
-    syst2[0,1] = 0.30*0.45
-
     c1 = Combine( [x,y] , syst1 )
     c2 = Combine( [x,y] , syst2 )
-
+    
     r1 = c1.result
     e1 = c1.errors 
-
+    
     r2 = c2.result
     e2 = c2.errors 
-
-    logger.info ( 'CORRELATED  : %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r2.value() , r2.error()  , r2.value() , e2[0] , e2[1] ) ) 
-    logger.info ( 'UNCORRELATED: %.3f+-%.3f = (%.3f+-%.3f+-%.3f) ' % ( r1.value() , r1.error()  , r1.value() , e1[0] , e1[1] ) ) 
-
+    
+    logger.info ( 'CORRELATED  : %+.3f +/- %-.3f = %+.3f +/- %-.3f +/- %-.3f' % ( r2.value() ,
+                                                                                  r2.error() ,
+                                                                                  r2.value() , e2[0] , e2[1] ) ) 
+    logger.info ( 'UNCORRELATED: %+.3f +/- %-.3f = %+.3f +/- %-.3f +/- %-.3f' % ( r1.value() ,
+                                                                                  r1.error() ,
+                                                                                  r1.value() , e1[0] , e1[1] ) ) 
+    
     logger.info ( 80*'*' ) 
-    
-    
+        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

@@ -1,6 +1,7 @@
 ## New features:
    
    1. add context managers for ROOT&RooFit random numbers generators 
+   1. slight impromev form `combine.py` : ad dhelper fnuction `covMatrix` to create 100% corelated or uncorrelated covarianxe matrices 
 
 ## Backward incompatible: 
 
