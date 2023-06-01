@@ -1,3 +1,11 @@
+## New features:
+   
+   1. add context managers for ROOT&RooFit random numbers generators 
+
+## Backward incompatible: 
+
+## Bug fixes:
+
 # v1.9.9.2
 
 ## New features:
