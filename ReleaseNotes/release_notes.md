@@ -1,3 +1,5 @@
+# v1.9.9.2
+
 ## New features:
 
   1. add new test for exteding drawing 
@@ -10,7 +12,6 @@
 ## Bug fixes:
 
  1. fix the bug in the `H2D_dset` and `H3D_dset` for `weighted=True` case 
-
 
 # v1.9.9.0
 
