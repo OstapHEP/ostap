@@ -26,9 +26,8 @@ def test_stats_blue1 () :
     m1 =  VE ( 5366.779, 0.069 **2 )
     m2 =  VE ( 5367.122, 0.089 **2 ) 
     
-    ## fit model systematics, assumed to be uncorrelated 
-    syst1 = covMatrix ( False , 0.134 , 0.091 )
-    syst1 [1,1] = syst[1,1] + 0.01**2 ## add also psi' mass 
+    ## fit model systematics, assumed to be uncorrelated, add also psi' mass  
+    syst1 = covMatrix ( False , 0.134 , ( 0.091 ** 2 + 0.01 **2 ) ** 0.5  )
     
     ## momentum scaling systematic, 100% correlated  
     syst2 = covMatrix ( True , 0.315 , 0.132 ) 
