@@ -10,7 +10,7 @@
 - see ostap/stat/combine.py.
 """
 # =============================================================================
-from   ostap.stats.combine import Combine, Ostap, VE 
+from   ostap.stats.combine import Combine, Ostap, VE, covMatrix  
 import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger 
@@ -18,36 +18,27 @@ if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_blue' )
 else                       : logger = getLogger ( __name__           )
 # ==============================================================================
 
+# =============================================================================
 def test_stats_blue1 () :
 
-    COV2 = Ostap.Math.SymMatrix(2)
-
-    m1 =  VE( 5366.779, 0.069 **2 )
-    m2 =  VE( 5367.122, 0.089 **2 ) 
+    ## values with their stat uncertainties
+    
+    m1 =  VE ( 5366.779, 0.069 **2 )
+    m2 =  VE ( 5367.122, 0.089 **2 ) 
     
     ## fit model systematics, assumed to be uncorrelated 
-    syst1 = COV2 ()
-    syst1 [0,0] = 0.134**2
-    syst1 [1,1] = 0.091**2 + 0.01**2 ## add also psi' mass 
+    syst1 = covMatrix ( False , 0.134 , 0.091 )
+    syst1 [1,1] += 0.01**2 ## add also psi' mass 
     
-    ## momentum scaling, 100% correlated  
-    syst2 = COV2 ()
-    syst2 [0,0] = 0.315**2
-    syst2 [1,1] = 0.132**2
-    syst2 [0,1] = 0.132*0.315
+    ## momentum scaling systematic, 100% correlated  
+    syst2 = covMatrix ( True , 0.315 , 0.132 ) 
     
-    ## energy loss, 100% correlated  
-    syst3 = COV2 ()
-    syst3 [0,0] = 0.030**2
-    syst3 [1,1] = 0.015**2
-    syst3 [0,1] = 0.030*0.015
+    ## energy loss systematic, 100% correlated  
+    syst3 = covMatrix ( True , 0.030 , 0.015 ) 
     
-    ## kaon mass, 100% correlated  
-    syst4 = COV2 ()
-    syst4 [0,0] = 0.029**2
-    syst4 [1,1] = 0.029**2
-    syst4 [0,1] = 0.029*0.029
-    
+    ## kaon mass systematic,   100% correlated  
+    syst4 = covMatrix ( True , 0.029 , 0.029 ) 
+
     cmb = Combine( [m1,m2] , syst1 + syst2 + syst3 + syst4 )
     
     r           = cmb.result        
@@ -59,6 +50,7 @@ def test_stats_blue1 () :
     logger.info ( 'Combined   : %.3f +/- %.3f = (%.3f +/- %.3f +/- %.3f) ' % ( r.value() , r.error()  , r.value() , stat, syst ) ) 
     logger.info ( 'Weights    : %s' %  cmb.weights ) 
 
+# =============================================================================
 def test_stats_blue2 () :
     
     m0 =  VE ( 5366.779 , 0.069**2 ) ## Bs -> J/psi K*K*
@@ -70,63 +62,25 @@ def test_stats_blue2 () :
     
     COV2 = Ostap.Math.SymMatrix(6)
     
-    ## charmonuium masses 
-    syst   = COV2()
-    syst  [1,1] = 0.01**2 
-    syst  [2,2] = 0.04**2 
+    ## charmonuium masses, uncorrelated  
+    syst   = covMatrix ( False , 0.0 , 0.01 , 0.04 , 0 , 0 , 0 ) 
 
     ## momentum scaling for 2010, uncorrelated 
-    syst0  = COV2()
-    syst0 [4,4] = 0.22**2 
+    syst0  = covMatrix ( False , 0    , 0    , 0 , 0 , 0.22 , 0 )
     
     ## fit model systematics, assumed to be uncorrelated 
-    syst1 = COV2 ()
-    syst1 [0,0] = 0.134**2
-    syst1 [1,1] = 0.091**2
-    syst1 [2,2] = (0.01+0.00)**2
-    syst1 [3,3] = (0.02+0.00)**2
-    syst1 [4,4] = (0.02+0.01)**2
-    syst1 [5,5] = (0.02+0.00)**2    
+    syst1  = covMatrix ( False , 0.134 , 0.091 , 0.01 + 0.0 , 0.02 + 0.0 , 0.02 + 0.01 , 0.02 + 0.0 ) 
     
     ## momentum scaling, 100% correlated  
-    syst2 = COV2()
-    syst2 [0,0] = 0.315**2
-    syst2 [1,1] = 0.132**2
-    syst2 [2,2] = 0.26 **2
-    syst2 [3,3] = 0.12 **2
-    syst2 [4,4] = 0.   **2
-    syst2 [5,5] = 0.124**2
-    
+    syst2 = covMatrix  ( True , 0.315 , 0.132 , 0.26 , 0.12 , 0 , 0.124 ) 
     
     ## energy loss, 100% correlated  
-    syst3 = COV2()
-    syst3 [0,0] = 0.030**2
-    syst3 [1,1] = 0.015**2
-    syst3 [2,2] = 0.020**2
-    syst3 [3,3] = 0.060**2
-    syst3 [4,4] = 0.030**2
-    syst3 [5,5] = 0.030**2
-    
+    syst3 = covMatrix  ( True , 0.030 , 0.015 , 0.020 , 0.060 , 0.030 , 0.030 )
     
     ## kaon mass, 100% correlated  
-    syst4 = COV2()
-    syst4 [0,0] = 0.029**2
-    syst4 [1,1] = 0.029**2
-    syst4 [2,2] = 0.020**2
-    syst4 [3,3] = 0.060**2
-    syst4 [4,4] = 0.020**2
-    syst4 [5,5] = 0.000**2
-    
-    ## they are 100% correlated
-    for CV in ( syst2 , syst3 , syst4 ) :
-        for i in range(6) :
-            cii = CV (i,i)
-            for j in  range ( i + 1 , 6 ) :
-                cjj = CV (j,j)
-                CV  [ i , j ] = ( cii * cjj )**0.5 
-                
-                
-    cmb = Combine( [m0,m1,m2,m3,m4,m5] , syst + syst0 + syst1 + syst2 + syst3 + syst4 )
+    syst4 = covMatrix  ( True , 0.029 , 0.029 , 0.020 , 0.060 , 0.020 , 0.000 )
+
+    cmb   = Combine( [m0,m1,m2,m3,m4,m5] , syst + syst0 + syst1 + syst2 + syst3 + syst4 )
     
     r          = cmb.result        
     stat, syst = cmb.errors 

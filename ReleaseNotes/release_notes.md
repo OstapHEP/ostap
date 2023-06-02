@@ -1,7 +1,9 @@
 ## New features:
    
    1. add context managers for ROOT&RooFit random numbers generators 
-   1. slight improvement for `combine.py` : add helper function `covMatrix` to create 100% correlated or uncorrelated covariance matrices 
+   1. slight improvement for `combine.py` : add helper function `covMatrix` to create 100% correlated or uncorrelated covariance matrices
+   1. slight improvement for `test_stats_blue.py` 
+ 
 
 ## Backward incompatible: 
 
