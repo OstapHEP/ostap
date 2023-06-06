@@ -45,7 +45,7 @@ class AddBranch(Task) :
         files = []  
         tree.chain.add_new_branch ( self.branch_name , self.function , verbose = False , report = False ) 
         for f in tree.files :
-            if not f in files : files.add ( f )
+            if not f in files : files.append ( f )
 
         ## list of processed  files
         self.__output = tuple ( files )

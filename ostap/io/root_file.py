@@ -1125,7 +1125,7 @@ def copy_file ( source , destination , progress = True ) :
         os.makedirs ( destdir )
 
     ## the main line! 
-    with rf : rf.Cp ( destination , True ) 
+    with rf : rf.Cp ( destination , progress ) 
     
     assert os.path.exists ( destination ) and os.path.isfile ( destination ) , \
            "Missing destination %s file!" % destination 

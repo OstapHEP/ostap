@@ -195,7 +195,8 @@ if '__main__' == __name__ :
         ROOT.RooArgList    () ,
         v1 , v2 , vars , varl , v3 , 
         ROOT.RooDataSet    ( 'ds', '', vars ) ,
-        ROOT.TTreeFormula()   
+        ROOT.TTreeFormula  () ,
+        ROOT.TPaletteAxis  ()
         ]
 
     file_name = dump_root ( objects )

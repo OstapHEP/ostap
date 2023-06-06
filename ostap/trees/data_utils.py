@@ -720,7 +720,8 @@ class Data(Files):
                   check        = True  , 
                   silent       = False ,
                   sorted       = True  , 
-                  parallel     = False ) : 
+                  parallel     = False ,
+                  transform    = None  ) : 
 
         ## we will need Ostap machinery for trees&chains here
         import ostap.trees.trees 
@@ -876,11 +877,11 @@ class Data2(Data):
                   check       = True  , 
                   silent      = False ,
                   sorted      = True  , 
-                  parallel    = False ) :
+                  parallel    = False ,
+                  transform   = None  ) : 
 
         ## decorate files 
         if isinstance ( files , str ) : files = [ files ]
-
 
         ## chain name 
         self.__chain2_name = chain2 if isinstance ( chain2 , str ) else chain2.name 
@@ -897,7 +898,8 @@ class Data2(Data):
                        check       = check       ,
                        silent      = silent      ,
                        sorted      = sorted      , 
-                       parallel    = parallel    ) 
+                       parallel    = parallel    ,
+                       transform   = transform   ) 
         
     @property 
     def files1    ( self ) :

@@ -68,7 +68,7 @@ else                       : logger = getLogger ( __name__     )
 #  Simple utility to collect luministy information form the standard trees 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-08  
-class dLumi(Data):
+class Lumi(Data):
     """Simple utility to access to certain chain in the set of ROOT-files    
     >>> data  = DataAndLumi('Bc/MyTree', '*.root' )
     >>> chain = data.chain
@@ -85,7 +85,8 @@ class dLumi(Data):
                   check       = True   ,
                   silent      = False  ,
                   sorted      = True   , 
-                  parallel    = False  ) :  
+                  parallel    = False  ,
+                  treansform  = None   ) :  
 
         chain      =      chain if isinstance (      chain , str ) else      chain.name
         
@@ -100,7 +101,8 @@ class dLumi(Data):
                         check       = check       , 
                         silent      = silent      ,
                         sorted      = sorted      , 
-                        parallel    = parallel    )
+                        parallel    = parallel    ,
+                        transform   = transform   )
     # =========================================================================
     @property
     def lumi ( self ) :
@@ -157,7 +159,8 @@ class DataAndLumi(Data2):
                   check       = True   ,
                   silent      = False  ,
                   sorted      = True   , 
-                  parallel    = False  ) :  
+                  parallel    = False  ,
+                  transform   = None   ) :  
 
         chain      =      chain if isinstance (      chain , str ) else      chain.name
 
@@ -175,7 +178,8 @@ class DataAndLumi(Data2):
                          check       = check       , 
                          silent      = silent      ,
                          sorted      = sorted      , 
-                         parallel    = parallel    )
+                         parallel    = parallel    ,
+                         transform   = transform   )
         
     # =========================================================================
     @property

@@ -2127,7 +2127,7 @@ def _chain_add_new_branch ( chain          ,
                                 name     = name         ,
                                 function = function     ,
                                 verbose  = tree_verbose ,
-                                ## verbose  = False        ,
+                                ## verbose  = False     ,
                                 report   = False        , 
                                 value    = value        )
             
@@ -2349,7 +2349,7 @@ def add_new_branch ( tree           ,
     - see Ostap::IFuncTree
     
     """
-    
+
     if not tree :
         logger.error (  "add_branch: Invalid Tree!" )
         return
@@ -2422,11 +2422,20 @@ def add_new_branch ( tree           ,
             
         elif (6,24) <= root_info :
 
-            fa = tuple ( v for v in function ) ## + ( tree , ) 
+
+            fa = tuple ( v for v in function )
             
-            if   2 == len ( function ) : ff = Ostap.Functions.Func1D ( *fa ) 
-            elif 3 == len ( function ) : ff = Ostap.Functions.Func2D ( *fa ) 
-            elif 4 == len ( function ) : ff = Ostap.Functions.Func3D ( *fa )
+            from   ostap.math.make_fun  import make_fun1, make_fun2, make_fun3
+            
+            if   2 == len ( function ) :
+                ## fa = ( make_fun1 ( function[0] ) , ) + function [1: ]
+                ff = Ostap.Functions.Func1D ( *fa ) 
+            elif 3 == len ( function ) :
+                ##  fa = ( make_fun2 ( function[0] ) , ) + function [1: ]
+                ff = Ostap.Functions.Func2D ( *fa ) 
+            elif 4 == len ( function ) :
+                ## fa = ( make_fun3 ( function[0] ) , ) + function [1: ]
+                ff = Ostap.Functions.Func3D ( *fa )
             
             args = name , ff
             
@@ -2490,7 +2499,8 @@ def add_new_branch ( tree           ,
                               ## numpy.uint8   ,
                               numpy.uint16  ,
                               numpy.uint32  , 
-                              numpy.uint64  ) :        
+                              numpy.uint64  ) :
+        
         data = function 
         dt   = data.dtype 
         ct   = numpy.ctypeslib._ctype_from_dtype( dt )
@@ -2524,6 +2534,7 @@ def add_new_branch ( tree           ,
     
     branches = set ( tree.branches () ) | set ( tree.leaves() ) 
     exists   = set ( names ) & branches
+
     
     ## if exists : logger.warning ("Branches '%s' already exist(s)!" % exists ) 
     assert not exists , "Branches '%s' already exist(s)!" % list ( exists ) 
