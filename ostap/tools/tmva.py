@@ -971,7 +971,7 @@ class Trainer(object):
                             self.logger.error ( "Method '%s' does not support negative (signal) weights" % m[1] )
                             
             # =================================================================
-            ## check for background weigths
+            ## check for background weights
             # =================================================================
             if self.background_weight :
                 if ( 6 , 20 ) <= root_info :

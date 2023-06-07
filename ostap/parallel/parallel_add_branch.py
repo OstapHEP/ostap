@@ -100,7 +100,8 @@ def add_new_branch ( chain          ,
     for f in ch.files :  nc.Add ( f )
 
     if report : 
-        new_branches = sorted ( set ( nc.branches () ) + set ( nc.leaves() ) - branches )
+        new_branches = set ( nc.branches () ) | set ( nc.leaves() )
+        new_branches = sorted ( new_branches - branches )
         if new_branches : 
             n = len ( new_branches )  
             if 1 == n  : title = 'Added %s branch to TChain'   % n
