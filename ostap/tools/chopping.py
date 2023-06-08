@@ -185,17 +185,26 @@ class Trainer(object) :
                    category                          ,   # accessor to category 
                    N                                 ,   # number of categories 
                    methods                           ,   # list of TMVA methods
-                   variables                         ,   # list of variables 
+                   variables                         ,   # list of variables
+                   ##
                    signal                            ,   # signal tree
                    background                        ,   # background tree
+                   ##
+                   signal_vars       = {}       ,  ## dictionary with new variables for signal sample 
+                   background_vars   = {}       ,  ## dictionary with new variables for background sample 
+                   ##                   
                    signal_cuts       = ''            ,   # signal cuts 
                    background_cuts   = ''            ,   # background cuts 
                    spectators        = []            ,
                    bookingoptions    = "Transformations=I;D;P;G,D" , 
                    configuration     = "SplitMode=Random:NormMode=NumEvents:!V" ,
-                   signal_weight     = None                  ,                
-                   background_weight = None                  ,
-                   prefilter         = ''                    ,   # prefilter cuts before TMVA data loader 
+                   signal_weight     = None          ,                
+                   background_weight = None          ,
+                   ## 
+                   prefilter            = ''      ,  ## prefilter cuts before TMVA data loader
+                   prefilter_signal     = ''      ,  ## separate prefilter for signal data 
+                   prefilter_background = ''      ,  ## separate prefilter for background data 
+
                    ##
                    signal_train_fraction     = -1 , ## fraction of signal events used for training     : 0<=f<1 
                    background_train_fraction = -1 , ## fraction of background events used for training : 0<=f<1
@@ -316,15 +325,48 @@ class Trainer(object) :
         self.__methods           = tuple ( methods) 
         self.__signal_weight     = signal_weight 
         self.__signal_cuts       = ROOT.TCut ( signal_cuts )     
-
-        self.__prefilter         = ROOT.TCut ( prefilter   )
+        
+        self.__signal_vars          = {}
+        if signal_vars     : self.__signal_vars.update     ( signal_vars )        
+        self.__background_vars      = {}
+        if background_vars : self.__background_vars.update ( background_vars ) 
+        
+        self.__prefilter            = ROOT.TCut ( prefilter   )
+        self.__prefilter_signal     = prefilter_signal     if prefilter_signal     else '' 
+        self.__prefilter_background = prefilter_background if prefilter_background else ''    
+        
         self.__background_weight = background_weight 
         self.__background_cuts   = ROOT.TCut ( background_cuts ) 
 
-        variables                = list ( variables ) ; variables.sort()
-        self.__variables         = tuple(variables)
+
+        variables                = list ( variables ) 
         
-        self.__spectators        = tuple(spectators)
+        vars = []
+        for v in variables  :
+            a , s1 , b  = v.partition ( ':' )    ## a : b 
+            a = a.strip ()
+            b = b.strip ()
+            if a and s1 and b :
+                c , s2 , d = b.partition ( '?' ) ## a : c ? d 
+                c = c.strip()
+                d = d.strip()
+                if c and s2 and d :
+                    vars.append ( a )
+                    signal_vars    .update ( { a : c } ) ## ATTENTION HERE 
+                    background_vars.update ( { a : d } ) ## ATTENTION HERE 
+                else :
+                    vars.append ( a )
+                    signal_vars    .update ( { a : b } )  ## ATTENTION HERE 
+                    background_vars.update ( { a : b } )  ## ATTENTION HERE 
+            else :
+                vars.append ( v )
+                
+        variables = vars 
+        variables.sort ()
+
+        self.__variables         = tuple ( variables  )
+        
+        self.__spectators        = tuple ( spectators )
 
         self.__bookingoptions    = bookingoptions
         self.__configuration     = configuration
@@ -352,68 +394,96 @@ class Trainer(object) :
         
         self.__workdir = os.path.abspath ( workdir ) 
         self.logger.info ("Working directory is %s" % self.__workdir )
+
         
         # =====================================================================
-        ## prefilter 
+        ## prefilter if required 
         # =====================================================================
-        if self.prefilter :
+        
+        
+        ##if self.verbose :
+        all_vars = [ self.prefilter ]           
+        for v in self.variables  :
+            vv = v
+            if isinstance ( vv , str ) : vv = ( vv , 'F' )
+            if   vv[0] in self.signal_vars     : continue
+            elif vv[0] in self.background_vars : continue 
+            else                               : all_vars.append ( vv[0] ) 
+        for v in self.spectators :
+            vv = v
+            if isinstance ( vv , str ) : vv = ( vv , 'F' )
+            all_vars.append ( vv[0] )
             
-            ##if self.verbose :
-            all_vars = [ self.prefilter ]           
-            for v in self.variables  :
-                vv = v
-                if isinstance ( vv , str ) : vv = ( vv , 'F' )
-                all_vars.append ( vv[0] ) 
-            for v in self.spectators :
-                vv = v
-                if isinstance ( vv , str ) : vv = ( vv , 'F' )
-                all_vars.append ( vv[0] )
-                
-            if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
-            if self.signal_weight     : all_vars.append ( self.signal_weight     )
-            if self.background_cuts   : all_vars.append ( self.background_cuts   )
-            if self.background_weight : all_vars.append ( self.background_weight )
-            
-            ## do not forget to process the chopping category index!
-            all_vars.append ( self.category ) 
-                
-            import ostap.trees.cuts 
-            cuts  = ROOT.TCut ( self.prefilter )            
-            scuts = { 'PreSelect' : cuts }
-            bcuts = { 'PreSelect' : cuts } 
-            if self.signal_cuts     : scuts.update ( { 'Signal'     : self.signal_cuts     } ) 
-            if self.background_cuts : bcuts.update ( { 'Background' : self.background_cuts } )
-            
+        ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
+        ## if self.signal_weight     : all_vars.append ( self.signal_weight     )
+        ## if self.background_cuts   : all_vars.append ( self.background_cuts   )
+        ## if self.background_weight : all_vars.append ( self.background_weight )
+        
+        ## do not forget to process the chopping category index!
+        all_vars.append ( self.category ) 
+        
+        ## prefilter signal if required 
+        if self.prefilter_signal or self.prefilter or 1 != self.prescale_signal or self.signal_vars :
+
+            if self.signal_weight : all_vars.append ( self.signal_weight )
+
             import ostap.trees.trees
             avars = self.signal.the_variables ( all_vars )
 
+            scuts = {}
+            if self.prefilter_signal : scuts.update ( { 'PreFilterSignal' : self.prefilter_signal } )                    
+            if self.prefilter        : scuts.update ( { 'PreFilterCommon' : self.prefilter        } )
+            if self.signal_cuts      : scuts.update ( { 'Signal'          : self.signal_cuts      } )
+            
             if ( 6 , 24 ) <= root_info :
                 import ostap.frames.frames 
                 import ostap.frames.tree_reduce       as TR
             else :
                 import ostap.parallel.parallel_reduce as TR
                 
-            ## if self.parallel :
-            ##     import ostap.parallel.parallel_reduce as TR
-            ## else :
-            ##     import ostap.frames.tree_reduce       as TR
-
-            silent = not self.verbose 
+            silent = not self.verbose or not self.category in ( 0, -1 )
             self.logger.info ( 'Pre-filter Signal     before processing' )
             self.__SigTR = TR.reduce ( self.signal        ,
                                        selection = scuts  ,
                                        save_vars = avars  ,
-                                       silent    = silent )
+                                       new_vars  = self.signal_vars     , 
+                                       prescale  = self.prescale_signal ,  
+                                       silent    = False  )
+            
+            self.__signal      = self.__SigTR
+            self.__signal_cuts = ROOT.TCut() 
+            
+        # =================================================================
+        ## prefilter background if required 
+        if self.prefilter_background or self.prefilter or 1 != self.prescale_background or self.background_vars :
+            
+            if self.background_weight : all_vars.append ( self.background_weight )
+
+            import ostap.trees.trees
+            avars = self.background.the_variables ( all_vars )
+            
+            bcuts = {}
+            if self.prefilter_background : bcuts.update ( { 'PreFilterBackground' : self.prefilter_background } )                    
+            if self.prefilter            : bcuts.update ( { 'PreFilterCommon'     : self.prefilter            } )
+            if self.background_cuts      : bcuts.update ( { 'Signal'              : self.background_cuts      } )
+            
+            if ( 6 , 24 ) <= root_info :
+                import ostap.frames.frames 
+                import ostap.frames.tree_reduce       as TR
+            else :
+                import ostap.parallel.parallel_reduce as TR
+                    
+            silent = not self.verbose or not self.category in ( 0, -1 )
             self.logger.info ( 'Pre-filter Background before processing' )
             self.__BkgTR = TR.reduce ( self.background    ,
                                        selection = bcuts  ,
                                        save_vars = avars  ,
-                                       silent    = silent )
-            self.__signal     = Chain ( self.__SigTR.chain ) 
-            self.__background = Chain ( self.__BkgTR.chain ) 
-
-            ## do not propagate prefilters to TMVA
-            self.__prefilter = ''
+                                       new_vars  = self.background_vars     , 
+                                       prescale  = self.prescale_background ,  
+                                       silent    = False   )
+            
+            self.__background      = self.__BkgTR
+            self.__background_cuts = ROOT.TCut() 
             
         # =====================================================================
         ## check for signal weigths
@@ -433,7 +503,7 @@ class Trainer(object) :
                         self.logger.error ( "Method `%s' does not support negative (signal) weights" % m[1] )
             
         # =====================================================================
-        ## check for backgrund weigths
+        ## check for background weigths
         # =================================================================
         if self.background_weight :
             if ( 6 , 20 ) <= root_info :
@@ -518,11 +588,27 @@ class Trainer(object) :
                 if 0 == i : row = 'TMVA configuraton'    , o
                 else      : row = ''                     , o 
                 rows.append ( row )
+  
+            if self.__signal_vars :
+                row = 'Signal vars'  , str ( self.__signal_vars  ) 
+                rows.append ( row )
+                
+            if self.__background_vars :
+                row = 'Background vars'  , str ( self.__background_vars  ) 
+                rows.append ( row )
 
             if self.prefilter :
                 row = 'Prefilter'  , str ( self.prefilter ) 
+                rows.append ( row )                
+                              
+            if self.prefilter_signal :
+                row = 'Prefilter Signal' , str ( self.prefilter_signal ) 
                 rows.append ( row )
                 
+            if self.prefilter_background :
+                row = 'Prefilter Background' , str ( self.prefilter_background ) 
+                rows.append ( row )
+     
             if self.signal_cuts : 
                 row = 'Signal cuts' , str ( self.signal_cuts ) 
                 rows.append ( row )
@@ -616,9 +702,6 @@ class Trainer(object) :
                            signal_train_fraction     = self.signal_train_fraction     ,  
                            background_train_fraction = self.background_train_fraction ,
                            ##
-                           prescale_signal      = self.prescale_signal     , ## prescale factor for signal 
-                           prescale_background  = self.prescale_background , ## prescale factor for signal 
-                           ##                           
                            output_file       = ''                     , 
                            ##                           
                            signal_cuts       = scuts                  , 
@@ -745,10 +828,34 @@ class Trainer(object) :
         return self.__background_weight
 
     @property
+    def signal_vars ( self ) :
+        """'signal_vars' :  variables for 'signal' sample"""
+        result = {}
+        if self.__signal_vars : result.update ( self.__signal_vars ) 
+        return result
+    
+    @property
+    def background_vars ( self ) :
+        """'background_vars' :  variables for `backgroun' sample"""
+        result = {}
+        if self.__background_vars : result.update ( self.__background_vars ) 
+        return result 
+
+    @property
     def prefilter ( self ) :
         """`prefilter' : cuts ot be applied/prefilter before processing"""
         return self.__prefilter
     
+    @property
+    def prefilter_signal ( self ) :
+        """'prefilter_signal' : cuts to be applied/prefilter for signal before processing"""
+        return self.__prefilter_signal
+    
+    @property
+    def prefilter_background ( self ) :
+        """'prefilter_background' : cuts to be applied/prefilter for background before processing"""
+        return self.__prefilter_background 
+
     @property
     def bookingoptions ( self ) :
         """`bookingoptions' : options used to book TMVA::Factory"""
@@ -1695,7 +1802,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     Helper function to add TMVA/chopping  response into dataset
     >>> tar_file = trainer.tar_file
     >>> dataset  = ...
-    >>> inputs   = [ 'var1' , 'var2' , 'var2' ] ## input varibales to TMVA 
+    >>> inputs   = [ 'var1' , 'var2' , 'var2' ] ## input variables to TMVA 
     >>> dataset.addChoppingResponse ( dataset , chopper ,  inputs , tar_file , prefix = 'tmva_' )
     """
     assert isinstance ( N , int ) and 1 < N < 10000 , 'Invalid "N" %s' % N

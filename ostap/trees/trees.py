@@ -17,14 +17,17 @@ __all__     = (
     'Tree'            , ## helper class , needed for multiprocessing
     'ActiveBranches'  , ## context manager to activate certain branches 
     'active_branches' , ## context manager to activate certain branches
+    'UseAliases'      , ## context manager to redefine aliases 
+    'use_aliases'     , ## context manager to redefine aliases 
   ) 
 # =============================================================================
 from   ostap.core.meta_info      import root_info
-from   ostap.core.core           import ( std , Ostap , VE  , WSE , hID ,
-                                          rootException     , 
+from   ostap.core.core           import ( std , Ostap , VE   , WSE ,
+                                          hID , fID   , 
+                                          rootException      , 
                                           ROOTCWD , strings  ,
-                                          split_string , var_separators , 
-                                          valid_pointer           ) 
+                                          split_string       , var_separators , 
+                                          valid_pointer      , rootError  ) 
 from   ostap.core.ostap_types    import ( integer_types  , long_type      ,
                                           string_types   , sequence_types ,
                                           sized_types    , num_types      ,
@@ -2778,6 +2781,26 @@ def the_variables ( tree , expression , *args ) :
 ROOT.TTree.the_variables = the_variables
 
 # ===============================================================================
+## valid formula expression?
+#  @code
+#  tree =
+#  if not tree.valid_expression ( 'QQ>1' ) : ...
+#  @endcode 
+def _rt_valid_formula_ ( tree , expression ) :
+    """Valid formula expression?
+    >>> tree =
+    >>> if not tree.valid_expression ( 'QQ>1' ) : ...
+    """
+    with rootError () :
+        ff   = Ostap.Formula ( fID() , expression , tree ) 
+        result = ff.ok ()
+        del ff 
+        return result
+    
+ROOT.TTree.valid_formula    = _rt_valid_formula_ 
+ROOT.TTree.valid_expression = _rt_valid_formula_ 
+
+# ===============================================================================
 ## Get all ``size''-variables
 #  @code
 #  tree  = ... 
@@ -3479,6 +3502,59 @@ def tree_path ( tree ) :
 
 ROOT.TTree.full_path = property ( tree_path , None , None )
 
+
+# =============================================================================
+## Context manager to temporariliy redefine aliases
+#  @code
+#  tree = ...
+#  with UseAliases ( tree , px = 'PX/1000' , py = 'PY/1000' ) :
+#  ... 
+#  @endcode 
+class UseAliases(object) :
+    """ Context manager to temporariliy redefine aliases
+    >>> tree = ...
+    >>> with UseAliases ( tree , px = 'PX/1000' , py = 'PY/1000' ) :
+    """
+    def __init__ ( self , tree , **aliases ) :
+
+        self.__aliases  = {}
+        self.__aliases.update ( aliases )
+        slef.__tree     = tree 
+        self.__previous = {}
+        
+    def __enter__ ( self ) :
+
+        if self.__tree and self.__aliases :
+            for a in self.__aliases :
+                ## 1) save previosu alias
+                ea = tree.GetAlias ( a )
+                if ea : self.__previous [ a ] = ea
+                ## 1) define new alias 
+                tree.SetAlias ( a , self.__aliases [ a ] )
+                
+        return self
+    
+    def __exit__ ( self , *_ ) :
+        
+        if self.__tree and self.__previous :
+            # reset all aliases 
+            for a in self.__previous  :
+                tree.SetAlias ( a , self.__previous [ a ] )
+            
+# =============================================================================
+## Context manager to temporariliy redefine aliases
+#  @code
+#  tree = ...
+#  with use_aliases ( tree , px = 'PX/1000' , py = 'PY/1000' ) :
+#  ... 
+#  @endcode 
+def use_aliases ( tree , **aliases ) :
+    """ Context manager to temporariliy redefine aliases
+    >>> tree = ...
+    >>> with use_aliases ( tree , px = 'PX/1000' , py = 'PY/1000' ) :
+    """
+    return UseAliases ( tree , **aliases ) 
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TTree  ,
@@ -3529,6 +3605,9 @@ _new_methods_       = (
     #
     ROOT.TTree.size_vars    , 
     ROOT.TTree.array_vars   , 
+    #
+    ROOT.TTree.valid_formula    ,
+    ROOT.TTree.valid_expression ,
     #
     ROOT.TTree.nEff             , 
     ROOT.TTree.get_moment       , 

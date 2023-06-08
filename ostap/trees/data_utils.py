@@ -629,7 +629,7 @@ class Files(object):
     ## copy all the files to new directory
     #  - new directory will be created (if needed)
     #  - common path (prefix) for all files will be replaced by new directory
-    def copy_files ( self , new_dir , parallel = False , also_bad = False ) :
+    def copy_files ( self , new_dir = None , parallel = False , also_bad = False ) :
         """copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
@@ -638,6 +638,11 @@ class Files(object):
         from ostap.utils.basic  import writeable,    copy_file
         from ostap.io.root_file import copy_file as copy_root_file 
 
+        ## use  temporary directory
+        if new_dir is None :
+            import ostap.utils.cleanup as CU
+            new_dir = CU.CleanUp.tempdir()
+            
         ## create directory if needed 
         if not os.path.exists ( new_dir ) : os.makedirs ( new_dir )
         
@@ -887,8 +892,8 @@ class Data2(Data):
         self.__chain2_name = chain2 if isinstance ( chain2 , str ) else chain2.name 
 
         if not description :
-            description = chain1.GetName() if hasattr ( chain1 , 'GetName' ) else str(chain1)
-            description = "%s&%s" % ( description , self.chain2.GetName() )
+            description = chain1.GetName() if hasattr ( chain1 , 'GetName' ) else str ( chain1 )
+            description = "%s&%s" % ( description , self.__chain2_name  )
 
         Data.__init__( self                      ,
                        chain       = chain1      ,
@@ -1011,7 +1016,7 @@ class Data2(Data):
                 nc     = len ( chain2 )
                 del  chain2
                 
-            ne  = len ( self.bad_files1 )
+            ne  = len ( self.bad_files )
             
         sf  =  set ( self.files ) == set ( self.files2 )
         
