@@ -510,7 +510,7 @@ class Files(object):
         files       = self.sample_files ( n , sort )
         description = "Sample(%d): %s" % ( n , self.description )
         
-        return self.clone ( files = files , description = description , patterns = () )
+        return self.clone ( files = files , description = description )
     
     # =========================================================================
     ##  Get an element or slice 

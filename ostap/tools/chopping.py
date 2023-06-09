@@ -210,7 +210,7 @@ class Trainer(object) :
                    background_train_fraction = -1 , ## fraction of background events used for training : 0<=f<1
                    ##
                    prescale_signal      = 1       , ## prescale factor for signal 
-                   prescale_background  = 1       , ## prescale factor for signal 
+                   prescale_background  = 1       , ## prescale factor for background 
                    ##
                    name              = 'TMVAChopper'         ,   # the name 
                    verbose           = False                 ,   # verbose ? 
@@ -431,9 +431,9 @@ class Trainer(object) :
             avars = self.signal.the_variables ( all_vars )
 
             scuts = {}
-            if self.prefilter_signal : scuts.update ( { 'PreFilterSignal' : self.prefilter_signal } )                    
-            if self.prefilter        : scuts.update ( { 'PreFilterCommon' : self.prefilter        } )
-            if self.signal_cuts      : scuts.update ( { 'Signal'          : self.signal_cuts      } )
+            if self.prefilter_signal : scuts.update ( { 'PreFilter/Signal' : self.prefilter_signal } )                    
+            if self.prefilter        : scuts.update ( { 'PreFilter'        : self.prefilter        } )
+            if self.signal_cuts      : scuts.update ( { 'Signal'           : self.signal_cuts      } )
             
             if ( 6 , 24 ) <= root_info :
                 import ostap.frames.frames 
@@ -463,9 +463,9 @@ class Trainer(object) :
             avars = self.background.the_variables ( all_vars )
             
             bcuts = {}
-            if self.prefilter_background : bcuts.update ( { 'PreFilterBackground' : self.prefilter_background } )                    
-            if self.prefilter            : bcuts.update ( { 'PreFilterCommon'     : self.prefilter            } )
-            if self.background_cuts      : bcuts.update ( { 'Signal'              : self.background_cuts      } )
+            if self.prefilter_background : bcuts.update ( { 'PreFilter/Background' : self.prefilter_background } )                    
+            if self.prefilter            : bcuts.update ( { 'PreFilter'            : self.prefilter            } )
+            if self.background_cuts      : bcuts.update ( { 'Background'           : self.background_cuts      } )
             
             if ( 6 , 24 ) <= root_info :
                 import ostap.frames.frames 
@@ -531,7 +531,7 @@ class Trainer(object) :
             self.__sig_histos = hs1   , hs2
             st = hs2.stat()
             if 0 >=  st.min()  : self.logger.warning ("Some signal categories are empty!")                 
-            self.logger.info('Signal     category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
+            self.logger.info('Signal     category population mean/rms: %.1f/%-.1f min/max: %.1f/%-.1f' % ( st.mean() , st.rms() , st.min() , st.max() ) )
                         
         if self.chop_background  :
             hb1 = ROOT.TH1F( hID() , 'Background categories' , self.N * 5 , -0.5 , self.N - 1 ) 
@@ -542,7 +542,7 @@ class Trainer(object) :
             ##
             st = hb2.stat()
             if 0 >=  st.min()  : self.logger.warning ("Some background categories are empty!")                 
-            self.logger.info('Background category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
+            self.logger.info('Background category population mean/rms: %.1f/%-.1f min/max: %.1f/%-.1f' % ( st.mean() , st.rms() , st.min() , st.max() ) )
 
         
         ##  trick to please Kisa 
