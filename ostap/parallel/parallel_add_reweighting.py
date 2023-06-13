@@ -13,7 +13,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2023-06-12"
 __all__     = (
-    'add_reweigting'  , ## add new branch to loooong TChain in parallel
+    'add_reweighting'  , ## add new branch to loooong TChain in parallel
     ) 
 # =============================================================================
 from   ostap.parallel.parallel import Task, WorkManager

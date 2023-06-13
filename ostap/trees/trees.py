@@ -1082,13 +1082,12 @@ def _rt_leaves_ ( t , pattern = '' , *args ) :
     >>> lst = tree.leaves( '.*(muon).*', re.I )
     >>> for l in lst : print l
     """
-    vlst =  t.GetListOfLeaves()
-
+    vlst =  tuple ( v.GetName()  for v in t.GetListOfLeaves() )
     if not vlst : return tuple()
 
     if not pattern :
 
-        lst  = [ v.GetName() for v in vlst  ]
+        lst  = [ v for v in vlst  ]
         lst.sort ()
         return tuple ( lst ) 
 
@@ -1099,11 +1098,11 @@ def _rt_leaves_ ( t , pattern = '' , *args ) :
         try : 
             import re
             c    =  re.compile ( p , *args )
-            vars = [ v.GetName() for v in vlst if c.match ( v.GetName () ) ]
+            vars = [ v for v in vlst if c.match ( v ) ]
             lst  = lst | set ( vars  ) 
         except :
             logger.error ('leaves("%s"): exception is caught, use all ' % p  , exc_info = True ) 
-            lst  = lst | set ( [ v.GetName() for v in vlst  ] )
+            lst  = lst | set ( [ v for v in vlst  ] )
             
     lst = list ( lst )
     lst.sort () 
@@ -1118,7 +1117,7 @@ def _rt_leaf_ ( tree , leaf ) :
     >>> tree = ...
     >>> l = tree.leaf('pt') 
     """
-    lst = tree.GetListOfLeaves()
+    lst = tuple ( v for v in tree.GetListOfLeaves() )
     for i in lst :
         if leaf == i.GetName() : return i
     return None
@@ -1147,20 +1146,20 @@ def _rt_branches_ ( t , pattern = '' , *args ) :
     >>> for b in lst : print b
     
     """
-    vlst =  t.GetListOfBranches()
+    vlst =  [ b.GetName() for b in t.GetListOfBranches() ]
     if not vlst : return tuple()
 
     if pattern :        
         try : 
             import re
             c  =  re.compile ( pattern , *args )
-            lst  = [ v.GetName() for v in vlst if c.match ( v.GetName () ) ]
+            lst  = [ v for v in vlst if c.match ( v  ) ]
             lst.sort()
             return tuple ( lst ) 
         except :
             logger.error ('branches: exception is caught, skip it' , exc_info = True ) 
             
-    lst  = [ v.GetName() for v in vlst  ]
+    lst  = [ v for v in vlst  ]
     lst.sort()
     return tuple ( lst ) 
 
@@ -1658,8 +1657,7 @@ def _rc_files_ ( chain ) :
     >>> chain = ... ## get the files 
     >>> files = chain.files()
     """
-    lst = chain.GetListOfFiles()
-    return [ i.GetTitle() for i in lst ]
+    return tuple ( i.GetTitle() for i in chain.GetListOfFiles() )
 
 
 ROOT.TChain. files = _rc_files_
@@ -1678,8 +1676,7 @@ def _rc_nfiles_ ( chain ) :
     >>> chain = ... ## get the files 
     >>> n = chain.nFiles()
     """
-    lst = chain.GetListOfFiles()
-    return lst.GetEntries()
+    return len ( _rc_files_ ( chain ) )
 
 ROOT.TChain. nFiles = _rc_nfiles_
 
@@ -1709,7 +1706,7 @@ ROOT.TChain.__getslice__ = _rc_getslice_
 
 
 # =============================================================================
-## iterator over individual trees in the echain
+## iterator over individual trees in the chain
 #  @code
 #  chain = ...
 #  for tree in  chain.trees ()  :
@@ -1724,7 +1721,6 @@ def _rc_itrees_   ( self ) :
 
     _files = self.files()
     for _f in _files :
-
         c = ROOT.TChain ( self.GetName() )
         c.Add ( _f )
         yield c

@@ -355,11 +355,10 @@ def _rd_keys_ ( rdir , recursive = True , no_dir = True ) :
     with ROOTCWD() :
         ##
         rdir.cd() 
-        _lst = rdir.GetListOfKeys()
+        _lst = tuple ( k.GetName() for k in rdir.GetListOfKeys() ) 
         if not _lst :  return _res
         
-        for i in _lst :
-            inam = i.GetName()
+        for inam in _lst :
 
             idir = rdir.GetDirectory ( inam )            
             if not idir or not no_dir : _res.append ( inam )
