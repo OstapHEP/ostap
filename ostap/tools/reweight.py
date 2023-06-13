@@ -30,6 +30,7 @@ import ostap.io.zipshelve     as     DBASE ## needed to store the weights&histos
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weigth to TTree/RooDataSet
 from   ostap.utils.utils      import CallThem, is_formula  
 from   ostap.logger.utils     import pretty_ve
+from   ostap.math.reduce      import root_factory
 import ostap.histos.histos 
 import ostap.histos.compare 
 import ostap.trees.trees
@@ -41,6 +42,7 @@ import ROOT, operator
 from ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweight' )
 else                       : logger = getLogger ( __name__               )
+_new_methods_ = []
 # =============================================================================
 ## @class AttrGetter
 #  simple class to bypass <code>operator.attrgetter</code> that
@@ -125,7 +127,8 @@ class Weight(object) :
 
         self.__vars    = [] 
         if not factors : return
-        self.__dbase = dbase
+        self.__dbase   = dbase
+        self.__factors = tuple ( factors ) 
         
         ## open database
 
@@ -137,7 +140,7 @@ class Weight(object) :
             logger.debug ( 'Weight: Reweigting database: \n%s' % db.table ( prefix = '# ' ) ) 
                 
             ## loop over the weighting factors and build the function
-            for wvar in factors :
+            for wvar in self.__factors :
 
                 funval  = wvar.accessor  ## accessor to the variable(s) 
                 funname = wvar.address   ## address  in database 
@@ -350,9 +353,18 @@ class Weight(object) :
 
         return grphs     
 
-    def __str__  ( self ) : return self.table()
-    def __repr__ ( self ) : return self.table()
+    def __str__    ( self ) : return self.table()
+    def __repr__   ( self ) : return self.table()
 
+    # =========================================================================
+    ## reduce the object for serialization (for parallel processing)
+    def __reduce__ ( self ) :
+        """Reduce the object for serialization (for parallel processing)
+        """
+        return root_factory , ( type ( self )  ,
+                                self.__dbase   ,
+                                self.__factors )
+                                
     # =========================================================================
     ## @class WeightingVar
     #  Helper class to keep information about single reweighting
@@ -1151,7 +1163,83 @@ class W2Data(FuncData) :
     def weight ( self ) :
         """`weight' : get the weighter object"""
         return  self.__weight
+
+
+# =============================================================================
+## Add specific re-weighting information into <code>ROOT.TTree</code>
+#  @see ostap.tools.reweight
+#  @see ostap.tools.reweight.Weight 
+#  @see ostap.tools.reweight.W2Tree 
+#  @code
+#  w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+#  tree = ...
+#  tree.add_reweighting ( w ) 
+#  @endcode 
+def tree_add_reweighting ( tree                 ,
+                           weighter             ,
+                           name      = 'weight' ,
+                           verbose   = True     ,
+                           report    = True     ) :
+    """Add specific re-weighting information into ROOT.TTree
     
+    >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+    >>> data = ...
+    >>> data.add_reweighting ( w )
+    - see ostap.tools.reweight
+    - see ostap.tools.reweight.Weight 
+    - see ostap.tools.reweight.W2Tree 
+    """
+    
+    assert isinstance ( weighter , Weight ), "Invalid type of `weighter'!"  
+    
+    ## create the weighting function 
+    wfun = W2Tree ( weighter )
+    
+    return tree.add_new_branch (  name , wfun , verbose = verbose  , report = report ) 
+
+ROOT.TTree.add_reweighting = tree_add_reweighting    
+
+
+# =============================================================================
+## Add specific re-weighting information into dataset
+#  @see ostap.tools.reweight
+#  @see ostap.tools.reweight.Weight 
+#  @see ostap.tools.reweight.W2Data 
+#  @code
+#  w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+#  data = ...
+#  data.add_reweighting ( w ) 
+#  @endcode 
+def data_add_reweighting ( data , weighter , name = 'weight' , progress = False ) :
+    """Add specific re-weighting information into dataset
+    
+    >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
+    >>> data = ...
+    >>> data.add_reweighting ( w )
+    - see ostap.tools.reweight
+    - see ostap.tools.reweight.Weight 
+    - see ostap.tools.reweight.W2Data 
+    """
+    
+    assert isinstance ( weighter , Weight ), "Invalid type of `weighter'!"
+    
+    ## create the weigthting function 
+    wfun = W2Data ( weighter  )
+
+    if progress :
+        from ostap.utils.progress_conf import progress_conf
+        return data.add_new_var ( name , wfun , progress_conf() )
+    
+    return data.add_new_var ( name , wfun ) 
+
+ROOT.RooDataSet.add_reweighting = data_add_reweighting
+
+
+_new_methods_ += [
+    ROOT.RooDataSet .add_reweighting , 
+    ROOT.TTree      .add_reweighting , 
+    ]
+
 # =============================================================================
 if '__main__' == __name__ :
         

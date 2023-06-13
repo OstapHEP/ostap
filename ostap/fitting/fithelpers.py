@@ -1822,7 +1822,9 @@ class FitHelper(VarMaker) :
         self.aux_keep.append ( err   )
         self.aux_keep.append ( gauss )
 
-        self.info ('Constraint is created %s: %s' % ( var.name , value ) )
+        v = float ( value )
+        e = float ( error ) 
+        self.debug  ("Constraint is created '%s' : %s" % ( var.name , VE ( v , e * e ) ) ) 
         return  gauss 
 
     # =========================================================================
@@ -1876,7 +1878,7 @@ class FitHelper(VarMaker) :
         self.aux_keep.append ( negerr )
         self.aux_keep.append ( agauss )
         
-        self.info ('Constraint is created %s: %.g+%.g-%.g' % ( var.name , value , pos_error , neg_error ) )        
+        self.debug ("Constraint is created '%s': %+.g+%-.g-%-.g" % ( var.name , value , pos_error , neg_error ) )        
         return agauss 
 
     # ==========================================================================
@@ -1983,7 +1985,7 @@ class FitHelper(VarMaker) :
         self.aux_keep.append ( vlist  )
         self.aux_keep.append ( mgauss )
         
-        self.info ('Multivariate (%s) constraint is created %s' % ( [ v.name for v in variables ] , mgauss ) ) 
+        self.debug ("Multivariate (%s) constraint is created %s" % ( [ v.name for v in variables ] , mgauss ) ) 
         return mgauss 
                         
     # ==========================================================================

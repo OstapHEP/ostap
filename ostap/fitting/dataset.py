@@ -1461,44 +1461,6 @@ _new_methods_ += [
     ROOT.RooDataSet .add_var     ,
     ]
 
-# =============================================================================
-## Add specific re-weighting information into dataset
-#  @see ostap.tools.reweight
-#  @see ostap.tools.reweight.Weight 
-#  @see ostap.tools.reweight.W2Data 
-#  @code
-#  w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
-#  data = ...
-#  data.add_reweighting ( w ) 
-#  @endcode 
-def add_reweighting ( data , weighter , name = 'weight' , progress = False ) :
-    """Add specific re-weighting information into dataset
-    
-    >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
-    >>> data = ...
-    >>> data.add_reweighting ( w )
-    - see ostap.tools.reweight
-    - see ostap.tools.reweight.Weight 
-    - see ostap.tools.reweight.W2Data 
-    """
-    
-    import ostap.tools.reweight as W
-    
-    assert isinstance ( weighter , W.Weight ), "Invalid type of ``weighting''!"
-    
-    ## create the weigthting function 
-    wfun = W.W2Data ( weighter  )
-
-    if progress :
-        from ostap.utils.progress_conf import progress_conf
-        return data.add_new_var ( name , wfun , progress_conf() )
-    
-    return data.add_new_var ( name , wfun ) 
-
-ROOT.RooDataSet.add_reweighting = add_reweighting
-_new_methods_ += [
-    ROOT.RooDataSet .add_reweighting
-    ]
 
 # =============================================================================
 ## make weighted data set from unweighted dataset
