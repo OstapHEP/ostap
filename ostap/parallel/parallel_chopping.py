@@ -166,6 +166,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
                                    N             = N             ,
                                    inputs        = inputs        , 
                                    weights_files = weights_files ,
+                                   category_name = category_name , 
                                    prefix        = prefix        ,
                                    suffix        = suffix        ,
                                    options       = options       , 

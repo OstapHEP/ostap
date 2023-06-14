@@ -1013,7 +1013,7 @@ class Data2(Data):
                 nc     = len ( chain1 )
                 del  chain1
                 chain2 = self.chain2
-                nc     = len ( chain2 )
+                nc2    = len ( chain2 )
                 del  chain2
                 
             ne  = len ( self.bad_files )
@@ -1021,10 +1021,10 @@ class Data2(Data):
         sf  =  set ( self.files ) == set ( self.files2 )
         
         if not self.bad_files :
-            return "<#files: {}; Entries: {}/{}>"   .format ( nf, nc , nc2 ) if sf else \
+            return "<#files: {}; Entries: {}/{}>"   .format ( nf ,      nc  , nc2 ) if sf else \
                    "<#files: {}/{}; Entries: {}/{}>".format ( nf , nf2 , nc , nc2 )
         else :
-            return "<#files: {}; Entries: {}/{}; No/empty :{}>"   .format ( nf , nc , nc2 , ne ) if sf else \
+            return "<#files: {}; Entries: {}/{}; No/empty :{}>"   .format ( nf ,       nc , nc2 , ne ) if sf else \
                    "<#files: {}/{}; Entries: {}/{}; No/empty :{}>".format ( nf , nf2 , nc , nc2 , ne )
         
 

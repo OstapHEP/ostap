@@ -17,6 +17,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.parallel.parallel import Task, WorkManager
+from   ostap.core.core         import VE
 import ROOT
 # =============================================================================
 # logging 
@@ -116,7 +117,7 @@ def pStatVar ( chain               ,
                cuts       = ''     ,
                nevents    = -1     ,
                first      =  0     ,
-               chunk_size = 250000 ,
+               chunk_size = 500000 ,
                max_files  =  1     ,
                silent     = True   , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
@@ -157,6 +158,49 @@ ROOT.TTree .pstatVar  = pStatVar
 ROOT.TChain.pstatVars = pStatVar 
 ROOT.TTree .pstatVars = pStatVar
 
+
+# ===================================================================================
+## parallel processing of loooong chain/tree 
+#  @code
+#  chain          = ...
+#  chain.pSumVar ( .... ) 
+#  @endcode 
+def pSumVar ( chain               ,
+              what                ,
+              cuts       = ''     ,
+              nevents    = -1     ,
+              first      =  0     ,
+              chunk_size = 500000 ,
+              max_files  =  1     ,
+              silent     = True   , **kwargs ) :
+    """ Parallel processing of loooong chain/tree 
+    >>> chain    = ...
+    >>> chain.psumVar( 'mass' , 'pt>1') 
+    """
+    ## few special/trivial cases
+
+    result = pStatVar ( chain      = chain      ,
+                        what       = what       ,
+                        cuts       = cuts       ,
+                        nevents    = nevents    ,
+                        first      = first      ,
+                        chunk_size = chunk_size , 
+                        max_files  = max_files  ,
+                        silent     = silent     , **kwargs )
+    
+    if isinstance ( result , dict ) :
+        sumres = {}
+        for key in result  :
+            r = result [ key ] 
+            sumres [ key ] = VE ( r.sum() , r.sum2() )
+        return sumres
+    
+    return VE ( result.sum() , result.sum2() )
+
+
+ROOT.TChain.psumVar  = pSumVar 
+ROOT.TTree .psumVar  = pSumVar
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TTree  ,
@@ -168,6 +212,8 @@ _new_methods_       = (
     ROOT.TChain.pstatVar  ,
     ROOT.TTree .pstatVars ,
     ROOT.TChain.pstatVars ,
+    ROOT.TTree .psumVar   ,
+    ROOT.TChain.psumVar   ,
     )
 
 # =============================================================================
