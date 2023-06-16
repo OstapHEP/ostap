@@ -163,7 +163,7 @@ trainer = Trainer (
     ##
     chop_signal     = True ,
     chop_background = True ,
-        ## 
+    ## 
     signal_train_fraction     = 0.85 , 
     background_train_fraction = 0.85 ,
     ##
