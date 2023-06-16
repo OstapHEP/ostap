@@ -1516,10 +1516,10 @@ def make_Plots ( name , output , show_plots = True ) :
         ## ( ROOT.TMVA.likelihoodrefs ,  ( name , output     ) ) ,
         ]
     
-    if (6,24) <= root_info :
-        plots.append   ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
-    else :
-        logger.warning ( 'make_Plots: Skip    macro ROOT.TMVA.%s%s' % ( 'mvaeffs'  , str ( ( name , output ) ) ) ) 
+    ## if (6,24) <= root_info :
+    ##    plots.append   ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
+    ## else :
+    logger.warning ( 'make_Plots: Skip    macro ROOT.TMVA.%s%s' % ( 'mvaeffs'  , str ( ( name , output ) ) ) ) 
             
         
     if hasattr ( ROOT.TMVA , 'network'                ) :
