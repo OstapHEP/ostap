@@ -5,13 +5,15 @@
    1. slight improvement for `test_stats_blue.py` 
    1. add `parallel_add_reweighting` to speedup adding the reweighting information to `TTree/TChain`
    1. add parallel verison of `sumVar` method 
-  
+   1. re-enable TMVA plots 
+
 ## Backward incompatible: 
 
 ## Bug fixes:
 
    1. Fix the bug/typo  in `padd_reweighting`
    1. fix parallel `addChoppingResponse` - the `categroy_name` was ignored 
+   1. fix but in parallel `addChoppingResponse` ( the `category_name` argument was ignored) 
 
 # v1.9.9.2
 

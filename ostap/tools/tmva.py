@@ -1346,7 +1346,10 @@ class Trainer(object):
 
 
         if  self.make_plots :
-            if ( 6 , 24 ) <= root_info : 
+            if ( 6 , 29 ) <= root_info :
+                self.makePlots ()                
+                ## self.logger.warning ( "'makePlots' is temporary (?) disabled, call this function offline: 'trainer.makePlots()' ")
+            elif ( 6 , 24 ) <= root_info : 
                 self.logger.warning ( "'makePlots' is temporary (?) disabled, call this function offline: 'trainer.makePlots()' ")
             else : 
                 self.makePlots ()
@@ -1467,9 +1470,9 @@ class Trainer(object):
 def make_Plots ( name , output , show_plots = True ) :
     """Make selected standard TMVA plots"""
 
-    if (6,29) <= root_info :
-        logger.warning ("fnuction is disabled")
-        return 
+    ## if (6,29) <= root_info :
+    ##    logger.warning ("function is disabled")
+    ##    return 
     
     if not output :
         self.logger.warning ('No output file is specified!')
@@ -1499,8 +1502,9 @@ def make_Plots ( name , output , show_plots = True ) :
         ( ROOT.TMVA.correlations   ,  ( name , output     ) ) ,
         ##
         ( ROOT.TMVA.mvas           ,  ( name , output , 0 ) ) ,
-        ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
-        ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
+        ## ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
+        ## ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
+        ( ROOT.TMVA.mvas           ,  ( name , output , 3 ) ) ,
         ##
         ( ROOT.TMVA.efficiencies   ,  ( name , output , 0 ) ) ,
         ( ROOT.TMVA.efficiencies   ,  ( name , output , 1 ) ) ,
@@ -1509,12 +1513,14 @@ def make_Plots ( name , output , show_plots = True ) :
         ##
         ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
         ## 
-        ( ROOT.TMVA.likelihoodrefs ,  ( name , output     ) ) ,
+        ## ( ROOT.TMVA.likelihoodrefs ,  ( name , output     ) ) ,
         ]
-
-    logger.warning ( 'make_Plots: Skip    macro ROOT.TMVA.%s%s' % ( 'mvaeffs'  , str ( ( name , output ) ) ) ) 
-    ## if (6,24) <= root_info :
-    ##    plots.append ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
+    
+    if (6,24) <= root_info :
+        plots.append   ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
+    else :
+        logger.warning ( 'make_Plots: Skip    macro ROOT.TMVA.%s%s' % ( 'mvaeffs'  , str ( ( name , output ) ) ) ) 
+            
         
     if hasattr ( ROOT.TMVA , 'network'                ) :
         plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 

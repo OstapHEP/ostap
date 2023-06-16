@@ -104,12 +104,12 @@ class ChopperTraining(Task) :
     def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output =  result
         else :
-            weights  = list ( self.__output[0] ) + list ( result[0] ) 
-            classes  = list ( self.__output[1] ) + list ( result[1] ) 
-            outputs  = list ( self.__output[2] ) + list ( result[2] ) 
-            tarfiles = list ( self.__output[3] ) + list ( result[3] ) 
-            dirnames = list ( self.__output[4] ) + list ( result[4] ) 
-            logfiles = list ( self.__output[5] ) + list ( result[5] ) 
+            weights  = list ( self.__output [0] ) + list ( result [0] ) 
+            classes  = list ( self.__output [1] ) + list ( result [1] ) 
+            outputs  = list ( self.__output [2] ) + list ( result [2] ) 
+            tarfiles = list ( self.__output [3] ) + list ( result [3] ) 
+            dirnames = list ( self.__output [4] ) + list ( result [4] ) 
+            logfiles = list ( self.__output [5] ) + list ( result [5] ) 
             weights  . sort ()
             classes  . sort ()
             outputs  . sort ()
@@ -181,6 +181,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
                           N             = N             ,
                           inputs        = inputs        , 
                           weights_files = weights_files ,
+                          category_name = category_name , 
                           prefix        = prefix        ,
                           suffix        = suffix        ,
                           options       = options       , 
