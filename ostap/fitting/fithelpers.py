@@ -1807,7 +1807,7 @@ class FitHelper(VarMaker) :
         assert isinstance ( error , ROOT.RooAbsReal ) or ( isinstance ( error , num_types ) and 0 < error ) , \
                "Invalid 'error': %s/%s"  % ( error , type ( error ) )
         
-        name  = name  if name  else 'Gauss_%s_%s'                      % ( var.GetName() , self.name ) 
+        name  = name  if name  else self.generate_name ( name = 'Gauss_%s_%s' % ( var.GetName() , self.name ) )
         title = title if title else 'Gaussian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
         
         # value & error as RooFit objects:
@@ -1815,7 +1815,7 @@ class FitHelper(VarMaker) :
         err = error if isinstance ( error , ROOT.RooAbsReal ) else ROOT.RooFit.RooConst ( error )
         
         # Gaussian constrains 
-        gauss = ROOT.RooGaussian ( self.var_name ( name ) , title , var , val , err )
+        gauss = ROOT.RooGaussian ( self.roo_name ( name ) , title , var , val , err )
         
         # keep all the created technical stuff  
         self.aux_keep.append ( val   )

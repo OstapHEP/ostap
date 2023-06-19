@@ -1815,7 +1815,7 @@ ROOT.TTree.make_dataset_old = make_dataset_old
 #  ds   = tree.make_dataset2 ( [ 'px , 'py' , 'pz' ] ) 
 #  @endcode
 def make_dataset ( tree              ,
-                   variables         , ## varibales 
+                   variables         , ## variables 
                    selection = ''    , ## TTree selection 
                    roo_cuts  = ''    , ## Roo-Fit selection  
                    name      = ''    , 
@@ -1985,7 +1985,7 @@ def fill_dataset2 ( self              ,
     ##    use_frame = False 
 
     ## process all events? 
-    all = 0 == first and ( 0 > nevents or len ( self ) <= nevents )
+    all = ( 0 == first ) and ( nevents < 0 or len ( self ) <= nevents )
 
     if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
         
@@ -1998,10 +1998,12 @@ def fill_dataset2 ( self              ,
             
             if not silent : logger.info ( "Make try to use the *SHORTCUT*!" )
             variables     = selector.variables 
-            ds , stat     = self.make_dataset ( variables = variables          ,
-                                                selection = selector.selection ,
-                                                roo_cuts  = selector.roo_cuts  ,
-                                                silent    = silent             )
+            ds , stat     = self.make_dataset ( variables = variables           ,
+                                                selection = selector.selection  ,
+                                                roo_cuts  = selector.roo_cuts   ,
+                                                name      = selector.data.name  , 
+                                                title     = selector.data.title , 
+                                                silent    = silent              )
             selector.data = ds
             selector.stat = stat
             
@@ -2268,7 +2270,8 @@ def fill_dataset1 ( tree                 ,
                                   selection = selection ,
                                   cuts      = cuts      , 
                                   roo_cuts  = roo_cuts  ,
-                                  name      = name      , 
+                                  name      = name      ,
+                                  fullname  = title     , 
                                   silence   = silent    ) 
     tree.fill_dataset2 ( selector , silent = silent , shortcut  = shortcut , use_frame = use_frame )
     data = selector.data

@@ -6,6 +6,7 @@
    1. add `parallel_add_reweighting` to speedup adding the reweighting information to `TTree/TChain`
    1. add parallel verison of `sumVar` method 
    1. re-enable TMVA plots 
+   1. make parallel fill of datasets more flexible 
 
 ## Backward incompatible: 
 

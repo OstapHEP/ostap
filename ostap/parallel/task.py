@@ -115,7 +115,7 @@ class Task(object) :
     ## Remote initialization: invoked for each secondary task on remote host
     def initialize_remote ( self , jobid = -1 )  :
         """Remote initialization: invoked for each secondary task on remote host
-        - default: run ``local initialization''
+        - default: run `local initialization'
         """
         return self.initialize_local () 
     
@@ -155,7 +155,7 @@ class Task(object) :
 
     @property
     def output  ( self ) :
-        """``output'' : get a task output"""
+        """`output' : get a task output (it invokes the method `results` """
         return self.results()
 
     @property

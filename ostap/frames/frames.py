@@ -133,8 +133,9 @@ def var_name ( prefix , used_names , *garbage ) :
     return name
 
 # ==============================================================================
-## Is impliti MC globally enabled? 
+## Is implicit MC globally enabled? 
 mt_global = OCC.general.getboolean ( 'ImplicitMT' , fallback = False )
+mt_global = True 
     
 # ==============================================================================
 ## modify constructor for RDataFrame to enable/disable Implicit multithreading

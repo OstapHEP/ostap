@@ -26,7 +26,8 @@ __all__     = (
 # =============================================================================
 from   builtins                  import range
 from   collections               import defaultdict 
-from   ostap.core.core           import ( Ostap, VE, hID, dsID , strings , 
+from   ostap.core.core           import ( Ostap, VE, SE ,
+                                          hID  , dsID , strings , 
                                           valid_pointer , split_string   ,
                                           ROOTCWD       , var_separators ,
                                           loop_items    )
@@ -558,8 +559,8 @@ def _rds_seek_for_duplicates_ ( dataset          ,
         if   isinstance ( criterium , ROOT.RooAbsArg ) and criterium in dataset : crit_var = criterum
         elif isinstance ( criterium , string_types   ) and criterium in dataset :
             crit_var = getattr ( dataset , criterium )
-        elif isinstance ( criterium  , string_types    ) and valid_formula ( criterium , dataset ) :
-            crit_var = make_formula ( '' , criterium  , dataset ) 
+        elif isinstance ( criterium  , string_types  ) and valid_formula ( criterium , dataset ) :
+            crit_var = make_formula ( '' , criterium , dataset ) 
         elif isinstance ( e , ROOT.RooAbsReal ) :
             crit_var = criterium
         else :
@@ -620,7 +621,8 @@ def _rds_unique_entries_ ( dataset          ,
                            entrytag         ,
                            choice           , 
                            criterium = ''   , 
-                           seed      = None ) :
+                           seed      = None ,
+                           report    = True ) :
     
     if criterium  :
         assert choice in ( 'min' , 'max' , 'minimal' , 'maximal' , 'minimum' , 'maximum' ) , \
@@ -644,20 +646,39 @@ def _rds_unique_entries_ ( dataset          ,
     from ostap.utils.utils import random_seed
 
     with random_seed ( seed ) :
-        
-        for e, lst in loop_items ( snapshot ):
-            
-            if   1 == len ( lst ) : yield lst [  0 ] [ 1 ]        
-            elif first            : yield lst [  0 ] [ 1 ]
-            elif last             : yield lst [ -1 ] [ 1 ]
-            elif rand             : yield random.choice ( lst ) [ 1 ] ## seed is needed here! 
-            elif minv             :
-                lst.sort ()
-                yield lst [ 0  ][  1 ]
-            elif maxv             :
-                lst.sort ()
-                yield lst [ -1 ][  1 ]
 
+        cnt    = SE ()
+        unique = 0 
+        for e, lst in loop_items ( snapshot ):
+
+            unique += 1
+            
+            num  = len ( lst )
+            if 1 < num : cnt += num 
+            
+            if   1 == num  : yield lst [   0 ] [ 1 ]        
+            elif first     : yield lst [   0 ] [ 1 ]
+            elif last      : yield lst [  -1 ] [ 1 ]
+            elif rand      : yield random.choice ( lst ) [ 1 ] ## seed is needed here! 
+            elif minv      : yield min ( lst ) [ 1 ]
+            elif maxv      : yield max ( lst ) [ 1 ]
+                
+    if report :
+        title = 'Unique'
+        rows  = [ ( '' , 'value' ) ]
+        row   =  'Total       entries'      , '%d' % len ( dataset )
+        rows.append ( row )
+        row   =  'Unique      events'       , '%d' % unique 
+        rows.append ( row )
+        row   =  'Events with duplicates'   , '%d' % cnt.nEntries() 
+        rows.append ( row )
+        row   =  'Duplicated  mean +/- rms' , '%.3f +/- %-.3f' % ( cnt.mean() , cnt.rms() )        
+        rows.append ( row )
+        row   =  'Duplicated  max'          , '%d' % cnt.max()         
+        rows.append ( row )
+        import ostap.logger.table as T 
+        logger.info ( '%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' ) ) )
+        
 # =============================================================================        
 ## Make a copy of dataset only with unique  entries 
 #  @code
@@ -673,7 +694,8 @@ def _rds_make_unique_ ( dataset          ,
                         entrytag         ,
                         choice           , 
                         criterium = ''   , 
-                        seed      = None ) :
+                        seed      = None ,
+                        report    = True ) :
     """Make a copy of dataset only with unique  entries 
     >>> dataset = ...
     >>> unique = dataset.make_unique ( ( 'evt' , 'run' ) , choice = 'random' )
@@ -688,7 +710,8 @@ def _rds_make_unique_ ( dataset          ,
     for i in dataset.unique_entries ( entrytag  = entrytag  ,
                                       choice    = choice    ,
                                       criterium = criterium ,
-                                      seed      = seed      ) :
+                                      seed      = seed      ,
+                                      report    = report    ) :
         ds.add ( dataset [ i ] )
 
     return ds
