@@ -611,7 +611,7 @@ def parallel_toys ( pdf                       ,
     params  = nSplit * [ nToy ]
     if nRest : params.append ( nRest )
 
-    wmgr.process( task , data )
+    wmgr.process( task , params )
 
     results , stats = task.results () 
     if progress or not silent : Toys.print_stats ( stats , nToys ) 
