@@ -7,6 +7,7 @@
    1. add parallel verison of `sumVar` method 
    1. re-enable TMVA plots 
    1. make parallel fill of datasets more flexible 
+   1. add methods `dot` and `weight_sum` to `SVectorWithError`
 
 ## Backward incompatible: 
 

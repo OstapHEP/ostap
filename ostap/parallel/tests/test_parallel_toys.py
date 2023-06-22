@@ -82,9 +82,6 @@ def test_parallel_toys ( ) :
         silent      = True  , 
         progress    = False )
 
-    for p in stats :
-        logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
-
     ## make histos:
     
     h_mean       = ROOT.TH1F ( hID() , 'mean of Gauss ' , 100 ,  0    ,  0.80 )
@@ -127,9 +124,6 @@ def test_parallel_toys2 ( ) :
         silent      = True  , 
         progress    = False )
     
-    for p in stats :
-        logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
-
     ## make histos
         
     h_mean       = ROOT.TH1F ( hID() , 'mean of Gauss ' , 50 ,  0    ,  0.80 )
@@ -143,6 +137,58 @@ def test_parallel_toys2 ( ) :
             h.draw()
             logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
 
+
+
+# ==============================================================================
+## Perform toy-study for Jackknife 
+def test_parallel_jackknife ( ) :
+    """Perform toys-study for Jackknife
+    """
+
+    logger = getLogger ( 'test_parallel_jackknife' ) 
+    logger.info ( 'Make (parallel) Jackknife analysis' ) 
+
+    model = Models.Fit1D ( signal     = gen_gauss ,
+                           background = 'flat'    )
+    model.S = 1000
+    model.B = 100
+    
+    data    = model.generate ( 1100 ) 
+
+    from ostap.fitting.toys import make_jackknife
+    
+    Toys.parallel_jackknife ( pdf        = model ,
+                              nSplit     = 6     , 
+                              data       = data  ,
+                              fit_config = { 'silent' : True } ,                     
+                              progress   = True  ,
+                              silent     = True  ) 
+
+# ==============================================================================
+## Perform toy-study for Bootstrap 
+def test_parallel_bootstrap ( ) :
+    """Perform toys-study for Bootstrap
+    """
+
+    logger = getLogger ( 'test_parallel_bootstrap' ) 
+    logger.info ( 'Make (parallel) Bootstrap analysis' ) 
+
+
+    model = Models.Fit1D ( signal     = gen_gauss ,
+                           background = 'flat'    )
+    model.S = 1000
+    model.B = 100
+    
+    data    = model.generate ( 1100 ) 
+
+    Toys.parallel_bootstrap ( pdf        = model ,
+                              size       = 1000  , 
+                              nSplit     = 6     , 
+                              data       = data  ,
+                              fit_config = { 'silent' : True } ,                     
+                              progress   = True  ,
+                              silent     = True  ) 
+        
 # =============================================================================
 ## Perform toy-study for significance of the signal 
 #  - generate <code>nToys</code> pseudoexperiments using background-only hypothesis 
@@ -198,13 +244,20 @@ def test_parallel_significance_toys ( ) :
             h.draw()
             logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
 
+
+
     
 # =============================================================================
 if '__main__' == __name__ :
 
+
     test_parallel_toys  () 
-    test_parallel_toys2 () 
+    test_parallel_toys2 ()
+    test_parallel_jackknife ()
+    test_parallel_bootstrap ()    
     test_parallel_significance_toys ( ) 
+
+    
 
 # =============================================================================
 ##                                                                      The END 

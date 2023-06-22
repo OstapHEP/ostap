@@ -69,8 +69,8 @@ def test_toys ( ) :
         silent      = True , 
         progress    = True )
 
-    for p in stats :
-        logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
+    ## for p in stats :
+    ##    logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
 
     ## make histos:
     
@@ -80,11 +80,10 @@ def test_toys ( ) :
     for r in results [ 'mean_GG'  ] : h_mean  .Fill ( r ) 
     for r in results [ 'sigma_GG' ] : h_sigma .Fill ( r )
 
-    with use_canvas ( 'test_toys' ) : 
+    with use_canvas ( 'test_toys' , wait = 1 ) : 
         for h in ( h_mean , h_sigma ) :            
-            with wait ( 1 ) :
-                h.draw()
-                logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
+            h.draw()
+            logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
 
 # =============================================================================
 ## Perform toy-study for possible fit bias and correct uncertainty evaluation
@@ -114,8 +113,8 @@ def test_toys2 ( ) :
         silent      = True , 
         progress    = True )
     
-    for p in stats :
-        logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
+    ## for p in stats :
+    ##    logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
 
     ## make histos
         
@@ -125,12 +124,11 @@ def test_toys2 ( ) :
     for r in results ['mean_FG'  ] : h_mean .Fill ( r ) 
     for r in results ['sigma_FG' ] : h_sigma.Fill ( r )
 
-    with use_canvas ( 'test_toys2' ) : 
+    with use_canvas ( 'test_toys2' , wait = 1 ) : 
         for h in ( h_mean , h_sigma ) :
-            with wait ( 1 ) : 
-                h.draw()
-                logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
-
+            h.draw()
+            logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
+            
 
 # =============================================================================
 ## Perform toy-study for significance of the signal 
@@ -175,19 +173,15 @@ def test_significance_toys ( ) :
         silent      = True , 
         progress    = True )
 
-    for p in stats :
-        logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
-
     h_S      = ROOT.TH1F ( hID() , '#S' , 60 ,  0 , 60 )
     
     for r in results ['S'  ] : h_S .Fill ( r )
     
-    with use_canvas ( 'test_toys2' ) : 
+    with use_canvas ( 'test_toys2' , wait = 1 ) : 
         for h in ( h_S ,  ) :
-            with wait ( 1 ) : 
-                h.draw()
-                logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
-                
+            h.draw()
+            logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
+            
 # =============================================================================
 if '__main__' == __name__ :
 

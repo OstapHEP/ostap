@@ -15,8 +15,10 @@ __author__  = 'Vanya BELYAEV  Ivan.Belyaev@itep.ru'
 __date__    = "2020-01-18"
 __version__ = '$Revision$'
 __all__     = (
-    'parallel_toys'  , ## run parallel toys (single   PDF  to generate and fit)
-    'parallel_toys2' , ## run parallel toys (separate PDFs to generate and fit) 
+    'parallel_toys'      , ## run parallel toys (single   PDF  to generate and fit)
+    'parallel_toys2'     , ## run parallel toys (separate PDFs to generate and fit) 
+    'parallel_jackknife' , ## run parallel Jackknife 
+    'parallel_bootstrap' , ## run parallel bootstrap 
     )
 # =============================================================================
 from   ostap.parallel.parallel import Task, WorkManager
@@ -62,13 +64,72 @@ def merge_toys ( previous , result , jobid = -1 ) :
 
 
 # =====================================================================================
+## The simple base class for task object 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2020-01-18 
+class  TheTask_ (Task) :
+    """The simple base class for task object
+    """
+    ## 
+    def __init__ ( self               ,
+                   data               ,
+                   fit_config = {}    ,
+                   more_vars  = {}    ,
+                   fit_fun    = None  , 
+                   accept_fun = None  , 
+                   silent     = True  ,
+                   progress   = False ,
+                   frequency  = 0     ) :
+        
+        self.data       = data  
+        self.fit_config = fit_config
+        self.more_vars  = more_vars
+        self.fit_fun    = fit_fun 
+        self.accept_fun = accept_fun 
+        self.silent     = silent
+        self.progress   = progress 
+        self.frequency  = frequency 
+        
+        self.__the_output   = ()
+        
+    @property
+    def the_output ( self ) :
+        return self.__the_output
+    @the_output.setter 
+    def the_output ( self , value ) :
+        self.__the_output = value 
+    
+    def initialize_local   ( self ) : self.__the_output = ()
+
+    ## initialize the remote task, treat the random numbers  
+    def initialize_remote  ( self , jobid = -1 ) :
+        """Initialize the remote task, treta the random numbers  
+        """
+        import random, ROOT
+        from ostap.parallel.utils import random_random
+        random_random ( jobid )
+        
+        return self.initialize_local() 
+        
+    ## get the results 
+    def results ( self ) :
+        return self.__the_output
+    
+    ## merge results of toys 
+    def merge_results ( self , result , jobid = -1 ) :
+        """Merge results of toys
+        """
+        self.__the_output = merge_toys ( self.__the_output , result , jobid )
+
+
+# =====================================================================================
 ## The simple task object for parallel fitting toys 
 #  - single PDF to generate and fit
 #  @see ostap.fitting.toys 
 #  @see ostap.fitting.make_toys 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2020-01-18 
-class  ToysTask(Task) :
+class  ToysTask(TheTask_) :
     """The simple task object for parallel fitting toys
     - single PDF to generate and fit
     - see ostap.fitting.toys.make_toys
@@ -85,49 +146,24 @@ class  ToysTask(Task) :
                    fit_fun    = None  , 
                    accept_fun = None  , 
                    silent     = True  ,
-                   progress   = False ) :
-        
-        self.pdf        = pdf
-                
-        self.data       = data  
+                   progress   = False ,
+                   frequency  = 0     ) :
+
+        TheTask_.__init__ ( self                    ,
+                            data       = data       ,
+                            fit_config = fit_config ,
+                            more_vars  = more_vars  ,
+                            fit_fun    = fit_fun    ,
+                            accept_fun = accept_fun ,
+                            silent     = silent     ,
+                            progress   = progress   ,
+                            frequency  = frequency  )
+                                    
+        self.pdf        = pdf                
         self.gen_config = gen_config 
-        self.fit_config = fit_config
-        self.init_pars  = init_pars 
-        self.more_vars  = more_vars
-        
+        self.init_pars  = init_pars         
         self.gen_fun    = gen_fun 
-        self.fit_fun    = fit_fun 
-        self.accept_fun = accept_fun 
         
-        self.silent     = silent
-        self.progress   = progress 
-        
-        self.__the_output   = () 
-
-    @property
-    def the_output ( self ) :
-        return self.__the_output
-    @the_output.setter 
-    def the_output ( self , value ) :
-        self.__the_output = value 
-    
-    def initialize_local   ( self ) : self.__the_output = ()
-
-    ## initialize the remote task, treta the random numbers  
-    def initialize_remote  ( self , jobid = -1 ) :
-        """Initialize the remote task, treta the random numbers  
-        """
-
-        import random, ROOT
-        from ostap.parallel.utils import random_random
-        random_random ( jobid )
-        
-        return self.initialize_local() 
-        
-    ## get the results 
-    def results ( self ) :
-        return self.__the_output
-    
     ## the actual processing 
     def process ( self , jobid , nToys ) :
 
@@ -145,29 +181,19 @@ class  ToysTask(Task) :
                'Jobid %s: Invalid "nToys" argument %s/%s' % ( jobid , nToys , type ( nToys ) )
         
         import ostap.fitting.toys as Toys 
-        results , stats = Toys.make_toys ( pdf        = self.pdf        ,
-                                           nToys      = nToys           ,
-                                           data       = self.data       ,
-                                           gen_config = self.gen_config , 
-                                           fit_config = self.fit_config , 
-                                           init_pars  = self.init_pars  ,
-                                           more_vars  = self.more_vars  ,
-                                           gen_fun    = self.gen_fun    , 
-                                           fit_fun    = self.fit_fun    , 
-                                           accept_fun = self.accept_fun ,
-                                           silent     = self.silent     ,
-                                           progress   = self.progress   )
-        
-        self.the_output = results , stats
-
-        return self.results() 
-
-    
-    ## merge results of toys 
-    def merge_results ( self , result , jobid = -1 ) :
-        """Merge results of toys
-        """
-        self.__the_output = merge_toys ( self.__the_output , result , jobid )
+        return Toys.make_toys ( pdf        = self.pdf        ,
+                                nToys      = nToys           ,  ## ATTENTION! 
+                                data       = self.data       ,
+                                gen_config = self.gen_config , 
+                                fit_config = self.fit_config , 
+                                init_pars  = self.init_pars  ,
+                                more_vars  = self.more_vars  ,
+                                gen_fun    = self.gen_fun    , 
+                                fit_fun    = self.fit_fun    , 
+                                accept_fun = self.accept_fun ,
+                                silent     = self.silent     ,
+                                progress   = self.progress   ,
+                                frequency  = self.frequency  )
     
 # =============================================================================
 ## The simple task object for parallel fitting toys
@@ -195,7 +221,8 @@ class  ToysTask2(ToysTask) :
                    fit_fun    = None  , 
                    accept_fun = None  , 
                    silent     = True  ,
-                   progress   = False ) :
+                   progress   = False , 
+                   frequency  = 0     ) :
 
         ToysTask.__init__ ( self                    ,
                             pdf        = gen_pdf    ,
@@ -208,7 +235,8 @@ class  ToysTask2(ToysTask) :
                             fit_fun    = fit_fun    ,
                             accept_fun = accept_fun ,
                             silent     = silent     ,
-                            progress   = progress   )
+                            progress   = progress   ,
+                            frequency  = frequency  )
                           
         self.gen_pdf    = self.pdf 
         self.fit_pdf    = fit_pdf
@@ -232,24 +260,153 @@ class  ToysTask2(ToysTask) :
                'Jobid %s: Invalid "nToys" argument %s/%s' % ( jobid , nToys , type ( nToys ) )
         
         import ostap.fitting.toys as Toys 
-        results , stats = Toys.make_toys2 ( gen_pdf    = self.gen_pdf    ,
-                                            fit_pdf    = self.fit_pdf    ,
-                                            nToys      = nToys           ,
-                                            data       = self.data       ,
-                                            gen_config = self.gen_config , 
-                                            fit_config = self.fit_config , 
-                                            gen_pars   = self.gen_pars   ,
-                                            fit_pars   = self.fit_pars   ,             
-                                            more_vars  = self.more_vars  ,
-                                            gen_fun    = self.gen_fun    ,
-                                            fit_fun    = self.fit_fun    ,
-                                            accept_fun = self.accept_fun ,
-                                            silent     = self.silent     ,
-                                            progress   = self.progress   )
-                
-        self.the_output = results , stats
+        return Toys.make_toys2 ( gen_pdf    = self.gen_pdf    ,
+                                 fit_pdf    = self.fit_pdf    ,
+                                 nToys      = nToys           , ## ATTENTION! 
+                                 data       = self.data       ,
+                                 gen_config = self.gen_config , 
+                                 fit_config = self.fit_config , 
+                                 gen_pars   = self.gen_pars   ,
+                                 fit_pars   = self.fit_pars   ,             
+                                 more_vars  = self.more_vars  ,
+                                 gen_fun    = self.gen_fun    ,
+                                 fit_fun    = self.fit_fun    ,
+                                 accept_fun = self.accept_fun ,
+                                 silent     = self.silent     ,
+                                 progress   = self.progress   ,
+                                 frequency  = self.frequency  )
+
+
+
+# =============================================================================
+## The simple task object for parallel Jackknife 
+#  @see ostap.fitting.toys 
+#  @see ostap.fitting.toys.make_jackknife 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2023-06-22 
+class  JackknifeTask(TheTask_) :
+    """The simple task object for parallel Jackknife 
+    - see ostap.fitting.toys.make_jackknife
+    """
+    def __init__ ( self                 ,
+                   pdf                  , 
+                   data                 ,
+                   fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
+                   fit_pars    = {}     , ## fit-parameters to reset/use
+                   more_vars   = {}     , ## additional  results to be calculated
+                   fit_fun     = None   , ## fit       function ( pdf , dataset , **fit_config ) 
+                   accept_fun  = None   , ## accept    function ( fit-result, pdf, dataset     )
+                   silent      = True   ,
+                   progress    = True   ,
+                   frequency   = 100    ) :
         
-        return self.results () 
+        TheTask_.__init__ ( self ,
+                            data       = data       ,
+                            fit_config = fit_config ,
+                            more_vars  = more_vars  ,
+                            fit_fun    = fit_fun    ,
+                            accept_fun = accept_fun ,
+                            silent     = silent     ,
+                            progress   = progress   ,
+                            frequency  = frequency  )
+        self.pdf      = pdf
+        self.fit_pars = fit_pars 
+        
+    ## the actual processing 
+    def process ( self , jobid , event_range ) :
+
+        import ROOT
+        from ostap.logger.logger import logWarning
+        with logWarning() :
+            import ostap.core.pyrouts            
+            import ostap.fitting.roofit            
+            import ostap.fitting.dataset            
+            import ostap.fitting.roofitresult            
+            import ostap.fitting.variables
+            
+        from   ostap.core.ostap_types import integer_types 
+        assert isinstance ( event_range , tuple ) and \
+               2 == len ( event_range )           and \
+               0 <= event_range [ 0 ] < event_range [ 1 ] , \
+               'Jobid %s: Invalid "event_range" argument %s/%s' % ( jobid , str ( event_range ) , type ( event_range ) )
+        
+        import ostap.fitting.toys as Toys 
+        return Toys.make_jackknife ( pdf         = self.pdf         ,
+                                     data        = self.data        ,
+                                     fit_config  = self.fit_config  ,
+                                     fit_pars    = self.fit_pars    ,
+                                     more_vars   = self.more_vars   ,
+                                     fit_fun     = self.fit_fun     ,
+                                     accept_fun  = self.accept_fun  ,
+                                     event_range = event_range      , ## ATTENTION!  
+                                     silent      = self.silent      ,
+                                     progress    = self.progress    , 
+                                     frequency   = self.frequency   )
+
+
+# =============================================================================
+## The simple task object for parallel Bootstrap 
+#  @see ostap.fitting.toys 
+#  @see ostap.fitting.toys.make_bootstrap
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2023-06-22 
+class BootstrapTask(TheTask_) :
+    """The simple task object for parallel Jackknife 
+    - see ostap.fitting.toys.make_jackknife
+    """
+    def __init__ ( self                 ,
+                   pdf                  , 
+                   data                 ,
+                   fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
+                   fit_pars    = {}     , ## fit-parameters to reset/use
+                   more_vars   = {}     , ## additional  results to be calculated
+                   fit_fun     = None   , ## fit       function ( pdf , dataset , **fit_config ) 
+                   accept_fun  = None   , ## accept    function ( fit-result, pdf, dataset     )
+                   silent      = True   ,
+                   progress    = True   ,
+                   frequency   = 100    ) :
+        
+        TheTask_.__init__ ( self ,
+                            data       = data       ,
+                            fit_config = fit_config ,
+                            more_vars  = more_vars  ,
+                            fit_fun    = fit_fun    ,
+                            accept_fun = accept_fun ,
+                            silent     = silent     ,
+                            progress   = progress   ,
+                            frequency  = frequency  )
+        self.pdf      = pdf
+        self.fit_pars = fit_pars 
+        
+    ## the actual processing 
+    def process ( self , jobid , size  ) :
+
+        import ROOT
+        from ostap.logger.logger import logWarning
+        with logWarning() :
+            import ostap.core.pyrouts            
+            import ostap.fitting.roofit            
+            import ostap.fitting.dataset            
+            import ostap.fitting.roofitresult            
+            import ostap.fitting.variables
+            
+        from   ostap.core.ostap_types import integer_types 
+        assert isinstance ( size , integer_types ) and 0 < size ,\
+               'Jobid %s: Invalid "size" argument %s/%s' % ( jobid , size , type ( size  ) )
+        
+        import ostap.fitting.toys as Toys 
+        return Toys.make_bootstrap ( pdf         = self.pdf         ,
+                                     data        = self.data        ,
+                                     size        = size             , ## ATTENTION
+                                     fit_config  = self.fit_config  ,
+                                     fit_pars    = self.fit_pars    ,
+                                     more_vars   = self.more_vars   ,
+                                     fit_fun     = self.fit_fun     ,
+                                     accept_fun  = self.accept_fun  ,
+                                     silent      = self.silent      ,
+                                     progress    = self.progress    ,
+                                     frequency   = self.frequency   ) 
+
 
 # ===================================================================================
 ## Run fitting toys in parallel
@@ -325,7 +482,8 @@ def parallel_toys ( pdf                       ,
                     fit_fun    = None         , ## fit       function ( pdf , dataset , **config )
                     accept_fun = None         , ## accept    function ( fit-result, pdf, dataset )
                     silent     = True         ,
-                    progress   = False        , **kwargs ):
+                    progress   = True         ,
+                    frequency  = 0            , **kwargs ):
     """Make `ntoys` pseudoexperiments, splitting them into `nSplit` subjobs
     to be executed in parallel
 
@@ -398,21 +556,23 @@ def parallel_toys ( pdf                       ,
     assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
                'Jobid %s: Invalid "nSplit" argument %s/%s' % ( jobid , nSplit , type ( nSplit ) )
 
+    config =  { 'pdf'        : pdf        ,
+                'data'       : data       ,
+                'gen_config' : gen_config ,
+                'fit_config' : fit_config ,
+                'init_pars'  : init_pars  ,
+                'more_vars'  : more_vars  ,
+                'gen_fun'    : gen_fun    ,
+                'fit_fun'    : fit_fun    ,
+                'accept_fun' : accept_fun ,
+                'silent'     : silent     ,
+                'frequency'  : frequency  }
+    
+    
     import ostap.fitting.toys as Toys
-    if 1 == nSplit :
-        return Toys.make_toys ( pdf        = pdf        ,
-                                nToys      = nToys      ,
-                                data       = data       ,
-                                gen_config = gen_config ,
-                                fit_config = fit_config ,
-                                init_pars  = init_pars  ,
-                                more_vars  = more_vars  ,
-                                gen_fun    = gen_fun    ,
-                                fit_fun    = fit_fun    ,
-                                accept_fun = accept_fun ,
-                                silent     = silent     ,
-                                progress   = progress   )
-        
+    if nSplit < 2 : return Toys.make_toys ( nToys  = nToys , progress = progress , **config )
+
+    
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
@@ -440,28 +600,21 @@ def parallel_toys ( pdf                       ,
         nRest  = 0     
     else :
         nToy , nRest = divmod ( nToys , nSplit )
-    
-    task  = ToysTask    ( pdf        = pdf            ,
-                          data       = toy_data       ,
-                          gen_config = gen_config     ,
-                          fit_config = fit_config     ,
-                          init_pars  = toy_init_pars  ,
-                          more_vars  = more_vars      ,
-                          gen_fun    = gen_fun        ,
-                          fit_fun    = fit_fun        ,
-                          accept_fun = accept_fun     ,
-                          silent     = silent         ,
-                          progress   = progress       )
-                          
-    wmgr  = WorkManager ( silent = False , **kwargs )
 
-    data  = nSplit * [ nToy ]
-    if nRest : data.append ( nRest )
+    ## create the task
+    task  = ToysTask    ( progress = progress and not silent , **config ) 
+
+    ## create the manager 
+    wmgr  = WorkManager ( silent = silent and not progress , progres = progress or not silent , **kwargs )
+
+    ## 
+    params  = nSplit * [ nToy ]
+    if nRest : params.append ( nRest )
 
     wmgr.process( task , data )
 
     results , stats = task.results () 
-    Toys.print_stats ( stats , nToys ) 
+    if progress or not silent : Toys.print_stats ( stats , nToys ) 
         
     return results, stats   
 
@@ -548,7 +701,8 @@ def parallel_toys2 (
     fit_fun    = None         , ## fit       function ( pdf , dataset , **fit_config ) 
     accept_fun = None         , ## accept    function ( fit-result, pdf, dataset     )
     silent     = True         ,
-    progress   = False        , **kwargs ) :
+    progress   = True         ,
+    frequency  = 0            , **kwargs ) :
     """Make `ntoys` pseudoexperiments, splitting them into `nSplit` subjobs
     to be executed in parallel
     
@@ -619,23 +773,23 @@ def parallel_toys2 (
     assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
                'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
 
+    config = { 'gen_pdf'    : gen_pdf    ,
+               'fit_pdf'    : fit_pdf    ,
+               'data'       : data       ,
+               'gen_config' : gen_config ,
+               'fit_config' : fit_config ,
+               'gen_pars'   : gen_pars   ,
+               'fit_pars'   : fit_pars   ,
+               'more_vars'  : more_vars  ,
+               'gen_fun'    : gen_fun    , 
+               'fit_fun'    : fit_fun    , 
+               'accept_fun' : accept_fun , 
+               'silent'     : silent     ,
+               'frequency'  : frequency  }
+
     import ostap.fitting.toys as Toys
-    if 1 == nSplit :
-        return Toys.make_toys2 (
-            gen_pdf    = gen_pdf    ,
-            fit_pdf    = fit_pdf    ,
-            nToys      = nToys      ,
-            data       = data       ,
-            gen_config = gen_config ,
-            fit_config = fit_config ,
-            gen_pars   = gen_pars   ,
-            fit_pars   = fit_pars   ,
-            more_vars  = more_vars  ,
-            gen_fun    = gen_fun    , 
-            fit_fun    = fit_fun    , 
-            accept_fun = accept_fun , 
-            silent     = silent     ,
-            progress   = progress   )
+    if nSplit < 2  :
+        return Toys.make_toys2 (  nToys = nToys , progress = progress , **config ) 
         
     import ostap.fitting.roofit
     import ostap.fitting.dataset
@@ -665,33 +819,238 @@ def parallel_toys2 (
         nRest  = 0     
     else :
         nToy , nRest = divmod ( nToys , nSplit )
-    
-    task  = ToysTask2   ( gen_pdf    = gen_pdf        ,
-                          fit_pdf    = fit_pdf        ,
-                          data       = toy_data       ,
-                          gen_config = gen_config     ,
-                          fit_config = fit_config     ,
-                          gen_pars   = gen_init_pars  ,
-                          fit_pars   = fit_init_pars  ,
-                          more_vars  = more_vars      ,
-                          gen_fun    = gen_fun        , 
-                          fit_fun    = fit_fun        , 
-                          accept_fun = accept_fun     , 
-                          silent     = silent         ,
-                          progress   = progress       )
 
+    ## create the task        
+    task  = ToysTask2   ( progress = progress and not silent , **config )
 
-    wmgr  = WorkManager ( silent = False , **kwargs )
+    ## create the manager 
+    wmgr   = WorkManager ( silent = silent and not progress , progress = progress or not silent , **kwargs )
 
-    data  = nSplit * [ nToy ]
-    if nRest : data.append ( nRest )
-    
-    wmgr.process( task , data )
+    ## perform the actual splitting 
+    params = nSplit * [ nToy ]
+    if nRest : params.append ( nRest )
 
+    ## start parallel processing! 
+    wmgr.process( task , params  )
+
+    ## get results from the task
     results , stats = task.results () 
-    Toys.print_stats ( stats , nToys ) 
+    if progress or not silent : Toys.print_stats ( stats , nToys ) 
 
     return results, stats   
+
+# =============================================================================
+## run Jackknife analysis in parallel, useful for evaluaton of fit biases and uncertainty estimates
+# 
+#  For each <code>i</code> remove event with index <code>i</code> from the dataset,
+#  and refit it.
+#  @code
+#  dataset = ...
+#  model   = ...
+#  r , f = model.fitTo ( dataset , .... )           ## fit the whole dataset   
+#  results, stats = make_jackknife ( model , data ) ## run Jackknife 
+#  print_jackknife ( r , stats )                    ## print summary table 
+#  @endcode
+#  @see printJackknife
+#
+#  Derived parameters can be also retrived via <code>more_vars</code> argument:
+#  @code
+#  ratio     = lambda res,pdf : res.ratio('x','y')
+#  more_vars = { 'Ratio' : ratio }
+#  r,  s = make_jackknife ( .... , more_vars = more_vars , ... ) 
+#  @endcode
+#
+#  @see https://en.wikipedia.org/wiki/Jackknife_resampling
+#  @param pdf         fit model
+#  @param data        original dataset
+#  @param fit_config  configuration of <code>pdf.FitTo( data , ... )</code>
+#  @param fit_pars    redefine these parameters before each fit 
+#  @param more_vars   calculate more variables from the fit-results 
+#  @param fit_fun     fitting   function
+#  @param accept_fun  accept    function
+#  @param silent      silent processing 
+#  @param progress    show progress bar?
+#  @param logger      use this logger
+#  @param frequency  how often to dump the intermediate results ? 
+#  @return statistics of jackknife experiments 
+def parallel_jackknife ( pdf                  ,
+                         data                 ,
+                         nSplit               , ## split into n-subtasks 
+                         fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
+                         fit_pars    = {}     , ## fit-parameters to reset/use
+                         more_vars   = {}     , ## additional  results to be calculated
+                         fit_fun     = None   , ## fit       function ( pdf , dataset , **fit_config ) 
+                         accept_fun  = None   , ## accept    function ( fit-result, pdf, dataset     )
+                         silent      = True   ,
+                         progress    = True   ,
+                         logger      = logger ,
+                         frequency   = 0      , **kwargs ) :
+
+    assert isinstance ( nSplit  , integer_types ) and 0 <= nSplit  <= len ( data )  ,\
+           'Invalid "nSplit"  argument %s/%s' % ( nSplit  , type ( nSplit  ) )
+
+    config = { 'pdf'        : pdf        ,
+               'data'       : data       ,
+               'fit_config' : fit_config , 
+               'fit_pars'   : fit_pars   ,
+               'more_vars'  : more_vars  ,
+               'fit_fun'    : fit_fun    ,
+               'silent'     : silent     ,
+               'frequency'  : frequency  }
+    
+    import ostap.fitting.toys as Toys
+    if nSplit < 2 : return Toys.make_jackknife ( progress = progress , **config ) 
+    
+    ## create the task 
+    task = JackknifeTask ( progress = progress and not silent , **config )
+    
+    ## create work manager 
+    wmgr  = WorkManager ( silent =  silent and not progress , progress = progress or not silent , **kwargs )
+
+    ## split it! 
+    N       = len ( data )
+    n1 , n2 = divmod ( N , nSplit )
+
+    ## actual split!
+    params = [ ( n1 * i , n1 * i + n1  ) for i in range ( nSplit ) ]
+    if n2 : params.append (  ( n1 * nSplit , N ) ) 
+
+    ## start parallel processing! 
+    wmgr.process ( task , params )
+
+    ## get results from the task 
+    results , stats = task.results () 
+    if progress or not silent :
+        
+        ## Toys.print_stats ( stats )
+        
+        fitcnf = {}
+        fitcnf.update ( fit_config )
+        if not 'silent' in fitcnf : fitcnf [ 'silent' ] = silent
+        
+        if not fit_fun : fit_fun = Toys.make_fit 
+        
+        ## 9. fit total dataset (twice) 
+        r_tot = fit_fun ( pdf , data , **fitcnf )
+        r_tot = fit_fun ( pdf , data , **fitcnf )
+     
+        ## the final table  
+        Toys.print_jackknife (
+            r_tot   ,
+            stats   ,
+            morevars = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ) )
+        
+        
+    return results, stats   
+
+
+# =============================================================================
+## Run Bootstrap analysis, useful for evaluaton of fit biases and uncertainty estimates
+# 
+#  In total <code>size</code> datasets are sampled (with replacement) from the original dataste
+#  <code>data</code> and each sampled dataset is fit
+#  @code
+#  dataset = ...
+#  model   = ...
+#  r , f = model.fitTo ( dataset , .... )                         ## fit the whole dataset   
+#  results, stats = make_bootstrap ( model , data , size = 1000 ) ## run Bootstrap 
+#  print_bootstrap ( r , stats )                    ## print summary table 
+#  @endcode
+#  @see print_bootstrap
+#
+#  Derived parameters can be also retrived via <code>more_vars</code> argument:
+#  @code
+#  ratio     = lambda res,pdf : res.ratio('x','y')
+#  more_vars = { 'Ratio' : ratio }
+#  r,  s = make_bootstrap ( .... , more_vars = more_vars , ... ) 
+#  @endcode
+#
+#  @param pdf   fit model
+#  @param data  original dataset
+#  @param size  number of datasets to sample
+#  @param fit_config configuration of <code>pdf.FitTo( data , ... )</code>
+#  @param fit_pars   redefine these parameters before each fit 
+#  @param more_vars  calculate more variables from the fit-results 
+#  @param fit_fun    specific fitting action (if needed) 
+#  @param accept_fun specific accept action (if needed) 
+#  @param silent     silent processing 
+#  @param progress   show progress bar?
+#  @param logger     use this logger
+#  @param frequency  how often dump the intermediate results? 
+#  @return statistics of boostrap experiments 
+def parallel_bootstrap ( pdf                  ,
+                         data                 ,
+                         size                 ,   ## numbere of samples
+                         nSplit               ,   ## number of splits 
+                         fit_config  = {}     ,   ## parameters for <code>pdf.fitTo</code>
+                         fit_pars    = {}     ,   ## fit-parameters to reset/use
+                         more_vars   = {}     ,   ## additional  results to be calculated
+                         fit_fun     = None   ,   ## fit       function ( pdf , dataset , **fit_config ) 
+                         accept_fun  = None   ,   ## accept    function ( fit-result, pdf, dataset     )
+                         silent      = True   ,   ## silent processing?
+                         progress    = True   ,   ## shpow progress bar? 
+                         logger      = logger ,   ## use this logger 
+                         frequency   = 0      , **kwargs ) :
+
+    assert isinstance ( size  , integer_types ) and 1 <= size ,\
+           'Invalid "size"  argument %s/%s' % ( size  , type ( size ) )
+
+    assert isinstance ( nSplit  , integer_types ) and 0 <= nSplit  <= size ,\
+           'Invalid "nSplit"  argument %s/%s' % ( nSplit  , type ( nSplit  ) )
+    
+    config = { 'pdf'         : pdf         ,
+               'data'        : data        , 
+               'fit_config'  : fit_config  ,
+               'fit_pars'    : fit_pars    ,
+               'more_vars'   : more_vars   ,
+               'fit_fun'     : fit_fun     , 
+               'accept_fun'  : accept_fun  ,
+               'silent'      : silent      ,
+               'frequency'   : frequency   }
+    
+    import ostap.fitting.toys as Toys
+    if nSplit < 2 : return Toys.make_boostrap ( size = size , progress = progress , **config ) 
+    
+
+    ## create teh task 
+    task = BootstrapTask ( progress = progress and not silent , **config )
+
+    ## create work manager 
+    wmgr  = WorkManager ( silent = silent and not progress , progress = progress or not silent , **kwargs )
+    
+    ## split it! 
+    n1 , n2 = divmod ( size  , nSplit )
+    
+    ## actual split! 
+    params = nSplit * [ n1] 
+    if n2 : params.append ( n2 )
+    
+    ## start parallel processing! 
+    wmgr.process( task , params  )
+
+    ## get results from the task
+    results , stats = task.results () 
+    if progress or not silent :
+
+        fitcnf = {}
+        fitcnf.update ( fit_config )
+        if not 'silent' in fitcnf : fitcnf [ 'silent' ] = silent
+        
+        if not fit_fun : fit_fun = Toys.make_fit 
+        
+        ## 9. fit total dataset (twice) 
+        r_tot = fit_fun ( pdf , data , **fitcnf )
+        r_tot = fit_fun ( pdf , data , **fitcnf )
+        
+        ## the final table  
+        Toys.print_bootstrap (
+            r_tot   ,
+            stats   ,
+            morevars = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ) )
+        
+    
+    return results, stats   
+
 
 # =============================================================================
 if '__main__' == __name__ :

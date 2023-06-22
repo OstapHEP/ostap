@@ -23,8 +23,9 @@ __all__     = (
     "print_bootstrap"  , ## print bootstrap statistics 
     )
 # =============================================================================
-from   builtins          import range
-from   ostap.core.core   import VE
+from   builtins              import range
+from  ostap.core.ostap_types import string_types, integer_types  
+from   ostap.core.core       import VE, SE 
 import ROOT
 # =============================================================================
 # logging 
@@ -63,31 +64,35 @@ def vars_transform ( vars ) :
 #  results    = ...
 #  statistics = make_stats ( results )
 #  @endcode 
-def make_stats ( results , fits = {} , covs = {} ) :
+def make_stats ( results , fits = {} , covs = {} , accept = SE () ) :
     """Prepare statistics from results of toys/jackknifes/boostrap studies
     >>> results    = ...
     >>> statistics = make_stats ( results )
     """
     from collections     import defaultdict 
-    from ostap.core.core import SE    
-    
+    from ostap.core.core import VE, SE
+
     stats = defaultdict ( SE )
     
-    for par in results : 
-        pars = results [ par ] 
-        for v in pars :
-            stats [ par ] += float ( v )
+    for par in results :
+        if par : 
+            pars = results [ par ] 
+            for v in pars : stats [ par ] += float ( v )
             
+    if 2 <= accept.nEntries() and 0 <= accept.eff() <= 1  :
+        stats ['- Accept '         ] = accept 
+    
     for k in fits :
-        stats ['- Status  %s' % k ] = fits [ k ]
+        stats ['- Status  %s' % k  ] = fits [ k ]
     for k in covs :
-        stats ['- CovQual %s' % k ] = covs [ k ]
+        stats ['- CovQual %s' % k  ] = covs [ k ]
+        
 
     return stats
 
 # =============================================================================
 ## print statistics of pseudoexperiments
-def print_stats (  stats , ntoys = '' , logger = logger ) :
+def print_stats ( stats , ntoys = '' , logger = logger ) :
     """print statistics of pseudoexperiments
     """
     
@@ -98,7 +103,7 @@ def print_stats (  stats , ntoys = '' , logger = logger ) :
         mean   = c.mean ()
         mean   = "%+13.6g +/- %-13.6g" % ( mean.value() , mean.error() )
         rms    = "%13.6g"             % c.rms ()
-        minmax = "%+13.6g / %-+13.6g" % ( c.min() , c.max () ) 
+        minmax = "%+13.6g / %-+13.6g"  % ( c.min() , c.max () ) 
         return p , n , mean , rms  , minmax 
         
     for p in sorted ( stats )  :
@@ -193,9 +198,10 @@ def print_jackknife  ( fitresult          ,
         ## jackknife estimates 
         jackknife , theta_jack = jackknife_statistics ( statistics , theta )
 
-        bias  = theta_jack.value () - theta     .value ()        
+        bias  = theta_jack.value () - theta     .value ()
+        
         scale = theta     .error () / theta_jack.error () 
-
+        
         row = ( name , 
                 "%+13.6g +/- %-13.6g" % ( theta      . value () , theta      .error () ) , 
                 "%+13.6g +/- %-13.6g" % ( jackknife  . value () , jackknife  .error () ) , 
@@ -320,7 +326,9 @@ def make_fit    ( pdf , dataset , **config ) :
     """Default function to  perform the actual fit
     - simple call for `PDF.fitTo`
     """
-    result , _ = pdf.fitTo ( dataset , **config )
+    result = pdf.fitTo ( dataset , **config )
+    if isinstance ( result , tuple ) and 2 == len ( result ) :
+        result = result [ 0 ] 
     return result
 
 # ==============================================================================
@@ -411,7 +419,7 @@ def make_toys ( pdf                 ,
                 silent     = True   ,                
                 progress   = True   ,
                 logger     = logger ,
-                frequency  = 1000   ) : ## 
+                frequency  = 500    ) : ## 
     """Make `nToys` pseudoexperiments
 
     -   Schematically:
@@ -493,9 +501,6 @@ def make_toys ( pdf                 ,
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
-    if progress and not silent :
-        assert isinstance ( frequency , integer_types ) and 0 < frequency,\
-               "make_toys: invalid 'frequency' parameter %s" % frequency
 
     import ostap.fitting.roofit
     import ostap.fitting.dataset
@@ -520,8 +525,8 @@ def make_toys ( pdf                 ,
     fix_pars = vars_transform ( params    ) 
     fix_init = vars_transform ( init_pars ) 
 
-    pdf.load_params ( params = fix_pars , silent = silent )
-    pdf.load_params ( params = fix_init , silent = silent )
+    pdf.load_params ( params = fix_pars , silent = True ) ## silent = silent )
+    pdf.load_params ( params = fix_init , silent = True ) ## silent = silent )
 
     ## save all initial parameters (needed for the final statistics)
     params  = pdf.params      ()
@@ -536,16 +541,17 @@ def make_toys ( pdf                 ,
 
     from   ostap.core.core        import SE, VE
 
-    fits = defaultdict ( SE )  ## fit statuses 
-    covs = defaultdict ( SE )  ## covariance matrix quality
+    fits   = defaultdict ( SE )  ## fit statuses 
+    covs   = defaultdict ( SE )  ## covariance matrix quality
+    accept = SE ()
     
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
                 
         ## 1. reset PDF parameters 
-        pdf.load_params ( params = fix_pars  , silent = silent )
-        pdf.load_params ( params = init_pars , silent = silent )
+        pdf.load_params ( params = fix_pars  , silent = True ) ## silent = silent )
+        pdf.load_params ( params = init_pars , silent = True ) ## silent = silent )
 
         ## 2. generate dataset!  
         ## dataset = pdf.generate ( varset = varset , **gen_config )  
@@ -562,13 +568,20 @@ def make_toys ( pdf                 ,
         covs [ r.covQual () ] += 1
               
         ## ok ?
-        if accept_fun ( r , pdf , dataset ) : 
+        ok      = accept_fun ( r , pdf , dataset )
+        accept += 1 if ok else 0
+        
+        if ok :
             
             ## 4. save results 
+            results [ ''  ].append ( r ) 
+            
+            ## 4.1 save results 
             rpf = r.params ( float_only = True ) 
             for p in rpf : 
                 results [ p ].append ( rpf [ p ][0] ) 
                 
+            ## 4.2 save results 
             for v in more_vars :
                 func  = more_vars[v] 
                 results [ v ] .append ( func ( r , pdf ) )
@@ -581,12 +594,12 @@ def make_toys ( pdf                 ,
         del r
 
         if progress or not silent :
-            if 0 < frequency and 1 <= i and 0 == ( i + 1 ) % frequency : 
-                stats = make_stats ( results , fits , covs )
+            if 0 < frequency and 1 <= i and 0 ==  i % frequency : 
+                stats = make_stats ( results , fits , covs , accept )
                 print_stats ( stats , i + 1 , logger = logger )
                 
     ## make a final statistics 
-    stats = make_stats ( results , fits , covs )
+    stats = make_stats ( results , fits , covs , accept )
         
     if progress or not silent :
         print_stats ( stats , nToys , logger = logger )
@@ -671,7 +684,7 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
                  silent     = True   ,
                  progress   = True   ,
                  logger     = logger ,
-                 frequency  = 1000   ) :
+                 frequency  = 500    ) :
     """Make `ntoys` pseudoexperiments
     
     -   Schematically:
@@ -740,10 +753,6 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
-    if progress and not silent :
-        assert isinstance ( frequency , integer_types ) and 0 < frequency,\
-               "make_toys2: invalid 'frequency' parameter %s" % frequency
-    
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
@@ -783,24 +792,25 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
 
     from   ostap.core.core        import SE
     
-    fits = defaultdict ( SE )  ## fit statuses 
-    covs = defaultdict ( SE )  ## covarinace matrix quality
-
+    fits   = defaultdict ( SE )  ## fit statuses 
+    covs   = defaultdict ( SE )  ## covarinace matrix quality
+    accept = SE()
+    
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
 
         ## 1. reset PDF parameters 
-        gen_pdf.load_params ( params = fix_gen_init , silent = silent )
-        gen_pdf.load_params ( params = fix_gen_pars , silent = silent )
+        gen_pdf.load_params ( params = fix_gen_init , silent = True ) ## silent = silent )
+        gen_pdf.load_params ( params = fix_gen_pars , silent = True ) ## silent = silent )
 
         ## 2. generate dataset!
         dataset =  gen_fun ( gen_pdf , varset = varset , **gen_config ) 
         if not silent : logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
 
         ## 3. reset parameters of fit_pdf
-        fit_pdf.load_params ( params = fix_fit_init , silent = silent )
-        fit_pdf.load_params ( params = fix_fit_pars , silent = silent )
+        fit_pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
+        fit_pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
         
         ## 4. fit it!  
         r = fit_fun ( fit_pdf , dataset , **fitcnf ) 
@@ -812,13 +822,19 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
         covs [ r.covQual () ] += 1
 
         ## ok ?
-        if accept_fun ( r , fit_pdf , dataset ) : 
+        ok      = accept_fun ( r , fit_pdf , dataset )
+        accept += 1 if ok else 0        
+        if ok : 
 
             ## 5. save results 
+            results [ ''  ].append ( r ) 
+            
+            ## 5.1 save results 
             rpf = r.params ( float_only = True ) 
             for j in rpf : 
                 results [ j ].append ( rpf [ j ] [ 0 ] ) 
                 
+            ## 5.2 save results 
             for v in more_vars :
                 func  = more_vars[v] 
                 results [ v ] .append ( func ( r , fit_pdf ) )
@@ -830,13 +846,13 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
         del dataset
 
         if progress or not silent :
-            if 0 < frequency and 1 <= i and 0 == ( i + 1 ) % frequency : 
-                stats = make_stats ( results , fits , covs )
+            if 0 < frequency and 1 <= i and 0 == i % frequency : 
+                stats = make_stats ( results , fits , covs , accept )
                 print_stats ( stats , i + 1 , logger = logger )
                 
         
     ## make a final statistics 
-    stats = make_stats ( results , fits , covs )
+    stats = make_stats ( results , fits , covs , accept )
                     
     if progress or not silent :
         print_stats ( stats , nToys , logger = logger  )
@@ -889,7 +905,7 @@ def make_jackknife ( pdf                  ,
                      silent      = True   ,
                      progress    = True   ,
                      logger      = logger ,
-                     frequency   = 100    ) :
+                     frequency   = 500    ) :
     """Run Jackknife analysis, useful for evaluaton of fit biased and uncertainty estimates
     For each <code>i</code> remove event with index <code>i</code> from the dataset, and refit it.
     >>> dataset = ...
@@ -940,10 +956,6 @@ def make_jackknife ( pdf                  ,
         if not silent : logger.info ( "make_jackknife: use default 'accept_fit' function!")
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
-
-    if progress and not silent :
-        assert isinstance ( frequency , integer_types ) and 0 < frequency,\
-               "make_makejackknife: invalid 'frequency' parameter %s" % frequency
     
     import ostap.fitting.roofit
     import ostap.fitting.dataset
@@ -964,13 +976,14 @@ def make_jackknife ( pdf                  ,
     from collections import defaultdict 
     results = defaultdict(list) 
 
-    from   ostap.core.core        import SE    
-    fits = defaultdict ( SE )  ## fit statuses 
-    covs = defaultdict ( SE )  ## covarinace matrix quality
-
+    from     ostap.core.core        import SE    
+    fits   = defaultdict ( SE )  ## fit statuses 
+    covs   = defaultdict ( SE )  ## covarinace matrix quality
+    accept = SE ()
+    
     ## Fit the whole sample 
-    pdf.load_params ( params = fix_fit_init , silent = silent )
-    pdf.load_params ( params = fix_fit_pars , silent = silent )
+    pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
+    pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
     r_tot = fit_fun ( pdf , data , **fitcnf )
     
     from ostap.utils.progress_bar import progress_bar
@@ -978,8 +991,8 @@ def make_jackknife ( pdf                  ,
     for i , ds in progress_bar ( enumerate ( data.jackknife ( begin , end ) ) , max_value = end - begin , silent = not progress ) :
 
         ## 2. reset parameters of fit_pdf
-        pdf.load_params ( params = fix_fit_init , silent = silent )
-        pdf.load_params ( params = fix_fit_pars , silent = silent )
+        pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
+        pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
  
         ## 3. fit it!  
         r = fit_fun ( pdf , ds , **fitcnf ) 
@@ -991,14 +1004,19 @@ def make_jackknife ( pdf                  ,
         covs [ r.covQual () ] += 1
 
         ## ok ?
-        if accept_fun ( r , pdf , ds ) : 
+        ok      =  accept_fun ( r , pdf , ds )
+        accept += ( 1 if ok else 0 )             
+        if ok : 
 
             ## 6. save results 
+            results [ ''  ].append ( r ) 
+
+            ## 6.1 save results 
             rpf = r.params ( float_only = True ) 
             for j in rpf : 
                 results [ j ].append ( rpf [ j ] [ 0 ] ) 
 
-            ## 7. more variables to be calculated? 
+            ## 6.2. more variables to be calculated? 
             for v in more_vars :
                 func  = more_vars[v] 
                 results [ v ] .append ( func ( r , pdf ) )
@@ -1009,12 +1027,12 @@ def make_jackknife ( pdf                  ,
         ds.clear()
 
         if progress or not silent :
-            if 0 < frequency and 1 <= i and 0 == ( i + 1 ) % frequency : 
-                stats = make_stats ( results , fits , covs )
+            if 0 < frequency and 1 <= i and 0 == i % frequency : 
+                stats = make_stats ( results , fits , covs , accept )
                 print_stats ( stats , i + 1 , logger = logger )
                         
     ## 8. make a final statistics 
-    stats = make_stats ( results , fits , covs )
+    stats = make_stats ( results , fits , covs , accept )
         
     if progress or not silent :
 
@@ -1076,7 +1094,7 @@ def make_bootstrap ( pdf                  ,
                      silent      = True   ,   ## silent processing?
                      progress    = True   ,   ## shpow progress bar? 
                      logger      = logger ,    ## use this logger 
-                     frequency   = 100    ) :
+                     frequency   = 500    ) :
 
     """Run Bootstrap analysis, useful for evaluaton of fit biased and uncertainty estimates 
     In total `size` datasets are sampled (with replacement) from the original dataste
@@ -1105,8 +1123,8 @@ def make_bootstrap ( pdf                  ,
     assert 1 < N            , 'make_bootstrap: invalid dataset size %s' % N
 
     from ostap.core.ostap_types import integer_types  
-    assert isinstance ( size , integer_types ) and 0 < size, \
-           "make_bootstrap: invalid 'size' parameter %s" % size 
+    assert isinstance ( size  , integer_types ) and 1 <= size ,\
+           'Invalid "size"  argument %s/%s' % ( size  , type ( size ) )
     
     ## 1. fitting function? 
     if fit_fun is None :
@@ -1120,10 +1138,6 @@ def make_bootstrap ( pdf                  ,
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
-    if progress and not silent :
-        assert isinstance ( frequency , integer_types ) and 0 < frequency,\
-               "make_bootstrap: invalid 'frequency' parameter %s" % frequency
-    
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
@@ -1144,12 +1158,13 @@ def make_bootstrap ( pdf                  ,
     results = defaultdict(list) 
 
     from   ostap.core.core        import SE    
-    fits = defaultdict ( SE )  ## fit statuses 
-    covs = defaultdict ( SE )  ## covarinace matrix quality
-
+    fits   = defaultdict ( SE )  ## fit statuses 
+    covs   = defaultdict ( SE )  ## covarinace matrix quality
+    accept = SE()
+    
     ## fit original dataset 
-    pdf.load_params ( params = fix_fit_init , silent = silent )
-    pdf.load_params ( params = fix_fit_pars , silent = silent )
+    pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
+    pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
     r_tot = fit_fun ( pdf , data , **fitcnf )
 
     from ostap.utils.progress_bar import progress_bar
@@ -1157,8 +1172,8 @@ def make_bootstrap ( pdf                  ,
     for i , ds in progress_bar ( enumerate ( data.bootstrap ( size ) ) , max_value = size , silent = not progress ) :
 
         ## 2. reset parameters of fit_pdf
-        pdf.load_params ( params = fix_fit_init , silent = silent )
-        pdf.load_params ( params = fix_fit_pars , silent = silent )
+        pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
+        pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
  
         ## 3. fit it!  
         r = fit_fun ( pdf , ds , **fitcnf ) 
@@ -1170,14 +1185,19 @@ def make_bootstrap ( pdf                  ,
         covs [ r.covQual () ] += 1
 
         ## ok ?
-        if accept_fun ( r , pdf , ds ) : 
+        ok      = accept_fun ( r , pdf , ds ) 
+        accept += ( 1 if ok else 0 )
+        if ok : 
 
             ## 6. save results 
+            results [ ''  ].append ( r ) 
+
+            ## 6.1 save results 
             rpf = r.params ( float_only = True ) 
             for j in rpf : 
                 results [ j ].append ( rpf [ j ] [ 0 ] ) 
 
-            ## 7. more variables to be calculated? 
+            ## 6.2 more variables to be calculated? 
             for v in more_vars :
                 func  = more_vars[v] 
                 results [ v ] .append ( func ( r , pdf ) )
@@ -1188,8 +1208,8 @@ def make_bootstrap ( pdf                  ,
         ds.clear()
         
         if progress or not silent :
-            if 0 < frequency and 1 <= i and 0 == ( i + 1 )  % frequency : 
-                stats = make_stats ( results , fits , covs )                
+            if 0 < frequency and 1 <= i and 0 ==  i % frequency : 
+                stats = make_stats ( results , fits , covs , accept )                
                 ## print_stats ( stats , i + 1 , logger = logger )
                 print_bootstrap ( r_tot ,
                                   stats ,
@@ -1198,8 +1218,7 @@ def make_bootstrap ( pdf                  ,
                 
 
     ## 8. make a final statistics 
-    stats = make_stats ( results , fits , covs )
-    
+    stats = make_stats ( results , fits , covs , accept )    
         
     if progress or not silent :
 
