@@ -7,6 +7,8 @@
 // ============================================================================
 #include <sstream>
 #include <cmath>
+#include <algorithm>
+#include <numeric>
 // ============================================================================
 // LHCbMath
 // ============================================================================
@@ -277,6 +279,202 @@ Ostap::Math::SVectorWithError<N,SCALAR>::mahalanobis
   return 0 <= c2 ? std::sqrt ( c2 ) : c2 ;
 }
 // ============================================================================
+/*  make unnormalized weighted sum, accounting the uncertainties  
+ *  \f[ r  = \sum_i v_i w_i \f] 
+ *  @param values  INPUT vector of values 
+ *  @param weights INPUT vector of weigths 
+ *  @return unnormalized weighted sum 
+ */
+// ============================================================================
+template <unsigned int N, typename SCALAR> 
+inline Ostap::Math::ValueWithError 
+Ostap::Math::dot 
+( const Ostap::Math::SVectorWithError<N,SCALAR>& values  , 
+  const Ostap::Math::SVectorWithError<N,SCALAR>& weights ) 
+{
+  /// central value 
+  const double value = Ostap::Math::dot ( values.value () , weights.value ()  ) ;
+  /// derivatives 
+  const ROOT::Math::SVector<SCALAR,N>& dRdV = weights ;
+  /// derivatives 
+  const ROOT::Math::SVector<SCALAR,N>& dRdW = values  ;
+  /// covariace 
+  const double cov2  = 
+    values .cov2().Similarity ( dRdV ) + 
+    weights.cov2().Similarity ( dRdW ) ;
+  /// final result 
+  return Ostap::Math::ValueWithError ( value , cov2 ) ;
+}
+// ============================================================================
+/*  make unnormalized weighted sum, accounting the uncertainties  
+ *  \f[ r  = \sum_i v_i w_i \f] 
+ *  @param values  INPUT vector of values 
+ *  @param weights INPUT vector of weigths 
+ *  @return unnormalized weighted sum 
+ */
+// ============================================================================
+template <unsigned int N, typename SCALAR> 
+inline Ostap::Math::ValueWithError 
+Ostap::Math::dot
+( const Ostap::Math::SVectorWithError<N,SCALAR>& values  , 
+  const ROOT::Math::SVector<SCALAR,N>&           weights ) 
+{
+  /// central value 
+  const double value = Ostap::Math::dot ( values.value () , weights ) ;
+  /// derivatives 
+  const ROOT::Math::SVector<SCALAR,N>& dRdV = weights ;
+  /// covarinace 
+  const double cov2  = values.cov2().Similarity ( dRdV ) ;
+  /// final result 
+  return Ostap::Math::ValueWithError ( value , cov2 ) ;
+}
+// ============================================================================
+/*  make unnormalized weighted sum, accounting the uncertainties  
+ *  \f[ r  = \sum_i v_i w_i \f] 
+ *  @param values  INPUT vector of values 
+ *  @param weights INPUT vector of weigths 
+ *  @return unnormalized weighted sum 
+ */
+// ============================================================================
+template <unsigned int N, typename SCALAR> 
+inline Ostap::Math::ValueWithError 
+Ostap::Math::dot
+( const ROOT::Math::SVector<SCALAR,N>&           values  , 
+  const Ostap::Math::SVectorWithError<N,SCALAR>& weights ) 
+{ return dot ( weights , values ) ; }
+// ============================================================================
+/*  make normalized weighted sum, accounting the uncertainties  
+ *  \f[ r  = \frac{ \sum_i v_i w_i } { \sum_i w_i }\f] 
+ *  @param values  INPUT vector of values 
+ *  @param weights INPUT vector of weigths 
+ *  @return normalized weighted sum 
+ */
+// ============================================================================
+template <unsigned int N, typename SCALAR> 
+inline Ostap::Math::ValueWithError 
+Ostap::Math::weighted_sum
+( const Ostap::Math::SVectorWithError<N,SCALAR>& values  , 
+  const Ostap::Math::SVectorWithError<N,SCALAR>& weights ) 
+{
+  /// total weight 
+  const double sumw  = std::accumulate ( weights.value ().begin () , 
+                                         weights.value ().end   () , 0.0 ) ;
+  /// central value 
+  const double value = Ostap::Math::weighted_sum ( values.value () , weights.value () ) ;
+  /// derivatives 
+  const ROOT::Math::SVector<SCALAR,N> dRdV {   weights.value ()           / sumw } ;
+  /// derivatives 
+  const ROOT::Math::SVector<SCALAR,N> dRdW { ( values .value () - value ) / sumw } ;
+  /// covarinace 
+  const double cov2  = 
+    ROOT::Math::Similarity ( values .cov2() , dRdV ) + 
+    ROOT::Math::Similarity ( weights.cov2() , dRdW ) ;
+  /// final result 
+  return Ostap::Math::ValueWithError ( value , cov2 ) ;    
+}
+// ============================================================================
+/*  make normalized weighted sum, accounting the uncertainties  
+ *  \f[ r  = \frac{ \sum_i v_i w_i } { \sum_i w_i }\f] 
+ *  @param values  INPUT vector of values 
+ *  @param weights INPUT vector of weigths 
+ *  @return normalized weighted sum 
+ */
+// ============================================================================
+template <unsigned int N, typename SCALAR> 
+inline Ostap::Math::ValueWithError 
+Ostap::Math::weighted_sum
+( const Ostap::Math::SVectorWithError<N,SCALAR>& values  , 
+  const ROOT::Math::SVector<SCALAR,N>&           weights ) 
+{
+  /// total weight 
+  const double sumw  = std::accumulate ( weights.begin () , 
+                                         weights.end   () , 0.0 ) ;
+  /// central value 
+  const double value = Ostap::Math::weighted_sum ( values.value() , weights ) ;
+  /// derivatives 
+  const ROOT::Math::SVector<SCALAR,N> dRdV {   weights / sumw } ;
+  /// covarinace 
+  const double cov2  = ROOT::Math::Similarity ( values .cov2() , dRdV ) ;
+  /// final result 
+  return Ostap::Math::ValueWithError ( value , cov2 ) ;    
+}
+// ========================================================================
+/*  make normalized weighted sum, accounting the uncertainties  
+ *  \f[ r  = \frac{ \sum_i v_i w_i } { \sum_i w_i }\f] 
+ *  @param values  INPUT vector of values 
+ *  @param weights INPUT vector of weigths 
+ *  @return normalized weighted sum 
+ */
+// ========================================================================
+template <unsigned int N, typename SCALAR> 
+inline Ostap::Math::ValueWithError 
+Ostap::Math::weighted_sum
+( const ROOT::Math::SVector<SCALAR,N>&           values  , 
+  const Ostap::Math::SVectorWithError<N,SCALAR>& weights )
+{
+  /// total weight 
+  const double sumw  = std::accumulate ( weights.value().begin () , 
+                                         weights.value().end   () , 0.0 ) ;
+  /// central value 
+  const double value = Ostap::Math::weighted_sum ( values , weights.value () ) ;
+  /// derivatives 
+  const ROOT::Math::SVector<SCALAR,N> dRdW { ( values - value ) / sumw } ;
+  /// covarinace 
+  const double cov2  = ROOT::Math::Similarity ( weights.cov2() , dRdW ) ;
+  /// final result 
+  return Ostap::Math::ValueWithError ( value , cov2 ) ;    
+}
+// ===========================================================================
+
+
+// ============================================================================
+/*  get the (unnornalized) weighted sum with set of weights 
+ *  \f[ r = \sum_i v_i w_i \f]
+ *  @param weigths (INPUT) vector of weights 
+ */ 
+// ============================================================================
+template <unsigned int N, typename SCALAR> 
+inline Ostap::Math::ValueWithError 
+Ostap::Math::SVectorWithError<N,SCALAR>::dot
+( const Ostap::Math::SVectorWithError<N,SCALAR>& weights ) const 
+{ return Ostap::Math::dot ( *this , weights ) ; }
+// ============================================================================
+/*  get the (unnornalized) weighted sum with set of weights 
+ *  \f[ r = \sum_i v_i w_i \f]
+ *  @param weigths (INPUT) vector of weights 
+ */ 
+// ============================================================================
+template <unsigned int N, typename SCALAR> 
+inline Ostap::Math::ValueWithError 
+Ostap::Math::SVectorWithError<N,SCALAR>::dot
+( const Ostap::Math::SVectorWithError<N,SCALAR>::Value& weights ) const 
+{ return Ostap::Math::dot ( *this , weights ) ; }
+// ============================================================================
+/*  get the (normalized) weighted sum with set of weights 
+ *  \f[ r = \frac{\sum_i v_i w_i}{ \sum_i w_i } \f]
+ *  @param weigths (INPUT) vector of weights 
+ */ 
+// ============================================================================
+template <unsigned int N, typename SCALAR> 
+inline Ostap::Math::ValueWithError 
+Ostap::Math::SVectorWithError<N,SCALAR>::weighted_sum
+( const Ostap::Math::SVectorWithError<N,SCALAR>& weights ) const 
+{ return Ostap::Math::weighted_sum ( *this , weights ) ; }
+// ============================================================================
+/*  get the (normalized) weighted sum with set of weights 
+ *  \f[ r = \frac{\sum_i v_i w_i}{ \sum_i w_i } \f]
+ *  @param weigths (INPUT) vector of weights 
+ */ 
+// ============================================================================
+template <unsigned int N, typename SCALAR> 
+inline Ostap::Math::ValueWithError 
+Ostap::Math::SVectorWithError<N,SCALAR>::weighted_sum
+( const Ostap::Math::SVectorWithError<N,SCALAR>::Value& weights ) const 
+{ return Ostap::Math::weighted_sum ( *this , weights ) ; }
+// ============================================================================
+
+
+
 
 // ============================================================================
 //                                                                     The END 

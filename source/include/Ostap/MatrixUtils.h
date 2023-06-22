@@ -8,6 +8,7 @@
 // ============================================================================
 #include <algorithm>
 #include <functional>
+#include <numeric>
 #include <utility>
 #include <cmath>
 #include <array>
@@ -1421,7 +1422,41 @@ namespace Ostap
       return decomp.getL ( L ) ;
     }
     // ========================================================================
-
+    /** make (unnormalized) weighted sum
+     *  \f[ r  = \sum_i v_i w_i \f] 
+     *  @param values  INPUT vector of values 
+     *  @param weights INPUT vector of weigths 
+     *  @return unnormalized weighted sum 
+     */
+    template <unsigned int N, typename SCALAR> 
+    inline double  
+    dot 
+    ( const ROOT::Math::SVector<SCALAR,N>& values  , 
+      const ROOT::Math::SVector<SCALAR,N>& weights )
+    {
+      double init { 0.0 } ;
+      return std::inner_product ( values.begin  () , 
+                                  values.end    () , 
+                                  weights.begin () , 
+                                  init             ) ;
+    }
+    // ======================================================================
+    /** make (normalized) weighted sum
+     *  \f[ r  = \frac{ \sum_i v_i w_i } { \sum_i w_i } \f] 
+     *  @param values  INPUT vector of values 
+     *  @param weights INPUT vector of weigths 
+     *  @return normalized weighted sum 
+     */
+    template <unsigned int N, typename SCALAR> 
+    inline double  
+    weighted_sum 
+    ( const ROOT::Math::SVector<SCALAR,N>& values  , 
+      const ROOT::Math::SVector<SCALAR,N>& weights )
+    {
+      double isum { 0.0 } ;
+      return weighted_sum_simple  ( values , weights ) / 
+        std::accumulate ( weights.begin() , weights.end() , isum ) ;
+    }
     // ========================================================================
     // helper functions to allow proper operations in PyROOT
     // - need to avoid expressions  (no easy way to use them in PyROOT)

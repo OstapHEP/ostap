@@ -237,6 +237,38 @@ namespace Ostap
       double mahalanobis 
       ( const Value& a ) const ;
       // ========================================================================
+    public:
+      // ========================================================================
+      /** get the (unnornalized) weighted sum with set of weights 
+       *  \f[ r = \sum_i v_i w_i \f]
+       *  @param weigths (INPUT) vector of weights 
+       */ 
+      Ostap::Math::ValueWithError
+      dot ( const SVectorWithError& weights ) const ;
+      // ========================================================================
+      /** get the (unnormalized) weighted sum with set of weights 
+       *  \f[ r = \sum_i v_i w_i \f]
+       *  @param weigths (INPUT) vector of weights 
+       */ 
+      Ostap::Math::ValueWithError
+      dot ( const Value&            weights ) const ;
+      // ========================================================================
+    public:
+      // ========================================================================
+      /** get the (normalized) weighted sum with set of weights 
+       *  \f[ r = \frac{\sum_i v_i w_i}{ \sum_i w_i } \f]
+       *  @param weigths (INPUT) vector of weights 
+       */ 
+      Ostap::Math::ValueWithError
+      weighted_sum ( const SVectorWithError& weights ) const ;
+      // ========================================================================
+      /** get the (normalized) weighted sum with set of weights 
+       *  \f[ r = \frac{\sum_i v_i w_i}{ \sum_i w_i } \f]
+       *  @param weigths (INPUT) vector of weights 
+       */ 
+      Ostap::Math::ValueWithError
+      weighted_sum ( const Value&            weights ) const ;
+      // ========================================================================
     public: //  helper functions for pythonizations
       // ======================================================================
       Self  __add__     ( const Self&  right ) const ;
@@ -693,6 +725,78 @@ namespace Ostap
     {
       return SVectorWithError<N,SCALAR> ( M * v.value() , v.cov2().Similarity ( M ) ) ;
     }
+    // ========================================================================
+    /** make unnormalized weighted sum, accounting the uncertainties  
+     *  \f[ r  = \sum_i v_i w_i \f] 
+     *  @param values  INPUT vector of values 
+     *  @param weights INPUT vector of weigths 
+     *  @return unnormalized weighted sum 
+     */
+    template <unsigned int N, typename SCALAR> 
+    inline ValueWithError 
+    dot 
+    ( const SVectorWithError<N,SCALAR>& values  , 
+      const SVectorWithError<N,SCALAR>& weights ) ;  
+    // ========================================================================
+    /** make unnormalized weighted sum, accounting the uncertainties  
+     *  \f[ r  = \sum_i v_i w_i \f] 
+     *  @param values  INPUT vector of values 
+     *  @param weights INPUT vector of weigths 
+     *  @return unnormalized weighted sum 
+     */
+    template <unsigned int N, typename SCALAR> 
+    inline ValueWithError 
+    dot 
+    ( const SVectorWithError<N,SCALAR>&    values  , 
+      const ROOT::Math::SVector<SCALAR,N>& weights ) ;
+    // ========================================================================
+    /** make unnormalized weighted sum, accounting the uncertainties  
+     *  \f[ r  = \sum_i v_i w_i \f] 
+     *  @param values  INPUT vector of values 
+     *  @param weights INPUT vector of weigths 
+     *  @return unnormalized weighted sum 
+     */
+    template <unsigned int N, typename SCALAR> 
+    inline ValueWithError 
+    dot 
+    ( const ROOT::Math::SVector<SCALAR,N>& values  , 
+      const SVectorWithError<N,SCALAR>&    weights ) ;
+    // ========================================================================
+    /** make normalized weighted sum, accounting the uncertainties  
+     *  \f[ r  = \frac{ \sum_i v_i w_i } { \sum_i w_i }\f] 
+     *  @param values  INPUT vector of values 
+     *  @param weights INPUT vector of weigths 
+     *  @return normalized weighted sum 
+     */
+    template <unsigned int N, typename SCALAR> 
+    inline ValueWithError 
+    weighted_sum
+    ( const SVectorWithError<N,SCALAR>& values  , 
+      const SVectorWithError<N,SCALAR>& weights ) ;
+    // ========================================================================
+    /** make normalized weighted sum, accounting the uncertainties  
+     *  \f[ r  = \frac{ \sum_i v_i w_i } { \sum_i w_i }\f] 
+     *  @param values  INPUT vector of values 
+     *  @param weights INPUT vector of weigths 
+     *  @return normalized weighted sum 
+     */
+    template <unsigned int N, typename SCALAR> 
+    inline ValueWithError 
+    weighted_sum
+    ( const SVectorWithError<N,SCALAR>&    values  , 
+      const ROOT::Math::SVector<SCALAR,N>& weights ) ;
+    // ========================================================================
+    /** make normalized weighted sum, accounting the uncertainties  
+     *  \f[ r  = \frac{ \sum_i v_i w_i } { \sum_i w_i }\f] 
+     *  @param values  INPUT vector of values 
+     *  @param weights INPUT vector of weigths 
+     *  @return normalized weighted sum 
+     */
+    template <unsigned int N, typename SCALAR> 
+    inline ValueWithError 
+    weighted_sum
+    ( const ROOT::Math::SVector<SCALAR,N>& values  , 
+      const SVectorWithError<N,SCALAR>&    weights ) ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
