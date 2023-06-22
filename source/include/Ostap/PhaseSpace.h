@@ -334,10 +334,11 @@ namespace Ostap
        *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
        *  @see Ostap::Kinematics::phasespace3
        */
-      static double phasespace ( const double x  , 
-                                 const double m1 , 
-                                 const double m2 , 
-                                 const double m3 ) ;
+      static double phasespace
+      ( const double x  , 
+        const double m1 , 
+        const double m2 , 
+        const double m3 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -564,8 +565,9 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
