@@ -8,7 +8,8 @@
    1. re-enable TMVA plots 
    1. make parallel fill of datasets more flexible 
    1. add methods `dot` and `weight_sum` to `SVectorWithError`
-   1. add parallel version for jackknife and bootstrapping 
+   1. add parallel versions for jackknife and bootstrapping 
+   1. imporvements for parallel versions for jackknife and bootstrapping 
 
 ## Backward incompatible: 
 

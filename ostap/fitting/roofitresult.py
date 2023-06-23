@@ -369,7 +369,7 @@ def _rfr_getattr_ ( self , att ) :
     for p in pars :
         if att == p.GetName() : return p
         
-    raise AttributeError ( 'RooFitResult: invalid attribute %s ' % att )
+    raise AttributeError ( "RooFitResult: invalid attribute `%s'" % att )
 
 # =============================================================================
 ## get fit-parameter through the key/name 

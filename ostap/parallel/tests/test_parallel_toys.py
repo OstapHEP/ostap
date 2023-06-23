@@ -17,10 +17,12 @@ __all__    = () ## nothing to import
 from   builtins                     import range
 import ostap.fitting.roofit 
 import ostap.fitting.models         as     Models 
+from   ostap.utils.timing           import timing 
 from   ostap.core.core              import cpp, VE, dsID, hID, rooSilent
 import ostap.fitting.models         as     Models
 from   ostap.plotting.canvas        import use_canvas
 from   ostap.utils.utils            import wait 
+from   ostap.fitting.toys           import pull_var
 import ROOT, sys, os, random, time 
 # =============================================================================
 # logging 
@@ -39,17 +41,23 @@ try :
             if dill.__version__ < '0.3' :
                 os.environ['OSTAP_PARALLEL'] = 'GAUDIMP'
                 logger.warning ( "Redefined os.environ['OSTAP_PARALLEL']='%s'" % os.environ.get('OSTAP_PARALLEL','' ) ) 
-except :
+except ImportError :
     pass
 
 import ostap.parallel.parallel_toys as     Toys
 
+nominal_mean  = 0.4
+nominal_sigma = 0.1
 
 mass      = ROOT.RooRealVar ( 'mass' , '', 0 , 1 )  
 gen_gauss = Models.Gauss_pdf ( 'GG' , xvar = mass )
 fit_gauss = Models.Gauss_pdf ( 'FG' , xvar = mass )
-gen_gauss.mean  = 0.4
-gen_gauss.sigma = 0.1
+gen_gauss.mean  = nominal_mean
+gen_gauss.sigma = nominal_sigma 
+
+model = Models.Fit1D ( signal     = gen_gauss ,
+                       background = 'flat'    )
+
 
 # ==============================================================================
 ## Perform toy-study for possible fit bias and correct uncertainty evaluation
@@ -70,18 +78,23 @@ def test_parallel_toys ( ) :
     """
 
     logger = getLogger ( 'test_parallel_toys' ) 
-         
-    results , stats = Toys.parallel_toys  (
-        pdf         = gen_gauss ,
-        nToys       = 1000      ,
-        nSplit      = 20        ,
-        data        = [ mass ]  , 
-        gen_config  = { 'nEvents' : 200  , 'sample' : True } ,
-        fit_config  = { 'silent'  : True } ,
-        init_pars   = { 'mean_GG' : 0.4 , 'sigma_GG' : 0.1 } ,
-        silent      = True  , 
-        progress    = False )
-
+    
+    more_vars   = { 'pull:mean_GG'  : pull_var ( 'mean_GG'  , nominal_mean  ) ,  
+                    'pull:sigma_GG' : pull_var ( 'sigma_GG' , nominal_sigma ) }
+    
+    with timing ( 'Toys      analysis' , logger = logger )  :        
+        results , stats = Toys.parallel_toys  (
+            pdf         = gen_gauss   ,
+            nToys       = 1000        ,
+            nSplit      = 20          ,
+            data        = [ mass ]    , 
+            gen_config  = { 'nEvents' : 200  , 'sample' : True } ,
+            fit_config  = { 'silent'  : True } ,
+            init_pars   = { 'mean_GG' : nominal_mean , 'sigma_GG' : nominal_sigma } ,
+            more_vars   = more_vars   , 
+            silent      = True        , 
+            progress    = True        )
+        
     ## make histos:
     
     h_mean       = ROOT.TH1F ( hID() , 'mean of Gauss ' , 100 ,  0    ,  0.80 )
@@ -91,9 +104,7 @@ def test_parallel_toys ( ) :
     for r in results [ 'sigma_GG' ] : h_sigma .Fill ( r )
 
     for h in ( h_mean , h_sigma ) :
-        with wait ( 1 ) , use_canvas ( 'test_parallel_toys: %s' % h.GetTitle() ) : 
-            h.draw()
-            logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
+        with use_canvas ( 'test_paralllel_toys  %s' % h.title  , wait = 1 ) : h.draw()
 
 # =============================================================================
 ## Perform toy-study for possible fit bias and correct uncertainty evaluation
@@ -111,32 +122,34 @@ def test_parallel_toys2 ( ) :
 
     logger = getLogger ( 'test_parallel_toys2' ) 
 
-    results , stats = Toys.parallel_toys2 (
-        gen_pdf     = gen_gauss ,
-        fit_pdf     = fit_gauss ,
-        nToys       = 1000      ,
-        nSplit      = 20        ,
-        data        = [ mass ]  , 
-        gen_config  = { 'nEvents' : 200    , 'sample' : True } ,
-        fit_config  = { 'silent'  : True } ,
-        gen_pars    = { 'mean_GG' : 0.4 , 'sigma_GG' : 0.1 } ,
-        fit_pars    = { 'mean_GF' : 0.4 , 'sigma_GF' : 0.1 } ,
-        silent      = True  , 
-        progress    = False )
+    more_vars   = { 'pull:mean_FG'  : pull_var ( 'mean_FG' , nominal_mean  ) ,  
+                    'pull:sigma_FG' : pull_var ( 'sigma_FG', nominal_sigma ) }
     
+    with timing ( 'Toys2     analysis' , logger = logger )  :        
+        results , stats = Toys.parallel_toys2 (
+            gen_pdf     = gen_gauss   ,
+            fit_pdf     = fit_gauss   ,
+            nToys       = 1000        ,
+            nSplit      = 20          ,
+            data        = [ mass ]    , 
+            gen_config  = { 'nEvents' : 200    , 'sample' : True } ,
+            fit_config  = { 'silent'  : True } ,
+            gen_pars    = { 'mean_GG' : nominal_mean , 'sigma_GG' : nominal_sigma  } ,
+            fit_pars    = { 'mean_FG' : nominal_mean , 'sigma_FG' : nominal_sigma } ,
+            more_vars   = more_vars   , 
+            silent      = True        , 
+            progress    = True        )
+        
     ## make histos
         
-    h_mean       = ROOT.TH1F ( hID() , 'mean of Gauss ' , 50 ,  0    ,  0.80 )
-    h_sigma      = ROOT.TH1F ( hID() , 'sigma of Gauss' , 50 ,  0.05 ,  0.15 )
+    h_mean       = ROOT.TH1F ( hID() , 'mean of Gauss ' , 100 ,  0    ,  0.80 )
+    h_sigma      = ROOT.TH1F ( hID() , 'sigma of Gauss' , 100 ,  0.05 ,  0.15 )
 
     for r in results ['mean_FG'  ] : h_mean .Fill ( r ) 
     for r in results ['sigma_FG' ] : h_sigma.Fill ( r )
 
     for h in ( h_mean , h_sigma ) :
-        with wait ( 1 ) , use_canvas ( 'test_parallel_toys2: %s' % h.GetTitle() ) : 
-            h.draw()
-            logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
-
+        with use_canvas ( 'test_parallel_toys2 %s' % h.title  , wait = 1 ) : h.draw()
 
 
 # ==============================================================================
@@ -146,24 +159,27 @@ def test_parallel_jackknife ( ) :
     """
 
     logger = getLogger ( 'test_parallel_jackknife' ) 
-    logger.info ( 'Make (parallel) Jackknife analysis' ) 
 
-    model = Models.Fit1D ( signal     = gen_gauss ,
-                           background = 'flat'    )
-    model.S = 1000
-    model.B = 100
-    
-    data    = model.generate ( 1100 ) 
+    if root_info < (6,18) :
+        logger.warning ( "(parallel) Jackknife is temporarily disabled for this version of ROOT" )
+        return 
 
-    from ostap.fitting.toys import make_jackknife
-    
-    Toys.parallel_jackknife ( pdf        = model ,
-                              nSplit     = 6     , 
-                              data       = data  ,
-                              fit_config = { 'silent' : True } ,                     
-                              progress   = True  ,
-                              silent     = True  ) 
-
+    with timing ( 'Jackknife analysis' , logger = logger )  :        
+        
+        model.S = 1000
+        model.B = 100
+        
+        dataset = model.generate ( 1100 ) 
+        
+        Toys.parallel_jackknife ( pdf        = model   ,
+                                  nSplit     = 6       , 
+                                  data       = dataset ,
+                                  fit_config = { 'silent' : True } ,                     
+                                  progress   = True  ,
+                                  silent     = True  ) 
+        
+        
+        
 # ==============================================================================
 ## Perform toy-study for Bootstrap 
 def test_parallel_bootstrap ( ) :
@@ -171,23 +187,21 @@ def test_parallel_bootstrap ( ) :
     """
 
     logger = getLogger ( 'test_parallel_bootstrap' ) 
-    logger.info ( 'Make (parallel) Bootstrap analysis' ) 
 
-
-    model = Models.Fit1D ( signal     = gen_gauss ,
-                           background = 'flat'    )
-    model.S = 1000
-    model.B = 100
-    
-    data    = model.generate ( 1100 ) 
-
-    Toys.parallel_bootstrap ( pdf        = model ,
-                              size       = 1000  , 
-                              nSplit     = 6     , 
-                              data       = data  ,
-                              fit_config = { 'silent' : True } ,                     
-                              progress   = True  ,
-                              silent     = True  ) 
+    with timing ( 'Bootstrap analysis' , logger = logger )  :
+        
+        model.S = 1000
+        model.B = 100
+        
+        dataset = model.generate ( 1100 ) 
+        
+        Toys.parallel_bootstrap ( pdf        = model   , 
+                                  size       = 1000    , 
+                                  nSplit     = 6       , 
+                                  data       = dataset ,
+                                  fit_config = { 'silent' : True } ,                     
+                                  progress   = True    ,
+                                  silent     = True    ) 
         
 # =============================================================================
 ## Perform toy-study for significance of the signal 
@@ -195,7 +209,7 @@ def test_parallel_bootstrap ( ) :
 #  - fit teach experiment with "signal+background" hypothesis
 #  - store  fit results
 #  - fill distributions for fit results
-def test_parallel_significance_toys ( ) :
+def test_parallel_significance ( ) :
     """Perform toy-study for significance of the signal 
     - generate `nToys` pseudoexperiments using background-only hypothesis 
     - fit each experiment with signal+background hypothesis
@@ -203,60 +217,54 @@ def test_parallel_significance_toys ( ) :
     - fill distributions for fit results
     """
     
-    logger = getLogger ( 'test_parallel_significance_toys' ) 
+    logger = getLogger ( 'test_parallel_significance' ) 
+    logger.info ( 'Make (parallel) Significance analysis' ) 
 
-    ## only background hypothesis
-    bkg_only = Models.Bkg_pdf    ( "BKG" , xvar =  mass , power = 0 , tau = 0      )
+    with timing ( 'Significance analysis' , logger = logger )  :        
 
-    
-    signal   = Models.Gauss_pdf  ( 'S'   , xvar = mass , mean = 0.5 , sigma = 0.1 )
-
-    signal.mean .fix ( 0.4 ) 
-    signal.sigma.fix ( 0.1 ) 
-
-    ## signal + background hypothesis
-    model    = Models.Fit1D      ( signal = signal , background = 1 )
-    model.background.tau.fix ( 0 )
-    
-    results , stats = Toys.parallel_toys2 (
-        gen_pdf     = bkg_only  ,
-        fit_pdf     = model     ,
-        nToys       = 1000      ,
-        nSplit      = 20        , 
-        data        = [ mass ]  , 
-        gen_config  = { 'nEvents'  : 100 , 'sample' : True } ,
-        fit_config  = { 'silent'   : True } ,
-        gen_pars    = { 'tau_BKG'  : 0.   } , ## initial values for generation 
-        fit_pars    = { 'B' : 100         ,
-                        'S' : 10          ,
-                        'phi0_Bkg_S': 0.0 } , ## initial fit values for parameters 
-        silent      = True  , 
-        progress    = False )
-
-    for p in stats :
-        logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
-
+        ## only background hypothesis
+        bkg_only = Models.Bkg_pdf    ( "BKG" , xvar =  mass , power = 0 , tau = 0      )
+               
+        signal   = Models.Gauss_pdf  ( 'S'   , xvar = mass , mean = 0.5 , sigma = 0.1 )
+        
+        signal.mean .fix ( 0.4 ) 
+        signal.sigma.fix ( 0.1 ) 
+        
+        ## signal + background hypothesis
+        model    = Models.Fit1D      ( signal = signal , background = 1 )
+        model.background.tau.fix ( 0 )
+        
+        results , stats = Toys.parallel_toys2 (
+            gen_pdf     = bkg_only  ,
+            fit_pdf     = model     ,
+            nToys       = 1000      ,
+            nSplit      = 20        , 
+            data        = [ mass ]  , 
+            gen_config  = { 'nEvents'   : 100 , 'sample' : True } ,
+            fit_config  = { 'silent'    : True } ,
+            gen_pars    = { 'tau_BKG'   : 0.   } , ## initial values for generation 
+            fit_pars    = { 'B'         : 100    ,
+                            'S'         : 10     ,
+                            'phi0_Bkg_S': 0.0 }  , ## initial fit values for parameters 
+            silent      = True  , 
+            progress    = True  )
+        
     h_S      = ROOT.TH1F ( hID() , '#S' , 60 ,  0 , 60 )    
     for r in results ['S'  ] : h_S .Fill ( r )
     
     for h in ( h_S ,  ) :
-        with wait ( 1 ) , use_canvas ( 'test_parallel_significance_toys: %s' % h.GetTitle() ) :             
-            h.draw()
-            logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
-
-
-
+        with use_canvas ( 'test_parallel_significance  %s' % h.title  , wait = 1 ) : h.draw()
     
 # =============================================================================
 if '__main__' == __name__ :
 
 
-    test_parallel_toys  () 
-    test_parallel_toys2 ()
-    test_parallel_jackknife ()
-    test_parallel_bootstrap ()    
-    test_parallel_significance_toys ( ) 
-
+    test_parallel_toys         ( ) 
+    test_parallel_toys2        ( )
+    test_parallel_significance ( ) 
+    
+    test_parallel_jackknife    ( )
+    test_parallel_bootstrap    ( )    
     
 
 # =============================================================================

@@ -23,9 +23,9 @@ __all__     = (
     "print_bootstrap"  , ## print bootstrap statistics 
     )
 # =============================================================================
-from   builtins              import range
-from  ostap.core.ostap_types import string_types, integer_types  
-from   ostap.core.core       import VE, SE 
+from   builtins               import range
+from   ostap.core.ostap_types import string_types, integer_types  
+from   ostap.core.core        import VE, SE 
 import ROOT
 # =============================================================================
 # logging 
@@ -59,6 +59,17 @@ def vars_transform ( vars ) :
     return result
 
 # =============================================================================
+## helper class to get serializeable accessor to pull-variable 
+class PoolVar(object) :
+    def __init__ ( self , name , value  ) :
+        self.__name   = name 
+        self.__value  = float ( value ) * 1.0 
+    def __call__ ( self , r , *args ) :
+        v = getattr ( r , self.__name ) * 1 
+        return ( v.value () - self.__value ) / v.error()
+# =============================================================================
+def pull_var ( name , value ) : return PoolVar ( name , value )
+# =============================================================================
 ## Prepare statistics from results of toys/jackknifes/boostrap studies
 #  @code
 #  results    = ...
@@ -79,7 +90,7 @@ def make_stats ( results , fits = {} , covs = {} , accept = SE () ) :
             pars = results [ par ] 
             for v in pars : stats [ par ] += float ( v )
             
-    if 2 <= accept.nEntries() and 0 <= accept.eff() <= 1  :
+    if isinstance ( accept , VE ) and 2 <= accept.nEntries() and 0 <= accept.eff() <= 1  :
         stats ['- Accept '         ] = accept 
     
     for k in fits :
@@ -101,9 +112,9 @@ def print_stats ( stats , ntoys = '' , logger = logger ) :
     def make_row ( c ) :
         n      = "{:^11}".format ( c.nEntries() )
         mean   = c.mean ()
-        mean   = "%+13.6g +/- %-13.6g" % ( mean.value() , mean.error() )
+        mean   = "%+13.6g +/- %-13.6g" % ( mean.value() , mean.error () )
         rms    = "%13.6g"             % c.rms ()
-        minmax = "%+13.6g / %-+13.6g"  % ( c.min() , c.max () ) 
+        minmax = "%+13.6g / %-+13.6g"  % ( c.min()      , c.max      () ) 
         return p , n , mean , rms  , minmax 
         
     for p in sorted ( stats )  :
@@ -206,8 +217,8 @@ def print_jackknife  ( fitresult          ,
                 "%+13.6g +/- %-13.6g" % ( theta      . value () , theta      .error () ) , 
                 "%+13.6g +/- %-13.6g" % ( jackknife  . value () , jackknife  .error () ) , 
                 "%+13.6g +/- %-13.6g" % ( theta_jack . value () , theta_jack .error () ) ,  
-                '%+6.2f'             % ( bias / theta.error() * 100 ) , 
-                '%+6.2f'             % ( scale * 100 - 100 )          )
+                '%+6.2f'              % ( bias / theta.error() * 100 ) , 
+                '%+6.2f'              % ( scale * 100 - 100 )          )
         
         table.append ( row )
 
@@ -501,7 +512,6 @@ def make_toys ( pdf                 ,
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
-
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
@@ -583,7 +593,7 @@ def make_toys ( pdf                 ,
                 
             ## 4.2 save results 
             for v in more_vars :
-                func  = more_vars[v] 
+                func  = more_vars [ v ] 
                 results [ v ] .append ( func ( r , pdf ) )
 
             results [ '#'     ] .append ( len ( dataset ) )

@@ -105,17 +105,15 @@ def test_toys_simfit_1 () :
     model2.S = NS2
     model2.B = NB2 
 
-    with use_canvas ( 'test_toys_simfit_1' ) : 
-        # =========================================================================
-        ## fit 1 
-        with wait ( 1 ) :
-            r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
+    # =========================================================================
+    ## fit 1 
+    with use_canvas ( 'test_toys_simfit_1/1' ) : 
+        r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
         
-        ## fit 2
-        with wait ( 1 ) :
-            r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
-        # =========================================================================
-    
+    ## fit 2
+    with use_canvas ( 'test_toys_simfit_1/2' ) : 
+        r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
+        
     ## combine data    
     sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
     
@@ -133,10 +131,10 @@ def test_toys_simfit_1 () :
     r , f = model_sim.fitTo ( dataset , silent = True )
     r , f = model_sim.fitTo ( dataset , silent = True )
 
-    
-    with use_canvas ( 'test_toys_simfit_1' ) : 
-        with wait ( 1 ) : fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
-        with wait ( 1 ) : fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
+    with use_canvas ( 'test_toys_simfit_1/A' ) : 
+        fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
+    with use_canvas ( 'test_toys_simfit_1/B' ) :         
+        fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
         
     logger.info ( 'Fit  results are: %s ' % r.table ( prefix = "# " ) ) 
 

@@ -76,7 +76,8 @@ __all__     = (
     ##
     'crange'             , ## helper loop over values between xmin and xmax using Chebyshev nodes 
     ##
-    'split_range'        , ## helper generator to splti large range into smaller chunks
+    'split_range'        , ## helper generator to split large range into smaller chunks
+    'split_n_range'      , ## helper generator to split large range into smaller chunks of approimately same size 
     ##
     'chunked'            , ## break *iterable* into chunks of length *n*:
     'divide'             , ## divide the elements from *iterable* into *n* parts
@@ -1012,6 +1013,32 @@ def split_range ( low , high , num ) :
             
         yield low , high
 
+# =============================================================================
+## split range into num smaller chunks of approximate size 
+#  @code 
+#  for i in split_n_range ( 0 , 10000 , 200 ) :
+#     for j in range (*i) :
+#          ... 
+#  @endcode 
+def split_n_range ( low , high , num ) :
+    """Split range into `num` smaller chunks of approximate size 
+    >>> for i in split_n_range ( 0 , 10000 , 200 ) :
+    >>>     for j in range (*i) :
+    >>>         ... 
+    """
+    if   high <= low or num < 1            : yield low , low
+    elif 1 == num                          : yield low , high
+    elif low < high  and high <= num + low : yield low , high
+    else : 
+        
+        nn   = high - low
+        newn = nn // num
+        for i in range ( 0 , num - 1 ) :
+            nl = i  * newn
+            nh = nl + newn
+            yield low + nl , low + nh 
+        yield low + num * newn - newn , high
+        
 # =============================================================================
 if (3,6) <= sys.version_info :
     

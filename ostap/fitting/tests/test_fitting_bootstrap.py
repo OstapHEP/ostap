@@ -62,27 +62,30 @@ def test_bootstrap  ( ) :
     ## prefit the whole dataset
     with use_canvas ( title = 'test_booststrap' ) : 
         res , f = model.fitTo ( dataset , draw = True , nbins = 100 , silent = True , refit = 5 )
+        res , f = model.fitTo ( dataset , draw = True , nbins = 100 , silent = True , refit = 5 )
 
     more_vars   = { 'vm' : lambda  r, *_ : ( r.mean_G - 0.4 ) / 0.1      ,
                     'vs' : lambda  r, *_ :   r.sigma_G        / 0.1 - 1  ,
                     'vr' : lambda  r, *_ :   r.sigma_G * 1    / r.mean_G } 
                     
 
-    ## start Jackknife process 
-    results , stats = Toys.make_bootstrap (
-        pdf         = model    ,
-        size        = 400      , 
-        data        = dataset  , 
-        fit_config  = { 'silent' : True , 'refit'   : 5   } ,
-        fit_pars    = { 'mean_G' : 0.4  , 'sigma_G' : 0.1 } ,
-        more_vars   = more_vars , 
-        silent      = True ,
-        progress    = True ,
-        frequency   = 100  )
-
+    with timing ( 'Boostrap analysis' , logger = logger ) : 
+        results , stats = Toys.make_bootstrap (
+            pdf         = model    ,
+            size        = 400      , 
+            data        = dataset  , 
+            fit_config  = { 'silent' : True , 'refit'   : 5   } ,
+            fit_pars    = { 'mean_G' : 0.4  , 'sigma_G' : 0.1 } ,
+            more_vars   = more_vars , 
+            silent      = True ,
+            progress    = True ,
+            frequency   = 100  )
+        
     ## fit the whole sample 
     with use_canvas ( title = 'test_booststrap' ) : 
         res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 )
+        res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 )
+        
     ## print fit results 
     logger.info  ('Fit results:\n%s' % res.table ( title     = 'Fit results' ,
                                                    prefix    = '# '          ,
@@ -90,7 +93,7 @@ def test_bootstrap  ( ) :
     ## print the final table
     Toys.print_bootstrap ( res   ,
                            stats ,
-                           morevars = dict ( (k,more_vars[k](res,model)) for k in more_vars ),
+                           morevars = dict ( ( k , more_vars [ k ] ( res , model ) ) for k in more_vars ),
                            logger   = logger )
 
     time.sleep ( 2 ) 

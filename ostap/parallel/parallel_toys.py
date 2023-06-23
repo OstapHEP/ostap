@@ -300,7 +300,7 @@ class  JackknifeTask(TheTask_) :
                    progress    = True   ,
                    frequency   = 100    ) :
         
-        TheTask_.__init__ ( self ,
+        TheTask_.__init__ ( self                    ,
                             data       = data       ,
                             fit_config = fit_config ,
                             more_vars  = more_vars  ,
@@ -350,34 +350,10 @@ class  JackknifeTask(TheTask_) :
 #  @see ostap.fitting.toys.make_bootstrap
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2023-06-22 
-class BootstrapTask(TheTask_) :
+class BootstrapTask(JackknifeTask) :
     """The simple task object for parallel Jackknife 
     - see ostap.fitting.toys.make_jackknife
     """
-    def __init__ ( self                 ,
-                   pdf                  , 
-                   data                 ,
-                   fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
-                   fit_pars    = {}     , ## fit-parameters to reset/use
-                   more_vars   = {}     , ## additional  results to be calculated
-                   fit_fun     = None   , ## fit       function ( pdf , dataset , **fit_config ) 
-                   accept_fun  = None   , ## accept    function ( fit-result, pdf, dataset     )
-                   silent      = True   ,
-                   progress    = True   ,
-                   frequency   = 100    ) :
-        
-        TheTask_.__init__ ( self ,
-                            data       = data       ,
-                            fit_config = fit_config ,
-                            more_vars  = more_vars  ,
-                            fit_fun    = fit_fun    ,
-                            accept_fun = accept_fun ,
-                            silent     = silent     ,
-                            progress   = progress   ,
-                            frequency  = frequency  )
-        self.pdf      = pdf
-        self.fit_pars = fit_pars 
-        
     ## the actual processing 
     def process ( self , jobid , size  ) :
 
@@ -593,24 +569,18 @@ def parallel_toys ( pdf                       ,
     toy_init_pars = Toys.vars_transform ( init_pars )
     
     # ========================================================================
-
-    if nToys <= nSplit :
-        nToy   = 1
-        nSplit = nToys
-        nRest  = 0     
-    else :
-        nToy , nRest = divmod ( nToys , nSplit )
-
+    
     ## create the task
     task  = ToysTask    ( progress = progress and not silent , **config ) 
 
     ## create the manager 
     wmgr  = WorkManager ( silent = silent and not progress , progres = progress or not silent , **kwargs )
-
-    ## 
-    params  = nSplit * [ nToy ]
-    if nRest : params.append ( nRest )
-
+    
+    ## split arguments
+    from ostap.utils.utils import split_n_range 
+    params = tuple ( i[1]-i[0] for i in split_n_range ( 0 , nToys , nSplit ) )
+    
+    ## start parallel processing! 
     wmgr.process( task , params )
 
     results , stats = task.results () 
@@ -813,12 +783,6 @@ def parallel_toys2 (
     
     # ========================================================================
 
-    if nToys <= nSplit :
-        nToy   = 1
-        nSplit = nToys
-        nRest  = 0     
-    else :
-        nToy , nRest = divmod ( nToys , nSplit )
 
     ## create the task        
     task  = ToysTask2   ( progress = progress and not silent , **config )
@@ -827,8 +791,8 @@ def parallel_toys2 (
     wmgr   = WorkManager ( silent = silent and not progress , progress = progress or not silent , **kwargs )
 
     ## perform the actual splitting 
-    params = nSplit * [ nToy ]
-    if nRest : params.append ( nRest )
+    from ostap.utils.utils import split_n_range 
+    params = tuple ( i[1]-i[0] for i in split_n_range ( 0 , nToys , nSplit ) )
 
     ## start parallel processing! 
     wmgr.process( task , params  )
@@ -907,13 +871,9 @@ def parallel_jackknife ( pdf                  ,
     ## create work manager 
     wmgr  = WorkManager ( silent =  silent and not progress , progress = progress or not silent , **kwargs )
 
-    ## split it! 
-    N       = len ( data )
-    n1 , n2 = divmod ( N , nSplit )
-
-    ## actual split!
-    params = [ ( n1 * i , n1 * i + n1  ) for i in range ( nSplit ) ]
-    if n2 : params.append (  ( n1 * nSplit , N ) ) 
+    ## perform the actual splitting 
+    from ostap.utils.utils import split_n_range 
+    params = tuple ( i for i in split_n_range ( 0 , len ( data ) , nSplit ) )
 
     ## start parallel processing! 
     wmgr.process ( task , params )
@@ -1018,13 +978,10 @@ def parallel_bootstrap ( pdf                  ,
     ## create work manager 
     wmgr  = WorkManager ( silent = silent and not progress , progress = progress or not silent , **kwargs )
     
-    ## split it! 
-    n1 , n2 = divmod ( size  , nSplit )
-    
-    ## actual split! 
-    params = nSplit * [ n1] 
-    if n2 : params.append ( n2 )
-    
+    ## perform the actual splitting 
+    from ostap.utils.utils import split_n_range 
+    params = tuple ( i[1]-i[0] for i in split_n_range ( 0 , size , nSplit ) )
+
     ## start parallel processing! 
     wmgr.process( task , params  )
 
