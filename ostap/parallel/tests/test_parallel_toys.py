@@ -15,6 +15,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 from   builtins                     import range
+from   ostap.core.meta_info         import root_info
 import ostap.fitting.roofit 
 import ostap.fitting.models         as     Models 
 from   ostap.utils.timing           import timing 
@@ -33,16 +34,14 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-try :
-    if sys.version_info < ( 3, 0 ) :
-        from ostap.core.meta_info import root_info
-        if ( 6 , 18 ) <= root_info < ( 6 , 20 ) : 
-            import dill
-            if dill.__version__ < '0.3' :
-                os.environ['OSTAP_PARALLEL'] = 'GAUDIMP'
-                logger.warning ( "Redefined os.environ['OSTAP_PARALLEL']='%s'" % os.environ.get('OSTAP_PARALLEL','' ) ) 
-except ImportError :
-    pass
+if sys.version_info < ( 3, 0 ) and ( 6 , 18 ) <= root_info < ( 6 , 20 ) :
+    try : 
+        import dill
+        if dill.__version__ < '0.3' :
+            os.environ['OSTAP_PARALLEL'] = 'GAUDIMP'
+            logger.warning ( "Redefined os.environ['OSTAP_PARALLEL']='%s'" % os.environ.get('OSTAP_PARALLEL','' ) ) 
+    except ImportError :
+        pass
 
 import ostap.parallel.parallel_toys as     Toys
 
