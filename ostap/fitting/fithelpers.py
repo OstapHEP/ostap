@@ -2012,7 +2012,7 @@ class FitHelper(VarMaker) :
         fa = isinstance ( a , ROOT.RooAbsReal )
         fb = isinstance ( b , ROOT.RooAbsReal )
 
-        if   fa and fv :
+        if   fa and fb :
             
             var = self.vars_ratio ( a , b )        
             return self.soft_constraint ( var , value , name , title )
@@ -2048,7 +2048,7 @@ class FitHelper(VarMaker) :
         fa = isinstance ( a , ROOT.RooAbsReal )
         fb = isinstance ( b , ROOT.RooAbsReal )
 
-        if   fa and fv :
+        if   fa and fb :
             
             var = self.vars_multiply ( a , b )        
             return self.soft_constraint ( var , value , name , title )
@@ -2103,7 +2103,7 @@ class FitHelper(VarMaker) :
         fa = isinstance ( a , ROOT.RooAbsReal )
         fb = isinstance ( b , ROOT.RooAbsReal )
 
-        if   fa and fv :
+        if   fa and fb :
             
             var = self.vars_add ( a , b )        
             return self.soft_constraint ( var , value , name , title )
@@ -2139,7 +2139,7 @@ class FitHelper(VarMaker) :
         fa = isinstance ( a , ROOT.RooAbsReal )
         fb = isinstance ( b , ROOT.RooAbsReal )
 
-        if   fa and fv :
+        if   fa and fb :
             
             var = self.vars_subtract ( a , b )        
             return self.soft_constraint ( var , value , name , title )
