@@ -495,22 +495,9 @@ if __name__ == '__main__' :
     if 'latex'    in __all__ : 
         logger.info ( 'The table is \n%s' % latex  ( table_data ) )  
     if 'tabulate' in __all__ :
-        for fmt in ( "plain"         , "simple"         , "github"          , 
-                     "simple_grid"   , "rounded_grid"   , "heavy_grid"      , 
-                     "mixed_grid"    , "double_grid"    , "fancy_grid"      , 
-                     "outline"       , "simple_outline" , "rounded_outline" , 
-                     "heavy_outline" , "mixed_outline"  , "double_outline"  , 
-                     "fancy_outline" , "pipe"           , "orgtbl"          , 
-                     "asciidoc"      , "jira"           , "presto"          ,
-                     "pretty"        , "psql"           , "rst"             , 
-                     "mediawiki"     , "moinmoin"       , "youtrack"        ,
-                     "html"          , "unsafehtml"     , "latex"           ,
-                     "latex_raw"     , "latex_booktabs" , "latex_longtable" , 
-                     "textile"       , "tsv"            , "grid"            ) : 
-
+        for fmt in _tabulate.tabulate_formats : 
             table = tabulate ( table_data , tablefmt = fmt )            
             logger.info ( 'The tabulate format="%s":\n%s' % ( fmt , table ) )
-            
             
 # =============================================================================
 ##                                                                      The END 
