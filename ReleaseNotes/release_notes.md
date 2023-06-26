@@ -10,6 +10,7 @@
    1. add methods `dot` and `weight_sum` to `SVectorWithError`
    1. add parallel versions for jackknife and bootstrapping 
    1. improvements for parallel versions for jackknife and bootstrapping 
+   1. make use of [tabulate](https://github.com/astanin/python-tabulate) package mainly to produce LaTex tables)
 
 ## Backward incompatible: 
 
@@ -24,7 +25,7 @@
 ## New features:
 
   1. add new test for exteding drawing 
-  1. add new method `valid_formula` that is usefuel for creation of formulas from expressions
+  1. add new method `valid_formula` that is usefule for creation of formulas from expressions
   1. add helper context manager `random_seed`
   1. add new methods for `RooDataSet` : `unique_entries`, `duplicates` and `make_unique` to deal with "duplicated" entries (multiple count) 
 

@@ -127,6 +127,16 @@ if ( NOT ${PY_terminaltables_FOUND} )
 message ( "----> (warning) (optional) terminaltables is NOT found!" )
 endif()
 
+find_python_module ( tabulate QUIET )
+if ( NOT ${PY_tabulate_FOUND} )
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install tabulate ${PIP_ARGS})
+endif()
+
+find_python_module ( tabulate QUIET )
+if ( NOT ${PY_tabulate_FOUND} )
+message ( "----> (warning) (optional)       tabulate is NOT found!" )
+endif()
+
 find_python_module ( more_itertools QUIET )
 if ( NOT ${PY_more_itertools_FOUND} )
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install more_itertools ${PIP_ARGS})

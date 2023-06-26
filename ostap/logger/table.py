@@ -420,6 +420,46 @@ def align_column ( table , index , align = 'left') :
         new_table.append ( row )
             
     return [ tuple ( row ) for row in new_table ] 
+
+
+# =============================================================================
+try :
+    # =========================================================================
+    import tabulate as _tabulate 
+    # =========================================================================
+    ## Simple wrapper for <code>tabulate.tabulate</code> function
+    #  @see https://github.com/astanin/python-tabulate
+    #  @code
+    #  rows = .... ## tanle rows
+    #  table = tabulate ( rows , ... )
+    #  @endcode
+    def tabulate  ( rows ,  **kwargs ) :
+        """ Simple wrapper for `tabulate.tabulate` function
+        - see https://github.com/astanin/python-tabulate
+        >>> rows = .... ## tanle rows
+        >>> table = tabulate ( rows , ... )
+        """
+        return _tabulate.tabulate ( tabular_data = rows , **kwargs )    
+    # =========================================================================
+    ## Convert table into latex <code>tabular</code> environment    
+    #  @see https://github.com/astanin/python-tabulate
+    #  @code
+    #  rows = .... ## table rows
+    #  table = latex ( rows , ... )
+    #  @endcode
+    def latex ( rows ,  **kwargs ) :
+        """ Simple wrapper for `tabulate.tabulate` function
+        - see https://github.com/astanin/python-tabulate
+        >>> rows = .... ## tanle rows
+        >>> table = latex ( rows , ... )
+        """
+        tablefmt = kwargs.get ( 'tablefmt' , 'latex_raw')
+        return tabulate ( rows , tablefmt = tablefmt , **kwargs ) 
+
+    __all__ = __all__ + ( 'tabulate' , 'latex' )
+    
+except ImportError :
+    pass 
     
 # =============================================================================
 if __name__ == '__main__' :
@@ -451,7 +491,27 @@ if __name__ == '__main__' :
     logger.info ( 'The table with prefix is \n%s' %
                   the_table ( table_data , 'Title' , prefix = '# ' ) ) 
     
-    
+
+    if 'latex'    in __all__ : 
+        logger.info ( 'The table is \n%s' % latex  ( table_data ) )  
+    if 'tabulate' in __all__ :
+        for fmt in ( "plain"         , "simple"         , "github"          , 
+                     "simple_grid"   , "rounded_grid"   , "heavy_grid"      , 
+                     "mixed_grid"    , "double_grid"    , "fancy_grid"      , 
+                     "outline"       , "simple_outline" , "rounded_outline" , 
+                     "heavy_outline" , "mixed_outline"  , "double_outline"  , 
+                     "fancy_outline" , "pipe"           , "orgtbl"          , 
+                     "asciidoc"      , "jira"           , "presto"          ,
+                     "pretty"        , "psql"           , "rst"             , 
+                     "mediawiki"     , "moinmoin"       , "youtrack"        ,
+                     "html"          , "unsafehtml"     , "latex"           ,
+                     "latex_raw"     , "latex_booktabs" , "latex_longtable" , 
+                     "textile"       , "tsv"            , "grid"            ) : 
+
+            table = tabulate ( table_data , tablefmt = fmt )            
+            logger.info ( 'The tabulate format="%s":\n%s' % ( fmt , table ) )
+            
+            
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
