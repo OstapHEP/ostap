@@ -1454,8 +1454,7 @@ namespace Ostap
       const ROOT::Math::SVector<SCALAR,N>& weights )
     {
       double isum { 0.0 } ;
-      return weighted_sum_simple  ( values , weights ) / 
-        std::accumulate ( weights.begin() , weights.end() , isum ) ;
+      return dot ( values , weights ) / std::accumulate ( weights.begin() , weights.end() , isum ) ;
     }
     // ========================================================================
     // helper functions to allow proper operations in PyROOT
