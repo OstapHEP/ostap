@@ -10,7 +10,7 @@
    1. add methods `dot` and `weight_sum` to `SVectorWithError`
    1. add parallel versions for jackknife and bootstrapping 
    1. improvements for parallel versions for jackknife and bootstrapping 
-   1. make use of [tabulate](https://github.com/astanin/python-tabulate) package mainly to produce LaTex tables)
+   1. make use of [tabulate](https://github.com/astanin/python-tabulate) package - mainly to produce LaTex tables
 
 ## Backward incompatible: 
 
