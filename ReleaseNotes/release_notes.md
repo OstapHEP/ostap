@@ -4,13 +4,15 @@
    1. slight improvement for `combine.py` : add helper function `covMatrix` to create 100% correlated or uncorrelated covariance matrices
    1. slight improvement for `test_stats_blue.py` 
    1. add `parallel_add_reweighting` to speedup adding the reweighting information to `TTree/TChain`
-   1. add parallel verison of `sumVar` method 
+   1. add parallel version of `sumVar` method 
    1. re-enable TMVA plots 
    1. make parallel fill of datasets more flexible 
    1. add methods `dot` and `weight_sum` to `SVectorWithError`
    1. add parallel versions for jackknife and bootstrapping 
    1. improvements for parallel versions for jackknife and bootstrapping 
    1. make use of [tabulate](https://github.com/astanin/python-tabulate) package - mainly to produce LaTex tables
+   1. re-enabvle plots for TMVA 
+   1. add `plot` argument to `use_canvas` context manager to print the plot at `__exit__`
 
 ## Backward incompatible: 
 

@@ -160,10 +160,34 @@ def _axis_iter_reversed_ ( a ) :
         yield i
         i-=1
 
+# =============================================================================
+## get new "scaled" axis 
+#  @code
+#  axis   = ...
+#  scaled = axis.scale ( 5 ) 
+#  @endcode
+def _axis_scale_ ( axis , scale ) :
+    """ Get new `scaled' axis 
+    >>> axis   = ...
+    >>> scaled = axis.scale ( 5 ) 
+    """
+    assert isinstance ( scale , num_types ) and 0 < scale , \
+           'Invalid "scale" argument %s' % scale
+    bins = axis.GetXbins ()
+    ## non-uniform bins are here 
+    if bins and 2 <= len ( bins ) :
+        newbins = array.array ('d' , ( v * scale for v in bins ) )
+        return ROOT.TAxis ( len ( newbins ) - 1 , newbins )
+    
+    return ROOT.TAxis ( axis.GetNbins ()         ,
+                        axis.GetXmin  () * scale ,
+                        axis.GetXmax  () * scale )
+
 
 ROOT.TAxis . __iter__     = _axis_iter_1_
 ROOT.TAxis . __reversed__ = _axis_iter_reversed_
 ROOT.TAxis . __contains__ = lambda s , i : 1 <= abs(i) <= s.GetNbins()
+ROOT.TAxis .   scale      = _axis_scale_
         
 # =============================================================================
 ## get item for the 1-D histogram 
@@ -951,7 +975,6 @@ ROOT.TH2F . findBin  = _h2_find_
 ROOT.TH2D . findBin  = _h2_find_
 ROOT.TH3F . findBin  = _h3_find_
 ROOT.TH3D . findBin  = _h3_find_
-
 
 # =============================================================================
 ## get mean for 2D-histogram 
@@ -7806,8 +7829,84 @@ else :
 ROOT.TH1.nEntries = _h1_nEntries_
 
 
-    
-    
+# =============================================================================
+## Scale axis (change units) for 1D histogram
+#  @code
+#  histo1 = ...
+#  histo2 = histo1.scale_axis ( 1000 ) 
+#  @endcode 
+def _h1_scale_axis_ ( h1 , scale ) :
+    """Scale axis (change units) for 1D histogram
+    >>> histo1 = ...
+    >>> histo2 = histo1.scale_axis ( 1000  ) 
+    """
+    xaxis   = h2.GetXaxis() 
+    newx    = xaxis . scale ( scale )
+    ## create new histogram 
+    result  = h1_axis ( newx , title = h1.title , double = type ( h1 ) )
+    ## copy content of the histogram
+    for i in h1 : result [ i ] = h1 [ i ]
+    ##
+    return result
+
+# =============================================================================
+## Scale axes (change units) for 2D histogram
+#  @code
+#  histo1 = ...
+#  histo2 = histo1.scale_axes ( 1000 , 5000 ) 
+#  @endcode 
+def _h2_scale_axes_ ( h2 , scalex , scaley = 1.0 ) :
+    """Scale axes (change units) for 2D histogram
+    >>> histo1 = ...
+    >>> histo2 = histo1.scale_axes ( 1000  , 5000 ) 
+    """
+    xaxis   = h2.GetXaxis() 
+    newx    = xaxis . scale ( scalex )
+    yaxis   = h2.GetYaxis() 
+    newy    = yaxis . scale ( scaley )
+    ## create new histogram 
+    result  = h2_axes ( newx , newy  , title = h2.title , double = type ( h2 ) )
+    ## copy content of the histogram
+    for i in h2 : result  [ i ] = h2 [ i ]
+    ##
+    return result 
+
+# =============================================================================
+## Scale axes (change units) for 3D histogram
+#  @code
+#  histo1 = ...
+#  histo2 = histo1.scale_axes ( 1 , 100 , 3 ) 
+#  @endcode 
+def _h3_scale_axes_ ( h3 , scalex , scaley = 1.0 , scalez = 1.0 ) :
+    """Scale axes (change units) for 3D histogram
+    >>> histo1 = ...
+    >>> histo2 = histo1.scale_axes ( 1000  , 5000 , 1000 ) 
+    """
+    xaxis   = h3.GetXaxis() 
+    newx    = xaxis . scale ( scalex )
+    yaxis   = h3.GetYaxis() 
+    newy    = yaxis . scale ( scaley )
+    zaxis   = h3.GetZaxis() 
+    newz    = zaxis . scale ( scalez )
+    ## create new histogram 
+    result  = h3_axes ( newx , newy  , newz , title = h3.title , double = type ( h3 ) )
+    ## copy content of the histogram
+    for i in h3 : result [ i ] = h3 [ i ]
+    ##
+    return result 
+
+ROOT.TH1F. scale_axis = _h1_scale_axis_
+ROOT.TH1D. scale_axis = _h1_scale_axis_
+
+ROOT.TH2F. scale_axes = _h2_scale_axes_
+ROOT.TH2D. scale_axes = _h2_scale_axes_
+
+ROOT.TH3F. scale_axes = _h3_scale_axes_
+ROOT.TH3D. scale_axes = _h3_scale_axes_
+
+
+
+
 
 
 # =============================================================================
@@ -7846,6 +7945,7 @@ _new_methods_   = (
     ROOT.TAxis . __iter__     ,
     ROOT.TAxis . __reversed__ ,
     ROOT.TAxis . __contains__ ,
+    ROOT.TAxis .   scale      ,
     #
     ROOT.TH1   . same_dims    , 
     ROOT.TH1   . same_bins    , 
@@ -8396,6 +8496,14 @@ _new_methods_   = (
     ROOT.TH1F.the_moment     , 
     ROOT.TH1D.the_moment     , 
     #
+    ROOT.TH1F. scale_axis    , 
+    ROOT.TH1D. scale_axis    , 
+    #
+    ROOT.TH2F. scale_axes    ,
+    ROOT.TH2D. scale_axes    , 
+    #
+    ROOT.TH3F. scale_axes    , 
+    ROOT.TH3D. scale_axes    , 
     )
 
 # =============================================================================

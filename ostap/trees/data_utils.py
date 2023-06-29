@@ -702,7 +702,8 @@ class Files(object):
                 
         copied = tuple ( copied )
         if not self.silent :
-            logger.info ( "#%d files are copied to '%s'" %  ( len ( copied ) , nd ) ) 
+            logger.info ( "#%d files are copied to '%s'" %  ( len ( copied ) , nd ) )
+            
         return self.clone ( files = copied ) 
     
 # =============================================================================

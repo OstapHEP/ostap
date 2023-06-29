@@ -929,7 +929,8 @@ class Canvas(KeepCanvas) :
                    title  = ''            ,
                    width  = canvas_width  ,   ## canvas width
                    height = canvas_height ,   ## canvas height 
-                   wait   = 0             ,   ## pause before exit 
+                   wait   = 0             ,   ## pause before exit
+                   plot   = ''            ,   ## produce the plot at __exit__
                    **kwargs               ) : ## Pad configuration
         
         self.__name   = name
@@ -937,7 +938,14 @@ class Canvas(KeepCanvas) :
         self.__width  = width
         self.__height = height
         self.__kwargs = kwargs
-        self.__cnv    = None 
+        self.__cnv    = None
+
+        if plot :
+            plot = plot.strip() 
+            while '  ' in plot : plot = plot.replace ( '  ' , ' ' )                
+            plot = plot.strip().replace ( ' ' , '_' )
+            
+        self.__plot   = plot            
         ## 
         KeepCanvas.__init__ ( self , wait ) 
         
@@ -977,6 +985,10 @@ class Canvas(KeepCanvas) :
     
     ## context manager: exit 
     def __exit__ ( self , *_ ) :
+
+        if self.__cnv and self.__plot :
+            self.__cnv >> self.__plot 
+                    
         KeepCanvas.__exit__ ( self , *_ ) 
         self.__cnv = None 
     

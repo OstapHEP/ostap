@@ -1393,8 +1393,8 @@ class Trainer(object):
     def makePlots ( self , name = None , output = None , ) :
         """Make selected standard TMVA plots"""
 
-        logger.warning ( "makePlots methdod is disabled, use standalone function 'make_Plots' instead" )
-        return 
+        ## logger.warning ( "makePlots methdod is disabled, use standalone function 'make_Plots' instead" )
+        ## return 
 
         name   = name   if name   else self.name
         output = output if output else self.output_file
