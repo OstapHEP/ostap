@@ -1392,9 +1392,9 @@ class Trainer(object):
     ## make selected standard TMVA plots 
     def makePlots ( self , name = None , output = None , ) :
         """Make selected standard TMVA plots"""
-
-        ## logger.warning ( "makePlots methdod is disabled, use standalone function 'make_Plots' instead" )
-        ## return 
+        
+        logger.warning ( "makePlots methdod is disabled, use standalone function 'make_Plots' instead" )
+        return 
 
         name   = name   if name   else self.name
         output = output if output else self.output_file
@@ -1426,6 +1426,7 @@ class Trainer(object):
             ( ROOT.TMVA.mvas           ,  ( name , output , 0 ) ) ,
             ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
             ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
+            ( ROOT.TMVA.mvas           ,  ( name , output , 3 ) ) ,
             ##
             ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) ,
             ##
