@@ -1713,7 +1713,9 @@ def _add_response_tree ( tree , verbose , *args ) :
     from   ostap.io.root_file        import REOPEN
     from   ostap.utils.progress_conf import progress_conf
 
-    tdir  = tree.GetDirectory()    
+    tdir     = tree.GetDirectory()
+    branches = tree.branches () if verbose else set() 
+
     with ROOTCWD () , REOPEN ( tdir )  as tfile  : 
         
         tdir.cd()
@@ -1726,10 +1728,25 @@ def _add_response_tree ( tree , verbose , *args ) :
             
         if tfile.IsWritable() :
             tfile.Write( "" , ROOT.TFile.kOverwrite )
+
+
+            status = sc
+            newt   = tdir.Get ( tree.GetName() )
+
+            if verbose :
+                new_branches = set ( newt.branches () ) | set ( newt.leaves() )
+                new_branches = sorted ( new_branches - branches )
+                if new_branches : 
+                    n = len ( new_branches )  
+                    if 1 == n  : title = 'Added %s branch to TChain'   % n
+                    else       : title = 'Added %s branches to TChain' % n
+                    table = newt.table ( new_branches , title = title , prefix = '# ' )
+                    logger.info ( '%s:\n%s' % ( title , table ) ) 
+                                               
             return sc , tdir.Get ( tree.GetName() )    ## RETURN
         
         else : logger.error ( "Can't write TTree back to the file" )
-        
+
         return sc , tree                               ## RETURN
 
 # =============================================================================
@@ -1739,8 +1756,9 @@ def _add_response_chain ( chain , verbose , *args ) :
     
     import ostap.trees.trees
     
-    files   = chain.files()
-    cname   = chain.GetName() 
+    files    = chain.files    ()
+    cname    = chain.GetName  () 
+    branches = chain.branches () if verbose else set() 
     
     if not files :
         logger.warning ( 'addChoppingResponse: empty chain (no files)' )
@@ -1751,7 +1769,6 @@ def _add_response_chain ( chain , verbose , *args ) :
     tree_verbose  = verbose and      len ( files ) < 5
     chain_verbose = verbose and 5 <= len ( files )
  
-    verbose = 1 < len ( files )
     from ostap.utils.progress_bar import progress_bar
     for f in progress_bar ( files , len ( files ) , silent = not chain_verbose ) :
 
@@ -1764,7 +1781,17 @@ def _add_response_chain ( chain , verbose , *args ) :
             
     newc = ROOT.TChain ( cname )
     for f in  files : newc.Add ( f  )
-        
+
+    if verbose :
+        new_branches = set ( newc.branches () ) | set ( newc.leaves() )
+        new_branches = sorted ( new_branches - branches )
+        if new_branches : 
+            n = len ( new_branches )  
+            if 1 == n  : title = 'Added %s branch to TChain'   % n
+            else       : title = 'Added %s branches to TChain' % n
+            table = newc.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+   
     return status, newc
   
 
@@ -1881,7 +1908,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     else       : sc = Ostap.TMVA.addChoppingResponse ( dataset ,                    *args )
 
     if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
-        
+
     return dataset 
 
 # =============================================================================

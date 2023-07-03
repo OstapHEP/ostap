@@ -118,14 +118,6 @@ class ReduceTree(CleanUp):
         elif selection :
             raise TypeError('Invalid  selection type %s/%s' %  ( selection , type ( selection ) ) )
         
-        if not silent and output and os.path.exists ( output ) and os.path.isfile ( output ) :
-            logger.warning ("Existing file %s will be overwritten!" % output  )
-            
-        if not output : 
-            output = self.tempfile ( prefix = 'ostap-frame-' , suffix = '.root' )
-            ## logger.debug ( 'ReduceTree: output file is %s' % output )  
-            if not tmp_keep : self.trash.add ( output  )
-
         if selections and addselvars :
             bvars     = chain.the_variables ( selections )
             save_vars = list  ( bvars ) + [ v for v in save_vars if not v in bvars ]
@@ -144,6 +136,9 @@ class ReduceTree(CleanUp):
         nb_ = len ( chain.branches () )
         ne_ = len ( chain             )
         
+        if not silent and output and os.path.exists ( output ) and os.path.isfile ( output ) :
+            logger.warning ("Existing file %s will be overwritten!" % output  )
+            
         ## chain name:
         if not name :
             name = chain.GetName()  ## produces ROOT error
@@ -153,6 +148,10 @@ class ReduceTree(CleanUp):
             _ , _ , name = name.rpartition ( '/' )                
             
         self.__name = name
+
+        if not output : 
+            output = self.tempfile ( prefix = 'ostap-frame-' , suffix = '.root' )
+            if not tmp_keep : self.trash.add ( output  )
 
         if not save_vars : 
             snapshot = frame.Snapshot ( name , output )            

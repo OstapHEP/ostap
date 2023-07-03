@@ -20,7 +20,8 @@ __all__     = (
     "addTMVAResponse" , ## add TMVA response to looong ROOT.TChain 
     )
 # =============================================================================
-from   ostap.parallel.parallel import Task, WorkManager
+from   ostap.parallel.parallel         import Task, WorkManager
+import ostap.parallel.parallel_statvar
 import ROOT
 # =============================================================================
 # logging 

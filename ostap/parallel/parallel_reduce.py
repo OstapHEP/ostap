@@ -118,7 +118,8 @@ def reduce ( chain               ,
              output     = ''     ,
              name       = ''     , 
              addselvars = False  ,
-             silent     = False  , **kwargs ) :
+             silent     = True   ,
+             progress   = True   , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>>chain    = ...
     >>> selector =  ...
@@ -127,7 +128,6 @@ def reduce ( chain               ,
 
     from ostap.trees.trees        import Chain
     from ostap.frames.tree_reduce import ReduceTree
-
     
     if isinstance ( chain , ROOT.TChain ) and 1 >= len ( chain.files() ) :
         return chain.reduce ( selection  = selection  ,
@@ -151,7 +151,7 @@ def reduce ( chain               ,
                         addselvars = addselvars ,
                         name       = name       )
     
-    wmgr  = WorkManager  ( silent = silent , **kwargs )
+    wmgr  = WorkManager  ( silent = silent , prorgess = progress and not silent , **kwargs )
     trees = ch.split     ( max_files = 1  )
     wmgr.process         ( task , trees   )
 
@@ -169,7 +169,7 @@ def reduce ( chain               ,
         
         result = Chain ( reduced.chain ) 
         
-    if not silent :
+    if progress or not silent :
         from ostap.frames.frames import report_print_table 
         title = 'Tree -> Frame -> Tree filter/transformation'
         logger.info ( 'Reduce tree:\n%s' % report_print_table ( table , title , '# ' ) )

@@ -178,17 +178,17 @@ class Task(object) :
     
     @property
     def append_to ( self ) :
-        """``append_to'' : a dictionary of environment variables to be appended"""
+        """`append_to' : a dictionary of environment variables to be appended"""
         return self.__append_to
 
     @property
     def prepend_to ( self ) :
-        """``prepend_to'' : a dictionary of environment variables to be appended"""
+        """`prepend_to' : a dictionary of environment variables to be appended"""
         return self.__prepend_to
     
     @property
     def dot_in_path ( self ) :
-        """``dot in path'' : has a dot in sys.path?"""
+        """`dot in path' : has a dot in sys.path?"""
         return  self.__dot_in_path
     
     @dot_in_path.setter 
@@ -197,12 +197,12 @@ class Task(object) :
 
     @property
     def batch_set ( self ) :
-        """``batch_set'' : is ``batch'' property activated?"""
+        """`batch_set' : is `batch' property activated?"""
         return self.__batch_set
     
     @property
     def batch ( self ) :
-        """``batch'' : use Batch mode for processing?"""
+        """`batch' : use Batch mode for processing?"""
         return self.__batch
 
     @batch.setter
@@ -212,7 +212,7 @@ class Task(object) :
 
     @property
     def build ( self ) :
-        """``build'': use this as a build directory"""
+        """`build': use this as a build directory"""
         return self.__build
     @build.setter
     def build ( self , value ) :
@@ -221,12 +221,12 @@ class Task(object) :
         
     @property
     def build_set ( self ) :
-        """``build_set'': is build directory defined?"""
+        """`build_set': is build directory defined?"""
         return self.__build_set
 
     @property
     def cleanup ( self ) :
-        """``cleanup'' : cleanup the temporary directories"""
+        """`cleanup' : cleanup the temporary directories"""
         return self.__cleanup
     @cleanup.setter
     def cleanup ( self , value ) :
@@ -812,14 +812,14 @@ class TaskManager(object) :
     
     __metaclass__ = abc.ABCMeta
 
-    def __init__  ( self            ,
-                    ncpus           ,
-                    silent  = False ,
-                    progress = True ) :
+    def __init__  ( self             ,
+                    ncpus            ,
+                    silent   = False ,
+                    progress = True  ) :
         
         self.__ncpus    = ncpus        
         self.__silent   = silent
-        self.__progress = True if progress else False
+        self.__progress = True if ( progress or not silent ) else False
         
     # =========================================================================
     ## process Task or callable object :

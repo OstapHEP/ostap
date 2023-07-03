@@ -63,9 +63,6 @@ if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel_pathos
 else                      : logger = getLogger ( __name__                         ) 
 # =============================================================================
 
-
-
-
 # =============================================================================
 ## helper function to access the underlyng <code>pp.Server</code> object
 #  @attention It should not be abused! 
@@ -75,9 +72,6 @@ def get_pps ( pool ) :
     """
     import pathos.parallel
     return pathos.parallel.__STATE.get ( pool._id , None )
-
-
-
 
 # =============================================================================
 ## @class WorkManager

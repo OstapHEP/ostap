@@ -1392,6 +1392,7 @@ class Trainer(object):
     ## make selected standard TMVA plots 
     def makePlots ( self , name = None , output = None , ) :
         """Make selected standard TMVA plots"""
+
         
         logger.warning ( "makePlots methdod is disabled, use standalone function 'make_Plots' instead" )
         return 
@@ -1428,8 +1429,6 @@ class Trainer(object):
             ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
             ( ROOT.TMVA.mvas           ,  ( name , output , 3 ) ) ,
             ##
-            ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) ) ,
-            ##
             ( ROOT.TMVA.efficiencies   ,  ( name , output , 0 ) ) ,
             ( ROOT.TMVA.efficiencies   ,  ( name , output , 1 ) ) ,
             ( ROOT.TMVA.efficiencies   ,  ( name , output , 2 ) ) ,
@@ -1438,6 +1437,9 @@ class Trainer(object):
             ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
             ## 
             ]
+
+        if  ( 6 , 24 ) <= root_info :
+            plots.append ( ( ROOT.TMVA.mvaeffs        ,  ( name , output ) ) ) 
 
         if hasattr ( ROOT.TMVA , 'network'                ) :
             plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
@@ -1503,8 +1505,8 @@ def make_Plots ( name , output , show_plots = True ) :
         ( ROOT.TMVA.correlations   ,  ( name , output     ) ) ,
         ##
         ( ROOT.TMVA.mvas           ,  ( name , output , 0 ) ) ,
-        ## ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
-        ## ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
+        ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
+        ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
         ( ROOT.TMVA.mvas           ,  ( name , output , 3 ) ) ,
         ##
         ( ROOT.TMVA.efficiencies   ,  ( name , output , 0 ) ) ,

@@ -20,7 +20,8 @@ __all__     = (
     "addChoppingResponse" , ## add TMVA/Chopping response to looong ROOT.TChain 
     )
 # =============================================================================
-from   ostap.parallel.parallel import Task, WorkManager
+from   ostap.parallel.parallel         import Task, WorkManager
+import ostap.parallel.parallel_statvar
 import ROOT
 # =============================================================================
 # logging 
@@ -177,16 +178,16 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
     ch       = Chain ( chain )
     branches = set   ( chain.branches() )
 
-    task  = AddChopping ( chopper       = chopper       ,
-                          N             = N             ,
-                          inputs        = inputs        , 
-                          weights_files = weights_files ,
-                          category_name = category_name , 
-                          prefix        = prefix        ,
-                          suffix        = suffix        ,
-                          options       = options       , 
-                          verbose       = verbose       ,
-                          aux           = aux           )
+    task     = AddChopping ( chopper       = chopper       ,
+                             N             = N             ,
+                             inputs        = inputs        , 
+                             weights_files = weights_files ,
+                             category_name = category_name , 
+                             prefix        = prefix        ,
+                             suffix        = suffix        ,
+                             options       = options       , 
+                             verbose       = verbose       ,
+                             aux           = aux           )
     
     wmgr  = WorkManager ( silent = False , **kwargs )
     trees = ch.split    ( max_files = 1  )

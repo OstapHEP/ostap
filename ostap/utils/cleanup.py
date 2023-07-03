@@ -21,7 +21,7 @@ __all__     = (
     'TempFile' , ## Simple placeholder for temporary file  
     )
 # =============================================================================
-import os, tempfile, datetime  
+import os, tempfile, datetime, weakref   
 from   sys import version_info as python_version 
 # =============================================================================
 from   ostap.core.ostap_types import string_types
@@ -51,7 +51,7 @@ if not base_tmp_dir :
     if base_tmp_dir and not os.path.exists ( base_tmp_dir ) :
         base_tmp_dir = make_dir  ( base_tmp_dir ) 
     if base_tmp_dir and not writeable ( base_tmp_dir ) :
-        logger.warning ('Directory ``%s'' is not writeable!' % base_tmp_dir )
+        logger.warning ("Directory `%s' is not writeable!" % base_tmp_dir )
         base_tmp_dir = None
         
 ## 2) get from configuration file 
@@ -151,7 +151,9 @@ class  CleanUp(object) :
         if  python_version.major > 2 : obj = super(CleanUp, cls).__new__( cls )
         else                         : obj = super(CleanUp, cls).__new__( cls , *args , **kwargs )
         ## define the local trash 
-        obj.__trash = set() 
+        obj.__trash   = set()
+        if (3,4) <= python_version : obj.__cleaner = weakref.finalize ( obj , obj._clean_trash_ , obj.__trash )
+        else                       : obj.__cleaner = None 
         return obj
  
     @property
@@ -192,15 +194,22 @@ class  CleanUp(object) :
 
     @property
     def trash ( self ) :
-        """``trash'' : local trash (files, directory), to be removed at deletion of the instance"""
+        """`trash' : local trash (files, directory), to be removed at deletion of the instance"""
         return self.__trash
     
+    @classmethod
+    def _clean_trash_ ( cls , trash ) :
+        """Helper class method to clean the local trash"""
+        while trash : cls.remove ( trash.pop () )
+        
     ## delete all local trash (files, directory)
     def __del__ ( self ) :
         """Delete all local trash (files, directory)
         """
-        while self.__trash : self.remove ( self.__trash.pop () )
-            
+        if not self.__trash : return
+        if ( not self.__cleaner ) or self.__cleaner.detach () :
+            self._clean_trash_ ( self.__trash  )             
+
     @staticmethod
     def tempdir ( suffix = '' , prefix = 'ostap-tmp-dir-' , date = True ) :
         """Get the name of the newly created temporary directory.
@@ -224,7 +233,6 @@ class  CleanUp(object) :
             logger.verbose ( 'temporary directory requested %s' % tmp   )
             return tmp        
 
-    
     @staticmethod
     def get_temp_file ( suffix = '' , prefix = 'ostap-tmp-' , dir = None , date = True ) :
         """Generate the name for the temporary file.
@@ -343,11 +351,11 @@ class CleanUpPID(object) :
             
     def __exit__ ( self , *_ ) :
         if self.__piddir :
-            CleanUp.remove_dir (  self.__piddir )
+            CleanUp.remove_dir ( self.__piddir )
             
     @property
     def piddir ( self ) :
-        """``piddir'' : PID-dependend temproary directory"""
+        """`piddir' : PID-dependent temporary directory"""
         return self.__piddir
     
 # =============================================================================
@@ -372,7 +380,6 @@ def _cleanup_ () :
     while tmp_dirs :
         f = tmp_dirs.pop()
         CleanUp.remove_dir ( f )
-
 
     ## 3.remove base directories
     global base_tmp_pid_dirs    
@@ -433,6 +440,7 @@ def _cleanup_ () :
             title = 'Not removed directories/files'
             table = T.table ( rows , title = title  , prefix = "# " , alignment = 'rl' )
             logger.warning ( '%s\n%s' % ( title , table ) ) 
+
         
 # =============================================================================
 ## @class TempFile
@@ -440,16 +448,21 @@ def _cleanup_ () :
 class TempFile(object) :
     """Base class-placeholder for the temporary  file 
     """
-    
     def __init__ ( self , suffix = '' , prefix = '' , dir = None ) :
         
-        self.__filename = CleanUp.tempfile (  suffix = suffix ,
-                                              prefix = prefix ,
-                                              dir    = dir    )
-        
+        self.__filename  = CleanUp.tempfile ( suffix = suffix ,
+                                             prefix = prefix ,
+                                             dir    = dir    )
+        if (3,4) <= python_version :  
+            self.__finalizer = weakref.finalize ( self                   ,
+                                                  self._remove_the_file_ ,
+                                                  self.__filename        )
+        else :
+            self.__finalizer = None   
+            
     @property
     def filename ( self ) :
-        """``filename'': the actual name of temporary file"""
+        """`filename': the actual name of temporary file"""
         return self.__filename
 
     ## context  manager enter: no action 
@@ -461,20 +474,24 @@ class TempFile(object) :
     def __exit__  ( self , *_ ) :
         """Context manager  exit: delete the file
         """
-        if self.__filename and os.path.exists ( self.__filename ) :
-            CleanUp.remove_file ( self.__filename )
-
+        self._remove_the_file_ ( self.__filename ) 
+        self.__filename = ''
+        
     ## delete the file 
     def __del__  ( self ) :
         """Delete the temporary file
-        """        
-        if self.__filename and os.path.exists ( self.__filename ) :
-            CleanUp.remove_file ( self.__filename )
-
+        """
+        if not self.__filename : return 
+        if ( not self.__finalizer ) or self.__finalizer.detach () :
+            self._remove_the_file_ ( self.__filename )             
+            self.__filename = ''
+            
+    @classmethod
+    def _remove_the_file_ ( cls , name ) :
+        if name and os.path.exists ( name ) :
+            CleanUp.remove_file ( name )
 
     
-    
-
 # =============================================================================
 if '__main__' == __name__ :
     

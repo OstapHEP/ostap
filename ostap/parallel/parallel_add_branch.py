@@ -16,7 +16,8 @@ __all__     = (
     'add_new_branch'  , ## add new branch to loooong TChain in parallel
     ) 
 # =============================================================================
-from   ostap.parallel.parallel import Task, WorkManager
+from   ostap.parallel.parallel         import Task, WorkManager
+import ostap.parallel.parallel_statvar
 import ROOT
 # =============================================================================
 # logging 
