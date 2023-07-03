@@ -1735,7 +1735,7 @@ def _add_response_tree ( tree , verbose , *args ) :
 
             if verbose :
                 new_branches = set ( newt.branches () ) | set ( newt.leaves() )
-                new_branches = sorted ( new_branches - branches )
+                new_branches = sorted ( new_branches - set ( branches ) )
                 if new_branches : 
                     n = len ( new_branches )  
                     if 1 == n  : title = 'Added %s branch to TChain'   % n
@@ -1784,7 +1784,7 @@ def _add_response_chain ( chain , verbose , *args ) :
 
     if verbose :
         new_branches = set ( newc.branches () ) | set ( newc.leaves() )
-        new_branches = sorted ( new_branches - branches )
+        new_branches = sorted ( new_branches - set ( branches ) ) 
         if new_branches : 
             n = len ( new_branches )  
             if 1 == n  : title = 'Added %s branch to TChain'   % n
