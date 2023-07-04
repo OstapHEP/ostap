@@ -461,13 +461,13 @@ class APDF1 ( Components ) :
         for_refit = False
         if 0 != st   :
             for_refit = 'status' 
-            self.warning ( 'fitTo: Fit status is %s ' % fit_status ( st ) )
+            if not silent : self.warning ( 'fitTo: Fit status is %s ' % fit_status ( st ) )
         #
         qual = result.covQual()
         cov2_good = ( qual == 3 ) or ( dataset.isWeighted() and qual == -1 )
         if not cov2_good :
             for_refit = 'covariance'
-            self.warning ( 'fitTo: covQual    is %s ' % cov_qual ( qual ) )
+            if not silent : self.warning ( 'fitTo: covQual    is %s ' % cov_qual ( qual ) )
 
         #
         ## check the integrals (if/when possible)
@@ -508,7 +508,7 @@ class APDF1 ( Components ) :
         ## call for refit if needed
         #
         if for_refit and 0 < refit :
-            self.info ( 'fitTo: call for refit:  %s/%s'  % ( for_refit , refit ) )
+            if not silent : self.info ( 'fitTo: call for refit:  %s/%s'  % ( for_refit , refit ) )
             refit -= 1 
             return  self.fitTo ( dataset         ,
                                  draw   = draw   ,
@@ -519,10 +519,10 @@ class APDF1 ( Components ) :
 
         if   result and 0 == result.status() and not silent :
             self.info      ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
-        elif result and ( not cov2_good ) and not silent : 
+        elif result and ( not cov2_good )    and not silent : 
             self.warning   ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
         elif result and not silent :
-            self.warning  ( "Fit result is\n%s" % result.table  ( prefix = "# " ) )
+            self.warning   ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
 
         frame = None
         
@@ -1521,14 +1521,14 @@ class APDF1 ( Components ) :
                 if 0 < error :
 
                     with SETVAR ( var ) : 
-                        var.setVal ( maxv + error ) 
+                        var.setVal ( max ( minv , maxv + error ) )
                         val_maxvp = nll.getVal()
 
                     with SETVAR ( var ) :  
-                        var.setVal ( maxv - error )
+                        var.setVal ( max ( minv , maxv - error ) ) 
                         val_maxvm = nll.getVal()
                         
-                    dnll = VE ( dnll , 0.25 * (val_maxvp - val_maxvm )**2 )
+                    dnll = VE ( dnll , 0.25 * (val_maxvp - val_maxvm ) ** 2 )
                     
             ## apply scale factor
             if 1 != sf :  self.info ('Scale factor of %.4g is applied' % sf )
@@ -1599,7 +1599,8 @@ class APDF1 ( Components ) :
 
         del pars
 
-        self.info ( "Wilks: fixed variables: %s" % [ f.GetName()  for f in fixed] )
+        if fixed and not silent :
+            self.info ( "Wilks2: fixed variables: %s" % [ f.GetName()  for f in fixed] )
 
         ## unpack the range 
         minv , maxv = range        
@@ -1638,10 +1639,10 @@ class APDF1 ( Components ) :
 
                 if 0 < error :
                     
-                    var.setVal ( maxv + error )
+                    var.setVal ( max ( minv , maxv + error ) )
                     ve1 = pLL.getVal()
                     
-                    var.setVal ( maxv - error )
+                    var.setVal ( max ( minv , maxv - error ) )
                     ve2 = pLL.getVal()
 
                     nll_max = VE ( nll_max , 0.25 * ( ve1 - ve2 ) ** 2 ) 
