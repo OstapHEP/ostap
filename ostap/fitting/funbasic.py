@@ -475,8 +475,8 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                 table = ostap.logger.table.table ( table , title , prefix = "# " )
                 
             self.info ( "%s parameters loaded:\n%s" % ( npars , table ) ) 
-            
-            not_used = list ( not_used )
+
+            not_used = [ n for n in not_used if not n.endswith ( '_centralvalue' ) ]
             not_used.sort() 
             if not_used :
                 self.warning ("Following keys are unused %s" % not_used ) 

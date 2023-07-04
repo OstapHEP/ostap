@@ -465,7 +465,8 @@ class APDF1 ( Components ) :
         #
         qual = result.covQual()
         cov2_good = ( qual == 3 ) or ( dataset.isWeighted() and qual == -1 )
-        if not cov2_good : 
+        if not cov2_good :
+            for_refit = 'covariance'
             self.warning ( 'fitTo: covQual    is %s ' % cov_qual ( qual ) )
 
         #
@@ -506,10 +507,9 @@ class APDF1 ( Components ) :
         #
         ## call for refit if needed
         #
-        if refit and for_refit :
-            self.info ( 'fitTo: call for refit:  %s/%s'  % ( for_refit , refit ) ) 
-            if   is_integer ( refit ) : refit -= 1
-            else                      : refit  = False
+        if for_refit and 0 < refit :
+            self.info ( 'fitTo: call for refit:  %s/%s'  % ( for_refit , refit ) )
+            refit -= 1 
             return  self.fitTo ( dataset         ,
                                  draw   = draw   ,
                                  nbins  = nbins  ,
