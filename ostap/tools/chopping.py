@@ -1724,30 +1724,33 @@ def _add_response_tree ( tree , verbose , *args ) :
         if verbose : sc = Ostap.TMVA.addChoppingResponse ( tree , progress_conf () , *args  )
         else       : sc = Ostap.TMVA.addChoppingResponse ( tree ,                    *args  )
         
-        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
-            
+        if sc.isFailure() :
+            logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
+        
         if tfile.IsWritable() :
             tfile.Write( "" , ROOT.TFile.kOverwrite )
+        else :
+            logger.error ( "Can't write TTree back to the file" )
 
+            
+    return sc , tdir.Get ( tree.GetName() )    ## RETURN
 
-            status = sc
-            newt   = tdir.Get ( tree.GetName() )
-
-            if verbose :
-                new_branches = set ( newt.branches () ) | set ( newt.leaves() )
-                new_branches = sorted ( new_branches - set ( branches ) )
-                if new_branches : 
-                    n = len ( new_branches )  
-                    if 1 == n  : title = 'Added %s branch to TChain'   % n
-                    else       : title = 'Added %s branches to TChain' % n
-                    table = newt.table ( new_branches , title = title , prefix = '# ' )
-                    logger.info ( '%s:\n%s' % ( title , table ) ) 
-                                               
-            return sc , tdir.Get ( tree.GetName() )    ## RETURN
+## status = sc
+## newt   = tdir.Get ( tree.GetName() )
+## if verbose :
+##     new_branches = set ( newt.branches () ) | set ( newt.leaves() )
+##     new_branches = sorted ( new_branches - set ( branches ) )
+##     if new_branches : 
+##         n = len ( new_branches )  
+##         if 1 == n  : title = 'Added %s branch to TChain'   % n
+##         else       : title = 'Added %s branches to TChain' % n
+##         table = newt.table ( new_branches , title = title , prefix = '# ' )
+##         logger.info ( '%s:\n%s' % ( title , table ) ) 
         
-        else : logger.error ( "Can't write TTree back to the file" )
+##         return sc , tree                               ## RETURN
+    
+    
 
-        return sc , tree                               ## RETURN
 
 # =============================================================================
 def _add_response_chain ( chain , verbose , *args ) :
