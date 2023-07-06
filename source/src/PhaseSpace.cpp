@@ -1334,10 +1334,10 @@ double Ostap::Math::PhaseSpace23L::ps23L ( const double x ) const
   //
   if ( lowEdge() >= x || highEdge() <= x ) { return  0 ; }
   //
-  // represent 3-body phase space as extention of 2-body phase space
+  // represent 3-body phase space as extension of the 2-body phase space
   double ps =  x / M_PI *
-    Ostap::Math::PhaseSpace2::phasespace ( x    , m1 () , m2 () , m_l  ) *
-    Ostap::Math::PhaseSpace2::phasespace ( M () ,    x  , m3 () , m_L  ) ;
+    Ostap::Math::PhaseSpace2::phasespace ( x    , m1 () , m2 () , m_l ) *
+    Ostap::Math::PhaseSpace2::phasespace ( M () ,    x  , m3 () , m_L ) ;
   //
   return 0 < m_norm ? ps * m_norm : ps ;
 }

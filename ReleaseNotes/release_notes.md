@@ -15,8 +15,7 @@
    1. add `plot` argument to `use_canvas` context manager to print the plot at `__exit__`
    1. fix few typos in documentation 
    1. soem adjustment for `CleanUp` machinery 
-   1. impromebt for the outptu for `add_chopping_response` 
-
+   1. improvement for the output for `add_chopping_response` 
 
 ## Backward incompatible: 
 

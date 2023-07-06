@@ -190,7 +190,7 @@ class PEAKMEAN(PDF1) :
         if  self.check_mean and self.xminmax () and not isinstance ( mean , ROOT.RooAbsReal ) :      
             mn , mx = self.xminmax()
             dm      =  mx - mn
-            self.__limits_mean  = mn - 0.2 * dm , mx + 0.2 * dm
+            self.__limits_mean  = mn - 0.35 * dm , mx + 0.35 * dm
 
         ## mean-value
         m_name  = mean_name  if mean_name  else "mean_%s"  % name
