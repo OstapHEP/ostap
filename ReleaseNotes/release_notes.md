@@ -16,7 +16,8 @@
    1. fix few typos in documentation 
    1. soem adjustment for `CleanUp` machinery 
    1. improvement for the output for `add_chopping_response` 
-
+   1. do not add `sumw2`/`asymttotic` flags for fitting of `ROOT.RooDataHist` 
+ 
 ## Backward incompatible: 
 
 ## Bug fixes:

@@ -706,7 +706,9 @@ class FitHelper(VarMaker) :
                           'sumw2error'       ,
                           'sumw2errors'      ) and isinstance ( a , bool ) :
                 
-                if   a and dataset and     dataset.isWeighted()           : pass 
+                if   dataset and isinstance ( dataset , ROOT.RooDataHist ) :
+                    self.warning ('parse_args: no need in SumW2-flag for RooDataHist')
+                elif a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
                     self.warning ('parse_args: SumW2-flag is True  for non-weighted dataset')
                 elif       dataset and not dataset.isWeighted() and not a : pass 
@@ -721,7 +723,9 @@ class FitHelper(VarMaker) :
                           'asymptoticerror'  ,
                           'asymptoticerrors' ) and isinstance ( a , bool ) and (6,19) <= root_info :
                 
-                if   a and dataset and     dataset.isWeighted()           : pass 
+                if   dataset and isinstance ( dataset , ROOT.RooDataHist ) : pass
+                    self.warning ('parse_args: no need in AsymptoticErrors-flag for RooDataHist')
+                elif a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
                     self.warning ('parse_args: AsymptoticError-flag is True  for non-weighted dataset')
                 elif       dataset and not dataset.isWeighted() and not a : pass 
@@ -929,7 +933,7 @@ class FitHelper(VarMaker) :
                 
         # =============================================================
         ## check options for the weighted datasets 
-        if dataset :
+        if dataset and not isinstance ( dataset , ROOT.RooDataHist ) :
             
             weighted = dataset.isWeighted ()            
             sw2      = check_arg  ( 'SumW2Error'      , *_args  )

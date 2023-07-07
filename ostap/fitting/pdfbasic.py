@@ -402,7 +402,7 @@ class APDF1 ( Components ) :
             pe = check_arg ('PrintEvalErrors' , *opts )
             if not pe : opts = opts + ( ROOT.RooFit.PrintEvalErrors ( 0     ) , )
                 
-        weighted = dataset.isWeighted() if dataset else False
+        weighted = dataset.isWeighted() and not isinstance ( dataset , ROOT.RooDataHist ) if dataset else False
         if weighted :
             sw2 = check_arg ( 'SumW2Error'      , *opts )
             aer = check_arg ( 'AsymptoticError' , *opts )
@@ -556,20 +556,19 @@ class APDF1 ( Components ) :
         """
         
         NARGS = 8
-        
+
         assert all ( isinstance ( o , ROOT.RooCmdArg ) for o in options  ), \
                "fit_to: invalid argument types: %s" % list ( options  ) 
 
         ##  for "small" number of arguments use the standard function 
-        if len ( options ) <= NARGS :
+        if len ( options ) <= NARGS and root_info < ( 6, 29 ) :
             return model.fitTo ( data , *options )
         
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
-
-        return model.fitTo ( data , cmd  )
-
-
+        return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
+    
+    
     # ================================================================================
     ## helper method to draw set of components 
     def _draw ( self , what , frame , options , style = None , args = () ) :
