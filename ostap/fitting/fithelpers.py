@@ -723,7 +723,7 @@ class FitHelper(VarMaker) :
                           'asymptoticerror'  ,
                           'asymptoticerrors' ) and isinstance ( a , bool ) and (6,19) <= root_info :
                 
-                if   dataset and isinstance ( dataset , ROOT.RooDataHist ) : pass
+                if   dataset and isinstance ( dataset , ROOT.RooDataHist ) :
                     self.warning ('parse_args: no need in AsymptoticErrors-flag for RooDataHist')
                 elif a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
