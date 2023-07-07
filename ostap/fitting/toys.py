@@ -47,7 +47,7 @@ def vars_transform ( vars ) :
     
     result = {}
     if isinstance   ( vars , ROOT.RooFitResult ) :
-        rs = vars.dct_parsms ()
+        rs = vars.dct_params ()
         for p in  rs  : result [ p ] = float ( rs   [ p ] )
     elif isinstance ( vars , dictlike_types ) :
         for p in vars : result [ p ] = float ( vars [ p ] ) 

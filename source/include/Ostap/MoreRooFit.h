@@ -3023,7 +3023,14 @@ namespace Ostap
       RooRealProxy  m_func {} ;
       // ======================================================================
     }; //                            The end of clas Ostap::MoreRooFit::WrapPdf 
-    // ========================================================================    
+    // ========================================================================
+    /// helper function to call <code>RooAbsPdf::fitTo ( data , opts )</code>
+    RooFitResult* 
+    fitTo
+    ( RooAbsPdf&           model , 
+      RooAbsData&          data  , 
+      const RooLinkedList& opts  ) ;
+    // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit  
   // ==========================================================================
 } //                                                 The end of namespace Ostap
