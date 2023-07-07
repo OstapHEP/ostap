@@ -4251,6 +4251,53 @@ def _smear_ ( h1 , sigma , addsigmas = 5 , silent = True ) :
 ROOT.TH1F. smear = _smear_
 ROOT.TH1D. smear = _smear_
 
+# =============================================================================
+### Get the integral with error
+def _h1_integral_err_ ( h1 ) :
+    """Get the integral with error"""
+    
+    xaxis = h1.GetXaxis() 
+    err   = ctypes.c_double ( 0.0 ) 
+    value = h1.IntegralAndError ( xaxis.GetFirst() , xaxis.GetLast() , err )
+    error = err.value 
+    return VE ( value , error ** 2 )
+
+# =============================================================================
+### Get the integral with error
+def _h2_integral_err_ ( h2 ) :
+    """Get the integral with error"""
+    
+    xaxis = h2.GetXaxis() 
+    yaxis = h2.GetYaxis() 
+    err   = ctypes.c_double ( 0.0 ) 
+    value = h2.IntegralAndError ( xaxis.GetFirst() , xaxis.GetLast() , 
+                                  yaxis.GetFirst() , yaxis.GetLast() , err )
+    error = err.value 
+    return VE ( value , error ** 2 )
+
+# =============================================================================
+### Get the integral with error
+def _h3_integral_err_ ( h3 ) :
+    """Get the integral with error"""
+    
+    xaxis = h3.GetXaxis() 
+    yaxis = h3.GetYaxis() 
+    zaxis = h3.GetYaxis() 
+    err   = ctypes.c_double ( 0.0 ) 
+    value = h23.IntegralAndError ( xaxis.GetFirst() , xaxis.GetLast() , 
+                                   yaxis.GetFirst() , yaxis.GetLast() ,
+                                   zaxis.GetFirst() , zaxis.GetLast() , err )
+    error = err.value 
+    return VE ( value , error ** 2 ) 
+
+ROOT.TH1F.the_integral = _h1_integral_err_
+ROOT.TH1D.the_integral = _h1_integral_err_
+
+ROOT.TH2F.the_integral = _h2_integral_err_
+ROOT.TH2D.the_integral = _h2_integral_err_
+
+ROOT.TH3F.the_integral = _h3_integral_err_
+ROOT.TH3D.the_integral = _h3_integral_err_
 
 # =============================================================================
 ## make transformation of histogram content 
@@ -8503,7 +8550,16 @@ _new_methods_   = (
     ROOT.TH2D. scale_axes    , 
     #
     ROOT.TH3F. scale_axes    , 
-    ROOT.TH3D. scale_axes    , 
+    ROOT.TH3D. scale_axes    ,
+    #
+    ROOT.TH1F. the_integral  , 
+    ROOT.TH1D. the_integral  ,
+    #
+    ROOT.TH2F. the_integral  , 
+    ROOT.TH2D. the_integral  ,
+    #
+    ROOT.TH3F. the_integral  , 
+    ROOT.TH3D. the_integral  , 
     )
 
 # =============================================================================

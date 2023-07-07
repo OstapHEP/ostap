@@ -19,7 +19,7 @@ __date__    = "2011-06-07"
 __all__     = (
     'setStorage' , ## define the default storage for  RooDataStore 
     'useStorage' , ## define (as context) the default storage for  RooDataStore
-    'ds_draw'    , ## draw varibales from RooDataSet 
+    'ds_draw'    , ## draw variables from RooDataSet 
     'ds_project' , ## project variables from RooDataSet to histogram
     'ds_combine' , ## combine two datasets with weights 
     )

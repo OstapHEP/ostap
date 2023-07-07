@@ -24,8 +24,8 @@ __all__     = (
     )
 # =============================================================================
 from   builtins               import range
-from   ostap.core.ostap_types import string_types, integer_types  
-from   ostap.core.core        import VE, SE 
+from   ostap.core.ostap_types import string_types, integer_types
+from   ostap.core.core        import VE, SE
 import ROOT
 # =============================================================================
 # logging 
@@ -517,6 +517,7 @@ def make_toys ( pdf                 ,
     import ostap.fitting.variables
     import ostap.fitting.roofitresult
     import ostap.fitting.pdfbasic 
+    import ostap.histos.histos   
 
     params = pdf.params ()
     varset = ROOT.RooArgSet() 
@@ -567,6 +568,9 @@ def make_toys ( pdf                 ,
         ## dataset = pdf.generate ( varset = varset , **gen_config )  
         dataset = gen_fun ( pdf , varset = varset , **gen_config )  
         if not silent : logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
+
+        ## histogram? 
+        histo = dataset if isinstance ( dataset , ROOT.TH1 ) else None 
         
         ## 3. fit it!
         r = fit_fun ( pdf , dataset , **fitcnf ) 
@@ -596,10 +600,15 @@ def make_toys ( pdf                 ,
                 func  = more_vars [ v ] 
                 results [ v ] .append ( func ( r , pdf ) )
 
-            results [ '#'     ] .append ( len ( dataset ) )
-            results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
-            
-        dataset.clear()
+            if histo : 
+                results [ '#'     ] .append ( histo.GetEntries   () )
+                results [ '#sumw' ] .append ( histo.the_integral () )
+            else :
+                results [ '#'     ] .append ( len ( dataset ) )
+                results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) )
+                
+
+        if isinstance ( dataset , ROOT.RooDataSet ) :  dataset.clear()
         del dataset
         del r
 
@@ -768,6 +777,7 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
     import ostap.fitting.variables
     import ostap.fitting.roofitresult
     import ostap.fitting.pdfbasic 
+    import ostap.histos.histos   
 
     gparams = gen_pdf.params ()
     varset  = ROOT.RooArgSet () 
@@ -817,6 +827,9 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
         ## 2. generate dataset!
         dataset =  gen_fun ( gen_pdf , varset = varset , **gen_config ) 
         if not silent : logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
+        
+        ## histogram? 
+        histo = dataset if isinstance ( dataset , ROOT.TH1 ) else None 
 
         ## 3. reset parameters of fit_pdf
         fit_pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
@@ -848,11 +861,15 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
             for v in more_vars :
                 func  = more_vars[v] 
                 results [ v ] .append ( func ( r , fit_pdf ) )
-                
-            results [ '#'     ] .append ( len ( dataset ) )
-            results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
 
-        dataset.clear()
+            if histo :
+                results [ '#'     ] .append ( histo.GetEntries   () )
+                results [ '#sumw' ] .append ( histo.the_integral () )
+            else :                
+                results [ '#'     ] .append ( len ( dataset ) )
+                results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
+
+        if isinstance ( dataset , ROOT.RooDataSet ) :  dataset.clear()
         del dataset
 
         if progress or not silent :
