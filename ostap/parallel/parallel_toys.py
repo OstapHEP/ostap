@@ -59,6 +59,9 @@ def merge_toys ( previous , result , jobid = -1 ) :
     for p in stat     : sset.add ( p )
     for p in stat_    : sset.add ( p )
     for p in sset     : stat_    [ p ] += stat    [ p ] 
+
+    stat    . clear () 
+    results . clear () 
     
     return results_ , stat_ 
 

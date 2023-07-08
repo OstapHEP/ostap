@@ -1168,7 +1168,8 @@ class SimFit (VarMaker,ConfigReducer) :
                    varset        = None  ,
                    args          = ()    ,
                    binning       = {}    ,
-                   sample        = True  , 
+                   sample        = True  ,
+                   storage       = None  ,
                    category_args = {}    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
@@ -1201,6 +1202,7 @@ class SimFit (VarMaker,ConfigReducer) :
                                    varset   = varset   ,
                                    binning  = binning  ,
                                    sample   = sample   ,
+                                   storage  = storage  , 
                                    args     = cargs    )
 
             if ds.isWeighted() :

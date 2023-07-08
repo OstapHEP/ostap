@@ -1836,7 +1836,8 @@ class APDF1 ( Components ) :
                    nEvents          ,
                    varset   = None  ,
                    binning  = None  ,
-                   sample   = True  , ##  sample number of events ?  
+                   sample   = True  , ## sample number of events ?
+                   storage  = None  , ## storage type for dataset
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
@@ -1871,15 +1872,20 @@ class APDF1 ( Components ) :
             varset = vs  
 
         from ostap.fitting.variables import KeepBinning
-            
+        
         with KeepBinning ( self.xvar ) : 
 
             if isinstance ( binning , dict ) :
                 binning = binning.get ( self.xvar.name , None )                 
             if binning : self.xvar.bins = binning
             
+            if storage in ( ROOT.RooAbsData.Tree , ROOT.RooAbsData.Vector ) :
+                from ostap.fitting.dataset import useStorage
+                with useStorage ( storage ) : 
+                    return self.pdf.generate (  varset , *args )
+            
             return self.pdf.generate (  varset , *args )
-
+            
     # ========================================================================
     ## clean some stuff 
     def clean ( self ) :

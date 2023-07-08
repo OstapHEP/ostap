@@ -815,40 +815,40 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
     fits   = defaultdict ( SE )  ## fit statuses 
     covs   = defaultdict ( SE )  ## covarinace matrix quality
     accept = SE()
-    
+
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
-
+        
         ## 1. reset PDF parameters 
         gen_pdf.load_params ( params = fix_gen_init , silent = True ) ## silent = silent )
         gen_pdf.load_params ( params = fix_gen_pars , silent = True ) ## silent = silent )
-
+        
         ## 2. generate dataset!
         dataset =  gen_fun ( gen_pdf , varset = varset , **gen_config ) 
         if not silent : logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
         
         ## histogram? 
         histo = dataset if isinstance ( dataset , ROOT.TH1 ) else None 
-
+        
         ## 3. reset parameters of fit_pdf
         fit_pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
         fit_pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
         
         ## 4. fit it!  
         r = fit_fun ( fit_pdf , dataset , **fitcnf ) 
-
+        
         ## fit status 
         fits [ r.status  () ] += 1
-
+        
         ## covariance matrix quality
         covs [ r.covQual () ] += 1
-
+        
         ## ok ?
         ok      = accept_fun ( r , fit_pdf , dataset )
         accept += 1 if ok else 0        
         if ok : 
-
+            
             ## 5. save results 
             results [ ''  ].append ( r ) 
             
@@ -856,28 +856,27 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
             rpf = r.params ( float_only = True ) 
             for j in rpf : 
                 results [ j ].append ( rpf [ j ] [ 0 ] ) 
-                
+                    
             ## 5.2 save results 
             for v in more_vars :
                 func  = more_vars[v] 
                 results [ v ] .append ( func ( r , fit_pdf ) )
-
+                
             if histo :
                 results [ '#'     ] .append ( histo.GetEntries   () )
                 results [ '#sumw' ] .append ( histo.the_integral () )
             else :                
                 results [ '#'     ] .append ( len ( dataset ) )
                 results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
-
-        if isinstance ( dataset , ROOT.RooDataSet ) :  dataset.clear()
+                
+        dataset.Delete() 
         del dataset
 
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 == i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )
                 print_stats ( stats , i + 1 , logger = logger )
-                
-        
+                         
     ## make a final statistics 
     stats = make_stats ( results , fits , covs , accept )
                     
