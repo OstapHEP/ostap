@@ -886,7 +886,7 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
     return results, stats 
 
 # =============================================================================
-## run Jackknife analysis, useful for evaluaton of fit biases and uncertainty estimates
+## run Jackknife analysis, useful for evaluation of fit biases and uncertainty estimates
 # 
 #  For each <code>i</code> remove event with index <code>i</code> from the dataset,
 #  and refit it.

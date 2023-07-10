@@ -764,7 +764,7 @@ class FitHelper(VarMaker) :
                           'ncpus'            ,
                           'numcpu'           ,
                           'numcpus'          ) and \
-                 isinstance ( a , list_types ) and 2 == len ( a )  and \
+                 isinstance ( a    , list_types    ) and 2 == len ( a )  and \
                  isinstance ( a[0] , integer_types ) and 1 <= a[1] and \
                  isinstance ( a[1] , integer_types ) and 0 <= a[1] <=3 :
                 
@@ -924,7 +924,8 @@ class FitHelper(VarMaker) :
             
         
         if not check_arg ( 'numcpu' , *_args ) :
-            if  dataset and not isinstance ( dataset , ROOT.RooDataHist ) :
+            if   dataset and     isinstance ( dataset , ROOT.RooDataHist ) : pass 
+            elif dataset and not isinstance ( dataset , ROOT.RooDataHist ) :
                 _args.append ( ncpu ( len ( dataset ) ) )
             else :
                 nc = numcpu()
