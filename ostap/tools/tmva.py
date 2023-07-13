@@ -1428,8 +1428,9 @@ class Trainer(object):
             ## 
             ]
 
+        ## it crashes if runnig on-line 
         ## if  ( 6 , 24 ) <= root_info :
-        ##     plots.append ( ( ROOT.TMVA.mvaeffs        ,  ( name , output ) ) ) 
+        ## plots.append ( ( ROOT.TMVA.mvaeffs        ,  ( name , output ) ) ) 
 
         if hasattr ( ROOT.TMVA , 'network'                ) :
             plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
