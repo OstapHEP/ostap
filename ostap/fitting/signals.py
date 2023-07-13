@@ -1791,7 +1791,7 @@ class BifurcatedStudentT_pdf(PEAK) :
         
     @property
     def kappa ( self ) :
-        """'kappa'-parameter for Apollonios2 function (same as 'asym'"""
+        """'kappa'-parameter for Bifurcated Student-T function (same as 'asym'"""
         return self.__asym
     @kappa.setter
     def kappa ( self, value ) :
@@ -2379,7 +2379,10 @@ class JohnsonSU_pdf(PEAK) :
         
         self.__xi    = self.mean
         self.__lambd = self.sigma
-        self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
+
+        if hasattr ( self.lambd , 'setMax' ) and hasattr ( self.lambd , 'getMax' ) :
+            self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it!
+        
         self.__delta   = self.make_var ( delta                 ,
                                          'delta_%s'     % name ,
                                          '#delta(%s)'   % name , 
@@ -3585,7 +3588,7 @@ class GenHyperbolic_pdf(Hyperbolic_pdf) :
         self.__lambda = self.make_var ( lambd               ,
                                         'lambda_%s'   % name ,
                                         '#lambda(%s)' % name ,
-                                        True , -2 , -100 , 100 ) 
+                                        False , -2 , -100 , 100 ) 
         #
         ## finally build pdf
         # 

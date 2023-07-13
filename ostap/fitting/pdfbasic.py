@@ -2281,8 +2281,9 @@ class APDF1 ( Components ) :
             return Generic1D_pdf ( pdf , xvar = xvar , *args , **kwargs ) , xvar 
         
         elif xvar and isinstance ( pdf , bkg_types ) :
-            
-            return self.make_bkg ( pdf , xvar = xvar , **kwargs ) , xvar 
+
+            name = kwargs.pop ( 'name' , self.generate_name ( 'BB' ) )
+            return self.make_bkg ( pdf , name = name , xvar = xvar , **kwargs ) , xvar 
 
         raise TypeError( "make_PDF1: invalid pdf/xvar %s/%s" % ( pdf , xvar ) )
 

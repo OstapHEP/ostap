@@ -44,6 +44,7 @@ from   ostap.math.base          import frexp10
 from   ostap.core.ostap_types   import integer_types, num_types , long_type, sequence_types
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.core.meta_info     import root_info, python_info
+from   ostap.math.random_ext    import poisson
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
 import ROOT, sys, math, ctypes, array 
@@ -4516,6 +4517,7 @@ def _h_sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
     """
     #
     result = histo.Clone ( hID () )     
+    result.Reset() 
     if not result.GetSumw2() : result.Sumw2()
     
     for bin in histo :
@@ -4528,7 +4530,7 @@ def _h_sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
         
         v2.setCov2 ( v1.cov2() )
         
-        result [bin] = v2
+        result [ bin ] = v2
         
     result.ResetStats() 
     return result
@@ -4536,6 +4538,7 @@ def _h_sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
 ROOT.TH1 ._sample_ = _h_sample_
 ROOT.TH1 .sample   = _h_sample_
 ROOT.TH1 .gauss    = _h_sample_
+
 
 # =============================================================================
 ## sample the histogram using the Poisson hypothesis
@@ -4559,7 +4562,7 @@ def _h_poisson_ ( histo , fluctuate = False , accept = lambda s : True ) :
     for bin in histo :
 
         ## getbin content
-        v1 = histo[bin]
+        v1 = histo [ bin ]
         
         ## sample it!
         p  = v1.poisson ( fluctuate , accept )
