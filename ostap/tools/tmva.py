@@ -1437,18 +1437,18 @@ class Trainer(object):
         if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
             plots.append ( ( ROOT.TMVA.annconvergencetest , ( name , output ) ) )
 
-        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
-            plots.append ( ( ROOT.TMVA.likelihoodrefs     , ( name , output ) ) )
+        ## if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
+        ##    plots.append ( ( ROOT.TMVA.likelihoodrefs     , ( name , output ) ) )
 
-        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBDT ] :            
-            if hasattr ( ROOT.TMVA , 'BDT'                    ) :
-                plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) ) )                
-            if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
-                plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) ) )
+        ## if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBDT ] :            
+        ##     if hasattr ( ROOT.TMVA , 'BDT'                    ) :
+        ##         plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) ) )                
+        ##     if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
+        ##         plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) ) )
             
-        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBoost ] :                
-            if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
-                plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) ) ) 
+        ## if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBoost ] :                
+        ##     if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
+        ##         plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) ) ) 
 
         ## change to some temporary directory
                 
