@@ -1428,8 +1428,8 @@ class Trainer(object):
             ## 
             ]
 
-        if  ( 6 , 24 ) <= root_info :
-            plots.append ( ( ROOT.TMVA.mvaeffs        ,  ( name , output ) ) ) 
+        ## if  ( 6 , 24 ) <= root_info :
+        ##     plots.append ( ( ROOT.TMVA.mvaeffs        ,  ( name , output ) ) ) 
 
         if hasattr ( ROOT.TMVA , 'network'                ) :
             plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
@@ -1454,7 +1454,7 @@ class Trainer(object):
         from ostap.utils.utils import batch, keepCanvas    
         for fun, args  in plots :            
             with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , keepCanvas() , rootWarning ()  :            
-                logger.info ( 'makePlots: Execute macro ROOT.TMVA%s%s' % ( fun.__name__ , str ( args ) ) )
+                logger.info ( 'makePlots: Execute macro ROOT.TMVA.%s%s' % ( fun.__name__ , str ( args ) ) )
                 fun ( *args )
 
 # =============================================================================
