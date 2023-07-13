@@ -280,14 +280,6 @@ def test_tmva () :
         table = counters_table ( counters , title = title , prefix = '# ' )
         logger.info ( '%s\n%s' % ( title , table ) )
 
-    # =========================================================================\
-    ## Finally make the standard TMVA plots 
-    # =========================================================================    
-    from ostap.tools.tmva import make_Plots
-    plots = make_Plots  ( trainer_name , tmva_output , False )
-    if plots : logger.info ( "Plots are saved into tarfile: '%s'" % plots ) 
-
-
 # =============================================================================
 if '__main__' == __name__ :
 
