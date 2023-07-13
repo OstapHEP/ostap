@@ -1346,14 +1346,7 @@ class Trainer(object):
 
 
         if  self.make_plots :
-            if ( 6 , 29 ) <= root_info :
-                self.makePlots ()                
-                ## self.logger.warning ( "'makePlots' is temporary (?) disabled, call this function offline: 'trainer.makePlots()' ")
-            elif ( 6 , 24 ) <= root_info : 
-                self.logger.warning ( "'makePlots' is temporary (?) disabled, call this function offline: 'trainer.makePlots()' ")
-            else : 
-                self.makePlots ()
-
+            self.makePlots ()                
         
         import glob, os 
         self.__weights_files = tuple ( [ f for f in glob.glob ( self.__pattern_xml   ) ] )
@@ -1393,9 +1386,6 @@ class Trainer(object):
     def makePlots ( self , name = None , output = None , ) :
         """Make selected standard TMVA plots"""
 
-        
-        logger.warning ( "makePlots methdod is disabled, use standalone function 'make_Plots' instead" )
-        return 
 
         name   = name   if name   else self.name
         output = output if output else self.output_file
@@ -1462,12 +1452,11 @@ class Trainer(object):
         ## change to some temporary directory
                 
         from ostap.utils.utils import batch, keepCanvas    
-        for fun, args  in plots :
-            
+        for fun, args  in plots :            
             with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , keepCanvas() , rootWarning ()  :            
                 logger.info ( 'makePlots: Execute macro ROOT.TMVA%s%s' % ( fun.__name__ , str ( args ) ) )
                 fun ( *args )
-                    
+
 # =============================================================================
 ## make selected standard TMVA plots 
 def make_Plots ( name , output , show_plots = True ) :
