@@ -1424,7 +1424,7 @@ class Trainer(object):
             ( ROOT.TMVA.efficiencies   ,  ( name , output , 2 ) ) ,
             ( ROOT.TMVA.efficiencies   ,  ( name , output , 3 ) ) ,
             ##
-            ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
+            ## ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
             ## 
             ]
 
@@ -1432,10 +1432,10 @@ class Trainer(object):
         ## if  ( 6 , 24 ) <= root_info :
         ## plots.append ( ( ROOT.TMVA.mvaeffs        ,  ( name , output ) ) ) 
 
-        if hasattr ( ROOT.TMVA , 'network'                ) :
-            plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
-        if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
-            plots.append ( ( ROOT.TMVA.annconvergencetest , ( name , output ) ) )
+        ## if hasattr ( ROOT.TMVA , 'network'                ) :
+        ##     plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
+        ## if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
+        ##     plots.append ( ( ROOT.TMVA.annconvergencetest , ( name , output ) ) )
 
         ## if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
         ##    plots.append ( ( ROOT.TMVA.likelihoodrefs     , ( name , output ) ) )
