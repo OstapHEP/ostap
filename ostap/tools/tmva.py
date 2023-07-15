@@ -1386,6 +1386,8 @@ class Trainer(object):
     def makePlots ( self , name = None , output = None , ) :
         """Make selected standard TMVA plots"""
 
+        self.logger.warning ( "makePlots: method is disbaled!" )
+        return 
 
         name   = name   if name   else self.name
         output = output if output else self.output_file

@@ -195,7 +195,7 @@ for f in trainer.output_files :
 
 
 # =============================================================================
-## A) Add TMVA/Chopping desision to (input) TTrees 
+## A) Add TMVA/Chopping decision to (input) TTrees 
 # =============================================================================
 with timing ( "Add TMVA/Chopping response to input TTree" , logger = logger ) as time_A :
     

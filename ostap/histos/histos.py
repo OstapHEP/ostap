@@ -4108,10 +4108,89 @@ def _h1_effic2_ ( h , value , increasing = True ) :
         
     return s1.frac( s2 ) if increasing else s2.frac ( s1 ) 
 
+# =============================================================================
+## Convert historgam into "efficinecy" histogram
+#  @code
+#  histo = ...
+#  effic = histp.eff ( ... )
+#  @endcode
+#  It adds two extra narrow fake bins!
+def _h1_effic3_ ( h1 , increasing = True ) :
+    """Convert historgam into "efficinecy" histogram
+    >>> histo = ...
+    >>> effic = histp.eff ( ... )
+    - It adds two extra narrow fake bins!
+    """
+
+    xa    = h1.GetXaxis()
+    edges = list ( xa.edges() )
+    
+    if h1.uniform_bins () :
+        minbin =  ( xa.GetXmax() - xa.GetXmin() ) / xa.GetNbins()
+    else :        
+        nn     = len ( edges )
+        minbin =  ( xa.GetXmax() - xa.GetXmin() )
+        for i in xa :
+            bw = xa.GetBinUpEdge() - xa.GetBinLowEdge()
+            if abs ( bw ) < minbin : minbin = abs ( bw )
+    
+    xf = edges[ 0] + 0.001 * minbin
+    xl = edges[-1] - 0.001 * minbin
+    
+    edges.insert (  1 , xf )
+    edges.insert ( -1 , xl )
+    
+    result = h1_axis ( edges , title = 'Efficiency histo for %s' % h1.title , double = type ( h1 ) )
+
+    def _my_eff_ ( a , r , c ) :
+        
+        R  = r + 0.5 * c
+        A  = a + 0.5 * c
+        
+        fA = float ( A )
+        fR = float ( R )
+
+        if not fA :
+            return 1.0 - _my_eff_ ( r , a , c ) 
+        
+        d  =   fR  / fA
+        
+        dr =   1.0 / fA
+        da = - d   / fA 
+        dc =  0.5  / fA - 0.5 * d / fA  
+        
+        c2 = dr * dr * r.cov2() + da  * da * a.cov2() + dc * dc * c.cov2()
+        d  = VE ( d , c2 )
+        
+        return 1.0 / ( 1.0 + d )
+    
+    N = len ( h1 ) 
+    sumi = VE(0,0)
+    for i in h1 :        
+
+        c = h1 [ i ]
+        
+        rest     = VE(0,0) 
+        for j in range ( i + 1 , N + 1 ) : rest += h1 [ j ] 
+
+        a  = sumi
+        r  = rest
+
+        result [ i + 1 ] = _my_eff_ ( a , r , c ) if increasing else _my_eff_ ( r , a , c ) 
+        
+        sumi += c 
+
+    result [  1 ] = VE ( 0.0 , 0.0 ) if increasing else VE ( 1.0 , 0.0 )
+    result [ -1 ] = VE ( 1.0 , 0.0 ) if increasing else VE ( 0.0 , 0.0 )
+
+    return result 
+     
 ROOT.TH1F.effic      = _h1_effic_ 
 ROOT.TH1D.effic      = _h1_effic_ 
 ROOT.TH1F.efficiency = _h1_effic2_ 
 ROOT.TH1D.efficiency = _h1_effic2_ 
+ROOT.TH1F.eff        = _h1_effic3_ 
+ROOT.TH1D.eff        = _h1_effic3_ 
 
 # ================================================================================
 if (2,7) <= python_info : _erfc_ = math.erfc 
@@ -8333,6 +8412,8 @@ _new_methods_   = (
     ROOT.TH1D.addFunctionIntegral ,
     #
     _h1_sumv_            , 
+    ROOT.TH1F.eff        , 
+    ROOT.TH1D.eff        ,
     ROOT.TH1F.effic      , 
     ROOT.TH1D.effic      ,
     ROOT.TH1F.efficiency ,

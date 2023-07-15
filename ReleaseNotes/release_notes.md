@@ -19,6 +19,7 @@
    1. do not add `sumw2`/`asymttotic` flags for fitting of `ROOT.RooDataHist` 
    1. allow to deal with the histograms in `make_toys` and `make_toys2` 
    1. add `storage` argument to `PDF.generate` to allow specification of the storage type for dataset 
+   1. add `TH1D.eff` and `TH!F.eff` methods to make  "correct" efficinecy historgams 
  
 ## Backward incompatible: 
 
