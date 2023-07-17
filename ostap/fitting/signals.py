@@ -3969,7 +3969,7 @@ class Bukin2_pdf(PEAK) :
     - see https://doi.org/10.1007/0-8176-4487-3_4
     - see Ostap::Math::NormalLaplace 
     - see Ostap::Mdoels::NormalLaplace 
-    - see Ostap::Mdoels::Bukin22
+    - see Ostap::Mdoels::Bukin2
     - see Ostap::Mdoels::ExGauss2
     - see Ostap::Mdoels::ExGauss
     """
@@ -3977,8 +3977,8 @@ class Bukin2_pdf(PEAK) :
                    name             ,
                    xvar             ,
                    mu        = None ,   ## related to mode 
-                   varsigmaA =  1   ,   ## related to width
-                   varsigmaB =  1   ,   ## related to width
+                   varsigma  =  1   ,   ## related to width
+                   asymmetry =  0   ,   ## related to width
                    kA        = -1   ,   ## related to shape
                    kB        = +1   ,   ## related to shape
                    phi       =  0   ) :
@@ -3987,26 +3987,30 @@ class Bukin2_pdf(PEAK) :
         #        
         PEAK.__init__  ( self , name , xvar                   , 
                          mean        = mu                     ,
-                         sigma       = varsigmaA              ,
+                         sigma       = varsigma               ,
                          mean_name   = 'mode_%s'       % name ,
                          mean_title  = 'mode(%s)'      % name ,
-                         sigma_name  = 'varsigmaA_%s'  % name ,
-                         sigma_title = 'varsigmaA(%s)' % name )
+                         sigma_name  = 'varsigma_%s'   % name ,
+                         sigma_title = 'varsigma(%s)'  % name )
         
         self.__mu        = self.mean
-        self.__varsigmaA = self.sigma
+        self.__varsigma  = self.sigma
+        
+        ## asymmetry parameter 
+        self.__asymmetry = self.make_var ( asymmetry                   ,
+                                           'asym_%s'            % name ,
+                                           '#asym_{Bukin2}(%s)' % name ,
+                                           None , 0 , -1 , 1 )
+        
+        ## construct left and right sigmas 
+        self.__varsigmaA , self.__varsigmaB = self.vars_from_asymmetry (
+            self.varsigma                                 , ## mean/average sigma 
+            self.asym                                     , ## asymmetry parametet
+            v1name  =  self.roo_name ( 'varsigmaA' , self.name ) ,
+            v2name  =  self.roo_name ( 'varsigmaB' , self.name ) ,
+            v1title = '#varsigma_{A}: #sigma #times (1+#kappa)'        , 
+            v2title = '#varsigma_{B}: #sigma #times (1-#kappa)'        )
 
-        ## varsigmaB
-        limits = () 
-        if self.xminmax () :
-            xmn , xmx = self.xminmax()
-            sigma_max = 3 * ( xmx - xmn ) / math.sqrt ( 12 ) 
-            limits    = 1.e-4 * sigma_max , sigma_max
-            
-        self.__varsigmaB = self.make_var ( varsigmaB ,
-                                           'varsigmaB_%s'  % name ,
-                                           'varsigmaB(%s)' % name ,
-                                           None , *limits ) 
         ## kA 
         self.__kA = self.make_var ( kA              ,
                                     'kA_%s'  % name ,
@@ -4042,27 +4046,55 @@ class Bukin2_pdf(PEAK) :
             'name'      : self.name      ,
             'xvar'      : self.xvar      ,
             'mu'        : self.mu        ,
-            'varsigmaA' : self.varsigmaA ,
-            'varsigmaB' : self.varsigmaB ,
+            'varsigma'  : self.varsigma  ,
+            'asymmetry' : self.asymmetry ,
             'kA'        : self.kB        ,
             'kB'        : self.kA        ,
             'phi'       : self.phi       }
 
     @property
-    def varsigmaA    ( self ) :
-        """'varsigmaA' : varsigmaA parameter for Bukin2 function (same as 'sigma')"""
+    def varsigma     ( self ) :
+        """'varsigma' : varsigma  parameter for Bukin2 function (same as 'sigma')"""
         return self.sigma
-    @varsigmaA.setter
-    def varsigmaA  ( self , value ) :
-        self.set_value ( self.__varsigmaA , value )
+    @varsigma.setter
+    def varsigma  ( self , value ) :
+        self.set_value ( self.sigma , value )
+
+    @property
+    def asymmetry   ( self ) :
+        """'asymmetry' : asymmetry parameters for Bukin2 function (same as 'kappa' or 'asym')"""
+        return self.__asymmetry
+    @asymmetry.setter 
+    def asymmetry   ( self , value ) :
+        self.set_value ( self.__asymmetry , value )
+        
+    @property
+    def kappa     ( self ) :
+        """'kappa' : asymmetry parameters for Bukin2 function (same as 'asymmetry' or 'asym')"""
+        return self.__asymmetry
+    @kappa.setter 
+    def kappa     ( self , value ) :
+        self.set_value ( self.__asymmetry , value )
+
+    @property
+    def asym     ( self ) :
+        """'asym' : asymmetry parameters for Bukin2 function (same as 'asymmetry' or 'kappa')"""
+        return self.__asymmetry
+    @asym.setter 
+    def asym     ( self , value ) :
+        self.set_value ( self.__asymmetry , value )
+
+
+
+    @property
+    def varsigmaA    ( self ) :
+        """'varsigmaA' : varsigmaA parameter for Bukin2 function"""
+        return self.__varsigmaA 
 
     @property
     def varsigmaB    ( self ) :
         """'varsigmaB' : varsigmaB parameter for Bukin2 function"""
         return self.__varsigmaB 
-    @varsigmaB.setter
-    def varsigmaB  ( self , value ) :
-        self.set_value ( self.__varsigmaB , value )
 
     @property
     def mu ( self ) :
@@ -4095,7 +4127,6 @@ class Bukin2_pdf(PEAK) :
     @phi.setter  
     def phi ( self , value ) :
         self.set_value ( self.__phi , value )
-
 
 models.append ( Bukin2_pdf )      
 
