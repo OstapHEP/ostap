@@ -1,6 +1,11 @@
 ## New features:
 
+  1. add `Ostap::MoreRooFit::ProfileLL` to allow bypass subtraction of the minimum for profile graphs.  From now the profile graph , obtaibed from `PDF.grpah_profile` with option `subtract=False` is not min-subtracted. It is useful e.g, for evalauation of discrete systematic uncertainties using profile-likelihood method  
+
 ## Backward incompatible: 
+
+  1. reparameterise `Bukin2_pdf` in terms of `varsigma` and `asymmetry` instead of `varsig`
+
 
 ## Bug fixes:
 

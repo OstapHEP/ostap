@@ -1265,12 +1265,12 @@ class APDF1 ( Components ) :
         sf   = dataset.sFactor() 
 
         self.debug ( 'nll: createNLL args: %s'% list ( opts ) )
-        if len ( opts ) < 8 : 
-            return self.pdf.createNLL ( dataset , *opts             ) , sf
+        if len ( opts ) < 8 and root_info < ( 6 , 29 ) : 
+            return self.pdf.createNLL ( dataset , *opts   ) , sf
         else :
-            return self.pdf.createNLL ( dataset , command ( *opts ) ) , sf
+            cmdlist =  command ( *opts )
+            return self.pdf.createNLL ( dataset , cmdlist  ) , sf
             
-
     # =========================================================================
     ## get NLL/profile-graph for the variable, using the specified abscissas
     #  @code
@@ -1396,15 +1396,18 @@ class APDF1 ( Components ) :
             vars.add ( fv ) 
             
         ## 2)  create profile LL
-        pLL = ROOT.RooProfileLL ( 'pLL_%s_%s'         % ( var.name , self.name ) ,
-                                  'LL-profile(%s,%s)' % ( var.name , self.name ) ,
-                                  nLL , vars )
+        pname  = self.roo_name ( 'pLL_%s_%s'         % ( var.name , self.name ) )
+        ptitle =                 'LL-profile(%s,%s)' % ( var.name , self.name ) 
 
+        if subtract : 
+            pLL = ROOT.RooProfileLL          ( pname , ptitle , nLL , vars )
+        else :
+            pLL = Ostap.MoreRooFit.ProfileLL ( pname , ptitle , nLL , vars )
+            
         ## 2) create graph if requested 
         import ostap.histos.graphs
         graph = ROOT.TGraph () if draw else None 
                         
-
         ## 3) collect pLL values 
         results = [] 
         with SETPARS ( self , dataset ) , RangeVar ( var , minv , maxv ) , SETVAR  ( var ) :

@@ -13,6 +13,7 @@
 #include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
+#include "RooProfileLL.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -21,7 +22,7 @@
 #include "Ostap/BSpline.h"
 #include "Ostap/HistoInterpolators.h"
 // ============================================================================
-/// froward declarations 
+/// forward declarations 
 // ============================================================================
 class RooAddPdf           ; // ROOT,RooFit 
 class RooProdPdf          ; // ROOT,RooFit 
@@ -613,6 +614,54 @@ namespace Ostap
       Ostap::Math::Histo1D           m_histo ; // function 
       // ======================================================================      
     } ; //                          The end of class Ostap::MoreRooFit::Histo1D
+    // ========================================================================
+    /** @class ProfileLL 
+     *  Slight extension for class RooProfileLL
+     *  - Do no subtract the minimum...
+     *  @see RooProfileLL
+     */
+    class ProfileLL : public RooProfileLL
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::ProfileLL,0) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor
+      ProfileLL ( const char*      name        , 
+                  const char*      title       , 
+                  RooAbsReal&      nll         ,  
+                  const RooArgSet& observables ) ;
+      /// "copy" constructor
+      ProfileLL ( const RooProfileLL& right    , 
+                  const char*         name = nullptr ) ;
+      /// virual destructor 
+      virtual ~ProfileLL() ;
+      /// clone method 
+      ProfileLL* clone ( const char* newname ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// default constructor 
+      ProfileLL () ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      using RooProfileLL::nll ;
+      const RooAbsReal& nll () const { return _nll.arg()  ; }
+      const RooArgSet&  obs () const { return _obs        ; }
+      const RooArgSet&  par () const { return _par        ; }
+      // ======================================================================
+      /// min-value 
+      double abs_min        () const { return _absMin       ; }
+      /// Is min-valeu valid ? 
+      bool   abs_min_valid  () const { return _absMinValid  ; }
+      // ======================================================================
+      /// main method: do not subtract min-value! 
+      double evaluate  () const override ;
+      // ======================================================================      
+    } ;
     // ========================================================================
     /** Helper method to check if recursive fractions were 
      *  used for creation of RooAddPdf object
