@@ -925,7 +925,14 @@ class APDF1 ( Components ) :
                         binw = ( xmx - xmn ) / float ( nbins )
                 if 0 < binw : self.info ( 'chi2/ndf: %.3f, binwidth: %s' %  ( frame.chi2ndf , binw ) )
                 else        : self.info ( 'chi2/ndf: %.3f' %                  frame.chi2ndf          )
-                
+
+
+            ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
+            if frame :
+                aux    = frame 
+                frame  = frame.copy ()
+                del aux
+
             if not residual and not pull:
                 return frame
 
@@ -952,7 +959,17 @@ class APDF1 ( Components ) :
                     pframe.SetXTitle ( '' )
                     pframe.SetYTitle ( '' )
                     pframe.SetZTitle ( '' )
-
+                    
+            ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
+            if rframe :
+                aux    = rframe 
+                rframe = rframe.copy ()
+                del aux  
+            if pframe :
+                aux    = pframe 
+                pframe = pframe.copy () 
+                del aux
+                
             return frame, rframe, pframe  
 
     # =========================================================================

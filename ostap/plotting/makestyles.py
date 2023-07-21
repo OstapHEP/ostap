@@ -250,6 +250,9 @@ def dump_style ( style ) :
     config ['PaperSize_X' ] = x.value 
     config ['PaperSize_Y' ] = y.value 
 
+    ## special... 
+    config [ 'TGaxisMaxDigits' ] = ROOT.TGaxis.GetMaxDigits()
+    
     ## very special attribute
     for i in range(31) :
         l = style.GetLineStyleString(i)
@@ -274,7 +277,7 @@ def table_style ( style , prefix = '' , title = '' ) :
     for i, key in enumerate ( sorted ( conf ) , start = 1 ) : 
         
         value = conf[ key ] 
-        row = '%3d' % i , key , '%s' % value 
+        row   = '%3d' % i , key , '%s' % value 
         table.append ( row )
 
     title = title if title else 'Style %s/%s' % ( style.GetName() , style.GetTitle () )
@@ -532,6 +535,9 @@ def set_style ( style , config ) :
             changed [ key ] = style.GetLineStyleString ( i )                         
             style.SetLineStyleString ( i , conf.pop ( k ) .strip() ) 
 
+    if 'TGaxisMaxDigits' in conf : 
+        ROOT.TGaxis.SetMaxDigits ( conf.pop ( 'TGaxisMaxDigits' ) )
+        
     if 'palette' in conf :
         style.SetPalette ( conf.pop ( 'palette' ) )
 
@@ -870,6 +876,10 @@ def make_ostap_style ( name                           ,
     conf [ 'TextColor'         ] = get_int   ( config , 'TextColor'           , 1    )
     conf [ 'TextFont'          ] = get_int   ( config , 'TextFont'            , font )
     conf [ 'TextSize'          ] = get_float ( config , 'TextSize'            , 0.08 )
+
+    ## maximal number of digits for the axis labels 
+    conf [ 'TGaxisMaxDigits'   ] = 3
+
 
     ## create the style 
     style       = ROOT.TStyle ( name , description )

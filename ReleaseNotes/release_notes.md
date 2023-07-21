@@ -1,6 +1,8 @@
 ## New features:
 
   1. add `Ostap::MoreRooFit::ProfileLL` to allow bypass subtraction of the minimum for profile graphs.  From now the profile graph , obtaibed from `PDF.grpah_profile` with option `subtract=False` is not min-subtracted. It is useful e.g, for evalauation of discrete systematic uncertainties using profile-likelihood method  
+  1. make attempts to avoid decolorisation of previously createe frames/`RooPlot` objects
+
 
 ## Backward incompatible: 
 
@@ -32,7 +34,7 @@
    1. do not add `sumw2`/`asymttotic` flags for fitting of `ROOT.RooDataHist` 
    1. allow to deal with the histograms in `make_toys` and `make_toys2` 
    1. add `storage` argument to `PDF.generate` to allow specification of the storage type for dataset 
-   1. add `TH1D.eff` and `TH!F.eff` methods to make  "correct" efficinecy historgams 
+   1. add `TH1D.eff` and `TH1F.eff` methods to make  "correct" efficiency historgams 
  
 ## Backward incompatible: 
 

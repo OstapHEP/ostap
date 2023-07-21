@@ -26,7 +26,8 @@ __all__     = (
     'make_fun1'         , ## reate popular FUN1 objects from the short description 
     )
 # =============================================================================
-from   sys                           import version_info as python_version 
+from   sys                           import version_info as python_version
+from   ostap.core.meta_info          import root_info 
 from   ostap.core.ostap_types        import ( integer_types  , num_types    ,
                                               dictlike_types , list_types   ,
                                               is_good_number , string_types )
@@ -724,6 +725,12 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             if kwargs :
                 self.warning("draw: ignored unknown options: %s" % list( kwargs.keys() ) ) 
 
+                
+            ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
+            if frame :                
+                self.__aux_fframe = frame                
+                frame             = frame.Clone() 
+            
             return frame
 
     # =========================================================================
@@ -740,12 +747,12 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                "plot_on: invalid argument types: %s" % list ( options  ) 
 
         ## for "small' number of arguments use the standard function 
-        if len ( options ) <= NARGS :
+        if len ( options ) <= NARGS and root_info < ( 6 , 29 ) :
             return what.plotOn ( frame  , *options )
         
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
-
+        
         return what.plotOn ( frame , cmd  )
 
         ## ## merge arguments to get shorter list        
@@ -815,7 +822,7 @@ class F1AUX(object) :
             ff = fun.function()
             if   hasattr  ( fun , 'setPars'   ) : fun.setPars()             
         else :
-            ff = PDF_fun  ( fun , self.xvar , xmin = xmin , xmax = xmax )
+            ff = PDF_fun  ( fun , self.xvar , xmin = xmin , xmax = xmax , normset = self.vars )
 
         return funcall ( ff , xmin = xmin , xmax = xmax , *args , **kwargs )
 
@@ -937,6 +944,18 @@ class F1AUX(object) :
         >>>  print ( 'MODE: %s ' % pdf.mode() )
         """
         from ostap.stats.moments import median as _calc
+        return self._get_stat_ ( _calc , **kwargs )
+
+
+    # =========================================================================
+    ## get the FWHM
+    def fwhm   ( self , **kwargs ) :
+        """Get the effective mode
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print ( 'FWHM: %s ' % pdf.fwhm () )
+        """
+        from ostap.stats.moments import fwhm as _calc
         return self._get_stat_ ( _calc , **kwargs )
 
     # =========================================================================
@@ -1077,7 +1096,6 @@ class F1AUX(object) :
             mom.Delete() 
             del mom
             return result 
-
 
     # =========================================================================
     ## get skewness using RooAbdPdf method

@@ -30,7 +30,7 @@ import ostap.fitting.printable
 import ostap.fitting.roocmdarg   
 from   ostap.fitting.dataset        import setStorage, useStorage
 from   ostap.core.ostap_types       import integer_types
-import ROOT, random, math 
+import ROOT, random, math, copy  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -111,11 +111,16 @@ class PDF_fun(object):
     >>> print 'MEDIAN  : %s' % median  ( fun , 0 , 1 )
     """
     ##
-    def __init__ ( self , pdf , xvar , xmin = None , xmax = None , norm = 1 ) :
+    def __init__ ( self , pdf , xvar , xmin = None , xmax = None , norm = 1 , normset = None ) :
         
-        self.__pdf     = pdf
-        self.__norm    = float ( norm )  
+        self.__pdf        = pdf
+        self.__norm       = float ( norm )
 
+        self.__normset    = None 
+        if normset : 
+            self.__normset    = ROOT.RooArgSet ()
+            for v in normset : self.__normset.add ( v )
+            
         ## ostap stuff: 
         if not isinstance ( pdf , ROOT.RooAbsPdf ) :
             if hasattr ( self.pdf , 'pdf' ) :
@@ -178,9 +183,11 @@ class PDF_fun(object):
         
         with SETVAR ( self.__xvar ) :
             self.__xvar.setVal ( x )
-            return self.__pdf.getVal() * self.__norm 
-
-
+            if self.__normset : 
+                return self.__pdf.getVal ( self.__normset ) * self.__norm
+            else : 
+                return self.__pdf.getVal (                ) * self.__norm
+            
 # ============================================================================
 ROOT.RooPlot.__len__ =  lambda s : math.floor ( s.numItems() ) 
 
@@ -324,7 +331,17 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
 ROOT.RooPlot.table    =  _rp_table_
 ROOT.RooPlot.__str__  =  _rp_table_
 ROOT.RooPlot.__repr__ =  _rp_table_
-                        
+
+
+# ================================================================================
+## copy RooPlot object
+def _rp_copy_ ( plot ) :
+    """copy RooPlot object"""
+
+    return copy.deepcopy ( plot )
+
+ROOT.RooPlot.copy      =  _rp_copy_ 
+
 _new_methods_ += [
     ROOT.RooPlot.__len__      ,
     ROOT.RooPlot.__contains__ ,
