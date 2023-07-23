@@ -402,7 +402,7 @@ class APDF1 ( Components ) :
             pe = check_arg ('PrintEvalErrors' , *opts )
             if not pe : opts = opts + ( ROOT.RooFit.PrintEvalErrors ( 0     ) , )
                 
-        weighted = dataset.isWeighted() and not isinstance ( dataset , ROOT.RooDataHist ) if dataset else False
+        weighted = dataset.isWeighted() if dataset else False
         if weighted :
             sw2 = check_arg ( 'SumW2Error'      , *opts )
             aer = check_arg ( 'AsymptoticError' , *opts )
@@ -880,12 +880,11 @@ class APDF1 ( Components ) :
 
             #
             ## suppress ugly axis labels
-            #
-            if not kwargs.get ( 'draw_axis_title' , False ) :  
+            #                
+            if frame and not kwargs.get ( 'draw_axis_title' , False ) :  
                 frame.SetXTitle ( '' )
                 frame.SetYTitle ( '' )
                 frame.SetZTitle ( '' )
-                
             #
             ## Draw the frame!
             #
@@ -914,7 +913,7 @@ class APDF1 ( Components ) :
                 if extra : self.warning ( "draw: ignored unknown options: %s" % extra ) 
 
             ## calculate chi2/ndf
-            frame.chi2dnf = None 
+            frame.chi2ndf = None 
             if dataset and not silent :             
                 pars          = self.params ( dataset )
                 frame.chi2ndf = frame.chiSquare ( len ( pars ) )
@@ -928,11 +927,12 @@ class APDF1 ( Components ) :
 
 
             ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
-            if frame :
-                aux    = frame 
-                frame  = frame.copy ()
-                del aux
-
+            frame = frame.copy ()
+            if not kwargs.get ( 'draw_axis_title' , False ) : 
+                frame.SetXTitle ( '' )
+                frame.SetYTitle ( '' )
+                frame.SetZTitle ( '' )
+                
             if not residual and not pull:
                 return frame
 
@@ -942,7 +942,9 @@ class APDF1 ( Components ) :
                 elif isinstance  ( residual , str ) : residual = residual ,
                 rframe  = frame.emptyClone ( rootID ( 'residual_' ) )
                 rh      = frame.residHist()
-                rframe.addPlotable ( rh , *residual ) 
+                rframe.addPlotable ( rh , *residual )
+                
+                rframe = rframe.copy()                
                 if not kwargs.get( 'draw_axis_title' , False ) :  
                     rframe.SetXTitle ( '' )
                     rframe.SetYTitle ( '' )
@@ -954,22 +956,14 @@ class APDF1 ( Components ) :
                 elif isinstance  ( pull , str ) : pull = pull ,
                 pframe  = frame.emptyClone ( rootID ( 'pull_' ) )
                 ph      = frame.pullHist()
-                pframe.addPlotable ( ph , *pull ) 
+                pframe.addPlotable ( ph , *pull )
+                
+                pframe = pframe.copy()                
                 if not kwargs.get( 'draw_axis_title' , False ) :  
                     pframe.SetXTitle ( '' )
                     pframe.SetYTitle ( '' )
                     pframe.SetZTitle ( '' )
-                    
-            ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
-            if rframe :
-                aux    = rframe 
-                rframe = rframe.copy ()
-                del aux  
-            if pframe :
-                aux    = pframe 
-                pframe = pframe.copy () 
-                del aux
-                
+                                    
             return frame, rframe, pframe  
 
     # =========================================================================

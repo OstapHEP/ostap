@@ -1928,7 +1928,6 @@ class PS23L_pdf(PDF1) :
         self.__L  = L
         self.__l  = l
 
-
         self.pdf  = Ostap.Models.PhaseSpace23L (
             self.roo_name ( "ps23_"  )   ,
             "Phase space 2 from 3 %s" % self.name  , 
