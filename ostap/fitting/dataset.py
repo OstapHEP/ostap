@@ -598,10 +598,9 @@ def _rds_duplicates_ ( dataset  ,
                                            entrytag  = entrytag ,
                                            criterium = ''       ) 
     for e, lst in loop_items ( snapshot ) :
-        if len ( lst ) <= 2 : continue        
-        yield tuple ( l[1] for l in lst )
-
-
+        if 2 <= len ( lst ) :
+            yield tuple ( sorted ( l [ 1 ] for l in lst ) ) 
+            
 # =============================================================================        
 ## Iterator over the unique entries in dataset
 #  @code
