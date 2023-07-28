@@ -1,3 +1,5 @@
+# v1.9.9.8
+
 ## New features:
 
 ## Backward incompatible: 
@@ -5,6 +7,7 @@
 ## Bug fixes:
 
   1. fix a bug in `dataset.duplicates` : not all duplicated entries were listed.
+
   
 # v1.9.9.6
 
