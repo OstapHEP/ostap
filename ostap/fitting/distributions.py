@@ -29,6 +29,7 @@
 - Hagedorn_pdf       : Hagedorn PDF 
 - GenPareto_pdf      : Generalised Pareto distribution
 - ExGenPareto_pdf    : Exponentiated Generalised Pareto distribution
+- Benini_pdf         : Benini distribution
 - GEV_pdf            : Generalised Extreme Value distribution
 - MPERT_pdf          : Modified PERT distribution
 """
@@ -58,6 +59,7 @@ __all__     = (
     'Tsallis2_pdf'       , ## 2D Tsallis PDF 
     'GenPareto_pdf'      , ## Generalised Pareto distribution
     'ExGenPareto_pdf'    , ## Exponentiatd Generalised Pareto distribution
+    'Benini_pdf'         , ## Benini distribution
     'GEV_pdf'            , ## Generalised Extreme Value distribution
     'MPERT_pdf'          , ## Modified PERT distribution
     )
@@ -1835,6 +1837,119 @@ class GEV_pdf(GenPareto_pdf) :
             }
         
 models.append ( GEV_pdf ) 
+
+
+# =============================================================================
+## @class Benini_pdf
+# A bit modified version of Benini distribution 
+# @see https://en.wikipedia.org/wiki/Benini_distribution
+# Parameters 
+#  - \f$ 0 < \alpha \f$ 
+#  - \f$ 0 < \beta  \f$ 
+#  - shift  \f$ delta \f$ 
+#  - scale  \f$ s \f$ 
+#
+#  For standard Benini pne has \f$ (\frac{x}{\sigma}\f$,
+#  here one has \f$ (\frac{x-\delta}{s}\f$       
+#  @see Ostap::Models::Benini
+#  @see Ostap::Math::Benini
+class Benini_pdf(PDF1) :
+    """A bit modified version of Benini distribution 
+    - see https://en.wikipedia.org/wiki/Benini_distribution
+    Parameters 
+    - 0 < alpha 
+    - 0 < beta  
+    - shift delta 
+    - scale s 
+    
+    For standard Benini pne has (x/sigma) and 
+    here one has (x-delta)/s 
+    - see `Ostap.Models.Benini`
+    - see `Ostap.Math.Benini`
+    """
+    ## constructor
+    def __init__ ( self         ,
+                   name         ,   ## the name 
+                   xvar         ,   ## the variable
+                   alpha        ,   ## shape  parameter
+                   beta         ,   ## shape  parameter                   
+                   scale        ,   ## scale  parameter
+                   shift        ) : ## shift  parameter
+        #
+        PDF1.__init__ ( self , name , xvar )
+        #
+        ##
+        xmnmx = self.xminmax()
+        
+        self.__alpha  = self.make_var   ( alpha                ,
+                                          'alpha_%s'    % name ,
+                                          '#alpha(%s)'  % name ,
+                                          None , 0 , 1000      )
+        self.__beta   = self.make_var   ( beta                 ,
+                                          'beta_%s'     % name ,
+                                          '#beta(%s)'   % name ,
+                                          None , 0 , 1000      )
+        self.__scale  = self.make_var   ( scale                 ,
+                                          'scale_%s'     % name ,
+                                          'scale(%s)'   % name  ,
+                                          None , 1 , 1.e-6 , 1000   )
+        self.__shift  = self.make_var   ( shift                 ,
+                                          'shift_%s'     % name ,
+                                          'shift(%s)'   % name  ,
+                                          None , *xmnmx )
+        
+        self.pdf  = Ostap.Models.Benini (
+            self.roo_name ( 'benini_' ) ,
+            'Benini %s' % self.name , 
+            self.x     ,
+            self.alpha ,
+            self.beta  ,
+            self.scale ,
+            self.shift )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'alpha' : self.alpha ,            
+            'beta'  : self.beta  ,            
+            'scale' : self.scale ,            
+            'shift' : self.shift ,            
+            }
+        
+    @property
+    def alpha ( self ) :
+        """'alpha'- shape parameter for Benini-distribution"""
+        return self.__alpha
+    @alpha.setter 
+    def alpha ( self , value ) :
+        self.set_value ( self.__alpha , value )
+    @property
+    def beta ( self ) :
+        """'beta'- shape parameter for Benini-distribution"""
+        return self.__beta
+    @beta.setter 
+    def beta ( self , value ) :
+        self.set_value ( self.__beta , value )
+
+    @property
+    def scale ( self ) :
+        """'scale'- scale parameter for Benini distribution"""
+        return self.__scale
+    @scale.setter 
+    def scale ( self , value ) :
+        self.set_value ( self.__scale , value )
+
+    @property
+    def shift ( self ) :
+        """'shift'- shift parameter for Benini distribution"""
+        return self.__shift
+    @shift.setter 
+    def shift ( self , value ) :
+        self.set_value ( self.__shift , value )
+        
+models.append ( Benini_pdf ) 
+
 
 # =============================================================================
 ## @class MPERT_pdf

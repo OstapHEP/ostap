@@ -10073,6 +10073,99 @@ Double_t Ostap::Models::ExGenPareto::analyticalIntegral
 
 
 
+
+
+
+
+// ============================================================================
+// Benini Distorbution
+// ============================================================================
+Ostap::Models::Benini::Benini
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          alpha     ,
+  RooAbsReal&          beta      ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_alpha   ( "!alpha" , "alpha-parameters" , this , alpha ) 
+  , m_beta    ( "!beta"  , "beta-parameter"   , this , beta  ) 
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale ) 
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift ) 
+    //
+  , m_benini  () 
+{
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Benini::Benini
+( const Ostap::Models::Benini&  right ,      
+  const char*                      name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_alpha  ( "!alpha"  , this , right.m_alpha ) 
+  , m_beta   ( "!beta"   , this , right.m_beta  ) 
+  , m_scale  ( "!scale"  , this , right.m_scale ) 
+  , m_shift  ( "!shift"  , this , right.m_shift ) 
+    //
+  , m_benini ( right.m_benini ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::Benini::~Benini (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Benini*
+Ostap::Models::Benini::clone( const char* name ) const 
+{ return new Ostap::Models::Benini(*this,name) ; }
+// ============================================================================
+void Ostap::Models::Benini::setPars () const 
+{
+  m_benini.setAlpha ( m_alpha ) ;
+  m_benini.setBeta  ( m_beta  ) ;
+  m_benini.setScale ( m_scale ) ;
+  m_benini.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Benini::evaluate() const 
+{
+  setPars () ;
+  return m_benini ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::Benini::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Benini::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars () ;
+  return m_benini.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
+
 // ============================================================================
 Ostap::Models::GEV::GEV
 ( const char*          name      , 
@@ -10367,6 +10460,7 @@ ClassImp(Ostap::Models::KarlinShapley      )
 ClassImp(Ostap::Models::KarlinStudden      )
 ClassImp(Ostap::Models::GenPareto          )
 ClassImp(Ostap::Models::ExGenPareto        )
+ClassImp(Ostap::Models::Benini             )
 ClassImp(Ostap::Models::GEV                )
 ClassImp(Ostap::Models::MPERT              )
 // ============================================================================

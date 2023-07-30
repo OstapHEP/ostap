@@ -4173,6 +4173,114 @@ std::size_t Ostap::Math::ExGenPareto::tag () const
 }
 
 
+
+// ============================================================================
+// Benini distribution 
+// ============================================================================
+Ostap::Math::Benini::Benini
+( const double alpha , 
+  const double beta  ,
+  const double scale , 
+  const double shift ) 
+  : m_alpha ( std::abs ( alpha ) ) 
+  , m_beta  ( std::abs ( beta  ) ) 
+  , m_scale ( std::abs ( scale ) ) 
+  , m_shift (            shift   ) 
+{}
+
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::Benini::evaluate 
+( const double x ) const 
+{
+  
+  if ( x < m_shift + m_scale  ) { return 0 ; }
+  //
+  const double lxs = std::log ( ( x - m_shift ) / m_scale ) ;
+  //
+  return std::exp ( - lxs * ( m_alpha + m_beta * lxs ) ) * 
+    ( m_alpha  + 2 * m_beta * lxs ) / x ;
+}
+// =============================================================================
+// set alpha parameter
+// =============================================================================
+bool Ostap::Math::Benini::setAlpha ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_alpha , avalue ) ) { return false ; }
+  m_alpha     = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set beta parameter
+// =============================================================================
+bool Ostap::Math::Benini::setBeta ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_beta , avalue ) ) { return false ; }
+  m_beta     = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set scale parameter
+// =============================================================================
+bool Ostap::Math::Benini::setScale ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_scale , avalue ) ) { return false ; }
+  m_scale     = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set shift  parameter
+// =============================================================================
+bool Ostap::Math::Benini::setShift ( const double value ) 
+{
+  if ( s_equal ( m_shift , value ) ) { return false ; }
+  m_shift     = value ;
+  return true ;    
+}
+// ============================================================================
+// evaluate the cdf 
+// ============================================================================
+double Ostap::Math::Benini::cdf
+( const double x ) const 
+{
+  if  ( x <= m_shift + m_scale ) { return 0 ; }
+  //
+  const double lxs = std::log ( ( x - m_shift ) / m_scale ) ;
+  //
+  return 1.0L - std::exp ( -lxs * ( m_alpha + m_beta * lxs ) ) ;
+}
+// =============================================================================
+// get the integral 
+// =============================================================================
+double Ostap::Math::Benini::integral  () const { return 1 ; }
+// =============================================================================
+// get the integral between low and high
+// =============================================================================
+double Ostap::Math::Benini::integral 
+( const double low  ,
+  const double high ) const 
+{ return 
+    std::max ( low , high ) <= m_shift + m_scale ? 0.0 :
+    s_equal ( low , high )                       ? 0.0 : cdf ( high ) - cdf ( low ) ; }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Benini::tag () const 
+{ 
+  static const std::string s_name = "Benini" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_alpha , m_beta , m_scale , m_shift  ) ;
+}
+
+
+
+
+
+
+
 // ============================================================================
 // Generalized extreme value distribution 
 // ============================================================================  

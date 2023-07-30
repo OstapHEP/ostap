@@ -9029,6 +9029,91 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Beini
+     *  Benini Distribution
+     *  @see https://en.wikipedia.org/wiki/Benini_distribution
+     *  @see Ostap::Math::Benini
+     */
+    class Benini : public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Benini, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general
+      Benini
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          alpha     ,
+        RooAbsReal&          beta      ,
+        RooAbsReal&          scale     , 
+        RooAbsReal&          shift     ) ;
+      /// copy
+      Benini
+      ( const Benini&        right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~Benini () ;
+      /// clone
+      Benini* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      Benini  () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Benini& function () const { return m_benini ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x     .arg () ; }
+      const RooAbsReal& alpha  () const { return m_alpha .arg () ; }
+      const RooAbsReal& beta   () const { return m_beta  .arg () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_alpha {} ;
+      RooRealProxy m_beta  {} ;
+      RooRealProxy m_scale {} ;
+      RooRealProxy m_shift {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Benini  m_benini {} ;  // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class GEV
      *  Generalized extreme value distribution
      *  @see https://en.wikipedia.org/wiki/Generalized_extreme_value_distribution

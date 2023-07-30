@@ -1957,6 +1957,23 @@ Ostap.Models.GenPareto   .__reduce__ = _rgpd1_reduce_
 Ostap.Models.ExGenPareto .__reduce__ = _rgpd1_reduce_ 
 Ostap.Models.GEV         .__reduce__ = _rgpd1_reduce_ 
 
+
+# =============================================================================
+## reduce Benini
+def _rben_reduce_ ( pdf ):
+    """Reduce Benini"""
+    return root_store_factory , ( type ( pdf )   ,
+                                  pdf.name       ,
+                                  pdf.title      ,
+                                  pdf.x       () ,                            
+                                  pdf.alpha   () ,
+                                  pdf.beta    () ,
+                                  pdf.scale   () ,
+                                  pdf.shift   () )
+
+Ostap.Models.Benini .__reduce__ = _rben_reduce_ 
+
+
 # =============================================================================
 ## reduce MPERT
 def _rmpert_reduce_ ( pdf ):

@@ -2922,6 +2922,86 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /* @class Benini
+     * A bit modified version of Benini distribution 
+     * @see https://en.wikipedia.org/wiki/Benini_distribution
+     * Parameters 
+     *  - \f$ 0 < \alpha \f$ 
+     *  - \f$ 0 < \beta  \f$ 
+     *  - shift  \f$ delta \f$ 
+     *  - scale  \f$ s \f$ 
+     *
+     *  For standard Benini pne has \f$ (\frac{x}{\sigma}\f$,
+     *  here one has \f$ (\frac{x-\delta}{s}\f$       
+     */
+    class Benini 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      Benini
+      ( const double alpha = 1 ,   // shape parameter 
+        const double beta  = 0 ,   // shape parameter 
+        const double scale = 1 ,   // scale parameter 
+        const double shift = 0 ) ; // shift parameter 
+      // ======================================================================
+    public:
+      // ======================================================================
+      // evaluate function 
+      double evaluate   ( const double x ) const ;
+      // evaluate function 
+      double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      // evaluate function 
+      double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public : // getters 
+      // ======================================================================
+      double alpha  () const { return m_alpha ; }
+      double beta   () const { return m_beta  ; }
+      double shift  () const { return m_shift ; }
+      double scale  () const { return m_scale ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setAlpha ( const double value ) ;
+      bool setBeta  ( const double value ) ;
+      bool setScale ( const double value ) ;
+      bool setShift ( const double value ) ;
+      // ====================================================================== 
+    public:
+      // ====================================================================== 
+      /// minimal x 
+      double xmin () const { return m_shift + m_scale ; }
+      // ====================================================================== 
+    public:
+      // ====================================================================== 
+      /// get the integral 
+      double integral  () const ;
+      /// get the integral between low and high
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      /// get the CDF 
+      double cdf ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// shape parameter alpha 
+      double m_alpha { 1 } ; // shape parametr alpha 
+      /// shape parameter beta 
+      double m_beta  { 0 } ; // shape parametr beta 
+      /// scale parameter 
+      double m_scale { 1 } ; // scale parameter 
+      /// shift parameter 
+      double m_shift { 0 } ; // shift parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class GEV
      *  Generalized extreme value distribution 
      *  https://en.wikipedia.org/wiki/Generalized_extreme_value_distribution

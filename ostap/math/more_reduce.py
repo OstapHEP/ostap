@@ -1024,6 +1024,22 @@ Ostap.Math.GenPareto   . __reduce__ = _omgpd_reduce_
 Ostap.Math.ExGenPareto . __reduce__ = _omgpd_reduce_
 Ostap.Math.GEV         . __reduce__ = _omgpd_reduce_
 
+
+# =============================================================================
+## reduce Ostap::Math::Benini
+#  @see Ostap::Math::Benini
+def _omben_reduce_ ( s ) :
+    """Reduce `Ostap.Math.Benini`
+    - see `Ostap.Math.GenPareto` 
+    """
+    return root_factory , ( type ( s ) ,
+                            s.alpha () ,
+                            s.beta  () ,
+                            s.scale () , 
+                            s.shift () )
+
+Ostap.Math.Benini  . __reduce__ = _omben_reduce_
+
 # =============================================================================
 ## reduce Ostap::Math::MPERT
 #  @see Ostap::Math::MPERT

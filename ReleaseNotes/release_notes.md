@@ -1,4 +1,6 @@
 ## New features:
+  1. Add Benini distribution  `Ostap::Math::Benini`, `Ostap::Models::Benini`, `Benini_pdf`
+
 
 ## Backward incompatible: 
 
