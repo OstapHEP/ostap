@@ -1,11 +1,10 @@
 ## New features:
-  1. Add Benini distribution  `Ostap::Math::Benini`, `Ostap::Models::Benini`, `Benini_pdf`
 
+  1. Add Benini distribution  `Ostap::Math::Benini`, `Ostap::Models::Benini`, `Benini_pdf`
 
 ## Backward incompatible: 
 
 ## Bug fixes:
-
 
 # v1.9.9.8
 
