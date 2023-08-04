@@ -10086,12 +10086,16 @@ Ostap::Models::Benini::Benini
   RooAbsReal&          x         ,
   RooAbsReal&          alpha     ,
   RooAbsReal&          beta      ,
+  RooAbsReal&          gamma     ,
+  RooAbsReal&          delta     ,
   RooAbsReal&          scale     ,
   RooAbsReal&          shift     ) 
   : RooAbsPdf ( name , title     ) 
   , m_x       ( "!x"     , "Observable"       , this , x     ) 
   , m_alpha   ( "!alpha" , "alpha-parameters" , this , alpha ) 
   , m_beta    ( "!beta"  , "beta-parameter"   , this , beta  ) 
+  , m_gamma   ( "!gamma" , "gamma-parameter"  , this , gamma ) 
+  , m_delta   ( "!delta" , "delta-parameter"  , this , delta ) 
   , m_scale   ( "!scale" , "scale-parameter"  , this , scale ) 
   , m_shift   ( "!shift" , "shift-parameter"  , this , shift ) 
     //
@@ -10099,6 +10103,24 @@ Ostap::Models::Benini::Benini
 {
   setPars () ;
 }
+// ============================================================================
+// Standard Benini Distribution
+// ============================================================================
+Ostap::Models::Benini::Benini
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          alpha     ,
+  RooAbsReal&          beta      ,
+  RooAbsReal&          scale     ) 
+  : Benini ( name , title , x , 
+             alpha , 
+             beta  , 
+             RooFit::RooConst ( 0 ) , 
+             RooFit::RooConst ( 0 ) , 
+             scale ,
+             RooFit::RooConst ( 0 ) )
+{}             
 // ============================================================================
 // copy constructor
 // ============================================================================
@@ -10110,6 +10132,8 @@ Ostap::Models::Benini::Benini
   , m_x      ( "!x"      , this , right.m_x     ) 
   , m_alpha  ( "!alpha"  , this , right.m_alpha ) 
   , m_beta   ( "!beta"   , this , right.m_beta  ) 
+  , m_gamma  ( "!gamma"  , this , right.m_gamma ) 
+  , m_delta  ( "!delta"  , this , right.m_delta ) 
   , m_scale  ( "!scale"  , this , right.m_scale ) 
   , m_shift  ( "!shift"  , this , right.m_shift ) 
     //
@@ -10132,6 +10156,8 @@ void Ostap::Models::Benini::setPars () const
 {
   m_benini.setAlpha ( m_alpha ) ;
   m_benini.setBeta  ( m_beta  ) ;
+  m_benini.setGamma ( m_gamma ) ;
+  m_benini.setDelta ( m_delta ) ;
   m_benini.setScale ( m_scale ) ;
   m_benini.setShift ( m_shift ) ;
 }

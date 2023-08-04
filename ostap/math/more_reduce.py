@@ -1035,6 +1035,8 @@ def _omben_reduce_ ( s ) :
     return root_factory , ( type ( s ) ,
                             s.alpha () ,
                             s.beta  () ,
+                            s.gamma () ,
+                            s.delta () ,
                             s.scale () , 
                             s.shift () )
 

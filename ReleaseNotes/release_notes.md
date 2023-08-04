@@ -1,7 +1,8 @@
 ## New features:
 
   1. Add Benini distribution  `Ostap::Math::Benini`, `Ostap::Models::Benini`, `Benini_pdf`
-
+  1. Add cubic and 4th order terms to (modified) Benini distribution 
+ 
 ## Backward incompatible: 
 
 ## Bug fixes:
@@ -15,7 +16,6 @@
 ## Bug fixes:
 
   1. fix a bug in `dataset.duplicates` : not all duplicated entries were listed.
-  
 
 # v1.9.9.6
 
@@ -60,8 +60,8 @@
 ## Bug fixes:
 
    1. Fix the bug/typo  in `padd_reweighting`
-   1. fix parallel `addChoppingResponse` - the `categroy_name` was ignored 
-   1. fix but in parallel `addChoppingResponse` ( the `category_name` argument was ignored) 
+   1. fix parallel `addChoppingResponse` - the `category_name` was ignored 
+   1. fix bug in parallel `addChoppingResponse` ( the `category_name` argument was ignored) 
 
 # v1.9.9.2
 

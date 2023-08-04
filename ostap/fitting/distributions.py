@@ -1841,40 +1841,58 @@ models.append ( GEV_pdf )
 
 # =============================================================================
 ## @class Benini_pdf
-# A bit modified version of Benini distribution 
+# Modified version of Benini distribution 
 # @see https://en.wikipedia.org/wiki/Benini_distribution
 # Parameters 
-#  - \f$ 0 < \alpha \f$ 
-#  - \f$ 0 < \beta  \f$ 
-#  - shift  \f$ delta \f$ 
+#  - \f$ 0 < \alpha  \f$ linear in log 
+#  - \f$ 0 < \beta   \f$ quadratic in log 
+#  - \f$ 0 < \gamma  \f$ cubic in log 
+#  - \f$ 0 < \delta  \f$ 4th order  in log 
+#  - shift  \f$ \mu  \f$ 
 #  - scale  \f$ s \f$ 
 #
 #  For standard Benini pne has \f$ (\frac{x}{\sigma}\f$,
-#  here one has \f$ (\frac{x-\delta}{s}\f$       
+#  here one has \f$ (\frac{x-\delta}{s}\f$
+#
+#  Standard Benini distribution: 
+#  - \f$ \mu=0    \f$ 
+#  - \f$ \gamma=0 \f$ 
+#  - \f$ \delta=0 \f$ 
+# 
 #  @see Ostap::Models::Benini
 #  @see Ostap::Math::Benini
 class Benini_pdf(PDF1) :
-    """A bit modified version of Benini distribution 
+    """Modified version of Benini distribution 
     - see https://en.wikipedia.org/wiki/Benini_distribution
     Parameters 
-    - 0 < alpha 
-    - 0 < beta  
-    - shift delta 
+    - 0 <  alpha  : linear     in log 
+    - 0 <= beta   : quadractic in log 
+    - 0 <= gamma  : cubic      in log 
+    - 0 <= delta   : cubic      in log 
+    - shift mu  
     - scale s 
     
     For standard Benini pne has (x/sigma) and 
     here one has (x-delta)/s 
+    
+    Standard Benini distribution: 
+    - mu=0
+    - gamma=0
+    - delta=0
+    
     - see `Ostap.Models.Benini`
     - see `Ostap.Math.Benini`
     """
     ## constructor
-    def __init__ ( self         ,
-                   name         ,   ## the name 
-                   xvar         ,   ## the variable
-                   alpha        ,   ## shape  parameter
-                   beta         ,   ## shape  parameter                   
-                   scale        ,   ## scale  parameter
-                   shift        ) : ## shift  parameter
+    def __init__ ( self                               ,
+                   name                               ,   ## the name 
+                   xvar                               ,   ## the variable
+                   alpha                              ,   ## shape  parameter
+                   beta                               ,   ## shape  parameter                   
+                   gamma = ROOT.RooFit.RooConst ( 0 ) ,   ## shape  parameter                   
+                   delta = ROOT.RooFit.RooConst ( 0 ) ,   ## shape  parameter                   
+                   scale = 1                          ,   ## scale  parameter
+                   shift = 0                          ) : ## shift  parameter
         #
         PDF1.__init__ ( self , name , xvar )
         #
@@ -1888,6 +1906,14 @@ class Benini_pdf(PDF1) :
         self.__beta   = self.make_var   ( beta                 ,
                                           'beta_%s'     % name ,
                                           '#beta(%s)'   % name ,
+                                          None , 0 , 1000      )
+        self.__gamma  = self.make_var   ( gamma                ,
+                                          'gamma_%s'    % name ,
+                                          '#gamma(%s)'  % name ,
+                                          None , 0 , 1000      )
+        self.__delta  = self.make_var   ( delta                ,
+                                          'delta_%s'    % name ,
+                                          '#delta(%s)'  % name ,
                                           None , 0 , 1000      )
         self.__scale  = self.make_var   ( scale                 ,
                                           'scale_%s'     % name ,
@@ -1904,6 +1930,8 @@ class Benini_pdf(PDF1) :
             self.x     ,
             self.alpha ,
             self.beta  ,
+            self.gamma ,
+            self.delta ,
             self.scale ,
             self.shift )
         
@@ -1913,6 +1941,8 @@ class Benini_pdf(PDF1) :
             'xvar'  : self.xvar  ,
             'alpha' : self.alpha ,            
             'beta'  : self.beta  ,            
+            'gamma' : self.gamma ,            
+            'delta' : self.delta ,            
             'scale' : self.scale ,            
             'shift' : self.shift ,            
             }
@@ -1924,6 +1954,7 @@ class Benini_pdf(PDF1) :
     @alpha.setter 
     def alpha ( self , value ) :
         self.set_value ( self.__alpha , value )
+        
     @property
     def beta ( self ) :
         """'beta'- shape parameter for Benini-distribution"""
@@ -1931,6 +1962,22 @@ class Benini_pdf(PDF1) :
     @beta.setter 
     def beta ( self , value ) :
         self.set_value ( self.__beta , value )
+
+    @property
+    def gamma ( self ) :
+        """'gamma'- shape parameter for Benini-distribution"""
+        return self.__gamma
+    @gamma.setter 
+    def gamma ( self , value ) :
+        self.set_value ( self.__gamma , value )
+
+    @property
+    def delta ( self ) :
+        """'delta'- shape parameter for Benini-distribution"""
+        return self.__delta
+    @delta.setter 
+    def delta ( self , value ) :
+        self.set_value ( self.__delta , value )
 
     @property
     def scale ( self ) :

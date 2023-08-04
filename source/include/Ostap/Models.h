@@ -2923,16 +2923,30 @@ namespace Ostap
     } ;
     // ========================================================================
     /* @class Benini
-     * A bit modified version of Benini distribution 
+     * A modified version of Benini distribution 
      * @see https://en.wikipedia.org/wiki/Benini_distribution
      * Parameters 
-     *  - \f$ 0 < \alpha \f$ 
-     *  - \f$ 0 < \beta  \f$ 
-     *  - shift  \f$ delta \f$ 
-     *  - scale  \f$ s \f$ 
+     *  - \f$ 0 < \alpha  \f$   linear    term in log ( (x-mu)/scale )
+     *  - \f$ 0 < \beta   \f$   quadratic term in log ( (x-mu)/scale )
+     *  - \f$ 0 < \gamma  \f$   cubic     term in log ( (x-mu)/scale )
+     *  - \f$ 0 < \delta  \f$   4th order term in log ( (x-mu)/scale )
+     *  - shift  \f$ \mu  \f$ 
+     *  - scale  \f$ s    \f$ 
+     *
+     *  \f[ f ( x , \alpha, \beta,\gamma,\delta, \mu,  \sigma = 
+     *   \mathrm{e}^{ - \alpha \Delta - \beta \Delta^2 
+     *                - \gamma \Delta^3 - \delta \Delta^4}
+     *   \left( \frac{\alpa}{x} + \frac{2\beta\Delta}{x} + 
+     *          \frac{3\gamma\Delta^2}{x}  + \frac{4\delta\Delta^3}{x}
+     *  \right)\f]
+     *  where \f$ \Delta = \log \frac{x-\mu}{\sigma}\f$ 
      *
      *  For standard Benini pne has \f$ (\frac{x}{\sigma}\f$,
-     *  here one has \f$ (\frac{x-\delta}{s}\f$       
+     *  here one has \f$ (\frac{x-\mu}{\sigma}\f$ and we have added 
+     *  a cubic and 4th order
+     *  - shift is 0
+     *  - \f$ \gamma = 0 \g$
+     *  - \f$ \delta = 0 \g$
      */
     class Benini 
     {
@@ -2942,6 +2956,8 @@ namespace Ostap
       Benini
       ( const double alpha = 1 ,   // shape parameter 
         const double beta  = 0 ,   // shape parameter 
+        const double gamma = 0 ,   // shape parameter 
+        const double delta = 0 ,   // shape parameter 
         const double scale = 1 ,   // scale parameter 
         const double shift = 0 ) ; // shift parameter 
       // ======================================================================
@@ -2958,6 +2974,8 @@ namespace Ostap
       // ======================================================================
       double alpha  () const { return m_alpha ; }
       double beta   () const { return m_beta  ; }
+      double gamma  () const { return m_gamma ; }
+      double delta  () const { return m_delta ; }
       double shift  () const { return m_shift ; }
       double scale  () const { return m_scale ; }
       // ======================================================================
@@ -2965,6 +2983,8 @@ namespace Ostap
       // ======================================================================
       bool setAlpha ( const double value ) ;
       bool setBeta  ( const double value ) ;
+      bool setGamma ( const double value ) ;
+      bool setDelta ( const double value ) ;
       bool setScale ( const double value ) ;
       bool setShift ( const double value ) ;
       // ====================================================================== 
@@ -2992,9 +3012,13 @@ namespace Ostap
     private:
       // ======================================================================
       /// shape parameter alpha 
-      double m_alpha { 1 } ; // shape parametr alpha 
+      double m_alpha { 1 } ; // shape parameter alpha 
       /// shape parameter beta 
-      double m_beta  { 0 } ; // shape parametr beta 
+      double m_beta  { 0 } ; // shape parameter beta 
+      /// shape parameter gamma
+      double m_gamma { 0 } ; // shape parameter gamma
+      /// shape parameter delta 
+      double m_delta { 0 } ; // shape parameter delta 
       /// scale parameter 
       double m_scale { 1 } ; // scale parameter 
       /// shift parameter 

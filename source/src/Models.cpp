@@ -37,6 +37,7 @@
 #include "Ostap/MoreMath.h"
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/Models.h"
+#include "Ostap/ToStream.h"
 // ============================================================================
 //  Local 
 // ============================================================================
@@ -4180,10 +4181,14 @@ std::size_t Ostap::Math::ExGenPareto::tag () const
 Ostap::Math::Benini::Benini
 ( const double alpha , 
   const double beta  ,
+  const double gamma ,
+  const double delta ,
   const double scale , 
   const double shift ) 
   : m_alpha ( std::abs ( alpha ) ) 
   , m_beta  ( std::abs ( beta  ) ) 
+  , m_gamma ( std::abs ( gamma ) ) 
+  , m_delta ( std::abs ( delta ) ) 
   , m_scale ( std::abs ( scale ) ) 
   , m_shift (            shift   ) 
 {}
@@ -4191,6 +4196,8 @@ Ostap::Math::Benini::Benini
 // ============================================================================
 // evaluate the function 
 // ============================================================================
+#include <iostream>
+
 double Ostap::Math::Benini::evaluate 
 ( const double x ) const 
 {
@@ -4199,8 +4206,13 @@ double Ostap::Math::Benini::evaluate
   //
   const double lxs = std::log ( ( x - m_shift ) / m_scale ) ;
   //
-  return std::exp ( - lxs * ( m_alpha + m_beta * lxs ) ) * 
-    ( m_alpha  + 2 * m_beta * lxs ) / x ;
+  std::array<double,4> coefs1 { { m_alpha,     m_beta ,     m_gamma ,     m_delta } } ;
+  std::array<double,4> coefs2 { { m_alpha, 2 * m_beta , 3 * m_gamma , 4 * m_delta } } ;
+  //
+  const double p1 = Ostap::Math::Clenshaw::monomial_sum ( coefs1.rbegin() , coefs1.rend  () , lxs ).first ;
+  const double p2 = Ostap::Math::Clenshaw::monomial_sum ( coefs2.rbegin() , coefs2.rend  () , lxs ).first ;
+  //
+  return std::exp ( - lxs * p1 ) * p2 / x ;
 }
 // =============================================================================
 // set alpha parameter
@@ -4220,6 +4232,26 @@ bool Ostap::Math::Benini::setBeta ( const double value )
   const double avalue = std::abs ( value ) ;
   if ( s_equal ( m_beta , avalue ) ) { return false ; }
   m_beta     = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set gamma parameter
+// =============================================================================
+bool Ostap::Math::Benini::setGamma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_gamma , avalue ) ) { return false ; }
+  m_gamma    = avalue ;
+  return true ;    
+}
+// =============================================================================
+// set delta  parameter
+// =============================================================================
+bool Ostap::Math::Benini::setDelta ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_delta , avalue ) ) { return false ; }
+  m_delta    = avalue ;
   return true ;    
 }
 // =============================================================================
@@ -4251,7 +4283,10 @@ double Ostap::Math::Benini::cdf
   //
   const double lxs = std::log ( ( x - m_shift ) / m_scale ) ;
   //
-  return 1.0L - std::exp ( -lxs * ( m_alpha + m_beta * lxs ) ) ;
+  std::array<double,4> coefs1 { { m_alpha,     m_beta ,     m_gamma ,     m_delta } } ;
+  const double p1 = Ostap::Math::Clenshaw::monomial_sum ( coefs1.rbegin() , coefs1.rend  () , lxs ).first ;
+  //
+  return 1.0L - std::exp ( -lxs * p1 ) ;
 }
 // =============================================================================
 // get the integral 
@@ -4272,11 +4307,14 @@ double Ostap::Math::Benini::integral
 std::size_t Ostap::Math::Benini::tag () const 
 { 
   static const std::string s_name = "Benini" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_alpha , m_beta , m_scale , m_shift  ) ;
+  return Ostap::Utils::hash_combiner ( s_name  , 
+                                       m_alpha , 
+                                       m_beta  , 
+                                       m_gamma , 
+                                       m_delta , 
+                                       m_scale , 
+                                       m_shift ) ;
 }
-
-
-
 
 
 
