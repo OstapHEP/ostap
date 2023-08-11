@@ -2586,6 +2586,33 @@ def _h1_asym_ ( h1 , h2 ) :
     >>> result = h1.asym ( h2 )     
     """
     return _h1_oper_ ( h1 , h2 , lambda x,y : x.asym(y) ) 
+
+
+# =============================================================================
+##  ``minimum'' of the histograms 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2023-09-11
+def _h1_min_ ( h1 , h2 ) :
+    """``minimum'' the histogram min(j1,h2)
+    >>> h1     = ...
+    >>> h2     = ...
+    >>> result = h1.min ( h2 )     
+    """
+    return _h1_oper_ ( h1 , h2 , lambda x,y : min ( x , y ) ) 
+
+# =============================================================================
+##  ``maximum'' of the histograms 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2023-09-11
+def _h1_max_ ( h1 , h2 ) :
+    """``maximum'' the histogram min(j1,h2)
+    >>> h1     = ...
+    >>> h2     = ...
+    >>> result = h1.max ( h2 )     
+    """
+    return _h1_oper_ ( h1 , h2 , lambda x,y : max ( x , y ) ) 
+
+
 # =============================================================================
 ## ``Difference'' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2830,6 +2857,8 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
     t .  diff        = _h1_diff_
     t .  chi2        = _h1_chi2_
     t .  average     = _h1_average_
+    t .  min         = _h1_min_
+    t .  max         = _h1_max_
 
 # =============================================================================
 ## find the first X-value for the given Y-value 
@@ -3453,7 +3482,34 @@ def _h2_asym_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> asym   = h1.asym ( h2 )
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : x.asym(y) ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : x.asym(y) )
+
+
+# =============================================================================
+## ``minimum'' of the histograms 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2023-08-11
+def _h2_min_ ( h1 , h2 ) :
+    """``minimum'' the histogram
+    >>> h1     = ...
+    >>> h2     = ...
+    >>> asym   = h1.min ( h2 )
+    """
+    return _h2_oper_ ( h1 , h2 , lambda x,y : min ( x , y ) )
+
+# =============================================================================
+## ``maximum'' of the histograms 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2023-08-11
+def _h2_max_ ( h1 , h2 ) :
+    """``maximum'' the histogram
+    >>> h1     = ...
+    >>> h2     = ...
+    >>> asym   = h1.max ( h2 )
+    """
+    return _h2_oper_ ( h1 , h2 , lambda x,y : max ( x , y ) )
+
+
 # =============================================================================
 ## ``Difference'' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3627,6 +3683,8 @@ for t in ( ROOT.TH2F , ROOT.TH2D ) :
     t .  diff        = _h2_diff_
     t .  chi2        = _h2_chi2_
     t .  average     = _h2_average_
+    t .  min         = _h2_min_
+    t .  max         = _h2_max_
 
     t .  box         = _h2_box_
     t .  lego        = _h2_lego_
@@ -3770,6 +3828,33 @@ def _h3_asym_ ( h1 , h2 ) :
     >>> h3 = h1.asym ( h2 )    
     """
     return _h3_oper_ ( h1 , h2 , lambda x,y : x.asym(y) ) 
+
+
+# =============================================================================
+## ``minimum'' of the histograms 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2023-08-11
+def _h3_min_ ( h1 , h2 ) :
+    """``minimum'' the histogram
+    >>> h1     = ...
+    >>> h2     = ...
+    >>> asym   = h1.min ( h2 )
+    """
+    return _h23_oper_ ( h1 , h2 , lambda x,y : min ( x , y ) )
+
+# =============================================================================
+## ``maximum'' of the histograms 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2023-08-11
+def _h3_max_ ( h1 , h2 ) :
+    """``maximum'' the histogram
+    >>> h1     = ...
+    >>> h2     = ...
+    >>> asym   = h1.max ( h2 )
+    """
+    return _h3_oper_ ( h1 , h2 , lambda x,y : max ( x , y ) )
+
+
 # =============================================================================
 ##  ``Chi2-tension'' the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3972,10 +4057,13 @@ ROOT.TH3.__isub__     = _h3_isub_
 ROOT.TH3.__abs__   = _h3_abs_
 ROOT.TH3.__pow__   = _h3_pow_
 
+
 ROOT.TH3.  frac    = _h3_frac_
 ROOT.TH3.  asym    = _h3_asym_
 ROOT.TH3.  chi2    = _h3_chi2_
 ROOT.TH3.  average = _h3_average_
+ROOT.TH3.  min     = _h3_min_
+ROOT.TH3.  max     = _h3_max_
 
 
 # =============================================================================
