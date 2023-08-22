@@ -113,6 +113,8 @@ agrestiCoullEff = Ostap.Math.agrestiCoullEff
 ## helper function for case-insensitive dictionary with ignorance of underscores and blanks
 from ostap.utils.cidict import case_transform 
 cidict_fun = lambda k : case_transform ( k ) . replace('_','') . replace ( ' ', '') 
+
+# =============================================================================
 # =============================================================================
 ## @class ROOTCWD
 #  context manager to preserve current directory (rather confusing stuff in ROOT)
@@ -127,66 +129,82 @@ cidict_fun = lambda k : case_transform ( k ) . replace('_','') . replace ( ' ', 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
-class ROOTCWD(object) :
-    """Context manager to preserve current directory
-    (rather confusing stuff in ROOT) 
-    >>> print the_ROOT.CurrentDirectory() 
-    >>> with ROOTCWD() :
-    ...     print the_ROOT.CurrentDirectory() 
-    ...     rfile = ROOT.TFile( 'test.root' , 'recreate' )
-    ...     print the_ROOT.CurrentDirectory() 
-    ... print the_ROOT.CurrentDirectory() 
-    """
-    def __init__ ( self ) :
-        self._dir = None
-
-    def __del__ ( self ) :
-        del self._dir
-
-    ## context manager ENTER 
-    def __enter__ ( self ) :
-        "Save current working directory"
-        self._dir = None
-
-        ## ROOT::TDirectory::TContext appears in ROOT 6/23/01
-            
-        groot     = ROOT.ROOT.GetROOT ()
-        if groot :
-            cwd = groot.CurrentDirectory()
-            if root_info < ( 6, 23, 1 ) : pass
-            else                        : cwd = cwd.load() 
-            if cwd : self._dir = cwd
-                           
-            ## self._dir = ROOT.TDirectory.TContext()
-            ## pass
-        
-        return self
-
-    ## context manager EXIT 
-    def __exit__  ( self , *_ ) :
-        "Make the previous directory current again"
-
-        ## ROOT::TDirectory::TContext appears in ROOT 6/23/01
-        if self._dir :
-
-            odir = self._dir
-                
+if root_info < ( 6, 29 ) :    
+    class ROOTCWD(object) :
+        """Context manager to preserve current directory
+        (rather confusing stuff in ROOT) 
+        >>> print the_ROOT.CurrentDirectory() 
+        >>> with ROOTCWD() :
+        ...     print the_ROOT.CurrentDirectory() 
+        ...     rfile = ROOT.TFile( 'test.root' , 'recreate' )
+        ...     print the_ROOT.CurrentDirectory() 
+        ... print the_ROOT.CurrentDirectory() 
+        """
+        def __init__ ( self ) :
             self._dir = None
             
-            fdir = odir.GetFile () if isinstance ( odir , ROOT.TDirectoryFile ) else None
-            
-            if fdir and not fdir.IsOpen () :
-                
-                groot = ROOT.ROOT.GetROOT ()
-                groot.cd ()
-                
-            else :
-                odir.cd()
-
+        def __del__ ( self ) :
+            self._dir = None 
             del self._dir
             
-        self._dir = None
+        ## context manager ENTER 
+        def __enter__ ( self ) :
+            "Save current working directory"
+            self._dir = None
             
+            ## ROOT::TDirectory::TContext appears in ROOT 6/23/01
+            groot     = ROOT.ROOT.GetROOT ()
+            if groot :
+                cwd = groot.CurrentDirectory()
+                cwd = cwd.load() 
+                if cwd : self._dir = cwd
+                
+            return self
+
+        ## context manager EXIT 
+        def __exit__  ( self , *_ ) :
+            "Make the previous directory current again"
+            
+            if self._dir :
+                
+                odir = self._dir
+                
+                self._dir = None
+                
+                fdir = odir.GetFile () if isinstance ( odir , ROOT.TDirectoryFile ) else None
+                
+                if fdir and not fdir.IsOpen () :
+                    
+                    groot = ROOT.ROOT.GetROOT ()
+                    groot.cd ()
+                    
+                else :
+                    
+                    odir.cd()
+
+            self._dir = None 
+            del self._dir
+else :
+    ## ========================================================================
+    class ROOTCWD(object) :
+        """Context manager to preserve current directory
+        (rather confusing stuff in ROOT) 
+        >>> print the_ROOT.CurrentDirectory() 
+        >>> with ROOTCWD() :
+        ...     print the_ROOT.CurrentDirectory() 
+        ...     rfile = ROOT.TFile( 'test.root' , 'recreate' )
+        ...     print the_ROOT.CurrentDirectory() 
+        ... print the_ROOT.CurrentDirectory() 
+        """
+
+        def __enter__ ( self ) :            
+            self._cntx = ROOT.TDirectory.TContext()
+            self._cntx.__enter__()
+
+        def __exit__ ( self , *_ ) :
+            return self._cntx.__exit__ ( *_ )
+            
+
 # =============================================================================
 ## global identifier for ROOT objects 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -586,7 +604,7 @@ def _rd_valid_ ( rdir ) :
     ## check validity of C++ pointer 
     if not valid_pointer ( rdir ) : return False
 
-    ## for the file directories check the validity of the file 
+    ## for the file directories check the validity of the file
     if isinstance ( rdir , ROOT.TDirectoryFile ) :
         fdir = rdir.GetFile()
         if not valid_pointer ( fdir ) or not fdir.IsOpen () or fdir.IsZombie () :
