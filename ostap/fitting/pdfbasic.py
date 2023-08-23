@@ -33,6 +33,7 @@ __all__     = (
 # =============================================================================
 import ostap.fitting.roofit 
 import ostap.fitting.variables
+import ostap.fitting.dataset 
 import ostap.fitting.roocollections 
 from   builtins                 import range
 from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID,
@@ -378,8 +379,8 @@ class APDF1 ( Components ) :
                                     args    =  args   , **kwargs )
             
         
-        if   isinstance ( dataset , H1D_dset ) : dataset = dataset.dset        
-        elif isinstance ( dataset , ROOT.TH1 ) :
+        if   isinstance ( dataset , ( H1D_dset , H2D_dset , H3D_dset ) ) : dataset = dataset.dset        
+        elif isinstance ( dataset , ROOT.TH1 ) and 1 == dataset.dim () :
             density = kwargs.pop ( 'density' , False  )
             chi2    = kwargs.pop ( 'chi2'    , False  )
             return self.fitHisto ( dataset           ,
@@ -387,7 +388,7 @@ class APDF1 ( Components ) :
                                    silent  = silent  ,
                                    density = density ,
                                    nbins   = nbins   , 
-                                   chi2    = chi2    , args = args , **kwargs ) 
+                                   chi2    = chi2    , args = args , **kwargs )
         #
         ## treat the arguments properly
         #
@@ -401,7 +402,12 @@ class APDF1 ( Components ) :
             if not vl : opts = opts + ( ROOT.RooFit.Verbose         ( False ) , )
             pe = check_arg ('PrintEvalErrors' , *opts )
             if not pe : opts = opts + ( ROOT.RooFit.PrintEvalErrors ( 0     ) , )
-                
+
+        if self.vars and 1 < len ( self.vars ) :
+            rng = check_arg ( 'Range' , *opts ) 
+            if rng : self.warning ( 'fitTo: %s is specified for >1D function - it is ambuguous!' % rng )
+
+        ## check sumw2/asymptoticerorr flags 
         weighted = dataset.isWeighted() if dataset else False
         if weighted :
             sw2 = check_arg ( 'SumW2Error'      , *opts )
@@ -409,14 +415,28 @@ class APDF1 ( Components ) :
             if not sw2 and not aer :
                 self.warning ( "fitTo: Neither 'SumW2Error' and 'AsymptoticError' are specified for weighted dataset!" )
 
-        if 1 < len ( self.vars ) :
-            rng = check_arg ( 'Range' , *opts ) 
-            if rng : self.warning ( 'fitTo: %s is specified for >1D function - it is ambuguous!' % rng )
-
         ## check fit ranges 
         rng = check_arg ( 'RangeByName' , *opts )
         ok  = self.check_ranges ( dataset , rng.getString(0) if rng else '' )
         if not ok : self.warning ( 'fitTo: ranges are not OK' ) 
+
+        ## #
+        ## ## check the limits/ranges 
+        ## #
+        ## if dataset and self.vars and \
+        ##        ( not check_arg ( 'Range'       , *opts ) ) and \
+        ##        ( not check_arg ( 'RangeByName' , *opts ) ) :
+        ##     vnames = [ v.name for v in self.vars if v.xminmax() ]
+        ##     if vnames :
+        ##         stat = dataset.statVars ( vnames )
+        ##         for v in self.vars :
+        ##             if not v.name in vnames : continue 
+        ##             vmn , vmx = v.xminmax()
+        ##             mnv , mxv = stat [ v.name ].minmax()
+        ##             if mnv < vmn or vmx < mxv :
+        ##                 self.warning ( 'Limits for %s variable [%+.3g,%+.3g], while the range is [%+.3g,%+.3g]' % ( v.name    ,
+        ##                                                                                                             vmn , vmx ,
+        ##                                                                                                             mnv , mxv ) )
 
         if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
             self.info ('fitTo options: %s ' % list ( flat_args ( *opts ) ) ) 
@@ -980,13 +1000,13 @@ class APDF1 ( Components ) :
                    chi2    = False ,
                    nbins   = None  , 
                    args    = () , **kwargs ) :
-        """Fit the histogram (and draw it)
+        """Fit the 1D-histogram (and draw it)
 
         >>> histo = ...
         >>> r,f = model.fitHisto ( histo , draw = True ) 
         
         """
-        with RangeVar( self.xvar , *(histo.xminmax()) ) : 
+        with RangeVar ( self.xvar , *(histo.xminmax()) ) : 
 
             hdata = getattr ( self , 'histo_data' , None )
             if hdata and isinstance ( hdata , H1D_dset ) and \
@@ -2748,7 +2768,7 @@ class APDF2 (APDF1) :
         >>> r,f = model.fitTo ( dataset , draw = True , nbins = 300 )    
         """
         if   isinstance ( dataset , H2D_dset ) : dataset = dataset.dset        
-        elif isinstance ( dataset , ROOT.TH2 ) :
+        elif isinstance ( dataset , ROOT.TH2 ) and 2 == dataste.dim() :
             density = kwargs.pop ( 'density' , False ) 
             chi2    = kwargs.pop ( 'chi2'    , False ) 
             return self.fitHisto ( dataset   ,
@@ -3016,7 +3036,7 @@ class APDF2 (APDF1) :
         return result 
     
     # =========================================================================
-    ## fit the 2D-histogram (and draw it)
+    ## fit the 2D-histogram
     #
     #  @code
     #
@@ -3031,16 +3051,16 @@ class APDF2 (APDF1) :
                    density = False ,
                    chi2    = False ,
                    args    = ()    , **kwargs ) :
-        """Fit the histogram (and draw it)
+        """Fit the 2D-histogram
         
         >>> histo = ...
-        >>> r,f = model.fitHisto ( histo , draw = True )
+        >>> r,f = model.fitHisto ( histo )
         
         """
 
         xminmax = histo.xminmax()
         yminmax = histo.yminmax()        
-        with RangeVar( self.xvar , *xminmax ) , RangeVar ( self.yvar , *yminmax ):
+        with RangeVar ( self.xvar , *xminmax ) , RangeVar ( self.yvar , *yminmax ):
             
             hdata = getattr ( self , 'histo_data' , None )
             if hdata and isinstance ( hdata  , H2D_dset ) and \
@@ -4211,10 +4231,10 @@ class APDF3 (APDF2) :
                    density = False ,
                    chi2    = False , 
                    args    = ()    , **kwargs ) :
-        """Fit the histogram (and draw it)
+        """Fit the 3D histogram
         
         >>> histo = ...
-        >>> r,f = model.fitHisto ( histo , draw = True )
+        >>> r,f = model.fitHisto ( histo )
         
         """
         
@@ -4224,7 +4244,7 @@ class APDF3 (APDF2) :
         
         with     RangeVar ( self.xvar , *xminmax ) , \
                  RangeVar ( self.yvar , *yminmax ) , \
-                 RangeVar ( self.xvar , *zminmax ): 
+                 RangeVar ( self.xvar , *zminmax ) : 
 
             hdata = getattr ( self , 'histo_data' , None )
             if hdata and isinstance ( hdata  , H3D_dset ) and \
@@ -4237,8 +4257,11 @@ class APDF3 (APDF2) :
             else :
                 ## convert it! 
                 self.debug ('Create new H3D_dset'        ) 
-                self.histo_data = H3D_dset ( histo , self.xvar , self.yvar  , self.zvar ,
-                                             density , silent )
+                self.histo_data = H3D_dset ( histo     ,
+                                             self.xvar ,
+                                             self.yvar ,
+                                             self.zvar ,
+                                             density   , silent )
                 data = self.histo_data
                 
             if chi2 : return self.chi2fitTo ( data              ,
@@ -4248,7 +4271,7 @@ class APDF3 (APDF2) :
                                               args    = args    , **kwargs )
             else    : return self.fitTo     ( data              ,
                                               silent  = silent  ,
-                                              args    =  args   , **kwargs ) 
+                                              args    = args    , **kwargs ) 
 
     # =========================================================================
     ## generate toy-sample according to PDF
