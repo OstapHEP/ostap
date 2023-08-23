@@ -202,8 +202,18 @@ else :
             self._cntx.__enter__()
 
         def __exit__ ( self , *_ ) :
-            return self._cntx.__exit__ ( *_ )
-            
+            result = self._cntx.__exit__ ( *_ )
+            groot     = ROOT.ROOT.GetROOT ()
+            if groot :
+                cwd = groot.CurrentDirectory().load()
+                if valid_pointer ( cwd ) :
+                    if isinstance ( cwd , ROOT.TDirectoryFile ) :
+                        fdir = cwd.GetFile ()
+                        if valid_pointer ( fdir ) and not fdir.IsOpen() :
+                            groot = ROOT.ROOT.GetROOT ()
+                            groot.cd ()
+                            
+            return result 
 
 # =============================================================================
 ## global identifier for ROOT objects 
