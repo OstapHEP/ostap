@@ -156,7 +156,7 @@ if root_info < ( 6, 29 ) :
             groot     = ROOT.ROOT.GetROOT ()
             if groot :
                 cwd = groot.CurrentDirectory()
-                cwd = cwd.load() 
+                if ( 6 , 23 , 1 ) <= root_info : cwd = cwd.load() ## resolve std::atomic 
                 if cwd : self._dir = cwd
                 
             return self
