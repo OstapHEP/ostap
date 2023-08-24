@@ -17,6 +17,10 @@
 #include "RooRealProxy.h"
 #include "RooAbsPdf.h"
 #include "RooGlobalFunc.h"
+// ======================================================================
+#if ROOT_VERSION(6,20,0)<=ROOT_VERSION_CODE
+#include "RooSpan.h"
+#endif 
 // ============================================================================
 namespace Ostap 
 {
