@@ -1834,14 +1834,14 @@ class PearsonIV_pdf(PEAK) :
         ## initialize the base
         # 
         PEAK.__init__  ( self                   ,
-                              name        = name     ,
-                              xvar        = xvar     ,
-                              mean        = mu       ,
-                              sigma       = varsigma ,
-                              mean_name   = 'mu_%s'               % name ,
-                              mean_title  = '#mu_{PIV}(%s)'       % name ,
-                              sigma_name  = 'varsigma_%s'         % name ,
-                              sigma_title = '#varsigma_{PIV}(%s)' % name )
+                         name        = name     ,
+                         xvar        = xvar     ,
+                         mean        = mu       ,
+                         sigma       = varsigma ,
+                         mean_name   = 'mu_%s'               % name ,
+                         mean_title  = '#mu_{PIV}(%s)'       % name ,
+                         sigma_name  = 'varsigma_%s'         % name ,
+                         sigma_title = '#varsigma_{PIV}(%s)' % name )
         
         ## location parameter 
         self.__mu       = self.mean
@@ -1885,7 +1885,7 @@ class PearsonIV_pdf(PEAK) :
 
     @property     
     def mu ( self ) :
-        """'mu'-parameter (location) for Pearon Type IV distribution (same as 'mean')"""
+        """'mu'-parameter (location) for Pearson Type IV distribution (same as 'mean')"""
         return self.__mu
     @mu.setter
     def mu ( self, value ) :
@@ -1893,7 +1893,7 @@ class PearsonIV_pdf(PEAK) :
 
     @property     
     def varsigma ( self ) :
-        """'varsigma'-parameter for Pearon Type IV distribution (same as 'sigma')"""
+        """'varsigma'-parameter for Pearson Type IV distribution (same as 'sigma')"""
         return self.__varsigma
     @varsigma.setter
     def varsigma ( self, value ) :
@@ -1909,7 +1909,7 @@ class PearsonIV_pdf(PEAK) :
 
     @property
     def kappa ( self ) :
-        """'kappa'-parameter (asymmetry) for Pearson Type IV distribution"""
+        """'kappa'-parameter (asymmetry) for Pearson Type IV distribution (same as nu)"""
         return self.__kappa
     @kappa.setter
     def kappa ( self, value ) :
@@ -1917,7 +1917,7 @@ class PearsonIV_pdf(PEAK) :
 
     @property     
     def nu ( self ) :
-        """'nu'-parameter (asymmetry) for Pearon Type IV distribution (same as 'kappa')"""
+        """'nu'-parameter (asymmetry) for Pearson Type IV distribution (same as 'kappa')"""
         return self.__nu
     @nu.setter
     def nu ( self, value ) :
