@@ -18,7 +18,7 @@
 #include "RooAbsPdf.h"
 #include "RooGlobalFunc.h"
 // ======================================================================
-#if ROOT_VERSION(6,20,0)<=ROOT_VERSION_CODE
+#if ROOT_VERSION(6,20,0)<=ROOT_VERSION_CODE && ROOT_VERSION_CODE<ROOT_VERSION(6,29,0)  
 #include "RooSpan.h"
 #endif 
 // ============================================================================
@@ -344,7 +344,8 @@ namespace Ostap
       // srite to the stream 
       void writeToStream(std::ostream& os, bool compact) const override ;
       // ======================================================================
-#if ROOT_VERSION(6,24,0)<=ROOT_VERSION_CODE
+#if     ROOT_VERSION_CODE<=ROOT_VERSION(6,29,0)
+#elseif ROOT_VERSION(6,24,0)<=ROOT_VERSION_CODE
       // ======================================================================
       RooSpan<const double> 
       getValues ( RooBatchCompute::RunContext& evalData , 
@@ -2736,7 +2737,8 @@ namespace Ostap
       double   getValV  ( const RooArgSet* aset = nullptr ) const override 
       { return m_x.arg ().getValV ( aset ) ; }
       // ======================================================================
-#if ROOT_VERSION(6,24,0)<=ROOT_VERSION_CODE
+#if     ROOT_VERSION_CODE<=ROOT_VERSION(6,29,0)
+#elseif ROOT_VERSION(6,24,0)<=ROOT_VERSION_CODE
       // ======================================================================
       RooSpan<const double>
       getValues 
