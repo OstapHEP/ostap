@@ -70,10 +70,11 @@ namespace Ostap
         : Addition ( name , title , x , RooFit::RooConst ( y ) )
       {}
       /// constructor with two variables 
-      Addition ( const double       x           ,
-                 RooAbsReal&        y           , 
-                 const std::string& name  = ""  , 
-                 const std::string& title = ""  ) 
+      Addition 
+      ( const double       x           ,
+        RooAbsReal&        y           , 
+        const std::string& name  = ""  , 
+        const std::string& title = ""  ) 
         : Addition ( name , title , RooFit::RooConst ( x ) , y )
       {}
       /// copy 
