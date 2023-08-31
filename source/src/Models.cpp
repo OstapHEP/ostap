@@ -4179,80 +4179,89 @@ std::size_t Ostap::Math::ExGenPareto::tag () const
 // Benini distribution 
 // ============================================================================
 Ostap::Math::Benini::Benini
-( const double alpha , 
-  const double beta  ,
-  const double gamma ,
-  const double delta ,
-  const double scale , 
-  const double shift ) 
-  : m_alpha ( std::abs ( alpha ) ) 
-  , m_beta  ( std::abs ( beta  ) ) 
-  , m_gamma ( std::abs ( gamma ) ) 
-  , m_delta ( std::abs ( delta ) ) 
+( const std::vector<double>& pars  ,   // shape parameters               
+  const double               scale ,   // scale parameter 
+  const double               shift )   // shift parameter 
+  : m_pars  ( pars.size() ) 
+  , m_pars2 ( pars.size() ) 
   , m_scale ( std::abs ( scale ) ) 
   , m_shift (            shift   ) 
+{
+  setPars ( pars ) ;
+  //
+  Ostap::Assert ( 2 <= m_pars.size() , 
+                  "Invalid number of parameters/1!" , 
+                  "Ostap::Math::Benini" ) ;
+  Ostap::Assert ( m_pars.size() <= 10 , 
+                  "Invalid number of parameters/2!" , 
+                  "Ostap::Math::Benini" ) ;
+  Ostap::Assert ( 0 < std::accumulate ( m_pars.begin() , m_pars.end() , 0.0 ) ,
+                  "Invalid number of parameters!" , 
+                  "Ostap::Math::Benini" ) ;
+}
+// ============================================================================
+// only two shape parameters: alpha and beta 
+// ============================================================================
+Ostap::Math::Benini::Benini
+( const double               scale ,             // scale parameter 
+  const double               shift )             // shift parameter
+  : Benini ( std::vector<double>( 2 , 1.0 ) , scale , shift ) 
 {}
-
+// ============================================================================
+// n parameteters 
+// ============================================================================
+Ostap::Math::Benini::Benini
+( const unsigned short       n     ,             // shape parameters 
+  const double               scale ,             // scale parameter 
+  const double               shift )             // shift parameter
+  : Benini ( std::vector<double> ( n , 1.0 ) , scale , shift ) 
+{}
+// ============================================================================
+bool Ostap::Math::Benini::_setPar  
+( const unsigned short i     , 
+  const double         value ) 
+{
+  if ( i < m_pars.size() ) { return false ; }
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_pars [ i ] , avalue ) ) { return false ; }
+  //
+  m_pars  [ i ] = avalue ;
+  m_pars2 [ i ] = ( i + 1 ) *  avalue ;
+  //
+  return true ; 
+}
+// ============================================================================
+bool Ostap::Math::Benini::setPars  
+( const std::vector<double>& values ) 
+{
+  bool changed = false ;
+  const std::size_t n = std::min ( m_pars.size() , values.size() ) ;
+  for ( unsigned short i = 0 ; i < n ; ++i ) 
+  {
+    const double avalue = std::abs ( values [ i ] ) ;
+    if ( s_equal ( m_pars [ i ] , avalue ) ) { continue ; }
+    //
+    m_pars  [ i ] =              avalue ;
+    m_pars2 [ i ] = ( i + 1 ) *  avalue ;
+    //
+  }
+  return changed ;
+}
 // ============================================================================
 // evaluate the function 
 // ============================================================================
-#include <iostream>
-
 double Ostap::Math::Benini::evaluate 
 ( const double x ) const 
 {
-  
+  //
   if ( x < m_shift + m_scale  ) { return 0 ; }
   //
   const double lxs = std::log ( ( x - m_shift ) / m_scale ) ;
   //
-  std::array<double,4> coefs1 { { m_alpha,     m_beta ,     m_gamma ,     m_delta } } ;
-  std::array<double,4> coefs2 { { m_alpha, 2 * m_beta , 3 * m_gamma , 4 * m_delta } } ;
-  //
-  const double p1 = Ostap::Math::Clenshaw::monomial_sum ( coefs1.rbegin() , coefs1.rend  () , lxs ).first ;
-  const double p2 = Ostap::Math::Clenshaw::monomial_sum ( coefs2.rbegin() , coefs2.rend  () , lxs ).first ;
+  const double p1 = Ostap::Math::Clenshaw::monomial_sum ( m_pars .rbegin() , m_pars .rend  () , lxs ).first ;
+  const double p2 = Ostap::Math::Clenshaw::monomial_sum ( m_pars2.rbegin() , m_pars2.rend  () , lxs ).first ;
   //
   return std::exp ( - lxs * p1 ) * p2 / x ;
-}
-// =============================================================================
-// set alpha parameter
-// =============================================================================
-bool Ostap::Math::Benini::setAlpha ( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( m_alpha , avalue ) ) { return false ; }
-  m_alpha     = avalue ;
-  return true ;    
-}
-// =============================================================================
-// set beta parameter
-// =============================================================================
-bool Ostap::Math::Benini::setBeta ( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( m_beta , avalue ) ) { return false ; }
-  m_beta     = avalue ;
-  return true ;    
-}
-// =============================================================================
-// set gamma parameter
-// =============================================================================
-bool Ostap::Math::Benini::setGamma ( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( m_gamma , avalue ) ) { return false ; }
-  m_gamma    = avalue ;
-  return true ;    
-}
-// =============================================================================
-// set delta  parameter
-// =============================================================================
-bool Ostap::Math::Benini::setDelta ( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( m_delta , avalue ) ) { return false ; }
-  m_delta    = avalue ;
-  return true ;    
 }
 // =============================================================================
 // set scale parameter
@@ -4283,8 +4292,7 @@ double Ostap::Math::Benini::cdf
   //
   const double lxs = std::log ( ( x - m_shift ) / m_scale ) ;
   //
-  std::array<double,4> coefs1 { { m_alpha,     m_beta ,     m_gamma ,     m_delta } } ;
-  const double p1 = Ostap::Math::Clenshaw::monomial_sum ( coefs1.rbegin() , coefs1.rend  () , lxs ).first ;
+  const double p1 = Ostap::Math::Clenshaw::monomial_sum ( m_pars.rbegin() , m_pars.rend  () , lxs ).first ;
   //
   return 1.0L - std::exp ( -lxs * p1 ) ;
 }
@@ -4308,14 +4316,11 @@ std::size_t Ostap::Math::Benini::tag () const
 { 
   static const std::string s_name = "Benini" ;
   return Ostap::Utils::hash_combiner ( s_name  , 
-                                       m_alpha , 
-                                       m_beta  , 
-                                       m_gamma , 
-                                       m_delta , 
                                        m_scale , 
-                                       m_shift ) ;
+                                       m_shift , 
+                                       Ostap::Utils::hash_range ( m_pars ) ) ;
 }
-
+// ============================================================================
 
 
 

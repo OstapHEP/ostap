@@ -1033,10 +1033,7 @@ def _omben_reduce_ ( s ) :
     - see `Ostap.Math.GenPareto` 
     """
     return root_factory , ( type ( s ) ,
-                            s.alpha () ,
-                            s.beta  () ,
-                            s.gamma () ,
-                            s.delta () ,
+                            s.pars  () ,
                             s.scale () , 
                             s.shift () )
 

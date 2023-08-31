@@ -1887,10 +1887,7 @@ class Benini_pdf(PDF1) :
     def __init__ ( self                               ,
                    name                               ,   ## the name 
                    xvar                               ,   ## the variable
-                   alpha                              ,   ## shape  parameter
-                   beta                               ,   ## shape  parameter                   
-                   gamma = ROOT.RooFit.RooConst ( 0 ) ,   ## shape  parameter                   
-                   delta = ROOT.RooFit.RooConst ( 0 ) ,   ## shape  parameter                   
+                   shape                              ,   ## shape  parameters
                    scale = 1                          ,   ## scale  parameter
                    shift = 0                          ) : ## shift  parameter
         #
@@ -1898,40 +1895,23 @@ class Benini_pdf(PDF1) :
         #
         ##
         xmnmx = self.xminmax()
-        
-        self.__alpha  = self.make_var   ( alpha                ,
-                                          'alpha_%s'    % name ,
-                                          '#alpha(%s)'  % name ,
-                                          None , 0 , 1000      )
-        self.__beta   = self.make_var   ( beta                 ,
-                                          'beta_%s'     % name ,
-                                          '#beta(%s)'   % name ,
-                                          None , 0 , 1000      )
-        self.__gamma  = self.make_var   ( gamma                ,
-                                          'gamma_%s'    % name ,
-                                          '#gamma(%s)'  % name ,
-                                          None , 0 , 1000      )
-        self.__delta  = self.make_var   ( delta                ,
-                                          'delta_%s'    % name ,
-                                          '#delta(%s)'  % name ,
-                                          None , 0 , 1000      )
-        self.__scale  = self.make_var   ( scale                 ,
-                                          'scale_%s'     % name ,
-                                          'scale(%s)'   % name  ,
-                                          None , 1 , 1.e-6 , 1000   )
-        self.__shift  = self.make_var   ( shift                 ,
-                                          'shift_%s'     % name ,
-                                          'shift(%s)'   % name  ,
-                                          None , *xmnmx )
+
+        self.__shape = ROOT.RooArgList()
+        for  i , p in enumerate ( shape ) :
+            
+            pp = self.make_var ( p ,
+                                 'p_%s_%s'  % ( i , name ) ,
+                                 'p_%s(%s)' % ( i , name ) ,
+                                 None , 0 , 1000 )
+            self.__shape.add  ( pp )
+
+        assert 2 <= len ( self.__shape ) , 'Invalid number of shape parameters!' 
         
         self.pdf  = Ostap.Models.Benini (
             self.roo_name ( 'benini_' ) ,
             'Benini %s' % self.name , 
             self.x     ,
-            self.alpha ,
-            self.beta  ,
-            self.gamma ,
-            self.delta ,
+            self.shape ,
             self.scale ,
             self.shift )
         
@@ -1939,10 +1919,7 @@ class Benini_pdf(PDF1) :
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'alpha' : self.alpha ,            
-            'beta'  : self.beta  ,            
-            'gamma' : self.gamma ,            
-            'delta' : self.delta ,            
+            'shape' : self.shape ,            
             'scale' : self.scale ,            
             'shift' : self.shift ,            
             }
@@ -1950,35 +1927,49 @@ class Benini_pdf(PDF1) :
     @property
     def alpha ( self ) :
         """'alpha'- shape parameter for Benini-distribution"""
-        return self.__alpha
+        return self.__shape[0]
     @alpha.setter 
     def alpha ( self , value ) :
-        self.set_value ( self.__alpha , value )
+        self.set_value ( self.__shape [ 0 ] , value )
         
     @property
     def beta ( self ) :
         """'beta'- shape parameter for Benini-distribution"""
-        return self.__beta
+        assert 1 < len ( self.__shape ) , 'Invalid parameter!'
+        return self.__shape[1] 
     @beta.setter 
     def beta ( self , value ) :
-        self.set_value ( self.__beta , value )
+        assert 1 < len ( self.__shape ) , 'Invalid parameter!'
+        self.set_value ( self.__shape [ 1 ] , value )
 
     @property
     def gamma ( self ) :
         """'gamma'- shape parameter for Benini-distribution"""
-        return self.__gamma
+        assert 2 < len ( self.__shape ) , 'Invalid parameter!'        
+        return self.__shape [ 2 ] 
     @gamma.setter 
     def gamma ( self , value ) :
-        self.set_value ( self.__gamma , value )
+        assert 2 < len ( self.__shape ) , 'Invalid parameter!'        
+        self.set_value ( self.__shape [ 2 ]  , value )
 
     @property
     def delta ( self ) :
         """'delta'- shape parameter for Benini-distribution"""
-        return self.__delta
+        assert 3 < len ( self.__shape ) , 'Invalid parameter!'        
+        return self.__shape [ 3 ] 
     @delta.setter 
     def delta ( self , value ) :
-        self.set_value ( self.__delta , value )
+        assert 3 < len ( self.__shape ) , 'Invalid parameter!'
+        self.set_value ( self.__shape [ 3 ]  , value )
 
+    @property
+    def shape  ( self ) :
+        """'shape' : get all shape parameters"""
+        return self.__shape
+    @shape.setter
+    def shape ( self , values ) :
+        self.component_setter ( self.__shape , values )
+        
     @property
     def scale ( self ) :
         """'scale'- scale parameter for Benini distribution"""

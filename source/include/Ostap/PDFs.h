@@ -9029,7 +9029,7 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Beini
+    /** @class Benini
      *  Benini Distribution
      *  @see https://en.wikipedia.org/wiki/Benini_distribution
      *  @see Ostap::Math::Benini
@@ -9043,6 +9043,14 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// Modified Benini
+      Benini
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooArgList&          shape     , 
+        RooAbsReal&          scale     , 
+        RooAbsReal&          shift     ) ;
       /// Modified Benini
       Benini
       ( const char*          name      ,
@@ -9104,20 +9112,14 @@ namespace Ostap
     public:
       // ======================================================================
       const RooAbsReal& x      () const { return m_x     .arg () ; }
-      const RooAbsReal& alpha  () const { return m_alpha .arg () ; }
-      const RooAbsReal& beta   () const { return m_beta  .arg () ; }
-      const RooAbsReal& gamma  () const { return m_gamma .arg () ; }
-      const RooAbsReal& delta  () const { return m_delta .arg () ; }
+      const RooArgList& shape  () const { return m_shape         ; }
       const RooAbsReal& scale  () const { return m_scale .arg () ; }
       const RooAbsReal& shift  () const { return m_shift .arg () ; }
       // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x     {} ;
-      RooRealProxy m_alpha {} ;
-      RooRealProxy m_beta  {} ;
-      RooRealProxy m_gamma {} ;
-      RooRealProxy m_delta {} ;
+      RooListProxy m_shape {} ;
       RooRealProxy m_scale {} ;
       RooRealProxy m_shift {} ;
       // ======================================================================

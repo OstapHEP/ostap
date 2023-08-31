@@ -10073,6 +10073,31 @@ Double_t Ostap::Models::ExGenPareto::analyticalIntegral
 
 
 
+// ============================================================================
+// Modified Benini
+// ============================================================================
+Ostap::Models::Benini::Benini
+( const char*          name      ,
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooArgList&          shape     , 
+  RooAbsReal&          scale     , 
+  RooAbsReal&          shift     )
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_shape   ( "!shape" , "shape-parameters" , this         )
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale ) 
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )    
+    //
+  , m_benini  ( ::size ( shape ) , 1.0 , 0.0 ) 
+{
+  ::copy_real ( shape, m_shape , "Invalid width parameter!" ,
+                "Ostap::Models::Benini"  ) ;
+  setPars () ;
+}
+
+
+
 
 
 
@@ -10092,15 +10117,18 @@ Ostap::Models::Benini::Benini
   RooAbsReal&          shift     ) 
   : RooAbsPdf ( name , title     ) 
   , m_x       ( "!x"     , "Observable"       , this , x     ) 
-  , m_alpha   ( "!alpha" , "alpha-parameters" , this , alpha ) 
-  , m_beta    ( "!beta"  , "beta-parameter"   , this , beta  ) 
-  , m_gamma   ( "!gamma" , "gamma-parameter"  , this , gamma ) 
-  , m_delta   ( "!delta" , "delta-parameter"  , this , delta ) 
+  , m_shape   ( "!shape" , "shape-parameters" , this         )
   , m_scale   ( "!scale" , "scale-parameter"  , this , scale ) 
   , m_shift   ( "!shift" , "shift-parameter"  , this , shift ) 
-    //
-  , m_benini  () 
+  //
+  , m_benini  ( 4 , 1.0 , 0.0 ) 
 {
+  //
+  m_shape.add ( alpha ) ;
+  m_shape.add ( beta  ) ;
+  m_shape.add ( gamma ) ;
+  m_shape.add ( delta ) ;
+  //
   setPars () ;
 }
 // ============================================================================
@@ -10130,10 +10158,7 @@ Ostap::Models::Benini::Benini
   : RooAbsPdf ( right , name ) 
     //
   , m_x      ( "!x"      , this , right.m_x     ) 
-  , m_alpha  ( "!alpha"  , this , right.m_alpha ) 
-  , m_beta   ( "!beta"   , this , right.m_beta  ) 
-  , m_gamma  ( "!gamma"  , this , right.m_gamma ) 
-  , m_delta  ( "!delta"  , this , right.m_delta ) 
+  , m_shape  ( "!shape"  , this , right.m_shape ) 
   , m_scale  ( "!scale"  , this , right.m_scale ) 
   , m_shift  ( "!shift"  , this , right.m_shift ) 
     //
@@ -10154,10 +10179,11 @@ Ostap::Models::Benini::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::Benini::setPars () const 
 {
-  m_benini.setAlpha ( m_alpha ) ;
-  m_benini.setBeta  ( m_beta  ) ;
-  m_benini.setGamma ( m_gamma ) ;
-  m_benini.setDelta ( m_delta ) ;
+  //
+  const unsigned short n = ::size ( m_shape ) ;
+  for ( unsigned short i = 0 ; i < n ; ++i ) 
+  { m_benini.setPar ( i , ::get_par ( i , m_shape ) ) ; }
+  //
   m_benini.setScale ( m_scale ) ;
   m_benini.setShift ( m_shift ) ;
 }

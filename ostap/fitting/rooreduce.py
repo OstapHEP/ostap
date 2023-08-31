@@ -1966,10 +1966,7 @@ def _rben_reduce_ ( pdf ):
                                   pdf.name       ,
                                   pdf.title      ,
                                   pdf.x       () ,                            
-                                  pdf.alpha   () ,
-                                  pdf.beta    () ,
-                                  pdf.gamma   () ,
-                                  pdf.delta   () ,
+                                  pdf.shape   () ,
                                   pdf.scale   () ,
                                   pdf.shift   () )
 

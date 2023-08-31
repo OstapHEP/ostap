@@ -2926,27 +2926,16 @@ namespace Ostap
      * A modified version of Benini distribution 
      * @see https://en.wikipedia.org/wiki/Benini_distribution
      * Parameters 
-     *  - \f$ 0 < \alpha  \f$   linear    term in log ( (x-mu)/scale )
-     *  - \f$ 0 < \beta   \f$   quadratic term in log ( (x-mu)/scale )
-     *  - \f$ 0 < \gamma  \f$   cubic     term in log ( (x-mu)/scale )
-     *  - \f$ 0 < \delta  \f$   4th order term in log ( (x-mu)/scale )
      *  - shift  \f$ \mu  \f$ 
      *  - scale  \f$ s    \f$ 
+     *  - shape parameters \f$ p_i \f$
+     * 
+     * Cumulative distributuon fnuctiin is defined as
+     * \f[ F(x) = 1 - \mathem{e}^{ - \sum_i \left| p_i \right| \Delta^i } \f]
+     * where \f$ \Delta = \log \frac{x-\mu}{s} \f$ 
      *
-     *  \f[ f ( x , \alpha, \beta,\gamma,\delta, \mu,  \sigma = 
-     *   \mathrm{e}^{ - \alpha \Delta - \beta \Delta^2 
-     *                - \gamma \Delta^3 - \delta \Delta^4}
-     *   \left( \frac{\alpa}{x} + \frac{2\beta\Delta}{x} + 
-     *          \frac{3\gamma\Delta^2}{x}  + \frac{4\delta\Delta^3}{x}
-     *  \right)\f]
-     *  where \f$ \Delta = \log \frac{x-\mu}{\sigma}\f$ 
-     *
-     *  For standard Benini pne has \f$ (\frac{x}{\sigma}\f$,
-     *  here one has \f$ (\frac{x-\mu}{\sigma}\f$ and we have added 
-     *  a cubic and 4th order
-     *  - shift is 0
-     *  - \f$ \gamma = 0 \g$
-     *  - \f$ \delta = 0 \g$
+     *  For standard Benini one has only linear and quadratic terms 
+     *  and shift is zero \f$ \mu=0\f$ 
      */
     class Benini 
     {
@@ -2954,12 +2943,19 @@ namespace Ostap
     public:
       // ======================================================================
       Benini
-      ( const double alpha = 1 ,   // shape parameter 
-        const double beta  = 0 ,   // shape parameter 
-        const double gamma = 0 ,   // shape parameter 
-        const double delta = 0 ,   // shape parameter 
-        const double scale = 1 ,   // scale parameter 
-        const double shift = 0 ) ; // shift parameter 
+      ( const std::vector<double>& pars      , // shape parameters               
+        const double               scale = 1 ,               // scale parameter 
+        const double               shift = 0 ) ;             // shift parameter 
+      // ======================================================================
+      /// two shape parameters: alpha and beta 
+      Benini
+      ( const double               scale = 1 ,              // scale parameter 
+        const double               shift = 0 ) ;            // shift parameter 
+      // ======================================================================
+      Benini
+      ( const unsigned short       n         ,              // number of shape parameters 
+        const double               scale     ,              // scale parameter 
+        const double               shift     ) ;            // shift parameter 
       // ======================================================================
     public:
       // ======================================================================
@@ -2972,21 +2968,41 @@ namespace Ostap
       // ======================================================================
     public : // getters 
       // ======================================================================
-      double alpha  () const { return m_alpha ; }
-      double beta   () const { return m_beta  ; }
-      double gamma  () const { return m_gamma ; }
-      double delta  () const { return m_delta ; }
+      /// shift parameter 
       double shift  () const { return m_shift ; }
+      /// scale parameter 
       double scale  () const { return m_scale ; }
+      /// shape parameter
+      double par    ( const unsigned short i ) const 
+      { return i < m_pars.size() ? m_pars [ i ] : 0.0 ; }
+      /// all shape parametgers 
+      const std::vector<double>& pars ()       const { return m_pars ; }
+      /// linear     term 
+      double alpha  () const { return par ( 0 ) ; }
+      /// quadrattic term 
+      double beta   () const { return par ( 1 ) ; }
+      /// cubic      term 
+      double gamma  () const { return par ( 2 ) ; }
+      /// quartic    term 
+      double delta  () const { return par ( 3 ) ; }
       // ======================================================================
     public: // setters 
       // ======================================================================
-      bool setAlpha ( const double value ) ;
-      bool setBeta  ( const double value ) ;
-      bool setGamma ( const double value ) ;
-      bool setDelta ( const double value ) ;
       bool setScale ( const double value ) ;
       bool setShift ( const double value ) ;
+      bool _setPar  ( const unsigned short i , const double value ) ;
+      bool setPar   ( const unsigned short i , const double value ) 
+      { return i < m_pars.size() ? _setPar ( i , value ) : false ; }
+      /// linear term  (if present) 
+      bool setAlpha ( const double value ) { return _setPar ( 0 , value ) ; }
+      /// quadratic term 
+      bool setBeta  ( const double value ) { return _setPar ( 1 , value ) ; }
+      /// cubic term    (i fpresent)
+      bool setGamma ( const double value ) { return _setPar ( 2 , value ) ; }
+      /// quartic term  (if present) 
+      bool setDelta ( const double value ) { return _setPar ( 3 , value ) ; }
+      /// set paramters
+      bool setPars  ( const std::vector<double>& values ) ;
       // ====================================================================== 
     public:
       // ====================================================================== 
@@ -3011,14 +3027,10 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// shape parameter alpha 
-      double m_alpha { 1 } ; // shape parameter alpha 
-      /// shape parameter beta 
-      double m_beta  { 0 } ; // shape parameter beta 
-      /// shape parameter gamma
-      double m_gamma { 0 } ; // shape parameter gamma
-      /// shape parameter delta 
-      double m_delta { 0 } ; // shape parameter delta 
+      /// vector of parameters 
+      std::vector<double>  m_pars  ; // vector of parameters 
+      /// vector of parameters 
+      std::vector<double>  m_pars2 ; // auxillary vector of parameters 
       /// scale parameter 
       double m_scale { 1 } ; // scale parameter 
       /// shift parameter 
