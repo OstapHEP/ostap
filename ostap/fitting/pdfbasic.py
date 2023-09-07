@@ -1094,7 +1094,10 @@ class APDF1 ( Components ) :
             args_ = tuple ( lst2 + lst1  )
             #
             chi2 = ROOT.RooChi2Var ( rootID ( "chi2_" ) , "chi2(%s)" % self.name  , self.pdf , hdataset , *args_ )
-            m    = ROOT.RooMinuit  ( chi2 ) 
+            ## 
+            if root_info < ( 6 , 28 ) :  m = ROOT.RooMinuit    ( chi2 )
+            else                      :  m = ROOT.RooMinimizer ( chi2 )
+            ##
             m.migrad   () 
             m.hesse    ()
             result = m.save ()

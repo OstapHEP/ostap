@@ -5,7 +5,8 @@
   1, add the methods `min` & `max` to histogram objects 
   1. make use for `ROOT::TDirectory::TContext` for `ROOTCWD`
   1. imporve functions/pdf for Benini distribution allowing terms upto power 10
- 
+  1. use 'RoMinimizer' instead of `RooMinuit` for fresh version of ROOT 
+
 ## Backward incompatible: 
 
 ## Bug fixes:
