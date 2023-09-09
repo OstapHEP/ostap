@@ -1075,15 +1075,22 @@ class APDF1 ( Components ) :
                 histo           = dataset 
                 
         with roo_silent ( silent ) : 
-
             
             lst1 = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
             lst1 = list ( self.parse_args ( hdataset , *args , **kwargs ) )
             lst2 = []
             
+            if silent :
+                pl = check_arg ('PrintLevel'      , *lst1 ) 
+                if not pl : lst1.append ( ROOT.RooFit.PrintLevel      ( -1    ) ) 
+                vl = check_arg ('Verbose'         , *lst1 )
+                if not vl : lst1.append ( ROOT.RooFit.Verbose         ( False ) )
+                pe = check_arg ('PrintEvalErrors' , *lst1 )
+                if not pe : lst1.append ( ROOT.RooFit.PrintEvalErrors ( 0     ) )
+
             if       self.pdf.mustBeExtended () : lst2.append ( ROOT.RooFit.Extended ( True  ) )
             elif not self.pdf.canBeExtended  () : lst2.append ( ROOT.RooFit.Extended ( False ) )
-            
+                
             if not silent : lst2.append ( ROOT.RooFit.Verbose  () )
             if histo :
                 if histo.natural() : lst2.append ( ROOT.RooFit.DataError ( ROOT.RooAbsData.Poisson ) )
@@ -1606,7 +1613,7 @@ class APDF1 ( Components ) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silnet = silent )
+                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset        = self.histo_data.dset
                 kwargs['ncpu']  = 1 
                 return self.wilks2 ( var            = var             ,
