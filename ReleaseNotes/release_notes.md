@@ -11,8 +11,8 @@
 ## Backward incompatible: 
 
 ## Bug fixes:
-  1. fix minor typos in `oftap.fitting.pdfbasic.py`
 
+  1. fix minor typos in `oftap.fitting.pdfbasic.py`
 
 # v1.9.9.8
 
