@@ -68,10 +68,10 @@ namespace
    *  @param to   objects to be copied to this proxy 
    */
   inline unsigned   int copy_real 
-  ( const RooAbsCollection&  from ,
-    RooArgList&        to   , 
-    const std::string& message = "Variable is not RooAbsReal!" ,
-    const std::string& tag     = "Ostap::copy_real"            )
+  ( const RooAbsCollection&  from                                    ,
+    RooArgList&              to                                      , 
+    const std::string&       message = "Variable is not RooAbsReal!" ,
+    const std::string&       tag     = "Ostap::copy_real"            )
   {
     //
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)

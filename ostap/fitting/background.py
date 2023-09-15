@@ -41,7 +41,9 @@ __all__     = (
     'PSSmear2_pdf'      , ## smeared (left, generic)        PhaseSpace-based PDF
     ##
     'KarlinShapley_pdf' , ## Kaglin-Shapley positive polynomial 
-    'KarlinStudden_pdf' , ## Kaglin-Studden positive polynomial 
+    'KarlinStudden_pdf' , ## Kaglin-Studden positive polynomial
+    ##
+    'Rational_pdf'      , ## Rational fuuction
     ## 
     ## get the native RooFit background shapes
     ##
@@ -414,6 +416,92 @@ class KarlinStudden_pdf(PolyBase) :
 
 models.append ( KarlinStudden_pdf ) 
 
+
+# =============================================================================
+## @class Rational_pdf
+#  Ratinal function: ratio of two positve bernstein polynomials 
+#  @see Ostap::Models::Rational
+#  @see Ostap::Math::RationalPositive
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2023-09-15
+class Rational_pdf(PolyBase) :
+    """Rational fnuction: ratio of two positive Bernstein polynomials  
+    - see Ostap.Models.Rational
+    - see Ostap.Math.RationalPositive
+    """
+    ## constructor
+    def __init__ ( self             ,
+                   name             ,  ## the name 
+                   xvar             ,  ## the variable 
+                   p        = 1     ,  ## degree if numerator 
+                   q        = 1     ,  ## degree of denumerator 
+                   xmin     = None  ,  ## optional x-min
+                   xmax     = None  ,  ## optional x-max 
+                   the_phis = None  ) :
+
+        assert isinstance ( p , int ) and 0 <= p , "Invalid `p'-parameter"
+        assert isinstance ( q , int ) and 0 <= q , "Invalid `q'-parameter"
+        
+        ## initialize the base 
+        PolyBase.__init__ ( self , name , p + q , xvar , the_phis )
+        #
+        n = len ( self.phis )
+        p = min ( n , p )
+        q =       n - p 
+        
+        #
+        ## xmin/xmax
+        self.__x_min , self.__x_max = self.xmnmx ( xmin , xmax )
+        #
+        
+        ## build the model
+        self.pdf   = Ostap.Models.Rational (
+            self.roo_name ( "rat_"  ) ,
+            "Rational function %s" % self.name , 
+            self.xvar            ,
+            p                    , 
+            self.phi_list        ,
+            self.x_min           ,
+            self.x_max           )
+        
+        ## save configuration 
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'p'        : self.pdf.p () ,            
+            'q'        : self.pdf.q () ,            
+            'the_phis' : self.phis     ,
+            'xmin'     : self.x_min    ,
+            'xmax'     : self.x_max    ,            
+            }
+                
+    @property
+    def p ( self ) :
+        """`p'-parameter - degree of numerator"""
+        return self.pdf.p()
+    @property
+    def q ( self ) :
+        """`q'-parameter - degree of denomerator"""
+        return self.pdf.q()
+    
+
+    @property
+    def x_min ( self ) :
+        """'x_min' - minimal x for Rational function"""
+        return self.__x_min
+
+    @property
+    def x_max ( self ) :
+        """'x_max' - maximal x for Rational function"""
+        return self.__x_max
+    
+    @property
+    def pars ( self ) :
+        """'pars' : phases (same as 'phis')"""
+        return self.phis
+
+    
+models.append ( Rational_pdf ) 
 
 # =============================================================================
 ## @class Linear_pdf

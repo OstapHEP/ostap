@@ -644,9 +644,9 @@ Ostap::Models::BreitWigner::BreitWigner
   const Ostap::Math::BW& bw ) 
   : RooAbsPdf ( name , title ) 
     //
-  , m_x        ( "x"  , "Observable" , this , x    ) 
-  , m_mass     ( "m0" , "Peak"       , this , mass ) 
-  , m_widths   ( "g"  , "Widths"     , this ) 
+  , m_x        ( "!x"  , "Observable" , this , x    ) 
+  , m_mass     ( "!m0" , "Peak"       , this , mass ) 
+  , m_widths   ( "!g"  , "Widths"     , this ) 
     //
   , m_bw ( bw.clone() ) 
 {
@@ -666,9 +666,9 @@ Ostap::Models::BreitWigner::BreitWigner
   const char*                       name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x      ( "x"  , this , right.m_x      ) 
-  , m_mass   ( "m0" , this , right.m_mass   ) 
-  , m_widths ( "g"  , this , right.m_widths )
+  , m_x      ( "!x"  , this , right.m_x      ) 
+  , m_mass   ( "!m0" , this , right.m_mass   ) 
+  , m_widths ( "!g"  , this , right.m_widths )
     //
   , m_bw     (  right.m_bw->clone()         ) 
 {
@@ -10406,6 +10406,119 @@ Double_t Ostap::Models::MPERT::analyticalIntegral
 // ============================================================================
 
 
+
+// ============================================================================
+Ostap::Models::Rational::Rational
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  const RooArgList&    p         , 
+  const RooArgList&    q         ,
+  const double         xmin      , 
+  const double         xmax      )
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"      , "Observable" , this , x ) 
+  , m_pars    ( "!pars"   , "parameters" , this )
+    //
+  , m_rational ( ::size ( p ) , ::size ( q ) , xmin , xmax ) 
+{
+  //
+  ::copy_real ( p , m_pars , "Invalid p-parameter!" , "Ostap::Models::Rational" ) ;
+  ::copy_real ( q , m_pars , "Invalid q-parameter!" , "Ostap::Models::Rational" ) ;
+  //
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::Rational::Rational
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  const unsigned short p         ,
+  const RooArgList&    a         , 
+  const double         xmin      , 
+  const double         xmax      )
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"      , "Observable" , this , x ) 
+  , m_pars    ( "!pars"   , "parameters" , this )
+    //
+  , m_rational ( p < ::size ( a ) ? p                : ::size ( a ) , 
+                 p < ::size ( a ) ? ::size ( a ) - p : 0            , xmin , xmax ) 
+{
+  //
+  ::copy_real ( a , m_pars , "Invalid a-parameter!" , "Ostap::Models::Rational" ) ;
+  //
+  setPars () ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Rational::Rational
+( const Ostap::Models::Rational& right , 
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x        ( "!x"    , this , right.m_x    ) 
+  , m_pars     ( "!pars" , this , right.m_pars ) 
+    //
+  , m_rational (  right.m_rational ) 
+{}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::Rational::~Rational(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Rational*
+Ostap::Models::Rational::clone ( const char* name ) const 
+{ return new Ostap::Models::Rational ( *this , name ) ; }
+// ============================================================================
+// set parameters 
+// ============================================================================
+void Ostap::Models::Rational::setPars () const 
+{
+  const unsigned short n = m_rational.npars() ;
+  for ( unsigned short i = 0 ; i < n ; ++i )
+  { m_rational.setPar ( i , ::get_par ( i , m_pars ) ) ; }
+}    
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Rational::evaluate() const 
+{ setPars() ; return  m_rational ( m_x ) ; }
+// ============================================================================
+// integration
+// ============================================================================
+Int_t Ostap::Models::Rational::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+// integration
+// ============================================================================
+Double_t Ostap::Models::Rational::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars() ;
+  return m_rational.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+
+
+
+
+
+
+
+
 // ============================================================================
 ClassImp(Ostap::Models::Shape1D            ) 
 ClassImp(Ostap::Models::Shape2D            ) 
@@ -10515,6 +10628,7 @@ ClassImp(Ostap::Models::ExGenPareto        )
 ClassImp(Ostap::Models::Benini             )
 ClassImp(Ostap::Models::GEV                )
 ClassImp(Ostap::Models::MPERT              )
+ClassImp(Ostap::Models::Rational           )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

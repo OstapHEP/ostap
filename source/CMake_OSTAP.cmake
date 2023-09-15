@@ -88,6 +88,7 @@ add_library(ostap SHARED src/format.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp
                          src/PyVar.cpp   
+                         src/Rational.cpp
                          src/RootID.cpp
                          src/SFactor.cpp
                          src/StatEntity.cpp

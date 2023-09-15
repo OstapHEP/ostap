@@ -7,6 +7,12 @@
   1. imporve functions/pdf for Benini distribution allowing terms upto power 10
   1. use 'RoMinimizer' instead of `RooMinuit` for fresh version of ROOT 
   1. Improve treatment of `silent` for `PDF.chi2FitTo`
+  1. Add `Ostap::Math::Rational`           : simple rational function inspired by `Ostap::Math::FloaterHormann` interpolant
+  1. Add `Ostap::Math::RationalBernstein`  : rational function as ratio of Bernstein and positve Bernstein polynomials 
+  1. Add `Ostap::Math::RationalPositive`   : rational function as ratio of two positve Bernstein polynomials
+  1. Add `Ostap::Models::Rational`         : rational PDF  as ratio of two positve Bernstein polynomials
+  1. Add `Rational_pdf`                    : rational PDF  as ratio of two positve Bernstein polynomials
+
 
 ## Backward incompatible: 
 

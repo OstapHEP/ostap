@@ -551,51 +551,22 @@ Ostap::Math::Berrut2nd::Berrut2nd
 
 
 
-
 // ============================================================================
-// Floater-Hormann rational interpolant 
+// Floater-Hormann weights
 // ============================================================================
-/*  Simple constructor from the interpolation points  
- *  @param p input data 
- *  @param d Floater-Hormann degree parameter 
- */
-// ============================================================================
-Ostap::Math::FloaterHormann::FloaterHormann
-( const Ostap::Math::Interpolation::Table& p ,
-  const unsigned short                     d )
-  : Ostap::Math::Interpolation::Table ( p )
-  , m_d       ( d        ) 
-  , m_weights ( p.size() ) 
-{ get_weights () ; }
-// ============================================================================
-/*  simple constructor from the interpolation points  
- *  @param p input data 
- *  @param d Floater-Hormann degree parameter 
- */
-// ============================================================================
-Ostap::Math::FloaterHormann::FloaterHormann
-( Ostap::Math::Interpolation::Table&&     p ,
-  const unsigned short                    d )
-  : Ostap::Math::Interpolation::Table ( std::move ( p ) ) 
-  , m_d       ( d        ) 
-  , m_weights ( p.size() ) 
-{ get_weights () ; }
-// ============================================================================
-// calculate weigthts for Floater-Hormann interpolant 
-// ============================================================================
-void Ostap::Math::FloaterHormann::get_weights() 
+Ostap::Math::FloaterHormann::Weights::Weights 
+( const Ostap::Math::Interpolation::Abscissas& a ,
+  const unsigned short                         d )
+  : m_d       ( d <= a.size() ? d : a.size() )  
+  , m_weights ( a.size() )
 {
-  /// (1) resize container of weigths 
-  m_weights.resize ( size() ) ;
   //
-  const unsigned int nn = size ()  ;
-  const unsigned int n  = 0 == nn ? 0 : nn - 1 ;
-  //
-  if ( n < m_d ) { m_d = n ; }
+  const unsigned int nn = m_weights.size() ;
+  const unsigned int n  = 1 <= nn ? nn - 1 : 0  ;
   //
   for ( unsigned int i = 0 ; i <= n ; ++i )
   {    
-    const long double xi = x ( i ) ;
+    const long double xi = a.x ( i ) ;
     //
     long double ib = 0 ;
     const unsigned int jmin = i       <= m_d ? 0 : i - m_d ;
@@ -609,7 +580,7 @@ void Ostap::Math::FloaterHormann::get_weights()
       long double bb = 1  ;
       for ( unsigned int k = kmin ; k <= kmax ; ++k ) 
       {
-        const long double xk = x ( k ) ;
+        const long double xk = a.x ( k ) ;
         if ( k != i ) { bb *= 1 / std::abs ( xi - xk ) ; }
       }
       ib += bb ;
@@ -617,7 +588,58 @@ void Ostap::Math::FloaterHormann::get_weights()
     /// fill table of weigths 
     m_weights [ i ] = ( i % 2 == 0 ? 1 : -1 ) * ib ;
   }
+  //
+  if ( 1 <= m_weights.size() && !s_zero ( m_weights[0] ) )
+  { Ostap::Math::scale ( m_weights , 1.0/std::abs ( m_weights[0] ) ) ; }
+  //
 }
+// ============================================================================
+/// constructor from Chebyshev abscissas and d 
+// ============================================================================
+Ostap::Math::FloaterHormann::Weights::Weights 
+( const unsigned short n , 
+  const unsigned short d ) 
+  : Weights ( Ostap::Math::Interpolation::Abscissas ( n , -1.0 , 1.0 ) , 
+              std::min ( n , d ) ) 
+{}
+// ============================================================================
+// scale the weights 
+// ============================================================================
+Ostap::Math::FloaterHormann::Weights&
+Ostap::Math::FloaterHormann::Weights::scale ( const double a )
+{ 
+  Ostap::Math::scale ( m_weights , std::abs ( a ) ) ;
+  return *this ; 
+}
+// ============================================================================
+
+
+// ============================================================================
+// Floater-Hormann rational interpolant 
+// ============================================================================
+/*  Simple constructor from the interpolation points  
+ *  @param p input data 
+ *  @param d Floater-Hormann degree parameter 
+ */
+// ============================================================================
+Ostap::Math::FloaterHormann::FloaterHormann
+( const Ostap::Math::Interpolation::Table& p ,
+  const unsigned short                     d )
+  : Ostap::Math::Interpolation::Table ( p )
+  , m_weights ( p.abscissas() , d ) 
+{}
+// ============================================================================
+/*  simple constructor from the interpolation points  
+ *  @param p input data 
+ *  @param d Floater-Hormann degree parameter 
+ */
+// ============================================================================
+Ostap::Math::FloaterHormann::FloaterHormann
+( Ostap::Math::Interpolation::Table&&     p ,
+  const unsigned short                    d )
+  : Ostap::Math::Interpolation::Table ( std::move ( p ) ) 
+  , m_weights ( this->abscissas() , d ) 
+{}
 // ============================================================================
 // the main method: get the value of Floater-Hormann interpolant 
 // ============================================================================
@@ -628,6 +650,7 @@ double Ostap::Math::FloaterHormann::evaluate
   //
   long double s1 = 0 ;
   long double s2 = 0 ;
+  long double z  = 1.0L * x ;
   //
   unsigned int N = size() ;
   for ( unsigned int i = 0  ; i < N  ;  ++i )
@@ -637,7 +660,7 @@ double Ostap::Math::FloaterHormann::evaluate
     //
     if ( s_equal ( x , xi ) ) { return yi ; }  // RETURN
     //
-    const double wi = m_weights[i] / ( x - xi ) ;
+    const long double wi = weight ( i ) / ( z - xi ) ;
     //
     s1 += wi * yi ;
     s2 += wi ;

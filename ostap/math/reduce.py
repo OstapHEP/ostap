@@ -151,12 +151,39 @@ for t in (  Ostap.Math.Polynomial     ,
     
     t.__reduce__ = poly_reduce
     
+# =============================================================================
+## Reduce Rational
+#  @see Ostap::Math::Rational
+def rati_reduce ( p ) : 
+    """Reduce Rartional
+    - see Ostap.Math.Rational
+    """
+    return poly_factory , ( type ( p ) ,
+                            array.array ( 'd' ,  p.pars() ) ,
+                            p.d    () , 
+                            p.xmin () ,
+                            p.xmax () )
+# =============================================================================
+## Reduce RationalBernstein
+#  @see Ostap::Math::RationalBernstein
+def rati2_reduce ( p ) : 
+    """Reduce RartionalBernstein
+    - see Ostap.Math.RationalBernstein
+    """
+    return poly_factory , ( type ( p ) ,
+                            array.array ( 'd' ,  p.numerator  ().pars() ) ,
+                            array.array ( 'd' ,  p.denominator().pars() ) ,
+                            p.xmin () ,
+                            p.xmax () )
 
+
+Ostap.Math.Rational         .__reduce__ = rati_reduce 
+Ostap.Math.RationalBernstein.__reduce__ = rati2_reduce 
+Ostap.Math.RationalPositive .__reduce__ = rati2_reduce 
 
 # =============================================================================
 ## Specific forms of Bernstein  polynomials 
 # =============================================================================
-
 
 # =============================================================================
 ## reduce monotonic polynomial
@@ -453,10 +480,13 @@ def _new_init_ ( t ,  *args )  :
     return t._old_init_ ( *targs ) 
 
 # =============================================================================
-for p in ( Ostap.Math.Polynomial    , 
-           Ostap.Math.ChebyshevSum  , 
-           Ostap.Math.LegendreSum   , 
-           Ostap.Math.HermiteSum    ) :
+for p in ( Ostap.Math.Polynomial        , 
+           Ostap.Math.ChebyshevSum      , 
+           Ostap.Math.LegendreSum       , 
+           Ostap.Math.HermiteSum        , 
+           Ostap.Math.Rational          , 
+           Ostap.Math.RationalBernstein , 
+           Ostap.Math.RationalPositive  ) :
     
     if not hasattr ( p , '_old_init_' ) :
         
@@ -470,7 +500,6 @@ for p in ( Ostap.Math.Polynomial    ,
         _p_new_init_.__doc__ += '\n' +   _new_init_.__doc__ 
         _p_new_init_.__doc__ += '\n' + p._old_init_.__doc__ 
         p.__init__ = _p_new_init_ 
-
 
 
 # =============================================================================

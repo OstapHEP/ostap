@@ -1028,7 +1028,7 @@ for  p in ( Ostap.Math.Bernstein     ,
             Ostap.Math.BernsteinEven ,
             Ostap.Math.Positive      ,
             Ostap.Math.PositiveEven  ,
-            Ostap.Math.Monotonic    ,
+            Ostap.Math.Monotonic     ,
             Ostap.Math.Convex        ,
             Ostap.Math.ConvexOnly    ) :
     

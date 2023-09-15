@@ -16,6 +16,7 @@
 #include "Ostap/Models.h"
 #include "Ostap/BSpline.h"
 #include "Ostap/Positive.h"
+#include "Ostap/Rational.h"
 #include "Ostap/HistoInterpolators.h"
 // ============================================================================
 // ROOT
@@ -9303,6 +9304,98 @@ namespace Ostap
       mutable Ostap::Math::MPERT  m_mpert {} ;  // the function
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class Rational
+     *  Ratio of two positive Bernstein polynomials 
+     *  @see Ostap::Math::RationalPositive 
+     */
+    class Rational : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Rational, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor
+      Rational 
+      (  const char*          name  , 
+         const char*          title ,
+         RooAbsReal&          x     , // observable 
+         const RooArgList&    p     , // parameters for numerator 
+         const RooArgList&    q     , // parameters for denumerator 
+         const double         xmin  , 
+         const double         xmax  ) ;
+      /// constructor
+      Rational 
+      (  const char*          name  , 
+         const char*          title ,
+         RooAbsReal&          x     , // observable 
+         const unsigned short p     , // degree of numerator 
+         const RooArgList&    a     , // all parameters
+         const double         xmin  , 
+         const double         xmax  ) ;
+      /// copy 
+      Rational ( const Rational& right          , 
+                 const char*     name = nullptr ) ;
+      /// destructor 
+      virtual ~Rational() ;
+      /// clone method
+      Rational* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// fake default constructor 
+      Rational () {} ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::RationalPositive& function () const { return m_rational ; }
+      /// access to underlying function
+      const Ostap::Math::RationalPositive& rational () const { return m_rational ; }
+      // ======================================================================      
+    public:
+      // ======================================================================
+      /// parameters 
+      const RooArgList& pars () const { return m_pars               ; }
+      /// observable 
+      const RooAbsReal& x    () const { return m_x.arg()            ; }
+      /// degree of nuemrator 
+      unsigned short    p    () const { return m_rational.pnpars () ; }
+      /// degree of denominator  
+      unsigned short    q    () const { return m_rational.qnpars () ; }
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// observable 
+      RooRealProxy                          m_x        {} ; // observable 
+      /// parameters  
+      RooListProxy                          m_pars     {} ; // parameters
+      // the function 
+      mutable Ostap::Math::RationalPositive m_rational {} ; // fnuction 
+      // ======================================================================
+    } ;  
     // ========================================================================
     /** @class Shape1D
      *  simple generic PDF

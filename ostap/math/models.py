@@ -1022,6 +1022,9 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.ConvexOnly             ,               
                Ostap.Math.KarlinShapley          ,           
                Ostap.Math.KarlinStudden          ,
+               Ostap.Math.Rational               ,
+               Ostap.Math.RationalBernstein      ,
+               Ostap.Math.RationalPositive       ,
                ## 
                Ostap.Math.BifurcatedGauss        ,
                Ostap.Math.DoubleGauss            ,
@@ -1466,7 +1469,8 @@ for pdf in ( Ostap.Models.BreitWigner        ,
              Ostap.Models.ExpoPositive       ,
              Ostap.Models.TwoExpoPositive    ,
              Ostap.Models.PositiveSpline     ,
-             Ostap.Models.MonotonicSpline   , 
+             Ostap.Models.MonotonicSpline    , 
+             Ostap.Models.Rational           , 
              
              Ostap.Models.StudentT           ,
              Ostap.Models.BifurcatedStudentT , 
@@ -1594,7 +1598,7 @@ for pdf in ( Ostap.Models.Poly3DPositive    ,
 
 # =============================================================================
 ## set, get & iterator
-from ostap.math.bernstein import _p_set_par_ , _p_get_par_, _p_iter_ 
+from ostap.math.bernstein import _p_set_par_ , _p_get_par_, _p_iter_
 
 for f in ( Ostap.Math.Bernstein2D    ,
            Ostap.Math.Positive2D     ,
@@ -1607,23 +1611,27 @@ for f in ( Ostap.Math.Bernstein2D    ,
            Ostap.Math.PositiveSpline2D    ,
            Ostap.Math.PositiveSpline2DSym ,
            ##
-           Ostap.Math.Bernstein3D    ,
-           Ostap.Math.Bernstein3DSym ,
-           Ostap.Math.Bernstein3DMix ,
-           Ostap.Math.Positive3D     ,
-           Ostap.Math.Positive3DSym  ,
-           Ostap.Math.Positive3DMix  ,
+           Ostap.Math.Bernstein3D         ,
+           Ostap.Math.Bernstein3DSym      ,
+           Ostap.Math.Bernstein3DMix      ,
+           Ostap.Math.Positive3D          ,
+           Ostap.Math.Positive3DSym       ,
+           Ostap.Math.Positive3DMix       ,
 
-           Ostap.Math.PolySum        ,
+           Ostap.Math.Rational            , 
+           Ostap.Math.RationalBernstein   , 
+           Ostap.Math.RationalPositive    ,
            ## 
-           Ostap.Math.NSphere        ) :
+           #
+           Ostap.Math.PolySum             ,
+           Ostap.Math.NSphere             , 
+           Ostap.Math.Parameters          ) :
 
     f.__setitem__  = _p_set_par_
     f.__getitem__  = _p_get_par_
     f.__len__      = lambda s     : s.npars() 
     f.__iter__     = _p_iter_
     f.__contains__ = lambda s , i : 0<=i<len(s)
-
 
 # =============================================================================
 ## random generators 
@@ -2331,6 +2339,11 @@ _decorated_classes_ = set( [
     Ostap.Math.Monotonic              ,
     Ostap.Math.Convex                 ,
     Ostap.Math.ConvexOnly             ,
+    ## 
+    Ostap.Math.Rational               ,
+    Ostap.Math.RationalBernstein      ,
+    Ostap.Math.RationalPositive       ,
+    ##
     Ostap.Math.BifurcatedGauss        ,
     Ostap.Math.Bukin                  ,
     Ostap.Math.Novosibirsk            ,

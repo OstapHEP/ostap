@@ -267,7 +267,57 @@ namespace Ostap
       // ======================================================================
       /// default constructor
       FloaterHormann () = default ;
-      // =====================================================================
+      // ======================================================================
+    public:
+      // ======================================================================
+      // helper class to get the Floater-Hormann's weigths for the given abscissas 
+      class Weights 
+      {
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// constructor from Abscissas and d 
+        Weights 
+        ( const Interpolation::Abscissas& a     , 
+          const unsigned short            d     ) ;
+        /// constructor from Chebyshev abscissas and d 
+        Weights 
+        ( const unsigned short            n = 3 , 
+          const unsigned short            d = 0 ) ;
+        // ====================================================================
+      public:
+        // ====================================================================
+        void exchange ( Weights& right ) 
+        {
+          std::swap ( m_d       , right.m_d       ) ;
+          std::swap ( m_weights , right.m_weights ) ; 
+        }
+        // ====================================================================        
+      public: 
+        // ====================================================================        
+        /// get parameter d 
+        unsigned short   d () const { return m_d ; }
+        /// get the weight 
+        inline double weight ( const unsigned short i ) const
+        { return i < m_weights.size() ? m_weights [ i ] : 0.0 ;}
+        /// get all weigths 
+        const Interpolation::Abscissas::Data& weights () const 
+        { return m_weights ; }
+        // ====================================================================        
+      public:
+        // ====================================================================        
+        // scale the weights 
+        Weights& scale ( const double a ) ;
+        // ====================================================================        
+      public:
+        // ====================================================================
+        // parameter d 
+        unsigned short                 m_d       {} ; // parameter d
+        // vector of weights 
+        Interpolation::Abscissas::Data m_weights {} ; // vector of weights 
+        // ====================================================================
+      } ;
+      // ======================================================================
     public:
       // ======================================================================
       /// the main method: get the value of Floater-Hormann interpolant 
@@ -278,15 +328,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the degree for the  Floater-Hormann interpolant 
-      unsigned short d () const { return m_d ; }
+      unsigned short d () const { return m_weights.d ()  ; }
       // ======================================================================
       //// get the weights 
-      double weight ( const unsigned short index ) const
-      { return index < m_weights.size() ? m_weights[index] : 0 ; }
+      inline double weight ( const unsigned short index ) const
+      { return m_weights.weight ( index ) ; }
       // ======================================================================
       /// get the weights 
       const Interpolation::Abscissas::Data& weights () const 
-      { return m_weights ; }
+      { return m_weights.weights()  ; }
       // ======================================================================
     public : 
       // ======================================================================
@@ -294,26 +344,24 @@ namespace Ostap
       void exchange ( FloaterHormann& right ) 
       { 
         Interpolation::Table::exchange ( right ) ;
-        swap      ( m_weights , right.m_weights ) ;        
-        std::swap ( m_d       , right.m_d       ) ;
+        m_weights.exchange             ( right.m_weights ) ;        
       }
       // ======================================================================      
     private :
       // ======================================================================
-      /// calculate weigthts for Floater-Hormann interpolant 
-      void get_weights() ;
-      // ======================================================================      
-    private :
-      // ======================================================================
-      /// degree for the Floater-Hormann interpolant  
-      unsigned short                  m_d       ; // Floater Hormann parameter 
-      /// vector of weights 
-      Interpolation::Abscissas::Data  m_weights ; // vector of weights 
+      /// weigths 
+      Weights  m_weights { 3 , 0 } ; // weigths 
       // ======================================================================
     } ;
     // ========================================================================
     /// swap two Floater-Hormann interpolators 
-    inline void swap ( FloaterHormann& a , FloaterHormann& b ) { a.exchange ( b ) ; }
+    inline void swap 
+    ( FloaterHormann&          a , 
+      FloaterHormann&          b ) { a.exchange ( b ) ; }
+    /// swap two Floater-Hormann interpolators 
+    inline void swap
+    ( FloaterHormann::Weights& a ,
+      FloaterHormann::Weights& b ) { a.exchange ( b ) ; }
     // ========================================================================
     /** @class Barycentric 
      *  Very efficient (true) Barycentric Lagrange interpolation

@@ -556,8 +556,9 @@ namespace Ostap
      *  @param n legendre polynomial order 
      *  @return k-th root of Legendre polynomial of order n
      */
-    double legendre_root ( const unsigned short k , 
-                           const unsigned short n ) ;    
+    double legendre_root 
+    ( const unsigned short k , 
+      const unsigned short n ) ;    
     // ========================================================================
     /** Evaluate Legendre \f$ P_N(x) \f$
      *  using the recurrence relation 

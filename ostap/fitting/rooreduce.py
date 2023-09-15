@@ -2665,6 +2665,21 @@ def _rgauss3d_reduce_ ( pdf ):
 
 Ostap.Models.Gauss3D.__reduce__ = _rgauss3d_reduce_ 
 
+# =============================================================================
+## reduce Rational
+def _rational_reduce_ ( pdf ):
+    """Reduce Ostap::Models::Rational"""
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.x        () ,                                  
+                                  pdf.pars     () ,                            
+                                  pdf.p        () ,                            
+                                  pdf.xmin     () ,
+                                  pdf.xmax     () )
+
+Ostap.Models.Rational.__reduce__ = _rational_reduce_ 
+
 
 # =============================================================================
 ## reduce Ostap::Functions::FuncRooTH1 
