@@ -13,16 +13,16 @@
 # - as      Fourier          sum (if numpy/scipy available)
 # - as      Cosine/Fourier   sum (if numpy/scipy available) 
 # - as      plain monomal    sum
-# - as positive                           Bernstein/Bezier sum
-# - as positive even                      Bernstein/Bezier sum
+# - as positive                          Bernstein/Bezier sum
+# - as positive even                     Bernstein/Bezier sum
 # - as positive monotonic                Bernstein/Bezier sum
-# - as positive            convex/concave Bernstein/Bezier sum
+# - as positive           convex/concave Bernstein/Bezier sum
 # - as positive monotonic convex/concave Bernstein/Bezier sum
-# - as      generic                            spline  (b-spline)
-# - as      positive                           spline  (p-spline)
+# - as      generic                           spline  (b-spline)
+# - as      positive                          spline  (p-spline)
 # - as      positive monotonic                spline  (m-spline) 
 # - as      positive monotonic convex/concave spline  (c-spline) 
-# - as      positive            convex/concave spline  (convex/concave-spline) 
+# - as      positive           convex/concave spline  (convex/concave-spline) 
 #
 # where possible, fit starts from reasonable approximatuion, taken from (1)
 # 
@@ -43,15 +43,15 @@
 #
 ## (2) using RooFit pdfs:
 #
-# - as positive                           Bernstein/Bezier sum
-# - as positive even                      Bernstein/Bezier sum
+# - as positive                          Bernstein/Bezier sum
+# - as positive even                     Bernstein/Bezier sum
 # - as positive monotonic                Bernstein/Bezier sum
-# - as positive            convex/concave Bernstein/Bezier sum
+# - as positive           convex/concave Bernstein/Bezier sum
 # - as positive monotonic convex/concave Bernstein/Bezier sum
-# - as      positive                           spline  (p-spline)
+# - as      positive                          spline  (p-spline)
 # - as      positive monotonic                spline  (m-spline) 
 # - as      positive monotonic convex/concave spline  (c-spline) 
-# - as      positive            convex/concave spline  (convex/concave-spline)
+# - as      positive           convex/concave spline  (convex/concave-spline)
 #
 # Typical usage:
 # @code
@@ -79,14 +79,14 @@
 - as      plain monomal    sum
 - as positive                           Bernstein/Bezier sum
 - as positive even                      Bernstein/Bezier sum
-- as positive monotonic                Bernstein/Bezier sum
+- as positive monotonic                 Bernstein/Bezier sum
 - as positive            convex/concave Bernstein/Bezier sum
-- as positive monotonic convex/concave Bernstein/Bezier sum
-- as      generic                            spline  (b-spline)
-- as      positive                           spline  (p-spline)
+- as positive monotonic  convex/concave Bernstein/Bezier sum
+- as      generic                           spline  (b-spline)
+- as      positive                          spline  (p-spline)
 - as      positive monotonic                spline  (m-spline) 
 - as      positive monotonic convex/concave spline  (c-spline) 
-- as      positive            convex/concave spline  (convex/concave-spline) 
+- as      positive           convex/concave spline  (convex/concave-spline) 
 
 where possible, fit starts from reasonable approximatuion, taken from (1)
 
@@ -109,13 +109,13 @@ Typical usage:
 
 - as positive                           Bernstein/Bezier sum
 - as positive even                      Bernstein/Bezier sum
-- as positive monotonic                Bernstein/Bezier sum
+- as positive monotonic                 Bernstein/Bezier sum
 - as positive            convex/concave Bernstein/Bezier sum
-- as positive monotonic convex/concave Bernstein/Bezier sum
-- as      positive                           spline  (p-spline)
+- as positive monotonic convex/concave  Bernstein/Bezier sum
+- as      positive                          spline  (p-spline)
 - as      positive monotonic                spline  (m-spline) 
 - as      positive monotonic convex/concave spline  (c-spline) 
-- as      positive            convex/concave spline  (convex/concave-spline)
+- as      positive           convex/concave spline  (convex/concave-spline)
 
 Typical usage:
 
@@ -139,8 +139,10 @@ from   ostap.math.param       import ( legendre_sum      ,
                                        bezier_sum        ,
                                        bernstein_sum     , 
                                        beziereven_sum    ,
-                                       bernsteineven_sum )
-from   ostap.core.ostap_types import integer_types, long_type, num_types 
+                                       bernsteineven_sum ,
+                                       rational_fun      ) 
+from   ostap.core.ostap_types import integer_types, long_type, num_types
+from   ostap.utils.utils      import vrange 
 from   collections            import namedtuple
 import ROOT, math 
 # =============================================================================
@@ -224,8 +226,7 @@ def _h1_param_sum_ ( h1               ,
         
         for i in range ( 0, b.npars() ) :
             fun.SetParameter ( i  , 0  )
-        
-        
+                
             
     if not opts                : opts  = 'S'
     if not 'S' in opts.upper() : opts += 'S'
@@ -595,6 +596,159 @@ def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
     return func 
         
 
+# =============================================================================
+## represent 1D-histo as rational function. based on Floater-Hormann's
+#  rational barycentric interpolant
+# 
+#  @code
+#  h = ...                   ## the histogram
+#  b = h.rational ( 5, 2  )  ## make a fit... 
+# 
+#  tf1        = b[0]         ## TF1 object
+#  obj        = b[1]         ## helper object 
+#  fun        = b[2]         ## underlying normalzed C++ object 
+#  fit_result = b[3]         ## fit result & status
+#  norm       = b[4]         ## normalization
+# 
+#  x = ...
+#  print 'TF1(%s) = %s' % ( x , tf1 ( x )        ) 
+#  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
+#  @endcode 
+def _h1_rational_  ( h1               ,
+                     n                , ## degree of numerator 
+                     d                ,
+                     opts   = 'SQ0'   ,
+                     xmin   = inf_neg ,
+                     xmax   = inf_pos ,
+                     fixes  = ()      ,
+                     params = ()      ,
+                     limits = ()      ,
+                     refit  = 1       ) :
+    """Represent histo as ratioal fnuction, based on Floater-Hormann's
+    rational barycentric interpolant 
+    
+    >>> h = ...                    # the histogram
+    >>> b = h.rational ( 5 , 2  )  ## make a fit... 
+    
+    >>> tf1        = b[0]    ## TF1 object
+    >>> obj        = b[1]    ## helper object 
+    >>> fun        = b[2]    ## underlying normalzed C++ object 
+    >>> fit_result = b[3]    ## fit result & status
+    >>> norm       = b[4]    ## normalization 
+    
+    >>> x = ...
+    >>> print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
+    >>> print 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) 
+    """
+    xmin = max ( xmin , h1.xmin() ) 
+    xmax = min ( xmax , h1.xmax() )  
+    # make reasonable approximation
+    func  = rational_fun ( h1 , n , d , xmin , xmax )
+    ## make a fit 
+    if not params : params = tuple ( [ p for p in func.pars() ] ) 
+    from ostap.fitting.param import H_fit
+    return _h1_param_sum_ ( h1              ,
+                            func            ,
+                            H_fit           ,
+                            opts   = opts   ,
+                            xmin   = xmin   ,
+                            xmax   = xmax   ,
+                            fixes  = fixes  ,
+                            params = params ,
+                            limits = limits , 
+                            refit  = refit  )
+
+
+# =============================================================================
+## represent 1D-histo as rational function - ration of Bernstein and positive Bernstein polynomials 
+# 
+#  @code
+#  h = ...                    ## the histogram
+#  b = h.brational ( 3 , 3 )  ## make a fit... 
+# 
+#  tf1        = b[0]         ## TF1 object
+#  obj        = b[1]         ## helper object 
+#  fun        = b[2]         ## underlying normalzed C++ object 
+#  fit_result = b[3]         ## fit result & status
+#  norm       = b[4]         ## normalization
+# 
+#  x = ...
+#  print 'TF1(%s) = %s' % ( x , tf1 ( x )        ) 
+#  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
+#  @endcode 
+def _h1_brational_  ( h1               ,
+                      n                , ## degree of numerator 
+                      d                , ## degree of denominator 
+                      opts   = 'SQ0'   ,
+                      xmin   = inf_neg ,
+                      xmax   = inf_pos ,
+                      fixes  = ()      ,
+                      params = ()      ,
+                      limits = ()      ,
+                      refit  = 1       ) :
+    """Represent 1D-histo as rational function - ratio
+    of Bernstein and positive Bernstein polynomials 
+    
+    >>> h = ...                    # the histogram
+    >>> b = h.brational ( 3 , 3  ) ## make a fit... 
+    
+    >>> tf1        = b[0]    ## TF1 object
+    >>> obj        = b[1]    ## helper object 
+    >>> fun        = b[2]    ## underlying normalzed C++ object 
+    >>> fit_result = b[3]    ## fit result & status
+    >>> norm       = b[4]    ## normalization 
+    
+    >>> x = ...
+    >>> print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
+    >>> print 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) 
+    """
+    xmin = max ( xmin , h1.xmin() ) 
+    xmax = min ( xmax , h1.xmax() )
+
+    ii = 1.0 / ( xmax - xmin ) 
+
+    # make reasonable approximation
+    func  = Ostap.Math.RationalBernstein ( n, d , xmin , xmax )
+
+    first = not params and not fixes and not limits 
+    
+    if not params and not fixes : 
+        np    = func.pnpars()
+        for i , x in enumerate ( vrange ( xmin , xmax , n ) ) :
+            func.setPar ( i , float ( h1 ( x ) ) * ii / max ( 1 , np ) )
+
+    from ostap.fitting.param import H_fit
+
+    if not fixes :
+        
+        nopts = opts.lower()
+        if not 'q' in nopts : nopts += 'q'
+        if not '0' in nopts : nopts += '0'
+        
+        ## fix denominator
+        p0 = tuple ( [ func.par  ( i )  for p in range ( func.npars() ) ] ) 
+        f0 = [ ( i , func.par ( i ) )   for i in range ( np , func.npars() ) ] 
+        r0 = _h1_param_sum_ ( h1 ,
+                              func            ,
+                              H_fit           ,
+                              opts   = nopts  ,
+                              xmin   = xmin   ,
+                              xmax   = xmax   ,
+                              fixes  = f0     ,
+                              params = p0     )
+        
+    ## make a fit 
+    if not params : params = tuple ( [ p for p in func.pars() ] ) 
+    return _h1_param_sum_ ( h1              ,
+                            func            ,
+                            H_fit           ,
+                            opts   = opts   ,
+                            xmin   = xmin   ,
+                            xmax   = xmax   ,
+                            fixes  = fixes  ,
+                            params = params ,
+                            limits = limits , 
+                            refit  = refit  )
 
 try :
     
@@ -1780,9 +1934,11 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.chebyshev      = _h1_chebyshev_
     t.legendre       = _h1_legendre_
     t.polynomial     = _h1_polinomial_
+    t.rational       = _h1_rational_
+    t.brational      = _h1_brational_
     t.positive       = _h1_positive_
     t.positiveeven   = _h1_positiveeven_
-    t.monotonic     = _h1_monotonic_
+    t.monotonic      = _h1_monotonic_
     t.convex         = _h1_convex_
     t.convexpoly     = _h1_convexpoly_
     t.concavepoly    = _h1_concavepoly_
@@ -1818,7 +1974,9 @@ _new_methods_ += [
     _h1_concavespline_ ,
     _h1_legendre_fast_ ,
     _h1_karlinshapley_ , 
-    _h1_karlinstudden_ 
+    _h1_karlinstudden_ ,  
+    _h1_rational_      ,  
+    _h1_brational_     ,  
     ]
 
 # =============================================================================
@@ -2692,6 +2850,41 @@ def _h1_beziereven_sum_ ( h1 , N , **kwargs ) :
     return beziereven_sum ( h1 , N , xmin , xmax )
 
 
+
+# =============================================================================
+## make a histogram representation in terms of Bezier(Bernstein) sum
+#  (sum over Bernstein polynomials) using even polynomials:
+#  \f$ f( \frac{x_{min}+x_{max}}{2} - x ) = f( \frac{x_{min}+x_{max}}{2} + x ) \f$ 
+#  @code 
+#  histo  = ...
+#  fsum   = histo.beziereven_sum    ( 2 )
+#  fsum   = histo.bernsteineven_sum ( 2 ) ## ditto
+#  print fsum
+#  x = ...
+#  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+#  @endcode 
+#  @see Ostap::Math::BernsteinEven
+#  @param h1 the histogram
+#  @param N  the degree of polynomial 
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2015-07-26
+def _h1_rational_fun_ ( h1 , n , d  , **kwargs ) :
+    """Make a histogram representation in terms of Rational function
+    inspired by Floated-Hormann's rational bary centric interpolant 
+    >>> histo  = ...
+    >>> rat    = rational_fun ( 2 ) ## ditto 
+    >>> print ( rat )
+    >>> x = ...
+    >>> print 'FUN(%s) = %s ' % ( x , rat ( x ) ) 
+    """
+    ##
+    xmin = max ( kwargs.get ( 'xmin' , h1.xmin() ) , h1.xmin () ) 
+    xmax = min ( kwargs.get ( 'xmax' , h1.xmax() ) , h1.xmax () ) 
+    ##
+    return rational_fun  ( h1 , n , d  , xmin , xmax )
+
+
+
 for h in ( ROOT.TH1F , ROOT.TH1D ) :
 
 
@@ -2710,6 +2903,8 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
 
     h.bezier_sum_orig    = _h1_bezier_sum_orig_
     h.bernstein_sum_orig = _h1_bezier_sum_orig_
+
+    h.rational_fun       = _h1_rational_fun_ 
 
     h.legendre_sum       = _h1_legendre_sum_orig_  ## ATTENTION 
     h.chebyshev_sum      = _h1_chebyshev_sum_orig_ ## ATTENTION 
@@ -2733,7 +2928,9 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
     
     _new_methods_ .append ( h.beziereven_sum     )
     _new_methods_ .append ( h.bernsteineven_sum  )
-    
+
+    _new_methods_ .append ( h.rational_fun       )
+
     
 # ==============================================================================
 ## (relatively) fast parameterization of 2D histogram as sum of
@@ -3038,6 +3235,7 @@ for h in ( ROOT.TH3F , ROOT.TH3D ) :
     _new_methods_ .append ( h.bezier         )
     _new_methods_ .append ( h.bezier_fast    )
     _new_methods_ .append ( h.bezier_fill    )
+
 _new_methods_ .append ( _h3_legendre_fast_   )
 
 # =============================================================================

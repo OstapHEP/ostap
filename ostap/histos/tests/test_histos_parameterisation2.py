@@ -287,6 +287,39 @@ def test_convex_poly () :
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
+
+# =============================================================================
+def test_rational () :
+
+    n    = 6
+    funs = set() 
+    logger =   getLogger("test_rational")
+    with timing ( 'Rational [%s]' % n , logger ) :
+        for h in  ( h1 , h2 , h3 , h4 ) :
+            with use_canvas ( 'test_rational %s' % h.GetTitle() , wait = 2 ) :  
+                h.draw()
+                for d in range ( 0 , n + 1 ) : 
+                    f = h.rational ( n = n , d = d )
+                    f.tf1.draw('same', color = d + 1 )
+                    funs.add ( f ) 
+                    logger.info ( "%-25s : [%d] difference %s" %  ( h.title , d , diff2 ( f , h ) ) )
+
+# =============================================================================
+def test_brational () :
+
+    n    = 3
+    funs = set() 
+    logger =   getLogger("test_brational")
+    with timing ( 'BRational [%s]' % n , logger ) :
+        for h in  ( h1 , h2 , h3 , h4 ) :
+            with use_canvas ( 'test_brational %s' % h.GetTitle() , wait = 2 ) :  
+                h.draw()
+                for d in range ( 2 , n + 2 ) : 
+                    f = h.brational ( n = n , d = d )
+                    f.tf1.draw('same', color = d + 1 )
+                    funs.add ( f ) 
+                    logger.info ( "%-25s : [%d] difference %s" %  ( h.title , d , diff2 ( f , h ) ) )
+                                        
 # =============================================================================
 def test_fourier () :
     
@@ -388,7 +421,6 @@ def test_convex_only_spline () :
             h    .draw()
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-
 
 # ============================================================================
 ## Karlin-Shapley
@@ -500,6 +532,9 @@ if '__main__' == __name__ :
     test_convex                 () 
     test_convex_poly            ()
 
+    test_rational               ()
+    test_brational              ()
+    
     test_fourier                ()
     test_cosine                 ()
     

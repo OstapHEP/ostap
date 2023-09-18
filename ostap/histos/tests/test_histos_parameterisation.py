@@ -328,7 +328,21 @@ def test_chebyshev_sum() :
             f.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
 
+# =============================================================================
+def test_rational_fun () :
+    
+    logger = getLogger("test_rational_fun")
 
+    n  = 8 
+    with timing ( 'Rational_fun[%s]' % n  , logger ) :
+        for h in histos :
+            with use_canvas ( 'test_rational_fun: ' + h.GetTitle() , wait = 1 )  :
+                h.draw()
+                for d in range ( 0 , n + 1 ) :
+                    f = h.rational_fun ( n , d ) 
+                    f.draw ( 'same' , color = d + 1 )
+                    logger.info ( "%-25s : [%d] difference %s" %  ( h.title , d , diff1 ( f , h ) ) )
+                    
 # =============================================================================
 def test_fourier_sum() :
     
@@ -336,7 +350,6 @@ def test_fourier_sum() :
     if not use_scipy :
         logger.warning("No numpy/scipy is avilable, skip the test test")
         return
-
 
     hh = [ h for h in histos if hasattr ( h , 'fourier_sum' ) ]
     with timing ( 'Fourier-sum[10]' , logger ) :
@@ -642,6 +655,8 @@ if '__main__' == __name__ :
     test_chebyshev_sum_fill ()
     test_chebyshev_sum      ()
     
+    test_rational_fun       ()
+
     test_fourier_sum        ()
     test_cosine_sum         ()
 

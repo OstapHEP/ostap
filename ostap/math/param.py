@@ -12,7 +12,8 @@
 # - as      Cosine/Fourier   sum  (relies on scipy.fftpack)
 # - as      Bernstein/Bezier sum  
 # - as even Bernstein/Bezier sum  
-# 
+# - as rational function inspired by Floater-Hormann's rationa barycentric interpolant
+
 # Typical usage:
 #
 # @code 
@@ -35,7 +36,7 @@
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2011-06-07
 # =============================================================================
-"""Module with utilities for parameterization of histograms
+"""Module with utilities for parameterization of functions/histograms
 
 ## (1) using histogram data only:
 
@@ -74,13 +75,14 @@ __all__     = (
     'bernstein_sum'     , ## - ditto -
     'beziereven_sum'    , ## even Bezier/Bernstein sum for the given function/object
     'bernsteineven_sum' , ## - ditto -
+    'rational_fun'      , ## Rational (a'la Floater-Hormann's interpolant) parameterisaton 
     ) 
-# =============================================================================
-import ROOT, ctypes
 # =============================================================================
 from   ostap.core.core         import cpp, Ostap
 from   ostap.core.ostap_types  import is_integer, num_types
+from   ostap.utils.utils       import crange 
 import ostap.math.models
+import ROOT, ctypes
 # =============================================================================
 # logging 
 # =============================================================================
@@ -138,7 +140,7 @@ def _get_xminmax_ ( func , xmin , xmax , name = 'get_xminmax') :
 #  x = ...
 #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
 #  @endcode 
-#  @see Gaudi::Math::LegendreSum
+#  @see Ostap::Math::LegendreSum
 #  @author Vanya Belyaev Ivan.Belyaev@iter.ru
 #  It is not very CPU efficient, but stable enough...
 #  @date 2015-07-26
@@ -150,7 +152,7 @@ def legendre_sum ( func , N , xmin , xmax , **kwargs ) :
     >>> print fsum
     >>> x = ...
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-    see Gaudi::Math::LegendreSum
+    see Ostap.Math.LegendreSum
     """
     from copy import deepcopy
 
@@ -203,7 +205,7 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
     >>> print fsum
     >>> x = ...
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-    see Gaudi::Math::ChebyshevSum
+    see Ostap::Math::ChebyshevSum
     """
     assert is_integer ( N ) and 0 <= N, "chebyshev_sum: invalid N %s " % N 
 
@@ -238,6 +240,9 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
     return csum
 
 
+
+
+
 # =============================================================================
 try :
     # =========================================================================
@@ -251,7 +256,7 @@ try :
     #  x = ...
     #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
     #  @endcode 
-    #  @see Gaudi::Math::FourierSum
+    #  @see Ostap::Math::FourierSum
     #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
     #  @date 2015-07-26
     def fourier_sum ( func , N , xmin , xmax , fejer = False ) :
@@ -330,7 +335,7 @@ try :
     #  x = ...
     #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) )
     #  @endcode 
-    #  @see Gaudi::Math::CosineSum
+    #  @see Ostap::Math::CosineSum
     #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
     #  @date 2015-07-26
     def cosine_sum ( func , N , xmin , xmax , fejer = False ) :
@@ -381,7 +386,7 @@ except ImportError :
 #  x = ...
 #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
 #  @endcode 
-#  @see Gaudi::Math::Bernstein
+#  @see Ostap::Math::Bernstein
 #  @param func (INPUT) the function
 #  @param N    (INPUT) the polynomial degree
 #  @param xmin (INPUT) the low  edge of the domain
@@ -452,7 +457,7 @@ bernstein_sum = bezier_sum
 #  x = ...
 #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
 #  @endcode 
-#  @see Gaudi::Math::BernsteinEven
+#  @see Ostap::Math::BernsteinEven
 #  @param func (INPUT) the function
 #  @param N    (INPUT) the degree of even polynomial 
 #  @param xmin (INPUT) the low  edge of the domain
@@ -526,6 +531,46 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
 
     return bsum
 
+
+
+# =============================================================================
+## make a function representation in terms of rational function
+#  based on the Floater-Hormann's rational barycentric interpolant 
+#  @code 
+#  func = lambda x : x * x
+#  rat  = rational( func , 3 , 3  , xmin = -1 , xmax = 1 )
+#  print ( rat ) 
+#  x = ...
+#  print 'FUN(%s) = %s ' % ( x , rat  ( x ) ) 
+#  @endcode 
+#  @see Ostap::Math::Rational
+#  @see Ostap::Math::FloaterHormann
+#  @author Vanya Belyaev Ivan.Belyaev@iter.ru
+#  @date 2023-09-18
+def rational_fun  ( func , n , d  , xmin , xmax , **kwargs ) :
+    """ Make a function representation in terms of rational function
+    based on the Floater-Hormann's rational barycentric interpolant
+    >>> func = lambda x : x * x
+    >>> rat  = rational ( func , N = 4 , d = 1  , xmin = -1 , xmax = 1 )
+    >>> print ( rat ) 
+    >>> x = ...
+    >>> print 'FUN(%s) = %s ' % ( x , rat ( x ) ) 
+    - see Ostap.Math.Rational 
+    - see Ostap.Math.FloaterHormann
+    """
+    from copy import deepcopy
+    
+    assert is_integer ( n ) and 0 <= n      , "rational: invalid n %s " % N
+    assert is_integer ( d ) and 0 <= d <= n , "rational: invalid d %s " % d
+    
+    xmin , xmax = _get_xminmax_ ( func , xmin , xmax , 'rational' )
+    
+    ## prepare the result
+    rational = Ostap.Math.Rational( n + 1 , d , xmin , xmax )
+    for i, r in enumerate ( crange ( xmin , xmax ,  n + 1 ) ) :
+        rational [ i ] = float ( func ( r ) ) 
+
+    return rational 
 
 # =============================================================================
 ## make a function representation in terms of even Bezier sum (sum over Bernstein polynomials)

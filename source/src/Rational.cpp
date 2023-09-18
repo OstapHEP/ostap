@@ -27,7 +27,6 @@
  */
 // ============================================================================
 
-
 // ============================================================================
 /*  constructor  
  *  @param n degree of numerator 
@@ -192,9 +191,9 @@ double Ostap::Math::RationalBernstein::evaluate ( const double x ) const
 std::vector<double> 
 Ostap::Math::RationalBernstein::pars () const 
 {
-  std::vector<double> result ( npars() , 0 ) ;
-  std::copy ( m_p.pars().begin() , m_p.pars().end() , result.begin()               ) ;
-  std::copy ( m_q.pars().begin() , m_q.pars().end() , result.begin() + m_p.npars() ) ;
+  const unsigned short np = npars() ;
+  std::vector<double> result ( np , 0.0 ) ;
+  for ( unsigned short i = 0 ; i < np ; ++i ) { result [ i ] = par ( i ) ; }
   return result ;
 }
 // ============================================================================

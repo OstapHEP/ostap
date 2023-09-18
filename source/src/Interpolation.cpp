@@ -557,7 +557,7 @@ Ostap::Math::Berrut2nd::Berrut2nd
 Ostap::Math::FloaterHormann::Weights::Weights 
 ( const Ostap::Math::Interpolation::Abscissas& a ,
   const unsigned short                         d )
-  : m_d       ( d <= a.size() ? d : a.size() )  
+  : m_d       ( a.size() ?  ( d < a.size() ? d : a.size() - 1 ) : 0 )
   , m_weights ( a.size() )
 {
   //
@@ -565,7 +565,7 @@ Ostap::Math::FloaterHormann::Weights::Weights
   const unsigned int n  = 1 <= nn ? nn - 1 : 0  ;
   //
   for ( unsigned int i = 0 ; i <= n ; ++i )
-  {    
+  {   
     const long double xi = a.x ( i ) ;
     //
     long double ib = 0 ;
