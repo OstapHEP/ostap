@@ -13,6 +13,7 @@
 // Ostap 
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/Hash.h"
 #include "Ostap/Choose.h"
 #include "Ostap/Bernstein1D.h"
 #include "Ostap/Polynomials.h"
@@ -21,6 +22,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
+#include "local_hash.h"
 #include "bernstein_utils.h"
 #include "syncedcache.h"
 // ============================================================================
@@ -1028,6 +1030,65 @@ double Ostap::Math::ConvexOnly::integral
 
 
 
+
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BernsteinEven::tag () const 
+{ 
+  static const std::string s_name = "BernsteinEven" ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , m_bernstein.tag() ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Positive::tag () const 
+{ 
+  static const std::string s_name = "Positive" ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , m_bernstein.tag() ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::PositiveEven::tag () const 
+{ 
+  static const std::string s_name = "PositiveEven" ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , m_even.tag() ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Monotonic::tag () const 
+{ 
+  static const std::string s_name = "Monotonic" ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , m_bernstein.tag() ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Convex::tag () const 
+{ 
+  static const std::string s_name = "Convex" ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , m_bernstein.tag() ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::ConvexOnly::tag () const 
+{ 
+  static const std::string s_name = "ConvexOnly" ;
+  return Ostap::Utils::hash_combiner 
+    ( s_name , m_bernstein.tag() ) ;
+}
+// ============================================================================
+
+  
+  
 
 
 

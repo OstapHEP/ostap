@@ -12,8 +12,10 @@
   1. Add `Ostap::Math::RationalPositive`   : rational function as ratio of two positve Bernstein polynomials
   1. Add `Ostap::Models::Rational`         : rational PDF  as ratio of two positve Bernstein polynomials
   1. Add `Rational_pdf`                    : rational PDF  as ratio of two positve Bernstein polynomials
-  1. Add 1D-histogram parameterisations in terms of rational functions: `rational_fun`, `rational` and `brational`
-
+  1. Add 1D-histogram parameterisations in terms      of rational functions: `rational_fun`, `rational` and `brational`
+  1. Add 1D-histogram parameterisations in terms of rational functions: `pdf_rational`
+  1. Improve a bit `tag` for 1D-Bernstein polynomials`  
+  
 ## Backward incompatible: 
 
 ## Bug fixes:
