@@ -245,11 +245,11 @@ std::size_t Ostap::Math::RationalBernstein::tag () const
 { 
   static const std::string s_name = "RationalBernstein" ;
   return Ostap::Utils::hash_combiner 
-    ( s_name  , 
-      xmin () ,
-      xmax () , 
-      Ostap::Utils::hash_range ( m_p.pars () ) , 
-      Ostap::Utils::hash_range ( m_q.pars () ) ) ;  
+    ( s_name     , 
+      xmin    () ,
+      xmax    () , 
+      m_p.tag () , 
+      m_q.tag () ) ;
 }
 // ============================================================================
 
@@ -349,19 +349,13 @@ std::size_t Ostap::Math::RationalPositive::tag () const
 { 
   static const std::string s_name = "RationalPositive" ;
   return Ostap::Utils::hash_combiner 
-    ( s_name  , 
-      xmin () ,
-      xmax () , 
-      Ostap::Utils::hash_range ( m_p.pars () ) , 
-      Ostap::Utils::hash_range ( m_q.pars () ) ) ;  
+    ( s_name     , 
+      xmin    () ,
+      xmax    () , 
+      m_p.tag () , 
+      m_q.tag () ) ;  
 }
 // ============================================================================
-
-
-     
-
-
-
 
 // ============================================================================
 //                                                                      The END 
