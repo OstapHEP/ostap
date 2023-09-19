@@ -52,7 +52,8 @@
 # - as      positive monotonic                spline  (m-spline) 
 # - as      positive monotonic convex/concave spline  (c-spline) 
 # - as      positive           convex/concave spline  (convex/concave-spline)
-#
+# - as      positive rational function
+# 
 # Typical usage:
 # @code
 # histo = ...                                 ## the histogram
@@ -2401,13 +2402,45 @@ def _h1_pdf_concavepoly_ ( h1 , degree , *args , **kwargs ) :
     from ostap.fitting.background import ConvexOnly_pdf
     return _h1_pdf_ ( h1 , ConvexOnly_pdf , (degree,False) , *args , **kwargs )
 
+
+# =============================================================================
+## parameterize/fit histogram with the rational function 
+#  @code
+#  h1 = ...
+#  results = h1.pdf_rational ( 3 , 3 )
+#  results = h1.pdf_rational ( 3 , 3 , draw = True , silent = True )
+#  print     results[ 0]
+#  pdf     = results[ 1]
+#  func    = results[ 2]
+#  norm    = results[ 3]
+#  pdf_fun = results[ 4] 
+#  frame   = results[-1] 
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2023-09-19
+def _h1_pdf_rational_ ( h1 , p , q  , *args , **kwargs ) :
+    """Parameterize/fit histogram with the rational function 
+    >>> h1 = ...
+    >>> results = h1.pdf_rational ( 3 , 3 )
+    >>> results = h1.pdf_rational ( 3 , 3 , draw = 3 , silent = True )
+    >>> print     results[ 0] ## fit results 
+    >>> pdf     = results[ 1] ## get PDF
+    >>> func    = results[ 2] ## normalized function  
+    >>> norm    = results[ 3] ## normalization
+    >>> pdf_fun = results[ 4] ## pdf-function (normalized)
+    >>> frame   = results[-1] ## frame/RooPlot 
+    """
+    from ostap.fitting.background import Rational_pdf
+    return _h1_pdf_ ( h1 , Rational_pdf , ( p , q ) , *args , **kwargs )
+
+
 # =============================================================================
 
 for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.pdf_positive           = _h1_pdf_positive_
     t.pdf_positiveeven       = _h1_pdf_even_
     t.pdf_even               = _h1_pdf_even_
-    t.pdf_monotonic         = _h1_pdf_monotonic_
+    t.pdf_monotonic          = _h1_pdf_monotonic_
     t.pdf_increasing         = _h1_pdf_increasing_
     t.pdf_decreasing         = _h1_pdf_decreasing_
     t.pdf_convex             = _h1_pdf_convex_
@@ -2418,6 +2451,7 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.pdf_concave_decreasing = _h1_pdf_concave_decreasing_
     t.pdf_convexpoly         = _h1_pdf_convexpoly_
     t.pdf_concavepoly        = _h1_pdf_concavepoly_
+    t.pdf_rational           = _h1_pdf_rational_
 
     _new_methods_ += [
         _h1_pdf_positive_    ,
@@ -2433,7 +2467,9 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
         _h1_pdf_concave_decreasing_ ,
         _h1_pdf_convexpoly_   ,
         _h1_pdf_concavepoly_  ,        
+        _h1_pdf_rational_     ,        
         ]
+    
 # =============================================================================
 ## parameterize/fit histogram with the positive  b-spline 
 #  @code

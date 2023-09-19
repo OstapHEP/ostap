@@ -433,21 +433,21 @@ class Rational_pdf(PolyBase) :
     def __init__ ( self             ,
                    name             ,  ## the name 
                    xvar             ,  ## the variable 
-                   p        = 1     ,  ## degree if numerator 
-                   q        = 1     ,  ## degree of denumerator 
+                   np       = 1     ,  ## degree if numerator 
+                   nq       = 1     ,  ## degree of denumerator 
                    xmin     = None  ,  ## optional x-min
                    xmax     = None  ,  ## optional x-max 
                    the_phis = None  ) :
 
-        assert isinstance ( p , int ) and 0 <= p , "Invalid `p'-parameter"
-        assert isinstance ( q , int ) and 0 <= q , "Invalid `q'-parameter"
+        assert isinstance ( np , int ) and 0 <= np , "Invalid `np'-parameter"
+        assert isinstance ( nq , int ) and 0 <= nq , "Invalid `nq'-parameter"
         
         ## initialize the base 
-        PolyBase.__init__ ( self , name , p + q , xvar , the_phis )
+        PolyBase.__init__ ( self , name , np + nq , xvar , the_phis )
         #
-        n = len ( self.phis )
-        p = min ( n , p )
-        q =       n - p 
+        n  = len ( self.phis )
+        np = min ( n , np )
+        nq =       n - np 
         
         #
         ## xmin/xmax
@@ -459,7 +459,7 @@ class Rational_pdf(PolyBase) :
             self.roo_name ( "rat_"  ) ,
             "Rational function %s" % self.name , 
             self.xvar            ,
-            p                    , 
+            np                   , 
             self.phi_list        ,
             self.x_min           ,
             self.x_max           )
@@ -468,23 +468,22 @@ class Rational_pdf(PolyBase) :
         self.config = {
             'name'     : self.name     ,
             'xvar'     : self.xvar     ,
-            'p'        : self.pdf.p () ,            
-            'q'        : self.pdf.q () ,            
+            'np'       : self.pdf.p () ,            
+            'nq'       : self.pdf.q () ,            
             'the_phis' : self.phis     ,
             'xmin'     : self.x_min    ,
             'xmax'     : self.x_max    ,            
             }
                 
     @property
-    def p ( self ) :
-        """`p'-parameter - degree of numerator"""
-        return self.pdf.p()
+    def np ( self ) :
+        """`np'-parameter - degree of numerator"""
+        return self.pdf.p ()
     @property
-    def q ( self ) :
-        """`q'-parameter - degree of denomerator"""
+    def nq ( self ) :
+        """`nq'-parameter - degree of denomerator"""
         return self.pdf.q()
     
-
     @property
     def x_min ( self ) :
         """'x_min' - minimal x for Rational function"""
@@ -499,6 +498,16 @@ class Rational_pdf(PolyBase) :
     def pars ( self ) :
         """'pars' : phases (same as 'phis')"""
         return self.phis
+
+    @property
+    def ppars ( self ) :
+        """'ppars' : parameters of numerator"""
+        return self.pars[ : self.np ]
+
+    @property
+    def qpars ( self ) :
+        """'qpars' : parameters of denumorator"""
+        return self.pars[ self.np : ]
 
     
 models.append ( Rational_pdf ) 
