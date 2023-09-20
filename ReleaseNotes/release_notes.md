@@ -1,3 +1,5 @@
+# v1.10.0.0
+
 ## New features:
 
   1. Add Benini distribution  `Ostap::Math::Benini`, `Ostap::Models::Benini`, `Benini_pdf`
@@ -21,7 +23,6 @@
 ## Bug fixes:
 
   1. fix minor typos in `ostap.fitting.pdfbasic.py`
-
 
 # v1.9.9.8
 
