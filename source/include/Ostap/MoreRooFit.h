@@ -2729,6 +2729,28 @@ namespace Ostap
       /// clone 
       AddDeps* clone ( const char* newname ) const override ;
       // ======================================================================    
+    public: // delegation 
+      // ======================================================================
+      Double_t    analyticalIntegral
+      ( Int_t            code            ,
+        const char*      range = nullptr ) const override ;
+      //
+      Double_t    analyticalIntegralWN
+      ( Int_t            code            ,
+        const RooArgSet* normset         ,
+        const char*      range = nullptr ) const override ;
+      //
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&       allVars         ,
+        RooArgSet&       analVars        ,
+        const char*      range = nullptr ) const override ;
+      //
+      Int_t    getAnalyticalIntegralWN
+      ( RooArgSet&       allVars         ,
+        RooArgSet&       analVars        ,
+        const RooArgSet* normset         ,
+        const char*      range = nullptr ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// the actual evaluation of the result 

@@ -26,7 +26,7 @@ namespace Ostap
      *  the Floater-Hormann rational barycentric interpolant 
      *  and parameters are the function valeus at Chebyshev's nodes  
      *
-     #  @see Ostap::Math::FloaterHormann
+     *  @see Ostap::Math::FloaterHormann
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date   2023-09-14
      */

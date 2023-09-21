@@ -2668,7 +2668,8 @@ Ostap.Models.Gauss3D.__reduce__ = _rgauss3d_reduce_
 # =============================================================================
 ## reduce Rational
 def _rational_reduce_ ( pdf ):
-    """Reduce Ostap::Models::Rational"""
+    """Reduce Ostap::Models::Rational & Ostap::MoreRooFit::Rational
+    """
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
@@ -2678,7 +2679,10 @@ def _rational_reduce_ ( pdf ):
                                   pdf.xmin     () ,
                                   pdf.xmax     () )
 
-Ostap.Models.Rational.__reduce__ = _rational_reduce_ 
+Ostap.Models.Rational              .__reduce__ = _rational_reduce_ 
+Ostap.MoreRooFit.Rational          .__reduce__ = _rational_reduce_ 
+Ostap.MoreRooFit.RationalBernstein .__reduce__ = _rational_reduce_ 
+
 
 
 # =============================================================================

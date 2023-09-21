@@ -1086,19 +1086,19 @@ Double_t Ostap::MoreRooFit::Id::analyticalIntegral
 ( Int_t            code     ,
   const char*      range    ) const
 { return m_x.arg().analyticalIntegral    ( code , range ) ; }
-//
+// ============================================================================
 Double_t Ostap::MoreRooFit::Id::analyticalIntegralWN
 ( Int_t            code     ,
   const RooArgSet* normset  ,
   const char*      range    ) const
 { return m_x.arg().analyticalIntegralWN  ( code , normset , range ) ; }
-//  
+// ============================================================================
 Int_t    Ostap::MoreRooFit::Id::getAnalyticalIntegral
 ( RooArgSet&       allVars  ,
   RooArgSet&       analVars ,
   const char*      range    ) const
 { return m_x.arg().getAnalyticalIntegral   ( allVars , analVars , range ) ; }
-//
+// ============================================================================
 Int_t    Ostap::MoreRooFit::Id::getAnalyticalIntegralWN
 ( RooArgSet&       allVars  ,
   RooArgSet&       analVars ,
@@ -1106,6 +1106,7 @@ Int_t    Ostap::MoreRooFit::Id::getAnalyticalIntegralWN
   const char*      range    ) const
 { return m_x.arg().getAnalyticalIntegralWN ( allVars , analVars , normset , range ) ; }
 // ============================================================================
+
 
 // ============================================================================
 /* constructor from name, title and two pdfs
@@ -1262,7 +1263,7 @@ Ostap::MoreRooFit::AddDeps::AddDeps
 ( const AddDeps& right   , 
   const char*    newname ) 
   : OneVar ( right , newname ) 
-  , m_vlst     ( "!vlst" , this , right.m_vlst )
+  , m_vlst ( "!vlst" , this , right.m_vlst )
 {}
 // ============================================================================
 // destructor 
@@ -1274,6 +1275,30 @@ Ostap::MoreRooFit::AddDeps::~AddDeps(){}
 Ostap::MoreRooFit::AddDeps*
 Ostap::MoreRooFit::AddDeps::clone ( const char* newname ) const 
 { return new Ostap::MoreRooFit::AddDeps( *this , newname ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::AddDeps::analyticalIntegral
+( Int_t            code     ,
+  const char*      range    ) const
+{ return m_x.arg().analyticalIntegral    ( code , range ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::AddDeps::analyticalIntegralWN
+( Int_t            code     ,
+  const RooArgSet* normset  ,
+  const char*      range    ) const
+{ return m_x.arg().analyticalIntegralWN  ( code , normset , range ) ; }
+// ============================================================================
+Int_t    Ostap::MoreRooFit::AddDeps::getAnalyticalIntegral
+( RooArgSet&       allVars  ,
+  RooArgSet&       analVars ,
+  const char*      range    ) const
+{ return m_x.arg().getAnalyticalIntegral   ( allVars , analVars , range ) ; }
+// ============================================================================
+Int_t    Ostap::MoreRooFit::AddDeps::getAnalyticalIntegralWN
+( RooArgSet&       allVars  ,
+  RooArgSet&       analVars ,
+  const RooArgSet* normset  ,
+  const char*      range    ) const
+{ return m_x.arg().getAnalyticalIntegralWN ( allVars , analVars , normset , range ) ; }
 // ============================================================================
 
 

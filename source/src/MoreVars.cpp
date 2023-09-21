@@ -44,6 +44,8 @@ namespace
   const std::string s_v3          = "Ostap::MoreRooFit::Convex"        ;
   const std::string s_v4          = "Ostap::MoreRooFit::ConvexOnly"    ;
   const std::string s_v5          = "Ostap::MoreRooFit::BSpline"       ;
+  const std::string s_v6          = "Ostap::MoreRooFit::Rational"      ;
+  const std::string s_v7          = "Ostap::MoreRooFit::RationalBernstein" ;
   // ===========================================================================
   class FakeRecursiveFraction : public RooRecursiveFraction 
   {
@@ -273,11 +275,13 @@ namespace
   // ==========================================================================
 } //                                             The end of anonymous namespace 
 // ============================================================================
-ClassImp ( Ostap::MoreRooFit::Bernstein  ) ;
-ClassImp ( Ostap::MoreRooFit::Monotonic  ) ;
-ClassImp ( Ostap::MoreRooFit::Convex     ) ;
-ClassImp ( Ostap::MoreRooFit::ConvexOnly ) ;
-ClassImp ( Ostap::MoreRooFit::BSpline    ) ;
+ClassImp ( Ostap::MoreRooFit::Bernstein         ) ;
+ClassImp ( Ostap::MoreRooFit::Monotonic         ) ;
+ClassImp ( Ostap::MoreRooFit::Convex            ) ;
+ClassImp ( Ostap::MoreRooFit::ConvexOnly        ) ;
+ClassImp ( Ostap::MoreRooFit::BSpline           ) ;
+ClassImp ( Ostap::MoreRooFit::Rational          ) ;
+ClassImp ( Ostap::MoreRooFit::RationalBernstein ) ;
 // ============================================================================
 // constructor from the variable, range and list of coefficients
 // ============================================================================
@@ -355,6 +359,7 @@ Double_t Ostap::MoreRooFit::Bernstein::analyticalIntegral
   return m_bernstein.integral ( xmin , xmax ) ;
 }
 // ============================================================================
+
 
 
 // ============================================================================
@@ -697,11 +702,194 @@ Double_t Ostap::MoreRooFit::ConvexOnly::analyticalIntegral
   //
   return a * ( xmax - xmin ) + b * m_convex.integral ( xmin , xmax ) ;
 }
+// ============================================================================
 
 
 
+// ============================================================================
+// constructor from the variable, range and list of coefficients
+// ============================================================================
+Ostap::MoreRooFit::Rational::Rational
+( const std::string&   name  ,
+  const std::string&   title ,
+  RooAbsReal&          xvar  ,
+  const RooArgList&    pars  ,
+  const unsigned short d     , 
+  const double         xmin  , 
+  const double         xmax  )
+  : RooAbsReal ( name.c_str  () , title.c_str () )
+  , m_xvar      ( "!x"    , "Observable" , this , xvar ) 
+  , m_pars      ( "!pars" , "Parameters" , this ) 
+  , m_rational  ( ::size ( pars ) , d , xmin , xmax ) 
+{
+  //
+  Ostap::Assert ( 1 <= ::size ( pars ) , s_EMPTYPARS  , s_v6 , 510 ) ;
+  //
+  ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v6 ) ;
+  //
+  Ostap::Assert ( m_rational.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v6 , 512 ) ;
+  //
+}
+// =============================================================================
+// copy constructor 
+// =============================================================================
+Ostap::MoreRooFit::Rational::Rational
+( const Ostap::MoreRooFit::Rational& right , 
+  const char*                         name  )
+  : RooAbsReal  ( right , name ) 
+  , m_xvar      ( "!x"    , this , right.m_xvar ) 
+  , m_pars      ( "!pars" , this , right.m_pars ) 
+  , m_rational  ( right.m_rational ) 
+{}
+// =============================================================================
+// default constructor 
+// ============================================================================
+Ostap::MoreRooFit::Rational::Rational(){}
+// =============================================================================
+// destructor  
+// ============================================================================
+Ostap::MoreRooFit::Rational::~Rational(){}
+// ============================================================================
+// clone it!
+// ============================================================================
+Ostap::MoreRooFit::Rational*
+Ostap::MoreRooFit::Rational::clone ( const char* newname ) const
+{ return new Rational( *this , newname ) ; }
+// ============================================================================
+void Ostap::MoreRooFit::Rational::setPars() const 
+{ ::set_pars ( m_pars , m_rational ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Rational::evaluate  () const 
+{
+  setPars () ;
+  const double x = m_xvar ;
+  return m_rational ( x ) ;
+}
+// ============================================================================
+Int_t    Ostap::MoreRooFit::Rational::getAnalyticalIntegral
+( RooArgSet&  allVars   , 
+  RooArgSet&  analVars  , 
+  const char* /* rangeName */ ) const 
+{
+  return matchArgs  ( allVars , analVars , m_xvar ) ? 1 : 0 ;
+}
+// ===========================================================================
+Double_t Ostap::MoreRooFit::Rational::analyticalIntegral 
+( Int_t code            , 
+  const char* rangeName ) const 
+{
+  setPars() ;
+  const double xmin = m_xvar.min ( rangeName ) ;
+  const double xmax = m_xvar.max ( rangeName ) ;
+  return m_rational.integral ( xmin , xmax ) ;
+}
+// ============================================================================
 
 
+
+// ============================================================================
+// constructor from the variable, range and list of coefficients
+// ============================================================================
+Ostap::MoreRooFit::RationalBernstein::RationalBernstein
+( const std::string&   name  ,
+  const std::string&   title ,
+  RooAbsReal&          xvar  ,
+  const RooArgList&    pars  ,
+  const unsigned short p     , 
+  const double         xmin  , 
+  const double         xmax  )
+  : RooAbsReal ( name.c_str  () , title.c_str () )
+  , m_xvar      ( "!x"    , "Observable" , this , xvar ) 
+  , m_pars      ( "!pars" , "Parameters" , this ) 
+  , m_rational  ( ::size ( pars ) , p , xmin , xmax ) 
+{
+  //
+  Ostap::Assert ( 1 <= ::size ( pars ) , s_EMPTYPARS  , s_v7 , 510 ) ;
+  //
+  ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v7 ) ;
+  //
+  Ostap::Assert ( m_rational.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v7 , 512 ) ;
+  //
+}
+// ============================================================================
+// constructor from the variable, range and list of coefficients
+// ============================================================================
+Ostap::MoreRooFit::RationalBernstein::RationalBernstein
+( const std::string&   name  ,
+  const std::string&   title ,
+  RooAbsReal&          xvar  ,
+  const RooArgList&    p     ,
+  const RooArgList&    q     ,
+  const double         xmin  , 
+  const double         xmax  )
+  : RooAbsReal ( name.c_str  () , title.c_str () )
+  , m_xvar      ( "!x"    , "Observable" , this , xvar ) 
+  , m_pars      ( "!pars" , "Parameters" , this ) 
+  , m_rational  ( ::size ( p ) , ::size ( q ) , xmin , xmax ) 
+{
+  //
+  Ostap::Assert ( 1 <= ::size ( p ) + ::size ( q ) , s_EMPTYPARS  , s_v7 , 510 ) ;
+  //
+  ::copy_real   ( p , m_pars , s_INVALIDPAR , s_v7 ) ;
+  ::copy_real   ( q , m_pars , s_INVALIDPAR , s_v7 ) ;
+  //
+  Ostap::Assert ( m_rational.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v7 , 512 ) ;
+  //
+}
+// =============================================================================
+// copy constructor 
+// =============================================================================
+Ostap::MoreRooFit::RationalBernstein::RationalBernstein
+( const Ostap::MoreRooFit::RationalBernstein& right , 
+  const char*                         name  )
+  : RooAbsReal  ( right , name ) 
+  , m_xvar      ( "!x"    , this , right.m_xvar ) 
+  , m_pars      ( "!pars" , this , right.m_pars ) 
+  , m_rational  ( right.m_rational ) 
+{}
+// =============================================================================
+// default constructor 
+// ============================================================================
+Ostap::MoreRooFit::RationalBernstein::RationalBernstein(){}
+// =============================================================================
+// destructor  
+// ============================================================================
+Ostap::MoreRooFit::RationalBernstein::~RationalBernstein(){}
+// ============================================================================
+// clone it!
+// ============================================================================
+Ostap::MoreRooFit::RationalBernstein*
+Ostap::MoreRooFit::RationalBernstein::clone ( const char* newname ) const
+{ return new RationalBernstein ( *this , newname ) ; }
+// ============================================================================
+void Ostap::MoreRooFit::RationalBernstein::setPars() const 
+{ ::set_pars ( m_pars , m_rational ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::RationalBernstein::evaluate  () const 
+{
+  setPars () ;
+  const double x = m_xvar ;
+  return m_rational ( x ) ;
+}
+// ============================================================================
+Int_t    Ostap::MoreRooFit::RationalBernstein::getAnalyticalIntegral
+( RooArgSet&  allVars   , 
+  RooArgSet&  analVars  , 
+  const char* /* rangeName */ ) const 
+{
+  return matchArgs  ( allVars , analVars , m_xvar ) ? 1 : 0 ;
+}
+// ===========================================================================
+Double_t Ostap::MoreRooFit::RationalBernstein::analyticalIntegral 
+( Int_t code            , 
+  const char* rangeName ) const 
+{
+  setPars() ;
+  const double xmin = m_xvar.min ( rangeName ) ;
+  const double xmax = m_xvar.max ( rangeName ) ;
+  return m_rational.integral ( xmin , xmax ) ;
+}
+// ============================================================================
 
 
 

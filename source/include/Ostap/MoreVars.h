@@ -20,6 +20,7 @@
 #include "Ostap/Bernstein.h"
 #include "Ostap/Bernstein1D.h"
 #include "Ostap/BSpline.h"
+#include "Ostap/Rational.h"
 #include "Ostap/HistoInterpolators.h"
 // ============================================================================
 /// forward declarations 
@@ -494,7 +495,177 @@ namespace Ostap
       // ======================================================================
     } ; //                          The end of class Ostap::MoreRooFit::BSpline 
     // ========================================================================
-    /** @class Shape 
+    /** @class Rational 
+     *  A simple pole-free rational function at interval \f$ x_{min} \le x \le x_{max}\f$
+     *  \f[ F(x) = \frac{p(x)}{q(x)} \f]
+     *  Actually internally it uses 
+     *  the Floater-Hormann rational barycentric interpolant 
+     *  and parameters are the function valeus at Chebyshev's nodes  
+     *   
+     *  @see Ostap::Math::Rational
+     *  @see Ostap::Math::FloaterHormann
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     *  @date   2023-09-21
+     */
+    class Rational final : public RooAbsReal 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Rational, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      Rational 
+        ( const std::string&   name  , 
+          const std::string&   title , 
+          RooAbsReal&          xvar  ,
+          const RooArgList&    pars  ,
+          const unsigned short d     ,
+          const double         xmin  , 
+          const double         xmax  ) ;
+      /// copy constructor 
+      Rational ( const Rational& right , const char* name = nullptr ) ;
+      /// default 
+      Rational () ;
+      /// clone method
+      Rational* clone ( const char* name ) const override ;
+      /// virtual destructor 
+      virtual ~Rational() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&  allVars             , 
+          RooArgSet&  analVars            , 
+          const char* rangeName = nullptr ) const override ;
+      Double_t    analyticalIntegral
+        ( Int_t code , 
+          const char* rangeName = nullptr ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the variable/observable 
+      const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
+      /// get parameters 
+      const RooArgList& pars   () const { return m_pars       ; }
+      /// get n
+      unsigned short    n      () const { return m_rational.n    () ; }
+      /// get d 
+      unsigned short    d      () const { return m_rational.d    () ; }
+      /// xmin for Rational
+      double            xmin   () const { return m_rational.xmin () ; }
+      /// xmax for Rational 
+      double            xmax   () const { return m_rational.xmax () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      void setPars () const ;
+      // ======================================================================
+   public:
+      // ======================================================================
+      const Ostap::Math::Rational& function () const { return m_rational ; }
+      const Ostap::Math::Rational& rational () const { return m_rational ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      Double_t evaluate  () const override ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      RooRealProxy                   m_xvar     {} ;
+      RooListProxy                   m_pars     {} ;
+      mutable Ostap::Math::Rational  m_rational { 3 , 1 } ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class RationalBernstein 
+     *  Rational fnuction as ratio of Bernstein polyhomial and 
+     *  positive Bernstein polynomial
+     *  \f[ R ( x ) = \frac{B(x)}{P(x)\f]
+     *  @see Ostap::Math::RationalBernstein
+     *  @see Ostap::Math::Bernstein
+     *  @see Ostap::Math::Positive 
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     *  @date   2023-09-21
+     */
+    class RationalBernstein final : public RooAbsReal 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::RationalBernstein, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      RationalBernstein 
+        ( const std::string&   name  , 
+          const std::string&   title , 
+          RooAbsReal&          xvar  ,
+          const RooArgList&    p     , // numerator 
+          const RooArgList&    q     , // denominator 
+          const double         xmin  , 
+          const double         xmax  ) ;
+      RationalBernstein 
+        ( const std::string&   name  , 
+          const std::string&   title , 
+          RooAbsReal&          xvar  ,
+          const RooArgList&    pars  , // all pars 
+          const unsigned short p     , // degree of numerator 
+          const double         xmin  , 
+          const double         xmax  ) ;
+      /// copy constructor 
+      RationalBernstein ( const RationalBernstein& right , const char* name = nullptr ) ;
+      /// default 
+      RationalBernstein () ;
+      /// clone method
+      RationalBernstein* clone ( const char* name ) const override ;
+      /// virtual destructor 
+      virtual ~RationalBernstein() ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+        ( RooArgSet&  allVars             , 
+          RooArgSet&  analVars            , 
+          const char* rangeName = nullptr ) const override ;
+      Double_t    analyticalIntegral
+        ( Int_t code , 
+          const char* rangeName = nullptr ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the variable/observable 
+      const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
+      /// get parameters 
+      const RooArgList& pars   () const { return m_pars       ; }
+      /// get p 
+      unsigned short    p      () const { return m_rational.pdegree () ; }
+      /// xmin for Rational
+      double            xmin   () const { return m_rational.xmin    () ; }
+      /// xmax for Rational 
+      double            xmax   () const { return m_rational.xmax    () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      void setPars () const ;
+      // ======================================================================
+   public:
+      // ======================================================================
+      const Ostap::Math::RationalBernstein& function () const { return m_rational ; }
+      const Ostap::Math::RationalBernstein& rational () const { return m_rational ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      Double_t evaluate  () const override ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      RooRealProxy                            m_xvar     {} ;
+      RooListProxy                            m_pars     {} ;
+      mutable Ostap::Math::RationalBernstein  m_rational { 3 , 1 } ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Shape1D
      *  The generic "fixed shape" function 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2023-01-30     

@@ -21,6 +21,7 @@ __all__     = (
     'RooPoly'        , ## simple wrapper for RooPolyVar            (RooAbsReal)
     'ScaleAndShift'  , ## scale and shift                          (RooAbsReal)
     'BSplineFun'     , ## BSpline                                  (RooAbsReal)
+    'RationalFun'    , ## Ratioal function                         (RooAbsReal)
     'Shape1D_fun'    , ## arbitrary fixed shape                    (RooAbsReal)
     'Histo1D_fun'    , ## fixed shap form historgam                (RooAbsReal)
     'Histo1DErr_fun' , ## fixed shap from historgam errors         (RooAbsReal)
@@ -538,6 +539,71 @@ class BSplineFun(FUN1,ParamsPoly) :
         """'power' : degree for BSpline object""" 
         return self.fun.degree() 
 
+
+
+# =============================================================================
+## @class RationalFun 
+#  A simple pole-free rational function at interval \f$ x_{min} \le x \le x_{max}\f$
+#  \f[ F(x) = \frac{p(x)}{q(x)} \f]
+#  Actually internally it uses 
+#  the Floater-Hormann rational barycentric interpolant 
+#  and parameters are the function values at Chebyshev's nodes  
+#   
+#  @see Ostap::MoreRooFit::Rational
+#  @see Ostap::Math::Rational
+#  @see Ostap::Math::FloaterHormann
+#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+#  @date   2023-09-21
+class RationalFun(FUN1,ParamsPoly) :
+    r"""A simple pole-free rational function at interval \f$ x_{min} \le x \le x_{max}\f$
+    >>> p1 =  BernsteinPoly ( 'P1' , xvar = (0,1) , power = 3   ) 
+    >>> p2 =  BernsteinPoly ( 'P2' , xvar = (0,1) , pars  = ... ) 
+    - see Ostap.MoreRooFit.Bernstein
+    - see Ostap.Math.Bernstein
+    """
+    def __init__ ( self , name , xvar ,
+                   n = 3 ,
+                   d = 1 , pars = None ) :
+        
+        ## initialize the base class 
+        FUN1      .__init__ ( self  , name  , xvar = xvar )
+        ParamsPoly.__init__ ( self          ,
+                              npars = n + 1 ,
+                              pars  = pars  )
+        
+        assert isinstance ( n , int ) and 1 <= n      , 'Invalid parameter n'
+        assert isinstance ( d , int ) and 0 <= d <= n , 'Invalid parameter d'
+        
+        xmin , xmax = self.xminmax ()
+        
+        ## create the function
+        self.fun    = Ostap.MoreRooFit.Rational (
+            self.roo_name ( 'rfun_' )   ,
+            'Rational %s' % self.name   ,
+            self.xvar                   ,
+            self.pars_lst               ,
+            d                           , 
+            xmin                        ,
+            xmax                        )
+        
+        ## self.tricks = True 
+        self.config = {
+            'name'  : self.name      ,
+            'xvar'  : self.xvar      ,
+            'n'     : self.fun.n ()  ,
+            'd'     : self.fun.d ()  ,
+            'pars'  : self.pars      ,
+            }    
+
+    @property 
+    def n ( self ) :
+        """'n' : n-parameter of rational function""" 
+        return self.fun.n ()
+    @property 
+    def d ( self ) :
+        """'d' : d-parameter of rational function""" 
+        return self.fun.d ()
+    
     
 # =============================================================================
 ## Generic 1D-shape from C++ callable
