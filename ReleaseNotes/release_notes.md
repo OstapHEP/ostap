@@ -1,7 +1,7 @@
 ## New features:
 
-  1. Add `Ostap::MoreRooFit::Rational` and `Ostap::MoreRooFit::RatioalBernstein`
-  1.  Add `RationaFun` FUN 
+  1. Add `Ostap::MoreRooFit::Rational` and `Ostap::MoreRooFit::RationalBernstein`
+  1. Add `RationalFun` & `RationalBernsteinFun` FUN 
 
 ## Backward incompatible: 
 

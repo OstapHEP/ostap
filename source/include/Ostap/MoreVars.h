@@ -88,6 +88,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the varibale 
+      const RooAbsReal& x      () const { return m_xvar.arg() ; }
+      /// get the varibale 
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
       const RooArgList& pars   () const { return m_pars       ; }
@@ -186,6 +188,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the varibale 
+      const RooAbsReal& x      () const { return m_xvar.arg() ; }
+      /// get the varibale 
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
       const RooArgList& pars   () const { return m_pars       ; }
@@ -282,6 +286,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the varibale 
+      const RooAbsReal& x      () const { return m_xvar.arg() ; }
       /// get the varibale 
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
@@ -386,6 +392,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the variable
+      const RooAbsReal& x      () const { return m_xvar.arg() ; }
+      /// get the variable
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
       const RooArgList& pars   () const { return m_pars       ; }
@@ -461,6 +469,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the varibale 
+      const RooAbsReal& x      () const { return m_xvar.arg() ; }
       /// get the varibale 
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
@@ -545,6 +555,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the variable/observable 
+      const RooAbsReal& x      () const { return m_xvar.arg() ; }
+      /// get the variable/observable 
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
       const RooArgList& pars   () const { return m_pars       ; }
@@ -552,6 +564,8 @@ namespace Ostap
       unsigned short    n      () const { return m_rational.n    () ; }
       /// get d 
       unsigned short    d      () const { return m_rational.d    () ; }
+      /// get p (==d)  
+      unsigned short    p      () const { return m_rational.d    () ; }
       /// xmin for Rational
       double            xmin   () const { return m_rational.xmin () ; }
       /// xmax for Rational 
@@ -634,11 +648,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the variable/observable 
+      const RooAbsReal& x      () const { return m_xvar.arg() ; }
+      /// get the variable/observable 
       const RooAbsReal& xvar   () const { return m_xvar.arg() ; }
       /// get parameters 
       const RooArgList& pars   () const { return m_pars       ; }
       /// get p 
       unsigned short    p      () const { return m_rational.pdegree () ; }
+      /// get q 
+      unsigned short    q      () const { return m_rational.qdegree () ; }
       /// xmin for Rational
       double            xmin   () const { return m_rational.xmin    () ; }
       /// xmax for Rational 

@@ -14,17 +14,18 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2020-03-08"
 # =============================================================================
 __all__     = (
-    'BernsteinPoly'  , ## generic polynomial in Bernstein form     (RooAbsReal)
-    'MonotonicPoly'  , ## monotonic polynomial                     (RooAbsReal)
-    'ConvexPoly'     , ## monotonic convex/concave polynomial      (RooAbsReal)
-    'ConvexOnlyPoly' , ## convex/concave polynomial                (RooAbsReal)
-    'RooPoly'        , ## simple wrapper for RooPolyVar            (RooAbsReal)
-    'ScaleAndShift'  , ## scale and shift                          (RooAbsReal)
-    'BSplineFun'     , ## BSpline                                  (RooAbsReal)
-    'RationalFun'    , ## Ratioal function                         (RooAbsReal)
-    'Shape1D_fun'    , ## arbitrary fixed shape                    (RooAbsReal)
-    'Histo1D_fun'    , ## fixed shap form historgam                (RooAbsReal)
-    'Histo1DErr_fun' , ## fixed shap from historgam errors         (RooAbsReal)
+    'BernsteinPoly'        , ## generic polynomial in Bernstein form     (RooAbsReal)
+    'MonotonicPoly'        , ## monotonic polynomial                     (RooAbsReal)
+    'ConvexPoly'           , ## monotonic convex/concave polynomial      (RooAbsReal)
+    'ConvexOnlyPoly'       , ## convex/concave polynomial                (RooAbsReal)
+    'RooPoly'              , ## simple wrapper for RooPolyVar            (RooAbsReal)
+    'ScaleAndShift'        , ## scale and shift                          (RooAbsReal)
+    'BSplineFun'           , ## BSpline                                  (RooAbsReal)
+    'RationalFun'          , ## Ratioal function                         (RooAbsReal)
+    'RationalBernsteinFun' , ## Ratioal function                         (RooAbsReal)
+    'Shape1D_fun'          , ## arbitrary fixed shape                    (RooAbsReal)
+    'Histo1D_fun'          , ## fixed shap form historgam                (RooAbsReal)
+    'Histo1DErr_fun'       , ## fixed shap from historgam errors         (RooAbsReal)
     ##
     ## 'var_sum'        , ## sum                          for RooAbsReal objects           
     ## 'var_mul'        , ## product                      for RooAbsReal objects           
@@ -59,7 +60,7 @@ __all__     = (
    )
 # =============================================================================
 from   ostap.core.core                import Ostap, VE  
-from   ostap.core.ostap_types         import num_types
+from   ostap.core.ostap_types         import num_types, integer_types
 from   ostap.fitting.fithelpers       import ParamsPoly , ShiftScalePoly
 import ostap.fitting.variables 
 from   ostap.fitting.funbasic         import FUN1, Fun1D, Fun2D, Fun3D
@@ -540,7 +541,6 @@ class BSplineFun(FUN1,ParamsPoly) :
         return self.fun.degree() 
 
 
-
 # =============================================================================
 ## @class RationalFun 
 #  A simple pole-free rational function at interval \f$ x_{min} \le x \le x_{max}\f$
@@ -561,9 +561,12 @@ class RationalFun(FUN1,ParamsPoly) :
     - see Ostap.MoreRooFit.Bernstein
     - see Ostap.Math.Bernstein
     """
-    def __init__ ( self , name , xvar ,
-                   n = 3 ,
-                   d = 1 , pars = None ) :
+    def __init__ ( self        ,
+                   name        ,
+                   xvar        ,
+                   n    = 3    ,
+                   d    = 1    ,
+                   pars = None ) :
         
         ## initialize the base class 
         FUN1      .__init__ ( self  , name  , xvar = xvar )
@@ -571,8 +574,8 @@ class RationalFun(FUN1,ParamsPoly) :
                               npars = n + 1 ,
                               pars  = pars  )
         
-        assert isinstance ( n , int ) and 1 <= n      , 'Invalid parameter n'
-        assert isinstance ( d , int ) and 0 <= d <= n , 'Invalid parameter d'
+        assert isinstance ( n , integer_types ) and 0 <= n      , 'Invalid parameter n'
+        assert isinstance ( d , integer_types ) and 0 <= d <= n , 'Invalid parameter d'
         
         xmin , xmax = self.xminmax ()
         
@@ -603,7 +606,84 @@ class RationalFun(FUN1,ParamsPoly) :
     def d ( self ) :
         """'d' : d-parameter of rational function""" 
         return self.fun.d ()
-    
+
+
+
+# =============================================================================
+## @class RationalBernsteinFun 
+#  A simple rational function at interval \f$ x_{min} \le x \le x_{max}\f$ as ratio
+#  of Bernstein and positive Bernstein polynomials 
+#  \f[ F(x) = \frac{p(x)}{q(x)} \f]
+#  @see Ostap::MoreRooFit::RationalBernstein
+#  @see Ostap::Math::RationalBernstein
+#  @see Ostap::Math::Bernstein
+#  @see Ostap::Math::Positive
+#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+#  @date   2023-09-21
+class RationalBernsteinFun(FUN1,ParamsPoly) :
+    """ A simple rational function at interval \f$ x_{min} \le x \le x_{max}\f$ as ratio
+    of Bernstein and positive Bernstein polynomials 
+    - see Ostap.MoreRooFit.RationalBernstein
+    - see Ostap.Math.RationalBernstein
+    - see Ostap.Math.Bernstein
+    - see Ostap.Math.Positive
+    """
+    def __init__ ( self        ,
+                   name        ,
+                   xvar        ,
+                   p    = 3    ,
+                   q    = 3    ,
+                   pars = None ) :
+        
+        assert isinstance ( p , integer_types ) and 0 <= p , 'Invalid parameter p'
+        assert isinstance ( q , integer_types ) and 0 <= q , 'Invalid parameter q'
+        
+        ## initialize the base class 
+        FUN1      .__init__ ( self  , name  , xvar = xvar )
+        ParamsPoly.__init__ ( self          ,
+                              npars = p + q + 1 ,
+                              pars  = pars  )
+
+        assert self.pars , 'Invalid number of parameters!'
+        p = min ( p , self.npars  - 1 )
+        
+        if not pars :
+            for i, v in enumerate ( self.pars ) :
+                if i < p + 1 : v.setVal ( 1 ) 
+                else : 
+                    v.setMin ( -5 * math.pi ) 
+                    v.setMax ( +5 * math.pi )
+                    
+        xmin , xmax = self.xminmax ()
+
+        ## create the function
+        self.fun    = Ostap.MoreRooFit.RationalBernstein (
+            self.roo_name ( 'rbf_' )           ,
+            'RationalBernstein %s' % self.name ,
+            self.xvar                   ,
+            self.pars_lst               ,
+            p                           , 
+            xmin                        ,
+            xmax                        )
+        
+        ## self.tricks = True 
+        self.config = {
+            'name'  : self.name      ,
+            'xvar'  : self.xvar      ,
+            'p'     : self.fun.p ()  ,
+            'q'     : self.fun.q ()  ,
+            'pars'  : self.pars      ,
+            }    
+
+    @property 
+    def p ( self ) :
+        """'p' : p-parameter of rational function""" 
+        return self.fun.p ()
+    @property 
+    def q ( self ) :
+        """'q' : q-parameter of rational function""" 
+        return self.fun.q ()
+
     
 # =============================================================================
 ## Generic 1D-shape from C++ callable

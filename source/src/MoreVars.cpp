@@ -801,12 +801,17 @@ Ostap::MoreRooFit::RationalBernstein::RationalBernstein
   : RooAbsReal ( name.c_str  () , title.c_str () )
   , m_xvar      ( "!x"    , "Observable" , this , xvar ) 
   , m_pars      ( "!pars" , "Parameters" , this ) 
-  , m_rational  ( ::size ( pars ) , p , xmin , xmax ) 
+  , m_rational  ( 0 , 0 , xmin , xmax ) // TMP!!
 {
   //
   Ostap::Assert ( 1 <= ::size ( pars ) , s_EMPTYPARS  , s_v7 , 510 ) ;
   //
   ::copy_real   ( pars , m_pars , s_INVALIDPAR , s_v7 ) ;
+  //
+  const unsigned short np = ::size ( m_pars ) ;
+  const unsigned short pp = p + 1 <= np ? p : np - 1 ;
+  const unsigned short qq = ( np - 1 ) - pp ;
+  m_rational = Ostap::Math::RationalBernstein ( pp , qq , xmin , xmax ) ;
   //
   Ostap::Assert ( m_rational.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v7 , 512 ) ;
   //
@@ -818,17 +823,17 @@ Ostap::MoreRooFit::RationalBernstein::RationalBernstein
 ( const std::string&   name  ,
   const std::string&   title ,
   RooAbsReal&          xvar  ,
-  const RooArgList&    p     ,
+  const RooArgList&    p     , 
   const RooArgList&    q     ,
   const double         xmin  , 
   const double         xmax  )
   : RooAbsReal ( name.c_str  () , title.c_str () )
   , m_xvar      ( "!x"    , "Observable" , this , xvar ) 
   , m_pars      ( "!pars" , "Parameters" , this ) 
-  , m_rational  ( ::size ( p ) , ::size ( q ) , xmin , xmax ) 
+  , m_rational  ( 1 <= ::size ( p ) ? ::size ( p ) - 1 : 0 , ::size ( q ) , xmin , xmax ) 
 {
   //
-  Ostap::Assert ( 1 <= ::size ( p ) + ::size ( q ) , s_EMPTYPARS  , s_v7 , 510 ) ;
+  Ostap::Assert ( 1 <= ::size ( p ) , s_EMPTYPARS  , s_v7 , 510 ) ;
   //
   ::copy_real   ( p , m_pars , s_INVALIDPAR , s_v7 ) ;
   ::copy_real   ( q , m_pars , s_INVALIDPAR , s_v7 ) ;

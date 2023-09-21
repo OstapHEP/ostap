@@ -42,7 +42,7 @@ funs = set()
 # =============================================================================
 ## test basic operationsw with functions
 def test_roofuncs_1 () :
-    """Test basic operationsw with functions
+    """Test basic operations with functions
     """
     
     logger = getLogger ( 'test_roofuncs_1' ) 
@@ -50,23 +50,23 @@ def test_roofuncs_1 () :
     
     power = 6
     
-    B  = RF.BernsteinPoly  ( 'Bernstein'   , xvar = x , power = power )
-    I  = RF.MonotonicPoly  ( 'BernsteinI'  , xvar = x , power = power , increasing = True  )
-    D  = RF.MonotonicPoly  ( 'DernsteinD'  , xvar = x , power = power , increasing = False )
-    IX = RF.ConvexPoly     ( 'ConvexIX'    , xvar = x , power = power , increasing = True  , convex = True  )
-    IV = RF.ConvexPoly     ( 'ConvexIV'    , xvar = x , power = power , increasing = True  , convex = False )
-    DX = RF.ConvexPoly     ( 'ConvexDX'    , xvar = x , power = power , increasing = False , convex = True  )
-    DV = RF.ConvexPoly     ( 'ConvexDV'    , xvar = x , power = power , increasing = False , convex = False )
-    CX = RF.ConvexOnlyPoly ( 'ConvexOnlyX' , xvar = x , power = power , convex = True  )
-    CV = RF.ConvexOnlyPoly ( 'ConvexOnlyV' , xvar = x , power = power , convex = False )
+    B  = RF.BernsteinPoly        ( 'Bernstein'   , xvar = x , power = power )
+    I  = RF.MonotonicPoly        ( 'BernsteinI'  , xvar = x , power = power , increasing = True  )
+    D  = RF.MonotonicPoly        ( 'DernsteinD'  , xvar = x , power = power , increasing = False )
+    IX = RF.ConvexPoly           ( 'ConvexIX'    , xvar = x , power = power , increasing = True  , convex = True  )
+    IV = RF.ConvexPoly           ( 'ConvexIV'    , xvar = x , power = power , increasing = True  , convex = False )
+    DX = RF.ConvexPoly           ( 'ConvexDX'    , xvar = x , power = power , increasing = False , convex = True  )
+    DV = RF.ConvexPoly           ( 'ConvexDV'    , xvar = x , power = power , increasing = False , convex = False )
+    CX = RF.ConvexOnlyPoly       ( 'ConvexOnlyX' , xvar = x , power = power , convex = True  )
+    CV = RF.ConvexOnlyPoly       ( 'ConvexOnlyV' , xvar = x , power = power , convex = False )
+    RT = RF.RationalFun          ( 'Rational'    , xvar = x , n     = power , d = 2 )
+    RB = RF.RationalBernsteinFun ( 'RationalBernstein'  , xvar = x , p = 3 , q = 3 )
 
-    for p in ( B , I , D , IX , IV , DX , DV , CX , CV ) :
-        p.pars = [ random.uniform ( -5 , 5 ) for i in range ( power + 2  ) ]
-
-        with wait ( 1 ), use_canvas ( 'test_roofuncs:%s' % p.name  ) : p.draw ()
+    for p in ( B , I , D , IX , IV , DX , DV , CX , CV , RT , RB ) :
+        p.pars = [ random.uniform ( -5 , 5 ) for i in range ( power + 2 ) ]
+        with use_canvas ( 'test_roofuncs:%s' % p.name  , wait = 1 ) : p.draw ()
         funs.add  ( p )
         
-
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================

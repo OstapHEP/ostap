@@ -149,7 +149,6 @@ std::size_t Ostap::Math::Rational::tag () const
   
   
 
-
 // ============================================================================
 Ostap::Math::RationalBernstein::RationalBernstein
 ( const unsigned short       p     ,
