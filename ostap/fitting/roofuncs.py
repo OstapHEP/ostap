@@ -621,7 +621,7 @@ class RationalFun(FUN1,ParamsPoly) :
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2023-09-21
 class RationalBernsteinFun(FUN1,ParamsPoly) :
-    """ A simple rational function at interval \f$ x_{min} \le x \le x_{max}\f$ as ratio
+    r""" A simple rational function at interval \f$ x_{min} \le x \le x_{max}\f$ as ratio
     of Bernstein and positive Bernstein polynomials 
     - see Ostap.MoreRooFit.RationalBernstein
     - see Ostap.Math.RationalBernstein
