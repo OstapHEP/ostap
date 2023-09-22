@@ -6257,8 +6257,9 @@ double Ostap::Math::Up::eval ( const double z )  const
   static const std::array<double,120> s_fourrier = 
     detail::make_array( fourrier , std::make_index_sequence<120>() ) ;
   //
-  return 1 <= std::abs ( z ) ? 0.0 : Ostap::Math::Clenshaw::cosine_sum 
-    ( s_fourrier.begin () , s_fourrier.end () , z * M_PI ) ; 
+  return 1 <= std::abs ( z ) ? 0.0 : 
+    std::max ( 0.0L , Ostap::Math::Clenshaw::cosine_sum 
+               ( s_fourrier.begin () , s_fourrier.end () , z * M_PI ) ) ; 
 }
 // ============================================================================
 // integral 
@@ -6419,9 +6420,10 @@ double Ostap::Math::FupN::eval ( const double z )  const
                   "Cache does not exist!"   , 
                   "Ostap::Math::FupN"       ) ;
   //
-  return 0.5 * ( m_N + 2 ) <= std::abs ( z ) ? 0.0 : Ostap::Math::Clenshaw::cosine_sum 
-    ( it->second.begin () , 
-      it->second.end   () ,  M_PI * z / ( m_N + 1 ) ) / ( m_N + 1 ) ; 
+  return 0.5 * ( m_N + 2 ) <= std::abs ( z ) ? 0.0 : 
+    std::max ( 0.0L , Ostap::Math::Clenshaw::cosine_sum 
+               ( it->second.begin () , 
+                 it->second.end   () ,  M_PI * z / ( m_N + 1 ) ) / ( m_N + 1 ) ) ; 
 }
 // ============================================================================
 // integral 
