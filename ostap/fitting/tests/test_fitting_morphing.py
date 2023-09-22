@@ -38,11 +38,23 @@ else :
 
 mass = ROOT.RooRealVar ( 'mass' , 'some mass' , 0 , 20 )
 mass.setBins ( 10000  ,'cache' )
+varset = ROOT.RooArgSet ( mass ) 
+ds   = ROOT.RooDataSet ( 'ds' , '' , varset ) 
 
 h1   = ROOT.TH1D ('h' ,'' , 200 , 0 , 20 )
 N    = 10000
 for i in range ( N ) :
-    h1.Fill ( random.gauss ( 10 , 2.5 ) ) 
+    v = random.gauss ( 10 , 2.5 ) 
+    h1.Fill ( v )
+    if v in mass :
+        mass.setVal ( v )
+        ds.add ( varset )  
+    
+conf = { 'refit'     :   5 ,  'maxcalls'  : 1000000 }
+
+if (6,29) <= root_info : 
+    conf [ 'minimizer'] = 'Minuit','migrad'
+    conf [ 'hesse'    ] =  True 
 
 # ============================================================================
 def test_morphingL () :
@@ -65,12 +77,11 @@ def test_morphingL () :
     for alpha in vrange ( amin , amax  , 10 ) :
         pdf.alpha = alpha
         logger.info ( 'alpha= %s' % alpha ) 
-        with wait ( 0.2 ) , use_canvas ( 'test_morphingL' ) :
+        with use_canvas ( 'test_morphingL' , wait = 0.5 ) :
             pdf.draw()
             
-    r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_morphingL' ) :
-        r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True )
+        r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True , **conf )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
 
 # ============================================================================
@@ -103,11 +114,9 @@ def test_morphing1 () :
         with wait ( 0.2 ) , use_canvas ( 'test_morphing1' ) :
             pdf.draw()
 
-    r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_morphing1' ) :
-        r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True )
+        r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True , **conf )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
-
 
 
 # ============================================================================
@@ -135,10 +144,8 @@ def test_morphing2 () :
     ## create morphing PDF 
     pdf  = MorphingN1_pdf ( 'M2', shapes , xvar    =  mass ) 
     
-    r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
-    r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_morphing2' ) :
-        r , f = pdf.fitHisto ( h1 , draw = True  , nbins = 100 , silent = True )
+        r , f = pdf.fitHisto ( h1 , draw = True  , nbins = 100 , silent = True , **conf )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
     
 # ============================================================================
@@ -155,7 +162,6 @@ def test_morphing3 () :
     
     smin , smax = 0.5 ,  5.0
     mmin , mmax = 8.0 , 12.0
-
     
     for i , sigma in  enumerate ( vrange ( smin , smax , 10 ) ) :
         for j , mean in  enumerate ( vrange ( mmin , mmax , 10 ) ) :
@@ -168,10 +174,8 @@ def test_morphing3 () :
     ## create morphing PDF 
     pdf  = MorphingN2_pdf ( 'M3' , shapes , xvar    =  mass )
             
-    r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
-    r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_morphing3' ) :
-        r , f = pdf.fitHisto ( h1 , draw = True  , nbins = 100 , silent = True )
+        r , f = pdf.fitHisto ( h1 , draw = True  , nbins = 100 , silent = True , **conf )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
     
 

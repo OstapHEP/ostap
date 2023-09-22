@@ -573,7 +573,10 @@ class RationalFun(FUN1,ParamsPoly) :
         ParamsPoly.__init__ ( self          ,
                               npars = n + 1 ,
                               pars  = pars  )
-        
+
+        if not pars :
+            for v in self.pars : v.setVal ( 0.5 ) 
+            
         assert isinstance ( n , integer_types ) and 0 <= n      , 'Invalid parameter n'
         assert isinstance ( d , integer_types ) and 0 <= d <= n , 'Invalid parameter d'
         
@@ -613,7 +616,7 @@ class RationalFun(FUN1,ParamsPoly) :
 ## @class RationalBernsteinFun 
 #  A simple rational function at interval \f$ x_{min} \le x \le x_{max}\f$ as ratio
 #  of Bernstein and positive Bernstein polynomials 
-#  \f[ F(x) = \frac{p(x)}{q(x)} \f]
+#  \f[ F(x) = \frac{p(x)}{q(x)} \frac{1}{x_{max} - x_{min}} \f]
 #  @see Ostap::MoreRooFit::RationalBernstein
 #  @see Ostap::Math::RationalBernstein
 #  @see Ostap::Math::Bernstein
@@ -647,14 +650,15 @@ class RationalBernsteinFun(FUN1,ParamsPoly) :
         assert self.pars , 'Invalid number of parameters!'
         p = min ( p , self.npars  - 1 )
         
+        xmin , xmax = self.xminmax ()
+
         if not pars :
             for i, v in enumerate ( self.pars ) :
-                if i < p + 1 : v.setVal ( 1 ) 
+                if i < p + 1 : v.setVal ( 0.5 ) 
                 else : 
                     v.setMin ( -5 * math.pi ) 
                     v.setMax ( +5 * math.pi )
                     
-        xmin , xmax = self.xminmax ()
 
         ## create the function
         self.fun    = Ostap.MoreRooFit.RationalBernstein (
@@ -683,8 +687,23 @@ class RationalBernsteinFun(FUN1,ParamsPoly) :
     def q ( self ) :
         """'q' : q-parameter of rational function""" 
         return self.fun.q ()
-
     
+    @property
+    def ppars ( self ) :
+        """'ppars : parameters for numerator"""
+        return self.pars [ : self.p + 1 ]
+    @ppars.setter 
+    def ppars ( self , values ) :
+        self.component_setter ( self.pars[ : self.p + 1 ] , values )
+        
+    @property
+    def qpars ( self ) :
+        """'qpars : parameters for denominator (phases)"""
+        return self.pars [ self.p + 1 : ]
+    @qpars.setter
+    def qpars ( self , values ) :
+        self.component_setter ( self.pars [ self.p + 1 : ] , values )
+
 # =============================================================================
 ## Generic 1D-shape from C++ callable
 #  @see Ostap::MoreRooFit::Shape1D

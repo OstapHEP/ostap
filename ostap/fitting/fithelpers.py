@@ -784,11 +784,22 @@ class FitHelper(VarMaker) :
                 _args.append   (  ROOT.RooFit.Range ( a[0] , a[1] ) )
                 
             elif key in ( 'minimizer'       ,
-                          'minimiser'       ) and isinstance ( a , list_types   ) and 2 == len ( 2 ) \
+                          'minimiser'       ) and isinstance ( a , list_types   ) and 2 == len ( a ) \
                  and isinstance ( a[0] ,  string_types ) \
                  and isinstance ( a[1] ,  string_types ) :
                 
                 _args.append   (  ROOT.RooFit.Minimizer ( a[0] , a[1] ) )
+                
+            elif key in ( 'minimizer'  , 'minimiser'   ) and \
+                 isinstance ( a , string_types ) and a.lower() == 'minuit' :
+                
+                _args.append   (  ROOT.RooFit.Minimizer ( 'Minuit' , 'migrad' ) )
+
+            elif key in ( 'minimizer'  , 'minimiser'   ) and \
+                 isinstance ( a , string_types ) and a.lower() == 'minuit2' :
+                
+                _args.append   (  ROOT.RooFit.Minimizer ( 'Minuit2' , 'migrad' ) )
+
                 
             elif key in  ( 'hesse'    ,     ) and isinstance ( a , bool ) :
                 

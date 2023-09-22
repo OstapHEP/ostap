@@ -12,8 +12,8 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
+from   ostap.fitting.roofit     import FIXVAR 
 from   ostap.core.core          import cpp, VE, dsID, Ostap, rooSilent 
 from   ostap.fitting.efficiency import Efficiency1D
 from   ostap.fitting.variables  import FIXVAR 
@@ -210,11 +210,82 @@ def test_vars3 () :
         funs.add ( f      )
         funs.add ( eff2   )
 
+
 # =============================================================================
 # use some functions  to parameterize efficiciency
 def test_vars4 () :
-## if 1 < 2 :     
+    
     logger = getLogger ( 'test_vars4' )
+
+    from ostap.fitting.roofuncs import RationalFun as RF 
+
+    n = 4
+    
+    for d in range ( 0 , n + 1 ) :
+        
+        f      = RF ( 'R%d%d'% ( n , d )  , xvar = x , n = n , d = d )
+        for p in f.pars :
+            p.setVal (  0.5  ) 
+            p.setMin ( -0.01 )
+            p.setMax (  1.01 )
+        
+        eff2   = Efficiency1D ( 'ER%d%d' % ( n , d ) , f.fun , cut = acc  , xvar = x )
+        
+        r2     = eff2.fitTo ( ds , silent = False )
+        
+        logger.info ( "Fit result using-RationalFun[%d,%d] \n%s" % ( f.n , f.d , r2.table ( prefix = "# ") ) )
+        logger.info ( "Compare with true efficiency (using RationalFun)\n%s" % make_table (
+            eff2 , title = 'using RationalFun[%d,%d]' % ( n , d ) ) )
+        
+        with use_canvas ( 'test_vars4_%s%d' % ( n , d )  , wait = 2 ) : 
+            f2     = eff2.draw  ( ds , nbins = 25 )
+            
+        funs.add ( f    ) 
+        funs.add ( eff2 )
+
+# =============================================================================
+# use some functions  to parameterize efficiciency
+def test_vars5 () :
+    
+    logger = getLogger ( 'test_vars5' )
+
+    from ostap.fitting.roofuncs import RationalBernsteinFun as RB 
+
+    p = 1
+    
+    for q in range ( 1 , 4 ) :
+        
+        f      = RB ( 'RB%d%d'% ( p , q )  , xvar = x , p = p , q = q )
+        for v in f.pars [ : p + 1 ] :
+            v.setVal (  0.02 ) 
+            v.setMin (  0    )
+            v.setMax (  100  )
+
+                
+        eff2   = Efficiency1D ( 'BR%d%d' % ( p , q ) , f.fun , cut = acc  , xvar = x )
+
+        ## pre-fit with fixed denominator 
+        with FIXVAR ( f.qpars ) : r2     = eff2.fitTo ( ds )
+
+        ## fit 
+        r2  = eff2.fitTo ( ds )
+        
+        logger.info ( "Fit result using-RationalBernsteinFun[%d,%d] \n%s" % ( f.p , f.q , r2.table ( prefix = "# ") ) )
+        logger.info ( "Compare with true efficiency (using RationalBernsteinFun)\n%s" % make_table (
+            eff2 , title = 'using RationalBernsteinFun[%d,%d]' % ( p , q ) ) )
+        
+        with use_canvas ( 'test_vars5_%s%d' % ( p , q )  , wait = 2 ) : 
+            f2     = eff2.draw  ( ds , nbins = 25 )
+            
+        funs.add ( f    ) 
+        funs.add ( eff2 )
+
+
+# =============================================================================
+# use some functions  to parameterize efficiciency
+def test_vars6 () :
+
+    logger = getLogger ( 'test_vars6' )
 
     a  = ROOT.RooRealVar  ( 'A', 'a' , 0.05  ,   0   , 1   )
     b  = ROOT.RooRealVar  ( 'B', 'b' , 0.02  , -0.05 , 0.1 )
@@ -236,7 +307,7 @@ def test_vars4 () :
         eff2 , title = 'using Fnu1D') )
 
     
-    with wait ( 2 ) , use_canvas ( 'test_vars4' ) : 
+    with wait ( 2 ) , use_canvas ( 'test_vars6' ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
     
     funs.add ( X    )
@@ -276,23 +347,29 @@ if '__main__' == __name__ :
     
     with timing ("PDF"   , logger ) :  
         test_pdf   ()
-        
+    
     with timing ("Vars1" , logger ) :  
         test_vars1 ()
-        
+    
     with timing ("Vars2" , logger ) :        
         test_vars2 ()
-        
+    
     with timing ("Vars3" , logger ) :        
         test_vars3 ()
-
+    
     with timing ("Vars4" , logger ) :        
-       test_vars4 ()
-
+        test_vars4 ()
+        
+    with timing ("Vars5" , logger ) :        
+        test_vars5 ()
+        
+    with timing ("Vars6" , logger ) :        
+       test_vars6 ()
+        
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()
-
+            
     pass
 
 

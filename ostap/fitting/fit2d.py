@@ -1331,7 +1331,7 @@ class Fit2DSym (PDF2) :
         return self.component_getter ( self.__nums_components )
     @C.setter
     def C (  self , value ) :
-        self.component_setter ( self.__nums_componenents , value )
+        self.component_setter ( self.__nums_components , value )
 
     @property
     def yields    ( self ) :

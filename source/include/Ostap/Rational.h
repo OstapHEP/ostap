@@ -106,7 +106,7 @@ namespace Ostap
     /** @class RationalBernstein
      *  Rational fnuction as ratio of Bernstein polyhomial and 
      *  positive Bernstein polynomial
-     *  \f[ R ( x ) = \frac{B(x)}{P(x)\f]
+     *  \f[ R ( x ) = \frac{B(x)}{P(x) \frac{1}{ x_{max} - x_{min} } \f]
      *  @see Ostap::Math::Bernstein
      *  @see Ostap::Math::Positive 
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch

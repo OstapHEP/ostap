@@ -87,7 +87,7 @@ double Ostap::Math::Rational::evaluate ( const double x ) const
     s1 += wi * yi ;
     s2 += wi ;
   }
-  return s1 / s2 ;
+  return ( s1 / s2 ) ;
 }
 // ============================================================================
 // get the integral
@@ -183,9 +183,12 @@ Ostap::Math::RationalBernstein::RationalBernstein
 // evaluate the rational function
 // ============================================================================    
 double Ostap::Math::RationalBernstein::evaluate ( const double x ) const 
-{ return x < xmin () ? 0.0 : x > xmax () ? 0.0 : m_p ( x ) / m_q ( x ) ; }
+{ return 
+    x < xmin () ? 0.0 : 
+    x > xmax () ? 0.0 : 
+    ( m_p ( x ) / m_q ( x ) ) / ( m_p.xmax() - m_p.xmin () ) ; }
 // ============================================================================
-/// all parameters (by value!!!)
+// all parameters (by value!!!)
 // ============================================================================    
 std::vector<double> 
 Ostap::Math::RationalBernstein::pars () const 

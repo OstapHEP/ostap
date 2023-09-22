@@ -14,9 +14,11 @@ from   __future__               import print_function
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.core.meta_info     import root_info
-from   ostap.core.pyrouts    import hID, dsID, Ostap 
+from   ostap.core.meta_info  import root_info
+from   ostap.core.pyrouts    import hID, dsID, Ostap, VE 
 import ostap.fitting.models  as     Models
+import ostap.histos.histos
+import ostap.fitting.dataset
 from   ostap.plotting.canvas import use_canvas
 from   ostap.utils.timing    import timing 
 from   ostap.utils.gsl       import gslCount 
@@ -39,8 +41,8 @@ ds1    = ROOT.RooDataSet ( dsID()  , 'dataset' , varset )
 ds2    = ROOT.RooDataSet ( dsID()  , 'dataset' , varset )
 
 
-N1 = 300
-N2 = 1000
+N1 = 100000
+N2 =   1000
 
 ## prepare some more or less random data
 for i in range ( N1 ) :     
@@ -90,9 +92,18 @@ for i in range ( 3*N2  ) :
     yvar.setVal ( yv )
     ds2.add ( varset )
 
+for i in range ( N2  ) :
+    xv = -100
+    yv = -100
+    while ( not xv in xvar ) or ( not yv in yvar ) : 
+        xv = random.uniform ( *xvar.minmax() ) 
+        yv = random.uniform ( *yvar.minmax() ) 
+    
+    xvar.setVal ( xv )
+    yvar.setVal ( yv )
+    ds2.add ( varset )
 
-ds1, ds2 = ds2, ds1 
-## ds2 = ds1
+
 
 flat   = Models.Flat2D( xvar = xvar , yvar = yvar , name = 'Flat2D' )    
 pdfs   = []
@@ -106,16 +117,21 @@ def test_shapes2_histos () :
     logger = getLogger('test_shapes2_histos')
     
     pdfs1 = [] 
-    for nx,ny  in [   ( 10 , 10 ) , ( 15 , 15 ) , ( 20 , 20 ) , ( 22 , 22 ) ] :
+    for nx,ny  in [   ( 10 , 10 ) , ( 15 , 15 ) , ( 20 , 20 ) ] :
         
-        h2 = ROOT.TH2F ( hID() , 'histograms' ,
+        h2 = ROOT.TH2F ( hID() , 'histogram' ,
                          nx , xvar.getMin() , xvar.getMax() ,
                          ny , yvar.getMin() , yvar.getMax() )
         
         ds1.project ( h2 , 'y : x' )
         
+        for ix,iy,x,y,v  in h2.items() :
+            if v.value() <= 1 :
+                h2 [ ix, iy ] = VE(1,1)
+
+            
         ## rely on RooHistPdf 
-        pdf = Models.H2D_pdf       ( 'R2D_%02d%02d' % ( nx , ny ) , h2 , xvar = xvar , yvar = yvar , order = 2 )
+        pdf = Models.H2D_pdf       ( 'R2D_%02d%02d' % ( nx , ny ) , h2 , xvar = xvar , yvar = yvar , order = 1 )
         pdfs1.append ( pdf )
         
         ## rely on Histo2D_pdf 
@@ -129,12 +145,9 @@ def test_shapes2_histos () :
     for pdf in fit_pdfs :
         
         with gslCount() , timing ( pdf.name , logger = logger ) : 
-            
-            pdf.fractions = 0.99 ,   
-            r , _ = pdf.fitTo ( ds2 , silent = True )
-            
-            pdf.fractions = 0.99 , 
-            r , _ = pdf.fitTo ( ds2 , silent = True )
+
+            pdf.fractions = 0.75 ,   
+            r , _ = pdf.fitTo ( ds2 , silent = True , refit = 4 )
             
             logger.info ( '%s:\n%s' % ( pdf.name , r.table ( title = pdf.name , prefix = '# ' ) ) )
             
@@ -177,11 +190,8 @@ def test_shapes2_poly () :
         
         with gslCount() , timing ( pdf.name , logger = logger ) :
             
-            pdf.fractions = 0.99 ,   
-            r , _ = pdf.fitTo ( ds2 , silent = True )
-            
-            pdf.fractions = 0.99 , 
-            r , _ = pdf.fitTo ( ds2 , silent = True )
+            pdf.fractions = 0.75 ,   
+            r , _ = pdf.fitTo ( ds2 , silent = True , refit = 5 )
             
             logger.info ( '%s:\n%s' % ( pdf.name , r.table ( title = pdf.name , prefix = '# ' ) ) )
             
@@ -203,7 +213,9 @@ def test_shapes2_keys () :
 
     pdfs3 = [] 
 
-    pdf = Models.RooKeys2D_pdf ( 'RKeys' , xvar = xvar , yvar = yvar , data = ds1 )
+    ds_keys = ds1.sample ( 1000 )
+    
+    pdf = Models.RooKeys2D_pdf ( 'RKeys' , xvar = xvar , yvar = yvar , data = ds_keys )
     pdfs3.append ( pdf ) 
     
     fit_pdfs = [ Models.Sum2D ( [ p , flat ] ) for p in pdfs3 ]
@@ -212,11 +224,8 @@ def test_shapes2_keys () :
         
         with gslCount() , timing ( pdf.name , logger = logger ) :
             
-            pdf.fractions = 0.99 ,   
-            r , _ = pdf.fitTo ( ds2 , silent = True )
-            
-            pdf.fractions = 0.99 , 
-            r , _ = pdf.fitTo ( ds2 , silent = True )
+            pdf.fractions = 0.75 ,   
+            r , _ = pdf.fitTo ( ds2 , silent = True , refit = 3 )
             
             logger.info ( '%s:\n%s' % ( pdf.name , r.table ( title = pdf.name , prefix = '# ' ) ) )
             

@@ -14,6 +14,7 @@ from   __future__               import print_function
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
+from   ostap.core.meta_info     import root_info 
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID, hID , rooSilent, Ostap 
@@ -120,15 +121,18 @@ def test_poly_karlin_studden () :
     logger = getLogger( "test_poly_karlin_studden" )
 
     logger.info ( "Test Karlin-Studden positive polynomials KarlinStudden_pdf" ) 
-    
+
+    conf = {}
+    if (6,29) <= root_info : 
+        conf = { 'minimizer' : ('Minuit','migrad') , 'hesse' : True , 'maxcalls' : 1000000 }
+
     for n in range ( Nmin , Nmax ) :
         
         model = Models.KarlinStudden_pdf ( 'KSt%s' % n  , xvar  = x  , power = n  , xmin = 0 , scale = 10 )
         
         title = 'KarlinStudden_pdf(n=%d)' % n 
-        model.fitTo ( dataset , silent = True , refit = 5 )
-        with use_canvas ( title , wait = 1 ) :
-            result , plot = model.fitTo ( dataset , silent = True , draw = True , nbins = 100 )
+        with use_canvas ( title , wait = 1 ) :            
+            result , plot = model.fitTo ( dataset , silent = True , refit = 3 , draw = True , nbins = 100 , **conf )
             logger.info ( '%s\n%s' % ( title , result.table ( title = title , prefix = '# ' ) ) ) 
             model.pdf.setPars()
         models  [ title ] = model  
@@ -145,14 +149,17 @@ def test_poly_roopoly () :
 
     logger.info ( "Test native RooFit polynomials RooPoly_pdf" ) 
     
+    conf = {}
+    if (6,29) <= root_info : 
+        conf = { 'minimizer' : ('Minuit','migrad') , 'hesse' : True , 'maxcalls' : 1000000 }
+
     for n in range ( 2 , 4 ) :
         
         model = Models.RooPoly_pdf ( 'R%s' % n  , xvar  = x  , power = n  )
         
         title = 'RooPoly_pdf(n=%d)' % n 
-        model.fitTo ( dataset , silent = True , refit = 5 )
         with use_canvas ( title , wait = 1 ) :
-            result , plot = model.fitTo ( dataset , silent = True , draw = True , nbins = 100 )
+            result , plot = model.fitTo ( dataset , silent = True , refit = 3 , draw = True , nbins = 100 , **conf )
             logger.info ( '%s\n%s' % ( title , result.table ( title = title , prefix = '# ' ) ) ) 
             
         models  [ title ] = model  
@@ -213,11 +220,11 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
     
-    with timing ( 'Bernstein positive polynomials: PolyPos_pdf' , logger ) : 
-        test_poly_positive() 
+   with timing ( 'Bernstein positive polynomials: PolyPos_pdf' , logger ) : 
+       test_poly_positive() 
         
-    with timing ( 'KarlinShapley positive polynomials: KarlinShapley_pdf' , logger ) : 
-        test_poly_karlin_shapley () 
+   with timing ( 'KarlinShapley positive polynomials: KarlinShapley_pdf' , logger ) : 
+       test_poly_karlin_shapley () 
     
     with timing ( 'KarlinStudden positive polynomials: KarlinStudden_pdf' , logger ) : 
         test_poly_karlin_studden () 
@@ -225,8 +232,8 @@ if '__main__' == __name__ :
     with timing ( 'Native RooFit polynomials: RooPoly_pdf' , logger ) : 
         test_poly_roopoly() 
 
-    with timing ( 'RooFit Chebyshev polynomials: RooCheb_pdf' , logger ) : 
-        test_poly_roocheb() 
+   with timing ( 'RooFit Chebyshev polynomials: RooCheb_pdf' , logger ) : 
+       test_poly_roocheb() 
 
     test_db()
     
