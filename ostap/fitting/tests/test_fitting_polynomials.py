@@ -220,20 +220,20 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
     
-   with timing ( 'Bernstein positive polynomials: PolyPos_pdf' , logger ) : 
-       test_poly_positive() 
+    with timing ( 'Bernstein positive polynomials: PolyPos_pdf' , logger ) : 
+        test_poly_positive() 
         
-   with timing ( 'KarlinShapley positive polynomials: KarlinShapley_pdf' , logger ) : 
-       test_poly_karlin_shapley () 
-    
+    with timing ( 'KarlinShapley positive polynomials: KarlinShapley_pdf' , logger ) : 
+        test_poly_karlin_shapley () 
+        
     with timing ( 'KarlinStudden positive polynomials: KarlinStudden_pdf' , logger ) : 
-        test_poly_karlin_studden () 
-
+        test_poly_karlin_studden ()
+        
     with timing ( 'Native RooFit polynomials: RooPoly_pdf' , logger ) : 
         test_poly_roopoly() 
-
-   with timing ( 'RooFit Chebyshev polynomials: RooCheb_pdf' , logger ) : 
-       test_poly_roocheb() 
+        
+    with timing ( 'RooFit Chebyshev polynomials: RooCheb_pdf' , logger ) : 
+        test_poly_roocheb() 
 
     test_db()
     
