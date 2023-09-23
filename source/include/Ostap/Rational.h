@@ -41,10 +41,10 @@ namespace Ostap
        *  @param xmax  high-edge of interval
        */
       Rational
-      ( const unsigned short n   , 
-        const unsigned short d   , 
-        const double   xmin  = 0 , 
-        const double   xmax  = 1 ) ;  
+      ( const unsigned short n = 3 , 
+        const unsigned short d = 1 , 
+        const double   xmin    = 0 , 
+        const double   xmax    = 1 ) ;  
       // =====================================================================
       /** constructor  
        *  @param pars  vector of parameters 
@@ -79,13 +79,45 @@ namespace Ostap
       // ======================================================================
     public: // integrals 
       // ======================================================================
-      // get the integral betweek xmin and xmax 
+      // get the integral between xmin and xmax 
       double integral  () const ;
       // ======================================================================
       // get the integral
       double integral 
       (  const double xlow  , 
          const double xhigh ) const ;
+      // ======================================================================
+    public: // some useful operations with Rational function 
+      // ======================================================================
+      /// scale rational function by some value 
+      Rational& scale ( const double value ) ;
+      /// add a constant to rational function 
+      Rational& add   ( const double value ) ;
+      /// scale as operator 
+      Rational& operator *= ( const double value ) { return scale (       value ) ; }
+      /// scale as operator 
+      Rational& operator /= ( const double value ) { return scale ( 1.0 / value ) ; }
+      /// add as operator 
+      Rational& operator += ( const double value ) { return add   (       value ) ; }
+      /// add as operator 
+      Rational& operator -= ( const double value ) { return add   (     - value ) ; }
+      /// negate it 
+      Rational  operator -  () const ;  
+      // ======================================================================
+    public: // sme python-related stuff 
+      // ======================================================================
+      Rational  __add__     ( const double value ) const ;
+      Rational  __sub__     ( const double value ) const ;
+      Rational  __mul__     ( const double value ) const ;
+      Rational  __div__     ( const double value ) const ;
+      Rational  __truediv__ ( const double value ) const ;
+      Rational  __radd__    ( const double value ) const ;
+      Rational  __rsub__    ( const double value ) const ;
+      Rational  __rmul__    ( const double value ) const ;
+      Rational  __neg__     ()                     const ;
+      Rational& __iadd__    ( const double value ) { return (*this) += value ; }        
+      Rational& __imul__    ( const double value ) { return (*this) *= value ; }        
+      Rational& __isub__    ( const double value ) { return (*this) /= value ; }        
       // ======================================================================
     public:
       // ======================================================================
@@ -103,6 +135,28 @@ namespace Ostap
       // ======================================================================
     } ;  
     // ========================================================================
+    /// scale Rational function 
+    inline Rational operator* ( const Rational& a , const double    b ) 
+    { return Rational ( a ) *= b ; }
+    /// scale Rational function 
+    inline Rational operator* ( const double    b , const Rational& a ) 
+    { return Rational ( a ) *= b ; }
+    /// scale Rational function 
+    inline Rational operator/ ( const Rational& a , const double    b ) 
+    { return Rational ( a ) /= b ; }
+    /// add Rational function 
+    inline Rational operator+ ( const Rational& a , const double    b ) 
+    { return Rational ( a ) += b ; }
+    /// add Rational function 
+    inline Rational operator+ ( const double    b , const Rational& a ) 
+    { return Rational ( a ) += b ; }
+    /// subtract Rational function 
+    inline Rational operator- ( const Rational& a , const double    b ) 
+    { return Rational ( a ) -= b ; }
+    /// subtract Rational function 
+    inline Rational operator- ( const double    b , const Rational& a ) 
+    { return  ( -a ) += b ; }
+    // ========================================================================
     /** @class RationalBernstein
      *  Rational fnuction as ratio of Bernstein polyhomial and 
      *  positive Bernstein polynomial
@@ -117,8 +171,8 @@ namespace Ostap
     public:
       // ======================================================================
       RationalBernstein
-      ( const unsigned short       p          ,
-        const unsigned short       q          , 
+      ( const unsigned short       p      = 3 ,
+        const unsigned short       q      = 0 , 
         const double               xmin   = 0 , 
         const double               xmax   = 1 ) ;
       // ======================================================================
@@ -195,6 +249,53 @@ namespace Ostap
       (  const double xlow  , 
          const double xhigh ) const ;
       // ======================================================================
+    public: // some useful operations with Rational function 
+      // ======================================================================
+      /// scale rational function by some value 
+      RationalBernstein& scale ( const double value ) ;
+      /// add a constant to rational function 
+      RationalBernstein& add   ( const double value ) ;
+      /// scale as operator 
+      RationalBernstein& operator *= ( const double value ) { return scale (       value ) ; }
+      /// scale as operator 
+      RationalBernstein& operator /= ( const double value ) { return scale ( 1.0 / value ) ; }
+      /// add as operator 
+      RationalBernstein& operator += ( const double value ) { return add   (       value ) ; }
+      /// add as operator 
+      RationalBernstein& operator -= ( const double value ) { return add   (     - value ) ; }
+      /// negate it 
+      RationalBernstein  operator -  () const ;  
+      /// multiply with Bernstein  polynomial
+      RationalBernstein& operator *=  ( const Bernstein& right ) ;
+      /// add      with with Bernstein polynomial
+      RationalBernstein& operator +=  ( const Bernstein& right ) ;
+      /// subtarct      with with Bernstein polynomial
+      RationalBernstein& operator -=  ( const Bernstein& right ) ;
+      // ======================================================================
+    public: // sme python-related stuff 
+      // ======================================================================
+      RationalBernstein  __add__     ( const double value ) const ;
+      RationalBernstein  __sub__     ( const double value ) const ;
+      RationalBernstein  __mul__     ( const double value ) const ;
+      RationalBernstein  __div__     ( const double value ) const ;
+      RationalBernstein  __truediv__ ( const double value ) const ;
+      RationalBernstein  __radd__    ( const double value ) const ;
+      RationalBernstein  __rsub__    ( const double value ) const ;
+      RationalBernstein  __rmul__    ( const double value ) const ;
+      RationalBernstein  __neg__     ()                     const ;
+      RationalBernstein& __iadd__    ( const double value ) { return (*this) += value ; }        
+      RationalBernstein& __imul__    ( const double value ) { return (*this) *= value ; }        
+      RationalBernstein& __isub__    ( const double value ) { return (*this) /= value ; }        
+      // ======================================================================
+      RationalBernstein  __add__     ( const Bernstein& right ) const ;
+      RationalBernstein  __sub__     ( const Bernstein& right ) const ;
+      RationalBernstein  __mul__     ( const Bernstein& right ) const ;
+      RationalBernstein  __radd__    ( const Bernstein& right ) const ;
+      RationalBernstein  __rsub__    ( const Bernstein& right ) const ;
+      RationalBernstein  __rmul__    ( const Bernstein& right ) const ;
+      RationalBernstein& __imul__    ( const Bernstein& right ) { return (*this) *= right ; }        
+      RationalBernstein& __isub__    ( const Bernstein& right ) { return (*this) -= right ; }        
+      // ====================================================================== 
     public:
       // ======================================================================
       /// unique tag 
@@ -210,6 +311,46 @@ namespace Ostap
       Ostap::Math::WorkSpace  m_workspace {} ; // workspace 
       // ======================================================================
     } ;
+    // ========================================================================
+    /// scale Rational function 
+    inline RationalBernstein operator* ( const RationalBernstein& a , const double    b ) 
+    { return RationalBernstein ( a ) *= b ; }
+    /// scale Rational function 
+    inline RationalBernstein operator* ( const double    b , const RationalBernstein& a ) 
+    { return RationalBernstein ( a ) *= b ; }
+    /// scale Rational function 
+    inline RationalBernstein operator/ ( const RationalBernstein& a , const double    b ) 
+    { return RationalBernstein ( a ) /= b ; }
+    /// add Rational function 
+    inline RationalBernstein operator+ ( const RationalBernstein& a , const double    b ) 
+    { return RationalBernstein ( a ) += b ; }
+    /// add Rational function 
+    inline RationalBernstein operator+ ( const double    b , const RationalBernstein& a ) 
+    { return RationalBernstein  ( a ) += b ; }
+    /// subtract Rational function 
+    inline RationalBernstein operator- ( const RationalBernstein& a , const double    b ) 
+    { return RationalBernstein ( a ) -= b ; }
+    /// subtract Rational function 
+    inline RationalBernstein operator- ( const double    b , const RationalBernstein& a ) 
+    { return  ( -a ) += b ; }
+    /// multiply with Bernstein polynomial 
+    inline RationalBernstein operator* ( const RationalBernstein& a , const Bernstein& b  ) 
+    { return RationalBernstein ( a ) *= b ; }
+    /// multiply with Bernstein polynomial 
+    inline RationalBernstein operator* ( const Bernstein& b , const RationalBernstein& a  ) 
+    { return RationalBernstein ( a ) *= b ; }
+    /// add with Bernstein polynomial 
+    inline RationalBernstein operator+ ( const RationalBernstein& a , const Bernstein& b  ) 
+    { return RationalBernstein ( a ) += b ; }
+    /// add with Bernstein polynomial 
+    inline RationalBernstein operator+ ( const Bernstein& b , const RationalBernstein& a  ) 
+    { return RationalBernstein ( a ) += b ; }
+    /// subtract with Bernstein polynomial 
+    inline RationalBernstein operator- ( const RationalBernstein& a , const Bernstein& b  ) 
+    { return RationalBernstein ( a ) -= b ; }
+    /// subtract with Bernstein polynomial 
+    inline RationalBernstein operator- ( const Bernstein& b , const RationalBernstein& a  ) 
+    { return ( -a ) += b ; }
     // ========================================================================
     /** @class RationalPositive 
      *  Rational fnuction as ratio of two positive Bernstein polyhomials 

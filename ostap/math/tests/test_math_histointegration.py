@@ -11,6 +11,7 @@
 import ostap.math.models
 from   ostap.core.core          import Ostap, hID, SE 
 from   ostap.utils.progress_bar import progress_bar
+from   ostap.utils.timing       import timing 
 import ostap.math.integral      as     I 
 import ostap.math.integrator    as     II
 import ostap.logger.table       as     T 
@@ -24,7 +25,6 @@ else                       : logger = getLogger ( __name__                      
 # =============================================================================
 
 
-
 def test_histo1_integration () :
 
 
@@ -35,7 +35,7 @@ def test_histo1_integration () :
         for e in ( True , False ) : 
             cnts [ k, e ]  = SE()
 
-    N          = 100
+    N          = 200
     NB         = 20
     xmin, xmax = -5 , 5 
     for k in progress_bar ( range ( 100 ) ) :
@@ -90,7 +90,7 @@ def test_histo2_integration () :
             for e in ( True , False ) : 
                 cnts  [ i,j,e ]  = SE()
                 
-    N          = 1000
+    N          = 5000
     NX         = 20
     NY         = 20
     xmin, xmax = -5 , 5 
@@ -148,7 +148,7 @@ def test_histo3_integration () :
                 for e in ( True , False ) : 
                     cnts [ i,j,k,e ]  = SE()
                 
-    N          = 5000
+    N          = 10000
     NX         = 20
     NY         = 20
     NZ         = 20
@@ -206,10 +206,14 @@ def test_histo3_integration () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    
-    test_histo1_integration() 
-    test_histo2_integration() 
-    test_histo3_integration() 
+    with timing  ( 'histo1_integration' , logger = logger ) : 
+        test_histo1_integration()
+        
+    with timing  ( 'histo2_integration' , logger = logger ) : 
+        test_histo2_integration() 
+
+    with timing  ( 'histo3_integration' , logger = logger ) : 
+        test_histo3_integration() 
 
 # =============================================================================
 ##                                                                      The END 

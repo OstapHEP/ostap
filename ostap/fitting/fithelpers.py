@@ -737,10 +737,19 @@ class FitHelper(VarMaker) :
                     
             elif key in ( 'batch'            ,
                           'batchmode'        ,
-                          'modebatch'        ) and isinstance ( a , bool ) and  ( 6, 20) <= root_info :
+                          'modebatch'        ) and isinstance ( a , bool ) and  ( 6, 20) <= root_info < ( 6 , 29 ) :
                 
                 _args.append (  ROOT.RooFit.BatchMode ( a ) )
+
+            elif key in ( 'evalbackend'   , 
+                          'eval_backend'  , 
+                          'backendeval'   , 
+                          'backend_eval'  , 
+                          'backend'       ) and isinstance ( a , string_types ) and  ( 6, 29 ) <= root_info :
                 
+                _args.append (  ROOT.RooFit.EvalBackend ( a ) )
+
+
             elif key in ( 'extended' ,       ) and isinstance ( a , bool ) :
                 
                 _args.append   (  ROOT.RooFit.Extended ( a ) )

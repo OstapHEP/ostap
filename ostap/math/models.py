@@ -1303,7 +1303,6 @@ Ostap.Math.Monotonic     .__repr__ = lambda s : _f_print_ ( s , 'Monotonic'    )
 Ostap.Math.FourierSum    .__repr__ = lambda s : _f_print_ ( s , 'FourierSum'    )
 Ostap.Math.CosineSum     .__repr__ = lambda s : _f_print_ ( s , 'CosineSum'     )
 
-
 Ostap.Math.LegendreSum2  .__repr__ = lambda s : "LegendreSum2(%d,%d)"       % ( s.nx() , s.ny() )
 Ostap.Math.LegendreSum3  .__repr__ = lambda s : "LegendreSum3(%d,%d,%d)"    % ( s.nx() , s.ny() , s.nz() )
 Ostap.Math.LegendreSum4  .__repr__ = lambda s : "LegendreSum4(%d,%d,%d,%d)" % ( s.nx() , s.ny() , s.nz() , s.nu() )
@@ -1313,7 +1312,28 @@ Ostap.Math.LegendreSum3  .__str__  =  Ostap.Math.LegendreSum3  .__repr__
 Ostap.Math.LegendreSum4  .__str__  =  Ostap.Math.LegendreSum4  .__repr__
 
 
+# ============================================================================
+# print Ostap::Math::Rational function 
+def _r1_print_ ( r  ) :
+    return 'Rational(%s,%d,%g,%g)' % ( [ r.par ( i ) for i in range ( r.npars() ) ] , r.d() , r.xmin() , r.xmax () )
+# print Ostap::Math::RationalBernstein function 
+def _r2_print_ ( r  ) :
+    return 'RationalBernstein(%s,%s,%g,%g)' % ( [ r.par(i) for i in range ( r.pnpars ()             ) ] ,
+                                                [ r.par(i) for i in range ( r.pnpars () , r.npars() ) ] ,
+                                                r.xmin() , r.xmax () )
+# print Ostap::Math::RationalPositive function 
+def _r3_print_ ( r  ) :
+    return 'RationalPositive(%s,%s,%g,%g)' % ( [ r.par(i) for i in range ( r.pnpars ()             ) ] ,
+                                               [ r.par(i) for i in range ( r.pnpars () , r.npars() ) ] ,
+                                               r.xmin() , r.xmax () )
 
+Ostap.Math.Rational          . __str__  = _r1_print_ 
+Ostap.Math.RationalBernstein . __str__  = _r2_print_ 
+Ostap.Math.RationalPositive  . __str__  = _r3_print_ 
+Ostap.Math.Rational          . __repr__ = _r1_print_ 
+Ostap.Math.RationalBernstein . __repr__ = _r2_print_ 
+Ostap.Math.RationalPositive  . __repr__ = _r3_print_ 
+    
 # =============================================================================
 ## print function for splines 
 def _sp_print_ ( self ,   typ = 'BSpline' ) :

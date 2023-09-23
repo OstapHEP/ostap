@@ -581,6 +581,7 @@ Ostap::Math::Bernstein::sum ( const Ostap::Math::Bernstein& other ) const
   if ( !s_equal ( xmin () , other.xmin() ) || 
        !s_equal ( xmax () , other.xmax() ) ) 
   {
+    //
     const double x_min = std::min ( xmin() , other.xmin() ) ;
     const double x_max = std::max ( xmax() , other.xmax() ) ;
     Bernstein b1 ( *this , x_min , x_max ) ;
@@ -590,14 +591,12 @@ Ostap::Math::Bernstein::sum ( const Ostap::Math::Bernstein& other ) const
   //
   if      ( degree() < other.degree() )
   {
-    Bernstein tmp ( *this ) ;
-    tmp.elevate ( other.degree() - degree() ) ;
+    const Bernstein tmp { elevate ( other.degree() - degree() ) } ;
     return tmp.sum ( other ) ;  
   }
   else if ( degree() > other.degree() ) 
   { 
-    Bernstein tmp ( other ) ;
-    tmp.elevate ( degree() - other.degree () ) ;
+    const Bernstein tmp { other.elevate ( degree() - other.degree () ) } ;
     return sum ( tmp ) ;
   }
   //
@@ -627,14 +626,12 @@ Ostap::Math::Bernstein::subtract ( const Ostap::Math::Bernstein& other ) const
   //
   if      ( degree() < other.degree() )
   {
-    Bernstein tmp ( *this ) ;
-    tmp.elevate ( other.degree() - degree() ) ;
-    return tmp.subtract( other ) ;  
+    const Bernstein tmp { elevate ( other.degree() - degree() ) } ;
+    return tmp.subtract ( other ) ;  
   }
   else if ( degree() > other.degree() ) 
   { 
-    Bernstein tmp ( other ) ;
-    tmp.elevate ( degree() - other.degree () ) ;
+    const Bernstein tmp { other.elevate ( degree() - other.degree () ) } ;
     return subtract ( tmp ) ;
   }
   //
@@ -660,15 +657,18 @@ Ostap::Math::Bernstein::isum
                   Ostap::StatusCode ( 520 )                       )  ;
   //
   if      ( degree()       < other.degree() ) 
-  { elevate ( other.degree() - degree() ) ; }
+  { 
+    *this = elevate ( other.degree() - degree() ) ; 
+    return isum ( other ) ;
+  }
   else if ( other.degree() < degree()       ) 
   {
-    Bernstein tmp ( other ) ; tmp.elevate ( degree() - other.degree() ) ;
+    const Bernstein tmp { other.elevate ( degree() - other.degree() ) } ;
     return isum ( tmp ) ;
   }
   //
   for ( unsigned short i = 0 ; i < npars() ; ++i ) 
-  { m_pars[i] += other.m_pars [ i ] ; }
+  { m_pars [ i ] += other.m_pars [ i ] ; }
   //
   return *this ;
 }
@@ -688,10 +688,13 @@ Ostap::Math::Bernstein::isub
                   Ostap::StatusCode ( 521 )                       )  ;
   //
   if      ( degree()       < other.degree() ) 
-  { elevate ( other.degree() - degree() ) ; }
+  {
+    *this = elevate ( other.degree() - degree() ) ; 
+    return isub ( other ) ;
+  }
   else if ( other.degree() < degree() ) 
   {
-    Bernstein tmp ( other ) ; tmp.elevate ( degree() - other.degree() ) ;
+    const Bernstein tmp { elevate ( degree() - other.degree() ) } ;
     return isub ( tmp ) ;
   }
   //
@@ -970,9 +973,9 @@ Ostap::Math::Bernstein::multiply ( const Ostap::Math::Bernstein& other ) const
   if ( 0 == m ) { return   other *       m_pars [ 0 ] ; }
   if ( 0 == n ) { return (*this) * other.m_pars [ 0 ] ; }
   //
-  if ( zero() || other.zero() ) { return Bernstein( degree() , xmin() , xmax() ) ; }
+  if ( zero() || other.zero() ) { return Bernstein ( m + n , xmin() , xmax() ) ; }
   //
-  Bernstein result ( m + n , xmin() , xmax() ) ;
+  Bernstein result ( m + n , xmin() , xmax() ) ;  
   //
   Ostap::Math::Utils::b_multiply
     ( m_pars        . begin () ,         m_pars . end () ,

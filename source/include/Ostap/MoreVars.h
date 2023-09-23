@@ -588,7 +588,7 @@ namespace Ostap
       // ======================================================================
       RooRealProxy                   m_xvar     {} ;
       RooListProxy                   m_pars     {} ;
-      mutable Ostap::Math::Rational  m_rational { 3 , 1 } ;
+      mutable Ostap::Math::Rational  m_rational {} ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -679,7 +679,7 @@ namespace Ostap
       // ======================================================================
       RooRealProxy                            m_xvar     {} ;
       RooListProxy                            m_pars     {} ;
-      mutable Ostap::Math::RationalBernstein  m_rational { 3 , 1 } ;
+      mutable Ostap::Math::RationalBernstein  m_rational {} ;
       // ======================================================================
     } ;
     // ========================================================================

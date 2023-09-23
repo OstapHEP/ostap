@@ -223,6 +223,27 @@ def frame_progress ( frame  ,
     
     return cnt
 
+
+if ( 6 , 29 ) <= root_info :
+
+    # =========================================================================
+    ## make use of new `ROOT::RDF::Experimental::AddProgressbar` utility
+    #  @see ROOT::RDF::Experimental::AddProgressbar 
+    def frame_progress2 ( frame , length = -1 ) :
+        """Make use of new `ROOT.RDF.Experimental.AddProgressbar` utility
+        - see ROOT.RDF.Experimental.AddProgressbar
+        """
+        
+        if   isinstance ( frame , DataFrame ) : pass
+        elif isinstance ( frame , FrameNode ) : pass
+        else : frame = as_rnode ( frame )
+
+        ROOT.ROOT.RDF.Experimental.AddProgressBar ( frame )
+        return frame
+    
+    __all__ = __all__  + ( 'frameprogress2', )
+    
+    
 # =============================================================================
 ## Get the effective entries in data frame
 #  @code

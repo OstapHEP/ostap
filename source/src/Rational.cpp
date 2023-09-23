@@ -40,7 +40,7 @@ Ostap::Math::Rational::Rational
   const unsigned short d    , 
   const double         xmin , 
   const double         xmax ) 
-  : Parameters ( n ) 
+  : Parameters  ( n ) 
   , m_abscissas ( n , xmin , xmax ) 
   , m_weights   ( n , d           )
   , m_workspace ()
@@ -145,6 +145,68 @@ std::size_t Ostap::Math::Rational::tag () const
       Ostap::Utils::hash_range ( pars () ) ) ;
 }
 // ============================================================================
+// scale it
+// ============================================================================
+Ostap::Math::Rational&
+Ostap::Math::Rational::scale 
+( const double value ) 
+{
+  Ostap::Math::scale ( m_pars , value ) ;
+  return *this ;
+}
+// ============================================================================
+// add/shift  it
+// ============================================================================
+Ostap::Math::Rational&
+Ostap::Math::Rational::add  
+( const double value ) 
+{
+  Ostap::Math::shift ( m_pars , value ) ;
+  return *this ;
+}
+// ============================================================================
+// negate it! 
+// ============================================================================
+Ostap::Math::Rational
+Ostap::Math::Rational::operator- () const 
+{
+  Rational result { *this } ;
+  Ostap::Math::negate ( result.m_pars ) ;
+  return result ;
+}
+// ============================================================================
+// For python 
+// ============================================================================
+Ostap::Math::Rational
+Ostap::Math::Rational::__add__     ( const double value ) const { return (*this)+value ; }
+// ============================================================================
+Ostap::Math::Rational
+Ostap::Math::Rational::__sub__     ( const double value ) const { return (*this)-value ; }
+// ============================================================================
+Ostap::Math::Rational
+Ostap::Math::Rational::__mul__     ( const double value ) const { return (*this)-value ; }
+// ============================================================================
+Ostap::Math::Rational
+Ostap::Math::Rational::__div__     ( const double value ) const { return (*this)/value ; }
+// ============================================================================
+Ostap::Math::Rational
+Ostap::Math::Rational::__truediv__ ( const double value ) const { return (*this)/value ; }
+// ============================================================================
+Ostap::Math::Rational
+Ostap::Math::Rational::__radd__    ( const double value ) const { return (*this)+value ; }
+// ============================================================================
+Ostap::Math::Rational
+Ostap::Math::Rational::__rsub__    ( const double value ) const { return value - (*this) ; }
+// ============================================================================
+Ostap::Math::Rational
+Ostap::Math::Rational::__rmul__    ( const double value ) const { return (*this)*value ; }
+// ============================================================================
+Ostap::Math::Rational
+Ostap::Math::Rational::__neg__     () const { return -(*this) ; }
+// ============================================================================
+
+
+
 
   
   
@@ -254,6 +316,124 @@ std::size_t Ostap::Math::RationalBernstein::tag () const
       m_q.tag () ) ;
 }
 // ============================================================================
+// scale it
+// ============================================================================
+Ostap::Math::RationalBernstein&
+Ostap::Math::RationalBernstein::scale 
+( const double value ) { m_p *= value ; return *this ; }
+// ============================================================================
+// add/shift  it
+// ============================================================================
+Ostap::Math::RationalBernstein&
+Ostap::Math::RationalBernstein::add  
+( const double value ) { m_p += value ; return *this ; }
+// ============================================================================
+// negate it! 
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::operator- () const 
+{
+  RationalBernstein result { *this } ;
+  result.m_p *= -1 ;
+  return result ;
+}
+// ============================================================================
+// Multiply with Bernstein polynomial
+// ============================================================================
+Ostap::Math::RationalBernstein&
+Ostap::Math::RationalBernstein::operator *=  
+( const Ostap::Math::Bernstein& right ) 
+{
+  if ( s_equal ( xmin () , right.xmin () ) && 
+       s_equal ( xmax () , right.xmax () ) ) 
+  { m_p = m_p * right ; }
+  else 
+  { m_p = m_p * Bernstein ( right , xmin () , xmax () ) ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// Add Bernstein polynomial
+// ============================================================================
+Ostap::Math::RationalBernstein&
+Ostap::Math::RationalBernstein::operator +=  
+( const Ostap::Math::Bernstein& right ) 
+{
+  if ( s_equal ( xmin () , right.xmin () ) && s_equal ( xmax () , right.xmax () ) ) 
+  { 
+    m_p = m_p + m_q.bernstein() * right  ;
+  }
+  else 
+  { m_p = m_p * Bernstein ( m_q.bernstein() * right , xmin () , xmax () ) ; }
+  //
+  return *this ;
+}
+// ============================================================================
+// subtract Bernstein polynomial
+// ============================================================================
+Ostap::Math::RationalBernstein&
+Ostap::Math::RationalBernstein::operator -=  
+( const Ostap::Math::Bernstein& right ) 
+{ return ( *this)+= ( -right ) ; }
+// ============================================================================
+// For python 
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__add__     ( const double value ) const { return (*this)+value ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__sub__     ( const double value ) const { return (*this)-value ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__mul__     ( const double value ) const { return (*this)-value ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__div__     ( const double value ) const { return (*this)/value ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__truediv__ ( const double value ) const { return (*this)/value ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__radd__    ( const double value ) const { return (*this)+value ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__rsub__    ( const double value ) const { return value - (*this) ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__rmul__    ( const double value ) const { return (*this)*value ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__neg__     () const { return -(*this) ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__add__     
+( const Ostap::Math::Bernstein& right ) const { return (*this)+right ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__radd__     
+( const Ostap::Math::Bernstein& right ) const { return (*this)+right ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__mul__     
+( const Ostap::Math::Bernstein& right ) const { return (*this)*right ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__rmul__     
+( const Ostap::Math::Bernstein& right ) const { return (*this)*right ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__sub__     
+( const Ostap::Math::Bernstein& right ) const { return (*this)-right ; }
+// ============================================================================
+Ostap::Math::RationalBernstein
+Ostap::Math::RationalBernstein::__rsub__     
+( const Ostap::Math::Bernstein& right ) const { return right - (*this) ; }
+// ============================================================================
+
+
+
+
+
 
 // ============================================================================
 Ostap::Math::RationalPositive::RationalPositive
