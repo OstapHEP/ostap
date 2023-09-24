@@ -241,7 +241,7 @@ if ( 6 , 29 ) <= root_info :
         ROOT.ROOT.RDF.Experimental.AddProgressBar ( frame )
         return frame
     
-    __all__ = __all__  + ( 'framep_rogress2', )
+    __all__ = __all__  + ( 'frame_progress2', )
     
     
 # =============================================================================
