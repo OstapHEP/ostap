@@ -7,14 +7,15 @@
 // ============================================================================
 // Local
 // ============================================================================
-#include "Ostap/PDFs.h"
 #include "Ostap/Iterator.h"
 #include "Ostap/Integrator.h"
 #include "Ostap/HistoHash.h"
+#include "Ostap/PDFs.h"
 // ============================================================================
 // ROOT 
 // ============================================================================
 #include "RooArgSet.h"
+#include "RooFitResult.h"
 #include "RooRealVar.h"
 #include "RooConstVar.h"
 #include "RooGlobalFunc.h"

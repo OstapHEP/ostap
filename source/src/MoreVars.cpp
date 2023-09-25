@@ -4,6 +4,7 @@
 // ROOT/RooFit
 // ============================================================================
 #include "RVersion.h"
+#include "RooFitResult.h"
 #include "RooAbsPdf.h"
 #include "RooConstVar.h"
 #include "RooAddPdf.h"

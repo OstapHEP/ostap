@@ -4,6 +4,7 @@
 // ROOT/RooFit 
 // ============================================================================
 #include "RooAbsReal.h"
+#include "RooFitResult.h"
 #include "RooArgList.h"
 #include "RooAddition.h"
 #include "RooAbsPdf.h"
