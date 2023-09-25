@@ -41,8 +41,8 @@ ds1    = ROOT.RooDataSet ( dsID()  , 'dataset' , varset )
 ds2    = ROOT.RooDataSet ( dsID()  , 'dataset' , varset )
 
 
-N1 = 100000
-N2 =   1000
+N1 = 1000000
+N2 =    1000
 
 ## prepare some more or less random data
 for i in range ( N1 ) :     
@@ -59,8 +59,8 @@ for i in range ( 3*N1 ) :
     xv = -100
     yv = -100
     while ( not xv in xvar ) or ( not yv in yvar ) : 
-        x1 = random.gauss ( 0 , 3 )
-        x2 = random.gauss ( 0 , 1 )
+        x1 = random.gauss ( 0 , 4 )
+        x2 = random.gauss ( 0 , 2 )
         xv = 5 + x1 + x2 
         yv = 3 + x1 - x2
 
@@ -83,8 +83,8 @@ for i in range ( 3*N2  ) :
     xv = -100
     yv = -100
     while ( not xv in xvar ) or ( not yv in yvar ) : 
-        x1 = random.gauss ( 0 , 3 )
-        x2 = random.gauss ( 0 , 1 )
+        x1 = random.gauss ( 0 , 4 )
+        x2 = random.gauss ( 0 , 2 )
         xv = 5 + x1 + x2 
         yv = 3 + x1 - x2
 
@@ -95,9 +95,8 @@ for i in range ( 3*N2  ) :
 for i in range ( N2  ) :
     xv = -100
     yv = -100
-    while ( not xv in xvar ) or ( not yv in yvar ) : 
-        xv = random.uniform ( *xvar.minmax() ) 
-        yv = random.uniform ( *yvar.minmax() ) 
+    while not xv in xvar : xv = random.uniform ( *xvar.minmax() ) 
+    while not yv in yvar : yv = random.uniform ( *yvar.minmax() ) 
     
     xvar.setVal ( xv )
     yvar.setVal ( yv )
@@ -109,6 +108,12 @@ flat   = Models.Flat2D( xvar = xvar , yvar = yvar , name = 'Flat2D' )
 pdfs   = []
 frames = []
 
+conf   = {}
+if (6,29) <= root_info : 
+    conf = { 'minimizer' : ('Minuit','migrad') ,
+             'hesse'     : True                ,
+             'maxcalls'  : 1000000             }
+
 # ===========================================================================================
 # (1) rely on histograms 
 # ===========================================================================================
@@ -117,7 +122,7 @@ def test_shapes2_histos () :
     logger = getLogger('test_shapes2_histos')
     
     pdfs1 = [] 
-    for nx,ny  in [   ( 10 , 10 ) , ( 15 , 15 ) , ( 20 , 20 ) ] :
+    for nx,ny  in [   ( 10 , 10 ) , ( 15 , 15 ) , ( 20 , 20 ) , ( 22 , 22 ) ] :
         
         h2 = ROOT.TH2F ( hID() , 'histogram' ,
                          nx , xvar.getMin() , xvar.getMax() ,
@@ -127,11 +132,10 @@ def test_shapes2_histos () :
         
         for ix,iy,x,y,v  in h2.items() :
             if v.value() <= 1 :
-                h2 [ ix, iy ] = VE(1,1)
+                h2 [ ix, iy ] = VE ( 1 , 1 )
 
-            
         ## rely on RooHistPdf 
-        pdf = Models.H2D_pdf       ( 'R2D_%02d%02d' % ( nx , ny ) , h2 , xvar = xvar , yvar = yvar , order = 1 )
+        pdf = Models.H2D_pdf       ( 'R2D_%02d%02d' % ( nx , ny ) , h2 , xvar = xvar , yvar = yvar , order = 0 )
         pdfs1.append ( pdf )
         
         ## rely on Histo2D_pdf 
@@ -147,7 +151,7 @@ def test_shapes2_histos () :
         with gslCount() , timing ( pdf.name , logger = logger ) : 
 
             pdf.fractions = 0.75 ,   
-            r , _ = pdf.fitTo ( ds2 , silent = True , refit = 4 )
+            r , _ = pdf.fitTo ( ds2 , silent = True , refit = 4 , **conf )
             
             logger.info ( '%s:\n%s' % ( pdf.name , r.table ( title = pdf.name , prefix = '# ' ) ) )
             
@@ -173,7 +177,9 @@ def test_shapes2_poly () :
 
     pdfs2 = []
     
-    for nx,ny  in [  ( 5 , 5 ) ,  ( 7 , 7 ) , ( 10 , 10 ) , ( 12 , 12 ) , ( 15 , 15 ) ] :
+    for nx,ny  in [ (  5 ,  5 ) , (  7 ,  7 ) ,
+                    ( 10 , 10 ) , ( 12 , 12 ) ,
+                    ( 15 , 15 ) ] :
         
         p2 = Ostap.Math.LegendreSum2 ( nx , ny ,  xvar.getMin() , xvar.getMax() , yvar.getMin() , yvar.getMax() )
         
@@ -213,7 +219,7 @@ def test_shapes2_keys () :
 
     pdfs3 = [] 
 
-    ds_keys = ds1.sample ( 1000 )
+    ds_keys = ds1.sample ( 2000 )
     
     pdf = Models.RooKeys2D_pdf ( 'RKeys' , xvar = xvar , yvar = yvar , data = ds_keys )
     pdfs3.append ( pdf ) 
