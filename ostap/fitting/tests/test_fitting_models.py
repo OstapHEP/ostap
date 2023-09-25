@@ -16,8 +16,7 @@ from   __future__               import print_function
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models 
+from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing
 from   builtins                 import range
@@ -25,6 +24,8 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
 from   ostap.fitting.background import make_bkg
 from   ostap.logger.colorized   import attention
+import ostap.fitting.roofit 
+import ostap.fitting.models     as     Models 
 import ostap.logger.table       as     T
 import ROOT, random
 # =============================================================================
@@ -89,6 +90,14 @@ signal_gauss.sigma.setMax ( 10.0 * m.error () )
 S = model_gauss.S
 B = model_gauss.B
 
+conf   = {}
+if (6,29) <= root_info : 
+    conf = {
+        'minimizer' : ('Minuit','migrad') ,
+        ## 'minimizer' : ('Fumili','') ,
+        'hesse'     : True                ,
+        'maxcalls'  : 1000000             }
+    
 
 stats   = {}
 results = []
@@ -343,8 +352,8 @@ def test_apollonios () :
     model.B = NB 
     
     with rooSilent() : 
-        result, frame = model. fitTo ( dataset0 , silent = True )
-        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True , **conf )
+        result, frame = model. fitTo ( dataset0 , silent = True , **conf )
         
     make_print ( model , result , 'Apollonios model' , logger )
 
