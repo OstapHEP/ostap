@@ -44,53 +44,41 @@ ds2    = ROOT.RooDataSet ( dsID()  , 'dataset' , varset )
 N1 = 1000000
 N2 =    1000
 
-## prepare some more or less random data
-for i in range ( N1 ) :     
-    xv = random.expovariate ( 1.0/5 )
-    while not xv in xvar : xv = random.expovariate ( 1.0/5 )
-    yv = random.expovariate ( 1.0/3 )
-    while not yv in yvar : yv = random.expovariate ( 1.0/3 )
+def make_data ( N = 1000 ) :
+       
+    ds = ROOT.RooDataSet ( dsID()  , 'dataset' , varset )
 
-    xvar.setVal ( xv )
-    yvar.setVal ( yv )
-    ds1.add ( varset )
-    
-for i in range ( 3*N1 ) :
-    xv = -100
-    yv = -100
-    while ( not xv in xvar ) or ( not yv in yvar ) : 
-        x1 = random.gauss ( 0 , 4 )
-        x2 = random.gauss ( 0 , 2 )
-        xv = 5 + x1 + x2 
-        yv = 3 + x1 - x2
+    ## prepare some more or less random data
+    for i in range ( N  ) :     
+        xv = random.expovariate ( 1.0/5 )
+        while not xv in xvar : xv = random.expovariate ( 1.0/5 )
+        yv = random.expovariate ( 1.0/3 )
+        while not yv in yvar : yv = random.expovariate ( 1.0/3 )
+        
+        xvar.setVal ( xv )
+        yvar.setVal ( yv )
+        ds.add ( varset )
+        
+    for i in range ( 3 * N ) :
+        xv = -100
+        yv = -100
+        while ( not xv in xvar ) or ( not yv in yvar ) : 
+            x1 = random.gauss ( 0 , 3 )
+            x2 = random.gauss ( 0 , 1 )
+            xv = 5 + x1 + x2 
+            yv = 3 + x1 - x2
+            
+        xvar.setVal ( xv )
+        yvar.setVal ( yv )
+        ds.add ( varset )
 
-    xvar.setVal ( xv )
-    yvar.setVal ( yv )
-    ds1.add ( varset )
+    return ds
 
-## prepare some more or less random data
-for i in range ( N2 ) :     
-    xv = random.expovariate ( 1.0/5 )
-    while not xv in xvar : xv = random.expovariate ( 1.0/5 )
-    yv = random.expovariate ( 1.0/3 )
-    while not yv in yvar : yv = random.expovariate ( 1.0/3 )
 
-    xvar.setVal ( xv )
-    yvar.setVal ( yv )
-    ds2.add ( varset )
-    
-for i in range ( 3*N2  ) :
-    xv = -100
-    yv = -100
-    while ( not xv in xvar ) or ( not yv in yvar ) : 
-        x1 = random.gauss ( 0 , 4 )
-        x2 = random.gauss ( 0 , 2 )
-        xv = 5 + x1 + x2 
-        yv = 3 + x1 - x2
+ds1 = make_data  ( N1 )
+ds2 = make_data  ( N2 )
 
-    xvar.setVal ( xv )
-    yvar.setVal ( yv )
-    ds2.add ( varset )
+## add some flattish component to ds2
 
 for i in range ( N2  ) :
     xv = -100
@@ -103,17 +91,18 @@ for i in range ( N2  ) :
     ds2.add ( varset )
 
 
-
 flat   = Models.Flat2D( xvar = xvar , yvar = yvar , name = 'Flat2D' )    
 pdfs   = []
 frames = []
 
 conf   = {}
 if (6,29) <= root_info : 
-    conf = { 'minimizer' : ('Minuit','migrad') ,
-             'hesse'     : True                ,
-             'maxcalls'  : 1000000             }
-
+    conf = {
+        'minimizer' : ('Minuit','migrad') ,
+        ## 'minimizer' : ('Fumili','') ,
+        'hesse'     : True                ,
+        'maxcalls'  : 1000000             }
+    
 # ===========================================================================================
 # (1) rely on histograms 
 # ===========================================================================================
@@ -219,7 +208,7 @@ def test_shapes2_keys () :
 
     pdfs3 = [] 
 
-    ds_keys = ds1.sample ( 2000 )
+    ds_keys = ds1.sample ( 1000 )
     
     pdf = Models.RooKeys2D_pdf ( 'RKeys' , xvar = xvar , yvar = yvar , data = ds_keys )
     pdfs3.append ( pdf ) 
