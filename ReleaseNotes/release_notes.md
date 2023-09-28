@@ -12,6 +12,7 @@
 
    1. Fix a sad bug in `Ostap::Math::Bernstein` for incorrectuage of `elevate`
 
+
 # v1.10.0.0
 
 ## New features:
