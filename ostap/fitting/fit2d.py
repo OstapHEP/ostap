@@ -298,9 +298,9 @@ class Shape2D_pdf(PDF2) :
 
         if isinstance ( shape , ROOT.TH2 ) and 2 == shape.dim () :
             
-            self.histo = shape
-            shape      = Ostap.Math.Histo2D     ( shape )
-            tag        = Ostap.Utils.hash_histo ( shape ) 
+            self.histo_obj = shape
+            shape          = Ostap.Math.Histo2D     ( shape )
+            tag            = Ostap.Utils.hash_histo ( shape ) 
             
         elif hasattr ( shape , 'tag' ) and not tag :
             
