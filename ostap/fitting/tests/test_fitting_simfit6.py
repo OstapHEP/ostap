@@ -36,6 +36,13 @@ else :
 # =============================================================================
 
 
+conf   = { 'refit' : 5 }
+if (6,29) <= root_info : 
+    conf [ 'minimizer' ] = 'Minuit','migrad'
+    conf [ 'hesse'     ] = True            
+    conf [ 'maxcalls'  ] =  1000000     
+
+    
 # =============================================================================
 def test_simfit6() :
     
@@ -78,7 +85,7 @@ def test_simfit6() :
     mc_dset.project ( hmc , model_mc.xvar.name )
     
     model_mc.fitTo ( hmc , silent = True )
-    rmch , fmch = model_mc.fitTo ( hmc , silent = True , draw = True , nbins = 100 )
+    rmch , fmch = model_mc.fitTo ( hmc , silent = True , draw = True , nbins = 100 , **conf )
     title   = 'Fit for MC data (histo)'
     logger.info ( '%s:\n%s' % ( title , rmch.table ( title = title , prefix = '# ' ) ) )
     
@@ -106,7 +113,7 @@ def test_simfit6() :
     # ===========================================================================
     smodel = Models.Fit1D ( signal = signal , background = bkg , suffix = '_spl' )
     smodel.fitTo ( ds , silent = True )
-    rs , fs = smodel.fitTo ( ds , silent = True , draw = True , nbins = 100 )
+    rs , fs = smodel.fitTo ( ds , silent = True , draw = True , nbins = 100 , **conf )
     title = 'Fit for sPlot'
     logger.info ( '%s:|n%s' % ( title , rs.table ( title = title , prefix = '# ' ) ) )
     smodel.sPlot ( ds )
@@ -117,8 +124,8 @@ def test_simfit6() :
     weight = 'S_spl_sw'
     dsw = ds.makeWeighted ( weight )
     
-    signal_cmp.fitTo ( dsw , silent = True , sumw2 = True )
-    r1 , f1 = signal_cmp.fitTo ( dsw , silent = True , sumw2 = True , draw = True , nbins = 100 )
+    signal_cmp.fitTo ( dsw , silent = True , sumw2 = True , **conf )
+    r1 , f1 = signal_cmp.fitTo ( dsw , silent = True , sumw2 = True , draw = True , nbins = 100 , **conf )
     title   = 'Fit for background subtracted dataset'
     logger.info ( '%s:\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
     
@@ -127,30 +134,24 @@ def test_simfit6() :
     dsw.project ( hdata1 , 'm1' )
     
     ## fit data histo
-    rhist , fhist = signal_cmp.fitTo ( hdata1 , silent = True ) 
-    rhist , fhist = signal_cmp.fitTo ( hdata1 , silent = True ) 
-    rhist , fhist = signal_cmp.fitTo ( hdata1 , silent = True , draw = True , nbins = 100 ) 
+    rhist , fhist = signal_cmp.fitTo ( hdata1 , silent = True , draw = True , nbins = 100 , **conf ) 
     title   = 'Fit histogram'
     logger.info ( '%s:\n%s' % ( title , rhist.table ( title = title , prefix = '# ' ) ) )
     
     ## fit data (unbinned) 
-    rdsw , fdsw = signal_cmp.fitTo ( dsw , sumw2 = True , silent = True ) 
-    rdsw , fdsw = signal_cmp.fitTo ( dsw , sumw2 = True , silent = True ) 
-    rdsw , fdsw = signal_cmp.fitTo ( dsw , sumw2 = True , silent = True , draw = True , nbins = 100 ) 
+    rdsw , fdsw = signal_cmp.fitTo ( dsw , sumw2 = True , silent = True , draw = True , nbins = 100 , **conf ) 
     title   = 'Fit unbinned dataset'
     logger.info ( '%s:\n%s' % ( title , rdsw.table ( title = title , prefix = '# ' ) ) )
     
     ## fit data histo with constrains 
-    rhistc , fhistc = signal_cmp.fitTo ( hdata1 , silent = True , constraints = ( mc_constraint, ) ) 
-    rhistc , fhistc = signal_cmp.fitTo ( hdata1 , silent = True , constraints = ( mc_constraint, ) ) 
-    rhistc , fhistc = signal_cmp.fitTo ( hdata1 , silent = True , constraints = ( mc_constraint, ) , draw = True , nbins = 100 ) 
+    rhistc , fhistc = signal_cmp.fitTo ( hdata1 , silent = True , constraints = ( mc_constraint, ) , draw = True , nbins = 100 ,
+                                         **conf ) 
     title   = 'Fit histogram with constraint'
     logger.info ( '%s:\n%s' % ( title , rhistc.table ( title = title , prefix = '# ' ) ) )
     
     ## fit data (unbinned) with constrains 
-    rdswc , fdswc = signal_cmp.fitTo ( dsw , sumw2 = True , silent = True , constraints = ( mc_constraint, ) ) 
-    rdswc , fdswc = signal_cmp.fitTo ( dsw , sumw2 = True , silent = True , constraints = ( mc_constraint, ) ) 
-    rdswc , fdswc = signal_cmp.fitTo ( dsw , sumw2 = True , silent = True , constraints = ( mc_constraint, ) , draw = True , nbins = 100 ) 
+    rdswc , fdswc = signal_cmp.fitTo ( dsw , sumw2 = True , silent = True , constraints = ( mc_constraint, ) ,
+                                       draw = True , nbins = 100 , **conf ) 
     title   = 'Fit unbinned with constraint'
     logger.info ( '%s:\n%s' % ( title , rdswc.table ( title = title , prefix = '# ' ) ) )
     
