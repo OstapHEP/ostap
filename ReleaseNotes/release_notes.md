@@ -6,7 +6,6 @@
 
 # v1.10.0.2
 
-
 ## New features:
 
   1. Add `Ostap::MoreRooFit::Rational` and `Ostap::MoreRooFit::RationalBernstein`
