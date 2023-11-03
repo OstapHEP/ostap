@@ -1,5 +1,7 @@
 ## New features:
 
+  1. Update `histo_compare` tests 
+
 ## Backward incompatible: 
 
 ## Bug fixes:

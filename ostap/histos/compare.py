@@ -188,7 +188,7 @@ def _h1_cmp_chi2_ ( h1              ,
         if h1_ is not h1 : del h1_
         if h2_ is not h2 : del h2_
         return cmp
-
+    
     chi2  = 0.0
     ndf   = 0  
     for i , x , v1  in h1.items() :        
@@ -1301,17 +1301,20 @@ def _h1_cmp_prnt_ ( h1                  ,
     fmt    = '%+11.4g +- %-10.4g'
     wid0   = 25
 
-    values = [ 'Mean'     ,
+    values = [ 'Integral' ,
+               'Mean'     ,
                'Rms'      ,
                'Skewness' , 
                'Kurtosis' ] 
 
     numbers = []
 
-    mean =  h1.mean     ()  , h2.mean     ()
-    rms  =  h1.rms      ()  , h2.rms      ()   
-    skew =  h1.skewness ()  , h2.skewness ()   
-    kurt =  h1.kurtosis ()  , h2.kurtosis ()
+    area =  h1.integrate ()  , h2.integrate ()
+    mean =  h1.mean      ()  , h2.mean      ()
+    rms  =  h1.rms       ()  , h2.rms       ()   
+    skew =  h1.skewness  ()  , h2.skewness  ()   
+    kurt =  h1.kurtosis  ()  , h2.kurtosis  ()
+    numbers.append ( area )
     numbers.append ( mean )
     numbers.append ( rms  )
     numbers.append ( skew )

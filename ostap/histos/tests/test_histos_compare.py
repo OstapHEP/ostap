@@ -14,11 +14,13 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   ostap.math.ve        import VE 
-from   ostap.core.core      import hID 
-from   ostap.histos.histos  import h1_axis
+from   ostap.math.ve         import VE 
+from   ostap.core.core       import hID 
+from   ostap.histos.histos   import h1_axis
+from   ostap.plotting.canvas import use_canvas 
 import ostap.histos.compare
-from   builtins             import range
+import ostap.histos.graphs 
+from   builtins              import range
 import ROOT, random
 # =============================================================================
 # logging 
@@ -44,8 +46,8 @@ h3g   = ROOT.TH1D ( hID() , '' ,  20 , -5 , 5 ) ; h3g.Sumw2()
 bins  = [ -5 ]
 ## 
 random.seed(10) 
-for i in range(0, 15 ) : bins.append ( random.uniform ( -5 , 5 ) )
-bins += [  5 ]
+for i in range(0, 20 ) : bins.append ( random.uniform ( -5 , 5 ) )
+bins = [ -5 ] + bins + [  5 ]
 bins.sort()
 
 h4g   = h1_axis ( bins ) 
@@ -70,18 +72,25 @@ h4e = h4g.clone()
 v   = VE(1,1.75**2)
 
 random.seed(10) 
-for i in range ( 0, 50000 ) :
+for i in range ( 0, 10000 ) :
 
-    g1 = v.gauss()
-    g2 = v.gauss()
+    g1 = -1000
+    g2 = -1000
+    g3 = -1000
+    g4 = -1000
+    
+    while not -5 < g1 < 5 : g1 = v.gauss()
+    while not -5 < g2 < 5 : g2 = v.gauss()
     g3 = g2          ## the same as g2 
-    g4 = v.gauss()
+    while not -5 < g4 < 5 : g4 = v.gauss()
     
     h1g.Fill ( g1 ) 
     h2g.Fill ( g2 ) 
     h3g.Fill ( g3 ) 
     h4g.Fill ( g4 ) 
     
+for i in range ( 0, 20000 ) :
+
     u1 = random.uniform ( -5 , 5 )
     u2 = random.uniform ( -5 , 5 )
     u3 = u2          #3 the same as u2 
@@ -92,14 +101,17 @@ for i in range ( 0, 50000 ) :
     h3u.Fill ( u3 ) 
     h4u.Fill ( u4 ) 
 
-    e1 = -1 * random.expovariate( -0.5 )  -5 
-    e2 = -1 * random.expovariate( -0.5 )  -5 
-    e3 = e2  ## the same as e2 
-    e4 = -1 * random.expovariate( -0.5 )  -5 
-    if not -5 < e1 < 5 : continue 
-    if not -5 < e2 < 5 : continue 
-    if not -5 < e3 < 5 : continue 
-    if not -5 < e4 < 5 : continue 
+for i in range ( 0, 50000 ) :
+
+    e1 = -1000
+    e2 = -1000
+    e3 = -1000
+    e4 = -1000
+    
+    while not -5 < e1 < 5 : e1 = -1 * random.expovariate( -0.5 )  -5    
+    while not -5 < e2 < 5 : e2 = -1 * random.expovariate( -0.5 )  -5 
+    e3 = e2  ## the same as e2
+    while not -5 < e4 < 5 : e4 = -1 * random.expovariate( -0.5 )  -5 
 
     h1e.Fill ( e1 ) 
     h2e.Fill ( e2 ) 
@@ -112,23 +124,30 @@ h5e = h4e.rescale_bins(1)
 
 ## compare two histograms 
 def compare ( h1 , h2 , title = '' , density = False ) :
-    
-    ## r1  = h1.cmp_fit       ( h2 , opts = 'WL0Q' , density = density )
-    ## if r1 : logger.info    ( 'h1 vs h2 : fit probability is %.5f%% ' % ( r1.Prob()*100 ) )
-    ## else  : logger.warning ( 'h1 vs h2 : fit problems ')
-    
-    ## r2  = h2.cmp_fit       ( h1 , opts = 'WL0Q' , density = density )
-    ## if r2 : logger.info    ( 'h2 vs h1 : fit probability is %.5f%% ' % ( r2.Prob()*100 ) )
-    ## else  : logger.warning ( 'h2 vs h1 : fit problems ')
 
-    ## ct  = h1.cmp_cos      ( h2 , density = density ) 
-    ## logger.info           ( 'h1 vs h2 : cos(theta)      is %s ' % ct  )
+    ## with use_canvas ( 'COMPARE!' , wait = 5 ) :
     
-    ## dd1 = h1.cmp_dist     ( h2 , density = density ) 
-    ## logger.info           ( 'h1 vs h2 : distance        is %s ' % dd1 )
+    r1  = h1.cmp_fit       (  h2 , opts = '0Q' , density = density )
+    if r1 : logger.info    ( 'h1 vs h2 : fit probability is  %.5f%%, scale %s' % ( r1.Prob()*100 , r1[0].toString ('%.3f +/- %.3f' ) ) )
+    else  : logger.warning ( 'h1 vs h2 : fit problems ')
+        
+    ## h1.blue  () 
+    ## h2.green () 
+    ## h1.draw('same')
+    ## h2.draw('same')
+        
+    r2  = h2.cmp_fit       ( h1 , opts = '0Q' , density = density )
+    if r2 : logger.info    ( 'h2 vs h1 : fit probability is  %.5f%%, scale %s' % ( r2.Prob()*100 , r2[0].toString ( '%.3f +/- %.3f' ) ) )
+    else  : logger.warning ( 'h2 vs h1 : fit problems ')
+
+    ct  = h1.cmp_cos      ( h2 , density = density ) 
+    logger.info           ( 'h1 vs h2 : cos(theta)      is %+.5f ' % ct  )
     
-    ## ## dd2 = h1.cmp_dist2    ( h2 , density = density ) 
-    ## ## logger.info           ( 'h1 vs h2 : distance2       is %s ' % dd2 )
+    dd1 = h1.cmp_dist     ( h2 , density = density ) 
+    logger.info           ( 'h1 vs h2 : distance        is %+.5f ' % dd1 )
+    
+    ## dd2 = h1.cmp_dist2    ( h2 , density = density ) 
+    ## logger.info           ( 'h1 vs h2 : distance2       is %s ' % dd2 )
     
     logger.info ( "%s\n%s" % (  title , h1.cmp_prnt       ( h2 , density = density , title = title , prefix = '# ' ) ) )
     logger.info ( "%s\n%s" % (  title , h1.cmp_diff_prnt  ( h2 , density = density , title = title , prefix = '# ' ) ) )
