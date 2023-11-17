@@ -2,7 +2,8 @@
 
   1. Update `histo_compare` tests 
   1. Slight optimisation in `Ostap::Math::ChebyshedSum`
-
+  1. Further optimisation in `Ostap::Math::ChebyshedSum`
+  1. add new test `ostap/math/tests/test_math.poly.py`
 
 ## Backward incompatible: 
 
@@ -23,7 +24,7 @@
 
 ## Bug fixes:
 
-   1. Fix a sad bug in `Ostap::Math::Bernstein` for incorrectuage of `elevate`
+   1. Fix a sad bug in `Ostap::Math::Bernstein` for incorrect usage of `elevate`
 
 # v1.10.0.0
 

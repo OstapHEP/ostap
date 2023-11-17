@@ -1056,16 +1056,18 @@ Ostap::Math::Polynomial
 Ostap::Math::Polynomial::indefinite_integral ( const double C ) const 
 {
   const double dx = 0.5 * ( m_xmax - m_xmin ) ;
-  std::vector<double> npars ( m_pars.size() + 1 , 0 ) ;
+  //
+  Ostap::Math::Polynomial integ ( degree() + 1 , m_xmin , m_xmax ) ;
+  //
   for ( unsigned int i = 0 ; i < m_pars.size() ; ++i ) 
   { 
     if ( s_zero ( m_pars[i] ) ) { continue ; }           // CONTINUE
-    npars [i+1] = m_pars[i] / ( i + 1 ) * dx ; 
+    integ.m_pars [ i + 1 ] = m_pars [ i ] / ( i + 1 ) * dx ; 
   }
   //
-  npars[0] = C ;
+  integ.m_pars[0] = C ;
   //
-  return Ostap::Math::Polynomial( npars , m_xmin , m_xmax ) ;
+  return integ ;
 }
 // ============================================================================
 // get the derivative at point "x" 
@@ -1097,15 +1099,16 @@ Ostap::Math::Polynomial::derivative          () const
   { return Ostap::Math::Polynomial( 0 , m_xmin , m_xmax ) ; }
   //
   const double dx = 2 / ( m_xmax - m_xmin ) ;
-  std::vector<double> npars ( m_pars.size() - 1 , 0 ) ;
-  for ( unsigned int i = 0 ; i < npars.size() ; ++i ) 
+  //
+  Ostap::Math::Polynomial deriv ( degree() - 1 , m_xmin , m_xmax ) ;
+  for ( unsigned int i = 0 ; i < deriv.npars () ; ++i ) 
   {    
-    const double p = m_pars[i+1] ;
+    const double p = m_pars [ i + 1 ] ;
     if ( s_zero ( p ) ) { continue ; }       // CONTINUE
-    npars [i] = ( i + 1 ) * p * dx ; 
+    deriv.m_pars [ i ] = ( i + 1 ) * p * dx ; 
   }
   //
-  return Ostap::Math::Polynomial ( npars , m_xmin , m_xmax ) ;
+  return deriv  ;
 }
 // ============================================================================ 
 // simple  manipulations with polynoms: shift it! 
@@ -1371,22 +1374,25 @@ Ostap::Math::ChebyshevSum::indefinite_integral ( const double C ) const
 {
   // 
   const double dx = 0.5 * ( m_xmax - m_xmin ) ;
-  std::vector<double> npars ( m_pars.size() + 1 , 0 ) ;
+  //
+  Ostap::Math::ChebyshevSum integ ( degree() + 1 , m_xmin , m_xmax ) ;
+  //
   for ( unsigned short i = 0 ; i < m_pars.size() ; ++i ) 
   {
     if ( s_zero ( m_pars[i] ) ) { continue ; }           // CONTINUE 
     //
-    if      ( 0 == i ) { npars [1] +=        m_pars[0] * dx ; }
-    else if ( 1 == i ) { npars [2] += 0.25 * m_pars[1] * dx ; }
+    if      ( 0 == i ) { integ.m_pars [ 1 ] +=        m_pars [ 0 ] * dx ; }
+    else if ( 1 == i ) { integ.m_pars [ 2 ] += 0.25 * m_pars [ 1 ] * dx ; }
     else 
     {
-      npars [ i + 1 ] += m_pars[i] * 0.5 / ( i + 1.0 ) * dx ;  
-      npars [ i - 1 ] -= m_pars[i] * 0.5 / ( i - 1.0 ) * dx ; 
+      integ.m_pars [ i + 1 ] += m_pars [ i ] * 0.5 / ( i + 1.0 ) * dx ;  
+      integ.m_pars [ i - 1 ] -= m_pars [ i ] * 0.5 / ( i - 1.0 ) * dx ; 
     }
   }
   //
-  npars[0] += C ;
-  return Ostap::Math::ChebyshevSum ( npars , m_xmin , m_xmax ) ;
+  integ.m_pars [ 0 ] += C ;
+  //
+  return integ ;
 }
 // ============================================================================
 // get the derivative at point "x" 
@@ -1741,7 +1747,7 @@ double Ostap::Math::LegendreSum::evaluate ( const double x ) const
 // get the integral between xmin and xmax
 // ============================================================================
 double Ostap::Math::LegendreSum::integral   () const 
-{ return m_pars[0] * ( m_xmax - m_xmin ) ; }
+{ return m_pars [ 0 ] * ( m_xmax - m_xmin ) ; }
 // ============================================================================
 // get the integral between low and high 
 // ============================================================================
@@ -1774,13 +1780,15 @@ double Ostap::Math::LegendreSum::integral
   // }
   //
   std::vector<double> npars ( m_pars.size() + 1 , 0 ) ;
-  for ( unsigned int i = 0 ; i < m_pars.size() ; ++i ) 
+  for ( unsigned int i = 1 ; i < m_pars.size() ; ++i ) 
   { 
     if ( s_zero ( m_pars[i] ) ) { continue ; }           // CONTINUE 
     //
-    npars [i+1]                += m_pars[i] / ( 2*i + 1 ) ; 
-    if ( 0 < i ) { npars [i-1] -= m_pars[i] / ( 2*i + 1 ) ; }
+    npars [ i + 1 ] += m_pars[i] / ( 2*i + 1 ) ; 
+    npars [ i - 1 ] -= m_pars[i] / ( 2*i + 1 ) ; 
   }
+  //
+  npars [ 1 ] += m_pars [ 0 ] ;
   //
   const double result = 
     Ostap::Math::Clenshaw::legendre_sum ( npars.begin() , npars.end() , xh ) -
@@ -1797,17 +1805,20 @@ Ostap::Math::LegendreSum::indefinite_integral ( const double C ) const
 {
   //
   const double dx = 0.5 * ( m_xmax - m_xmin ) ;
-  std::vector<double> npars ( m_pars.size() + 1 , 0 ) ;
-  for ( unsigned int i = 0 ; i < m_pars.size() ; ++i ) 
+  //
+  Ostap::Math::LegendreSum integ (  degree() + 1 , m_xmin , m_xmax ) ;
+  for ( unsigned int i = 1 ; i < m_pars.size() ; ++i ) 
   { 
-    if ( s_zero ( m_pars[i] ) ) { continue ; }           // CONTINUE 
+    if ( s_zero ( m_pars [ i ] ) ) { continue ; }           // CONTINUE 
     //
-    npars [i+1]                += m_pars[i] / ( 2*i + 1 ) * dx ; 
-    if ( 0 < i ) { npars [i-1] -= m_pars[i] / ( 2*i + 1 ) * dx ; }
+    integ.m_pars [ i + 1 ] += m_pars [ i ] / ( 2*i + 1 ) * dx ; 
+    integ.m_pars [ i - 1 ] -= m_pars [ i ] / ( 2*i + 1 ) * dx ; 
   }
   //
-  npars[0] += C ;
-  return Ostap::Math::LegendreSum ( npars , m_xmin , m_xmax ) ;
+  integ.m_pars [ 1 ] += m_pars [ 0 ] * dx ;
+  integ.m_pars [ 0 ] += C ; 
+  //
+  return integ ;
 }
 // ============================================================================
 // get the derivative at point "x" 
@@ -1840,16 +1851,17 @@ Ostap::Math::LegendreSum::derivative () const
   { return Ostap::Math::LegendreSum ( 0 , m_xmin , m_xmax ) ; }
   //
   const double dx = 2 / ( m_xmax - m_xmin ) ;
-  std::vector<double> npars ( m_pars.size() - 1 , 0 ) ;
+  //
+  Ostap::Math::LegendreSum deriv (  degree() - 1 , m_xmin , m_xmax ) ;
   for ( unsigned short i = 1 ; i < m_pars.size() ; ++i )
   { 
     if ( s_zero ( m_pars[i] ) ) { continue ; }           // CONTINUE 
     //
     for ( int j = i-1 ; 0<=j  ; j-=2 ) 
-    { npars[j] += m_pars[i] * ( 2 * j + 1 ) * dx ; }
+    { deriv.m_pars [ j ] += m_pars[i] * ( 2 * j + 1 ) * dx ; }
   }
   //
-  return Ostap::Math::LegendreSum ( npars , m_xmin , m_xmax ) ;
+  return deriv ;
 }
 // ============================================================================
 // simple  manipulations with polynoms: shift it! 

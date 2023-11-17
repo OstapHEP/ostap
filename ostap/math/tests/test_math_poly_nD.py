@@ -11,7 +11,7 @@
 #  @see Ostap::Math::Bernstein3D
 # ============================================================================= 
 """ Test script for 2&3-dimnsional polynomial functions  
-a- see Ostap::Math::LegendreSum2
+- see Ostap::Math::LegendreSum2
 - see Ostap::Math::LegendreSum3
 - see Ostap::Math::Bernstein2D
 - see Ostap::Math::Bernstein3D
