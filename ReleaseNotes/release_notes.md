@@ -1,6 +1,8 @@
 ## New features:
 
   1. Update `histo_compare` tests 
+  1. Slight optimisation in `Ostap::Math::ChebyshedSum`
+
 
 ## Backward incompatible: 
 

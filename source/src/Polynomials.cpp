@@ -1415,14 +1415,14 @@ double Ostap::Math::ChebyshevSum::derivative ( const double x     ) const
     const unsigned short id = i - 1 ;
     if ( 0 == id % 2 ) 
     {
-      for ( unsigned short j = 0 ; j <= id ; j+=2 ) 
-      { npars[j] += 2 * i * m_pars[i] ; } 
-      npars [0]  -=     i * m_pars[i] ;
+      for ( unsigned short j = 0 ; j <= id ; j += 2 ) 
+      { npars [ j ] += 2 * i * m_pars [ i ] ; } 
+      npars   [ 0 ] -=     i * m_pars [ i ] ;
     }
     else 
     {
-      for ( unsigned short j = 1 ; j <= id ; j+=2 ) 
-      { npars[j] += 2 * i * m_pars[i] ; } 
+      for ( unsigned short j = 1 ; j <= id ; j += 2 ) 
+      { npars [ j ] += 2 * i * m_pars [ i ] ; } 
     }
   }
   //
@@ -1443,27 +1443,30 @@ Ostap::Math::ChebyshevSum::derivative () const
   { return Ostap::Math::ChebyshevSum ( 0 , m_xmin , m_xmax ) ; }
   //
   const double dx = 2 / ( m_xmax - m_xmin ) ;
-  std::vector<double> npars ( m_pars.size() - 1 , 0 ) ;
+  //
+  // result 
+  Ostap::Math::ChebyshevSum deriv  ( degree() -1 , m_xmin , m_xmax ) ;
   for ( unsigned short i = 1 ; i < m_pars.size() ; ++i ) 
   { 
     //
-    if ( s_zero ( m_pars[i] ) ) { continue ; }           // CONTINUE 
+    if ( s_zero ( m_pars [ i ] ) ) { continue ; }           // CONTINUE 
     //
     const unsigned short id = i - 1 ;
     if ( 0 == id % 2 ) 
     {
       for ( unsigned short j = 0 ; j <= id ; j+=2 ) 
-      { npars[j] += 2 * i * m_pars[i] * dx ; } 
-      npars [0]  -=     i * m_pars[i] * dx ;
+      { deriv.m_pars [ j ] += 2 * i * m_pars [ i ] * dx ; } 
+      //
+      deriv.m_pars [ 0 ]   -=     i * m_pars [ i ] * dx ;
     }
     else 
     {
       for ( unsigned short j = 1 ; j <= id ; j+=2 ) 
-      { npars[j] += 2 * i * m_pars[i] * dx ; } 
+      { deriv.m_pars [ j ] += 2 * i * m_pars [ i ] * dx ; } 
     }
   }
   //
-  return Ostap::Math::ChebyshevSum ( npars , m_xmin , m_xmax ) ;
+  return deriv ;
 }
 // ============================================================================
 /*  update  the chebyshev expansion by addition of one "event" with 
@@ -1484,16 +1487,17 @@ Ostap::Math::ChebyshevSum::fill
   else if ( s_zero ( weight )     ) { return true  ; }
   // 
   const long double tt =  t ( x ) ;
+  if ( 1 <= std::abs ( tt )       ) { return false ; }
   //
   const long double w  = weight * 4.0L / ( m_xmax - m_xmin ) / ( std::sqrt ( 1.0L - tt * tt ) * M_PI ) ;
-  if ( !std::isfinite( w  )     ) { return false ; }
+  if ( !std::isfinite ( w  )     ) { return false ; }
   //
   const unsigned short N = degree() ;
   //
-  m_pars[0] += w * 0.5L ;
+  m_pars [ 0 ] += w * 0.5L ;
   if ( 0 == N ) { return true ; } //  RETURN 
   //
-  m_pars[1] += w * tt   ;
+  m_pars [ 1 ] += w * tt   ;
   if ( 1 == N ) { return true ; } //  RETURN 
   //
   long double p0  = 1  ;
@@ -1502,10 +1506,10 @@ Ostap::Math::ChebyshevSum::fill
   //
   for ( unsigned short i = 2 ; i <= N ; ++i ) 
   {
-    p_i        = 2.0L * tt * p1 - p0 ;
-    m_pars[i] += w * p_i ;
-    p0         = p1  ;
-    p1         = p_i ;
+    p_i           = 2.0L * tt * p1 - p0 ;
+    m_pars [ i ] += w * p_i ;
+    p0            = p1  ;
+    p1            = p_i ;
   }
   //
   return true ;
@@ -1515,13 +1519,13 @@ Ostap::Math::ChebyshevSum::fill
 // ============================================================================
 Ostap::Math::ChebyshevSum& 
 Ostap::Math::ChebyshevSum::operator+= ( const double a ) 
-{ m_pars[0] += a ; return *this ; }
+{ m_pars [ 0 ] += a ; return *this ; }
 // ============================================================================
 // simple  manipulations with polynoms: shift it! 
 // ============================================================================
 Ostap::Math::ChebyshevSum& 
 Ostap::Math::ChebyshevSum::operator-= ( const double a ) 
-{ m_pars[0] -= a ; return *this ; }
+{ m_pars [ 0 ] -= a ; return *this ; }
 // ============================================================================
 // simple  manipulations with polynoms: scale it  
 // ============================================================================
