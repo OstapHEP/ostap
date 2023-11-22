@@ -5,7 +5,6 @@
 // ============================================================================
 #include "Ostap/Funcs.h"
 #include "Ostap/Formula.h"
-#include "Ostap/Iterator.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/HFuncs.h"
 #include "Ostap/FormulaVar.h"
@@ -22,6 +21,7 @@
 // ============================================================================
 #include "Exception.h"
 #include "local_utils.h"
+#include "local_roofit.h"
 // ============================================================================
 /** @file 
  *  Implementation file for classes from namespace Ostap::Functions
@@ -190,9 +190,10 @@ bool Ostap::Functions::FuncRooFormula::make_formula () const
   { throw Ostap::Exception ( "Invalid RooArgSet", 
                              "Ostap::Function::FuncRooFormula"  , 
                              Ostap::StatusCode(705)             ) ; }
+  //
   RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  ::copy ( *varset , varlst ) ;
   //
   m_formula = std::make_unique<Ostap::FormulaVar> ( m_name , m_expression , varlst , false ) ;
   //
@@ -759,8 +760,7 @@ bool Ostap::Functions::FuncRoo1D::make_xvar () const
                              Ostap::StatusCode(705)        ) ; }
   //
   RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  ::copy ( *varset , varlst ) ;
   //
   m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
   //
@@ -826,8 +826,7 @@ bool Ostap::Functions::FuncRoo2D::make_xvar () const
                              Ostap::StatusCode(705)        ) ; }
   //
   RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  ::copy ( *varset , varlst ) ;
   //
   m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
   //
@@ -849,8 +848,7 @@ bool Ostap::Functions::FuncRoo2D::make_yvar () const
                              Ostap::StatusCode(705)        ) ; }
   //
   RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  ::copy ( *varset , varlst ) ;
   //
   m_yvar = std::make_unique<Ostap::FormulaVar> ( m_yvar_exp , varlst , false ) ;
   //
@@ -926,8 +924,7 @@ bool Ostap::Functions::FuncRoo3D::make_xvar () const
                              Ostap::StatusCode(705)        ) ; }
   //
   RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  ::copy ( *varset , varlst ) ;
   //
   m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
   //
@@ -949,8 +946,7 @@ bool Ostap::Functions::FuncRoo3D::make_yvar () const
                              Ostap::StatusCode(705)        ) ; }
   //
   RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  ::copy ( *varset , varlst ) ;
   //
   m_yvar = std::make_unique<Ostap::FormulaVar> ( m_yvar_exp , varlst , false ) ;
   //
@@ -972,8 +968,7 @@ bool Ostap::Functions::FuncRoo3D::make_zvar () const
                              Ostap::StatusCode(705)        ) ; }
   //
   RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  ::copy ( *varset , varlst ) ;
   //
   m_zvar = std::make_unique<Ostap::FormulaVar> ( m_zvar_exp , varlst , false ) ;
   //

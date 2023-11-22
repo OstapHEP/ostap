@@ -1408,7 +1408,7 @@ Double_t Ostap::MoreRooFit::Minimal::evaluate () const
   // ==========================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
   //
-  Ostap::Utils::Iterator tmp ( this->m_vars ) ;
+  Ostap::Utils::Iterator tmp ( this->m_vars ) ;  // only for ROOT < 6.18 
   RooAbsArg* c = 0 ;
   while ( c = (RooAbsArg*) tmp.next() )
   {
@@ -1538,7 +1538,7 @@ Double_t Ostap::MoreRooFit::Maximal::evaluate () const
   // ==========================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
   //
-  Ostap::Utils::Iterator tmp ( this->m_vars ) ;
+  Ostap::Utils::Iterator tmp ( this->m_vars ) ;   // only for ROOT < 6.18 
   RooAbsArg* c = 0 ;
   while ( c = (RooAbsArg*) tmp.next() )
   {

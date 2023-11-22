@@ -14,9 +14,11 @@
 // ============================================================================
 // standard constructor: create and keep the ietrator 
 // ============================================================================  
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,31,0)
 Ostap::Utils::Iterator::Iterator ( const RooAbsCollection& collection ) 
   : m_iterator ( collection.createIterator() ) 
 {}
+#endif 
 // ============================================================================  
 // standard constructor: create and keep the ietrator 
 // ============================================================================  

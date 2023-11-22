@@ -16,6 +16,10 @@ class TCollection      ;  // ROOT
 class RooLinkedList    ;  // RooFit
 class RooAbsCollection ;  // RooFit
 // ============================================================================
+// ROOT
+// ============================================================================
+#include "RVersion.h"
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -32,8 +36,10 @@ namespace Ostap
     {
     public: 
       // ======================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,31,0)
       /// standard constructor: create and keep the ietrator 
-      Iterator  ( const RooAbsCollection& collection ) ;    
+      Iterator  ( const RooAbsCollection& collection ) ; // only for ROOT < 6.31    
+#endif 
       /// standard constructor: create and keep the ietrator 
       Iterator  ( const TCollection&      collection ) ;    
       /// standard constructor: create and keep the ietrator 

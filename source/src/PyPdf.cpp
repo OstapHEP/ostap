@@ -18,11 +18,11 @@
 // ============================================================================
 #include "Ostap/PyPdf.h"
 #include "Ostap/PyVar.h"
-#include "Ostap/Iterator.h"
 // ============================================================================
 // Local
 // ============================================================================
 #include "CallPython.h"
+#include "local_roofit.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::Models::PyPdf 
@@ -66,8 +66,7 @@ Ostap::Models::PyPdf::PyPdf
                   "PyPdf::consructor"    , 
                   Ostap::StatusCode(400) ) ;
   //
-  Ostap::Utils::Iterator it ( variables ) ;
-  while ( RooAbsReal* v = it.static_next<RooAbsReal>() ) { m_varlist.add ( *v ) ; } 
+  ::copy_real ( variables , m_variables , "Variable is not RooAbsReal" , "Ostap::Functions::PyPdf::PyPdf" );
   //
   Py_XINCREF ( m_self ) ;
 }
@@ -88,8 +87,7 @@ Ostap::Models::PyPdf::PyPdf
   , m_varlist ( "!varlist" , "All variables(list)" , this ) 
 {
   //
-  Ostap::Utils::Iterator it ( variables ) ;
-  while ( RooAbsReal* v = it.static_next<RooAbsReal>() ) { m_varlist.add ( *v ) ; } 
+  ::copy_real ( variables , m_varlist , "Variable is not RooAbsReal" , "Ostap::Functions::PyPdf::PyPdf" );
   //
 }
 // ============================================================================
@@ -522,8 +520,7 @@ Ostap::Models::PyPdf2::PyPdf2
                   "PyPdf2::consructor"    , 
                   Ostap::StatusCode(400) ) ;
   //
-  Ostap::Utils::Iterator it ( variables ) ;
-  while ( RooAbsReal* v = it.static_next<RooAbsReal>() ) { m_varlist.add ( *v ) ; } 
+  ::copy_real ( variables , m_varlist , "Variable is not RooAbsReal" , "Ostap::Functions::PyPdf2::PyPdf2" );
   //
   if ( m_function ) { Py_XINCREF ( m_function ) ; }
   m_arguments = PyTuple_New ( m_varlist.getSize() ) ;
@@ -574,11 +571,24 @@ Double_t Ostap::Models::PyPdf2::evaluate() const
                 "PyPdf2::evaluate"                 ,
                 Ostap::StatusCode(500) ) ;
   //
-  Ostap::Utils::Iterator it ( m_varlist ) ;
   unsigned short index = 0 ;
+  //
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+  // 
+  Ostap::Utils::Iterator it ( m_varlist ) ; // onlyu for ROOT < 6.18 
   while ( RooAbsReal* v = it.static_next<RooAbsReal>() )
   {
-    PyObject* pv =  PyFloat_FromDouble ( v->getVal()  ) ;
+    //
+#else
+    // 
+  for  ( auto* vv : m_varlist )
+  {
+    RooAbsReal* v = static_cast<RooAbsReal*>( vv ) ;
+    //
+#endif 
+    //
+    const double value = v->getVal() ;
+    PyObject* pv =  PyFloat_FromDouble ( value ) ;
     if ( 0 != PyTuple_SetItem ( m_arguments , index , pv ) ) 
     {
       PyErr_Print () ;

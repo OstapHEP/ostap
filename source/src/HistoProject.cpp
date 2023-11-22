@@ -19,7 +19,6 @@
 #include "Ostap/Formula.h"
 #include "Ostap/FormulaVar.h"
 #include "Ostap/HistoProject.h"
-#include "Ostap/Iterator.h"
 #include "Ostap/ProgressBar.h"
 #include "Ostap/Notifier.h"
 #include "Ostap/Exception.h"
@@ -34,6 +33,7 @@
 #include "Exception.h"
 #include "local_math.h"
 #include "local_utils.h"
+#include "local_roofit.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Ostap::HistoProject
@@ -136,9 +136,7 @@ namespace
     RooArgList        alst ;
     const RooArgSet*  aset = data->get() ;
     if ( 0 == aset       ) { return  0 ; }                            // RETURN
-    Ostap::Utils::Iterator iter ( *aset );
-    RooAbsArg*   coef = 0 ;
-    while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
+    ::copy ( *aset , alst ) ;
     //
     // convert expressions into FormulaVar 
     const bool        with_cuts = !selection.empty() ;
@@ -253,9 +251,7 @@ namespace
     RooArgList        alst ;
     const RooArgSet*  aset = data->get() ;
     if ( 0 == aset       ) { return  0 ; }                            // RETURN
-    Ostap::Utils::Iterator iter ( *aset );
-    RooAbsArg*   coef = 0 ;
-    while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
+    ::copy ( *aset , alst ) ;
     //
     // convert expressions into FormulaVar 
     const bool        with_cuts = !selection.empty() ;
@@ -392,9 +388,7 @@ namespace
     RooArgList        alst ;
     const RooArgSet*  aset = data->get() ;
     if ( 0 == aset       ) { return  0 ; }                            // RETURN
-    Ostap::Utils::Iterator iter ( *aset );
-    RooAbsArg*   coef = 0 ;
-    while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
+    ::copy ( *aset , alst );
     //
     // convert expressions into FormulaVar 
     const bool        with_cuts = !selection.empty() ;
@@ -552,9 +546,7 @@ namespace
     RooArgList        alst ;
     const RooArgSet*  aset = data->get() ;
     if ( 0 == aset       ) { return  0 ; }                            // RETURN
-    Ostap::Utils::Iterator iter ( *aset );
-    RooAbsArg*   coef = 0 ;
-    while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
+    ::copy ( *aset , alst ) ;
     //
     // convert expressions into FormulaVar 
     const bool        with_cuts = !selection.empty() ;
@@ -2435,9 +2427,7 @@ Ostap::HistoProject::project
   RooArgList        alst ;
   const RooArgSet*  aset = data->get() ;
   if ( 0 == aset       ) { return  0 ; }                            // RETURN
-  Ostap::Utils::Iterator iter ( *aset );
-  RooAbsArg*   coef = 0 ;
-  while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
+  ::copy ( *aset , alst ) ;
   //
   // convert expressions into FormulaVar 
   const bool        with_cuts = !selection.empty() ;
@@ -2528,10 +2518,7 @@ Ostap::HistoProject::project2
   RooArgList        alst ;
   const RooArgSet*  aset = data->get() ;
   if ( 0 == aset       ) { return  0 ; }  // RETURN
-  //
-  Ostap::Utils::Iterator iter ( *aset );
-  RooAbsArg*   coef = 0 ;
-  while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
+  ::copy ( *aset , alst ) ;
   //
   // convert expressions into FormulaVar 
   const bool        with_cuts   = !selection.empty() ;
@@ -2636,10 +2623,7 @@ Ostap::HistoProject::project3
   RooArgList        alst ;
   const RooArgSet*  aset = data->get() ;
   if ( 0 == aset       ) { return  0 ; }  // RETURN
-  //
-  Ostap::Utils::Iterator iter ( *aset );
-  RooAbsArg*   coef = 0 ;
-  while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
+  ::copy ( *aset , alst ) ;
   //
   // convert expressions into FormulaVar 
   const bool        with_cuts   = !selection.empty() ;

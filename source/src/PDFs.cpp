@@ -7,7 +7,6 @@
 // ============================================================================
 // Local
 // ============================================================================
-#include "Ostap/Iterator.h"
 #include "Ostap/Integrator.h"
 #include "Ostap/HistoHash.h"
 #include "Ostap/PDFs.h"

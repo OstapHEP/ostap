@@ -67,7 +67,6 @@ namespace
   { 
     if ( allow_empty && expression.empty() ) { return nullptr ; }  // RETURN!
     //
-    RooArgList        alst ;
     const RooArgSet*  aset = data.get() ;
     //
     if ( allow_null && nullptr == aset     ) { return nullptr ; }
@@ -76,10 +75,15 @@ namespace
                     "Invalid varset"               , 
                     "Ostap::StatVar::make_formula" ) ;
     //
-    Ostap::Utils::Iterator iter ( *aset );
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+    RooArgList        alst ;
+    Ostap::Utils::Iterator iter ( *aset );  // ONLY FOR ROOT < 6.18
     //
     RooAbsArg* coef = 0 ;
     while ( ( coef = (RooAbsArg*) iter.next() ) ) { alst.add ( *coef ); }
+#else 
+    RooArgList        alst { *aset } ;
+#endif 
     //
     auto result = std::make_unique<Ostap::FormulaVar> ( expression , alst , false ) ;
     //

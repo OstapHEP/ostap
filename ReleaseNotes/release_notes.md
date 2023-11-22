@@ -4,6 +4,7 @@
   1. Slight optimisation in `Ostap::Math::ChebyshedSum`
   1. Further optimisation in `Ostap::Math::ChebyshedSum`
   1. add new test `ostap/math/tests/test_math.poly.py`
+  1. Reduce usage of `Ostap::Utils::Iterator`
 
 ## Backward incompatible: 
 

@@ -51,7 +51,7 @@ namespace
     //
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
     //
-    Ostap::Utils::Iterator tmp ( from ) ;
+    Ostap::Utils::Iterator tmp ( from ) ; // only for ROOT < 6.18
     RooAbsArg* c = 0 ;
     while ( c = (RooAbsArg*) tmp.next() ) { to.add ( *c ) ; }
     //
@@ -76,7 +76,7 @@ namespace
     //
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
     //
-    Ostap::Utils::Iterator tmp ( from ) ;
+    Ostap::Utils::Iterator tmp ( from ) ; // only for ROOT < 6.18 
     RooAbsArg* c = 0 ;
     while ( c = (RooAbsArg*) tmp.next() )
     {
@@ -124,7 +124,7 @@ namespace
     //
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
     //
-    Ostap::Utils::Iterator it ( lst ) ;
+    Ostap::Utils::Iterator it  ( lst  ) ; // only for ROOT < 6.18 
     RooAbsArg*   p = 0 ;
     unsigned int k = 0 ;
     while ( ( p = (RooAbsArg*) it.next() ) )

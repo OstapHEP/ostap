@@ -65,7 +65,7 @@ namespace
     //
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
     //   
-    Ostap::Utils::Iterator tmp ( variables ) ;
+    Ostap::Utils::Iterator tmp ( variables ) ; // only for ROOT < 6.18
     RooAbsArg* c = 0 ;
     while ( c = (RooAbsArg*) tmp.next() )
     { if ( c && actual.contains ( *c ) ) { used.add ( *c ) ; } }
