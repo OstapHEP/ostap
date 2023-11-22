@@ -58,8 +58,7 @@ __version__ = "$Revision$"
 # ============================================================================
 __all__     = (
     "uPlot" ,  ## make  plot of U-statistics 
-    "uDist" ,  ## calculate  U-statistics 
-    "uCalc" ,  ## calclulate the distance between two data points 
+    "uCalc" ,  ## calculate U-statistics 
     )
 # ============================================================================
 from   ostap.core.core import cpp, Ostap, hID
@@ -72,34 +71,6 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.ustat' )
 else                       : logger = getLogger ( __name__      )
 # =============================================================================
-## calculate the distance between two data points 
-#  @author Vanya Belyaev Ivan.Belyaev@cern.ch
-#  @date 2011-09-21
-def uDist ( x , y ) :
-    """Calculate the distance between two data points 
-    """
-    
-    ix = Ostap.Utils.Iterator ( x )
-    iy = Ostap.Utils.Iterator ( y )
-    
-    dist = 0.0
-    
-    xv = ix.Next()
-    yv = iy.Next()
-    while xv and yv :
-
-        if not hasattr ( xv  , 'getVal' ) : break 
-        if not hasattr ( yv  , 'getVal' ) : break
-        
-        d     = xv.getVal()-yv.getVal()
-        dist += d*d
-        xv = ix.Next()
-        yv = iy.Next()
-
-    del ix
-    del iy
-
-    return math.sqrt( dist )
 
 # =============================================================================
 ##  calculate U-statistics
@@ -129,54 +100,6 @@ def uCalc ( pdf            ,
     tStat = float ( tStat.value  ) 
     return histo, tStat 
     
-    numEntries = data.numEntries ()
-    dim        = args.getSize    ()
-    data_clone = data.Clone      ()
-
-    from ostap.logger.progress_bar import progress_bar 
-    for i in progress_bar ( xrange ( numEntries ) ) : 
-
-        event_x = data_clone.get ( i ) 
-        event_i = event_x.selectCommon ( args )
-        
-        ## fill args and evaluate PDF 
-        for a in args : a.setVal ( event_i.getRealValue ( a.GetName () ) )        
-        pdfValue = pdf.getVal ( args )
-        
-        small_v = 1.e+100 
-        small_j = 0
-        for j in xrange ( 0 , numEntries ) :
-            
-            if j == i  : continue
-
-            event_y = data.get( j )
-            event_j = event_y.selectCommon ( args ) 
-
-            dist = uDist ( event_i , event_j )
-            
-            if 0 == j or dist < small_v :
-                small_v = dist
-                small_j = j 
-                
-        value = 0 
-        if   1 == dim :
-            value  = small_v
-            value *= numEntries * pdfValue 
-        elif 2 == dim :
-            value  = small_v**2
-            value *= numEntries * pdfValue
-            value *= math.pi 
-        else :
-            logger.error ( ' Not-implemented (yet) %s '  % dim )
-            continue 
-
-        value = math.exp ( -1 * value )
-
-        histo.Fill ( value ) 
-
-    del data_clone 
-    return histo
-
 # =============================================================================
 ##  make the plot of U-statistics
 #
@@ -221,7 +144,8 @@ def uPlot ( pdf            ,
     if not bins or bins <= 0 :
         nEntries = float(data.numEntries())
         bins = 10 
-        for nbins in ( 50  ,
+        for nbins in ( 100 ,
+                       50  ,
                        40  ,
                        25  ,
                        20  ,
@@ -232,8 +156,7 @@ def uPlot ( pdf            ,
             if nEntries/nbins < 100 : continue  
             bins = nbins
             break
-        print('#bins %s' % bins)
-        
+
     histo = ROOT.TH1F ( hID () ,'U-statistics', bins , 0 , 1 )
     histo.Sumw2      (   )
     histo.SetMinimum ( 0 )
@@ -263,5 +186,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # ===========================================================================
-# The END 
+##                                                                    The END 
 # ===========================================================================

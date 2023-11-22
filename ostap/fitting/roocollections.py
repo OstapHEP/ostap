@@ -170,18 +170,28 @@ ROOT.RooArgList . __repr__      = lambda s : str ( _rs_list_ ( s ) )
 ## iterator for RooArgSet
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _ras_iter_ ( self ) :
-    """Simple iterator for RootArgSet:
-    >>> arg_set = ...
-    >>> for i in arg_set : print i    
-    """    
-    it  = Ostap.Utils.Iterator ( self )
-    val = it.Next()
-    while val :
-        yield val 
+if root_info < (6,31) : 
+    def _ras_iter_ ( self ) :
+        """Simple iterator for RooArgSet:
+        >>> arg_set = ...
+        >>> for i in arg_set : print i    
+        """    
+        it  = Ostap.Utils.Iterator ( self ) ## only for ROOT < 6.31 
         val = it.Next()
-        
-    del it
+        while val :
+            yield val 
+            val = it.Next()    
+        del it        
+else :
+    def _ras_iter_ ( self ) :
+        """Simple iterator for RooArgSet:
+        >>> arg_set = ...
+        >>> for i in arg_set : print i    
+        """    
+        cnt = self.get()
+        for v in cnt : yield v 
+            
+
 
 # =============================================================================
 ## get the attibute for RooArgSet 

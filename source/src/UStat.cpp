@@ -63,16 +63,31 @@ namespace
     }
 #else 
     //
-    RooArgSet::const_iterator xIter = x -> begin () ;
-    RooArgSet::const_iterator yIter = y -> begin () ;
-    RooArgSet::const_iterator xEnd  = x -> end   () ;
-    RooArgSet::const_iterator yEnd  = y -> begin () ;    
-    for ( ; xIter != xEnd && yIter != yEnd ; ++xIter, ++yIter ) 
+    // RooArgSet::const_iterator xIter = x -> begin () ;
+    // RooArgSet::const_iterator yIter = y -> begin () ;
+    // RooArgSet::const_iterator xEnd  = x -> end   () ;
+    // RooArgSet::const_iterator yEnd  = y -> begin () ;    
+    // for ( ; xIter != xEnd && yIter != yEnd ; ++xIter, ++yIter ) 
+    // {
+    //   const RooRealVar* xVar  = static_cast<const RooRealVar*> ( *xIter ) ;
+    //   const RooRealVar* yVar  = static_cast<const RooRealVar*> ( *yIter ) ;
+    //   //
+    //   const double      val   = xVar->getVal() - yVar->getVal() ;
+    //   result                 += val*val ;
+    // }
+    //
+    for ( auto* xa : *x )
     {
-      const RooRealVar* xVar  = static_cast<const RooRealVar*> ( *xIter ) ;
-      const RooRealVar* yVar  = static_cast<const RooRealVar*> ( *yIter ) ;
-      const double      val   = xVar->getVal() - yVar->getVal() ;
-      result                 += val*val ;
+      if ( nullptr == xa ) { continue ; }
+      const RooAbsArg*  ya   = y -> find ( *xa ) ;
+      if ( nullptr == ya ) { continue ; }
+      //
+      const RooRealVar* xv   = static_cast<const RooRealVar*> ( xa ) ;
+      const RooRealVar* yv   = static_cast<const RooRealVar*> ( ya ) ;
+      //
+      const double      val  = xv->getVal() - yv->getVal() ;
+      result                += val*val ;
+      //
     }
     //
 #endif    
@@ -122,8 +137,8 @@ Ostap::StatusCode Ostap::UStat::calculate
   //
   const unsigned int num    = data.numEntries () ;
   //
-  const RooArgSet * event_x = 0 ;
-  const RooArgSet * event_y = 0 ;
+  const RooArgSet* event_x = 0 ;
+  const RooArgSet* event_y = 0 ;
   //
   for ( unsigned int i = 0 ; i < num ; ++i ) 
   {
@@ -133,7 +148,7 @@ Ostap::StatusCode Ostap::UStat::calculate
     if ( 0 == event_x || 0 == event_x->getSize() ) 
     { return Ostap::StatusCode ( InvalidItem1 ) ; }             // RETURN 
     //
-    std::unique_ptr<RooArgSet> event_i ( ( RooArgSet*)event_x->selectCommon( *args ) ) ;
+    std::unique_ptr<RooArgSet> event_i ( ( RooArgSet*)event_x->selectCommon ( *args ) ) ;
     if ( !event_i || 0 == event_i->getSize() ) 
     { return Ostap::StatusCode ( InvalidItem2 ) ; }             // RETURN 
     //
