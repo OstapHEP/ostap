@@ -66,7 +66,7 @@ Ostap::Models::PyPdf::PyPdf
                   "PyPdf::consructor"    , 
                   Ostap::StatusCode(400) ) ;
   //
-  ::copy_real ( variables , m_variables , "Variable is not RooAbsReal" , "Ostap::Functions::PyPdf::PyPdf" );
+  ::copy_real ( variables , m_varlist , "Variable is not RooAbsReal" , "Ostap::Functions::PyPdf::PyPdf" );
   //
   Py_XINCREF ( m_self ) ;
 }
