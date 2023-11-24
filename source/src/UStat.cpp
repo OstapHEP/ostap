@@ -118,8 +118,8 @@ namespace
 Ostap::StatusCode Ostap::UStat::calculate
 ( const RooAbsPdf&  pdf   , 
   const RooDataSet& data  ,  
-  TH1&              hist  ,
   double&           tStat ,
+  TH1*              hist  ,
   RooArgSet*        args  ) 
 {
   //
@@ -187,7 +187,7 @@ Ostap::StatusCode Ostap::UStat::calculate
       { return Ostap::StatusCode ( InvalidItem2 ) ; }            // RETURN 
       //
       const double distance = getDistance ( event_i.get() , event_j.get() ) ;
-      if ( 0 > distance ) { return Ostap::StatusCode( InvalidDist ) ; }  // RETURN 
+      if ( 0 > distance ) { return Ostap::StatusCode ( InvalidDist ) ; }  // RETURN 
       //
       if ( 0 == j || distance < min_distance ) 
       { min_distance = distance  ; }
@@ -199,7 +199,7 @@ Ostap::StatusCode Ostap::UStat::calculate
     //
     const double value = std::exp ( -val1 * num * pdfValue ) ;
     //
-    hist.Fill ( value ) ;
+    if ( hist ) { hist -> Fill ( value ) ; }
     //
     tstat.push_back ( value ) ; 
     //
@@ -208,7 +208,7 @@ Ostap::StatusCode Ostap::UStat::calculate
   //
   // calculate T-statistics
   //
-  std::sort ( tstat.begin() , tstat.end() ) ;
+  std::stable_sort ( tstat.begin() , tstat.end() ) ;
   double tS = 0 ;
   double nD = tstat.size() ;
   for ( TStat::const_iterator t = tstat.begin() ; tstat.end() != t  ; ++t ) 
@@ -224,5 +224,5 @@ Ostap::StatusCode Ostap::UStat::calculate
   return Ostap::StatusCode::SUCCESS ;
 }
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

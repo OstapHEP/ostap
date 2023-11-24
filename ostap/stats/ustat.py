@@ -13,12 +13,12 @@
 # 
 #   >>> pdf  = ...               ## pdf
 #   >>> data = ...               ## dataset
-#   >>> pdf.fitTo( data , ... )  ## fit it!
+#   >>> pdf.fitTo ( data , ... ) ## fit it!
 #
 #   >>> import ostap.stats.ustat as uStat
 #
 #   >>> r,histo = uStat.uPlot ( pdf , data ) 
-#   >>> print r                  ## print fit results
+#   >>> print ( r )              ## print fit results
 #   >>> histo.Draw()             ## plot the results  
 #
 #  @endcode
@@ -30,7 +30,7 @@
 # @date 2011-09-21
 #
 # ============================================================================
-""" ``U-statistics'' useful for ``Goodness-Of-Fit'' tests
+""" `U-statistics' useful for `Goodness-Of-Fit' tests
 
 This is a simple translation of the original C++ lines written by Greig Cowan into Python
 
@@ -51,17 +51,16 @@ Usage is fairly trivial:
    >>> histo.Draw()             ## plot the results     
 """
 # ============================================================================
-from   __future__        import print_function
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2010-09-21"
-__version__ = "$Revision$"
+__version__ = "$Revision:$"
 # ============================================================================
 __all__     = (
     "uPlot" ,  ## make  plot of U-statistics 
     "uCalc" ,  ## calculate U-statistics 
     )
 # ============================================================================
-from   ostap.core.core import cpp, Ostap, hID
+from   ostap.core.core import Ostap, hID
 import ostap.histos.histos
 import ROOT, math, ctypes
 # =============================================================================
@@ -83,22 +82,35 @@ else                       : logger = getLogger ( __name__      )
 #   @see Analysis::UStat::calculate
 #   @date 2011-09-21
 def uCalc ( pdf            ,
-            args           , 
             data           ,
-            histo          ,
+            args   = None  , 
+            histo  = None  ,
             silent = False )  :
     """Calculate U-statistics 
     """
-    import sys
     
+    if not isinstance ( pdf , ROOT.RooAbsPdf ) or not pdf :
+        from   ostap.fitting.pdfbasic import APDF1 
+        assert pdf and isinstance ( pdf , APDF1 ) , "Invalid type of `pdf'!"
+        pdf = pdf.pdf
+        
+    if not args  : args  = pdf.getObservables ( data )  
+    if not histo : histo = ROOT.nullptr
+
+    ##
     tStat = ctypes.c_double (-1)
     sc    = Ostap.UStat.calculate ( pdf   ,
                                     data  ,
-                                    histo ,
                                     tStat ,
+                                    histo ,
                                     args  )
+    if sc.isFailure() :
+        logger.error ( "Error from Ostap::UStat::Calculate %s" % sc )
+
+    if not histo : histo = None 
+    
     tStat = float ( tStat.value  ) 
-    return histo, tStat 
+    return tStat, histo  
     
 # =============================================================================
 ##  make the plot of U-statistics
@@ -112,8 +124,8 @@ def uCalc ( pdf            ,
 #    
 #    >>> import ostap.stats.ustat as uStat
 #    
-#    >>> r,histo = uStat.uPlot ( pdf , data ) 
-#    >>> print r                  ## print fit results
+#    >>> t , res , histo = uStat.uPlot ( pdf , data ) 
+#    >>> print ( res )            ## print fit results
 #    >>> histo.Draw()             ## plot the results
 #
 #   @endcode
@@ -136,24 +148,21 @@ def uPlot ( pdf            ,
     
     >>> import ostap.stats.ustat as uStat
     
-    >>> r,histo = uStat.uPlot ( pdf , data ) 
-    >>> print r                  ## print fit results
+    >>> t, res , histo = uStat.uPlot ( pdf , data ) 
+    >>> print ( res )            ## print fit results
     >>> histo.Draw()             ## plot the results  
     """
-
+    
     if not bins or bins <= 0 :
         nEntries = float(data.numEntries())
-        bins = 10 
-        for nbins in ( 100 ,
-                       50  ,
-                       40  ,
-                       25  ,
-                       20  ,
-                       16  ,
-                       10  ,
-                       8   ,
-                       5   ) :
-            if nEntries/nbins < 100 : continue  
+        bins     = 10 
+        for nbins in ( 1000 , 500 ,
+                       200  , 100 ,
+                       50   , 40  ,
+                       25   , 20  ,
+                       16   , 10  ,
+                       8    , 5   ) :
+            if nEntries/float(nbins) < 100 : continue  
             bins = nbins
             break
 
@@ -161,14 +170,12 @@ def uPlot ( pdf            ,
     histo.Sumw2      (   )
     histo.SetMinimum ( 0 )
 
-    if not args : args = pdf.getObservables ( data )
-    
-    h,tStat = uCalc ( pdf       ,
-                      args      ,
-                      data      ,
-                      histo     ,
-                      silent    )    
-    
+    tStat , hh = uCalc ( pdf       ,
+                         data      ,
+                         args      ,
+                         histo     ,
+                         silent    )    
+
     res  = histo.Fit         ( 'pol0' , 'SLQ0+' )
     func = histo.GetFunction ( 'pol0' )
     if func :
@@ -176,7 +183,7 @@ def uPlot ( pdf            ,
         func.SetLineColor ( 2 )
         func.ResetBit     ( 1 << 9 )
         
-    return res , histo, float(tStat)
+    return float ( tStat ) , histo , res  
 
 # ===========================================================================
 

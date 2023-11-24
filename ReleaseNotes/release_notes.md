@@ -5,8 +5,12 @@
   1. Further optimisation in `Ostap::Math::ChebyshedSum`
   1. add new test `ostap/math/tests/test_math.poly.py`
   1. Reduce usage of `Ostap::Utils::Iterator`
+  1. add test  for `ostap.stats.ustat` module 
 
 ## Backward incompatible: 
+
+  1. change the interface for fuctions from `ostap.stats.ustat` module 
+  1. change the interface for `Ostap::UStat`  class 
 
 ## Bug fixes:
 

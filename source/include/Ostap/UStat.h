@@ -45,11 +45,11 @@ namespace Ostap
      *  @param args  (input)  the arguments
      */
     static Ostap::StatusCode calculate
-    ( const RooAbsPdf&  pdf       , 
-      const RooDataSet& data      ,  
-      TH1&              hist      ,
-      double&           tStat     ,
-      RooArgSet *       args  = 0 ) ;
+    ( const RooAbsPdf&  pdf             , 
+      const RooDataSet& data            ,  
+      double&           tStat           ,
+      TH1*              hist  = nullptr ,
+      RooArgSet*        args  = nullptr ) ;
     // ========================================================================
   };
   // ==========================================================================
