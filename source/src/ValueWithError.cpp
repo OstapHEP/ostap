@@ -3352,7 +3352,8 @@ Ostap::Math::two_samples
   const Ostap::Math::ValueWithError& b  ,
   const double                       nb )
 {
-  const double nt = na + nb ;
+  const long double la = na ;
+  const long double nt = la + nb ;
   //
   static const std::string s_m1 { "Invalid sample size"      } ;
   static const std::string s_m2 { "Ostap::Math::two_samples" } ;
@@ -3361,8 +3362,6 @@ Ostap::Math::two_samples
   //
   if      ( !na  ) { return b ; }
   else if ( !nb  ) { return a ; }
-  //
-  const long double la = na ;
   //
   return _two_samples_ ( a , b , la / nt ) ;
 }
