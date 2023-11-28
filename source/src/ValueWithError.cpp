@@ -3280,6 +3280,93 @@ Ostap::Math::agm
   //
   return agm ( x , y , 0.0 ) ;
 }
+// =============================================================================
+namespace
+{
+  // ===========================================================================
+  inline
+  Ostap::Math::ValueWithError
+  _two_samples_ 
+  ( const Ostap::Math::ValueWithError& a      ,
+    const Ostap::Math::ValueWithError& b      ,
+    const long double                  alpha  )
+  {
+    const double  beta  = 1.0L - alpha ;
+    //
+    const double am  = a.value() ;
+    const double bm  = b.value() ;
+    const double ac2 = std::max ( a.cov2() , 0.0 ) ;
+    const double bc2 = std::max ( b.cov2() , 0.0 ) ;
+    //
+    const double m   = alpha * am + beta * bm ;
+    const double dm  = am - bm ;
+    const double c2  = alpha * ac2  + beta * bc2 + alpha * beta * dm * dm ;
+    //
+    return Ostap::Math::ValueWithError ( m , c2 ) ;
+  }
+  // ===========================================================================
+}
+// =============================================================================
+/* Calculate mean and RMS  for two samples 
+ *  @param  a   mean and  rms for the 1st sample
+ *  @param na   size of the first sample  
+ *  @param  b   mean and  rms for the 2nd sample
+ *  @param nb  size of the second sample  
+ *  @return mean and rmd for the combined sample 
+ */
+// =============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::two_samples
+( const Ostap::Math::ValueWithError& a  ,
+  const unsigned long                na ,
+  const Ostap::Math::ValueWithError& b  ,
+  const unsigned long                nb )
+{
+  const unsigned long nt = na + nb ;
+  //
+  static const std::string s_m1 { "Invalid sample size"      } ;
+  static const std::string s_m2 { "Ostap::Math::two_samples" } ;
+  //
+  Ostap::Assert ( 0 < nt , s_m1 , s_m2 ) ;
+  //
+  if      ( !na  ) { return b ; }
+  else if ( !nb  ) { return a ; }
+  //
+  const long double la = na ;
+  //
+  return _two_samples_ ( a , b , la / nt ) ;
+}
+// =============================================================================
+/* Calculate mean and RMS  for two samples 
+ *  @param  a   mean and  rms for the 1st sample
+ *  @param na   size of the first sample  
+ *  @param  b   mean and  rms for the 2nd sample
+ *  @param nb   size of the second sample  
+ *  @return mean and rmd for the combined sample 
+ */
+// =============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::two_samples
+( const Ostap::Math::ValueWithError& a  ,
+  const double                       na ,
+  const Ostap::Math::ValueWithError& b  ,
+  const double                       nb )
+{
+  const double nt = na + nb ;
+  //
+  static const std::string s_m1 { "Invalid sample size"      } ;
+  static const std::string s_m2 { "Ostap::Math::two_samples" } ;
+  //
+  Ostap::Assert ( 0 < nt , s_m1 , s_m2 ) ;
+  //
+  if      ( !na  ) { return b ; }
+  else if ( !nb  ) { return a ; }
+  //
+  const long double la = na ;
+  //
+  return _two_samples_ ( a , b , la / nt ) ;
+}
+// =============================================================================
 
 
 

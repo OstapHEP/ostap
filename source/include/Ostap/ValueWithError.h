@@ -1517,10 +1517,36 @@ namespace Ostap
     ( ValueWithError& left , 
       ValueWithError& right ) { left.swap ( right ) ; }
     // ========================================================================
-    // converison to string
+    // conversion to string
     inline std::string to_string 
     ( const ValueWithError& v ) 
     { return v.toString() ; }
+    // ========================================================================
+    /** Calculate mean andRMS  for two samples 
+     *  @param  a   mean and  rms for the 1st sample
+     *  @param na   size of the first sample  
+     *  @param  b   mean and  rms for the 2nd sample
+     *  @param nb  size of the second sample  
+     *  @return mean and rmd for the combined sample 
+     */
+    ValueWithError two_samples
+    ( const ValueWithError& a  ,
+      const unsigned long   na ,
+      const ValueWithError& b  ,
+      const unsigned long   nb ) ;
+    // ========================================================================
+    /** Calculate mean andRMS  for two samples 
+     *  @param  a   mean and  rms for the 1st sample
+     *  @param na   size of the first sample  
+     *  @param  b   mean and  rms for the 2nd sample
+     *  @param nb  size of the second sample  
+     *  @return mean and rmd for the combined sample 
+     */
+    ValueWithError two_samples
+    ( const ValueWithError& a  ,
+      const double          na ,
+      const ValueWithError& b  ,
+      const double          nb ) ;
     // ========================================================================
   } //                                         The end of namespace Ostap::Math 
   // ==========================================================================
