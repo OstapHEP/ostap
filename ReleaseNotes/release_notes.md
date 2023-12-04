@@ -7,6 +7,8 @@
   1. Reduce usage of `Ostap::Utils::Iterator`
   1. add test  for `ostap.stats.ustat` module 
   1. Add `Ostap::Math::two_samples` function 
+  1. Add the first version of code for RooDataSety -> numpy conversion by Artem Egorychev 
+
 
 ## Backward incompatible: 
 
