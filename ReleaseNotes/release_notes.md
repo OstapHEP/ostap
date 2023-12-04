@@ -6,6 +6,7 @@
   1. add new test `ostap/math/tests/test_math.poly.py`
   1. Reduce usage of `Ostap::Utils::Iterator`
   1. add test  for `ostap.stats.ustat` module 
+  1. Add `Ostap::Math::two_samples` function 
 
 ## Backward incompatible: 
 
