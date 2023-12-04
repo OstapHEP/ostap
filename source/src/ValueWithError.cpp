@@ -3291,7 +3291,7 @@ namespace
     const Ostap::Math::ValueWithError& b      ,
     const long double                  alpha  )
   {
-    const double  beta  = 1.0L - alpha ;
+    const long double beta = 1.0L - alpha ;
     //
     const double am  = a.value() ;
     const double bm  = b.value() ;
