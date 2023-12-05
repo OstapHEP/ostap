@@ -47,7 +47,7 @@ _new_methods_ = []
 
 
 # =============================================================================
-if   np and ( 6 , 26 ) <= root_info  :  ## 6.26 <= ROOT 
+if   np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT 
 # =============================================================================
 
     # =========================================================================
@@ -98,14 +98,15 @@ if   np and ( 6 , 26 ) <= root_info  :  ## 6.26 <= ROOT
 
         ## 5) convert to VectorStore again...
         #  batches are not (yet) implemented for Tree & Composite stores         
-        store   = dataset.store()
-        source  = dataset
-        twoargs = False
+        store     = dataset.store()
+        source    = dataset
+        twoargs   = False
+        delsource = False 
         if not isinstance ( store , ROOT.RooVectorDataStore ) :
-            source  = ROOT.RooVectorDataStore ( store , dataset.get() , store.name + '_vct' )
-            twoargs = True 
-    
-
+            source    = ROOT.RooVectorDataStore ( store , dataset.get() , store.name + '_vct' )
+            twoargs   = True 
+            delsource = True 
+        
         vars       = source.get()
         vars       = [ v for v in vars if v.name in vnames ]
         doubles    = [ v.name for v in vars if isinstance ( v , ROOT.RooAbsReal     ) ] 
@@ -166,7 +167,7 @@ if   np and ( 6 , 26 ) <= root_info  :  ## 6.26 <= ROOT
                 data = np.concatenate ( [ data , part ] )
                 del part 
 
-        if not source is dataset :
+        if delsource : 
             source.reset()
             del source
             
