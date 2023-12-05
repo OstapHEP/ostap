@@ -8,6 +8,10 @@
   1. add test  for `ostap.stats.ustat` module 
   1. Add `Ostap::Math::two_samples` function 
   1. Add the first version of code for RooDataSety -> numpy conversion by Artem Egorychev 
+  1. Improve `ds2numpy` code and test
+  1. small fixes for `ostap.utuls.split_ranges`
+  1. add conversion to int for `RooAbsCategory` 
+  1. add iterator/contains/len functions for `RooAbsDataStore`
 
 
 ## Backward incompatible: 

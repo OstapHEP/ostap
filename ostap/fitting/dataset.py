@@ -819,6 +819,16 @@ _new_methods_ += [
    ]
 
 
+ROOT.RooAbsDataStore . __len__      = lambda s : s.numEntries()
+ROOT.RooAbsDataStore . __iter__     = _rad_iter_ 
+ROOT.RooAbsDataStore . __contains__ = _rad_contains_ 
+
+
+_new_methods_ += [
+   ROOT.RooAbsDataStore . __len__       ,
+   ROOT.RooAbsDataStore . __iter__      , 
+   ROOT.RooAbsDataStore . __contains__
+   ]
 # =============================================================================
 ## Helper project method for RooDataSet/DataFrame/... and similar objects 
 #

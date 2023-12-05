@@ -21,9 +21,11 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info         import root_info
-from   ostap.core.ostap_types       import string_types 
+from   ostap.core.ostap_types       import string_types
+from   ostap.utils.utils            import split_range 
+from   ostap.fitting.dataset        import useStorage
+from   ostap.utils.progress_bar     import progress_bar 
 import ostap.fitting.roocollections
-import ostap.fitting.dataset 
 import ROOT
 # =============================================================================
 # logging 
@@ -75,16 +77,27 @@ def add_weight ( ds , data ):
     return data
 
 # =============================================================================
-if   np and ( 6 , 26 ) <= root_info :  ## 6.26 <= ROOT 
+if   np and ( 6 , 26 ) <= root_info  :  ## 6.26 <= ROOT 
 # =============================================================================
 
     # =========================================================================
-    ## Convert dataset into numpy array using <code>ROOT.RooDataSet.to_numpy</code>
-    #  @see `ROOT.RooDataSet.to_numpy`
-    # 
-    def ds2numpy ( dataset , var_lst ) :
-        """ Convert dataset into numpy array using `ROOT.RooDataSet.to_numpy` methdod from new ROOT
-        - see `ROOT.RooDataSet.to_numpy` 
+    ## Convert dataset into numpy array using <code>ROOT.RooAbsData</code> interface 
+    #  @see ROOT.RooAbsData.getBatches
+    #  @see ROOT.RooAbsData.getCategoryBatches
+    #  @see ROOT.RooAbsData.getWeightBatche    
+    #  @see ROOT.RooAbsDataStore.getBatches
+    #  @see ROOT.RooAbsDataStore.getCategoryBatches
+    #  @see ROOT.RooAbsDataStore.getWeightBatche
+    #  @attention conversion to ROOT.RooVectorDataStore is used! 
+    def ds2numpy ( dataset , var_lst , silent = True ) :
+        """ Convert dataset into numpy array using `ROOT.RooAbsData` iterface 
+        - see ROOT.RooAbsData.getBatches
+        - see ROOT.RooAbsData.getCategoryBatches
+        - see ROOT.RooAbsData.getWeightBatche    
+        - see ROOT.RooAbsDataStore.getBatches
+        - see ROOT.RooAbsDataStore.getCategoryBatches
+        - see ROOT.RooAbsDataStore.getWeightBatche    
+        - attention: Conversion to `ROOT.RooVectorDataStore` is used! 
         """
         
         ## 1) check that all variables are present in dataset 
@@ -98,39 +111,95 @@ if   np and ( 6 , 26 ) <= root_info :  ## 6.26 <= ROOT
         ## 2) check that all variables are present in the dataset 
         assert all ( ( v in dataset ) for v in var_lst ) , 'Not all variables are in dataset!'
 
-        ## remove duplicated
-        new_names = []
-        for v in vnames :
-            if not v in new_names : new_names.append ( v )
-        vnames = new_names
-        
         ## 3) reduce dataset if only a small subset of variables is requested 
-        nvars = len( dataset.get() )
-        if 2 * len ( vnames )  <= nvars :
-            dstmp  = dataset.subset ( vnames )
+        nvars = len ( dataset.get() )
+        if 2 * len ( vnames )  <= nvars :            
+            with useStorage ( ROOT.RooAbsData.Vector ) : 
+                dstmp  = dataset.subset ( vnames )
             result = ds2numpy ( dstmp , vnames )
             dstmp.erase()
             del dstmp 
-            return result  
+            return result
 
-        ## 4) convert to numpy 
-        data = dataset.to_numpy()
-        
-        ## 5) convert to named/structured array 
-        
-        dtypes = [ ( name , data [ name ].dtype ) for name in vnames if name in data ]
-        lst    = [          data [ name ]         for name in vnames if name in data ]
+        ## 4) convert to VectorDataStore
+        #  batches are not (yet) implemented for Tree & Composite stores 
+        dataset.convertToVectorStore()
+        ## dataset.convertToTreeStore()
 
-        ## 6) add the weight
-        if dataset.isWeighted() : 
-            weight = dataset.weightVar().GetName()
-            if not weight in vnames : 
-                dtypes.append ( ( weight , data [ weight ] .dtype ) )
-                lst   .append (            data [ weight ]          )
+        ## 5) convert to VectorStore again...
+        #  batches are not (yet) implemented for Tree & Composite stores         
+        store   = dataset.store()
+        source  = dataset
+        twoargs = False
+        if not isinstance ( store , ROOT.RooVectorDataStore ) :
+            source  = ROOT.RooVectorDataStore ( store , dataset.get() , store.name + '_vct' )
+            twoargs = True 
+    
 
-        ## is there a better way to avoid a creation of lists ??? 
-        data  = np.array ( list ( zip ( *lst ) ) , dtype = dtypes )
+        vars       = source.get()
+        vars       = [ v for v in vars if v.name in vnames ]
+        doubles    = [ v.name for v in vars if isinstance ( v , ROOT.RooAbsReal     ) ] 
+        categories = [ v.name for v in vars if isinstance ( v , ROOT.RooAbsCategory ) ]
+
+        ## name of weight variable 
+        weight = '' if not dataset.isWeighted() else dataset.weightVar().GetName () 
+
+        dtypes = [] 
+        for v in vnames :
+            if   v in doubles    : dtypes.append ( ( v      , np.float64 ) ) 
+            elif v in vategories : dtypes.append ( ( v      , np.int64   ) )
+        if weight                : dtypes.append ( ( weight , np.float64 ) ) 
+            
+        ## get data in batches
+        nevts  = len ( dataset ) 
+
+        data   = None
+
+        ## maximal size of data chunk 
+        nmax   = max ( nevts // 6 , 30000 // nvars )
         
+        ## get data is chunks/batches 
+        for first, last in progress_bar ( split_range ( 0 , nevts , nmax ) , silent = silent ) :
+            
+            num   = last - first            
+            wget  = False 
+            part  = np.zeros ( num , dtype = dtypes )
+            
+            if doubles :
+                dpart   = source.getBatches ( first , num )
+                for d in dpart :
+                    dname = d.first.name
+                    if   dname in doubles :
+                        part [ dname ] = d.second
+
+                        
+                    elif d == weight      :
+                        part [ dname ] = d.second
+                del dpart
+                
+            if categories :
+                cpart   = source.getCategoryBatches ( first , num )
+                for c in cpart :
+                    cname = c.first.name
+                    if cname in categroies : 
+                        part [ cname ] = c.second
+                del cpart
+                
+            if weight and not wget :
+                if twoargs : weights = source.getWeightBatch ( first , num         )
+                else       : weights = source.getWeightBatch ( first , num , False )
+                if weights : part [ weight ] = weights 
+                else       : part [ weight ] = np.full ( num , source.weight() , dtype = np.float64 )
+
+            if data is None : data = part
+            else            :  
+                data = np.concatenate ( [ data , part ] )
+                del part 
+
+        if not source is dataset :
+            source.reset()
+            del source
+            
         return data
     
 
@@ -143,18 +212,15 @@ if   np and ( 6 , 26 ) <= root_info :  ## 6.26 <= ROOT
                        ROOT.RooDataSet.to_np   ]
     
 # =============================================================================
-elif np and ( 6 , 24 ) <= root_info : ## 6.24 <= ROOT < 6.26 
+elif   np  :  ## ROOT < 6.26 
 # =============================================================================
 
     # =========================================================================
-    ## Convert dataset into numpy array using <code>ROOT.RooVectorDataStore.getArrays</code>
-    #  @see `ROOT.RooVectorDataStore.getArrays`
-    # 
-    def ds2numpy ( dataset , var_lst ) :
-        """ Convert dataset into numpy array using `ROOT.RooVectorDataStore.getArrays`
-        - see `ROOT.RooVectorDataStore.getArrays` 
+    ## Convert dataset into numpy array using (slow) explicit loops 
+    def ds2numpy ( dataset , var_lst , silent = False ) :
+        """ Convert dataset into numpy array using (slow) explicit loops
         """
-
+        
         ## 1) check that all variables are present in dataset 
         if   all ( isinstance ( v , string_types   ) for v in var_lst ) :
             vnames = [ v          for  v in var_lst ]
@@ -166,188 +232,45 @@ elif np and ( 6 , 24 ) <= root_info : ## 6.24 <= ROOT < 6.26
         ## 2) check that all variables are present in the dataset 
         assert all ( ( v in dataset ) for v in var_lst ) , 'Not all variables are in dataset!'
 
-        ## remove duplicated
-        new_names = []
-        for v in vnames :
-            if not v in new_names : new_names.append ( v )
-        vnames = new_names
-        
         ## 3) reduce dataset if only a small subset of variables is requested 
-        nvars = len( dataset.get() )
+        nvars = len ( dataset.get() )
         if 2 * len ( vnames )  <= nvars :
             dstmp  = dataset.subset ( vnames )
             result = ds2numpy ( dstmp , vnames )
             dstmp.erase()
             del dstmp 
             return result  
-
-        ## 4) here we need RooVectorDataStore 
-        store = dataset.store()
-        if not isinstance ( store , ROOT.RooVectorDataStore ) : 
-            dataset.ConvertToVectorStore()
-            store = dataset.store()
-            
-        new_store = False 
-        if not isinstance ( store , ROOT.RooVectorDataStore ) : 
-            variables  = store.get()
-            store      = ROOT.RooVectorDataStore ( store, variables , store.GetName() )
-            new_store  = True
-
-        ## 5) get arrays from the store 
-
-        array_info = store.getArrays()
-        n          = array_info.size
-
-        ## 6) using numpy structured array
-        dtypes = [ ( name , 'f8') for name in vnames ]
         
-        ## 7) weight?
-        if dataset.isWeighted() : 
-            weight = dataset.weightVar().GetName()
-            if not weight in vnames : 
-                dtypes.append ( ( weight , 'f8' ) )
+        vars       = dataset.get()
+        vars       = [ v for v in vars if v.name in vnames ]
+        doubles    = [ v.name for v in vars if isinstance ( v , ROOT.RooAbsReal     ) ] 
+        categories = [ v.name for v in vars if isinstance ( v , ROOT.RooAbsCategory ) ]
 
-        ## 8) create the structured array 
-        data   = np.zeros ( len ( dtypes ) , dtype = dtypes )
-        
-        for x in array_info.reals:
-            if x.name in vnames :
-                data [ x.name ] = np.frombuffer ( x.data , dtype = np.float64 , count = n )
-                
-        for x in array_info.cats:
-            if x.name in vnames :
-                data [ x.name ] = np.frombuffer ( x.data , dtype = np.int32   , count = n )
+        ## name of weight variable 
+        weight = '' if not dataset.isWeighted() else dataset.weightVar().GetName () 
 
-        if new_store : ## delete newly created store 
-            store.reset() 
-            del store
-
-        ## check here!!! 
-        return add_weight ( dataset , data )
-    
-
-    __all__  = __all__ + ( 'ds2numpy' , )
-    ROOT.RooDataSet.tonumpy = ds2numpy 
-    ROOT.RooDataSet.tonp    = ds2numpy
-    ROOT.RooDataSet.to_np   = ds2numpy
-    _new_methods_ += [ ROOT.RooDataSet.tonumpy ,
-                       ROOT.RooDataSet.tonp    ,
-                       ROOT.RooDataSet.to_np   ]
-    
-    
-# =============================================================================
-elif np and ( 6, 20 ) <= root_info :  ## 6.20 <= ROOT < 6.24 
-# =============================================================================
-
-    # =========================================================================
-    ## Convert dataset into numpy array using <code>ROOT.RooVectorDataStore.getBatches</code>
-    #  @see `ROOT.RooVectorDataStore.getBatches`
-    # 
-    def ds2numpy ( dataset , var_lst ) :
-        """ Convert dataset into numpy array using `ROOT.RooVectorDataStore.getBatches`
-        - see `ROOT.RooVectorDataStore.getBatches` 
-        """
-        
-
-        ## 1) check that all variables are present in dataset 
-        if   all ( isinstance ( v , string_types   ) for v in var_lst ) :
-            vnames = [ v          for  v in var_lst ]
-        elif all ( isinstance ( v , ROOT.RooAbsArg ) for v in var_lst ) :
-            vnames = [ v.GetName() for v in var_lst ]
-        else :
-            raise TypeError ( "Invalid type of `var_list`!" ) 
-
-        ## 2) check that all variables are present in the dataset 
-        assert all ( ( v in dataset ) for v in var_lst ) , 'Not all variables are in dataset!'
-
-        ## remove duplicated
-        new_names = []
+        dtypes = [] 
         for v in vnames :
-            if not v in new_names : new_names.append ( v )
-        vnames = new_names
+            if   v in doubles    : dtypes.append ( ( v      , np.float64 ) ) 
+            elif v in vategories : dtypes.append ( ( v      , np.int64   ) )
+        if weight                : dtypes.append ( ( weight , np.float64 ) ) 
+            
         
-        ## 3) reduce dataset if only a small subset of variables is requested 
-        nvars = len( dataset.get() )
-        if 2 * len ( vnames )  <= nvars :
-            dstmp  = dataset.subset ( vnames )
-            result = ds2numpy ( dstmp , vnames )
-            dstmp.erase()
-            del dstmp 
-            return result  
+        ## create data 
+        data = np.zeros ( len ( dataset )  , dtype = dtypes )
 
-        ## 4) here we need RooVectorDataStore 
-        store = dataset.store()
-        if not isinstance ( store , ROOT.RooVectorDataStore ) : 
-            dataset.ConvertToVectorStore()
-            store = dataset.store()
-            
-        new_store = False 
-        if not isinstance ( store , ROOT.RooVectorDataStore ) : 
-            variables  = store.get()
-            store      = ROOT.RooVectorDataStore ( store, variables, store.GetName() )
-            new_store  = True
+        ## make an explict loop:
+        for i , evt in enumerate ( progress_bar ( dataset , silent = silent ) ) :
 
-            
-        #$ 5) using numpy structed array
-        dtypes = [ ( name , 'f8') for name in vnames ]
-
-        ## 6) weight?
-        weight = None 
-        if dataset.isWeighted() : 
-            weight = dataset.weightVar().GetName()
-            if not weight in vnames : 
-                dtypes.append ( ( weight , 'f8' ) )
-
-        ## 7) book the array 
-
-        # for large datasets
-        # check batch size * var size < 10^6 
-        num_entries = len ( dataset ) 
-        data_limit  = num_entries * nvars 
-        num_limit   = 110000000
-        nb , r      = divmod ( n , num_limit )
-
-        ##
-        ##
-        ## REWRITE: should be RunContext here!!! 
-        ##
-        
-        if data_limit < num_limit:
-            data    = np.zeros ( len ( dtypes )  , dtype = dtypes )            
-            batches = store.getBatches ( 0 , n)
-            count   = 0
-            for name in vnames :
-                for x in batches :
-                    if name == x.first.__follow__().GetName() :
-                        data [ name ] = x.second
-                        break
-            if weight :
-                data [ weight ] = store.getWeightBatch ( 0 , n )
-            
-        else:
-            
-            rargs = [ ( i * num_limit , num_limit ) for i in range ( nb ) ] + [ ( nb * num_limit , r ) ]
-
-            data  = None 
-            for first , num in rargs :
-
-                part = np.zeros ( num , dtype = dtypes )                 
-                batches = store.getBatches  ( first, num)
-                for x in vnames :
-                    for x in batches :
-                        if name == x.first.__follow__().GetName() :
-                            part [ name ] = x.second
-                            break
-                if weight : part [ weight ] = store.getWeightBatch ( 0 , n )
-
-                if data : data = np.concatenate ( [ data , part ] )
-                else    : data = part 
+            for v in evt :
+                vname = v.name
+                if   vname in doubles    : data [ vname  ] [ i ] = float ( v  )
+                elif vname in categories : data [ vname  ] [ i ] = int   ( v  )
                 
-        if new_store : ## delete newly created store 
-            store.reset() 
-            del store
-            
+            if weight                    : data [ weight ] [ i ] = dataset.weight()  
+        
         return data
+    
 
     __all__  = __all__ + ( 'ds2numpy' , )
     ROOT.RooDataSet.tonumpy = ds2numpy 
@@ -357,6 +280,8 @@ elif np and ( 6, 20 ) <= root_info :  ## 6.20 <= ROOT < 6.24
                        ROOT.RooDataSet.tonp    ,
                        ROOT.RooDataSet.to_np   ]
     
+
+
 # =============================================================================
 else    :
 # =============================================================================

@@ -39,8 +39,8 @@ def test_small_ds():
         y.setVal(y_val)
         data.add(ROOT.RooArgSet(x, y))
 
-    with timing ('Test small ds' , logger ) :
-        ws = ds2numpy ( data, ['x', 'y'] )
+
+    ws = ds2numpy ( data, ['x', 'y'] )
 
 
 # =============================================================================
@@ -68,12 +68,10 @@ def test_small_ds_with_weights():
 
     ds = data.makeWeighted('x+y')
 
-    with timing ('Test small ds with weights' , logger ) :        
-        ws = ds2numpy ( ds, ['x', 'y' ] )
+    ws = ds2numpy ( ds, ['x', 'y' ] )
         
 # =============================================================================
-## def test_ds_with_weights():
-if 1 < 2 :
+def test_ds_with_weights():
     
     logger = getLogger ( 'test_ds2numpy_ds_with_weights' )
     
@@ -91,7 +89,7 @@ if 1 < 2 :
     # Заполняем датасет случайными данными
     random_generator = ROOT.TRandom3(42)  # устанавливаем seed
 
-    NN  = 10
+    NN  = 10000
     for _ in range ( NN ):
         x_val = random.gauss   (    0 ,   1 )
         y_val = random.gauss   (   10 ,   1 )
@@ -106,17 +104,15 @@ if 1 < 2 :
 
     ds = data.makeWeighted('x+y')
 
-    with timing ('Test ds with weights ' , logger ) :        
-        ws = ds2numpy ( ds , ['x', 'y' , 'q' ] )
+    ws = ds2numpy ( ds , ['x', 'y' , 'q' ] )
 
 # =============================================================================
 def test_large_ds_with_weights():
-
     
     logger = getLogger ( 'test_ds2numpy_large_ds_with_weights' )
 
     N  = 100 
-    NN = 50000
+    NN = 10000
     # Создаем RooDataSet
     variables = []
     for i in range ( N ):
@@ -138,17 +134,16 @@ def test_large_ds_with_weights():
 
     var_lst = list ( set( "x{}".format( random.randint ( 0 , N - 1  ) ) for i in range ( 50 ) ) ) 
 
-    with timing ('Test large ds with weights ' , logger ) :        
-        ws = ds2numpy(ds, var_lst )
+    ws = ds2numpy(ds, var_lst )
 
 
 # ============================================================================
 def test_large_ds_without_weights():
 
-    logger = getLogger ( 'test_ds2numpy_large_ds_without_weights' )
+    logger = getLogger ( 'test_ds2numpy_large_ds_no_weights' )
 
     N  = 100
-    NN = 50000
+    NN = 10000
     # Создаем RooDataSet
     variables = []
     for i in range ( N ):
@@ -169,29 +164,28 @@ def test_large_ds_without_weights():
 
     var_lst = list ( set( "x{}".format( random.randint ( 0 , N - 1 ) ) for i in range ( 50 ) ) ) 
     
-    with timing ('Test large ds without weights ' , logger ) :        
-        ws = ds2numpy(data, var_lst )
+    ws = ds2numpy(data, var_lst )
 
 # ============================================================================
 
 if '__main__' == __name__ :
 
-    pass
+    ## pass
 
- ##    with timing ('Test small ds' , logger ) :
-##         test_small_ds()
+    with timing ('Test small ds' , logger ) :
+        test_small_ds()
 
-##     with timing ('Test small dataset with    weights', logger ) :
-##         test_small_ds_with_weights()
+    with timing ('Test small dataset with    weights', logger ) :
+        test_small_ds_with_weights()
 
-##     with timing ('Test large dataset with    weights', logger ) :
-##        test_ds_with_weights()
+    with timing ('Test large dataset with    weights', logger ) :
+       test_ds_with_weights()
         
-##     with timing ('Test large dataset with    weights', logger ) :
-##         test_large_ds_with_weights()
+    with timing ('Test large dataset with    weights', logger ) :
+        test_large_ds_with_weights()
     
-##     with timing ('Test large dataset without weights', logger ) :
-##         test_large_ds_without_weights()
+    with timing ('Test large dataset without weights', logger ) :
+        test_large_ds_without_weights()
 
 
 # =============================================================================

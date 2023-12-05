@@ -960,6 +960,7 @@ ROOT.RooAbsCategory.names         = _racat_labels_
 ROOT.RooAbsCategory.keys          = _racat_labels_
 ROOT.RooCategory   .__str__       = _rcat_str_ 
 ROOT.RooCategory   .__repr__      = _rcat_str_ 
+ROOT.RooCategory   .__int__       = lambda s : s.getCurrentIndex() 
 
 _new_methods_       += [
     ROOT.RooAbsCategory.__iter__      , 

@@ -986,6 +986,43 @@ def crange ( vmin , vmax , n = 10 ) :
     """
     return CRange ( vmin , vmax , n )
 
+
+
+# =============================================================================
+## split range into smaller chunks:
+#  @code
+#  for i in SplitRange ( 0 , 10000 , 200 ) :
+#     for j in range (*i) :
+#          ... 
+#  @endcode 
+class SplitRange(object) :
+    """Split range into smaller chunks:
+    >>> for i in SplitRange ( 0 , 10000 , 200 ) :
+    >>>     for j in range (*i) :
+    >>>         ... 
+    """
+    def __init__ ( self , low , high , num ) :
+
+        self.__low  = low
+        self.__high = high 
+        self.__num  = num
+
+        self.__size = 0 
+        if low < high and 1 <= num :
+            self.__size , r = divmod ( self.__high - self.__low , self.__num )
+            if r : self.__size += 1 
+
+    def __iter__ ( self ) :
+        
+        if 1 <= self.__num : 
+            while self.__low < self.__high :
+                yield self.__low , self.__high 
+                self.__low += self.__num 
+                
+    def __len__ ( self ) :
+        return self.__size 
+    
+
 # =============================================================================
 ## split range into smaller chunks:
 #  @code
@@ -999,19 +1036,7 @@ def split_range ( low , high , num ) :
     >>>     for j in range (*i) :
     >>>         ... 
     """
-    if high <= low or num < 1 :
-        
-        yield low , low 
-        
-    else : 
-        
-        next = low + num 
-        while next < high :
-            yield low , next
-            low   = next
-            next += num 
-            
-        yield low , high
+    return SplitRange ( low , high , num )
 
 # =============================================================================
 ## split range into num smaller chunks of approximate size 
@@ -1026,7 +1051,8 @@ def split_n_range ( low , high , num ) :
     >>>     for j in range (*i) :
     >>>         ... 
     """
-    if   high <= low or num < 1            : yield low , low
+
+    if   high <= low or num < 1            : pass 
     elif 1 == num                          : yield low , high
     elif low < high  and high <= num + low : yield low , high
     else : 
