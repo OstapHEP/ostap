@@ -119,7 +119,8 @@ def test_large_ds_with_weights():
         var_name = "x{}".format(i)
         var = ROOT.RooRealVar(var_name, var_name, 0, 10)
         variables.append(var)
-    varset = ROOT.RooArgSet(*variables)        
+    varset = ROOT.RooArgSet()
+    for v in variables : varset.add ( v )
     data   = ROOT.RooDataSet("data", "data", varset )
 
     # Заполняем датасет случайными данными
@@ -150,7 +151,8 @@ def test_large_ds_without_weights():
         var_name = "x{}".format(i)
         var = ROOT.RooRealVar(var_name, var_name, 0, 10)
         variables.append(var)
-    varset = ROOT.RooArgSet(*variables)
+    varset = ROOT.RooArgSet()
+    for v in variables : varset.add ( v )
     data   = ROOT.RooDataSet("data", "data", varset )
 
     # Заполняем датасет случайными данными
