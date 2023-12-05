@@ -25,7 +25,8 @@ __all__     = (
     )
 # =============================================================================
 from   builtins                  import range
-from   collections               import defaultdict 
+from   collections               import defaultdict
+from   ostap.core.meta_info      import root_info
 from   ostap.core.core           import ( Ostap, VE, SE ,
                                           hID  , dsID , strings , 
                                           valid_pointer , split_string   ,
@@ -2272,7 +2273,7 @@ _new_methods_ += [
 
 
 # =============================================================================
-## get the name of weigth variable in dataset
+## get the name of weight variable in dataset
 #  @code
 #  dataset = ...
 #  wname   = dataset.wname() 
@@ -2288,8 +2289,12 @@ def _ds_wname_ ( dataset ) :
 
     attr = '_weight_var_name'
     if not hasattr ( dataset , attr ) :
-        
-        wn = Ostap.Utils.getWeight (  dataset )
+
+        if ( 6 , 26 ) <= root_info :
+            wv = dataset.weightVar()
+            wn = wv.name if wv else Ostap.Utils.getWeight ( dataset )
+        else : wn = Ostap.Utils.getWeight ( dataset )
+            
         setattr ( dataset , attr , wn ) 
         
     return getattr ( dataset , attr , '' )

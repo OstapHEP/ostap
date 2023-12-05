@@ -46,36 +46,6 @@ _new_methods_ = []
 
 
 
-# input: 
-# dataset - initial dataset
-# var_lst - name of variables to add in numpy array 
-# weight - Bool value, which work with weights vars in dataset
-#ds = DS_to_Numpy(data, ['evt', 'run'], weight)
-#ds = DS_to_Numpy_for_old_version(data, ['evt', 'run']) - for old ROOT package version
-# output: 
-# data - numpy array with values of the required variables
-
-#Check the list of variables for duplicates
-def find_dublicates_in_var_list(var_lst):
-    return len(var_lst) != len(set(var_lst))
-
-#add weight variable in numpy array
-def add_weight ( ds , data ):
-    
-    if not ds.isWeighted() : return data
-    
-    weight  = ds.weightVar().GetName()
-    
-    ## creathe the weight array 
-    weights = np.zeros( len ( ds ) , dtype=np.float64)
-
-    ## fill it 
-    for i in ds : weight_array[i] = ds.weight()
-
-    data [ weight ] = weights 
-
-    return data
-
 # =============================================================================
 if   np and ( 6 , 26 ) <= root_info  :  ## 6.26 <= ROOT 
 # =============================================================================
@@ -142,7 +112,7 @@ if   np and ( 6 , 26 ) <= root_info  :  ## 6.26 <= ROOT
         categories = [ v.name for v in vars if isinstance ( v , ROOT.RooAbsCategory ) ]
 
         ## name of weight variable 
-        weight = '' if not dataset.isWeighted() else dataset.weightVar().GetName () 
+        weight = '' if not dataset.isWeighted() else dataset.wname () 
 
         dtypes = [] 
         for v in vnames :
@@ -247,7 +217,7 @@ elif   np  :  ## ROOT < 6.26
         categories = [ v.name for v in vars if isinstance ( v , ROOT.RooAbsCategory ) ]
 
         ## name of weight variable 
-        weight = '' if not dataset.isWeighted() else dataset.weightVar().GetName () 
+        weight = '' if not dataset.isWeighted() else dataset.wname () 
 
         dtypes = [] 
         for v in vnames :
