@@ -971,8 +971,13 @@ ROOT.RooAbsCategory.keys          = _racat_labels_
 ROOT.RooCategory   .__str__       = _rcat_str_ 
 ROOT.RooCategory   .__repr__      = _rcat_str_
 
-ROOT.RooCategory   .__int__       = lambda s : s.getCurrentIndex () 
-ROOT.RooCategory   .getVal        = lambda s : s.getCurrentIndex ()  
+if  ( 6 , 24 ) <= root_info : 
+    ROOT.RooCategory   .__int__       = lambda s : s.getCurrentIndex () 
+    ROOT.RooCategory   .getVal        = lambda s : s.getCurrentIndex ()
+else :
+    ROOT.RooCategory   .__int__       = lambda s : s.getIndex        () 
+    ROOT.RooCategory   .getVal        = lambda s : s.getIndex        ()
+    
 ROOT.RooCategory   .setVal        = _rcat_setval_ 
 
 _new_methods_       += [
