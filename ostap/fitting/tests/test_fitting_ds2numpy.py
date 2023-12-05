@@ -24,24 +24,28 @@ def test_small_ds():
     
     NN = 1000 
     # Создаем переменные RooRealVar
-    x = ROOT.RooRealVar("x", "x", 0, 10)
-    y = ROOT.RooRealVar("y", "y", 0, 10)
-
+    x      = ROOT.RooRealVar  ("x", "x"        , 0, 10)
+    y      = ROOT.RooRealVar  ("y", "y"        , 0, 10)
+    i      = ROOT.RooCategory ("i", 'category' , 'odd' , 'even' ) 
+    varset = ROOT.RooArgSet   ( x , y , i ) 
+    
     # Создаем RooDataSet
-    data = ROOT.RooDataSet("data", "data", ROOT.RooArgSet(x, y))
+    data = ROOT.RooDataSet("data", "data", varset )
 
     # Заполняем датасет случайными данными
     random_generator = ROOT.TRandom3(42)  # устанавливаем seed
-    for _ in range( NN ):
+    for e in range( NN ):
         x_val = random_generator.Uniform(0, 10)
         y_val = random_generator.Uniform(0, 10)
-        x.setVal(x_val)
-        y.setVal(y_val)
-        data.add(ROOT.RooArgSet(x, y))
+        x.setVal   ( x_val )
+        y.setVal   ( y_val )
+        f = random.randint ( 0 , 100 )
+        i.setVal   ( f % 2  )  
+        data.add   ( varset )
 
 
-    ws = ds2numpy ( data, ['x', 'y'] )
-
+    ws = ds2numpy ( data, ['x', 'y' , 'i' ] )
+    
 
 # =============================================================================
 def test_small_ds_with_weights():
@@ -50,25 +54,29 @@ def test_small_ds_with_weights():
 
     NN = 1000 
     # Создаем переменные RooRealVar
-    x = ROOT.RooRealVar("x", "x", 0, 10)
-    y = ROOT.RooRealVar("y", "y", 0, 10)
-    varset = ROOT.RooArgSet(x, y ) 
+    x      = ROOT.RooRealVar("x", "x", 0, 10)
+    y      = ROOT.RooRealVar("y", "y", 0, 10)
+    i      = ROOT.RooCategory ("i", 'category' , 'a' , 'b' , 'c' , 'd' , 'e' ) 
+    varset = ROOT.RooArgSet(x, y , i ) 
     
     # Создаем RooDataSet
     data = ROOT.RooDataSet("data", "data", varset )
 
     # Заполняем датасет случайными данными
     random_generator = ROOT.TRandom3(42)  # устанавливаем seed
-    for _ in range(NN):
+    for e in range(NN):
         x_val = random_generator.Uniform(0, 10)
         y_val = random_generator.Uniform(0, 10)
-        x.setVal(x_val)
-        y.setVal(y_val)
-        data.add( varset )
+        x.setVal   ( x_val  )
+        y.setVal   ( y_val  )
+        f = random.randint ( 0 , 100 ) 
+        i.setVal   ( f % 5  ) 
+        data.add   ( varset )
 
     ds = data.makeWeighted('x+y')
 
-    ws = ds2numpy ( ds, ['x', 'y' ] )
+    ws = ds2numpy ( ds, ['x', 'y' , 'i' ] )
+    print ( ws )
         
 # =============================================================================
 def test_ds_with_weights():

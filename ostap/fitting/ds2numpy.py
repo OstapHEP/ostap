@@ -118,7 +118,7 @@ if   np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         dtypes = [] 
         for v in vnames :
             if   v in doubles    : dtypes.append ( ( v      , np.float64 ) ) 
-            elif v in vategories : dtypes.append ( ( v      , np.int64   ) )
+            elif v in categories : dtypes.append ( ( v      , np.int64   ) )
         if weight                : dtypes.append ( ( weight , np.float64 ) ) 
             
         ## get data in batches
@@ -152,7 +152,7 @@ if   np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                 cpart   = source.getCategoryBatches ( first , num )
                 for c in cpart :
                     cname = c.first.name
-                    if cname in categroies : 
+                    if cname in categories : 
                         part [ cname ] = c.second
                 del cpart
                 
@@ -223,7 +223,7 @@ elif   np  :  ## ROOT < 6.26
         dtypes = [] 
         for v in vnames :
             if   v in doubles    : dtypes.append ( ( v      , np.float64 ) ) 
-            elif v in vategories : dtypes.append ( ( v      , np.int64   ) )
+            elif v in categories : dtypes.append ( ( v      , np.int64   ) )
         if weight                : dtypes.append ( ( weight , np.float64 ) ) 
             
         

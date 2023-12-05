@@ -805,7 +805,7 @@ if root_info < ( 6, 22 ) :
     ROOT.RooAbsCategory.__iter__  = _racat_items_
     
     # =========================================================================
-    ## Is given label (or index) defined fron this categroy?
+    ## Is given label (or index) defined fron this category?
     #  @see RooAbsCategory.isValidIndex
     #  @see RooAbsCategory.isValidLabel     
     def _racat_contains_ ( cat , item ) :
@@ -839,7 +839,7 @@ if root_info < ( 6, 22 ) :
             return result.GetName()
         elif isinstance ( item , ROOT.RooCatType ) :  
             result = cat.lookupType ( item , False )
-            if not result : raise  IndexError("No '%s' categroy is defined!" % item )
+            if not result : raise  IndexError("No '%s' category is defined!" % item )
             return result
         
         raise TypeError("No '%s' label/index is defined!" % item )
@@ -870,7 +870,7 @@ else :
     ROOT.RooAbsCategory.__iter__   =  _racat_items_ 
 
     # =========================================================================
-    ## Is given label (or index) defined fron this categroy?
+    ## Is given label (or index) defined fron this category?
     #  @see RooAbsCategory.hasIndex
     #  @see RooAbsCategory.hasLabel     
     def _racat_contains_ ( cat , item ) :
@@ -950,6 +950,16 @@ def _rcat_str_ ( cat ) :
     """Print RooCategory instance"""
     return "'%s' : '%s'/%d" % ( cat.name , cat.getLabel() , cat.getIndex() )
 
+# ==============================================================================
+## set current label/index 
+def _rcat_setval_( cat , value ) :
+    """Set current label/index
+    """
+    if   isinstance ( value , integer_types ) : return cat.setIndex ( value )
+    elif isinstance ( value , string_types  ) : return cat.setLabel ( value )
+    raise TypeError ( 'Invalid value type!' )
+    
+    
 ROOT.RooAbsCategory.items         = _racat_items_
 ROOT.RooAbsCategory.iteritems     = _racat_items_
 ROOT.RooAbsCategory.__contains__  = _racat_contains_
@@ -959,8 +969,11 @@ ROOT.RooAbsCategory.labels        = _racat_labels_
 ROOT.RooAbsCategory.names         = _racat_labels_
 ROOT.RooAbsCategory.keys          = _racat_labels_
 ROOT.RooCategory   .__str__       = _rcat_str_ 
-ROOT.RooCategory   .__repr__      = _rcat_str_ 
-ROOT.RooCategory   .__int__       = lambda s : s.getCurrentIndex() 
+ROOT.RooCategory   .__repr__      = _rcat_str_
+
+ROOT.RooCategory   .__int__       = lambda s : s.getCurrentIndex () 
+ROOT.RooCategory   .getVal        = lambda s : s.getCurrentIndex ()  
+ROOT.RooCategory   .setVal        = _rcat_setval_ 
 
 _new_methods_       += [
     ROOT.RooAbsCategory.__iter__      , 
