@@ -13,7 +13,6 @@
   1. add conversion to int for `RooAbsCategory` 
   1. add iterator/contains/len functions for `RooAbsDataStore`
 
-
 ## Backward incompatible: 
 
   1. change the interface for fuctions from `ostap.stats.ustat` module 
