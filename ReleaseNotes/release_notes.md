@@ -12,14 +12,17 @@
   1. small fixes for `ostap.utuls.split_ranges`
   1. add conversion to int for `RooAbsCategory` 
   1. add iterator/contains/len functions for `RooAbsDataStore`
-
+  1. add some simple utilities for goodness-of-fit studies `ostap.stats.gof` 
+  
 ## Backward incompatible: 
 
-  1. change the interface for fuctions from `ostap.stats.ustat` module 
-  1. change the interface for `Ostap::UStat`  class 
+  1. change the interface for functions from the `ostap.stats.ustat` module 
+  1. change the interface for the `Ostap::UStat`  class 
 
 ## Bug fixes:
 
+  1. fix a newly introduced bug in `ostap.utils.utils.split_range`
+`
 
 # v1.10.0.2
 
