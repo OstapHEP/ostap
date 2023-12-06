@@ -135,7 +135,7 @@ if   np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             num   = last - first            
             wget  = False 
             part  = np.zeros ( num , dtype = dtypes )
-            
+
             if doubles :
                 dpart   = source.getBatches ( first , num )
                 for d in dpart :
@@ -144,7 +144,7 @@ if   np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                         part [ dname ] = d.second
 
                         
-                    elif d == weight      :
+                    elif dname == weight  :
                         part [ dname ] = d.second
                 del dpart
                 
@@ -165,8 +165,8 @@ if   np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             if data is None : data = part
             else            :  
                 data = np.concatenate ( [ data , part ] )
-                del part 
-
+                del part
+                
         if delsource : 
             source.reset()
             del source
