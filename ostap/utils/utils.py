@@ -1016,8 +1016,9 @@ class SplitRange(object) :
         
         if 1 <= self.__num : 
             while self.__low < self.__high :
-                yield self.__low , self.__high 
-                self.__low += self.__num 
+                next  = min ( self.__low + self.__num , self.__high ) 
+                yield self.__low , next
+                self.__low = next 
                 
     def __len__ ( self ) :
         return self.__size 
