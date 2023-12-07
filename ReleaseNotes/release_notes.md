@@ -13,6 +13,7 @@
   1. add conversion to int for `RooAbsCategory` 
   1. add iterator/contains/len functions for `RooAbsDataStore`
   1. add some simple utilities for goodness-of-fit studies `ostap.stats.gof` 
+  1. simplify `Ostap::Utils:::getWeight` for 6.26<=ROOT  
   
 ## Backward incompatible: 
 

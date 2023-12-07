@@ -11,6 +11,7 @@
 // ============================================================================
 // Forward declarations 
 // ============================================================================
+class RooAbsReal ;
 class RooAbsData ;
 class RooDataSet ;
 // ============================================================================
@@ -24,7 +25,13 @@ namespace Ostap
      *  @param data (INPUT) dataset
      *  @return the name of weigth variable, if and when possible 
      */
-    std::string getWeight ( const RooAbsData* data ) ;
+    std::string       getWeight ( const RooAbsData* data ) ;
+    // ========================================================================
+    /** get the weight variable from data set (if and when possible)
+     *  @param data (INPUT) dataset
+     *  @return the weigth variable, if and when possible 
+     */
+    const RooAbsReal* getWeightVar ( const RooAbsData* data ) ;
     // ========================================================================
     /** weight errors are stored for the weighted data set?
      *  @param data (INPUT) dataset
@@ -34,7 +41,7 @@ namespace Ostap
      *  @see RooAbsData
      *  @see RooAbsArg::getAttribute
      */
-    bool        storeError ( const RooAbsData* data ) ;
+    bool              storeError ( const RooAbsData* data ) ;
     // ========================================================================
     /** weigth errors are stored for the weighted data set?
      *  @param data (INPUT) dataset
@@ -43,7 +50,7 @@ namespace Ostap
      *  @see RooAbsData
      *  @see RooAbsArg::getAttribute
      */
-    bool        storeAsymError ( const RooAbsData* data ) ;
+    bool              storeAsymError ( const RooAbsData* data ) ;
     // ========================================================================
     /** make un unweighted dataset from weighted one 
      *  @param weighted_data   (INPUT) input dataset 
@@ -51,8 +58,9 @@ namespace Ostap
      *  @return unweighted dataset + name of weight variable, if and when possible
      */
     std::pair<RooDataSet*,std::string> 
-    unweight ( const RooAbsData*  weighted_data      ,
-               const std::string& weight_var    = "" ) ;
+    unweight 
+    ( const RooAbsData*  weighted_data      ,
+      const std::string& weight_var    = "" ) ;
   // ========================================================================
   } //                                        The end of namespace Ostap::Utils
   // ==========================================================================

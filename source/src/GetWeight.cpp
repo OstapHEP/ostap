@@ -28,6 +28,8 @@
 namespace 
 {
   // ==========================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION ( 6 , 26 , 0 ) 
+  // ==========================================================================
   /// helper class to get the protected info 
   class AuxDataSet : public RooDataSet
   {
@@ -40,7 +42,7 @@ namespace
   public:
     // =======================================================================
     /// get the weight variable 
-    std::string wgtVar() const 
+    std::string wgtName () const 
     { return RooDataSet::_wgtVar ? RooDataSet::_wgtVar->GetName() : "" ; }
     // ========================================================================
     /// store error on weight ?  
@@ -52,7 +54,11 @@ namespace
     bool storeAsymError () const 
     { return RooDataSet::_wgtVar ? RooDataSet::_wgtVar->getAttribute ( "StoreAsymError" ) : false ; }
     // ========================================================================
+    const RooAbsReal* wgtVar () const { return _wgtVar ; }
+    // ========================================================================
   } ;
+  // ==========================================================================
+#endif 
   // ==========================================================================
   static_assert ( std::numeric_limits<double>::is_specialized        ,
                   "std::numeric_limits<double> is not specialized"   ) ;
@@ -67,16 +73,38 @@ namespace
  *  @return weigth variable, when possible 
  */
 // ============================================================================
-std::string Ostap::Utils::getWeight ( const RooAbsData* data ) 
+const RooAbsReal* Ostap::Utils::getWeightVar ( const RooAbsData* data ) 
 {
-  if ( nullptr == data || !data->isWeighted() ) { return "" ; }
+  if ( nullptr == data || !data->isWeighted() ) { return nullptr ; }
   const RooDataSet* ds = dynamic_cast<const RooDataSet*>( data ) ;
-  if ( nullptr == ds   ) { return ""  ; }
+  if ( nullptr == ds                          ) { return nullptr ; }
+  //
+#if ROOT_VERSION_CODE < ROOT_VERSION ( 6 , 26 , 0 ) 
   //
   std::unique_ptr<RooAbsData> cloned { ds->emptyClone() } ;
   AuxDataSet aux { *dynamic_cast<RooDataSet*>( cloned.get() ) } ;
   //
   return aux.wgtVar() ;
+  //
+#else 
+  //
+  return ds->weightVar() ;
+  //
+#endif  
+  //
+}
+// ============================================================================
+/*  get the weight variable from data set (if possible)
+ *  @param data (INPUT) dataset
+ *  @return weigth variable, when possible 
+ */
+// ============================================================================
+std::string Ostap::Utils::getWeight ( const RooAbsData* data )
+{
+  // weight var 
+  const RooAbsReal* wvar = getWeightVar ( data ) ;
+  if ( nullptr == wvar ) { return "" ; }
+  return wvar->GetName() ;
 }
 // ============================================================================
 /*  weight errors are stored for the weighted data set?
@@ -88,16 +116,14 @@ std::string Ostap::Utils::getWeight ( const RooAbsData* data )
  *  @see RooAbsArg::getAttribute
  */
 // ============================================================================
-bool Ostap::Utils::storeError ( const RooAbsData* data ) 
+bool Ostap::Utils::storeError ( const RooAbsData* data )
 {
-  if ( nullptr == data || !data->isWeighted() ) { return false ; }
-  const RooDataSet* ds = dynamic_cast<const RooDataSet*>( data ) ;
-  if ( nullptr == ds   ) { return false ; }
-  //
-  std::unique_ptr<RooAbsData> cloned { ds->emptyClone() } ;  
-  AuxDataSet aux { *dynamic_cast<RooDataSet*>( cloned.get() ) } ;
-  //
-  return aux.storeError() ;
+  // weight var 
+  const RooAbsReal* wvar = getWeightVar ( data ) ;
+  if ( nullptr == wvar ) { return false ; }
+  return 
+    wvar->getAttribute ( "StoreError"     ) || 
+    wvar->getAttribute ( "StoreAsymError" ) ;
 }
 // ============================================================================
 /*  weigth errors are stored for the weighted data set?
@@ -109,17 +135,13 @@ bool Ostap::Utils::storeError ( const RooAbsData* data )
  */
 // ============================================================================
 bool Ostap::Utils::storeAsymError ( const RooAbsData* data ) 
-{
-  if ( nullptr == data || !data->isWeighted() ) { return false ; }
-  const RooDataSet* ds = dynamic_cast<const RooDataSet*>( data ) ;
-  if ( nullptr == ds   ) { return false ; }
+ {
+  // weight var 
+  const RooAbsReal* wvar = getWeightVar ( data ) ;
+  if ( nullptr == wvar ) { return false ; }
+  return wvar->getAttribute ( "StoreAsymError" ) ;
   //
-  std::unique_ptr<RooAbsData> cloned { ds->emptyClone() } ;  
-  AuxDataSet aux { *dynamic_cast<RooDataSet*>( cloned.get() ) } ;
-  //
-  return aux.storeAsymError() ;
 }
-
 // ============================================================================
 /*  make un unweighted dataset from weighted one 
  *  @param weighted_data   (INPUT) input dataset 
@@ -131,8 +153,8 @@ Ostap::Utils::unweight
 ( const RooAbsData*  weighted_data , 
   const std::string& weight_var    ) 
 {
-  if ( nullptr ==  weighted_data     ) { return std::make_pair ( nullptr, "" ) ; } //  RETURN
-  if ( ! weighted_data->isWeighted() ) { return std::make_pair ( nullptr, "" ) ; } //  RETURN
+  if ( nullptr ==  weighted_data    ) { return std::make_pair ( nullptr, "" ) ; } //  RETURN
+  if ( !weighted_data->isWeighted() ) { return std::make_pair ( nullptr, "" ) ; } //  RETURN
   //
   std::string wvar = weight_var ;
   //
