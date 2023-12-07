@@ -18,8 +18,9 @@ __all__     = (
     'normalize' , ## "normalize" variables in dataset/structured array
     )
 # =============================================================================
-from ostap.core.core        import VE, Ostap
-from ostap.core.ostap_types import string_types 
+from   ostap.core.core        import VE, Ostap
+from   ostap.core.ostap_types import string_types
+import sys 
 # =============================================================================
 try :    
     import numpy as np
@@ -128,91 +129,89 @@ def nEff ( weights ) :
 #  ds = ... # data set as structured array
 #  dsn = normalize ( ds ) 
 #  @endcode
-def normalize ( ds , *others , weight = () , first = True ) :
-    """ Get the `normalized' input datasets
-    All floating felds  are calculated as
-    
-    x = (x - <x>)/sigma
-    
-    - <x> is a mean value 
-    - is a standard deviation.
- 
-    - If several datasets are specified, all floating names must be the same
-    and the mean and sigma are either taken either from the first dataset,
-    if `first=True` or as combined through all datasets, otherwise  
-    
-    - If `weight` is specified, this floating column is concidered
-    as the weight
-    
-    - attention Only the floating point columns are transformed! 
-    - attention Input datasets are expected to be numpy structured arrays 
-    """
 
-    if not weight :
-        weight = ( len ( others ) + 1 ) * [ '' ]
-    elif isinstance ( weight , string_types ) :
-        weight       = [ weight]  + len ( others ) * [ '' ]
-
-    assert ( len ( weight ) == len ( others ) + 1 ) and \
-           all ( ( not w ) or isinstance ( w , string_types ) for w in weight ) , \
-           'Invalid specification of weight!'
-
-    weight = list ( weight )
-    for i,w in enumerate ( weight ) :
-        if not w : weight [ i ] = '' 
-    weight = tuple ( weight )
-
-    data    = ( ds , ) + others  
-    result  = []  
+if (3,0) <= sys.version_info :
     
-    ## collect the floating columns 
-    columns = []
-    w0      = weight [ 0 ] 
-    for n,t in ds.dtype.fields.items () :
-        if t[0] in _np_floats  and n != w0 : columns.append ( n ) 
+    def normalize ( ds , *others , weight = () , first = True ) :
+        """ Get the `normalized' input datasets
+        All floating felds  are calculated as
+        
+        x = (x - <x>)/sigma
+        
+        - <x> is a mean value 
+        - is a standard deviation.
+        
+        - If several datasets are specified, all floating names must be the same
+        and the mean and sigma are either taken either from the first dataset,
+        if `first=True` or as combined through all datasets, otherwise  
+        
+        - If `weight` is specified, this floating column is concidered
+        as the weight
+        
+        - attention Only the floating point columns are transformed! 
+        - attention Input datasets are expected to be numpy structured arrays 
+        """
+
+        nd = len ( others ) + 1 
+        if not weight                             : weight = nd * [ ''     ]
+        elif isinstance ( weight , string_types ) : weight = nd * [ weight ]
+            
+        assert ( len ( weight ) == nd ) and \
+               all ( ( not w ) or isinstance ( w , string_types ) for w in weight ) , \
+               'Invalid specification of weight!'
+        
+        weight = list ( weight )
+        for i , w in enumerate ( weight ) :
+            if not w : weight [ i ] = '' 
+        weight = tuple ( weight )
+        
+        data    = ( ds , ) + others  
+        result  = []  
+    
+        ## collect the floating columns 
+        columns = []
+        w0      = weight [ 0 ] 
+        for n,t in ds.dtype.fields.items () :
+            if t[0] in _np_floats  and n != w0 : columns.append ( n ) 
             
         
-    vmeans  = [] 
-    for i , c in enumerate ( columns ) :
-        mean, var    = mean_var ( ds [ c ] , None if not weight [ 0 ] else ds [ weight [ 0] ] )
-        vmeans.append ( VE ( mean , var ) )
-        
-    ## Number of events/effective entries 
-    nevents = 1.0 * ds.shape [ 0 ] if not weight [ 0 ] else nEff ( ds [ weight [ 0 ] ] )
-        
-    if not first and others : 
-        nevents = ds.shape[0] 
-        for k , dd in others :
-
-            nn = 1.0 * dd.shape [ 0 ] if not weight [ k ] else nEff ( dd [ weight [ k ] ] )
+        vmeans  = [] 
+        for i , c in enumerate ( columns ) :
+            mean, var    = mean_var ( ds [ c ] , None if not w0 else ds [ w0 ] )
+            vmeans.append ( VE ( mean , var ) )
             
-            for i , c in enumerate ( columns ) :
+        ## Number of events/effective entries 
+        nevents = 1.0 * ds.shape [ 0 ] if not w0 else nEff ( ds [ w0 ] )
+        
+        if not first and others : 
+            nevents = ds.shape[0] 
+            for k , dd in enumerate ( others ) :
                 
-                mean, var = mean_var ( dd [ c ] , None if not weight [ k ] else dd [ weight [ k ] ] )
-                
-                vv = VE ( mean , var ) 
-                nn = dd.shape [ 0 ]
+                wk = weight [ k + 1 ] 
+                nn = 1.0 * dd.shape [ 0 ] if not wk else nEff ( dd [ wk ] )                
 
-                vmean  [ i ] = Ostap.Math.two_samples ( vmean [ i ] , nevents , vv , nn )
+                for i , c in enumerate ( columns ) :
+                    
+                    mean, var = mean_var ( dd [ c ] , None if not wk else dd [ wk ] )                    
+                    vv = VE ( mean , var ) 
+                    vmean  [ i ] = Ostap.Math.two_samples ( vmean [ i ] , nevents , vv , nn )
+                    
+                nevents += nn
                 
-            nevents += nn
-                
-    
-    result = []  
-    for k , d in enumerate ( ( ds , *others ) ) :
-        nds = d.copy ()
-        result.append ( nds ) 
-        for ic,c in enumerate ( columns ) :
-            a     = nds    [  c ]
-            vv    = vmeans [ ic ]
-            mean  = vv.value ()
-            sigma = vv.error () 
-    
-            nds [ c ] =  ( a - mean ) / sigma
-
+        result = []  
+        for d in ( ds , *others ) :
             
+            nds = d.copy ()
+            for ic , c in enumerate ( columns ) :
+                vv        = vmeans [ ic ]
+                mean      = vv.value ()
+                sigma     = vv.error ()                 
+                a         = nds [  c ]
+                nds [ c ] =  ( a - mean ) / sigma
 
-    return result [ 0 ] if not others else tuple ( result ) 
+            result.append ( nds )
+            
+        return result [ 0 ] if not others else tuple ( result ) 
         
 
 # =============================================================================
