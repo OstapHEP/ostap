@@ -210,77 +210,23 @@ def normalize2 ( datasets , weight = () , first = True ) :
     return tuple ( result ) 
 
 
-
 # =============================================================================
 if (3,0) <= sys.version_info : 
-    # =========================================================================
-    ## Get the "normalized" input datasets
-    #  All floating felds  are calculated as
-    #  \f[ x = \frac{x - \left\langle x \right\rangle}{\sigma} \f]
-    #  where \f$ \left\langle x \right\rangle\f$ is mena value
-    #  and \f$ \sigma \f$ is a standard deviation.
-    # 
-    #  @code
-    #  ds = ... # data set as structured array
-    #  dsn = normalize ( ds ) 
-    #  @endcode
-    #
-    #  - If several datasets are specified, all floating names must be the same
-    #  and the mean and sigma are either taken either from the first dataset,
-    #  if <code>first=True</code> or as combined through all datasets otherwise 
-    #
-    #  @code
-    #  ds1 = ... # data set as structured array
-    #  ds2 = ... # data set as structured array
-    #  ds3 = ... # data set as structured array
-    #  ds1n, ds2n, ds3n  = normalize ( ds1 , ds2 , ds3 , first = True ) 
-    #  @endcode
-    #
-    #  - If <code>weight</code> is specified, this floating column is considered
-    #  as the weight
-    #
-    #  @code
-    #  ds = ... # data set as structured array with weight 
-    #  dsn = normalize ( ds , weight = 'weight' ) 
-    #  @endcode
-    #
-    #  @code
-    #  ds1 = ... # data set as structured array without weight 
-    #  ds2 = ... # data set as structured array with weight 
-    #  ds1n , ds2n = normalize ( ds1 , ds2 , weight = ( None , 'weight'  ) ) 
-    #  @endcode
-    #
-    #  @attention Only the floating point columns are transformed! 
-    #  @attention Input datasets are expected to be numpy structured arrays
-    #
-    #  @code
-    #  ds = ... # data set as structured array
-    #  dsn = normalize ( ds ) 
-    #  @endcode
-    def normalize ( ds , *others , weight = () , first = True ) :        
-        """ Get the `normalized' input datasets
-        All floating felds  are calculated as
-        
-        x = (x - <x>)/sigma
-        
-        - <x> is a mean value 
-        - is a standard deviation.
-        
-        - If several datasets are specified, all floating names must be the same
-        and the mean and sigma are either taken either from the first dataset,
-        if `first=True` or as combined through all datasets, otherwise  
-        
-        - If `weight` is specified, this floating column is concidered
-        as the weight
-        
-        - attention Only the floating point columns are transformed! 
-        - attention Input datasets are expected to be numpy structured arrays 
-        """
+    code3 = """
+def normalize ( ds , *others , weight = () , first = True ) :
+    result = normalize2 ( ( ds , *others ) , weight = weight , first = first )      
+    return result [ 0 ] if not others else resut 
+    """
+    exec ( code3 )
+else :
+    code2 = """
+def normalize ( ds , others = () , weight = () , first = True ) :
+    result = normalize2 ( ( ds , *others ) , weight = weight , first = first )          
+    return result [ 0 ] if not others else resut 
+    """
+    exec ( code2 )
+normalize.__doc__ = normalize2.__doc__ 
 
-        result = normalize2 ( ( ds , *others ) , weight = weight , first = first )  
-
-        return result [ 0 ] if not others else resut 
-    
 # =============================================================================
 if '__main__' == __name__ :
     
