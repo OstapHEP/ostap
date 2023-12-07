@@ -54,7 +54,7 @@ namespace
     bool storeAsymError () const 
     { return RooDataSet::_wgtVar ? RooDataSet::_wgtVar->getAttribute ( "StoreAsymError" ) : false ; }
     // ========================================================================
-    const RooAbsReal* wgtVar () const { return _wgtVar ; }
+    const RooAbsReal* wgtVar () const { return RooDataSet::_wgtVar ; }
     // ========================================================================
   } ;
   // ==========================================================================
