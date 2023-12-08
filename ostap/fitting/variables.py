@@ -69,7 +69,7 @@ __all__     = (
 from   builtins                 import range
 from   ostap.core.meta_info     import root_info 
 from   ostap.math.base          import doubles, iszero, isequal 
-from   ostap.core.core          import VE, hID, Ostap
+from   ostap.core.core          import VE, hID, Ostap, valid_pointer 
 from   ostap.math.reduce        import root_factory 
 from   ostap.core.ostap_types   import ( num_types      , list_types     ,
                                          integer_types  , string_types   ,
@@ -185,8 +185,10 @@ ROOT.RooRealVar     . Release         = _rel_par_
 ## convert to float 
 ROOT.RooRealVar     . __float__       = lambda s : s.getVal()
 ## print it in more suitable form 
-ROOT.RooRealVar     . __repr__        = lambda s : "'%s' : %s " % ( s.GetName() , s.ve() )
-ROOT.RooRealVar     . __str__         = lambda s : "'%s' : %s " % ( s.GetName() , s.ve() )
+ROOT.RooAbsReal     . __repr__        = lambda s : 'nullptr' if not valid_pointer ( s ) else "'%s' : %s " % ( s.GetName() , s.getVal() )
+ROOT.RooAbsReal     . __str__         = lambda s : 'nullptr' if not valid_pointer ( s ) else "'%s' : %s " % ( s.GetName() , s.getVal() )
+ROOT.RooRealVar     . __repr__        = lambda s : 'nullptr' if not valid_pointer ( s ) else "'%s' : %s " % ( s.GetName() , s.ve()     )
+ROOT.RooRealVar     . __str__         = lambda s : 'nullptr' if not valid_pointer ( s ) else "'%s' : %s " % ( s.GetName() , s.ve()     )
 
 
 ROOT.RooConstVar    . as_VE          = lambda s : VE ( s.getVal() , 0 )
@@ -194,10 +196,10 @@ ROOT.RooFormulaVar  . as_VE          = lambda s : VE ( s.getVal() , 0 )
 ROOT.RooConstVar    . asVE           = lambda s : VE ( s.getVal() , 0 )
 ROOT.RooFormulaVar  . asVE           = lambda s : VE ( s.getVal() , 0 )
 
+
+ROOT.RooAbsReal     . __float__      = lambda s : s.getVal() ## NB!!!
 ROOT.RooRealVar     . __float__      = lambda s : s.getVal()
 ROOT.RooConstVar    . __float__      = lambda s : s.getVal()
-ROOT.RooAbsReal     . __float__      = lambda s : s.getVal() ## NB!!!
-
 
 ROOT.RooAbsReal       .__contains__ = lambda s,v : False ## ??? do we need it???
 ROOT.RooAbsRealLValue .__contains__ = _rrv_contains_ 

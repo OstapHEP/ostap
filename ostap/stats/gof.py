@@ -221,7 +221,8 @@ def normalize ( ds , *others , weight = () , first = True ) :
 else :
     code2 = """
 def normalize ( ds , others = () , weight = () , first = True ) :
-    result = normalize2 ( ( ds , *others ) , weight = weight , first = first )          
+    datasets = [ ds ] + [ d for d in others ]
+    result = normalize2 ( datasets , weight = weight , first = first )          
     return result [ 0 ] if not others else resut 
     """
     exec ( code2 )

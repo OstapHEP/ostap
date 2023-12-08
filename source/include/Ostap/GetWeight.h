@@ -25,7 +25,7 @@ namespace Ostap
      *  @param data (INPUT) dataset
      *  @return the name of weigth variable, if and when possible 
      */
-    std::string       getWeight ( const RooAbsData* data ) ;
+    std::string       getWeight    ( const RooAbsData* data ) ;
     // ========================================================================
     /** get the weight variable from data set (if and when possible)
      *  @param data (INPUT) dataset

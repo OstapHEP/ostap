@@ -2289,17 +2289,29 @@ def _ds_wname_ ( dataset ) :
 
     attr = '_weight_var_name'
     if not hasattr ( dataset , attr ) :
-
-        if ( 6 , 26 ) <= root_info :
-            wv = dataset.weightVar()
-            wn = wv.name if wv else Ostap.Utils.getWeight ( dataset )
-        else : wn = Ostap.Utils.getWeight ( dataset )
-            
+        wn = Ostap.Utils.getWeight ( dataset )    
         setattr ( dataset , attr , wn ) 
         
     return getattr ( dataset , attr , '' )
 # =============================================================================
 
+
+# =============================================================================
+## Get the weight variable from the dataset
+#  @code
+#  dataset = ...
+#  wvar    = dataset.weightVar() 
+#  @endcode 
+def _ds_weight_var_ ( dataset ) :
+    """Get the weight variable from the dataset
+    
+    >>> dataset = ...
+    >>> wvar    = dataset.weightVar()
+    
+    """
+    wvar = Ostap.Utils.getWeightVar ( dataset )
+    return wvar 
+    ## return wvar if valid_pointer ( wvar ) else None
 
 # =============================================================================
 ## Are weight errors stored in dataset?
@@ -2363,21 +2375,27 @@ def _ds_store_asym_error_ ( dataset ) :
 # =============================================================================
 
 ROOT.RooDataSet.wname            = _ds_wname_
+ROOT.RooDataSet.weight_name      = _ds_wname_
 ROOT.RooDataSet.store_error      = _ds_store_error_
 ROOT.RooDataSet.store_asym_error = _ds_store_asym_error_
 
+if not hasattr ( ROOT.RooDataSet , 'weightVar' ) :
+    ROOT.RooDataSet.weightVar = _ds_weight_var_ 
+
+
 _new_methods_ += [
     ROOT.RooDataSet.wname            , 
+    ROOT.RooDataSet.weight_name      , 
     ROOT.RooDataSet.store_error      , 
     ROOT.RooDataSet.store_asym_error ,
     ]
 
-if sys.version_info < (3,0) :
-    def f_open ( name , mode , **kwargs ) :
-        return open ( name , mode )
-else :
+if (3,0) <= sys.version_info :
     def f_open ( name , mode , **kwargs ) :
         return open ( name , mode , **kwargs )
+else : 
+    def f_open ( name , mode , **kwargs ) :
+        return open ( name , mode )
 # =============================================================================
 ## Convert dataset to CSV format
 #  @code

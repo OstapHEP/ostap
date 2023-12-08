@@ -72,6 +72,8 @@ namespace
  *  @return weigth variable, when possible 
  */
 // ============================================================================
+#include <iostream> 
+
 const RooAbsReal* Ostap::Utils::getWeightVar ( const RooAbsData* data ) 
 { 
   if ( nullptr == data || !data->isWeighted() ) { return nullptr ; }
