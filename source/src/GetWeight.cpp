@@ -88,7 +88,7 @@ const RooAbsReal* Ostap::Utils::getWeightVar ( const RooAbsData* data )
   // 
   if ( nullptr == set1  || 
        nullptr == set2  || 
-       set1->getgSize() != set2->getSize() + 1 ) { return nullptr ; }
+       set1->getSize() != set2->getSize() + 1 ) { return nullptr ; }
   //
   const RooAbsArg* wvar = set1->find ( wname.c_str() ) ;
   if ( nullptr == wvar ) { return nullptr ; }
