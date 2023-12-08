@@ -24,6 +24,7 @@
 
   1. fix a newly introduced bug in `ostap.utils.utils.split_range`
 `
+
 # v1.10.0.2
 
 ## New features:
