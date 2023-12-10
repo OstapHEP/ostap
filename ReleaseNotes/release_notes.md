@@ -3,8 +3,8 @@
 ## New features:
 
   1. Update `histo_compare` tests 
-  1. Slight optimisation in `Ostap::Math::ChebyshedSum`
-  1. Further optimisation in `Ostap::Math::ChebyshedSum`
+  1. Slight optimisation in `Ostap::Math::ChebyshevSum`
+  1. Further optimisation in `Ostap::Math::ChebyshevSum`
   1. add new test `ostap/math/tests/test_math.poly.py`
   1. Reduce usage of `Ostap::Utils::Iterator`
   1. add test  for `ostap.stats.ustat` module 
@@ -26,7 +26,6 @@
 
   1. fix a newly introduced bug in `ostap.utils.utils.split_range`
 `
-
 # v1.10.0.2
 
 ## New features:
