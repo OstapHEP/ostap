@@ -1,3 +1,5 @@
+# v1.10.0.4
+
 ## New features:
 
   1. Update `histo_compare` tests 
