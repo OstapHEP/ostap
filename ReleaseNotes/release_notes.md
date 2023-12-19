@@ -1,3 +1,11 @@
+## New features:
+
+  1. add `more_vars`argument to `ostap.fitting.ds2numpy.ds2numpy` function
+`
+## Backward incompatible: 
+
+## Bug fixes:
+
 # v1.10.0.4
 
 ## New features:

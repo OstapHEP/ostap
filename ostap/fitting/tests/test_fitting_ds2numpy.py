@@ -4,6 +4,7 @@
 from   ostap.utils.timing      import timing
 from   builtins                import range
 from   ostap.fitting.ds2numpy  import ds2numpy
+import ostap.fitting.models    as     Models 
 import ostap.fitting.roofit 
 import ROOT, random 
 # =============================================================================
@@ -43,10 +44,14 @@ def test_small_ds():
         i.setVal   ( f % 2  )  
         data.add   ( varset )
 
-
-    ws = ds2numpy ( data, ['x', 'y' , 'i' ] )
+    g1 = Models.Gauss_pdf ( 'G1' , xvar = x  , mean = 5  , sigma = 1 )
+    g2 = Models.Gauss_pdf ( 'G2' , xvar = y  , mean = 5  , sigma = 1 )
     
-
+    ws = ds2numpy ( data, ['x', 'y' , 'i' ] , more_vars = { 'gaus1' : g1 ,
+                                                            'gaus2' : g2 } )
+    
+    print ( ws  )
+    
 # =============================================================================
 def test_small_ds_with_weights():
 
@@ -185,17 +190,17 @@ if '__main__' == __name__ :
     with timing ('Test small ds' , logger ) :
         test_small_ds()
 
-    with timing ('Test small dataset with    weights', logger ) :
-        test_small_ds_with_weights()
+    ## with timing ('Test small dataset with    weights', logger ) :
+    ##     test_small_ds_with_weights()
 
-    with timing ('Test large dataset with    weights', logger ) :
-       test_ds_with_weights()
+    ## with timing ('Test large dataset with    weights', logger ) :
+    ##    test_ds_with_weights()
         
-    with timing ('Test large dataset with    weights', logger ) :
-        test_large_ds_with_weights()
+    ## with timing ('Test large dataset with    weights', logger ) :
+    ##     test_large_ds_with_weights()
     
-    with timing ('Test large dataset without weights', logger ) :
-        test_large_ds_without_weights()
+    ## with timing ('Test large dataset without weights', logger ) :
+    ##     test_large_ds_without_weights()
 
 
 # =============================================================================
