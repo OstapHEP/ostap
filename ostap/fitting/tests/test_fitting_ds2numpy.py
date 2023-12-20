@@ -190,17 +190,17 @@ if '__main__' == __name__ :
     with timing ('Test small ds' , logger ) :
         test_small_ds()
 
-    ## with timing ('Test small dataset with    weights', logger ) :
-    ##     test_small_ds_with_weights()
+    with timing ('Test small dataset with    weights', logger ) :
+        test_small_ds_with_weights()
 
-    ## with timing ('Test large dataset with    weights', logger ) :
-    ##    test_ds_with_weights()
+    with timing ('Test large dataset with    weights', logger ) :
+       test_ds_with_weights()
         
-    ## with timing ('Test large dataset with    weights', logger ) :
-    ##     test_large_ds_with_weights()
+    with timing ('Test large dataset with    weights', logger ) :
+        test_large_ds_with_weights()
     
-    ## with timing ('Test large dataset without weights', logger ) :
-    ##     test_large_ds_without_weights()
+    with timing ('Test large dataset without weights', logger ) :
+        test_large_ds_without_weights()
 
 
 # =============================================================================

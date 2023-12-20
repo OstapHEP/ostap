@@ -118,8 +118,13 @@ _new_methods_ += [
     ROOT.RooArgList. __bool__      ,
     ROOT.RooArgList. __getitem__   ,
     ROOT.RooArgList. __setitem__   ,
-]    
+]
 
+if root_info < ( 6, 26 ) and not hasattr ( ROOT.RooAbsCollection , 'assign' ) :
+    ROOT.RooAbsCollection.assign = ROOT.RooAbsCollection.assignValueOnly 
+    _new_methods_ += [
+        ROOT.RooAbsCollection.assign ,
+        ]
 # =============================================================================
 ## helper function to print collection
 def _rs_list_ ( self ) :
