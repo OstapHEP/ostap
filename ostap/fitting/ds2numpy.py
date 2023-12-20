@@ -95,13 +95,29 @@ if   np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                 obsvars = absreal.getObservables ( dataset )
                 item    = name , absreal , obsvars
                 funcs.append ( item )
-
+        elif more_vars and all ( ( isinstance ( v , ( ROOT.RooAbsReal , AFUN1 ) ) for v in more_vars ) ) :
+            for v in more_vars :
+                if isinstance ( v  , AFUN1 ) : absreal = v.fun
+                else                         : absreal = v  
+                obsvars = absreal.getObservables ( dataset )
+                item    = v.name , absreal , obsvars
+                funcs.append ( item )
+        elif more_vars :
+            for name, var in more_vars :
+                if   isinstance ( var , AFUN1           ) : absreal = var.fun
+                elif isinstance ( var , ROOT.RooAbsReal ) : absreal = var   
+                else :
+                    raise TypeError ( "Invalid content of 'more_vars'!" )
+                obsvars = absreal.getObservables ( dataset )
+                item    = name , absreal , obsvars
+                funcs.append ( item )
+                
         ## 3) reduce dataset if only a small subset of variables is requested 
         nvars = len ( dataset.get() )
         if 2 * len ( vnames )  <= nvars :            
             with useStorage ( ROOT.RooAbsData.Vector ) : 
                 dstmp  = dataset.subset ( vnames )
-            result = ds2numpy ( dstmp , vnames )
+            result = ds2numpy ( dstmp , vnames , more_vars = more_vars )
             dstmp.erase()
             del dstmp 
             return result
@@ -239,12 +255,28 @@ elif   np  :  ## ROOT < 6.26
                 obsvars = absreal.getObservables ( dataset )
                 item    = name , absreal , obsvars
                 funcs.append ( item )
+        elif more_vars and all ( ( isinstance ( v , ( ROOT.RooAbsReal , AFUN1 ) ) for v in more_vars ) ) :
+            for v in more_vars :
+                if isinstance ( v  , AFUN1 ) : absreal = v.fun
+                else                         : absreal = v  
+                obsvars = absreal.getObservables ( dataset )
+                item    = v.name , absreal , obsvars
+                funcs.append ( item )
+        elif more_vars :
+            for name, var in more_vars :
+                if   isinstance ( var , AFUN1           ) : absreal = var.fun
+                elif isinstance ( var , ROOT.RooAbsReal ) : absreal = var   
+                else :
+                    raise TypeError ( "Invalid content of 'more_vars'!" )
+                obsvars = absreal.getObservables ( dataset )
+                item    = name , absreal , obsvars
+                funcs.append ( item )
                 
         ## 3) reduce dataset if only a small subset of variables is requested 
         nvars = len ( dataset.get() )
         if 2 * len ( vnames )  <= nvars :
             dstmp  = dataset.subset ( vnames )
-            result = ds2numpy ( dstmp , vnames )
+            result = ds2numpy ( dstmp , vnames , more_vars = more_vars )
             dstmp.erase()
             del dstmp 
             return result  
