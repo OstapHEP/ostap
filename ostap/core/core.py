@@ -616,10 +616,11 @@ def _rd_valid_ ( rdir ) :
 
     ## for the file directories check the validity of the file
     if isinstance ( rdir , ROOT.TDirectoryFile ) :
-        fdir = rdir.GetFile()
-        if not valid_pointer ( fdir ) or not fdir.IsOpen () or fdir.IsZombie () :
-            return False 
 
+        fdir = rdir.GetFile()
+        if not valid_pointer ( fdir ) or ( not fdir.IsOpen () ) or fdir.IsZombie () :
+            return False 
+        
     return True 
         
 ROOT.TDirectory.__bool__     = _rd_valid_

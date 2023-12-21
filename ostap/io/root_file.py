@@ -929,9 +929,9 @@ def _rf_new_close_ ( rfile , options = '' ) :
     >>> print ROOT.gROOT.CurrentDirectory()
     """
     if rfile and rfile.IsOpen() :
-        with ROOTCWD() :
-            logger.debug ( "Close ROOT file %s" % rfile.GetName() ) 
-            return rfile ._old_close_ ( options )
+        ## with ROOTCWD() :
+        logger.debug ( "Close ROOT file %s" % rfile.GetName() ) 
+        return rfile ._old_close_ ( options )
             
 # =============================================================================
 ## another name, just for convinince
