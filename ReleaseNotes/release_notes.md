@@ -1,3 +1,5 @@
+# v1.10.0.6
+
 ## New features:
 
   1. add `more_vars`argument to `ostap.fitting.ds2numpy.ds2numpy` function
@@ -6,6 +8,7 @@
 
 ## Bug fixes:
 
+  1. fix old bug in `_rf_new_close_`
 
 # v1.10.0.4
 
