@@ -1763,13 +1763,13 @@ def test_hypatia () :
     from ostap.utils.gsl import gslCount
     with rooSilent() , gslCount() :
         signal.kappa.fix ( 0 )    
-        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True , **conf )
         signal.kappa.release ()
         signal.zeta .release ()
         signal.mean .release ()
         signal.sigma.release ()
-        result, frame = model. fitTo ( dataset0 , silent = True )
-        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True , **conf )
+        result, frame = model. fitTo ( dataset0 , silent = True , **conf )
         
     make_print ( model , result , "Hypatia model" , logger )        
     
