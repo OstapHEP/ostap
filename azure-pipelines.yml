@@ -100,6 +100,14 @@ jobs:
     CMTCONFIG: 'x86_64-centos7-gcc11-opt'
     artifact: 'test_cs7_lcg104c_gcc11'
 
+ - template: template-pipelines.yml  # Template reference
+   parameters:
+    name: cs7_lcg_105_gcc12
+    vmImage:  'ubuntu-latest'
+    dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
+    LCG: 'LCG_105'
+    CMTCONFIG: 'x86_64-centos7-gcc12-opt'
+    artifact: 'test_cs7_lcg105_gcc12'
 
 # - template: template-pipelines.yml  # Template reference
 #   parameters:
