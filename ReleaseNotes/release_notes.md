@@ -5,7 +5,6 @@
 
 ## Bug fixes:
 
-
 # v1.10.0.6
 
 ## New features:
