@@ -7,9 +7,13 @@ message ( "----> ROOT   version   : " ${ROOT_VERSION} )
 find_program(ROOT_CONFIG_EXECUTABLE NAMES root-config)
 
 
+if(ROOT_VERSION VERSION_LESS "6.31.01")
+
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python2-version
                  OUTPUT_VARIABLE PY2VERSION_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+endif() 
 
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python3-version
                  OUTPUT_VARIABLE PY3VERSION_ROOT
@@ -56,7 +60,8 @@ elseif (PY3VERSION_ROOT)
   set( PYTHON_LIBRARIES    ${Python3_LIBRARIES}    )
   set( PYTHON_VERSION      ${Python3_VERSION}      PARENT_SCOPE)
   set( PYTHON_EXECUTABLE   ${Python3_EXECUTABLE}   PARENT_SCOPE)
-  set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT3;ROOT::ROOTTPython;Python3::Python")
+  ## set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT3;ROOT::ROOTTPython;Python3::Python")
+  set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::ROOTTPython;Python3::Python")
 endif () 
 
 
