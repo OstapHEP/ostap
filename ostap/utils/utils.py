@@ -77,7 +77,7 @@ __all__     = (
     'crange'             , ## helper loop over values between xmin and xmax using Chebyshev nodes 
     ##
     'split_range'        , ## helper generator to split large range into smaller chunks
-    'split_n_range'      , ## helper generator to split large range into smaller chunks of approimately same size 
+    'split_n_range'      , ## helper generator to split large range into smaller chunks of approximately same size 
     ##
     'chunked'            , ## break *iterable* into chunks of length *n*:
     'divide'             , ## divide the elements from *iterable* into *n* parts
@@ -131,10 +131,10 @@ from   sys                    import version_info  as python_version
 from   ostap.utils.timing     import timing, timer
 ## other useful stuff 
 from   ostap.utils.basic      import isatty, with_ipython, NoContext
-from   ostap.core.ostap_types import integer_types 
+from   ostap.core.ostap_types import integer_types, string_types, dictlike_types, listlike_types    
 ## ... and more useful stuff 
 from   ostap.utils.memory     import memory, virtualMemory, Memory 
-import ROOT, time, os , sys, math, time, functools, abc, array, random ## attention here!!
+import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime  ## attention here!!
 # =============================================================================
 try :
     from string import ascii_letters, digits 
@@ -1189,7 +1189,7 @@ except ImportError :
     #  into RAM on the client.
     # 
     #  The function is copied from <code>more_itertools</code>
-    def chunked(iterable, n):
+    def chunked  ( iterable , n ):
         """Break *iterable* into lists of length *n*:
         
         >>> list(chunked([1, 2, 3, 4, 5, 6], 3))
@@ -1211,7 +1211,7 @@ except ImportError :
         
         - the function is copied from `more_itertools`
         """
-        return iter(partial(take, n, iter(iterable)), [])
+        return iter ( partial ( take , n , iter ( iterable ) ) , [] )
 
     # =========================================================================
     ## Divide the elements from *iterable* into *n* parts, maintaining order.
@@ -1910,8 +1910,8 @@ def is_formula ( expr , symbols = math_symbols ) :
 # -ff                                  The compression level use is the one specified in the first input
 # -f0                                  Do not compress the target file
 # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)  
-def hadd ( self , files , output = None , opts = "-ff" ) :
-    """<erge all files using <code>hadd</code> script from ROOT
+def hadd ( files , output = None , dir = None , opts = "-ff -O" ) :
+    """Merge all files using <code>hadd</code> script from ROOT
     - `output`  name of the output merged file
     - `opts`   options for command <code>hadd</code>
     It returns the name of the merged file
@@ -1941,24 +1941,51 @@ def hadd ( self , files , output = None , opts = "-ff" ) :
     # -f0                                  Do not compress the target file
     # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)                            
     """
+
+    if isinstance ( files , string_types ) : files = [ files ]
+
+    import glob
+    all_files = []
+    for p in files :
+        all_files += [ f for f in glob.iglob ( p ) ]
+
+    all_files = list  ( set ( all_files ) )
+    all_files.sort()
+    all_files = tuple ( all_files )
+    
     if not output :
         import ostap.utils.cleanup as CU
-        output = CU.CleanUp.tempfile ( prefix = 'ostap-hadd-' , suffix = '.root' )
-        
-    import subprocess
+        suffix = '.root'
+        if files :
+            base , suffix = os.path.splitext  ( all_files [0] )
+            if base : base    = os.path.basename ( base   )
+            if base : suffix  = '-%s%s' % ( base , suffix )            
+        output = CU.CleanUp.tempfile ( prefix = 'ostap-hadd-merged-' , suffix = suffix , dir = dir )
+            
+                            
+    cargs    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in all_files ]
 
-    ## patterns ? 
-    if isinstance ( files , str ) :
-        import glob
-        files = [ f for f in glob.iglob ( files ) ] 
-                    
-    cargs    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in files ]
+    import subprocess
     subprocess.check_call ( cargs )
     
     if os.path.exists ( output ) and os.path.isfile ( output ) :
         return output 
     
     raise IOError ( "The output file %s does not exist!" % output )
+
+
+# =============================================================================
+def hadd2 ( args ) :
+
+    if   isinstance ( args , string_types     ) : return hadd (  args )
+    elif isinstance ( args , listlike_types   ) \
+         and all ( ( isinstance ( i , string_types ) and i ) for i in args ) :
+        return hadd ( args )    
+    elif isinstance ( args , dictlike_types   ) :
+        return hadd ( **args )
+
+    return hadd  ( *args ) 
+
 
 # =============================================================================
 if '__main__' == __name__ :

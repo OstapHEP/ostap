@@ -28,6 +28,7 @@ __all__     = (
     'commonpath'    , ## common path(prefix) for list of files
     'copy_file'     , ## copy fiel creating inetremadiet directorys if needed 
     'NoContext'     , ## empty context manager
+    'mtime'         , ## last modication/creation time for the path (dir or file)
     ##
     'loop_items'    , ## loop over dictionary items 
     'items_loop'    , ## ditto
@@ -36,7 +37,7 @@ __all__     = (
     'get_env'       , ## case-insensitive access to environment variable   
     )
 # =============================================================================
-import sys, os 
+import sys, os, datetime  
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
 #  @code
@@ -316,6 +317,39 @@ def get_env ( variable , default , silent = False ) :
         logger.warning ( '%s\n%s' %  ( title2 , table ) ) 
     
     return found [ -1] [ 1 ] 
+
+# =============================================================================
+## Get the modification time for the path (inclusnuig subdirectories)
+def mtime ( path ) :
+    """Get the last modification time for the path (inclusing subdirectories)
+    """
+    
+    assert os.path.exists ( path ) , "The path `%s' does not exist!" % path
+
+    ## get the time of modification/creation 
+    _mtime_ = lambda p : max ( os.path.getmtime ( path ) , os.path.getctime ( path ) ) 
+
+    ## own/root  
+    mt      = datetime.datetime.fromtimestamp ( _mtime_ ( path ) )
+    
+    if os.path.isfile ( path ) : return mt 
+
+    for root, dirs, files in os.walk ( path ) :
+        
+        for d in dirs  :
+            entry = os.path.join ( root , d )
+            if os.path.exists ( entry ) : 
+                mt = max ( mt , mtime ( entry ) )
+                
+        for f in files :
+            entry = os.path.join ( root , f )
+            if os.path.exists ( entry ) : 
+                mt = max ( mt ,  datetime.datetime.fromtimestamp ( _mtime_ ( entry ) ) ) 
+
+        break 
+        
+        
+    return mt  
 
 # =========================================================================
 ## copy source file into destination, creating intermediate directories

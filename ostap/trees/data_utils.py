@@ -336,7 +336,7 @@ class Files(object):
         return isinstance ( other , Files ) 
 
     # =========================================================================
-    ## check that the list of fiels is the same
+    ## check that the list of files is the same
     #  @code
     #  ds1 = ...
     #  ds2 = ...\
@@ -511,7 +511,7 @@ class Files(object):
         description = "Sample(%d): %s" % ( n , self.description )
         
         return self.clone ( files = files , description = description )
-    
+
     # =========================================================================
     ##  Get an element or slice 
     #   @code
@@ -546,65 +546,39 @@ class Files(object):
     def __len__     ( self ) : return len  ( self.files )
 
     # =========================================================================
-    ## merge all files using <code>hadd</code> script from ROOT
-    #  @param output  name of the output merged file, if None,
-    #                 the temporary name will be generated,
-    #                 that will be deleted at the end of the session
-    #  @param opts   options for command <code>hadd</code>
-    #  @return the name of the merged file
-    # OPTIONS:
-    # -a                                   Append to the output
-    # -k                                   Skip corrupt or non-existent files, do not exit
-    # -T                                   Do not merge Trees
-    # -O                                   Re-optimize basket size when merging TTree
-    # -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
-    # -j                                   Parallelize the execution in multiple processes
-    # -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
-    # -d                                   Carry out the partial multiprocess execution in the specified directory
-    # -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
-    # -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
-    # -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
-    # -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
-    # -fk                                  Sets the target file to contain the baskets with the same compression
-    #                                      as the input files (unless -O is specified). Compresses the meta data
-    #                                      using the compression level specified in the first input or the
-    #                                      compression setting after fk (for example 206 when using -fk206)
-    # -ff                                  The compression level use is the one specified in the first input
-    # -f0                                  Do not compress the target file
-    # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)    
-    def hadd ( self , output = None , opts = "-ff" ) :
-        """<erge all files using <code>hadd</code> script from ROOT
-        - `output`  name of the output merged file
-        - `opts`   options for command <code>hadd</code>
-        It returns the name of the merged file
-        
-        If no output file name is specified, the temporary name
-        will be generate and the temporary file will be deleted
-        at the end of the session
-
-        OPTIONS:
-        # -a                                   Append to the output
-        # -k                                   Skip corrupt or non-existent files, do not exit
-        # -T                                   Do not merge Trees
-        # -O                                   Re-optimize basket size when merging TTree
-        # -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
-        # -j                                   Parallelize the execution in multiple processes
-        # -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
-        # -d                                   Carry out the partial multiprocess execution in the specified directory
-        # -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
-        # -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
-        # -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
-        # -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
-        # -fk                                  Sets the target file to contain the baskets with the same compression
-        #                                      as the input files (unless -O is specified). Compresses the meta data
-        #                                      using the compression level specified in the first input or the
-        #                                      compression setting after fk (for example 206 when using -fk206)
-        # -ff                                  The compression level use is the one specified in the first input
-        # -f0                                  Do not compress the target file
-        # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)                            
+    ## Split object into several chunks of smaller size
+    #  @code
+    #  data   = ...
+    #  chunks = data.split_chunks ( 10 ) 
+    #  @endcode 
+    def split_chunks ( self , chunk_size = 10 ) :
+        """Split obnject into several chunks of smaller size
+        >>> data   = ...
+        >>> chunks = data.split_chunks ( 10 ) 
         """
-        from ostap.utils.utils import hadd as hadd_
-        return hadd_ ( self.files , ouput = output , opts = opts  )
+        from ostap.utils.utils import chunked 
+        return tuple ( self.clone ( files = chunk ) for chunk in chunked ( self.files , chunk_size ) )
+
+    # =========================================================================
+    ## Split object into several chunks 
+    #  @code
+    #  data   = ...
+    #  chunks = data.split_groups ( 10 ) 
+    #  @endcode 
+    def split_groups ( self , groups = 10 ) :
+        """Split the object into several groups
+        >>> data   = ...
+        >>> groups = data.split_groups ( 10 ) 
+        """
+        from ostap.utils.utils import divide
+        result = []
+        for group in divide ( groups , self.files ) :
+            files = list ( group ) 
+            if not files : continue
+            result.append ( self.clone ( files = files ) )
+            
+        return tuple  ( result )
+
     
     # =========================================================================
     ## get a common path (prefix) for all files in collection
@@ -635,7 +609,7 @@ class Files(object):
         - common path (prefix) for all files will be replaced by new directory
         """
         
-        from ostap.utils.basic  import writeable,    copy_file
+        from ostap.utils.basic  import writeable,   copy_file
         from ostap.io.root_file import copy_file as copy_root_file 
 
         ## use  temporary directory
@@ -861,6 +835,139 @@ class Data(Files):
             pb = frame_progress ( f , len ( self.chain ) ) 
         return f 
     
+    # =========================================================================
+    ## merge all files using <code>hadd</code> script from ROOT
+    #  @param output  name of the output merged file, if None,
+    #                 the temporary name will be generated,
+    #                 that will be deleted at the end of the session
+    #  @param opts   options for command <code>hadd</code>
+    #  @return the name of the merged file
+    # OPTIONS:
+    # -a                                   Append to the output
+    # -k                                   Skip corrupt or non-existent files, do not exit
+    # -T                                   Do not merge Trees
+    # -O                                   Re-optimize basket size when merging TTree
+    # -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
+    # -j                                   Parallelize the execution in multiple processes
+    # -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
+    # -d                                   Carry out the partial multiprocess execution in the specified directory
+    # -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
+    # -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
+    # -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
+    # -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
+    # -fk                                  Sets the target file to contain the baskets with the same compression
+    #                                      as the input files (unless -O is specified). Compresses the meta data
+    #                                      using the compression level specified in the first input or the
+    #                                      compression setting after fk (for example 206 when using -fk206)
+    # -ff                                  The compression level use is the one specified in the first input
+    # -f0                                  Do not compress the target file
+    # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)    
+    def hadd ( self , output = None , opts = "-ff -O" , **kwargs ) :
+        """Merge all files using <code>hadd</code> script from ROOT
+        - `output`  name of the output merged file
+        - `opts`   options for command <code>hadd</code>
+        It returns the name of the merged file
+        
+        If no output file name is specified, the temporary name
+        will be generate and the temporary file will be deleted
+        at the end of the session
+
+        OPTIONS:
+        # -a                                   Append to the output
+        # -k                                   Skip corrupt or non-existent files, do not exit
+        # -T                                   Do not merge Trees
+        # -O                                   Re-optimize basket size when merging TTree
+        # -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
+        # -j                                   Parallelize the execution in multiple processes
+        # -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
+        # -d                                   Carry out the partial multiprocess execution in the specified directory
+        # -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
+        # -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
+        # -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
+        # -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
+        # -fk                                  Sets the target file to contain the baskets with the same compression
+        #                                      as the input files (unless -O is specified). Compresses the meta data
+        #                                      using the compression level specified in the first input or the
+        #                                      compression setting after fk (for example 206 when using -fk206)
+        # -ff                                  The compression level use is the one specified in the first input
+        # -f0                                  Do not compress the target file
+        # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)                            
+        """
+        from ostap.utils.utils import hadd as hadd_
+        return hadd_ ( self.files , output = output , opts = opts  , **kwargs )
+    
+    # =========================================================================
+    ## Split data into severals chunks of smaller size and merge (using <code>hadd</code>) each chunk
+    #  @code
+    #  data   = ..
+    #  merged = data.merge_chunks ( 10 ) 
+    #  @endcode 
+    def __merge_chunks (  self , chunks , opts = '-ff -O' , parallel = True ) :
+        """Split data into severals chunks of smaller size and merge (using <code>hadd</code>) each chunk        
+        >>> data   = ..
+        >>> merged = data.merge_chunks ( 10 ) 
+        """
+
+        import ostap.utils.cleanup as  CU
+        cu     = CU.CleanUp()
+        tmpdir = cu.tmpdir
+
+        if parallel and chunks and 2 <= len ( chunks[0].files ) :
+            
+            from   ostap.parallel.parallel import WorkManager
+            from   ostap.utils.utils       import hadd2       as hadd_
+            
+            if     '-j' in opts : opts = opts.replace('-j','')
+            if not '-v' in opts : opts = '%s -v 0' % opts
+
+            pargs  = [ ( c.files , None , tmpdir , opts ) for c in chunks ] 
+            
+            wm     = WorkManager ( silent = True , progress = not self.silent )
+            
+            merged = [ o for o in wm.iexecute ( hadd_ , pargs , progress = not self.silent ) ]
+
+            return self.clone ( files = merged ) 
+            
+        if not '-j' in opts : opts = '%s -j' % opts
+
+        output = []
+
+        if self.silent and not '-v' in opts : opts = '%s -v 0' % opts
+        for c in progress_bar ( chunks , silent = self.silent or not chunks ) :
+            output.append (  c.hadd ( opts = opts , dir = tmpdir ) ) 
+                    
+        return self.clone ( output )
+
+    # =========================================================================
+    ## Split data into severals chunks of smaller size and merge (using <code>hadd</code>) each chunk
+    #  @code
+    #  data   = ..
+    #  merged = data.merge_chunks ( 10 ) 
+    #  @endcode 
+    def merge_chunks (  self , chunk_size , opts = '-ff -O' , parallel = True ) :
+        """Split data into severals chunks of smaller size and merge (using <code>hadd</code>) each chunk        
+        >>> data   = ..
+        >>> merged = data.merge_chunks ( 10 ) 
+        """
+        chunks = self.split_chunks ( chunk_size )
+        return self.__merge_chunks ( chunks , opts = opts , parallel = parallel )
+    
+    
+    # =========================================================================
+    ## Split data into severalgroup and merge (using  <code>hadd</code>) each group
+    #  @code
+    #  data   = ..
+    #  merged = data.merge_groups ( 10 ) 
+    #  @endcode 
+    def merge_groups (  self , groups , opts = '-ff -O' , parallel = True ) :
+        """Split data into severals groups and merge (using <code>hadd</code>) each group
+        >>> data   = ..
+        >>> merged = data.merge_chunks ( 10 ) 
+        """
+        chunks = self.split_groups ( groups )  
+        return self.__merge_chunks ( chunks , opts = opts , parallel = parallel )
+
+
 # =============================================================================
 ## @class Data2
 #  Simple utility to access two chains in the set of ROOT-files

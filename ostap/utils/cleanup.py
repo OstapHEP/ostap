@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/utils/cleanup.py
@@ -21,19 +21,22 @@ __all__     = (
     'TempFile' , ## Simple placeholder for temporary file  
     )
 # =============================================================================
-import os, tempfile, datetime, weakref   
+import os, tempfile, datetime, weakref, re    
 from   sys import version_info as python_version 
 # =============================================================================
 from   ostap.core.ostap_types import string_types
-from   ostap.utils.basic      import make_dir, writeable, whoami   
+from   ostap.utils.basic      import make_dir, writeable, whoami, mtime 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.cleanup' )
 else                       : logger = getLogger( __name__              )
 del getLogger
 # =============================================================================
-date_format =  "%Y-%b-%d"
-re_format   = r"-(\d{4}-(\D&\S){3}-\d{2})-" 
+date_format = "%Y-%b-%d"
+re_format   = re.compile ( r'(?P<date>(\d{4}-\S{3}-\d{2}))-(?P<pid>(\d{2,12}))-.*' )
+start       = datetime.datetime.now()
+time_delta  = datetime.timedelta ( days = 4 ) ## from Friday to Tuesday :-)
+
 # =============================================================================
 user = whoami ()
 # =============================================================================            
@@ -70,20 +73,20 @@ if not base_tmp_dir :
 # ===============================================================================
 ## local storage of temporary pid-dependent temporary directories 
 base_tmp_pid_dirs = {}
-
+dir_prefix        = 'ostap-session-'
+dir_user_prefix   = 'ostap-session-%s-' % user 
 # ===========================================================================
 ## create the base temporary directory
 def make_base_tmp_dir () :
     """Create the base temporary directory
     """
     
-    prefix = 'ostap-session-'
+    prefix = '%s' % dir_prefix 
     
     td = tempfile.gettempdir()
-    if user and not user in td : prefix = '%s%s-' % ( prefix , user )
+    if user and not user in td : prefix = dir_user_prefix
     
-    now     = datetime.datetime.now()
-    prefix  = "%s%s-%d-"   %  ( prefix , now.strftime ( date_format ) , os.getpid () )
+    prefix  = "%s%s-%d-"   %  ( prefix , start.strftime ( date_format ) , os.getpid () )
 
     t = tempfile.mkdtemp ( prefix = prefix ) 
     return t
@@ -158,7 +161,7 @@ class  CleanUp(object) :
  
     @property
     def tmpdir ( self ) :
-        """``tmpdir'' : return the name of temporary managed directory
+        """`tmpdir' : return the name of temporary managed directory
         - the managed directory will be cleaned-up and deleted at-exit
         >>> o    = CleanUp()
         >>> tdir = o.tmpdir 
@@ -168,7 +171,7 @@ class  CleanUp(object) :
     
     @property
     def tmpdirs  ( self ) :
-        """``tmpdirs'' - list of currently registered managed temporary directories"""
+        """`tmpdirs' - list of currently registered managed temporary directories"""
         return tuple ( self._tmpdirs )
     
     @tmpdirs.setter
@@ -181,7 +184,7 @@ class  CleanUp(object) :
                 
     @property 
     def tmpfiles ( self ) :
-        """``tempfiles'' : list of registered managed temporary files"""
+        """`tempfiles' : list of registered managed temporary files"""
         return list ( self._tmpfiles )
     
     @tmpfiles.setter
@@ -218,11 +221,10 @@ class  CleanUp(object) :
         """
         with UseTmpDir ( tmp_dir () ) :
             if date :
-                now    = datetime.datetime.now()
                 if prefix and prefix.endswith('-') :
-                    prefix = "%s%s-"  % ( prefix , now.strftime ( date_format ) )
+                    prefix = "%s%s-"  % ( prefix , start.strftime ( date_format ) )
                 else :
-                    prefix = "%s-%s-" % ( prefix , now.strftime ( date_format ) )
+                    prefix = "%s-%s-" % ( prefix , start.strftime ( date_format ) )
                     
             td = tempfile.gettempdir()
             if user and not user in td : prefix = '%s%s-' % ( prefix , user )
@@ -241,11 +243,10 @@ class  CleanUp(object) :
         """
         with UseTmpDir ( tmp_dir () ) :
             if date :
-                now = datetime.datetime.now()
                 if prefix and prefix.endswith('-') :
-                    prefix = "%s%s-"  % ( prefix , now.strftime ( date_format ) )
+                    prefix = "%s%s-"  % ( prefix , start.strftime ( date_format ) )
                 else :
-                    prefix = "%s-%s-" % ( prefix , now.strftime ( date_format ) )
+                    prefix = "%s-%s-" % ( prefix , start.strftime ( date_format ) )
 
             td = tempfile.gettempdir()
             if user and not user in td : prefix = '%s%s-' % ( prefix , user )
@@ -377,21 +378,81 @@ def _cleanup_ () :
     ## 2. clean up  the directories 
     tmp_dirs = CleanUp._tmpdirs
     logger.debug ( 'remove temporary directories: %s' % list ( tmp_dirs ) )
+    hdirs    = set()
+    hdirs.add ( tempfile.gettempdir() ) 
     while tmp_dirs :
         f = tmp_dirs.pop()
         CleanUp.remove_dir ( f )
+        dn = os.path.dirname ( f ) 
+        if os.path.exists ( dn ) and os.path.isdir ( dn ) : hdirs.add ( dn )
 
     ## 3.remove base directories
-    global base_tmp_pid_dirs    
+    global base_tmp_pid_dirs
+
     for k in base_tmp_pid_dirs :
         d = base_tmp_pid_dirs [ k ]
         CleanUp.remove_dir ( d )
+        dn = os.path.dirname ( f ) 
+        if os.path.exists ( dn ) and os.path.isdir ( dn ) : hdirs.add ( dn )
+        
     base_tmp_pid_dirs = {}
 
     ## 4. remove base tmp directory 
     if for_cleanup and base_tmp_dir :
         CleanUp.remove_dir ( base_tmp_dir  )
 
+    ## 5. remove old/ancient directories 
+    ddirs   = set() 
+    for hd in hdirs :
+        if not os.path.exists ( hd ) : continue
+        if not os.path.isdir  ( hd ) : continue
+        for entry in os.listdir ( hd ) :
+            if   entry.startswith ( dir_user_prefix ) : e = entry.replace ( dir_user_prefix , '' )
+            elif entry.startswith ( dir_prefix      ) : e = entry.replace ( dir_prefix      , '' )
+            else                                      : continue  
+            match = re_format.search ( e )
+            if match :
+                date  = match.group ( 'date' )
+                pid   = match.group ( 'pid'  )
+                
+                try :
+                    date = datetime.datetime.strptime ( date , r'%Y-%b-%d')
+                    pid  = int ( pid ) 
+                except :
+                    continue
+
+                dd = os.path.join ( hd , entry )
+                if os.path.exists ( dd ) and os.path.isdir ( dd ) :
+                    mdate = mtime ( dd )                    
+                    if date <= mdate and mdate + time_delta < start :
+                        entry = start - mdate , dd 
+                        ddirs.add ( entry )
+                        
+    if ddirs :
+        ddirs = list ( ddirs )
+        ddirs.sort ()
+        rows  = []
+        for d , hd in ddirs :
+            if os.path.exists ( hd ) and os.path.isdir ( hd ) :
+                CleanUp.remove_dir ( hd )
+                if not os.path.exists ( hd ) : 
+                    row =  '%s'% hd 
+                    if     365 <= d.days    : row = row , '%d  year'    % ( d.days    / 365  ) 
+                    elif    30 <= d.days    : row = row , '%2d months'  % ( d.days    /  30  ) 
+                    elif     7 <= d.days    : row = row , '%1d weeks'   % ( d.days    /   7  )
+                    elif     1 <= d.days    : row = row , '%1d days'    % ( d.days           )
+                    elif  3600 <= d.seconds : row = row , '%d hours'    % ( d.seconds / 3600 )
+                    elif    60 <= d.seconds : row = row , '%d minutes'  % ( d.seconds /   60 )
+                    else :                    row = row , '%d seconds'  % ( d.seconds        )                    
+                    rows.append ( row ) 
+        if rows :
+            rows =  [ ( 'directory' , 'age' ) ]  + rows 
+            title = 'Remove ancient directories' 
+            import ostap.logger.table as T
+            table = T.table ( rows , title = title , prefix = "# " , alignment = 'll' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+            
+        
     if CleanUp._protected :
         title = 'Kept temporary files'
         rows = [] 
@@ -441,7 +502,6 @@ def _cleanup_ () :
             table = T.table ( rows , title = title  , prefix = "# " , alignment = 'rl' )
             logger.warning ( '%s\n%s' % ( title , table ) ) 
 
-        
 # =============================================================================
 ## @class TempFile
 #  Base class-placeholder for the temporary  file 

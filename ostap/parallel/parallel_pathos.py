@@ -307,7 +307,7 @@ class WorkManager (TaskManager) :
             
 
     # =========================================================================
-    ## get the statistics from the paralell python
+    ## get the statistics from the parallel python
     def get_pp_stat ( self ) :
         
         smpp = StatMerger ()

@@ -1,8 +1,19 @@
 ## New features:
 
+  1. Add `split_chunks` and `split_groups` Functions for `ostap.trees.data_utils.Files` objects to split a large collection sof files into smaller chunks 
+  1. Add `merge_chunks` and `merge_groups` Functions for `ostap.trees.data_utils.Data` objects to perform a partial merging 
+    of ROOT files in the large collections  
+  1. improve `hadd` function from `ostap.utils.utils` module 
+  1. add `mtime` fnuction into `ostap.utils.basic` module - last createion/modification date for the path (dir/file)
+  1. add (much) better cleanup of the ancient tmp directories. Usefulto remove lefovers from the parallel executions.  
+
 ## Backward incompatible: 
 
+  1. move `hadd` function from  `ostap.trees.data_utils.Files` to `ostap.trees.data_utils.Data`
+
 ## Bug fixes:
+
+  1. fix numerous typos in documentation strings 
 
 # v1.10.0.6
 
