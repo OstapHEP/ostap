@@ -122,7 +122,7 @@ class WorkManager (TaskManager) :
             from ostap.parallel.utils import get_workers 
             ppservers = get_workers( 'Pathos' , 'OSTAP_PPSERVERS' ,  local_host )
 
-        ## use Paralell python if ppservers are specified or explicit flag
+        ## use Parallel python if ppservers are specified or explicit flag
         if ppservers or kwa.pop ( 'PP' , False ) or kwa.pop ( 'Parallel' , False ) :
 
             ## remove duplicates (if any) - do not sort! 

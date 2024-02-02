@@ -86,7 +86,7 @@ def copy_files ( file_pairs , progress = True , maxfiles = 5 , copier = None , *
         
     task = CopyTask ( copier = copier )
     
-    wmgr  = WorkManager ( silent = not progress , **kwargs )
+    wmgr  = WorkManager ( silent = not progress , progress = progress , **kwargs )
     
     if maxfiles < 1 : maxfiles = 1
     
