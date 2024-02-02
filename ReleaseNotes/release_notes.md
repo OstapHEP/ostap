@@ -15,6 +15,7 @@
 
   1. fix numerous typos in documentation strings 
 
+
 # v1.10.0.6
 
 ## New features:
