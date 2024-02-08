@@ -190,9 +190,8 @@ def reduce ( chain               ,
             elif kb : fs = '%.1fkB' % ( float ( fs ) / 1024 ) 
             else    : fs = '%sB'    %           fs
             
-            logger.info ( 'Output:%s size:%s' % ( output , fs  )
-
-        
+            logger.info ( 'Output:%s size:%s' % ( output , fs  ) )
+            
     return result 
 
 ROOT.TTree .preduce  = reduce

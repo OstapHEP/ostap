@@ -204,7 +204,7 @@ class ReduceTree(CleanUp):
         ne = len ( self.__chain             )
         ff = float ( nb * ne * 100 ) / ( nb0  * ne0 ) 
         
-        self.__report += '\n# Reduce: (%dx%d) -> (%dx%d) branches x entries => %.1f%% ' % ( nb0  ,  ne0 ,  nb , ne , ff ) ) 
+        self.__report += '\n# Reduce: (%dx%d) -> (%dx%d) branches x entries => %.1f%% ' % ( nb0  ,  ne0 ,  nb , ne , ff )
         self.__report += '\n# Output:%s size:%s'                                        % ( self.__output , fs  )
         ## self.__report += '\n# %s' % str ( self.__chain ) 
         
