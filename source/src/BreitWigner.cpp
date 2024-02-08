@@ -366,7 +366,7 @@ double Ostap::Math::FormFactors::BlattWeisskopf::operator()
 std::size_t Ostap::Math::FormFactors::BlattWeisskopf::tag      () const
 {
   static const std::string s_name = "BlattWeisskopf";
-  return Ostap::Utils::hash_combiner ( s_name , m_what , m_L , m_b ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_what , (int) m_L , m_b ) ; 
 }
 // ============================================================================
 // clone operation 

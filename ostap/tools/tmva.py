@@ -257,8 +257,8 @@ class Trainer(object):
                    signal                         ,  ## signal sample/tree
                    background                     ,  ## background sample/tree
                    ## 
-                   signal_vars         = {}       ,  ## dictionary with new variables for signal sample 
-                   background_vars     = {}       ,  ## dictionary with new variables for background sample 
+                   signal_vars          = {}      ,  ## dictionary with new variables for signal sample 
+                   background_vars      = {}      ,  ## dictionary with new variables for background sample 
                    ## 
                    signal_cuts          = ''      ,  # signal cuts 
                    background_cuts      = ''      ,  # background cuts                   
@@ -319,7 +319,10 @@ class Trainer(object):
 
         self.__methods           = tuple ( methods    )
         
-        variables                = list  ( variables  ) ;
+        variables                = list  ( variables  ) 
+
+        _sig_vars = {}
+        _bkg_vars = {}
         
         vars = []
         for v in variables  :
@@ -332,15 +335,21 @@ class Trainer(object):
                 d = d.strip()
                 if c and s2 and d :
                     vars.append ( a )
-                    signal_vars    .update ( { a : c } ) ## ATTENTION HERE 
-                    background_vars.update ( { a : d } ) ## ATTENTION HERE 
+                    _sig_vars.update ( { a : c } ) ## ATTENTION HERE 
+                    _bkg_vars.update ( { a : d } ) ## ATTENTION HERE 
                 else :
                     vars.append ( a )
-                    signal_vars    .update ( { a : b } )  ## ATTENTION HERE 
-                    background_vars.update ( { a : b } )  ## ATTENTION HERE 
+                    _sig_vars.update ( { a : b } )  ## ATTENTION HERE 
+                    _bkg_vars.update ( { a : b } )  ## ATTENTION HERE 
             else :
                 vars.append ( v )
-                
+
+        if signal_vars     : _sig_vars.update ( signal_vars     )
+        if background_vars : _bkg_vars.update ( background_vars )
+
+        signal_vars      = _sig_vars 
+        background_vars  = _bkg_vars 
+
         variables = vars 
         variables.sort ()
         self.__variables         = tuple ( variables )
@@ -562,11 +571,11 @@ class Trainer(object):
                 rows.append ( row )
 
             if 0 < self.background_train_fraction < 1 :
-                row = 'Backgroundtrain fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
+                row = 'Background train fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
                 rows.append ( row )
 
             if 1 != self.prescale_background:
-                row = 'Backgronud prescale'      , '%s' % self.prescale_background
+                row = 'Background prescale'      , '%s' % self.prescale_background
                 rows.append ( row )
 
             ms  = [ m[1] for m in self.methods ]
@@ -976,13 +985,23 @@ class Trainer(object):
             #
             # =================================================================
             
-            all_vars = [] 
-            for v in itertools.chain ( self.variables , self.spectators ) : 
+            all_vars = []
+            
+            for v in self.variables :
+                
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
-                if   vv[0] in self.signal_vars     : continue
-                elif vv[0] in self.background_vars : continue 
-                else                               : all_vars.append ( vv[0] ) 
+                
+                varexp = vv [ 0 ].strip()  
+                nick , sep , expr = varexp.partition ( ":=" )
+                nick = nick.strip()
+                expr = expr.strip() 
+                if nick and sep and expr : varexp = expr
+                else                     : nick   = varexp 
+                
+                if   varexp in self.signal_vars     or ( nick and nick in self.signal_vars     ) : continue
+                elif varexp in self.background_vars or ( nick and nick in self.background_vars ) : continue 
+                else  : all_vars.append ( varexp )
 
             for v in self.spectators :
                 vv = v
@@ -996,7 +1015,7 @@ class Trainer(object):
             ## if self.background_weight : all_vars.append ( self.background_weight )
 
             # =================================================================
-            ## prefilter signal if required 
+            ## prefilter/prescale signal if required 
             if self.prefilter_signal or self.prefilter or 1 != self.prescale_signal or self.signal_vars :
                 
                 if self.signal_weight     : all_vars.append ( self.signal_weight     )
@@ -1005,9 +1024,9 @@ class Trainer(object):
                 avars = self.signal.the_variables ( all_vars )
                 
                 scuts = {}
-                if self.prefilter        : scuts.update ( { 'PreFilterSignal' : self.prefilter_signal } )                    
-                if self.prefilter_signal : scuts.update ( { 'PreFilterCommon' : self.prefilter        } )
-                if self.signal_cuts      : scuts.update ( { 'Signal'          : self.signal_cuts      } )
+                if self.prefilter_signal : scuts.update ( { 'PreFilter/Signal' : self.prefilter_signal } )                    
+                if self.prefilter        : scuts.update ( { 'PreFilter/Common' : self.prefilter        } )
+                if self.signal_cuts      : scuts.update ( { 'Signal'           : self.signal_cuts      } )
                 
                 if ( 6 , 24 ) <= root_info :
                     import ostap.frames.frames 
@@ -1028,7 +1047,7 @@ class Trainer(object):
                 self.__signal_cuts = ROOT.TCut() 
                 
             # =================================================================
-            ## prefilter background if required 
+            ## prefilter/prescale background if required 
             if self.prefilter_background or self.prefilter or 1 != self.prescale_background or self.background_vars :
                 
                 if self.background_weight : all_vars.append ( self.background_weight )
@@ -1037,9 +1056,9 @@ class Trainer(object):
                 avars = self.background.the_variables ( all_vars )
                 
                 bcuts = {}
-                if self.prefilter_background : bcuts.update ( { 'PreFilterBackground' : self.prefilter_background } )                    
-                if self.prefilter            : bcuts.update ( { 'PreFilterCommon'     : self.prefilter            } )
-                if self.background_cuts      : bcuts.update ( { 'Signal'              : self.background_cuts      } )
+                if self.prefilter_background : bcuts.update ( { 'PreFilter/Background' : self.prefilter_background } )                  
+                if self.prefilter            : bcuts.update ( { 'PreFilter/Common'     : self.prefilter            } )
+                if self.background_cuts      : bcuts.update ( { 'Background'           : self.background_cuts      } )
                 
                 if ( 6 , 24 ) <= root_info :
                     import ostap.frames.frames 

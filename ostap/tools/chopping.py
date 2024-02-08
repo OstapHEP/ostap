@@ -326,11 +326,6 @@ class Trainer(object) :
         self.__signal_weight     = signal_weight 
         self.__signal_cuts       = ROOT.TCut ( signal_cuts )     
         
-        self.__signal_vars          = {}
-        if signal_vars     : self.__signal_vars.update     ( signal_vars )        
-        self.__background_vars      = {}
-        if background_vars : self.__background_vars.update ( background_vars ) 
-        
         self.__prefilter            = ROOT.TCut ( prefilter   )
         self.__prefilter_signal     = prefilter_signal     if prefilter_signal     else '' 
         self.__prefilter_background = prefilter_background if prefilter_background else ''    
@@ -340,6 +335,9 @@ class Trainer(object) :
 
 
         variables                = list ( variables ) 
+        
+        _sig_vars = {}
+        _bkg_vars = {}
         
         vars = []
         for v in variables  :
@@ -363,6 +361,18 @@ class Trainer(object) :
                 
         variables = vars 
         variables.sort ()
+        
+        if signal_vars     : _sig_vars.update ( signal_vars     )
+        if background_vars : _bkg_vars.update ( background_vars )
+
+        signal_vars      = _sig_vars 
+        background_vars  = _bkg_vars 
+
+        self.__signal_vars          = {}
+        if signal_vars     : self.__signal_vars.update     ( signal_vars )        
+        self.__background_vars      = {}
+        if background_vars : self.__background_vars.update ( background_vars ) 
+        
 
         self.__variables         = tuple ( variables  )
         
@@ -402,18 +412,28 @@ class Trainer(object) :
         
         
         ##if self.verbose :
-        all_vars = [ self.prefilter ]           
+        all_vars = []           
         for v in self.variables  :
             vv = v
             if isinstance ( vv , str ) : vv = ( vv , 'F' )
-            if   vv[0] in self.signal_vars     : continue
-            elif vv[0] in self.background_vars : continue 
-            else                               : all_vars.append ( vv[0] ) 
+            
+            varexp = vv [ 0 ].strip()  
+            nick , sep , expr = varexp.partition ( ":=" )
+            nick = nick.strip()
+            expr = expr.strip() 
+            if nick and sep and expr : varexp = expr
+            else                     : nick   = varexp 
+            
+            if   varexp in self.signal_vars     or ( nick and nick in self.signal_vars     ) : continue
+            elif varexp in self.background_vars or ( nick and nick in self.background_vars ) : continue 
+            else  : all_vars.append ( varexp )
+            
         for v in self.spectators :
             vv = v
             if isinstance ( vv , str ) : vv = ( vv , 'F' )
             all_vars.append ( vv[0] )
             
+        if self.prefilter         : all_vars.append ( self.prefilter         )                
         ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
         ## if self.signal_weight     : all_vars.append ( self.signal_weight     )
         ## if self.background_cuts   : all_vars.append ( self.background_cuts   )
@@ -429,10 +449,13 @@ class Trainer(object) :
 
             import ostap.trees.trees
             avars = self.signal.the_variables ( all_vars )
+            
+            keys  = set   ( self.background_vars.keys () ) - set ( self.signal_vars    .keys () )
+            avars = tuple ( sorted ( set ( avars ).union ( keys ) ) ) 
 
             scuts = {}
             if self.prefilter_signal : scuts.update ( { 'PreFilter/Signal' : self.prefilter_signal } )                    
-            if self.prefilter        : scuts.update ( { 'PreFilter'        : self.prefilter        } )
+            if self.prefilter        : scuts.update ( { 'PreFilter/Common' : self.prefilter        } )
             if self.signal_cuts      : scuts.update ( { 'Signal'           : self.signal_cuts      } )
             
             if ( 6 , 24 ) <= root_info :
@@ -449,7 +472,7 @@ class Trainer(object) :
                                        new_vars  = self.signal_vars     , 
                                        prescale  = self.prescale_signal ,  
                                        silent    = False  )
-            
+
             self.__signal      = self.__SigTR
             self.__signal_cuts = ROOT.TCut() 
             
@@ -460,11 +483,14 @@ class Trainer(object) :
             if self.background_weight : all_vars.append ( self.background_weight )
 
             import ostap.trees.trees
-            avars = self.background.the_variables ( all_vars )
+            bvars = self.background.the_variables ( all_vars )
             
+            keys  = set   ( self.signal_vars.keys () ) - set ( self.background_vars    .keys () )
+            bvars = tuple ( sorted ( set ( bvars ).union ( keys ) ) ) 
+
             bcuts = {}
             if self.prefilter_background : bcuts.update ( { 'PreFilter/Background' : self.prefilter_background } )                    
-            if self.prefilter            : bcuts.update ( { 'PreFilter'            : self.prefilter            } )
+            if self.prefilter            : bcuts.update ( { 'PreFilter/Common'      : self.prefilter            } )
             if self.background_cuts      : bcuts.update ( { 'Background'           : self.background_cuts      } )
             
             if ( 6 , 24 ) <= root_info :
@@ -477,10 +503,10 @@ class Trainer(object) :
             self.logger.info ( 'Pre-filter Background before processing' )
             self.__BkgTR = TR.reduce ( self.background    ,
                                        selection = bcuts  ,
-                                       save_vars = avars  ,
+                                       save_vars = bvars  ,
                                        new_vars  = self.background_vars     , 
                                        prescale  = self.prescale_background ,  
-                                       silent    = False   )
+                                       silent    = False  )
             
             self.__background      = self.__BkgTR
             self.__background_cuts = ROOT.TCut() 
@@ -1249,7 +1275,8 @@ class Trainer(object) :
             self.logger.verbose ( "Remove existing tar-logfile %s" % lfile )
 
         with tarfile.open ( lfile , 'w:gz' ) as tar :
-            for x in  logfiles: tar.add ( x )
+            for x in  logfiles:
+                if os.path.exists ( x ) : tar.add ( x )
             self.logger.info ( "Tar/gz logfile  : %s" % lfile  ) 
             ## if self.verbose : tar.list ()
         

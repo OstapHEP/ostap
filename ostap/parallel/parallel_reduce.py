@@ -17,7 +17,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.parallel.parallel import Task, WorkManager
-import ROOT
+import ROOT, os 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -176,8 +176,22 @@ def reduce ( chain               ,
         
         nb = len ( result.chain.branches() )
         ne = len ( result.chain            )        
-        f  = float ( nb0 * ne0 ) / ( nb  * ne ) 
-        logger.info ( 'reduce: (%dx%d) -> (%dx%d) %.1f (branches x entries) ' % ( nb0  , ne0 ,  nb , ne , f ) ) 
+        ff = float ( nb * ne * 100 ) / ( nb0  * ne0 ) 
+        logger.info ( 'Reduce: (%dx%d) -> (%dx%d) branches x entries => %.1f%% ' % ( nb0  , ne0 ,  nb , ne , ff ) )
+
+        if output and os.path.exists ( output ) and os.path.isfile ( output ) : 
+            fs = os.path.getsize ( output )        
+            gb , r = divmod ( fs ,  1024 * 1024 * 1024 )
+            mb , r = divmod ( r  ,  1024 * 1024 )
+            kb , r = divmod ( r  ,  1024 )
+            
+            if   gb : fs = '%.1fGB' % ( float ( fs ) / 1024 / 1024 / 1024 )
+            elif mb : fs = '%.1fMB' % ( float ( fs ) / 1024 / 1024 )
+            elif kb : fs = '%.1fkB' % ( float ( fs ) / 1024 ) 
+            else    : fs = '%sB'    %           fs
+            
+            logger.info ( 'Output:%s size:%s' % ( output , fs  )
+
         
     return result 
 

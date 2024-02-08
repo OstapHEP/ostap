@@ -149,16 +149,21 @@ def error_band2 ( value , epos , eneg , min_value , max_value , **kwargs ) :
         
     ## fill color 
     fcolor = config.get ( 'fill_color' , ROOT.kOrange )
+
+
+    delta = max_value - min_value
+    mnv   = min_value + 0.001 * delta
+    mxv   = max_value - 0.001 * delta
     
     from  itertools import count
     for fc , ep , en in zip ( count ( fcolor , -1 ) , reversed ( epos ) ,  reversed ( eneg ) ) :
         
         if not transpose :
-            box1 = ROOT.TBox ( value - en , min_value  , value + ep , max_value  )
-            box2 = ROOT.TBox ( value - en , min_value  , value + ep , max_value  )
+            box1 = ROOT.TBox ( value - en , mnv  , value + ep , mxv  )
+            box2 = ROOT.TBox ( value - en , mnv  , value + ep , mxv  )
         else         :
-            box1 = ROOT.TBox ( min_value  , value - en , max_value  , value + ep )
-            box2 = ROOT.TBox ( min_value  , value - en , max_value  , value + ep )
+            box1 = ROOT.TBox ( mnv  , value - en , mxv  , value + ep )
+            box2 = ROOT.TBox ( mnv  , value - en , mxv  , value + ep )
             
         box1.set_fill_attributes ( **config ) 
         box2.set_fill_attributes ( **config ) 

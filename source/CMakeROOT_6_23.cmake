@@ -139,6 +139,8 @@ include(CMake_OSTAP.cmake)
 ##     NO_SYSTEM_FROM_IMPORTED ON
 ##     )
 
+if(ROOT_VERSION VERSION_LESS_EQUAL "6.31.00")
+
 execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx17
                  OUTPUT_VARIABLE CXX17_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
@@ -156,6 +158,38 @@ target_compile_features (ostap PUBLIC cxx_std_14 )
 elseif ( ${CXX11_ROOT} STREQUAL "yes" ) 
 target_compile_features (ostap PUBLIC cxx_std_11 )
 endif() 
+
+else() 
+
+execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --cxxstandard
+                 OUTPUT_VARIABLE CXX_ROOT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+set_property(TARGET ostap PROPERTY CXX_STANDARD ${CXX_ROOT} )
+
+if     ( ${CXX_ROOT} STREQUAL "26" ) 
+target_compile_features (ostap PUBLIC cxx_std_26 )
+                        message ( '26' ) 
+elseif ( ${CXX_ROOT} STREQUAL "23" ) 
+target_compile_features (ostap PUBLIC cxx_std_23 )
+                        message ( '23' ) 
+elseif ( ${CXX_ROOT} STREQUAL "20" ) 
+target_compile_features (ostap PUBLIC cxx_std_20 )
+                        message ( '20' ) 
+elseif ( ${CXX_ROOT} STREQUAL "17" ) 
+## target_compile_features (ostap PUBLIC cxx_std_17 )
+##                         message ( '17' ) 
+else() 
+##target_compile_features (ostap PUBLIC cxx_std_17 )
+##                        message ( '17/0' ) 
+endif() 
+
+endif() 
+
+
+
+
+
 
 target_link_libraries   ( ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame GSL::gsl )
 

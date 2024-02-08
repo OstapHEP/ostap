@@ -24,7 +24,8 @@ __all__     = (
 import ostap.trees.trees
 from   ostap.core.meta_info import root_info 
 from   ostap.core.core      import cpp, Ostap 
-from   ostap.utils.cleanup  import CleanUp 
+from   ostap.utils.cleanup  import CleanUp
+from   ostap.utils.basic    import make_dirs 
 import ROOT, os, sys 
 # =============================================================================
 # logging 
@@ -62,14 +63,19 @@ class ReduceTree(CleanUp):
                    tmp_keep   = False ,   ## keep the temporary file
                    silent     = False ):  ## silent processing 
         
-        from   ostap.frames.frames import DataFrame, frame_prescale 
+        from   ostap.frames.frames import DataFrame, frame_prescale
         frame  = DataFrame ( chain )
         report = None
         
         self.__frame_main = frame
         
         if not  silent :
-            pbar = frame.ProgressBar ( len (  chain ) )
+            if ( 6 , 29 ) <= root_info :
+                from   ostap.frames.frames import frame_progress2 
+                cnt = frame_progress2 ( frame )
+            else                   :
+                from   ostap.frames.frames import frame_progress  
+                cnt = frame_progress  ( frame , len ( chain ) )
             
         ## add overall prescale (if requested)  
         if 1 != prescale :
@@ -133,8 +139,8 @@ class ReduceTree(CleanUp):
             all_vars  = list ( bvars ) + [ v for v in nvars if not v in bvars ]
             save_vars = tuple ( [ v for v in all_vars if not v in no_vars ] ) 
             
-        nb_ = len ( chain.branches () )
-        ne_ = len ( chain             )
+        nb0 = len ( chain.branches () )
+        ne0 = len ( chain             )
         
         if not silent and output and os.path.exists ( output ) and os.path.isfile ( output ) :
             logger.warning ("Existing file %s will be overwritten!" % output  )
@@ -153,6 +159,10 @@ class ReduceTree(CleanUp):
             output = self.tempfile ( prefix = 'ostap-frame-' , suffix = '.root' )
             if not tmp_keep : self.trash.add ( output  )
 
+        dirname = os.path.dirname ( output )
+        if dirname and not os.path.exists ( dirname ) :
+            make_dirs ( dirname )
+            
         if not save_vars : 
             snapshot = frame.Snapshot ( name , output )            
         else :
@@ -192,10 +202,11 @@ class ReduceTree(CleanUp):
         
         nb = len ( self.__chain.branches () )
         ne = len ( self.__chain             )
-
-        self.__report += '\n# Reduce %d -> %d branches, %d -> %d entries' % ( nb_ , nb , ne_ , ne ) 
-        self.__report += '\n# Output:%s size:%s'                          % ( self.__output , fs  )
-        self.__report += '\n# %s' % str ( self.__chain ) 
+        ff = float ( nb * ne * 100 ) / ( nb0  * ne0 ) 
+        
+        self.__report += '\n# Reduce: (%dx%d) -> (%dx%d) branches x entries => %.1f%% ' % ( nb0  ,  ne0 ,  nb , ne , ff ) ) 
+        self.__report += '\n# Output:%s size:%s'                                        % ( self.__output , fs  )
+        ## self.__report += '\n# %s' % str ( self.__chain ) 
         
         del self.__frame_main
         

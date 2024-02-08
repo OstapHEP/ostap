@@ -594,7 +594,10 @@ class Files(object):
             files = []
             for f in self.__files :
                 files .append ( strip_protocol ( f ) ) 
-        else : files = self.__files 
+        else : files = self.__files
+        
+        if not files : return '' 
+
         cp = commonpath ( files )
         return cp if os.path.isdir ( cp ) else os.path.dirname ( cp ) 
     # =========================================================================

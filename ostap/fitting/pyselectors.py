@@ -1849,8 +1849,14 @@ def make_dataset ( tree              ,
 
     total = len ( tree )
     
-    if not silent :
-        pb = frame.ProgressBar ( total )
+    if not  silent :
+        if ( 6 , 29 ) <= root_info :
+            from   ostap.frames.frames import frame_progress2 
+            pb = frame_progress2 ( frame )
+        else                   :
+            from   ostap.frames.frames import frame_progress  
+            pb = frame_progress  ( frame , total )
+            
                     
     columns = set ( tree.branches() ) | set ( tree.leaves() )
 
