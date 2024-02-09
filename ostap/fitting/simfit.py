@@ -1194,7 +1194,14 @@ class SimFit (VarMaker,ConfigReducer) :
 
         weight = None
         wvar   = None
-        
+
+        if not varset :
+            varset = ROOT.RooArgSet () 
+            for lab in self.categories :
+                pdf = self.categories [ lab ]
+                for v in pdf.vars :
+                    if not v in varset : varset.add ( v )
+                    
         ## generate all categories separately:        
         for label in nEvents :
             

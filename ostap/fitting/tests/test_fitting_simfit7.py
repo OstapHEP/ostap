@@ -99,7 +99,8 @@ with use_canvas ( 'test_simfit7: simultaneous fit/DATA' ) :
     fDATA = model_sim.draw ( 'DATA'  , cds )
 with use_canvas ( 'test_simfit7: simultaneous fit/MC' ) :
     fMC   = model_sim.draw ( 'MC'    , cds )
-        
+
+
 # =============================================================================
 ## (2) Perform DATA fit with MC constraints to get scale-factor
 # =============================================================================
@@ -113,6 +114,23 @@ with use_canvas ( 'test_simfit7: constrained fit/DATA' ) :
     
 logger.info ( "Scale factor from 'simultaneous' fit: %s" % ( rSIM .sfactor * 1 ) )
 logger.info ( "Scale factor from 'constrained'  fit: %s" % ( rDATA.sfactor * 1 ) )
+
+
+# =========================================================================
+## test creation of dataset
+# =========================================================================
+ds_gen = model_sim.generate ( nEvents = { 'MC'   : len ( ds_MC   ) ,
+                                          'DATA' : len ( ds_DATA ) } ,
+                              varset  = vars  )
+
+rg , f = model_sim.fitTo ( ds_gen , silent = True )
+rg , f = model_sim.fitTo ( ds_gen , silent = True )
+
+title = 'Results of simultaneous fit to generated dataset'
+logger.info ( '%s\n%s' % ( title , rg.table ( title = title , prefix = '# ' ) ) )
+
+
+
     
 # =============================================================================
 ##                                                                      The END 
