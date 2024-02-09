@@ -98,7 +98,7 @@ def test_stats_ustat_G3D () :
             pdf.phi    = math.pi/4 
             pdf.theta  = math.pi/4 
             pdf.psi    = math.pi/4 
-                        
+
             data       = pdf.generate ( n )
             
             pdf.fitTo ( data , silent = True )

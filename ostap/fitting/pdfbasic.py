@@ -2279,7 +2279,7 @@ class APDF1 ( Components ) :
             if ( hasattr ( v , 'hasMin' ) and not v.hasMin() ) and \
                ( hasattr ( v , 'hasMax' ) and not v.hasMax() ) : continue
             
-            if not v in dataset                                : continue
+            if dataset and not v in dataset                                : continue
             
             vv_minmax = v.minmax ()
             if not vv_minmax : continue
@@ -4338,7 +4338,7 @@ class APDF3 (APDF2) :
                 if ybins : self.yvar.bins = ybins
                 if zbins : self.zvar.bins = zbins
 
-                return self.pdf.generate ( varset , *args )
+            return self.pdf.generate ( varset , *args )
 
     # ========================================================================
     ## check minmax of the PDF using the random shoots
