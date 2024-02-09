@@ -1158,10 +1158,10 @@ class SimFit (VarMaker,ConfigReducer) :
     ## generate toy-sample according to PDF
     #  @code
     #  model  = ....
-    #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+    #  data   = model.generate ( { 'A' : 100 , 'B' : 200 } ) ## generate dataset with 100+200 events 
     #  varset = ....
-    #  data   = model.generate ( 100000 , varset , sample = False )
-    #  data   = model.generate ( 100000 , varset , sample = True  )     
+    #  data   = model.generate ( { 'A' : 100 , 'B' : 200 } , varset , sample = False )
+    #  data   = model.generate ( { 'A' : 100 , 'B' : 200 } , varset , sample = True  )     
     #  @endcode
     def generate ( self                  , 
                    nEvents               , 
@@ -1173,33 +1173,43 @@ class SimFit (VarMaker,ConfigReducer) :
                    category_args = {}    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
-        >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+        >>> data   = model.generate ( { 'A' : 100 , 'B' : 200 } ) ## generate dataset with 10000 events
         
         >>> varset = ....
-        >>> data   = model.generate ( 100000 , varset , sample = False )
-        >>> data   = model.generate ( 100000 , varset , sample = True  )
+        >>> data   = model.generate ( { 'A' : 100 , 'B' : 200 } , varset , sample = False )
+        >>> data   = model.generate ( { 'A' : 100 , 'B' : 200 } , varset , sample = True  )
         """
 
+        from   ostap.core.ostap_types   import dictlike_types
+        
         labels = self.sample.labels()
         
-        assert len ( labels ) == len ( nEvents ), 'Invalid length of nEvents array'
+        assert isinstance ( nEvents , dictlike_types ) and \
+               len ( labels ) == len ( nEvents )       and \
+               all ( k in labels for k in nEvents )      , \
+               'Invalid type/length of nEvents!'
         
         vars   = ROOT.RooArgSet()
         data   = {}
 
         weight = None
         wvar   = None
+        
         ## generate all categories separately:        
-        for l , n in zip ( labels , nEvents ) :
+        for label in nEvents :
             
+            nevts =  nEvents [ label ] 
+
             cargs = []
-            for a in args                         : cargs.append ( a )
-            for a in category_args.get ( l , () ) : cargs.append ( a )
+            for a in args                             : cargs.append ( a )
+            for a in category_args.get ( label , () ) : cargs.append ( a )
             cargs = tuple ( cargs )
                 
-            pdf   = self.categories [ l ]
-            ds    = pdf.generate ( n                   ,
-                                   varset   = varset   ,
+            pdf   = self.categories [ label ]
+            vv    = ROOT.RooArgSet ( [ v for v in self.vars if v in varset ] )
+            ds    = pdf.generate ( nevts               ,
+                                   varset   = vv       ,
+                                   ## varset   = varset   , 
                                    binning  = binning  ,
                                    sample   = sample   ,
                                    storage  = storage  , 
@@ -1209,7 +1219,7 @@ class SimFit (VarMaker,ConfigReducer) :
                 ds , weight  = ds.unWeighted ()
                 if weight : wvar = getattr ( ds , weight )
                 
-            data [ l ]  = ds
+            data [ label ]  = ds
             for v in ds.varset() :
                 if not v in vars : vars.add ( v ) 
                 ## vars       |= ds.varset()                 

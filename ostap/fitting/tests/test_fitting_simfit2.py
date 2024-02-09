@@ -161,6 +161,21 @@ def test_simfit2 ( ) :
     logger.info ( 'Significane: %.1f and %.1f ' % ( wilks , wilks2 ) ) 
 
 
+    # =========================================================================
+    ## test creation of dataset
+    # =========================================================================
+    ds_gen = model_sim.generate ( nEvents = { 'A' : len ( dataset1 ) ,
+                                              'B' : len ( dataset2 ) } ,
+                                  varset  = vars  )
+
+    rg , f = model_sim.fitTo ( ds_gen , silent = True )
+    rg , f = model_sim.fitTo ( ds_gen , silent = True )
+    
+    title = 'Results of simultaneous fit to generated dataset'
+    logger.info ( '%s\n%s' % ( title , rg.table ( title = title , prefix = '# ' ) ) )
+
+
+
 # =============================================================================
 if '__main__' == __name__ :
 

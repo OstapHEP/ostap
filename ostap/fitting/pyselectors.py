@@ -1717,7 +1717,9 @@ def make_dataset_old ( tree              ,
     with TIMING ( 'Fill RooDataSet' , logger = logger ) : 
         with rooSilent ( ROOT.RooFit.ERROR  , True ) :
             with rootError ( ROOT.kWarning ) :
-                ds      = ROOT.RooDataSet ( name  , title , tree , varsete , str ( cuts ) )
+                if root_info <= ( 6, 31 ) : ds = ROOT.RooDataSet ( name , title , tree    , varsete , str ( cuts ) )
+                else                      : ds = ROOT.RooDataSet ( name , title , varsete , ROOT.RooFit.Import ( tree ) , ROOT.RooFit.Cut ( str ( cuts ) ) ) 
+                    
                 varsete = ds.get()
                 
     if not silent :

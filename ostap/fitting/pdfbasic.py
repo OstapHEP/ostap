@@ -1905,15 +1905,16 @@ class APDF1 ( Components ) :
             binning = {}
             
         if   not varset :
-            varset = ROOT.RooArgSet ( self.xvar )
+            varset = ROOT.RooArgSet ( self.vars )
         elif isinstance ( varset , ROOT.RooAbsReal ) :
             varset = ROOT.RooArgSet ( varset    )
             
-        if not self.xvar in varset :
-            vs = ROOT.RooArgSet()
-            vs . add ( self.xvar )
-            for  v in varset : vs.add ( v )
-            varset = vs  
+        for v in self.vars :
+            if not v in varset :
+                vs = ROOT.RooArgSet()
+                vs . add ( v )
+                for vv in varset : vs.add ( vv )
+                varset = vs
 
         from ostap.fitting.variables import KeepBinning
         
@@ -3112,7 +3113,8 @@ class APDF2 (APDF1) :
                    nEvents          ,
                    varset   = None  ,
                    binning  = {}    ,
-                   sample   = True  , 
+                   sample   = True  ,
+                   storage  = None  ,  
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
@@ -3136,18 +3138,13 @@ class APDF2 (APDF1) :
         elif isinstance ( varset , ROOT.RooAbsReal ) :
             varset = ROOT.RooArgSet( varset )
 
-        if not self.xvar in varset :
-            vs = ROOT.RooArgSet()
-            vs . add ( self.xvar )
-            for  v in varset : vs.add ( v )
-            varset = vs
-
-        if not self.yvar in varset :
-            vs = ROOT.RooArgSet()
-            vs . add ( self.yvar )
-            for  v in varset : vs.add ( v )
-            varset = vs
-
+        for v in self.vars :
+            if not v in varset :
+                vs = ROOT.RooArgSet()
+                vs . add ( v )
+                for vv in varset : vs.add ( vv )
+                varset = vs
+                
         from ostap.fitting.variables import KeepBinning        
         with KeepBinning ( self.xvar ) , KeepBinning ( self.yvar ) : 
 
@@ -4296,7 +4293,8 @@ class APDF3 (APDF2) :
                    nEvents          ,
                    varset   = None  ,
                    binning  = {}    ,
-                   sample   = True  , 
+                   sample   = True  ,
+                   storage  = None  ,
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
@@ -4320,23 +4318,12 @@ class APDF3 (APDF2) :
         elif isinstance ( varset , ROOT.RooAbsReal ) :
             varset = ROOT.RooArgSet( varset )
 
-        if not self.xvar in varset :
-            vs = ROOT.RooArgSet()
-            vs . add ( self.xvar )
-            for  v in varset : vs.add ( v )
-            varset = vs
-
-        if not self.yvar in varset :
-            vs = ROOT.RooArgSet()
-            vs . add ( self.yvar )
-            for  v in varset : vs.add ( v )
-            varset = vs
-
-        if not self.zvar in varset :
-            vs = ROOT.RooArgSet()
-            vs . add ( self.zvar )
-            for  v in varset : vs.add ( v )
-            varset = vs
+        for v in self.vars :
+            if not v in varset :
+                vs = ROOT.RooArgSet()
+                vs . add ( v )
+                for vv in varset : vs.add ( vv )
+                varset = vs
             
         from ostap.fitting.variables import KeepBinning        
         with KeepBinning ( self.xvar ) , KeepBinning ( self.yvar ), KeepBinning ( self.zvar ) : 
@@ -4350,9 +4337,8 @@ class APDF3 (APDF2) :
                 if xbins : self.xvar.bins = xbins
                 if ybins : self.yvar.bins = ybins
                 if zbins : self.zvar.bins = zbins
-   
-        return self.pdf.generate ( varset , *args )
 
+                return self.pdf.generate ( varset , *args )
 
     # ========================================================================
     ## check minmax of the PDF using the random shoots

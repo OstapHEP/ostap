@@ -200,7 +200,20 @@ def test_simfit4() :
        graphs.append ( grs )
        title = 'Simultaneous fit'
        logger.info ( 'Combined fit  results are:\n%s ' % rC.table ( title  = title ,
-                                                                 prefix = '#'   )  )
+                                                                    prefix = '#'   )  )
+    # =========================================================================
+    ## test creation of dataset
+    # =========================================================================
+    ds_gen = model_sim.generate ( nEvents = { 'N' : len ( dataset1 ) ,
+                                              'S' : len ( dataset2 ) } ,
+                                  varset  = vars  )
+
+    rg , f = model_sim.fitTo ( ds_gen , silent = True )
+    rg , f = model_sim.fitTo ( ds_gen , silent = True )
+    
+    title = 'Results of simultaneous fit to generated dataset'
+    logger.info ( '%s\n%s' % ( title , rg.table ( title = title , prefix = '# ' ) ) )
+
     
 # =============================================================================
 if '__main__' == __name__ :

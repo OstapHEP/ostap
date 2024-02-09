@@ -120,7 +120,6 @@ results = []
 graphs  = [] 
 # =============================================================================
 def test_simfit1 () :
-## if 1 < 2 :
     
     logger = getLogger( 'test_simfit1' )
     
@@ -218,6 +217,21 @@ def test_simfit1 () :
 
     with use_canvas ( 'test_simfit1: sPlot/xyz for B (background)' , wait = 1 ) :
         dataset.draw ( 'test_xyz' , '(sample==1)*B_M2_sw' )
+
+
+    # =========================================================================
+    ## test creation of dataset
+    # =========================================================================
+    ds_gen = model_sim.generate ( nEvents = { 'A' : len ( dataset1 ) ,
+                                              'B' : len ( dataset2 ) } ,
+                                  varset  = vars  )
+
+    rg , f = model_sim.fitTo ( ds_gen , silent = True )
+    rg , f = model_sim.fitTo ( ds_gen , silent = True )
+    
+    title = 'Results of simultaneous fit to generated dataset'
+    logger.info ( '%s\n%s' % ( title , rg.table ( title = title , prefix = '# ' ) ) )
+   
 
 # =============================================================================
 ## check that everything is serializable

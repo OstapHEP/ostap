@@ -6,14 +6,17 @@
   1. improve `hadd` function from `ostap.utils.utils` module 
   1. add `mtime` fnuction into `ostap.utils.basic` module - last createion/modification date for the path (dir/file)
   1. add (much) better cleanup of the ancient tmp directories. Usefulto remove lefovers from the parallel executions.  
+  1. some improvements for `SimFuit.generate`
 
 ## Backward incompatible: 
 
   1. move `hadd` function from  `ostap.trees.data_utils.Files` to `ostap.trees.data_utils.Data`
+  1. require `nEvents` argument for `SimFit.generate` to be `dict`-like type 
 
 ## Bug fixes:
 
   1. fix numerous typos in documentation strings 
+  1. fix `SimFit.generate` 
 
 # v1.10.0.6
 

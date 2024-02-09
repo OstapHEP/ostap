@@ -255,7 +255,23 @@ def test_simfit5() :
         with wait ( 1 ) : fdm3 = model_sim.draw ( 'dm3'  , cdataset2 , nbins = 100 )
         with wait ( 1 ) : fd   = model_sim.draw ( 'data' , cdataset2 , nbins = 100 )
 
-    ## tru to serialize everything
+    # =========================================================================
+    ## test creation of dataset
+    # =========================================================================
+    ds_gen = model_sim.generate ( nEvents = { 'data' : len ( dataset ) ,
+                                              'dm1'  : len ( dset1   ) ,
+                                              'dm2'  : len ( dset2   ) ,
+                                              'dm3'  : len ( dset3   ) } , 
+                                  varset  = vars  )
+
+    rg , f = model_sim.fitTo ( ds_gen , silent = True )
+    rg , f = model_sim.fitTo ( ds_gen , silent = True )
+    
+    title = 'Results of simultaneous fit to generated dataset'
+    logger.info ( '%s\n%s' % ( title , rg.table ( title = title , prefix = '# ' ) ) )
+
+    
+    ## try to serialize everything
     logger.info('Saving all objects into DBASE')
     with timing ('Save everything to DBASE' , logger ), DBASE.tmpdb() as db : 
 
