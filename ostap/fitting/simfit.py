@@ -1213,7 +1213,9 @@ class SimFit (VarMaker,ConfigReducer) :
             cargs = tuple ( cargs )
                 
             pdf   = self.categories [ label ]
-            vv    = ROOT.RooArgSet ( [ v for v in self.vars if v in varset ] )
+            vv    = ROOT.RooArgSet ()
+            for  v for v in self.vars :
+                if v in varset : vv.add ( v )
             ds    = pdf.generate ( nevts               ,
                                    varset   = vv       ,
                                    ## varset   = varset   , 
