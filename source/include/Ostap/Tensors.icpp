@@ -42,10 +42,10 @@ Ostap::Math::Tensors::Epsilon::e_3
   //
   // take Minkowski metric into account
   return  
-    - Epsilon_<I,J,K,X>::value * x 
-    - Epsilon_<I,J,K,Y>::value * y 
-    - Epsilon_<I,J,K,Z>::value * z 
-    + Epsilon_<I,J,K,E>::value * e ;
+    - x * int ( Epsilon_<I,J,K,X>::value ) 
+    - y * int ( Epsilon_<I,J,K,Y>::value ) 
+    - z * int ( Epsilon_<I,J,K,Z>::value ) 
+    + e * int ( Epsilon_<I,J,K,E>::value ) ;
 }
 // ============================================================================
 /*  evaluate the tensor e*v1*v2 product
@@ -84,21 +84,21 @@ Ostap::Math::Tensors::Epsilon::e_2
   const iTYPE z2 = -v2.Pz () ;
   const iTYPE e2 =  v2.E  () ;
   
-  return Epsilon_<I,J,X,Y>::value * x1 * y2 
-    +    Epsilon_<I,J,X,Z>::value * x1 * z2 
-    +    Epsilon_<I,J,X,E>::value * x1 * e2 
+  return int ( Epsilon_<I,J,X,Y>::value ) * x1 * y2 
+    +    int ( Epsilon_<I,J,X,Z>::value ) * x1 * z2 
+    +    int ( Epsilon_<I,J,X,E>::value ) * x1 * e2 
     //
-    +    Epsilon_<I,J,Y,X>::value * y1 * x2 
-    +    Epsilon_<I,J,Y,Z>::value * y1 * z2 
-    +    Epsilon_<I,J,Y,E>::value * y1 * e2 
+    +    int ( Epsilon_<I,J,Y,X>::value ) * y1 * x2 
+    +    int ( Epsilon_<I,J,Y,Z>::value ) * y1 * z2 
+    +    int ( Epsilon_<I,J,Y,E>::value ) * y1 * e2 
     //
-    +    Epsilon_<I,J,Z,X>::value * z1 * x2 
-    +    Epsilon_<I,J,Z,Y>::value * z1 * y2 
-    +    Epsilon_<I,J,Z,E>::value * z1 * e2 
+    +    int ( Epsilon_<I,J,Z,X>::value ) * z1 * x2 
+    +    int ( Epsilon_<I,J,Z,Y>::value ) * z1 * y2 
+    +    int ( Epsilon_<I,J,Z,E>::value ) * z1 * e2 
     //
-    +    Epsilon_<I,J,E,X>::value * e1 * x2 
-    +    Epsilon_<I,J,E,Y>::value * e1 * y2 
-    +    Epsilon_<I,J,E,Z>::value * e1 * z2 ;
+    +    int ( Epsilon_<I,J,E,X>::value ) * e1 * x2 
+    +    int ( Epsilon_<I,J,E,Y>::value ) * e1 * y2 
+    +    int ( Epsilon_<I,J,E,Z>::value ) * e1 * z2 ;
 }
 // ============================================================================
 /*  evaluate the e*v1*v2*v3 product
@@ -145,33 +145,33 @@ Ostap::Math::Tensors::Epsilon::e_1
   const iTYPE z3 = -v3.Pz () ;
   const iTYPE e3 =  v3.E  () ;
   
-  return Epsilon_<I,X,Y,Z>::value * x1 * y2 * z3 
-    +    Epsilon_<I,X,Y,E>::value * x1 * y2 * e3 
-    +    Epsilon_<I,X,Z,Y>::value * x1 * z2 * y3 
-    +    Epsilon_<I,X,Z,E>::value * x1 * z2 * e3
-    +    Epsilon_<I,X,E,Y>::value * x1 * e2 * y3 
-    +    Epsilon_<I,X,E,Z>::value * x1 * e2 * z3 
+  return int ( Epsilon_<I,X,Y,Z>::value ) * x1 * y2 * z3 
+    +    int ( Epsilon_<I,X,Y,E>::value ) * x1 * y2 * e3 
+    +    int ( Epsilon_<I,X,Z,Y>::value ) * x1 * z2 * y3 
+    +    int ( Epsilon_<I,X,Z,E>::value ) * x1 * z2 * e3
+    +    int ( Epsilon_<I,X,E,Y>::value ) * x1 * e2 * y3 
+    +    int ( Epsilon_<I,X,E,Z>::value ) * x1 * e2 * z3 
     //
-    +    Epsilon_<I,Y,X,Z>::value * y1 * x2 * z3 
-    +    Epsilon_<I,Y,X,E>::value * y1 * x2 * e3
-    +    Epsilon_<I,Y,Z,X>::value * y1 * z2 * x3
-    +    Epsilon_<I,Y,Z,E>::value * y1 * z2 * e3
-    +    Epsilon_<I,Y,E,X>::value * y1 * e2 * x3  
-    +    Epsilon_<I,Y,E,Z>::value * y1 * e2 * z3 
+    +    int ( Epsilon_<I,Y,X,Z>::value ) * y1 * x2 * z3 
+    +    int ( Epsilon_<I,Y,X,E>::value ) * y1 * x2 * e3
+    +    int ( Epsilon_<I,Y,Z,X>::value ) * y1 * z2 * x3
+    +    int ( Epsilon_<I,Y,Z,E>::value ) * y1 * z2 * e3
+    +    int ( Epsilon_<I,Y,E,X>::value ) * y1 * e2 * x3  
+    +    int ( Epsilon_<I,Y,E,Z>::value ) * y1 * e2 * z3 
     //
-    +    Epsilon_<I,Z,X,Y>::value * z1 * x2 * y3
-    +    Epsilon_<I,Z,X,E>::value * z1 * x2 * e3
-    +    Epsilon_<I,Z,Y,X>::value * z1 * y2 * x3 
-    +    Epsilon_<I,Z,Y,E>::value * z1 * y2 * e3
-    +    Epsilon_<I,Z,E,X>::value * z1 * e2 * x3
-    +    Epsilon_<I,Z,E,Y>::value * z1 * e2 * y3 
+    +    int ( Epsilon_<I,Z,X,Y>::value ) * z1 * x2 * y3
+    +    int ( Epsilon_<I,Z,X,E>::value ) * z1 * x2 * e3
+    +    int ( Epsilon_<I,Z,Y,X>::value ) * z1 * y2 * x3 
+    +    int ( Epsilon_<I,Z,Y,E>::value ) * z1 * y2 * e3
+    +    int ( Epsilon_<I,Z,E,X>::value ) * z1 * e2 * x3
+    +    int ( Epsilon_<I,Z,E,Y>::value ) * z1 * e2 * y3 
     //
-    +    Epsilon_<I,E,X,Y>::value * e1 * x2 * y3 
-    +    Epsilon_<I,E,X,Z>::value * e1 * x2 * z3
-    +    Epsilon_<I,E,Y,X>::value * e1 * y2 * x3
-    +    Epsilon_<I,E,Y,Z>::value * e1 * y2 * z3
-    +    Epsilon_<I,E,Z,X>::value * e1 * z2 * x3
-    +    Epsilon_<I,E,Z,Y>::value * e1 * z2 * y3 ;
+    +    int ( Epsilon_<I,E,X,Y>::value ) * e1 * x2 * y3 
+    +    int ( Epsilon_<I,E,X,Z>::value ) * e1 * x2 * z3
+    +    int ( Epsilon_<I,E,Y,X>::value ) * e1 * y2 * x3
+    +    int ( Epsilon_<I,E,Y,Z>::value ) * e1 * y2 * z3
+    +    int ( Epsilon_<I,E,Z,X>::value ) * e1 * z2 * x3
+    +    int ( Epsilon_<I,E,Z,Y>::value ) * e1 * z2 * y3 ;
 }
 // ====================================================================
 /* evaluate the e*v1*v2*v3 product
@@ -435,36 +435,35 @@ Ostap::Math::Tensors::Epsilon::epsilon
   const iTYPE z4 = -v4.Pz () ;
   const iTYPE e4 =  v4.E  () ;
   
-  return x1 * y2 * z3 * e4 * Epsilon_<X,Y,Z,E>::value
-    +    x1 * y2 * e3 * z4 * Epsilon_<X,Y,E,Z>::value
-    +    x1 * z2 * y3 * e4 * Epsilon_<X,Z,Y,E>::value
-    +    x1 * z2 * e3 * y4 * Epsilon_<X,Z,E,Y>::value
-    +    x1 * e2 * y3 * z4 * Epsilon_<X,E,Y,Z>::value
-    +    x1 * e2 * z3 * y4 * Epsilon_<X,E,Z,Y>::value
+  return x1 * y2 * z3 * e4 * int ( Epsilon_<X,Y,Z,E>::value )
+    +    x1 * y2 * e3 * z4 * int ( Epsilon_<X,Y,E,Z>::value ) 
+    +    x1 * z2 * y3 * e4 * int ( Epsilon_<X,Z,Y,E>::value ) 
+    +    x1 * z2 * e3 * y4 * int ( Epsilon_<X,Z,E,Y>::value ) 
+    +    x1 * e2 * y3 * z4 * int ( Epsilon_<X,E,Y,Z>::value ) 
+    +    x1 * e2 * z3 * y4 * int ( Epsilon_<X,E,Z,Y>::value )
     //
-    +    y1 * x2 * z3 * e4 * Epsilon_<Y,X,Z,E>::value
-    +    y1 * x2 * e3 * z4 * Epsilon_<Y,X,E,Z>::value
-    +    y1 * z2 * x3 * e4 * Epsilon_<Y,Z,X,E>::value
-    +    y1 * z2 * e3 * x4 * Epsilon_<Y,Z,E,X>::value
-    +    y1 * e2 * x3 * z4 * Epsilon_<Y,E,X,Z>::value
-    +    y1 * e2 * z3 * x4 * Epsilon_<Y,E,Z,X>::value
+    +    y1 * x2 * z3 * e4 * int ( Epsilon_<Y,X,Z,E>::value ) 
+    +    y1 * x2 * e3 * z4 * int ( Epsilon_<Y,X,E,Z>::value ) 
+    +    y1 * z2 * x3 * e4 * int ( Epsilon_<Y,Z,X,E>::value ) 
+    +    y1 * z2 * e3 * x4 * int ( Epsilon_<Y,Z,E,X>::value ) 
+    +    y1 * e2 * x3 * z4 * int ( Epsilon_<Y,E,X,Z>::value ) 
+    +    y1 * e2 * z3 * x4 * int ( Epsilon_<Y,E,Z,X>::value ) 
     //
-    +    z1 * x2 * y3 * e4 * Epsilon_<Z,X,Y,E>::value
-    +    z1 * x2 * e3 * y4 * Epsilon_<Z,X,E,Y>::value
-    +    z1 * y2 * x3 * e4 * Epsilon_<Z,Y,X,E>::value
-    +    z1 * y2 * e3 * x4 * Epsilon_<Z,Y,E,X>::value
-    +    z1 * e2 * x3 * y4 * Epsilon_<Z,E,X,Y>::value
-    +    z1 * e2 * y3 * x4 * Epsilon_<Z,E,Y,X>::value
+    +    z1 * x2 * y3 * e4 * int ( Epsilon_<Z,X,Y,E>::value )
+    +    z1 * x2 * e3 * y4 * int ( Epsilon_<Z,X,E,Y>::value ) 
+    +    z1 * y2 * x3 * e4 * int ( Epsilon_<Z,Y,X,E>::value )
+    +    z1 * y2 * e3 * x4 * int ( Epsilon_<Z,Y,E,X>::value ) 
+    +    z1 * e2 * x3 * y4 * int ( Epsilon_<Z,E,X,Y>::value ) 
+    +    z1 * e2 * y3 * x4 * int ( Epsilon_<Z,E,Y,X>::value ) 
     //
-    +    e1 * x2 * y3 * z4 * Epsilon_<E,X,Y,Z>::value
-    +    e1 * x2 * z3 * y4 * Epsilon_<E,X,Z,Y>::value
-    +    e1 * y2 * x3 * z4 * Epsilon_<E,Y,X,Z>::value
-    +    e1 * y2 * z3 * x4 * Epsilon_<E,Y,Z,X>::value
-    +    e1 * z2 * x3 * y4 * Epsilon_<E,Z,X,Y>::value
-    +    e1 * z2 * y3 * x4 * Epsilon_<E,Z,Y,X>::value  ;
+    +    e1 * x2 * y3 * z4 * int ( Epsilon_<E,X,Y,Z>::value ) 
+    +    e1 * x2 * z3 * y4 * int ( Epsilon_<E,X,Z,Y>::value ) 
+    +    e1 * y2 * x3 * z4 * int ( Epsilon_<E,Y,X,Z>::value ) 
+    +    e1 * y2 * z3 * x4 * int ( Epsilon_<E,Y,Z,X>::value ) 
+    +    e1 * z2 * x3 * y4 * int ( Epsilon_<E,Z,X,Y>::value ) 
+    +    e1 * z2 * y3 * x4 * int ( Epsilon_<E,Z,Y,X>::value ) ;
 }
 // ============================================================================
-
 /* evaluate the tensor product: (e*a1*a2*a3)*(e*b1*b2*b3)
  *
  *  \f$  r =
