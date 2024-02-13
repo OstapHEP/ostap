@@ -586,8 +586,9 @@ class APDF1 ( Components ) :
         
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
+
         return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
-    
+
     
     # ================================================================================
     ## helper method to draw set of components 

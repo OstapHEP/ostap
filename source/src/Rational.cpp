@@ -126,8 +126,9 @@ double Ostap::Math::Rational::integral
       s_APRECISION              , // absolute precision
       s_RPRECISION              , // relative precision
       m_workspace.size()        , // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
+      s_message                 , 
+      __FILE__ , __LINE__       ,
+      GSL_INTEG_GAUSS21         ) ;
   //
   return result ; 
 }
@@ -297,8 +298,9 @@ double Ostap::Math::RationalBernstein::integral
       s_APRECISION              , // absolute precision
       s_RPRECISION              , // relative precision
       m_workspace.size()        , // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
+      s_message                 , 
+      __FILE__ , __LINE__       ,
+      GSL_INTEG_GAUSS21         ) ;
   //
   return result ; 
 }
@@ -519,8 +521,9 @@ double Ostap::Math::RationalPositive::integral
       s_APRECISION              , // absolute precision
       s_RPRECISION              , // relative precision
       m_workspace.size()        , // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
+      s_message                 , 
+      __FILE__ , __LINE__       , 
+      GSL_INTEG_GAUSS21         ) ;
   //
   return result ; 
 }
