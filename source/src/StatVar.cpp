@@ -2451,8 +2451,10 @@ Ostap::StatVar::quantile
                     "Ostap::StatVar::quantile"     ) ;
   }
   //
-  auto result = _quantiles_ 
-    ( tree , std::set<double> {{ q }} , var , cut.get() , first , last ) ; 
+  std::set<double> qset {} ;
+  qset.insert ( q )  ;
+  //
+  auto result = _quantiles_ ( tree , qset , var , cut.get() , first , last ) ; 
   //
   Ostap::Assert ( 1 == result.quantiles.size()         , 
                   "Invalid quantiles size"   ,
@@ -2498,8 +2500,10 @@ Ostap::StatVar::p2quantile
                     "Ostap::StatVar::quantile"     ) ;
   }
   //
-  auto result = _p2quantiles_ 
-    ( tree , std::set<double> {{ q }} , var , cut.get() , first , last ) ; 
+  std::set<double> qset {} ;
+  qset.insert ( q )  ;
+  //
+  auto result = _p2quantiles_ ( tree , qset , var , cut.get() , first , last ) ; 
   //
   Ostap::Assert ( 1 == result.quantiles.size()         , 
                   "Invalid quantiles size"   ,
@@ -3221,8 +3225,11 @@ Ostap::StatVar::quantile
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
+  std::set<double> qset {} ;
+  qset.insert ( q )  ;
+  //
   auto result = _quantiles_ 
-    (  data,  std::set<double>{{ q }} , 
+    (  data,  qset , 
        *expression ,  cut.get() , first , the_last , cutrange ) ;
   //
   Ostap::Assert ( 1 == result.quantiles.size()         ,
@@ -3266,8 +3273,11 @@ Ostap::StatVar::p2quantile
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
+  std::set<double> qset {} ;
+  qset.insert ( q )  ;
+  //
   auto result = _p2quantiles_ 
-    (  data,  std::set<double>{{ q }} , 
+    (  data,  qset, 
        *expression ,  cut.get() , first , the_last , cutrange ) ;
   //
   Ostap::Assert ( 1 == result.quantiles.size()         ,
@@ -4151,7 +4161,11 @@ Ostap::StatVar::quantile
   Ostap::Assert ( 0 < q && q < 1             , 
                   "Invalid quantile"         ,
                   "Ostap::StatVar::quantile" ) ;
-  auto result = _quantiles_ ( frame , std::set<double>{{ q }} , expr , cuts ) ;
+  //
+  std::set<double> qset {} ;
+  qset.insert ( q )  ;
+  //
+  auto result = _quantiles_ ( frame , qset , expr , cuts ) ;
   Ostap::Assert ( 1 == result.quantiles.size()         , 
                   "Invalid quantiles size"   ,
                   "Ostap::StatVar::interval" ) ;
@@ -4176,7 +4190,11 @@ Ostap::StatVar::p2quantile
   Ostap::Assert ( 0 < q && q < 1             , 
                   "Invalid quantile"         ,
                   "Ostap::StatVar::quantile" ) ;
-  auto result = _p2quantiles_ ( frame , std::set<double>{{ q }} , expr , cuts ) ;
+
+  std::set<double> qset {} ;
+  qset.insert ( q )  ;
+  //
+  auto result = _p2quantiles_ ( frame , qset , expr , cuts ) ;
   Ostap::Assert ( 1 == result.quantiles.size()         , 
                   "Invalid quantiles size"   ,
                   "Ostap::StatVar::interval" ) ;
@@ -4278,7 +4296,11 @@ Ostap::StatVar::interval
                   "Invalid quantile2"        ,
                   "Ostap::StatVar::interval" ) ;
   //
-  auto result = _quantiles_( frame , std::set<double>{{ q1 , q2 }} ,  expr , cuts ) ; 
+  std::set<double> qset {} ;
+  qset.insert ( q1 )  ;
+  qset.insert ( q2 )  ;
+  //
+  auto result = _quantiles_( frame , qset ,  expr , cuts ) ; 
   Ostap::Assert ( 2 == result.quantiles.size()         ,
                   "Invalid interval"         ,
                   "Ostap::StatVar::interval" ) ;
@@ -4315,7 +4337,11 @@ Ostap::StatVar::p2interval
                   "Invalid quantile2"        ,
                   "Ostap::StatVar::interval" ) ;
   //
-  auto result = _p2quantiles_ ( frame , std::set<double>{{ q1 , q2 }} ,  expr , cuts ) ; 
+  std::set<double> qset {} ;
+  qset.insert ( q1 )  ;
+  qset.insert ( q2 )  ;
+  //
+  auto result = _p2quantiles_ ( frame , qset ,  expr , cuts ) ; 
   Ostap::Assert ( 2 == result.quantiles.size()         ,
                   "Invalid interval"         ,
                   "Ostap::StatVar::interval" ) ;

@@ -211,8 +211,8 @@ double Ostap::Math::Utils::positive_pseudo_roots
   std::vector<double>& pproots )
 {
   //
-  if      ( 2 >  N ) { pproots = {{     }} ; return 1.0   ; }
-  else if ( 2 == N ) { pproots = {{ 0.5 }} ; return 1.0/3 ; }
+  if      ( 2 >  N ) { pproots = std::vector<double>()      ; return 1.0   ; }
+  else if ( 2 == N ) { pproots = std::vector<double>(1,0.5) ; return 1.0/3 ; }
   //
   pproots.resize ( N - 1 ) ;
   //
@@ -275,8 +275,8 @@ Ostap::Math::Positive::Positive
   if ( 2 <= N ) 
   {
     const PPROOTS& pp = deltas_for_pproots ( N ) ;
-    m_sphereA = NSphere ( "" , {{ std::get<0> ( pp ) }} ) ; 
-    m_sphereR = NSphere ( "" ,    std::get<1> ( pp )    ) ;
+    m_sphereA = NSphere ( "" , std::vector<double>( 1 , std::get<0> ( pp ) ) ) ; 
+    m_sphereR = NSphere ( "" ,                          std::get<1> ( pp )   ) ;
   }
   updateBernstein () ;
 }

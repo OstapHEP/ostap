@@ -151,7 +151,7 @@ Ostap::Math::Bernstein3D::Bernstein3D
   for ( unsigned short ix = 0 ; ix <= m_nx ; ++ix ) 
   { for ( unsigned short iy = 0 ; iy <= m_ny ; ++iy )
     { for ( unsigned short iz = 0 ; iz <= m_nz ; ++iz ) 
-      { setPar ( ix , iy , iz , bx.par ( ix ) * by.par ( iy ) ) * bz.par ( iz ) ; } } }
+      { setPar ( ix , iy , iz , bx.par ( ix ) * by.par ( iy ) * bz.par ( iz ) ) ; } } }
   //
 }
 // ============================================================================

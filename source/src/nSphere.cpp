@@ -253,8 +253,8 @@ std::vector<double>
 Ostap::Math::NSphere::phis ( const std::vector<double>& x )
 {
   //
-  if      ( 0 == x.size () ) { return {{}}      ; }
-  else if ( 1 == x.size () ) { return {{ 0.0 }} ; }
+  if      ( 0 == x.size () ) { return std::vector<double> ()          ; }
+  else if ( 1 == x.size () ) { return std::vector<double> ( 1 , 0.0 ) ; }
   //
   const unsigned short nphi = x.size() - 1 ;
   //

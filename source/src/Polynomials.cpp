@@ -818,7 +818,7 @@ Ostap::Math::Polynomial::Polynomial
   , m_xmin ( std::min ( xmin, xmax ) )
   , m_xmax ( std::max ( xmin, xmax ) )
 {
-  std::vector<double> coeffs { {1.0} } ;
+  std::vector<double> coeffs ( 1 , 1.0 )  ;
   coeffs.reserve ( degree() + 1 ) ;
   /// add real roots 
   for ( std::vector<double>::const_iterator rr = roots_real.begin() ; 

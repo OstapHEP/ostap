@@ -112,8 +112,8 @@ double Ostap::Kinematics::Dalitz0::density
   static const double s_dens = 0.25 * M_PI * M_PI ;
   return
     s  <= s_min  () ? 0.0 : 
-    s1 <= s1_min () ? 0,0 : 
-    s2 <= s2_min () ? 0,0 : 
+    s1 <= s1_min () ? 0.0 : 
+    s2 <= s2_min () ? 0.0 : 
     !inside ( s , s1 , s2 ) ? 0.0 : s_dens / s ;
 }
 // ============================================================================
@@ -1223,8 +1223,8 @@ double Ostap::Kinematics::Dalitz::density
 {
   static const double s_dens = 0.25 * M_PI * M_PI ;
   return
-    s1 <= s1_min ()     ? 0,0 : 
-    s2 <= s2_min ()     ? 0,0 : 
+    s1 <= s1_min ()     ? 0.0 : 
+    s2 <= s2_min ()     ? 0.0 : 
     !inside ( s1 , s2 ) ? 0.0 : s_dens / s () ;
 }
 // ============================================================================

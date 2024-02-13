@@ -7,6 +7,7 @@
   1. add `mtime` fnuction into `ostap.utils.basic` module - last createion/modification date for the path (dir/file)
   1. add (much) better cleanup of the ancient tmp directories. Usefulto remove lefovers from the parallel executions.  
   1. some improvements for `SimFuit.generate`
+  1. fix clang++ bugs&warnings    
 
 ## Backward incompatible: 
 

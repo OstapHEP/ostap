@@ -41,8 +41,10 @@ namespace
                   std::numeric_limits<long>::is_signed           ,                  
                   "std::numeric_limits<long> is not appropriate" ) ;
   //
-  const long s_long_min = std::numeric_limits<long>::min () ;
-  const long s_long_max = std::numeric_limits<long>::max () ;
+  const long   s_long_min  = std::numeric_limits<long>::min () ;
+  const long   s_long_max  = std::numeric_limits<long>::max () ;
+  const double sd_long_min = float ( std::numeric_limits<long>::min () ) ;
+  const double sd_long_max = float ( std::numeric_limits<long>::max () ) ;
 }
 // ============================================================================
 /* compare two double numbers with relative precision 'epsilon'
@@ -81,14 +83,14 @@ namespace
   static_assert ( std::numeric_limits<short> ::is_specialized     , 
                   "std::numeric_limits<short> is not specialized" ) ;
   // ==========================================================================
-  const double s_MAX_L  =  0.1 + std::numeric_limits<long>::max      () ;
-  const double s_MIN_L  = -0.1 - std::numeric_limits<long>::max      () ;
-  const double s_MAX_LL =  0.1 + std::numeric_limits<long long>::max () ;
-  const double s_MIN_LL = -0.1 - std::numeric_limits<long long>::max () ;
-  const double s_MAX_I  =  0.1 + std::numeric_limits<int>::max       () ;
-  const double s_MIN_I  = -0.1 - std::numeric_limits<int>::max       () ;
-  const double s_MAX_S  =  0.1 + std::numeric_limits<short>::max     () ;
-  const double s_MIN_S  = -0.1 - std::numeric_limits<short>::max     () ;
+  const double s_MAX_L  =  0.1 + double ( std::numeric_limits<long>::max      () ) ;
+  const double s_MIN_L  = -0.1 - double ( std::numeric_limits<long>::max      () ) ;
+  const double s_MAX_LL =  0.1 + double ( std::numeric_limits<long long>::max () ) ;
+  const double s_MIN_LL = -0.1 - double ( std::numeric_limits<long long>::max () ) ;
+  const double s_MAX_I  =  0.1 + 1.0 * std::numeric_limits<int>::max       () ;
+  const double s_MIN_I  = -0.1 - 1.0 * std::numeric_limits<int>::max       () ;
+  const double s_MAX_S  =  0.1 + 1.0 * std::numeric_limits<short>::max     () ;
+  const double s_MIN_S  = -0.1 - 1.0 * std::numeric_limits<short>::max     () ;
   // ==========================================================================
   static_assert ( std::numeric_limits<unsigned long long> ::is_specialized     , 
                   "std::numeric_limits<unsigned long long> is not specialized" ) ;
@@ -99,10 +101,10 @@ namespace
   static_assert ( std::numeric_limits<unsigned short> ::is_specialized     , 
                   "std::numeric_limits<unisgned short> is not specialized" ) ;
   // ==========================================================================
-  const double s_MAX_UL  =  0.1 + std::numeric_limits<unsigned long>::max      () ;
-  const double s_MAX_ULL =  0.1 + std::numeric_limits<unsigned long long>::max () ;
-  const double s_MAX_UI  =  0.1 + std::numeric_limits<unsigned int>::max       () ;
-  const double s_MAX_US  =  0.1 + std::numeric_limits<unsigned short>::max     () ;
+  const double s_MAX_UL  =  0.1 + double ( std::numeric_limits<unsigned long>::max      () ) ;
+  const double s_MAX_ULL =  0.1 + double ( std::numeric_limits<unsigned long long>::max () ) ;
+  const double s_MAX_UI  =  0.1 + 1.0 * std::numeric_limits<unsigned int>::max       () ;
+  const double s_MAX_US  =  0.1 + 1.0 * std::numeric_limits<unsigned short>::max     () ;
   // ==========================================================================
 }
 // ============================================================================
@@ -389,12 +391,12 @@ float Ostap::Math::round_N ( const float x , const unsigned short n )
 long Ostap::Math::round ( const double x ) 
 {
   return 
-    x <= s_long_min ? s_long_min :
-    x >= s_long_max ? s_long_max : long ( std::lround ( x )  ) ;
+    x <= sd_long_min ? s_long_min :
+    x >= sd_long_max ? s_long_max : long ( std::lround ( x )  ) ;
 }
-// ============================================================================\
+// ============================================================================
 
 
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

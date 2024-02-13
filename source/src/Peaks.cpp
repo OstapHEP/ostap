@@ -890,7 +890,7 @@ double Ostap::Math::SkewGauss::mean () const
 double Ostap::Math::SkewGauss::variance () const 
 {
   const double delta = m_alpha / std::sqrt( 1 + m_alpha * m_alpha ) ;
-  return m_omega * m_omega * ( 1 - 2 * delta * delta , M_PI ) ;
+  return m_omega * m_omega * ( 1 - 2 * delta * delta / M_PI ) ;
 }
 // ============================================================================
 double Ostap::Math::SkewGauss::skewness () const 

@@ -85,7 +85,7 @@ std::string Ostap::format
   return 
     0 < result && (unsigned int) result < s_LEN ? std::string ( s_buffer , s_buffer + result ) : 
     ( fmt + std::to_string ( value1 ) + 
-      " " + std::to_string ( value2 ) ,
+      " " + std::to_string ( value2 ) +
       " " + std::to_string ( value3 ) ) ;
 }
 // ============================================================================
@@ -111,8 +111,8 @@ std::string Ostap::format
   return 
     0 < result && (unsigned int) result < s_LEN ? std::string ( s_buffer , s_buffer + result ) : 
     ( fmt + std::to_string ( value1 ) + 
-      " " + std::to_string ( value2 ) ,
-      " " + std::to_string ( value3 ) , 
+      " " + std::to_string ( value2 ) +
+      " " + std::to_string ( value3 ) + 
       " " + std::to_string ( value4 ) ) ;
 }
 // ============================================================================
@@ -140,9 +140,9 @@ std::string Ostap::format
   return 
     0 < result && ( unsigned int) result < s_LEN ? std::string ( s_buffer , s_buffer + result ) :
     ( fmt + std::to_string ( value1 ) + 
-      " " + std::to_string ( value2 ) ,
-      " " + std::to_string ( value3 ) , 
-      " " + std::to_string ( value4 ) , 
+      " " + std::to_string ( value2 ) +
+      " " + std::to_string ( value3 ) + 
+      " " + std::to_string ( value4 ) + 
       " " + std::to_string ( value5 ) ) ;
 }
 // ============================================================================

@@ -390,7 +390,7 @@ Ostap::Math::KarlinStudden::KarlinStudden
   const std::vector<double>& phases2 , 
   const double               xmin    , 
   const double               scale   ) 
-  : KarlinStudden ( A , {{ phi }} , phases2 , xmin , scale )
+  : KarlinStudden ( A , std::vector<double>(1,phi) , phases2 , xmin , scale )
 {}
 // ============================================================================
 // set parameter alpha 
