@@ -21,6 +21,7 @@
   1. fix numerous typos in documentation strings 
   1. fix `SimFit.generate` 
 
+
 # v1.10.0.6
 
 ## New features:
