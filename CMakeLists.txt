@@ -23,7 +23,7 @@ include(CTest)
 set(OSTAP_VERSION_MAJOR 1)
 set(OSTAP_VERSION_MINOR 10)
 set(OSTAP_VERSION_PATCH 0)
-set(OSTAP_VERSION_TWEAK 7)
+set(OSTAP_VERSION_TWEAK 8)
 
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
@@ -35,6 +35,10 @@ set(OSTAP_PYTHON_SITE_DIR "")
 # http://stackoverflow.com/a/29904501/504346
 find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
+
+message ( "----> C-compiler       : " $ENV{CC}  )
+message ( "----> C++-compiler     : " $ENV{CXX} )
+
 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 # - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake

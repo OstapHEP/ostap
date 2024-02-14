@@ -1,3 +1,5 @@
+# v1.10.0.8
+
 ## New features:
 
   1. Add `split_chunks` and `split_groups` Functions for `ostap.trees.data_utils.Files` objects to split a large collection sof files into smaller chunks 
