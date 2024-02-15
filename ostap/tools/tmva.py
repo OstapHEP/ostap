@@ -166,6 +166,62 @@ def opts_replace ( opts , expr , direct = True ) :
         #
     while 0<= opts.find ( '::' ) : opts = opts.replace ( '::' , ':' )
     return opts 
+
+# =============================================================================
+## Create the tar file from components, optionally create it as tmp,
+#  and later copy to the final destination.
+#  (Sometime for unreliable file systems (like EOS via fsmount)
+#  normal creation of tar-gile raises OSError
+#  @code
+#  files =...
+#  t = make_tarfile ( 'outptu.tgz' , files , varbose = True , tmp = True )  
+#  @endcode
+def make_tarfile ( output , files , verbose = False , tmp = False ) :
+    """Create the tar file from components, optionally create it as tmp,
+    and later copy to the final destination.
+    (Sometime for unreliable file systems (like EOS via fsmount)
+    normal creation of tar-gile raises OSError
+    >>> files =...
+    >>> t = make_tarfile ( 'outptu.tgz' , files , varbose = True , tmp = True )  
+    """
+    
+    assert not os.path.exists ( output ) or os.path.isfile ( outptu ) , \
+           "Invalid destination for output tar-file: `%s'" % output
+    
+    if os.path.exists ( output ) and os.path.isfile ( output ) :
+        try :
+            os.remove ( output )
+        except :
+            pass
+
+    if tmp :
+        
+         # 1) create & fill the temporary tar-file
+         tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-tarfile-' , suffix = '.tgz' )         
+         with tarfile.open ( tmptar , 'w:gz' ) as tar :
+             for x in files :
+                 if os.path.exists ( x ) and os.path.isfile ( x ) : tar.add ( x )
+             if verbose : tar.list()
+         # 2) check it 
+         assert os.path.exists ( tmptar ) and os.path.isfile ( tmptar ) and tarfile.is_tarfile ( tmptar ) , \
+                'Non-existing or invalid temporary tar-file!'
+         # 3) move to the final destination 
+         shutil.move ( tmptar , output )
+         
+    else :
+
+        ## create & fill the tar-file
+        with tarfile.open ( output, 'w:gz' ) as tar :
+            for x in files : 
+                 if os.path.exists ( x ) and os.path.isfile ( x ) : tar.add ( x )
+            if verbose : tar.list()
+
+    ## check the result 
+    assert os.path.exists ( output ) and os.path.isfile ( output ) and tarfile.is_tarfile ( output ) , \
+           "Non-existing or invalid tar-file:`%s'" % output 
+
+    return output 
+    
 # =============================================================================
 ## @class Trainer
 #  Helper class to train TMVA
@@ -448,7 +504,7 @@ class Trainer(object):
         self.__class_files   = []
         self.__output_file   = output_file if output_file else os.path.join ( self.workdir , '%s.root' % self.name )
         self.__tar_file      = None 
-        self.__log_file      = None
+        self.__log_file      = '' 
         self.__plots         = []
         
         self.__output_file   = os.path.abspath ( self.output_file ) if self.output_file else None  
@@ -760,7 +816,7 @@ class Trainer(object):
     @property
     def log_file ( self ) :
         """'log_file'  : the name of log-file """
-        return str(self.__log_file) if self.__log_file else None 
+        return str(self.__log_file) if self.__log_file else '' 
 
     @property
     def category    ( self ) :
@@ -780,7 +836,7 @@ class Trainer(object):
     @property
     def plots ( self ) :
         """'plots': list of produced plots"""
-        return self.__plots
+        return tuple ( self.__plots ) 
 
     @property
     def show_plots ( self ) :
@@ -853,12 +909,20 @@ class Trainer(object):
             
             row  = 'Variables', ', '.join( vv )
             rows.append ( row )
-
+ 
+            if self.signal_vars :
+                row = 'Signal vars'  , str ( self.signal_vars  ) 
+                rows.append ( row )
+                
+            if self.background_vars :
+                row = 'Background vars'  , str ( self.background_vars  ) 
+                rows.append ( row )
+                
             if self.spectators : 
                 row  = 'Spectators', ', '.join( self.spectators )
                 rows.append ( row )
 
-            row = 'Methdos' ,  ', '.join( [ i[1] for i in  self.methods ] )
+            row = 'Methods' ,  ', '.join( [ i[1] for i in  self.methods ] )
             rows.append ( row )
             
             if self.workdir and os.path.exists ( self.workdir ) and os.path.isdir ( self.workdir ) :
@@ -1051,6 +1115,9 @@ class Trainer(object):
                 self.__signal      = self.__SigTR
                 self.__signal_cuts = ROOT.TCut() 
                 
+            missvars = [ v for v in self.signal_vars if not v in self.signal ]
+            assert not missvars , "Variables %s are not in signal sample!" % missvars                          
+
             # =================================================================
             ## prefilter/prescale background if required 
             if self.prefilter_background or self.prefilter or 1 != self.prescale_background or self.background_vars :
@@ -1083,9 +1150,11 @@ class Trainer(object):
                 self.__background      = self.__BkgTR
                 self.__background_cuts = ROOT.TCut() 
 
-                
+            missvars = [ v for v in self.background_vars if not v in self.background ]
+            assert not missvars , "Variables %s are not in background sample!" % missvars                         
+                         
             # =====================================================================
-            ## check for signal weigths
+            ## check for signal weights
             # =====================================================================
             if self.signal_weight :
                 if ( 6 , 20 ) <= root_info : 
@@ -1267,9 +1336,15 @@ class Trainer(object):
             ## 
             dataloader = ROOT.TMVA.DataLoader ( self.name )
 
-            #
+            
+            avars = set ( self.variables )
+            for v in self.signal_vars     : avars.add ( v ) 
+            for v in self.background_vars : avars.add ( v )
+            avars = sorted ( avars )
+            
             all_vars = [] 
-            for v in self.variables :
+            ## for v in self.variables :
+            for v in avars :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
                 all_vars.append ( vv[0] ) 
@@ -1381,30 +1456,39 @@ class Trainer(object):
         self.__weights_files = tuple ( [ f for f in glob.glob ( self.__pattern_xml   ) ] )
         self.__class_files   = tuple ( [ f for f in glob.glob ( self.__pattern_C     ) ] ) 
         self.__plots         = tuple ( [ f for f in glob.glob ( self.__pattern_plots ) ] )
-        
-        tfile = self.name + '.tgz'
-        if os.path.exists ( tfile ) :
-            self.logger.debug  ( "Remove existing tar-file %s" % tfile ) 
-            try :
-                os.remove ( tfile )
-            except :
-                pass 
-            
-        # create temporary tar-file
-        tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-tarfile-' , suffix = '.tgz' )                
-        with tarfile.open ( tmptar , 'w:gz' ) as tar :
-            for x in self.weights_files : tar.add ( x )
-            for x in self.  class_files : tar.add ( x )
-            for x in self.  plots       : tar.add ( x )
-            if self.log_file and os.path.exists ( self.log_file ) and os.path.isfile ( self.log_file ) :
-                tar.add ( self.log_file )
-                
-        assert os.path.exists ( tmptar ) and os.path.isfile ( tmptar ) and tarfile.is_tarfile ( tmptar ) , \
-               'Non-existing or invalid temporary tar-file!'
 
-        ## copy it
-        import shutil
-        shutil.copy ( tmptar , tfile )
+        
+        tfile = make_tarfile ( output  = '.'.join ( [ self.name , 'tgz'] ) ,
+                               files   = self.weights_files + self.class_files + self.plots + ( self.log_file , ) ,
+                               verbose = self.verbose  ,
+                               tmp     = True          ) 
+        
+        ## if os.path.exists ( tfile ) :
+        ##     self.logger.debug  ( "Remove existing tar-file %s" % tfile ) 
+        ##     try :
+        ##         os.remove ( tfile )
+        ##     except :
+        ##         pass 
+            
+        ## # create temporary tar-file
+        
+        ## tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-tarfile-' , suffix = '.tgz' )                
+        ## with tarfile.open ( tmptar , 'w:gz' ) as tar :
+        ##     for x in self.weights_files : tar.add ( x )
+        ##     for x in self.  class_files : tar.add ( x )
+        ##     for x in self.  plots       : tar.add ( x )
+        ##     if self.log_file and os.path.exists ( self.log_file ) and os.path.isfile ( self.log_file ) :
+        ##         tar.add ( self.log_file )
+                
+        ## assert os.path.exists ( tmptar ) and os.path.isfile ( tmptar ) and tarfile.is_tarfile ( tmptar ) , \
+        ##        'Non-existing or invalid temporary tar-file!'
+
+        ## ## copy it
+        ## import shutil
+        ## shutil.move ( tmptar , tfile )
+
+        ## assert os.path.exists ( tfile ) and os.path.isfile ( tfile ) and tarfile.is_tarfile ( tfile ) , \
+        ##        'Non-existing or invalid tar-file!'
           
         self.__weights_files = tuple ( [ os.path.abspath ( f ) for f in self.weights_files ] ) 
         self.__class_files   = tuple ( [ os.path.abspath ( f ) for f in self.class_files   ] ) 
@@ -1594,29 +1678,12 @@ def make_Plots ( name , output , show_plots = True ) :
         if plots :
             
             ## tarfile with plots 
-            tfile = '%s_plots.tgz' % name
-
-            if os.path.exists ( tfile ) :
-                self.logger.verbose ( "Remove existing tar-plotsfile %s" % lfile )
-            try :
-                os.remove ( tfile )
-            except :
-                pass
-            
-            # create temporary tar-file
-            tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-plots-' , suffix = '.tgz' )
-            
-            with tarfile.open ( tmptar , 'w:gz' ) as tar :
-                for x in plots  : tar.add ( x )
-                
-            ## copy it 
-            shutil.copy ( tmptar , tfile )
-    
-            if tfile and os.path.exists ( tfile  ) and tarfile.is_tarfile ( tfile ) :
-                with tarfile.open ( tfile , 'r' ) as tar :
-                    logger.info ( "Tarfile with plots: '%s'" % tfile )
-                    tar.list()
-                    return tfile 
+            tfile = make_tarfile ( output  = '.'.join ( [ '%s_plots' % name , 'tgz' ] ) ,
+                                   files   = plots        ,
+                                   verbose = self.verbose ,
+                                   tmp     = True         ) 
+            logger.info ( "Tarfile with plots: '%s'" % tfile )
+            return tfile 
                 
         return '' 
             

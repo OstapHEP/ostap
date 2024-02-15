@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/utils/source_env.py
-#  'Source' the  environmentfile
+#  'Source' the  environmen tfile
 #  @code
 #  from ostap.utuls.source_env import source_env
 #  ## get the dict of all modified/new variables 

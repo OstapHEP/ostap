@@ -90,8 +90,8 @@ __all__     = (
 from   ostap.core.meta_info    import root_info
 from   ostap.tools.tmva        import Trainer as TMVATrainer
 from   ostap.tools.tmva        import Reader  as TMVAReader
-from   ostap.tools.tmva        import ( dir_name     , good_for_negative,
-                                        trivial_opts ) 
+from   ostap.tools.tmva        import ( dir_name     , good_for_negative ,
+                                        trivial_opts , make_tarfile      ) 
 from   ostap.core.core         import WSE 
 from   ostap.core.pyrouts      import hID, h1_axis, Ostap 
 from   ostap.core.ostap_types  import integer_types 
@@ -476,7 +476,10 @@ class Trainer(object) :
 
             self.__signal      = self.__SigTR
             self.__signal_cuts = ROOT.TCut() 
-            
+
+        missvars = [ v for v in self.signal_vars if not v in self.signal ]
+        assert not missvars , "Variables %s are not in signal sample!" % missvars                          
+        
         # =================================================================
         ## prefilter background if required 
         if self.prefilter_background or self.prefilter or 1 != self.prescale_background or self.background_vars :
@@ -512,6 +515,9 @@ class Trainer(object) :
             self.__background      = self.__BkgTR
             self.__background_cuts = ROOT.TCut() 
             
+        missvars = [ v for v in self.background_vars if not v in self.background ]
+        assert not missvars , "Variables %s are not in background sample!" % missvars                         
+
         # =====================================================================
         ## check for signal weigths
         # =====================================================================
@@ -713,9 +719,15 @@ class Trainer(object) :
         else :
             mp = self.make_plots 
             vb = self.verbose   
-            
-        t  = TMVATrainer ( methods           = self.methods          ,
-                           variables         = self.variables         ,
+        
+        vv = set ( self.variables )
+        for v in self.signal_vars     : vv.add ( v ) 
+        for v in self.background_vars : vv.add ( v )
+        vv = sorted ( vv )
+        
+        t  = TMVATrainer ( methods           = self.methods           ,
+                           variables         = vv                     ,
+                           ##
                            signal            = self.__signal          ,
                            background        = self.__background      ,
                            spectators        = self.spectators        ,
@@ -997,15 +1009,28 @@ class Trainer(object) :
             result = self._train()
             
         rows = [ ( 'Item' , 'Value' ) ]
+
+        vv = set ( self.variables )
+        for k in self.signal_vars     : vv.add ( k )
+        for k in self.background_vars : vv.add ( k )
+        vv = sorted ( vv ) 
         
-        row  = 'Variables', ', '.join( self.variables )
+        row  = 'Variables', ', '.join ( vv )
         rows.append ( row )
         
+        if self.signal_vars :
+            row = 'Signal vars'  , str ( self.signal_vars  ) 
+            rows.append ( row )
+            
+        if self.background_vars :
+            row = 'Background vars'  , str ( self.background_vars  ) 
+            rows.append ( row )
+            
         if self.spectators : 
             row  = 'Spectators', ', '.join( self.spectators )
             rows.append ( row )
             
-        row = 'Methdos' ,  ', '.join( [ i[1] for i in  self.methods ] )
+        row = 'Methods' ,  ', '.join( [ i[1] for i in  self.methods ] )
         rows.append ( row )
 
         row = 'Category' , self.category 
@@ -1191,7 +1216,19 @@ class Trainer(object) :
         self.__class_files   = tuple ( classes )
         self.__output_files  = tuple ( outputs )
 
-        self.make_tarfile ( tarfiles , logfiles )
+        ## create the final tar-file 
+        self.__tar_file      = make_tarfile ( output  = '.'.join ( [ self.name , 'tgz' ] ) ,
+                                              files   = tarfiles     ,
+                                              verbose = self.verbose , 
+                                              tmp     = True         )
+        
+        if logfiles : 
+            self.__log_file  = make_tarfile ( output  = '.'.join ( [ '%s_logs' % self.name , 'tgz' ] ) ,
+                                              files   = logfiles     ,
+                                              verbose = self.verbose , 
+                                              tmp     = True         )  
+        else : 
+            self.__log_file  = ''
 
         return self.tar_file 
 
@@ -1245,77 +1282,24 @@ class Trainer(object) :
         self.__class_files   = tuple ( classes )
         self.__output_files  = tuple ( outputs )
 
-        self.make_tarfile ( tarfiles , logfiles )
+        ## create the final tar-file 
+        self.__tar_file      = make_tarfile ( output  = '.'.join ( [ self.name , 'tgz' ] ) ,
+                                              files   = tarfiles     ,
+                                              verbose = self.verbose , 
+                                              tmp     = True         )
+        
+        if logfiles : 
+            self.__log_file  = make_tarfile ( output  = '.'.join ( [ '%s_logs' % self.name , 'tgz' ] ) ,
+                                              files   = logfiles     ,
+                                              verbose = self.verbose , 
+                                              tmp     = True         )  
+        else : 
+            self.__log_file  = ''
 
         self.__trainer_dirs = tuple ( dirnames ) 
         
         return self.tar_file
         
-    ## create the tarfile from the list of tarfiles 
-    def make_tarfile ( self , tarfiles , logfiles = [] ) : 
-    
-        import tarfile, os
-        
-        tfile = '%s.tgz' % self.name 
-        if os.path.exists ( tfile ) :
-            self.logger.verbose ( "Remove existing tar-file %s" % tfile ) 
-            try :
-                os.remove ( tfile )
-            except :
-                pass
-
-        # create temporary tar-file
-        tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-tarfile-' , suffix = '.tgz' )
-            
-        with tarfile.open ( tmptar , 'w:gz' ) as tar :
-            for x in  tarfiles: tar.add ( x )
-            self.logger.debug ( "Tar/gz    file  : %s" % tmptar ) 
-            if self.verbose : tar.list ()
-
-        assert os.path.exists ( tmptar ) and os.path.isfile ( tmptar ) and tarfile.is_tarfile ( tmptar ) , \
-               'Non-existing or invalid temporary tar-file!'
-
-        ## copy it 
-        shutil.copy ( tmptar , tfile )
-        
-        assert os.path.exists ( tfile ) and os.path.isfile ( tfile ) and tarfile.is_tarfile ( tfile ) , \
-               'Non-existing or invalid temporary tar-file!'
-            
-        ## finally set the tar-file 
-        if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :
-            self.__tar_file = tfile ; ## os.path.abspath ( tfile ) 
-            self.logger.debug ( "Tar/gz    file  : %s" % tfile ) 
-        
-        if not logfiles : return tfile
-        
-        lfile = '%s_logs.tgz' % self.name 
-        if os.path.exists ( lfile ) :
-            self.logger.verbose ( "Remove existing tar-logfile %s" % lfile )
-            try :
-                os.remove ( lfile )
-            except :
-                pass
-            
-        # create temporary tar-file
-        tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-logfile-' , suffix = '.tgz' )
-        with tarfile.open ( tmptar , 'w:gz' ) as tar :
-            for x in  logfiles:
-                if os.path.exists ( x ) : tar.add ( x )
-            self.logger.debug ( "Tar/gz logfile  : %s" % tmptar ) 
-            if self.verbose : tar.list ()
-                
-        if os.path.exists ( tmptar ) and os.path.isfile ( tmptar ) and tarfile.is_tarfile ( tmptar ) :
-            shutil.copy ( tmptar , lfile )                   
-
-        ## finally set the tar/log-file 
-        if os.path.exists ( lfile ) and tarfile.is_tarfile( lfile ) :
-            self.__log_file = lfile ## os.path.abspath ( lfile )
-            self.logger.debug ( "Tar/gz logfile  : %s" % lfile  ) 
-            
-
-        return tfile
-
-
 # =============================================================================
 ## @class WeightFiles
 #  helper structure  to deal with weights files
