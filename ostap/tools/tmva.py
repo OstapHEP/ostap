@@ -37,6 +37,7 @@ __all__     = (
 from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning 
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
 from   ostap.core.meta_info    import root_version_int, root_info  
+from   ostap.utils.cleanup     import CleanUp
 import ostap.io.root_file
 import ROOT, os, glob, math, tarfile, shutil, itertools 
 # =============================================================================
@@ -75,7 +76,6 @@ def dir_name ( name ) :
 # =============================================================================
 ## @class WeightFiles
 #  helper structure to deal with weights files
-from ostap.utils.cleanup import  CleanUp
 class WeightsFiles(CleanUp) :
     """Helper structure  to deal with weights files
     """
@@ -1375,14 +1375,27 @@ class Trainer(object):
         tfile = self.name + '.tgz'
         if os.path.exists ( tfile ) :
             self.logger.debug  ( "Remove existing tar-file %s" % tfile ) 
-
-        with tarfile.open ( tfile , 'w:gz' ) as tar :
+            try :
+                os.remove ( tfile )
+            except :
+                pass 
+            
+        # create temporary tar-file
+        tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-tarfile-' , suffix = '.tgz' )                
+        with tarfile.open ( tmptar , 'w:gz' ) as tar :
             for x in self.weights_files : tar.add ( x )
             for x in self.  class_files : tar.add ( x )
             for x in self.  plots       : tar.add ( x )
             if self.log_file and os.path.exists ( self.log_file ) and os.path.isfile ( self.log_file ) :
-                tar.add ( self.log_file ) 
+                tar.add ( self.log_file )
+                
+        assert os.path.exists ( tmptar ) and os.path.isfile ( tmptar ) and tarfile.is_tarfile ( tmptar ) , \
+               'Non-existing or invalid temporary tar-file!'
 
+        ## copy it
+        import shutil
+        shutil.copy ( tmptar , tfile )
+          
         self.__weights_files = tuple ( [ os.path.abspath ( f ) for f in self.weights_files ] ) 
         self.__class_files   = tuple ( [ os.path.abspath ( f ) for f in self.class_files   ] ) 
         self.__plots         = tuple ( [ os.path.abspath ( f ) for f in self.__plots       ] ) 
@@ -1571,11 +1584,24 @@ def make_Plots ( name , output , show_plots = True ) :
         if plots :
             
             ## tarfile with plots 
-            tfile = '%s_plots.tgz' % name 
-            with tarfile.open ( tfile , 'w:gz' ) as tar :
+            tfile = '%s_plots.tgz' % name
+
+            if os.path.exists ( tfile ) :
+                self.logger.verbose ( "Remove existing tar-plotsfile %s" % lfile )
+            try :
+                os.remove ( tfile )
+            except :
+                pass
+            
+            # create temporary tar-file
+            tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-plots-' , suffix = '.tgz' )
+            
+            with tarfile.open ( tmptar , 'w:gz' ) as tar :
                 for x in plots  : tar.add ( x )
-                tfile = os.path.abspath ( tar.name ) 
                 
+            ## copy it 
+            shutil.copy ( tmptar , tfile )
+    
             if tfile and os.path.exists ( tfile  ) and tarfile.is_tarfile ( tfile ) :
                 with tarfile.open ( tfile , 'r' ) as tar :
                     logger.info ( "Tarfile with plots: '%s'" % tfile )

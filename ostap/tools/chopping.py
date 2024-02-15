@@ -95,6 +95,7 @@ from   ostap.tools.tmva        import ( dir_name     , good_for_negative,
 from   ostap.core.core         import WSE 
 from   ostap.core.pyrouts      import hID, h1_axis, Ostap 
 from   ostap.core.ostap_types  import integer_types 
+from   ostap.utils.cleanup     import CleanUp
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils       as     Utils 
@@ -1258,39 +1259,66 @@ class Trainer(object) :
         tfile = '%s.tgz' % self.name 
         if os.path.exists ( tfile ) :
             self.logger.verbose ( "Remove existing tar-file %s" % tfile ) 
-            
-        with tarfile.open ( tfile , 'w:gz' ) as tar :
-            for x in  tarfiles: tar.add ( x )
-            self.logger.info ( "Tar/gz    file  : %s" % tfile ) 
-            ## if self.verbose : tar.list ()
+            try :
+                os.remove ( tfile )
+            except :
+                pass
 
+        # create temporary tar-file
+        tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-tarfile-' , suffix = '.tgz' )
+            
+        with tarfile.open ( tmptar , 'w:gz' ) as tar :
+            for x in  tarfiles: tar.add ( x )
+            self.logger.debug ( "Tar/gz    file  : %s" % tmptar ) 
+            if self.verbose : tar.list ()
+
+        assert os.path.exists ( tmptar ) and os.path.isfile ( tmptar ) and tarfile.is_tarfile ( tmptar ) , \
+               'Non-existing or invalid temporary tar-file!'
+
+        ## copy it 
+        shutil.copy ( tmptar , tfile )
+        
+        assert os.path.exists ( tfile ) and os.path.isfile ( tfile ) and tarfile.is_tarfile ( tfile ) , \
+               'Non-existing or invalid temporary tar-file!'
+            
         ## finally set the tar-file 
         if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :
             self.__tar_file = tfile ; ## os.path.abspath ( tfile ) 
-
+            self.logger.debug ( "Tar/gz    file  : %s" % tfile ) 
+        
         if not logfiles : return tfile
         
         lfile = '%s_logs.tgz' % self.name 
         if os.path.exists ( lfile ) :
             self.logger.verbose ( "Remove existing tar-logfile %s" % lfile )
-
-        with tarfile.open ( lfile , 'w:gz' ) as tar :
+            try :
+                os.remove ( lfile )
+            except :
+                pass
+            
+        # create temporary tar-file
+        tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-logfile-' , suffix = '.tgz' )
+        with tarfile.open ( tmptar , 'w:gz' ) as tar :
             for x in  logfiles:
                 if os.path.exists ( x ) : tar.add ( x )
-            self.logger.info ( "Tar/gz logfile  : %s" % lfile  ) 
-            ## if self.verbose : tar.list ()
-        
+            self.logger.debug ( "Tar/gz logfile  : %s" % tmptar ) 
+            if self.verbose : tar.list ()
+                
+        if os.path.exists ( tmptar ) and os.path.isfile ( tmptar ) and tarfile.is_tarfile ( tmptar ) :
+            shutil.copy ( tmptar , lfile )                   
+
         ## finally set the tar/log-file 
         if os.path.exists ( lfile ) and tarfile.is_tarfile( lfile ) :
             self.__log_file = lfile ## os.path.abspath ( lfile )
+            self.logger.debug ( "Tar/gz logfile  : %s" % lfile  ) 
             
+
         return tfile
 
 
 # =============================================================================
 ## @class WeightFiles
 #  helper structure  to deal with weights files
-from ostap.utils.cleanup import CleanUp
 class WeightsFiles(CleanUp) :
     """Helper structure  to deal with weights files
     """
