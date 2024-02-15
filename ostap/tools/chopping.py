@@ -602,8 +602,16 @@ class Trainer(object) :
             row = 'Variables'      , ' '.join ( self.variables )
             rows.append ( row )
 
+            if self.signal_vars :
+                row = 'Signal vars'  , str ( self.signal_vars  ) 
+                rows.append ( row )
+                
+            if self.background_vars :
+                row = 'Background vars'  , str ( self.background_vars  ) 
+                rows.append ( row )
+
             if self.spectators :
-                row = 'Spectators' , ' '.join ( self.variables )
+                row = 'Spectators' , ' '.join ( self.spectators )
                 rows.append ( row )
             
             for i , o in enumerate ( [ o for o in self.bookingoptions.split ( ':' )  if not o in trivial_opts ] ) :
@@ -616,14 +624,6 @@ class Trainer(object) :
                 else      : row = ''                     , o 
                 rows.append ( row )
   
-            if self.__signal_vars :
-                row = 'Signal vars'  , str ( self.__signal_vars  ) 
-                rows.append ( row )
-                
-            if self.__background_vars :
-                row = 'Background vars'  , str ( self.__background_vars  ) 
-                rows.append ( row )
-
             if self.prefilter :
                 row = 'Prefilter'  , str ( self.prefilter ) 
                 rows.append ( row )                

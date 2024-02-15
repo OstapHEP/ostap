@@ -513,8 +513,16 @@ class Trainer(object):
             row = 'Variables'      , ' '.join ( self.variables )
             rows.append ( row )
 
+            if self.signal_vars :
+                row = 'Signal vars'  , str ( self.signal_vars  ) 
+                rows.append ( row )
+                
+            if self.background_vars :
+                row = 'Background vars'  , str ( self.background_vars  ) 
+                rows.append ( row )
+                
             if self.spectators :
-                row = 'Spectators' , ' '.join ( self.variables )
+                row = 'Spectators' , ' '.join ( self.spectators )
                 rows.append ( row )
             
             for i , o in enumerate ( [ o for o in self.bookingoptions.split ( ':' ) if not o in trivial_opts ] ) :
@@ -527,14 +535,6 @@ class Trainer(object):
                 else      : row = ''                     , o 
                 rows.append ( row )
 
-            if self.__signal_vars :
-                row = 'Signal vars'  , str ( self.__signal_vars  ) 
-                rows.append ( row )
-                
-            if self.__background_vars :
-                row = 'Background vars'  , str ( self.__background_vars  ) 
-                rows.append ( row )
-                
             if self.prefilter :
                 row = 'Prefilter'  , str ( self.prefilter ) 
                 rows.append ( row )
@@ -845,8 +845,13 @@ class Trainer(object):
             ## Training outputs
                     
             rows = [ ( 'Item' , 'Value' ) ]
+
+            vv = set ( self.variables )
+            for k in self.signal_vars     : vv.add ( k )
+            for k in self.background_vars : vv.add ( k )
+            vv = sorted ( vv ) 
             
-            row  = 'Variables', ', '.join( self.variables )
+            row  = 'Variables', ', '.join( vv )
             rows.append ( row )
 
             if self.spectators : 
@@ -1171,12 +1176,17 @@ class Trainer(object):
                 
                 row  = 'Name'      , self.name
                 rows.append ( row )
+
+                vv  = set ( self.variables )
+                for k in self.signal_vars     : vv.add ( k )
+                for k in self.background_vars : vv.add ( k )
+                vv = sorted ( vv )
                 
-                row = 'Variables'      , ' '.join ( self.variables )
+                row = 'Variables'      , ' '.join ( vv )
                 rows.append ( row )
                 
                 if self.spectators :
-                    row = 'Spectators' , ' '.join ( self.variables )
+                    row = 'Spectators' , ' '.join ( self.spectators )
                     rows.append ( row )
                     
                 for i , o in enumerate ( [ o for o in self.bookingoptions.split ( ':' ) if not o in trivial_opts ] ) :
