@@ -14,8 +14,8 @@ jobs:
       matrix:
         build: [1,2]
         include:
-            - { build: 1, lcg: dev3/latest, platform: x86_64-centos7-gcc11-opt }
-            - { build: 2, lcg: dev3/latest, platform: x86_64-centos7-gcc12-opt }
+            - { build: 1, lcg: dev3/latest, platform: x86_64-el9-gcc13-opt }
+            - { build: 2, lcg: dev3/latest, platform: x86_64-el9-clang16-opt }
       fail-fast: false
      runs-on: ubuntu-latest 
      steps:
@@ -27,13 +27,13 @@ jobs:
        - name: Build
          run: |
           ls /cvmfs/sft.cern.ch 
-          docker  create -v  /osya --name ostap-build    gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest 
+          docker  create -v  /osya --name ostap-build    gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest 
           docker cp  /home/runner/work/ostap/ostap/  ostap-build:/osya
-          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  && ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
+          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest /bin/bash -c "cd /osya/ostap  && ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
        - name: Test
          run: |
           ls /cvmfs/sft.cern.ch 
-          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  && ./.aux/test_with_lcg  ${{ matrix.lcg }}  ${{ matrix.platform }}"
+          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest /bin/bash -c "cd /osya/ostap  && ./.aux/test_with_lcg  ${{ matrix.lcg }}  ${{ matrix.platform }}"
        - name: copy artifacts
          if: always()
          run: |
