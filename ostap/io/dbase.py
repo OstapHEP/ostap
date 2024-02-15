@@ -293,20 +293,20 @@ class TmpDB(object) :
         
     @property
     def tmp_name ( self ) :
-        """``tmp_name'' : get the generated temporary file nale
+        """``tmp_name'' : get the generated temporary file name
         """
         return self.__tmp_name
     
     @property
     def remove ( self ) :
-        """``remove'':  remove the temporary file immediately (just after``clonse''),
+        """``remove'':  remove the temporary file immediately (just after``close''),
         otherwise remove it at the shutdown
         """
         return self.__remove
     
     @property
     def keep   ( self )  :
-        """``keep'' keep the file and not delete it
+        """``keep'' keep the file and do not delete it
         """
         return self.__keep 
     
