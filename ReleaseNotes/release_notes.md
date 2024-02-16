@@ -1,3 +1,9 @@
+## New features:
+
+## Backward incompatible: 
+
+## Bug fixes:
+
 # v1.10.0.8
 
 ## New features:
@@ -20,7 +26,6 @@
 
   1. fix numerous typos in documentation strings 
   1. fix `SimFit.generate` 
-
 
 # v1.10.0.6
 
