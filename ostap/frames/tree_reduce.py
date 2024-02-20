@@ -8,7 +8,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-06-16
 # =============================================================================
-"""Helper module to ``reduce'' tree using frames
+"""Helper module to `reduce' tree using frames
 - see Ostap.DataFrame
 - see ROOT.ROOT.RDataFrame
 """
@@ -34,7 +34,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.frames.tree_reduce' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-logger.debug ( "``Reduce'' TTree using ROOT::RDataFrame object")
+logger.debug ( "`Reduce' TTree using ROOT::RDataFrame object")
 # =============================================================================
 ## @class ReduceTree
 #  Reduce TTree object using intermediate (temporary
@@ -63,7 +63,7 @@ class ReduceTree(CleanUp):
                    tmp_keep   = False ,   ## keep the temporary file
                    silent     = False ):  ## silent processing 
         
-        from   ostap.frames.frames import DataFrame, frame_prescale
+        from   ostap.frames.frames import DataFrame, frame_prescale, frame_columns 
         frame  = DataFrame ( chain )
         report = None
         
@@ -80,13 +80,18 @@ class ReduceTree(CleanUp):
         ## add overall prescale (if requested)  
         if 1 != prescale :
             frame = frame_prescale ( frame , prescale )
-            
+
+        avars = set ( frame_columns ( frame ) ) 
         nvars = [] 
         ## new variables 
         for nv in new_vars :
-            frame = frame.Define ( nv , new_vars [ nv ] )
+            if ( 6 , 26 ) <= root_info and nv in avars :
+                frame = frame.Redefine ( nv , new_vars [ nv ] ) ## REDEFINE!!!
+            else : 
+                frame = frame.Define   ( nv , new_vars [ nv ] )
             nvars.append ( nv )
-
+            avars.add    ( nv )
+            
         from ostap.core.ostap_types import ( string_types   ,
                                              listlike_types ,
                                              dictlike_types )

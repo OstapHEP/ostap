@@ -117,7 +117,7 @@ def columns ( frame ) :
     """
     names  = [ str(c) for c in frame.GetColumnNames()        ]
     if ( 6 , 16 ) <= root_info : 
-        names += [ str(c) for c in frame.GetDefinedColumnNames() ]            
+        names += [ str ( c ) for c in frame.GetDefinedColumnNames() ]            
     return tuple ( sorted ( set ( names ) ) )    
     
 frame_columns      = columns
