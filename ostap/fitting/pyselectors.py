@@ -1587,7 +1587,7 @@ def make_dataset_old ( tree              ,
         if not silent : logger.info ( "Switch to more efficient function 'make_dataset'" )
         return make_dataset ( tree                  ,
                               variables = variables ,
-                              seletion  = selection ,
+                              selection = selection ,
                               roo_cuts  = roo_cuts  ,
                               name      = name      ,
                               title     = title     ,
