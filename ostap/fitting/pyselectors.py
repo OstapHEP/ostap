@@ -1862,8 +1862,11 @@ def make_dataset ( tree              ,
             from   ostap.frames.frames import frame_progress  
             pb = frame_progress  ( frame , total )
             
-                    
-    columns = set ( tree.branches() ) | set ( tree.leaves() )
+
+    if  ( 6,16 ) <= root_info : 
+        columns = set ( frame_columns ( frame  ) )
+    else :
+        columns = set ( tree.branches() ) | set ( tree.leaves() )
 
     scuts  = [] 
     limits = []
@@ -1885,8 +1888,11 @@ def make_dataset ( tree              ,
             
         if v.name == v.formula and v.name in columns : continue
 
-        ## define new variable 
-        frame = frame.Define ( v.name , v.formula )
+        ## define new variable
+        if ( 6 , 26 ) <=root_info and  v.name in columns : 
+            frame = frame.Redefine ( v.name , v.formula )  ## REDEFINE 
+        else : 
+            frame = frame.Define   ( v.name , v.formula )
 
         columns |= set ( frame_columns ( frame  ) )
         
