@@ -1218,7 +1218,6 @@ class SimFit (VarMaker,ConfigReducer) :
                 if v in varset : vv.add ( v )
             ds    = pdf.generate ( nevts               ,
                                    varset   = vv       ,
-                                   ## varset   = varset   , 
                                    binning  = binning  ,
                                    sample   = sample   ,
                                    storage  = storage  , 
@@ -1235,11 +1234,17 @@ class SimFit (VarMaker,ConfigReducer) :
 
         ## combine generated datasets
         args = () if not weight else ( ROOT.RooFit.WeightVar ( weight ) , )
-        return combined_data ( self.sample ,
-                               vars        , 
-                               data        ,
-                               args = args )
-    
+        result = combined_data ( self.sample ,
+                                 vars        , 
+                                 data        ,
+                                 args = args )
+
+        while data :
+            _ , ds = data.popitem()
+            ds.reset()
+            del ds
+            
+        return result 
     # =========================================================================
     ## perform sPlot-analysis 
     #  @code
