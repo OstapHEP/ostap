@@ -436,7 +436,10 @@ class Variable(object) :
         self.__formula = None
         if accessor is None :
             varname        = var.GetName()
-            accessor       = varname
+            
+            if ( 6 ,30 ) <= root_info : accessor = '1.0*(%s)' % varname
+            else                      : accessor = varname
+
             self.__formula = varname 
             
         if isinstance  ( accessor , str ) :
