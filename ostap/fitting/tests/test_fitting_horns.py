@@ -13,12 +13,12 @@ from   __future__              import print_function
 # ============================================================================= 
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
-from   ostap.core.core          import Ostap, VE, dsID, rooSilent
+from   ostap.core.core          import Ostap, VE, dsID, rooSilent,rootError 
 from   builtins                 import range
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
-import ROOT, random
+import ROOT, random, warnings 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -44,14 +44,17 @@ def test_horns_1 () :
                                          delta = ( 1 , 1 , 2 ) ,
                                          resolution = 0.1 ) ,  
         S = 1000 ,
-        B = 1    ,
+        B = 10   ,
         suffix = 'horns'
         )
     
     horns.signal.a    .fix(7)
     horns.signal.delta.fix(1) 
     dataset = horns.generate ( 5000 ) 
-    with wait ( 1 ) , use_canvas ( 'Test HORNSdini' ) :
+    with wait ( 1 ) , use_canvas ( 'Test HORNSdini' ) , warnings.catch_warnings(), rootError() :
+        warnings.simplefilter("ignore")
+        horns.S = 5000
+        horns.B =   50
         result , _ = horns.fitTo ( dataset , draw = False , silent = True ) 
         result , _ = horns.fitTo ( dataset , draw = True  , silent = True ) 
 
@@ -77,14 +80,17 @@ def test_hill_1 () :
                                          delta = ( 1 , 1 , 2 ) ,
                                          resolution = 0.1 ) ,  
         S = 1000 ,
-        B = 1    ,
+        B = 10   ,
         suffix = 'hill'
         )
 
     horns.signal.a    .fix(7)
     horns.signal.delta.fix(1) 
     dataset = horns.generate ( 5000 ) 
-    with wait ( 1 ) , use_canvas ( 'Test HILLdini' ) :
+    with wait ( 1 ) , use_canvas ( 'Test HILLdini' ) , warnings.catch_warnings() , rootError () :
+        warnings.simplefilter("ignore")
+        horns.S = 5000
+        horns.B =   50
         result , _ = horns.fitTo ( dataset , draw = False , silent = True ) 
         result , _ = horns.fitTo ( dataset , draw = True  , silent = True ) 
 

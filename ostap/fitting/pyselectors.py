@@ -421,6 +421,7 @@ class Variable(object) :
             assert vmin < vmax, \
                    "Variable: invalid 'minmax' range (%g,%g)"       % ( vmin , vmax ) 
 
+
             if    description                   : pass
             elif  isinstance ( accessor , str ) : description = accessor
             else                                : description = "'%s'-variable" % var
@@ -444,18 +445,21 @@ class Variable(object) :
             
         if isinstance  ( accessor , str ) :
             accessor = accessor.strip() 
-            if accessor  : 
+            if accessor : 
                 from ostap.trees.funcs import FuncFormula as FuncVar
                 self.__formula  = accessor 
-                accessor = FuncVar ( accessor ) 
-
+                accessor = FuncVar ( accessor )
+                
         assert callable ( accessor ), \
                'Invalid accessor function! %s/%s' % ( accessor , type ( accessor ) )
         
-        self.__var         = var
-        self.__minmax      = var.minmax()
-        self.__accessor    = accessor
-        self.__checked     = False
+        self.__var      = var
+        self.__minmax   = var.minmax()
+        self.__accessor = accessor
+        self.__checked  = False        
+        self.__identity = self.formula and self.formula in ( self.name  ,
+                                                             '1.0*(%s)' % self.name ,
+                                                             '(%s)*1.0' % self.name ) 
         
     @property
     def var         ( self ) :
@@ -495,7 +499,10 @@ class Variable(object) :
     def formula ( self ) :
         """'formula' - formula for this variable (when applicable)?"""
         return self.__formula
-    
+    @property
+    def identity ( self ) :
+        """ id: The same variable? """
+        return self.__identity
     @property
     def trivial ( self ) :
         """'trivial' - is this variable 'trivial'?"""
@@ -2041,7 +2048,7 @@ def fill_dataset2 ( self              ,
             selection = selector.selection
             
             from ostap.utils.utils    import ImplicitMT 
-            from ostap.frames.frames  import DataFrame 
+            from ostap.frames.frames  import DataFrame, frame_columns 
             
             total  = len ( self )
 
@@ -2049,10 +2056,14 @@ def fill_dataset2 ( self              ,
 
             frame_main = frame
             
-            if not silent :
-                pb = frame.ProgressBar ( len ( self ) )
-                
-            columns = set ( frame.columns() ) 
+            if ( 6 , 29 ) <= root_info :
+                from   ostap.frames.frames import frame_progress2
+                cnt = frame_progress2 ( frame )
+            else                   :
+                from   ostap.frames.frames import frame_progress
+                cnt = frame_progress  ( frame , total )
+
+            columns = set ( frame_columns ( frame ) )  
             
             vars   = list ( selector.variables )
             tvars  = [ v for v in vars if     v.trivial ] ## trivial vars 
@@ -2061,7 +2072,8 @@ def fill_dataset2 ( self              ,
             scuts  = []
             rcuts  = selector.roo_cuts
             
-            dvars  = [ v.name for v in vars if v.name != v.formula and v.name in columns ]
+            ## dvars  = [ v.name for v in vars if v.name != v.formula and v.name in columns ]
+            dvars  = [ v.name for v in vars if not v.identity and v.name in columns ]
             assert not dvars, "Can't redefine existing variables: %s" % dvars  
             
             ranges = []
@@ -2079,8 +2091,15 @@ def fill_dataset2 ( self              ,
                                         vmax        = v.vmax        ,
                                         accessor    = v.name        ) ## make it trivial!
                     nvars.append ( newv )
-                    logger.debug  ( 'PROCESS: define %s as %s ' % ( v.name , v.formula ) )                    
-                    frame = frame.Define ( v.name , v.formula )  ## define new variable  for the frame
+                    logger.debug  ( 'PROCESS: define %s as %s ' % ( v.name , v.formula ) )
+
+                    ## define new variable
+                    if ( 6 , 26 ) <=root_info and  v.name in columns : 
+                        frame = frame.Redefine ( v.name , v.formula )  ## REDEFINE 
+                    else : 
+                        frame = frame.Define   ( v.name , v.formula )  ## define new variable  for the frame
+
+                    columns.add ( v.name )
                     
                 if _minv < mn :
                     lcut = "(%.16g <= %s)" % ( mn     , v.name )
