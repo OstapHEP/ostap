@@ -51,12 +51,11 @@ def test_horns_1 () :
     horns.signal.a    .fix(7)
     horns.signal.delta.fix(1) 
     dataset = horns.generate ( 5000 ) 
-    with wait ( 1 ) , use_canvas ( 'Test HORNSdini' ) , warnings.catch_warnings(), rootError() :
-        warnings.simplefilter("ignore")
+    with wait ( 1 ) , use_canvas ( 'Test HORNSdini' ) :
         horns.S = 5000
         horns.B =   50
-        result , _ = horns.fitTo ( dataset , draw = False , silent = True ) 
-        result , _ = horns.fitTo ( dataset , draw = True  , silent = True ) 
+        result , _ = horns.fitTo ( dataset , draw = False , silent = True , minimizer = 'minuit' ) 
+        result , _ = horns.fitTo ( dataset , draw = True  , silent = True , minimiser = 'minuit' ) 
 
 
     table  = result.table ( prefix = '# ' ) 
@@ -87,12 +86,11 @@ def test_hill_1 () :
     horns.signal.a    .fix(7)
     horns.signal.delta.fix(1) 
     dataset = horns.generate ( 5000 ) 
-    with wait ( 1 ) , use_canvas ( 'Test HILLdini' ) , warnings.catch_warnings() , rootError () :
-        warnings.simplefilter("ignore")
+    with wait ( 1 ) , use_canvas ( 'Test HILLdini' ) : 
         horns.S = 5000
         horns.B =   50
-        result , _ = horns.fitTo ( dataset , draw = False , silent = True ) 
-        result , _ = horns.fitTo ( dataset , draw = True  , silent = True ) 
+        result , _ = horns.fitTo ( dataset , draw = False , silent = True , minimiser = 'minuit' ) 
+        result , _ = horns.fitTo ( dataset , draw = True  , silent = True , minimiser = 'minuit' ) 
 
 
     table  = result.table ( prefix = '# ' ) 
@@ -118,7 +116,7 @@ def test_hh_1 () :
                                       delta = ( 1 , 1 , 2 ) ,
                                       resolution = 0.1 ) ,  
         S = 1000 ,
-        B = 1    ,
+        B = 10   ,
         suffix = 'hill'
         )
 
@@ -127,9 +125,11 @@ def test_hh_1 () :
     horns.signal.fL.fix(0.4)
     dataset = horns.generate ( 5000 ) 
     with wait ( 1 ) , use_canvas ( 'Test HILLdini' ) :
-        result , _ = horns.fitTo ( dataset , draw = False , silent = True )
+        horns.S = 5000
+        horns.B =   50
+        result , _ = horns.fitTo ( dataset , draw = False , silent = True , minimiser = 'minuit' )
         horns.signal.fL.release()         
-        result , _ = horns.fitTo ( dataset , draw = True  , silent = True ) 
+        result , _ = horns.fitTo ( dataset , draw = True  , silent = True , minimiser = 'minuit' ) 
 
     table  = result.table ( prefix = '# ' ) 
 
