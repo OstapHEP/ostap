@@ -249,7 +249,7 @@ foreach(filename ${files})
    else  () 
      add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
    endif () 
-   set_tests_properties(${tname} PROPERTIES TIMEOUT 5000 ) 
+   set_tests_properties(${tname} PROPERTIES TIMEOUT 5000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
 endforeach() 
 file(GLOB               allfiles "${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/*.py")
 list(SORT               allfiles)
@@ -285,7 +285,7 @@ foreach(filename ${allfiles})
 
     add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
 
-    set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ) 
+    set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
 
 endforeach() 
 

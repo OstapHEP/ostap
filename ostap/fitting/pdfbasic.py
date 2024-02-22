@@ -37,7 +37,7 @@ import ostap.fitting.dataset
 import ostap.fitting.roocollections 
 from   builtins                 import range
 from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID,
-                                         valid_pointer ,
+                                         valid_pointer , in_test      , 
                                          roo_silent    , rootWarning  )
 from   ostap.math.base          import iszero , frexp10 
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
@@ -53,7 +53,7 @@ from   ostap.utils.cidict       import select_keys
 from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command  
 from   ostap.core.meta_info     import root_info
 import ostap.histos.histos 
-import ROOT, math,  random
+import ROOT, math,  random, warnings 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -587,8 +587,13 @@ class APDF1 ( Components ) :
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
 
-        return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
-
+        if not in_test () :
+            return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
+        
+        with warnings.catch_warnings():
+            warnings.simplefilter("default")
+            return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
+        
     
     # ================================================================================
     ## helper method to draw set of components 

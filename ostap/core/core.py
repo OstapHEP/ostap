@@ -73,9 +73,10 @@ __all__     = (
     'var_separators'      , ##  defalt separators for the string expressions
     ##
     'cidict_fun'          , ## key transformation for case-insensitive keys ingoring underscores
+    ##
+    'in_test'             , ## Are we in CMAKE-test regime?  
     )
 # =============================================================================
-import math, sys, os, re  
 from   sys                    import version_info  as python_version 
 from   builtins               import range
 from   ostap.math.base        import ( Ostap    , std     , cpp ,  
@@ -90,7 +91,7 @@ from   ostap.stats.counters   import SE , WSE
 from   ostap.core.meta_info   import root_info
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
 from   ostap.utils.basic      import NoContext, loop_items, items_loop 
-import ROOT, cppyy
+import ROOT, cppyy, math, sys, os, re  
 # =============================================================================
 ## ROOT.ROOT.EnableThreadSafety()
 # =============================================================================
@@ -1112,7 +1113,16 @@ else :
     if ROOT.ROOT.IsImplicitMTEnabled() : 
         logger.debug ("Implicit MT is disabled")
         ROOT.ROOT.DisableImplicitMT ()
-        
+
+
+
+# =============================================================================
+## Are we in CMAKE-test regime?
+def in_test () :
+    """ Are we in CMAKE-test regime?"""
+    return os.environ.get( 'OSTAP_CMAKE_TEST', False)
+
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TObject        ,
