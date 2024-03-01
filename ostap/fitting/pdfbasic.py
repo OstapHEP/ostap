@@ -53,7 +53,7 @@ from   ostap.utils.cidict       import select_keys
 from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command  
 from   ostap.core.meta_info     import root_info
 import ostap.histos.histos 
-import ROOT, math,  random, warnings 
+import ROOT, math,  random, warnings, sys 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -587,12 +587,13 @@ class APDF1 ( Components ) :
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
 
-        if not in_test () :
-            return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
+        if sys.warnoptions or in_test() :
+            with warnings.catch_warnings():
+                warnings.simplefilter("always")
+                return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
+
+        return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
         
-        with warnings.catch_warnings():
-            warnings.simplefilter("default")
-            return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
         
     
     # ================================================================================
