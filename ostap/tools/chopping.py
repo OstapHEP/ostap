@@ -1288,7 +1288,7 @@ class Trainer(object) :
                                               verbose = self.verbose , 
                                               tmp     = True         )
         
-        if logfiles snd Fslse : 
+        if logfiles and False : 
             self.__log_file  = make_tarfile ( output  = '.'.join ( [ '%s_logs' % self.name , 'tgz' ] ) ,
                                               files   = logfiles     ,
                                               verbose = self.verbose , 
