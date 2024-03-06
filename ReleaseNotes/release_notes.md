@@ -2,8 +2,7 @@
 
   1.  `tree_reduce` : allow redefininition of existing variables  (very useful for `tmva/chopping`) (only for 6.26<=ROOT)
   1.  remove intermediate datasets created in `Simfit.generate`
-  
-  
+    
 ## Backward incompatible: 
 
 ## Bug fixes:
