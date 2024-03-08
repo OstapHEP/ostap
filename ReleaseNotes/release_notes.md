@@ -1,8 +1,10 @@
 ## New features:
 
-  1.  `tree_reduce` : allow redefininition of existing variables  (very useful for `tmva/chopping`) (only for 6.26<=ROOT)
-  1.  remove intermediate datasets created in `Simfit.generate`
-    
+  1. `tree_reduce` : allow redefininition of existing variables  (very useful for `tmva/chopping`) (only for 6.26<=ROOT)
+  1. remove intermediate datasets created in `Simfit.generate`
+  1. add `RRange`,`Prange`, `rraneg` and  `prange` loopers into `ostap.utils/utils`
+  1. improve `VRange` , 'Lrange` loopers from `ostap.utils.utils`
+  
 ## Backward incompatible: 
 
 ## Bug fixes:

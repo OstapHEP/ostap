@@ -73,6 +73,8 @@ __all__     = (
     'log_range'          , ## helper loop over values between xmin and xmax in log
     ## 
     'lrange'             , ## helper loop over values between xmin and xmax in log
+    'prange'             , ## helper loop over values between xmin and xmax in log
+    'prange'             , ## helper loop over values between xmin and xmax in log
     ##
     'crange'             , ## helper loop over values between xmin and xmax using Chebyshev nodes 
     ##
@@ -131,7 +133,9 @@ from   sys                    import version_info  as python_version
 from   ostap.utils.timing     import timing, timer
 ## other useful stuff 
 from   ostap.utils.basic      import isatty, with_ipython, NoContext
-from   ostap.core.ostap_types import integer_types, string_types, dictlike_types, listlike_types    
+from   ostap.core.ostap_types import ( integer_types  , num_types ,
+                                       string_types   ,
+                                       dictlike_types , listlike_types )
 ## ... and more useful stuff 
 from   ostap.utils.memory     import memory, virtualMemory, Memory 
 import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime  ## attention here!!
@@ -816,41 +820,56 @@ class VRange(object) :
     >>> for v in VRange ( vmin = 0 , vmax = 5 , n = 100 ) :
     >>> ... print ( v ) 
     """
-    def __init__ ( self , vmin , vmax , n = 100 ) :
+    def __init__ ( self , vmin , vmax , n = 100 , edges = True ) :
         
         assert isinstance ( n , integer_types ) and 0 < n,\
                'VRange: invalid N=%s/%s' % ( n  , type ( n ) ) 
         
-        self.__vmin = vmin
-        self.__vmax = vmax
-        self.__n    = n 
+        self.__vmin  = min ( vmin , vmax )
+        self.__vmax  = max ( vmin , vmax ) 
+        self.__n     = n
+        self.__edges = True if edges else False  
 
     @property
+    def edges ( self ) :
+        """`edges`: include edges?"""
+        return self.__edges
+    
+    @property
     def vmin  ( self ) :
-        """``vmin'' : minimal value"""
+        """`vmin' : minimal value"""
         return self.__vmin
     @property
     def vmax  ( self ) :
-        """``vmax'' : maximal value"""
+        """`vmax' : maximal value"""
         return self.__vmax    
     @property
     def n ( self )  :
-        """``n'' : number of steps"""
+        """`n' : number of steps"""
         return self.__n
 
-    def __len__     ( self ) : return self.__n + 1
+    def __len__     ( self ) :
+
+        n = self.__n 
+        return n + 1 if e else n - 1 
+
     def __iter__    ( self ) :
         
         n  = self.n 
         fn = 1.0 / float ( n ) 
-        for i in range ( n + 1 ) :
-            #
-            if   0 == i : yield self.vmin
-            elif n == i : yield self.vmax
-            else        :
-                f2 = i * fn
-                f1 = 1 - f2
-                yield self.vmin * f1 + f2 * self.vmax
+        e  = self.edges
+
+        vmn = self.vmin
+        vmx = self.vmax
+        
+        if e : yield vmn
+
+        for i in range ( 1 , n ) :
+            f2 = i * fn
+            f1 = 1 - f2
+            yield vmn * f1 + f2 * vmx
+            
+        if e : yield vmx
                 
 # =============================================================================
 ## loop over values between xmin and xmax 
@@ -858,12 +877,12 @@ class VRange(object) :
 #  for x in vrange ( xmin , xmax , 200 ) :
 #         print (x) 
 #  @endcode
-def vrange ( vmin , vmax , n = 100 ) :
+def vrange ( vmin , vmax , n = 100 , edges = True ) :
     """ Loop  over range of values between xmin and xmax 
     >>> for v in vrange ( vmin , vmax , 200 ) :
     ...                print (v) 
     """
-    return VRange ( vmin , vmax , n )
+    return VRange ( vmin , vmax , n , edges )
 
 
 # =============================================================================
@@ -878,12 +897,12 @@ class LRange(VRange) :
     >>> for v in LRange ( vmin = 1 , vmax = 5 , n = 100 ) :
     >>> ... print ( v ) 
     """
-    def __init__ ( self , vmin , vmax , n = 100 ) :
+    def __init__ ( self , vmin , vmax , n = 100 , edges = True ) :
         
         assert 0 < vmin  and 0 < vmax,\
            'LRange: invalid  non-positive vmin/ymax values: %s/%s' %  ( vmin , vmax )
 
-        super ( LRange , self ).__init__ ( vmin , vmax , n ) 
+        super ( LRange , self ).__init__ ( vmin , vmax , n , edges ) 
 
         self.__lmin = math.log10 ( self.vmin )
         self.__lmax = math.log10 ( self.vmax )
@@ -900,28 +919,31 @@ class LRange(VRange) :
     def __iter__    ( self ) :
 
         n  = self.n 
-        fn = 1.0 / float ( n ) 
-        for i in range ( n + 1 ) :
+        fn = 1.0 / float ( n )
+        e  = self.edges
+
+        if e : yield self.vmin
+        
+        for i in range ( 1 , n  ) :
             #
-            if   0 == i : yield self.vmin
-            elif n == i : yield self.vmax
-            else        :
-                f2 = i * fn
-                f1 = 1 - f2
-                yield 10.0 ** ( self.__lmin * f1 + f2 * self.__lmax ) 
+            f2 = i * fn
+            f1 = 1 - f2
+            yield 10.0 ** ( self.__lmin * f1 + f2 * self.__lmax ) 
             
+        if e : yield self.vmax
+
 # =============================================================================
 ## loop over values between xmin and xmax in log-scale 
 #  @code
 #  for x in log_range ( xmin , xmax , 200 ) :
 #         print (x) 
 #  @endcode
-def log_range ( vmin , vmax , n = 100 ) :
+def log_range ( vmin , vmax , n = 100 , edges = True ) :
     """Loop over values between xmin and xmax in log-scale 
     >>> for x in log_range ( xmin , xmax , 200 ) :
     >>>      print (x) 
     """
-    return LRange ( vmin , vmax , n )
+    return LRange ( vmin , vmax , n , edges )
 
 # =============================================================================
 ## loop over values between xmin and xmax in log-scale 
@@ -929,16 +951,16 @@ def log_range ( vmin , vmax , n = 100 ) :
 #  for v in lrange ( vmin , vmax , 200 ) : ## ditto 
 #         print (v) 
 #  @endcode
-def lrange ( vmin , vmax , n = 100 ) :
+def lrange ( vmin , vmax , n = 100 , edges = True ) :
     """:oop over values between vmin and vmax in log-scale 
     >>> for v in lrange ( vmin , vmax , 200 ) :  ## ditto 
     >>>      print (v) 
     """
-    return LRange ( vmin , vmax , n )
+    return LRange ( vmin , vmax , n , edges )
 
 # =============================================================================
 ## @class CRange
-#  Generate sequence of numbers between vmin and vmax accrording to Chebyshev nodes
+#  Generate sequence of numbers between vmin and vmax according to Chebyshev nodes
 #  It can be useful for e.g. interpolation nodes
 #  @code
 #  for c in CRange(-1,1,10) : print ( c ) 
@@ -986,6 +1008,98 @@ def crange ( vmin , vmax , n = 10 ) :
     """
     return CRange ( vmin , vmax , n )
 
+# =============================================================================
+## @class RRange
+#  Helper looper over the random values between vmin and vmax
+#  @code
+#  for v in RRange ( vmin = 1 , vmax = 5 , n = 100 , edges = True  ) :
+#  ... print ( v ) 
+#  @endcode 
+class RRange(VRange) :
+    """Helper looper over the values between vmin and vmax using log-steps
+    >>> for v in RRange ( vmin = 1 , vmax = 5 , n = 100 , edges = True ) :
+    >>> ... print ( v ) 
+    """
+    def __iter__    ( self ) :
+        
+        n   = self.n
+        vmn = self.vmin
+        vmx = self.vmax
+        e   = self.edges
+
+        if e : yield vmn
+        
+        for i in range ( 1 , n ) :
+            yield random.uniform ( vmn, vmx )
+
+        if e : yield vmx
+            
+# =============================================================================
+## Generate sequence of random numbers between vmin and vmax
+#  @code
+#  for c in rrange(-1,1,10) : print ( c ) 
+#  @endcode 
+def rrange ( vmin , vmax , n = 10 , edges = True  ) :
+    """ Generate random sequence of numbers between vmin and vmax 
+    >>> for c in crange(-1,1,10, edges = True ) : print ( c ) 
+    """
+    return RRange ( vmin , vmax , n , edges )
+
+# =============================================================================
+## @class PRange
+#  Helper looper over the values between vmin and vmax with non=unifomr power-law) distributed poinnts 
+#  @code
+#  for v in PRange ( vmin = 1 , vmax = 5 , n = 100 , power = 2 ) , edges = True :
+#  ... print ( v ) 
+#  @endcode 
+class PRange(VRange) :
+    """Helper looper over the values between vmin and vmax with non-unifomr  (power-low) points 
+    >>> for v in PRange ( vmin = 1 , vmax = 5 , n = 100 , power = 2 , edges = True ) :
+    >>> ... print ( v ) 
+    """
+    def __init__ ( self , vmin , vmax , n = 100 , power = 2 , edges = True ) :
+        
+        assert isinstance ( power , num_types ) and 0 < power , 'PRange: Invalid powr %s' % power  
+
+        super ( PRange , self ).__init__ ( vmin , vmax , n , edges ) 
+
+        self.__power = power
+
+    @property
+    def power ( self ) :
+        """`power`: the power-low exponent """
+        return self.__power
+    
+    def __iter__    ( self ) :
+
+        n     = self.n 
+        fn    = 1.0 / float ( n ) 
+        e     = self.edges
+        
+        p     = self.power
+        vmn   = self.vmin
+        vmx   = self.vmax
+        delta = vmx - vmn
+        
+        if e : yield vmn
+
+        for i in range ( 1 , n ) :
+            x = i * fn
+            yield vmn + delta * ( x ** p ) 
+
+        if e : yield vmx
+
+
+# =============================================================================
+## Loop over sequence of non-uniformly distributed  (power-low) unmpers
+#  @code
+#  for c in prange(-1,1,10, power = 2 , edges = True ) : print ( c ) 
+#  @endcode 
+def prange ( vmin , vmax , n = 10 , power = 2 , edges = True  ) :
+    """ Loop over the sequence of non-unifrmy distribited (power-low) numbers 
+    >>> for c in prange(-1,1,10, power = 2 , edges = True  ) : print ( c ) 
+    """
+    return PRange ( vmin , vmax , n , power = power  , edges = edges )
 
 
 # =============================================================================
