@@ -850,7 +850,8 @@ class VRange(object) :
 
     def __len__     ( self ) :
 
-        n = self.__n 
+        n = self.__n
+        e = self.__edges 
         return n + 1 if e else n - 1 
 
     def __iter__    ( self ) :
@@ -922,13 +923,16 @@ class LRange(VRange) :
         fn = 1.0 / float ( n )
         e  = self.edges
 
+        lmn = self.__lmin
+        lmx = self.__lmx
+        
         if e : yield self.vmin
         
         for i in range ( 1 , n  ) :
             #
             f2 = i * fn
             f1 = 1 - f2
-            yield 10.0 ** ( self.__lmin * f1 + f2 * self.__lmax ) 
+            yield 10.0 ** ( lmn * f1 + f2 * lmx ) 
             
         if e : yield self.vmax
 
