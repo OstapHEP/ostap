@@ -887,9 +887,9 @@ class SelectorWithVars(SelectorWithCuts) :
                'Invalid setting of variablesl!'
         
         self.__triv_sel = False
-        if   not selection                              : self.__triv_sel = True
-        elif tree and tree.valid_formula ( selection  ) : self.__triv_sel = True   
-        elif valid_formula ( selectionn , self.varset ) :
+        if   not selection                             : self.__triv_sel = True
+        elif tree and tree.valid_formula ( selection ) : self.__triv_sel = True   
+        elif valid_formula ( selection , self.varset ) :
             if not roo_cuts  : roo_cuts = selection
             else             : roo_cuts = '(%s)*(%s)' % ( roo_cuts, selection )
             selection = ''
