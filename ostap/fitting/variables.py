@@ -2323,16 +2323,13 @@ def make_formula ( name , formula , *variables ) :
     >>> var       = make_formula ( 'F1' , 'a+b' , variables )
     """
 
-    print ( 'MAKE_VAR/1', formula , variables )
     
     if  variables and 1 == len ( variables ) and isinstance  ( variables [ 0 ] , ROOT.RooArgList ) :
 
-        print  ( 'here..1' ) 
         varlist = variables  [ 0 ]
         
     else :
         
-        print  ( 'here..2' ) 
         varlist = ROOT.RooArgList()
         
         for i, var in enumerate ( variables ) :
@@ -2341,7 +2338,7 @@ def make_formula ( name , formula , *variables ) :
                 for v in var.get () : varlist.add ( v )
             elif isinstance ( var , ROOT.RooAbsCollection ) :
                 for vv in var : varlist.add ( vv )
-            elif isinstance ( variables , sequence_types ) :                    
+            elif isinstance ( var , sequence_types ) :                    
                 vlst = [ v for v in var ]
                 assert all ( isinstance ( vv , ROOT.RooAbsArg ) for vv in vlst ) , \
                        "Invalid element in 'variables[%d]': %s" % ( i . str ( vlst ) )
@@ -2351,17 +2348,12 @@ def make_formula ( name , formula , *variables ) :
                                                                                type ( var ) ,
                                                                                str  ( var ) ) )
             
-    print ( 'MAKE_VAR/2', formula , varlist , type ( varlist ) )
-
     # =====================================================================
     if name : name = str ( name ) 
     else    : name = 'formula_%s' % ( hash ( formula ) )
     name    = name.strip().replace(' ','_')
     formula = str  ( formula  )
     
-    print ( 'NAME    ', name    , type ( name    ) )
-    print ( 'FORMULA ', formula , type ( formula ) )
-            
     result = Ostap.FormulaVar ( name , formula , varlist , False )
     assert result.ok() , "Invalid formula '%s'" % formula
     
