@@ -106,6 +106,7 @@ __all__ = (
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import ( cpp  , Ostap , items_loop ,
                                          dsID , valid_pointer , binomEff ) 
+from   ostap.fitting.variables  import make_formula
 from   ostap.core.ostap_types   import num_types, string_types, integer_types
 from   ostap.core.meta_info     import old_PyROOT
 import ostap.fitting.roofit 
@@ -536,7 +537,7 @@ class Variable(object) :
 class Variables(object) :
     """Helper structure to manage/keep/check list of variables
     """
-    def __init__ ( self , variables ) :
+    def __init__ ( self , variables , tree = None ) :
 
         self.__variables = []
         self.__triv_vars = True
@@ -571,6 +572,7 @@ class Variables(object) :
             
             self.__variables.append ( vv     )
             vset.add    ( vv.var )
+
             #
             if   vv.trivial and vv.name == vv.formula : pass
             elif vv.really_trivial                    : pass
@@ -1928,7 +1930,7 @@ def make_dataset ( tree              ,
         frame = frame.Filter ( selection , 'SELECTION' )
 
     if roo_cuts  :
-        frame = frame.Filter ( roo_cuts  , 'ROO-CUTS'  )
+        frame = frame.Filter ( str ( roo_cuts )  , 'ROO-CUTS'  )
 
     report   = frame.Report()
     
@@ -2124,7 +2126,9 @@ def fill_dataset2 ( self              ,
                     if silent : scuts.append ( hcut )
                     else      : ranges.append ( ( hcut , 'RANGE(%s,high)' % v.name ) )
 
-            frame  = frame.Filter ( selection , 'SELECTION' )
+
+            if selection :  
+                frame  = frame.Filter ( selection , 'SELECTION' )
 
             for  c , f in ranges : 
                 frame = frame.Filter ( c  , f )
@@ -2136,7 +2140,8 @@ def fill_dataset2 ( self              ,
                 logger.debug  ( 'PROCESS: add cut %s ' % acut )
 
             if rcuts :
-                frame = frame.Filter ( rcuts , 'ROO-CUTS' )
+                frame = frame.Filter ( str ( rcuts ) , 'ROO-CUTS' )
+                logger.debug  ( 'PROCESS: add cut %s ' % rcuts )
                 
             from ostap.utils.cleanup import TempFile
             with TempFile ( suffix = '.root' , prefix = 'ostap-frame-' ) as tf :
@@ -2212,6 +2217,7 @@ def fill_dataset2 ( self              ,
                                                       cuts     = selector.morecuts ,
                                                       roo_cuts = selector.roo_cuts , 
                                                       name     = selector.name     ,
+                                                      tree     = tree              , 
                                                       fullname = selector.fullname ,
                                                       silence  = selector.silence  )
                     
