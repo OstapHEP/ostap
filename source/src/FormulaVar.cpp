@@ -8,6 +8,7 @@
 #include <memory>
 #include <regex>
 #include <sstream>
+#include <exception>
 // ============================================================================
 // ROOT/RooFit 
 // ============================================================================
@@ -36,6 +37,25 @@ ClassImp(Ostap::FormulaVar) ;
 // ============================================================================
 namespace
 {
+  // ==========================================================================
+  class ESentry
+  {
+  public :
+    ESentry  () ;
+    ~ESentry () ;
+  private:
+    int m_level ;    
+  };
+  //===========================================================================    
+  ESentry:: ESentry()
+    : m_level ( gErrorIgnoreLevel )
+  {
+    gErrorIgnoreLevel = kError + 1 ;
+  }  
+  ESentry::~ESentry()
+  {
+    gErrorIgnoreLevel = m_level ;    
+  }
   // ==========================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   // ==========================================================================
@@ -116,22 +136,38 @@ Ostap::makeFormula
   //
 #elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
-  std::unique_ptr<RooFormula> ptr
-  { new RooFormula ( vname      .c_str () ,                                                        
-                     expression.c_str () , 
-                     dependents          , 
-                     false             ) } ;
+  std::unique_ptr<RooFormula> ptr ;
+  //
+  try
+  {
+    ESentry sentry {} ;
+    ptr.reset ( new RooFormula ( vname     .c_str () ,                                                        
+                                 expression.c_str () , 
+                                 dependents          , 
+                                 false             ) ) ;
+  }
+  catch ( std::invalid_argument& /* e1 */ ){ return nullptr ;  }
+  catch ( std::runtime_error&    /* e2 */ ){ return nullptr ;  }
+  //
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
   const RooArgList used { ::usedVariables ( *ptr , dependents ) } ;
   //
 #else
   //
-  std::unique_ptr<RooFormulaVar> ptr
-  { new RooFormulaVar ( vname      .c_str () ,                                                        
-                        expression.c_str () , 
-                        expression.c_str () , 
-                        dependents          , 
-                        false             ) } ;
+  std::unique_ptr<RooFormulaVar> ptr ;
+  //
+  try
+  {
+    ESentry sentry {} ;
+    ptr.reset ( new RooFormulaVar ( vname     .c_str () ,                                                        
+                                    expression.c_str () , 
+                                    expression.c_str () , 
+                                    dependents          , 
+                                    false             ) ) ;
+  }
+  catch ( std::invalid_argument& /* e1 */ ){ return nullptr ;  }
+  catch ( std::runtime_error&    /* e2 */ ){ return nullptr ;  }
+  //    
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
   const RooArgList used { usedVariables ( *ptr , dependents ) } ;
   // ========================================================================

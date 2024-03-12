@@ -886,7 +886,20 @@ class SelectorWithVars(SelectorWithCuts) :
         assert 1 <= len ( self.__variables ), \
                'Invalid setting of variablesl!'
         
-        self.__triv_sel  = valid_formula ( selection , self.varset ) 
+        self.__triv_sel = False
+        if   not selection                              : self.__triv_sel = True
+        elif tree and tree.valid_formula ( selection  ) : self.__triv_sel = True   
+        elif valid_formula ( selectionn , self.varset ) :
+            if not roo_cuts  : roo_cuts = selection
+            else             : roo_cuts = '(%s)*(%s)' % ( roo_cuts, selection )
+            selection = ''
+            self.__triv_sel = True 
+        else :
+            self.logger.warning ( 'Cannot validate/check selection: "%s"' % selection )
+            self.__triv_sel = False  
+                    
+        ## self.__triv_sel  = valid_formula ( selection , self.varset )
+            
         triv_cuts        = not cuts
         
         self.__trivial = self.trivial_vars and self.__triv_sel and triv_cuts

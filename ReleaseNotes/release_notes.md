@@ -4,6 +4,10 @@
   1. remove intermediate datasets created in `Simfit.generate`
   1. add `RRange`,`Prange`, `rraneg` and  `prange` loopers into `ostap.utils/utils`
   1. improve `VRange` , 'Lrange` loopers from `ostap.utils.utils`
+  1. few fixes for `SelectorWitvars`
+  1. suppress error prints from `Ostap::FormulaVar`
+  1. catch C++ exceptons from `RooFormula`
+  `
   
 ## Backward incompatible: 
 

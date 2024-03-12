@@ -1983,9 +1983,13 @@ class FitHelper(VarMaker) :
             
             fitres     = first 
             float_pars = fitres.floatParsFinal()
+            const_pars = fitres.constPars     ()
+            vlist      = ROOT.RooArgList()
+            
             for v in variables :
-                assert v in float_pars , \
-                       'FitResult object does not depend on parameter %s/%s' % ( v , type ( v ) )
+                if   v in float_pars : vlist.add ( v )
+                
+            assert vlist, 'fitResult does not depend on parameters!'
 
         ## 2) values and covariances are provided explicitely 
         elif isinstance ( first , ROOT.TVectorD ) and isinstance ( second , ROOT.TMatrixDSym ) :
