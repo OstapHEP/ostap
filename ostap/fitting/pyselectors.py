@@ -1182,6 +1182,10 @@ class SelectorWithVars(SelectorWithCuts) :
         kw [ 'cuts'      ] = self.morecuts
         kw [ 'silence'   ] = self.silence
 
+        tree = self.tree
+        if not tree : tree = None 
+        kw [ 'tree'      ] = tree 
+
         kw.update ( kwargs )
         return SelectorWithVars ( **kw ) 
 
@@ -2325,6 +2329,7 @@ def fill_dataset1 ( tree                 ,
                                   selection = selection ,
                                   cuts      = cuts      , 
                                   roo_cuts  = roo_cuts  ,
+                                  tree      = tree      , 
                                   name      = name      ,
                                   fullname  = title     , 
                                   silence   = silent    ) 
