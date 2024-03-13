@@ -1,3 +1,5 @@
+# v1.10.1.0
+
 ## New features:
 
   1. `tree_reduce` : allow redefininition of existing variables  (very useful for `tmva/chopping`) (only for 6.26<=ROOT)
@@ -8,7 +10,6 @@
   1. suppress error prints from `Ostap::FormulaVar`
   1. catch C++ exceptons from `RooFormula`
   `
-  
 ## Backward incompatible: 
 
 ## Bug fixes:

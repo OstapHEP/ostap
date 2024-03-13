@@ -851,7 +851,7 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__cuts      = cuts
         self.__variables = [] 
         self.__varset    = ROOT.RooArgSet()
-        
+
         ## vvars  = set ()
         ## vnames = set ()
         ## for v in variables :
@@ -888,18 +888,19 @@ class SelectorWithVars(SelectorWithCuts) :
         assert 1 <= len ( self.__variables ), \
                'Invalid setting of variablesl!'
         
-        self.__triv_sel = False
+        self.__triv_sel = True 
+        ## self.__triv_sel = False
         if   not selection                             : self.__triv_sel = True
         elif tree and tree.valid_formula ( selection ) : self.__triv_sel = True   
-        elif valid_formula ( selection , self.varset ) :
+        elif valid_formula      ( selection , self.varset ) :
             if not roo_cuts  : roo_cuts = selection
             else             : roo_cuts = '(%s)*(%s)' % ( roo_cuts, selection )
             selection = ''
             self.__triv_sel = True 
-        else :
+        elif tree :
             self.logger.warning ( 'Cannot validate/check selection: "%s"' % selection )
             self.__triv_sel = False  
-                    
+
         ## self.__triv_sel  = valid_formula ( selection , self.varset )
             
         triv_cuts        = not cuts
@@ -950,7 +951,6 @@ class SelectorWithVars(SelectorWithCuts) :
             t  = T.table (  table_data , title , '# ' )
             self.logger.info ( "Booked dataset: %s\n%s" % ( title , t ) ) 
 
-            
         ## Book dataset
         self.__data = ROOT.RooDataSet (
             ##

@@ -20,6 +20,7 @@
 // ============================================================================
 #include "Ostap/FormulaVar.h"
 #include "Ostap/Iterator.h"
+#include "Ostap/Mute.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -50,7 +51,7 @@ namespace
   ESentry:: ESentry()
     : m_level ( gErrorIgnoreLevel )
   {
-    gErrorIgnoreLevel = kError + 1 ;
+    gErrorIgnoreLevel = kFatal + 1 ;
   }  
   ESentry::~ESentry()
   {
@@ -127,10 +128,17 @@ Ostap::makeFormula
   // ========================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,20,0)
   //
-  std::unique_ptr<RooFormula> ptr
-  { new RooFormula ( vname      .c_str () ,
-                     expression.c_str  () , 
-                     dependents           ) } ;
+  std::unique_ptr<RooFormula> ptr ;
+  try
+  {
+    ESentry sentry {} ;
+    ptr.reset ( new RooFormula ( vname      .c_str () ,
+                                 expression.c_str  () , 
+                                 dependents           ) } ;
+  }
+  catch ( std::invalid_argument& /* e1 */ ){ return nullptr ;  }
+  catch ( std::runtime_error&    /* e2 */ ){ return nullptr ;  }
+  //
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
   const RooArgList used { ::usedVariables ( *ptr , dependents ) } ;
   //
@@ -159,6 +167,8 @@ Ostap::makeFormula
   try
   {
     ESentry sentry {} ;
+    Ostap::Utils::Mute m1  ( true  ) ;
+    Ostap::Utils::Mute m2  ( false ) ;    
     ptr.reset ( new RooFormulaVar ( vname     .c_str () ,                                                        
                                     expression.c_str () , 
                                     expression.c_str () , 
@@ -255,32 +265,51 @@ Ostap::usedVariables
   //
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,20,0)
   //
-  std::unique_ptr<RooFormula> ptr
-  { new RooFormula ( vname  .c_str () ,
-                     formula.c_str () , 
-                     variables        ) } ;
+  std::unique_ptr<RooFormula> ptr ;
+  try
+  {
+    ESentry sentry {} ;
+    ptr.reset (  new RooFormula ( vname  .c_str () ,
+                                  formula.c_str () ,
+                                  variables        ) ) ;
+  }
+  catch ( std::invalid_argument& /* e1 */ ){ return RooArgList () ; }
+  catch ( std::runtime_error&    /* e2 */ ){ return RooArgList () ; }
   //
   if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
   return ::usedVariables ( *ptr , variables ) ;
   //
 #elif ROOT_VERSION_CODE < ROOT_VERSION(6,29,0)
   //
-  std::unique_ptr<RooFormula> ptr 
-  { new RooFormula ( vname  .c_str () ,
-                     formula.c_str () , 
-                     variables        , 
-                     false            ) };
+  std::unique_ptr<RooFormula> ptr ;
+  try
+  {
+    ESentry sentry {} ;
+    ptr.reset ( new RooFormula ( vname  .c_str () ,
+                                 formula.c_str () , 
+                                 variables        , 
+                                 false            ) ) ;
+  }
+  catch ( std::invalid_argument& /* e1 */ ){ return RooArgList () ; }
+  catch ( std::runtime_error&    /* e2 */ ){ return RooArgList () ; }
   //
   if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
   return ::usedVariables ( *ptr , variables ) ;
   //
 #else 
   //
-  std::unique_ptr<RooFormulaVar> ptr 
-  { new RooFormulaVar ( vname.c_str () ,
-                        formula.c_str () , 
-                        variables        , 
-                        false            ) };
+  ESentry sentry {} ;
+  std::unique_ptr<RooFormulaVar> ptr ;
+  try
+  {
+    ESentry sentry {} ;
+    ptr.reset ( new RooFormulaVar ( vname.c_str () ,
+                                    formula.c_str () , 
+                                    variables        , 
+                                    false            ) ) ;
+  }
+  catch ( std::invalid_argument& /* e1 */ ){ return RooArgList () ; }
+  catch ( std::runtime_error&    /* e2 */ ){ return RooArgList () ; }
   //
   if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
   return usedVariables ( *ptr , variables ) ;

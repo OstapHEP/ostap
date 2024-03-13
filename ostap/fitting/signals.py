@@ -4048,8 +4048,8 @@ class Bukin2_pdf(PEAK) :
             'mu'        : self.mu        ,
             'varsigma'  : self.varsigma  ,
             'asymmetry' : self.asymmetry ,
-            'kA'        : self.kB        ,
-            'kB'        : self.kA        ,
+            'kA'        : self.kA        ,
+            'kB'        : self.kB        ,
             'phi'       : self.phi       }
 
     @property
@@ -4083,8 +4083,6 @@ class Bukin2_pdf(PEAK) :
     @asym.setter 
     def asym     ( self , value ) :
         self.set_value ( self.__asymmetry , value )
-
-
 
     @property
     def varsigmaA    ( self ) :
