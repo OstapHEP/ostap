@@ -2323,7 +2323,6 @@ def make_formula ( name , formula , *variables ) :
     >>> var       = make_formula ( 'F1' , 'a+b' , variables )
     """
 
-    
     if  variables and 1 == len ( variables ) and isinstance  ( variables [ 0 ] , ROOT.RooArgList ) :
 
         varlist = variables  [ 0 ]
@@ -2341,7 +2340,7 @@ def make_formula ( name , formula , *variables ) :
             elif isinstance ( var , sequence_types ) :                    
                 vlst = [ v for v in var ]
                 assert all ( isinstance ( vv , ROOT.RooAbsArg ) for vv in vlst ) , \
-                       "Invalid element in 'variables[%d]': %s" % ( i . str ( vlst ) )
+                       "Invalid element in 'variables[%d]': %s" % ( i , str ( vlst ) )
                 for vv in vlst : varlist.add ( v )
             else :
                 raise TypeError ( "Invalid type for 'variables[%d]' %s/%s" % ( i ,

@@ -665,7 +665,7 @@ class SelStat(object) :
                "Invalid counters: %s/%s/%s" % ( total, processed , skipped)
         
         self.__total     = total
-        self.__processed = processed 
+        self.__processed = processed  ## passed cuts
         self.__skipped   = skipped  
         
     @property
@@ -690,7 +690,7 @@ class SelStat(object) :
         
     @property
     def skipped ( self ) :
-        """'skipped'   : number of skipped events (e.g. due to variabel ranges)"""
+        """'skipped'   : number of skipped events (e.g. due to variable ranges)"""
         return self.__skipped
     @skipped.setter
     def skipped ( self , value ) :
@@ -892,7 +892,7 @@ class SelectorWithVars(SelectorWithCuts) :
         ## self.__triv_sel = False
         if   not selection                             : self.__triv_sel = True
         elif tree and tree.valid_formula ( selection ) : self.__triv_sel = True   
-        elif valid_formula      ( selection , self.varset ) :
+        elif tree and valid_formula      ( selection , self.varset ) :
             if not roo_cuts  : roo_cuts = selection
             else             : roo_cuts = '(%s)*(%s)' % ( roo_cuts, selection )
             selection = ''
@@ -965,11 +965,12 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__roo_formula = None
 
         if roo_cuts :            
-            varlist = self.__data.varlist() 
-            roosel  = make_formula ( roo_cuts , roo_cuts , varlist )
-            self.__roo_formula = roosel 
+            vlst               = ROOT.RooArgList()
+            for v in self.varset : vlst.add  ( v )
+            self.__varlist     = vlst 
+            self.__roo_formula = make_formula ( roo_cuts , roo_cuts , vlst )
             self.__roo_cuts    = roo_cuts 
-    
+
         ## it is still very puzzling for me: should this line be here at all??
         ROOT.SetOwnership ( self.__data  , False )
         
@@ -1119,7 +1120,7 @@ class SelectorWithVars(SelectorWithCuts) :
         ## == for more convenience
         #
         bamboo = self.tree 
-        ##        
+        ##
         return self.fill ( bamboo )
         
     # =========================================================================
@@ -1149,8 +1150,8 @@ class SelectorWithVars(SelectorWithCuts) :
                 return 0                     ## RETURN 
 
             var.setVal ( value ) 
-
-        ## no roo-cuts are specified or roo-cuts are satisfied 
+            
+        ## no roo-cuts are specified or roo-cuts are satisfied
         if ( not self.__roo_formula ) or self.__roo_formula.getVal() : 
             self.__data .add ( self.varset )
             
@@ -1364,10 +1365,11 @@ class SelectorWithVars(SelectorWithCuts) :
         # reset Roo-formula (if specified) 
         if self.roo_cuts :
             roo_cuts = self.roo_cuts            
-            del self.__roo_formula 
-            varlist = self.__data.varlist() 
-            roosel  = make_formula ( roo_cuts , roo_cuts , varlist )
-            self.__roo_formula = roosel 
+            del self.__roo_formula
+            vlst    = ROOT.RooArgList () 
+            for v in self.varset : vlst.add ( v )
+            self.__varlist = vlst
+            self.__roo_formula = make_formula ( roo_cuts , roo_cuts , vlst )
             
         ## take care on the progress bar 
         if self.__progress and not self.silence :
@@ -1391,14 +1393,14 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         assert self.ok () , 'SlaveBegin::Formula is invalid!'
         #
-        #
-        # reset Roo-formula (if specified) 
+        # reset Roo-formula (if specified)
         if self.roo_cuts :
-            roo_cuts = self.roo_cuts 
-            del self.__roo_formula 
-            varlist = self.__data.varlist() 
-            roosel  = make_formula ( roo_cuts , roo_cuts , varlist ) 
-            self.__roo_formula = roosel 
+            roo_cuts = self.roo_cuts            
+            del self.__roo_formula
+            vlst    = ROOT.RooArgList () 
+            for v in self.varset : vlst.add ( v )
+            self.__varlist = vlst
+            self.__roo_formula = make_formula ( roo_cuts , roo_cuts , vlst )
             
         ## take care on the progress bar 
         if not self.__progress and not self.silence :
@@ -1766,7 +1768,8 @@ def make_dataset_old ( tree              ,
         ffs   = []
         fcuts = []
         for f in formulas :            
-            fv = make_formula ( f.name , f.description , f.formula , ds  )
+            fv = make_formula ( f.name , f.formula , ds  )
+            fv.title = f.description 
             ffs.append ( fv )
             fcols.add  ( fv )
             mn , mx = f.minmax            
@@ -2023,9 +2026,9 @@ def fill_dataset2 ( self              ,
     >>> chain.fill_dataset2 ( selector )  ## NB: note lowercase 'process' here !!!    
     """
 
-    ## if use_frame and root_info < (6,15) :
-    ##    logger.warning ( 'Processing via DataFrame is disabled for %s' % str ( root_info ) ) 
-    ##    use_frame = False 
+    if use_frame and root_info < (6,15) :
+        ## logger.warning ( 'Processing via DataFrame is disabled for %s' % str ( root_info ) ) 
+        use_frame = False 
 
     ## process all events? 
     all = ( 0 == first ) and ( nevents < 0 or len ( self ) <= nevents )

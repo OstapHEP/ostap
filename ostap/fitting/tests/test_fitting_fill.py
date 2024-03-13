@@ -122,7 +122,7 @@ def xvar  ( s ) : return (s.mass+s.pt+s.eta)/s.eta
 
 # =============================================================================
 def test_fitting_fill_1 () :
-## if 1 < 2 :     
+
     logger = getLogger ('test_fitting_fill_1' ) 
 
     ## prepare data
@@ -149,13 +149,14 @@ def test_fitting_fill_1 () :
         ( 'x'   , 'some variable'  , 0 , 5000 , '(mass+pt+eta)/eta' ) 
         ]
     
-    config = { 'variables' : variables , 'selection' : "pt>7 && eta<3"  }
+    config = { 'variables' : variables , 'selection' : "(pt>7) && (eta<3)"  }
     
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = False , use_frame = False )
         ds1_1 = selector.data
+
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 :
         logger.info ( attention ( t2.name ) )        
         selector = SelectorWithVars ( **config ) 
@@ -176,7 +177,7 @@ def test_fitting_fill_1 () :
         with timing ( " pure-FRAME (new) " , logger = None ) as t5 : 
             logger.info ( attention ( t5.name ) )        
             ds1_5 , _ = chain.make_dataset ( silent = False , **config )
-            
+
     table = [ ('Configuration' , 'CPU' ) ] 
 
     table.append ( ( t1.name , '%.3fs' % t1.delta ) )
@@ -199,7 +200,6 @@ def test_fitting_fill_1 () :
     if DataSet_NEW_FILL : 
         if ds1_1 != ds1_5 : logger.error ('Datasets ds1_1  and ds1_5   are different!' )
 
-        
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -236,6 +236,7 @@ def test_fitting_fill_1 () :
     if ds1_2 != ds1p_2  : logger.error ('Datasets ds1_2  and ds1p_2  are different!' )
     if ds1_3 != ds1p_3  : logger.error ('Datasets ds1_3  and ds1p_3  are different!' )
     if ds1_4 != ds1p_4  : logger.error ('Datasets ds1_4  and ds1p_4  are different!' )
+
 
     # =========================================================================
     logger.info ( attention( 'Trivial variables + CUT' ) ) 
@@ -583,7 +584,6 @@ def test_fitting_fill_1 () :
     logger.info ( '%s\n%s' % ( title4  , table4  ) ) 
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
 
-        
 # =============================================================================
 if '__main__' == __name__ :
 
