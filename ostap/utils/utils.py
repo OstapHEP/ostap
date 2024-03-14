@@ -924,7 +924,7 @@ class LRange(VRange) :
         e  = self.edges
 
         lmn = self.__lmin
-        lmx = self.__lmx
+        lmx = self.__lmax
         
         if e : yield self.vmin
         
