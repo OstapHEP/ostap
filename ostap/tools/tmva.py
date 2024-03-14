@@ -1596,10 +1596,10 @@ def make_Plots ( name , output , show_plots = True ) :
     ##    return 
     
     if not output :
-        self.logger.warning ('No output file is specified!')
+        logger.warning ('No output file is specified!')
         return 
     if not os.path.exists ( output ) or not os.path.isfile ( output ) :
-        self.logger.error   ('No output file %s is found !' % output )
+        logger.error   ('No output file %s is found !' % output )
         return
 
     try :
@@ -1607,7 +1607,7 @@ def make_Plots ( name , output , show_plots = True ) :
         with ROOT.TFile.Open ( output , 'READ' , exception = True ) as o :
             pass   
     except IOError :
-        self.logger.error ("Output file %s can't be opened!"   % output )
+        logger.error ("Output file %s can't be opened!"   % output )
         return
         
     output = os.path.abspath ( output )
@@ -1680,7 +1680,6 @@ def make_Plots ( name , output , show_plots = True ) :
             ## tarfile with plots 
             tfile = make_tarfile ( output  = '.'.join ( [ '%s_plots' % name , 'tgz' ] ) ,
                                    files   = plots        ,
-                                   verbose = self.verbose ,
                                    tmp     = True         ) 
             logger.info ( "Tarfile with plots: '%s'" % tfile )
             return tfile 
