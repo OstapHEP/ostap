@@ -41,7 +41,9 @@ from   ostap.core.core import ( cpp      , Ostap     ,
                                 natural_entry        ,
                                 natural_number       )
 from   ostap.math.base          import frexp10 
-from   ostap.core.ostap_types   import integer_types, num_types , long_type, sequence_types
+from   ostap.core.ostap_types   import ( integer_types  , num_types    ,
+                                         long_type      , sized_types   , 
+                                         sequence_types ) 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.core.meta_info     import root_info, python_info
 from   ostap.math.random_ext    import poisson
@@ -4420,7 +4422,23 @@ ROOT.TH1F. smear = _smear_
 ROOT.TH1D. smear = _smear_
 
 # =============================================================================
-### Get the integral with error
+## Smooth the histogram
+#  @see TH1::Smooth
+def  _h1_smooth_ ( h1 , ntimes = 1 ) :
+    """ Smooth the histogram
+    - see `ROOT.TH1.Smooth`
+    """
+    assert isinstance ( ntimes , integer_types ) and 1 <= ntimes ,\
+           "Invalid `ntimes` parameter! "
+    result = h1.clone() 
+    result .Smooth ( ntimes )
+    return result
+
+ROOT.TH1F. smooth = _h1_smooth_
+ROOT.TH1D. smooth = _h1_smooth_
+
+# =============================================================================
+## Get the integral with error
 def _h1_integral_err_ ( h1 ) :
     """Get the integral with error"""
     
@@ -4918,6 +4936,19 @@ def _rebin_nums_1D_ ( h1 , template ) :
     >>> h = horig.rebinNumbers ( template ) 
     """
     ##
+    if   isinstance ( template , ROOT.TH1 ) : pass 
+    elif isinstance ( template  , integer_types  ) and 1 < template :
+        xaxis    = h1.GetXaxis()
+        htype    = ROOT.TH1D if isinstance ( h1  , ROOT.TH1D ) else ROOT.TH1F
+        template = htype  ( hID() , 'template' , template , xaxis.GetXmin() , xaxis.GetXmax() )
+    elif isinstance ( template  , sized_types      ) and \
+             isinstance ( template  , sequence_types   ) and \
+             3 == len   ( template  )                    and \
+             isinstance ( template [0] , integer_types ) and  1 < template [0] and \
+             isinstance ( template [1] , num_types     ) and \
+             isinstance ( template [2] , num_types     ) and template [ 1] < template [ 2 ] :  
+        template = htype  ( hID() , 'template' , template , xaxis.GetXmin() , xaxis.GetXmax() )
+        
     # clone it!
     h2 = template.Clone( hID() )
     if not h2.GetSumw2() : h2.Sumw2()
@@ -4950,6 +4981,20 @@ def _rebin_func_1D_ ( h1 , template ) :
     >>> template = ...  ## the template with binnings
     >>> h = horig.rebinFunction ( template ) 
     """
+    
+    if   isinstance ( template , ROOT.TH1 ) : pass 
+    elif isinstance ( template  , integer_types  ) and 1 < template :
+        xaxis    = h1.GetXaxis()
+        htype    = ROOT.TH1D if isinstance ( h1  , ROOT.TH1D ) else ROOT.TH1F
+        template = htype  ( hID() , 'template' , template , xaxis.GetXmin() , xaxis.GetXmax() )
+    elif isinstance ( template  , sized_types      ) and \
+             isinstance ( template  , sequence_types   ) and \
+             3 == len   ( template  )                    and \
+             isinstance ( template [0] , integer_types ) and  1 < template [0] and \
+             isinstance ( template [1] , num_types     ) and \
+             isinstance ( template [2] , num_types     ) and template [ 1] < template [ 2 ] :  
+        template = htype  ( hID() , 'template' , template , xaxis.GetXmin() , xaxis.GetXmax() )
+        
     # clone it!
     h2 = template.Clone( hID() )
     if not h2.GetSumw2() : h2.Sumw2()
@@ -8509,6 +8554,8 @@ _new_methods_   = (
     #
     ROOT.TH1F. smear     ,
     ROOT.TH1D. smear     , 
+    ROOT.TH1F. smooth    ,
+    ROOT.TH1D. smooth    , 
     #
     ROOT.TH1F. transform ,
     ROOT.TH1D. transform , 

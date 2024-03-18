@@ -468,14 +468,16 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             
             table.sort()
             npars = len ( table )
-            
+
             if npars :            
                 title = 'Parameters loaded: %s' % npars 
                 table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
                 import ostap.logger.table
                 table = ostap.logger.table.table ( table , title , prefix = "# " )
-                
-            self.info ( "%s parameters loaded:\n%s" % ( npars , table ) ) 
+                if 1 == npars : self.info ( "%d parameter  loaded:\n%s" % ( npars , table ) )
+                else          : self.info ( "%d parameters loaded:\n%s" % ( npars , table ) )
+            else :
+                self.info ( "No parameters loaded" )
 
             not_used = [ n for n in not_used if not n.endswith ( '_centralvalue' ) ]
             not_used.sort() 
