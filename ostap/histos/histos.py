@@ -4922,11 +4922,6 @@ def _bin_overlap_2D_ ( x1 , y1 , x2 , y2 ) :
     return ( xmax - xmin ) * ( ymax - ymin ) / ( 4.0 * x1e * y1e )
 
 
-
-
-## print ('QUQUQU!!')
-
-
 # ==============================================================================
 ## rebin 1D-histogram with NUMBERS 
 def _rebin_nums_1D_ ( h1 , template ) :
@@ -4946,7 +4941,8 @@ def _rebin_nums_1D_ ( h1 , template ) :
              3 == len   ( template  )                    and \
              isinstance ( template [0] , integer_types ) and  1 < template [0] and \
              isinstance ( template [1] , num_types     ) and \
-             isinstance ( template [2] , num_types     ) and template [ 1] < template [ 2 ] :  
+             isinstance ( template [2] , num_types     ) and template [ 1] < template [ 2 ] :
+        htype    = ROOT.TH1D if isinstance ( h1  , ROOT.TH1D ) else ROOT.TH1F
         template = htype  ( hID() , 'template' , template , xaxis.GetXmin() , xaxis.GetXmax() )
         
     # clone it!
@@ -4993,6 +4989,7 @@ def _rebin_func_1D_ ( h1 , template ) :
              isinstance ( template [0] , integer_types ) and  1 < template [0] and \
              isinstance ( template [1] , num_types     ) and \
              isinstance ( template [2] , num_types     ) and template [ 1] < template [ 2 ] :  
+        htype    = ROOT.TH1D if isinstance ( h1  , ROOT.TH1D ) else ROOT.TH1F
         template = htype  ( hID() , 'template' , template , xaxis.GetXmin() , xaxis.GetXmax() )
         
     # clone it!

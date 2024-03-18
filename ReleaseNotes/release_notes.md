@@ -1,5 +1,8 @@
 ## New features
-
+   1. improve prints from `PDF.load_params`
+   1. add `smooth` function for 1D-histogram 
+   1. imporove `rebin*` functoions for 1D-histograms
+   
 ## Backward incompatible
 
 ## Bug fixes
