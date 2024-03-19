@@ -4943,7 +4943,7 @@ def _rebin_nums_1D_ ( h1 , template ) :
              isinstance ( template [1] , num_types     ) and \
              isinstance ( template [2] , num_types     ) and template [ 1] < template [ 2 ] :
         htype    = ROOT.TH1D if isinstance ( h1  , ROOT.TH1D ) else ROOT.TH1F
-        template = htype  ( hID() , 'template' , template , xaxis.GetXmin() , xaxis.GetXmax() )
+        template = htype  ( hID() , 'template' , *template )
         
     # clone it!
     h2 = template.Clone( hID() )
@@ -4990,7 +4990,7 @@ def _rebin_func_1D_ ( h1 , template ) :
              isinstance ( template [1] , num_types     ) and \
              isinstance ( template [2] , num_types     ) and template [ 1] < template [ 2 ] :  
         htype    = ROOT.TH1D if isinstance ( h1  , ROOT.TH1D ) else ROOT.TH1F
-        template = htype  ( hID() , 'template' , template , xaxis.GetXmin() , xaxis.GetXmax() )
+        template = htype  ( hID() , 'template' , *template )
         
     # clone it!
     h2 = template.Clone( hID() )
