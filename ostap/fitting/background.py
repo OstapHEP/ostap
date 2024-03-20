@@ -2921,47 +2921,71 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
             return model
         
         import re        
-        poly = re.search ( r'(poly|pol|p)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        poly = re.search ( r'(poly|pol|p)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if poly :
             degree = -1 * abs ( int ( poly.group ( 'degree' ) ) ) 
             return make_bkg ( degree  , name ,  xvar , logger = logger , **kwargs  )
         
-        expo = re.search ( r'(expo|exp|e)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        expo = re.search ( r'(expo|exp|e)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if expo :
             degree =            int ( expo.group ( 'degree' ) ) 
             return make_bkg ( degree  , name ,  xvar , logger = logger , **kwargs  )
         
-        incr = re.search ( r'(increasing|increase|incr|inc|i)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        incr = re.search ( r'(increasing|increase|incr|inc|i)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if incr : 
             degree = int ( incr.group ( 'degree' ) )
             bkg    = Monotonic_pdf ( name , xvar , power = degree , increasing = True )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
         
-        decr = re.search ( r'(decreasing|decrease|decr|dec|d)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        decr = re.search ( r'(decreasing|decrease|decr|dec|d)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if decr : 
             degree = int ( decr.group ( 'degree' ) )
             bkg    = Monotonic_pdf ( name , xvar , power = degree , increasing = False )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
         
-        decr = re.search ( r'(convex|cx)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        decr = re.search ( r'(convex|cx)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = True )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
 
-        decr = re.search ( r'(concave|cv)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        decr = re.search ( r'(concave|cv)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = False )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
 
-        decr = re.search ( r'(roochebyshev|roocheb|chebyshev|cheb|rc)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        decr = re.search ( r'(convex|cx)(( *)|(_*))(decreasing|dec)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
+        if desc :
+            degree = int ( decr.group ( 'degree' ) )
+            bkg    = Convex_pdf ( name , xvar , power = degree , increasing = False, convex = True )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            
+        decr = re.search ( r'(convex|cx)(( *)|(_*))(increasing|inc)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
+        if desc :
+            degree = int ( decr.group ( 'degree' ) )
+            bkg    = Convex_pdf ( name , xvar , power = degree , increasing = True , convex = True )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            
+        decr = re.search ( r'(concave|cv)(( *)|(_*))(decreasing|dec)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
+        if desc :
+            degree = int ( decr.group ( 'degree' ) )
+            bkg    = Convex_pdf ( name , xvar , power = degree , increasing = False, convex = False )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            
+        decr = re.search ( r'(concave|cv)(( *)|(_*))(increasing|inc)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
+        if desc :
+            degree = int ( decr.group ( 'degree' ) )
+            bkg    = Convex_pdf ( name , xvar , power = degree , increasing = True , convex = False )
+            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+
+        decr = re.search ( r'(roochebyshev|roocheb|chebyshev|cheb|rc)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = RooCheb_pdf ( name , xvar , power = degree )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
         
-        decr = re.search ( r'(roopoly|rp|r)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
+        decr = re.search ( r'(roopoly|rp|r)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = RooPoly_pdf ( name , xvar , power = degree )

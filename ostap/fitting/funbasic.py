@@ -97,7 +97,10 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         self.__draw_var     = None
         ## predefined drawing options for this FUN/PDF
         self.__draw_options = cidict ( transform = key_transform )
+
         
+        self.__fit_options  = () ## predefined fit options for this PDF
+
         self.__checked_keys = set()
                 
         self.vars.add         ( self.xvar )
@@ -264,6 +267,25 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         """
         return self.__draw_options
 
+    @property
+    def fit_options ( self ) :
+        """'fit_options' : the predefined 'fitTo'-options for this PDF
+        - tuple of ROOT.RooArgCmd
+        pdf = ...
+        pdf.fit_options = ROOT.RooFit.Optimize ( 1 )
+        pdf.fit_options = ROOT.RooFit.Optimize ( 1 ) , ROOT.RooFit.PrintEvalError ( 2 ) 
+        """
+        return self.__fit_options
+    @fit_options.setter
+    def fit_options ( self , value )  :
+        if isinstance ( value , ROOT.RooCmdArg ) : value = value , 
+        assert isinstance ( value , list_types ), 'Invalid fitTo-options %s' % value 
+        _opts = []
+        for v in value :
+            assert isinstance ( v , ROOT.RooCmdArg ), 'Invalid fitTo-option %s' % v
+            _opts.append ( v )
+        self.__fit_options = tuple ( _opts ) 
+
     # =========================================================================
 
     # =========================================================================
@@ -416,7 +438,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                 vv = float  ( v )
                 if vv != pv : 
                     p.setVal ( vv )
-                    item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
+                    item = p.name , "%-+15.7g" % pv , "%-+15.7g" % vv 
                     table.append ( item ) 
                 keys.add ( key )
 
@@ -437,7 +459,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                 pv = float  ( p ) 
                 if vv != pv :
                     p.setVal   ( vv )
-                    item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
+                    item = p.name , "%-+15.7g" % pv , "%-+15.7g" % vv 
                     table.append ( item ) 
                 keys.add  ( i )
 
@@ -458,7 +480,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             pv = float  ( p ) 
             if vv != pv :
                 p.setVal   ( vv )
-                item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
+                item = p.name , "%-+15.7g" % pv , "%-+15.7g" % vv 
                 table.append ( item ) 
             keys.add  ( key )
             
@@ -470,7 +492,8 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             npars = len ( table )
 
             if npars :            
-                title = 'Parameters loaded: %s' % npars 
+                if 1 == npars : title = '%s parameter loaded '  % npars
+                else          : title = '%s parameters loaded ' % npars
                 table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
                 import ostap.logger.table
                 table = ostap.logger.table.table ( table , title , prefix = "# " )
@@ -629,7 +652,10 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         ## cloned = KLASS ( **conf )
 
         cloned = self.factory ( conf )
-            
+
+        cloned.draw_options.update ( self.draw_options )
+        cloned.fit_options         = self .fit_options 
+        
         return cloned 
             
     # =========================================================================

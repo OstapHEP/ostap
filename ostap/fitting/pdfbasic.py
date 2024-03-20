@@ -262,7 +262,6 @@ class APDF1 ( Components ) :
         ## take care about sPlots 
         self.__splots                = []
         self.__histo_data            = None
-        self.__fit_options           = () ## predefined fit options for this PDF
         
         self.__fit_result   = None
 
@@ -323,25 +322,6 @@ class APDF1 ( Components ) :
             self.__histo_data = value 
         else :
             raise AttributeError("'histo_data' has invalid type %s/%s" % (   value , type(value) ) )
-    @property
-    def fit_options ( self ) :
-        """'fit_options' : the predefined 'fitTo'-options for this PDF
-        - tuple of ROOT.RooArgCmd
-        pdf = ...
-        pdf.fit_options = ROOT.RooFit.Optimize ( 1 )
-        pdf.fit_options = ROOT.RooFit.Optimize ( 1 ) , ROOT.RooFit.PrintEvalError ( 2 ) 
-        """
-        return self.__fit_options
-    @fit_options.setter
-    def fit_options ( self , value )  :
-        if isinstance ( value , ROOT.RooCmdArg ) : value = value , 
-        assert isinstance ( value , list_types ), 'Invalid fitTo-options %s' % value 
-        _opts = []
-        for v in value :
-            assert isinstance ( v , ROOT.RooCmdArg ), 'Invalid fitTo-option %s' % v
-            _opts.append ( v )
-        self.__fit_options = tuple ( _opts ) 
-
         
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
