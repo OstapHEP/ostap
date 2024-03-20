@@ -16,6 +16,7 @@ __all__     = (
     'getCanvas'        , ## get/create canvas 
     'getCanvases'      , ## get all existing canvases 
     'canvas_partition' , ## split canvas into several pads with no space between pads 
+    'partition_draw'   , ## split canvas into several pads with no space between pads & draw  
     'canvas_pull'      , ## split canvas into two pads with no vertical interspace
     'draw_pads'        , ## plot sequence of object on sequence of pads, adjustinng axis label size
     'AutoPlots'        , ## context manager to activate the auto-plotting machinery
@@ -471,7 +472,7 @@ def canvas_partition ( canvas                        ,
             hmarl   = 0.0
             hmarr   = 0.0
 
-        for iy in range(ny) :
+        for iy in range ( ny ) :
             if 0 == iy : 
                 vposd   = 0.0
                 vposu   = bottom_margin + vStep
@@ -496,6 +497,12 @@ def canvas_partition ( canvas                        ,
             groot = ROOT.ROOT.GetROOT()
             pad   = groot.FindObject ( pname )
             if pad : del pad
+
+            hposl = max ( 0 , min ( 1.0 , hposl ) )
+            hposr = max ( 0 , min ( 1.0 , hposr ) )
+            vposu = max ( 0 , min ( 1.0 , vposu ) )
+            vposd = max ( 0 , min ( 1.0 , vposd ) )
+            
             pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
 
             logger.verbose ( ' Create pad[%d,%d]=(%f,%f,%f,%f),[%f,%f,%f,%f] %s ' % (
@@ -525,13 +532,62 @@ def canvas_partition ( canvas                        ,
             
     return canvas.pads 
 
+
+# =============================================================================
+## Make partition of Canvas into nx, ny adjuncent pads and plot objects
+#  @code
+#  canvas  = ...
+#  objects = ...
+#  pads    = canvas.partition_draw ( objects , 3 , 2 )
+def partition_draw ( canvas                        ,
+                     objects                       , 
+                     nx                            ,
+                     ny                            ,
+                     left_margin   = margin_left   , 
+                     right_margin  = margin_right  , 
+                     bottom_margin = margin_bottom , 
+                     top_margin    = margin_top    ,
+                     hSpacing      = 0.0           ,
+                     vSpacing      = 0.0           ) :
+    """Perform partition of Canvas into pads with no inter-marginspads and draw objects
+    >>> canvas  = ...
+    >>> objects = ...
+    >>> pads    = canvas.partition_draw ( objects , 3 , 2 )
+    """
+    pads = canvas_partition ( canvas  ,
+                              nx = nx ,
+                              ny = ny ,
+                              left_margin   = left_margin   ,
+                              right_margin  = right_margin  ,
+                              bottom_margin = bottom_margin ,
+                              top_margin    = top_margin    ,
+                              hSpacing      = hSpacing      ,
+                              vSpacing      = vSpacing      )
+
+    canvas.Clear()
+    for key , obj in zip ( pads, objects ) :
+        
+        canvas.cd(0)
+        pad = pads [ key ] 
+        pad.draw ()
+        pad.cd   ()
+        obj.draw ()
+
+    canvas.Update()
+    canvas.cd(0)
+    return pads
+    
+    
 # =============================================================================
 def _cnv_pads_ ( self ) :
-    """``pads'' : get an ordered dict of pads for the given canvas partition (if prepared)
+    """`pads' : get (an ordered) dict of pads for the given canvas partition (if prepared)
     """
     if not hasattr ( self , '__pads' ) :
-        import collections as _C
-        self.__pads  = _C.OrderedDict ()
+        if (3,7) <= python_version :
+            self.__pads = {}
+        else  : 
+            from collections import OrderedDict 
+            self.__pads  = OrderedDict ()
     return self.__pads
 # =============================================================================
 def _cnv_del_pads_ ( self ) :
@@ -546,7 +602,8 @@ def _cnv_del_pads_ ( self ) :
 ## property! 
 ROOT.TCanvas.pads = property ( _cnv_pads_ , None , _cnv_del_pads_ )
 
-ROOT.TCanvas.partition = canvas_partition
+ROOT.TCanvas.partition      = canvas_partition
+ROOT.TCanvas.partition_draw = partition_draw
 
 # ==============================================================================
 ## Split canvas in y-direction into non-equal pads,
@@ -1027,6 +1084,7 @@ _decorated_classes_  = (
 _new_methods_        = (
     ROOT.TVirtualPad.__rshift__ ,
     ROOT.TCanvas.partition      ,
+    ROOT.TCanvas.partition_draw ,
     ROOT.TCanvas.pull_partition ,
     ROOT.TObject    .draw       , 
     ROOT.TObject    .draw_with_autoplot, 
