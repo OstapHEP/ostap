@@ -61,7 +61,7 @@ def test_simfit6() :
     ## prepare dataset for splot
     # =============================================================================
     signal     = Models.Gauss_pdf ( 'SG' , xvar = mass , mean  = 5 , sigma =  0.5 )
-    bkg        = Models.Bkg_pdf   ( 'BG' , xvar = mass , power = 1 , tau   = -0.2 )
+    bkg        = Models.Bkg_pdf   ( 'BG' , xvar = mass , power = 0 , tau   = -0.5 )
     
     ## "signal"
     signal_cmp = Models.Fit1D  (
@@ -69,9 +69,9 @@ def test_simfit6() :
                                               xvar      = m1  ,
                                               mean      = 2.5 ,
                                               sigma     = 0.2 ,
-                                              beta      = 0.7 ,
+                                              beta      = 1.5 ,
                                               asymmetry = 0.1 ) , 
-        background = 0   , suffix = '_Scmp' )
+        background = 'flat'   , suffix = '_Scmp' )
     signal_cmp.S = 1000
     signal_cmp.B =  500 
     
@@ -115,7 +115,7 @@ def test_simfit6() :
     smodel.fitTo ( ds , silent = True )
     rs , fs = smodel.fitTo ( ds , silent = True , draw = True , nbins = 100 , **conf )
     title = 'Fit for sPlot'
-    logger.info ( '%s:|n%s' % ( title , rs.table ( title = title , prefix = '# ' ) ) )
+    logger.info ( '%s:\n%s' % ( title , rs.table ( title = title , prefix = '# ' ) ) )
     smodel.sPlot ( ds )
     
     # ============================================================================
