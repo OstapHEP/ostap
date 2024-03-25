@@ -111,7 +111,7 @@ class AsymErrors (object) :
         return  "( -/%.5g +/%.5g )" % ( self.__negative , self.__positive )
     ##def __repr__ ( self ) :
     ##    return  "AsymErrors( negative=%+.6g, positive=%+.6g )" % ( self.__negative , self.__positive )
-
+    def __repr__ ( self ) : return self.__str__ () 
 
 # =============================================================================
 ## @class ValWithErrors
@@ -206,6 +206,7 @@ class ValWithErrors(object) :
     ## def __repr__ ( self ) :
     ##    return  "ValWithErrors(%+.6g, ( %+.6g , %+.6g ))" % \
     ##           ( self.__value , self.neg_error, self.pos_error )
+    def __repr__ ( self ) : return self.__str__ () 
 
 
 # ===========================================================================
