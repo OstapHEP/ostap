@@ -95,11 +95,15 @@ def test_nroots ():
 
     troots.sort() 
     logger.info ('Roots true  : [%s]' %  ( ', '.join ( "%.6f" % r for r in troots )  ) )
-    
+
+    delta = 1.e-4 * ( bs.xmax() - bs.xmin() )  
     for i in  range( 20 )  :
         
-        x1 = random.uniform (  0 , 0.80 )
-        x2 = random.uniform ( x1 , 1.00 )
+        while True :            
+            x1 = random.uniform ( bs.xmin() , bs.xmax() )
+            x2 = random.uniform ( x1        , bs.xmax() )            
+            if x2 <= x1 or abs ( x1 - x2 ) < delta : continue            
+            break        
 
         nr = bs.nroots ( x1 , x2 )
         nt = 0
@@ -282,20 +286,24 @@ def test_monotonic () :
 
     ## 8-9) check for Monotonic 
     BPM = Ostap.Math.Monotonic
-    
-    b = BPM ( 5 , 0 , 2 , True )
-    for i in  b :  b[i] = random.uniform ( -10 , 10 )
+
+    increasing = True 
+    b = BPM ( 5 , 0 , 2 , increasing )
+    for i in  b :  b [ i ] = random.uniform ( -10 , 10 )
     
     for i in range(500) :
-        x1 = random.uniform ( b.xmin() , b.xmax() )
-        y1 = b(x1)
-        if y1 <= 0 :
-            raise ValueError ( 'Invalid Increasing y(%s)=%s' % ( x1 , y1 ) )
-        x2 = random.uniform ( x1 , b.xmax() )
-        y2 = b(x2)
-        if y2 <= 0 :
-            raise ValueError ( 'Invalid Increasing y(%s)=%s' % ( x2 , y2 ) )
-        if y1 > y2 :
+        
+        while True :            
+            x1 = random.uniform ( b.xmin() , b.xmax() )
+            x2 = random.uniform ( x1       , b.xmax() )            
+            if x2 <= x1 or abs ( x1 - x2 ) < 1.e-6 : continue            
+            break        
+        y1 , y2 = b ( x1 ) , b ( x2 )
+
+        ok1 = ( x1 < x2 ) and ( y1 <= y2 ) 
+        ok2 = ( x1 > x2 ) and ( y1 >= y2 )
+
+        if not ok1 and not ok2 : 
             raise ValueError ( 'Invalid Increasing y(%s)=%s>y(%s)=%s' % ( x1 , y1 , x2 , y1 ) )
         
     logger.info ('Increasing poly is OK' )
@@ -303,19 +311,22 @@ def test_monotonic () :
     functions.add ( b ) 
 
     b = BPM ( 5 , 0 , 2 , False )
-    for i in  b :  b[i] = random.uniform ( -10 , 10 )
+    for i in  b :  b [ i ] = random.uniform ( -10 , 10 )
     
     for i in range(500) :
-        x1 = random.uniform ( b.xmin() , b.xmax() )
-        y1 = b(x1)
-        if y1 <= 0 :
-            raise ValueError ( 'Invalid Decreasing y(%s)=%s' % ( x1 , y1 ) )
-        x2 = random.uniform ( x1 , b.xmax() )
-        y2 = b(x2)
-        if y2 <= 0 :
-            raise ValueError ( 'Invalid Decreasing y(%s)=%s' % ( x2 , y2 ) )
-        if y1 < y2 :
-            raise ValueError ( 'Invalid Decreasing y(%s)=%s>y(%s)=%s' % ( x1 , y1 , x2 , y1 ) )
+
+        while True :            
+            x1 = random.uniform ( b.xmin() , b.xmax() )
+            x2 = random.uniform ( x1       , b.xmax() )            
+            if x2 <= x1 or abs ( x1 - x2 ) < 1.e-6 : continue            
+            break        
+        y1 , y2 = b ( x1 ) , b ( x2 )
+
+        ok1 = ( x1 > x2 ) and ( y1 <= y2 ) 
+        ok2 = ( x1 < x2 ) and ( y1 >= y2 )
+
+        if not ok1 and not ok2 : 
+            raise ValueError ( 'Invalid Deccreasing y(%s)=%s>y(%s)=%s' % ( x1 , y1 , x2 , y1 ) )
         
     functions.add ( b ) 
 
@@ -344,10 +355,13 @@ def test_convex () :
     functions.add ( b_00 ) 
 
     for i in range(500) :
-        
-        ##  note:  x1 <  x2 
-        x1 = random.uniform ( b.xmin() , b.xmax() )
-        x2 = random.uniform ( x1       , b.xmax() )
+
+        while True :            
+            x1 = random.uniform ( b.xmin() , b.xmax() )
+            x2 = random.uniform ( x1       , b.xmax() )            
+            if x2 <= x1 or abs ( x1 - x2 ) < 1.e-6 : continue            
+            break        
+
         xm = 0.5 * ( x1 + x2 )
         
         for b in ( b_11   , b_01 , b_10 , b_00 ) :
@@ -393,9 +407,12 @@ def test_convexonly () :
 
     for i in range(500) :
         
-        ##  note:  x1 <  x2 
-        x1 = random.uniform ( b.xmin() , b.xmax() )
-        x2 = random.uniform ( x1       , b.xmax() )
+        while True :            
+            x1 = random.uniform ( b.xmin() , b.xmax() )
+            x2 = random.uniform ( x1       , b.xmax() )            
+            if x2 <= x1 or abs ( x1 - x2 ) < 1.e-6 : continue            
+            break        
+
         xm = 0.5 * ( x1 + x2 )
         
         for b in ( b_11   , b_01 ) :
