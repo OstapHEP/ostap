@@ -3403,25 +3403,27 @@ def _rplot_add_ ( plot1 , plot2 ) :
             
         return True
         
-
-    
+    iii = 0 
     for item1,item2 in zip ( plot1.items() , plot2.items() ) : 
 
         obj1 , options1 , invisible1 = item1
         obj2 , options2 , invisible2 = item2
 
-    
         if isinstance ( obj1 , ROOT.RooHist ) and isinstance ( obj2 , ROOT.RooHist ) :
             
             if not obj1.hasIdenticalBinning ( obj2 ) : return NotImplemented
+            
             ints1  = all_ints ( obj1 )
             ints2  = all_ints ( obj2 )
-            errors = ROOT.RooAbsData.Poisson if ( ints1 and ints1 ) else ROOT.RooAbsData.SumW2 
-            plot   = ROOT.RooHist ( obj1 , obj2 , 1.0 , 1.0 , errors )
+
+            errors = ROOT.RooAbsData.Poisson if ( ints1 and ints1 ) else ROOT.RooAbsData.SumW2
+            
+            plot   = ROOT.RooHist ( obj1 , obj2 , 1.0 , 1.0 , errors , 1.0 )
+
             result.addPlotable ( plot , options1 , invisible1 )  
             
         elif isinstance ( obj1 , ROOT.RooCurve ) and isinstance ( obj2 , ROOT.RooCurve ) :
-            
+
             plot = ROOT.RooCurve ( obj2 )
             
             for i, X, Y in plot.items() :
