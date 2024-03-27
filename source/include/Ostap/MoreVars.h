@@ -33,7 +33,7 @@ class RooEfficiency       ; // ROOT,RooFit
 class RooPolyVar          ; // ROOT,RooFit 
 class RooPolynomial       ; // ROOT,RooFit 
 class RooMultiVarGaussian ; // ROOT,RooFit 
-class RooLinearVar        ; // ROOT,RooFit 
+class RooLinearVar        ; // ROOT,RooFit
 // ============================================================================
 namespace Ostap 
 {

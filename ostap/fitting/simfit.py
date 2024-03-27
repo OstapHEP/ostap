@@ -22,6 +22,7 @@ __all__     = (
     'combined_hdata' , ## prepare combined binned dataset for the simultaneous fit
     )
 # =============================================================================
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import std , Ostap , dsID , items_loop
 from   ostap.utils.utils        import chunked 
 from   ostap.fitting.fithelpers import VarMaker, ConfigReducer
@@ -106,15 +107,16 @@ def combined_data ( sample          ,
         ##       'Weighted data cannot be combined!'
 
         if not dset.isWeighted () :
-            largs.append (  ROOT.RooFit.Import ( label , dset ) )
+            print ( 'MPORT:', type ( label ) , type ( dset ) ) 
+            largs.append (  ROOT.RooFit.Import ( str  ( label ) , dset ) )
         else :
             store_error      = dset.store_error      () 
             store_asym_error = dset.store_asym_error ()            
             uwdset , wnam    = dset.unWeighted ()
             assert uwdset and wnam, "Cannot 'unweight' dataset!"
-            largs.append   ( ROOT.RooFit.Import ( label , uwdset ) )
+            largs.append   ( ROOT.RooFit.Import ( str ( label ) , uwdset ) )
             ds_keep.append ( uwdset ) 
-            weights.add    ( wnam   )
+            weights.add    ( str ( wnam ) )
             
     ## we can do with only one weight variable!
     assert len ( weights ) < 2 , 'Invalid number of weights %s' % list ( weights )
@@ -141,7 +143,7 @@ def combined_data ( sample          ,
 
     wset = ROOT.RooArgSet() 
     if weight :
-        args = args + ( ROOT.RooFit.WeightVar ( weight ) , )
+        args = args + ( ROOT.RooFit.WeightVar ( str ( weight ) ) , )
         if not weight in vars : 
             wvar = ROOT.RooRealVar ( weight , 'weight variable' , 1 , -1.e+100 , 1.e+100 ) 
             vars.add ( wvar )
@@ -374,9 +376,11 @@ class Sim1D(PDF1) :
             self.sample )
 
         keys = self.categories.keys()
-        for key in sorted ( keys ) :
-            self.pdf.addPdf ( self.categories[key].pdf , key )
 
+        for key in sorted ( keys ) :
+            the_pdf = self.categories [ key ] 
+            self.pdf.addPdf ( the_pdf , str ( key ) )
+                                           
         for k , pdf in items_loop ( self.categories ) :
 
             self.copy_structures ( pdf )
@@ -691,9 +695,12 @@ class SimFit (VarMaker,ConfigReducer) :
                     self.__observables.add ( v )
               
         keys = self.categories.keys()
-        for key in sorted ( keys ) :
-            sim_pdf.pdf.addPdf ( self.categories[key].pdf , key )
 
+
+        for key in sorted ( keys ) :
+            the_pdf = self.categories [ key ].pdf 
+            sim_pdf.pdf.addPdf ( the_pdf , str ( key ) )
+                                           
         self.__pdf = sim_pdf 
         
         for k , cmp in items_loop ( self.categories ) :

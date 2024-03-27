@@ -23,7 +23,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import root_info 
-from   ostap.core.core         import Ostap, valid_pointer 
+from   ostap.core.core         import std, Ostap, valid_pointer 
 from   ostap.core.ostap_types  import string_types , integer_types
 import ostap.fitting.variables
 import ROOT, sys, random
@@ -327,7 +327,12 @@ def _ras_contains_ ( self , aname ) :
     """
     if isinstance ( aname , integer_types ) :
         return  0 <= aname < len ( self )
-    _v = self.find ( aname )
+
+    if ( 6 , 31 ) <= root_info and isinstance ( aname , std.string ) : 
+        _v = self.find ( str ( aname ) )
+    else  : 
+        _v = self.find (       aname   )
+        
     if not _v : return False 
     return             True
 
