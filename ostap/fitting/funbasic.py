@@ -105,7 +105,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                 
         self.vars.add         ( self.xvar )
         self.variables.append ( self.xvar )
-
+        
         self.__func_init = True  
 
         ## derived functions/objects

@@ -104,16 +104,16 @@ def _ral_getitem_ ( self , index ) :
 ## some decoration over RooArgList 
 ROOT.RooArgList . __len__       = lambda s   : s.getSize()
 ROOT.RooArgList . __contains__  = _ral_contains_ 
-ROOT.RooArgList . __iter__      = _ral_iter_
 ROOT.RooArgList . __nonzero__   = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
 ROOT.RooArgList . __bool__      = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
 ROOT.RooArgList . __getitem__   = _ral_getitem_
 ROOT.RooArgList . __setitem__   = lambda s,*_ : NotImplemented 
 
+
+       
 _new_methods_ += [
     ROOT.RooArgList. __len__       ,
     ROOT.RooArgList. __contains__  ,
-    ROOT.RooArgList. __iter__      ,
     ROOT.RooArgList. __nonzero__   ,
     ROOT.RooArgList. __bool__      ,
     ROOT.RooArgList. __getitem__   ,
@@ -335,7 +335,6 @@ def _ras_contains_ ( self , aname ) :
 # =============================================================================
 ## some decoration over RooArgSet 
 ROOT.RooArgSet . __len__           = lambda s   : s.getSize()
-ROOT.RooArgSet . __iter__          = _ras_iter_ 
 ROOT.RooArgSet . __getattr__       = _ras_getattr_ 
 ROOT.RooArgSet . __getitem__       = _ras_getitem_ 
 ROOT.RooArgSet . __contains__      = _ras_contains_ 
@@ -348,11 +347,23 @@ ROOT.RooArgSet     . __repr__      = lambda s : str ( set   ( _rs_list_ ( s ) ) 
 ROOT.RooLinkedList . __str__       = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) 
 ROOT.RooLinkedList . __repr__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) 
 
-ROOT.RooAbsCollection.__iter__     = _ras_iter_
 ROOT.RooAbsCollection.__len__      = lambda s   : s.getSize()
 ROOT.RooAbsCollection. __nonzero__ = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
 ROOT.RooAbsCollection. __bool__    = lambda s   : valid_pointer ( s ) and 0 != len ( s ) 
 
+
+
+if not hasattr ( ROOT.RooArgList , '__iter__' ) or root_info < ( 6 , 31 ) : 
+    ROOT.RooArgList . __iter__      = _ral_iter_
+    _new_methods_ += [ ROOT.RooArgList. __iter__ ]
+    
+if not hasattr ( ROOT.RooArgSet , '__iter__' ) or root_info < ( 6 , 31 ) : 
+    ROOT.RooArgSet . __iter__          = _ras_iter_ 
+    _new_methods_ += [ ROOT.RooArgList. __iter__ ]
+
+if not hasattr ( ROOT.RooAbsCollection , '__iter__' ) or root_info < ( 6 , 31 ) : 
+    ROOT.RooAbsCollection.__iter__     = _ras_iter_
+    _new_methods_ += [ ROOT.RooAbsCollection. __iter__ ]
 
 # =============================================================================
 ## iterator for class RooLinkedList
@@ -367,12 +378,13 @@ def _rll_iter_  ( self ) :
     """
     l = len ( self )  
     for i in range ( l ) : yield self.At ( i )
-        
-ROOT.RooLinkedList . __iter__  = _rll_iter_ 
 
+if not hasattr ( ROOT.RooLinkedList , '__iter__' ) or root_info < ( 6, 31 ) :
+    ROOT.RooLinkedList . __iter__  = _rll_iter_ 
+    _new_methods_ += [ ROOT.RooLinkedList . __iter__ ]
+        
 _new_methods_ += [
     ROOT.RooArgSet . __len__      ,
-    ROOT.RooArgSet . __iter__     ,
     ROOT.RooArgSet . __getattr__  , 
     ROOT.RooArgSet . __setattr__  ,
     ROOT.RooArgSet . __contains__ ,
@@ -388,7 +400,6 @@ ROOT.RooLinkedList.__len__ = ROOT.RooLinkedList.GetSize
 _new_methods_ += [
     ROOT.RooLinkedList . __len__  ,
     ROOT.RooLinkedList . __repr__ ,
-    ROOT.RooLinkedList . __iter__ ,
     ROOT.RooLinkedList . add 
     ]
     

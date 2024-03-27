@@ -2258,10 +2258,10 @@ class APDF1 ( Components ) :
         """
 
         import ostap.trees.cuts
-        
+
         cuts = '' 
-        for v in self.vars :
-            
+        for i , v in enumerate ( self.vars ) :
+
             ## has range? 
             if ( hasattr ( v , 'hasMin' ) and not v.hasMin() ) and \
                ( hasattr ( v , 'hasMax' ) and not v.hasMax() ) : continue
