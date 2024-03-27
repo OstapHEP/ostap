@@ -54,6 +54,7 @@ def set_line_attributes  ( obj , **kwargs ) :
         l = keys.get ( 'color_alpha' , None )
         if not l is None : obj.SetLineColorAlpha ( object.GetLineColor() , l )  
 
+
 # =============================================================================
 ## set fill attributes for the object
 #  @code

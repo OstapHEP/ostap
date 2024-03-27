@@ -40,7 +40,7 @@ Also one can add colored bands for ``average'':
 >>> average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
 >>> result = draw_summary ( data  , average  = average , vmax = 5 )
 
-``Averag'' data  can be also added into list of data points:
+``Average'' data  can be also added into list of data points:
 
 >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
 ... Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
@@ -57,8 +57,9 @@ __all__     = (
     'Limit'         , ## graphical representation of the upper/lower limit (arrow) 
     'Record'        , ## graphical representation of data poins with several unceratities
     'Point'         , ## graphical representation of a single data point
-    'Interval'      , ## graphical representation of an interval     
+    'Interval'      , ## graphical representation of an interval
     'Average'       , ## graphical representation of average  (box)
+    'Separator'     , ## separator line for data blocks  
     'Summary'       , ## the  final summary graph 
     'make_summary'  , ## prepare summary graph 
     'draw_summary'  , ## draw summary graph
@@ -263,6 +264,7 @@ class Label(DrawConfig) :
         
         return label 
         
+
 # =============================================================================
 ## @class  Limit
 #  A graphical represenation of upper/lower limit as
@@ -507,6 +509,68 @@ class Average(Record) :
                              max_value    = level ,
                              **self.config        )  
 
+
+# =============================================================================
+## @class Separator
+#  the simplesy object - line, likely the separator 
+class Separator(Label) :
+    ""
+    def __init__  ( self , low = None , high = None , **config ) :
+        
+        super(Label,self).__init__  ( **config )
+        
+        self.__low   = low 
+        self.__high  = high 
+        
+        if not 'marker_style' in self.config : self.config [ 'marker_style' ] = 1
+        if not 'line_style'   in self.config : self.config [ 'line_style'   ] = 2
+        if not 'line_swidth'  in self.config : self.config [ 'line_width'   ] = 1
+        
+        if 'color' in self.config :
+            if not 'line_color'   in self.config : self.config [ 'line_color'   ] = self.config [ 'color' ]
+
+    # =========================================================================
+    ## create an arrow for the upper limit at certain level 
+    def line ( self , vpos , low = None , high = None ) :
+        """ Create the arrow at certain level """
+        
+        style = self.config.get ( 'line_style' , 1 )
+        width = self.config.get ( 'line_width' , 1 )
+
+
+        l = low  if isinstance ( low  , num_types ) else self.__low
+        h = high if isinstance ( high , num_types ) else self.__high 
+
+        assert isinstance ( l , num_types ) , 'Invalid low-edge!'
+        assert isinstance ( h , num_types ) , 'Invalid high-edge!'
+        
+        the_line = ROOT.TLine ( l , vpos , h , vpos )  
+        
+        the_line.set_line_attributes ( **self.config )
+
+        return the_line 
+
+    @property
+    def low  ( self ) :
+        "``low'': low edge"
+        return self.__low
+    @low.setter
+    def low  ( self, value ) :
+        assert value is None or isinatance ( value  , num_types ) , \
+               "Invalid 'low' type!"
+        self.__low = value
+
+    @property
+    def high ( self ) :
+        "``high'': high  edge"
+        return self.__high
+    @high.setter
+    def high ( self, value ) :
+        assert value is None or isinatance ( value  , num_types ) , \
+               "Invalid 'high' type!"
+        self.__high = value
+
+        
 # ==============================================================================================
 ## @class Summary
 #   The final graph for the ``summary plot''. It is a container of
@@ -529,13 +593,15 @@ class Summary(object) :
                    points = ()   ,
                    limits = ()   ,
                    bands  = ()   ,
-                   labels = ()   ) :
+                   labels = ()   ,
+                   lines  = [] ) :
 
         self.__histo  = histo
-        self.__points = points 
-        self.__limits = limits
-        self.__bands  = bands
-        self.__labels = labels
+        self.__points = tuple ( p for p in points ) 
+        self.__limits = tuple ( l for l in limits )
+        self.__bands  = tuple ( b for b in bands  )
+        self.__labels = tuple ( l for l in labels )
+        self.__lines  = tuple ( l for l in lines  ) 
         
     # ======================================================================================
     ##  draw the summary plot
@@ -550,15 +616,21 @@ class Summary(object) :
         """
         
         if   self.histo    :
+            
             self.histo.draw ()            
             for b in self.bands  : b.draw()
             for p in self.points : p.draw('pe1')
+            
         else :
 
-            if self.points : self.points[0].draw('ape1')
+            if self.points :
+                self.points[0].draw('ape1')                
+                for p in self.points[1:] :
+                    p.draw('pe1')
+                
             for b in self.bands  : b.draw()
-            for p in self.points : p.draw('pe1')
         
+        for l in self.lines      : l.draw()
         for l in self.limits     : l.draw()
         for l in self.labels     : l.draw()
 
@@ -583,6 +655,11 @@ class Summary(object) :
         return self.__limits
 
     @property
+    def lines ( self  ) :
+        """``lines'' : lines/separators"""
+        return self.__lines
+
+    @property
     def bands ( self  ) :
         """``bands'' : color bands associated with mean/averages"""
         return self.__bands
@@ -593,7 +670,7 @@ class Summary(object) :
         return self.__labels
 
     # =========================================================================
-    ## number of data points in the sumamry plot
+    ## number of data points in the summary plot
     #  @code
     #  summary = ...
     #  n = len ( summary )
@@ -603,7 +680,7 @@ class Summary(object) :
         >>> summary = ...
         >>> n = len ( summary )
         """
-        return len ( self.points ) 
+        return len ( self.points ) + len ( self.lines ) 
     # =========================================================================
     ## get xmin/xmax for this summary graph
     #  @code
@@ -628,6 +705,10 @@ class Summary(object) :
             xmax = max ( xmax , l.GetX1 ()  , l.GetX2 () )
             
         for b in self.bands   :
+            xmin = min ( xmin , b.GetX1 ()  , b.GetX2 () )
+            xmax = max ( xmax , b.GetX1 ()  , b.GetX2 () )
+
+        for b in self.lines   :
             xmin = min ( xmin , b.GetX1 ()  , b.GetX2 () )
             xmax = max ( xmax , b.GetX1 ()  , b.GetX2 () )
             
@@ -656,6 +737,10 @@ class Summary(object) :
             ymax = max ( ymax , l.GetY1 ()  , l.GetY2 () )
             
         for b in self.bands   :
+            ymin = min ( ymin , b.GetY1 ()  , b.GetY2 () )
+            ymax = max ( ymax , b.GetY1 ()  , b.GetY2 () )
+
+        for b in self.lines   :
             ymin = min ( ymin , b.GetY1 ()  , b.GetY2 () )
             ymax = max ( ymax , b.GetY1 ()  , b.GetY2 () )
             
@@ -688,7 +773,9 @@ class Summary(object) :
 def make_summary ( data               ,
                    average   = None   ,
                    transpose = False  ,
-                   offset    = 0.5    ) :  
+                   offset    = 0.5    ,
+                   vmin      = None   ,
+                   vmax      = None   ) :  
     """Prepare ``summary'' plot
     >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
     ...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
@@ -716,41 +803,57 @@ def make_summary ( data               ,
     graphs  = []
     limits  = []
     labels  = []
-    points  = [] 
+    points  = []
+    lines   = [] 
 
-    ldata = reversed ( data ) if transpose else data 
 
-    for i , record in enumerate ( ldata ) :
+    data = reversed ( data ) if not transpose else data 
 
-        iv = np - i - 1.0 + offset 
 
+    vv = offset + 0.0 
+    for i , record in enumerate ( data ) :
+
+        vv = i + offset 
+        
         if   isinstance ( record  , Record ) :
             
-            point  = record.point ( iv )
+            point  = record.point ( vv )
             
             points.append ( point )
             
-            label = record.label (  iv )
+            label = record.label (  vv )
             if label : labels.append ( label )
-            
+
         elif isinstance ( record , Limit ) :
 
-            arrow , point = record. arrow ( iv ) 
+            arrow , point = record. arrow ( vv ) 
             
             points.append ( point )
         
             limits.append ( arrow  )
             
-            label = record.label (  iv )
+            label = record.label (  vv )
             if label : labels.append ( label )
+            
+        elif isinstance ( record , Separator ) :
 
+            line  = record.line ( vv , vmin , vmax )
+            lines.append ( line )
+            
+        elif record and isinstance ( record , string_rypes ) and record.lower() in ( 'line' , 'sep' , 'separator' ) :
+
+            line = Separator()
+            line = line.line  ( vv , vmin , vmax )
+            
+            lines.append ( line )
+            
         else :
+            
             raise TypeError ( 'Invalid record #%d %s/%s' % ( i , str ( record ) , type ( record ) ) )
 
-        
+                
     assert not average or isinstance ( average , ( VE , Average ) ) ,\
            'Invalid average %s/%s'% ( average , type(average) )   
-
 
     bands = () 
     if isinstance( average , VE ) : average  = Average ( average  )
@@ -762,7 +865,8 @@ def make_summary ( data               ,
     g = Summary ( points = points ,
                   limits = limits ,
                   bands  = bands  ,
-                  labels = labels )  
+                  labels = labels ,
+                  lines  = lines  )  
     
     xmin, xmax  = g.xminmax()
     ymin, ymax  = g.yminmax()
@@ -851,7 +955,9 @@ def draw_summary ( data      = []     ,
     summary = make_summary ( data                  ,
                              average   = average   ,
                              transpose = transpose ,
-                             offset    = offset    )
+                             offset    = offset    ,
+                             vmin      = vmin      ,
+                             vmax      = vmax      ) 
 
     xmin, xmax = summary.xminmax()
     ymin, ymax = summary.xminmax()

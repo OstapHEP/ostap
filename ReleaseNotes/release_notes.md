@@ -2,6 +2,7 @@
    1. improve prints from `PDF.load_params`
    1. add `smooth` function for 1D-histogram 
    1. imporove `rebin*` functoions for 1D-histograms
+   1. add possibility to add separator line to `summary_graphs`
    
 ## Backward incompatible
 
