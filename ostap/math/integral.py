@@ -465,7 +465,7 @@ except ImportError :
                    **kwargs            ) :
         """Use Romberg integration as default method when scipy is not available
         """
-        return romberg ( func          ,
+        return romberg ( fun           ,
                          xmin   = xmin ,
                          xmax   = xmax ,
                          args   = args ,
