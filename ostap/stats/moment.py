@@ -184,6 +184,10 @@ def _om_u5th ( obj ) :
     return Ostap.Math.Moments.unbiased_5th ( obj )  
 
 
+pos_infinity = float('+Inf')
+neg_infinity = float('-Inf')
+
+
 # =============================================================================
 ## get central moment 
 #  @code
@@ -191,34 +195,90 @@ def _om_u5th ( obj ) :
 #  v = m.central_moment() 
 #  v = m.moment() 
 #  @endcode
-def _om_cm2 ( obj , order  ) :
-    """Get a central moment fro the moment-counter 
-    >>> m = ...
-    >>> v = m.central_moment ( 3 ) ## ditto 
-    >>> v = m.cmoment        ( 3 ) ## ditto 
-    """
-    assert isinstance  ( order , integer_types ) and 2<= order , 'Invalid order %s'% order
-    assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
-
-    if order * 2 <= obj.order :
-        ##
-        
-        if   root_info < ( 6 , 18 ) : ## well, actually 6.14
-            T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
-            return T ( obj )
-        elif root_info < ( 6 , 20 ) : 
-            T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
-            M = Ostap.Math.Moments() 
-            return T ( M , obj ) 
-        elif root_info < ( 6 , 22 ) : 
-            T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
-            M = Ostap.Math.Moments() 
-            return T ( M , obj ) 
-        
+if   ( 6 , 31 ) <= root_info :
+    ##
+    def _om_cm2 ( obj , order  ) :
+        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+               'central_moment: invalid order %s/%d' % ( order , obj.order )
+        if 2 <= order and obj.empty() : return neg_infinity
+        return obj.moment_[order]()
+    ##
+elif ( 6 , 22 ) <= root_info :
+    ##
+    def _om_cm2 ( obj , order  ) :
+        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+               'central_moment: invalid order %s/%d' % ( order , obj.order )        
+        if 2 <= order and obj.empty() : return neg_infinity 
         T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
         return T ( obj ) 
+    ##
+elif ( 6 , 20 ) <= root_info :
+    ##
+    def _om_cm2 ( obj , order  ) :
+        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+               'central_moment: invalid order %s/%d' % ( order , obj.order )        
+        if 2 <= order and obj.empty() : return neg_infinity 
+        T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
+        M = Ostap.Math.Moments() 
+        return T ( M , obj ) 
+    ##
+elif ( 6 , 18 ) <= root_info : 
+    ##
+    def _om_cm2 ( obj , order  ) :
+        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+               'central_moment: invalid order %s/%d' % ( order , obj.order )        
+        if 2 <= order and obj.empty() : return neg_infinity 
+        T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
+        M = Ostap.Math.Moments() 
+        return T ( M , obj ) 
+    ##
+else : 
+    ##
+    def _om_cm2 ( obj , order  ) :
+        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+               'central_moment: invalid order %s/%d' % ( order , obj.order )                
+        if 2 <= order and obj.empty() : return neg_infinity 
+        T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
+        return T ( obj ) 
+    
+_om_cm2.__doc__ = \
+   """Get a central moment fro the moment-counter 
+   >>> m = ...
+   >>> v = m.central_moment ( 3 ) ## ditto 
+   >>> v = m.cmoment        ( 3 ) ## ditto 
+   """
 
-    return obj.moment ( order ) 
+
+ 
+## def _om_cm2 ( obj , order  ) :
+##     """Get a central moment fro the moment-counter 
+##     >>> m = ...
+##     >>> v = m.central_moment ( 3 ) ## ditto 
+##     >>> v = m.cmoment        ( 3 ) ## ditto 
+##     """
+##     assert isinstance  ( order , integer_types ) and 2<= order , 'Invalid order %s'% order
+##     assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
+
+##     if order * 2 <= obj.order :
+##         ##
+
+##         if   root_info < ( 6 , 18 ) : ## well, actually 6.14
+##             T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
+##             return T ( obj )
+##         elif root_info < ( 6 , 20 ) : 
+##             T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
+##             M = Ostap.Math.Moments() 
+##             return T ( M , obj ) 
+##         elif root_info < ( 6 , 22 ) : 
+##             T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
+##             M = Ostap.Math.Moments() 
+##             return T ( M , obj ) 
+        
+##         T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
+##         return T ( obj ) 
+
+##     return obj.moment ( order ) 
+
 
 # =============================================================================
 ## get central moment 
@@ -227,34 +287,90 @@ def _om_cm2 ( obj , order  ) :
 #  v = m.central_moment() 
 #  v = m.moment() 
 #  @endcode
-def _om_cm3 ( obj , order  ) :
-    """Get a central moment fro the moment-counter 
+if   ( 6 , 31 ) <= root_info :
+    ##
+    def _om_cm3 ( obj , order  ) :
+        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+               'central_moment: invalid order %s/%d' % ( order , obj.order )
+        if 2 <= order and not obj.ok () : return neg_infinity
+        ##
+        return obj.moment_[order]()
+    ##
+elif ( 6 , 22 ) <= root_info :
+    ##
+    def _om_cm3 ( obj , order  ) :    
+        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+               'central_moment: invalid order %s/%d' % ( order , obj.order )
+        if 2 <= order and not obj.ok () : return neg_infinity
+        ##
+        T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+        return T ( obj )
+    ##
+elif ( 6 , 20 ) <= root_info :
+    ##
+    def _om_cm3 ( obj , order  ) :    
+        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+               'central_moment: invalid order %s/%d' % ( order , obj.order )
+        if 2 <= order and not obj.ok () : return neg_infinity
+        ##
+        T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+        M = Ostap.Math.Moments () 
+        return T ( M , obj ) 
+    ##
+elif ( 6 , 18 ) <= root_info :
+    ##
+    def _om_cm3 ( obj , order  ) :            
+        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+               'central_moment: invalid order %s/%d' % ( order , obj.order )
+        if 2 <= order and not obj.ok () : return neg_infinity
+        ##
+        T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
+        M = Ostap.Math.Moments () 
+        return T ( M , obj ) 
+else:
+    ##
+    def _om_cm3 ( obj , order  ) :            
+        assert isinstance  ( order , integer_types ) and order <= obj.order ,\
+               'central_moment: invalid order %s/%d' % ( order , obj.order )
+        if 2 <= order and not obj.ok () : return neg_infinity
+        ##
+        T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
+        return T ( obj ) 
+    
+
+_om_cm3.__doc__ = \
+    """ Get a central moment fro the moment-counter 
     >>> m = ...
     >>> v = m.central_moment ( 3 ) ## ditto 
     >>> v = m.cmoment        ( 3 ) ## ditto 
     """
-    assert isinstance  ( order , integer_types ) and 2<= order , 'Invalid order %s'% order
-    assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
 
-    if order * 2 <= obj.order :
-        ##
-        if   root_info < ( 6 , 18 )  : ## well, actaully 6.14
-            T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
-            return T ( obj ) 
-        elif root_info < ( 6 , 20 )  : ## well, actaully 6.14
-            T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
-            M = Ostap.Math.Moments () 
-            return T ( M , obj ) 
-        elif root_info < ( 6 , 22 ) : 
-            T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
-            M = Ostap.Math.Moments () 
-            return T ( M , obj ) 
+
+## def _om_cm3 ( obj , order  ) :
+##     """Get a central moment fro the moment-counter 
+##     >>> m = ...
+##     >>> v = m.central_moment ( 3 ) ## ditto 
+##     >>> v = m.cmoment        ( 3 ) ## ditto 
+##     """
+##     assert isinstance  ( order , integer_types ) and 2<= order , 'Invalid order %s'% order
+##     assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
+
+##     if order * 2 <= obj.order :
+##         ##
+##         if   root_info < ( 6 , 18 )  : ## well, actaully 6.14
+##             T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
+##             return T ( obj ) 
+##         elif root_info < ( 6 , 20 )  : ## well, actaully 6.14
+##             T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
+##             M = Ostap.Math.Moments () 
+##             return T ( M , obj ) 
+##         elif root_info < ( 6 , 22 ) : 
+##             T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+##             M = Ostap.Math.Moments () 
+##             return T ( M , obj ) 
         
-        T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
-        return T ( obj ) 
 
-
-    return obj.moment ( order ) 
+##     return obj.moment ( order ) 
 
 # =============================================================================
 ## get a RMS 

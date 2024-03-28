@@ -9,7 +9,8 @@
 """
 # =============================================================================
 import ostap.stats.moment
-from   ostap.core.core import Ostap
+from   ostap.core.core    import Ostap
+import ostap.logger.table as     T 
 import ROOT,random
 # ============================================================================= 
 # logging 
@@ -95,12 +96,76 @@ def test_moment2() :
         if 3 <= i.order : logger.info (' %s : skewness %s ' % ( t , i.skewness () ) )
         if 4 <= i.order : logger.info (' %s : kurtosis %s ' % ( t , i.kurtosis () ) )
 
+# =============================================================================
+def test_moment3() :
+
+    logger = getLogger ( 'test_moment3' )
+
+    m = Ostap.Math.Moment_(20)()
+     
+    for i in range ( 1000000 ) :
+        v = random.gauss ( 0 , 1   ) 
+        m  += v 
+
+    rows = [ ( '' , 'Value' , 'True')  ]
+
+    e0 = 1
+    
+    for i in range ( m.order + 1 ) :
+        
+        e  = 0 if ( 1 == i%2 ) else e0 
+        
+        c = m.central_moment ( i )
+        
+        row = '%d' % i , str ( c  ) , str  ( e )
+        rows.append ( row )
+        
+        if 1 == i%2 : e0 *= i
+                
+    title = 'Central moments'
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rcr' )  
+    logger.info ( '%s:\n%s' % ( title , table  ) ) 
+
+
+# =============================================================================
+def test_moment4() :
+
+    logger = getLogger ( 'test_moment4' )
+
+    m = Ostap.Math.WMoment_(10)()
+     
+    for i in range ( 10000 ) :
+        v = random.gauss ( 0 , 1   )
+        w = random.uniform ( 0.95  , 1.05  )
+        m.add ( v , w )  
+
+    rows = [ ( '' , 'Value' , 'True')  ]
+
+    e0 = 1
+    
+    for i in range ( m.order + 1 ) :
+        
+        e  = 0 if ( 1 == i%2 ) else e0 
+        
+        c = m.central_moment ( i )
+        
+        row = '%d' % i , str ( c  ) , str  ( e )
+        rows.append ( row )
+        
+        if 1 == i%2 : e0 *= i
+                
+    title = 'Central moments'
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rcr' )  
+    logger.info ( '%s:\n%s' % ( title , table  ) ) 
+
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_moment1()
-    test_moment2()
+    test_moment1 ()
+    test_moment2 ()
+    test_moment3 ()
+    test_moment4 ()
         
 # =============================================================================
 ##                                                                      The END 
