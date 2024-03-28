@@ -335,7 +335,8 @@ namespace
     // std::function<std::complex<double>(double)>               __ff0 ;
     // std::function<std::complex<double>(double,double)>        __ff1 ;
     // std::function<std::complex<double>(double,double,double)> __ff2 ;
-    
+    //
+
   };
   // ==========================================================================
 } //                                             The end of anonymous namespace 

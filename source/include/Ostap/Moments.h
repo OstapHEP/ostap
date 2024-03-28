@@ -10,6 +10,10 @@
 #include <array>
 #include <type_traits>
 // ============================================================================
+// ROOT 
+// ============================================================================
+#include "RVersion.h"
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Choose.h"
@@ -140,6 +144,34 @@ namespace  Ostap
       inline long double M ( const unsigned short k ) const
       { return k >  N ? 0.0L : k == N ? this->m_M : this->m_prev.M( k ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      void swap ( Moment_& right )
+      {
+        m_prev.swap ( right.m_prev ) ;
+        std::swap ( m_M , right.m_M ) ;
+      }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the central moment of order N 
+       */ 
+      template <unsigned int K, 
+                typename std::enable_if<(N<2*K)&&(K==N),int>::type = 0 >
+      double moment_ () const
+      { return 0 == this->size() ? 0 : this->m_M / this->size  () ; }
+      // =======================================================================
+      template <unsigned int K, 
+                typename std::enable_if<(N<2*K)&&(K<N),int>::type = 0 >
+      double moment_ () const
+      { return this->m_prev.template moment_<K> () ; }
+      // ======================================================================
+        template <unsigned int K, 
+                  typename std::enable_if<(2*K<=N),int>::type = 0 >
+        std::string moment_ () const
+      { return "ququ" ; }
+        
+      // =======================================================================
     private:
       // ======================================================================
       /// counter of (N-1)th order
@@ -296,6 +328,11 @@ namespace  Ostap
       inline long double M ( const unsigned short k ) const
       { return  0 < k ? 0 : m_size  ; }
       // ======================================================================
+    public:
+      // ======================================================================      
+      void swap ( Moment_& right )
+      { std::swap ( m_size , right.m_size ) ; }
+      // ======================================================================      
     private:
       // ======================================================================
       unsigned long long m_size ;
@@ -316,7 +353,7 @@ namespace  Ostap
       // ======================================================================
       enum _ { order = 1 } ;
       // ======================================================================
-    public :
+    public: 
       // ======================================================================
       /** get the value of the Nth moment 
        *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
@@ -401,6 +438,14 @@ namespace  Ostap
       inline long double M ( const unsigned short k ) const
       { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      void swap ( Moment_& right )
+      {
+        m_prev.swap ( right.m_prev ) ;
+        std::swap ( m_mu , right.m_mu ) ;
+      }
+      // ======================================================================
     private:
       // ======================================================================
       Moment_<0>  m_prev {   } ;
@@ -429,7 +474,12 @@ namespace  Ostap
     inline Moment_<N> operator+ ( const double       a , const Moment_<N>&  b  )
     { return b + a ; }
     // ========================================================================
-
+    /// swap two counters 
+    template <unsigned int N>
+    inline void swap ( Moment_<N>&  a , Moment_<N>&  b  )
+    { a.swap( b ) ; }
+    // ========================================================================
+    
     // ========================================================================
     // Weighted moments 
     // ========================================================================
@@ -554,6 +604,14 @@ namespace  Ostap
        */   
       inline long double M ( const unsigned short k ) const
       { return k >  N ? 0.0L : k == N ? this->m_M : this->m_prev.M( k ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      void swap ( WMoment_& right )
+      {
+        m_prev.swap ( right.m_prev ) ;
+        std::swap ( m_M , right.m_M ) ;
+      }
       // ======================================================================
     private:
       // ======================================================================
@@ -728,6 +786,15 @@ namespace  Ostap
       inline long double M ( const unsigned short k ) const
       { return  0 < k ? 0 : m_w ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      void swap ( WMoment_& right )
+      {
+        std::swap ( m_size , right.m_size ) ;
+        std::swap ( m_w    , right.m_w    ) ;
+        std::swap ( m_w2   , right.m_w2   ) ;
+      }
+      // ======================================================================
     private:
       // ======================================================================
       /// number of entries 
@@ -843,6 +910,14 @@ namespace  Ostap
       inline long double M ( const unsigned short k ) const
       { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      void swap ( WMoment_& right )
+      {
+        m_prev.swap ( right.m_prev ) ;
+        std::swap ( m_mu , right.m_mu ) ;
+      }
+      // ======================================================================
     private:
       // ======================================================================
       WMoment_<0>  m_prev { } ;
@@ -862,7 +937,12 @@ namespace  Ostap
     { WMoment_<N> r  ( a ) ; r += b ; return r ; }
     
     // ========================================================================
-    // Weighted moments 
+    /// swap two counters 
+    template <unsigned int N>
+    inline void swap ( WMoment_<N>&  a , WMoment_<N>&  b  )
+    { a.swap( b ) ; }
+    // ========================================================================
+
     // ========================================================================
     
     // ========================================================================
@@ -894,7 +974,7 @@ namespace  Ostap
        *  @return the unbiased estimate (if number of entries exceeds 2) and 
        *   <code>s_INVALID_MOMENT</code> otherwise 
        */
-      template <unsigned short N, typename std::enable_if<(1<N),int>::type = 0 >
+      template <unsigned short N, typename std::enable_if<(2<=N),int>::type = 0 >
       static inline double unbiased_2nd ( const Moment_<N>& m )
       {
         const unsigned long long n = m.size() ;
@@ -907,7 +987,7 @@ namespace  Ostap
        *  @return the unbiased estimate (if number of entries exceeds 3) and 
        *   <code>s_INVALID_MOMENT</code> otherwise 
        */
-        template <unsigned short N, typename std::enable_if<(2<N),int>::type = 0 >
+        template <unsigned short N, typename std::enable_if<(3<=N),int>::type = 0 >
         static inline double unbiased_3rd ( const Moment_<N>& m )
       {
         const unsigned long long n = m.size() ;
@@ -925,7 +1005,7 @@ namespace  Ostap
        *  @return the unbiased estimate (if number of entries exceeds 4) and 
        *   <code>s_INVALID_MOMENT</code> otherwise
        */
-      template <unsigned short N, typename std::enable_if<(3<N),int>::type = 0 > 
+      template <unsigned short N, typename std::enable_if<(4<=N),int>::type = 0 > 
       static inline double unbiased_4th ( const Moment_<N>& m )
       {
         const unsigned long long n =  m.size() ;
