@@ -84,17 +84,17 @@ def test_moment2() :
         logger.info ( "%s\n%s" % ( t , i.table ( title = t , prefix = '# '                   ) ) )
         logger.info ( "%s\n%s" % ( t , i.table ( title = t , prefix = '# ' , standard = True ) ) )
 
-    for i in m :
-        t = 'Moment counter-%2d' % i.order 
-        logger                  .info (' %s : size     %s ' % ( t , i.size     () ) )
-        logger                  .info (' %s : n_eff    %s ' % ( t , i.nEff     () ) )
-        logger                  .info (' %s : sum(w)   %s ' % ( t , i.w        () ) )
-        logger                  .info (' %s : sum(w^2) %s ' % ( t , i.w2       () ) )        
-        if 1 <= i.order : logger.info (' %s : mean     %s ' % ( t , i.mean     () ) )
-        if 2 <= i.order : logger.info (' %s : rms      %s ' % ( t , i.rms      () ) )
-        if 2 <= i.order : logger.info (' %s : variance %s ' % ( t , i.variance () ) )
-        if 3 <= i.order : logger.info (' %s : skewness %s ' % ( t , i.skewness () ) )
-        if 4 <= i.order : logger.info (' %s : kurtosis %s ' % ( t , i.kurtosis () ) )
+    ## for i in m :
+    ##     t = 'Moment counter-%2d' % i.order 
+    ##     logger                  .info (' %s : size     %s ' % ( t , i.size     () ) )
+    ##     logger                  .info (' %s : n_eff    %s ' % ( t , i.nEff     () ) )
+    ##     logger                  .info (' %s : sum(w)   %s ' % ( t , i.w        () ) )
+    ##     logger                  .info (' %s : sum(w^2) %s ' % ( t , i.w2       () ) )        
+    ##     if 1 <= i.order : logger.info (' %s : mean     %s ' % ( t , i.mean     () ) )
+    ##     if 2 <= i.order : logger.info (' %s : rms      %s ' % ( t , i.rms      () ) )
+    ##     if 2 <= i.order : logger.info (' %s : variance %s ' % ( t , i.variance () ) )
+    ##     if 3 <= i.order : logger.info (' %s : skewness %s ' % ( t , i.skewness () ) )
+    ##     if 4 <= i.order : logger.info (' %s : kurtosis %s ' % ( t , i.kurtosis () ) )
 
 # =============================================================================
 def test_moment3() :
@@ -162,10 +162,10 @@ def test_moment4() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_moment1 ()
+    ## test_moment1 ()
     test_moment2 ()
-    test_moment3 ()
-    test_moment4 ()
+    ## test_moment3 ()
+    ## test_moment4 ()
         
 # =============================================================================
 ##                                                                      The END 

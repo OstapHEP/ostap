@@ -229,6 +229,16 @@ namespace  Ostap
           this->template moment_<K> () / std::pow ( this->moment_<2>() , 0.5 * K ) ;
       }      
       // =======================================================================
+    public:
+      // ======================================================================
+      /// mean value 
+      inline Ostap::Math::ValueWithError
+      mean () const
+      {
+        const double cov2 = ( 2 <= size() ) ? M_<2>() / ( size () * size () ) : 0.0L ;        
+        return Ostap::Math::ValueWithError ( mu () , cov2 ) ;
+      }      
+      // =======================================================================
     private:
       // ======================================================================
       /// counter of (N-1)th order
@@ -557,6 +567,11 @@ namespace  Ostap
       template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
       inline long double std_moment_ () const { return 0 ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// mean value 
+      inline double mean () const { return mu() ; }      
+      // =======================================================================
     private :
       // ======================================================================
       Moment_<0>  m_prev {   } ;
@@ -804,6 +819,16 @@ namespace  Ostap
           this->template moment_<K> () / std::pow ( this->moment_<2>() , 0.5 * K ) ;
       }      
       // ======================================================================
+    public:
+      // ======================================================================
+      /// mean value 
+      inline Ostap::Math::ValueWithError
+      mean () const
+      {
+        const double cov2 = ( ok () && 2 <= size() ) ? M_<2>() / ( w() * nEff() ) : 0.0L ;        
+        return Ostap::Math::ValueWithError ( mu () , cov2 ) ;
+      }      
+      // =======================================================================
     private:
       // ======================================================================
       /// counter of (N-1)th order
@@ -1163,6 +1188,11 @@ namespace  Ostap
       template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
       inline long double std_moment_ () const { return 0 ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// mean value 
+      inline double mean () const { return mu() ; }      
+      // =======================================================================
     private:
       // ======================================================================
       WMoment_<0>  m_prev { } ;

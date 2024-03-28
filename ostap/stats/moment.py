@@ -408,125 +408,122 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
     IM = Ostap.Math.Moments.invalid_moment() 
     
     rows  = []
-    item  = obj
-    while 1 < 2 :
-        
-        order  = item.order
-        moment = item.moment ()  
-        size   = item.size   ()
-        
-        if   0 == order :
+    
+    order  = obj.order
+    size   = obj.size   ()
+    
+    s = obj.size() 
+    if 1.e+6 < s :
+        field , n = pretty_float ( s * 1.0 ) 
+        row = "#entries" , '' if not n else '[10^%+d]' % n , field 
+    else :                
+        row = "#entries" , '' , '%d' % s     
+    rows.append ( row )
+                    
+    if hasattr  ( obj , 'w2' ) :
             
-            if hasattr  ( obj , 'w2' ) :
-                
-                w2 = obj.w2 ()
-                field , n = pretty_float ( w2 ) 
-                row = "sum(w^2)" , '' if not n else '[10^%+d]' % n , field 
-                rows.append ( row )
-                
-            if hasattr  ( obj , 'w' ) :
-                
-                w = obj.w ()
-                field , n = pretty_float ( w ) 
-                row = "sum(w)" , '' if not n else '[10^%+d]' % n , field 
-                rows.append ( row )
-
-            if hasattr  ( obj , 'nEff' ) :
-                
-                neff = obj.nEff()
-                if neff != size and 0 < neff and isfinite ( neff ) :
-                    field , n = pretty_float ( neff ) 
-                    row = "nEff" , '' if not n else '[10^%+d]' % n , field 
-                    rows.append ( row )
-
-            s = obj.size() 
-            if 1.e+6 < s :
-                field , n = pretty_float ( s * 1.0 ) 
-                row = "#entries" , '' if not n else '[10^%+d]' % n , field 
-            else :                
-                row = "#entries" , '' , '%d' % s 
-                
+        w2 = obj.w2 ()
+        field , n = pretty_float ( w2 ) 
+        row = "sum(w^2)" , '' if not n else '[10^%+d]' % n , field 
+        rows.append ( row )
+        
+    if hasattr  ( obj , 'w' ) :
+        
+        w = obj.w ()
+        field , n = pretty_float ( w ) 
+        row = "sum(w)" , '' if not n else '[10^%+d]' % n , field 
+        rows.append ( row )
+        
+    if hasattr  ( obj , 'nEff' ) :
+            
+        neff = obj.nEff()
+        if neff != size and 0 < neff and isfinite ( neff ) :
+            field , n = pretty_float ( neff ) 
+            row = "nEff" , '' if not n else '[10^%+d]' % n , field 
+            rows.append ( row )
+            
+    if 1 <= order and 1 <= size and obj.ok () :
+            
+        v  = obj.mean ()
+        vv = float   ( v ) 
+        if IM != float ( v ) and isfinite ( vv ) : 
+            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            else                     : field , n = pretty_float ( v )
+            row = "mean" , '' if not n else '[10^%+d]' % n , field 
+            rows.append ( row )
+            
+    if 2 <= order and 2 <= size and obj.ok() :
+        
+        v  = obj.rms (    )
+        vv = float   ( v  )                             
+        if isfinite  ( vv ) and IM != vv and 0 <= vv :                    
+            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            else                     : field , n = pretty_float ( v )
+            row = "rms"  , '' if not n else '[10^%+d]' % n , field 
+            rows.append ( row )
+            
+        v  = obj.variance (    )
+        vv = float   ( v  )                             
+        if isfinite  ( vv ) and IM != vv and 0 <= vv :                    
+            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            else                     : field , n = pretty_float ( v )
+            row = "variance"  , '' if not n else '[10^%+d]' % n , field 
+            rows.append ( row )
+            
+    if 3 <= order and 3 <= size and  obj.ok () :
+        
+        v  = obj.skewness ()
+        vv = float   ( v )                         
+        if isfinite ( vv ) and IM != vv :
+            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            else                     : field , n = pretty_float ( v )
+            row = "skewness"  , '' if not n else '[10^%+d]' % n , field 
+            rows.append ( row )
+            
+    elif 4 <= order and 4 <= size and  obj.ok () :
+        
+        v  = obj.kurtosis ()
+        vv = float   ( v )                                     
+        if isfinite ( vv ) and IM != float ( v ) :
+            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            else                     : field , n = pretty_float ( v )
+            row = "kurtosis"  , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
                 
-        elif 1 == order and 1 <= size :
-            
-            v  = obj.mean ()
-            vv = float   ( v ) 
-            if IM != float ( v ) and isfinite ( vv ) : 
-                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
-                else                     : field , n = pretty_float ( v )
-                row = "mean" , '' if not n else '[10^%+d]' % n , field 
-                rows.append ( row )
-                
-        elif 2 == order and 2 <= size :
+    if 5 <= order and 5 <= size and obj.ok() and hasattr  ( obj , 'unbiased_5th' ) : 
 
-            v  = obj.variance ()
-            vv = float   ( v )             
-            if isfinite ( vv ) and IM != vv and 0 <= vv :
-                
-                v  = obj.rms (    )
-                vv = float   ( v  )                             
-                if isfinite  ( vv ) and IM != vv and 0 <= vv :                    
-                    if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
-                    else                     : field , n = pretty_float ( v )
-                    row = "rms"  , '' if not n else '[10^%+d]' % n , field 
-                    rows.append ( row )
-                    
-        elif 3 == order and 3 <= size :
+        v  = obj.unbiased_5th ()
+        vv = float   ( v )                         
+        if isfinite ( vv ) and IM != float ( v ) :
+            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            else                     : field , n = pretty_float ( v )
+            row = "M[5](unb)" , '' if not n else '[10^%+d]' % n , field 
+            rows.append ( row )
 
-            v  = obj.skewness ()
-            vv = float   ( v )                         
-            if isfinite ( vv ) and IM != vv :
-                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
-                else                     : field , n = pretty_float ( v )
-                row = "skewness"  , '' if not n else '[10^%+d]' % n , field 
-                rows.append ( row )
+    for i in range ( 2 , order + 1 ) :
+        
+        if standard  :
             
-        elif 4 == order and 4 <= size :
-            
-            v  = obj.kurtosis ()
-            vv = float   ( v )                                     
-            if isfinite ( vv ) and IM != float ( v ) :
-                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
-                else                     : field , n = pretty_float ( v )
-                row = "kurtosis"  , '' if not n else '[10^%+d]' % n , field 
-                rows.append ( row )
-                
-        elif 5 == order and 5 <= size and obj.order < 10 and hasattr ( obj , 'unbiased_5th' ) and not standard :
-            
-            v  = obj.unbiased_5th ()
-            vv = float   ( v )                         
-            if isfinite ( vv ) and IM != float ( v ) :
-                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
-                else                     : field , n = pretty_float ( v )
-                row = "M[5](unb)" , '' if not n else '[10^%+d]' % n , field 
-                rows.append ( row )
-                
-        elif order <= size and standard : 
-
-            v  = obj.std_moment ( order )
+            v  = obj.std_moment ( i )
             vv = float   ( v )                         
             if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
-                row = "std-M[%s]"  % order , '' if not n else '[10^%+d]' % n , field 
+                row = "std-M[%s]" % i , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
-                
-        elif order <= size : 
 
-            v  = obj.cmoment ( order )
+        else :
+
+            v  = obj.central_moment ( i )
             vv = float   ( v )                         
             if isfinite ( vv ) and IM != float ( v ) :                
                 if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
                 else                     : field , n = pretty_float ( v )
-                row = "M[%s]"  % order , '' if not n else '[10^%+d]' % n , field 
+                row = "M[%s]"  % i  , '' if not n else '[10^%+d]' % n , field 
                 rows.append ( row )
-                
-        if hasattr ( item , 'previous' ) : item = item.previous()
-        else                             : break
+
         
-        
-    rows = tuple ( [ ( '' , '' , 'value') ] +  [ r for r in reversed ( rows ) ] )
+    rows = tuple ( [ ( '' , '' , 'value') ] +  rows  )
         
     import ostap.logger.table as T
 
