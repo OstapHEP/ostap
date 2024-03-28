@@ -1624,8 +1624,8 @@ def var_abs ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.abs ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )     
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 0 ) 
     #
     return Ostap.MoreRooFit.Abs( a, b , name , title )
     #
@@ -1645,8 +1645,8 @@ def var_exp ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.exp ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )          ## RETURN
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 1 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 1 ) 
     #
     return Ostap.MoreRooFit.Exp ( a, b , name , title )
 
@@ -1705,8 +1705,8 @@ def var_erf ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.erf ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )          ## RETURN
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 0 ) 
     #
     return Ostap.MoreRooFit.Erf ( a, b , name , title ) 
 
@@ -1726,8 +1726,8 @@ def var_erfc ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.erfc ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )          ## RETURN
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 1 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 1 ) 
     #
     return Ostap.MoreRooFit.Erf ( a, b , name , title ) 
 
@@ -1748,8 +1748,8 @@ def var_sin ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.sin ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )          ## RETURN 
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 0 ) 
     #
     return Ostap.MoreRooFit.Sin ( a, b , name , title ) 
     
@@ -1769,8 +1769,8 @@ def var_cos ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.cos ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )       ## RETURN
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 1 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 1 ) 
     #
     return Ostap.MoreRooFit.Cos ( a, b , name , title )
 
@@ -1791,8 +1791,8 @@ def var_tan ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.tan ( float ( a ) * float ( b ) )   ##  RETURN
         return ROOT.RooFit.RooConst ( ab )
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 0 ) 
     #
     return Ostap.MoreRooFit.Tan ( a, b , name , title )
 
@@ -1813,8 +1813,8 @@ def var_sinh ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.sinh ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )          ## RETURN 
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 0 ) 
     #
     return Ostap.MoreRooFit.Sinh ( a, b , name , title ) 
     
@@ -1835,8 +1835,8 @@ def var_cosh ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.cosh ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )       ## RETURN
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 1 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 1 ) 
     #
     return Ostap.MoreRooFit.Cosh ( a, b , name , title )
 
@@ -1856,8 +1856,8 @@ def var_tanh ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :        
         ab = math.tanh ( float ( a ) * float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 0 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 0 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 0 ) 
     #
     return Ostap.MoreRooFit.Tanh ( a, b , name , title )
 
@@ -1877,8 +1877,8 @@ def var_sech ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :        
         ab = Ostap.Math.sech ( float ( a ) * float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
-    elif fa and iszero ( fa ) : return ROOT.RooFit.RooConst ( 1 ) 
-    elif fb and iszero ( fb ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 1 ) 
+    elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 1 ) 
     #
     return Ostap.MoreRooFit.Sech ( a, b , name , title )
 
