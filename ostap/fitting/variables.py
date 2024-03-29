@@ -1621,6 +1621,10 @@ def var_abs ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.abs ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )     
@@ -1642,6 +1646,10 @@ def var_exp ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.exp ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )          ## RETURN
@@ -1663,6 +1671,10 @@ def var_log ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.log ( float ( a ) * float ( b ) )       ## RETURN
         return ROOT.RooFit.RooConst ( ab )
@@ -1682,6 +1694,10 @@ def var_log10 ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.log10 ( float ( a ) * float ( b ) )       ## RETURN
         return ROOT.RooFit.RooConst ( ab )
@@ -1702,6 +1718,10 @@ def var_erf ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.erf ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )          ## RETURN
@@ -1723,6 +1743,10 @@ def var_erfc ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.erfc ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )          ## RETURN
@@ -1745,6 +1769,10 @@ def var_sin ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.sin ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )          ## RETURN 
@@ -1766,6 +1794,10 @@ def var_cos ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.cos ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )       ## RETURN
@@ -1788,6 +1820,10 @@ def var_tan ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.tan ( float ( a ) * float ( b ) )   ##  RETURN
         return ROOT.RooFit.RooConst ( ab )
@@ -1810,6 +1846,10 @@ def var_sinh ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.sinh ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )          ## RETURN 
@@ -1832,6 +1872,10 @@ def var_cosh ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.cosh ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )       ## RETURN
@@ -1853,6 +1897,10 @@ def var_tanh ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :        
         ab = math.tanh ( float ( a ) * float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
@@ -1874,6 +1922,10 @@ def var_sech ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :        
         ab = Ostap.Math.sech ( float ( a ) * float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
@@ -1895,6 +1947,10 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.atan2 ( float ( a ) , float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
@@ -1915,6 +1971,10 @@ def var_bessel_J ( x , nu = 0 , name = '' , title = '' ) :
     """
     fx  = isinstance ( x  , num_types )
     fnu = isinstance ( nu , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         val = mve.bessel_J ( float ( fnu ) , float ( fx ) ) 
         return ROOT.RooFit.RooConst ( val )      ## RETURN
@@ -1935,7 +1995,11 @@ def var_bessel_Y ( x , nu = 0 , name = '' , title = '' ) :
     """
     fx  = isinstance ( x  , num_types )
     fnu = isinstance ( nu , num_types )
-    if fa and fb :
+    
+    if fx  : x  = float ( x  )
+    if fnu : nu = float ( nu )
+    
+    if fx and fnu :
         val = mve.bessel_Y ( float ( fnu ) , float ( fx ) ) 
         return ROOT.RooFit.RooConst ( val )      ## RETURN
     return Ostap.MoreRooFit.BesselY ( x , nu , name , title )
@@ -1955,7 +2019,11 @@ def var_bessel_I ( x , nu = 0 , name = '' , title = '' ) :
     """
     fx  = isinstance ( x  , num_types )
     fnu = isinstance ( nu , num_types )
-    if fa and fb :
+    ##
+    if fx  : x  = float ( x  )
+    if fnu : nu = float ( nu )
+    ##
+    if fx and fnu :
         val = mve.bessel_I ( float ( fnu ) , float ( fx ) ) 
         return ROOT.RooFit.RooConst ( val )      ## RETURN
     return Ostap.MoreRooFit.BesselI ( x , nu , name , title )
@@ -1974,8 +2042,12 @@ def var_bessel_K ( x , nu = 0 , name = '' , title = '' ) :
     >>> e  = var_bessel_K ( x , nu  ) 
     """
     fx  = isinstance ( x  , num_types )
-    fnu = isinstance ( nu , num_types )
-    if fa and fb :
+    fnu = isinstance ( nu , num_types )    
+    ##
+    if fx  : x  = float ( x  )
+    if fnu : nu = float ( nu )
+    ##
+    if fx and fnu :
         val = mve.bessel_K ( float ( fnu ) , float ( fx ) ) 
         return ROOT.RooFit.RooConst ( val )      ## RETURN
     return Ostap.MoreRooFit.BesselK ( x , nu , name , title )
@@ -1996,6 +2068,10 @@ def var_max ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = max ( float ( a ) , float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
@@ -2015,6 +2091,10 @@ def var_min ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = min ( float ( a ) , float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
@@ -2033,6 +2113,10 @@ def var_gamma ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.gamma ( float ( a ) * float ( b ) )      
         return ROOT.RooFit.RooConst ( ab )           ## RETURN 
@@ -2052,6 +2136,10 @@ def var_lgamma ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = math.lgamma ( float ( a ) * float ( b ) )      
         return ROOT.RooFit.RooConst ( ab )           ## RETURN 
@@ -2071,6 +2159,10 @@ def var_igamma ( a , b = 1 , name = '' , title = '' ) :
     """
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
+    
+    if fa : a = float ( a )
+    if fb : b = float ( b )
+    
     if fa and fb :
         ab = Ostap.Math.igamma ( float ( a ) * float ( b ) )
         return ROOT.RooFit.RooConst ( ab )              ## RETURN 
@@ -2093,6 +2185,9 @@ def var_sum ( v1 , v2 , name = '' , title = '' ) :
     """
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )
+        
+    if f1 : v1 = float ( v1 )
+    if f2 : v2 = float ( v2 )
     
     if f1 and f2 :
         r = float ( v1 ) + float ( v2 ) 
@@ -2118,6 +2213,10 @@ def var_sub ( v1 , v2 , name = '' , title = '' ) :
     """
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
+        
+    if f1 : v1 = float ( v1 )
+    if f2 : v2 = float ( v2 )
+    
     if f1 and f2 :
         r = float ( v1 ) - float ( v2 ) 
         return ROOT.RooFit.RooConst ( r )                 ## RETURN    
@@ -2142,6 +2241,10 @@ def var_mul ( v1 , v2 , name = '' , title = '' ) :
     """
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
+        
+    if f1 : v1 = float ( v1 )
+    if f2 : v2 = float ( v2 )
+    
     if f1 and f2 :
         r = float ( v1 ) * float ( v2 ) 
         return ROOT.RooFit.RooConst ( r )                 ## RETURN
@@ -2167,6 +2270,10 @@ def var_div ( v1 , v2 , name = '' , title = '' ) :
     """
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
+        
+    if f1 : v1 = float ( v1 )
+    if f2 : v2 = float ( v2 )
+    
     if f1 and f2 :
         r = float ( v1 ) / float ( v2 ) 
         return ROOT.RooFit.RooConst ( r )                 ## RETURN
@@ -2190,6 +2297,10 @@ def var_pow ( v1 , v2 , name = '' , title = '' ) :
     """
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
+        
+    if f1 : v1 = float ( v1 )
+    if f2 : v2 = float ( v2 )
+    
     if f1 and f2 :
         r = float ( v1 ) ** float ( v2 ) 
         return ROOT.RooFit.RooConst ( r )                 ## RETURN    
@@ -2215,6 +2326,10 @@ def var_fraction ( a , b , name = '' , title = '' ) :
     """
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
+        
+    if f1 : v1 = float ( v1 )
+    if f2 : v2 = float ( v2 )
+    
     if f1 and f2 :
         r = float ( v1) / ( float ( v1 ) + float ( v1 ) )  
         return ROOT.RooFit.RooConst ( r )                 ## RETURN    
@@ -2239,6 +2354,10 @@ def var_asymmetry ( a , b , name = '' , title = '' ) :
     """
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
+        
+    if f1 : v1 = float ( v1 )
+    if f2 : v2 = float ( v2 )
+    
     if f1 and f2 :
         r = ( float ( v1 ) - float ( v2 ) ) / ( float ( v1 ) + float ( v2 ) )  ## 
         return ROOT.RooFit.RooConst ( r )                                ## RETURN    
