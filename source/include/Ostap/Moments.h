@@ -1416,18 +1416,6 @@ namespace  Ostap
         return VE ( muo , cov2 ) ;
       }
       // ======================================================================
-      /** get the central moment of order \f$ N \f$  with 
-       *  the estimate of the uncertainty (with \f$O(n^{-2})\f$~precision
-       *  - the error estimate is possible only when \f$ 2N \le K \f$!
-       *  @aparam m counter 
-       *  @return moment with uncertainty for non-empty counter 
-       *          <code>s_INVALID_MOMENT</code> for empty counters 
-       */
-      template <unsigned short N, unsigned short K,
-                typename std::enable_if<(1<N)&&(2*N<=K),int>::type = 0 >
-      static inline VE _central_moment_2 ( const Moment_<K>& m )
-      { return central_moment<N> ( m ) ; }
-      // ======================================================================
       /** get the standartized moment of order 1 
        */
       template <unsigned short N, unsigned short K,
@@ -1558,18 +1546,6 @@ namespace  Ostap
         //
         return VE ( muo , cov2 ) ;
       }
-      // ======================================================================
-      /** get the central moment of order \f$ N \f$  with 
-       *  the estimate of the uncertainty (with \f$O(n^{-2})\f$~precision
-       *  - the error estimaet is possible only when \f$ 2N \le K \f$!
-       *  @aparam m counter 
-       *  @return moment with uncertainty for non-empty counter 
-       *          <code>s_INVALID_MOMENT</code> for empty counters 
-       */
-      template <unsigned short N, unsigned short K,
-                typename std::enable_if<(1<N)&&(2*N<=K),int>::type = 0 >
-      static inline VE _central_moment_3 ( const WMoment_<K>& m )
-      { return central_moment<N> ( m ) ; }
       // ======================================================================
       /** get the standartized moment of order 1 
        */
