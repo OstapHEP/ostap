@@ -2288,13 +2288,21 @@ namespace Ostap
         const std::string&  title = ""  ) 
         : BesselJ ( name , title , x , nu )
       {}
-      /// constructor with two variables
+      /// constructor with one variables
       BesselJ 
       ( RooAbsReal&         x           , 
         const double        nu          ,
         const std::string&  name  = ""  , 
         const std::string&  title = ""  ) 
         : BesselJ ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variables
+      BesselJ 
+      ( const double        x           ,
+        RooAbsReal&         nu          , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselJ ( name , title , RooFit::RooConst( x ) , nu )
       {}
       /// constructor with one variable
       BesselJ 
@@ -2303,6 +2311,14 @@ namespace Ostap
         RooAbsReal&        x     ,
         const double       nu    )
         : BesselJ ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variable
+      BesselJ 
+      ( const std::string& name  , 
+        const std::string& title , 
+        const double       x     ,
+        RooAbsReal&        nu    )
+        : BesselJ ( name , title , RooFit::RooConst ( x ) , nu )
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization)
@@ -2350,13 +2366,21 @@ namespace Ostap
         const std::string&  title = ""  ) 
         : BesselY  ( name , title , x , nu )
       {}
-      /// constructor with two variables
+      /// constructor with one variables
       BesselY 
       ( RooAbsReal&         x           , 
         const double        nu          ,
         const std::string&  name  = ""  , 
         const std::string&  title = ""  ) 
         : BesselY ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variables
+      BesselY 
+      ( const double        x          ,
+        RooAbsReal&         nu         , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselY ( name , title , RooFit::RooConst ( x ) , nu )
       {}
       /// constructor with one variable
       BesselY 
@@ -2365,6 +2389,14 @@ namespace Ostap
         RooAbsReal&        x     ,
         const double       nu    )
         : BesselY ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variable
+      BesselY 
+      ( const std::string& name  , 
+        const std::string& title , 
+        const double       x     ,
+        RooAbsReal&        nu    )
+        : BesselY ( name , title , RooFit::RooConst ( x ) , nu )
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization)
@@ -2412,13 +2444,21 @@ namespace Ostap
         const std::string&  title = ""  ) 
         : BesselI  ( name , title , x , nu )
       {}
-      /// constructor with two variables
+      /// constructor with one variables
       BesselI 
       ( RooAbsReal&         x           , 
         const double        nu          ,
         const std::string&  name  = ""  , 
         const std::string&  title = ""  ) 
         : BesselI ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variables
+      BesselI 
+      ( const double        x          ,
+        RooAbsReal&         nu         , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselI ( name , title , RooFit::RooConst ( x ) , nu )
       {}
       /// constructor with one variable
       BesselI 
@@ -2427,6 +2467,14 @@ namespace Ostap
         RooAbsReal&        x     ,
         const double       nu    )
         : BesselI ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variable
+      BesselI 
+      ( const std::string& name  , 
+        const std::string& title , 
+        const double       x     ,
+        RooAbsReal&        nu    )
+        : BesselI ( name , title , RooFit::RooConst ( x ) , nu )
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization)
@@ -2474,13 +2522,21 @@ namespace Ostap
         const std::string&  title = ""  ) 
         : BesselK  ( name , title , x , nu )
       {}
-      /// constructor with two variables
+      /// constructor with one variables
       BesselK 
       ( RooAbsReal&         x           , 
         const double        nu          ,
         const std::string&  name  = ""  , 
         const std::string&  title = ""  ) 
         : BesselK ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variables
+      BesselK 
+      ( const double        x          ,
+        RooAbsReal&         nu         , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : BesselK ( name , title , RooFit::RooConst ( x ) , nu )
       {}
       /// constructor with one variable
       BesselK 
@@ -2489,6 +2545,14 @@ namespace Ostap
         RooAbsReal&        x     ,
         const double       nu    )
         : BesselK ( name , title , x , RooFit::RooConst ( nu ) )
+      {}
+      /// constructor with one variable
+      BesselK 
+      ( const std::string& name  , 
+        const std::string& title , 
+        const double       x     ,
+        RooAbsReal&        nu    )
+        : BesselK ( name , title , RooFit::RooConst ( x ) , nu )
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization)
