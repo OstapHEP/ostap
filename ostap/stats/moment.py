@@ -218,10 +218,11 @@ elif ( 6 , 20 ) <= root_info :
     def _om_cm2 ( obj , order  ) :
         assert isinstance  ( order , integer_types ) and order <= obj.order ,\
                'central_moment: invalid order %s/%d' % ( order , obj.order )        
-        if 2 <= order and obj.empty() : return neg_infinity 
-        T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
-        M = Ostap.Math.Moments() 
-        return T ( M , obj ) 
+        if 2 <= order and obj.empty() : return neg_infinity
+        return obj.moment ( order ) 
+        ## T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
+        ## M = Ostap.Math.Moments() 
+        ## return T ( M , obj ) 
     ##
 elif ( 6 , 18 ) <= root_info : 
     ##
@@ -314,10 +315,11 @@ elif ( 6 , 20 ) <= root_info :
         assert isinstance  ( order , integer_types ) and order <= obj.order ,\
                'central_moment: invalid order %s/%d' % ( order , obj.order )
         if 2 <= order and not obj.ok () : return neg_infinity
+        return obj.moment ( order ) 
         ##
-        T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
-        M = Ostap.Math.Moments () 
-        return T ( M , obj ) 
+        ## T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+        ## M = Ostap.Math.Moments () 
+        ## return T ( M , obj ) 
     ##
 elif ( 6 , 18 ) <= root_info :
     ##
