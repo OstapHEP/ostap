@@ -195,7 +195,8 @@ neg_infinity = float('-Inf')
 #  v = m.central_moment() 
 #  v = m.moment() 
 #  @endcode
-if   ( 6 , 31 ) <= root_info :
+if   ( 6 , 22 ) <= root_info :
+## if   ( 6 , 31 ) <= root_info :
     ##
     def _om_cm2 ( obj , order  ) :
         assert isinstance  ( order , integer_types ) and order <= obj.order ,\
@@ -287,7 +288,8 @@ _om_cm2.__doc__ = \
 #  v = m.central_moment() 
 #  v = m.moment() 
 #  @endcode
-if   ( 6 , 31 ) <= root_info :
+if   ( 6 , 22 ) <= root_info :
+##  if   ( 6 , 31 ) <= root_info :
     ##
     def _om_cm3 ( obj , order  ) :
         assert isinstance  ( order , integer_types ) and order <= obj.order ,\
