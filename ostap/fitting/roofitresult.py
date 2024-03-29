@@ -45,6 +45,7 @@ def _rfr_params_ (self , float_only = True ) :
     >>> p0     = params()['A'][0]  ## get the value
     >>> p0s    = params()['A'][1]  ## get the parameter itself     
     """
+
     pars  = self.floatParsFinal()
     pars_ = {}
     for p in pars :
