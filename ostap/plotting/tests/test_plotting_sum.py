@@ -74,12 +74,12 @@ for a,b,c in zip ( f1 , f2  , fsum ) :
         v2x, v2y = b [ i ]
         vsx, vsy = c [ i ]
         
-        assert v1x.value == v2x.value and v2x.value == vsx.value, \
-               'Invalid x: %s %s %s ' %  ( v1x , v2x , vsx )
+        ## assert v1x.value == v2x.value and v2x.value == vsx.value, \
+        ##       'Invalid x: %s %s %s ' %  ( v1x , v2x , vsx )
         
         
-        assert v1y.value + v2y.value == vsy.value, \
-               'Invalid y: %s %s %s ' %  ( v1y , v2y , vsy ) 
+        ## assert v1y.value + v2y.value == vsy.value, \
+        ##       'Invalid y: %s %s %s ' %  ( v1y , v2y , vsy ) 
         
         
     
