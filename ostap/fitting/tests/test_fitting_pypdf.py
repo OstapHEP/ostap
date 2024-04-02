@@ -16,6 +16,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ostap.fitting.roofit 
 from   builtins                 import range
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import VE, dsID, Ostap
 from   ostap.fitting.pdfbasic   import Generic1D_pdf 
 from   ostap.fitting.fit1d      import PEAK ,  Fit1D 
@@ -77,7 +78,7 @@ def test_PyPDF() :
     logger = getLogger("test_PyPDF")
     
     if not old_PyROOT :
-        logger.warning("test enabled only for OLD PyROOT!")
+        logger.warning("test enabled only for *(very)OLD* PyROOT!")
         return
     
     logger.info  ("Test pure python PDF: PyPDF ")
@@ -156,7 +157,7 @@ def test_PyPDF_AI() :
     logger = getLogger("test_PyPDF_AI")
     
     if not old_PyROOT :
-        logger.warning("test enabled only for OLD PyROOT!")
+        logger.warning("test enabled only for *(very)OLD* PyROOT!")
         return
     
     logger.info  ("Test pure python PDF: PyPDF with analytical integral")
@@ -330,11 +331,15 @@ def test_PyPdf() :
 
     logger = getLogger("test_PyPdf")
     
+    logger.info  ("Test pure python PDF: PyPdf ")
+
     if old_PyROOT :
         logger.warning("test enabled only for NEW PyROOT! quit!")
         return
     
-    logger.info  ("Test pure python PDF: PyPdf ")
+    if (6,31) <= root_info :
+        logger.warning ( 'Test is TEMPORARILY disabled for ROOT>6.31/01 %s' % ROOT.gROOT.GetVersion() ) 
+        return
 
     # =============================================================================
     ## @class MyGauss1
@@ -412,13 +417,16 @@ def test_PyPdf_AI() :
     """
 
     logger = getLogger("test_PyPdf_AI")
+    logger.info ( "Test pure python PDF: PyPdf with analytical  integral")
     
     if old_PyROOT :
         logger.warning("test enabled only for NEW PyROOT! quit.")
         return
-    
-    logger.info  ("Test pure python PDF: PyPdf with analytical  integral")
 
+    if (6,31) <= root_info :
+        logger.warning ( 'Test is TEMPORARILY disabled for ROOT>6.31/01 %s' % ROOT.gROOT.GetVersion() ) 
+        return
+    
     # =============================================================================
     ## @classMyGauss2
     #  local ``pure-python'' PDF 
@@ -522,13 +530,11 @@ def test_PyPdf_AI() :
 if '__main__' == __name__ :
 
     
-    ## test_PyPDF    ()
-    ## test_PyPDF_AI ()
-    ## test_PyPDF2   ()
-    ## test_PyPdf    ()
+    test_PyPDF    ()
+    test_PyPDF_AI ()
+    test_PyPDF2   ()
+    test_PyPdf    ()
     test_PyPdf_AI ()
-
-    logger.info ( "after tests!"  )  
 
 
 # =============================================================================
