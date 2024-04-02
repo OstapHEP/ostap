@@ -47,7 +47,9 @@ def test_stats_blue1 () :
         logger.info ( 'Component %d: %.3f +/- %.3f ' % ( i + 1 , c.value() , c.error() ) )
 
     logger.info ( 'Combined   : %.3f +/- %.3f = (%.3f +/- %.3f +/- %.3f) ' % ( r.value() , r.error()  , r.value() , stat, syst ) ) 
-    logger.info ( 'Weights    : %s' %  cmb.weights ) 
+    logger.info ( 'Weights    : %s'       %  cmb.weights ) 
+    logger.info ( 'chi2/ndf   : %.2f/%d'  %  ( cmb.chi2 , cmb.D ) ) 
+    logger.info ( 'p-value    : %.2f[%%]' %  ( cmb.pvalue * 100 ) ) 
 
 # =============================================================================
 def test_stats_blue2 () :
@@ -89,7 +91,9 @@ def test_stats_blue2 () :
         logger.info ( 'Component %d: %.3f +/- %.3f ' % ( i + 1 , c.value() , c.error() ) )
         
     logger.info ( 'Combined   : %.3f +/- %.3f = (%.3f +/- %.3f +/- %.3f) ' % ( r.value() , r.error()  , r.value() , stat, syst ) ) 
-    logger.info ( 'Weights    : %s' %  cmb.weights ) 
+    logger.info ( 'Weights    : %s'   %  cmb.weights ) 
+    logger.info ( 'chi2/ndf   : %.2f/%d'  %  ( cmb.chi2 , cmb.D ) ) 
+    logger.info ( 'p-value    : %.2f[%%]' %  ( cmb.pvalue * 100 ) ) 
         
 
 # =============================================================================

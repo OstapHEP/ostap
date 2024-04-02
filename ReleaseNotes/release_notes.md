@@ -4,6 +4,7 @@
    1. imporove `rebin*` functoions for 1D-histograms
    1. add possibility to add separator line to `summary_graphs`
    1. fix for new ROOT>6.31 few issues with std::string <--> const char*
+   1.  imporve a bit BLUE
    
 ## Backward incompatible
 

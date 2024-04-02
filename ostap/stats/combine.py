@@ -116,21 +116,23 @@ class Combine(object) :
         DATA     = Ostap.Vector       ( N ) 
         COV2     = Ostap.SymMatrix    ( N ) 
 
-        self.__cov2 = None  
-        if isinstance  ( data , DATA ) : self.__data = data
+        mycov2 = None
+        
+        if isinstance  ( data , DATA ) : mydata = data
         else :
-            self.__data = DATA() 
+            mydata = DATA () 
             for i in range ( N )  :
                 e  = data[i]
                 if hasattr ( e , 'cov2' ) and 0 < e.cov2() :
-                    if not self.__cov2 : self.__cov2 = COV2() 
-                    self.__cov2[i,i] = e.cov2()  
-                self.__data[i] = data[i]
+                    if mycov2 is None : mycov2 = COV2() 
+                    mycov2 [ i , i ] = e.cov2()
+  
+                mydata[i] = data[i]
 
         self.__covs = [] 
         ## add covariance matrix
-        if not self.__cov2 : self.__cov2 =        COV2 (             )
-        else               : self.__covs.append ( COV2 ( self.__cov2 )  )
+        if  mycov2 is None : mycov2 =             COV2 (          )
+        else               : self.__covs.append ( COV2 ( mycov2 ) )
 
         _covs = ( cov2, ) + args
         for c in _covs :
@@ -138,36 +140,69 @@ class Combine(object) :
             c1 = COV2()
             c1 = c1 + c 
 
-            self.__cov2 = self.__cov2 + c1               
+            mycov2 = mycov2 + c1               
             self.__covs.append ( COV2 ( c1 ) )
 
-        self.__covs   = tuple ( self.__covs ) 
-        self.combiner = COMBINER( self.data , self.cov2 )
-
+        self.__covs     = tuple ( self.__covs ) 
+        self.__combiner = COMBINER( mydata , mycov2 )
+        self.__result   = None
+        self.__chi2     = None
+        self.__pvalue   = None  
+        self.__D        = N
+        
     @property
-    def data ( self )  :
-        """``data'' : input data/measurements"""
-        return self.__data
-
+    def D ( self ) :
+        """``D'' : dimension of the problem """
+        return self.__D
+    
+    @property
+    def combiner ( self  ) :
+        """``combiner'' : BLUE combiner"""
+        return self.__combiner
+    
     @property
     def covs ( self )  :
         """``covs'' : covariance matrices"""
         return self.__covs
     
     @property
+    def data ( self )  :
+        """``data'' : input data/measurements"""
+        return self.combiner.data () 
+
+    @property
     def cov2 ( self )  :
         """``cov2'' : overall covariance matrix"""
-        return self.__cov2 
+        return self.combiner.cov2 () 
 
     @property
     def result ( self ) :
         """``result'' : the final  result"""
-        return self.combiner.result  ()
+        if self.__result is None  :
+            self.__result = self.combiner.result ()
+        return self.__result 
     
     @property 
     def weights ( self ) :
         """``weights'' : the weights"""
         return self.combiner.weights ()
+
+    @property
+    def chi2   ( self ) :
+        """`chi2' : get the total chi2"""
+        if self.__chi2 is None :
+            self.__chi2 = self.combiner.chi2()
+        return self.__chi2
+
+    @property
+    def pvalue ( self ) :
+        """``pvalue''  : get the p-value"""
+        if self.__pvalue is None  :
+            N = self.D
+            x = self.chi2
+            self.__pvalue = Ostap.Math.gamma_star ( 0.5 * N , 0.5 * x ) 
+        return self.__pvalue 
+    
 
     # =========================================================================
     ## get the decomposition of the final variances 

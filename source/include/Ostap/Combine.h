@@ -19,6 +19,7 @@
 #include "Ostap/MatrixUtils.h"
 #include "Ostap/ValueWithError.h"
 #include "Ostap/SVectorWithError.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 /** @file Ostap/Combine.h 
  *  Helper utility to combine   correlated measurements:
@@ -59,7 +60,9 @@ namespace  Ostap
      *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-09-28
      */
-    template <unsigned int D, class T=double>
+    template <unsigned int D,
+              class T=double,
+              typename std::enable_if<(D>1),int>::type = 1 >
     class Combine
     {
     public:
@@ -71,98 +74,63 @@ namespace  Ostap
     public:
       // =======================================================================
       // constructor from the vector of data and cov matrix 
-      Combine ( const Data&       data , 
-                const Covariance& cov2 ) 
+      Combine
+      ( const Data&       data , 
+        const Covariance& cov2 ) 
         : m_data ( data ) 
-        , m_cov2 ( cov2 ) 
+        , m_cov2 ( cov2 )
+        , m_vxi  ()  
         , m_w    () 
-      { m_w = this->getWeights() ; }
-      // ======================================================================
-      // constructor from the vector of data and cov matrices 
-      Combine ( const Data&       data , 
-                const Covariance& cov1 , 
-                const Covariance& cov2 )
-        : m_data ( data ) 
-        , m_cov2 ( cov1 + cov2  ) 
-        , m_w    () 
-      { m_w = this->getWeights() ; }
-      // ======================================================================
-      // constructor from the vector of data and cov matrices 
-      Combine ( const Data&       data , 
-                const Covariance& cov1 , 
-                const Covariance& cov2 ,
-                const Covariance& cov3 )
-        : m_data ( data ) 
-        , m_cov2 ( cov1 + cov2 + cov3 ) 
-        , m_w    () 
-      { m_w = this->getWeights() ; }
-      // ======================================================================
-      // constructor from the vector of data and cov matrices 
-      Combine ( const Data&       data , 
-                const Covariance& cov1 , 
-                const Covariance& cov2 ,
-                const Covariance& cov3 ,
-                const Covariance& cov4 )
-        : m_data ( data ) 
-        , m_cov2 ( cov1 + cov2 + cov3 + cov4 ) 
-        , m_w    () 
-      { m_w = this->getWeights() ; }
+      {
+        if ( Ostap::Math::inverse ( m_cov2 , m_vxi ) ) 
+        {
+          Ostap::throwException ( "Covariance matrix is not innvertile!" ,
+                                  "Ostap::Math::Combine<>" , 730 ) ;
+        }
+        const Data& vone = this->units() ;
+        m_w = ( m_vxi * vone ) / ROOT::Math::Similarity( m_vxi , vone ) ; 
+      }
       // ======================================================================
       // constructor from the data
       Combine ( const DataWithError& data ) 
-        : m_data ( data.value() ) 
-        , m_cov2 ( data.cov2 () ) 
-        , m_w    () 
-      { m_w = this->getWeights() ; }
+        : Combine ( data.value() , data.cov2() )
+      {}
       // ======================================================================
-      // constructor from the vector of data and cov matrix 
-      Combine ( const std::array<double,D>& data , 
-                const Covariance&           cov2 ) 
-        : m_data ( data.begin() , data.end ()  ) 
-        , m_cov2 ( cov2 ) 
-        , m_w    () 
-      { m_w = this->getWeights() ; }
+      Combine
+      ( const std::array<double,D>& data , 
+        const Covariance&           cov2 ) 
+        : Combine ( Data ( data.begin() , data.end() ), cov2 )
+      {}
+      // ======================================================================
+      // constructor from the vector of data and cov matrices
+      template <typename ... ARGS> 
+      Combine
+      ( const Data&       data , 
+        const Covariance& cov1 , 
+        const Covariance& cov2 ,
+        ARGS...           args ) 
+        : Combine ( data , cov1 + cov2 , args... )
+      {}
+      // ======================================================================
+      // constructor from the data
+      template <typename ... ARGS> 
+      Combine
+      ( const DataWithError& data ,
+        ARGS...              args ) 
+        : Combine ( data.value() , data.cov2() , args... )
+      {}
+      // ======================================================================
+      // constructor from the data
+      template <typename ... ARGS> 
+      Combine
+      ( const std::array<double,D>& data , 
+        const Covariance&           cov2 ,
+        ARGS...                     args )
+        : Combine ( Data ( data.begin() , data.end() ), cov2 , args... )
+      {}
       // ======================================================================
     public:
       // ======================================================================
-      /// calculate weights
-      Data getWeights() const 
-      {
-        // the inverse covariance matrix 
-        Covariance vxi ;
-        if ( Ostap::Math::inverse ( m_cov2 , vxi ) ) 
-        { 
-          /* try to regularize the matrix */
-          const double tr    = std::abs ( Ostap::Math::trace           ( m_cov2 ) ) / D     ;
-          const double mnd   = std::abs ( Ostap::Math::min_diagonal    ( m_cov2 ) )         ;
-          const double mxd   = std::abs ( Ostap::Math::max_diagonal    ( m_cov2 ) ) / D     ;
-          const double mnad  = std::abs ( Ostap::Math::minabs_diagonal ( m_cov2 ) )         ;
-          const double mxad  = std::abs ( Ostap::Math::maxabs_diagonal ( m_cov2 ) ) / D     ;
-          const double mn    = std::abs ( Ostap::Math::min_element     ( m_cov2 ) ) / D / D ;
-          const double mx    = std::abs ( Ostap::Math::max_element     ( m_cov2 ) ) / D / D ;
-          const double mna   = std::abs ( Ostap::Math::minabs_element  ( m_cov2 ) ) / D / D ;
-          const double mxa   = std::abs ( Ostap::Math::maxabs_element  ( m_cov2 ) ) / D / D ;
-          //
-          double small = 1.e-4 * mxa ;
-          //
-          if ( 0 < tr   )  {  small = std::min ( small , 1.e-3 * tr   ) ; }
-          if ( 0 < mnd  )  {  small = std::min ( small , 1.e-3 * mnd  ) ; }
-          if ( 0 < mxd  )  {  small = std::min ( small , 1.e-3 * mxd  ) ; }
-          if ( 0 < mnad )  {  small = std::min ( small , 1.e-3 * mnad ) ; }
-          if ( 0 < mxad )  {  small = std::min ( small , 1.e-3 * mxad ) ; }
-          if ( 0 < mn   )  {  small = std::min ( small , 1.e-3 * mn   ) ; }
-          if ( 0 < mx   )  {  small = std::min ( small , 1.e-3 * mx   ) ; }
-          if ( 0 < mna  )  {  small = std::min ( small , 1.e-3 * mna  ) ; }
-          if ( 0 < mxa  )  {  small = std::min ( small , 1.e-3 * mxa  ) ; }
-          //
-          Covariance fixed ( m_cov2 ) ;
-          for ( unsigned int i = 0 ; i < D ; ++i ) { fixed ( i, i ) += small ; }
-          Ostap::Math::inverse ( fixed , vxi ) ;
-        }
-        //
-        const Data& vone = this->units() ;
-        return ( vxi * vone ) / ROOT::Math::Similarity( vxi , vone ) ;
-      }
       /// the main method:  get a combined value using the calculated weights
       Ostap::Math::ValueWithError result () const 
       { 
@@ -171,7 +139,18 @@ namespace  Ostap
         return Ostap::Math::ValueWithError ( r , e2 ) ;
       }
       /// get the calculated weights
-      const Data& weights() const { return m_w ; }
+      const Data&       weights () const { return m_w    ; }
+      /// get the data
+      const Data&       data    () const { return m_data ; }
+      /// get the covarinace 
+      const Covariance& cov2    () const { return m_data ; }
+      /// get the chi2
+      double            chi2    () const
+      {
+        const double r  = ROOT::Math::Dot        ( m_data , m_w ) ;
+        Data delta = m_data - r  ;
+        return ROOT::Math::Similarity ( m_vxi , delta ) ;
+      }
       // ======================================================================
     private:
       // ======================================================================
@@ -186,14 +165,16 @@ namespace  Ostap
     private:
       // ======================================================================
       /// input data vector 
-      Data        m_data  ;            // input data vector 
+      Data        m_data  {} ;            // input data vector 
       /// the overall covariance matrix 
-      Covariance  m_cov2  ;            // the overall covariance matrix
+      Covariance  m_cov2  {} ;            // the overall covariance matrix
       // ======================================================================
     private:
       // ======================================================================
+      /// inverse  covariance matrix 
+      Covariance  m_vxi   {} ;            // inverse covariance matrix
       /// weights 
-      Data m_w            ; // weights 
+      Data        m_w     {} ; // weights
       // ======================================================================
     } ;  
     // ========================================================================
