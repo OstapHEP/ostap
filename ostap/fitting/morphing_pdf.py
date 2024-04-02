@@ -182,6 +182,8 @@ class MorphingN1_pdf (PDF1) :
             morph_var                ,
             "mu_%s"           % name ,
             "morphing mu(%s)" % name , False , mu_min , mu_max )
+        if not morph_var :
+            self.__mu.setVal ( 0.5 * ( mu_min + mu_max ) )
 
         ## vector of morphing values 
         muvct  = ROOT.TVectorD ( len ( self.pdflist ) )
@@ -193,16 +195,35 @@ class MorphingN1_pdf (PDF1) :
         self.__morph_pdflst      = pdflst        
         self.__morph_observables = ROOT.RooArgList (  self.xvar )
 
-        ## create the PDF  
-        self.pdf = ROOT.RooMomentMorph (
-            self.roo_name ( 'morph_' ) ,
-            "Morphing %s" % self.name  , 
-            self.mu                    , ## morphing variable
-            self.__morph_observables   , ## observables 
-            self.__morph_pdflst        , ## ordered list of PDFs  
-            muvct                      , ## values of morhing parameter 
-            self.setting               ) ## morphing setting 
-
+        ## create the PDF
+        if ( 6 , 31 ) <= root_info :            
+            self.__morph = ROOT.RooMomentMorphFuncND (
+                self.roo_name ( 'morph1d_' )   ,
+                "Morphing 1D %s" % self.name  , 
+                self.mu                    , ## morphing variables 
+                self.__morph_observables   , ## observables
+                self.__morph_pdflst        , ## ordered list of PDFs  
+                muvct                      , ## values of morhing parameter 
+                self.setting               ) ## morphing setting 
+            self.__morph.setPdfMode()
+            ## create the PDF  
+            self.pdf = ROOT.RooWrapperPdf (
+                self.roo_name ( 'morph2_' )   ,
+                "Morphing 1D %s" % self.name  ,
+                self.__morph , True 
+                )
+            
+        else :
+            self.pdf = ROOT.RooMomentMorph (
+                self.roo_name ( 'morph1d_' ) ,
+                "Morphing %s" % self.name  , 
+                self.mu                    , ## morphing variable
+                self.__morph_observables   , ## observables 
+                self.__morph_pdflst        , ## ordered list of PDFs  
+                muvct                      , ## values of morhing parameter 
+                self.setting               ) ## morphing setting 
+            
+            
         #
         self.config = {
             'name'      : self.name             ,
@@ -288,13 +309,10 @@ class MorphingN2_pdf (PDF1) :
 
         assert 2 <= len ( v1ps ) and 2 <= len ( v2ps ) , 'Invalid number of bins!'
 
-        v1ps = list ( v1ps ) 
-        v2ps = list ( v2ps )
+        v1ps = tuple ( sorted ( v1ps ) )
+        v2ps = tuple ( sorted ( v2ps ) ) 
 
-        v1ps.sort ()
-        v2ps.sort ()
-
-        assert  len ( pdfs ) ==  len ( v1ps ) * len ( v2ps ) ,\
+        assert  len ( pdfs ) == len ( v1ps ) * len ( v2ps ) ,\
                'Invalid table/dict structure!'
         
         ## initialize the base class 
@@ -304,13 +322,15 @@ class MorphingN2_pdf (PDF1) :
         self.__mu1 = self.make_var (
             morph_var1                ,
             "mu1_%s"           % name ,
-            "morphing mu1(%s)" % name , False , v1ps[0] , v1ps[-1] )
+            "morphing mu1(%s)" % name , False ,
+            0.5 * ( v1ps[0] + v1ps[-1] ) , v1ps[0] , v1ps[-1] )
         
         ## create morphing variables 
         self.__mu2 = self.make_var (
             morph_var2                ,
             "mu2_%s"           % name ,
-            "morphing mu2(%s)" % name , False , v2ps[0] , v2ps[-1] )
+            "morphing mu2(%s)" % name , False , 
+            0.5 * ( v2ps[0] + v2ps[-1] ) , v2ps[0] , v2ps[-1] )
         
         self.__pdfdict = {}
         for k in sorted ( pdfs.keys()  ) :
@@ -325,7 +345,7 @@ class MorphingN2_pdf (PDF1) :
                 raise TypeError( "Invalid component type: %s/%s" % ( pdfk , type ( pdfk ) ) ) 
 
             pair = k , pdfk 
-            self.pdfdict [ ( v1, v2 ) ] = pdfk
+            self.__pdfdict [ ( v1, v2 ) ] = pdfk
             
         ## save setting 
         self.__setting = setting
@@ -359,18 +379,9 @@ class MorphingN2_pdf (PDF1) :
         self.__morph_vars        = ROOT.RooArgList ( self.mu1 , self.mu2 )
         self.__morph_observables = ROOT.RooArgList ( self.xvar )
 
-        if root_info < ( 6 , 29 ) : 
-            ## create the PDF  
-            self.pdf = ROOT.RooMomentMorphND (
-                self.roo_name ( 'morph2_' )   ,
-                "Morphing 2D %s" % self.name  , 
-                self.__morph_vars         , ## morphing variables 
-                self.__morph_observables  , ## observables 
-                self.grid               , ## morphing grid 
-                self.setting            ) ## morphing setting 
-        else :
+        if ( 6 , 29 ) <= root_info :
             self.__morph = ROOT.RooMomentMorphFuncND (
-                self.roo_name ( 'morph2f_' )   ,
+                self.roo_name ( 'morph2d_' )   ,
                 "Morphing 2D %s" % self.name  , 
                 self.__morph_vars         , ## morphing variables 
                 self.__morph_observables  , ## observables 
@@ -379,10 +390,19 @@ class MorphingN2_pdf (PDF1) :
             self.__morph.setPdfMode()
             ## create the PDF  
             self.pdf = ROOT.RooWrapperPdf (
-                self.roo_name ( 'morph2_' )   ,
+                self.roo_name ( 'morph2d_' )   ,
                 "Morphing 2D %s" % self.name  ,
                 self.__morph , True 
                 )
+        else :
+            ## create the PDF  
+            self.pdf = ROOT.RooMomentMorphND (
+                self.roo_name ( 'morph2_' )   ,
+                "Morphing 2D %s" % self.name  , 
+                self.__morph_vars         , ## morphing variables 
+                self.__morph_observables  , ## observables 
+                self.grid               , ## morphing grid 
+                self.setting            ) ## morphing setting 
             
         #
         self.config = {
