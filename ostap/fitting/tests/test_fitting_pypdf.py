@@ -532,7 +532,7 @@ if '__main__' == __name__ :
     
     test_PyPDF    ()
     test_PyPDF_AI ()
-    test_PyPDF2   ()
+    ## test_PyPDF2   ()  ## ATTENTION!!! 
     test_PyPdf    ()
     test_PyPdf_AI ()
 
