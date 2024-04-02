@@ -373,6 +373,13 @@ class Trainer(object):
             if isinstance ( logging , string_types ) : self.__logging = logging 
             else                                     : self.__logging = "%s.log" % self.name
 
+
+        
+        for i , e in enumerate ( methods ) :
+            t = e [ 0 ] 
+            assert ROOT.TMVA.Types.kVariable <= t < ROOT.TMVA.Types.kMaxMethod, \
+                   'Invalid TMVA.Types.EMVA %s' % t 
+                  
         self.__methods           = tuple ( methods    )
         
         variables                = list  ( variables  ) 

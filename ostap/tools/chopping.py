@@ -582,6 +582,17 @@ class Trainer(object) :
         from ostap.trees.trees import Chain
         if isinstance ( self.__signal     , ROOT.TTree ) :  self.__signal     = Chain ( self.__signal     ) 
         if isinstance ( self.__background , ROOT.TTree ) :  self.__background = Chain ( self.__background ) 
+
+        ##  trick to pleas Kisa for ROTO 6.31/01  (enum TMVA.Types.ETMVA is not pickable...
+        if ( 6, 31 ) <= root_info :
+            ms = list ( self.__methods )
+            for i, e in enumerate  ( ms ) :
+                e = list ( e )
+                e = tuple ( [ int ( e[0] ) ] + e[1:]) 
+                ms [ i ] = e
+            self.__methods = ms
+            
+            
         
         ## book the trainers 
         self.__trainers      = () 

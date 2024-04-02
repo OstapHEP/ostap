@@ -171,6 +171,7 @@ trainer = Trainer (
     ## parallel_conf  = { 'ncpus' : 0 , 'ppservers' : 'auto' }
     )
 
+
 # train it!  
 with timing ( 'for TMVA/Chopping training' , logger ) :
     trainer.train () 
@@ -344,7 +345,7 @@ title = 'Timing'
 table = T.table ( rows , title = title , prefix = '# ' , alignment = 'cc' )
 logger.info ( '%s\n%s' % ( title , table ) ) 
 
-
+    
                           
 # =============================================================================
 ##                                                                      The END
