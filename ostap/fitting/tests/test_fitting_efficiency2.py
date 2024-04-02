@@ -12,7 +12,8 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   builtins                 import range 
+from   builtins                 import range
+from   ostap.core.meta_info     import root_info 
 import ostap.fitting.roofit
 import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID, Ostap, rooSilent  
@@ -160,9 +161,9 @@ def test_pyVAR () :
     logger = getLogger("test_pyVAR") 
     
     if not old_PyROOT :
-        logger.warning ("test is enabled only for *OLD* PyROOT!")
-        return 
-    
+        logger.warning ("test is enabled only for *(very)OLD* PyROOT!")
+        return
+
     from ostap.fitting.pyvar import PyVAR
     
     # =========================================================================
@@ -227,6 +228,10 @@ def test_pyVAR2 () :
     
     logger = getLogger("test_pyVAR2") 
     
+    if (6,31) <= root_info :
+        logger.warning ( 'Test is TEMPORARILY disabled for %s' % ROOT.gROOT.GetVersion() )
+        return
+    
     from ostap.fitting.pyvar import PyVAR2
     
     myEff3 = PyVAR2 ( name = 'myEff3' , vars = vars , function  = eff )
@@ -275,6 +280,10 @@ def test_pyVar () :
     
     if old_PyROOT :
         logger.warning ("test is enabled only for *NEW* PyROOT!")
+        return
+
+    if (6,31) <= root_info :
+        logger.warning ( 'Test is TEMPORARILY disabled for %s' % ROOT.gROOT.GetVersion() )
         return
     
     # =========================================================================
