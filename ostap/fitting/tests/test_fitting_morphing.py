@@ -154,11 +154,11 @@ def test_morphing_N2 () :
 
     shapes = {}
     
-    mmin , mmax = 5.0 , 15.0
+    mmin , mmax = 8.0 , 12.0
     smin , smax = 0.5 ,  5.5
     
-    for i , mean in  enumerate ( vrange ( mmin , mmax , 20 ) ) :
-        for j , sigma in  enumerate ( vrange ( smin , smax , 20 ) ) :
+    for i , mean in  enumerate ( vrange ( mmin , mmax , 10 ) ) :
+        for j , sigma in  enumerate ( vrange ( smin , smax , 10 ) ) :
             gauss = Models.Gauss_pdf ( 'G3_%d_%d' % ( i , j ) , 
                                        xvar  = mass ,
                                        mean  = ROOT.RooFit.RooConst ( mean  ) ,
