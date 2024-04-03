@@ -26,7 +26,9 @@ namespace Ostap
   {
     // ========================================================================
     /** @class BifurcatedGauss
-     *  simple representation of bifurcated gaussian function
+     *  Aka a split normal distribution 
+     *  @see https://en.wikipedia.org/wiki/Split_normal_distribution
+     *  simple representation of bifurcated gaussian function/
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */

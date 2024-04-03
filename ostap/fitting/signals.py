@@ -914,6 +914,8 @@ class Apollonios2_pdf(PEAK) :
 models.append ( Apollonios2_pdf )    
 # =============================================================================
 ## @class BifurcatedGauss_pdf
+#  Aka a split normal distribution 
+#  @see https://en.wikipedia.org/wiki/Split_normal_distribution
 #  simple wrapper over bifurcated-gaussian
 #  @see RooGaussian
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -921,6 +923,9 @@ models.append ( Apollonios2_pdf )
 class BifurcatedGauss_pdf(PEAK) :
     """Bifurcated Gauss function
     
+    Aka a split normal distribution 
+    - see https://en.wikipedia.org/wiki/Split_normal_distribution
+
     f(x; mu, sigma_l, sigma_r ) ~ exp ( -0.5 * dx^2 )
     
     with
