@@ -18,6 +18,7 @@
 // ============================================================================
 #include "Ostap/PyPdf.h"
 #include "Ostap/PyVar.h"
+#include "Ostap/Iterator.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -66,7 +67,9 @@ Ostap::Models::PyPdf::PyPdf
                   "PyPdf::consructor"    , 
                   Ostap::StatusCode(400) ) ;
   //
-  ::copy_real ( variables , m_varlist , "Variable is not RooAbsReal" , "Ostap::Functions::PyPdf::PyPdf" );
+  // Ostap::Utils::Iterator it ( variables ) ;
+  // while ( RooAbsReal* v = it.static_next<RooAbsReal>() ) { m_varlist.add ( *v ) ; } 
+  ::copy_real ( variables , m_varlist ) ;
   //
   Py_XINCREF ( m_self ) ;
 }
@@ -87,7 +90,9 @@ Ostap::Models::PyPdf::PyPdf
   , m_varlist ( "!varlist" , "All variables(list)" , this ) 
 {
   //
-  ::copy_real ( variables , m_varlist , "Variable is not RooAbsReal" , "Ostap::Functions::PyPdf::PyPdf" );
+  // Ostap::Utils::Iterator it ( variables ) ;
+  // while ( RooAbsReal* v = it.static_next<RooAbsReal>() ) { m_varlist.add ( *v ) ; } 
+  ::copy_real ( variables , m_varlist ) ;
   //
 }
 // ============================================================================
@@ -104,14 +109,12 @@ int    Ostap::Models::PyPdf::get_analytical_integral () const { return 0 ; }
 // ============================================================================
 double Ostap::Models::PyPdf::analytical_integral     () const 
 {
-  Ostap::throwException ( "Method ``analytical_integral'' must be overriden!"  ,
-                          "Ostap::Models::PyPdf"          ,
-                          Ostap::StatusCode(500)          ) ;
+  Ostap::throwException
+    ( "Method ``analytical_integral'' must be overriden!"  ,
+      "Ostap::Models::PyPdf"          ,
+      Ostap::StatusCode(500)          ) ;
   return 0 ;
 }
-
-
-
 // ============================================================================
 // copy constructor
 // ============================================================================
@@ -520,7 +523,9 @@ Ostap::Models::PyPdf2::PyPdf2
                   "PyPdf2::consructor"    , 
                   Ostap::StatusCode(400) ) ;
   //
-  ::copy_real ( variables , m_varlist , "Variable is not RooAbsReal" , "Ostap::Functions::PyPdf2::PyPdf2" );
+  // Ostap::Utils::Iterator it ( variables ) ;
+  // while ( RooAbsReal* v = it.static_next<RooAbsReal>() ) { m_varlist.add ( *v ) ; }
+  ::copy_real ( variables , m_varlist ) ;
   //
   if ( m_function ) { Py_XINCREF ( m_function ) ; }
   m_arguments = PyTuple_New ( m_varlist.getSize() ) ;
@@ -573,22 +578,21 @@ Double_t Ostap::Models::PyPdf2::evaluate() const
   //
   unsigned short index = 0 ;
   //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
-  // 
-  Ostap::Utils::Iterator it ( m_varlist ) ; // onlyu for ROOT < 6.18 
+#if ROOT_VERSION(6,31,0) <= ROOT_VERSION_CODE
+  for  ( auto* av : m_varlist )
+  {
+    if ( nullptr == av ) {continue  ; }
+    RooAbsReal* v = static_cast<RooAbsReal*> ( av ) ;
+    //  
+#else
+    //
+  Ostap::Utils::Iterator it ( m_varlist ) ;
   while ( RooAbsReal* v = it.static_next<RooAbsReal>() )
   {
+#endif
     //
-#else
-    // 
-  for  ( auto* vv : m_varlist )
-  {
-    RooAbsReal* v = static_cast<RooAbsReal*>( vv ) ;
-    //
-#endif 
-    //
-    const double value = v->getVal() ;
-    PyObject* pv =  PyFloat_FromDouble ( value ) ;
+    if ( nullptr == v  ) { continue ; }
+    PyObject* pv =  PyFloat_FromDouble ( v->getVal()  ) ;
     if ( 0 != PyTuple_SetItem ( m_arguments , index , pv ) ) 
     {
       PyErr_Print () ;
