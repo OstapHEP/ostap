@@ -14,15 +14,14 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ostap.fitting.roofit 
-from   builtins                 import range
 from   ostap.core.core          import VE, dsID, Ostap
 from   ostap.fitting.pdfbasic   import Generic1D_pdf 
 from   ostap.fitting.fit1d      import PEAK ,  Fit1D 
 from   ostap.utils.utils        import timing
-from   ostap.core.meta_info     import old_PyROOT 
+from   ostap.core.meta_info     import old_PyROOT, root_info  
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
+import ostap.fitting.roofit 
 import ROOT, random, math, time 
 # =============================================================================
 # logging 
@@ -75,7 +74,7 @@ def test_PyPDF() :
     logger = getLogger("test_PyPDF")
     
     if not old_PyROOT :
-        logger.warning("test enabled only for OLD PyROOT!")
+        logger.warning("test enabled only for*(very)OLD* PyROOT!")
         return
     
     logger.info  ("Test pure python PDF: PyPDF ")
@@ -83,7 +82,7 @@ def test_PyPDF() :
     from   ostap.fitting.pypdf  import PyPDF    
     # =============================================================================
     ## @class PyGauss
-    #  local ``pure-python'' PDF 
+    #  local `pure-python' PDF 
     class PyGauss(PEAK,PyPDF) :
         """Local ``pure-python'' PDF
         """    
@@ -138,7 +137,7 @@ def test_PyPDF() :
         r, _ = model  .fitTo ( dataset , draw = False , silent = True , ncpu=1 )
         with wait ( 1 ) , use_canvas ( "test_PyPDF" ) : 
             r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )            
-            logger.info  ("Fit result for``pure python'' PDF: PyPDF \n%s" % r.table ( prefix = "# " ) )
+            logger.info  ("Fit result for `pure python' PDF: PyPDF \n%s" % r.table ( prefix = "# " ) )
         
 
 # =============================================================================
@@ -151,10 +150,10 @@ def test_PyPDF_AI() :
     - see Ostap.Models.PyPdf 
     """
 
-    logger = getLogger("test_PyPDF_AI")
+    logger = getLogger("test_PyPDF&AI")
     
     if not old_PyROOT :
-        logger.warning("test enabled only for OLD PyROOT!")
+        logger.warning("test enabled only for *(very)OLD* PyROOT!")
         return
     
     logger.info  ("Test pure python PDF: PyPDF with analytical integral")
@@ -230,7 +229,7 @@ def test_PyPDF_AI() :
             
             return CDF ( xmax , m , s  ) - CDF ( xmin , m , s  )
 
-    with timing ("Using-PyPDF+AI", logger ) :
+    with timing ("Using-PyPDF&AI", logger ) :
 
         pdf.mean  = random.gauss ( 3.100 , 0.010 )
         pdf.sigma = random.gauss ( 0.012 , 0.001 )
@@ -244,9 +243,9 @@ def test_PyPDF_AI() :
         
         ##  fit!
         r, _ = model  .fitTo ( dataset , draw = False , silent = True , ncpu=1 )
-        with wait ( 1 ) , use_canvas ( "test_PyPDF_AI" ) : 
+        with wait ( 1 ) , use_canvas ( "test_PyPDF&AI" ) : 
             r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )        
-            logger.info  ("Fit result for``pure python'' PDF: PyPDF with analytical integral \n%s" % r.table ( prefix = "# " ) ) 
+            logger.info  ("Fit result for `pure python' PDF: PyPDF with analytical integral \n%s" % r.table ( prefix = "# " ) ) 
 
 
 # =============================================================================
@@ -311,7 +310,7 @@ def test_PyPDF2 () :
         r, _ = model  .fitTo ( dataset , draw = False , silent = True , ncpu=1 )
         with wait ( 1 ) , use_canvas ( "test_PyPDF2" ) : 
             r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )
-            logger.info  ("Fit result for``pure python'' PDF: PyPDF2 with python function \n%s" % r.table ( prefix = "# " ) )
+            logger.info  ("Fit result for `pure python' PDF: PyPDF2 with python function \n%s" % r.table ( prefix = "# " ) )
     
 # =============================================================================
 ## Test pure python PDF: <code>PyPdf</code>
@@ -325,32 +324,50 @@ def test_PyPdf() :
 
     logger = getLogger("test_PyPdf")
     
+    logger.info  ("Test pure python PDF: PyPdf ")
+
     if old_PyROOT :
         logger.warning("test enabled only for NEW PyROOT!")
         return
-    
-    logger.info  ("Test pure python PDF: PyPdf ")
+
+    if ( 6 , 31 ) <= root_info :
+        logger.warning  ( 'Test is temporarily disabled' )
+        return 
+        
 
     # =============================================================================
-    ## @class PyGauss
+    ## @class PyGauss1
     #  local ``pure-python'' PDF 
-    class MyGauss(Ostap.Models.PyPdf) :
+    class MyGauss1(Ostap.Models.PyPdf) :
         """Local ``pure-python'' PDF
         """    
-        def __init__ ( self , name , xvar , mean , sigma ) :
+        def __init__ ( self , name , xvar = None , mean = None , sigma = None , clone = None ) :
+
             
-            vars = ROOT.RooArgList()
+            assert clone is None or ( clone and isinstance ( clone , Ostap.Models.PyPdf ) ) , \
+                   "Invalid constructor!"
             
-            vars.add ( xvar  )
-            vars.add ( mean  )
-            vars.add ( sigma )
-            
-            super(MyGauss,self).__init__ ( name , 'title' , vars )
-            
+            if clone :
+                
+                ## call C++ copy constructor  
+                super(MyGauss1,self).__init__ ( clone , name )
+
+            else :
+
+                assert xvar  and isinstance ( xvar  , ROOT.RooAbsReal  ) , 'Invaid xvar!' 
+                assert mean  and isinstance ( mean  , ROOT.RooAbsReal  ) , 'Invaid xvar!' 
+                assert sigma and isinstance ( sigma , ROOT.RooAbsReal  ) , 'Invaid xvar!' 
+                
+                vars = ROOT.RooArgList()
+                
+                vars.add ( xvar  )
+                vars.add ( mean  )
+                vars.add ( sigma )
+                
+                super(MyGauss1,self).__init__ ( name , 'title' , vars )
+
         ## the  main method 
         def evaluate ( self ) :
-            
-            vlist = self.varlist
             
             x = self.variable ( 0 ) 
             m = self.variable ( 1 )  
@@ -359,17 +376,11 @@ def test_PyPdf() :
             dx = ( x - m ) / s        
             return math.exp ( -0.5 * dx * dx ) * NORM / s 
 
+        ## ++ cloner 
         def clone ( self , newname ) :
 
-            name = newname if newname else self.name
-            
-            vlist = self.variables() 
-            
-            xvar  = vlist[0]  
-            mean  = vlist[1]
-            sigma = vlist[2] 
-
-            cl = MyGauss( name , xvar , mean , sigma ) 
+            name = newname if newname else  self.name   
+            cl = MyGauss1( name , clone = self ) 
             ROOT.SetOwnership ( cl  , False )
             
             return cl
@@ -379,8 +390,8 @@ def test_PyPdf() :
         pdf.mean  = random.gauss ( 3.100 , 0.010 )
         pdf.sigma = random.gauss ( 0.012 , 0.001 )
 
-        pdf_  = MyGauss ( 'MyGauss' , pdf.xvar , pdf.mean , pdf.sigma )
-        gauss = Generic1D_pdf  ( pdf_ , xvar = pdf.xvar )
+        pdf1  = MyGauss1 ( 'MyGauss1' , pdf.xvar , pdf.mean , pdf.sigma )
+        gauss = Generic1D_pdf  ( pdf1 , xvar = pdf.xvar )
                 
         ## build fit model 
         model = Fit1D ( signal = gauss , background = None  , name = 'M3' )
@@ -389,7 +400,7 @@ def test_PyPdf() :
         r, _ = model  .fitTo ( dataset , draw = False , silent = True , ncpu=1 )
         with wait ( 1 ) , use_canvas ( "test_PyPdf" ) : 
             r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )        
-            logger.info  ("Fit result for``pure python'' PDF: PyPdf \n%s" % r.table ( prefix = "# " ) )
+            logger.info  ("Fit result for `pure python' PDF: PyPdf \n%s" % r.table ( prefix = "# " ) )
 
 # =============================================================================
 ## Test pure python PDF: <code>PyPdf</code> + analytical integrals 
@@ -401,30 +412,49 @@ def test_PyPdf_AI() :
     - see Ostap.Models.PyPdf 
     """
 
-    logger = getLogger("test_PyPdf_AI")
+    logger = getLogger("test_PyPdf&AI")
     
+    logger.info  ("Test pure python PDF: PyPdf with analytical  integral")
+
     if old_PyROOT :
         logger.warning("test enabled only for NEW PyROOT!")
         return
     
-    logger.info  ("Test pure python PDF: PyPdf with analytical  integral")
-
+    if ( 6 , 31 ) <= root_info :
+        logger.warning  ( 'Test is temporarily disabled' )
+        return 
+        
     # =============================================================================
     ## @class PyGauss
     #  local ``pure-python'' PDF 
-    class MyGauss(Ostap.Models.PyPdf) :
-        """Local ``pure-python'' PDF
+    class MyGauss2(Ostap.Models.PyPdf) :
+        """Local `pure-python' PDF
         """    
-        def __init__ ( self , name , xvar , mean , sigma ) :
+        def __init__ ( self , name , xvar = None , mean = None , sigma = None , clone = None ) :
+
             
-            vars = ROOT.RooArgList()
+            assert clone is None or ( clone and isinstance ( clone , Ostap.Models.PyPdf ) ) , \
+                   "Invalid constructor!"
             
-            vars.add ( xvar  )
-            vars.add ( mean  )
-            vars.add ( sigma )
-            
-            super(MyGauss,self).__init__ ( name , 'title' , vars )
-            
+            if clone :
+                
+                ## call C++ copy constructor  
+                super(MyGauss2,self).__init__ ( clone , name )
+
+            else :
+
+                assert xvar  and isinstance ( xvar  , ROOT.RooAbsReal  ) , 'Invaid xvar!' 
+                assert mean  and isinstance ( mean  , ROOT.RooAbsReal  ) , 'Invaid xvar!' 
+                assert sigma and isinstance ( sigma , ROOT.RooAbsReal  ) , 'Invaid xvar!' 
+                
+                vars = ROOT.RooArgList()
+                
+                vars.add ( xvar  )
+                vars.add ( mean  )
+                vars.add ( sigma )
+                
+                super(MyGauss2,self).__init__ ( name , 'title' , vars )
+
         ## the  main method 
         def evaluate ( self ) :
             
@@ -435,21 +465,15 @@ def test_PyPdf_AI() :
             dx = ( x - m ) / s        
             return math.exp ( -0.5 * dx * dx ) * NORM / s 
 
+        ## ++ cloner 
         def clone ( self , newname ) :
-
-            name = newname if newname else self.name
             
-            vlist = self.variables() 
-            
-            xvar  = vlist[0]  
-            mean  = vlist[1]
-            sigma = vlist[2] 
-
-            cl = MyGauss( name , xvar , mean , sigma ) 
+            name = newname if newname else  self.name   
+            cl = MyGauss2 ( name , clone = self ) 
             ROOT.SetOwnership ( cl  , False )
             
             return cl
-        
+
         ## declare analytical integral 
         def get_analytical_integral ( self ) :
             """Declare the analytical integral"""
@@ -478,28 +502,28 @@ def test_PyPdf_AI() :
             
             return CDF ( xmax , m , s  ) - CDF ( xmin , m , s  )
 
-    with timing ("Using-PyPdf+AI", logger ) :
+    with timing ("Using-PyPdf&AI", logger ) :
 
         pdf.mean  = random.gauss ( 3.100 , 0.010 )
         pdf.sigma = random.gauss ( 0.012 , 0.001 )
 
-        pdf_  = MyGauss ( 'MyGauss' , pdf.xvar , pdf.mean , pdf.sigma )
-        gauss = Generic1D_pdf  ( pdf_ , xvar = pdf.xvar )
+        pdf2  = MyGauss2 ( 'MyGauss' , pdf.xvar , pdf.mean , pdf.sigma )
+        gauss = Generic1D_pdf ( pdf2 , xvar = pdf.xvar )
         
         ## build fit model 
         model = Fit1D ( signal = gauss , background = None  , name = 'M3' )
         
         ##  fit!
         r, _ = model  .fitTo ( dataset , draw = False , silent = True , ncpu=1 )
-        with wait ( 1 ) , use_canvas ( "test_PyPdf_AI" ) : 
+        with wait ( 1 ) , use_canvas ( "test_PyPdf&AI" ) : 
             r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )            
-            logger.info  ("Fit result for``pure python'' PDF: PyPdf with analytical integral\n%s" % r.table ( prefix = "# " ) )
+            logger.info  ("Fit result for `pure python' PDF: PyPdf with analytical integral\n%s" % r.table ( prefix = "# " ) )
 
 # =============================================================================
 if '__main__' == __name__ :
 
     
-    test_PyPDF    ()
+    test_PyPDF    () 
     test_PyPDF_AI ()
     test_PyPDF2   ()
     test_PyPdf    ()

@@ -421,7 +421,7 @@ class PyPDF2(object) :
     """
     def __init__ (  self       ,
                     name       ,
-                    function   ,
+                    function   , ##  python callable (var1,var2,...,varn)-> double  
                     vars       , 
                     title = '' ) :
 

@@ -67,8 +67,6 @@ Ostap::Models::PyPdf::PyPdf
                   "PyPdf::consructor"    , 
                   Ostap::StatusCode(400) ) ;
   //
-  // Ostap::Utils::Iterator it ( variables ) ;
-  // while ( RooAbsReal* v = it.static_next<RooAbsReal>() ) { m_varlist.add ( *v ) ; } 
   ::copy_real ( variables , m_varlist ) ;
   //
   Py_XINCREF ( m_self ) ;
@@ -90,8 +88,6 @@ Ostap::Models::PyPdf::PyPdf
   , m_varlist ( "!varlist" , "All variables(list)" , this ) 
 {
   //
-  // Ostap::Utils::Iterator it ( variables ) ;
-  // while ( RooAbsReal* v = it.static_next<RooAbsReal>() ) { m_varlist.add ( *v ) ; } 
   ::copy_real ( variables , m_varlist ) ;
   //
 }
@@ -142,8 +138,6 @@ Ostap::Models::PyPdf::PyPdf
 // ============================================================================
 #endif 
 // ============================================================================
-
-
 
 // ============================================================================
 // virtual destructor 
@@ -269,8 +263,8 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
   return cl ;
   // ==========================================================================
 #else 
-  // ==========================================================================
-  Ostap::throwException ( "clone method must be overrided!" , 
+// ==========================================================================
+Ostap::throwException ( "clone method must be overrided!" , 
                         "Ostap::Functions::PyPdf"  ) ;
   return nullptr ;
 // ============================================================================
@@ -523,34 +517,62 @@ Ostap::Models::PyPdf2::PyPdf2
                   "PyPdf2::consructor"    , 
                   Ostap::StatusCode(400) ) ;
   //
-  // Ostap::Utils::Iterator it ( variables ) ;
-  // while ( RooAbsReal* v = it.static_next<RooAbsReal>() ) { m_varlist.add ( *v ) ; }
   ::copy_real ( variables , m_varlist ) ;
   //
   if ( m_function ) { Py_XINCREF ( m_function ) ; }
-  m_arguments = PyTuple_New ( m_varlist.getSize() ) ;
 }
+// ============================================================================
+/*  Standard constructor
+ *  @param name      the name of PDF 
+ *  @param function  callable function
+ *  @param variables all variables 
+ *  @param title     the title  of PDF 
+ */
+// ============================================================================
+Ostap::Models::PyPdf2::PyPdf2
+( const std::string& name       , 
+  PyObject*          function   ,
+  const RooArgList&  variables  ,
+  const std::string& title      )
+  : PyPdf2 ( name.c_str() , 
+             title.empty() ? name.c_str() : title.c_str() , 
+             function     ,  
+             variables    )
+{}      
+// ============================================================================
+/*  Standard constructor
+ *  @param name      the name of PDF 
+ *  @param function  callable function
+ *  @param variables all variables 
+ *  @param title     the title  of PDF 
+ */
+// ============================================================================
+Ostap::Models::PyPdf2::PyPdf2
+( const std::string& name       , 
+  const RooArgList&  variables  ,
+  PyObject*          function   ,
+  const std::string& title      ) 
+  : PyPdf2 ( name , function , variables , title ) 
+{}
 // ============================================================================
 // copy constructor
 // ============================================================================
 Ostap::Models::PyPdf2::PyPdf2
 ( const Ostap::Models::PyPdf2& right , 
-  const char*                 name  ) 
+  const char*                  name  ) 
   : RooAbsPdf  ( right , name     ) 
     //
   , m_function ( right.m_function ) 
   , m_varlist  ( "!varlist" , this , right.m_varlist ) 
 {
   if ( m_function ) { Py_XINCREF ( m_function  ) ; }
-  m_arguments = PyTuple_New ( m_varlist.getSize() ) ;
 }
 // ============================================================================
 // virtual destructor 
 // ============================================================================
 Ostap::Models::PyPdf2::~PyPdf2() 
 {
-  if ( m_function  ) { Py_DECREF ( m_function  ) ; m_function  = nullptr ; }
-  if ( m_arguments ) { Py_DECREF ( m_arguments ) ; m_arguments = nullptr ; }
+  if ( m_function ) { Py_DECREF ( m_function  ) ; m_function  = nullptr ; }
 }
 // ============================================================================
 Ostap::Models::PyPdf2* 
@@ -571,14 +593,21 @@ Double_t Ostap::Models::PyPdf2::evaluate() const
                             Ostap::StatusCode(500) )           ;
   }
   //
- Ostap:Assert ( PySequence_Size ( m_arguments ) == m_varlist.getSize() , 
-                "Invalid argument/varlist  size!" ,
-                "PyPdf2::evaluate"                 ,
-                Ostap::StatusCode(500) ) ;
+   //
+  PyObject* arguments = PyTuple_New ( m_varlist.getSize() ) ;
+  if ( !arguments )
+  {
+    PyErr_Print () ;
+    Ostap::throwException ( "Can't create PyTuple"   ,
+                            "PyPdf2::evaluate"     ,
+                            Ostap::StatusCode(500) ) ;
+    return 0 ;
+  }
   //
   unsigned short index = 0 ;
   //
 #if ROOT_VERSION(6,31,0) <= ROOT_VERSION_CODE
+  //
   for  ( auto* av : m_varlist )
   {
     if ( nullptr == av ) {continue  ; }
@@ -589,11 +618,12 @@ Double_t Ostap::Models::PyPdf2::evaluate() const
   Ostap::Utils::Iterator it ( m_varlist ) ;
   while ( RooAbsReal* v = it.static_next<RooAbsReal>() )
   {
+    //
 #endif
     //
     if ( nullptr == v  ) { continue ; }
     PyObject* pv =  PyFloat_FromDouble ( v->getVal()  ) ;
-    if ( 0 != PyTuple_SetItem ( m_arguments , index , pv ) ) 
+    if ( 0 != PyTuple_SetItem ( arguments , index , pv ) ) 
     {
       PyErr_Print () ;
       Ostap::throwException ( "Can't fill PyTuple"   ,
@@ -603,8 +633,12 @@ Double_t Ostap::Models::PyPdf2::evaluate() const
     ++index ;
   }
   //
-  PyObject* result = PyObject_CallObject ( m_function , m_arguments ) ;
+  PyObject* result = PyObject_CallObject ( m_function , arguments ) ;
   //
+  // std::cout << "EVALUATE: " << std::endl ;
+  // PyObject_Print  ( m_arguments , stderr , Py_PRINT_RAW );
+  Py_DECREF ( arguments ) ;
+    
   return result_to_double ( result , "PyPdf2::evaluate" ) ;
 }
 // ============================================================================

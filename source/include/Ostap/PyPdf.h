@@ -129,18 +129,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      ///  get all variables in a form of the list 
-      const RooArgList&   proxylist () const { return m_varlist ; }
       ///  get all variables in a form of the list      
-      /// const RooListProxy& variables () const { return m_varlist ; }
-      const RooArgList&   variables () const { return m_varlist ; }
-      ///  get all variables in a form of the list 
-      // const RooListProxy& varlist   () const { return m_varlist ; }
-      const RooArgList&   varlist   () const { return m_varlist ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      std::string myid() const ;
+      const RooArgList& variables () const { return m_varlist ; }
+      ///  get all variables in a form of the list
+      const RooArgList& varlist   () const { return m_varlist ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -222,10 +214,11 @@ namespace Ostap
        *  @param function  callable function
        *  @param variables all variables 
        */
-      PyPdf2 ( const char*       name      , 
-               const char*       title     ,
-               PyObject*         function  , 
-               const RooArgList& variables );
+      PyPdf2
+      ( const char*       name      , 
+        const char*       title     ,
+        PyObject*         function  , 
+        const RooArgList& variables ) ;
       // =======================================================================
       /** Standard constructor
        *  @param name      the name of PDF 
@@ -233,15 +226,11 @@ namespace Ostap
        *  @param variables all variables 
        *  @param title     the title  of PDF 
        */
-      PyPdf2 ( const std::string& name       , 
-               PyObject*          function   ,
-               const RooArgList&  variables  ,
-               const std::string& title = "" )
-        : PyPdf2 ( name.c_str() , 
-                   title.empty() ? name.c_str() : title.c_str() , 
-                   function     ,  
-                   variables    )
-      {}      
+      PyPdf2
+      ( const std::string& name       , 
+        PyObject*          function   ,
+        const RooArgList&  variables  ,
+        const std::string& title = "" ) ;
       // =======================================================================
       /** Standard constructor
        *  @param name      the name of PDF 
@@ -249,12 +238,11 @@ namespace Ostap
        *  @param variables all variables 
        *  @param title     the title  of PDF 
        */
-      PyPdf2 ( const std::string& name       , 
-               const RooArgList&  variables  ,
-               PyObject*          function   ,
-               const std::string& title = "" )
-        : PyPdf2 ( name , function , variables , title ) 
-      {}
+      PyPdf2
+      ( const std::string& name       , 
+        const RooArgList&  variables  ,
+        PyObject*          function   ,
+        const std::string& title = "" );
       /// copy  constructor 
       PyPdf2 ( const PyPdf2& right , const char* name = nullptr ) ;
       /// virtual destructor 
@@ -269,6 +257,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      ///  get all variables in a form of the list      
+      const RooArgList&   variables () const { return m_varlist ; }
+      ///  get all variables in a form of the list
+      const RooArgList&    varlist   () const { return m_varlist ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       // the actual evaluation of function
       Double_t evaluate() const override;
       // ======================================================================
@@ -276,7 +271,6 @@ namespace Ostap
       // ======================================================================
       // python partner
       PyObject*    m_function  { nullptr } ; // python partner
-      PyObject*    m_arguments { nullptr } ; // argument cache
       /// all variables as list of variables 
       RooListProxy m_varlist   {} ; // all variables as list of variables 
       // ======================================================================  
