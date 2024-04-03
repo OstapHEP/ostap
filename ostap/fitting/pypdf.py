@@ -208,7 +208,7 @@ if old_PyROOT :
     class PyPDF (object) :
         """Helper base class to implement 'pure-python' PDF
         
-        Typical usage (for OLD PyROOT):
+        Typical usage (for very OLD PyROOT):
         
         ... import math
         ... from ostap.fitting.basic import PEAK
@@ -280,7 +280,6 @@ if old_PyROOT :
                        vars          , ## all variables (observables&parameters) 
                        title  = ''   ,
                        pypdf  = None ) :
-            
             
             assert ( not pypdf ) or isinstance ( pypdf , Ostap.Models.PyPdf  ) , \
                    "Invalid type of 'pypdf': %s/%s" % ( pypdf , type ( pypdf ) )
