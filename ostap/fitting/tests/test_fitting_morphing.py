@@ -51,8 +51,9 @@ for i in range ( N ) :
         mass.setVal ( v )
         ds.add ( varset )  
     
-conf = { 'refit'     :   5 ,  'maxcalls'  : 1000000 }
+conf = { 'refit'     :   5 }
 
+if (6,27) <= root_info : conf [ 'maxcalls' ] = 1000000
 if (6,29) <= root_info : 
     conf [ 'minimizer'] = 'Minuit','migrad'
     conf [ 'hesse'    ] =  True 
