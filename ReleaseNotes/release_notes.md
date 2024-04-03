@@ -1,3 +1,5 @@
+# v1.10.1.2
+
 ## New features
    1. improve prints from `PDF.load_params`
    1. add `smooth` function for 1D-histogram 
@@ -11,7 +13,6 @@
 ## Backward incompatible
 
 ## Bug fixes
-
 
 # v1.10.1.0
 
