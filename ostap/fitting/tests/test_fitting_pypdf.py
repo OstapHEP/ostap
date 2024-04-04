@@ -330,9 +330,9 @@ def test_PyPdf() :
         logger.warning("test enabled only for NEW PyROOT!")
         return
 
-    if ( 6 , 31 ) <= root_info :
-        logger.warning  ( 'Test is temporarily disabled' )
-        return 
+    ##  if ( 6 , 31 ) <= root_info :
+    ##    logger.warning  ( 'Test is temporarily disabled' )
+    ##    return 
         
 
     # =============================================================================
@@ -420,9 +420,9 @@ def test_PyPdf_AI() :
         logger.warning("test enabled only for NEW PyROOT!")
         return
     
-    if ( 6 , 31 ) <= root_info :
-        logger.warning  ( 'Test is temporarily disabled' )
-        return 
+    ##  if ( 6 , 31 ) <= root_info :
+    ##    logger.warning  ( 'Test is temporarily disabled' )
+    ##    return 
         
     # =============================================================================
     ## @class PyGauss
