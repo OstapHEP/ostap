@@ -74,7 +74,7 @@ def test_PyPDF() :
     logger = getLogger("test_PyPDF")
     
     if not old_PyROOT :
-        logger.warning("test enabled only for*(very)OLD* PyROOT!")
+        logger.warning("test enabled only for *(very)OLD* PyROOT!")
         return
     
     logger.info  ("Test pure python PDF: PyPDF ")
@@ -330,11 +330,10 @@ def test_PyPdf() :
         logger.warning("test enabled only for NEW PyROOT!")
         return
 
-    ##  if ( 6 , 31 ) <= root_info :
-    ##    logger.warning  ( 'Test is temporarily disabled' )
-    ##    return 
-        
-
+    if ( 6 , 31 ) <= root_info :
+        logger.warning  ( 'Test is *TEMPORARILY* disabled, see https://github.com/root-project/root/issues/15085#issuecomment-2029462023' )
+        return 
+    
     # =============================================================================
     ## @class PyGauss1
     #  local ``pure-python'' PDF 
@@ -420,9 +419,9 @@ def test_PyPdf_AI() :
         logger.warning("test enabled only for NEW PyROOT!")
         return
     
-    ##  if ( 6 , 31 ) <= root_info :
-    ##    logger.warning  ( 'Test is temporarily disabled' )
-    ##    return 
+    if ( 6 , 31 ) <= root_info :
+        logger.warning  ( 'Test is *TEMPORARILY* disabled, see https://github.com/root-project/root/issues/15085#issuecomment-2029462023' )
+        return 
         
     # =============================================================================
     ## @class PyGauss
