@@ -21,12 +21,12 @@ from   builtins import range
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
-import ostap.math.linalg      
 import ostap.fitting.variables     
 import ostap.fitting.printable
+import ostap.math.linalg        as     LA 
 from   ostap.logger.colorized   import allright, attention
 from   ostap.logger.utils       import pretty_float, pretty_ve, pretty_2ve 
-import ROOT, math, sys 
+import ROOT, math, sys, ctypes  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.roofitresult' )
@@ -205,7 +205,7 @@ def _rfr_cov_matrix_  ( self , var1 , var2 , *vars ) :
 ## get the covariance matrix 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _rfr_covmatrix_  ( self ) :
+def _rfr_covmatrix_  ( self , tmatrix = False ) :
     """Get covariance ( matrix 
     >>> result = ...
     >>> cov = results.covmatrix()
@@ -213,8 +213,11 @@ def _rfr_covmatrix_  ( self ) :
     """
         
     cm = self.covarianceMatrix ()
-    N  = cm.GetNrows()
+    
+    if tmatrix : return cm ## RETURN NATIVE ROOT TMAtrixSym<double
 
+    N  = cm.GetNrows()
+    
     import ostap.math.linalg 
     m  = Ostap.Math.SymMatrix ( N )()
 
@@ -621,7 +624,7 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     else : n = '' 
 
     rows.append ( ( 'Estimated distance to minimum' , n , '  ' + s , '' ) )
-    
+
     cq = r.covQual()
     cn = '' 
     if  -1 == cq :
@@ -652,9 +655,9 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
 
     with_globcorr = not ( (6,24) <= root_info < (6,28) )
     with_globcorr = True or not ( (6,24) <= root_info < (6,28) )
-    with_globcorr = True 
     with_globcorr = not ( (6,24) <= root_info < (6,26) )
 
+    with_globcorr = True 
 
     if with_globcorr : rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
     else             : rows = [ ( '', 'Unit', 'Value' , 'Max correlation [%]') ] + rows
@@ -779,6 +782,47 @@ def _rfr_print_ ( self , opts = 'v' ) :
     return result 
     
 # =============================================================================
+## Get global correlation coeffcient
+#  @code
+#  fit_reuslt = ///
+#  coeff      = fit_results.global_cc ( 3 ) 
+#  @endcode 
+#  @see Ostap::Utils::global_cc 
+def _rfr_global_cc_ ( rfr , par ) :
+    """Get global correlation coeffcient
+    
+    - see `Ostap.Utils.global_cc `
+    
+    >>> fit_reuslt = ///
+    >>> coeff      = fit_results.global_cc ( 3 ) 
+    """
+    if par is None :
+        
+        ## get all values at once 
+        values = Ostap.Utils.global_cc ( rfr ) 
+        if len ( values ) != len ( rfr ) :
+            raise ValueError( "Error from Ostap::Utils::global_cc" )
+        return tuple ( v for v in values )
+    
+    elif  isinstance  ( par , string_types    ) :
+        
+        index = rfr.floatParsFinal().index ( par )        
+        if index < 0 : raise KeyError ( 'Invalid parameter %s' % par )
+        return _rfr_global_cc_ ( rfr , index )
+    
+    elif isinstance ( par , ROOT.RooAbsArg ) :
+        return _rfr_global_cc_ ( rfr , par.name )
+
+    index = par 
+    assert isinstance ( index , integer_types ) and 0 <= index  , \
+           'Invald index %s/%s' % ( par , index )
+    
+    if not 0 <= index < len ( rfr ) :
+        raise IndexError("Invalid index %s/%s" % ( par , index ) ) 
+
+    return Ostap.Utils.global_cc ( rfr , index )
+
+# =============================================================================
 ## Get global correlation coefficient for the parameter
 #  \f$ \rho_k = \sqrt{    1 - \left[ C_{kk} V_{kk}\right]^{-1} } \f$
 #  where \f$ C \f$ is covarinace matrix and \f$ V = C^{-1}\$ is inverse
@@ -789,7 +833,7 @@ def _rfr_print_ ( self , opts = 'v' ) :
 #  It should be accessible via <code>RooFitResult::globalCorr</code> method
 #  but often it results in segfault
 #  @see RooFitResult::globalCorr
-def _rfr_global_corr_ ( self , par ) :
+def _rfr_global_corr_ ( rfr , par ) :
     """ Get global correlation coefficient for the parameter
     rho_k = sqrt ( 1 - 1/( C_{kk} V_{kk}) )
     - where C is covariance  matrix and V is inverse
@@ -799,31 +843,52 @@ def _rfr_global_corr_ ( self , par ) :
     - see `RooFitResult.globalCorr`
     """
     if  isinstance  ( par , string_types    ) :
-        index = self.floatParsFinal().index ( par ) 
-        if index < 0 :                                     return -1
+        index = rfr.floatParsFinal().index ( par ) 
+        if index < 0 :                                    return -1
     elif isinstance ( par , integer_types   ) :
-        if not 0 <= par < len ( self.floatParsFinal () ) : return -1
+        if not 0 <= par < len ( rfr.floatParsFinal () ) : return -1
         index = par 
     elif isinstance ( par , ROOT.RooAbsArg ) :
-        return _rfr_global_corr_ ( self , par.name )
+        return _rfr_global_corr_ ( rfr , par.name )
     else : return -1 
-
-    ## get the covariance matrix and invert it! 
-    v = self.covmatrix()
-    if not v.InvertChol () : return -1   
-
-    ## get the covariance matrix 
-    c = self.covmatrix()
-
-    cv = c ( index , index ) * v ( index , index )
     
-    rho2 = 1.0 - 1.0 / cv
-    if rho2 < 0 : return -1.0
-    
-    return  math.sqrt ( rho2 )
+    np    = len ( rfr ) 
+
+    return _rfr_global_cc_ (rfr , par ) 
+
+    ## ## ostap.math.linalg2 machinery fails for large matrices
+    ## if 10 >= np or ( np , 'double' ) in LA.LinAlgT.known_ssymmatrices : 
+
+    ##     ## get the covariance matrix and invert it 
+    ##     mc = self.covmatrix () 
+    ##     if not mc.InvertChol () : return -1   
+        
+    ##     ## get the covariance matrix 
+    ##     cm = self.covmatrix()
+
+    ## else : ## use TMatrixTSym
+        
+
+    ##     cm  = self.covarianceMatrix()
+    ##     mc  = type ( cm ) ( cm )
+    ##     det = ctypes.c_double(0)
+    ##     mc.Invert( det )
+    ##     det = det.value
+    ##     if iszero ( det ) : return -1
+
+                
+    ## cv = cm ( index , index ) * mc ( index , index ) 
+    ## rho2 = 1.0 - 1.0 / cv
+    ## if rho2 < 0 : return -1
+    ## return  math.sqrt ( rho2 )
+
 
 # =============================================================================
-## 
+## The size of the problem == number of floating parameters
+def _rfr_len_ ( rfr ) :
+    """ The size of the problem == number  of floating parameters
+    """
+    return len ( rfr.floatParsFinal() )
 
 # =============================================================================
 ## Symmetrized Kullback-Leibler divergency between two RooFitResult objects
@@ -1051,6 +1116,8 @@ ROOT.RooFitResult . table            = _rfr_table_
 ROOT.RooFitResult . global_corr      = _rfr_global_corr_
 ROOT.RooFitResult . kullback         = _rfr_kullback_
 ROOT.RooFitResult . kullback_leibler = _rfr_kullback_
+ROOT.RooFitResult . __len__          = _rfr_len_ 
+ROOT.RooFitResult . global_cc        = _rfr_global_cc_
 
 _new_methods_ += [
     ROOT.RooFitResult . __repr__         ,

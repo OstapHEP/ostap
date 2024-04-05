@@ -15,7 +15,8 @@ __version__ = ""
 # =============================================================================
 __all__     = (
     'mgetter'  , ## get  (i,j) element from matrix-like object
-    'checkops' , ## check the allowed operations  
+    'checkops' , ## check the allowed operations
+    'LinAlgT'  , ## LinAlgenra type&decorator store 
     )
 # =============================================================================
 import ROOT 
@@ -26,8 +27,8 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg2' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-from   ostap.math.linalg2 import mgetter, checkops  
-import ostap.math.linalgt
+from ostap.math.linalg2 import mgetter, checkops  
+from ostap.math.linalgt import LinAlgT         
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -97,6 +97,28 @@ namespace Ostap
       // ======================================================================        
     }; //                                The end of the class Ostap::FitResults
     // ========================================================================
+    /** calculate the global correlation coefficient 
+     * \f$ \rho_k = \sqrt{    1 - \left[ C_{kk} V_{kk}\right]^{-1} } \f$
+     *  where \f$ C \f$ is covarinace matrix and \f$ V = C^{-1}\$ is inverse
+     *  @code
+     *  @param index parameter index 
+     *  @param r     fit result 
+     *  @return global correlation coefficients (or -1 in case of failure) 
+     */
+    double global_cc 
+    ( const RooFitResult&  r     , 
+      const unsigned short index ) ;
+    // ========================================================================
+    /** calculate the global correlation coefficients 
+     * \f$ \rho_k = \sqrt{    1 - \left[ C_{kk} V_{kk}\right]^{-1} } \f$
+     *  where \f$ C \f$ is covarinace matrix and \f$ V = C^{-1}\$ is inverse
+     *  @code
+     *  @param r     fit result 
+     *  @return vector global correlation coefficients (empty in case of failure)
+     */
+    std::vector<double> global_cc 
+    ( const RooFitResult& r ) ;
+    // ========================================================================
   } //                                        The end of namespace Ostap::Utils
   // ==========================================================================
 } //                                                 The end of namespace Ostap

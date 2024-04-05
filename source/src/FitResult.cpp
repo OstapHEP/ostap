@@ -10,6 +10,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Math.h"
 #include "Ostap/FitResult.h"
 // ============================================================================
 /** @file 
@@ -119,10 +120,15 @@ Ostap::Utils::FitResults::clone () const { return Clone() ; }
 std::vector<double> 
 Ostap::Utils::FitResults::global_cc () const 
 {
-  if ( nullptr == _GC ) { return std::vector<double>() ; }
-  return std::vector<double>( _GC->GetMatrixArray() , 
-                              _GC->GetMatrixArray() + 
-                              _GC->GetNrows()        ) ;
+  // use (pre)calcualted values 
+  if ( nullptr != _GC ) 
+  { 
+    return std::vector<double>( _GC->GetMatrixArray () , 
+                                _GC->GetMatrixArray () + 
+                                _GC->GetNrows       () ) ; 
+  }
+  // recalculate: 
+  return Ostap::Utils::global_cc ( *this ) ;
 }
 // ============================================================================
 // add label/status pair to the history 
@@ -132,9 +138,58 @@ void Ostap::Utils::FitResults::add_to_history
   const int          status )
 { _statusHistory.push_back ( std::make_pair ( label , status ) ) ; }
 // ============================================================================
-
-
-
+/*  calculate the global correlation coefficients 
+ * \f$ \rho_k = \sqrt{    1 - \left[ C_{kk} V_{kk}\right]^{-1} } \f$
+ *  where \f$ C \f$ is covarinace matrix and \f$ V = C^{-1}\$ is inverse
+ *  @code
+ *  @param r     fit result 
+ *  @return vector global correlation coefficients (empty in case of failure)
+ */
+// ============================================================================
+std::vector<double>
+Ostap::Utils::global_cc ( const RooFitResult& r ) 
+{
+  /// zero for doubles  
+  const static Ostap::Math::Zero<double> s_zero {}      ; // zero for doubles
+  ///
+  /// 1) try to invert covariance matrix 
+  TMatrixTSym<double> cinv { r.covarianceMatrix() } ;
+  double det = 0 ;
+  cinv.Invert ( &det  ) ;
+  if ( s_zero ( det ) ) { return std::vector<double>() ; }
+  ///
+  const int ncols = cinv.GetNcols() ;
+  std::vector<double> result ( ncols, 0.0 ) ;
+  //
+  const  TMatrixTSym<double>& cm = r.covarianceMatrix() ;
+  for ( int index = 0 ; index < ncols ; ++index ) 
+  {
+    const double cv = cinv ( index , index ) * cm ( index , index ) ;
+    if ( s_zero ( cv ) ) { return std::vector<double>() ; }
+    const double rho2 = 1.0 - 1.0 / cv ;
+    if ( rho2 < 0      ) { return std::vector<double>() ; }
+    result [ index ] = std::sqrt ( rho2 ) ;
+  }
+  //
+  return result ;
+}
+// ============================================================================
+/*  calculate the global correlation coefficient 
+ * \f$ \rho_k = \sqrt{    1 - \left[ C_{kk} V_{kk}\right]^{-1} } \f$
+ *  where \f$ C \f$ is covarinace matrix and \f$ V = C^{-1}\$ is inverse
+ *  @code
+ *  @param r     fit result 
+ *  @return global correlation coefficients (or -1 in case of failure) 
+ */
+// ============================================================================
+double Ostap::Utils::global_cc 
+( const RooFitResult&  r     , 
+  const unsigned short index ) 
+{
+  const std::vector<double> result { Ostap::Utils::global_cc ( r ) } ;
+  if ( result.size() <= index ) { return -1 ; }
+  return result [ index ] ;
+}
 // ============================================================================
 ClassImp(Ostap::Utils::FitResults    )
 // ============================================================================
