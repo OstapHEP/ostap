@@ -84,7 +84,7 @@ namespace  Ostap
       {
         if ( Ostap::Math::inverse ( m_cov2 , m_vxi ) ) 
         {
-          Ostap::throwException ( "Covariance matrix is not innvertile!" ,
+          Ostap::throwException ( "Covariance matrix is not innvertible!" ,
                                   "Ostap::Math::Combine<>" , 730 ) ;
         }
         const Data& vone = this->units() ;
@@ -131,7 +131,7 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// the main method:  get a combined value using the calculated weights
+      /// the main method: get a combined value using the calculated weights
       Ostap::Math::ValueWithError result () const 
       { 
         const double r  = ROOT::Math::Dot        ( m_data , m_w ) ;
@@ -198,9 +198,47 @@ namespace Ostap
      *  @date 2015-09-28
      */
     Ostap::Math::ValueWithError 
-    combine  ( const double               x   , 
-               const double               y   , 
-               const Ostap::SymMatrix2x2& cov ) ;
+    combine 
+    ( const double               x   , 
+      const double               y   , 
+      const Ostap::SymMatrix2x2& cov ) ;
+    // ========================================================================
+    /** combine three measurements <code>x</code>, <code>y</code> 
+     *  and <code>z</code> with covarinace matrix <code>cov</code>
+     *  @param x   (INPUT) the first  measurement 
+     *  @param y   (INPUT) the second measurement 
+     *  @param z   (INPUT) the third  measurement 
+     *  @param cov (INPUT) covariance matrix 
+     *  @return combined result
+     *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2015-09-28
+     */
+    Ostap::Math::ValueWithError 
+    combine 
+    ( const double               x   , 
+      const double               y   , 
+      const double               z   , 
+      const Ostap::SymMatrix3x3& cov ) ;
+    // ========================================================================
+    /** combine four measurements <code>x</code>, <code>y</code>, 
+     *  <code>z</code> and <code>w</code>
+     *  with covarinace matrix <code>cov</code>
+     *  @param x   (INPUT) the first  measurement 
+     *  @param y   (INPUT) the second measurement 
+     *  @param z   (INPUT) the third  measurement 
+     *  @param w   (INPUT) the fourth measurement 
+     *  @param cov (INPUT) covariance matrix 
+     *  @return combined result
+     *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2015-09-28
+     */
+    Ostap::Math::ValueWithError 
+    combine 
+    ( const double               x   , 
+      const double               y   , 
+      const double               z   , 
+      const double               w   , 
+      const Ostap::SymMatrix4x4& cov ) ;
     // ========================================================================
     /** combine two measurements <code>x1</code> and <code>x2</code>
      *  using correlation coefficient <code>rho</code>:  \f$-1\le\rho\le1\f$

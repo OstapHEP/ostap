@@ -1,4 +1,5 @@
 ## New features
+   1. Add functions for the 1st, 2nd3rd and 4th cumulants 
 
 ## Backward incompatible
 

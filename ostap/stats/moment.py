@@ -107,7 +107,7 @@ def _om_skewness ( obj ) :
 #  m = ...
 #  v = m.kurtosis () 
 #  @endcode
-def _om_kurtosis( obj ) :
+def _om_kurtosis ( obj ) :
     """Get an excess  kurtosis  for the moment-counter
     >>> m = ...
     >>> v = m.kurtosis () 
@@ -118,6 +118,93 @@ def _om_kurtosis( obj ) :
         m2 = obj.moment ( 2 )        
         return m4 / ( m2 * m2 ) - 3.0 
     return Ostap.Math.Moments.kurtosis ( obj )  
+
+# =============================================================================
+## Get 1st cumulant, well i tis equasl to the mean
+#  @code
+#  m = ...
+#  v = m.cumulant1() 
+#  @endcode
+def _om_cumulant_1st( obj ) :
+    """Get 1st cumulant, well it is equal to the mean
+    
+    >>> m = ...
+    >>> v = m.cumulant_1st() 
+    """
+    return obj.mean() 
+
+# =============================================================================
+## Get 2nd cumulant, well it is equal to the variance 
+#  @code
+#  m = ...
+#  v = m.cumulant2() 
+#  @endcode
+def _om_cumulant_2nd ( obj ) :
+    """Get 3nd  cumulant, well it is equal to the variance 
+    
+    >>> m = ...
+    >>> v = m.cumulant2() 
+    """
+    assert 2 <= obj.order , 'cumulant_2nd: the order must be >=2!'
+    ##
+    if root_info < ( 6 , 18 ) : 
+        ## get the unbiased 2nd moment
+        return obj.variance () 
+    ##
+    return Ostap.Math.Moments.cumulant_2nd  ( obj )  
+
+# =============================================================================
+## Get 3nd cumulant, well it is equal to the 3rd central moment  
+#  @code
+#  m = ...
+#  v = m.cumulant3() 
+#  @endcode
+def _om_cumulant_3rd ( obj ) :
+    """Get 3rd cumulant, well it is equal to the 3rd central moment 
+    
+    >>> m = ...
+    >>> v = m.cumulant_3rd() 
+    """
+    assert 3 <= obj.order , 'cumulant_3rd: the order must be >=3!'
+    ##
+    if root_info < ( 6 , 18 ) : 
+        ## get the unbiased 3rd moment 
+        unb = m.unbiased_3rd ()
+        if obj.order() < 6 : return unb
+        ## 
+        ## get moment 
+        val = m.central_moment ( 3 ) 
+        ## get the correctedalue 
+        if isinstance ( val , VE ) : return VE ( unb , val.cov2() )
+    ## 
+    return Ostap.Math.Moments.cumulant_3rd ( obj )  
+    
+
+# =============================================================================
+## Get 3th cumulant,
+#  @code
+#  m = ...
+#  v = m.cumulant3() 
+#  @endcode
+def _om_cumulant_4th ( obj ) :
+    """Get 34th cumulant, well it is equal to the 3rd central moment 
+    
+    >>> m = ...
+    >>> v = m.cumulant_4th() 
+    """
+    assert 4 <= obj.order , 'cumulant_4th: the order must be >=3!'
+    ##
+    if root_info < ( 6 , 18 ) : 
+        ## get the unbiased 3rd moment
+        m4  = obj.moment ( 4 )
+        m2  = obj.moment ( 2 )
+        n   = obj.size()
+        vv  = m4 * ( n - 1 ) - 3 * m2 * m2 * ( n - 1 )
+        ## 
+        return vv * n * n * 1.0 / ( ( n - 1 ) * ( n -2 ) * ( n -3 ) )          
+    ## 
+    return Ostap.Math.Moments.cumulant_4th ( obj )  
+    
 
 # =============================================================================
 ## get unbiased 2nd order moment from the moment-counter 
@@ -182,6 +269,7 @@ def _om_u5th ( obj ) :
     if root_info < ( 6 , 18 ) :
         return obj.moment ( 5 )    
     return Ostap.Math.Moments.unbiased_5th ( obj )  
+
 
 
 pos_infinity = float('+Inf')
@@ -410,6 +498,47 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
             row = "M[5](unb)" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
 
+    if 1 <= order and 1 <= size and obj.ok () and hasattr ( obj , 'cumulant_1st' ) :
+
+        v  = obj.cumulant_1st ()
+        vv = float   ( v )                         
+        if isfinite ( vv ) and IM != float ( v ) :
+            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            else                     : field , n = pretty_float ( v )
+            row = "K[1](unb)" , '' if not n else '[10^%+d]' % n , field 
+            rows.append ( row )
+
+    if 2 <= order and 2 <= size and obj.ok () and hasattr ( obj , 'cumulant_2nd' ) :
+
+        v  = obj.cumulant_2nd ()
+        vv = float   ( v )                         
+        if isfinite ( vv ) and IM != float ( v ) :
+            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            else                     : field , n = pretty_float ( v )
+            row = "K[2](unb)" , '' if not n else '[10^%+d]' % n , field 
+            rows.append ( row )
+
+    if 3 <= order and 3 <= size and obj.ok () and hasattr ( obj , 'cumulant_3rd' ) :
+
+        v  = obj.cumulant_2nd ()
+        vv = float   ( v )                         
+        if isfinite ( vv ) and IM != float ( v ) :
+            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            else                     : field , n = pretty_float ( v )
+            row = "K[3](unb)" , '' if not n else '[10^%+d]' % n , field 
+            rows.append ( row )
+
+    if 4 <= order and 4 <= size and obj.ok () and hasattr ( obj , 'cumulant_4th' ) :
+
+        v  = obj.cumulant_4th ()
+        vv = float   ( v )                         
+        if isfinite ( vv ) and IM != float ( v ) :
+            if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+            else                     : field , n = pretty_float ( v )
+            row = "K[4](unb)" , '' if not n else '[10^%+d]' % n , field 
+            rows.append ( row )
+        
+            
     fmt = '[%d]'
     if   10  <= order < 100   : fmt = '[%02d]'
     elif 100 <= order < 1000  : fmt = '[%03d]'
@@ -461,6 +590,12 @@ Ostap.Math.Moment.kurtosis       = _om_kurtosis
 Ostap.Math.Moment.cmoment        = _om_cm2
 Ostap.Math.Moment.central_moment = _om_cm2
 Ostap.Math.Moment.table          = _om_table
+
+Ostap.Math.Moment.cumulant_1st   = _om_cumulant_1st ## 1st cumulant is a mens
+Ostap.Math.Moment.cumulant_2nd   = _om_cumulant_2nd ## 2nd cumulant is a variance 
+Ostap.Math.Moment.cumulant_3rd   = _om_cumulant_3rd ## 3nd cumulant is a 3rd central moment 
+Ostap.Math.Moment.cumulant_4th   = _om_cumulant_4th ## 4th cumulant is different 
+
 
 Ostap.Math.WMoment.mean           = _om_mean    
 Ostap.Math.WMoment.rms            = _om_rms 

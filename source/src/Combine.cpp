@@ -8,7 +8,7 @@
 #include "Ostap/Combine.h"
 // ============================================================================
 /** @file
- *  Implementation file for utilitied fromm LHCbMath/Comiiner.h file  
+ *  Implementation file for utilities from LHCbMath/Combiner.h file  
  *  @see Ostap::Math::Combine
  *  Helper utility to combine   correlated measurements 
  *  @see P.Avery "Combining measurements with correlated errors", CBX 95 55
@@ -35,7 +35,56 @@ Ostap::Math::combine
   const Ostap::SymMatrix2x2& cov ) 
 {
   Ostap::Vector2 data ( x,y) ;
-  Ostap::Math::Combine<2> combiner  ( data , cov ) ;
+  const Ostap::Math::Combine<2> combiner  ( data , cov ) ;
+  return combiner.result() ;
+}
+// ============================================================================
+/*  combine three measurements <code>x</code>, <code>y</code> 
+ *  and <code>z</code> with covarinace matrix <code>cov</code>
+ *  @param x   (INPUT) the first  measurement 
+ *  @param y   (INPUT) the second measurement 
+ *  @param z   (INPUT) the third  measurement 
+ *  @param cov (INPUT) covariance matrix 
+ *  @return combined result
+ *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2015-09-28
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::combine  
+( const double               x   , 
+  const double               y   , 
+  const double               z   , 
+  const Ostap::SymMatrix3x3& cov ) 
+{
+  Ostap::Vector3 data ( x , y , z ) ;
+  const Ostap::Math::Combine<3> combiner  ( data , cov ) ;
+  return combiner.result() ;
+}
+// ============================================================================
+/*  combine four measurements <code>x</code>, <code>y</code>, 
+ *  <code>z</code> and <code>w</code>
+ *  with covarinace matrix <code>cov</code>
+ *  @param x   (INPUT) the first  measurement 
+ *  @param y   (INPUT) the second measurement 
+ *  @param z   (INPUT) the third  measurement 
+ *  @param w   (INPUT) the fourth measurement 
+ *  @param cov (INPUT) covariance matrix 
+ *  @return combined result
+ *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2015-09-28
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::combine  
+( const double               x   , 
+  const double               y   , 
+  const double               z   , 
+  const double               w   , 
+  const Ostap::SymMatrix4x4& cov ) 
+{
+  Ostap::Vector4 data ( x , y , z , w ) ;
+  const Ostap::Math::Combine<4> combiner  ( data , cov ) ;
   return combiner.result() ;
 }
 // ============================================================================
