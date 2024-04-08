@@ -120,13 +120,13 @@ def _om_kurtosis ( obj ) :
     return Ostap.Math.Moments.kurtosis ( obj )  
 
 # =============================================================================
-## Get 1st cumulant, well i tis equasl to the mean
+## Get 1st unbiased cumulant, well i tis equasl to the mean
 #  @code
 #  m = ...
 #  v = m.cumulant1() 
 #  @endcode
 def _om_cumulant_1st( obj ) :
-    """Get 1st cumulant, well it is equal to the mean
+    """Get 1st unbiased cumulant, well it is equal to the mean
     
     >>> m = ...
     >>> v = m.cumulant_1st() 
@@ -140,7 +140,7 @@ def _om_cumulant_1st( obj ) :
 #  v = m.cumulant2() 
 #  @endcode
 def _om_cumulant_2nd ( obj ) :
-    """Get 3nd  cumulant, well it is equal to the variance 
+    """Get 2nd unbiased cumulant, well it is equal to the variance 
     
     >>> m = ...
     >>> v = m.cumulant2() 
@@ -154,13 +154,13 @@ def _om_cumulant_2nd ( obj ) :
     return Ostap.Math.Moments.cumulant_2nd  ( obj )  
 
 # =============================================================================
-## Get 3nd cumulant, well it is equal to the 3rd central moment  
+## Get 3nd unbiased cumulant, well it is equal to the 3rd central moment  
 #  @code
 #  m = ...
-#  v = m.cumulant3() 
+#  v = m.cumulant_3rd() 
 #  @endcode
 def _om_cumulant_3rd ( obj ) :
-    """Get 3rd cumulant, well it is equal to the 3rd central moment 
+    """Get 3rd unbiased cumulant, well it is equal to the 3rd central moment 
     
     >>> m = ...
     >>> v = m.cumulant_3rd() 
@@ -181,13 +181,13 @@ def _om_cumulant_3rd ( obj ) :
     
 
 # =============================================================================
-## Get 3th cumulant,
+## Get 4th nb unbiased cumulant,
 #  @code
 #  m = ...
-#  v = m.cumulant3() 
+#  v = m.cumulant_4th() 
 #  @endcode
 def _om_cumulant_4th ( obj ) :
-    """Get 34th cumulant, well it is equal to the 3rd central moment 
+    """Get 4th unbiased cumulant, well it is equal to the 3rd central moment 
     
     >>> m = ...
     >>> v = m.cumulant_4th() 
@@ -331,12 +331,33 @@ else :
         return obj.moment ( order ) 
 
 _om_cm3.__doc__ = \
-    """ Get a central moment fro the moment-counter 
+    """ Get a central moment for the moment-counter 
     >>> m = ...
     >>> v = m.central_moment ( 3 ) ## ditto 
     >>> v = m.cmoment        ( 3 ) ## ditto 
     """
 
+# ================================================================================
+## get the cumulant
+#  @code
+#  m = ...
+#  v = m.cumulant ( 4 ) 
+#  @endcode
+def _om_cumulant_ ( obj , order ) :
+    """ Get th ecumulant 
+    >>> m = ...
+    >>> v = m.cumulant ( 3 ) ## ditto 
+    """
+    assert isinstance  ( order , integer_types ) and 1 <= order <= obj.order ,\
+           'cumulant: invalid order %s/%d' % ( order , obj.order )
+    if not obj.ok() : return neg_infinity
+    return obj.cumulant_[order] ()
+
+if (6,22) <= root_info :
+    
+    Ostap.Math.Moment.cumulant  = _om_cumulant_
+    
+    
 
 # =============================================================================
 ## get a RMS 
@@ -520,7 +541,7 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
 
     if 3 <= order and 3 <= size and obj.ok () and hasattr ( obj , 'cumulant_3rd' ) :
 
-        v  = obj.cumulant_2nd ()
+        v  = obj.cumulant_3rd ()
         vv = float   ( v )                         
         if isfinite ( vv ) and IM != float ( v ) :
             if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
@@ -537,8 +558,20 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
             else                     : field , n = pretty_float ( v )
             row = "K[4](unb)" , '' if not n else '[10^%+d]' % n , field 
             rows.append ( row )
-        
             
+    if 1<= order and obj.ok () and hasattr ( obj , 'cumulant' ) :
+        kmax = min ( order , 10 )        
+        fmt = '[%d]'
+        if 10 <= kmax : fmt = '[%02d]'
+        for k in range ( 1 , kmax + 1 ) :            
+            v  = obj.cumulant ( k )
+            vv = float   ( v )                         
+            if isfinite ( vv ) and IM != float ( v ) :
+                if isinstance ( v , VE ) : field , n = pretty_ve    ( v )
+                else                     : field , n = pretty_float ( v )
+                row = ( "K" + fmt + "/raw" )  % k , '' if not n else '[10^%+d]' % n , field 
+                rows.append ( row )
+                
     fmt = '[%d]'
     if   10  <= order < 100   : fmt = '[%02d]'
     elif 100 <= order < 1000  : fmt = '[%03d]'
@@ -640,6 +673,11 @@ _new_methods_ = (
     Ostap.Math.Moment.unbiased_3rd   ,
     Ostap.Math.Moment.unbiased_4th   ,
     Ostap.Math.Moment.unbiased_5th   ,
+    ##
+    Ostap.Math.Moment.cumulant_1st   , 
+    Ostap.Math.Moment.cumulant_2nd   , 
+    Ostap.Math.Moment.cumulant_3rd   , 
+    Ostap.Math.Moment.cumulant_4th   , 
     ##
     Ostap.Math.Moment.mean           ,
     Ostap.Math.Moment.rms            ,

@@ -1,5 +1,8 @@
 ## New features
-   1. Add functions for the 1st, 2nd3rd and 4th cumulants 
+
+   1. Add functions for the 1st, 2nd, 3rd and 4th unbiased cumulant estimators  
+   1. add fucntions for cumulants up to order 10 + correct uncertainties for 3rd and 4th cumulants
+
 
 ## Backward incompatible
 

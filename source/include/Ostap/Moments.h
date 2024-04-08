@@ -84,7 +84,8 @@ namespace  Ostap
       // ======================================================================
       /// get value of the kth standartized moment for \f$  k \le N \f$
       inline double std_moment ( const unsigned short k ) const
-      { return 
+      { 
+        return 
           N <  k ? 0 : 
           0 == k ? 1 : 
           1 == k ? 0 :
@@ -169,13 +170,13 @@ namespace  Ostap
       template <unsigned  int K, typename std::enable_if<(K==N),int>::type = 0 >
       inline long double M_ () const { return this->m_M ; }
       // =====================================================================
-      template <unsigned  int K, typename std::enable_if<(N>K) ,int>::type = 0 >
+      template <unsigned  int K, typename std::enable_if<(N>K),int>::type = 0 >
       inline long double M_ () const { return this->m_prev.template M_<K>() ; }
       // ======================================================================
     public:  // templated moment
       // ======================================================================
       /// get the central moment of order K 
-      template <unsigned int K, typename std::enable_if<(K==0)&&(N>=K),int>::type = 0 >
+      template <unsigned int K, typename std::enable_if<(K==0)&&(K<=N),int>::type = 0 >
       inline long double moment_ () const { return 1 ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==1)&&(N>=K),int>::type = 0 >
@@ -231,6 +232,127 @@ namespace  Ostap
         return this->empty () ? 0 :
           this->template moment_<K> () / std::pow ( this->moment_<2>() , 0.5 * K ) ;
       }      
+      // ======================================================================
+    public:
+      // ======================================================================      
+      /// 1st cumulant 
+      template <unsigned int K, typename std::enable_if<(1==K)&&(K<=N),int>::type = 0 >
+      inline long double cumulant_ () const { return this->mu() ; }
+      /// 2nd cumulant 
+      template <unsigned int K, typename std::enable_if<(2==K)&&(K<=N),int>::type = 0 >
+      inline long double cumulant_ () const 
+      { return !this->ok() ? 0.0 : this->template M_<K>() / this->size() ; }
+      /// 3rd cumulant 
+      template <unsigned int K, typename std::enable_if<(3==K)&&(K<=N),int>::type = 0 >
+      inline long double cumulant_ () const 
+      { return !this->ok() ? 0.0 : this->template M_<K>() / this->size() ; }
+      /// 4th cumulant 
+      template <unsigned int K, typename std::enable_if<(4==K)&&(K<=N),int>::type = 0 >
+      inline long double cumulant_ () const 
+      { 
+        if ( !this->ok() ) { return 0.0 ; }
+        //
+        const long double m4 = this->template M_<4> () / this->size() ;
+        const long double m2 = this->template M_<2> () / this->size() ;
+        //
+        return m4 - 3 * m2 * m2 ;
+      }
+      /// 5th cumulant 
+      template <unsigned int K, typename std::enable_if<(5==K)&&(K<=N),int>::type = 0 >
+        inline long double cumulant_ () const 
+      { 
+        if ( !this->ok() ) { return 0.0 ; }
+        //
+        const long double m5 = this->template M_<5> () / this->size() ;
+        const long double m3 = this->template M_<3> () / this->size() ;
+        const long double m2 = this->template M_<2> () / this->size() ;
+        //
+        return m5 - 10  *m3 * m2 ;
+      }
+      /// 6th cumulant 
+      template <unsigned int K, typename std::enable_if<(6==K)&&(K<=N),int>::type = 0 >
+      inline long double cumulant_ () const 
+      { 
+        if ( !this->ok() ) { return 0.0 ; }
+        //
+        const long double m6 = this->template M_<6> () / this->size() ;       
+        const long double m4 = this->template M_<4> () / this->size() ;
+        const long double m3 = this->template M_<3> () / this->size() ;
+        const long double m2 = this->template M_<2> () / this->size() ;
+        //
+        return m6 - 15 * m4 * m2 - 10 * m3 * m3 + 30 * m2 * m2 * m2 ;
+      }
+      /// 7th cumulant 
+      template <unsigned int K, typename std::enable_if<(7==K)&&(K<=N),int>::type = 0 >
+      inline long double cumulant_ () const 
+      { 
+        if ( !this->ok() ) { return 0.0 ; }
+        //
+        const long double m7 = this->template M_<7> () / this->size() ;       
+        const long double m5 = this->template M_<5> () / this->size() ;       
+        const long double m4 = this->template M_<4> () / this->size() ;
+        const long double m3 = this->template M_<3> () / this->size() ;
+        const long double m2 = this->template M_<2> () / this->size() ;
+        //
+        return m7 - 21 * m5 * m2 - 35 * m4 * m3 + 210 *m3 * m2 * m2 ;
+      }
+      /// 8th cumulant 
+      template <unsigned int K, typename std::enable_if<(8==K)&&(K<=N),int>::type = 0 >
+      inline long double cumulant_ () const 
+      { 
+        if ( !this->ok() ) { return 0.0 ; }
+        //
+        const long double m8 = this->template M_<8> () / this->size() ;       
+        const long double m6 = this->template M_<6> () / this->size() ;       
+        const long double m5 = this->template M_<5> () / this->size() ;       
+        const long double m4 = this->template M_<4> () / this->size() ;
+        const long double m3 = this->template M_<3> () / this->size() ;
+        const long double m2 = this->template M_<2> () / this->size() ;
+        //
+        return m8 - 28 * m6 * m2 - 56 * m5 * m3 - 35 * m4 * m4 
+        + 420 * m4 * m2 * m2 + 560 * m3 * m3 * m2 - 630 * m2 * m2 * m2 * m2 ;
+        
+      }
+      /// 9th cumulant 
+      template <unsigned int K, typename std::enable_if<(9==K)&&(K<=N),int>::type = 0 >
+      inline long double cumulant_ () const 
+      { 
+        if ( !this->ok() ) { return 0.0 ; }
+        //
+        const long double m9 = this->template M_<9> () / this->size() ;       
+        const long double m7 = this->template M_<7> () / this->size() ;       
+        const long double m6 = this->template M_<6> () / this->size() ;       
+        const long double m5 = this->template M_<5> () / this->size() ;       
+        const long double m4 = this->template M_<4> () / this->size() ;
+        const long double m3 = this->template M_<3> () / this->size() ;
+        const long double m2 = this->template M_<2> () / this->size() ;
+        //
+        return m9 - 36 * m7 * m2 - 84 * m6 * m3 - 126 * m5 * m4 
+        + 756 * m5 * m2 * m2 + 2520 * m4 * m3 * m2 
+        + 560 * m3 * m3 * m3 - 7560 * m3 * m2 * m2 * m2 ; // NB? typo here? 
+        
+      }
+      /// 10th cumulant 
+      template <unsigned int K, typename std::enable_if<(10==K)&&(K<=N),int>::type = 0 >
+      inline long double cumulant_ () const 
+      { 
+        if ( !this->ok() ) { return 0.0 ; }
+        //
+        const long double m10 = this->template M_<10> () / this->size() ;       
+        const long double m8  = this->template M_<8>  () / this->size() ;       
+        const long double m7  = this->template M_<7>  () / this->size() ;       
+        const long double m6  = this->template M_<6>  () / this->size() ;       
+        const long double m5  = this->template M_<5>  () / this->size() ;       
+        const long double m4  = this->template M_<4>  () / this->size() ;
+        const long double m3  = this->template M_<3>  () / this->size() ;
+        const long double m2  = this->template M_<2>  () / this->size() ;
+        //
+        return m10 - 45 * m8 * m2 - 120 * m7 * m3 - 210 * m6 * m4 
+        + 1260  * m6 * m2 * m2       - 126   * m5 * m5
+        + 5040  * m5 * m3 * m2       + 3150  * m4 * m4 * m2 
+        + 4200  * m4 * m3 * m3       - 18900 * m4 * m2 * m2 * m2  
+        - 37800 * m3 * m3 * m2 * m2  + 22680 * m2 * m2 * m2 * m2 * m2 ;
+      }
       // ======================================================================
     private:
       // ======================================================================
@@ -559,6 +681,12 @@ namespace  Ostap
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(K==1),int>::type = 0 >
       inline long double std_moment_ () const { return 0 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// 1st cumulant 
+      template <unsigned int K, typename std::enable_if<(1==K),int>::type = 0 >
+      inline long double cumulant_ () const { return this->mu() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1407,9 +1535,8 @@ namespace  Ostap
       static inline double std_moment ( const Moment_<N>& m )
       { return ( !m.ok() || m.size() < K ) ? s_INVALID_MOMENT : m.template moment_<K> () ; }
       // ======================================================================
-      
 
-      
+
       // ======================================================================
       /// get the first cumulant, well, it is actually the first central moment 
       template <unsigned short N,
@@ -1461,7 +1588,7 @@ namespace  Ostap
       }
       /// get the third unbiased cumulant, well it is actually the third unbiased central moment 
       template <unsigned short N,
-                typename std::enable_if<(N>=3),int>::type = 1 >
+                typename std::enable_if<(N>=3)&&(N<6),int>::type = 1 >
       static inline double cumulant_3rd  ( const Moment_<N>& m ) 
       { 
         if ( !m.ok() || ( m.size() < 3 ) ) { return s_INVALID_MOMENT ; }
@@ -1471,9 +1598,33 @@ namespace  Ostap
         //
         return m3 * n * n  / ( ( n - 1 ) * ( n - 2 ) ) ; 
       }
+      /// get the third unbiased cumulant, well it is actually the third unbiased central moment 
+      template <unsigned short N,
+                typename std::enable_if<(N>=6),int>::type = 1 >
+      static inline VE cumulant_3rd  ( const Moment_<N>& m ) 
+      { 
+        if ( !m.ok() || ( m.size() < 3 ) ) { return s_INVALID_MOMENT ; }
+        //
+        const auto n = m.size() ;
+        const double m3 = m.template M_<3> () / n ; 
+        //
+        const double k3u = m3 * n * n  / ( ( n - 1 ) * ( n - 2 ) ) ; 
+        //
+        const double k6 = m.template cumulant_<6> () ;
+        const double k4 = m.template cumulant_<4> () ;
+        const double k3 = m.template cumulant_<3> () ;
+        const double k2 = m.template cumulant_<2> () ;
+        //
+        const double c2 = k6 / n 
+          + 9 *     k4 * k2      /   ( n - 1 ) 
+          + 9 *     k3 * k3      /   ( n - 1 ) 
+          + 6 * n * k2 * k2 * k2 / ( ( n - 1 ) * ( n - 2 ) ) ;
+        //
+        return VE ( k3u , c2 ) ;
+      }
       /// get the 4th unbiased cumulant 
       template <unsigned short N,
-                typename std::enable_if<(N>=3),int>::type = 1 >
+                typename std::enable_if<(N>=4)&&(N<8),int>::type = 1 >
       static inline double cumulant_4th  ( const Moment_<N>& m ) 
       { 
         if ( !m.ok() || ( m.size() < 4 ) ) { return s_INVALID_MOMENT ; }
@@ -1488,8 +1639,40 @@ namespace  Ostap
         //
         return k4 ;
       }
+      //
+      template <unsigned short N,
+                typename std::enable_if<(N>=8),int>::type = 1 >
+      static inline VE cumulant_4th  ( const Moment_<N>& m ) 
+      { 
+        if ( !m.ok() || ( m.size() < 4 ) ) { return s_INVALID_MOMENT ; }
+        //
+        const auto n = m.size() ;
+        // 
+        const double m2  = m.template M_<2> () / n ; 
+        const double m4  = m.template M_<4> () / n ;
+        //
+        const double k4u = ( ( n + 1 ) * m4 - 3 * m2  *m2 * ( n - 1 ) ) 
+          / ( ( n - 1 ) * ( n - 2 ) * ( n -3 ) ) ;
+        //
+        const double k8 = m.template cumulant_<8> () ;
+        const double k6 = m.template cumulant_<6> () ;
+        const double k5 = m.template cumulant_<5> () ;
+        const double k4 = m.template cumulant_<4> () ;
+        const double k3 = m.template cumulant_<3> () ;
+        const double k2 = m.template cumulant_<2> () ;
+        //
+        const double c2 =  k8 / n 
+          +  16     * k6 * k2      /   ( n - 1 ) 
+          +  48     * k5 * k3      /   ( n - 1 ) 
+          +  34     * k4 * k4      /   ( n - 1 ) 
+          +  72 * n * k4 * k2 * k2 / ( ( n - 1 ) * ( n - 2 ) ) 
+          + 144 * n * k3 * k3 * k2 / ( ( n - 1 ) * ( n - 2 ) ) 
+          +  24 * n * ( n + 1 ) * std::pow ( m2 , 4 ) / 
+          ( ( n -1 ) * ( n -2 ) * ( n -3 ) )  ;
+        //
+        return VE ( k4u , c2 ) ;
+      }
       // ======================================================================
-
 
       // ======================================================================
       // Weighted
