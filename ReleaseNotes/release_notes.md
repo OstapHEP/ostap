@@ -11,6 +11,7 @@
 
    1. fix a bug with summation of two `RooPlot objects` 
 
+
 # v1.10.1.2
 
 ## New features
