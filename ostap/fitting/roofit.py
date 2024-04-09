@@ -334,7 +334,7 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
         table.append ( row )
 
     import ostap.logger.table as T
-    return T.table ( table , title = title, prefix = prefix , alignment = 'clcw' )
+    return T.table ( table , title = title, prefix = prefix , alignment = 'clcclllw' )
 
 ROOT.RooPlot.table    =  _rp_table_
 ROOT.RooPlot.__str__  =  _rp_table_
