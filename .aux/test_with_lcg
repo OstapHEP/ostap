@@ -4,5 +4,5 @@ CMTCONFIG=$2
 source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
 source build/INSTALL/thisostap.sh 
 cd build 
-ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j8 -R '(mypdf|eff|morph|fill|linalg|blue|sum|bern)'  --output-on-failure
+ctest -N  && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j8   --output-on-failure
 
