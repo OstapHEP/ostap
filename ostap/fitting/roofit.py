@@ -284,7 +284,7 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
     
     if not title  :
         title = 'RooPlot %s' % plot.name
-    table = [ ( 'Index' , 'Type' , 'Option' , 'Line' , 'Marker' , 'Fill' , 'Name' ) ]
+    table = [ ( 'Index' , 'Type' , 'Option' , 'Binw' , 'Line' , 'Marker' , 'Fill' , 'Name' ) ]
 
     names = set() 
     for index , obj in enumerate ( plot )  :
@@ -298,6 +298,10 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
             names.add  ( name )
             
         row  = [ '%2d' % index , _name ( obj ) , options ]
+
+        if not isinstance ( obj , ROOT.RooHist ) : row.append ( '' )
+        else : row.append ( '%g' % obj.getNominalBinWidth() ) 
+            
 
         ## line attributes 
         if isinstance ( obj , ROOT.TAttLine ) : 
@@ -318,9 +322,13 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
             row.append ( '%4d/%-3d' % ( obj.GetFillStyle () ,
                                         obj.GetFillColor () ) )
         else : row.append ('')
+
         
         ## 
         row.append  ( name )
+
+
+        
         row = tuple ( row  )
         
         table.append ( row )
@@ -337,7 +345,6 @@ ROOT.RooPlot.__repr__ =  _rp_table_
 ## copy RooPlot object
 def _rp_copy_ ( plot ) :
     """copy RooPlot object"""
-
     return copy.deepcopy ( plot )
 
 ROOT.RooPlot.copy      =  _rp_copy_ 

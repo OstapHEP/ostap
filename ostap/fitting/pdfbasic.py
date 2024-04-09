@@ -932,7 +932,6 @@ class APDF1 ( Components ) :
                 if 0 < binw : self.info ( 'chi2/ndf: %.3f, binwidth: %s' %  ( frame.chi2ndf , binw ) )
                 else        : self.info ( 'chi2/ndf: %.3f' %                  frame.chi2ndf          )
 
-
             ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
             frame = frame.copy ()
             if not kwargs.get ( 'draw_axis_title' , False ) : 

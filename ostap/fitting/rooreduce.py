@@ -816,8 +816,15 @@ def _rhist_factory_ ( klass , *args ) :
     -see `ROOT.RooPlotable`
     -see `ROOT.TGraphAsymmErrors`
     """
-    graph     = GR.graph_asymerrors_factory ( klass , *args [:-1] )
-    rplotatts = args[-1]
+    rplotatts = args [ -1 ]
+    if 4 == len ( rplotatts ) :
+        binwidth  = rplotatts [   -1 ]
+        rplotatts = rplotatts [ : -1 ] 
+        fklass = lambda  : klass ( binwidth ) 
+    else :
+        fklass = lambda  : klass () 
+        
+    graph     = GR.graph_asymerrors_factory ( fklass , *args [:-1] )
     graph.setYAxisLabel  (  rplotatts [0 ] )
     graph.setYAxisLimits ( *rplotatts [1:] )
     ## 
@@ -833,8 +840,14 @@ def _rhist_reduce_ ( graph ) :
     - see `ROOT.TGraphAsymmErrors`
     """
     _ , content = GR.graph_asymerrors_reduce ( graph )
-    rplotatts   = graph.getYAxisLabel (), graph.getYAxisMin (), graph.getYAxisMax () 
-    return _rhist_factory_ , content + ( rplotatts , ) 
+    
+    rplotatts   = graph.getYAxisLabel () , \
+                  graph.getYAxisMin   () , \
+                  graph.getYAxisMax   () , \
+                  graph.getNominalBinWidth() ## new! 
+    
+    payload     = content + ( rplotatts , ) 
+    return _rhist_factory_ , payload 
 
 ROOT.RooHist.__reduce__ = _rhist_reduce_
 

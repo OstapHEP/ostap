@@ -17,7 +17,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info           import root_info 
 from   ostap.math.reduce              import root_factory
-from   ostap.core.ostap_types         import num_types, integer_types  
+from   ostap.core.ostap_types         import num_types, integer_types, string_types 
 from   ostap.plotting.draw_attributes import copy_graph_attributes  
 import ROOT, array, itertools  
 # =============================================================================
@@ -47,7 +47,7 @@ def graph_factory ( klass     ,
     """
     graph = klass ()
     ## TNamed
-    graph.SetName   ( name  )
+    graph.SetName   ( name  ) 
     graph.SetTitle  ( title )
     ## min/max 
     graph.SetMinimum ( minmax[0] )
@@ -75,8 +75,8 @@ def graph_reduce ( graph ) :
     """Reduce/serialize/pickle simple `ROOT.TGraph` object\
     - see `ROOT.TGraph`
     """
-    xvalues = array.array ( 'd' ,   graph.GetX () ) 
-    yvalues = array.array ( 'd' ,   graph.GetY () )     
+    xvalues = array.array  ( 'd' ,  graph.GetX () ) 
+    yvalues = array.array  ( 'd' ,  graph.GetY () )     
     return graph_factory , ( type ( graph ) ,
                              ## TNamed                             
                              str ( graph.GetName    () ) ,

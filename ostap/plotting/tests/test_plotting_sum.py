@@ -58,7 +58,8 @@ with use_canvas ( title , wait = 5 ) :
 assert len ( f1 ) == len ( f2 ) and len ( f1 ) == len ( fsum ) , \
        'Invalid dimentions/1!'
 
-for a,b,c in zip ( f1 , f2  , fsum ) :
+
+for a, b, c in zip ( f1 , f2  , fsum ) :
     
     if not  isinstance ( a , ROOT.RooHist ) : continue
     
@@ -74,14 +75,29 @@ for a,b,c in zip ( f1 , f2  , fsum ) :
         v2x, v2y = b [ i ]
         vsx, vsy = c [ i ]
         
-        ## assert v1x.value == v2x.value and v2x.value == vsx.value, \
-        ##       'Invalid x: %s %s %s ' %  ( v1x , v2x , vsx )
+        assert v1x.value == v2x.value and v2x.value == vsx.value, \
+              'Invalid x: %s %s %s ' %  ( v1x , v2x , vsx )
         
         
-        ## assert v1y.value + v2y.value == vsy.value, \
-        ##       'Invalid y: %s %s %s ' %  ( v1y , v2y , vsy ) 
+        assert v1y.value + v2y.value == vsy.value, \
+              'Invalid y: %s %s %s ' %  ( v1y , v2y , vsy ) 
         
-        
+
+## h1 = f1.getObject(0)
+## h2 = f2.getObject(0)
+
+## print ( 'nominal bin widths h1' , h1.getNominalBinWidth() )
+## print ( 'nominal bin widths h2' , h1.getNominalBinWidth() )
+
+
+## h1 = f1.getObject(2)
+## h2 = f2.getObject(2)
+
+## print ( 'nominal bin widths h1' , h1.getNominalBinWidth() )
+## print ( 'nominal bin widths h2' , h1.getNominalBinWidth() )
+
+
+
     
 # =============================================================================
 if '__main__' == __name__  :
