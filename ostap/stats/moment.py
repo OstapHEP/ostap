@@ -169,13 +169,14 @@ def _om_cumulant_3rd ( obj ) :
     ##
     if root_info < ( 6 , 18 ) : 
         ## get the unbiased 3rd moment 
-        unb = m.unbiased_3rd ()
-        if obj.order() < 6 : return unb
-        ## 
+        unb = obj.unbiased_3rd ()
+        if obj.order < 6 : return unb
         ## get moment 
-        val = m.central_moment ( 3 ) 
-        ## get the correctedalue 
+        val = obj.central_moment ( 3 ) 
+        ## get the corrected value 
         if isinstance ( val , VE ) : return VE ( unb , val.cov2() )
+        ## 
+        return unb 
     ## 
     return Ostap.Math.Moments.cumulant_3rd ( obj )  
     
@@ -196,9 +197,9 @@ def _om_cumulant_4th ( obj ) :
     ##
     if root_info < ( 6 , 18 ) : 
         ## get the unbiased 3rd moment
+        n   = obj.size()
         m4  = obj.moment ( 4 )
         m2  = obj.moment ( 2 )
-        n   = obj.size()
         vv  = m4 * ( n - 1 ) - 3 * m2 * m2 * ( n - 1 )
         ## 
         return vv * n * n * 1.0 / ( ( n - 1 ) * ( n -2 ) * ( n -3 ) )          
