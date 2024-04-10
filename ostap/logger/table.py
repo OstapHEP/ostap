@@ -78,7 +78,12 @@ wrap_indent = '  '
 #  t = the_table ( table_data , 'Title' )
 #  print (t)
 #  @endcode
-def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 , indent = wrap_indent ) :
+def the_table ( rows ,
+                title      = '' ,
+                prefix     = '' ,
+                alignment  = () ,
+                wrap_width = -1 ,
+                indent     = wrap_indent , style = '' ) :
     """Format the list of rows as a  table (home-made primitive) 
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
@@ -91,7 +96,9 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
     """
     ## calculate the number of columns
 
-    rows = list ( rows )
+    title = allright ( decolorize ( title ).strip() ) 
+    
+    rows   = list ( rows )
     
     nc  = 0
     for row in rows : nc = max ( nc , len ( row ) )
@@ -123,13 +130,17 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
         for k in widths :
             if not k in wraps :
                 twidth += widths [ k ] + 2
-                twidth += nc + 1                
+                twidth += nc + 1
+
+        ww = 12
+        
         _ , w = terminal_size()
         if w <= twidth : break
         
         nw = len ( wraps ) 
         ww = ( w - twidth ) - 2 * nw
         ww , _ = divmod ( ww  , nw )
+
 
         if 12 < wrap_width and wrap_width < ww :
             ww = wrap_width
@@ -141,7 +152,6 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
         
         if len ( wraps ) == lw  : break 
 
-        
     for i in wraps :
         widths [ i ] = min ( ww  , widths [ i ] ) 
 
@@ -186,8 +196,9 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
     totwidth = 0
     for c in widths : totwidth += widths[c]
     totwidth += ( nc - 1 ) * 3
-    if totwidth < len ( title )  :
-        delta = 1 + ( len ( title ) - totwidth ) // nc
+    titwidth  = len ( decolorize ( title ) )
+    if totwidth < titwidth  :
+        delta = 1 + ( titwidth - totwidth ) // nc
         for c in widths : widths[c] += delta 
 
             
@@ -276,8 +287,7 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
     
     from ostap.utils.basic import isatty
 
-
-    title = allright ( decolorize ( title ) )
+    title = allright ( decolorize ( title ).strip() ) 
     if rows :
         rows       = list  ( rows ) 
         header_row = rows[0]
@@ -287,9 +297,8 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
         
     rows = [ list(row) for row in rows ]
 
-    if not style :
-        style = '%s' % default_style
-        
+    if not style : style = '%s' % default_style
+    
     fmt = style.lower() 
 
     if 'local' == fmt or not terminaltables :
@@ -311,11 +320,11 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
         table_instance = terminaltables.DoubleTable                 ( rows , title )
     else :
         table_instance = terminaltables.DoubleTable                 ( rows , title )
-    
+
     cw = table_instance.column_widths
     nc = len ( cw )
 
-    wraps = [   i  for (i,a) in enumerate ( alignment ) if a in wrapped ]
+    wraps = [ i for ( i , a ) in enumerate ( alignment ) if a in wrapped ]
     
     if wraps : 
         from terminaltables.width_and_alignment import max_dimensions

@@ -4,6 +4,9 @@
 
 ## Bug fixes
 
+  1. Fix a tiny bug in `ostap.logger.table.the_table` for wrapped columns 
+
+
 # v1.10.1.4
 
 ## New features
