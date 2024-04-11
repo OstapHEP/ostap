@@ -811,16 +811,16 @@ class Histo1DFun (object) :
             'extrapolate' : extrapolate ,
             'density'     : density
             }
-    ##  the only one imporant method
+    ##  the only one important method
     def __call__ ( x ) :
         return self.__histo ( x , **self.__config )
     @property
     def histo ( self )  :
-        """``histo'': the  histogram itself"""
+        """`histo': the  histogram itself"""
         return self.__histo 
     @property
     def config ( self ) :
-        """``config'' : the configuration (immutable)"""
+        """`config'  : the configuration (immutable)"""
         cnf = {}
         cnf.update ( self.__config )
         return cnf 
