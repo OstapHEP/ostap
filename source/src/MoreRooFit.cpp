@@ -72,6 +72,7 @@ ClassImp(Ostap::MoreRooFit::AddDeps       )
 ClassImp(Ostap::MoreRooFit::NVars         )
 ClassImp(Ostap::MoreRooFit::Minimal       )
 ClassImp(Ostap::MoreRooFit::Maximal       )
+ClassImp(Ostap::MoreRooFit::ABC           )
 // ============================================================================
 namespace 
 {
@@ -1562,6 +1563,84 @@ Double_t Ostap::MoreRooFit::Maximal::evaluate () const
   return value ; 
 } 
 // ============================================================================
+
+
+
+
+// ============================================================================
+// constructor with three variables 
+// ============================================================================
+Ostap::MoreRooFit::ABC::ABC
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     ,
+  RooAbsReal&        b     , 
+  RooAbsReal&        c     ) 
+  : NVars ( name , title , a , b , c ) 
+{}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::MoreRooFit::ABC::ABC
+( const Ostap::MoreRooFit::ABC& right ,
+  const char*                   name  ) 
+  : NVars ( right , name ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::ABC::~ABC (){}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::MoreRooFit::ABC*
+Ostap::MoreRooFit::ABC::clone ( const char* newname ) const
+{ return new Ostap::MoreRooFit::ABC ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ================m===========================================================
+Double_t Ostap::MoreRooFit::ABC::evaluate () const
+{
+  //
+  Ostap::Assert ( ::size ( this->m_vars ) == 3    , 
+                  "Invalid number of parameters!" ,
+                  "Ostap::MoreRooFit::ABC"        ) ;
+  //
+  const RooAbsArg* aa = this->m_vars.at ( 0 ) ;
+  const RooAbsArg* ab = this->m_vars.at ( 1 ) ;
+  const RooAbsArg* ac = this->m_vars.at ( 2 ) ;
+  //
+  Ostap::Assert ( ( nullptr != aa ) && 
+                  ( nullptr != ab ) && 
+                  ( nullptr != ac )        , 
+                  "Invalid parameter!"     ,
+                  "Ostap::MoreRooFit::ABC" ) ;
+  //
+  const RooAbsReal* va = static_cast<const RooAbsReal*> ( aa ) ;
+  const RooAbsReal* vb = static_cast<const RooAbsReal*> ( ab ) ;
+  const RooAbsReal* vc = static_cast<const RooAbsReal*> ( ac ) ;
+  //
+  Ostap::Assert ( ( nullptr != va ) && 
+                  ( nullptr != vb ) && 
+                  ( nullptr != vc )        , 
+                  "Invalid parameter!"     ,
+                  "Ostap::MoreRooFit::ABC" ) ;
+  //
+  const double a = va -> getVal() ;
+  if ( s_zero ( a ) ) { return  0 ; }
+  //
+  const double b = vb -> getVal() ;
+  if ( s_zero ( b ) ) { return  0 ; }
+  //
+  const double c = vc -> getVal() ;
+  //
+  return a * ( b / c ) ;
+}
+// ============================================================================
+
+
+
+
 
 // ============================================================================
 // helper function to call RooAbsPdf::fitTo ( data , options ) 

@@ -2981,6 +2981,43 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class ABC 
+     *  Trivial function that gets <code>A*(B/C)</code>
+     */
+    class ABC final : public NVars 
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::ABC , 1 ) ;  
+      // ========================================================================
+    public:
+      // =======================================================================
+      /// constructor with three variables 
+      ABC 
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        a     ,
+          RooAbsReal&        b     ,
+          RooAbsReal&        c     ) ;
+      /// copy 
+      ABC
+        ( const ABC&         right       , 
+          const char*        newname = 0 ) ;
+      /// clone 
+      ABC* clone ( const char* newname ) const override ;
+      /// fake default constructor (needed for serisalization)
+      ABC () = default ;
+      // virtual destructor 
+      virtual ~ABC () ;
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ; 
+      // ======================================================================
+    } ;
+    // ========================================================================
+
+    // ========================================================================
     /** @class ProductPdf
      *  Oversimplified product of two PDF
      *  - It is useful to bypass some "features" of RooFit
