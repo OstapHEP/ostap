@@ -153,7 +153,7 @@ def the_table ( rows ,
         if len ( wraps ) == lw  : break 
 
     for i in wraps :
-        widths [ i ] = min ( ww  , widths [ i ] ) 
+        widths [ i ] = max ( min ( ww  , widths [ i ] ) , 10 ) 
 
             
     hformats = [  "{:^%d}"  % widths [ c ] for c in range ( nc ) ]
@@ -284,7 +284,7 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
     - `double`    : use `DoubleTable` 
     - (default)   : use `DoubleTable` 
     """
-    
+
     from ostap.utils.basic import isatty
 
     title = allright ( decolorize ( title ).strip() ) 
