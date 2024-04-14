@@ -397,7 +397,7 @@ class Trainer(object) :
         if not workdir : workdir = os.getcwd()
 
         if not os.path.exists ( workdir ) :
-            from ostap.utils.basis import make_dirs
+            from ostap.utils.basic import make_dirs
             make_dirs ( workdir )
             
         assert os.path.exists ( workdir ) and os.path.isdir ( workdir ), \
