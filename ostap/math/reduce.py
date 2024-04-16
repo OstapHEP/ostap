@@ -573,8 +573,6 @@ def _rm_pslep_reduce_ ( o ) :
                             o.tau        () )  
 Ostap.Math.PhaseSpaceLeftExpoPol .__reduce__ = _rm_pslep_reduce_
 
-
-
 # =============================================================================
 ## reduce Histo1D
 def _rm_h1d_reduce_ ( o ) :
@@ -598,6 +596,23 @@ Ostap.Math.Histo1D.__reduce__ = _rm_h1d_reduce_
 Ostap.Math.Histo2D.__reduce__ = _rm_h2d_reduce_ 
 Ostap.Math.Histo3D.__reduce__ = _rm_h3d_reduce_ 
 # =============================================================================
+
+# =============================================================================
+## Reduce PyCallable/PyCallable2/PyCallable3 
+## def _pc_reduce_ ( o ) :
+##    """Reduce 
+##    - Ostap.Functions.PyCallable
+##    - Ostap.Functions.PyCallable
+##    - Ostap.Functions.PyCallable
+##    """
+##    return root_factory , ( type ( o ) , o.callable() , True ) 
+
+## Ostap.Functions.PyCallable.__reduce__  = _pc_reduce_
+## Ostap.Functions.PyCallable2.__reduce__ = _pc_reduce_
+## Ostap.Functions.PyCallable3.__reduce__ = _pc_reduce_
+
+
+
 
 
 

@@ -1,5 +1,9 @@
 ## New features
 
+  1. Update `Ostap::Functions::PyCallable`, `Ostap::Functions::PyCallable2` and `Ostap::Functions::PyCallable3`
+  1. add new test `test_math_callable`
+  1. improve a bit functions from `ostap.math.make_fun` module
+  
 ## Backward incompatible
 
 ## Bug fixes

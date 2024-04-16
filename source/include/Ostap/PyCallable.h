@@ -24,7 +24,7 @@ namespace Ostap
     {
     public  : 
       // ======================================================================
-      /// constructor from the callable object 
+      /// constructor from the callable object and fake boolean 
       PyCallable ( PyObject* callable , const bool ok ) ;
       /// copy constructor 
       PyCallable ( const PyCallable&  right ) ;
@@ -40,12 +40,15 @@ namespace Ostap
       /// the main method 
       double evaluate    ( const double x ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// access the callable 
+      const PyObject* callable() const { return m_callable ; }
+      // ======================================================================
     private :
       // ======================================================================
       // the callable object 
       PyObject* m_callable   { nullptr } ;
-      // the tuple of arguments 
-      PyObject* m_arguments  { nullptr } ;
       // ======================================================================
     };
     // ========================================================================
@@ -58,7 +61,7 @@ namespace Ostap
     {
     public  : 
       // ======================================================================
-      /// constructor from the callable object 
+      /// constructor from the callable object and fake boolean 
       PyCallable2 ( PyObject* callable , const bool ok ) ;
       /// copy constructor 
       PyCallable2 ( const PyCallable2&  right ) ;
@@ -78,12 +81,15 @@ namespace Ostap
         ( const double x , 
           const double y ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// access the callable 
+      const PyObject* callable () const { return m_callable ; }
+      // ======================================================================
     private :
       // ======================================================================
       // the callable object 
       PyObject* m_callable   { nullptr } ;
-      // the tuple of arguments 
-      PyObject* m_arguments  { nullptr } ;
       // ======================================================================
     };
     // ========================================================================
@@ -96,7 +102,7 @@ namespace Ostap
     {
     public  : 
       // ======================================================================
-      /// constructor from the callable object 
+      /// constructor from the callable object and fake boolean 
       PyCallable3 ( PyObject* callable , const bool ok ) ;
       /// copy constructor 
       PyCallable3 ( const PyCallable3&  right ) ;
@@ -118,12 +124,15 @@ namespace Ostap
           const double y ,
           const double z ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// access the callable 
+      const PyObject* callable () const { return m_callable ; }
+      // ======================================================================
     private :
       // ======================================================================
       // the callable object 
       PyObject* m_callable   { nullptr } ;
-      // the tuple of arguments 
-      PyObject* m_arguments  { nullptr } ;
       // ======================================================================
     };
     // ========================================================================

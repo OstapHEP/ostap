@@ -626,6 +626,7 @@ Double_t Ostap::Models::PyPdf2::evaluate() const
     if ( 0 != PyTuple_SetItem ( arguments , index , pv ) ) 
     {
       PyErr_Print () ;
+      Py_XDECREF ( arguments ) ; arguments = nullptr ;
       Ostap::throwException ( "Can't fill PyTuple"   ,
                               "PyPdf2::evaluate"     ,
                               Ostap::StatusCode(500) ) ;
@@ -635,10 +636,8 @@ Double_t Ostap::Models::PyPdf2::evaluate() const
   //
   PyObject* result = PyObject_CallObject ( m_function , arguments ) ;
   //
-  // std::cout << "EVALUATE: " << std::endl ;
-  // PyObject_Print  ( m_arguments , stderr , Py_PRINT_RAW );
-  Py_DECREF ( arguments ) ;
-    
+  Py_XDECREF ( arguments ) ;
+  //
   return result_to_double ( result , "PyPdf2::evaluate" ) ;
 }
 // ============================================================================
