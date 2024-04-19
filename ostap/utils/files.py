@@ -533,13 +533,15 @@ class Files(object):
         nn    = max ( len ( files ) , len ( bad ) ) 
         nfmt  = '%%%dd' % ( math.floor ( math.log10 ( nn ) ) + 1 )
 
-        from itertools          import chain 
+        from itertools  import chain
+        total_size =  0 
         for i , f in enumerate ( chain ( files , bad ) , start = 1 ) : 
 
             row   = [ nfmt % i ]
             fsize = self.get_file_size ( f )
             if 0 <= fsize :
-                vv , unit = fsize_unit ( fsize )
+                total_size += fsize 
+                vv , unit   = fsize_unit ( fsize )
                 row.append ( '%3d %s' % ( vv , unit ) ) 
             else : 
                 row.append ( '???' )
@@ -547,6 +549,14 @@ class Files(object):
             row .append ( f   ) 
             rows.append ( row )
 
+        ## the last row: summary
+        from ostap.logger.colorized import infostr 
+        vv , unit  = fsize_unit ( total_size  )
+        row   = '' , \
+            infostr ( '%3d %s' % ( vv , unit ) ) , \
+            infostr ( self.commonpath )  
+        rows.append ( row )
+        
         import ostap.logger.table as T
         return T.table ( rows , title = title , prefix = prefix , alignment = 'rrw' ) 
 

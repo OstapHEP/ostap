@@ -62,7 +62,6 @@ else                       : logger = getLogger ( __name__     )
 # =============================================================================
 if not hasattr ( ROOT.TTree , '__len__' ) :  
     ROOT.TTree. __len__ = lambda s : s.GetEntries()
-
     
 # =============================================================================
 ## @class Data
@@ -104,28 +103,7 @@ class Data(RootFiles):
         ## initialize the  base class 
         RootFiles.__init__( self , files , description  , maxfiles , silent = silent , sorted = sorted , parallel = parallel )
 
-    # =========================================================================
-    ## get a common path (prefix) for all files in collection
-    #  - protocols are ignored 
-    @property 
-    def commonpath ( self ) :
-        """'commonpath': common path (prefix) for all files in collection
-        - protocols are ignored 
-        """
-        from ostap.utils.basic import commonpath 
-        ##
-        if any ( RootFiles.has_protocol ( f ) for f in self.files ) :
-            files = []
-            for f in self.files :
-                files .append ( RootFiles.strip_protocol ( f ) ) 
-        else : files = self.files
-        
-        if not files : return '' 
-
-        cp = commonpath ( files )
-        return cp if os.path.isdir ( cp ) else os.path.dirname ( cp ) 
-    # =========================================================================
-    
+    # =========================================================================    
     @property
     def validate ( self ) :
         """'check' : make check for `TTree`/`TChain` structures
@@ -237,6 +215,9 @@ class Data(RootFiles):
         nn    = max ( len ( files ) , len ( bad ) ) 
         nfmt  = '%%%dd' % ( math.floor ( math.log10 ( nn ) ) + 1 )
 
+        total_size    = 0
+        total_entries = 0
+        
         from itertools          import chain 
         for i , f in enumerate ( chain ( files , bad ) , start = 1 ) : 
 
@@ -253,6 +234,9 @@ class Data(RootFiles):
 
                 vv , unit = fsize_unit ( fsize )
                 row.append ( '%3d %s' % ( vv , unit) ) ## file size  
+
+                total_size    += fsize
+                total_entries += entries
                 
             else :
                 
@@ -261,6 +245,16 @@ class Data(RootFiles):
                 
             row .append ( f   ) 
             rows.append ( row )
+
+        ## summary row
+        from ostap.logger.colorized import infostr 
+        vv , unit  = fsize_unit ( total_size )
+        row   = ''                               , \
+            infostr ( '%d' % total_entries     ) , \
+            infostr ( '%3d %s' % ( vv , unit ) ) , \
+            infostr ( self.commonpath )
+        
+        rows.append ( row )
 
         title = title if title else "Data(chain='%s')" % self.chain_name 
         import ostap.logger.table as T
@@ -505,6 +499,10 @@ class Data2(Data):
         nn    = max ( len ( files ) , len ( bad ) ) 
         nfmt  = '%%%dd' % ( math.floor ( math.log10 ( nn ) ) + 1 )
 
+        total_entries1 = 0
+        total_entries2 = 0
+        total_size     = 0
+        
         from itertools          import chain 
         for i , f in enumerate ( chain ( files , bad ) , start = 1 ) : 
 
@@ -526,6 +524,10 @@ class Data2(Data):
                 vv , unit = fsize_unit ( fsize ) 
                 row.append ( '%3d %s' % ( vv , unit ) ) ## value 
                 
+                total_size     += fsize
+                total_entries1 += entries1
+                total_entries2 += entries2
+
             else :
                 
                 row.append ( '???' ) ## entries1
@@ -534,6 +536,16 @@ class Data2(Data):
                 
             row .append ( f   ) 
             rows.append ( row )
+
+        ## summary row
+        from ostap.logger.colorized import infostr 
+        vv , unit  = fsize_unit ( total_size )
+        row   = ''                               , \
+            infostr ( '%d' % total_entries1  )   , \
+            infostr ( '%d' % total_entries2  )   , \
+            infostr ( '%3d %s' % ( vv , unit ) ) , \
+            infostr ( self.commonpath ) 
+        rows.append ( row )
 
         title = title if title else "Data2(chani1='%s',chani2='%s')" % ( self.chain1_name , self.chain2_name ) 
         import ostap.logger.table as T
