@@ -41,6 +41,7 @@ from   ostap.core.ostap_types  import ( num_types      , list_types     ,
 from   ostap.math.random_ext   import ve_gauss, poisson
 from   ostap.core.meta_info    import root_version_int, root_info 
 from   ostap.fitting.variables import SETVAR 
+from   ostap.utils.basic       import numcpu 
 import ROOT, math, random 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
@@ -114,12 +115,6 @@ _ncmax =   16 ## maximal number of CPUs: there are some problems with >= 7
               ## @see https://sft.its.cern.ch/jira/browse/ROOT-4897
 # ==============================================================================
 _ncpus = []
-## Get number of cores/CPUs
-def  numcpu () :
-    """Get number of cores/CPUs
-    """
-    import multiprocessing
-    return multiprocessing.cpu_count()
 
 # =============================================================================
 ## prepare "NumCPU" argument with reasonable choice of #cpu, depending on

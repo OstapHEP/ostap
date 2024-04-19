@@ -55,14 +55,14 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-08"
 __all__     = (
-    'Files'       , ## collect files  
+    'Files'       , ## collect files
+    'RootFiles'   , ## collect ROOT files    
     'Data'        , ## collect files and create     TChain
     'Data2'       , ## collect files and create two TChain objects 
     'DataAndLumi' , ## collect files and create two TChain objects (LHCb specific)
     )
 # =============================================================================
-import glob 
-from   ostap.trees.data_utils   import Files, Data, Data2
+from   ostap.trees.data_utils   import Files, RootFiles, Data, Data2, fsize_unit 
 from   ostap.contribs.lhcb.data import DataAndLumi 
 # =============================================================================
 # logging 

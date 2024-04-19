@@ -34,7 +34,9 @@ __all__     = (
     'items_loop'    , ## ditto
     ##
     'has_env'       , ## case-insensitive check for environment variable   
-    'get_env'       , ## case-insensitive access to environment variable   
+    'get_env'       , ## case-insensitive access to environment variable
+    ##
+    'numcpu'        , ## number of cores/CPUs
     )
 # =============================================================================
 import sys, os, datetime  
@@ -159,6 +161,7 @@ if (3,5) <= sys.version_info :
     
 else :
 
+    # ========================================================================
     ## get a common path(prefix) for list of paths
     # Fix for a  buggy <code>os.path.commonprefix</code>
     #  @see https://www.rosettacode.org/wiki/Find_common_directory_path#Python
@@ -168,7 +171,6 @@ else :
         - https://www.rosettacode.org/wiki/Find_common_directory_path#Python
         """
         return os.path.dirname ( os.path.commonprefix ( paths ) ) 
-
 
 # =============================================================================
 if (3,2) <= sys.version_info :
@@ -319,12 +321,12 @@ def get_env ( variable , default , silent = False ) :
     return found [ -1] [ 1 ] 
 
 # =============================================================================
-## Get the modification time for the path (inclusnuig subdirectories)
+## Get the modification time for the path (including subdirectories)
 def mtime ( path ) :
-    """Get the last modification time for the path (inclusing subdirectories)
+    """Get the last modification time for the path (including subdirectories)
     """
     
-    assert os.path.exists ( path ) , "The path `%s' does not exist!" % path
+    assert os.path.exists ( path ) , "mtime: the path `%s' does not exist!" % path
 
     ## get the time of modification/creation 
     _mtime_ = lambda p : max ( os.path.getmtime ( path ) , os.path.getctime ( path ) ) 
@@ -347,8 +349,7 @@ def mtime ( path ) :
                 mt = max ( mt ,  datetime.datetime.fromtimestamp ( _mtime_ ( entry ) ) ) 
 
         break 
-        
-        
+                
     return mt  
 
 # =========================================================================
@@ -359,7 +360,7 @@ def copy_file ( source , destination , progress = False ) :
     - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
     """
     assert os.path.exists ( source ) and os.path.isfile ( source ), \
-           "copy_file: ``source'' %s does not exist!" % source 
+           "copy_file: `source' %s does not exist!" % source 
     
     destination = os.path.abspath  ( destination )    
     destination = os.path.normpath ( destination )
@@ -368,7 +369,7 @@ def copy_file ( source , destination , progress = False ) :
     if os.path.exists ( destination ) and os.path.isdir ( destination ) :
         destination = os.path.join ( destination , os.path.basename ( source ) )
         
-    make_dirs ( os.path.dirname ( destination ) , exist_ok = True)
+    make_dirs ( os.path.dirname ( destination ) , exist_ok = True )
     
     if not progress : 
         import shutil 
@@ -377,7 +378,13 @@ def copy_file ( source , destination , progress = False ) :
         from ostap.utils.utils import copy_with_progress
         return copy_with_progress ( source , destination )
 
-
+# =============================================================================
+## Get number of cores/CPUs
+def  numcpu () :
+    """Get number of cores/CPUs
+    """
+    import multiprocessing
+    return multiprocessing.cpu_count()
 
 # =============================================================================
 if __name__ == '__main__' :
