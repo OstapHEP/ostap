@@ -7,13 +7,16 @@
   1. add `table` method for `Files/Data/Data2` tools to print the content as table
   1. add version of `parallle_copy` based on `GNU parallel` (if/when available)
   1. make use of  `parallel_copy` in `copy_files`
+  1. imporove specific models form `ostap.fitting.specific` module
+  1. ad dnew test for specific models
   
 ## Backward incompatible
 
 ## Bug fixes
 
   1. Fix a tiny bug in `ostap.logger.table.the_table` for wrapped columns 
-
+  1. fix typo in `make_bkg`
+  
 
 # v1.10.1.4
 

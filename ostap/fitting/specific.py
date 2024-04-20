@@ -14,17 +14,19 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     #
-    'D0_pdf'  , ## PDF for D0        : Bukin 
-    'Dp_pdf'  , ## PDF for D+        : Bukin
-    'Ds_pdf'  , ## PDF for Ds+       : Bukin 
-    'Lc_pdf'  , ## PDF for Lambda_c+ : Gauss
+    'D0_pdf'     , ## PDF for D0        : Bukin 
+    'Dp_pdf'     , ## PDF for D+        : Bukin
+    'Ds_pdf'     , ## PDF for Ds+       : Bukin 
+    'Lc_pdf'     , ## PDF for Lambda_c+ : Gauss
     #
-    'Bd_pdf'  , ## pdf for B0        : double-sided Crystal Ball 
-    'B0_pdf'  , ## pdf for B0        : double-sided Crystal Ball 
-    'Bu_pdf'  , ## pdf for B+        : double-sided Crystal Ball 
-    'Bs_pdf'  , ## pdf for Bs        : double-sided Crystal Ball 
-    'Bc_pdf'  , ## pdf for Bc+       : double-sided Crystal Ball 
+    'Bd_pdf'     , ## pdf for B0        : double-sided Crystal Ball 
+    'B0_pdf'     , ## pdf for B0        : double-sided Crystal Ball 
+    'Bu_pdf'     , ## pdf for B+        : double-sided Crystal Ball 
+    'Bs_pdf'     , ## pdf for Bs        : double-sided Crystal Ball 
+    'Bc_pdf'     , ## pdf for Bc+       : double-sided Crystal Ball 
     #
+    'DpDs_pdf'   , ## ready-to-use model for D+ and D_s+ signals 
+    'BdBs_pdf'   , ## ready-to-use model for Bd and Bs signals 
     'Manca_pdf'  , ## Manca function to fit Y->mu mu spectrum  [Y(1S),Y(2S),Y(3S)]
     'Manca2_pdf' , ## Manca function to fit Y->mu mu spectrum  [Y(1S),Y(2S),Y(3S)]
     'MancaX_pdf' , ## associative production of Y+X 
@@ -76,17 +78,6 @@ class Bd_pdf(CB2_pdf) :
                            alphaR           ,
                            nL               ,
                            nR               )
-        ## save configuration
-        self.config = {
-            'xvar'   : self.xvar  ,
-            'name'   : self.name  ,
-            'mean'   : self.mean  ,
-            'sigma'  : self.sigma , 
-            'alphaL' : self.aL    ,
-            'alphaR' : self.aR    ,
-            'nL'     : self.nL    ,
-            'nR'     : self.nR    ,            
-            }
         
 B0_pdf = Bd_pdf
 models.append ( Bd_pdf ) 
@@ -119,17 +110,6 @@ class Bu_pdf(CB2_pdf) :
                            alphaR           ,
                            nL               ,
                            nR               )
-        ## save configuration
-        self.config = {
-            'xvar'   : self.xvar  ,
-            'name'   : self.name  ,
-            'mean'   : self.mean  ,
-            'sigma'  : self.sigma , 
-            'alphaL' : self.aL    ,
-            'alphaR' : self.aR    ,
-            'nL'     : self.nL    ,
-            'nR'     : self.nR    ,            
-            }
 
 models.append ( Bu_pdf ) 
 # =============================================================================
@@ -173,7 +153,8 @@ class Bs_pdf(CB2_pdf) :
             'nR'     : self.nR    ,            
             }
 
-models.append ( Bs_pdf ) 
+models.append ( Bs_pdf )
+
 # =============================================================================
 ## @class Bc_pdf
 #  simple wrapper over CB2-pdf
@@ -203,18 +184,6 @@ class Bc_pdf(CB2_pdf) :
                            alphaR           ,
                            nL               ,
                            nR               )
-        ## save configuration
-        self.config = {
-            'xvar'   : self.xvar  ,
-            'name'   : self.name  ,
-            'mean'   : self.mean  ,
-            'sigma'  : self.sigma , 
-            'alphaL' : self.aL    ,
-            'alphaR' : self.aR    ,
-            'nL'     : self.nL    ,
-            'nR'     : self.nR    ,            
-            }
-
 
 models.append ( Bc_pdf ) 
 # =============================================================================
@@ -223,6 +192,9 @@ models.append ( Bc_pdf )
 ## @class D0_pdf
 #  simple wrapper over Bukin-pdf
 #  @see RooBukinPdf
+#  @see Ostap::Math::Bukin
+#  @see Analusis::Models::Bukin
+
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class D0_pdf(Bukin_pdf) :
@@ -245,23 +217,13 @@ class D0_pdf(Bukin_pdf) :
                              xi            , 
                              rhoL          ,
                              rhoR          ) 
-        ## save configuration
-        self.config = {
-            'xvar'   : self.xvar  ,
-            'name'   : self.name  ,
-            'mean'   : self.mean  ,
-            'sigma'  : self.sigma ,
-            'xi'     : self.xi    ,
-            'rhoL'   : self.rhoL  ,
-            'rhoR'   : self.rhoR  ,
-            }
-
                              
 models.append ( D0_pdf ) 
 # =============================================================================
 ## @class Dp_pdf
 #  simple wrapper over Bukin-pdf
-#  @see RooBukinPdf
+#  @see Ostap::Math::Bukin
+#  @see Analusis::Models::Bukin
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Dp_pdf(Bukin_pdf) :
@@ -284,22 +246,14 @@ class Dp_pdf(Bukin_pdf) :
                              xi            ,                            
                              rhoL          ,
                              rhoR          ) 
-        ## save configuration
-        self.config = {
-            'xvar'   : self.xvar  ,
-            'name'   : self.name  ,
-            'mean'   : self.mean  ,
-            'sigma'  : self.sigma , 
-            'xi'     : self.xi    ,
-            'rhoL'   : self.rhoL  ,
-            'rhoR'   : self.rhoR  ,
-            }
         
 models.append ( Dp_pdf ) 
+
 # =============================================================================
 ## @class Ds_pdf
 #  simple wrapper over Bukin-pdf
-#  @see RooBukinPdf
+#  @see Ostap::Math::Bukin
+#  @see Analusis::Models::Bukin
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Ds_pdf(Bukin_pdf) :
@@ -322,23 +276,14 @@ class Ds_pdf(Bukin_pdf) :
                              xi            ,
                              rhoL          ,
                              rhoR          ) 
-        ## save configuration
-        self.config = {
-            'xvar'   : self.xvar  ,
-            'name'   : self.name  ,
-            'mean'   : self.mean  ,
-            'sigma'  : self.sigma ,
-            'xi'     : self.xi    ,
-            'rhoL'   : self.rhoL  ,
-            'rhoR'   : self.rhoR  ,
-            }
-
         
 models.append ( Ds_pdf ) 
+
 # =============================================================================
 ## @class Lc_pdf
 #  simple wrapper over Bukin-pdf
-#  @see RooBukinPdf
+#  @see Ostap::Math::Bukin
+#  @see Analusis::Models::Bukin
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Lc_pdf(Bukin_pdf) :
@@ -361,355 +306,188 @@ class Lc_pdf(Bukin_pdf) :
                              xi       ,
                              rhoL     ,
                              rhoR     ) 
-        ## save configuration
-        self.config = {
-            'xvar'   : self.xvar  ,
-            'name'   : self.name  ,
-            'mean'   : self.mean  ,
-            'sigma'  : self.sigma ,
-            'xi'     : self.xi    ,
-            'rhoL'   : self.rhoL  ,
-            'rhoR'   : self.rhoR  ,
-            }
-
-        
 models.append ( Lc_pdf ) 
+
 # =============================================================================
-## @class Manca_pdf 
-#  the final full PDF for Y->mu+mu- fit
-#  This is physically well-motivated function for fits in narrow
-#  bins in pt and rapidity  
+## Ready-to-use fit model 
+# =============================================================================
+
+# =============================================================================
+## @class BdBs_pdf
+#  Ready-to-use model to fit a distribution with Bd and Bs peaks 
+#  - Bs mass is calculated as  <code>m(Bd)+delta_m</code>
+#  - Bs resolution is calcualetd as <code>sigma(Bd)*(m(Bs)/m(Bd)))</code>
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-08-02
-class Manca_pdf (PDF1) :
-    """Manca: the final fit model for Y->mu+mu- fit
-    This is physically well-motivated function for fits in narrow bins in pt and rapidity
-    - three Needham functions for Y(1S), Y(2S) and Y(3S) peaks
-    - constrants for their resolutions and masses 
-    - background: exponent modulated by positive polynomial 
-    
+class BdBs_pdf (PEAK) :
+    """Ready-to-use model to fit a distribution iwth D+ and D_s+ peaks
+      - Bs mass is calculated as  `m(Bd)+delta_m`
+      - Bs resolution is calculates as `sigma(Bd)*(m(Bs)/m(Bd))`
     """
-    def __init__ ( self          ,
-                   mass          ,
-                   name   = 'Y'  ,
-                   power  = 0    ,
-                   m1s    = None ,
-                   sigma  = None ,
-                   a0     = 1.91 ,
-                   a1     = None ,
-                   a2     = None ) : 
+    def __init__ ( self                               ,
+                   xvar                               ,
+                   name       = 'BdBd'                ,
+                   mBd        = 5.287                 ,  ## location of Bd peak 
+                   sBd        = 7.2938e-03            ,  ## to be released later 
+                   dm         = 1.969 - 1.869         ,  ## mass differenc:  m(Bs) - m(Bd)
+                   alphaL     = 1.4499e+00            ,  ## to be released later 
+                   alphaR     = 1.9326e+00            ,  ## to be released later
+                   nL         = 8.7234e+00            ,  ## to be released later 
+                   nR         = 2.0377e+00            ,  ## to be released later 
+                   background = 'convex decreasing 2' , 
+                   NBd        = None                  ,
+                   NBs        = None                  ,
+                   B          = None                  ) :
+        
+        ## initialize the base
+        PEAK.__init__      ( self                         ,
+                             name       = name            ,
+                             xvar       = xvar            , 
+                             mean       = mBd             , 
+                             sigma      = sBd             ,
+                             mean_name  = 'mBd_%s' % name ,
+                             sigma_name = 'sBd_%s' % name )
+        
+        self.__Bd = Bd_pdf ( xvar   = self.xvar           , 
+                             name   = 'Bd_%s' % self.name ,
+                             mean   = self.mean           ,
+                             sigma  = self.sigma          ,
+                             alphaL = alphaL              ,
+                             alphaR = alphaR              ,
+                             nL     = nL                  ,
+                             nR     = nR                  )
+        
+        self.__dm  = self.make_var ( dm                      ,
+                                     "dm_"     + self.name   ,
+                                     "dm(%s)"  % self.name   ,
+                                     False                   )
+        
+        self.__mBs = Ostap.MoreRooFit.Addition ( "mBs"     + self.name ,
+                                                 "mBs(%s)" % self.name ,
+                                                 self.mBd  , self.dm   ) 
+        
+        ## resoltuion of Bs is a scaled resolution of Bd by m(Bs)/m(Bd) 
+        self.__sBs    = Ostap.MoreRooFit.ABC ( 
+            "sBs_"            + self.name  ,
+            "#sigma_{Bs}(%s)" % self.name  ,
+            self.sBd   ,
+            self.__mBs ,
+            self.mBd   )        
+        
+        self.__Bs = Bs_pdf ( xvar  = self.xvar           , 
+                             name  = 'Bs_%s' % self.name ,
+                             mean  = self.__mBs          ,
+                             sigma = self.__sBs          ,
+                             alphaL = self.Bd.aL         ,
+                             alphaR = self.Bd.aR         ,
+                             nL     = self.Bd.nL         ,
+                             nR     = self.Bd.nR         )
+    
+        # ===============================================================================
+        ## use helper function to create the background  
+        # ===============================================================================
+        self.__bkg   = self.make_bkg ( background , 'Bkg%s' % self.name , self.xvar )
 
-        #
-        PDF1.__init__ ( self , name , mass )
-        #
-        if   9460.  in self.mass and 10023. in self.mass and 10355. in self.mass :  gev_ = 1000        
-        elif 9.460  in self.mass and 10.023 in self.mass and 10.355 in self.mass : gev_ = 1
-        else :
-            raise AttributeError ( "Illegal mass range %s<m<%s" % self.xminmax()  ) 
-        
-        m_y1s  =  9.46030     * gev_ 
-        s_y1s  =  4.3679e-02  * gev_ 
-        dm_y2s = 10.02326     * gev_ - m_y1s
-        dm_y3s = 10.3552      * gev_ - m_y1s
-
-        # =====================================================================
-        ## Y(1S)
-        # =====================================================================
-        
-        self.__a0   = self.make_var ( a0                 ,
-                                      'a0m_%s' % name    ,
-                                      "a0 for Needham's function" ,
-                                      True  , 1.91  , 0.1 , 3.0   )
-        
-        self.__a1   = self.make_var ( a1                 ,
-                                      'a1m_%s' % name    ,
-                                      "a1 for Needham's function" ,
-                                      True , 1.1174 / gev_ ,  -10.0 / gev_ , 10.0 /gev_ )
-        
-        self.__a2   = self.make_var ( a2                 ,
-                                      'a2m_%s' % name    ,
-                                      "a2 for Needham's function" , 
-                                      True , -5.299 / gev_**2   , -100.0  / gev_**2  , 100.0  /gev_**2 )
-        
-        ## default logic does not work nicely here, therefore we need to be explicit:
-        if a0 is None and not self.a0.isConstant () : self.a0.fix (  1.91             ) 
-        if a1 is None and not self.a1.isConstant () : self.a1.fix (  1.1174 / gev_    )
-        if a2 is None and not self.a2.isConstant () : self.a2.fix ( -5.299  / gev_**2 ) 
-        
-        self.__m1s   = self.make_var ( m1s                   ,
-                                       "m1S_%s"       % name ,
-                                       "mass Y1S(%s)" % name , 
-                                       None , m_y1s , m_y1s - 0.15 * s_y1s , m_y1s + 0.15 * s_y1s ) 
-        
-        self.__s1s   = self.make_var ( sigma                  ,
-                                       "s1S_%s"        % name ,
-                                       "sigma Y1S(%s)" % name ,
-                                       None , s_y1s , 0.3 * s_y1s , 4 * s_y1s )
-        
-        self.__sigma = self.s1s 
-        self.__Y1S   = Needham_pdf (
-            name + '1S'           ,
-            xvar     = self.mass  ,
-            mean     = self.m1s   ,
-            sigma    = self.s1s   ,
-            a0       = self.a0    ,
-            a1       = self.a1    ,
-            a2       = self.a2    ) 
-        
-        # =====================================================================
-        ## Y(2S)
-        # =====================================================================
-        self.__dm2s  = self.make_var ( None ,
-                                       "dm2s"      + name    ,
-                                       "dm2s(%s)"  % name    ,
-                                       True ,
-                                       dm_y2s ,
-                                       dm_y2s - 0.20 * s_y1s , 
-                                       dm_y2s + 0.20 * s_y1s )
-        
-        self.__aset11 = ROOT.RooArgList ( self.__m1s , self.__dm2s )
-
-        ## self.__m2s    = ROOT.RooFormulaVar (
-        ## "m_" + name + '2S'   ,
-        ## "m2s(%s)"  % name    ,
-        ## "%s+%s" % ( self.__m1s.GetName() , self.__dm2s.GetName()  ) , 
-        ## self.__aset11       )
-        self.__m2s    = Ostap.MoreRooFit.Addition ( "m_" + name + '2S' ,
-                                                    "m2s(%s)"  % name  ,
-                                                    self.__m1s , self.__dm2s ) 
-        
-        self.__aset12 = ROOT.RooArgList ( self.__sigma , self.__m1s , self.__m2s ) 
-        self.__s2s    = Ostap.FormulaVar (
-            "sigma_"  + name + '2S'    ,
-            "#sigma_{Y2S}(%s)" % name  ,
-            "%s*(%s/%s)"  % ( self.__sigma.GetName() ,
-                              self.__m2s  .GetName() ,
-                              self.__m1s  .GetName() ) ,
-            self.__aset12  )
-        
-        self.__Y2S   = Needham_pdf (
-            name + '2S'           ,
-            xvar     = self.mass  ,
-            mean     = self.m2s   ,
-            sigma    = self.s2s   ,
-            a0       = self.a0    ,
-            a1       = self.a1    ,
-            a2       = self.a2    ) 
-        
-        # =====================================================================
-        ## Y(3S)
-        # =====================================================================
-        self.__dm3s  = self.make_var ( None                  ,
-                                       "dm3s"      + name    ,
-                                       "dm3s(%s)"  % name    ,
-                                       True                  , 
-                                       dm_y3s                ,
-                                       dm_y3s - 0.20 * s_y1s , 
-                                       dm_y3s + 0.20 * s_y1s )
-        
-        self.__aset21 = ROOT.RooArgList ( self.__m1s , self.__dm3s )
-        ## self.__m3s    = ROOT.RooFormulaVar (
-        ## "m_"       + name + '(3S)' ,
-        ## "m3s(%s)"  % name          ,
-        ## "%s+%s" % ( self.__m1s.GetName() , self.__dm3s.GetName() ) ,
-        ## self.__aset21       )
-        self.__m3s    = Ostap.MoreRooFit.Addition ( "m_" + name + '3S' ,
-                                                    "m3s(%s)"  % name  ,
-                                                    self.__m1s , self.__dm3s ) 
-        
-        
-        self.__aset22 = ROOT.RooArgList ( self.__sigma , self.__m1s , self.__m3s ) 
-        self.__s3s    = Ostap.FormulaVar (
-            "sigma_"  + name + '3S'    ,
-            "#sigma_{Y3S}(%s)" % name  ,
-            "%s*(%s/%s)"  % ( self.__sigma.GetName() ,
-                              self.__m3s  .GetName() ,
-                              self.__m1s  .GetName() ) , 
-            self.__aset22       )
-        
-        self.Y3S   = Needham_pdf (
-            name + '3S'           ,
-            xvar     = self.mass  ,
-            mean     = self.m3s   ,
-            sigma    = self.s3s   ,
-            a0       = self.a0    ,
-            a1       = self.a1    ,
-            a2       = self.a2    ) 
-        
-        #
-        ## the actual signal PDFs
-        # 
-        self.__y1s   = self.Y1S.pdf
-        self.__y2s   = self.Y2S.pdf
-        self.__y3s   = self.Y3S.pdf
-
-        self.__power = power 
-        ## use helper function to create background  
-        self.background = self.make_bkg ( power , 'Bkg%s' % name , self.mass )
-
-        self.__n1s = self.make_var ( None ,
-                                     "N1S" + name  ,
-                                     "Signal(Y1S)" ,  None , 1000 ,  0 ,  1.e+8 )
-        self.__n2s = self.make_var ( None ,
-                                     "N2S" + name  ,
-                                     "Signal(Y2S)" ,  None ,  300 ,  0 ,  1.e+7 )
-        self.__n3s = self.make_var ( None ,
-                                     "N3S" + name  ,
-                                     "Signal(Y3S)" ,  None ,  100 ,  0 ,  1.e+6 )
-        self.__b   = self.make_var ( None ,
+        # ===============================================================================
+        ## Yields:
+        # ===============================================================================        
+        self.__nBd = self.make_var ( NBd  ,
+                                     "NBd" + name  ,
+                                     "Signal(Bd)"  ,  None , 1000 ,  0 ,  5.e+7 )
+        self.__nBs = self.make_var ( NBs  ,
+                                     "NBs" + name  ,
+                                     "Signal(Bs)" ,  None , 1000 ,  0 ,  5.e+7 )
+        self.__b   = self.make_var ( B     ,
                                      "B"   + name  ,
-                                     "Background"  ,  None ,  100 ,  0 ,  1.e+8 )
-        
-        self.alist1 = ROOT.RooArgList ( self.__y1s , self.__y2s , self.__y3s ) 
-        self.alist2 = ROOT.RooArgList ( self.__n1s , self.__n2s , self.__n3s ) 
-        
-        self.alist1 . add ( self.background.pdf )
-        self.alist2 . add ( self.__b            )
-        
-        self.pdf  = ROOT.RooAddPdf  (
-            "manca_%s"  % name ,
-            "manca(%s)" % name ,
+                                     "Background"  ,  None ,  100 ,  0 ,  9.e+8 )
+
+        # ===============================================================================
+        ## create the final PDF 
+        # ===============================================================================
+        self.alist1 = ROOT.RooArgList ( self.Bd.pdf , self.Bs.pdf , self.bkg.pdf ) 
+        self.alist2 = ROOT.RooArgList ( self.NBd    , self.NBs    , self.B       ) 
+        self.pdf    = ROOT.RooAddPdf  (
+            "BdBs_%s"  % self.name ,
+            "BdBs(%s)" % self.name ,
             self.alist1 ,
             self.alist2 )
-        
-        self.__dm2s.setConstant ( True )
-        self.__dm3s.setConstant ( True )
-        
-        self._splots = []
-        
-        self.s1_name = self.__n1s.GetName ()
-        self.s2_name = self.__n2s.GetName ()
-        self.s3_name = self.__n3s.GetName ()
 
-        # 
-        ## finally declare components 
-        #
-        self.signals    () . add ( self.__y1s )
-        self.signals    () . add ( self.__y2s )
-        self.signals    () . add ( self.__y3s )
-        self.backgrounds() . add ( self.background.pdf ) 
+        # ===============================================================================
+        ## finally declare the components 
+        # ===============================================================================
+        self.signals     . add ( self.Bd.pdf  )
+        self.signals     . add ( self.Bs.pdf  )
+        self.backgrounds . add ( self.bkg.pdf ) 
 
-        ## save configurtaion
+        ## save configuration
         self.config = {
-            'mass'  : self.mass  ,
-            'name'  : self.name  ,
-            'power' : self.power ,
-            'm1s'   : self.m1s   ,
-            'sigma' : self.sigma ,
-            'a0'    : self.a0    ,
-            'a1'    : self.a1    ,
-            'a2'    : self.a2    ,
-            }
-    
-    def alpha_1S ( self ) : return self.Y1S.pdf.alpha ()
-    def alpha_2S ( self ) : return self.Y2S.pdf.alpha ()
-    def alpha_3S ( self ) : return self.Y3S.pdf.alpha ()
-
-    @property
-    def mass ( self ) :
-        """'mass'-variable, ailas for 'x' and 'xvar'"""
-        return self.xvar
+            'xvar'        : self.xvar  ,
+            'name'        : self.name  ,
+            'background'  : self.bkg   ,
+            'mBd'         : self.mBd   ,
+            'sBd'         : self.sBd   ,
+            ##
+            'alphaL'      : self.Bd.aL ,
+            'alphaR'      : self.Bd.aR ,
+            'nL'          : self.Bd.nL ,
+            'nR'          : self.Bd.nR ,
+            ##
+            'dm'          : self.dm    , 
+            ## 
+            'NBd'         : self.NBd   ,
+            'NBs'         : self.NBs   ,
+            'B'           : self.B     }
     
     @property
-    def power ( self ) :
-        """'power'-variable for background"""
-        return self.__power
+    def Bd ( self ) :
+        """'Bd' : model for the Bd peak"""
+        return self.__Bd
 
     @property
-    def  s1s (  self ) :
-        """'s1s'-parameter (resoltuion for Y(1S) peak) (same as 'sigma')"""
-        return self.__sigma
-    @s1s.setter
-    def  s1s (  self , value ) :
-        self.set_value ( self.__s1s , value )
+    def Bs ( self ) :
+        """'Bs' : model for the Bs peak"""
+        return self.__Bs
 
     @property
-    def  sigma (  self ) :
-        """'sigma'-parameter (resolution for Y(1S) peak) (same as 's1s')"""
-        return self.s1s
-    @sigma.setter
-    def  sigma (  self , value ) :
-        self.s1s = value
+    def mBd ( self ) :
+        """''mBd' : mass/location for D+ peak (same as 'mean') """
+        return self.mean
+    @mBd.setter
+    def mBd  ( self , value ) :
+        self.mean = value 
 
     @property
-    def a0 ( self ) :
-        """'a0' parameter for Needham function"""
-        return self._a0
-    @property
-    def a1 ( self ) :
-        """'a1' parameter for Needham function"""
-        return self._a1
-    @property
-    def a2 ( self ) :
-        """'a2' parameter for Needham function"""
-        return self._a0
-    
-    @property
-    def  m1s (  self ) :
-        """'m1s'-parameter (mass for Y(1S) peak)"""
-        return self.__m1s
-    @m1s.setter
-    def  m1s (  self , value ) :
-        self.set_value ( self.__m1s , value )
+    def sBd ( self ) :
+        """''sBd' : resolution for the Bd peak (same as 'sigma') """
+        return self.sigma
+    @sBd.setter
+    def sBd ( self , value ) : 
+        self.sigma = value
 
     @property
-    def  m2s (  self ) :
-        """'m2s'-parameter (mass for Y(2S) peak)"""
-        return self.__m2s
-    @property
-    def  m3s (  self ) :
-        """'m3s'-parameter (mass for Y(3S) peak)"""
-        return self.__m3s
-
-    @property
-    def  s2s (  self ) :
-        """'s2s'-parameter (resolution for Y(2S) peak)"""
-        return self.__s2s
-    @property
-    def  s3s (  self ) :
-        """'s3s'-parameter (resolution for Y(3S) peak)"""
-        return self.__s3s
-    
-    @property
-    def  dm2s (  self ) :
-        """'dm2s'-parameter (mass  difference for Y(2S) and Y(1S) peaks)"""
-        return self.__dm2s    
-    @dm2s.setter
-    def  dm2s (  self , value ) :
-        self.set_value ( self.__dm2s , value )
-
-    @property
-    def  dm3s (  self ) :
-        """'dm3s'-parameter (mass  difference for Y(3S) and Y(1S) peaks)"""
-        return self.__dm3s    
-    @dm3s.setter
-    def  dm3s (  self , value ) :
-        self.set_avlue ( self.__dm3s , value )
+    def dm ( self )  :
+        """'dm' : mass difference between Bs and Bs mesons"""
+        return self.__dm
+    @dm.setter
+    def dm ( self , value ) :
+        self.set_value ( self.__dm , value )
         
     @property
-    def N1S ( self ) :
-        """'N1S'-parameter: yield of Y(1S)"""
-        return self.__n1s
-    @N1S.setter
-    def N1S ( self , value ) :
-        self.set_value ( self.__n1s , value )
+    def NBd ( self ) :
+        """'NBd'-parameter: yield of Bd"""
+        return self.__nBd
+    @NBd.setter
+    def NBd ( self , value ) :
+        self.set_value ( self.__nBd , value )
 
     @property
-    def N2S ( self ) :
-        """'N2S'-parameter: yield of Y(2S)"""
-        return self.__n2s
-    @N2S.setter
-    def N2S ( self , value ) :
-        self.set_avlue ( self.__n2s , value )
-
-    @property
-    def N3S ( self ) :
-        """'N3S'-parameter: yield of Y(3S)"""
-        return self.__n3s
-    @N3S.setter
-    def N3S ( self , value ) :
-        self.set_value ( self.__n3s , value )
-
+    def NBs ( self ) :
+        """'NBs'-parameter: yield of Bs"""
+        return self.__nBs
+    @NBs.setter
+    def NBs ( self , value ) :
+        self.set_value ( self.__nBs , value )
+        
     @property
     def B ( self ) :
         """'B'-parameter: yield of background component"""
@@ -717,193 +495,330 @@ class Manca_pdf (PDF1) :
     @B.setter
     def B ( self , value ) :
         self.set_value ( self.__b , value )
-        
-    
-models.append ( Manca_pdf ) 
-# =============================================================================
-## @class Manca2_pdf 
-#  the final full PDF for Y->mu+mu- fit
-#  This is an effective function for fit in global bin, without pt/y-binning 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2014-06-24
-class Manca2_pdf (PDF1) :
-    """Manca2: the final fit model for Y->mu+mu- fit
-    This is an effective function for fit in global bin, without pt/y-binning
-    - three double-sided Crystal Ball functions for Y(1S), Y(2S) and Y(3S) peaks
-    - constrants for their resolutions and masses 
-    - background: ... 
-    """
-    def __init__ ( self                    ,
-                   mass                    ,
-                   name       = 'Y'        ,
-                   background = 'd3'       , ## dcreasing positive 3rd order polynomial
-                   m1s        = None       ,
-                   sigma      = None       ,                   
-                   alphaL     = 1.65       ,
-                   alphaR     = 1.65       ,
-                   nL         = 1.3110     ,
-                   nR         = 1.5751e+01 ,
-                   ## 
-                   dm2S       = None       , ## m(2S) - m(1S) 
-                   dm3S       = None       , ## m(3S) - m(1S)
-                   ## 
-                   N1S        = None       , ## Y(2S) signal
-                   N2S        = None       , ## Y(2S) signal
-                   N3S        = None       , ## Y(3S) sigbnal 
-                   B          = None       , ## background 
-                   ) :
 
-        #
-        PDF1.__init__ ( self , name , mass )
-        #
-        if   9460. in self.mass and 10023. in self.mass and 10355. in self.mass : gev_ = 1000        
-        elif 9.460 in self.mass and 10.023 in self.mass and 10.355 in self.mass : gev_ = 1
+    @property
+    def bkg ( self ) :
+        """'background' : get the background shape"""
+        return self.__bkg 
+
+models.append ( BdBs_pdf ) 
+
+
+# =============================================================================
+## @class DpDs_pdf
+#  Ready-to-use model to fit a distribution with D+ and Ds+ peaks 
+#  - Ds+ mass is calculated as  <code>m(D+)+delta_m</code>
+#  - Ds+ resolution is calculates as <code>sigma(D+)*(m(Ds+)/m(D+)))</code>
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2011-08-02
+class DpDs_pdf (PEAK) :
+    """Ready-to-use model to fit a distribution with D+ and Ds+ peaks
+      - Ds+ mass is calculated as  `m(D+)+delta_m`
+      - Ds+ resolution is calculated as `sigma(D+)*(m(Ds+)/m(D+))`
+    """
+    def __init__ ( self                               ,
+                   xvar                               ,
+                   name       =  'DpDs'               ,
+                   mDp        =  1.869                ,  ## location of Bd peak
+                   dm         =  1.969 - 1.869        ,  ## mass differenc:  m(Ds+) - m(D+)                   
+                   sDp        =  7.1183e-03           ,
+                   xi         = -7.7344e-03           ,
+                   rhoL       =  3.0241e-01           ,
+                   rhoR       =  3.7452e-01           ,                    
+                   background = 'convex decreasing 2' , 
+                   NDp        = None                  ,
+                   NDs        = None                  ,
+                   B          = None                  ) :
+        
+        ## initialize the base
+        PEAK.__init__      ( self                         ,
+                             name       = name            ,
+                             xvar       = xvar            , 
+                             mean       = mDp             , 
+                             sigma      = sDp             ,
+                             mean_name  = 'mDp_%s' % name ,
+                             sigma_name = 'sDp_%s' % name )
+        
+        self.__Dp = Dp_pdf ( xvar   = self.xvar           , 
+                             name   = 'Dp_%s' % self.name ,
+                             mean   = self.mean           ,
+                             sigma  = self.sigma          ,
+                             xi     = xi                  ,
+                             rhoL   = rhoL                ,
+                             rhoR   = rhoR                )
+        
+        self.__dm  = self.make_var ( dm                      ,
+                                     "dm_"     + self.name   ,
+                                     "dm(%s)"  % self.name   ,
+                                     False                   )
+        
+        self.__mDs = Ostap.MoreRooFit.Addition ( "mDs"     + self.name ,
+                                                 "mDs(%s)" % self.name ,
+                                                 self.mDp  , self.dm   ) 
+        
+        ## resolution of Ds+ is a scaled resolution of D+ by m(Ds+)/m(D+) 
+        self.__sDs    = Ostap.MoreRooFit.ABC ( 
+            "sDs_"            + self.name  ,
+            "#sigma_{Ds}(%s)" % self.name  ,
+            self.sDp   ,
+            self.__mDs ,
+            self.mDp   )        
+        
+        self.__Ds = Ds_pdf ( xvar   = self.xvar           , 
+                             name   = 'Ds_%s' % self.name ,
+                             mean   = self.__mDs          ,
+                             sigma  = self.__sDs          ,
+                             xi     = self.Dp.xi          ,
+                             rhoL   = self.Dp.rhoL        ,
+                             rhoR   = self.Dp.rhoR        )
+    
+        # ===============================================================================
+        ## use helper function to create the background  
+        # ===============================================================================
+        self.__bkg   = self.make_bkg ( background , 'Bkg%s' % self.name , self.xvar )
+
+        # ===============================================================================
+        ## Yields:
+        # ===============================================================================        
+        self.__nDp = self.make_var ( NDp  ,
+                                     "NDp" + name  ,
+                                     "Signal(Dp)"  ,  None , 1000 ,  0 ,  5.e+7 )
+        self.__nDs = self.make_var ( NDs  ,
+                                     "NDs" + name  ,
+                                     "Signal(Ds)" ,  None , 1000 ,  0 ,  5.e+7 )
+        self.__b   = self.make_var ( B     ,
+                                     "B"   + name  ,
+                                     "Background"  ,  None ,  100 ,  0 ,  9.e+8 )
+
+        # ===============================================================================
+        ## create the final PDF 
+        # ===============================================================================
+        self.alist1 = ROOT.RooArgList ( self.Dp.pdf , self.Ds.pdf , self.bkg.pdf ) 
+        self.alist2 = ROOT.RooArgList ( self.NDp    , self.NDs    , self.B       ) 
+        self.pdf    = ROOT.RooAddPdf  (
+            "DpDs_%s"  % self.name ,
+            "DpDs(%s)" % self.name ,
+            self.alist1 ,
+            self.alist2 )
+
+        # ===============================================================================
+        ## finally declare the components 
+        # ===============================================================================
+        self.signals     . add ( self.Dp.pdf  )
+        self.signals     . add ( self.Ds.pdf  )
+        self.backgrounds . add ( self.bkg.pdf ) 
+
+        ## save configuration
+        self.config = {
+            'xvar'        : self.xvar    ,
+            'name'        : self.name    ,
+            'background'  : self.bkg     ,
+            'mDp'         : self.mDp     ,
+            'sDp'         : self.sDp     ,
+            ##
+            'xi'          : self.Dp.xi   ,
+            'rhoL'        : self.Dp.rhoL ,
+            'rhoR'        : self.Dp.rhoR ,
+            ##
+            'dm'          : self.dm      , 
+            ## 
+            'NDp'         : self.NDp     ,
+            'NDs'         : self.NDs     ,
+            'B'           : self.B       }
+    
+    @property
+    def Dp ( self ) :
+        """'Dp' : model for the D+ peak"""
+        return self.__Dp
+
+    @property
+    def Ds ( self ) :
+        """'Ds' : model for the Ds+ peak"""
+        return self.__Ds
+
+    @property
+    def mDp ( self ) :
+        """''mDp' : mass/location for D+ peak (same as 'mean') """
+        return self.mean
+    @mDp.setter
+    def mDp  ( self , value ) :
+        self.mean = value 
+
+    @property
+    def sDp ( self ) :
+        """''sDp' : resolution for the D+ peak (same as 'sigma') """
+        return self.sigma
+    @sDp.setter
+    def sDp ( self , value ) : 
+        self.sigma = value
+
+    @property
+    def dm ( self )  :
+        """'dm' : mass difference between Ds+ and D+ mesons"""
+        return self.__dm
+    @dm.setter
+    def dm ( self , value ) :
+        self.set_value ( self.__dm , value )
+        
+    @property
+    def NDp ( self ) :
+        """'NDp'-parameter: yield of D+"""
+        return self.__nDp
+    @NDp.setter
+    def NDp ( self , value ) :
+        self.set_value ( self.__nDp , value )
+
+    @property
+    def NDs ( self ) :
+        """'NDs'-parameter: yield of Ds+"""
+        return self.__nDs
+    @NDs.setter
+    def NDs ( self , value ) :
+        self.set_value ( self.__nDs , value )
+        
+    @property
+    def B ( self ) :
+        """'B'-parameter: yield of background component"""
+        return self.__b
+    @B.setter
+    def B ( self , value ) :
+        self.set_value ( self.__b , value )
+
+    @property
+    def bkg ( self ) :
+        """'background' : get the background shape"""
+        return self.__bkg 
+
+models.append ( DpDs_pdf ) 
+
+# =============================================================================
+## @class MANCA
+#  Helper base class for implementaton of PDFs for Y-> mu+mu- peaks
+#  It helps to make a connection between the three Upsulon peaks,
+#  starting form the Y(1S) parameters 
+#  - Y(2S) mass is calculated as  <code>m(Y(1S))+dm21</code>
+#  - Y(2S) mass is calculated as  <code>m(Y(2S))+dm32</code>
+#  - Y(2S) resolution is calculated as <code>sigma(Y(1S))*(m(Y(2S))/m(Y(1S)))</code>
+#  - Y(3S) resolution is calculated as <code>sigma(Y(1S))*(m(Y(3S))/m(Y(1S)))</code>
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2011-08-02
+class MANCA(PEAK) :
+    """Helper base class for implementaton of PDFs for Y-> mu+mu- peaks
+    - It helps to make a connection between three Upsilons peaks:
+    starting form the Y(1S) parameters 
+    - Y(2S) mass is calculated as `m(Y(1S))+dm21`
+    - Y(2S) mass is calculated as  `m(Y(2S))+dm32`
+    - Y(2S) resolution is calculated as `sigma(Y(1S))*(m(Y(2S))/m(Y(1S)))`
+    - Y(3S) resolution is calculated as `sigma(Y(1S))*(m(Y(3S))/m(Y(1S)))`
+    """
+    ## create MancaBase 
+    #  @param xvar observable, mu+mu- mass
+    #  @param name       the name of the PDF
+    #  @param m1s        mass/location of Y(1S) peak 
+    #  @param s1s        resolution parameter for Y(1S) peak  
+    #  @param dm21        mass difference between Y(2S) and Y(1S) states 
+    #  @param dm32        mass difference between Y(3S) and Y(2S) states
+    #  @param  background backrgudn shape: symbols, PDF or ROOT.RooAbsPdf
+    #  @param N1S         yield for the Y(1S) signal
+    #  @param N2S         yield for the Y(2S) signal
+    #  @param N3S         yield for the Y(3S) signal
+    #  @param B           yield for the background component    
+    def __init__  ( self  ,
+                    xvar              ,   ## the observable : mu+mu- mass
+                    name       = 'Y'  ,   ## PDF name 
+                    m1s        = None ,   ## mass/location      for the Y(!S) peak 
+                    s1s        = None ,   ## resution parameter for the Y(1S) peak
+                    ##
+                    dm21       = None ,   ## mass difference bewween Y(2S) and Y(1S)
+                    dm32       = None ,   ## mass difference bewween Y(3S) and Y(2S)
+                    ##
+                    background = 'd3' , ## decreasing 3rd order polyminial 
+                    ##
+                    N1S        = None ,   ## Y(1S) signal
+                    N2S        = None ,   ## Y(2S) signal
+                    N3S        = None ,   ## Y(3S) signal
+                    B          = None ) : ## background signal
+        """
+        - xvar       : observable, mu+mu- mass
+        - name       : the name of the PDF
+        - m1s        : mass/location of Y(1S) peak 
+        - s1s        : resolution parameter for Y(1S) peak  
+        - dm21       : mass difference between Y(2S) and Y(1S) states 
+        - dm32       : mass difference between Y(3S) and Y(2S) states 
+        - N1S        : yield for the Y(1S) signal
+        - N2S        : yield for the Y(2S) signal
+        - N3S        : yield for the Y(3S) signal
+        - B          : yield for the background component    
+        """
+        ## initialize the base
+        PEAK.__init__ ( self                         ,
+                        name       = name            ,
+                        xvar       = xvar            ,
+                        mean       = m1s             , 
+                        sigma      = s1s             ,
+                        mean_name  = 'm1s_%s' % name ,
+                        sigma_name = 's1s_%s' % name )
+        
+        
+        
+        if   9460. in self.xvar and 10023. in self.xvar and 10355. in self.xvar : self._gev = 1000        
+        elif 9.460 in self.xvar and 10.023 in self.xvar and 10.355 in self.xvar : self._gev = 1
         else :
             raise AttributeError ( "Illegal mass range %s<m<%s" % self.xminmax()  ) 
 
-        m_y1s  =  9.46030     * gev_
-        s_y1s  =  4.03195e-02 * gev_ 
-        dm_y2s = 10.02326     * gev_ - m_y1s
-        dm_y3s = 10.3552      * gev_ - m_y1s
+        m_y1s  =   9.46030     * self._gev
+        m_y2s  =  10.02328     * self._gev
+        m_y3s  =  10.3552      * self._gev
+        
+        s_y1s  =  4.03195e-02  * self._gev 
+        dm_y21 = m_y2s - m_y1s
+        dm_y32 = m_y3s - m_y2s
 
-        # =====================================================================
-                
-        # =====================================================================
-        ## Y(1S)
-        # =====================================================================
-        self.__aL    = self.make_var ( alphaL                  ,
-                                       "aL_%s"          % name ,
-                                       "#alpha_{L}(%s)" % name ,
-                                       None   , 1.5462     , 0.1   , 10 )
-        self.__nL    = self.make_var ( nL                      ,                     
-                                       "nL_%s"          % name ,
-                                       "n_{L}(%s)"      % name ,
-                                       None   , 1.3119     , 1.e-5 , 25 )
-        self.__aR    = self.make_var ( alphaR                  ,
-                                       "aR_%s"          % name ,
-                                       "#alpha_{R}(%s)" % name ,
-                                       None , 1.6952e+00 , 0.1     , 10 )
-        self.__nR    = self.make_var ( nR                      ,
-                                       "nR_%s"          % name ,
-                                       "n_{R}(%s)"      % name ,
-                                       None , 1.5751e+01 , 1.e-5   , 100 )
-        
-        self.__m1s   = self.make_var ( m1s                   ,
-                                       "m1S_%s"         % name ,
-                                       "mass Y1S(%s)"   % name ,
-                                       None  , 
-                                       m_y1s , m_y1s - 0.15 * s_y1s , m_y1s + 0.15 * s_y1s )         
-        self.__s1s   = self.make_var ( sigma                  ,
-                                       "s1S_%s"        % name ,
-                                       "sigma Y1S(%s)" % name ,
-                                       None  , s_y1s , 0.3 * s_y1s , 4 * s_y1s )
-        
-        self.__sigma = self.__s1s
-        
-        self.__Y1S   = CB2_pdf (
-            name + '1S'             ,
-            xvar     = self.mass    ,
-            mean     = self.__m1s   ,
-            sigma    = self.__s1s   ,
-            alphaL   = self.__aL    ,
-            alphaR   = self.__aR    ,
-            nL       = self.__nL    ,
-            nR       = self.__nR    )
-        
-        # =====================================================================
-        ## Y(2S)
-        # =====================================================================
-        self.__dm2s  = self.make_var ( dm2S                  ,
-                                       "dm2S"      + name    ,
-                                       "dm2S(%s)"  % name    ,
+        ## mass differences for the Y(2S) & Y(3S) states 
+    
+        self.__dm21  = self.make_var ( dm21                  ,
+                                       "dm21"      + name    ,
+                                       "dm21(%s)"  % name    ,
                                        False                 , 
-                                       dm_y2s                ,
-                                       dm_y2s - 0.20 * s_y1s , 
-                                       dm_y2s + 0.20 * s_y1s )
+                                       dm_y21                ,
+                                       dm_y21 - 0.10 * s_y1s , 
+                                       dm_y21 + 0.10 * s_y1s )
         
-        self.__m2s    = Ostap.MoreRooFit.Addition ( "m_" + name + '2S' ,
-                                                    "m2s(%s)"  % name  ,
-                                                    self.__m1s , self.__dm2s ) 
-              
-        ## self.__aset12 = ROOT.RooArgList ( self.__sigma , self.__m1s , self.__m2s ) 
-        ## self.__s2s    = Ostap.FormulaVar (
-        ##     "sigma_"  + name + '2S'    ,
-        ##     "#sigma_{Y2S}(%s)" % name  ,
-        ##     "%s*(%s/%s)"  % ( self.__sigma.GetName() ,
-        ##                       self.__m2s  .GetName() ,
-        ##                       self.__m1s  .GetName() ) ,
-        ##     self.__aset12  )
+        self.__dm32  = self.make_var ( dm32                  ,
+                                       "dm32"      + name    ,
+                                       "dm32(%s)"  % name    ,
+                                       False                 , 
+                                       dm_y32                ,
+                                       dm_y32 - 0.10 * s_y1s , 
+                                       dm_y32 + 0.10 * s_y1s )
         
+        ## masses for the Y(2S) & Y(3S) states 
+
+        self.__m2s    = Ostap.MoreRooFit.Addition ( "m_" + name + '2S'   ,
+                                                    "m2s(%s)"  % name    ,
+                                                    self.m1s , self.dm21 ) 
+
+        self.__m3s    = Ostap.MoreRooFit.Addition ( "m_" + name + '3S'   ,
+                                                    "m3s(%s)"  % name    ,
+                                                    self.m2s , self.dm32 ) 
+
+        ## resolution parameters for the Y(2S) and Y(3S) states
+       
         ## width of Y(2S) is a scaled width of Y(1S) by m(2S)/m(1S) 
         self.__s2s    = Ostap.MoreRooFit.ABC ( 
             "sigma_"  + name + '2S'    ,
             "#sigma_{Y2S}(%s)" % name  ,
-            self.__sigma ,
-            self.__m2s   ,
-            self.__m1s   )
-        
-        self.__Y2S  = CB2_pdf (
-            name + '2S'             ,
-            xvar     = self.mass    ,
-            mean     = self.__m2s   ,
-            sigma    = self.__s2s   ,
-            alphaL   = self.__aL    ,
-            alphaR   = self.__aR    ,
-            nL       = self.__nL    ,
-            nR       = self.__nR    )
-                
-        # =====================================================================
-        ## Y(3S)
-        # =====================================================================
-        self.__dm3s  = self.make_var ( dm3S                  ,
-                                       "dm3s"      + name    ,
-                                       "dm3s(%s)"  % name    ,
-                                       False                 , 
-                                       dm_y3s                ,
-                                       dm_y3s - 0.20 * s_y1s , 
-                                       dm_y3s + 0.20 * s_y1s )
-        
-        self.__m3s    = Ostap.MoreRooFit.Addition ( "m_" + name + '3S' ,
-                                                    "m3s(%s)"  % name  ,
-                                                    self.__m1s , self.__dm3s ) 
-        
-        ## self.__aset22 = ROOT.RooArgList ( self.__sigma , self.__m1s , self.__m3s )        
-        ## self.__s3s    = Ostap.FormulaVar 
-        ##     "sigma_"  + name + '3S'    ,
-        ##     "#sigma_{Y3S}(%s)" % name  ,
-        ##     "%s*(%s/%s)"  % ( self.__sigma.GetName() ,
-        ##                       self.__m3s  .GetName() ,
-        ##                       self.__m1s  .GetName() ) , 
-        ##     self.__aset22       )
-        
-        ## width of Y(3S) is a sclaed width of Y(1S) by m(3S)/m(1S) 
+            self.s1s ,
+            self.m2s ,
+            self.m1s )        
+
+        ## width of Y(3S) is a scaled width of Y(1S) by m(3S)/m(1S) 
         self.__s3s    = Ostap.MoreRooFit.ABC ( 
             "sigma_"  + name + '3S'    ,
             "#sigma_{Y3S}(%s)" % name  ,
-            self.__sigma ,
-            self.__m3s   ,
-            self.__m1s   )
-        
-        self.__Y3S  = CB2_pdf (
-            name + '3S'           ,
-            xvar     = self.mass  ,
-            mean     = self.__m3s ,
-            sigma    = self.__s3s ,
-            alphaL   = self.__aL  ,
-            alphaR   = self.__aR  ,
-            nL       = self.__nL  ,
-            nR       = self.__nR  )
-        
-        #
-        ## the actual signal PDFs
-        # 
-        self.__y1s   = self.__Y1S.pdf
-        self.__y2s   = self.__Y2S.pdf
-        self.__y3s   = self.__Y3S.pdf
-                
-        ## use helper function to create background  
-        self.__bkg   = self.make_bkg ( background  , 'Bkg%s' % name , self.mass )
-
+            self.s1s ,
+            self.m3s ,
+            self.m1s )
 
         ## Yields:
         
@@ -918,90 +833,54 @@ class Manca2_pdf (PDF1) :
                                      "Signal(Y3S)" ,  None ,  100 ,  0 ,  2.e+6 )
         self.__b   = self.make_var ( B     ,
                                      "B"   + name  ,
-                                     "Background"  ,  None ,  100 ,  0 ,  5.e+8 )
-        
-        self.alist1 = ROOT.RooArgList ( self.__y1s , self.__y2s , self.__y3s ) 
-        self.alist2 = ROOT.RooArgList ( self.__n1s , self.__n2s , self.__n3s ) 
-        
-        self.alist1 . add ( self.__bkg.pdf )
-        self.alist2 . add ( self.__b       )
-        
-        self.pdf  = ROOT.RooAddPdf  (
-            "manca_%s"  % name ,
-            "manca(%s)" % name ,
-            self.alist1 ,
-            self.alist2 )
-        
-        self._splots = []
-        
-        self.s1_name = self.N1S.GetName ()
-        self.s2_name = self.N2S.GetName ()
-        self.s3_name = self.N3S.GetName ()
-        self.b_name  = self.B  .GetName ()
+                                     "Background"  ,  None ,  100 ,  0 ,  9.e+8 )
 
-        # 
-        ## finally declare components 
-        #
-        self.signals     . add ( self.__y1s )
-        self.signals     . add ( self.__y2s )
-        self.signals     . add ( self.__y3s )
-        self.backgrounds . add ( self.__bkg.pdf ) 
+         
+        # ===============================================================================
+        ## use helper function to create the background  
+        # ===============================================================================
+        self.__bkg   = self.make_bkg ( background , 'Bkg%s' % name , self.mass )
 
-        ## save configurtaion
-        self.config = {
-            'mass'        : self.mass   ,
-            'name'        : self.name   ,
-            'background'  : self.__bkg  ,
-            'm1s'         : self.m1s    ,
-            'sigma'       : self.sigma  ,
-            'alphaL'      : self.aL     , 
-            'alphaR'      : self.aR     , 
-            'nL'          : self.nL     ,
-            'nR'          : self.nR     ,
-            'N1S'         : self.N1S    ,
-            'N2S'         : self.N2S    ,
-            'N3S'         : self.N3S    ,
-            'B'           : self.B      ,
-            'dm2S'        : self.dm2S   , 
-            'dm3S'        : self.dm3S   , 
-            }
-        
-    @property
-    def mass ( self ) :
-        """'mass'-variable, ailas for 'x' and 'xvar'"""
-        return self.xvar
-    
-    @property
-    def  s1s (  self ) :
-        """'s1s'-parameter (resoltuion for Y(1S) peak) (same as 'sigma')"""
-        return self.__sigma
-    @s1s.setter
-    def  s1s (  self , value ) :
-        self.set_value ( self.__s1s , value )
-    
-    @property
-    def  sigma (  self ) :
-        """'sigma'-parameter (resoltuion for Y(1S) peak) (same as 's1s')"""
-        return self.s1s
-    @sigma.setter
-    def  sigma (  self , value ) :
-        self.s1s = value
 
     @property
     def  m1s (  self ) :
-        """'m1s'-parameter (mass for Y(1S) peak)"""
-        return self.__m1s
+        """'m1s'-parameter, location of the  Y(1S) peak, same as 'mean'"""
+        return self.mean
     @m1s.setter
     def  m1s (  self , value ) :
-        self.set_value ( self.__m1s , value )
+        self.mean = value 
+    
+    @property
+    def  s1s (  self ) :
+        """'s1s'-parameter (resolution for Y(1S) peak) (same as 'sigma')"""
+        return self.sigma
+    @s1s.setter
+    def  s1s (  self , value ) :
+        self.sigma = value 
+
+    @property
+    def  dm21 (  self ) :
+        """'dm21'-parameter (mass  difference for Y(2S) and Y(1S) peaks)"""
+        return self.__dm21
+    @dm21.setter
+    def  dm21 (  self , value ) :
+        self.set_value ( self.__dm21 , value ) 
+        
+    @property
+    def  dm32 (  self ) :
+        """'dm32'-parameter (mass  difference for Y(3S) and Y(2S) peaks)"""
+        return self.__dm32    
+    @dm32.setter
+    def  dm32 (  self , value ) :
+        self.set_value ( self.__dm32 , value )
 
     @property
     def  m2s (  self ) :
-        """'m2s'-parameter (mass for Y(2S) peak)"""
+        """'m2s'-parameter (mass/location for the Y(2S) peak)"""
         return self.__m2s
     @property
     def  m3s (  self ) :
-        """'m3s'-parameter (mass for Y(3S) peak)"""
+        """'m3s'-parameter (mass/location for the Y(3S) peak)"""
         return self.__m3s
 
     @property
@@ -1012,22 +891,6 @@ class Manca2_pdf (PDF1) :
     def  s3s (  self ) :
         """'s3s'-parameter (resolution for Y(3S) peak)"""
         return self.__s3s
-    
-    @property
-    def  dm2S (  self ) :
-        """'dm2S'-parameter (mass  difference for Y(2S) and Y(1S) peaks)"""
-        return self.__dm2s
-    @dm2S.setter
-    def  dm2S (  self , value ) :
-        self.set_value ( self.__dm2s , value ) 
-        
-    @property
-    def  dm3S (  self ) :
-        """'dm3S'-parameter (mass  difference for Y(3S) and Y(1S) peaks)"""
-        return self.__dm3s    
-    @dm3S.setter
-    def  dm3S (  self , value ) :
-        self.Set_value ( self.__dm3s , value )
         
     @property
     def N1S ( self ) :
@@ -1062,6 +925,446 @@ class Manca2_pdf (PDF1) :
         self.set_value ( self.__b , value )
 
     @property
+    def bkg ( self ) :
+        """'background' : get the background shape"""
+        return self.__bkg 
+            
+# =============================================================================
+## @class Manca_pdf 
+#  the final full PDF for Y->mu+mu- fit
+#  This is physically well-motivated function for fits in narrow
+#  bins in pt and rapidity
+#
+#  Parameters of three Upsilon peaks are related:
+#  - Y(2S) mass is calculated as  <code>m(Y(1S))+dm21</code>
+#  - Y(2S) mass is calculated as  <code>m(Y(2S))+dm32</code>
+#  - Y(2S) resolution is calculated as <code>sigma(Y(1S))*(m(Y(2S))/m(Y(1S)))</code>
+#  - Y(3S) resolution is calculated as <code>sigma(Y(1S))*(m(Y(3S))/m(Y(1S)))</code>
+#
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2011-08-02
+class Manca_pdf (MANCA) :
+    """Manca: the final fit model for Y->mu+mu- fit
+    This is physically well-motivated function for fits in narrow bins in pt and rapidity
+    - three Needham functions for Y(1S), Y(2S) and Y(3S) peaks
+    - constrants for their resolutions and masses 
+    - background: ... 
+
+    Parameters of three Upsilon peaks are related:
+    - Y(2S) mass is calculated as `m(Y(1S))+dm21`
+    - Y(2S) mass is calculated as  `m(Y(2S))+dm32`
+    - Y(2S) resolution is calculated as `sigma(Y(1S))*(m(Y(2S))/m(Y(1S)))`
+    - Y(3S) resolution is calculated as `sigma(Y(1S))*(m(Y(3S))/m(Y(1S)))`
+    """
+    # ===========================================================================
+    ## create Manca PDF 
+    #  @param  xvar observable, mu+mu- mass
+    #  @param  name       the name of the PDF
+    #  @param  background backrgudn shape: symbols, PDF or ROOT.RooAbsPdf
+    #  @param  m1s        mass/location of Y(1S) peak 
+    #  @param  s1s        resolution parameter for Y(1S) peak    
+    #  @param a0          a0-parameter for Needham function
+    #  @param a1          a1-parameter for Needham function
+    #  @param a2          a2-parameter for Needham function
+    #  @param dm21        mass difference between Y(2S) and Y(1S) states 
+    #  @param dm32        mass difference between Y(3S) and Y(2S) states 
+    #  @param N1S         yield for the Y(1S) signal
+    #  @param N2S         yield for the Y(2S) signal
+    #  @param N3S         yield for the Y(3S) signal
+    #  @param B           yield for the background component        
+    def __init__ ( self               ,
+                   xvar               ,
+                   name        = 'Y'  ,
+                   background  = 0    ,                   
+                   m1s         = None ,
+                   s1s         = None ,
+                   ## 
+                   a0          = 1.91 ,
+                   a1          = None ,
+                   a2          = None ,
+                   ## 
+                   dm21       = None  ,   ## m(2S) - m(1S) 
+                   dm32       = None  ,   ## m(3S) - m(2S)
+                   ##
+                   N1S        = None  ,   ## Y(2S) signal
+                   N2S        = None  ,   ## Y(2S) signal
+                   N3S        = None  ,   ## Y(3S) signal 
+                   B          = None  ) : ## background
+
+        """ Create Manca1 PDF: function to fit Y->mu+mu- signals in narrow kinematic range 
+        - xvar       : observable, mu+mu- mass
+        - name       : the name of the PDF
+        - background : background  shape: symbol, PDF or ROOT.RooAbsPdf        
+        - m1s        : mass/location of Y(1S) peak 
+        - s1s        : resolution parameter for Y(1S) peak  
+        - a0         : a0-parameter for Needham function
+        - a1         : a1-parameter for Needham function
+        - a2         : a2-parameter for Needham function
+        - dm21       : mass difference between Y(2S) and Y(1S) states 
+        - dm32       :  mass difference between Y(3S) and Y(2S) states 
+        - N1S        : yield for the Y(1S) signal
+        - N2S        : yield for the Y(2S) signal
+        - N3S        : yield for the Y(3S) signal
+        - B          : yield for the background component    
+        
+        Parameters of three Upsilon peaks are related:
+        - Y(2S) mass is calculated as `m(Y(1S))+dm21`
+        - Y(2S) mass is calculated as  `m(Y(2S))+dm32`
+        - Y(2S) resolution is calculated as `sigma(Y(1S))*(m(Y(2S))/m(Y(1S)))`
+        - Y(3S) resolution is calculated as `sigma(Y(1S))*(m(Y(3S))/m(Y(1S)))`
+        """
+        ### initialize the base 
+        MANCA.__init__ ( self                    ,
+                         name       = name       ,
+                         xvar       = xvar       ,
+                         m1s        = m1s        ,
+                         s1s        = s1s        ,
+                         dm21       = dm21       ,
+                         dm32       = dm32       ,
+                         background = background , 
+                         N1S        = N1S        , 
+                         N2S        = N2S        , 
+                         N3S        = N3S        , 
+                         B          = B          )
+        
+        # =====================================================================
+        ## Shape parameters
+        # =====================================================================
+
+        self.__a0   = self.make_var ( a0                 ,
+                                      'a0m_%s' % name    ,
+                                      "a0 for Needham's function" ,
+                                      True  , 1.91  , 0.1 , 3.0   )
+        
+        self.__a1   = self.make_var ( a1                 ,
+                                      'a1m_%s' % name    ,
+                                      "a1 for Needham's function" ,
+                                      True , 1.1174 / self._gev ,  -10.0 / self._gev , 10.0 / self._gev )
+        
+        self.__a2   = self.make_var ( a2                 ,
+                                      'a2m_%s' % name    ,
+                                      "a2 for Needham's function" , 
+                                      True , -5.299 / self._gev**2   , -100.0  / self._gev**2  , 100.0  / self._gev**2 )
+            
+        # =====================================================================
+        ## Y(1S)
+        # =====================================================================
+        self.__Y1S   = Needham_pdf (
+            name + '1S'           ,
+            xvar     = self.xvar  ,
+            mean     = self.m1s   ,
+            sigma    = self.s1s   ,
+            a0       = self.a0    ,
+            a1       = self.a1    ,
+            a2       = self.a2    ) 
+        
+        # =====================================================================
+        ## Y(2S)
+        # =====================================================================
+        self.__Y2S   = Needham_pdf (
+            name + '2S'           ,
+            xvar     = self.xvar  ,
+            mean     = self.m2s   ,
+            sigma    = self.s2s   ,
+            a0       = self.a0    ,
+            a1       = self.a1    ,
+            a2       = self.a2    ) 
+        
+        # =====================================================================
+        ## Y(3S)
+        # =====================================================================
+        self.__Y3S   = Needham_pdf (
+            name + '3S'           ,
+            xvar     = self.xvar  ,
+            mean     = self.m3s   ,
+            sigma    = self.s3s   ,
+            a0       = self.a0    ,
+            a1       = self.a1    ,
+            a2       = self.a2    ) 
+        
+        # ===============================================================================
+        ## create the final PDF 
+        # ===============================================================================
+        self.alist1 = ROOT.RooArgList ( self.Y1S.pdf , self.Y2S.pdf , self.Y3S.pdf , self.bkg.pdf ) 
+        self.alist2 = ROOT.RooArgList ( self.N1S     , self.N2S     , self.N3S     , self.B       ) 
+        self.pdf    = ROOT.RooAddPdf  (
+            "manca_%s"  % name ,
+            "manca(%s)" % name ,
+            self.alist1 ,
+            self.alist2 )
+
+        # ===============================================================================
+        ## finally declare the components 
+        # ===============================================================================
+        self.signals     . add ( self.Y1S.pdf )
+        self.signals     . add ( self.Y2S.pdf )
+        self.signals     . add ( self.Y3S.pdf )
+        self.backgrounds . add ( self.bkg.pdf ) 
+
+        ## save configurtaion
+        self.config = {
+            'xvar'        : self.xvar ,
+            'name'        : self.name ,
+            'background'  : self.bkg  ,
+            'm1s'         : self.m1s  ,
+            's1s'         : self.s1s  ,
+            ##
+            'a0'          : self.a0   ,
+            'a1'          : self.a1   , 
+            'a2'          : self.a2   ,
+            ##
+            'dm21'        : self.dm21 , 
+            'dm32'        : self.dm32 ,
+            ## 
+            'N1S'         : self.N1S  ,
+            'N2S'         : self.N2S  ,
+            'N3S'         : self.N3S  ,
+            'B'           : self.B    }
+    
+    @property
+    def a0 ( self ) :
+        """'a0' parameter for Needham's function"""
+        return self.__a0
+    @a0.setter 
+    def a0 (  self , value ) :
+        self.set_value ( self.__a0 , value )
+  
+    @property
+    def a1 ( self ) :
+        """'a1' parameter for Needham's function"""
+        return self.__a1
+    @a1.setter 
+    def a1 (  self , value ) :
+        self.set_value ( self.__a1 , value )
+          
+    @property
+    def a2 ( self ) :
+        """'a2' parameter for Needham's function"""
+        return self.__a2
+    @a2.setter 
+    def a2 (  self , value ) :
+        self.set_value ( self.__a2 , value )
+      
+    @property
+    def Y1S ( self ) :
+        """'Y1S' : Y(1S) shape"""
+        return self.__Y1S
+
+    @property
+    def Y2S ( self ) :
+        """'Y2S' : Y(2S) shape"""
+        return self.__Y2S
+
+    @property
+    def Y3S ( self ) :
+        """'Y3S' : Y(3S) shape"""
+        return self.__Y3S
+   
+models.append ( Manca_pdf ) 
+
+# =============================================================================
+## @class Manca2_pdf 
+#  the final full PDF for Y->mu+mu- fit
+#  This is an effective function for fit in global bin, without pt/y-binning
+#  - Y signals are parameterised by the double-sided Cruystal Ball fnuctions
+#
+#  Parameters of three Upsilon peaks are related:
+#  - Y(2S) mass is calculated as  <code>m(Y(1S))+dm21</code>
+#  - Y(2S) mass is calculated as  <code>m(Y(2S))+dm32</code>
+#  - Y(2S) resolution is calculated as <code>sigma(Y(1S))*(m(Y(2S))/m(Y(1S)))</code>
+#  - Y(3S) resolution is calculated as <code>sigma(Y(1S))*(m(Y(3S))/m(Y(1S)))</code>
+#
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2014-06-24
+class Manca2_pdf (MANCA) :
+    """Manca2: the final fit model for Y->mu+mu- fit
+    This is an effective function for fit in global bin, without pt/y-binning
+    - three double-sided Crystal Ball functions for Y(1S), Y(2S) and Y(3S) peaks
+    - constrants for their resolutions and masses 
+    - background: ... 
+    The Y signals are parameterised by the double-sided Crystal Ball fnuctions
+
+    Parameters of three Upsilon peaks are related:
+    - Y(2S) mass is calculated as `m(Y(1S))+dm21`
+    - Y(2S) mass is calculated as  `m(Y(2S))+dm32`
+    - Y(2S) resolution is calculated as `sigma(Y(1S))*(m(Y(2S))/m(Y(1S)))`
+    - Y(3S) resolution is calculated as `sigma(Y(1S))*(m(Y(3S))/m(Y(1S)))`
+    """
+    # ===========================================================================
+    ## create Manca2 PDF 
+    #  @param  xvar observable, mu+mu- mass
+    #  @param  name       the name of the PDF
+    #  @param  background backrgudn shape: symbols, PDF or ROOT.RooAbsPdf
+    #  @param  m1s        mass/location of Y(1S) peak 
+    #  @param  s1s        resolution parameter for Y(1S) peak  
+    #  @param alphaL      left  alpha-parameter for double-sided  Crystal Ball function
+    #  @param alphaR      right alpha-parameter for double-sided  Crystal Ball function
+    #  @param nL          left  n-parameter for double-sided  Crystal Ball function
+    #  @param nR          right n-parameter for double-sided  Crystal Ball function
+    #  @param dm21        mass difference between Y(2S) and Y(1S) states 
+    #  @param dm32        mass difference between Y(3S) and Y(2S) states 
+    #  @param N1S         yield for the Y(1S) signal
+    #  @param N2S         yield for the Y(2S) signal
+    #  @param N3S         yield for the Y(3S) signal
+    #  @param B           yield for the background component    
+    def __init__ ( self                    ,
+                   xvar                    ,   ## the observable: mu+mu- mass 
+                   name       = 'Y'        ,   ## PDF name 
+                   background = 'd3'       ,   ## decreasing positive 3rd order polynomial
+                   m1s        = None       ,   ## mass ioif Y(1S) state 
+                   s1s        = None       ,   ## resoltuion parameter for Y(1S) state 
+                   ## 
+                   alphaL     = 1.65       ,   ## left  alpha-parameter for double-sided  Crystal Ball function
+                   alphaR     = 1.65       ,   ## left  alpha-parameter for double-sided  Crystal Ball function
+                   nL         = 1.3110     ,   ## left  n-parameter for double-sided  Crystal Ball function
+                   nR         = 1.5751e+01 ,   ## right n-parameter for double-sided  Crystal Ball function
+                   ## 
+                   dm21       = None       ,   ## m(2S) - m(1S) mass difference 
+                   dm32       = None       ,   ## m(3S) - m(2S) mass difference 
+                   ## 
+                   N1S        = None       ,   ## Y(2S) signal
+                   N2S        = None       ,   ## Y(2S) signal
+                   N3S        = None       ,   ## Y(3S) signal 
+                   B          = None       ) : ## background 
+        
+        """ Create Manca2 PDF: function to fit Y->mu+mu- signals in wide kinematic ranges 
+        - xvar       : observable, mu+mu- mass
+        - name       : the name of the PDF
+        - background : background  shape: symbol, PDF or ROOT.RooAbsPdf        
+        - m1s        : mass/location of Y(1S) peak 
+        - s1s        : resolution parameter for Y(1S) peak  
+        - alphaL     : left  alpha-parameter for double-sided  Crystal Ball function
+        - alphaR     : right alpha-parameter for double-sided  Crystal Ball function
+        - nL         : left  n-parameter for double-sided  Crystal Ball function
+        - nR         : right n-parameter for double-sided  Crystal Ball function
+        - dm21       : mass difference between Y(2S) and Y(1S) states 
+        - dm32       :  mass difference between Y(3S) and Y(2S) states 
+        - N1S        : yield for the Y(1S) signal
+        - N2S        : yield for the Y(2S) signal
+        - N3S        : yield for the Y(3S) signal
+        - B          : yield for the background component    
+
+        Parameters of three Upsilon peaks are related:
+        - Y(2S) mass is calculated as `m(Y(1S))+dm21`
+        - Y(2S) mass is calculated as  `m(Y(2S))+dm32`
+        - Y(2S) resolution is calculated as `sigma(Y(1S))*(m(Y(2S))/m(Y(1S)))`
+        - Y(3S) resolution is calculated as `sigma(Y(1S))*(m(Y(3S))/m(Y(1S)))`
+        """
+        
+        ### initialize the base 
+        MANCA.__init__ ( self                    ,
+                         name       = name       ,
+                         xvar       = xvar       ,
+                         m1s        = m1s        ,
+                         s1s        = s1s        ,
+                         dm21       = dm21       ,
+                         dm32       = dm32       ,
+                         background = background , 
+                         N1S        = N1S        , 
+                         N2S        = N2S        , 
+                         N3S        = N3S        , 
+                         B          = B          )
+
+        # =====================================================================
+        ## Dobule Crystal Ball shape parameters 
+        # =====================================================================
+        self.__aL    = self.make_var ( alphaL                  ,
+                                       "aL_%s"          % name ,
+                                       "#alpha_{L}(%s)" % name ,
+                                       None   , 1.5462     , 0.1   , 10 )
+        self.__nL    = self.make_var ( nL                      ,                     
+                                       "nL_%s"          % name ,
+                                       "n_{L}(%s)"      % name ,
+                                       None   , 1.3119     , 1.e-5 , 25 )
+        self.__aR    = self.make_var ( alphaR                  ,
+                                       "aR_%s"          % name ,
+                                       "#alpha_{R}(%s)" % name ,
+                                       None , 1.6952e+00 , 0.1     , 10 )
+        self.__nR    = self.make_var ( nR                      ,
+                                       "nR_%s"          % name ,
+                                       "n_{R}(%s)"      % name ,
+                                       None , 1.5751e+01 , 1.e-5   , 100 )
+
+        # =====================================================================
+        ## Y(1S) peak 
+        # =====================================================================
+        self.__Y1S   = CB2_pdf (
+            name + '1S'           ,
+            xvar     = self.xvar  ,
+            mean     = self.m1s   ,
+            sigma    = self.s1s   ,
+            alphaL   = self.aL    ,
+            alphaR   = self.aR    ,
+            nL       = self.nL    ,
+            nR       = self.nR    )
+
+        # =====================================================================
+        ## Y(2S)
+        # =====================================================================
+        self.__Y2S  = CB2_pdf (
+            name + '2S'           ,
+            xvar     = self.xvar  ,
+            mean     = self.m2s   ,
+            sigma    = self.s2s   ,
+            alphaL   = self.aL    ,
+            alphaR   = self.aR    ,
+            nL       = self.nL    ,
+            nR       = self.nR    )
+                
+        # =====================================================================
+        ## Y(3S)
+        # =====================================================================
+        self.__Y3S  = CB2_pdf (
+            name + '3S'          ,
+            xvar     = self.xvar ,
+            mean     = self.m3s  ,
+            sigma    = self.s3s  ,
+            alphaL   = self.aL   ,
+            alphaR   = self.aR   ,
+            nL       = self.nL   ,
+            nR       = self.nR   )
+        
+        # ===============================================================================
+        ## create the final PDF 
+        # ===============================================================================
+        self.alist1 = ROOT.RooArgList ( self.Y1S.pdf , self.Y2S.pdf , self.Y3S.pdf , self.bkg.pdf ) 
+        self.alist2 = ROOT.RooArgList ( self.N1S     , self.N2S     , self.N3S     , self.B       ) 
+        self.pdf    = ROOT.RooAddPdf  (
+            "manca_%s"  % name ,
+            "manca(%s)" % name ,
+            self.alist1 ,
+            self.alist2 )
+
+        # ===============================================================================
+        ## finally declare the components 
+        # ===============================================================================
+        self.signals     . add ( self.Y1S.pdf )
+        self.signals     . add ( self.Y2S.pdf )
+        self.signals     . add ( self.Y3S.pdf )
+        self.backgrounds . add ( self.bkg.pdf ) 
+
+        ## save configurtaion
+        self.config = {
+            'xvar'        : self.xvar   ,
+            'name'        : self.name   ,
+            'background'  : self.bkg    ,
+            'm1s'         : self.m1s    ,
+            's1s'         : self.s1s    ,
+            ##
+            'alphaL'      : self.aL     , 
+            'alphaR'      : self.aR     , 
+            'nL'          : self.nL     ,
+            'nR'          : self.nR     ,
+            ##
+            'dm21'        : self.dm21   , 
+            'dm32'        : self.dm32   ,
+            ## 
+            'N1S'         : self.N1S    ,
+            'N2S'         : self.N2S    ,
+            'N3S'         : self.N3S    ,
+            'B'           : self.B      }
+        
+    @property
     def aL (  self ) :
         """(left)'alpha'-parameter for Y-peaks"""
         return self.__aL
@@ -1092,8 +1395,24 @@ class Manca2_pdf (PDF1) :
     @nR.setter 
     def nR (  self , value ) :
         self.set_value ( self.__nR , value )
-        
-models.append ( Manca2_pdf ) 
+
+    @property
+    def Y1S ( self ) :
+        """'Y1S' : Y(1S) shape"""
+        return self.__Y1S
+
+    @property
+    def Y2S ( self ) :
+        """'Y2S' : Y(2S) shape"""
+        return self.__Y2S
+
+    @property
+    def Y3S ( self ) :
+        """'Y3S' : Y(3S) shape"""
+        return self.__Y3S
+
+models.append ( Manca2_pdf )
+
 # =============================================================================
 ## Specific model for fitting of Y+X
 class MancaX_pdf(PDF2) :
