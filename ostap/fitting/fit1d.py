@@ -877,7 +877,7 @@ class Fit1D (PDF1) :
         
         if not backgrounds :
             ## create background
-            bkg_name = 'Background' if not self.suffix else 'Background_%s' % self.suffix 
+            bkg_name = 'Background_%s' % self.name if not self.suffix else 'Background_%s' % self.suffix 
             background = self.make_bkg ( background , name = bkg_name , xvar = self.xvar ) 
             
         bkg_lst  = list ( otherbackgrounds ) + list ( backgrounds )
