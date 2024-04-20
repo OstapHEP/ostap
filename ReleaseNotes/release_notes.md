@@ -7,8 +7,8 @@
   1. add `table` method for `Files/Data/Data2` tools to print the content as table
   1. add version of `parallle_copy` based on `GNU parallel` (if/when available)
   1. make use of  `parallel_copy` in `copy_files`
-  1. imporove specific models form `ostap.fitting.specific` module
-  1. ad dnew test for specific models
+  1. improve specific models form `ostap.fitting.specific` module
+  1. add new test for specific models
   
 ## Backward incompatible
 
