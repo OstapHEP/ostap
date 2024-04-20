@@ -2956,25 +2956,25 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
 
         decr = re.search ( r'(convex|cx)(( *)|(_*))(decreasing|dec)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
-        if desc :
+        if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = Convex_pdf ( name , xvar , power = degree , increasing = False, convex = True )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
             
         decr = re.search ( r'(convex|cx)(( *)|(_*))(increasing|inc)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
-        if desc :
+        if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = Convex_pdf ( name , xvar , power = degree , increasing = True , convex = True )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
             
         decr = re.search ( r'(concave|cv)(( *)|(_*))(decreasing|dec)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
-        if desc :
+        if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = Convex_pdf ( name , xvar , power = degree , increasing = False, convex = False )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
             
         decr = re.search ( r'(concave|cv)(( *)|(_*))(increasing|inc)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
-        if desc :
+        if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = Convex_pdf ( name , xvar , power = degree , increasing = True , convex = False )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
