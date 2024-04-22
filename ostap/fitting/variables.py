@@ -1183,21 +1183,21 @@ class FIXVAR(object):
         for v in vars :
             assert isinstance ( v , ROOT.RooAbsReal ),\
                    'FIXVAR: Invalid variable type %s/%s' % ( v   , type ( v ) )
-            variables.append ( v )
+            if hasattr ( v , 'fix' ) : variables.append ( v )
 
         self.__variables = tuple ( variables )
         self.__fixed     = ()
         
     def __enter__ ( self        ) :
 
-        self.__fixed = tuple ( [ c.isConstant() for c in self.variables ] )
-        for v in self.variables : v.fix ()
+        self.__fixed = [ c.isConstant() for c in self.variables ] 
+        for i , v in enumerate ( self.variables ) : v.fix ()
 
         return self
     
     def __exit__  ( self , *_   ) :
         for v , c in zip ( self.variables , self.fixed ) :
-            if not c : v.release()
+            if ( not c ) and hasattr ( v , 'release' ) : v.release()
 
     @property
     def variables ( self ) :

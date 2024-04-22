@@ -87,17 +87,21 @@ def add_new_branch ( chain          ,
     if   isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass 
     elif isinstance ( chain , ROOT.TTree  ) : 
         return _add_branch_ ( chain , branch_name , function , verbose = verbose , report = report  ) 
-    
+
+    cname    = chain.name 
     ch       = Chain ( chain ) 
     branches = set   ( chain.branches() ) | set ( chain.leaves() ) 
     
+    keep_it  = branch_name , function
+
     task     = AddBranch   ( branch_name ,  function  )
     wmgr     = WorkManager ( silent = not verbose , **kwargs )
     trees    = ch.split    ( max_files = 1  )
+
     
     wmgr.process ( task , trees )
-    
-    nc = ROOT.TChain ( chain.name )
+
+    nc = ROOT.TChain ( cname )
     for f in ch.files :  nc.Add ( f )
 
     if report : 

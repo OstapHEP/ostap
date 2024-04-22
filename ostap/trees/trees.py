@@ -2373,11 +2373,13 @@ def add_new_branch ( tree           ,
     assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
            "add_branch: invalid type of ``function'': %s/%s" % ( function , type ( function ) )  
 
-    treepath =  tree.path
+    treepath = tree.path
     the_file = tree.topdir
     assert treepath and the_file and ( not the_file is ROOT.gROOT ) and isinstance ( the_file ,  ROOT.TFile ) , \
            'This is not file-resident TTree object, addition of new branch is not posisble!'
     the_file = the_file.GetName() 
+    
+    funcs    = []
     
     if isinstance ( name  ,  dictlike_types ) and function is None :
         
@@ -2390,17 +2392,21 @@ def add_new_branch ( tree           ,
             elif isinstance ( v , Ostap.IFuncTree ) : typeformula = True
             else : raise TypeError ('add_branch: Unknown branch %s/%s for %s'  % ( v , type( v ) , k ) )
                     
-        if typeformula : MMAP = Ostap.Trees.FUNCTREEMAP
-        else           : MMAP = std.map  ( 'std::string'       , 'std::string' )
-        
-        mmap = MMAP () 
+        if typeformula :
+            MMAP = Ostap.Trees.FUNCTREEMAP
+            PAIR = Ostap.Trees.FUNCTREEPAIR
+        else           :
+            MMAP = std.map  ( 'std::string'       , 'std::string' )
+            PAIR = MMAP.value_type 
+
+        mmap  = MMAP () 
         for k in name.keys() :
             v = name [ k ]
             if typeformula and isinstance ( v , string_types ) :
                 v = Ostap.Functions.FuncFormula ( v , tree )
                 funcs.append ( v ) 
-            ## mmap.insert ( PAIR ( k , v ) )
-            mmap [ k ] = v 
+            mmap.insert ( PAIR ( k , v ) )
+            ## mmap [ k ] = v 
 
         names = list ( name.keys() )
         args  = mmap ,
@@ -2533,7 +2539,6 @@ def add_new_branch ( tree           ,
     
     branches = set ( tree.branches () ) | set ( tree.leaves() ) 
     exists   = set ( names ) & branches
-
     
     ## if exists : logger.warning ("Branches '%s' already exist(s)!" % exists ) 
     assert not exists , "Branches '%s' already exist(s)!" % list ( exists ) 

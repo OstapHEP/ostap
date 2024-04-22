@@ -70,7 +70,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.core   import ROOTCWD, valid_pointer
-from   ostap.utils.files import Files
+from   ostap.io.files    import Files
 import ROOT, sys, os   
 # =============================================================================
 # logging 

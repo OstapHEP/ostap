@@ -25,8 +25,8 @@ from   ostap.parallel.task    import Task
 import os, glob, random, math   
 # =============================================================================
 from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.files' )
-else                       : logger = getLogger( __name__            )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.io.files' )
+else                       : logger = getLogger( __name__         )
 del getLogger
 # =============================================================================
 ## @class TreatFileTask
@@ -462,7 +462,7 @@ class Files(object):
             if sort : files.sort()
             return tuple ( files ) 
         elif isinstance ( n , float ) and 0 < n < 1 :
-            n = int ( math.floor ( len ( self.files ) * n ) )
+            n = int ( math.ceil ( len ( self.files ) * n ) )
             return self.sample_files ( n , sort ) 
         else  :
             raise IndexError ( "Invalid fraction: %s/%s" % ( n , len( self.files ) ) )

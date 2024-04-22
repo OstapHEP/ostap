@@ -54,7 +54,9 @@ else                       : logger = getLogger ( __name__                  )
 try                : from string import            ascii_letters
 except ImportError : from string import letters as ascii_letters
 # =============================================================================
-_py2 = sys.version_info.major < 3 
+_py2 = sys.version_info.major < 3
+## possible numericla types for variables 
+numvar_types = num_types + ( VE , ) 
 # =============================================================================
 ## @class NameDuplicates
 #  Are name duplicates allowed?
@@ -357,12 +359,12 @@ class VarMaker (object) :
         # var = ( value )
         # var = ( min , max )
         # var = ( value , min , max )
-        
+
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif var is None : 
             assert name and args , "make_var: 'name' and 'args' must be specified when 'var' is None!"
             var = name , title if title else name            
-        elif isinstance ( var , num_types ) :
+        elif isinstance ( var , numvar_types ) :
             assert name , "make_var: 'name' must be specified when 'var' is of numerical type!"
             var = name , title if title else name , float ( var ) 
             

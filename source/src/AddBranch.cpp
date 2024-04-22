@@ -61,6 +61,7 @@ Ostap::Trees::add_branch
   const std::string&                name     , 
   const Ostap::IFuncTree&           func     ) 
 {
+  
   if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
   //
   Double_t value    = 0  ;

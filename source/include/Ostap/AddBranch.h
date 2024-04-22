@@ -45,6 +45,11 @@ namespace Ostap
      *  helper type to deal with map of functions 
      */
     typedef std::map<std::string,const Ostap::IFuncTree*>        FUNCTREEMAP  ;
+    // =======================================================================
+    /** @typedef FUNCTREEEMAP 
+     *  helper type to deal with map of functions 
+     */
+    typedef FUNCTREEMAP::value_type                              FUNCTREEPAIR ;
     // ========================================================================
     /**  add new branch with name <code>name</code> to the tree
      *   the value of the branch is taken from  function <code>func</code>

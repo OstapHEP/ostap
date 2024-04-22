@@ -99,7 +99,7 @@ class sPlot1D(object) :
                len ( pdf.alist1 ) ==  len ( pdf.alist2 )     , 'Invalid type of PDF!'
 
         cmps   = pdf.alist2 
-        names  = [ c.name for c in cmps ] 
+        names  = sorted ( set ( c.name for c in cmps ) ) 
 
         ## if  datset is specified - perform the fit
         if  dataset :
@@ -109,7 +109,8 @@ class sPlot1D(object) :
             ## make a proper (re)fit fixing everything  but yields
             to_fix =  [ v  for v in vars if not v in cmps ]
             with FIXVAR ( to_fix ) :
-                logger.info ('Refit with the fixed parameters %s' % [ v.name for v in to_fix ] )
+                ns = ','.join ( sorted ( v.name for v in to_fix ) ) 
+                logger.info ( 'Refit with the fixed parameters: %s' % ns )
                 
                 fitresult , f = pdf.fitTo ( dataset , silent = True , draw = False , **fitopts )
                 ## fitresult , f = pdf.fitTo ( dataset , silent = True , draw = True , **fitopts )
@@ -117,10 +118,11 @@ class sPlot1D(object) :
         elif fitresult :
             
             pars   = fitresult.floatParsFinal()
-            pnames = set( [ p.name for p in pars ] )
+            pnames = sorted ( set ( p.name for p in pars ) ) 
             
-            if set ( names )  != pnames :
-                raise RuntimeError("Rerun fit with with only %s floating " % names )
+            if names != pnames :                
+                ns = ','.join ( n for n in names  ) 
+                raise RuntimeError ( "Rerun fit with with only floating %s" % ns )
 
         ## template histogram 
         template = pdf.make_histo ( nbins )
@@ -131,12 +133,12 @@ class sPlot1D(object) :
         ## the list of PDFs 
         cpdfs        = [ Generic1D_pdf ( p , xvar = pdf.xvar ) for p in pdf.alist1 ]
         
-        for p , n in zip  ( cpdfs , names ) :
+        for p , v in zip  ( cpdfs , pdf.alist2  ) :
             
             if fast  : hc = p.roo_histo ( histo = template , events = False )
             else     : hc = p.    histo ( histo = template , events = False , errors = False )
             
-            hcomponents [ n ] = hc
+            hcomponents [ v.name ] = hc
 
         ## sum of all histograms 
         hsum = template.clone()

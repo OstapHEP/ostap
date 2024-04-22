@@ -50,7 +50,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core     import rootError, rootWarning
-from   ostap.utils.files   import Files, fsize_unit 
+from   ostap.io.files      import Files, fsize_unit 
 from   ostap.io.root_file  import RootFiles
 import ROOT, os, math  
 # =============================================================================

@@ -572,9 +572,9 @@ Ostap::Functions::FuncTH1::FuncTH1
   const bool           edges         ,
   const bool           extrapolate   , 
   const bool           density       )
-  : Func1D ( Ostap::Math::Histo1D ( histo , tx , edges , extrapolate , density ) , 
-             xvar , 
-             tree ) 
+  : FuncTH1 ( Ostap::Math::Histo1D ( histo , tx , edges , extrapolate , density ) , 
+	      xvar , 
+	      tree ) 
 {}
 // ============================================================================
 /*  constructor from the histogram 
@@ -626,10 +626,10 @@ Ostap::Functions::FuncTH2::FuncTH2
   const bool           edges                     ,
   const bool           extrapolate               , 
   const bool           density                   )
-  : Func2D ( Ostap::Math::Histo2D ( histo , tx , ty , edges , extrapolate , density ) , 
-             xvar ,   
-             yvar , 
-             tree )
+  : FuncTH2 ( Ostap::Math::Histo2D ( histo , tx , ty , edges , extrapolate , density ) , 
+	      xvar ,   
+	      yvar , 
+	      tree )
 {}
 // ======================================================================
 /*  constructor from the histogram 
@@ -685,11 +685,11 @@ Ostap::Functions::FuncTH3::FuncTH3
   const bool           edges                     ,
   const bool           extrapolate               , 
   const bool           density                   )
-  : Func3D ( Ostap::Math::Histo3D ( histo , tx , ty , tz , edges , extrapolate , density ) , 
-             xvar , 
-             yvar , 
-             zvar , 
-             tree )
+: FuncTH3 ( Ostap::Math::Histo3D ( histo , tx , ty , tz , edges , extrapolate , density ) , 
+	    xvar , 
+	    yvar , 
+	    zvar , 
+	    tree )
 {}
 // ======================================================================
 /*  constructor from the histogram 
