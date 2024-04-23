@@ -860,7 +860,7 @@ def _gre_setitem_ ( graph , ipoint , point )  :
     
     if not ipoint in graph    : raise IndexError
     if not 2 == len ( point ) :
-        raise AttributeError("Invalid dimension of 'point'")
+        raise AttributeError("Invalid dimension of 'point' %s" % str ( point ) ) 
     
     x = VE ( point [ 0 ] ) 
     v = VE ( point [ 1 ] ) 

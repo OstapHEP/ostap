@@ -51,6 +51,33 @@ namespace Ostap
      */
     typedef FUNCTREEMAP::value_type                              FUNCTREEPAIR ;
     // ========================================================================
+    class Branches 
+    {
+      // ===================================================================== 
+    public:
+      // ======================================================================
+      bool add
+      ( const std::string&      name ,
+	const Ostap::IFuncTree& func ) ;      
+      bool add
+      ( const Ostap::IFuncTree& func ,		 
+	const std::string&      name ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      FUNCTREEMAP::const_iterator begin () const { return m_map.begin () ; }
+      FUNCTREEMAP::const_iterator end   () const { return m_map.end   () ; }
+      std::size_t                 size  () const { return m_map.size  () ; }
+      bool                        empty () const { return m_map.empty () ; }
+      const FUNCTREEMAP&          map   () const { return m_map          ; }
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// the actual storage 
+      FUNCTREEMAP m_map {} ; // the actual storage 
+      // ======================================================================
+    };
+    // ========================================================================
     /**  add new branch with name <code>name</code> to the tree
      *   the value of the branch is taken from  function <code>func</code>
      *   @param tree    input tree 
@@ -174,6 +201,36 @@ namespace Ostap
     ( TTree*                            tree     ,  
       const Ostap::Utils::ProgressConf& progress , 
       const FUNCTREEMAP&                branches ) ;
+    // ========================================================================
+    /** add new branches to the tree
+     *  the value of the branch each  is taken from <code>branches</code>
+     *  @param tree     input tree 
+     *  @param name     the name for new branch 
+     *  @param branches the map name->function use to calculate new branch
+     *  @return status code 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-05-14
+     */
+    Ostap::StatusCode 
+    add_branch 
+    ( TTree*             tree     ,  
+      const Branches&    branches ) ;
+    // ========================================================================
+    /** add new branches to the tree
+     *  the value of the branch each  is taken from <code>branches</code>
+     *  @param tree     input tree 
+     *  @param progress configuration of the progress bar
+     *  @param name     the name for new branch 
+     *  @param branches the map name->function use to calculate new branch
+     *  @return status code 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-05-14
+     */
+    Ostap::StatusCode 
+    add_branch 
+    ( TTree*                            tree     ,  
+      const Ostap::Utils::ProgressConf& progress , 
+      const Branches&                   branches ) ;
     // ========================================================================
     /** add new branch to TTree, sampling it from   the 1D-histogram
      *  @param tree (UPFATE) input tree 

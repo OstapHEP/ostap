@@ -473,7 +473,7 @@ class Trainer(object) :
                                        new_vars  = self.signal_vars     , 
                                        prescale  = self.prescale_signal ,  
                                        silent    = False  )
-
+            
             self.__signal      = self.__SigTR
             self.__signal_cuts = ROOT.TCut() 
 

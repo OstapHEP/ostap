@@ -2114,6 +2114,8 @@ def _chain_add_new_branch ( chain          ,
     tree_verbose  = verbose and      len ( files ) < 5
     chain_verbose = verbose and 5 <= len ( files )
 
+    keep = name , function
+    
     import ostap.io.root_file
     for fname in progress_bar ( files , len ( files ) , silent = not chain_verbose ) :
 
@@ -2233,9 +2235,48 @@ try :
 except ImportError :
     numpy = None
 
-
 from ostap.utils.utils import implicitMT 
-                
+
+# ==============================================================================
+## Helper class to keep/store fnuctios 
+class FunStore(object) :
+    """Helper class to keep/store functions"""
+    def __init__ ( self ) :
+        self.__map      = {} 
+        self.__funcs    = [] ## store objects 
+        self.__branches = Ostap.Trees.Branches() 
+            
+    def add ( self , name , fun , tree = ROOT.nullptr ) :
+
+        if name in self.__map :
+            raise KeyError ( "Function with key '%s' already defined!" % name )
+
+        if   isinstance ( fun , Ostap.IFuncTree ) : w = fun 
+        elif isinstance ( fun , string_types    ) :
+            w = Ostap.Functions.FuncFormula ( fun , tree )
+        else :
+            raise TypeError ( 'Invalid type %s:%s' % (  name , fun ) )
+        
+        self.__map [ name  ] = fun  
+        self.__funcs.append ( fun  )
+        self.__funcs.append ( w    )
+        self.__branches.add ( name , w )
+
+    def __getstate__ ( self ) :
+        return self.__map
+    def __setstate__ ( self , state ) :
+        self.__map      = {} 
+        self.__funcs    = [] ## store objects 
+        self.__branches = Ostap.Trees.Branches() 
+        for k in state :
+            self.add ( k , kwargs [ k ] )
+        
+    ## get the branches 
+    @property
+    def branches ( self )  :
+        """Get the branches"""
+        return self.__branches 
+    
 # ==============================================================================
 ## Add new branch to the tree
 # 
@@ -2378,13 +2419,22 @@ def add_new_branch ( tree           ,
     assert treepath and the_file and ( not the_file is ROOT.gROOT ) and isinstance ( the_file ,  ROOT.TFile ) , \
            'This is not file-resident TTree object, addition of new branch is not posisble!'
     the_file = the_file.GetName() 
-    
-    funcs    = []
-    
+
+    fun_store = FunStore ()
+
     if isinstance ( name  ,  dictlike_types ) and function is None :
         
+        for k in name.keys() :
+            fun_store.add ( k , name [ k ] , tree )
+            
+        names = list ( name.keys() )
+        args  = fun_store.branches.map() , 
+        
+        """
         typeformula = False 
         for k in  name.keys() :
+            
+            print ( 'ADD BRANCH/3' , k  )
             
             assert not k in tree.branches() ,'Branch %s already exists!' % k
             v = name [ k ]
@@ -2392,6 +2442,7 @@ def add_new_branch ( tree           ,
             elif isinstance ( v , Ostap.IFuncTree ) : typeformula = True
             else : raise TypeError ('add_branch: Unknown branch %s/%s for %s'  % ( v , type( v ) , k ) )
                     
+        print ( 'ADD BRANCH/4' , typeformula )
         if typeformula :
             MMAP = Ostap.Trees.FUNCTREEMAP
             PAIR = Ostap.Trees.FUNCTREEPAIR
@@ -2399,18 +2450,31 @@ def add_new_branch ( tree           ,
             MMAP = std.map  ( 'std::string'       , 'std::string' )
             PAIR = MMAP.value_type 
 
+        print ( 'ADD BRANCH/4' , typeformula , MMAP , PAIR )
+        
         mmap  = MMAP () 
         for k in name.keys() :
             v = name [ k ]
+            print ( 'ADD BRANCH/5.1 ' , k , v , type ( v ) , isinstance ( v , ROOT.TObject ) )  
             if typeformula and isinstance ( v , string_types ) :
                 v = Ostap.Functions.FuncFormula ( v , tree )
-                funcs.append ( v ) 
+                funcs.append ( v )
+            else :
+                assert isinstance ( v , Ostap.IFuncTree ) , 'Invalid type!'
+                funcs.append ( v )
+                
+            pp = PAIR ( k , v )
+            funcs.append ( pp ) 
             mmap.insert ( PAIR ( k , v ) )
-            ## mmap [ k ] = v 
-
+            print ( 'ADD BRANCH/5.2 ' , k , v , type ( v ) , isinstance ( v , ROOT.TObject ) )  
+            
+            ## mmap [ k ] = v
+            
+        funcs.append ( mmap )
         names = list ( name.keys() )
-        args  = mmap ,
-        
+        args  = fun_store.branches ,
+        """
+
     elif isinstance ( function , addbranch_types ) :
 
         args = tuple ( [ n  for n in names ] + [ function ] )

@@ -38,6 +38,19 @@ ClassImp(Ostap::Functions::FuncTH2)
 ClassImp(Ostap::Functions::FuncTH3)
 ClassImp(Ostap::Functions::Expression)
 // ============================================================================
+Ostap::Functions::Func1D::~Func1D(){};
+Ostap::Functions::Func2D::~Func2D(){};
+Ostap::Functions::Func3D::~Func3D(){};
+Ostap::Functions::FuncRoo1D::~FuncRoo1D(){};
+Ostap::Functions::FuncRoo2D::~FuncRoo2D(){};
+Ostap::Functions::FuncRoo3D::~FuncRoo3D(){};
+Ostap::Functions::FuncTH1::~FuncTH1(){};
+Ostap::Functions::FuncTH2::~FuncTH2(){};
+Ostap::Functions::FuncTH3::~FuncTH3(){};
+Ostap::Functions::FuncRooTH1::~FuncRooTH1(){};
+Ostap::Functions::FuncRooTH2::~FuncRooTH2(){};
+Ostap::Functions::FuncRooTH3::~FuncRooTH3(){};
+// ============================================================================
 /*  constructor from the formula expression 
  *  @param expression the  formula expression 
  *  @param tree       the tree 
@@ -247,7 +260,7 @@ Ostap::Functions::Func1D::Clone ( const char* /* newname */ ) const
 // notify 
 // ============================================================================
 Bool_t Ostap::Functions::Func1D::Notify () 
-{  
+{
   /// attention! here  we delete the variable instead of notify/reset 
   m_xvar.reset ( nullptr ) ;
   return ( m_xvar && m_xvar->ok() ) ? m_xvar->Notify() : false ; 
@@ -272,10 +285,10 @@ double Ostap::Functions::Func1D::operator() ( const TTree* tree ) const
 {
   //
   if ( nullptr != tree ) 
-  {
-    const TChain* chain = dynamic_cast<const TChain*>( tree ) ;
-    if ( chain ) { tree = chain->GetTree() ; }
-  }
+    {
+      const TChain* chain = dynamic_cast<const TChain*>( tree ) ;
+      if ( chain ) { tree = chain->GetTree() ; }
+    }
   //
   // the tree 
   if ( tree != m_tree )

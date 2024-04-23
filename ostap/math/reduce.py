@@ -599,17 +599,17 @@ Ostap.Math.Histo3D.__reduce__ = _rm_h3d_reduce_
 
 # =============================================================================
 ## Reduce PyCallable/PyCallable2/PyCallable3 
-## def _pc_reduce_ ( o ) :
-##    """Reduce 
-##    - Ostap.Functions.PyCallable
-##    - Ostap.Functions.PyCallable
-##    - Ostap.Functions.PyCallable
-##    """
-##    return root_factory , ( type ( o ) , o.callable() , True ) 
+def _pc_reduce_ ( o ) :
+    """Reduce 
+    - Ostap.Functions.PyCallable
+    - Ostap.Functions.PyCallable
+    - Ostap.Functions.PyCallable
+    """
+    return root_factory , ( type ( o ) , o.callable() , True ) 
 
-## Ostap.Functions.PyCallable.__reduce__  = _pc_reduce_
-## Ostap.Functions.PyCallable2.__reduce__ = _pc_reduce_
-## Ostap.Functions.PyCallable3.__reduce__ = _pc_reduce_
+Ostap.Functions.PyCallable .__reduce__ = _pc_reduce_
+Ostap.Functions.PyCallable2.__reduce__ = _pc_reduce_
+Ostap.Functions.PyCallable3.__reduce__ = _pc_reduce_
 
 
 

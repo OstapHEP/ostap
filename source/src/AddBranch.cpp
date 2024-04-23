@@ -4,6 +4,7 @@
 #include <string>
 #include <tuple>
 #include <functional>
+#include <typeinfo> 
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -43,6 +44,54 @@ namespace
   // ==========================================================================
 }
 // ============================================================================
+bool Ostap::Trees::Branches::add
+( const std::string&      name ,
+  const Ostap::IFuncTree& func )
+{
+  const TObject* o = dynamic_cast<const TObject*> ( &func ) ;
+  m_map [ name ] = &func ; 
+  return true ;
+}
+// =============================================================================
+bool Ostap::Trees::Branches::add
+( const Ostap::IFuncTree& func ,
+  const std::string&      name )
+{ return add ( name , func ) ; }
+// ===========================================================================
+/*  add new branches to the tree
+ *  the value of the branch each  is taken from <code>branches</code>
+ *  @param tree     input tree 
+ *  @param name     the name for new branch 
+ *  @param branches the map name->function use to calculate new branch
+ *  @return status code 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2019-05-14
+ */
+// ===========================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                        tree     ,  
+  const Ostap::Trees::Branches& branches )
+{ return add_branch ( tree , branches.map() ) ; }
+// ========================================================================
+/* add new branches to the tree
+ *  the value of the branch each  is taken from <code>branches</code>
+ *  @param tree     input tree 
+ *  @param progress configuration of the progress bar
+ *  @param name     the name for new branch 
+ *  @param branches the map name->function use to calculate new branch
+ *  @return status code 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2019-05-14
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                            tree     ,  
+  const Ostap::Utils::ProgressConf& progress , 
+  const Ostap::Trees::Branches&     branches )
+{ return add_branch ( tree , progress , branches.map() ) ; }
+// ============================================================================
 /* add new branch with name <code>name</code> to the tree
  * the value of the branch is taken from  function <code>func</code>
  * @param tree    input tree 
@@ -69,7 +118,6 @@ Ostap::Trees::add_branch
   if ( !branch ) { return Ostap::StatusCode ( CANNOT_CREATE_BRANCH ) ; }
   //
   const TObject* o = dynamic_cast<const TObject*>( &func ) ;
-  //
   Ostap::Utils::Notifier notifier { tree , o ? const_cast<TObject*>(o) : nullptr } ;
   //
   // due to  some strange reasons we need to invoke the Notifier explicitely.
@@ -248,7 +296,7 @@ Ostap::Trees::add_branch
   const Ostap::Utils::ProgressConf& progress , 
   const Ostap::Trees::FUNCTREEMAP&  branches ) 
 {
-  // 
+  //
   if      ( !tree            ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
   else if ( branches.empty() ) { return Ostap::StatusCode::SUCCESS         ; }
   //
@@ -269,10 +317,11 @@ Ostap::Trees::add_branch
   {
     const auto&             name = entry.first  ;
     const Ostap::IFuncTree* func = entry.second ;
+    //
     if ( !func   ) { return Ostap::StatusCode ( INVALID_TREEFUNCTION ) ; }
     functions [ index ] = func ;
     //
-    const TObject* o = dynamic_cast<const TObject*>( func ) ;
+    const TObject* o = dynamic_cast<const TObject*> ( func ) ;
     if ( nullptr != o ) { notifier.add ( const_cast<TObject*> ( o ) ) ; }
     //
     TBranch* branch   = tree->Branch
@@ -291,12 +340,15 @@ Ostap::Trees::add_branch
   //
   const Long64_t nentries = tree->GetEntries(); 
   Ostap::Utils::ProgressBar bar ( nentries , progress ) ;
+  //
   for ( Long64_t i = 0 ; i < nentries ; ++i , ++bar  )
   {
+    //
     if ( tree->GetEntry ( i ) < 0 ) { break ; };
     //
     // evaluate the functions
     for ( unsigned int k = 0 ; k < N ; ++k ) { values    [ k ] = (*functions[ k ]) ( tree ) ; }
+    //
     // fill the branches
     for ( unsigned int j = 0 ; j < N ; ++j ) { tbranches [ j ] -> Fill ()                   ; }
   }
@@ -324,7 +376,6 @@ Ostap::Trees::add_branch
   /// delegate to another mehtod 
   return add_branch ( tree , progress , branches ) ;
 }
-
 
 
 // ============================================================================
