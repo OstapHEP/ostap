@@ -74,7 +74,7 @@ def check ( obj ):
     import subprocess
     fail = True
     try:
-        _obj = dumps(obj,)
+        _obj = dumps ( obj )
     except ( PicklingError , AttributeError ) :
         return None 
     ## 
