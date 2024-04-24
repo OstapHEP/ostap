@@ -63,7 +63,7 @@ def pickles ( obj ) :
     try:
         pkl = loads ( dumps ( obj ) )
         return pkl == obj 
-    except ( PicklingError, UnpicklingError ) : 
+    except ( PicklingError, UnpicklingError , AttributeError ) : 
         return False
 
 # =============================================================================
@@ -75,7 +75,7 @@ def check ( obj ):
     fail = True
     try:
         _obj = dumps(obj,)
-    except PicklingError :
+    except ( PicklingError , AttributeError ) :
         return None 
     ## 
     msg = "%s -c import pickle; print(pickle.loads(%s))" %  ( python , repr ( _obj ) )

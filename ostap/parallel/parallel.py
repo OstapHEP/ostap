@@ -128,8 +128,11 @@ if not WorkManager :
     worker = 'GAUDI'
 
 # =============================================================================
-## check if object can be pickled 
+## check if object can be pickled & nupickled 
 def pickles ( obj ) :
+    """ Check if object can be pickled & unpiickled
+    """
+    print ( 'PICKLES:' , dill, WorkManager, worker ) 
     if dill and WorkManager and worker == 'PATHOS' :
         return dill.pickles ( obj )
     from ostap.io.pickling import pickles as _pickles
@@ -140,6 +143,7 @@ def pickles ( obj ) :
 def check ( obj ):
     """Check pickling of an object across another process
     """
+    print ( 'CHECK:' , dill, WorkManager, worker ) 
     if dill and WorkManager and worker == 'PATHOS' :
         return dill.check ( obj )
     from ostap.io.pickling import check  as _check 
