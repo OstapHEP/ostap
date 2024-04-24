@@ -144,13 +144,16 @@ def test_addbranch() :
     # =========================================================================
     ## 2) add new branch as pure python function 
     # =========================================================================
-    with timing ('pyfunc' , logger = logger ) :          
-        et2 = lambda tree : tree.pt**2 + tree.mass**2        
-        chain = data.chain
-        chain.padd_new_branch ( 'et2', et2 )
-    ## reload the chain and check: 
-    logger.info ( 'With python:\n%s' % data.chain.table ( prefix = '# ' ) )
-    assert 'et2' in data.chain , "Branch `et2' is  not here!"
+    with timing ( 'pyfunc' , logger = logger ) :
+        if root_info < ( 6, 24 , 6 ) :
+            logger.info ( 'The test is disabled (lambda canno be pickled)' )
+        else : 
+            et2 = lambda tree : tree.pt**2 + tree.mass**2        
+            chain = data.chain
+            chain.padd_new_branch ( 'et2', et2 )
+            ## reload the chain and check: 
+            logger.info ( 'With python:\n%s' % data.chain.table ( prefix = '# ' ) )
+            assert 'et2' in data.chain , "Branch `et2' is  not here!"
 
     # =========================================================================
     ## 3) add new branch as histogram-function 
