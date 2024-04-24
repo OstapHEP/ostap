@@ -79,7 +79,7 @@ namespace  Ostap
     protected:
       // ======================================================================      
       /// the function itself
-      std::function<double(double)> m_fun ; // the function itself
+      std::function<double(double)> m_fun { Id() } ; // the function itself
       // ======================================================================      
     } ;
     // ========================================================================
@@ -153,9 +153,9 @@ namespace  Ostap
     protected:
       // ======================================================================      
       /// the first function 
-      std::function<double(double)> m_fun1 ; // the ferst  function
+      std::function<double(double)> m_fun1 { Id() } ; // the ferst  function
       /// the second function 
-      std::function<double(double)> m_fun2 ; // the second function
+      std::function<double(double)> m_fun2 { Id() } ; // the second function
       // ======================================================================      
     } ;
     // ========================================================================
@@ -178,11 +178,13 @@ namespace  Ostap
        *  @param f2  the secons function 
        */
       Linear
-      ( std::function<double(double)> f1 , 
-        std::function<double(double)> f2 )
+      ( std::function<double(double)> f1     , 
+        std::function<double(double)> f2     ,
+	const double                  c1 = 1 ,
+	const double                  c2 = 1 )	
         : F2   ( f1 , f2 ) 
-        , m_c1 ( 1  ) 
-        , m_c2 ( 1  ) 
+        , m_c1 ( c1 ) 
+        , m_c2 ( c2 ) 
       {}
       // ======================================================================
       /** constructor from two functions and two scale factors 
@@ -235,11 +237,13 @@ namespace  Ostap
        */
       template <class FUNCTION1, class FUNCTION2>
       Linear
-      ( FUNCTION1 f1 , 
-        FUNCTION2 f2 )
+      ( FUNCTION1    f1     , 
+        FUNCTION2    f2     ,
+	const double c1 = 1 , 
+	const double c2 = 1 )
         : F2   ( f1 , f2 ) 
-        , m_c1 ( 1  ) 
-        , m_c2 ( 1  ) 
+        , m_c1 ( c1 ) 
+        , m_c2 ( c2 ) 
       {}
       // ======================================================================
       /** constructor from two functions and two scale factors 
@@ -359,7 +363,7 @@ namespace  Ostap
     // ========================================================================
     /** @class Multiply 
      *  Multiplication of two functions 
-     *   \f[ f(x) =  f_1(x) \times f_2 ( x  ) \f] 
+     *   \f[ f(x) =  f_1(x) \times f_2 ( x ) \f] 
      */
     class Multiply : public F2 
     {
@@ -387,9 +391,6 @@ namespace  Ostap
         ARGS ...  args ) 
         : Multiply ( Multiply ( f1 , f2 ) , args ... )
       {}
-      // ======================================================================
-      Multiply ( const Multiply&  ) = default ;
-      Multiply (       Multiply&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================
@@ -425,7 +426,9 @@ namespace  Ostap
         FUNCTION2 f2 ) 
         : F2 ( f1 , f2 ) 
       {}
-      /// Constructor with several functions
+      /** Constructor with several functions
+       *  \f$ f(x) = \frac{f_1(x)}{ f_2(x)f_3(x)...}}\f$ 
+       */
       template <class FUNCTION1, class FUNCTION2, typename ... ARGS >
       Divide
       ( FUNCTION1 f1   ,
@@ -433,9 +436,6 @@ namespace  Ostap
         ARGS ...  args ) 
         : Divide ( f1  , Multiply ( f2  , args ... ) )
       {}
-      // ======================================================================
-      Divide ( const Divide&  ) = default ;
-      Divide (       Divide&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================
@@ -481,6 +481,30 @@ namespace  Ostap
         FUNCTION2    f2 ) 
         : F2 ( f1 , f2 ) 
       {}
+      // ======================================================================
+      /** constructor from two functions
+       *   \f[ f(x) =  f_1(x) + f_2 ( x  ) \f] 
+       *  @param f1 the first  function 
+       *  @param f1 the second function 
+       */
+      template <class FUNCTION1>
+      Sum
+      ( FUNCTION1    f1 ,
+        const double f2 )
+        : F2 ( f1 , f2 ) 
+      {}
+      // ====================================================================== 
+      /** constructor from two functions
+       *   \f[ f(x) =  f_1(x) + f_2 ( x  ) \f] 
+       *  @param f1 the first  function 
+       *  @param f1 the second function 
+       */
+      template <class FUNCTION1>
+      Sum
+      ( const double f1 , 
+	FUNCTION1    f2 )
+        : F2 ( f1 , f2 ) 
+      {}
       // ====================================================================== 
       /// Constructor with several functions
       template <class FUNCTION1, class FUNCTION2, typename ... ARGS >
@@ -490,9 +514,6 @@ namespace  Ostap
         ARGS ...  args ) 
         : Sum ( Sum ( f1 , f2 ) , args ... )
       {}
-      // ======================================================================
-      Sum ( const Sum&  ) = default ;
-      Sum (       Sum&& ) = default ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -520,7 +541,7 @@ namespace  Ostap
       /** constructor from two functions
        *   \f[ f(x) =  f_1(x) - f_2 ( x  ) \f] 
        *  @param f1 the first  function 
-       *  @param f1 the second function 
+       *  @param f2 the second function 
        */
       Subtract
       ( std::function<double(double)> f1 , 
@@ -531,7 +552,7 @@ namespace  Ostap
       /** constructor from two functions
        *   \f[ f(x) =  f_1(x) - f_2 ( x  ) \f] 
        *  @param f1 the first  function 
-       *  @param f1 the second function 
+       *  @param f2 the second function 
        */
       template <class FUNCTION1, class FUNCTION2>
       Subtract
@@ -540,7 +561,33 @@ namespace  Ostap
         : F2 ( f1 , f2 ) 
       {}
       // ====================================================================== 
-      /// Constructor with several functions
+      /** constructor from two functions
+       *   \f[ f(x) =  f_1(x) - f_2 ( x  ) \f] 
+       *  @param f1 the first  function 
+       *  @param f2 the second function 
+       */
+      template <class FUNCTION1>
+      Subtract
+      ( FUNCTION1    f1 ,
+	const double f2 )
+        : F2 ( f1 , f2 ) 
+      {}
+      // ====================================================================== 
+      /** constructor from two functions
+       *   \f[ f(x) =  f_1(x) - f_2 ( x  ) \f] 
+       *  @param f1 the first  function 
+       *  @param f2 the second function 
+       */
+      template <class FUNCTION1>
+      Subtract
+      ( const double f1 ,
+	FUNCTION1    f2 )
+        : F2 ( f1 , f2 ) 
+      {}
+      // ====================================================================== 
+      /** Constructor with several functions
+       *  \f$ f(x) = f_1(x) - \sum_{2}^{n} f_i(x) \f$
+       */
       template <class FUNCTION1, class FUNCTION2, typename ... ARGS >
       Subtract
       ( FUNCTION1 f1   ,
@@ -548,9 +595,6 @@ namespace  Ostap
         ARGS ...  args ) 
         : Subtract ( f1 , Sum ( f2 , args ... ) ) 
       {}
-      // ======================================================================
-      Subtract ( const Subtract&  ) = default ;
-      Subtract (       Subtract&& ) = default ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -575,22 +619,61 @@ namespace  Ostap
      *   - hyperbola , \f$ a =0 \f$ 
      *  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
      */
-    class Moebius
+    class Moebius : F1 
     {
       // ======================================================================
     public:
       // ======================================================================
       Moebius
-      ( const double a = 1  ,
-        const double b = 0  ,
-        const double c = 0  ,
-        const double d = 1  ) ;
+      ( const double a = 1 ,
+        const double b = 0 ,
+        const double c = 0 ,
+        const double d = 1 ) ;
+      // ======================================================================
+      Moebius
+      ( const double                  a ,
+        const double                  b ,
+        const double                  c ,
+        const double                  d ,
+	std::function<double(double)> f ) 
+	: F1  ( f )
+	, m_a ( a )
+	, m_b ( b )
+	, m_c ( c )
+	, m_d ( d )
+      {
+	this->check() ;
+      }
+      // ================================================================
+      template <class FUNCTION>
+      Moebius
+      ( const double a ,
+        const double b ,
+        const double c ,
+        const double d ,
+	FUNCTION     f ) 
+	: F1  ( f )
+	, m_a ( a )
+	, m_b ( b )
+	, m_c ( c )
+	, m_d ( d )
+      {
+	this->check() ;
+      }
       // ======================================================================
     public:
       // ======================================================================
       /// the only important method 
       inline double operator()  ( const double x ) const
-      { return ( m_a * x + m_b ) / ( m_c  * x  + m_d ) ; }        
+      {
+	const double y = m_fun ( x ) ;
+	return ( m_a * x + m_b ) / ( m_c  * x  + m_d ) ;
+      }        
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// check parameters 
+      bool check() const ;
       // ======================================================================
     private :
       // ======================================================================
@@ -606,26 +689,45 @@ namespace  Ostap
     };
     // ========================================================================
     /** @class Step
-     *  Heaviside step function
+     *  Heaviside's step function
      *   \f[ h(x) =  \left \begin{array}{lcl} 1 & \mathrm{for} & ax+b\ge 0 \ \
      *                                        0 & \mathrm{for} & ax+b<0   
      *                       \end{array} \right\} \f] 
      *  @see https://en.wikipedia.org/wiki/Heaviside_step_function
      */
-    class Step
+    class Step : F1 
     {
     public:
       // ======================================================================
       Step
       ( const double a = 1 ,
-        const double b = 0 )
-        : m_a ( a ) 
-        , m_b ( 0 )
+        const double b = 0 ) ;
+      // ======================================================================
+      Step
+      ( const double                  a ,
+        const double                  b ,
+	std::function<double(double)> f ) 
+	: F1  ( f )
+	, m_a ( a )
+	, m_b ( b )
+      {}
+      // ======================================================================
+      template <class FUNCTION>
+      Step
+      ( const double a ,
+        const double b ,
+	FUNCTION     f ) 
+	: F1  ( f )
+	, m_a ( a )
+	, m_b ( b )
       {}
       // ======================================================================
       /// the only one method
       inline double operator() ( const double x ) const
-      { return  0 <= m_a * x + m_b ? 1 : 0 ; }
+      {
+	const double y = m_fun ( x ) ;
+	return  0 <= m_a * y + m_b ? 1 : 0 ;
+      }
       // ======================================================================
     private:
       // ======================================================================
@@ -699,9 +801,6 @@ namespace  Ostap
         ARGS ...  args ) 
         : Max ( Max ( f1 , f2 ) , args ... )
       {}
-      // ======================================================================
-      Max ( const Max&  ) = default ;
-      Max (       Max&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================
@@ -780,9 +879,6 @@ namespace  Ostap
         ARGS ...  args ) 
         : Min ( Min ( f1 , f2 ) , args ... )
       {}
-      // ======================================================================
-      Min ( const Min&  ) = default ;
-      Min (       Min&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -896,9 +992,6 @@ namespace  Ostap
       /// default contsructor 
       Sqrt () : Sqrt ( Id () ) {}
       // ======================================================================
-      Sqrt ( const Sqrt&  ) = default ;
-      Sqrt (       Sqrt&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -931,9 +1024,6 @@ namespace  Ostap
       // ======================================================================
       /// default contsructor 
       Cbrt () : Cbrt ( Id () ) {}
-      // ======================================================================
-      Cbrt ( const Cbrt&  ) = default ;
-      Cbrt (       Cbrt&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -968,9 +1058,6 @@ namespace  Ostap
       /// default contsructor 
       Exp () : Exp ( Id () ) {}
       // ======================================================================
-      Exp ( const Exp&  ) = default ;
-      Exp (       Exp&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1003,9 +1090,6 @@ namespace  Ostap
       // ======================================================================
       /// default contsructor 
       Log () : Log ( Id () ) {}
-      // ======================================================================
-      Log ( const Log&  ) = default ;
-      Log (       Log&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -1040,9 +1124,6 @@ namespace  Ostap
       /// default contsructor 
       Log10 () : Log10 ( Id () ) {}
       // ======================================================================
-      Log10 ( const Log10&  ) = default ;
-      Log10 (       Log10&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1076,9 +1157,6 @@ namespace  Ostap
       /// default contsructor 
       Erf () : Erf ( Id () ) {}
       // ======================================================================
-      Erf ( const Erf&  ) = default ;
-      Erf (       Erf&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1111,9 +1189,6 @@ namespace  Ostap
       // ======================================================================
       /// default contsructor 
       Erfc () : Erfc ( Id () ) {}
-      // ======================================================================
-      Erfc ( const Erfc&  ) = default ;
-      Erfc (       Erfc&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -1149,9 +1224,6 @@ namespace  Ostap
       /// default contsructor 
       TGamma () : TGamma ( Id () ) {}
       // ======================================================================
-      TGamma ( const TGamma&  ) = default ;
-      TGamma (       TGamma&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1185,9 +1257,6 @@ namespace  Ostap
       // ======================================================================
       /// default contsructor 
       LGamma () : LGamma ( Id () ) {}
-      // ======================================================================
-      LGamma ( const LGamma&  ) = default ;
-      LGamma (       LGamma&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -1223,9 +1292,6 @@ namespace  Ostap
       /// default contsructor 
       Sin () : Sin ( Id () ) {}
       // ======================================================================
-      Sin ( const Sin&  ) = default ;
-      Sin (       Sin&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1259,9 +1325,6 @@ namespace  Ostap
       // ======================================================================
       /// default contsructor 
       Cos () : Cos ( Id () ) {}
-      // ======================================================================
-      Cos ( const Cos&  ) = default ;
-      Cos (       Cos&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -1297,9 +1360,6 @@ namespace  Ostap
       /// default contsructor 
       Tan () : Tan ( Id () ) {}
       // ======================================================================
-      Tan ( const Tan&  ) = default ;
-      Tan (       Tan&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1333,9 +1393,6 @@ namespace  Ostap
       // ======================================================================
       /// default contsructor 
       ASin () : ASin ( Id () ) {}
-      // ======================================================================
-      ASin ( const ASin&  ) = default ;
-      ASin (       ASin&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -1371,9 +1428,6 @@ namespace  Ostap
       /// default contsructor 
       ACos () : ACos ( Id () ) {}
       // ======================================================================
-      ACos ( const ACos&  ) = default ;
-      ACos (       ACos&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1407,9 +1461,6 @@ namespace  Ostap
       // ======================================================================
       /// default contsructor 
       ATan () : ATan ( Id () ) {}
-      // ======================================================================
-      ATan ( const ATan&  ) = default ;
-      ATan (       ATan&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -1445,9 +1496,6 @@ namespace  Ostap
       /// default contsructor 
       Sinh () : Sinh ( Id () ) {}
       // ======================================================================
-      Sinh ( const Sinh&  ) = default ;
-      Sinh (       Sinh&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1481,9 +1529,6 @@ namespace  Ostap
       // ======================================================================
       /// default contsructor 
       Cosh () : Cosh ( Id () ) {}
-      // ======================================================================
-      Cosh ( const Cosh&  ) = default ;
-      Cosh (       Cosh&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -1519,9 +1564,6 @@ namespace  Ostap
       /// default contsructor 
       Tanh () : Tanh ( Id () ) {}
       // ======================================================================
-      Tanh ( const Tanh&  ) = default ;
-      Tanh (       Tanh&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1555,9 +1597,6 @@ namespace  Ostap
       // ======================================================================
       /// default constructor 
       ASinh () : ASinh ( Id () ) {}
-      // ======================================================================
-      ASinh ( const ASinh&  ) = default ;
-      ASinh (       ASinh&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -1593,9 +1632,6 @@ namespace  Ostap
       /// default contsructor 
       ACosh () : ACosh ( Id () ) {}
       // ======================================================================
-      ACosh ( const ACosh&  ) = default ;
-      ACosh (       ACosh&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1630,9 +1666,6 @@ namespace  Ostap
       /// default contsructor 
       ATanh () : ATanh ( Id () ) {}
       // ======================================================================
-      ATanh ( const ATanh&  ) = default ;
-      ATanh (       ATanh&& ) = default ;
-      // ======================================================================
     public:
       // ======================================================================      
       template <class FUNCTION>
@@ -1646,6 +1679,7 @@ namespace  Ostap
       { return std::atanh ( m_fun ( x ) ) ; }
       // ======================================================================
     } ;
+    // ========================================================================
     // ========================================================================
     /** @class Pow 
      *  pow for the function 
@@ -1670,6 +1704,7 @@ namespace  Ostap
         , m_dorder ( order  )
         , m_type   ( Double ) 
       {}      
+      // ======================================================================
       /// constructor  from the function and degree 
       Pow
       ( std::function<double(double)> f     , 
@@ -1679,6 +1714,7 @@ namespace  Ostap
         , m_dorder ( order   )
         , m_type   ( Integer ) 
       {}
+      // ======================================================================
       /// constructor  from two functions
       Pow 
       ( std::function<double(double)> f1 , 
@@ -1699,6 +1735,7 @@ namespace  Ostap
         , m_dorder ( order  )
         , m_type   ( Double ) 
       {}
+      // ======================================================================
       /// constructor  from the function and degree 
       template <class FUNCTION>
       Pow
@@ -1709,7 +1746,7 @@ namespace  Ostap
         , m_dorder ( order   )
         , m_type   ( Integer ) 
       {}
-      
+      // ======================================================================
       /// constructor  from two functions
       template <class FUNCTION1,
                 class FUNCTION2>
@@ -1721,7 +1758,7 @@ namespace  Ostap
         , m_dorder ( 0        )
         , m_type   ( Function ) 
       {}
-
+      // =======================================================================
       /// constructor  from degree 
       Pow ( const double order ) 
         : Pow ( Id () ,  order )
@@ -1766,6 +1803,10 @@ namespace  Ostap
           m_type == Double  ? std::pow ( m_fun1 ( x ) , m_dorder ) :
           std::pow  ( m_fun1 ( x  ) , m_fun2  ( x ) ) ;
       }
+      // ======================================================================        
+    public:
+      // ======================================================================
+      Type t () const { return m_type ; }
       // ======================================================================        
     private :
       // ======================================================================     
