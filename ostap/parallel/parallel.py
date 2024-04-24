@@ -22,11 +22,11 @@ __all__     = (
     'GenericTask' , ## very generic "template"  tasl 
     )
 # =============================================================================
-import sys, os, warnings 
 from ostap.parallel.task import Task, GenericTask
 from ostap.utils.basic   import has_env as ostap_hasenv 
 from ostap.utils.basic   import get_env as ostap_getenv 
 from ostap.logger.logger import getLogger
+import sys, os, warnings 
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel')
 else                      : logger = getLogger ( __name__         ) 
 # =============================================================================
@@ -125,6 +125,25 @@ if not WorkManager :
     
     from ostap.parallel.parallel_gaudi  import WorkManager 
     logger.debug ('Use TaskManager from GaudiMP.Parallel'         )
+    worker = 'GAUDI'
+
+# =============================================================================
+## check if object can be pickled 
+def pickles ( obj ) :
+    if dill and WorkManager and worker == 'PATHOS' :
+        return dill.pickles ( obj )
+    from ostap.io.pickling import pickles as _pickles
+    return _pickles ( obj )
+
+# =============================================================================
+## Check pickling of an object across another process
+def check ( obj ):
+    """Check pickling of an object across another process
+    """
+    if dill and WorkManager and worker == 'PATHOS' :
+        return dill.check ( obj )
+    from ostap.io.pickling import check  as _check 
+    return _check ( obj )
 
 # =============================================================================
 if '__main__' == __name__ :

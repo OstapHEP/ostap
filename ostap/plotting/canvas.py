@@ -54,7 +54,8 @@ _canvases = []
 def getCanvas ( name   = 'glCanvas'    ,   ## canvas name 
                 title  = 'Ostap'       ,   ## canvas title
                 width  = canvas_width  ,   ## canvas width
-                height = canvas_height ) : ## canvas height 
+                height = canvas_height ,   ## canvas height 
+                **kwargs               ) : ## other properties 
     """Get create canvas/create new canvas
     
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
@@ -64,7 +65,8 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
     cnvlst = ROOT.gROOT.GetListOfCanvases()
     cnv    = cnvlst.get ( name , None ) 
     if cnv and isinstance ( cnv , ROOT.TCanvas ) :
-        _canvases.append ( cnv ) 
+        _canvases.append ( cnv )
+        set_pad ( cnv , **kwargs )
         return cnv 
 
     ## create new canvas
@@ -83,7 +85,9 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
         dw = width  - cnv.GetWw()
         dh = height - cnv.GetWh()
         cnv.SetWindowSize ( width + dw , height + dh )
-                
+
+    set_pad ( cnv , **kwargs )
+    
     _canvases.append ( cnv ) 
     return cnv
 
@@ -887,7 +891,6 @@ def set_pad ( pad , **config ) :
     if 'y_stat' in conf :
         changed[ 'y_stat' ] = pad.GetYstat ()
         pad.SetYstat ( conf.pop ('y_stat') )
-
     
     if 'top_margin' in conf or 'margin_top' in conf :                
         changed ['margin_top']  = pad.GetTopMargin()
@@ -908,6 +911,28 @@ def set_pad ( pad , **config ) :
         changed ['margin_right']  = pad.GetRightMargin()
         if 'right_margin' in conf  : pad.SetRightMargin  ( conf.pop ( 'right_margin'  ) )
         else                       : pad.SetRightMargin  ( conf.pop ( 'margin_right'  ) )
+
+    if 'grid_x' in conf or 'x_grid' in conf :
+        changed ['grid_x']  = pad.GetGridx () 
+        if 'grid_x' in conf : pad.SetGridx ( conf.pop ( 'grid_x' ) ) 
+        else                : pad.SetGridx ( conf.pop ( 'x_grid' ) )
+
+    if 'grid_y' in conf or 'y_grid' in conf :
+        changed ['grid_y']  = pad.GetGridy () 
+        if 'grid_y' in conf : pas.SetGridy ( conf.pop ( 'grid_y' ) ) 
+        else                : pas.SetGridy ( conf.pop ( 'y_grid' ) ) 
+
+    if 'log_x' in conf or 'x_log' in conf :
+        changed ['log_x']  =  pad.GetLogx () 
+        if 'log_x' in conf  : pad.SetLogx ( conf.pop ( 'log_x' ) ) 
+        else                : pad.SetLogx ( conf.pop ( 'x_log' ) )
+        
+    if 'log_y' in conf or 'y_log' in conf :
+        changed ['log_y']  =  pad.GetLogy () 
+        if 'log_y' in conf  : pad.SetLogy ( conf.pop ( 'log_y' ) ) 
+        else                : pad.SetLogy ( conf.pop ( 'y_log' ) )
+        
+
         
     if conf :
         logger.warning ("set_pad: unprocessed items: %s" % conf ) 

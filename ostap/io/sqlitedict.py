@@ -80,10 +80,6 @@ else:
             raise value.with_traceback(tb)
         raise value
 
-try:
-    from cPickle import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
-except ImportError:
-    from pickle import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
 
 # some Python 3 vs 2 imports
 try:
@@ -96,6 +92,9 @@ try:
 except ImportError:
     from Queue import Queue
 
+    
+# =============================================================================
+from ostap.io.pickling import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
 
 logger = logging.getLogger(__name__)
 

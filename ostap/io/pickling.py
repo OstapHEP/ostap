@@ -20,6 +20,8 @@ __all__ = (
     'Pickler'          , 
     'Unpickler'        ,
     'BytesIO'          ,
+    'dumps'            ,
+    'loads'            ,    
     )
 # =============================================================================
 import os, sys
@@ -28,15 +30,23 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.pickling' )
 else                      : logger = getLogger ( __name__               )
 # =============================================================================
-if   sys.version_info < ( 3 , 0 ) :    
+if  (3, 0 ) <= sys.version_info :
+    from pickle import ( Pickler, Unpickler, 
+                         DEFAULT_PROTOCOL, HIGHEST_PROTOCOL,
+                         dumps, loads,
+                        PicklingError, UnpicklingError ) 
+else : 
     DEFAULT_PROTOCOL = 2 
     try:
-        from cPickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
+        from cPickle   import ( Pickler, Unpickler, HIGHEST_PROTOCOL,
+                                dumps, loads,
+                                PicklingError, UnpicklingError ) 
     except ImportError:
-        from  pickle   import Pickler, Unpickler, HIGHEST_PROTOCOL
+        from  pickle   import ( Pickler, Unpickler, HIGHEST_PROTOCOL,
+                                dumps, loads,
+                                PicklingError, UnpicklingError ) 
     DEFAULT_PROTOCOL = min ( DEFAULT_PROTOCOL , HIGHEST_PROTOCOL )
-else :  
-    from pickle import Pickler, Unpickler, DEFAULT_PROTOCOL, HIGHEST_PROTOCOL    
+    
 # =============================================================================    
 try :
     from io            import BytesIO 
@@ -45,6 +55,32 @@ except ImportError :
         from cStringIO import StringIO as BytesIO 
     except ImportError:
         from  StringIO import StringIO as BytesIO
+# =============================================================================
+## Primitive check if the object casn be pickled and unpickled  
+def pickles ( obj ) :
+    """Primitive check if the object casn be pickled and unpickled 
+    """
+    try:
+        pkl = loads ( dumps ( obj ) )
+        return pkl == obj 
+    except ( PicklingError, UnpicklingError ) : 
+        return False
+
+# =============================================================================
+## Check pickling of an object across another process
+def check ( obj ):
+    """Check pickling of an object across another process
+    """
+    import subprocess
+    fail = True
+    try:
+        _obj = dumps(obj,)
+    except PicklingError :
+        return None 
+    ## 
+    msg = "%s -c import pickle; print(pickle.loads(%s))" %  ( python , repr ( _obj ) )
+    return subprocess.call ( msg.split ( None , 2 ) )
+
 # =============================================================================
 ## helper function to get the protocol 
 def get_protocol ( p ) :

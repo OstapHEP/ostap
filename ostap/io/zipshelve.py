@@ -143,21 +143,6 @@ else                      : logger = getLogger ( __name__             )
 # =============================================================================
 logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database"   )
 # =============================================================================
-from sys import version_info as python_version 
-# =============================================================================
-## try:
-##     from cPickle   import Pickler, Unpickler
-## except ImportError:
-##     from  pickle   import Pickler, Unpickler
-## # =============================================================================
-## if 2 < python_version.major :
-##     from io import BytesIO
-## else : 
-##     try:
-##         from cStringIO import StringIO as BytesIO 
-##     except ImportError:
-##         from  StringIO import StringIO as BytesIO    
-# ==============================================================================
 import os, sys, shelve, shutil
 import zlib ## use zlib to compress DB-content 
 from   ostap.io.compress_shelve import CompressShelf, ENCODING, PROTOCOL, HIGHEST_PROTOCOL

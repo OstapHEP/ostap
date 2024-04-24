@@ -30,7 +30,7 @@ from   ostap.trees.data                   import Data
 from   ostap.math.make_fun                import make_fun1, make_fun2, make_fun3 
 from   ostap.utils.timing                 import timing 
 from   ostap.utils.progress_bar           import progress_bar
-from   ostap.parallel.parallel            import DILL_PY3_issue
+from   ostap.parallel.parallel            import pickles 
 import ostap.parallel.parallel_add_branch 
 import ROOT, math, random, array  
 # ============================================================================= 
@@ -95,9 +95,6 @@ def prepare_data ( nfiles = 50 ,  nentries = 500  ) :
 ## top-level function 
 def fun_ftwo ( x ) : return 2 * x
 
-## top-level callabke 
-class CALL(object):
-    def __call__ ( self , x ) : return 2.0 * x
             
 # =============================================================================
 # Many ways to add branch into TTree/Tchain
@@ -110,7 +107,7 @@ def test_addbranch() :
     - using string formula (TTreeFormula-based)
     - using pure python function
     - using histogram/function
-    - using histogram sampling
+       - using histogram sampling
     """
     
     ## files = prepare_data ( 100 , 1000 )
@@ -136,8 +133,8 @@ def test_addbranch() :
     with timing ('simultaneous' , logger = logger ) :          
         chain = data.chain  
         chain.padd_new_branch ( { 'Et1' : 'sqrt(pt*pt+mass*mass)'   ,
-                                 'Et2' : 'sqrt(pt*pt+mass*mass)*2' ,
-                                 'Et3' : 'sqrt(pt*pt+mass*mass)*3' } , None )        
+                                  'Et2' : 'sqrt(pt*pt+mass*mass)*2' ,
+                                  'Et3' : 'sqrt(pt*pt+mass*mass)*3' } , None )        
     ## reload the chain and check: 
     logger.info ( 'With formula:\n%s' % data.chain.table ( prefix = '# ' ) )
     assert 'Et1' in data.chain , "Branch `Et1' is  not here!"
@@ -148,15 +145,15 @@ def test_addbranch() :
     ## 2) add new branch as pure python function 
     # =========================================================================
     with timing ( 'pyfunc' , logger = logger ) :
-        if DILL_PY3_issue : 
-            logger.info ( 'The test is disabled (lambda cannot be pickled)' )
-        else : 
-            et2 = lambda tree : tree.pt**2 + tree.mass**2        
+        et2 = lambda tree : tree.pt**2 + tree.mass**2        
+        if pickles ( et2 ) : 
             chain = data.chain
             chain.padd_new_branch ( 'et2', et2 )
             ## reload the chain and check: 
             logger.info ( 'With python:\n%s' % data.chain.table ( prefix = '# ' ) )
             assert 'et2' in data.chain , "Branch `et2' is  not here!"
+        else :
+            logger.warning ( "The test 'pyfunc' is disabled (lambda cannot be pickled)" )
 
     # =========================================================================
     ## 3) add new branch as histogram-function 
@@ -165,17 +162,20 @@ def test_addbranch() :
         h1  = ROOT.TH1D ( hID () , 'some pt-correction' , 100 , 0 , 10 )
         h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
         from   ostap.trees.funcs  import FuncTH1
-        ptw = FuncTH1 ( h1 , 'pt' )
-        chain = data.chain 
-        chain.padd_new_branch ( 'ptw', ptw )     
-    ## reload the chain and check: 
-    logger.info ( 'With histogram:\n%s' % data.chain.table ( prefix = '# ' ) )
-    assert 'ptw' in data.chain , "Branch `ptw' is  not here!"
-    
+        ptw   = FuncTH1 ( h1 , 'pt' )
+        if pickles ( ptw ) : 
+            chain = data.chain 
+            chain.padd_new_branch ( 'ptw', ptw )     
+            ## reload the chain and check: 
+            logger.info ( 'With histogram:\n%s' % data.chain.table ( prefix = '# ' ) )
+            assert 'ptw' in data.chain , "Branch `ptw' is  not here!"
+        else :
+            logger.warning ( "The test 'histo-1' is disabled (object cannot be pickled)" )
+            
     # =========================================================================
     ## 4) add several functions simultanepusly 
     # =========================================================================
-    with timing ('histo-1' , logger = logger ) :          
+    with timing ('histo-3' , logger = logger ) :          
         from   ostap.trees.funcs  import FuncTH1
         hh    = ROOT.TH1D ( hID() , 'some pt-correction' , 100 , 0 , 10 )
         h1    = hh + ( lambda x :  1.0 + math.tanh ( 0.1 * ( x - 5 ) ) )
@@ -185,37 +185,46 @@ def test_addbranch() :
         h3    = h1 + ( lambda x :  1.0 + math.tanh ( 0.3 * ( x - 5 ) ) ) 
         ptw3  = FuncTH1 ( h3 , 'pt' )
         chain = data.chain
-        brs = { 'ptw1' : ptw1 , 'ptw2' : ptw2 , 'ptw3' : ptw1 } 
-        chain.padd_new_branch ( None , brs )     
-    ## reload the chain and check: 
-    logger.info ( 'With histogram:\n%s' % data.chain.table ( prefix = '# ' ) )
-    assert 'ptw' in data.chain , "Branch `ptw1' is  not here!"
-    assert 'ptw' in data.chain , "Branch `ptw2' is  not here!"
-    assert 'ptw' in data.chain , "Branch `ptw3' is  not here!"
-
+        brs = { 'ptw1' : ptw1 , 'ptw2' : ptw2 , 'ptw3' : ptw1 }
+        if pickles ( brs ) :             
+            chain.padd_new_branch ( None , brs )     
+            ## reload the chain and check: 
+            logger.info ( 'With histogram:\n%s' % data.chain.table ( prefix = '# ' ) )
+            assert 'ptw' in data.chain , "Branch `ptw1' is  not here!"
+            assert 'ptw' in data.chain , "Branch `ptw2' is  not here!"
+            assert 'ptw' in data.chain , "Branch `ptw3' is  not here!"
+        else :
+            logger.warning ( "The test 'histo-2' is disabled (object cannot be pickled)" )
+            
     # =========================================================================
     ## 5) add the variable sampled from the histogram
     # =========================================================================
     with timing ('histo-2' , logger = logger ) :          
         h2 = ROOT.TH1D( hID() , 'Gauss' , 120 , -6 , 6 )
-        for i in range ( 100000 ) : h2.Fill ( random.gauss ( 0 , 1 ) )             
-        chain = data.chain 
-        chain.padd_new_branch ( 'hg', h2 ) 
-    ## reload the chain and check: 
-    logger.info ( 'With sampled:\n%s' % data.chain.table ( prefix = '# ' ) )
-    assert 'hg' in data.chain , "Branch `hg' is  not here!"
-
+        for i in range ( 100000 ) : h2.Fill ( random.gauss ( 0 , 1 ) )
+        if pickles ( h2 ) : 
+            chain = data.chain 
+            chain.padd_new_branch ( 'hg', h2 ) 
+            ## reload the chain and check: 
+            logger.info ( 'With sampled:\n%s' % data.chain.table ( prefix = '# ' ) )
+            assert 'hg' in data.chain , "Branch `hg' is  not here!"
+        else :
+            logger.warning ( "The test 'histo-2' is disabled (object cannot be pickled)" )
+            
     # =========================================================================
     ## 6) python function again 
     # =========================================================================
     with timing ('gauss' , logger = logger ) :          
         def gauss ( *_ ) : return random.gauss(0,1)    
-        chain = data.chain 
-        chain.padd_new_branch ( 'gauss', gauss )         
-    ## reload the chain and check: 
-    logger.info ( 'With gauss:\n%s' % data.chain.table ( prefix = '# ' ) )
-    assert 'gauss' in data.chain , "Branch `gauss' is  not here!"
-
+        chain = data.chain
+        if pickles ( gauss ) : 
+            chain.padd_new_branch ( 'gauss', gauss )         
+            ## reload the chain and check: 
+            logger.info ( 'With gauss:\n%s' % data.chain.table ( prefix = '# ' ) )
+            assert 'gauss' in data.chain , "Branch `gauss' is  not here!"
+        else :
+            logger.warning ( "The test 'gauss' is disabled (object cannot be pickled)" )
+        
     # =========================================================================
     ## 7) add numpy array 
     # =========================================================================
@@ -224,7 +233,6 @@ def test_addbranch() :
     except ImportError :
         numpy  = None
 
-        
     if numpy : ## ATTETNION! 
 
         with timing ('numpy float16' , logger = logger ) :
@@ -255,7 +263,7 @@ def test_addbranch() :
         ##     adata  = numpy.full ( 10000 , -1 , dtype = numpy.int8 )
         ##     chain  = data.chain            
         ##     chain.padd_new_branch ( 'np_i8' , adata )
-        ## ## reload the chain and check: 
+        ## ## reload the chain and pickles: 
         ## logger.info ( 'With numpy.int8:\n%s' % data.chain.table ( prefix = '# ' ) )
         ## assert 'np_i8' in data.chain , "Branch `np_i8' is  not here!"
 
@@ -263,7 +271,7 @@ def test_addbranch() :
         ##   adata  = numpy.full ( 10000 , +2 , dtype = numpy.uint8 )
         ##   chain  = data.chain            
         ##   chain.padd_new_branch ( 'np_ui8' , adata )
-        ## ## reload the chain and check: 
+        ## ## reload the chain and pickles: 
         ## logger.info ( 'With numpy.uint8:\n%s' % data.chain.table ( prefix = '# ' ) )
         ## assert 'np_ui8' in data.chain , "Branch `np_ui8' is  not here!"
 
@@ -287,7 +295,7 @@ def test_addbranch() :
            adata  = numpy.full( 10000 , -5 , dtype = numpy.int32 )
            chain  = data.chain            
            chain.padd_new_branch ( 'np_i32' , adata )
-        ## reload the chain and check: 
+        ## reload the chain and pickles: 
         logger.info ( 'With numpy.int32:\n%s' % data.chain.table ( prefix = '# ' ) )
         assert 'np_i32' in data.chain , "Branch `np_i32' is  not here!"
 
@@ -327,9 +335,9 @@ def test_addbranch() :
             chain  = data.chain
             vname  = 'arr_%s' % l 
             chain.padd_new_branch ( vname , adata )
-            ## reload the chain and check: 
-        logger.info ( "With array '%s':\n%s" % ( l ,  data.chain.table ( prefix = '# ' ) ) ) 
-        assert vname in data.chain , "Branch `%s' is  not here!" % vname 
+            ## reload the chain : 
+            logger.info ( "With array '%s':\n%s" % ( l ,  data.chain.table ( prefix = '# ' ) ) ) 
+            assert vname in data.chain , "Branch `%s' is  not here!" % vname 
 
     
     ## add function
@@ -367,7 +375,11 @@ def test_addbranch() :
     with timing ('1D-callable' , logger = logger ) :            
             
         logger.warning  ('1D-callable is not allowed for parallel add_branch' )
-
+        
+        ## top-level callabke 
+        ## class CALL(object):
+        ##    def __call__ ( self , x ) : return 2.0 * x
+            
         ## ftwo = CALL()
         ## fun      =  ( make_fun1 ( ftwo , forcepc = True ) , 'pt' )
         
