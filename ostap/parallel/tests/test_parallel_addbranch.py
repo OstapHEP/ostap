@@ -30,6 +30,7 @@ from   ostap.trees.data                   import Data
 from   ostap.math.make_fun                import make_fun1, make_fun2, make_fun3 
 from   ostap.utils.timing                 import timing 
 from   ostap.utils.progress_bar           import progress_bar
+from   ostap.parallel.parallel            import DILL_PY3_issue
 import ostap.parallel.parallel_add_branch 
 import ROOT, math, random, array  
 # ============================================================================= 
@@ -38,6 +39,8 @@ import ROOT, math, random, array
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_parallel_addbranch' )
 else                       : logger = getLogger ( __name__                  )
+# =============================================================================
+
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :
@@ -145,8 +148,8 @@ def test_addbranch() :
     ## 2) add new branch as pure python function 
     # =========================================================================
     with timing ( 'pyfunc' , logger = logger ) :
-        if root_info < ( 6, 24 , 6 ) :
-            logger.info ( 'The test is disabled (lambda canno be pickled)' )
+        if DILL_PY3_issue : 
+            logger.info ( 'The test is disabled (lambda cannot be pickled)' )
         else : 
             et2 = lambda tree : tree.pt**2 + tree.mass**2        
             chain = data.chain
