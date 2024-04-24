@@ -919,8 +919,8 @@ def set_pad ( pad , **config ) :
 
     if 'grid_y' in conf or 'y_grid' in conf :
         changed ['grid_y']  = pad.GetGridy () 
-        if 'grid_y' in conf : pas.SetGridy ( conf.pop ( 'grid_y' ) ) 
-        else                : pas.SetGridy ( conf.pop ( 'y_grid' ) ) 
+        if 'grid_y' in conf : pad.SetGridy ( conf.pop ( 'grid_y' ) ) 
+        else                : pad.SetGridy ( conf.pop ( 'y_grid' ) ) 
 
     if 'log_x' in conf or 'x_log' in conf :
         changed ['log_x']  =  pad.GetLogx () 
@@ -931,8 +931,6 @@ def set_pad ( pad , **config ) :
         changed ['log_y']  =  pad.GetLogy () 
         if 'log_y' in conf  : pad.SetLogy ( conf.pop ( 'log_y' ) ) 
         else                : pad.SetLogy ( conf.pop ( 'y_log' ) )
-        
-
         
     if conf :
         logger.warning ("set_pad: unprocessed items: %s" % conf ) 
