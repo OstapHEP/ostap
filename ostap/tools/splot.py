@@ -22,7 +22,7 @@ avoiding the direct usage of ROOT.RooStat.SPlot)
 
 - see RooStat::SPlot
 - see M.Pivk, F.R. Le Deberder,
-... ``SPlot: A Statistical tool to unfold data distributions''
+... `SPlot: A Statistical tool to unfold data distributions'
 ...  Published in Nucl.Instrum.Meth. A555 (2005) 356
 - see http://arxiv.org/abs/physics/0402083
 - see https://doi.org/10.1016/j.nima.2005.08.106
@@ -35,10 +35,12 @@ __all__     = (
     'sPlot1D'  , ## 1D-splot
     )
 # =============================================================================
-import ostap.fitting.roofitresult
-from   ostap.fitting.pdfbasic     import PDF1,  Generic1D_pdf 
+from   ostap.core.core            import Ostap 
+from   ostap.core.ostap_types     import string_types 
+from   ostap.fitting.pdfbasic     import PDF1, Generic1D_pdf 
 from   ostap.fitting.variables    import FIXVAR
 from   ostap.histos.histos        import Histo1DFun 
+import ostap.fitting.roofitresult
 import ROOT
 # =============================================================================
 # logging 
@@ -170,11 +172,54 @@ class sPlot1D(object) :
         for k in hweights    : weights    [k] = Histo1DFun ( hweights    [k] , **access )  
         
         self.__hcomponents = hcomponents
-        self.__components  =  components 
+        self.__components  = components 
         self.__hweights    = hweights 
         self.__weights     =  weights         
         self.__access      =  access
 
+
+    # =========================================================================
+    ## Add sPlot results to TTree
+    #  @code
+    #  splot = ...
+    #  tree  = ...
+    #  splot.add_to_tree ( tree , parallel = True , suffix = '_sw'
+    #  @endcode 
+    def add_to_tree ( self , tree , var , suffix = '_sw' , prefix = '' , parallel = False ) :
+        """ Add sPlot results to TTree
+        >>> splot = ...
+        >>> tree  = ...
+        >>> splot.add_to_tree ( tree , parallel = True , suffix = '_sw'
+        """
+        import ostap.trees.trees 
+        assert tree and isinstance ( tree , ROOT.TTree   ) , "sPlot: Ivalid tree!"
+        assert var  and isinstance ( var  , string_types ) and var  in tree, "sPlot: Variable '%s' not in the tree" % var 
+        
+        if parallel :
+            import ostap.parallel.parallel_add_branch
+            
+        suffix = suffix.strip   ()
+        suffix = suffix.replace ( ' ' , '_' )
+        prefix = prefix.strip   ()
+        prefix = prefix.replace ( ' ' , '_' )
+        
+        fmap   = {}
+        for ww in self.hweights  :            
+            hw     = self.hweights [ ww ]
+            fw     = Ostap.Functions.FuncTH1 ( hw , var )
+            newvar = '%s%s%s' % ( prefix , ww , suffix )
+            assert not newvar in tree , "sPlot: Variable '%s' is already in the Tree!" % newvar 
+            fmap [ newvar ] = fw
+            
+        vvs = sorted ( fmap.keys() )
+        bbs = ','.join ( vvs ) 
+        logger.info ( "Adding sPlot results %s to TTree" % vvs ) 
+        
+        if parallel : result = tree.padd_new_branch ( None, fmap ) 
+        else        : result = tree. add_new_branch ( None, fmap ) 
+
+        return result 
+            
     @property
     def components  ( self ) :
         """'components'  :  get fit components (as 1D-functions)"""

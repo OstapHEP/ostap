@@ -9,7 +9,8 @@
   1. make use of  `parallel_copy` in `copy_files`
   1. improve specific models form `ostap.fitting.specific` module
   1. add new test for specific models
-  
+  1. add new method `sPlot1D.adD_to_tree` for adding the sPlot results to the `TTree/TChain`
+
 ## Backward incompatible
 
 ## Bug fixes
