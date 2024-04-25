@@ -146,14 +146,15 @@ def test_addbranch() :
     # =========================================================================
     with timing ( 'pyfunc' , logger = logger ) :
         et2 = lambda tree : tree.pt**2 + tree.mass**2        
-        if pickles ( et2 ) : 
-            chain = data.chain
+        chain = data.chain
+        if pickles ( et2 ) :
             chain.padd_new_branch ( 'et2', et2 )
-            ## reload the chain and check: 
-            logger.info ( 'With python:\n%s' % data.chain.table ( prefix = '# ' ) )
-            assert 'et2' in data.chain , "Branch `et2' is  not here!"
-        else :
-            logger.warning ( "The test 'pyfunc' is disabled (lambda cannot be pickled)" )
+        else               :
+            logger.warning ( "pyfunc: switch to sequential processing(lambda cannot be pickled" )
+            chain. add_new_branch ( 'et2', et2 )            
+    ## reload the chain and check: 
+    logger.info ( 'With python:\n%s' % data.chain.table ( prefix = '# ' ) )
+    assert 'et2' in data.chain , "Branch `et2' is  not here!"
 
     # =========================================================================
     ## 3) add new branch as histogram-function 
@@ -163,14 +164,15 @@ def test_addbranch() :
         h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
         from   ostap.trees.funcs  import FuncTH1
         ptw   = FuncTH1 ( h1 , 'pt' )
+        chain = data.chain 
         if pickles ( ptw ) : 
-            chain = data.chain 
-            chain.padd_new_branch ( 'ptw', ptw )     
-            ## reload the chain and check: 
-            logger.info ( 'With histogram:\n%s' % data.chain.table ( prefix = '# ' ) )
-            assert 'ptw' in data.chain , "Branch `ptw' is  not here!"
+            chain.padd_new_branch ( 'ptw', ptw )
         else :
-            logger.warning ( "The test 'histo-1' is disabled (object cannot be pickled)" )
+            logger.warning ( "histo-1: switch to sequential processing (object cannot be pickled)" )
+            chain.add_new_branch ( 'ptw', ptw )            
+        ## reload the chain and check: 
+        logger.info ( 'With histogram:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'ptw' in data.chain , "Branch `ptw' is  not here!"
             
     # =========================================================================
     ## 4) add several functions simultanepusly 
@@ -187,14 +189,15 @@ def test_addbranch() :
         chain = data.chain
         brs = { 'ptw1' : ptw1 , 'ptw2' : ptw2 , 'ptw3' : ptw1 }
         if pickles ( brs ) :             
-            chain.padd_new_branch ( None , brs )     
-            ## reload the chain and check: 
-            logger.info ( 'With histogram:\n%s' % data.chain.table ( prefix = '# ' ) )
-            assert 'ptw' in data.chain , "Branch `ptw1' is  not here!"
-            assert 'ptw' in data.chain , "Branch `ptw2' is  not here!"
-            assert 'ptw' in data.chain , "Branch `ptw3' is  not here!"
+            chain.padd_new_branch ( None , brs )
         else :
-            logger.warning ( "The test 'histo-2' is disabled (object cannot be pickled)" )
+            logger.warning ( "histo-3: switch to sequential processing (object cannot be pickled)" )
+            chain. add_new_branch ( None , brs )            
+        ## reload the chain and check: 
+        logger.info ( 'With histogram:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'ptw' in data.chain , "Branch `ptw1' is  not here!"
+        assert 'ptw' in data.chain , "Branch `ptw2' is  not here!"
+        assert 'ptw' in data.chain , "Branch `ptw3' is  not here!"
             
     # =========================================================================
     ## 5) add the variable sampled from the histogram
@@ -202,14 +205,15 @@ def test_addbranch() :
     with timing ('histo-2' , logger = logger ) :          
         h2 = ROOT.TH1D( hID() , 'Gauss' , 120 , -6 , 6 )
         for i in range ( 100000 ) : h2.Fill ( random.gauss ( 0 , 1 ) )
+        chain = data.chain 
         if pickles ( h2 ) : 
-            chain = data.chain 
-            chain.padd_new_branch ( 'hg', h2 ) 
-            ## reload the chain and check: 
-            logger.info ( 'With sampled:\n%s' % data.chain.table ( prefix = '# ' ) )
-            assert 'hg' in data.chain , "Branch `hg' is  not here!"
+            chain.padd_new_branch ( 'hg', h2 )
         else :
-            logger.warning ( "The test 'histo-2' is disabled (object cannot be pickled)" )
+            logger.warning ( "histo-2: switch to sequential processing (object cannot be pickled)" )
+            chain. add_new_branch ( 'hg', h2 )            
+        ## reload the chain and check: 
+        logger.info ( 'With sampled:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'hg' in data.chain , "Branch `hg' is  not here!"
             
     # =========================================================================
     ## 6) python function again 
@@ -218,12 +222,13 @@ def test_addbranch() :
         def gauss ( *_ ) : return random.gauss(0,1)    
         chain = data.chain
         if pickles ( gauss ) : 
-            chain.padd_new_branch ( 'gauss', gauss )         
-            ## reload the chain and check: 
-            logger.info ( 'With gauss:\n%s' % data.chain.table ( prefix = '# ' ) )
-            assert 'gauss' in data.chain , "Branch `gauss' is  not here!"
+            chain.padd_new_branch ( 'gauss', gauss )
         else :
-            logger.warning ( "The test 'gauss' is disabled (object cannot be pickled)" )
+            logger.warning ( "gauss: switch to sequential processing (object cannot be pickled)" )
+            chain. add_new_branch ( 'gauss', gauss )            
+        ## reload the chain and check: 
+        logger.info ( 'With gauss:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'gauss' in data.chain , "Branch `gauss' is  not here!"
         
     # =========================================================================
     ## 7) add numpy array 
@@ -233,7 +238,7 @@ def test_addbranch() :
     except ImportError :
         numpy  = None
 
-    if numpy : ## ATTETNION! 
+    if numpy : ## ATTENTION! 
 
         with timing ('numpy float16' , logger = logger ) :
            adata  = numpy.full ( 10000 , +0.1 , dtype = numpy.float16 )
@@ -345,80 +350,79 @@ def test_addbranch() :
 
         logger.warning  ('1D-function is not allowed for parallel add_branch' ) 
         
-        ## ## use top-level function 
-        ## fun         =  ( make_fun1 ( fun_ftwo , forcepc = True ) , 'pt' )
+        ## use top-level function 
+        fun         =  ( make_fun1 ( fun_ftwo , forcepc = True ) , 'pt' )
         
-        ## chain    = data.chain
-        ## vname    = 'doubled_pt1'
-        ## chain.padd_new_branch ( vname , fun  )
+        chain    = data.chain
+        vname    = 'doubled_pt1'
+        chain. add_new_branch ( vname , fun  )
         
-        ## logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
-        ## assert vname in data.chain , "Branch `%s' is  not here!" % vname 
+        logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
+        assert vname in data.chain , "Branch `%s' is  not here!" % vname 
         
     ## add lambda 
     with timing ('1D-lambda' , logger = logger ) :
         
         logger.warning  ('1D-lambda  is not allowed for parallel add_branch' )
         
-        ## ftwo     = lambda x : 2 * x 
-        ## fun      =  ( make_fun1 ( ftwo , forcepc = True ) , 'pt' )
+        ftwo     = lambda x : 2 * x 
+        fun      =  ( make_fun1 ( ftwo , forcepc = True ) , 'pt' )
         
-        ## chain    = data.chain
-        ## vname    = 'doubled_pt2'
-        ## chain.padd_new_branch ( vname , fun  )
+        chain    = data.chain
+        vname    = 'doubled_pt2'
+        chain. add_new_branch ( vname , fun  )
         
-        ## logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
-        ## assert vname in data.chain , "Branch `%s' is  not here!" % vname 
-
-            
+        logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
+        assert vname in data.chain , "Branch `%s' is  not here!" % vname 
+    
     ## add callable
     with timing ('1D-callable' , logger = logger ) :            
-            
+        
         logger.warning  ('1D-callable is not allowed for parallel add_branch' )
         
         ## top-level callabke 
-        ## class CALL(object):
-        ##    def __call__ ( self , x ) : return 2.0 * x
+        class CALL(object):
+            def __call__ ( self , x ) : return 2.0 * x
             
-        ## ftwo = CALL()
-        ## fun      =  ( make_fun1 ( ftwo , forcepc = True ) , 'pt' )
+        ftwo = CALL()
+        fun      =  ( make_fun1 ( ftwo , forcepc = True ) , 'pt' )
         
-        ## chain    = data.chain
-        ## vname    = 'doubled_pt3'
-        ## chain.padd_new_branch ( vname , fun  )
+        chain    = data.chain
+        vname    = 'doubled_pt3'
+        chain. add_new_branch ( vname , fun  )
         
-        ## logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
-        ## assert vname in data.chain , "Branch `%s' is  not here!" % vname 
+        logger.info ( "With doubled pt:\n%s" % data.chain.table ( prefix = '# ' ) )
+        assert vname in data.chain , "Branch `%s' is  not here!" % vname 
             
     ## add 2D-function
     with timing ('2D-function ' , logger = logger ) :
         
         logger.warning  ('2D-function is not allowed for parallel add_branch' ) 
 
-        ## def fff ( x , y  ) : return x * y 
-        ## fun         =  ( make_fun2 ( fff ) , 'pt' , 'et')
+        def fff ( x , y  ) : return x * y 
+        fun         =  ( make_fun2 ( fff ) , 'pt' , 'et')
         
-        ## chain    = data.chain
-        ## vname    = 'pt_mult_et'
-        ## chain.padd_new_branch ( vname , fun  )
+        chain    = data.chain
+        vname    = 'pt_mult_et'
+        chain. add_new_branch ( vname , fun  )
         
-        ## logger.info ( "With pt*et:\n%s" % data.chain.table ( prefix = '# ' ) )
-        ## assert vname in data.chain , "Branch `%s' is  not here!" % vname 
+        logger.info ( "With pt*et:\n%s" % data.chain.table ( prefix = '# ' ) )
+        assert vname in data.chain , "Branch `%s' is  not here!" % vname 
             
     ## add 3D-function
     with timing ('3D-function ' , logger = logger ) :
         
         logger.warning  ('3d-function is not allowed for parallel add_branch' ) 
 
-        ## def fff ( x , y  , z ) : return x * y * z  
-        ## fun         =  ( make_fun3 ( fff ) , 'pt' , 'et' , 'et2' )
+        def fff ( x , y  , z ) : return x * y * z  
+        fun         =  ( make_fun3 ( fff ) , 'pt' , 'et' , 'et2' )
         
-        ## chain    = data.chain
-        ## vname    = 'pt_mult_et_e2'
-        ## chain.padd_new_branch ( vname , fun  )
+        chain    = data.chain
+        vname    = 'pt_mult_et_e2'
+        chain. add_new_branch ( vname , fun  )
         
-        ## logger.info ( "With pt*et*et2:\n%s" % data.chain.table ( prefix = '# ' ) )
-        ## assert vname in data.chain , "Branch `%s' is  not here!" % vname 
+        logger.info ( "With pt*et*et2:\n%s" % data.chain.table ( prefix = '# ' ) )
+        assert vname in data.chain , "Branch `%s' is  not here!" % vname 
     
 # =============================================================================
 if '__main__' ==  __name__  :
