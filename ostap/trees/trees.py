@@ -1298,11 +1298,12 @@ def _rt_table_0_ ( tree ,
         
         bbs.append ( b ) 
 
-    if hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
-    else                             : bbstats = tree. statVar ( bbs , cuts , *args )
+    if   hasattr ( tree , 'fstatVar' ) : bbstats = tree.fstatVar ( bbs , cuts , *args )
+    elif hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
+    else                               : bbstats = tree. statVar ( bbs , cuts , *args )
 
     from ostap.stats.counters import WSE, SE  
-    if   isinstance ( bbstats , ( WSE , SE ) )  : bbstats = { bbs[0] : bbstats } 
+    if   isinstance ( bbstats , ( WSE , SE ) )  : bbstats = { bbs [ 0 ] : bbstats } 
     
     for b in brs :
         
