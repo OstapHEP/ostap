@@ -1301,8 +1301,8 @@ def _rt_table_0_ ( tree ,
     if hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
     else                             : bbstats = tree. statVar ( bbs , cuts , *args )
 
-    from ostap.stats.counters import WSE 
-    if isinstance ( bbstats , WSE )  : bbstats = { bbs[0] : bbstats } 
+    from ostap.stats.counters import WSE, SE  
+    if   isinstance ( bbstats , ( WSE , SE ) )  : bbstats = { bbs[0] : bbstats } 
     
     for b in brs :
         
