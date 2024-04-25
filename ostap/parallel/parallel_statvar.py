@@ -132,19 +132,18 @@ def pStatVar ( chain               ,
     
     from ostap.trees.trees  import _stat_vars_
     last = min ( n_large , first + nevents if 0 < nevents else n_large )
-        
-    if 0 <= first and 0 < nevents < chunk_size :
+
+    if ( 6 , 18 ) <= root_info < ( 6 , 19 ) and python_info < ( 3 , 0 )  :
+        print ( 'I AM PSTATVAR/1 ' )        
+        return chain.statVar ( what , cuts , first , last )
+    elif 0 <= first and 0 < nevents < chunk_size :
         return chain.statVar ( what , cuts , first , last )
     elif isinstance ( chain , ROOT.TChain ) :
         if 1 == chain.nFiles() and len ( chain ) < chunk_size :
             return chain.statVar ( what , cuts , first , last )                         
     elif isinstance ( chain , ROOT.TTree  ) and len ( chain ) < chunk_size :
         return chain.statVar ( what , cuts , first , last )
-    elif ( 6 , 18 ) <= root_info < ( 6 , 19 ) and python_info < ( 3 , 0 ) :
-        print ( 'I AM PSTATVAR/1 ' )
-        return chain.statVar ( what , cuts , first , last )
-        
-    print ( 'I AM PSTATVAR/2 ' )
+
     
     from ostap.trees.trees import Chain
     ch     = Chain ( chain , first = first , nevents = nevents )
