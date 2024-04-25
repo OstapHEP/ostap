@@ -127,9 +127,6 @@ def pStatVar ( chain               ,
     """
     ## few special/trivial cases
 
-
-    print ( 'I AM PSTATVAR/0 ' , root_info , python_info,  ( 6 , 18 ) <= root_info, root_info < ( 6 , 19 ) ,  ( 6 , 18 ) <= root_info < ( 6 , 19 ) ,  python_info < ( 3 , 0 ) ) 
-    
     from ostap.trees.trees  import _stat_vars_
     last = min ( n_large , first + nevents if 0 < nevents else n_large )
 
@@ -140,7 +137,7 @@ def pStatVar ( chain               ,
     elif isinstance ( chain , ROOT.TTree  ) and len ( chain ) < chunk_size :
         return chain.statVar ( what , cuts , first , last )
     elif ( 6 , 18 ) <= root_info < ( 6 , 19 ) and python_info < ( 3 , 0 )  :
-        print ( 'I AM PSTATVAR/1 ' )        
+        if not silent : logger.info ( 'Switch to seqential processing...' )
         return chain.statVar ( what , cuts , first , last )
     
     from ostap.trees.trees import Chain

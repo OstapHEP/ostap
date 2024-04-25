@@ -16,6 +16,7 @@ __all__     = (
     'add_new_branch'  , ## add new branch to loooong TChain in parallel
     ) 
 # =============================================================================
+from   ostap.core.meta_info            import root_info, python_info 
 from   ostap.parallel.parallel         import Task, WorkManager
 import ostap.parallel.parallel_statvar
 import ROOT
@@ -83,6 +84,10 @@ def add_new_branch ( chain          ,
     """
     from ostap.trees.trees import Chain
     from ostap.trees.trees import add_new_branch as _add_branch_ 
+
+    if ( 6 , 18 ) <= root_info < ( 6, 19) and python_info < ( 3 , 0 ) :
+        if verbose : logger.info ( 'Switch to sequential processing...' ) 
+        return _add_branch_ ( chain , branch_name , function , verbose = verbose , report = report  ) 
     
     if   isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass 
     elif isinstance ( chain , ROOT.TTree  ) : 
