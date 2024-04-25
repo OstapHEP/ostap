@@ -99,7 +99,7 @@ def add_new_branch ( chain          ,
     trees    = ch.split    ( max_files = 1  )
 
     import ostap.parallel.parallel as P
-    print ( 'PARALLEL'  , p.worker , p.WorkManager , p.dill )
+    print ( 'PARALLEL'  , P.worker    , P.WorkManager , P.dill , P.DILL_PY3_issue )
     print ( 'PICKLES/F' , function    , P.pickles ( function    ) )
     print ( 'PICKLES/B' , branch_name , P.pickles ( branch_name ) )
     print ( 'PICKLES/T' , task        , P.pickles ( task  ) )
