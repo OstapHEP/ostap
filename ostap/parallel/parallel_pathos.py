@@ -289,15 +289,6 @@ class WorkManager (TaskManager) :
         - no summary prin
         - no merging of results  
         """
-
-        print ('IEXCUTE', job, type ( job ) , jobs_args )
-        import ostap.parallel.parallel as P
-        print ( 'IEXECUTE/A' , type ( jobs_args), P.pickles ( jobs_args  ) )
-        print ( 'IEXECUTE/J' , job , type ( job), P.pickles ( job ) )
-
-        print ( 'BADOBNJECTS' , P.dill.detect.badobjects ( job ) )
-        print ( 'BADTYPES'    , P.dill.detect.badtypes   ( job ) )
-        print ( 'ERRORS'      , P.dill.detect.errors     ( job ) )                        
         
         with pool_context ( self.pool ) as pool :
 

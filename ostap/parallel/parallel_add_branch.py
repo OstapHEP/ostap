@@ -103,12 +103,6 @@ def add_new_branch ( chain          ,
     wmgr     = WorkManager ( silent = not verbose , **kwargs )
     trees    = ch.split    ( max_files = 1  )
 
-    import ostap.parallel.parallel as P
-    print ( 'PARALLEL'  , P.worker    , P.WorkManager , P.dill , P.DILL_PY3_issue )
-    print ( 'PICKLES/F' , function    , P.pickles ( function    ) )
-    print ( 'PICKLES/B' , branch_name , P.pickles ( branch_name ) )
-    print ( 'PICKLES/T' , task        , P.pickles ( task  ) )
-    
     wmgr.process ( task , trees )
 
     nc = ROOT.TChain ( cname )
