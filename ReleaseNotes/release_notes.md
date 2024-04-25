@@ -18,7 +18,6 @@
   1. Fix a tiny bug in `ostap.logger.table.the_table` for wrapped columns 
   1. fix typo in `make_bkg`
   
-
 # v1.10.1.4
 
 ## New features
