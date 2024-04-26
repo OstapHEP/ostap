@@ -1266,10 +1266,10 @@ def _rt_table_0_ ( tree ,
     ## collect information
     _vars = []
 
-    print ( 'RT_TABLE' , cuts , args )
+    if   hasattr ( tree , 'fstatVar' ) : s0 = tree.fstatVar ( '1' , cuts , *args )
+    elif hasattr ( tree , 'pstatVar' ) : s0 = tree.pstatVar ( '1' , cuts , *args )
+    else                               : s0 = tree. statVar ( '1' , cuts , *args )
     
-    if hasattr ( tree , 'pstatVar' ) : s0 = tree.pstatVar ( '1' , cuts , *args )
-    else                             : s0 = tree. statVar ( '1' , cuts , *args )
     n0    = s0.nEntries  ()
 
     ## no entries passed the cuts 
