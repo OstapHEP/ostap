@@ -1,3 +1,5 @@
+# v1.10.1.6
+
 ## New features
 
   1. Update `Ostap::Functions::PyCallable`, `Ostap::Functions::PyCallable2` and `Ostap::Functions::PyCallable3`
