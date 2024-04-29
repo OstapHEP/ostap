@@ -379,13 +379,13 @@ def copy_file ( source , destination , progress = False ) :
         return copy_with_progress ( source , destination )
 
 # =============================================================================
-## Get number of cores/CPUs
-def  numcpu () :
-    """Get number of cores/CPUs
-    """
-    import multiprocessing
-    return multiprocessing.cpu_count()
-
+if ( 3 , 4 ) <= sys.version_info :
+    ## Get number of cores/CPUs
+    from os               import cpu_count as numcpu
+else :
+    ## Get number of cores/CPUs
+    from multtipricessing import cpu_count as numcpu
+    
 # =============================================================================
 if __name__ == '__main__' :
 
