@@ -1266,7 +1266,7 @@ class Manca2_pdf (MANCA) :
                          B          = B          )
 
         # =====================================================================
-        ## Dobule Crystal Ball shape parameters 
+        ## Double Crystal Ball shape parameters 
         # =====================================================================
         self.__aL    = self.make_var ( alphaL                  ,
                                        "aL_%s"          % name ,
@@ -1946,7 +1946,6 @@ class HHdini_pdf(PEAK) :
         return self.horns.cnvpars 
 
 models.append ( HHdini_pdf ) 
-
 
 
 # =============================================================================
