@@ -1066,8 +1066,10 @@ class Canvas(KeepCanvas) :
     ## context manager: exit 
     def __exit__ ( self , *_ ) :
 
-        if self.__cnv and self.__plot :
-            self.__cnv >> self.__plot 
+        if self.__cnv :
+            self.__cnv.Update()            
+            if self.__plot :
+                self.__cnv >> self.__plot 
                     
         KeepCanvas.__exit__ ( self , *_ ) 
         self.__cnv = None 
