@@ -1432,8 +1432,9 @@ def _rt_table_1_ ( tree ,
 
     bbs = tuple ( sorted ( variables ) ) 
 
-    if hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
-    else                             : bbstats = tree. statVar ( bbs , cuts , *args )
+    if   hasattr ( tree , 'fstatVar' ) : bbstats = tree.fstatVar ( bbs , cuts , *args )
+    elif hasattr ( tree , 'pstatVar' ) : bbstats = tree.pstatVar ( bbs , cuts , *args )
+    else                               : bbstats = tree. statVar ( bbs , cuts , *args )
 
     from ostap.stats.counters import WSE 
     if isinstance ( bbstats , WSE )  : bbstats = { bbs[0] : bbstats } 

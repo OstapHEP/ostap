@@ -141,9 +141,9 @@ def test_tmva () :
             ( ROOT.TMVA.Types.kKNN        , 'KNN'          , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
             ##
             ] ,
-            variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
-            signal                    = tSignal                  , ## ``Signal'' sample
-            background                = tBkg                     , ## ``Background'' sample
+            variables = [ 'var1' , 'var2' ,  'var3' ]            , ## Variables for training 
+            signal                    = tSignal                  , ## `Signal' sample
+            background                = tBkg                     , ## `Background' sample
             verbose                   = True                     ,
             signal_train_fraction     = 0.75                     ,        
             background_train_fraction = 0.75                     ,

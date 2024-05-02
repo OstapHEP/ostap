@@ -1249,8 +1249,8 @@ class Trainer(object):
             # The table
             # =================================================================            
 
-            ## if self.verbose :
-            if 1 < 2 : 
+            if self.verbose :
+                ## if 1 < 2 : 
                 
                 rows = [ ( 'Item' , 'Value' ) ]
                 
@@ -1330,8 +1330,23 @@ class Trainer(object):
                 table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
                 self.logger.info ( "%s\n%s" % ( title , table ) ) 
                 
-                
-                
+                if self.verbose :
+                    
+                    import ostap.trees.trees
+                    import ostap.trees.cuts
+
+                    stitle = 'Input Signal     variables'
+                    sc = ROOT.TCut ( self.signal_cuts )
+                    if self.signal_weight : sc *= self.signal_weight                
+                    tS = self.signal.table2     ( vv , title = stitle , cuts = sc , prefix = '# ' )
+                    self.logger.info ( '%s\n%s' % ( stitle , tS ) )
+                    
+                    btitle = 'Input Background variables'
+                    bc = ROOT.TCut ( self.background_cuts )
+                    if self.background_weight : bc *= self.background_weight                
+                    tB = self.background.table2 ( vv , title = btitle , cuts = bc , prefix = '# ' )
+                    self.logger.info ( '%s\n%s' % ( btitle , tB ) )
+
             bo = self.bookingoptions.split (':')
             bo.sort() 
             if self.verbose : self.logger.info  ( 'Book TMVA-factory %s ' % bo ) 
@@ -1352,7 +1367,7 @@ class Trainer(object):
             for v in self.signal_vars     : avars.add ( v ) 
             for v in self.background_vars : avars.add ( v )
             avars = sorted ( avars )
-            
+                
             all_vars = [] 
             ## for v in self.variables :
             for v in avars :
@@ -1367,7 +1382,6 @@ class Trainer(object):
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )             
                 all_vars.append ( vv[0] ) 
                 dataloader.AddSpectator ( *vv )
-                #
 
             if self.verbose : self.logger.info ( "Loading 'Signal'     sample" ) 
             dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
@@ -1523,7 +1537,7 @@ class Trainer(object):
     def makePlots ( self , name = None , output = None , ) :
         """Make selected standard TMVA plots"""
 
-        self.logger.warning ( "makePlots: method is disbaled!" )
+        self.logger.warning ( "makePlots: method is (temporarily?) disabled!" )
         return 
 
         name   = name   if name   else self.name
