@@ -160,7 +160,19 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
     """
 
     from ostap.tools.chopping import addChoppingResponse as _add_response_
+
+    assert category_name and ( prefix or suffix ) , \
+        'addChoppingResponse: invalid category/prefix/suffix %s/%s' % ( category_name , prefix , suffix ) 
     
+    if isinstance ( chain , ROOT.TTree ) :
+        import ostap.trees.trees        
+        vars    = set ( chain.branches() ) | set ( chain.leaves () ) 
+        matched = sorted ( v for v in vars if v.startswith ( prefix ) and v.endswith (  suffix ) ) 
+        if matched or category_name in vars :
+            matched = ','.join ( matched )
+            logger.warning ( "addChoppingResponse: Variables/Category '%s/%s' already in TTree, skip" % ( matched , category_name ) )
+            return chain 
+      
     if isinstance ( chain , ROOT.TChain ) and 1 < len ( chain.files () ) : pass
     else : return _add_response_ ( dataset       = chain         ,
                                    chopper       = chopper       ,
@@ -176,7 +188,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
     
     from ostap.trees.trees import Chain
     ch       = Chain ( chain )
-    branches = set   ( chain.branches() )
+    branches = set   ( chain.branches() ) | set ( chain.leaves() ) 
 
     task     = AddChopping ( chopper       = chopper       ,
                              N             = N             ,
@@ -197,7 +209,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
     nc = ROOT.TChain ( chain.name )
     for f in ch.files :  nc.Add ( f )
 
-    nb = list ( set ( nc.branches () ) - branches ) 
+    nb = list ( ( set ( nc.branches () ) | set ( nc.leaves() ) ) - branches ) 
     if nb : logger.info ( 'Added branches:\n%s' % nc.table ( variables = nb , prefix = '# ' ) ) 
     
     return nc

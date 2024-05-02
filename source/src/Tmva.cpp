@@ -467,7 +467,7 @@ namespace
     // category in Tree:
     //
     UInt_t i_category = 0 ;
-    TBranch* bcat = tree->Branch( category.c_str() , &i_category , ( category + "/i" ).c_str() ) ;
+    TBranch* bcat     = tree->Branch( category.c_str() , &i_category , ( category + "/i" ).c_str() ) ;
     //
     if ( !bcat ) { return Ostap::TMVA::InvalidBranch ; } 
     //

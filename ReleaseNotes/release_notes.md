@@ -1,5 +1,7 @@
 ## New features
 
+  1. Improve `addTMVAResponse` and `addChoppingResponse`  (and their paralell analogues)
+     
 ## Backward incompatible
 
 ## Bug fixes

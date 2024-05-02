@@ -90,8 +90,9 @@ __all__     = (
 from   ostap.core.meta_info    import root_info
 from   ostap.tools.tmva        import Trainer as TMVATrainer
 from   ostap.tools.tmva        import Reader  as TMVAReader
-from   ostap.tools.tmva        import ( dir_name     , good_for_negative ,
-                                        trivial_opts , make_tarfile      ) 
+from   ostap.tools.tmva        import ( dir_name      , good_for_negative ,
+                                        trivial_opts  , make_tarfile      ,
+                                        NO_PROCESSING ) 
 from   ostap.core.core         import WSE 
 from   ostap.core.pyrouts      import hID, h1_axis, Ostap 
 from   ostap.core.ostap_types  import integer_types 
@@ -1764,8 +1765,23 @@ def _add_response_tree ( tree , verbose , *args ) :
     from   ostap.utils.progress_conf import progress_conf
 
     tdir     = tree.GetDirectory()
-    branches = tree.branches () if verbose else set() 
+    
+    vars     = set ( tree.branches() ) | set ( tree.leaves () )
+    
+    ## args = chopper , category_name , N , _inputs , _maps , options , prefix , suffix , aux
+    
+    category       = args [ 1 ]
+    prefix, suffix = args [ 6 : 8 ]
 
+    matched = []    
+    if prefix or suffix :
+        matched = sorted ( v for v in vars if v.startswith ( prefix ) and v.endswith ( suffix ) ) 
+        
+    if matched or category in vars :
+        matched = ','.join ( matched )         
+        logger.warning ( "add_response_tree: Variables/Category '%s/%s' already in TTree, skip" % ( matched , category ) )
+        return NO_PROCESSING , tree
+    
     with ROOTCWD () , REOPEN ( tdir )  as tfile  : 
         
         tdir.cd()
@@ -1782,7 +1798,7 @@ def _add_response_tree ( tree , verbose , *args ) :
         else :
             logger.error ( "Can't write TTree back to the file" )
 
-            
+
     return sc , tdir.Get ( tree.GetName() )    ## RETURN
 
 ## status = sc
@@ -1810,8 +1826,8 @@ def _add_response_chain ( chain , verbose , *args ) :
     import ostap.trees.trees
     
     files    = chain.files    ()
-    cname    = chain.GetName  () 
-    branches = chain.branches () if verbose else set() 
+    cname    = chain.GetName  ()
+    branches = set ( chain.branches () ) | set ( chain.leaves() ) if verbose else set() 
     
     if not files :
         logger.warning ( 'addChoppingResponse: empty chain (no files)' )
@@ -1887,7 +1903,18 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     """
     assert isinstance ( N , int ) and 1 < N < 10000 , 'Invalid "N" %s' % N
 
+    assert category_name and ( prefix or suffix ) , \
+        'addChoppingResponse: invalid category/prefix/suffix %s/%s' % ( category_name , prefix , suffix ) 
     
+    if isinstance ( dataset , ROOT.TTree ) :
+        import ostap.trees.trees        
+        vars    = set( dataset.branches() ) | set( dataset.leaves () ) 
+        matched = sorted ( v for v in vars if v.startswith ( prefix ) and v.endswith (  suffix ) ) 
+        if matched or category_name in vars :
+            matched = ','.join ( matched )
+            logger.warning ( "addChoppingResponse: Variables/Category '%s/%s' already in TTree, skip" % ( matched , category_name ) )
+            return dataset
+     
     ## decode inputs&weights
     
     from ostap.tools.tmva import _inputs2map_ , _weights2map_ , opts_replace
@@ -1918,14 +1945,17 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     if   isinstance ( dataset , ROOT.TChain  ) :
         
         sc , newdata = _add_response_chain ( dataset , verbose , *args ) 
-        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
+        if   NO_PROCESSING == sc :
+            if verbose : logger.warning ( 'No processing...' )
+        elif sc.isFailure     () : logger.error   ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
         return newdata
     
     elif isinstance ( dataset , ROOT.TTree   ) :
         
         sc , newdata = _add_response_tree  ( dataset , verbose , *args )
-        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )
-        
+        if   NO_PROCESSING == sc :
+            if verbose : logger.warning ( 'No processing...' )
+        elif sc.isFailure     () : logger.error   ( 'Error from Ostap::TMVA::addChoppingResponse %s' % sc )        
         return newdata 
 
     ## here we deal with RooAbsData
@@ -1939,7 +1969,6 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
             chopper = make_formula ( 'chopping' , chopper , varset )
             
     assert isinstance ( chopper , ROOT.RooAbsReal ), 'Invalid chopper type %s' % chopper 
-
 
     category = ROOT.RooCategory ( category_name ,
                                   'Chopping category: (%s)%%%d' %  ( chopper.GetTitle() , N ) )

@@ -34,7 +34,7 @@ __all__     = (
     "tmvaGUI"
     )
 # =============================================================================
-from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning 
+from   ostap.core.core         import items_loop, WSE, Ostap, rootWarning
 from   ostap.core.ostap_types  import num_types, string_types, integer_types 
 from   ostap.core.meta_info    import root_version_int, root_info  
 from   ostap.utils.cleanup     import CleanUp
@@ -66,6 +66,10 @@ good_for_negative = (
     ROOT.TMVA.Types.kSVM        ,
     ROOT.TMVA.Types.kBDT
     )
+# =============================================================================
+## @var NO_PROCESSING
+#  status for from  no-processing  action
+NO_PROCESSING = Ostap.StatusCode ( 88888 ) ## unique enought? 
 # =============================================================================
 def dir_name ( name ) :
     name = str( name )
@@ -2244,10 +2248,20 @@ def _add_response_tree  ( tree , verbose , *args ) :
     from   ostap.io.root_file        import REOPEN
     from   ostap.utils.progress_conf import progress_conf
 
-    vars = set() 
-    if verbose :
-        vars = set ( tree.branches() ) | set ( tree.leaves () ) 
-                
+    vars = set ( tree.branches() ) | set ( tree.leaves () )
+
+    ## args = _inputs, _map, options, prefix , suffix , aux
+    prefix, suffix  = args [ 3 : 5 ]
+    
+    matched = []
+    if prefix or suffix :
+        matched = sorted ( v for v in vars if v.startswith ( prefix ) and v.endswith (  suffix ) ) 
+        
+    if matched :
+        matched = ','.join ( matched ) 
+        logger.warning ( "add_response_tree: Variables '%s' already in TTree, skip" % matched ) 
+        return NO_PROCESSING , tree
+
     tdir  = tree.GetDirectory ()
     tname = tree.full_path
     with ROOTCWD () , REOPEN ( tdir ) as tfile : 
@@ -2361,6 +2375,18 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     assert isinstance ( dataset , ( ROOT.TTree , ROOT.RooAbsData ) ),\
            'Invalid dataset type!'
 
+    assert prefix or suffix , 'addTMVAResponse: invalid prefix/suffix %s/%s' % ( prefix , suffix ) 
+
+    
+    if isinstance ( dataset , ROOT.TTree ) :
+        import ostap.trees.trees        
+        vars    = set( dataset.branches() ) | set( dataset.leaves () ) 
+        matched = sorted ( v for v in vars if v.startswith ( prefix ) and v.endswith (  suffix ) ) 
+        if matched :
+            matched = ','.join ( matched ) 
+            logger.warning ( "addTMVAResponse:: Variables '%s' already in TTree, skip" % matched ) 
+            return dataset
+        
     from ostap.core.core           import cpp, std, Ostap
     from ostap.utils.progress_conf import progress_conf
     from ostap.utils.basic         import isatty
@@ -2375,17 +2401,21 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
     options = opts_replace ( options , 'Color:'  ,     isatty  () )
     
     args = _inputs, _map, options, prefix , suffix , aux
-    
+
     if   isinstance ( dataset , ROOT.TChain     ) :
         
         sc , newdata = _add_response_chain ( dataset , verbose , *args )
-        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
+        if   NO_PROCESSING == sc :
+            if verbose : logger.warning ( 'No processing...' )
+        elif sc.isFailure()      : logger.error   ( 'Error from Ostap::TMVA::addResponse %s' % sc )
         return newdata
     
     elif isinstance ( dataset , ROOT.TTree      ) :
-        
+
         sc , newdata = _add_response_tree  ( dataset , verbose , *args )
-        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )
+        if   NO_PROCESSING == sc :
+            if verbose : logger.warning ( 'No processing...' )
+        elif sc.isFailure     () : logger.error   ( 'Error from Ostap::TMVA::addResponse %s' % sc )
         
     else :
 
@@ -2393,7 +2423,8 @@ def addTMVAResponse ( dataset                ,   ## input dataset to be updated
         if verbose :  sc = Ostap.TMVA.addResponse  ( dataset , progress_conf () , *args )
         else       :  sc = Ostap.TMVA.addResponse  ( dataset                    , *args )
         
-        if sc.isFailure() : logger.error ( 'Error from Ostap::TMVA::addResponse %s' % sc )        
+        if sc.isFailure     () : logger.error   ( 'Error from Ostap::TMVA::addResponse %s' % sc )
+        
         newdata = dataset
 
     return newdata

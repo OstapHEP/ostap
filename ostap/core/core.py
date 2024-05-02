@@ -290,8 +290,8 @@ StatusCode = Ostap.StatusCode
 StatusCode .__repr__ = _sc_print_
 StatusCode .__str__  = _sc_print_
 
-SUCCESS = StatusCode ( Ostap.StatusCode.SUCCESS )
-FAILURE = StatusCode ( Ostap.StatusCode.FAILURE )
+SUCCESS     = StatusCode ( Ostap.StatusCode.SUCCESS     )
+FAILURE     = StatusCode ( Ostap.StatusCode.FAILURE     )
 
 _valid_pointer_ = Ostap.Utils.valid_pointer
 # =============================================================================
