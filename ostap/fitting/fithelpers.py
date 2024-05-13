@@ -1735,7 +1735,7 @@ class FitHelper(VarMaker) :
         asym_var = self.vars_asymmetry (
             var1               , ## first vatiable 
             var2               , ## second variable 
-            scale = scale      , ## scale
+            scale = asym_scale , ## scale
             name  = asym_name  ,
             title = asym_title ) 
 
