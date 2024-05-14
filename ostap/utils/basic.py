@@ -384,7 +384,7 @@ if ( 3 , 4 ) <= sys.version_info :
     from os               import cpu_count as numcpu
 else :
     ## Get number of cores/CPUs
-    from multtipricessing import cpu_count as numcpu
+    from multiprocessing import cpu_count as numcpu
     
 # =============================================================================
 if __name__ == '__main__' :
