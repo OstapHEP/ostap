@@ -288,10 +288,10 @@ class  EvalNVE(object) :
         
         ## calculate the covariance 
         cov2 = 0.0
-        for i , v in enumerate ( xv ) : 
+        for i , v in enumerate ( xve ) : 
 
             ## get covariance 
-            c2 = v.cov2()
+            c2 = v.cov2() 
             if c2 <= 0 or iszero ( c2 ) : continue
 
             ## calculate the partical derivative 
