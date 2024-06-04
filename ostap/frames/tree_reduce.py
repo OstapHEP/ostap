@@ -66,7 +66,8 @@ class ReduceTree(CleanUp):
         from   ostap.frames.frames import DataFrame, frame_prescale, frame_columns 
         frame  = DataFrame ( chain )
         report = None
-        
+        chname = chain.GetName() 
+		
         self.__frame_main = frame
         
         if not  silent :
@@ -151,9 +152,8 @@ class ReduceTree(CleanUp):
             logger.warning ("Existing file %s will be overwritten!" % output  )
             
         ## chain name:
-        if not name :
-            name = chain.GetName()  ## produces ROOT error
-            name = '%s_reduced' % name
+        if not name : name = chname ## produces ROOT error
+        if name == chname and root_info <  ( 6 ,32 ) : name = '%s_reduced' % name
             
         if root_info < ( 6 , 24 ) : 
             _ , _ , name = name.rpartition ( '/' )                
@@ -192,6 +192,7 @@ class ReduceTree(CleanUp):
         if report :
             from ostap.frames.frames import report_print, report_as_table 
             title = 'Tree -> Frame -> Tree filter/transformation'
+            if name!= chname : title += "[%s->%s] " % ( chname , name ) 
             self.__report += '%s' % report_print ( report , title , '# ')
             self.__table   = report_as_table ( report )
                 
@@ -209,8 +210,13 @@ class ReduceTree(CleanUp):
         ne = len ( self.__chain             )
         ff = float ( nb * ne * 100 ) / ( nb0 * ne0 ) 
         
-        self.__report += '\n# Reduce: (%dx%d) -> (%dx%d) branches x entries => %.2f%% ' % ( nb0  ,  ne0 ,  nb , ne , ff )
-        self.__report += '\n# Output:%s size:%s'                                        % ( self.__output , fs  )
+        if   0.100 <= ff : ff = '%.1f%%' %   ff
+        elif 0.010 <= ff : ff = '%.2f%%' %   ff
+        elif 0.001 <= ff : ff = '%.3f%%' %   ff
+        else             : ff = '%.3g'   % ( ff / 100 )
+         
+        self.__report += '\n# Reduce: (%dx%d) -> (%dx%d) branches x entries => %s ' % ( nb0  ,  ne0 ,  nb , ne , ff )
+        self.__report += '\n# Output:%s size:%s'                                    % ( self.__output , fs  )
         ## self.__report += '\n# %s' % str ( self.__chain ) 
         
         del self.__frame_main
@@ -318,9 +324,15 @@ def reduce  ( tree               ,
     else     : 
         nb = len ( result.chain.branches() )
         ne = len ( result.chain            )
-        f  = float ( nb0 * ne0 * 100 ) / ( nb  * ne ) 
+        f  = float ( nb0 * ne0 * 100 ) / ( nb  * ne )
+        ##
+        if   0.100 <= f : f = '%.1f%%' % f
+        elif 0.010 <= f : f = '%.2f%%' % f
+        elif 0.001 <= f : f = '%.3f%%' % f
+        else            : f = '%.3g'   % ( f / 100 )
+        ## 
         ## sys.stdout.write('\n')
-        logger.info ( 'reduce: (%dx%d) -> (%dx%d) %.2f%% (branches x entries) ' % ( nb0  , ne0 ,  nb , ne , f ) ) 
+        logger.info ( 'reduce: (%dx%d) -> (%dx%d) %d (branches x entries) ' % ( nb0  , ne0 ,  nb , ne , f ) ) 
                       
     return result
 

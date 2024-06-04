@@ -176,8 +176,14 @@ def reduce ( chain               ,
         
         nb = len ( result.chain.branches() )
         ne = len ( result.chain            )        
-        ff = float ( nb * ne * 100 ) / ( nb0  * ne0 ) 
-        logger.info ( 'Reduce: (%dx%d) -> (%dx%d) branches x entries => %.1f%% ' % ( nb0  , ne0 ,  nb , ne , ff ) )
+        ff = float ( nb * ne * 100 ) / ( nb0  * ne0 )
+        ##
+        if   0.100 <= ff : ff = '%.1f%%' %   ff
+        elif 0.010 <= ff : ff = '%.2f%%' %   ff
+        elif 0.001 <= ff : ff = '%.3f%%' %   ff
+        else             : ff = '%.3g'   % ( ff / 100 )
+        ##
+        logger.info ( 'Reduce: (%dx%d) -> (%dx%d) branches x entries => %s' % ( nb0  , ne0 ,  nb , ne , ff ) )
 
         if output and os.path.exists ( output ) and os.path.isfile ( output ) : 
             fs = os.path.getsize ( output )        
