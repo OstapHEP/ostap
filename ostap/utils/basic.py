@@ -355,7 +355,9 @@ def mtime ( path ) :
 # =========================================================================
 ## copy source file into destination, creating intermediate directories
 #  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
-def copy_file ( source , destination , progress = False ) :
+def copy_file ( source           ,
+                destination      ,
+                progress = False ) :
     """Copy source file into destination, creating intermediate directories
     - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
     """
@@ -378,6 +380,45 @@ def copy_file ( source , destination , progress = False ) :
         from ostap.utils.utils import copy_with_progress
         return copy_with_progress ( source , destination )
 
+# =========================================================================
+## Sync/copy source file into destination, creating intermediate directories, using 'rsync -a'
+#  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
+def sync_file ( source              ,
+                destination         ,
+                progress    = False ) :
+    """Sync/Copy source file into destination, creating intermediate directories
+    - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
+    """
+    from   ostap.utils.utils import which
+    rsync = which ( 'rsync' )
+    if not rsync :
+        return copy_file ( source = source , destination = destination , progress = progress )
+    
+    assert os.path.exists ( source ) and os.path.isfile ( source ), \
+           "sync_file: `source' %s does not exist!" % source 
+    
+    destination = os.path.abspath  ( destination )    
+    destination = os.path.normpath ( destination )
+    destination = os.path.realpath ( destination )
+    
+    if os.path.exists ( destination ) and os.path.isdir ( destination ) :
+        destination = os.path.join ( destination , os.path.basename ( source ) )
+        
+    make_dirs ( os.path.dirname ( destination ) , exist_ok = True )
+
+    import subprocess, shlex
+    
+    if progress : command = 'rsync --progress -a %s %s ' % ( source , destination ) 
+    else        : command = 'rsync            -a %s %s ' % ( source , destination )
+    
+    subprocess.check_call ( shlex.split ( command )  )
+    
+    if not os.path.exists ( destination ) :
+        logger.warning ( "copy_files: no expected output '%s'" % nf ) 
+        return ''
+    
+    return destination
+    
 # =============================================================================
 if ( 3 , 4 ) <= sys.version_info :
     ## Get number of cores/CPUs

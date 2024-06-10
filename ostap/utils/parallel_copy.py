@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 # ==========================================================================================
 ## @file ostap/utils/parallel_copy.py
-#  Copy files in parallel using GNU paralllel (if/when available)
+#  Copy files in parallel using GNU paralllel or xargs (if/when available)
 #  @see https://www.gnu.org/software/parallel/
 #  @date   2024-04-18
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 # =============================================================================
-"""  Copy files in parallel using GNU paralllel (if/when available) 
+"""  Copy files in parallel using GNU paralllel or xargs (if/when available) 
 - see https://www.gnu.org/software/parallel/
 """
 # =============================================================================
@@ -29,17 +29,22 @@ else                       : logger = getLogger ( __name__                    )
 # =============================================================================
 
 # ============================================================================
-## Copy files in parallel using GNU paralell 
+## Copy files in parallel using GNU paralell or xargs 
 #  @see https://www.gnu.org/software/parallel/
 #  - switch to multiprocess-based parallelisation when GNU parallel is not avialable 
-def copy_files ( file_pairs , progress = True , copier = None , **kwargs ) :
-    """Copy files in parallel using GNU parallel
+def copy_files ( file_pairs      ,
+                 progress = True ,
+                 copier   = None ,
+                 copy_cmd = ''   , **kwargs ) :
+    """Copy files in parallel using GNU parallel or xargs 
     - see https://www.gnu.org/software/parallel/
     - switch to multiprocess-based parallelisation when GNU parallel is not available 
     """
     if not copier :
         from ostap.utils.basic import copy_file
         copier = copy_file
+        
+    if not copy_cmd : copy_cmd = 'cp'
 
     ## keep arguments 
     pairs = tuple ( p for p in file_pairs )
@@ -59,30 +64,45 @@ def copy_files ( file_pairs , progress = True , copier = None , **kwargs ) :
             copied.append ( result ) 
         return tuple ( copied )
 
+    parallel = which ( 'parallel' )
+    xargs    = '' if parallel else which ( 'xargs' )
+
     # =====================================================================
-    ## GNU parallel is not available: 
-    if not which ( 'parallel' ) :
+    ## Neither GNU parallel nor xargs is available: 
+    if not parallel and not xargs :
         from ostap.parallel.parallel_copy import copy_files as cpfiles
-        return cpfiles ( file_pairs , progress = progress , copier = copier , **kwargs ) 
+        return cpfiles ( file_pairs          ,
+                         progress = progress ,
+                         copier   = copier   , **kwargs ) 
 
     # =====================================================================
     ## (1) collect all directories
     ddirs = set() 
-    for f, nf in pairs : ddirs.add ( os.path.dirname ( nf ) )
-    
+    for f, nf in pairs :
+        ddir = os.path.dirname ( nf )
+        if not os.path.exists ( ddir ) : 
+            ddirs.add ( ddir )
+
     ## (2) recreate all required directories
     from ostap.utils.basic import make_dirs 
     while ddirs : make_dirs ( ddirs.pop() , exist_ok = True ) 
-    
+
+    if parallel :
+        command = 'parallel --bar :::' if progress else 'parallel :::'
+        thecmd  = '%s %%s %%s\n' % copy_cmd
+    else        :
+        command = 'xargs -P%d -L1 %s ' % ( numcpu() , copy_cmd ) 
+        if progress and 'cp' == copy_cmd : command += ' -v ' 
+        thecmd  = '%s %s\n' 
+
     ## (3) prepare the input file with the commands
     import ostap.utils.cleanup as CU
     tmpfile = CU.CleanUp.tempfile( suffix = '.lst' )  
     with open ( tmpfile , 'w' ) as cmd :
         for f, nf in pairs :
-            cmd.write ( 'cp %s %s\n' % ( f , nf ) )
-            
-    ## (4) finally, call GNU parallel via subprocess
-    command = 'parallel --bar :::' if progress  else 'parallel :::'
+            cmd.write ( thecmd % ( f , nf ) )
+
+    ## (4) finally, call GNU parallel/xargs command 
     import subprocess, shlex 
     with open ( tmpfile , 'r' ) as input :
         subprocess.check_call ( shlex.split ( command ) , stdin = input )
@@ -94,12 +114,44 @@ def copy_files ( file_pairs , progress = True , copier = None , **kwargs ) :
             result = f , os.path.abspath ( nf ) 
             results.add ( result )
         else :
+
             logger.warning ( "copy_files: no expected output '%s'" % nf ) 
 
     return tuple ( results ) 
 
+
+# ============================================================================
+## Sync/copy files in parallel using GNU paralell or xargs 
+#  @see https://www.gnu.org/software/parallel/
+#  - switch to multiprocess-based parallelisation when GNU parallel is not avialable 
+def sync_files ( file_pairs            ,
+                 progress = True       ,
+                 copier   = None       ,
+                 copy_cmd = ''         , **kwargs ) :
+    """Sync/copy files in parallel using GNU parallel or xargs 
+    - see https://www.gnu.org/software/parallel/
+    - switch to multiprocess-based parallelisation when GNU parallel is not available 
+    """
+    if not which ( 'rsync' ) :
+        return copy_files ( file_pairs          ,
+                            progress = progress ,
+                            copier   = None     ,
+                            copy_cmd = ''       , **kwargs )
+    
+    if not copy_cmd :
+        copy_cmd = 'rsync -a'
+    
+    if not copier :
+        from ostap.utils.basic import sync_file
+        copier =  sync_file
+        
+    return copy_files ( file_pairs          ,
+                        progress = progress ,
+                        copier   = copier   ,
+                        copy_cmd = copy_cmd , **kwargs )
+
 # =============================================================================
-if not which ( 'parallel' ) :
+if not which ( 'parallel' ) and not which ( 'xargs' ) :
     from ostap.parallel.parallel_copy import copy_files
 
 # =============================================================================
@@ -107,7 +159,16 @@ if '__main__' == __name__ :
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-      
+
+
+    sync_files ( [ ( '/tmp/ibelyaev/Ypipi3.root'   ,
+                     '/tmp/ibelyaev/Ypipi3.root_1' ) , 
+                   ( '/tmp/ibelyaev/Ypipi4.root'   ,
+                     '/tmp/ibelyaev/Ypipi4.root_1' ) ] ) 
+                   
+    
+
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

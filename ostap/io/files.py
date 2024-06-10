@@ -630,10 +630,40 @@ class Files(object):
                               progress = not self.silent )
         
         if not self.silent :
-            logger.info ( "copy_files: #%d files are copied to '%s'" %  ( len ( copied ) , nd ) )
+            from ostap.utils.basic import commonpath 
+            cp = commonpath ( copied  )
+            logger.info ( "copy_files: #%d files are copied to '%s'" %  ( len ( copied ) , cp ) )
 
         return self.clone ( files = sorted ( copied ) ) 
 
+
+    # =========================================================================
+    ## Sync/copy all the files to new directory
+    #  - new directory will be created (if needed)
+    #  - common path (prefix) for all files will be replaced by new directory
+    def sync_files ( self , new_dir = None , parallel = False , also_bad = False ) :
+        """Sync/copy all the files to new directory
+        - new directory will be created (if needed)
+        - common path (prefix) for all files will be replaced by new directory
+        """
+
+        files_to_copy = set ( self.__files )
+        if also_bad and self.bad_files :
+            files_to_copy |= set ( self.bad_files )
+
+        ## use generic function 
+        copied = sync_files ( files_to_copy              ,
+                              new_dir  = new_dir         ,   
+                              parallel = parallel        ,
+                              progress = not self.silent )
+        
+        if not self.silent :
+            from ostap.utils.basic import commonpath 
+            cp = commonpath ( copied  )
+            logger.info ( "sync_files: #%d files are sync/copied to '%s'" %  ( len ( copied ) , cp ) )
+
+        return self.clone ( files = sorted ( copied ) ) 
+        
 # =========================================================================
 ## Copy set of files into new directory.
 #  Files are copied in a way to preserve they name uniqueness:
@@ -647,11 +677,12 @@ class Files(object):
 #  @param copier the low-level copy routine ot be used 
 #  @param progress show progrees bar if possible
 #  @return list of copied files 
-def copy_files ( files_to_copy     ,
-                 new_dir   = None  ,
-                 parallel  = False ,
-                 copier    = None  ,
-                 progress  = False ) :
+def copy_files ( files_to_copy           ,
+                 new_dir   = None        ,
+                 parallel  = False       ,
+                 copier    = None        ,
+                 copy_cmd  = ''          , 
+                 progress  = False       ) :
     """Copy set of files into new directory.
 
     Files are copied in a way to preserve they name uniqueness:
@@ -679,7 +710,7 @@ def copy_files ( files_to_copy     ,
     ## create directory if needed 
     if not os.path.exists ( new_dir ) : os.makedirs ( new_dir )
 
-    from ostap.utils.basic  import writeable,   copy_file
+    from ostap.utils.basic  import writeable
     assert writeable ( new_dir ), \
         "copy_files: the destination directory `%s' is not writable!" % new_dir 
     
@@ -701,17 +732,18 @@ def copy_files ( files_to_copy     ,
 
     nfiles = len ( pairs  )
 
-    if not copier : copier = copy_file
+    if not copier :
+        from ostap.utils.basic  import copy_file
+        copier = copy_file
 
     from   ostap.utils.basic      import numcpu
     from   ostap.utils.utils      import which
     
     if parallel and 1 < nfiles and 1 < numcpu () :
         
-        if which ( 'parallel' ) : from ostap.utils.parallel_copy    import copy_files as parallel_copy
-        else                    : from ostap.parallel.parallel_copy import copy_files as parallel_copy
+        from ostap.utils.parallel_copy import copy_files as parallel_copy
         
-        copied = parallel_copy ( pairs , maxfiles = 1 , copier = copier , progress = progress  )
+        copied = parallel_copy ( pairs , maxfiles = 1 , copier = copier , copy_cmd = copy_cmd , progress = progress  )
         copied = tuple ( f [ 1 ] for f in copied )
 
     else :
@@ -725,7 +757,67 @@ def copy_files ( files_to_copy     ,
             copied.append ( result ) 
             
     return tuple ( copied )
-            
+
+# =========================================================================
+## Sync/copy set of files into new directory.
+#  Files are copied in a way to preserve they name uniqueness:
+#  - a.txt                -> NEWDIR/a.txt
+#  - subdira.txt          -> NEWDIR//subdira.txt
+#  - subdir/subdir/a.txt  -> NEWDIR/subdir/subdir.txt
+#  Essentially a common prefix for all input files will be replaced
+#  by the destination directory 
+#  @param file_to_copy sequence of files to be copied
+#  @param new_dir destination directory, for None temproary directory wil lbe used
+#  @param copier the low-level copy routine ot be used 
+#  @param progress show progrees bar if possible
+#  @return list of copied files 
+def sync_files ( files_to_copy          ,
+                 new_dir   = None       ,
+                 parallel  = False      ,
+                 copier    = None       ,
+                 copy_cmd  = ''         , 
+                 progress  = False      ) :
+    """Sync/copy set of files into new directory.
+
+    Files are copied in a way to preserve they name uniqueness:
+
+    - a.txt                -> NEWDIR/a.txt
+    - subdira.txt          -> NEWDIR//subdira.txt
+    - subdir/subdir/a.txt  -> NEWDIR/subdir/subdir.txt
+
+    Essentially a common prefix for all input files is replaced  
+    by the destination directory 
+
+    - file_to_copy sequence of files to be copied
+    - new_dir      destination directory, for None temproary directory wil lbe used
+    - copier       low-level copy routine ot be used 
+    - progress      show progrees bar if possible
+    
+    A list of copied files is returned 
+    """
+
+    from   ostap.utils.utils  import which
+    if not which ( 'rsync' ) :        
+        from ostap.utils.basic  import copy_file
+        return copy_files ( files_to_copy        ,
+                            new_dir  = new_dir   ,
+                            parallel = parallel  ,
+                            copier   = copy_file ,
+                            copy_cmd = ''        ,
+                            progress = progress  )
+
+    if not copy_cmd : copy_cmd = 'rsync -a'
+    if not copier : 
+        from ostap.utils.basic  import sync_file
+        copier = sync_file 
+        
+    return copy_files ( files_to_copy        ,
+                        new_dir  = new_dir   ,
+                        parallel = parallel  ,
+                        copier   = copier    ,
+                        copy_cmd = copy_cmd  ,
+                        progress = progress  )
+
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -36,7 +36,12 @@ class Reweighter(object) :
     def __init__ ( self , **kwargs )  :
 
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")                
+            warnings.simplefilter("ignore")
+
+            import numpy
+            if not hasattr ( numpy , 'float' ) :
+                numpy.float = numpy.float64
+                
             from hep_ml.reweight import GBReweighter as GBRW 
             self.__reweighter = GBRW ( **kwargs ) 
             self.__variables  = ()
