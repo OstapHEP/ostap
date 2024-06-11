@@ -161,14 +161,6 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 
-    sync_files ( [ ( '/tmp/ibelyaev/Ypipi3.root'   ,
-                     '/tmp/ibelyaev/Ypipi3.root_1' ) , 
-                   ( '/tmp/ibelyaev/Ypipi4.root'   ,
-                     '/tmp/ibelyaev/Ypipi4.root_1' ) ] ) 
-                   
-    
-
-    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
