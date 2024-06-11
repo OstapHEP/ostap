@@ -3,8 +3,7 @@
   1. Improve `addTMVAResponse` and `addChoppingResponse`  (and their paralell analogues)
   1. improve `parallel_copy`,  rely on `xargs` when `GNU parallel` is not available
   1. add add parallel `sync, based on `rsync -a` & `xargs/parallel`
-  
-  
+    
 ## Backward incompatible
 
 ## Bug fixes
