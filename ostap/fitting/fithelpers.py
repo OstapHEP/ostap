@@ -932,10 +932,19 @@ class FitHelper(VarMaker) :
                           'maxcalls' ,
                           'callmax'  ,
                           'callsmax' ) and \
-                     isinstance ( a , integer_types )    and (6,27) <= root_info :
+                     isinstance ( a , integer_types ) and (6,27) <= root_info :
                 
                 _args.append   ( ROOT.RooFit.MaxCalls ( a ) ) 
 
+            elif key in ( 'evalbackend'  ,
+                          'eval_backend' ,
+                          'backendeval'  ,
+                          'backend_eval' ,
+                          'backend'      ) and \
+                 isinstance ( a , string_types ) and (6,32) <= root_info :
+                
+                _args.append   ( ROOT.RooFit.EvalBackend ( a ) ) 
+                
             else :
                
                 self.error ( 'parse_args: Unknown/illegal keyword argument: %s/%s, skip it ' % ( k , type ( a ) ) )
