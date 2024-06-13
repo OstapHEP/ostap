@@ -501,7 +501,10 @@ class SqliteMultithread(Thread):
         self.timeout = timeout 
         # use request queue of unlimited size
         self.reqs = Queue()
-        self.setDaemon(True)  # python2.5-compatible
+        
+        ## self.setDaemon(True)  # python2.5-compatible
+        self.daemon    = True
+        
         self.exception = None
         self.log = logging.getLogger('sqlitedict.SqliteMultithread')
         self.start()
