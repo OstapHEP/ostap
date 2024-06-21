@@ -2,7 +2,7 @@
 
   1. Improve `addTMVAResponse` and `addChoppingResponse`  (and their paralell analogues)
   1. improve `parallel_copy`,  rely on `xargs` when `GNU parallel` is not available
-  1. add add parallel `sync, based on `rsync -a` & `xargs/parallel`
+  1. add add parallel `sync` based on `rsync -a` & `xargs/parallel`
   1. `sqlitedict` : tiny fix for warning in `python-3.11`
   
 ## Backward incompatible
