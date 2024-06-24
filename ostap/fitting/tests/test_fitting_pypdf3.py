@@ -71,6 +71,7 @@ B          = model0.B
 background = model0.background_components[0]
 
 
+## store = [] 
 # =============================================================================
 ## Test pure python PDF: <code>PyPdf</code>
 #  @attention For *NEW* PyROOT only!
@@ -98,7 +99,9 @@ def test_PyPdf() :
     #  local ``pure-python'' PDF 
     class MyGauss1(Ostap.Models.PyPdf) :
         """Local ``pure-python'' PDF
-        """    
+        """
+        store = set() 
+        
         def __init__ ( self , name , xvar = None , mean = None , sigma = None , clone = None ) :
 
             
@@ -124,6 +127,8 @@ def test_PyPdf() :
                 
                 super(MyGauss1,self).__init__ ( name , 'title' , vars )
 
+            print ( '# of cloned:' , len ( self.store ) ) 
+            
         ## the  main method 
         def evaluate ( self ) :
             
@@ -137,11 +142,13 @@ def test_PyPdf() :
         ## ++ cloner 
         def clone ( self , newname ) :
 
-            name = newname if newname else  self.name   
-            cl = MyGauss1( name , clone = self ) 
-            ROOT.SetOwnership ( cl  , False )
+            name   = newname if newname else  self.name   
+            cloned = MyGauss1( name , clone = self )
             
-            return cl
+            ROOT.SetOwnership ( cloned , False )
+            self.store.add    ( cloned )
+                            
+            return cloned
         
     with timing ("Using-PyPdf", logger ) :
 
@@ -160,10 +167,10 @@ def test_PyPdf() :
             r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )        
             logger.info  ("Fit result for `pure python' PDF: PyPdf \n%s" % r.table ( prefix = "# " ) )
 
-        ## del model
-        ## del gauss
-        ## del pdf1
-        ## del MyGauss1 
+        del model
+        del gauss
+        del pdf1
+        del MyGauss1 
         
 # =============================================================================
 ## Test pure python PDF: <code>PyPdf</code> + analytical integrals 
@@ -192,7 +199,9 @@ def test_PyPdf_AI() :
     #  local ``pure-python'' PDF 
     class MyGauss2(Ostap.Models.PyPdf) :
         """Local `pure-python' PDF
-        """    
+        """
+        store = set()
+        
         def __init__ ( self , name , xvar = None , mean = None , sigma = None , clone = None ) :
 
             
@@ -231,11 +240,11 @@ def test_PyPdf_AI() :
         ## ++ cloner 
         def clone ( self , newname ) :
             
-            name = newname if newname else  self.name   
-            cl = MyGauss2 ( name , clone = self ) 
-            ROOT.SetOwnership ( cl  , False )
-            
-            return cl
+            name   = newname if newname else  self.name   
+            cloned = MyGauss2 ( name   , clone = self ) 
+            ROOT.SetOwnership ( cloned , False )            
+            self.store.add    ( cloned )
+            return cloned 
 
         ## declare analytical integral 
         def get_analytical_integral ( self ) :
@@ -282,10 +291,10 @@ def test_PyPdf_AI() :
             r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )            
             logger.info  ("Fit result for `pure python' PDF: PyPdf with analytical integral\n%s" % r.table ( prefix = "# " ) )
 
-        ## del model
-        ## del gauss
-        ## del pdf2
-        ## del MyGauss2 
+        del model
+        del gauss
+        del pdf2
+        del MyGauss2 
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -294,9 +303,9 @@ if '__main__' == __name__ :
     test_PyPdf    ()
     test_PyPdf_AI ()
 
-    ## del model0
-    ## del pdf
-    ## del background
+    del model0
+    del pdf
+    del background
     
     
 # =============================================================================

@@ -171,17 +171,17 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
   if ( !method ) 
   {
     PyErr_Print();
-    Ostap::throwException ( "No method ``clone'' is found"  ,
-                            "PyPdf::clone"                  ,
-                            Ostap::StatusCode(500)          ) ;
+    Ostap::throwException ( "No method `clone' is found"  ,
+                            "PyPdf::clone"                ,
+                            Ostap::StatusCode(500)        ) ;
   }
   if  ( !PyCallable_Check ( method ) ) 
   {
     PyErr_Print();
     Py_DECREF ( method ); 
-    Ostap::throwException ( "Attribute ``clone'' is not callable" ,
-                            "PyPdf::clone"              ,
-                            Ostap::StatusCode(500) ) ;
+    Ostap::throwException ( "Attribute `clone' is not callable" ,
+                            "PyPdf::clone"                      ,
+                            Ostap::StatusCode(500)              ) ;
   }
   /// create C++ clone 
   PyPdf*     cl     = new Ostap::Models::PyPdf ( *this , name ) ;
