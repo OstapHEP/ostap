@@ -160,10 +160,10 @@ def test_PyPdf() :
             r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )        
             logger.info  ("Fit result for `pure python' PDF: PyPdf \n%s" % r.table ( prefix = "# " ) )
 
-        del model
-        del gauss
-        del pdf1
-        del MyGauss1 
+        ## del model
+        ## del gauss
+        ## del pdf1
+        ## del MyGauss1 
         
 # =============================================================================
 ## Test pure python PDF: <code>PyPdf</code> + analytical integrals 
@@ -282,10 +282,10 @@ def test_PyPdf_AI() :
             r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )            
             logger.info  ("Fit result for `pure python' PDF: PyPdf with analytical integral\n%s" % r.table ( prefix = "# " ) )
 
-        del model
-        del gauss
-        del pdf2
-        del MyGauss2 
+        ## del model
+        ## del gauss
+        ## del pdf2
+        ## del MyGauss2 
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -294,9 +294,9 @@ if '__main__' == __name__ :
     test_PyPdf    ()
     test_PyPdf_AI ()
 
-    del model0
-    del pdf
-    del background
+    ## del model0
+    ## del pdf
+    ## del background
     
     
 # =============================================================================
