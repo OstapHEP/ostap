@@ -1652,6 +1652,15 @@ Ostap::MoreRooFit::fitTo
   const RooLinkedList& opts  )
 { return model.fitTo ( data , opts ) ; }
 // ============================================================================
+// helper function to call RooAbsPdf::createNLL( data , options ) 
+// ============================================================================
+RooAbsReal* 
+Ostap::MoreRooFit::createNLL
+( RooAbsPdf&           model , 
+  RooAbsData&          data  , 
+  const RooLinkedList& opts  )
+{ return model.createNLL ( data , opts ) ; }
+// ============================================================================
 
     
 // ============================================================================

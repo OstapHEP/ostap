@@ -3158,7 +3158,15 @@ namespace Ostap
     ( RooAbsPdf&           model   , 
       RooAbsData&          data    , 
       const RooLinkedList& opts    ) ;
+    // ========================================================================
+    RooAbsReal*
+    createNLL
+    ( RooAbsPdf&           model   ,
+      RooAbsData&          data    ,
+      const RooLinkedList& opts    ) ;
+    // =======================================================================
 #if ROOT_VERSION(6,32,0)<=ROOT_VERSION_CODE
+    // =======================================================================
     template <typename... CmdArgs_t>
     RooFit::OwningPtr<RooFitResult> fitTo
     ( RooAbsPdf&           model   ,
@@ -3167,6 +3175,16 @@ namespace Ostap
     {
       return model.fitTo(data, cmdArgs... ) ;
     }
+    // =======================================================================
+    template <typename... CmdArgs_t>
+    RooFit::OwningPtr<RooAbsReal> createNLL
+    ( RooAbsPdf&           model   ,
+      RooAbsData&          data    ,
+      CmdArgs_t const&...  cmdArgs )
+    {
+      return model.createNLL ( data , cmdArgs... ) ;
+    }
+    // ========================================================================
 #endif
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit  
