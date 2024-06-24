@@ -202,7 +202,7 @@ def test_vars3 () :
         
         logger.info ( "Fit result using BSpline(%d) \n%s" %  ( power , r2.table ( prefix = "# ") ) )
         logger.info ( "Compare with true efficiency (using BSpine(%d))\n%s" % ( power , make_table (
-            eff2 , title = 'using MonotonicPoly') ) ) 
+            eff2 , title = 'using MonotonicPoly[%d]' % power ) ) ) 
         
         with wait ( 2 ) , use_canvas ( 'test_var3_%s' % power  ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
@@ -224,6 +224,7 @@ def test_vars4 () :
     for d in range ( 0 , n + 1 ) :
         
         f      = RF ( 'R%d%d'% ( n , d )  , xvar = x , n = n , d = d )
+
         for p in f.pars :
             p.setVal (  0.5  ) 
             p.setMin ( -0.01 )
@@ -345,14 +346,14 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
     
-    with timing ("PDF"   , logger ) :  
-        test_pdf   ()
+##    with timing ("PDF"   , logger ) :  
+##        test_pdf   ()
     
-    with timing ("Vars1" , logger ) :  
-        test_vars1 ()
+##    with timing ("Vars1" , logger ) :  
+##        test_vars1 ()
     
-    with timing ("Vars2" , logger ) :        
-        test_vars2 ()
+##    with timing ("Vars2" , logger ) :        
+##        test_vars2 ()
     
     with timing ("Vars3" , logger ) :        
         test_vars3 ()

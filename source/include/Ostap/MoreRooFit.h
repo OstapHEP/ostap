@@ -3155,9 +3155,19 @@ namespace Ostap
     /// helper function to call <code>RooAbsPdf::fitTo ( data , opts )</code>
     RooFitResult* 
     fitTo
-    ( RooAbsPdf&           model , 
-      RooAbsData&          data  , 
-      const RooLinkedList& opts  ) ;
+    ( RooAbsPdf&           model   , 
+      RooAbsData&          data    , 
+      const RooLinkedList& opts    ) ;
+#if ROOT_VERSION(6,32,0)<=ROOT_VERSION_CODE
+    template <typename... CmdArgs_t>
+    RooFit::OwningPtr<RooFitResult> fitTo
+    ( RooAbsPdf&           model   ,
+      RooAbsData&          data    ,
+      CmdArgs_t const&...  cmdArgs )
+    {
+      return model.fitTo(data, cmdArgs... ) ;
+    }
+#endif
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit  
   // ==========================================================================
