@@ -124,34 +124,36 @@ def test_vars1 () :
     
     logger = getLogger ( 'test_vars1' )
 
-    power = 3 
-    f     = BP ( 'B3'           ,
-                 xvar  = x     ,
-                 power = power ,
-                 pars  = ( power + 1 ) * [ ( 0.2 , 0 , 1 ) ] )
-
-    for p in f.pars :
-        p.setMin ( 0 )
+    for power in range ( 1 , 4 ) :
+        
+        f     = BP ( 'BP_%s' % power  ,
+                     xvar  = x        ,
+                     power = power    ,
+                     pars  = ( power + 1 ) * [ ( 0.2 , 0 , 1 ) ] )
+        
+        for p in f.pars :
+            p.setMin ( 0 )
         p.setMax ( 1 )
         p.setVal ( 0.2)
         p.release()
         
-    ## f.release_par() 
-    
-    eff2   = Efficiency1D ( 'Ev1' , f.fun , cut = acc  , xvar = x )
-    
-    r2     = eff2.fitTo ( ds )
+        
+        ## f.release_par() 
+        
+        eff2   = Efficiency1D ( 'Ef1_BP%d' % power , f.fun , cut = acc  , xvar = x )
+        
+        r2     = eff2.fitTo ( ds )
 
-    logger.info ( "Fit result using-BernsteinPoly \n%s" % r2.table ( prefix = "# ") )
-    logger.info ( "Compare with true efficiency (using BernsteinPoly)\n%s" % make_table (
-        eff2 , title = 'using BernsteinPoly') )
-    
-    with wait ( 2 ) , use_canvas ( 'test_vars1' ) : 
-        f2     = eff2.draw  ( ds , nbins = 25 )
-
-    funs.add ( f    ) 
-    funs.add ( eff2 ) 
-
+        logger.info ( "Fit result using-BernsteinPoly \n%s" % r2.table ( prefix = "# ") )
+        logger.info ( "Compare with true efficiency (using BernsteinPoly)\n%s" % make_table (
+            eff2 , title = 'using BernsteinPoly%d' % power) )
+        
+        with wait ( 2 ) , use_canvas ( 'test_vars1_PB%s' % power  ) : 
+            f2     = eff2.draw  ( ds , nbins = 25 )
+            
+        funs.add ( f    ) 
+        funs.add ( eff2 ) 
+            
 # =============================================================================
 # use some functions  to parameterize efficiciency
 def test_vars2 () :
@@ -160,27 +162,28 @@ def test_vars2 () :
 
     from ostap.fitting.roofuncs import MonotonicPoly as MP 
 
-    f      = MP ( 'M4' , xvar = x , increasing = True , power = 4 )
-    f.pars = 0.6 , 0.8 , -0.1 , -0.6
-    f.a    = 0.06
-    f.b    = 2.72
-    f.a.release ()
-    f.b.release ()
-
-    eff2   = Efficiency1D ( 'Ev2' , f , cut = acc  , xvar = x )
-    
-    r2     = eff2.fitTo ( ds )
-    
-    logger.info ( "Fit result using-MonotonicPoly \n%s" % r2.table ( prefix = "# ") )
-    logger.info ( "Compare with true efficiency (using MonotonicPoly)\n%s" % make_table (
-        eff2 , title = 'using MonotonicPoly') )
-    
-    with wait ( 2 ) , use_canvas ( 'test_vars2' ) : 
-        f2     = eff2.draw  ( ds , nbins = 25 )
+    for power in ( 1 , 5 ) : 
+        f      = MP ( 'M%' % power  , xvar = x , increasing = True , power = power )
+        f.pars = 0.6 , 0.8 , -0.1 , -0.6
+        f.a    = 0.06
+        f.b    = 2.72
+        f.a.release ()
+        f.b.release ()
         
-    funs.add ( f    ) 
-    funs.add ( eff2 ) 
-
+        eff2   = Efficiency1D ( 'Eff_MP%d'% power  , f , cut = acc  , xvar = x )
+        
+        r2     = eff2.fitTo ( ds )
+        
+        logger.info ( "Fit result using-MonotonicPoly \n%s" % r2.table ( prefix = "# ") )
+        logger.info ( "Compare with true efficiency (using MonotonicPoly)\n%s" % make_table (
+            eff2 , title = 'using MonotonicPoly%d' % power ) )
+        
+        with wait ( 2 ) , use_canvas ( 'test_vars2_MP%d' % power ) : 
+            f2     = eff2.draw  ( ds , nbins = 25 )
+            
+        funs.add ( f    ) 
+        funs.add ( eff2 ) 
+            
 # =============================================================================
 # use some functions  to parameterize efficiciency
 def test_vars3 () :
@@ -189,14 +192,14 @@ def test_vars3 () :
 
     from ostap.fitting.roofuncs import BSplineFun as BS
 
-    for power in range ( 4 ) :
+    for power in range ( 5 ) :
         
-        f      = BS ( 'BS%s' % power  , xvar = x ,
+        f      = BS ( 'BSP_%s' % power  , xvar = x ,
                       knots = ( 0 , 3 , 7 , 10 ) ,
                       power = power ,
                       pars  = 12 * [ ( 0.2 , 0 , 1 ) ] )
         
-        eff2   = Efficiency1D ( 'Ev3_%s' % power , f , cut = acc  , xvar = x )
+        eff2   = Efficiency1D ( 'Eff_BSP_%s' % power , f , cut = acc  , xvar = x )
         
         r2     = eff2.fitTo ( ds )
         
@@ -223,14 +226,14 @@ def test_vars4 () :
     
     for d in range ( 0 , n + 1 ) :
         
-        f      = RF ( 'R%d%d'% ( n , d )  , xvar = x , n = n , d = d )
+        f      = RF ( 'RF_%d%d'% ( n , d )  , xvar = x , n = n , d = d )
 
         for p in f.pars :
             p.setVal (  0.5  ) 
             p.setMin ( -0.01 )
             p.setMax (  1.01 )
         
-        eff2   = Efficiency1D ( 'ER%d%d' % ( n , d ) , f.fun , cut = acc  , xvar = x )
+        eff2   = Efficiency1D ( 'Eff_ER%d%d' % ( n , d ) , f.fun , cut = acc  , xvar = x )
         
         r2     = eff2.fitTo ( ds , silent = False )
         
@@ -263,7 +266,7 @@ def test_vars5 () :
             v.setMax (  100  )
 
                 
-        eff2   = Efficiency1D ( 'BR%d%d' % ( p , q ) , f.fun , cut = acc  , xvar = x )
+        eff2   = Efficiency1D ( 'Eff_BR%d%d' % ( p , q ) , f.fun , cut = acc  , xvar = x )
 
         ## pre-fit with fixed denominator 
         with FIXVAR ( f.qpars ) : r2     = eff2.fitTo ( ds )

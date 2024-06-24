@@ -561,7 +561,9 @@ class APDF1 ( Components ) :
                "fit_to: invalid argument types: %s" % list ( options  ) 
 
         if  ( 6 , 32 ) <= root_info :
-            ## return model.fitTo ( data , *options )
+            with warnings.catch_warnings():
+                warnings.simplefilter("always")
+                return Ostap.MoreRooFit.fitTo ( model , data , *options )
             return Ostap.MoreRooFit.fitTo ( model , data , *options )
 
         ##  for "small" number of arguments use the standard function 
@@ -571,19 +573,12 @@ class APDF1 ( Components ) :
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
         
-        print ( 'options' , options , type ( options ) , [ type( o ) for o in options ] )
-
         if sys.warnoptions or in_test() :
             with warnings.catch_warnings():
                 warnings.simplefilter("always")
                 return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
             
         return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
-
-        
-        return model.fitTo ( data , *options )
-    
-        
     
     # ================================================================================
     ## helper method to draw set of components 
