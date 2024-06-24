@@ -146,7 +146,7 @@ def test_PyPdf() :
             cloned = MyGauss1( name , clone = self )
             
             ROOT.SetOwnership ( cloned , False )
-            self.store.add    ( cloned )
+            if (6,32) <= root_info : self.store.add    ( cloned )
                             
             return cloned
         
@@ -243,7 +243,7 @@ def test_PyPdf_AI() :
             name   = newname if newname else  self.name   
             cloned = MyGauss2 ( name   , clone = self ) 
             ROOT.SetOwnership ( cloned , False )            
-            self.store.add    ( cloned )
+            if ( 6 ,32 ) <= root_info : self.store.add    ( cloned )
             return cloned 
 
         ## declare analytical integral 
