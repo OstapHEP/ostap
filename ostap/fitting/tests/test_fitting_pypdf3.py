@@ -90,10 +90,6 @@ def test_PyPdf() :
         logger.warning("test enabled only for NEW PyROOT!")
         return
 
-#    if ( 6 , 31 ) <= root_info :
-#        logger.warning  ( 'Test is *TEMPORARILY* disabled, see https://github.com/root-project/root/issues/15085#issuecomment-2029462023' )
-#        return 
-    
     # =============================================================================
     ## @class PyGauss1
     #  local ``pure-python'' PDF 
@@ -170,7 +166,6 @@ def test_PyPdf() :
         del model
         del gauss
         del pdf1
-        del MyGauss1 
         
 # =============================================================================
 ## Test pure python PDF: <code>PyPdf</code> + analytical integrals 
@@ -190,10 +185,6 @@ def test_PyPdf_AI() :
         logger.warning("test enabled only for NEW PyROOT!")
         return
     
-#    if ( 6 , 31 ) <= root_info :
-#        logger.warning  ( 'Test is *TEMPORARILY* disabled, see https://github.com/root-project/root/issues/15085#issuecomment-2029462023' )
-#        return 
-        
     # =============================================================================
     ## @class PyGauss
     #  local ``pure-python'' PDF 
@@ -294,7 +285,6 @@ def test_PyPdf_AI() :
         del model
         del gauss
         del pdf2
-        del MyGauss2 
 
 # =============================================================================
 if '__main__' == __name__ :
