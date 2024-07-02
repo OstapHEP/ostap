@@ -8,7 +8,8 @@
   1. add `ostap.stats.average` code for calculation of averages for inconsistet data
   1. add test for `ostap.stats.average`
   1. reshullle a bit the code between `ostap.math.minimize` and `ostap.math.local_minimize`
-  `
+  1. add `sync_dirs` function into `ostap.io.files` module to syncronize the directories
+  
 ## Backward incompatible
 
 ## Bug fixes

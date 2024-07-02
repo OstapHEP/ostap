@@ -17,10 +17,12 @@ __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
     'Files'       , ## base class tool to handle set of files
-    'copy_files'  , ## a bit specific copy of set of files 
+    'copy_files'  , ## a bit specific copy of set of files
+    'sync_files'  , ## synchonize the files
+    'sync_dirs'   , ## synchonize the directories     
 )
 # =============================================================================
-from   ostap.core.ostap_types import integer_types 
+from   ostap.core.ostap_types import integer_types, path_types, sized_types  
 from   ostap.parallel.task    import Task
 import os, glob, random, math   
 # =============================================================================
@@ -672,8 +674,8 @@ class Files(object):
 #  - subdir/subdir/a.txt  -> NEWDIR/subdir/subdir.txt
 #  Essentially a common prefix for all input files will be replaced
 #  by the destination directory 
-#  @param file_to_copy sequence of files to be copied
-#  @param new_dir destination directory, for None temproary directory wil lbe used
+#  @param file_to_copy sequence of files to be copied or sequence of (source,destination) pairs 
+#  @param new_dir destination directory, for None temproary directory will be used. 
 #  @param copier the low-level copy routine ot be used 
 #  @param progress show progrees bar if possible
 #  @return list of copied files 
@@ -694,43 +696,62 @@ def copy_files ( files_to_copy           ,
     Essentially a common prefix for all input files is replaced  
     by the destination directory 
 
-    - file_to_copy sequence of files to be copied
+    - file_to_copy sequence of files to be copied or seuqence of (source,destination) pairs 
     - new_dir      destination directory, for None temproary directory wil lbe used
     - copier       low-level copy routine ot be used 
-    - progress      show progrees bar if possible
+    - progress     show progrees bar if possible
     
     A list of copied files is returned 
     """
-
-    ## use  temporary directory
-    if new_dir is None or new_dir == '' :
-        import ostap.utils.cleanup as CU
-        new_dir = CU.CleanUp.tempdir()
-        
-    ## create directory if needed 
-    if not os.path.exists ( new_dir ) : os.makedirs ( new_dir )
-
-    from ostap.utils.basic  import writeable
-    assert writeable ( new_dir ), \
-        "copy_files: the destination directory `%s' is not writable!" % new_dir 
     
-    nd = os.path.abspath  ( new_dir )
-    nd = os.path.normpath ( nd      ) 
+    the_files = [ f for f in files_to_copy ] 
+        
+    ## 1) no input 
+    if   not the_files : pairs = [] 
+    ## 1) input: list of files :
+    elif all ( isinstance ( f , path_types ) and os.path.exists ( f ) and os.path.osfile ( f ) for f in the_files ) :
 
-    ## get the common path.prefix for all input files 
-    from ostap.utils.basic import commonpath 
-    cp = commonpath ( os.path.abspath ( f ) for f in files_to_copy )
-    cp = cp if os.path.isdir ( cp ) else os.path.dirname ( cp ) 
+        ## use  temporary directory
+        if new_dir is None or new_dir == '' :
+            import ostap.utils.cleanup as CU
+            new_dir = CU.CleanUp.tempdir()
+            
+        ## create directory if needed 
+        if not os.path.exists ( new_dir ) : os.makedirs ( new_dir )
+        
+        from ostap.utils.basic  import writeable
+        assert writeable ( new_dir ), \
+            "copy_files: the destination directory `%s' is not writable!" % new_dir 
+        
+        nd = os.path.abspath  ( new_dir )
+        nd = os.path.normpath ( nd      ) 
+        
+        ## get the common path.prefix for all input files 
+        from ostap.utils.basic import commonpath 
+        cp = commonpath ( os.path.abspath ( f ) for f in the_files )
+        cp = cp if os.path.isdir ( cp ) else os.path.dirname ( cp ) 
+        
+        pairs = []
+        for f in files_to_copy :
+            fs   = os.path.abspath  ( f )   
+            nf   = fs.replace       ( cp , nd ) 
+            nf   = os.path.abspath  ( nf )
+            pair = f , nf
+            pairs.append ( pair )
+    
+    ## 2) input: list of pairs 
+    elif  all ( isinstance ( f , sized_types )          \
+                and 2 == len ( f )                      \
+                and isinstance ( f [ 0 ] , path_types ) \
+                and isinstance ( f [ 1 ] , path_types ) \
+                and os.path.exists ( f [ 0 ] )          \
+                and os.path.isfile ( f [ 0 ] ) for f in the_files ) :
 
-    pairs = []
-    for f in files_to_copy :
-        fs   = os.path.abspath  ( f )   
-        nf   = fs.replace       ( cp , nd ) 
-        nf   = os.path.abspath  ( nf )
-        pair = f , nf
-        pairs.append ( pair )
-
-    nfiles = len ( pairs  )
+        pairs = the_files
+        
+    else :
+        raise TypeError ( "Invalid input file list" ) 
+                                  
 
     if not copier :
         from ostap.utils.basic  import copy_file
@@ -739,10 +760,10 @@ def copy_files ( files_to_copy           ,
     from   ostap.utils.basic      import numcpu
     from   ostap.utils.utils      import which
     
+    nfiles = len ( pairs  )
     if parallel and 1 < nfiles and 1 < numcpu () :
         
-        from ostap.utils.parallel_copy import copy_files as parallel_copy
-        
+        from ostap.utils.parallel_copy import copy_files as parallel_copy        
         copied = parallel_copy ( pairs , maxfiles = 1 , copier = copier , copy_cmd = copy_cmd , progress = progress  )
         copied = tuple ( f [ 1 ] for f in copied )
 
@@ -766,7 +787,7 @@ def copy_files ( files_to_copy           ,
 #  - subdir/subdir/a.txt  -> NEWDIR/subdir/subdir.txt
 #  Essentially a common prefix for all input files will be replaced
 #  by the destination directory 
-#  @param file_to_copy sequence of files to be copied
+#  @param file_to_copy sequence of files to be copied or sequence of (source,destination) pairs 
 #  @param new_dir destination directory, for None temproary directory wil lbe used
 #  @param copier the low-level copy routine ot be used 
 #  @param progress show progrees bar if possible
@@ -777,6 +798,7 @@ def sync_files ( files_to_copy          ,
                  copier    = None       ,
                  copy_cmd  = ''         , 
                  progress  = False      ) :
+    
     """Sync/copy set of files into new directory.
 
     Files are copied in a way to preserve they name uniqueness:
@@ -788,7 +810,7 @@ def sync_files ( files_to_copy          ,
     Essentially a common prefix for all input files is replaced  
     by the destination directory 
 
-    - file_to_copy sequence of files to be copied
+    - file_to_copy sequence of files to be copied or sequence of (source,destination) pairs 
     - new_dir      destination directory, for None temproary directory wil lbe used
     - copier       low-level copy routine ot be used 
     - progress      show progrees bar if possible
@@ -817,6 +839,82 @@ def sync_files ( files_to_copy          ,
                         copier   = copier    ,
                         copy_cmd = copy_cmd  ,
                         progress = progress  )
+
+# =============================================================================
+## Sync/copy two directories 
+#  Files are copied in a way to preserve they name uniqueness:
+#  - a.txt                -> NEWDIR/a.txt
+#  - subdira.txt          -> NEWDIR//subdira.txt
+#  - subdir/subdir/a.txt  -> NEWDIR/subdir/subdir.txt
+#  Essentially a common prefix for all input files will be replaced
+#  by the destination directory 
+#  @param file_to_copy sequence of files to be copied
+#  @param new_dir destination directory, for None temproary directory wil lbe used
+#  @param copier the low-level copy routine ot be used 
+#  @param progress show progrees bar if possible
+#  @return list of copied files 
+def sync_dirs  ( source_dir             ,
+                 new_dir                ,
+                 parallel  = False      ,
+                 copier    = None       ,
+                 copy_cmd  = ''         , 
+                 progress  = False      ) :
+    """Sync/copy two directories 
+
+    Files are copied in a way to preserve they name uniqueness:
+
+    - a.txt                -> NEWDIR/a.txt
+    - subdira.txt          -> NEWDIR//subdira.txt
+    - subdir/subdir/a.txt  -> NEWDIR/subdir/subdir.txt
+
+    Essentially a common prefix for all input files is replaced  
+    by the destination directory 
+
+    - file_to_copy sequence of files to be copied
+    - new_dir      destination directory, for None temproary directory wil lbe used
+    - copier       low-level copy routine ot be used 
+    - progress      show progrees bar if possible
+    
+    A list of copied files is returned 
+    """
+
+    assert source_dir and os.path.exists ( source_dir ) and os.path.isdir ( source_dir ) , \
+        'Invalid source directory %s' % source_dir 
+
+    ## create directory if needed 
+    if not os.path.exists ( new_dir ) : os.makedirs ( new_dir )
+    
+    from   ostap.utils.basic      import writeable
+    assert os.path.exists ( new_dir ) and os.path.isdir ( new_dir ) and writeable ( new_dir ) , \
+        'Invalid new directory %s' % new_dir 
+
+    
+    source = os.path.abspath  ( source_dir )
+    source = os.path.normpath ( source     )
+
+    the_files  = set() 
+    ## collect all files in the source directory
+    for root, dirs, files in os.walk ( source ) :
+        root = os.path.abspath  ( root )
+        root = os.path.normpath ( root )
+        for f in files : the_files.add ( os.path.join ( root , f ) ) 
+
+    newdir = os.path.abspath  ( new_dir    )
+    newdir = os.path.normpath ( newdir     )
+
+    pairs  = [ ( f, f.replace ( source , newdir ) ) for f in the_files ]
+    pairs  = tuple ( pairs ) 
+
+    return sync_files ( pairs               ,
+                        new_dir  = new_dir  , 
+                        parallel = parallel ,
+                        copier   = copier   ,
+                        copy_cmd = copy_cmd ,
+                        progress = progress )
+
+# =============================================================================
+
+
 
 # =============================================================================
 if '__main__' == __name__ :

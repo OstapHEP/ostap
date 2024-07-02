@@ -25,7 +25,8 @@ __all__     = (
     'long_type'       , ## long-type
     'sequence_types'  , ## sequence types
     'iterable_types'  , ## iterable 
-    'sized_types'     , ## sized types 
+    'sized_types'     , ## sized types
+    'path_types'      , ## path-like types     
     ##
     'is_integer'      , ## is a value of int-like type?
     'is_number'       , ## is a value of numeric  type?
@@ -41,7 +42,7 @@ __all__     = (
     'all_strings'     , ## all argumets of string  types?
     )
 # =============================================================================
-import math
+import math, os 
 from   sys import version_info as python_version 
 if ( 3 , 0 ) <= python_version :
     long           = int
@@ -81,7 +82,6 @@ num_types       = integer_types + ( float , )
 str_types       = str,
 
 list_types      = list , tuple
-
 import array 
 listlike_types  = list_types + ( set , C.Sequence , array.array )
 # =============================================================================
@@ -95,6 +95,9 @@ dict_types      = dict ,
 dictlike_types  = dict ,  C.Mapping  
 sequence_types  = listlike_types + ( Sequence , Collection , Iterable , Generator )
 sized_types     = Sized ,
+path_types      = string_types
+if (3,6) <= python_version :
+    path_types = string_types + ( os.PathLike , )
 # =============================================================================
 
 # =============================================================================
