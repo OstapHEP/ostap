@@ -200,7 +200,7 @@ class Combine(object) :
         if self.__pvalue is None  :
             N = self.D
             x = self.chi2
-            self.__pvalue = Ostap.Math.gamma_star ( 0.5 * N , 0.5 * x ) 
+            self.__pvalue = Ostap.Math.gamma_inc_P ( 0.5 * N , 0.5 * x )            
         return self.__pvalue 
     
 

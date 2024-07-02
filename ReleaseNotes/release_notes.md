@@ -5,11 +5,16 @@
   1. add add parallel `sync` based on `rsync -a` & `xargs/parallel`
   1. `sqlitedict` : tiny fix for warning in `python-3.11`
   1. fix `pypdf` examples
-  
+  1. add `ostap.stats.average` code for calculation of averages for inconsistet data
+  1. add test for `ostap.stats.average`
+  1. reshullle a bit the code between `ostap.math.minimize` and `ostap.math.local_minimize`
+  `
 ## Backward incompatible
 
 ## Bug fixes
+  1. `ostap.stats.combine`  fix calcualtion of p-value
 
+  
 # v1.10.1.6
 
 ## New features
