@@ -109,11 +109,11 @@ class Average(object):
 
     # ============================================================================
     ## make the NLL graph 
-    def draw_nll ( self , *args , xmin = None , xmax = None , **kwargs ) :
+    def draw_nll ( self , opts = '' , xmin = None , xmax = None , **kwargs ) :
         from ostap.math.models import f1_draw
         if xmin is None : xmin = self.__xmin
         if xmax is None : xmax = self.__xmax
-        return f1_draw ( self , *args , xmin = xmin , xmax = xmax , **kwargs ) 
+        return f1_draw ( self , opts , xmin = xmin , xmax = xmax , **kwargs ) 
         
     # ============================================================================
     ## len of data 
