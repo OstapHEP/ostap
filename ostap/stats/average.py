@@ -52,9 +52,9 @@ def ve_expand ( *values ) :
 
 # =============================================================================
 ## @class Average
-#  Helper base class to implement 
+#  Helper abstract base class to implement varios averages
 class Average(object):
-    """Helper base class to implement average for (inconsistent) data
+    """Helper abstarct base class to implement average for (inconsistent) data
     """
     def __init__ ( self , *data ) :
         
@@ -77,13 +77,21 @@ class Average(object):
     def pvalue ( self ) :
         """'pvalue' : p-value (from chi2-distribution)"""
         if self.__pvalue is None :
-            average = self.weighted_average()
-            value   = average.value() 
-            c2      = self.chi2 ( value )
-            k       = len ( self ) 
-            self.__pvalue = Ostap.Math.gamma_inc_P ( k / 2.0 , c2 / 2.0 )  
+            average       = self.weighted_average()
+            value         = average.value() 
+            self.__pvalue = self.p_value ( value ) 
         return self.__pvalue
 
+    # =======================================================================
+    ## Calcuaet the p-value form chi2 distributon 
+    def p_value ( self , mu ) :
+        """Calculate the p-value"""        
+        ## get chi2 value 
+        c2      = self.chi2 ( mu )
+        k       = len ( self ) 
+        return Ostap.Math.gamma_inc_P ( k / 2.0 , c2 / 2.0 )  
+        
+        
     @property
     def values  ( self ) :
         """'values' : input data, array of `ValueWithError` objects"""

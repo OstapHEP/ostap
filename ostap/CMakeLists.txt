@@ -158,19 +158,35 @@ message ( "----> (warning) (optional) psutils        is NOT found!" )
 endif()
 
 
+## BerkeleyDB
+
 if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )
 
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
+if  ( ${PYTHON_VERSION} VERSION_LESS_EQUAL "3.6" )
    find_python_module ( berkeleydb QUIET )
    if ( NOT ${PY_berkeleydb_FOUND} )
-     execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install berkeleydb ${PIP_ARGS})
-   endif()
-   find_python_module ( berkeleydb QUIET )
-   if ( NOT ${PY_berkeleydb_FOUND} )
-     message ( "----> (warning) (optional)     berkeleydb is NOT found!" ) 
+     execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install berkeleydb=18.1.4 ${PIP_ARGS})
    endif()
 endif()
 
+if  ( ${PYTHON_VERSION} VERSION_LESS_EQUAL "3.7" )
+   find_python_module ( berkeleydb QUIET )
+   if ( NOT ${PY_berkeleydb_FOUND} )
+     execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install berkeleydb=18.1.6 ${PIP_ARGS})
+   endif()
+endif()
+
+find_python_module ( berkeleydb QUIET )
+if ( NOT ${PY_berkeleydb_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install berkeleydb ${PIP_ARGS})
+endif()
+	
+find_python_module ( berkeleydb QUIET )
+if ( NOT ${PY_berkeleydb_FOUND} )
+   message ( "----> (warning) (optional)     berkeleydb is NOT found!" ) 
+endif()
+
+## BDDDB3  
 if  ( ${PYTHON_VERSION} VERSION_LESS          "3.10" )
   find_python_module ( bsddb3 QUIET )
   if ( NOT ${PY_bsddb3_FOUND} )
@@ -181,7 +197,8 @@ if  ( ${PYTHON_VERSION} VERSION_LESS          "3.10" )
      message ( "----> (warning) (optional)         bsddb3 is NOT found!" ) 
   endif()
 endif()
-endif()
+
+
 
 
 find_python_module ( hep_ml QUIET )
