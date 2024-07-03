@@ -1298,7 +1298,7 @@ class APDF1 ( Components ) :
         self.debug ( 'nll: createNLL args: %s'% list ( opts ) )
         
         if ( 6 , 32 ) <= root_info :
-            return Ostap.MoreRooFit.createNLL ( self.pdf , dataset , *opts ), sF 
+            return Ostap.MoreRooFit.createNLL ( self.pdf , dataset , *opts ), sf 
             
         if len ( opts ) < 8 and root_info < ( 6 , 29 ) : 
             return self.pdf.createNLL ( dataset , *opts   ) , sf
