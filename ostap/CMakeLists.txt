@@ -186,6 +186,7 @@ if ( NOT ${PY_berkeleydb_FOUND} )
    message ( "----> (warning) (optional)     berkeleydb is NOT found!" ) 
 endif()
 
+
 ## BDDDB3  
 if  ( ${PYTHON_VERSION} VERSION_LESS          "3.10" )
   find_python_module ( bsddb3 QUIET )
@@ -198,6 +199,7 @@ if  ( ${PYTHON_VERSION} VERSION_LESS          "3.10" )
   endif()
 endif()
 
+endif() 
 
 
 
