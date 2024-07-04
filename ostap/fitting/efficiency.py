@@ -220,12 +220,13 @@ class Efficiency (ConfigReducer) :
         >>> eff     = Efficiency1D( ... ) 
         >>> result  = eff.fitTo ( dataset ) 
         """
-        
         vargs = [] ##  i for i in args ]
         vargs.append  ( ROOT.RooFit.ConditionalObservables ( self.vars ) ) 
         vargs = tuple ( vargs ) 
         ##
-        draw  = kwargs.pop ( 'draw' , False ) 
+        draw  = kwargs.pop ( 'draw' , False )
+
+        
         with roo_silent ( silent ) : 
             result , frame = self.pdf_fit.fitTo ( dataset ,                            
                                                   draw   = False  ,
@@ -233,7 +234,15 @@ class Efficiency (ConfigReducer) :
                                                   silent = silent ,
                                                   refit  = refit  ,
                                                   args   = vargs  , **kwargs )
+            ## reset data token 
+            for v in self.pdf_fit.variables :
+                if v.hasDataToken() :
+                    self.pdf_fit.warning ( 'Reset data token for %s' % v.name )
+                    v.resetDataToken() 
+            
             if  draw : self.draw ( dataset ) 
+
+
         self.__fit_result = result 
         return result
 
