@@ -19,7 +19,8 @@ from   ostap.fitting.efficiency import Efficiency1D
 from   ostap.fitting.variables  import FIXVAR 
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait
+from   ostap.logger.logger      import attention 
 import ROOT, random, math 
 # =============================================================================
 # logging 
@@ -37,15 +38,20 @@ xmin , xmax = x.minmax()
 acc = ROOT.RooCategory( 'cut','cut')
 acc.defineType('accept',1)
 acc.defineType('reject',0)
-varset  = ROOT.RooArgSet  ( x , acc )
-ds      = ROOT.RooDataSet ( dsID() , 'test data' ,  varset )
 
 eff0       = Models.Monotonic_pdf ( 'E0' , xvar = x , power = 3 , increasing = True )
-eff0.phis  = 3.1415/1 , 3.1415/2 , 3.1415/3  
+eff0.phis  = 3.1415/1 , 3.1415/2 , 3.1415/3
+
 margin     = 1.25 
 emax       = margin * eff0 ( x.getMax() ) 
 
+conf = { 'minimizer' : ('Minuit','migrad') , 'maxcalls' : 1000000 , 'refit' : 5 }
+
+
 N = 20000
+
+varset = ROOT.RooArgSet  ( x , acc )
+ds     = ROOT.RooDataSet ( dsID() , 'test data' ,  varset )
 
 for i in range ( N ) :
     
@@ -72,57 +78,77 @@ funs = set ()
 def make_table ( func , title , prefix = "# ") :
 
     rows = [ ( 'x' , 'fitted eff [%]' , 'true eff [%]' , 'delta [%]' ) ]
+    
     for p in points :
 
         e1  = 100 * func (  p , error = True ) 
         e2  = 100 * eff0 ( p ) / emax 
-        d   = e1 - e2    
+        dd  = e1 - e2
+        d   = dd .toString ( '(%5.2f+-%4.2f)' )
+        
+        if 5 < abs ( dd.value() ) : d = attention ( d )
+            
         row = "%4.2f" % p , \
               "%s"    %  e1.toString ( '(%5.2f+-%4.2f)'  ) ,\
               "%.2f"  %  e2  ,\
-              "%s"    %  d .toString ( '(%5.2f+-%4.2f)'  )
+              d
         
         rows.append ( row )
+        
     from ostap.logger.table import table
     return table ( rows , title = title , prefix = prefix ) 
 
 
 # =============================================================================
 # use some PDF to parameterize efficienct
-def test_pdf () :
+def test_eff_PDF () :
     
-    logger = getLogger ( 'test_pdf' )
+    logger = getLogger ( 'test_eff_PDF' )
 
-    effPdf = Models.Monotonic_pdf ( 'P4' , xvar = x , power = 4 , increasing = True )
+    ## for power in range ( 3 , 4 ) :
+    for power in range ( 1 , 2 ) :
 
-    maxe   = margin * effPdf ( xmax )
-    
-    s0     = min ( 1.0 / emax , 1.0 / maxe ) 
-    scale  = ROOT.RooRealVar ( 'scaleX' , 'scaleX' , s0 , 0.2 * s0 , 5.0 * s0  )
-    
-    eff2   = Efficiency1D ( 'EPDF' , effPdf , cut = acc  , scale = scale )
-    
-    r2     = eff2.fitTo ( ds )
-    
-    logger.info ( "Fit result using-Monotonic_pdf \n%s" % r2.table ( prefix = "# ") )
-    logger.info ( "Compare with true efficiency (using Monotonic_pdf)\n%s" % make_table (
-        eff2 , title = 'using Monotonic_pdf') )
-    
-    with wait ( 2 ) , use_canvas ( 'test_pdf' ) : 
-        f2     = eff2.draw  ( ds , nbins = 25 )
+        effPdf = Models.Monotonic_pdf ( 'M%d' % power , xvar = x , power = power , increasing = True )
+        ## effPdf = Models.Bkg_pdf ( 'MGK' , xvar = x , power = 0 ) 
+        
+        maxe   = margin * effPdf ( xmax )
+        
+        s0     = 1.0 / effPdf ( 9.99 )
+        
+        ## smx    = min ( 1.0 / maxe , s0 * 100 ) 
+        ## smn    = s0 / 100 
+        scale  = ROOT.RooRealVar ( 'scale_M%d' % power , 'scaleX' , s0 , s0/100 , s0 * 2 ) 
 
+        scale.setVal ( 0.40 / effPdf ( 4.0 ) ) 
+        
+        eff2   = Efficiency1D ( 'EPDF_M%d' % power , effPdf , cut = acc  , scale = scale )
 
-    funs.add ( effPdf )
-    funs.add ( eff2   )
-    
-
+        with FIXVAR ( effPdf.phis ) : 
+            r2     = eff2.fitTo ( ds , **conf     )
+            f2     = eff2.draw  ( ds , nbins = 25 )
+            
+        r2 = eff2.fitTo ( ds , **conf )
+            
+        title = 'Fit result using Monotonic_pdf[%d]' % power         
+        logger.info ( "%s\n%s" % ( title , r2.table ( title = title , prefix = "# " ) ) )
+        
+        title = "using Monotonic_pdf[%d]" % power         
+        logger.info ( "Compare with true efficiency (%s)\n%s" % ( title , make_table (
+            eff2 , title = title ) ) ) 
+        
+        with wait ( 2 ) , use_canvas ( 'test_eff_PDF_M%d' % power) : 
+            f2     = eff2.draw  ( ds , nbins = 25 )
+            
+        funs.add ( effPdf )
+        funs.add ( eff2   )
+        
 # =============================================================================
 # use some functions  to parameterize efficiciency
-def test_vars1 () :
+def test_eff_BP () :
     
     from ostap.fitting.roofuncs import BernsteinPoly as BP 
     
-    logger = getLogger ( 'test_vars1' )
+    logger = getLogger ( 'test_eff_BP' )
 
     for power in range ( 1 , 4 ) :
         
@@ -136,19 +162,19 @@ def test_vars1 () :
         p.setMax ( 1 )
         p.setVal ( 0.2)
         p.release()
-        
-        
-        ## f.release_par() 
-        
+                
         eff2   = Efficiency1D ( 'Ef1_BP%d' % power , f.fun , cut = acc  , xvar = x )
         
-        r2     = eff2.fitTo ( ds )
-
-        logger.info ( "Fit result using-BernsteinPoly \n%s" % r2.table ( prefix = "# ") )
-        logger.info ( "Compare with true efficiency (using BernsteinPoly)\n%s" % make_table (
-            eff2 , title = 'using BernsteinPoly%d' % power) )
+        r2     = eff2.fitTo ( ds , refit = 5 )
         
-        with wait ( 2 ) , use_canvas ( 'test_vars1_PB%s' % power  ) : 
+        title = "Fit result using BernsteinPoly[%d]" % power 
+        logger.info ( "%s\n%s" % ( title  , r2.table ( title = title , prefix = "# " ) ) )
+        
+        title = "using BernsteinPoly[%d]" % power 
+        logger.info ( "Compare with true efficiency (%s)\n%s" % ( title , make_table (
+            eff2 , title = title ) ) ) 
+        
+        with wait ( 2 ) , use_canvas ( 'test_eff_BP_PB%s' % power  ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
             
         funs.add ( f    ) 
@@ -156,14 +182,14 @@ def test_vars1 () :
             
 # =============================================================================
 # use some functions  to parameterize efficiciency
-def test_vars2 () :
+def test_eff_MP () :
     
-    logger = getLogger ( 'test_vars2' )
+    logger = getLogger ( 'test_eff_MP' )
 
     from ostap.fitting.roofuncs import MonotonicPoly as MP 
 
     for power in ( 1 , 5 ) : 
-        f      = MP ( 'M%' % power  , xvar = x , increasing = True , power = power )
+        f      = MP ( 'MP%d' % power  , xvar = x , increasing = True , power = power )
         f.pars = 0.6 , 0.8 , -0.1 , -0.6
         f.a    = 0.06
         f.b    = 2.72
@@ -172,13 +198,15 @@ def test_vars2 () :
         
         eff2   = Efficiency1D ( 'Eff_MP%d'% power  , f , cut = acc  , xvar = x )
         
-        r2     = eff2.fitTo ( ds )
+        r2     = eff2.fitTo ( ds , **conf )
         
-        logger.info ( "Fit result using-MonotonicPoly \n%s" % r2.table ( prefix = "# ") )
-        logger.info ( "Compare with true efficiency (using MonotonicPoly)\n%s" % make_table (
-            eff2 , title = 'using MonotonicPoly%d' % power ) )
+        title = "Fit result using MonotonicPoly[%d]" % power 
+        logger.info ( "%s\n%s" % ( title , r2.table ( title = title , prefix = "# " ) ) )
+        title = "using MonotonicPoly[%d]" % power         
+        logger.info ( "Compare with true efficiency (%s)\n%s" % ( title , make_table (
+            eff2 , title = title ) ) ) 
         
-        with wait ( 2 ) , use_canvas ( 'test_vars2_MP%d' % power ) : 
+        with wait ( 2 ) , use_canvas ( 'test_eff_MP_MP%d' % power ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
             
         funs.add ( f    ) 
@@ -186,9 +214,9 @@ def test_vars2 () :
             
 # =============================================================================
 # use some functions  to parameterize efficiciency
-def test_vars3 () :
+def test_eff_BS () :
     
-    logger = getLogger ( 'test_vars3' )
+    logger = getLogger ( 'test_eff_BS' )
 
     from ostap.fitting.roofuncs import BSplineFun as BS
 
@@ -201,13 +229,15 @@ def test_vars3 () :
         
         eff2   = Efficiency1D ( 'Eff_BSP_%s' % power , f , cut = acc  , xvar = x )
         
-        r2     = eff2.fitTo ( ds )
+        r2     = eff2.fitTo ( ds , **conf )
         
-        logger.info ( "Fit result using BSpline(%d) \n%s" %  ( power , r2.table ( prefix = "# ") ) )
-        logger.info ( "Compare with true efficiency (using BSpine(%d))\n%s" % ( power , make_table (
-            eff2 , title = 'using MonotonicPoly[%d]' % power ) ) ) 
+        title = "Fit result using BSpline[%d]" % power 
+        logger.info ( "%s \n%s" %  ( title, r2.table ( title = title , prefix = "# " ) ) )
+        title = "using BSpline[%d]" % power         
+        logger.info ( "Compare with true efficiency (%s)\n%s" % ( title , make_table (
+            eff2 , title = title ) ) ) 
         
-        with wait ( 2 ) , use_canvas ( 'test_var3_%s' % power  ) : 
+        with wait ( 2 ) , use_canvas ( 'test_eff_BS_%s' % power  ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
         
         funs.add ( f      )
@@ -216,9 +246,9 @@ def test_vars3 () :
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
-def test_vars4 () :
+def test_eff_RF () :
     
-    logger = getLogger ( 'test_vars4' )
+    logger = getLogger ( 'test_eff_RF' )
 
     from ostap.fitting.roofuncs import RationalFun as RF 
 
@@ -235,13 +265,16 @@ def test_vars4 () :
         
         eff2   = Efficiency1D ( 'Eff_ER%d%d' % ( n , d ) , f.fun , cut = acc  , xvar = x )
         
-        r2     = eff2.fitTo ( ds , silent = False )
+        r2     = eff2.fitTo ( ds , **conf  )
         
-        logger.info ( "Fit result using-RationalFun[%d,%d] \n%s" % ( f.n , f.d , r2.table ( prefix = "# ") ) )
-        logger.info ( "Compare with true efficiency (using RationalFun)\n%s" % make_table (
-            eff2 , title = 'using RationalFun[%d,%d]' % ( n , d ) ) )
+        title = "Fit result using RationalFun[%d/%s]" % ( f.n , f.d )
+        logger.info ( "%s\n%s" % ( title , r2.table ( title , prefix = "# " ) ) )
         
-        with use_canvas ( 'test_vars4_%s%d' % ( n , d )  , wait = 2 ) : 
+        title = "using RationalFun[%d/%s]" % ( f.n , f.d )        
+        logger.info ( "Compare with true efficiency (%s)\n%s" % ( title , make_table (
+            eff2 , title = title ) ) ) 
+        
+        with use_canvas ( 'test_eff_RF_[%s/%d]' % ( f.n , f.d )  , wait = 2 ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
             
         funs.add ( f    ) 
@@ -249,9 +282,9 @@ def test_vars4 () :
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
-def test_vars5 () :
+def test_eff_RB () :
     
-    logger = getLogger ( 'test_vars5' )
+    logger = getLogger ( 'test_eff_RB' )
 
     from ostap.fitting.roofuncs import RationalBernsteinFun as RB 
 
@@ -274,11 +307,14 @@ def test_vars5 () :
         ## fit 
         r2  = eff2.fitTo ( ds )
         
-        logger.info ( "Fit result using-RationalBernsteinFun[%d,%d] \n%s" % ( f.p , f.q , r2.table ( prefix = "# ") ) )
-        logger.info ( "Compare with true efficiency (using RationalBernsteinFun)\n%s" % make_table (
-            eff2 , title = 'using RationalBernsteinFun[%d,%d]' % ( p , q ) ) )
+        title = "Fit result using RationalBernstein[%d/%d]" % ( f.p , f.q )
+        logger.info ( "%s \n%s" % ( title , r2.table ( title = title , prefix = "# ") ) )
         
-        with use_canvas ( 'test_vars5_%s%d' % ( p , q )  , wait = 2 ) : 
+        title = "using RationalBernstein[%d/%d]" % ( f.p , f.q )
+        logger.info ( "Compare with true efficiency (%s)\n%s" % ( title , make_table (
+            eff2 , title = title ) ) ) 
+        
+        with use_canvas ( 'test_eff_RB_[%s/%d]' % ( p , q )  , wait = 2 ) : 
             f2     = eff2.draw  ( ds , nbins = 25 )
             
         funs.add ( f    ) 
@@ -287,9 +323,9 @@ def test_vars5 () :
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
-def test_vars6 () :
+def test_eff_FUN () :
 
-    logger = getLogger ( 'test_vars6' )
+    logger = getLogger ( 'test_eff_FUN' )
 
     a  = ROOT.RooRealVar  ( 'A', 'a' , 0.05  ,   0   , 1   )
     b  = ROOT.RooRealVar  ( 'B', 'b' , 0.02  , -0.05 , 0.1 )
@@ -304,14 +340,14 @@ def test_vars6 () :
     
     eff2   = Efficiency1D ( 'E5' , F , cut = acc  , xvar = x )
     
-    r2     = eff2.fitTo ( ds )
+    r2     = eff2.fitTo ( ds , **conf )
 
     logger.info ( "Fit result using-Fun1D \n%s" % r2.table ( prefix = "# ") )
     logger.info ( "Compare with true efficiency (using Fun1D)\n%s" % make_table (
         eff2 , title = 'using Fnu1D') )
 
     
-    with wait ( 2 ) , use_canvas ( 'test_vars6' ) : 
+    with wait ( 2 ) , use_canvas ( 'test_eff_FUN' ) : 
         f2     = eff2.draw  ( ds , nbins = 25 )
     
     funs.add ( X    )
@@ -348,33 +384,31 @@ def test_db() :
 
 # =============================================================================
 if '__main__' == __name__ :
-    
-##    with timing ("PDF"   , logger ) :  
-##        test_pdf   ()
-    
-##    with timing ("Vars1" , logger ) :  
-##        test_vars1 ()
-    
-##    with timing ("Vars2" , logger ) :        
-##        test_vars2 ()
-    
-    with timing ("Vars3" , logger ) :        
-        test_vars3 ()
-    
-    with timing ("Vars4" , logger ) :        
-        test_vars4 ()
+
+    with timing ("test_eff_pdf"   , logger ) :  
+        test_eff_PDF   ()
         
-    with timing ("Vars5" , logger ) :        
-        test_vars5 ()
+    with timing ("test_eff_BP" , logger ) :  
+        test_eff_BP    ()
+    
+    with timing ("test_eff_MP" , logger ) :        
+        test_eff_MP  ()
+
+    with timing ("test_eff_BS" , logger ) :        
+        test_eff_BS ()
+
+    with timing ("test_eff_RF" , logger ) :        
+        test_eff_RF ()
         
-    with timing ("Vars6" , logger ) :        
-       test_vars6 ()
+    with timing ("test_eff_RB" , logger ) :        
+        test_eff_RB()
+        
+    with timing ("test_eff_FUN" , logger ) :        
+       test_eff_FUN ()
         
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()
-            
-    pass
 
 
 # =============================================================================

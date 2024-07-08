@@ -25,6 +25,7 @@
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
  */
 // ============================================================================
+// #include <iostream> 
 namespace 
 {
   // ==========================================================================
@@ -56,10 +57,11 @@ namespace
                               Ostap::StatusCode ( 10000 + level ) ) ;
     }
     else if ( kWarning <= level && Py_IsInitialized() ) 
-    {
-      // python warning here 
-      PyErr_WarnExplicit( NULL, (char*)message, (char*)location, 0, (char*)"ROOT", NULL );
-    }
+      {
+	// python warning here 
+	PyErr_WarnExplicit( NULL, (char*)message, (char*)location, 0, (char*)"ROOT", NULL );
+	// std::cerr << " RAWNING HERE: loc:" << location << " mg:" << message  << std::endl ;
+      }
     else if ( nullptr != s_handler && s_handler != &errorHandler ) 
     { (*s_handler) ( level , abort , location , message ) ; }
     else 

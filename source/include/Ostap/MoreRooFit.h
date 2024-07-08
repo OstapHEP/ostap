@@ -26,7 +26,7 @@ namespace Ostap
 {
   // ==========================================================================
   /** @namespace Ostap::MoreRooFit   Ostap/MoreRooFit.h
-   *  Collection of small additios to RooFit 
+   *  Collection of small additions to RooFit 
    *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
    *  @date 2019-11-21
    */
@@ -1129,8 +1129,9 @@ namespace Ostap
       Abs
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Abs ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     ,
+	  const double       b = 1 )
+	  : Abs ( name , title , a , RooFit::RooConst ( b ) )
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1197,8 +1198,9 @@ namespace Ostap
       Exp 
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Exp ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     , 
+	  const double       b = 1 )
+	  : Exp ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1265,8 +1267,9 @@ namespace Ostap
       Log 
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Log ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     ,
+	  const double       b = 1 )
+	  : Log ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1335,8 +1338,9 @@ namespace Ostap
       Log10
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Log10 ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     ,
+	  const double       b = 1 )
+	  : Log10 ( name , title , a , RooFit::RooConst ( b ) )  
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1403,10 +1407,11 @@ namespace Ostap
       {}
       /// constructor with one variable
       Erf 
-        ( const std::string& name  , 
-          const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Erf ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 )
+	: Erf ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1475,8 +1480,9 @@ namespace Ostap
       Erfc 
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Erfc ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     ,
+	  const double       b = 1 )
+	  : Erfc ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1545,8 +1551,9 @@ namespace Ostap
       Gamma 
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Gamma ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     ,
+	  const double       b = 1 )
+	  : Gamma ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1613,10 +1620,11 @@ namespace Ostap
       {}
       /// constructor with one variable
       LGamma
-        ( const std::string& name  , 
-          const std::string& title , 
-          RooAbsReal&        a     ) 
-        : LGamma ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 )
+	: LGamma ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1681,10 +1689,11 @@ namespace Ostap
       {}
       /// constructor with one variable
       IGamma
-        ( const std::string& name  , 
-          const std::string& title , 
-          RooAbsReal&        a     ) 
-        : IGamma ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     , 
+	const double       b = 1 )
+        : IGamma ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1751,10 +1760,11 @@ namespace Ostap
       {}
       /// constructor with one variable
       Sin 
-        ( const std::string& name  , 
-          const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Sin ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 )
+	: Sin ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1821,10 +1831,11 @@ namespace Ostap
       {}
       /// constructor with one variable
       Cos 
-        ( const std::string& name  , 
-          const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Cos ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 )
+	: Cos ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1891,8 +1902,9 @@ namespace Ostap
       Tan
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Tan ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     , 
+	  const double       b = 1 )
+	  : Tan ( name , title , a , RooFit::RooConst ( b ) )         
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1961,8 +1973,9 @@ namespace Ostap
       Sinh 
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Sinh ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     , 
+	  const double       b = 1 )
+	  : Sinh ( name , title , a , RooFit::RooConst ( b ) )         
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -2031,8 +2044,9 @@ namespace Ostap
       Cosh
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Cosh ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     ,
+	  const double       b = 1 )
+	  : Cosh ( name , title , a , RooFit::RooConst ( b )         ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization)
@@ -2101,8 +2115,9 @@ namespace Ostap
       Tanh 
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Tanh ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     , 
+	  const double       b = 1 )
+	  : Tanh ( name , title , a , RooFit::RooConst ( b ) )         
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization)
@@ -2122,6 +2137,7 @@ namespace Ostap
       Double_t evaluate () const override ;
       // ======================================================================
     }; //
+
     // ========================================================================
     /** @class Sech
      *  Evaluate \f$ \sech ab = \frac{1}{ \cosh a b }   \f$
@@ -2169,8 +2185,9 @@ namespace Ostap
       Sech
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Sech ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     ,
+	  const double       b = 1 )
+	  : Sech ( name , title , a , RooFit::RooConst ( b ) )         
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization)
@@ -2239,8 +2256,9 @@ namespace Ostap
       Atan2 
         ( const std::string& name  , 
           const std::string& title , 
-          RooAbsReal&        a     ) 
-        : Atan2 ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+          RooAbsReal&        a     ,
+	  const double       b = 1 )
+	  : Atan2 ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization)
@@ -2255,6 +2273,77 @@ namespace Ostap
       // ======================================================================
       Atan2* clone ( const char* newname ) const override 
       { return new Atan2 ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+
+    // ========================================================================
+    /** @class Sigmoid
+     *  Evaluate \f$ \frac{1+\tanh ab}{2}  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2024-07-208
+     */
+    class Sigmoid final : public TwoVars
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Sigmoid , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Sigmoid
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     , 
+	RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Sigmoid 
+      ( RooAbsReal&         a           , 
+	RooAbsReal&         b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : Sigmoid ( name , title , a , b )
+      {}
+      /// constructor with two variables
+      Sigmoid 
+      ( RooAbsReal&         a           , 
+	const double        b           ,
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : Sigmoid ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      Sigmoid 
+      ( const double        a           ,
+	RooAbsReal&         b           , 
+	const std::string&  name  = ""  , 
+	const std::string&  title = ""  ) 
+        : Sigmoid ( name , title , RooFit::RooConst ( a ) , b )
+      {}
+      /// constructor with one variable
+      Sigmoid 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        a     ,
+	const double       b = 1 ) 
+        : Sigmoid ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      // ======================================================================
+      /// fake defautl constructor (needed for serisalization)
+      Sigmoid () = default ;
+      // ======================================================================
+      // copy 
+      Sigmoid ( const Sigmoid& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Sigmoid* clone ( const char* newname ) const override 
+      { return new Sigmoid ( *this , newname ) ; }
       // ======================================================================
     protected:
       // ======================================================================
@@ -3017,6 +3106,57 @@ namespace Ostap
     } ;
     // ========================================================================
 
+    // ========================================================================
+    /** @class Clamp 
+     *  Trivial helper function \f$ E(x) = max(a,min(b,f(x)) \fF
+     */
+    class Clamp final : public OneVar
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Clamp , 1 ) ;  
+      // ========================================================================
+    public:
+      // =======================================================================
+      /// constructor with three variables 
+      Clamp 
+      ( const std::string& name  , 
+	const std::string& title , 
+	RooAbsReal&        e     ,
+	const double       a = 0 ,
+	const double       b = 1 ) ;      
+      /// copy 
+      Clamp
+      ( const Clamp&       right       , 
+	const char*        newname = 0 ) ;
+      /// clone 
+      Clamp* clone ( const char* newname ) const override ;
+      /// fake default constructor (needed for serisalization)
+      Clamp () = default ;
+      // virtual destructor 
+      virtual ~Clamp () ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get a 
+      double a () const { return m_a ; }
+      /// get b 
+      double b () const { return m_b ; }
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ; 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// minimal value 
+      double m_a { 0 } ; // minimal value 
+      /// maximal value 
+      double m_b { 1 } ; // maximal value 
+      // ======================================================================
+    } ;
+    // ========================================================================
+        
     // ========================================================================
     /** @class ProductPdf
      *  Oversimplified product of two PDF

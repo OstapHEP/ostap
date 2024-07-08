@@ -51,6 +51,7 @@ ClassImp(Ostap::MoreRooFit::Cosh          )
 ClassImp(Ostap::MoreRooFit::Tanh          )
 ClassImp(Ostap::MoreRooFit::Sech          )
 ClassImp(Ostap::MoreRooFit::Atan2         )
+ClassImp(Ostap::MoreRooFit::Sigmoid       )
 ClassImp(Ostap::MoreRooFit::BesselJ       )
 ClassImp(Ostap::MoreRooFit::BesselY       )
 ClassImp(Ostap::MoreRooFit::BesselI       )
@@ -73,6 +74,7 @@ ClassImp(Ostap::MoreRooFit::NVars         )
 ClassImp(Ostap::MoreRooFit::Minimal       )
 ClassImp(Ostap::MoreRooFit::Maximal       )
 ClassImp(Ostap::MoreRooFit::ABC           )
+ClassImp(Ostap::MoreRooFit::Clamp         )
 // ============================================================================
 namespace 
 {
@@ -836,6 +838,17 @@ Ostap::MoreRooFit::Atan2::Atan2
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
+Ostap::MoreRooFit::Sigmoid::Sigmoid
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "sigmoid" , a , b ) ,
+              title1_ ( title , "sigmoid" , a , b ) , a , b )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
 Ostap::MoreRooFit::BesselJ::BesselJ
 ( const std::string& name  , 
   const std::string& title , 
@@ -1023,6 +1036,9 @@ Double_t Ostap::MoreRooFit::Sech::evaluate () const
 // ============================================================================
 Double_t Ostap::MoreRooFit::Atan2::evaluate () const 
 { const double a = m_x ; const double b = m_y ; return std::atan2  ( a , b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Sigmoid::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return 0.5 * ( 1 + std::tanh ( a * b ) ) ; }
 // ============================================================================
 Double_t Ostap::MoreRooFit::MaxV::evaluate () const 
 { const double a = m_x ; const double b = m_y ; return std::max  ( a , b ) ; }
@@ -1640,6 +1656,54 @@ Double_t Ostap::MoreRooFit::ABC::evaluate () const
 
 
 
+// ============================================================================
+// constructor with one variables 
+// ============================================================================
+Ostap::MoreRooFit::Clamp::Clamp
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        e     ,
+  const double       a     ,
+  const double       b     )  
+  : OneVar ( name , title , e )
+  , m_a ( std::min ( a , b ) ) 
+  , m_b ( std::max ( a , b ) ) 
+{
+  Ostap::Assert ( m_a < m_b && !s_equal ( m_a , m_b ) ,
+                  "Invalid parameters!"     ,
+                  "Ostap::MoreRooFit::Clamp" ) ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::MoreRooFit::Clamp::Clamp
+( const Ostap::MoreRooFit::Clamp& right ,
+  const char*                          name  ) 
+  : OneVar ( right , name )
+  , m_a ( right.m_a )
+  , m_b ( right.m_b )    
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::Clamp::~Clamp(){}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::MoreRooFit::Clamp*
+Ostap::MoreRooFit::Clamp::clone ( const char* newname ) const
+{ return new Ostap::MoreRooFit::Clamp ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ================m===========================================================
+Double_t Ostap::MoreRooFit::Clamp::evaluate () const
+{
+  const double xx = m_x ;
+  return
+    xx <= m_a || s_equal ( xx , m_a ) ? m_a : 
+    xx >= m_b || s_equal ( xx , m_b ) ? m_b : xx ;
+}
+// ============================================================================
 
 
 // ============================================================================

@@ -4284,11 +4284,13 @@ class Fun1op(FUN1) :
         self.__fun1 = fun1
         self.__fun2 = fun2
 
-        ## Fix for new problem/feature appearing in dev3 at 20221/08/11 
+        ## Fix for "new" problem/feature appearing in dev3 at 2022/08/11 
         if operation is Ostap.MoreRooFit.Addition :
             if isinstance ( fun1 , ROOT.RooAbsRealLValue ) :
+                self.__fun1_orig = fun1 
                 fun1 = Ostap.MoreRooFit.Id ( self.new_roo_name ( 'Id_' + fun1.name ) , fun1 )
             if isinstance ( fun2 , ROOT.RooAbsRealLValue ) :
+                self.__fun2_orig = fun2 
                 fun2 = Ostap.MoreRooFit.Id ( self.new_roo_name ( 'Id_' + fun2.name ) , fun2 )
                 
         if   isinstance ( fun1 , AFUN1           ) : self.__raw1  = fun1.fun
@@ -4303,6 +4305,9 @@ class Fun1op(FUN1) :
         
         self.__strname   = strname 
         self.__operation = operation
+
+        if self.raw1 is xvar : self.__raw1 = Ostap.MoreRooFit.Id ( self.new_roo_name ( 'Id_' + self.raw1.name ) , self.raw1 )
+        if self.raw2 is xvar : self.__raw2 = Ostap.MoreRooFit.Id ( self.new_roo_name ( 'Id_' + self.raw2.name ) , self.raw2 )
 
         ## create the actual function 
         self.fun         = operation ( self.raw1 , self.raw2 ) 

@@ -18,6 +18,7 @@ __all__     = (
     'Efficiency3D', ## helper utility to get the efficiency (3D-case)
     )
 # =============================================================================
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, roo_silent  
 from   ostap.fitting.funbasic   import ( FUN1  , FUN2  , FUN3  , 
                                          Fun1D , Fun2D , Fun3D )  
@@ -53,7 +54,7 @@ class Efficiency (ConfigReducer) :
 
         ## 
         ConfigReducer.__init__ ( self )
-        
+
         self.__name   = str(name)
         self.__cut    = cut
         self.__accept = str(accept) 
@@ -70,6 +71,8 @@ class Efficiency (ConfigReducer) :
         self.__vars    = ROOT.RooArgSet( *vars )
         
         self.__scale   = 1
+
+        print ( 'Efficiency/1', self.__eff_pdf, self.__eff_fun )
         
         if not self.eff_fun :
 
@@ -83,15 +86,22 @@ class Efficiency (ConfigReducer) :
             if   isinstance ( scale , ROOT.RooAbsReal ) :
                 self.__scale = scale
             else : 
-                self.__scale = ROOT.RooRealVar ( 'effscale_%s' % self.name , 'scale factor for efficiency (%s)' % self.name , *scale )
-
+                self.__scale = ROOT.RooRealVar ( 'eff_scale_%s' % self.name , 'scale factor for efficiency (%s)' % self.name , *scale )
+                
             self.__lst     = ROOT.RooArgList ( self.__scale , self.__eff_pdf.pdf )
             _s             = self.scale.GetName()
             _p             = self.eff_pdf.pdf.GetName()
+
+
+            self.__eff_pdf_fun = self.__eff_pdf.as_FUN() 
+            self.__eff_fun_aux = self.__eff_pdf_fun * self.__scale
+
+            self.__ff1  = Ostap.MoreRooFit.Id ( ( 'Id_' + self.__eff_pdf.name ) , self.__eff_pdf.pdf  )
+            self.__ff2  = Ostap.MoreRooFit.Id ( ( 'Id_' + self.__scale  .name ) , self.__scale       )
             
             self.__eff_fun = Ostap.MoreRooFit.Product ( 'Eff_%s'           % self.name    ,
                                                         'efficiency %s*%s' % ( _s , _p )  ,
-                                                        self.__scale , self.__eff_pdf.pdf )  
+                                                        self.__ff2 , self.__ff1 )  
             
         ## create the main PDF: RooEfficiency 
         self.__pdf =  ROOT.RooEfficiency (
@@ -136,6 +146,9 @@ class Efficiency (ConfigReducer) :
         
         ## the fit results from the last fit
         self.__fit_result = None
+
+        ## ft options 
+        self.__opts = ROOT.RooFit.ConditionalObservables ( self.vars )
 
         self.config = {
             'name'    : self.name          ,
@@ -213,20 +226,19 @@ class Efficiency (ConfigReducer) :
     #  eff     = Efficiency1D ( ... ) 
     #  result  = eff.fitTo ( dataset ) 
     #  @endcode 
-    def  fitTo ( self , dataset , silent = True , refit = 2 , args = () , **kwargs )  :
+    def  fitTo ( self , dataset , silent = True , refit = 3 , args = () , **kwargs )  :
         """Fit it!
 
         >>> dataset = ...
         >>> eff     = Efficiency1D( ... ) 
         >>> result  = eff.fitTo ( dataset ) 
         """
-        vargs = [] ##  i for i in args ]
-        vargs.append  ( ROOT.RooFit.ConditionalObservables ( self.vars ) ) 
+        vargs = [ i for i in args ]
+        vargs.append  ( self.__opts ) 
         vargs = tuple ( vargs ) 
         ##
         draw  = kwargs.pop ( 'draw' , False )
 
-        
         with roo_silent ( silent ) : 
             result , frame = self.pdf_fit.fitTo ( dataset ,                            
                                                   draw   = False  ,
@@ -234,14 +246,15 @@ class Efficiency (ConfigReducer) :
                                                   silent = silent ,
                                                   refit  = refit  ,
                                                   args   = vargs  , **kwargs )
-            ## reset data token 
-            for v in self.pdf_fit.variables :
-                if v.hasDataToken() :
-                    self.pdf_fit.warning ( 'Reset data token for %s' % v.name )
-                    v.resetDataToken() 
+            
+            ## reset data token (problem appears at  6.33
+            if ( 6 , 28 ) <= root_info : 
+                for v in self.pdf_fit.variables :
+                    if v.hasDataToken() :
+                        self.pdf_fit.warning ( 'Reset data token for %s' % v.name )
+                        v.resetDataToken() 
             
             if  draw : self.draw ( dataset ) 
-
 
         self.__fit_result = result 
         return result
