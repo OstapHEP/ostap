@@ -109,7 +109,7 @@ jobs:
     CMTCONFIG: 'x86_64-el9-gcc13-opt'
     artifact: 'test_al9_lcg104c_gcc13'
 
-- template: template-pipelines.yml  # Template reference
+ - template: template-pipelines.yml  # Template reference
    parameters:
     name: cs7_lcg_105_gcc12
     vmImage:  'ubuntu-latest'
