@@ -248,7 +248,7 @@ class Efficiency (ConfigReducer) :
                                                   args   = vargs  , **kwargs )
             
             ## reset data token (problem appears at  6.33
-            if ( 6 , 28 ) <= root_info : 
+            if ( 6 , 30 ) <= root_info : 
                 for v in self.pdf_fit.variables :
                     if v.hasDataToken() :
                         self.pdf_fit.warning ( 'Reset data token for %s' % v.name )
