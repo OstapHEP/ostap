@@ -292,8 +292,8 @@ level = logging.INFO - 2
 if arguments.Quiet :    
     logger.info ( '(silent) Interactive Ostap session (steroid-enhanced PyROOT)')
     level = logging.WARNING - 1
-elif arguments.Debug    : level = logging.DEBUG   - 2 
-elif arguments.Verbose  : level = logging.VERBOSE - 2
+elif arguments.Debug      : level = logging.DEBUG   - 2 
+elif arguments.Verbose    : level = logging.VERBOSE - 2
 elif 0 == arguments.Level : level = 1 
 elif 1 == arguments.Level : level = logging.VERBOSE   - 2   
 elif 2 == arguments.Level : level = logging.DEBUG     - 2  
