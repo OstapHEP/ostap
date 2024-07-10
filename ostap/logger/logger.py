@@ -58,18 +58,19 @@ from   ostap.logger.colorized import ( isatty         ,
 # =============================================================================
 ## Message levels   (a'la Gaudi) 
 # =============================================================================
-ALL     = 0
-VERBOSE = 1
-DEBUG   = 2
-INFO    = 3
-WARNING = 4
-ERROR   = 5
-FATAL   = 6
+ALL       = 0
+VERBOSE   = 1
+DEBUG     = 2
+INFO      = 3
+ATTENTION = 4 
+WARNING   = 5
+ERROR     = 6
+FATAL     = 7
 # =============================================================================
 ## some manipulations with logging module
 if not hasattr ( logging , 'VERBOSE'   ) : logging.VERBOSE   = 5
-if not hasattr ( logging , 'ATTENTION' ) : logging.ATTENTION = logging.INFO + 2 
-if not hasattr ( logging , 'FATAL'     ) : logging.FATAL     = logging.CRITICAL 
+if not hasattr ( logging , 'ATTENTION' ) : logging.ATTENTION = logging.INFO     + 2 
+if not hasattr ( logging , 'FATAL'     ) : logging.FATAL     = logging.CRITICAL + 1 
 # =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose1_(self, msg, *args, **kwargs):
