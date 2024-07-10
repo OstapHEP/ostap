@@ -368,7 +368,6 @@ def batch( batch = True ) :
     """
     return Batch ( batch )
 
-
 # =============================================================================
 ## context manager to keep the current working directory
 #  @code

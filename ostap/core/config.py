@@ -53,7 +53,8 @@ config [ 'General'  ] = {
     'Quiet'              : str ( default_config.quiet   ) ,
     'Verbose'            : str ( default_config.verbose ) ,
     'Parallel'           : 'PATHOS'                       ,
-    }
+    'WebDisplay'         : default_config.web             , ## ROOT.TROOT.Set/Get WebDisplay                        
+}
 
 ## generic TCanvas configuration
 config [ 'Canvas'      ] = { 'Width'       :  '1000' , 'Height'       :  '800' , 
@@ -89,8 +90,10 @@ files_read = config.read ( config_files )
 ## sections
 general = config [ 'General' ]
 
+
 quiet   = general.getboolean ( 'Quiet'  , fallback = False )
 verbose = general.getboolean ( 'Verbose', fallback = False )
+
 
 # =============================================================================
 ## section with canvas configuration
@@ -107,6 +110,10 @@ fit_draw = config [ 'Fit Draw' ]
 # =============================================================================
 ## section for Tables  
 tables   = config [ 'Tables'   ]
+
+# =============================================================================
+## Redefine webdidpay fron environment variable if set 
+general [ 'WebDisplay' ] = ostap_getenv ( 'OSTAP_DISPLAY' , general [ 'WebDisplay' ] )
 
 # =============================================================================
 # logging 

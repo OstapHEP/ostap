@@ -112,15 +112,16 @@ def parse_args ( args = [] ) :
     from argparse import ArgumentParser 
     parser = ArgumentParser ( prog = 'ostap' )
     #
-    group1 = parser.add_mutually_exclusive_group()    
-    group1.add_argument ( 
+    ## 1st exclusive group
+    group1  = parser.add_argument_group ( 'Control verbosity' , 'Control the general level of verbosity') 
+    egroup1 = group1.add_mutually_exclusive_group()    
+    egroup1.add_argument ( 
         "-q" , "--quiet"       ,
         dest    = 'Quiet'      , 
         action  = 'store_true' ,
         help    = "Quite processing [default: %(default)s]" ,
         default =  _cnf.quiet  )
-    
-    group1.add_argument ( 
+    egroup1.add_argument ( 
         "--verbose"     ,
         dest    = 'Verbose'    , 
         action  = 'store_true' ,
@@ -160,13 +161,6 @@ def parse_args ( args = [] ) :
         default = True           )
     #
     parser.add_argument ( 
-        '--no-canvas'           ,
-        dest    = 'canvas'      , 
-        action  = 'store_false' , 
-        help    = "Do not create canvas", 
-        default = True          )
-    #
-    parser.add_argument ( 
         '--no-color'     ,
         dest    = 'Color'      , 
         action  = 'store_false' , 
@@ -200,24 +194,42 @@ def parse_args ( args = [] ) :
         dest    = 'build_dir'                , 
         help    = "Build directory for ROOT" , 
         default = ''                         )
-    # 
-    group2 = parser.add_mutually_exclusive_group()
-    group2.add_argument ( '-i' ,  
-                         '--interactive' , dest='batch', 
-                         action = 'store_false' , default = False ,
-                         help = "Interactive shell/start_ipython" )
-    group2.add_argument ( '-e' ,
-                         '--embed' , 
-                         action = 'store_true' ,
-                         help = "Interactive embedded shell" )
-    group2.add_argument ( '-s' ,
-                         '--simple' ,
-                         action = 'store_true' ,
-                         help = "Simple python shell" )
-    group2.add_argument ( '-b' ,
-                         '--batch' ,
-                         action = 'store_true' , default = False , 
-                         help = "Batch processing: execute files and exit" )
+    #
+    ## 2nd exclusive group
+    group2  = parser.add_argument_group ( 'Web Display' , 'Use Web/ROOT display, see ROOT.TROOT.(Set/Get)WebDisplay') 
+    egroup2 = group2.add_mutually_exclusive_group()
+    egroup2.add_argument ( 
+        '-w' , '--web'          ,
+        dest    = 'web'         , 
+        help    = "Use WebDisplay, see ROOT.TROOT.(Get/Set)WebDisplay ", 
+        default = ''            ) 
+    #
+    egroup2.add_argument ( 
+        '--no-canvas'           ,
+        dest    = 'canvas'      , 
+        action  = 'store_false' , 
+        help    = "Do not create canvas", 
+        default = True          )
+    #
+    ## 3rd exclusive group
+    group3  = parser.add_argument_group ( 'Sesstion type' , 'General session type: interactive/embed/plain/batch...') 
+    egroup3 = group3.add_mutually_exclusive_group()
+    egroup3.add_argument ( '-i' ,  
+                           '--interactive' , dest='batch', 
+                           action = 'store_false' , default = False ,
+                           help = "Interactive shell/start_ipython" )
+    egroup3.add_argument ( '-e' ,
+                           '--embed' , 
+                           action = 'store_true' ,
+                        help = "Interactive embedded shell" )
+    egroup3.add_argument ( '-s' ,
+                           '--simple' ,
+                           action = 'store_true' ,
+                           help = "Simple python shell" )
+    egroup3.add_argument ( '-b' ,
+                           '--batch' ,
+                           action = 'store_true' , default = False , 
+                           help = "Batch processing: execute files and exit" )
 
     if not args :
         import sys 
@@ -286,7 +298,13 @@ if arguments.Config :
     os.environ['OSTAP_CONFIG'] = cc
 
 import ostap.core.config     
-    
+
+# =============================================================================
+## Web Display
+# =============================================================================
+if arguments.web :
+    ostap.core.config.general['WebDisplay'] = arguments.web
+
 # =============================================================================
 ## use profiling ?
 if arguments.Profile :
@@ -309,7 +327,9 @@ if arguments.Profile :
     _pr.enable()
     del _pr 
     logger.info ( 'Profiling is activated' )
-    
+
+
+
 # =============================================================================
 ## set ROOT into batch mode 
 # =============================================================================
@@ -339,12 +359,13 @@ if arguments.build_dir :
         ostap.core.build_dir.build_dir = bdir 
         
     del bdir, writeable , make_dir
-    
+
 # =============================================================================
 ## ostap startup: history, readlines, etc... 
 # =============================================================================
 import ostap.core.startup
 
+    
 # =============================================================================
 ## import everything from ostap
 # =============================================================================
@@ -356,11 +377,11 @@ if arguments.Quiet :
 else :
     from ostap.core.load_ostap import *
 
-    
 # =============================================================================
 ## create default canvas
 # =============================================================================
-if arguments.canvas : 
+if arguments.canvas :
+    
     import ostap.plotting.canvas 
     logger.debug ( "Create the default canvas" )
     canvas    = ostap.plotting.canvas.getCanvas ()

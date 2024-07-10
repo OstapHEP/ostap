@@ -28,6 +28,7 @@ __all__      = (
 # =============================================================================
 quiet        =  False
 verbose      =  False
+web          = 'off'
 
 ## configuration files to read 
 config_files = (

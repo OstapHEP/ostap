@@ -21,6 +21,9 @@ __all__     = (
     'draw_pads'        , ## plot sequence of object on sequence of pads, adjustinng axis label size
     'AutoPlots'        , ## context manager to activate the auto-plotting machinery
     'auto_plots'       , ## ditto, but as function
+    'UseWeb'           , ## constext manmager to use Web Displya 
+    'useWeb'           , ## constext manmager to use Web Displya
+    'setWebDisplay'    , ## set WebDisplay, see ROOT.TROOT.SetWebDisplay
     'use_pad'          , ## context manager to modifty TPad
     'KeepCanvas'       , ## context manager to keep/preserve currect canvas 
     'keepCanvas'       , ## context manager to keep/preserve currect canvas 
@@ -32,7 +35,8 @@ from   sys                     import version_info as python_version
 from   ostap.utils.cidict      import cidict
 from   ostap.utils.utils       import KeepCanvas, keepCanvas 
 from   ostap.core.core         import cidict_fun
-from   ostap.core.core         import rootWarning 
+from   ostap.core.core         import rootWarning
+from   ostap.utils.utils       import which
 import ostap.plotting.style
 import ROOT, os, tempfile, math   
 # =============================================================================
@@ -46,6 +50,83 @@ from ostap.plotting.makestyles import  ( canvas_width , canvas_height ,
                                          margin_left  , margin_right  ,
                                          margin_top   , margin_bottom )
 
+
+# =============================================================================
+#$ define WebDispla
+#  @see TROOT::SetWebDisplay
+def setWebDisplay ( web ) :
+    """Define WebDispllay
+    - see `ROOT.TROOT.SetWebDisplay`
+    """
+    wlow = web.lower()
+    if    not web         : web = 'off'
+    elif 'root'   == wlow : web = 'off'
+    elif 'chrome' == wlow :
+        if   which ( web  ) : pass
+        elif which ( wlow ) : web = wlow 
+        elif which ( 'google-chrome'        ) : web = 'google-chrome'
+        elif which ( 'google-chrome-stable' ) : web = 'google-chrome-stable'
+    ROOT.gROOT.SetWebDisplay( web )
+    return ROOT.gROOT.GetWebDisplay()
+
+# =============================================================================
+## @class UseWeb
+#  Context manager to redefien the web-display
+#  @code
+#  with UseWe ('chrome') :
+#  ...
+#  @endcode
+#  @see TROOT::GetWebDisplay
+#  @see TROOT::SetWebDisplay
+class UseWeb(object) :
+    """ Context manager to redefien the web-display
+    >>> with UseWe ('chrome') :
+    >>> ...
+    - see `ROOT.TROOT.GetWebDisplay`
+    - see `ROOT.TROOT.SetWebDisplay`
+    """
+    def __init__ ( self , web = "default" ) :
+
+        self.__web  = web
+        self.__prev = None 
+
+    ## ENTER the context 
+    def __enter__ ( self ) :
+        self.__prev = ROOT.gROOT.GetWebDisplay()
+        setWebDisplay ( self.__web )
+        return self 
+    
+    ## EXIT the context 
+    def __exit__ ( self , *_ ) :        
+        if not self.__prev is None :
+            setWebDisplay ( self.__prev )
+            
+# =============================================================================
+## Context manager to redefien the web-display
+#  @code
+#  with useWeb ('chrome') :
+#  ...
+#  @endcode
+#  @see TROOT::GetWebDisplay
+#  @see TROOT::SetWebDisplay
+def  useWeb( web  = 'default' ) :
+    """ Context manager to redefien the web-display
+    >>> with useWeb ('chrome') :
+    >>> ...
+    - see `ROOT.TROOT.GetWebDisplay`
+    - see `ROOT.TROOT.SetWebDisplay`
+    """
+    return UseWeb ( web )
+        
+# =============================================================================
+import ostap.core.config as cnf
+web = cnf.general['WebDisplay']
+if web :
+    logger.debug ( 'Set WebDisplay to be `%s`' % web ) 
+    setWebDisplay ( web )
+
+# =============================================================================
+## list of created canvases 
 _canvases = [] 
 # =============================================================================
 ## get the canvas

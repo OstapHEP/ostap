@@ -107,6 +107,7 @@ import ostap.utils.hepdata
 import ostap.utils.pdg_format 
 
 import ostap.plotting.canvas
+import ostap.plotting.style 
 
 import ostap.fitting.minuit 
 import ostap.fitting.roofit 

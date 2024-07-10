@@ -18,7 +18,7 @@ import ostap.plotting.style
 # =============================================================================
 # The Heart 
 # =============================================================================
-## load zillions of decorations for ROOT-objects 
+## load zillions of decorations for ROOT-objects
 import ostap.core.pyrouts        ## NB: the most important line!
 import ostap.io.zipshelve as DBASE
 
