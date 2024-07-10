@@ -11,6 +11,7 @@
   1. add `sync_dirs` function into `ostap.io.files` module to syncronize the directories
   1. add `UseWeb` & 'useWeb' contetx managers for setting the WebDispaly into `ostap.plotting.canvas` module
   1. add command line option `-w/--web` optioon for `ostap` script to alolow defien Web-Distplay  
+  1. add command line option `-p/--print-level` optioon for `ostap` script for better contol of the global print level 
 
 ## Backward incompatible
 

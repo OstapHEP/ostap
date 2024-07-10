@@ -119,14 +119,34 @@ def parse_args ( args = [] ) :
         "-q" , "--quiet"       ,
         dest    = 'Quiet'      , 
         action  = 'store_true' ,
-        help    = "Quite processing [default: %(default)s]" ,
-        default =  _cnf.quiet  )
+        help    = "Quite processing, same as --print-level=5 [default: %(default)s]" ,
+        default = _cnf.quiet  )
+    egroup1.add_argument ( 
+        "--silent"     ,
+        dest    = 'Silent'    , 
+        action  = 'store_true' ,
+        help    = "Verbose processing, same as --print-level=4 [default: %(default)s]" ,
+        default = _cnf.verbose )
     egroup1.add_argument ( 
         "--verbose"     ,
         dest    = 'Verbose'    , 
         action  = 'store_true' ,
-        help    = "Verbose processing [default: %(default)s]" ,
+        help    = "Verbose processing, same as --print-level=1 [default: %(default)s]" ,
         default = _cnf.verbose )
+    egroup1.add_argument ( 
+        "--debug"        ,
+        dest    = 'Debug'    , 
+        action  = 'store_true' ,
+        help    = "Debug processing, same as --print-level=2 [default: %(default)s]" ,
+        default = False )
+    egroup1.add_argument ( 
+        "-p" , "--print-level"                  ,
+        dest    = 'Level'          ,
+        choices = range ( -1 , 8 ) , 
+        type    = int              , 
+        help    =  "Printout level [default: %(default)s]" ,
+    default = -1       )
+    
     #
     parser.add_argument (
         "files" ,
@@ -265,18 +285,29 @@ logger = getLogger( 'ostap' )
 # =============================================================================
 ## suppress extra prints from logging  
 # =============================================================================
-if arguments.Quiet :
-    
-    import logging
+import logging
+
+level = logging.INFO - 2
+
+if arguments.Quiet :    
     logger.info ( '(silent) Interactive Ostap session (steroid-enhanced PyROOT)')
-    logging.disable ( logging.WARNING - 1 )
+    level = logging.WARNING - 1
+elif arguments.Debug    : level = logging.DEBUG   - 2 
+elif arguments.Verbose  : level = logging.VERBOSE - 2
+elif 0 == arguments.Level : level = 1 
+elif 1 == arguments.Level : level = logging.VERBOSE   - 2   
+elif 2 == arguments.Level : level = logging.DEBUG     - 2  
+elif 3 == arguments.Level : level = logging.INFO      - 2 
+elif 4 == arguments.Level : level = logging.ATTENTION - 2 
+elif 5 == arguments.Level : level = logging.WARNING   - 2 
+elif 6 == arguments.Level : level = logging.ERROR     - 2
+elif 7 <= arguments.Level : level = logging.CRITICAL  - 2
 
-else:
+
+logging.disable ( level  )
+
+if level <= logging.INFO : 
     
-    import logging
-    level = logging.DEBUG-5  if arguments.Verbose else logging.INFO-1
-    logging.disable ( level  )
-
     from ostap import banner
     logger.info ( "Welcome to Ostap\n" +  banner )
     logger.info ( __doc__ )
@@ -287,7 +318,7 @@ else:
     logger.info ( 'Arguments  : ')
     for _k in sorted ( _keys ) : logger.info ( '  %15s : %-s ' % ( _k , _vars[_k] ) )
     del _keys,_vars,_k,level  
-
+    
 # =============================================================================
 if arguments.Config :
     from ostap.utils.basic import get_env as ostap_getenv  
@@ -365,11 +396,10 @@ if arguments.build_dir :
 # =============================================================================
 import ostap.core.startup
 
-    
 # =============================================================================
 ## import everything from ostap
 # =============================================================================
-if arguments.Quiet :
+if arguments.Quiet : 
     from ostap.logger.utils import mute
     with mute () : 
         from   ostap.core.load_ostap import *
