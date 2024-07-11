@@ -21,6 +21,7 @@
 
   1. `ostap.stats.combine`  fix calculation of p-value
 
+
 # v1.10.1.6
 
 ## New features
