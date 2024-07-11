@@ -1,3 +1,5 @@
+# v1.10.1.8
+
 ## New features
 
   1. Improve `addTMVAResponse` and `addChoppingResponse`  (and their paralell analogues)
@@ -17,7 +19,7 @@
 
 ## Bug fixes
 
-  1. `ostap.stats.combine`  fix calcualtion of p-value
+  1. `ostap.stats.combine`  fix calculation of p-value
 
 
 # v1.10.1.6
