@@ -1,3 +1,9 @@
+## New features
+
+## Backward incompatible
+
+## Bug fixes
+
 # v1.10.1.8
 
 ## New features
@@ -20,7 +26,6 @@
 ## Bug fixes
 
   1. `ostap.stats.combine`  fix calculation of p-value
-
 
 # v1.10.1.6
 
