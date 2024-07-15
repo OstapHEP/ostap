@@ -3699,6 +3699,125 @@ Ostap::Math::agm
 }
 // ============================================================================
 
+// ============================================================================
+/*  simple harmonic mean for two real numbers (just for completeness)
+ *  @param a the first number 
+ *  @param b the second number 
+ *  @return harmonic mean 
+ */
+// ============================================================================
+double
+Ostap::Math::harmonic_mean 
+( const double a , 
+  const double b ) 
+{ return
+    s_zero ( a ) ? 0.0 :
+    s_zero ( b ) ? 0.0 :
+    2.0 / ( 1. / a + 1. / b ) ; }
+// ============================================================================
+/*  simple harmonic mean for two real numbers (just for completeness)
+ *  @param a the first number 
+ *  @param b the second number 
+ *  @return harmonic mean 
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::harmonic_mean 
+( const std::complex<double>& a , 
+  const std::complex<double>& b ) 
+{
+  return
+    s_zero ( a.real() ) && s_zero ( a.imag() ) ? 0.0 :
+    s_zero ( b.real() ) && s_zero ( b.imag() ) ? 0.0 :
+    2.0 / ( 1. / a + 1. / b ) ;
+}
+// ============================================================================
+/*  Heronian mean for two real numbers (just for completeness)
+ *  @see https://en.wikipedia.org/wiki/Heronian_mean 
+ *  @param a the first number 
+ *  @param b the second number 
+ *  @return heronian mean 
+ */
+// ============================================================================
+double
+Ostap::Math::heronian_mean 
+( const double a , 
+  const double b )
+{
+  return ( a + std::sqrt ( a * b ) + b  ) / 3 ;
+}
+// ============================================================================
+/** Power mean for two real numbers 
+ *  @see https://en.wikipedia.org/wiki/Power_mean 
+ *  @param x-parameter: 0<=x<=0.5
+ *  @param a the first number 
+ *  @param b the second number 
+ *  @return power mean 
+ */
+// ============================================================================
+double
+Ostap::Math::power_mean 
+( const double p , 
+  const double a ,
+  const double b )
+{
+  return
+    s_zero ( p ) ? geometric_mean ( a , b ) :
+    std::pow ( 0.5 * ( std::pow ( a , p ) + std::pow ( b , p ) ) , 1.0 / p ) ;
+}
+// ============================================================================
+/*  Heinz mean for two real numbers (just for completeness)
+ *  @see https://en.wikipedia.org/wiki/Heinz_mean 
+ *  \f$ 0 \le x \l1 1/2 \f$ 
+ *  @param x-parameter: 0<=x<=0.5
+ *  @param a the first number 
+ *  @param b the second number 
+ *  @return Heinz mean 
+ */
+// ============================================================================
+double
+Ostap::Math::heinz_mean 
+( const double x , 
+  const double a ,
+  const double b )
+{
+  return
+    ( x   <= 0 ) || s_zero  ( x       ) ? 0.5 *     ( a + b ) : 
+    ( 0.5 <= x ) || s_equal ( x , 0.5 ) ? std::sqrt ( a * b ) : 
+    0.5 * ( std::pow ( a ,     x ) * std::pow ( b ,  1 - x ) +
+	    std::pow ( a , 1 - x ) * std::pow ( b ,      x ) ) ;
+}
+// ============================================================================
+/*  Lehmer mean for two real numbers (just for completeness)
+ *  @see https://en.wikipedia.org/wiki/Lehmer_mean 
+ *  - \f$ p \rigtharrow - \infty\f$ : minimal value
+ *  - \f$ p = 0 \f$   : harmonic mean 
+ *  - \f$ p = 1/2 \f$ : geometric mean 
+ *  - \f$ p = 1 \f$   : ariphmetic mean 
+ *  - \f$ p = 2 \f$   : contraharmonic mean 
+ *  - \f$ p \rigtharrow + \infty\f$ : maximal value
+ *  @param p-parameter
+ *  @param a the first number 
+ *  @param b the second number 
+ *  @return Lehmer mean 
+ */
+// ============================================================================
+double
+Ostap::Math::lehmer_mean 
+( const double p , 
+  const double a ,
+  const double b )
+{
+  return
+    s_zero  ( p       ) ? harmonic_mean   ( a , b ) : 
+    s_equal ( p , 0.5 ) ? geometric_mean  ( a , b ) :
+    s_equal ( p , 1   ) ? arithmetic_mean ( a , b ) : 
+    ( std::pow ( a , p     ) + std::pow ( b , p     ) ) /
+    ( std::pow ( a , p - 1 ) + std::pow ( b , p - 1 ) ) ; 
+}
+// ============================================================================
+
+
 
 // ============================================================================
 /*  Gudermannian function 

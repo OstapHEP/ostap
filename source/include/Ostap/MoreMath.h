@@ -9,6 +9,8 @@
 #include <vector>
 #include <complex>
 #include <cmath>
+#include <numeric>
+#include <algorithm>
 // ============================================================================
 /** @file Ostap/MoreMath.h
  *  collection of various helper math functions  
@@ -484,6 +486,28 @@ namespace Ostap
     ( const std::complex<double>& x , 
       const std::complex<double>& y ) ;
     // ========================================================================
+    /** simple arithmetic mean for two real numbers (just for completeness)
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return arithmetic mean 
+     */
+    inline
+    double
+    arithmetic_mean 
+    ( const double a , 
+      const double b ) { return 0.5 * ( a + b ) ; } 
+    // ========================================================================
+    /** simple arithmetic mean for two complex numbers 
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return arithmetic  mean 
+     */
+    inline
+    std::complex<double>
+    arithmetic_mean 
+    ( const std::complex<double>& a , 
+      const std::complex<double>& b ) { return 0.5 * ( a + b ) ; }
+    // ========================================================================
     /** simple geometric mean for two real numbers (just for completeness)
      *  @param a the first number 
      *  @param b the second number 
@@ -505,6 +529,83 @@ namespace Ostap
     geometric_mean 
     ( const std::complex<double>& a , 
       const std::complex<double>& b ) ;
+    // ========================================================================
+    /** simple harmonic mean for two real numbers (just for completeness)
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return harmonic mean 
+     */
+    double
+    harmonic_mean 
+    ( const double a , 
+      const double b ) ;
+    // ========================================================================
+    /** simple harmonic mean for two real numbers (just for completeness)
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return harmonic mean 
+     */
+    std::complex<double>
+    harmonic_mean 
+    ( const std::complex<double>& a , 
+      const std::complex<double>& b ) ;
+    // ========================================================================    
+    /** Heronian mean for two real numbers (just for completeness)
+     *  @see https://en.wikipedia.org/wiki/Heronian_mean 
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return heronian mean 
+     */
+    double
+    heronian_mean 
+    ( const double a , 
+      const double b ) ;
+    // ========================================================================
+    /** Power mean for two real numbers (just for completeness)
+     *  @see https://en.wikipedia.org/wiki/Power_mean 
+     *  @param x-parameter: 0<=x<=0.5
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return power mean 
+     */
+    double
+    power_mean 
+    ( const double x , 
+      const double a ,
+      const double b ) ;
+    // ========================================================================
+    /** Heinz mean for two real numbers (just for completeness)
+     *  @see https://en.wikipedia.org/wiki/Heinz_mean 
+     *  \f$ 0 \le x \l1 1/2 \f$ 
+     *  @param x-parameter: 0<=x<=0.5
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return Heinz mean 
+     */
+    double
+    heinz_mean 
+    ( const double x , 
+      const double a ,
+      const double b ) ;
+    // ========================================================================
+    /** Lehmer mean for two real numbers (just for completeness)
+     *  @see https://en.wikipedia.org/wiki/Lehmer_mean 
+     *  - \f$ p \rigtharrow - \infty\f$ : minimal value
+     *  - \f$ p = 0 \f$   : harmonic mean 
+     *  - \f$ p = 1/2 \f$ : geometric mean 
+     *  - \f$ p = 1 \f$   : arithmetic mean 
+     *  - \f$ p = 2 \f$   : contraharmonic mean 
+     *  - \f$ p \rigtharrow + \infty\f$ : maximal value
+     *  @param p-parameter
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return Lehmer mean 
+     */
+    double
+    lehmer_mean 
+    ( const double p , 
+      const double a ,
+      const double b ) ;
     // ========================================================================
     
     // ========================================================================
