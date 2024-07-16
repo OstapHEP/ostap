@@ -726,7 +726,7 @@ namespace  Ostap
     inline void swap ( Moment_<N>&  a , Moment_<N>&  b  )
     { a.swap( b ) ; }
     // ========================================================================
-
+    
     // ========================================================================
     // Weighted moments 
     // ========================================================================
@@ -1328,7 +1328,730 @@ namespace  Ostap
     inline void swap ( WMoment_<N>&  a , WMoment_<N>&  b  )
     { a.swap( b ) ; }
     // ========================================================================
+    
+    // ========================================================================
+    // Other type of counters 
+    // ========================================================================
 
+    // ========================================================================
+    /** @class GeometricMean 
+     *  Calculate the geometric mean 
+     *  \f$ \left(x_1x_2...x_n\right)^{\frac{1}{n}} \f$
+     *  @see https://en.wikipedia.org/wiki/Geometric_mean
+     */
+    class GeometricMean : public Moment 
+    {
+    public:
+      // ======================================================================
+      /// get the geometric mean 
+      inline double mean () const { return std::pow ( 2 , m_log2.mean() ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline GeometricMean& operator+=( const double         x ) { return add ( x ) ; }
+      inline GeometricMean& operator+=( const GeometricMean& x ) { return add ( x ) ; }   
+      inline GeometricMean& operator*=( const double         x ) { return add ( x ) ; }
+      inline GeometricMean& operator*=( const GeometricMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only positive entries 
+      inline GeometricMean& add ( const double         x )
+      {
+	if ( 0 < x ) { m_log2.add ( std::log2 ( x ) ) ; }
+	return *this ;
+      }
+      inline GeometricMean& add ( const GeometricMean& x )
+      {
+	m_log2.add ( x.m_log2 ) ;
+	return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline void add ( ITERATOR begin , ITERATOR end   )
+      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a Moment 
+      void update ( const double x ) override { add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_log2.size  () ; }
+      /// empty ?
+      inline bool               empty () const { return m_log2.empty () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_log2.ok    () ; } 
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// get the counter of log2(x) 
+      Moment_<1> m_log2 {} ;
+      // ======================================================================
+    };
+
+    // ========================================================================
+    /** @class HarmonicMean 
+     *  Calcualet  the harmonic mean 
+     *  \f$ \frac{n}{ \frac{1}{x_1} + ... + \frac{1}{x_n}} \f$
+     *  @see https://en.wikipedia.org/wiki/Harmonic_mean
+     */
+    class HarmonicMean : public Moment 
+    {
+    public:
+      // ======================================================================
+      /// get the harmonic mean 
+      inline double mean () const { return 1. / m_inv.mean() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline HarmonicMean& operator+=( const double        x ) { return add ( x ) ; }
+      inline HarmonicMean& operator+=( const HarmonicMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only non-zero entries 
+      HarmonicMean& add ( const double         x ) ;
+      /// add two counters togather 
+      inline HarmonicMean& add ( const HarmonicMean& x )
+      {
+	m_inv.add ( x.m_inv ) ;
+	return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline void add ( ITERATOR begin , ITERATOR end   )
+      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a Moment 
+      void update ( const double x ) override { add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_inv.size  () ; }
+      /// empty ?
+      inline bool               empty () const { return m_inv.empty () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_inv.ok    () ; } 
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// get the counter of 1/x 
+      Moment_<1> m_inv {} ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class PowerMean 
+     *  Calculate  the power mean 
+     *  \f$ \left(\frac{1}{n}\sum x_i^p \right)^{\frac{1}{p}}\f$
+     *  @see https://en.wikipedia.org/wiki/Power_mean
+     */
+    class PowerMean : public Moment 
+    {
+    public:
+      // ======================================================================
+      // constructir from the power 
+      PowerMean ( const double p = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the power mean 
+      inline double mean () const { return std::pow ( m_pow.mean() , 1 / m_p ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline PowerMean& operator+=( const double     x ) { return add ( x ) ; }
+      inline PowerMean& operator+=( const PowerMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only positive entries 
+      inline PowerMean& add ( const double         x )
+      {
+	if ( 0 < x ) { m_pow.add ( std::pow ( x , m_p ) ) ; }
+	return *this ;
+      }
+      /// add two counters togather if p is common 
+      PowerMean& add ( const PowerMean& x ) ;
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline void add ( ITERATOR begin , ITERATOR end   )
+      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a Moment 
+      void update ( const double x ) override { add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_pow.size  () ; }
+      /// empty ?
+      inline bool               empty () const { return m_pow.empty () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_pow.ok    () ; }
+      /// power 
+      inline double             p     () const { return m_p            ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the power
+      double m_p       {1} ;
+      /// get the counter of x^p
+      Moment_<1> m_pow {}  ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class LehmerMean 
+     *  Calculate the Lehmer mean 
+     *  \f$ \frac{ \sum_i x_i^p}{\sum_i x_i^{p-1}} \f$
+     *  - \f$ p \rigtharrow - \infty\f$ : minimal value
+     *  - \f$ p = 0 \f$   : harmonic mean 
+     *  - \f$ p = 1/2 \f$ : geometric mean 
+     *  - \f$ p = 1 \f$   : arithmetic mean 
+     *  - \f$ p = 2 \f$   : contraharmonic mean 
+     *  - \f$ p \rigtharrow + \infty\f$ : maximal value
+     *  @see https://en.wikipedia.org/wiki/Lehmer_mean
+     */
+    class LehmerMean : public Moment 
+    {
+    public:
+      // ======================================================================
+      // constructir from the power 
+      LehmerMean ( const double p = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the power mean 
+      inline double mean () const { return m_lp.mean() / m_lpm1.mean () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline LehmerMean& operator+=( const double      x ) { return add ( x ) ; }
+      inline LehmerMean& operator+=( const LehmerMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only positive entries 
+      inline LehmerMean& add ( const double x )
+      {
+	if ( 0 < x )
+	  {
+	    m_lp  .add ( std::pow ( x , m_p     ) ) ;
+	    m_lpm1.add ( std::pow ( x , m_p - 1 ) ) ;	    
+	  }
+	return *this ;
+      }
+      /// add two counters togather if p is common 
+      LehmerMean& add ( const LehmerMean& x ) ;
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline void add ( ITERATOR begin , ITERATOR end   )
+      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a Moment 
+      void update ( const double x ) override { add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_lp.size   () ; }
+      /// empty ?
+      inline bool               empty () const { return m_lp.empty  () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_lp.ok     () ; }
+      /// power 
+      inline double             p     () const { return m_p            ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the power
+      double m_p          {1} ;
+      /// get the counter of x^p
+      Moment_<1> m_lp     {}  ;
+      /// get the counter of x^(p-1)
+      Moment_<1> m_lpm1   {}  ;
+      // ======================================================================
+    };
+
+    // ========================================================================
+    /** @class WGeometricMean 
+     *  Calculate the weighted geometric mean 
+     *  @see https://en.wikipedia.org/wiki/Geometric_mean
+     */
+    class WGeometricMean : public WMoment 
+    {
+    public:
+      // ======================================================================
+      /// get the geometric mean 
+      inline double mean () const { return std::pow ( 2 , m_log2.mean() ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline WGeometricMean& operator+=( const WGeometricMean& x ) { return add ( x ) ; }   
+      inline WGeometricMean& operator*=( const WGeometricMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only positive entries 
+      inline WGeometricMean& add ( const double x      ,
+				   const double w  = 1 ) 			     
+      {
+	if ( 0 < x ) { m_log2.add ( std::log2 ( x ) , w ) ; }
+	return *this ;
+      }
+      inline WGeometricMean& add ( const WGeometricMean& x )
+      {
+	m_log2.add ( x.m_log2 ) ;
+	return *this ;
+      }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a WMoment 
+      void update
+      ( const double x ,
+	const double w ) override { add ( x , w ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_log2.size  () ; }
+      /// number of effective entries
+      inline long double        nEff  () const { return m_log2.nEff  () ; }
+      /// get sum of weighes \f$  \sum_i w_i \f$ 
+      inline long double        w     () const { return m_log2.w     () ; }
+      /// get sum of weights squared 
+      inline long double        w2    () const { return m_log2.w2    () ; }
+      /// empty ?
+      inline bool               empty () const { return m_log2.empty () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_log2.ok    () ; } 
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// get the counter of log2(x) 
+      WMoment_<1> m_log2 {} ;
+      // ======================================================================
+    };
+
+    // ========================================================================    
+    
+    // ========================================================================
+    /** @class WHarmonicMean 
+     *  Calcualet  the weighted harmonic mean 
+     *  @see https://en.wikipedia.org/wiki/Harmonic_mean
+     */
+    class WHarmonicMean : public WMoment 
+    {
+    public:
+      // ======================================================================
+      /// get the harmonic mean 
+      inline double mean () const { return 1. / m_inv.mean() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline WHarmonicMean& operator+=( const WHarmonicMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only non-zero entries 
+      WHarmonicMean&
+      add ( const double         x     ,
+	    const double         w = 1 ) ;
+      /// add two counters togather 
+      inline WHarmonicMean& add ( const WHarmonicMean& x )
+      {
+	m_inv.add ( x.m_inv ) ;
+	return *this ;
+      }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a WMoment 
+      void update
+      ( const double x ,
+	const double w ) override { add ( x , w ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_inv.size  () ; }
+      /// number of effective entries
+      inline long double        nEff  () const { return m_inv.nEff  () ; }
+      /// get sum of weighes \f$  \sum_i w_i \f$ 
+      inline long double        w     () const { return m_inv.w     () ; }
+      /// get sum of weights squared 
+      inline long double        w2    () const { return m_inv.w2    () ; }
+      /// empty ?
+      inline bool               empty () const { return m_inv.empty () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_inv.ok    () ; } 
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// get the counter of 1/x 
+      WMoment_<1> m_inv {} ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class WPowerMean 
+     *  Calculate  the weighted power mean 
+     *  @see https://en.wikipedia.org/wiki/Power_mean
+     */
+    class WPowerMean : public WMoment 
+    {
+    public:
+      // ======================================================================
+      // constructir from the power 
+      WPowerMean ( const double p = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the power mean 
+      inline double mean () const { return std::pow ( m_pow.mean() , 1 / m_p ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline WPowerMean& operator+=( const WPowerMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only positive entries 
+      WPowerMean& add
+      ( const double  x     ,
+	const double  w = 1 ) ;
+      /// add two counters togather if p is common 
+      WPowerMean& add ( const WPowerMean& x ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a Moment 
+      void update
+      ( const double x ,
+	const double w ) override { add ( x , w ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_pow.size  () ; }
+      /// number of effective entries
+      inline long double        nEff  () const { return m_pow.nEff  () ; }
+      /// get sum of weighes \f$  \sum_i w_i \f$ 
+      inline long double        w     () const { return m_pow.w     () ; }
+      /// get sum of weights squared 
+      inline long double        w2    () const { return m_pow.w2    () ; }
+      /// empty ?
+      inline bool               empty () const { return m_pow.empty () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_pow.ok    () ; }
+      /// power 
+      inline double             p     () const { return m_p            ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the power
+      double      m_p   {1} ;
+      /// get the counter of x^p
+      WMoment_<1> m_pow {}  ;
+      // ======================================================================
+    };
+
+
+    // ========================================================================
+    /** @class WLehmerMean 
+     *  Calculate the weighted Lehmer mean 
+     *  @see https://en.wikipedia.org/wiki/Lehmer_mean
+     */
+    class WLehmerMean : public WMoment 
+    {
+    public:
+      // ======================================================================
+      // constructir from the power 
+      WLehmerMean ( const double p = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the power mean 
+      inline double mean () const { return m_lp.mean() / m_lpm1.mean () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline WLehmerMean& operator+=( const WLehmerMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only positive entries with non-zero weight       
+      WLehmerMean& add
+      ( const double x     ,
+	const double w = 1 ) ;
+      /// add two counters togather if p is common 
+      WLehmerMean& add ( const WLehmerMean& x ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a WMoment 
+      void update
+      ( const double x ,
+	const double w ) override { add ( x , w ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_lp.size   () ; }
+      /// number of effective entries
+      inline long double        nEff  () const { return m_lp.nEff   () ; }
+      /// get sum of weighes \f$  \sum_i w_i \f$ 
+      inline long double        w     () const { return m_lp.w      () ; }
+      /// get sum of weights squared 
+      inline long double        w2    () const { return m_lp.w2     () ; }
+      /// empty ?
+      inline bool               empty () const { return m_lp.empty  () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_lp.ok     () ; }
+      /// power 
+      inline double             p     () const { return m_p            ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the power
+      double m_p          {1} ;
+      /// get the counter of x^p
+      WMoment_<1> m_lp    {}  ;
+      /// get the counter of x^(p-1)
+      WMoment_<1> m_lpm1  {}  ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class ArithmeticMean 
+     *  Calculate the arithmetic mean 
+     */
+    class ArithmeticMean : public  Moment_<0> {} ;
+    // ========================================================================
+    /** @class WArithmeticMean 
+     *  Calculate the weighted arithmetic mean 
+     */
+    class WArithmeticMean : public WMoment_<0> {} ;       
+    // ========================================================================
+    /** @class MinMean 
+     *  Degenerate case of "mean" : minimal value 
+     *  \f$ min ( x_1 , .. , x_n ) \f$
+     */
+    class MinValue : public Moment 
+    {
+    public:
+      // ======================================================================
+      /// default constructor
+      MinValue () ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the min mean 
+      inline double mean () const { return m_min ; }
+      /// get the min value  
+      inline double min  () const { return m_min ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline MinValue& operator+=( const double    x ) { return add ( x ) ; }
+      inline MinValue& operator+=( const MinValue& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only positive entries 
+      inline MinValue& add ( const double x )
+      {
+	m_min = std::min ( m_min , x ) ;
+	m_cnt.add ( x ) ;
+	return *this ;
+      }
+      inline MinValue& add ( const MinValue& x )
+      {
+	m_min = std::min ( m_min , x.m_min ) ;
+	m_cnt.add ( x.m_cnt  ) ;
+	return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline void add ( ITERATOR begin , ITERATOR end   )
+      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a WMoment 
+      void update ( const double x ) override { add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_cnt.size  () ; }
+      /// empty ?
+      inline bool               empty () const { return m_cnt.empty () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_cnt.ok    () ; } 
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// minimal value   ;
+      double     m_min    ; 
+      /// get the counter
+      Moment_<0> m_cnt {} ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class MaxValue 
+     *  Degenerate case of "mean" : maximal value 
+     *  \f$ max ( x_1 , .. , x_n ) \f$
+     */
+    class MaxValue : public Moment 
+    {
+    public:
+      // ======================================================================
+      /// default constructor
+      MaxValue () ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the max value  
+      inline double mean () const { return m_max ; }
+      /// get the max value  
+      inline double max  () const { return m_max ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline MaxValue& operator+=( const double    x ) { return add ( x ) ; }
+      inline MaxValue& operator+=( const MaxValue& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only positive entries 
+      inline MaxValue& add ( const double x )
+      {
+	m_max = std::max ( m_max , x ) ;
+	m_cnt.add ( x ) ;
+	return *this ;
+      }
+      inline MaxValue& add ( const MaxValue& x )
+      {
+	m_max = std::max ( m_max , x.m_max ) ;
+	m_cnt.add ( x.m_cnt  ) ;
+	return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline void add ( ITERATOR begin , ITERATOR end   )
+      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a WMoment 
+      void update ( const double x ) override { add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_cnt.size  () ; }
+      /// empty ?
+      inline bool               empty () const { return m_cnt.empty () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_cnt.ok    () ; } 
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// maximal value   ;
+      double     m_max    ; 
+      /// get the counter
+      Moment_<0> m_cnt {} ;
+      // ======================================================================
+    } ;    
+    // ========================================================================
+    /** @class MinMaxValue 
+     */
+    class MinMaxValue : public Moment 
+    {
+    public:
+      // ======================================================================
+      /// default constructor
+      MinMaxValue () ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the minvalue  
+      inline double min  () const { return m_min ; }
+      /// get the max value  
+      inline double max  () const { return m_max ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline MinMaxValue& operator+=( const double       x ) { return add ( x ) ; }
+      inline MinMaxValue& operator+=( const MinMaxValue& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only positive entries 
+      inline MinMaxValue& add ( const double x )
+      {
+	m_min = std::min ( m_min , x ) ;
+	m_max = std::max ( m_max , x ) ;
+	m_cnt.add ( x ) ;
+	return *this ;
+      }
+      inline MinMaxValue& add ( const MinMaxValue& x )
+      {
+	m_min = std::min ( m_min , x.m_min ) ;
+	m_max = std::max ( m_max , x.m_max ) ;
+	m_cnt.add ( x.m_cnt  ) ;
+	return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline void add ( ITERATOR begin , ITERATOR end   )
+      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a WMoment 
+      void update ( const double x ) override { add ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_cnt.size  () ; }
+      /// empty ?
+      inline bool               empty () const { return m_cnt.empty () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_cnt.ok    () ; } 
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// minimal value   ;
+      double     m_min    ; 
+      /// maximal value   ;
+      double     m_max    ; 
+      /// get the counter
+      Moment_<0> m_cnt {} ;
+      // ======================================================================
+    } ;
+    
+    
+    
+
+    
     
     // ========================================================================
     /**  @class Moments 

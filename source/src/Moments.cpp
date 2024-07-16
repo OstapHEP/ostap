@@ -9,6 +9,7 @@
 // ============================================================================
 // Local
 // ============================================================================
+#include  "Exception.h"
 #include  "local_math.h"
 // ============================================================================
 /** @file 
@@ -31,6 +32,157 @@ Ostap::Math::Moment::~Moment(){}
 // ===========================================================================
 Ostap::Math::WMoment::~WMoment(){}
 // ===========================================================================
+
+
+// ===========================================================================
+// HarmoincMean:: accumulate only non-zero entries 
+// ===========================================================================
+Ostap::Math::HarmonicMean&
+Ostap::Math::HarmonicMean::add ( const double x )
+{
+  if ( !s_zero ( x ) ) { m_inv.add ( 1/x ) ; }
+  return *this ;
+}
+// ===========================================================================
+// WHarmoincMean:: accumulate only non-zero entries 
+// ===========================================================================
+Ostap::Math::WHarmonicMean&
+Ostap::Math::WHarmonicMean::add
+( const double x ,
+  const double w ) 
+{
+  if ( !s_zero ( x ) ) { m_inv.add ( 1/x , w ) ; }
+  return *this ;
+}
+
+
+// ===========================================================================
+Ostap::Math::PowerMean::PowerMean
+( const double p )
+  : m_p   ( p )
+  , m_pow (   )
+{}
+// ===========================================================================
+// add two counters togather if p is common 
+// ===========================================================================
+Ostap::Math::PowerMean&
+Ostap::Math::PowerMean::add ( const Ostap::Math::PowerMean& x )
+{
+  Ostap::Assert ( s_equal ( m_p , x.m_p ) ,
+		  "Cannot add counters with non-eual values of 'p'" , 
+		  "Ostap::Math::PowerMean"  ) ;
+  m_pow.add ( x.m_pow ) ;
+  return *this ;
+}
+
+// ===========================================================================
+Ostap::Math::WPowerMean::WPowerMean
+( const double p )
+  : m_p   ( p )
+  , m_pow (   )
+{}
+// ===========================================================================
+// add two counters togather if p is common 
+// ===========================================================================
+Ostap::Math::WPowerMean&
+Ostap::Math::WPowerMean::add ( const Ostap::Math::WPowerMean& x )
+{
+  Ostap::Assert ( s_equal ( m_p , x.m_p ) ,
+		  "Cannot add counters with non-eual values of 'p'" , 
+		  "Ostap::Math::WPowerMean"  ) ;
+  m_pow.add ( x.m_pow ) ;
+  return *this ;
+}
+// ===========================================================================
+Ostap::Math::WPowerMean&
+Ostap::Math::WPowerMean::add
+( const double x  ,
+  const double w  )
+{
+  if ( 0 < x && !s_zero ( w ) ) { m_pow.add ( std::pow ( x , m_p ) , w ) ; }
+  return *this ;
+}
+
+// ===========================================================================
+Ostap::Math::LehmerMean::LehmerMean
+( const double p )
+  : m_p ( p )
+  , m_lp   ()
+  , m_lpm1 ()
+{}
+// ===========================================================================
+Ostap::Math::WLehmerMean::WLehmerMean
+( const double p )
+  : m_p    ( p )
+  , m_lp   ()
+  , m_lpm1 ()
+{}
+// ===========================================================================
+// add two counters togather if p is common 
+// ===========================================================================
+Ostap::Math::LehmerMean&
+Ostap::Math::LehmerMean::add ( const Ostap::Math::LehmerMean& x )
+{
+  Ostap::Assert ( s_equal ( m_p , x.m_p ) ,
+		  "Cannot add counters with non-eual values of 'p'" , 
+		  "Ostap::Math::LehmerMean"  ) ;
+  m_lp   .add ( x.m_lp   ) ;
+  m_lpm1 .add ( x.m_lpm1 ) ;
+  return *this ;
+}
+// ===========================================================================
+Ostap::Math::WLehmerMean&
+Ostap::Math::WLehmerMean::add
+( const Ostap::Math::WLehmerMean& x )
+{
+  Ostap::Assert ( s_equal ( m_p , x.m_p ) ,
+		  "Cannot add counters with non-eual values of 'p'" , 
+		  "Ostap::Math::WLehmerMean"  ) ;
+  m_lp   .add ( x.m_lp   ) ;
+  m_lpm1 .add ( x.m_lpm1 ) ;
+  return *this ;
+}
+// ===========================================================================
+// accumulate only positive entries with non-zero weight 
+// ===========================================================================
+Ostap::Math::WLehmerMean&
+Ostap::Math::WLehmerMean::add
+( const double x ,
+  const double w ) 
+{
+  if ( ( 0 < x ) && !s_zero ( x ) && !s_zero ( w ) )
+    {
+      m_lp  .add ( std::pow ( x , m_p     ) , w ) ;
+      m_lpm1.add ( std::pow ( x , m_p - 1 ) , w ) ;	    
+    }
+  return *this ;
+}
+
+
+// ===========================================================================
+// default constructor
+// ===========================================================================
+Ostap::Math::MinValue::MinValue ()
+  : m_min ( std::numeric_limits<double>::max() ) 
+  , m_cnt ()
+{}
+// ===========================================================================
+// default constructor
+// ===========================================================================
+Ostap::Math::MaxValue::MaxValue ()
+  : m_max ( - std::numeric_limits<double>::max() ) 
+  , m_cnt ()
+{}
+// ===========================================================================
+// default constructor
+// ===========================================================================
+Ostap::Math::MinMaxValue::MinMaxValue ()
+  : m_min (   std::numeric_limits<double>::max() ) 
+  , m_max ( - std::numeric_limits<double>::max() ) 
+  , m_cnt ()
+{}
+
+// ======================================================================
 
 
 // int test()

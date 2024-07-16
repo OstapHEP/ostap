@@ -9,6 +9,7 @@
 """Functions to collect statistics for trees and  datasets
 - data_get_moment      - calculate the moment 
 - data_moment          - get the moment            (with uncertainty)
+- data_get_stat        - get the momentt-based statistics 
 - data_the_moment      - get the (central) moment   
 - data_central_moment  - get the central moment    (with uncertainty)
 - data_mean            - get the mean              (with uncertainty)
@@ -25,6 +26,10 @@
 - data_quartiles       - get three quartiles 
 - data_quintiles       - get four  quintiles 
 - data_deciles         - get nine  deciles
+- data_harmonic_mean   - get the (weighted) harmonic  mean 
+- data_geometric_mean  - get the geometric mean 
+- data_power_mean      - get the power mean 
+- data_lehmer_mean     - get Lehmer mean 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -34,6 +39,7 @@ __all__     = (
     'data_get_moment'     , ##  calculate the moment 
     'data_moment'         , ## get the moment            (with uncertainty)
     'data_the_moment'     , ## get the cental  moment         
+    'data_get_stat'       , ## get the momentt-based statistics 
     'data_central_moment' , ## get the central moment    (with uncertainty)
     'data_mean'           , ## get the mean              (with uncertainty)
     'data_variance'       , ## get the variance          (with uncertainty)
@@ -49,6 +55,10 @@ __all__     = (
     'data_quartiles'      , ## get three quartiles 
     'data_quintiles'      , ## get four  quintiles 
     'data_deciles'        , ## get nine  deciles
+    'data_harmonic_mean'  , ## get the (weighted) harmonic mean 
+    'data_geometric_mean' , ## get the geometric mean 
+    'data_power_mean'     , ## get the power mean 
+    'data_lehmer_mean'    , ## get Lehmer mean 
     'data_decorate'       , ## technical function to decorate the class
     )
 # =============================================================================
@@ -68,6 +78,7 @@ StatVar = Ostap.StatVar
 ## @var QEXACT
 #  use it as threshold for exact/slow vs approximate/fast quantile calcualtion 
 QEXACT = 10000
+
 # =============================================================================
 ## get the moment of order 'order' relative to 'center'
 #  @code
@@ -112,8 +123,6 @@ def  data_moment ( data , order , expression , cuts  = ''  , *args ) :
                                 order      ,
                                 expression ,
                                 cuts       , *args )
-
-
     
 # =============================================================================
 ## get the central moment (with uncertainty) of order 'order' 
@@ -143,6 +152,177 @@ def  data_central_moment ( data , order , expression , cuts  = '' , *args ) :
                                         expression ,
                                         cuts       , *args )
 
+    
+# =============================================================================
+## Get the (w)moments-base statsitocs from data
+#  @code
+#  statobj = Ostap.Math.MinValue()
+#  data    = ...
+#  result  = data.get_moment ( statobj , 'x+y' , 'pt>1' ) 
+#  @encode
+#  @see Ostap::Math::Moment
+#  @see Ostap::Math::WMoment
+#  @see Ostap::statVar::the_moment
+def data_get_stat ( data , statobj , expression , cuts = '' , *args ) :
+    """Get the (w)moments -based statistics 
+    >>> data   = ...
+    >>> stat   = Ostap.Math.MinValue() 
+    >>> result = data.get_thestat ( stat , 'x/y+z' , '0<qq' )
+    - see Ostap.Math.Moment 
+    - see Ostap.Math.WMoment 
+    """
+    assert isinstance ( statobj , ( Ostap.Math.Moment , Ostap.Math.WMoment ) ) ,\
+        'get_object: invalid satobj type!'
+    
+    if ( not cuts ) and isinstance ( data , Tree ) and isinstance ( statobj , Ostap.Math.Moment ) : 
+        with rootException() : 
+            sc = StatVar.the_moment ( data , statobj  , expression , *args )
+            assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
+            return statobj
+        
+    with rootException() :
+        sc = StatVar.the_moment ( data , statobj , expression , cuts , *args )
+        assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
+        return statobj
+
+# =============================================================================
+## Get harmonic mean over the data
+#  @code
+#  data = ...
+#  result = data_harmonic_mean ( data , 'pt' , 'eta>0' )
+#  @endcode 
+#  @see Ostap::Math::Moment
+#  @see Ostap::Math::WMoment
+#  @see Ostap::Math::HarmonicMean
+#  @see Ostap::Math::WHarmonicMean
+#  @see Ostap::statVar::the_moment
+def data_harmonic_mean ( data , expression , cuts = '' , *args ) :
+    """ Get harmonic mean over the data
+    >>> data = ...
+    >>> result = data_harmonic_mean ( data , 'pt' , 'eta>0' )
+    - see `Ostap.Math::Moment`
+    - see `Ostap.Math::WMoment`
+    - see `Ostap.Math::HarmonicMean`
+    - see `Ostap.Math::WHarmonicMean`
+    - see `Ostap.statVar.the_moment`
+    """
+    
+    if ( not cuts ) and isinstance ( data , Tree ) : 
+        statobj = Ostap.Math.HarmonicMean()
+        return data_get_stat ( data , statobj , expression , '' , *args )  
+            
+    statobj = Ostap.Math.WHarmonicMean()
+    return data_get_stat ( data , statobj , expression , cuts , *args )  
+
+# =============================================================================
+## Get geometric mean over the data
+#  @code
+#  data = ...
+#  result = data_geometric_mean ( data , 'pt' , 'eta>0' )
+#  @endcode 
+#  @see Ostap::Math::Moment
+#  @see Ostap::Math::GeometricMean
+#  @see Ostap::Math::WMoment
+#  @see Ostap::Math::WGeometricMean
+#  @see Ostap::statVar::the_moment
+def data_geometric_mean ( data , expression , cuts = '' , *args ) :
+    """ Get geometric mean over the data
+    >>> data = ...
+    >>> result = data_geometric_mean ( data , 'pt' , 'eta>0' )
+    - see `Ostap.Math::Moment`
+    - see `Ostap.Math::HarmonicMean`
+    - see `Ostap.statVar.the_moment`
+    """
+    
+    if ( not cuts ) and isinstance ( data , Tree ) : 
+        statobj = Ostap.Math.GeometricMean()
+        return data_get_stat ( data , statobj , expression , '' , *args )  
+            
+    statobj = Ostap.Math.WGeometricMean()
+    return data_get_stat ( data , statobj , expression , cuts , *args )  
+
+# =============================================================================
+## Get power mean over the data
+#  @code
+#  data = ...
+#  result = data_power_mean ( data , 5 , 'pt' , 'eta>0' )
+#  @endcode 
+#  @see Ostap::Math::Moment
+#  @see Ostap::Math::WMoment
+#  @see Ostap::Math::PowerMean
+#  @see Ostap::Math::WPowerMean
+#  @see Ostap::statVar::the_moment
+def data_power_mean ( data , p , expression , cuts = '' , *args ) :
+    """ Get power mean over the data
+    >>> data = ...
+    >>> result = data_power_mean ( data , 5 , 'pt' , 'eta>0' )
+    - see `Ostap.Math::Moment`
+    - see `Ostap.Math::WMoment`
+    - see `Ostap.Math::PowerMean`
+    - see `Ostap.Math::WPowerMean`
+    - see `Ostap.statVar.the_moment`
+    """
+    from ostap.core.ostap_types import num_types 
+    from ostap.math.base        import isequal, iszero 
+    
+    assert isinstance ( p , num_types ) , 'Invalid p-parameter!'
+    
+    if ( not cuts ) and isinstance ( data , Tree ) : 
+        if    p == -1 or isequal ( p , -1. ) : statobj = Ostap.Math.HarmonicMean   (   )
+        elif  p ==  0 or iszero  ( p       ) : statobj = Ostap.Math.GeometricMean  (   )
+        elif  p ==  1 or isequa  ( p ,  1. ) : statobj = Ostap.Math.ArithmeticMean ( 0 )
+        else                                 : statobj = Ostap.Math.PowerMean      ( p )
+        return data_get_stat ( data , statobj , expression , '' , *args )  
+    
+    if    p == -1 or isequal ( p , -1. ) : statobj = Ostap.Math.WHarmonicMean      (   )
+    elif  p ==  0 or iszero  ( p       ) : statobj = Ostap.Math.WGeometricMean     (   )
+    elif  p ==  1 or isequa  ( p ,  1. ) : statobj = Ostap.Math.WArithmeticMean    (   )
+    else                                 : statobj = Ostap.Math.WPowerMean         ( p )
+    
+    return data_get_stat ( data , statobj , expression , cuts , *args )
+
+# =============================================================================
+## Get Lehmer mean over the data
+#  @code
+#  data = ...
+#  result = data_lehmer_mean ( data , 5 , 'pt' , 'eta>0' )
+#  @endcode 
+#  @see Ostap::Math::Moment
+#  @see Ostap::Math::WMoment
+#  @see Ostap::Math::LehmerMean
+#  @see Ostap::Math::WLehmerMean
+#  @see Ostap::statVar::the_moment
+def data_lehmer_mean ( data , p , expression , cuts = '' , *args ) :
+    """ Get Lehmer mean over the data
+    >>> data = ...
+    >>> result = data_lehmer_mean ( data , 5 , 'pt' , 'eta>0' )
+    - see `Ostap.Math::Moment`
+    - see `Ostap.Math::WMoment`
+    - see `Ostap.Math::LehmerMean`
+    - see `Ostap.Math::WLehmerMean`
+    - see `Ostap.statVar.the_moment`
+    """
+    from ostap.core.ostap_types import num_types
+    from ostap.math.base        import isequal, iszero 
+    
+    assert isinstance ( p , num_types ) , 'Invalid p-parameter!'
+    
+    if ( not cuts ) and isinstance ( data , Tree ) :
+
+        if       p == 0 or iszero  ( p       ) : statobj = Ostap.Math.HarmonicMean   (   )        
+        elif 2 * p == 1 or isequal ( p , 0.5 ) : statobj = Ostap.Math.GeometricMean  (   )
+        elif     p == 1 or isequal ( p , 1.0 ) : statobj = Ostap.Math.ArithmeticMean (   )        
+        else                                   : statobj = Ostap.Math.LehmerMean     ( p ) 
+
+        return data_get_stat ( data , statobj , expression , '' , *args )  
+
+    if       p == 0 or iszero  ( p       ) : statobj = Ostap.Math.WHarmonicMean   (   )        
+    elif 2 * p == 1 or isequal ( p , 0.5 ) : statobj = Ostap.Math.WGeometricMean  (   )
+    elif     p == 1 or isequal ( p , 1.0 ) : statobj = Ostap.Math.WArithmeticMean (   )        
+    else                                   : statobj = Ostap.Math.WLehmerMean     ( p ) 
+    
+    return data_get_stat ( data , statobj , expression , cuts , *args )  
+
 # =============================================================================
 ## Get the moments or order <code>order</code> as <code>Ostap::Math::(W)Moment_<order></code>
 #  @code
@@ -164,16 +344,17 @@ def data_the_moment ( data , order , expression , cuts = '' , *args ) :
         M      = Ostap.Math. Moment_(order)
         moment = M ()
         with rootException() : 
-            sc = StatVar.the_moment ( data , moment , *args )
+            sc = StatVar.the_moment ( data , moment , expression , *args )
             assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
             return moment 
 
     M      = Ostap.Math.WMoment_(order)
     moment = M ()
     with rootException() :
-        sc = StatVar.the_moment ( data , moment , cuts , *args )
+        sc = StatVar.the_moment ( data , moment , expression , cuts , *args )
         assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
         return moment 
+
     
 # =============================================================================
 ## get the  skewness (with uncertainty)
@@ -561,6 +742,12 @@ def data_decorate ( klass ) :
     klass.quintiles       = data_quintiles
     klass.deciles         = data_deciles
 
+    klass.get_stats       = data_get_stat
+    klass.harmonic_mean   = data_harmonic_mean 
+    klass.geometric_mean  = data_geometric_mean 
+    klass.power_mean      = data_power_mean 
+    klass.lehmer_mean     = data_lehmer_mean 
+    
     return ( klass.get_moment      , 
              klass.moment          , 
              klass.central_moment  , 
@@ -577,7 +764,12 @@ def data_decorate ( klass ) :
              klass.terciles        , 
              klass.quartiles       , 
              klass.quintiles       , 
-             klass.deciles         ) 
+             klass.deciles         , 
+             klass.get_stats       , 
+             klass.harmonic_mean   , 
+             klass.geometric_mean  , 
+             klass.power_mean      ,
+             klass.lehmer_mean     ) 
 
 # =============================================================================
 

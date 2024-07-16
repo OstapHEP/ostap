@@ -1,5 +1,7 @@
 ## New features
 
+  1. Add estimators for haromins, geometic. power, Lehmer means and their weighted analogues
+  
 ## Backward incompatible
 
 ## Bug fixes
