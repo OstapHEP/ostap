@@ -66,11 +66,13 @@ if not os.path.exists( data_file ) :
             var2 = array ( 'd', [0] )
             var3 = array ( 'd', [0] )
             var4 = array ( 'd', [0] )
+            var5 = array ( 'd', [0] )
             
             tree .Branch ( 'x' , var1 , 'x/D' )
             tree .Branch ( 'y' , var2 , 'y/D' )
             tree .Branch ( 'z' , var3 , 'z/D' )
             tree .Branch ( 'u' , var4 , 'u/D' )
+            tree .Branch ( 'v' , var5 , 'v/D' )
             
             I   = 0
             bar = ProgressBar ( N ) 
@@ -80,6 +82,7 @@ if not os.path.exists( data_file ) :
                 y = -5 + random.expovariate ( 1/5.0 )
                 z =      random.gauss       (   .0 , 4.0 )
                 u =      random.gauss       (  2.0 , 5.0 )
+                v =      random.gauss       (    0 , 1.0 )
             
                 var1[0] =  x + 0.5 * y
                 
@@ -87,7 +90,9 @@ if not os.path.exists( data_file ) :
                 
                 var3[0] = -x +       z + 0.5 * y + random.uniform ( -5 , 5 )
                 
-                var4[0] = -z + u - y   + 1.5 * x + random.uniform ( -5 , 5 )                 
+                var4[0] = -z + u - y   + 1.5 * x + random.uniform ( -5 , 5 )
+                
+                var5[0] =  v 
 
                 if not xmin <= var1 [0] <= xmax : continue
                 if not ymin <= var2 [0] <= ymax : continue
@@ -542,15 +547,82 @@ def test_parameterize_4D () :
         table = T.table ( rows , title = title , prefix = '# ' , alignment =  'llcc' )
         logger.info ( '%s\n%s' % ( title , table ) )
         
+# =============================================================================
 
+# =============================================================================
+## 1D statistics 
+# =============================================================================
+def test_statistics_1D () :
     
+    logger  = getLogger("test_statistics_1D")
+    logger.info ( 'Test 1D statistics' ) 
+    
+    with ROOT.TFile.Open(data_file,'READ') as f :
+        
+        tree = f.S
+
+        rows = [  ('Parameter' , 'Value' ) ]
+
+        for i in range ( 5 ) :            
+            v = tree.get_moment ( i , 0.0 , 'v' )
+            row = "moment[%d,0.0,'v']" % i , '%+.4f' % v 
+            rows.append ( row )
+
+        for i in range ( 5 ) :            
+            v = tree.moment ( i , 'v' )
+            row = "moment[%d,'v']" % i , v.toString ( '%+.4f +/- %-.4f' ) 
+            rows.append ( row )
+
+        for i in range ( 5 ) :            
+            v = tree.central_moment ( i , 'v' )
+            row = "central moment[%d,'v']" % i , v.toString ( '%+.4f +/- %-.4f' ) 
+            rows.append ( row )
+
+            
+        vv  = 'abs(1+0.01*x)'
+        
+        v   = tree.harmonic_mean ( vv )
+        row = 'harmonic   mean' , '%+.6f' % v.value()
+        rows.append ( row )
+        
+        v   = tree.geometric_mean ( vv )
+        row = 'geometric  mean' , '%+.6f' % v.value() 
+        rows.append ( row )
+        
+        v   = tree.arithmetic_mean ( vv )             
+        row = 'arithmetic mean' , '%+.6f' % v.value() 
+        rows.append ( row )
+
+        for p in range ( -2 , 6 ) :
+            v   = tree.power_mean ( p , vv  )
+            row = 'power [%+d] mean' % p , '%+.6f' % v.value() 
+            rows.append ( row )
+
+        for p in range ( -2 , 6 ) :
+            v   = tree.lehmer_mean ( p , vv  )
+            row = 'Lehmer[%+d] mean' % p , '%+.6f' % v.value() 
+            rows.append ( row )
+            
+        
+            
+        title = '1D statistics'
+        table = T.table ( rows , title = title , prefix = '# ' , alignment =  'lc' )
+        logger.info ( '%s\n%s' % ( title , table ) )
+
+        print ( tree.statVar ( 'v' ) ) 
+        
+
 # =============================================================================
 if '__main__' == __name__ :
 
+    """
     test_parameterize_1D () 
     test_parameterize_2D () 
     test_parameterize_3D () 
     test_parameterize_4D () 
+    """
+    
+    test_statistics_1D () 
     
 # =============================================================================
 ##                                                                      The END 

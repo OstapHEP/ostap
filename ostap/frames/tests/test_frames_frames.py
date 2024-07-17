@@ -140,12 +140,22 @@ def test_frame2 ( ) :
     frame = DataFrame     ( tname        , fname        )
     tree  = Tree          ( name = tname , file = fname ).chain
 
-    s1    = tree.statVar  (         'b1' , '1/b1' )
-    s2    = frame_statVar ( frame , 'b1' , '1/b1' )
+    s1    = tree.statVar  (         'b1' ) ## , '1/b1' )
+    s2    = frame_statVar ( frame , 'b1' ) ## , '1/b1' )
+
+    print ( 'FIRST s1/s2', type ( s1 ) , type ( s2 ) )
     
     logger.info ('StatTree  :%s' % s1 ) 
     logger.info ('StatFrame :%s' % s2 ) 
 
+    s1    = tree.statVar  (         'b1' , '1/b1' )
+    s2    = frame_statVar ( frame , 'b1' , '1/b1' )
+
+    print ( 'SECONF s1/s2', type ( s1 ) , type ( s2 ) )
+    
+    logger.info ('StatTree  :%s' % s1 ) 
+    logger.info ('StatFrame :%s' % s2 ) 
+    
 
 # =============================================================================
 def test_frame3 () :
@@ -322,15 +332,15 @@ if '__main__' == __name__ :
 
     if (6,16) <= root_info :
         
-        test_frame0 () 
-        test_frame1 ()
+        ## test_frame0 () 
+        ## test_frame1 ()
         test_frame2 ()
-        test_frame3 ()
-        test_frame4 ()   
-        test_frame5 ()   
-        test_frame6 ()
-        test_frame7 ()
-        test_frame8 ()
+        ## test_frame3 ()
+        ## test_frame4 ()   
+        ## test_frame5 ()   
+        ## test_frame6 ()
+        ## test_frame7 ()
+        ## test_frame8 ()
         
     else :
         

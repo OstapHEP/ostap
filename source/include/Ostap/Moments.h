@@ -1344,7 +1344,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the geometric mean 
-      inline double mean () const { return std::pow ( 2 , m_log2.mean() ) ; }
+      inline double value () const { return std::pow ( 2 , m_log.mean() ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1358,12 +1358,12 @@ namespace  Ostap
       /// accumulate only positive entries 
       inline GeometricMean& add ( const double         x )
       {
-	if ( 0 < x ) { m_log2.add ( std::log2 ( x ) ) ; }
+	if ( 0 < x ) { m_log.add ( std::log2 ( x ) ) ; }
 	return *this ;
       }
       inline GeometricMean& add ( const GeometricMean& x )
       {
-	m_log2.add ( x.m_log2 ) ;
+	m_log.add ( x.m_log ) ;
 	return *this ;
       }
       // ======================================================================
@@ -1380,16 +1380,16 @@ namespace  Ostap
     public:
       // ======================================================================
       /// number of entries
-      inline unsigned long long size  () const { return m_log2.size  () ; }
+      inline unsigned long long size  () const { return m_log.size  () ; }
       /// empty ?
-      inline bool               empty () const { return m_log2.empty () ; } 
+      inline bool               empty () const { return m_log.empty () ; } 
       /// ok ?
-      inline bool               ok    () const { return m_log2.ok    () ; } 
+      inline bool               ok    () const { return m_log.ok    () ; } 
       // ======================================================================      
     private:
       // ======================================================================
       /// get the counter of log2(x) 
-      Moment_<1> m_log2 {} ;
+      Moment_<1> m_log {} ;
       // ======================================================================
     };
 
@@ -1404,7 +1404,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the harmonic mean 
-      inline double mean () const { return 1. / m_inv.mean() ; }
+      inline double value () const { return 1. / m_inv.mean() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1463,7 +1463,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the power mean 
-      inline double mean () const { return std::pow ( m_pow.mean() , 1 / m_p ) ; }
+      inline double value () const { return std::pow ( m_pow.mean() , 1 / m_p ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1532,7 +1532,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the power mean 
-      inline double mean () const { return m_lp.mean() / m_lpm1.mean () ; }
+      inline double value () const { return m_lp.mean() / m_lpm1.mean () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1596,7 +1596,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the geometric mean 
-      inline double mean () const { return std::pow ( 2 , m_log2.mean() ) ; }
+      inline double value () const { return std::pow ( 2 , m_log.mean() ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1609,12 +1609,12 @@ namespace  Ostap
       inline WGeometricMean& add ( const double x      ,
 				   const double w  = 1 ) 			     
       {
-	if ( 0 < x ) { m_log2.add ( std::log2 ( x ) , w ) ; }
+	if ( 0 < x ) { m_log.add ( std::log2 ( x ) , w ) ; }
 	return *this ;
       }
       inline WGeometricMean& add ( const WGeometricMean& x )
       {
-	m_log2.add ( x.m_log2 ) ;
+	m_log.add ( x.m_log ) ;
 	return *this ;
       }
       // ======================================================================
@@ -1628,22 +1628,22 @@ namespace  Ostap
     public:
       // ======================================================================
       /// number of entries
-      inline unsigned long long size  () const { return m_log2.size  () ; }
+      inline unsigned long long size  () const { return m_log.size  () ; }
       /// number of effective entries
-      inline long double        nEff  () const { return m_log2.nEff  () ; }
+      inline long double        nEff  () const { return m_log.nEff  () ; }
       /// get sum of weighes \f$  \sum_i w_i \f$ 
-      inline long double        w     () const { return m_log2.w     () ; }
+      inline long double        w     () const { return m_log.w     () ; }
       /// get sum of weights squared 
-      inline long double        w2    () const { return m_log2.w2    () ; }
+      inline long double        w2    () const { return m_log.w2    () ; }
       /// empty ?
-      inline bool               empty () const { return m_log2.empty () ; } 
+      inline bool               empty () const { return m_log.empty () ; } 
       /// ok ?
-      inline bool               ok    () const { return m_log2.ok    () ; } 
+      inline bool               ok    () const { return m_log.ok    () ; } 
       // ======================================================================      
     private:
       // ======================================================================
       /// get the counter of log2(x) 
-      WMoment_<1> m_log2 {} ;
+      WMoment_<1> m_log {} ;
       // ======================================================================
     };
 
@@ -1659,7 +1659,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the harmonic mean 
-      inline double mean () const { return 1. / m_inv.mean() ; }
+      inline double value () const { return 1. / m_inv.mean() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1720,8 +1720,8 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get the power mean 
-      inline double mean () const { return std::pow ( m_pow.mean() , 1 / m_p ) ; }
+      /// get the weighter power mean 
+      inline double value () const { return std::pow ( m_pow.mean() , 1 / m_p ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1784,8 +1784,8 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get the power mean 
-      inline double mean () const { return m_lp.mean() / m_lpm1.mean () ; }
+      /// get the Lehmer  mean 
+      inline double value () const { return m_lp.mean() / m_lpm1.mean () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1838,12 +1838,24 @@ namespace  Ostap
     /** @class ArithmeticMean 
      *  Calculate the arithmetic mean 
      */
-    class ArithmeticMean : public  Moment_<0> {} ;
+    class ArithmeticMean : public  Moment_<1>
+    {
+    public:
+      // ======================================================================
+      inline double value() const { return this->mean () ; }
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class WArithmeticMean 
      *  Calculate the weighted arithmetic mean 
      */
-    class WArithmeticMean : public WMoment_<0> {} ;       
+    class WArithmeticMean : public WMoment_<1>
+    {
+    public:
+      // ======================================================================
+      inline double value() const { return this->mean () ; }
+      // ======================================================================
+    } ;       
     // ========================================================================
     /** @class MinMean 
      *  Degenerate case of "mean" : minimal value 

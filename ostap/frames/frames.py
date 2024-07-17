@@ -217,9 +217,10 @@ def frame_progress ( frame  ,
     csize      = max    ( csize  , 1       )
     
     ## if rr : nchunks += 1 
-    
-    fun = Ostap.Utils.frame_progress ( nchunks , progress_conf () )
-    cnt.OnPartialResultSlot  ( csize , fun )
+
+    ## commented out 
+    ## fun = Ostap.Utils.frame_progress ( nchunks , progress_conf () )
+    ## cnt.OnPartialResultSlot  ( csize , fun )
     
     return cnt
 
@@ -356,7 +357,9 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
         all_vars.add ( vn )
         current = current.Define ( vn , e )
         names    [ e  ] = vn
+        print ( 'DEFINE:', e , vn )
 
+        
     cuts  = str ( cuts )
     cname = cuts 
     if cuts and not cuts in vars :
@@ -365,13 +368,19 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
         all_vars.add ( vn )
         current = current.Define ( vn , cuts )
         cname   = vn
+        print ( 'DEFINE CUT:', cuts , vn )
 
+    print ( 'CNAME:' , cname  )
+    print ( 'NAMES:' , names  )
+    
     results = {}
     for e in names :
 
-        if cname : 
+        if cname :
+            print ( 'book WSTATVAR' , CNT ( [ names [ e ] , cname ] ) ) 
             results [ e ] = current.Book( ROOT.std.move ( Ostap.Actions.WStatVar() ) , CNT ( [ names [ e ] , cname ] ) ) 
         else :
+            print ( 'book  STATVAR' ,  CNT ( 1 , names[e] ) ) 
             results [ e ] = current.Book( ROOT.std.move ( Ostap.Actions. StatVar() ) , CNT ( 1 , names[e] ) ) 
 
     if not lazy :
