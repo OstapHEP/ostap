@@ -40,322 +40,14 @@ namespace ROOT
     namespace RDF 
     {
       // ======================================================================
-      /** @class StatVar
-       *  Helper class to get statitsics for the column in DataFrame 
-       *  @see Ostap::StatEntity 
-       *  @see Ostap::DataFrame 
-       */
-      class StatVar : public RActionImpl<StatVar> 
-      {
-      public:
-        // ====================================================================
-        /// define the result type 
-        using Result_t = Ostap::StatEntity ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// default constructor 
-        StatVar () ;
-        /// Move constructor 
-        StatVar (       StatVar&& ) = default ;
-        /// Copy constructor is disabled 
-        StatVar ( const StatVar&  ) = delete ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// initialize (empty) 
-        void InitTask   ( TTreeReader * , unsigned int ) {} ;
-        /// initialize (empty) 
-        void Initialize () {} ;
-        /// finalize : sum over the slots 
-        void Finalize   () ;
-        /// who am I ?
-        std::string GetActionName() { return "StatVar" ; }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double value ) 
-        { m_slots [ slot % m_N ] += value ; } 
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like columns       
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const T &vs )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e += v ; } }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// Get the result 
-        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
-        /// get partial result for the given slot 
-        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
-        // ====================================================================
-      private:
-        // ====================================================================
-        /// the final result 
-        const std::shared_ptr<Result_t> m_result {   } ;
-        /// size of m_slots 
-        unsigned long                   m_N      { 1 } ;
-        /// (current) results per  slot 
-        std::vector<Result_t>           m_slots  { 1 } ;
-        // ====================================================================
-      } ; //                        The end of class ROOT::Detail::RDF::StatVar
-      // ======================================================================
-      /** @class WStatVar
-       *  Helper class to get weighted statitsics for the column in DataFrame 
-       *  @see Ostap::WStatEntity 
-       *  @see Ostap::DataFrame 
-       */
-      class WStatVar : public RActionImpl<WStatVar> 
-      {
-      public:
-        // ====================================================================
-        /// define the resutl type 
-        using Result_t = Ostap::WStatEntity ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// default constructor 
-        WStatVar () ;
-        /// Move constructor 
-        WStatVar (       WStatVar&& ) = default ;
-        /// Copy constructor is disabled 
-        WStatVar ( const WStatVar&  ) = delete ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// initialize (empty) 
-        void InitTask   ( TTreeReader * , unsigned int ) {} ;
-        /// initialize (empty) 
-        void Initialize () {} ;
-        /// finalize : sum over the slots 
-        void Finalize   () ;
-        /// who am I ?
-        std::string GetActionName() { return "WStatVar" ; }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double value , double weight = 1 ) 
-        { m_slots [ slot % m_N ].add ( value , weight ) ; } 
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like column of values        
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const T &vs , const double weight = 1 )
-        {
-          Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e.add ( v , weight ) ; } 
-        }
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like column of weight 
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
-        void Exec ( unsigned int slot , const double value , const T &ws )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.add ( value , w   ) ; } }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// Get the result 
-        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
-        /// get partial result for the given slot 
-        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
-        // ====================================================================
-      private:
-        // ====================================================================
-        /// the final result 
-        const std::shared_ptr<Result_t> m_result {}    ;
-        /// size of m_slots 
-        unsigned long                   m_N      { 1 } ;
-        /// (current) results per  slot 
-        std::vector<Result_t>           m_slots  { 1 } ;
-        // ====================================================================
-      } ; //                       The end of class ROOT::Detail::RDF::WStatVar
-      // ======================================================================
-      /** @class Moment_
-       *  Helper class to get statitsics for the column in DataFrame 
-       *  @see Ostap::Math::Moment_
-       */
-      template <unsigned short N>
-      class Moment_ : public RActionImpl<Moment_<N> > 
-      {
-      public:
-        // ====================================================================
-        /// define the result type 
-        using Result_t = Ostap::Math::Moment_<N> ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// default constructor 
-        Moment_ () 
-          : m_result ( std::make_shared<Result_t>() ) 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-          , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
-#else 
-          , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
-#endif
-          , m_slots  ( this->m_N ) 
-        {}
-        /// Move constructor 
-        Moment_ (       Moment_&& ) = default ;
-        /// Copy constructor is disabled 
-        Moment_ ( const Moment_&  ) = delete ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// initialize (empty) 
-        void InitTask   ( TTreeReader * , unsigned int ) {} ;
-        /// initialize (empty) 
-        void Initialize () {} ;
-        /// finalize : sum over the slots 
-        void Finalize   () 
-        { 
-          Result_t sum { m_slots [ 0 ] } ;
-          for ( unsigned int i = 1 ; i < m_N ; ++i ) { sum += m_slots [ i ] ; }
-          *m_result = sum ;
-        }
-        /// who am I ?
-        std::string GetActionName() { return "Moment_" ; }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double value ) 
-        { m_slots [ slot % m_N ].add ( value ) ; } 
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like columns       
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const T &vs )
-        { Result_t& m = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { m.add ( v ) ; } }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// Get the result 
-        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
-        /// get partial result for the given slot 
-        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
-        // ====================================================================
-      private:
-        // ====================================================================
-        /// the final result 
-        const std::shared_ptr<Result_t> m_result {   } ;
-        /// size of m_slots 
-        unsigned long                   m_N      { 1 } ;
-        /// (current) results per  slot 
-        std::vector<Result_t>           m_slots  { 1 } ;
-        // ====================================================================
-      } ; //                        The end of class ROOT::Detail::RDF::Moment_
-      // ======================================================================
-      /** @class WMoment_
-       *  Helper class to get statitsics for the column in DataFrame 
-       *  @see Ostap::Math::WMoment_
-       */
-      template <unsigned short N>
-      class WMoment_ : public RActionImpl<WMoment_<N> > 
-      {
-      public:
-        // ====================================================================
-        /// define the result type 
-        using Result_t = Ostap::Math::WMoment_<N> ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// default constructor 
-        WMoment_ () 
-          : m_result ( std::make_shared<Result_t>() ) 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-          , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
-#else 
-          , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
-#endif
-          , m_slots  ( this->m_N ) 
-        {}
-        /// Move constructor 
-        WMoment_ (       WMoment_&& ) = default ;
-        /// Copy constructor is disabled 
-        WMoment_ ( const WMoment_&  ) = delete ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// initialize (empty) 
-        void InitTask   ( TTreeReader * , unsigned int ) {} ;
-        /// initialize (empty) 
-        void Initialize () {} ;
-        /// finalize : sum over the slots 
-        void Finalize   () 
-        { 
-          Result_t sum { m_slots [ 0 ] } ;
-          for ( unsigned int i = 1 ; i < m_N ; ++i ) { sum += m_slots [ i ] ; }
-          *m_result = sum ;
-        }
-        /// who am I ?
-        std::string GetActionName() { return "WMoment_" ; }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double value , double weight ) 
-        { m_slots [ slot % m_N ].add ( value , weight ) ; } 
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like columns       
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const T &vs , double weight )
-        { Result_t& m = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { m.add ( v ) ; } }
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like column of weight 
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
-        void Exec ( unsigned int slot , const double value , const T &ws )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.add ( value , w   ) ; } }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// Get the result 
-        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
-        /// get partial result for the given slot 
-        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
-        // ====================================================================
-      private:
-        // ====================================================================
-        /// the final result 
-        const std::shared_ptr<Result_t> m_result {   } ;
-        /// size of m_slots 
-        unsigned long                   m_N      { 1 } ;
-        /// (current) results per  slot 
-        std::vector<Result_t>           m_slots  { 1 } ;
-        // ====================================================================
-      } ; //                        The end of class ROOT::Detail::RDF::Moment_
-      // ======================================================================
-
-
-
-      // ======================================================================
       /** @class StatAction
        *  Helper class to get statitsics for the column in DataFrame 
        *  using soem COUNTER class
        *  Requirements for COUNTER:
        *  -  counter.add ( value ) 
        *  -  counter += counter 
+       *  @see Ostap::StatEntity
+       *  @see Ostap::Math::Moment_
        */
       template <class COUNTER> 
       class StatAction : public RActionImpl< StatAction<COUNTER> > 
@@ -367,15 +59,16 @@ namespace ROOT
         // ====================================================================
       public:
         // ====================================================================
-        /// default constructor 
-        StatAction () 
-          : m_result ( std::make_shared<Result_t>() ) 
+        /// constructor 
+	template <typename ...Args>
+        StatAction ( const Args& ...args ) 
+          : m_result ( std::make_shared<Result_t>( args ... ) ) 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
           , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
 #else 
           , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
 #endif
-          , m_slots  ( std::max ( 1ul , this->m_N ) )
+	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
         {}
         /// Move constructor 
         StatAction (       StatAction&& ) = default ;
@@ -432,9 +125,13 @@ namespace ROOT
       } ; //                    The end of class ROOT::Detail::RDF::StatCounter
       // ======================================================================
       /** @class WStatAction
-       *  Helper class to get weighted statitsics for columns in Daa frames 
-       *  @see Ostap::WStatEntity 
-       *  @see Ostap::DataFrame 
+       *  Helper class to get statitsics for the column in DataFrame 
+       *  using soem COUNTER class
+       *  Requirements for COUNTER:
+       *  -  counter.add ( value , weight ) 
+       *  -  counter += counter 
+       *  @see Ostap::WStatEntity
+       *  @see Ostap::Math::WMoment_
        */
       template <class Counter>
       class WStatAction : public RActionImpl< WStatAction<Counter> > 
@@ -447,14 +144,15 @@ namespace ROOT
       public:
         // ====================================================================
         /// default constructor 
-        WStatAction () 
-	  : m_result ( std::make_shared<Result_t>() ) 
+	template <typename ...Args>
+        WStatAction ( const Args& ...args ) 
+	  : m_result ( std::make_shared<Result_t>( args ... ) ) 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
 	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
 #else 
 	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
 #endif
-          , m_slots  ( std::max ( 1ul , this->m_N ) )
+	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
         {}
 	/// Move constructor 
         WStatAction  (       WStatAction&& ) = default ;
@@ -517,121 +215,49 @@ namespace ROOT
         /// (current) results per  slot 
         std::vector<Result_t>           m_slots  { 1 } ;
         // ====================================================================
-      } ; //                        The end of class ROOT::Detail::RDF::Moment_
+      } ; //                    The end of class ROOT::Detail::RDF::WStatAction
       // ======================================================================
-      
-
-      
-
-
-
-      // ======================================================================
-      /** @class LegendrePoly
-       *  Helper class to parameterise data as 1D Legendre polynomial
+      /** @class Poly1Action
+       *  Helper class to parameterise data as 1D polynomial
        *  @see Ostap::Math::LegendreSum 
-       *  @see Ostap::DataFrame 
-       */
-      class LegendrePoly : public RActionImpl<LegendrePoly> 
-      {
-      public:
-        // ====================================================================
-        /// define the resutl type 
-        using Result_t = Ostap::Math::LegendreSum;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// constructor 
-        LegendrePoly 
-        ( const unsigned short N    , 
-          const double         xmin ,
-          const double         xmax ) ;
-        /// constructor from 
-        LegendrePoly 
-        ( const Ostap::Math::LegendreSum&  ) ;
-        /// Move constructor 
-        LegendrePoly (       LegendrePoly&& ) = default ;
-        /// Copy constructor is disabled 
-        LegendrePoly ( const LegendrePoly&  ) = delete ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// initialize (empty) 
-        void InitTask   ( TTreeReader * , unsigned int ) {} ;
-        /// initialize (empty) 
-        void Initialize () {} ;
-        /// finalize : sum over the slots 
-        void Finalize   () ;
-        /// who am I ?
-        std::string GetActionName() { return "LegendrePoly" ; }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double value , double weight = 1 ) 
-        { m_slots [ slot % m_N ].Fill ( value , weight ) ; } 
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like column of values        
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const T &vs , const double weight = 1 )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e.Fill ( v , weight ) ; } }
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like column of weight 
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
-        void Exec ( unsigned int slot , const double value , const T &ws )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.Fill ( value , w   ) ; } }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// Get the result 
-        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
-        /// get partial result for the given slot 
-        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
-        // ====================================================================
-      private:
-        // ====================================================================
-        /// the final result 
-        const std::shared_ptr<Result_t> m_result {}    ;
-        /// size of m_slots 
-        unsigned long                   m_N      { 1 } ;
-        /// (current) results per  slot 
-        std::vector<Result_t>           m_slots  { 1 } ;
-        // ====================================================================
-      } ; //                   The end of class ROOT::Detail::RDF::LegendrePoly
-      // ======================================================================
-      /** @class ChebyshePoly
-       *  Helper class to parameterise data as 1D Chebyshev polynomial
        *  @see Ostap::Math::ChebyshevSum 
+       *  @see Ostap::Math::BernsteinSum 
        *  @see Ostap::DataFrame 
+       *  Requirements for class POLYNOMIAL
+       *   - copy constructor 
+       *   - summation : <code>polynomial += polynomial </code>
+       *   - scaling   : <code>polynomial *= scale </code>
+       *   - fill:       <code> polynomial.Fill ( value , weight ) </code>
        */
-      class ChebyshevPoly : public RActionImpl<ChebyshevPoly> 
+      template <class POLYNOMIAL>
+      class Poly1Action : public RActionImpl<Poly1Action<POLYNOMIAL> > 
       {
       public:
         // ====================================================================
         /// define the resutl type 
-        using Result_t = Ostap::Math::ChebyshevSum;
+        using Result_t = POLYNOMIAL ;
         // ====================================================================
       public:
         // ====================================================================
         /// constructor
-        ChebyshevPoly 
-        ( const unsigned short N    , 
-          const double         xmin ,
-          const double         xmax ) ;
-        /// constructor from 
-        ChebyshevPoly 
-        ( const Ostap::Math::ChebyshevSum&  ) ;
+	template <typename ...Args>
+        Poly1Action 
+        ( const Args& ...args )
+	  : m_result ( std::make_shared<Result_t>( args ... ) ) 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
+#else 
+	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
+#endif
+	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+	{
+	  (*m_result) *= 0.0 ; // reset the polynomial
+	  for ( auto& i : m_slots ) { i *= 0.0 ; }
+	}  
         /// Move constructor 
-        ChebyshevPoly (       ChebyshevPoly&& ) = default ;
+        Poly1Action (       Poly1Action&& ) = default ;
         /// Copy constructor is disabled 
-        ChebyshevPoly ( const ChebyshevPoly&  ) = delete ;
+        Poly1Action ( const Poly1Action&  ) = delete ;
         // ====================================================================
       public:
         // ====================================================================
@@ -640,14 +266,20 @@ namespace ROOT
         /// initialize (empty) 
         void Initialize () {} ;
         /// finalize : sum over the slots 
-        void Finalize   () ;
+        void Finalize   ()
+	{
+	  (*m_result) *= 0.0 ;
+	  for ( unsigned int i = 0 ; i < m_N ; ++i ) { *m_result += m_slots [ i ] ; }
+	}
         /// who am I ?
-        std::string GetActionName() { return "ChebyshevPoly" ; }
+        std::string GetActionName() { return "Poly1Action" ; }
         // ====================================================================
       public:
         // ====================================================================
         /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double value , double weight = 1 ) 
+        void Exec ( unsigned int slot       ,
+		    const double value      ,
+		    const double weight = 1 ) 
         { m_slots [ slot % m_N ].Fill ( value , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of values        
@@ -684,117 +316,48 @@ namespace ROOT
         /// (current) results per  slot 
         std::vector<Result_t>           m_slots  { 1 } ;
         // ====================================================================
-      } ; //                   The end of class ROOT::Detail::RDF::LegendrePoly 
+      } ; //                    The end of class ROOT::Detail::RDF::Poly1Action
       // ======================================================================
-      /** @class BernsteinPoly
-       *  Helper class to parameterise data as 1D Bernstein polynomial
-       *  @see Ostap::Math::Bernstein 
-       *  @see Ostap::DataFrame 
-       */
-      class BernsteinPoly : public RActionImpl<BernsteinPoly> 
-      {
-      public:
-        // ====================================================================
-        /// define the resutl type 
-        using Result_t = Ostap::Math::Bernstein;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// constructor
-        BernsteinPoly 
-        ( const unsigned short N    , 
-          const double         xmin ,
-          const double         xmax ) ;
-        /// constructor from 
-        BernsteinPoly 
-        ( const Ostap::Math::Bernstein&  ) ;
-        /// Move constructor
-        BernsteinPoly (       BernsteinPoly&& ) = default ;
-        /// Copy constructor is disabled 
-        BernsteinPoly ( const BernsteinPoly&  ) = delete ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// initialize (empty) 
-        void InitTask   ( TTreeReader * , unsigned int ) {} ;
-        /// initialize (empty) 
-        void Initialize () {} ;
-        /// finalize : sum over the slots 
-        void Finalize   () ;
-        /// who am I ?
-        std::string GetActionName() { return "BernsteinPoly" ; }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double value , double weight = 1 ) 
-        { m_slots [ slot % m_N ].Fill ( value , weight ) ; } 
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like column of values        
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const T &vs , const double weight = 1 )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e.Fill ( v , weight ) ; } }
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like column of weight 
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
-        void Exec ( unsigned int slot , const double value , const T &ws )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.Fill ( value , w   ) ; } }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// Get the result 
-        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
-        /// get partial result for the given slot 
-        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
-        // ====================================================================
-      private:
-        // ====================================================================
-        /// the final result 
-        const std::shared_ptr<Result_t> m_result {}    ;
-        /// size of m_slots 
-        unsigned long                   m_N      { 1 } ;
-        /// (current) results per  slot 
-        std::vector<Result_t>           m_slots  { 1 } ;
-        // ====================================================================
-      } ; //                  The end of class ROOT::Detail::RDF::BernsteinPoly
-      // ======================================================================
-      /** @class LegendrePoly2
-       *  Helper class to parameterise data as 2D Legendre polynomial
+      /** @class Poly2Action
+       *  Helper class to parameterise data as 2D polynomial 
        *  @see Ostap::Math::LegendreSum2
+       *  @see Ostap::Math::BErnstein2D 
        *  @see Ostap::DataFrame 
+       *  Requirements for class POLYNOMIAL
+       *   - copy constructor 
+       *   - summation : <code>polynomial += polynomial </code>
+       *   - scaling   : <code>polynomial *= scale </code>
+       *   - fill:       <code> polynomial.Fill ( x , y , weight ) </code>
        */
-      class LegendrePoly2 : public RActionImpl<LegendrePoly2> 
+      template <class POLYNOMIAL>
+      class Poly2Action : public RActionImpl<Poly2Action<POLYNOMIAL>> 
       {
       public:
         // ====================================================================
         /// define the resutl type 
-        using Result_t = Ostap::Math::LegendreSum2;
-        // ====================================================================
+        using Result_t = POLYNOMIAL ;
+	  // ====================================================================
       public:
         // ====================================================================
         /// constructor 
-        LegendrePoly2 
-        ( const unsigned short NX   , 
-          const unsigned short NY   , 
-          const double         xmin ,
-          const double         xmax ,
-          const double         ymin ,
-          const double         ymax ) ;
-        /// constructor from 
-        LegendrePoly2 
-        ( const Ostap::Math::LegendreSum2&  ) ;
+	template <typename ...Args>
+        Poly2Action 
+        ( const Args& ...args )
+	  : m_result ( std::make_shared<Result_t>( args ... ) ) 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
+#else 
+	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
+#endif
+	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+	{
+	  (*m_result) *= 0.0 ; // reset the polynomial
+	  for ( auto& i : m_slots ) { i *= 0.0 ; }
+	}  
         /// Move constructor 
-        LegendrePoly2 (       LegendrePoly2&& ) = default ;
+        Poly2Action (       Poly2Action&& ) = default ;
         /// Copy constructor is disabled 
-        LegendrePoly2 ( const LegendrePoly2&  ) = delete ;
+        Poly2Action ( const Poly2Action&  ) = delete ;
         // ====================================================================
       public:
         // ====================================================================
@@ -803,14 +366,18 @@ namespace ROOT
         /// initialize (empty) 
         void Initialize () {} ;
         /// finalize : sum over the slots 
-        void Finalize   () ;
+        void Finalize   ()
+	{
+	  (*m_result) *= 0.0 ;
+	  for ( unsigned int i = 0 ; i < m_N ; ++i ) { *m_result += m_slots [ i ] ; }
+	}
         /// who am I ?
-        std::string GetActionName() { return "LegendrePoly2" ; }
+        std::string GetActionName() { return "Poly2Action" ; }
         // ====================================================================
       public:
         // ====================================================================
         /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double x , double y  , double weight = 1 ) 
+        void Exec ( unsigned int slot , const double x , const double y  , double weight = 1 ) 
         { m_slots [ slot % m_N ].Fill ( x , y , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of values
@@ -854,130 +421,47 @@ namespace ROOT
         /// (current) results per  slot 
         std::vector<Result_t>           m_slots  { 1 } ;
         // ====================================================================
-      } ; //                  The end of class ROOT::Detail::RDF::LegendrePoly2
+      } ; //                    The end of class ROOT::Detail::RDF::Poly2Action
       // ======================================================================
-      /** @class BernsteinPoly2
-       *  Helper class to parameterise data as 2D Bernstein polynomial
-       *  @see Ostap::Math::Bernstein2D
+      /** @class Poly3Action
+       *  Helper class to parameterise data as 3D polynomial 
+       *  @see Ostap::Math::LegendreSum3
+       *  @see Ostap::Math::Bernstein3D
        *  @see Ostap::DataFrame 
+       *  Requirements for class POLYNOMIAL
+       *   - copy constructor 
+       *   - summation : <code>polynomial += polynomial </code>
+       *   - scaling   : <code>polynomial *= scale </code>
+       *   - fill:       <code> polynomial.Fill ( x , y , z , weight ) </code>
        */
-      class BernsteinPoly2 : public RActionImpl<BernsteinPoly2> 
+      template <class POLYNOMIAL>
+      class Poly3Action : public RActionImpl<Poly3Action<POLYNOMIAL>> 
       {
       public:
         // ====================================================================
         /// define the resutl type 
-        using Result_t = Ostap::Math::Bernstein2D;
-        // ====================================================================
+        using Result_t = POLYNOMIAL ;
+	  // ====================================================================
       public:
         // ====================================================================
-        /// constructor 
-        BernsteinPoly2 
-        ( const unsigned short NX   , 
-          const unsigned short NY   , 
-          const double         xmin ,
-          const double         xmax ,
-          const double         ymin ,
-          const double         ymax ) ;
-        /// constructor from 
-        BernsteinPoly2 
-        ( const Ostap::Math::Bernstein2D&  ) ;
-        /// Move constructor 
-        BernsteinPoly2 (       BernsteinPoly2&& ) = default ;
-        /// Copy constructor is disabled 
-        BernsteinPoly2 ( const BernsteinPoly2&  ) = delete ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// initialize (empty) 
-        void InitTask   ( TTreeReader * , unsigned int ) {} ;
-        /// initialize (empty) 
-        void Initialize () {} ;
-        /// finalize : sum over the slots 
-        void Finalize   () ;
-        /// who am I ?
-        std::string GetActionName() { return "BernsteinPoly2" ; }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double x , double y  , double weight = 1 ) 
-        { m_slots [ slot % m_N ].Fill ( x , y , weight ) ; } 
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like column of values
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+	template <typename ...Args>
+        Poly3Action 
+        ( const Args& ...args )
+	  : m_result ( std::make_shared<Result_t>( args... ) ) 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
 #else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const T &xs , const double y , const double weight = 1 )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &x : xs ) { e.Fill ( x , y , weight ) ; } }
-        // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const double x , const T &ys , const double weight = 1 )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &y : ys ) { e.Fill ( x , y , weight ) ; } }
-        // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
 #endif
-        void Exec ( unsigned int slot , const double x, const double y , const T &ws )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.Fill ( x , y , w   ) ; } }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// Get the result 
-        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
-        /// get partial result for the given slot 
-        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
-        // ====================================================================
-      private:
-        // ====================================================================
-        /// the final result 
-        const std::shared_ptr<Result_t> m_result {}    ;
-        /// size of m_slots 
-        unsigned long                   m_N      { 1 } ;
-        /// (current) results per  slot 
-        std::vector<Result_t>           m_slots  { 1 } ;
-        // ====================================================================
-      } ; //                The end of class ROOT::Detail::RDF::BernnsteinPoly2
-      // ======================================================================
-      /** @class LegendrePoly3
-       *  Helper class to parameterise data as 3D Legendre polynomial
-       *  @see Ostap::Math::LegendreSum3 
-       *  @see Ostap::DataFrame 
-       */
-      class LegendrePoly3 : public RActionImpl<LegendrePoly3> 
-      {
-      public:
-        // ====================================================================
-        /// define the resutl type 
-        using Result_t = Ostap::Math::LegendreSum3;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// constructor 
-        LegendrePoly3 
-        ( const unsigned short NX   , 
-          const unsigned short NY   , 
-          const unsigned short NZ   , 
-          const double         xmin ,
-          const double         xmax ,
-          const double         ymin ,
-          const double         ymax ,
-          const double         zmin ,
-          const double         zmax ) ;
-        /// constructor from 
-        LegendrePoly3 
-        ( const Ostap::Math::LegendreSum3&  ) ;
+	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+	{
+	  (*m_result) *= 0.0 ; // reset the polynomial
+	  for ( auto& i : m_slots ) { i *= 0.0 ; }
+	}  
         /// Move constructor 
-        LegendrePoly3 (       LegendrePoly3&& ) = default ;
+        Poly3Action (       Poly3Action&& ) = default ;
         /// Copy constructor is disabled 
-        LegendrePoly3 ( const LegendrePoly3&  ) = delete ;
+        Poly3Action ( const Poly3Action&  ) = delete ;
         // ====================================================================
       public:
         // ====================================================================
@@ -986,14 +470,22 @@ namespace ROOT
         /// initialize (empty) 
         void Initialize () {} ;
         /// finalize : sum over the slots 
-        void Finalize   () ;
+        void Finalize   ()
+	{
+	  (*m_result) *= 0.0 ;
+	  for ( unsigned int i = 0 ; i < m_N ; ++i ) { *m_result += m_slots [ i ] ; }
+	}
         /// who am I ?
-        std::string GetActionName() { return "LegendrePoly3" ; }
+        std::string GetActionName() { return "Poly3Action" ; }
         // ====================================================================
       public:
         // ====================================================================
         /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double x , double y , double z , double weight = 1 ) 
+        void Exec ( unsigned int slot ,
+		    const double x          ,
+		    const double y          ,
+		    const double z          ,
+		    const double weight = 1 ) 
         { m_slots [ slot % m_N ].Fill ( x , y , z , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of values
@@ -1044,145 +536,47 @@ namespace ROOT
         unsigned long                   m_N      { 1 } ;
         /// (current) results per  slot 
         std::vector<Result_t>           m_slots  { 1 } ;
-        // ====================================================================
-      } ; //                  The end of class ROOT::Detail::RDF::LegendrePoly3
-      // ======================================================================
-      /** @class BernsteinPoly3
-       *  Helper class to parameterise data as 3D Bernstein polynomial
-       *  @see Ostap::Math::Bernstein3D 
-       *  @see Ostap::DataFrame 
-       */
-      class BernsteinPoly3 : public RActionImpl<BernsteinPoly3> 
-      {
-      public:
-        // ====================================================================
-        /// define the resutl type 
-        using Result_t = Ostap::Math::Bernstein3D;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// constructor 
-        BernsteinPoly3 
-        ( const unsigned short NX   , 
-          const unsigned short NY   , 
-          const unsigned short NZ   , 
-          const double         xmin ,
-          const double         xmax ,
-          const double         ymin ,
-          const double         ymax ,
-          const double         zmin ,
-          const double         zmax ) ;
-        /// constructor from 
-        BernsteinPoly3 
-        ( const Ostap::Math::Bernstein3D&  ) ;
-        /// Move constructor 
-        BernsteinPoly3 (       BernsteinPoly3&& ) = default ;
-        /// Copy constructor is disabled 
-        BernsteinPoly3 ( const BernsteinPoly3&  ) = delete ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// initialize (empty) 
-        void InitTask   ( TTreeReader * , unsigned int ) {} ;
-        /// initialize (empty) 
-        void Initialize () {} ;
-        /// finalize : sum over the slots 
-        void Finalize   () ;
-        /// who am I ?
-        std::string GetActionName() { return "BernsteinPoly3" ; }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double x , double y , double z , double weight = 1 ) 
-        { m_slots [ slot % m_N ].Fill ( x , y , z , weight ) ; } 
-        // ====================================================================
-        /// The basic method: increment the counter for the vector-like column of values
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const T &xs , const double y , const double z , const double weight = 1 )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &x : xs ) { e.Fill ( x , y , z , weight ) ; } }
-        // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const double x , const T &ys , const double z , const double weight = 1 )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &y : ys ) { e.Fill ( x , y , z , weight ) ; } }
-        // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif 
-        void Exec ( unsigned int slot , const double x , const double y , const T &zs , const double weight = 1 )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto &z : zs ) { e.Fill ( x , y , z , weight ) ; } }
-        // ====================================================================
-#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
-        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
-#else 
-        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-#endif
-        void Exec ( unsigned int slot , const double x, const double y , const double z , const T &ws )
-        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.Fill ( x , y , z , w   ) ; } }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// Get the result 
-        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
-        /// get partial result for the given slot 
-        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
-        // ====================================================================
-      private:
-        // ====================================================================
-        /// the final result 
-        const std::shared_ptr<Result_t> m_result {}    ;
-        /// size of m_slots 
-        unsigned long                   m_N      { 1 } ;
-        /// (current) results per  slot 
-        std::vector<Result_t>           m_slots  { 1 } ;
-        // ====================================================================
-      } ; //                 The end of class ROOT::Detail::RDF::BernsteinPoly3
-      // ======================================================================
-      /** @class LegendrePoly4
-       *  Helper class to parameterise data as 4D Legendre polynomial
+        // =====================================================================
+      } ; //                     The end of class ROOT::Detail::RDF::Poly3Action
+      // =======================================================================
+      /** @class Poly4Action
+       *  Helper class to parameterise data as 4D polynomial 
        *  @see Ostap::Math::LegendreSum4
        *  @see Ostap::DataFrame 
+       *  Requirements for class POLYNOMIAL
+       *   - copy constructor 
+       *   - summation : <code>polynomial += polynomial </code>
+       *   - scaling   : <code>polynomial *= scale </code>
+       *   - fill:       <code> polynomial.Fill (  x, y , z ,v  , weight ) </code>
        */
-      class LegendrePoly4 : public RActionImpl<LegendrePoly4> 
+      template <class POLYNOMIAL>
+      class Poly4Action : public RActionImpl<Poly4Action<POLYNOMIAL>> 
       {
       public:
         // ====================================================================
         /// define the resutl type 
-        using Result_t = Ostap::Math::LegendreSum4;
-        // ====================================================================
+        using Result_t = POLYNOMIAL ;
+	  // ====================================================================
       public:
         // ====================================================================
-        /// constructor 
-        LegendrePoly4 
-        ( const unsigned short NX   , 
-          const unsigned short NY   , 
-          const unsigned short NZ   , 
-          const unsigned short NU   , 
-          const double         xmin ,
-          const double         xmax ,
-          const double         ymin ,
-          const double         ymax ,
-          const double         zmin ,
-          const double         zmax ,
-          const double         umin ,
-          const double         umax ) ;
-        /// constructor from 
-        LegendrePoly4 
-        ( const Ostap::Math::LegendreSum4&  ) ;
+	template <typename ...Args>
+        Poly4Action 
+        ( const Args& ...args )
+	  : m_result ( std::make_shared<Result_t>( args ... ) ) 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
+#else 
+	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
+#endif
+	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+	{
+	  (*m_result) *= 0.0 ; // reset the polynomial
+	  for ( auto& i : m_slots ) { i *= 0.0 ; }
+	}  
         /// Move constructor 
-        LegendrePoly4 (       LegendrePoly4&& ) = default ;
+        Poly4Action (       Poly4Action&& ) = default ;
         /// Copy constructor is disabled 
-        LegendrePoly4 ( const LegendrePoly4&  ) = delete ;
+        Poly4Action ( const Poly4Action&  ) = delete ;
         // ====================================================================
       public:
         // ====================================================================
@@ -1191,14 +585,23 @@ namespace ROOT
         /// initialize (empty) 
         void Initialize () {} ;
         /// finalize : sum over the slots 
-        void Finalize   () ;
+        void Finalize   ()
+	{
+	  (*m_result) *= 0.0 ;
+	  for ( unsigned int i = 0 ; i < m_N ; ++i ) { *m_result += m_slots [ i ] ; }
+	}
         /// who am I ?
-        std::string GetActionName() { return "LegendrePoly4" ; }
+        std::string GetActionName() { return "Poly4Action" ; }
         // ====================================================================
       public:
         // ====================================================================
         /// The basic method: increment the counter 
-        void Exec ( unsigned int slot , double x , double y , double z , double u , double weight = 1 ) 
+        void Exec ( unsigned int slot       ,
+		    const double x          ,
+		    const double y          ,
+		    const double z          ,
+		    const double u          ,
+		    const double weight = 1 ) 
         { m_slots [ slot % m_N ].Fill ( x , y , z , u , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of values
@@ -1259,7 +662,7 @@ namespace ROOT
         /// (current) results per  slot 
         std::vector<Result_t>           m_slots  { 1 } ;
         // ====================================================================
-      } ; //                  The end of class ROOT::Detail::RDF::LegendrePoly3
+      } ; //                    The end of class ROOT::Detail::RDF::Poly4Action
       // ======================================================================
     } //                                 The end of namespace ROOT::Detail::RDF
     // ========================================================================
@@ -1273,30 +676,48 @@ namespace Ostap
   namespace Actions 
   {
     // ========================================================================
-    //  
-    using LegendrePoly   = ROOT::Detail::RDF::LegendrePoly   ;
-    using ChebyshevPoly  = ROOT::Detail::RDF::ChebyshevPoly  ;
-    using BernsteinPoly  = ROOT::Detail::RDF::BernsteinPoly  ;
-    //
-    using LegendrePoly2  = ROOT::Detail::RDF::LegendrePoly2  ;
-    using BernsteinPoly2 = ROOT::Detail::RDF::BernsteinPoly2 ;
-    //
-    using LegendrePoly3  = ROOT::Detail::RDF::LegendrePoly3  ;
-    using BernsteinPoly3 = ROOT::Detail::RDF::BernsteinPoly3 ;
-    //
-    using LegendrePoly4  = ROOT::Detail::RDF::LegendrePoly4  ;
-    //
-    template <unsigned short N> 
-    using Moment_        = ROOT::Detail::RDF::Moment_<N>     ;
-    template <unsigned short N> 
-    using WMoment_       = ROOT::Detail::RDF::WMoment_<N>    ;
-    //
-    // using StatVar        = ROOT::Detail::RDF::StatVar        ;
-    // using WStatVar       = ROOT::Detail::RDF::WStatVar       ;
     
-    using StatVar  = ROOT::Detail::RDF::StatAction<Ostap::StatEntity>   ;
-    using WStatVar = ROOT::Detail::RDF::WStatAction<Ostap::WStatEntity> ;
+    template <class COUNTER>
+    using StatAction  = ROOT::Detail::RDF::StatAction <COUNTER>  ;    
+    template <class COUNTER>
+    using WStatAction = ROOT::Detail::RDF::WStatAction <COUNTER>  ;
+
+    using StatVar  = StatAction <Ostap::StatEntity>  ;    
+    using WStatVar = WStatAction<Ostap::WStatEntity> ;
+
+    template <unsigned short N> 
+    using Moment_  = StatAction <typename Ostap::Math::Moment_<N>  > ;
+    template <unsigned short N> 
+    using WMoment_ =  WStatAction<typename Ostap::Math::WMoment_<N> > ;
+
+    using GeometricMean  = StatAction <Ostap::Math::GeometricMean>  ;    
+    using ArithmeticMean = StatAction <Ostap::Math::ArithmeticMean> ;    
+    using HarmonicMean   = StatAction <Ostap::Math::HarmonicMean>   ;    
+    using PowerMean      = StatAction <Ostap::Math::PowerMean>      ;    
+    using LehmerMean     = StatAction <Ostap::Math::LehmerMean>     ;    
+
+    template <class POLYNOMIAL>
+    using Poly1Action    = ROOT::Detail::RDF::Poly1Action<POLYNOMIAL> ;    
+    template <class POLYNOMIAL>
+    using Poly2Action    = ROOT::Detail::RDF::Poly2Action<POLYNOMIAL> ;    
+    template <class POLYNOMIAL>
+    using Poly3Action    = ROOT::Detail::RDF::Poly4Action<POLYNOMIAL> ;    
+    template <class POLYNOMIAL>
+    using Poly4Action    = ROOT::Detail::RDF::Poly4Action<POLYNOMIAL> ;    
+
     
+    using LegendrePoly   = Poly1Action<Ostap::Math::LegendreSum>  ;
+    using ChebyshevPoly  = Poly1Action<Ostap::Math::ChebyshevSum> ;
+    using BernsteinPoly  = Poly1Action<Ostap::Math::Bernstein>    ;
+
+    using LegendrePoly2  = Poly2Action <Ostap::Math::LegendreSum2> ;
+    using BernsteinPoly2 = Poly2Action <Ostap::Math::Bernstein2D>  ; 
+
+    using LegendrePoly3  = Poly3Action <Ostap::Math::LegendreSum3> ;
+    using BernsteinPoly3 = Poly3Action <Ostap::Math::Bernstein3D>  ; 
+
+    using LegendrePoly4  = Poly4Action <Ostap::Math::LegendreSum4> ;
+   
     // ========================================================================
 
   }

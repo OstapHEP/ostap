@@ -335,12 +335,12 @@ if '__main__' == __name__ :
         ## test_frame0 () 
         ## test_frame1 ()
         test_frame2 ()
-        ## test_frame3 ()
-        ## test_frame4 ()   
-        ## test_frame5 ()   
-        ## test_frame6 ()
-        ## test_frame7 ()
-        ## test_frame8 ()
+        test_frame3 ()
+        test_frame4 ()   
+        test_frame5 ()   
+        test_frame6 ()
+        test_frame7 ()
+        test_frame8 ()
         
     else :
         

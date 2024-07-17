@@ -1871,9 +1871,9 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the min mean 
-      inline double mean () const { return m_min ; }
+      inline double value () const { return m_min ; }
       /// get the min value  
-      inline double min  () const { return m_min ; }
+      inline double min   () const { return m_min ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1938,9 +1938,9 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the max value  
-      inline double mean () const { return m_max ; }
+      inline double value () const { return m_max ; }
       /// get the max value  
-      inline double max  () const { return m_max ; }
+      inline double max   () const { return m_max ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2002,6 +2002,9 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the min/max value  
+      inline std::pair<double,double> value () const
+      { return std::make_pair ( m_min , m_max ) ; }
       /// get the minvalue  
       inline double min  () const { return m_min ; }
       /// get the max value  

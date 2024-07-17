@@ -441,11 +441,13 @@ def _fr_the_moment_ ( frame , N , expression , cuts = '' ) :
         cname   = vn
 
     if cname :
-        TT = ROOT.Detail.RDF.WMoment_(N) 
-        return current.Book( ROOT.std.move ( TT () ) , CNT ( [ vname , cname ] ) ) 
+        ## TT = Ostap.Actions.WMoment_(N) 
+        TT = ROOT.Detail.RDF.WStatAction ( Ostap.Math.WMoment_(N) ) 
+        return current.Book ( ROOT.std.move ( TT () ) , CNT ( [ vname , cname ] ) ) 
     else :
-        TT = ROOT.Detail.RDF.Moment_(N)             
-        return current.Book( ROOT.std.move ( TT () ) , CNT ( 1 , vname ) ) 
+        ## TT = Ostap.Actions.Moment_(N)             
+        TT = ROOT.Detail.RDF.StatAction ( Ostap.Math.Moment_(N) ) 
+        return current.Book ( ROOT.std.move ( TT () ) , CNT ( 1 , vname ) ) 
 
     return results 
 
