@@ -21,9 +21,10 @@ else                       : logger = getLogger ( __name__               )
 
 try :
     import warnings
-    with warnings.catch_warnings( category = DeprecationWarning):
+    with warnings.catch_warnings():
         warnings.simplefilter("ignore")                
         import bayesian_average as ba 
+        
         
     import numpy            as np
     import warnings  
