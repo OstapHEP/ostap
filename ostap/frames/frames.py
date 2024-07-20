@@ -407,7 +407,7 @@ def _fr_helper_ ( frame , expressions , cuts = '' ) :
             vn      = var_name ( 'var_' , used , expr , *vars )
             all_vars.add ( vn )
             current = current.Define ( vn , expr )
-            vname   = expression
+            vname   = vn
         vnames [ expr ] = vname 
     
     cname = cuts
