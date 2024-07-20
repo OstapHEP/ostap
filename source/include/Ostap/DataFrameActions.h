@@ -678,9 +678,9 @@ namespace Ostap
     // ========================================================================
     
     template <class COUNTER>
-    using StatAction  = ROOT::Detail::RDF::StatAction <COUNTER>  ;    
+    using StatAction  = ROOT::Detail::RDF::StatAction<COUNTER>   ;    
     template <class COUNTER>
-    using WStatAction = ROOT::Detail::RDF::WStatAction <COUNTER>  ;
+    using WStatAction = ROOT::Detail::RDF::WStatAction<COUNTER>  ;
 
     using StatVar  = StatAction <Ostap::StatEntity>  ;    
     using WStatVar = WStatAction<Ostap::WStatEntity> ;
@@ -690,12 +690,18 @@ namespace Ostap
     template <unsigned short N> 
     using WMoment_ =  WStatAction<typename Ostap::Math::WMoment_<N> > ;
 
-    using GeometricMean  = StatAction <Ostap::Math::GeometricMean>  ;    
-    using ArithmeticMean = StatAction <Ostap::Math::ArithmeticMean> ;    
-    using HarmonicMean   = StatAction <Ostap::Math::HarmonicMean>   ;    
-    using PowerMean      = StatAction <Ostap::Math::PowerMean>      ;    
-    using LehmerMean     = StatAction <Ostap::Math::LehmerMean>     ;    
-
+    using GeometricMean   = StatAction<Ostap::Math::GeometricMean>    ;    
+    using ArithmeticMean  = StatAction<Ostap::Math::ArithmeticMean>   ;    
+    using HarmonicMean    = StatAction<Ostap::Math::HarmonicMean>     ;    
+    using PowerMean       = StatAction<Ostap::Math::PowerMean>        ;    
+    using LehmerMean      = StatAction<Ostap::Math::LehmerMean>       ;    
+    
+    using WGeometricMean  = WStatAction<Ostap::Math::WGeometricMean>  ;    
+    using WArithmeticMean = WStatAction<Ostap::Math::WArithmeticMean> ;    
+    using WHarmonicMean   = WStatAction<Ostap::Math::WHarmonicMean>   ;    
+    using WPowerMean      = WStatAction<Ostap::Math::WPowerMean>      ;    
+    using WLehmerMean     = WStatAction<Ostap::Math::WLehmerMean>     ;    
+    
     template <class POLYNOMIAL>
     using Poly1Action    = ROOT::Detail::RDF::Poly1Action<POLYNOMIAL> ;    
     template <class POLYNOMIAL>
@@ -704,7 +710,6 @@ namespace Ostap
     using Poly3Action    = ROOT::Detail::RDF::Poly4Action<POLYNOMIAL> ;    
     template <class POLYNOMIAL>
     using Poly4Action    = ROOT::Detail::RDF::Poly4Action<POLYNOMIAL> ;    
-
     
     using LegendrePoly   = Poly1Action<Ostap::Math::LegendreSum>  ;
     using ChebyshevPoly  = Poly1Action<Ostap::Math::ChebyshevSum> ;

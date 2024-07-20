@@ -16,6 +16,7 @@ from   ostap.utils.utils     import wait
 from   ostap.core.meta_info  import root_info
 from   ostap.utils.utils     import implicitMT
 from   ostap.utils.timing    import timing
+import ostap.logger.table    as     T 
 import ROOT, os, sys
 # =============================================================================
 # logging 
@@ -24,16 +25,15 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_frames_frames' )
 else                       : logger = getLogger ( __name__            )
 # ============================================================================= 
+from ostap.frames.frames   import Frames_OK 
 
-
-if root_info < (6,16) :
+if not Frames_OK : 
     
     logger.warning ( "Tests are disabled for this version of ROOT %s" % str ( root_info ) )
     
 else :
     
-    from ostap.frames.frames   import DataFrame, frame_project, \
-         frame_statVar, frame_statCov, frame_progress, has_std_move  
+    from ostap.frames.frames   import * 
     
     # A simple helper function to fill a test tree
     def fill_tree ( tname , fname ) :
@@ -41,12 +41,12 @@ else :
         tdf  = DataFrame        ( 10000 )
         a    = tdf.ProgressBar  ( 10000 )
         tdf.Define   ("one", "1.0"                    )\
-                   .Define   ("b1" , "(double) tdfentry_ + 1 ") \
+                   .Define   ("b1" , "tdfentry_ + 1000.0") \
                    .Define   ("b2" , "(1.0+b1)*(1.0+b1)"      ) \
                    .Define   ("b3" , "(1.0+b1)*(1.0+b1)"      ) \
                    .Define   ("b4" , "gRandom->Gaus()"        ) \
                    .Define   ("b5" , "gRandom->Gaus()"        ) \
-                   .Define   ("b6" , "gRandom->Gaus()"        ) \
+                   .Define   ("b6" , "10+0.5*gRandom->Gaus()" ) \
                    .Snapshot ( tname, fname )
         
     # We prepare an input tree to run on
@@ -58,58 +58,130 @@ else :
 
 
 # =============================================================================
-def test_frame0 () :
-    
+def test_frame0 () : 
+
     logger = getLogger ( 'test_frame0' ) 
-    if root_info < (6,16) : 
+    if not Frames_OK : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
     
     frame = DataFrame ( tname        , fname        )
     tree  = Tree      ( name = tname , file = fname ).chain
     
-    
     logger.info ( 80*'*' ) 
     logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
-    
+
     logger.info ( 'Tree  :\n%s' % tree  ) 
     logger.info ( 'Frame :\n%s' % frame )
+
+    rows  = [ ( 'Parameter' , 'Tree' , 'Frame' ) ] 
+
+    row = 'Lengh' , '%d' % len ( tree ) , '%d' % len ( frame )
+    rows.append ( row )
+
+    row = 'Branches' , str ( tree.branches() ) , str ( frame.branches() ) 
+    rows.append ( row )
     
-    logger.info ( 'Len:                          %30s vs %-30s '  % ( len ( frame )         , len ( tree ) )        )
-    logger.info ( 'Branches:                     %30s vs %-30s '  % ( frame.branches()      , tree.branches() )     ) 
-    logger.info ( 'nEff:                         %30s vs %-30s '  % ( frame.nEff    ()      , tree.nEff    () )     )
-    logger.info ( 'nEff(b1):                     %30s vs %-30s '  % ( frame.nEff    ('b1')  , tree.nEff    ('b1') ) )
-    logger.info ( "m(5,50,'b1','b1/(b2+1'):      %30s vs %-30s "  % ( frame.get_moment ( 5 , 50 ,  'b1' , 'b1/(b2+1)' ) ,
-                                                                      tree .get_moment ( 5 , 50 ,  'b1' , 'b1/(b2+1)' ) ) ) 
-    logger.info ( "m(5,'b1','b1/(b2+1'):         %30s vs %-30s "  % ( frame.moment ( 5 , 'b1' , 'b1/(b2+1)' ) ,
-                                                                      tree .moment ( 5 , 'b1' , 'b1/(b2+1)' ) ) ) 
-    logger.info ( "cm(5,'b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.central_moment ( 2 , 'b1' , 'b1/(b2+1)' ) ,
-                                                                      tree .central_moment ( 2 , 'b1' , 'b1/(b2+1)' ) ) ) 
-    logger.info ( "mean('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.mean ( 'b1' , 'b1/(b2+1)' ) ,
-                                                                      tree .mean ( 'b1' , 'b1/(b2+1)' ) ) ) 
-    logger.info ( "rms ('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.rms  ( 'b1' , 'b1/(b2+1)' ) ,
-                                                                      tree .rms  ( 'b1' , 'b1/(b2+1)' ) ) ) 
-    logger.info ( "skew('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.skewness ( 'b1' , 'b1/(b2+1)' ) ,
-                                                                      tree .skewness ( 'b1' , 'b1/(b2+1)' ) ) )
-    logger.info ( "kurt('b1','b1/(b2+1'):        %30s vs %-30s "  % ( frame.kurtosis ( 'b1' , 'b1/(b2+1)' ) ,
-                                                                      tree .kurtosis ( 'b1' , 'b1/(b2+1)' ) ) ) 
-    logger.info ( "quantile(0.3, 'b1','b1<500'): %30s vs %-30s "  % ( frame.quantile ( 0.3 , 'b1' , 'b1/(b2+1)' ) ,
-                                                                      tree .quantile ( 0.3 , 'b1' , 'b1/(b2+1)' ) ) )
-    logger.info ( "median(0.3, 'b1','b1<500'):   %30s vs %-30s "  % ( frame.median   (       'b1' , 'b1/(b2+1)' ) ,
-                                                                      tree .median   (       'b1' , 'b1/(b2+1)' ) ) )
-    logger.info ( "terciles('b1','b1<500'):      %30s vs %-30s "  % ( frame.terciles (       'b1' , 'b1/(b2+1)' ) ,
-                                                                      tree .terciles (       'b1' , 'b1/(b2+1)' ) ) )
+    row = 'nEff' , '%.2f' % tree.nEff()  , '%.2f' % frame.nEff() 
+    rows.append ( row )
     
+    row = 'nEff(b6)' , '%.2f' % tree.nEff('b6')  , '%.2f' % frame.nEff('b6')
+    rows.append ( row )
+
+    row = 'mean      (b6)' , \
+        tree .mean ( 'b6' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.mean ( 'b6' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    row = 'rms       (b6)' , \
+        tree .rms  ( 'b6' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.rms  ( 'b6' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    row = 'variance  (b6)' , \
+        tree .variance ( 'b6' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.variance ( 'b6' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    row = 'mean      (b6,1)' , \
+        tree .mean ( 'b6', '1' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.mean ( 'b6', '1' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    row = 'rms       (b6,1)' , \
+        tree .rms  ( 'b6' , '1' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.rms  ( 'b6' , '1' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    row = 'variance  (b6,1)' , \
+        tree .variance ( 'b6' , '1' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.variance ( 'b6' , '1' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
     
+    row = 'skewness  (b6,1)' , \
+        tree .skewness ( 'b6' , '1' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.skewness ( 'b6' , '1' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    row = 'kurtosis  (b6,1)' , \
+        tree .kurtosis ( 'b6' , '1' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.kurtosis ( 'b6' , '1' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    row = 'mean      (b6,1/b6)' , \
+        tree .mean ( 'b6' , '1/b6' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.mean ( 'b6' , '1/b6' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    row = 'rms       (b6,1/b6)' , \
+        tree .rms  ( 'b6' , '1/b6' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.rms  ( 'b6' , '1/b6' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    row = 'variance  (b6,1/b6)' , \
+        tree .variance ( 'b6' , '1/b6' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.variance ( 'b6' , '1/b6' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+    
+    row = 'skewness  (b6,1/b6)' , \
+        tree .skewness ( 'b6' , '1/b6' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.skewness ( 'b6' , '1/b6' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    row = 'kurtosis  (b6,1/b6)' , \
+        tree .kurtosis ( 'b6' , '1/b6' ).toString ( '%+.2f +/- %-.2f' ) , \
+        frame.kurtosis ( 'b6' , '1/b6' ).toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+    
+    row = 'quantile  (0.3,b6,1/b6)' , \
+        '%s' % tree .quantile ( 0.3 , 'b6' , '1/b6' ) ,\
+        '%s' % frame.quantile ( 0.3 , 'b6' , '1/b6' )
+    rows.append ( row )
+
+    row = 'terciles  (b6,1/b6)' , \
+        '%s' % tree .terciles ( 'b6' , '1/b6' ) ,\
+        '%s' % frame.terciles ( 'b6' , '1/b6' )
+    rows.append ( row )
+    
+    row = 'median    (b6,1/b6)' , \
+        '%s' % tree .median  ( 'b6' , '1/b6' ) ,\
+        '%s' % frame.median  ( 'b6' , '1/b6' )
+    rows.append ( row )
+    
+    title = 'Frame/Tree statistics' 
+    logger.info ( '%s\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' , alignment = 'lrl' ) ) ) 
     
 
 # =============================================================================
 def test_frame1 ( ) :
 
     logger = getLogger ( 'test_frame1' ) 
-    if root_info < ( 6 , 16 ) : 
+    if not Frames_OK : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
+    
+    logger.info ( 80*'*' ) 
+    logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
     
     frame = DataFrame ( tname        , fname        )
     tree  = Tree      ( name = tname , file = fname ).chain
@@ -133,37 +205,143 @@ def test_frame1 ( ) :
 def test_frame2 ( ) :
  
     logger = getLogger ( 'test_frame2' ) 
-    if root_info <  ( 6 , 16 ) : 
+    if not Frames_OK : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
+      
+    logger.info ( 80*'*' ) 
+    logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
     
     frame = DataFrame     ( tname        , fname        )
     tree  = Tree          ( name = tname , file = fname ).chain
 
-    s1    = tree.statVar  (         'b1' ) ## , '1/b1' )
-    s2    = frame_statVar ( frame , 'b1' ) ## , '1/b1' )
+    rows = [ ( 'Statistics' , 'Tree' , 'Frame' ) ]
 
-    print ( 'FIRST s1/s2', type ( s1 ) , type ( s2 ) )
+    s1    = tree.statVar  (         'b1' ) 
+    s2    = frame_statVar ( frame , 'b1' ) 
+
+    row = 'StatVar    mean (b1)' , s1.mean().toString ( '%+.2f +/- %-.2f' ) , s2.mean().toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
+
+    s1    = tree.statVar  (         'b1' , '1/b1' ) 
+    s2    = frame_statVar ( frame , 'b1' , '1/b1' ) 
+
+    row = 'StatVar    mean (b1,1/b1)' , s1.mean().toString ( '%+.2f +/- %-.2f' ) , s2.mean().toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
     
-    logger.info ('StatTree  :%s' % s1 ) 
-    logger.info ('StatFrame :%s' % s2 ) 
+    s1    = tree.statVar  (         'b1' , 'b1>0' ) 
+    s2    = frame_statVar ( frame , 'b1' , 'b1>0' ) 
 
-    s1    = tree.statVar  (         'b1' , '1/b1' )
-    s2    = frame_statVar ( frame , 'b1' , '1/b1' )
+    row = 'StatVar    mean (b1,b1>0)' ,  s1.mean().toString ( '%+.2f +/- %-.2f' ) , s2.mean().toString ( '%+.2f +/- %-.2f' ) 
+    rows.append ( row )
 
-    print ( 'SECONF s1/s2', type ( s1 ) , type ( s2 ) )
+    s1    = tree.arithmetic_mean  (         'b1' ) 
+    s2    = frame_arithmetic_mean ( frame , 'b1' ) 
+
+    row = 'Arithmetic mean (b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
     
-    logger.info ('StatTree  :%s' % s1 ) 
-    logger.info ('StatFrame :%s' % s2 ) 
-    
+    s1    = tree.arithmetic_mean  (         'b1' , '1/b1') 
+    s2    = frame_arithmetic_mean ( frame , 'b1' , '1/b1') 
 
+    row = 'Arithmetic mean (b1,1/b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+    
+    s1    = tree.arithmetic_mean  (         'b1' , 'b1>0') 
+    s2    = frame_arithmetic_mean ( frame , 'b1' , 'b1>0') 
+    row = 'Arithmetic mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+
+    s1    = tree.geometric_mean  (         'b1' ) 
+    s2    = frame_geometric_mean ( frame , 'b1' ) 
+
+    row = 'Geometric  mean (b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+    
+    s1    = tree.geometric_mean  (         'b1' , '1/b1') 
+    s2    = frame_geometric_mean ( frame , 'b1' , '1/b1') 
+
+    row = 'Geometric  mean (b1,1/b1)' , '%+.2f' % s1.mean()   , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+  
+    s1    = tree.geometric_mean  (         'b1' , 'b1>0') 
+    s2    = frame_geometric_mean ( frame , 'b1' , 'b1>0') 
+
+    row = 'Geometric  mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+    
+    
+    s1    = tree.harmonic_mean  (         'b1' ) 
+    s2    = frame_harmonic_mean ( frame , 'b1' ) 
+
+    row = 'Harmonic   mean (b1)' , '%+.2f' % s1.mean() , '%+.2f' %  s2.GetValue().value() 
+    rows.append ( row )
+    
+    s1    = tree.harmonic_mean  (         'b1' , '1/b1') 
+    s2    = frame_harmonic_mean ( frame , 'b1' , '1/b1') 
+
+    row = 'Harmonic   mean (b1,1/b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+
+    s1    = tree.harmonic_mean  (         'b1' , 'b1>0') 
+    s2    = frame_harmonic_mean ( frame , 'b1' , 'b1>0') 
+
+    row = 'Harmonic   mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+    
+    s1    = tree.power_mean  (         2 , 'b1' ) 
+    s2    = frame_power_mean ( frame , 2 , 'b1' ) 
+
+    row = 'Power      mean (2,b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value()
+    rows.append ( row )
+
+    s1    = tree.power_mean  (         2 , 'b1' , '1/b1') 
+    s2    = frame_power_mean ( frame , 2 , 'b1' , '1/b1') 
+
+    row = 'Power      mean (2,b1,1/b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+   
+    s1    = tree.power_mean  (         2 , 'b1' , 'b1>0') 
+    s2    = frame_power_mean ( frame , 2 , 'b1' , 'b1>0') 
+
+    row = 'Power      mean (2,b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+
+    s1    = tree.lehmer_mean  (         3 , 'b1' ) 
+    s2    = frame_lehmer_mean ( frame , 3 , 'b1' ) 
+
+    row = 'Lehmer     mean (3,b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+    
+    s1    = tree.lehmer_mean  (         3 , 'b1' , '1/b1') 
+    s2    = frame_lehmer_mean ( frame , 3 , 'b1' , '1/b1') 
+
+    row = 'Lehmer     mean (3,b1,1/b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+   
+    s1    = tree.lehmer_mean  (         3 , 'b1' , 'b1>0') 
+    s2    = frame_lehmer_mean ( frame , 3 , 'b1' , 'b1>0') 
+
+    row = 'Lehmer     mean (3,b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
+    rows.append ( row )
+    
+    title = 'Frame/Tree statistics' 
+    logger.info ( '%s\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' , alignment = 'lcc' ) ) ) 
+  
+   
 # =============================================================================
 def test_frame3 () :
 
     logger = getLogger ( 'test_frame3' ) 
-    if root_info < ( 6 , 16 ) : 
+    if not Frames_OK : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
+   
+    logger.info ( 80*'*' ) 
+    logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
+
+    logger.info ( 80*'*' ) 
+    logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
 
     tree   = Tree      ( name = tname , file = fname ).chain
 
@@ -172,28 +350,26 @@ def test_frame3 () :
         frame = DataFrame ( tname       , fname        )
         pb    = frame_progress ( frame  , len ( tree ) )
         message = 'Value: %d %s' % ( i , pb.GetValue() )
-        ## sys.stdout.write('\n')        
         logger.info ( message ) 
         
 # =============================================================================
 def test_frame4 () :
 
     logger = getLogger ( 'test_frame4' ) 
-    logger = getLogger ( 'test_frame0' ) 
-    if root_info < (6,16) : 
+    if not Frames_OK : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
                    
+    logger.info ( 80*'*' ) 
+    logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
+
     frame  = DataFrame     ( tname        , fname        )
     tree   = Tree      ( name = tname , file = fname ).chain
 
     pb     = frame_progress ( frame  , len ( tree ) )
-    frame  = frame.Filter ( 'b1>100' , '#1' )
-    frame  = frame.Filter ( 'b1>200' , '#2' )
-    frame  = frame.Filter ( 'b1>300' , '#3' )
-    frame  = frame.Filter ( 'b1>400' , '#4' )
-    frame  = frame.Filter ( 'b1>500' , '#5' )
-    cnt    = frame.Count  ()
+    for i,c in enumerate ( range ( 0 , 10000 , 1000 ) , start = 1 )  : 
+        frame  = frame.Filter ( 'b1>%s' % c , '#cut%d' % i )
+    cnt    = frame.Count ()
     report = frame.Report()
 
     from ostap.frames.frames import report_print, report_as_table
@@ -204,14 +380,13 @@ def test_frame4 () :
 def test_frame5 () :
 
     logger = getLogger ( 'test_frame5' ) 
-    if root_info < (6,16) : 
+    if not Frames_OK : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
-                   
-    if not has_std_move : 
-        logger.warning ( "Test is disabled (no std::move)" )
-        return     
     
+    logger.info ( 80*'*' ) 
+    logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
+
     frame = DataFrame      ( tname        , fname        )
     tree  = Tree           ( name = tname , file = fname ).chain
     
@@ -225,10 +400,13 @@ def test_frame5 () :
 def test_frame6 () :
 
     logger = getLogger ( 'test_frame6' ) 
-    if root_info < (6,16) : 
+    if not Frames_OK : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
-                   
+                      
+    logger.info ( 80*'*' ) 
+    logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
+
     frame = DataFrame      ( tname        , fname        )
     tree  = Tree           ( name = tname , file = fname ).chain
     
@@ -258,26 +436,23 @@ def test_frame6 () :
 def test_frame7 () :
 
     logger = getLogger ( 'test_frame7' ) 
-    if root_info < (6,16) or not has_std_move : 
+    if not Frames_OK : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return
-    
-    if not has_std_move : 
-        logger.warning ( "Test is disabled (no std::move)" )
-        return     
-    
+     
+    logger.info ( 80*'*' ) 
+    logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
+
     frame = DataFrame      ( tname        , fname        )
     tree  = Tree           ( name = tname , file = fname ).chain
     
     pb    = frame_progress ( frame  , len ( tree ) )
-
     
     bs = Ostap.Math.Bernstein    ( 10 , -3 , 3 )
     ls = Ostap.Math.LegendreSum  ( 10 , -3 , 3 )
     cs = Ostap.Math.ChebyshevSum ( 10 , -3 , 3 )
 
     from ostap.frames.frames import frame_param
-
 
     rb = frame_param ( frame , bs , 'b4' , '(b4>-1)*1.01' )
     rl = frame_param ( frame , ls , 'b5' )
@@ -297,14 +472,13 @@ def test_frame7 () :
 def test_frame8 () :
 
     logger = getLogger ( 'test_frame8' ) 
-    if root_info < (6,16) or not has_std_move : 
+    if not Frames_OK : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return
-    
-    if not has_std_move : 
-        logger.warning ( "Test is disabled (no std::move)" )
-        return     
-    
+      
+    logger.info ( 80*'*' ) 
+    logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
+       
     frame = DataFrame      ( tname        , fname        )
     tree  = Tree           ( name = tname , file = fname ).chain
     
@@ -330,10 +504,10 @@ def test_frame8 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    if (6,16) <= root_info :
+    if Frames_OK : 
         
-        ## test_frame0 () 
-        ## test_frame1 ()
+        test_frame0 () 
+        test_frame1 ()
         test_frame2 ()
         test_frame3 ()
         test_frame4 ()   

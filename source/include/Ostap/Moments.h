@@ -25,17 +25,28 @@ namespace  Ostap
   namespace Math
   {
     // ========================================================================
-    /** @struct Moment
-     *  Helper (empty) base class for moment-counters 
+    /** @class Statistic
+     *  Helper abstract base class for statistic counters 
+     */
+    class Statistic
+    {
+    public :
+      // ======================================================================
+      virtual ~Statistic() ;
+      /// add new value to the counter 
+      virtual void update ( const double x ) = 0 ;
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class Moment
+     *  Helper (empty) base class for weighted statistic counters 
      *  - it is not really neeeded for C++, but it simplifies python decorations 
      */
-    class Moment
+    class Moment : public Statistic
     {
     public :
       // ======================================================================
       virtual ~Moment() ;
-      /// add new value to the counter 
-      virtual void update ( const double x ) = 0 ;
       // ======================================================================      
     } ;
     // ========================================================================
@@ -94,6 +105,8 @@ namespace  Ostap
       // ======================================================================
       /// get number of entries
       inline unsigned long long size  () const { return m_prev.size  () ; }
+      /// get effective number of entries 
+      inline unsigned long long nEff  () const { return m_prev.nEff  () ; }
       /// get the mean value (if \f$ 1 \le N \$4)
       inline long double        mu    () const { return m_prev.mu    () ; }
       /// empty ?
@@ -465,7 +478,9 @@ namespace  Ostap
       { return 0 == k || 2 == k ? 1 : 0 ; }
       // ======================================================================
       /// get number of entries
-      inline unsigned long long size  () const { return m_size ; }
+      inline unsigned long long size  () const { return m_size  ; }
+      /// get effective number of entries 
+      inline unsigned long long nEff  () const { return size () ; }
       /// empty ?
       inline bool               empty () const { return 0 == m_size ; }
       /// ok ?
@@ -575,7 +590,9 @@ namespace  Ostap
       { return 0 == k || 2 == k ? 1 : 0 ; }
       // ======================================================================
       /// get number of entries
-      inline unsigned long long size  () const { return m_prev.size()  ; }
+      inline unsigned long long size  () const { return m_prev.size () ; }
+      /// get effective number of entries 
+      inline unsigned long long nEff  () const { return m_prev.nEff () ; }
       // get the mean value
       inline long double        mu    () const { return m_mu ; } 
       /// empty ?
@@ -731,18 +748,30 @@ namespace  Ostap
     // Weighted moments 
     // ========================================================================
     
+	
     // ========================================================================
-    /** @struct WMoment
+    /** @class WStatistic
+     *  Helper (empty) base class for weighted statistics 
+     */
+    class WStatistic
+    {
+    public :
+      // ======================================================================
+      virtual ~WStatistic () ;
+      /// add new value to the counter 
+      virtual void update ( const double x , const double w = 1 ) = 0 ;
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class WMoment
      *  Helper (empty) base class for weighted moment-counters 
      *  - it is not really neeeded for C++, but it simplifies python decorations 
      */
-    class WMoment
+    class WMoment : public WStatistic
     {
     public :
       // ======================================================================
       virtual ~WMoment() ;
-      /// add new value to the counter 
-      virtual void update ( const double x , const double w = 1 ) = 0 ;
       // ======================================================================      
     } ;
     // ========================================================================
@@ -905,7 +934,7 @@ namespace  Ostap
         //
         if ( !this->ok() ) { return 0 ; }
         //
-        const auto n = this->nEff () ;
+		const long double n = this->w() ; // ATENTION!
         //
         const long double muo  = this->template M_ <K>  () / n ;
         const long double mu2o = this->template M_<2*K> () / n ;
@@ -1339,13 +1368,14 @@ namespace  Ostap
      *  \f$ \left(x_1x_2...x_n\right)^{\frac{1}{n}} \f$
      *  @see https://en.wikipedia.org/wiki/Geometric_mean
      */
-    class GeometricMean : public Moment 
+    class GeometricMean : public Statistic 
     {
     public:
       // ======================================================================
       /// get the geometric mean 
-      inline double value () const { return std::pow ( 2 , m_log.mean() ) ; }
-      // ======================================================================
+      inline double mean  () const { return value () ; }
+      inline double value () const { return std::pow ( 2 , m_log.mean() ) ; }   
+	  // ======================================================================
     public:
       // ======================================================================
       inline GeometricMean& operator+=( const double         x ) { return add ( x ) ; }
@@ -1392,20 +1422,20 @@ namespace  Ostap
       Moment_<1> m_log {} ;
       // ======================================================================
     };
-
     // ========================================================================
     /** @class HarmonicMean 
      *  Calcualet  the harmonic mean 
      *  \f$ \frac{n}{ \frac{1}{x_1} + ... + \frac{1}{x_n}} \f$
      *  @see https://en.wikipedia.org/wiki/Harmonic_mean
      */
-    class HarmonicMean : public Moment 
+    class HarmonicMean : public Statistic
     {
     public:
       // ======================================================================
       /// get the harmonic mean 
       inline double value () const { return 1. / m_inv.mean() ; }
-      // ======================================================================
+      inline double mean  () const { return value () ; }
+	  // ======================================================================
     public:
       // ======================================================================
       inline HarmonicMean& operator+=( const double        x ) { return add ( x ) ; }
@@ -1453,7 +1483,7 @@ namespace  Ostap
      *  \f$ \left(\frac{1}{n}\sum x_i^p \right)^{\frac{1}{p}}\f$
      *  @see https://en.wikipedia.org/wiki/Power_mean
      */
-    class PowerMean : public Moment 
+    class PowerMean : public Statistic 
     {
     public:
       // ======================================================================
@@ -1464,6 +1494,7 @@ namespace  Ostap
       // ======================================================================
       /// get the power mean 
       inline double value () const { return std::pow ( m_pow.mean() , 1 / m_p ) ; }
+      inline double mean  () const { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1522,7 +1553,7 @@ namespace  Ostap
      *  - \f$ p \rigtharrow + \infty\f$ : maximal value
      *  @see https://en.wikipedia.org/wiki/Lehmer_mean
      */
-    class LehmerMean : public Moment 
+    class LehmerMean : public Statistic 
     {
     public:
       // ======================================================================
@@ -1533,7 +1564,8 @@ namespace  Ostap
       // ======================================================================
       /// get the power mean 
       inline double value () const { return m_lp.mean() / m_lpm1.mean () ; }
-      // ======================================================================
+      inline double mean  () const { return value () ; }
+	  // ======================================================================
     public:
       // ======================================================================
       inline LehmerMean& operator+=( const double      x ) { return add ( x ) ; }
@@ -1584,19 +1616,19 @@ namespace  Ostap
       /// get the counter of x^(p-1)
       Moment_<1> m_lpm1   {}  ;
       // ======================================================================
-    };
-
+    } ;
     // ========================================================================
     /** @class WGeometricMean 
      *  Calculate the weighted geometric mean 
      *  @see https://en.wikipedia.org/wiki/Geometric_mean
      */
-    class WGeometricMean : public WMoment 
+    class WGeometricMean : public WStatistic
     {
     public:
       // ======================================================================
       /// get the geometric mean 
       inline double value () const { return std::pow ( 2 , m_log.mean() ) ; }
+      inline double mean  () const { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1654,12 +1686,13 @@ namespace  Ostap
      *  Calcualet  the weighted harmonic mean 
      *  @see https://en.wikipedia.org/wiki/Harmonic_mean
      */
-    class WHarmonicMean : public WMoment 
+    class WHarmonicMean : public WStatistic 
     {
     public:
       // ======================================================================
       /// get the harmonic mean 
       inline double value () const { return 1. / m_inv.mean() ; }
+	  inline double mean  () const { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1711,7 +1744,7 @@ namespace  Ostap
      *  Calculate  the weighted power mean 
      *  @see https://en.wikipedia.org/wiki/Power_mean
      */
-    class WPowerMean : public WMoment 
+    class WPowerMean : public WStatistic 
     {
     public:
       // ======================================================================
@@ -1722,6 +1755,7 @@ namespace  Ostap
       // ======================================================================
       /// get the weighter power mean 
       inline double value () const { return std::pow ( m_pow.mean() , 1 / m_p ) ; }
+      inline double mean  () const { return value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1768,14 +1802,12 @@ namespace  Ostap
       WMoment_<1> m_pow {}  ;
       // ======================================================================
     };
-
-
     // ========================================================================
     /** @class WLehmerMean 
      *  Calculate the weighted Lehmer mean 
      *  @see https://en.wikipedia.org/wiki/Lehmer_mean
      */
-    class WLehmerMean : public WMoment 
+    class WLehmerMean : public WStatistic 
     {
     public:
       // ======================================================================
@@ -1785,7 +1817,8 @@ namespace  Ostap
     public:
       // ======================================================================
       /// get the Lehmer  mean 
-      inline double value () const { return m_lp.mean() / m_lpm1.mean () ; }
+      inline double value () const { return m_lp.mean () / m_lpm1.mean () ; }
+      inline double mean  () const { return value () ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -2443,7 +2476,8 @@ namespace  Ostap
       {
         if ( !m.ok() || m.size() < 2  ) { return VE ( s_INVALID_MOMENT , -1 ) ; } // RETURN
         //
-        const double m2 = m.template moment_<2> ()  ;
+        const double m2 = m.template M_<2> () / m.w()  ;
+	    // 
         if ( 0 >  m2 ) { return VE ( s_INVALID_MOMENT , -1 ) ; } // RETURN
         //
         if ( m.size() < 4  ) { return m2 ; }  // RETURN 

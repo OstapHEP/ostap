@@ -592,8 +592,8 @@ namespace
   _quantiles_
   ( TTree&                  tree      ,
     const std::set<double>& quantiles , //  0<q<1 
-    Ostap::Formula&      var       ,
-    Ostap::Formula*      cuts      , 
+    Ostap::Formula&         var       ,
+    Ostap::Formula*         cuts      , 
     const unsigned long     first     ,
     const unsigned long     last      ) 
   {
@@ -845,12 +845,12 @@ namespace
    *  @return the moment 
    */
   void _moment_
-  ( TTree&               tree    ,
-    Ostap::Math::Moment& counter ,
-    Ostap::Formula&      var     ,
-    Ostap::Formula*      cuts    , 
-    const unsigned long  first   , 
-    const unsigned long  last    )
+  ( TTree&                  tree    ,
+    Ostap::Math::Statistic& counter ,
+    Ostap::Formula&         var     ,
+    Ostap::Formula*         cuts    , 
+    const unsigned long     first   , 
+    const unsigned long     last    )
   {
     // 
     // the loop
@@ -890,13 +890,13 @@ namespace
    *  @return the moment 
    */
   void _moment_
-  ( TTree&                tree    ,
-    Ostap::Math::WMoment& counter ,
-    Ostap::Formula&       var     ,
-    Ostap::Formula*       weight  ,
-    Ostap::Formula*       cuts    , 
-    const unsigned long   first   , 
-    const unsigned long   last    )
+  ( TTree&                   tree    ,
+    Ostap::Math::WStatistic& counter ,
+    Ostap::Formula&          var     ,
+    Ostap::Formula*          weight  ,
+    Ostap::Formula*          cuts    , 
+    const unsigned long      first   , 
+    const unsigned long      last    )
   {
     // 
     // the loop
@@ -4551,11 +4551,11 @@ Ostap::StatVar::get_table
 // ============================================================================
 Ostap::StatusCode 
 Ostap::StatVar::the_moment
-( TTree*               tree       , 
-  Ostap::Math::Moment& moment     , 
-  const std::string&   expression , 
-  const unsigned long  first      ,
-  const unsigned long  last       ) 
+( TTree*                  tree       , 
+  Ostap::Math::Statistic& moment     , 
+  const std::string&      expression , 
+  const unsigned long     first      ,
+  const unsigned long     last       ) 
 {
   if ( nullptr == tree    ) { return Ostap::StatusCode ( INVALID_DATA       ) ; }
   //
@@ -4593,12 +4593,12 @@ Ostap::StatVar::the_moment
 // ============================================================================
 Ostap::StatusCode 
 Ostap::StatVar::the_moment
-( TTree*                tree       , 
-  Ostap::Math::WMoment& moment     , 
-  const std::string&    expression , 
-  const std::string&    selection  , 
-  const unsigned long   first      ,
-  const unsigned long   last       ) 
+( TTree*                   tree       , 
+  Ostap::Math::WStatistic& moment     , 
+  const std::string&       expression , 
+  const std::string&       selection  , 
+  const unsigned long      first      ,
+  const unsigned long      last       ) 
 {
   if ( nullptr == tree    ) { return Ostap::StatusCode ( INVALID_DATA       ) ; }
   //
@@ -4649,13 +4649,13 @@ Ostap::StatVar::the_moment
 // ========================================================================
 Ostap::StatusCode 
 Ostap::StatVar::the_moment
-( const RooAbsData*     data       , 
-  Ostap::Math::WMoment& moment     , 
-  const std::string&    expression , 
-  const std::string&    selection  , 
-  const std::string&    cutrange   ,      
-  const unsigned long   first      ,
-  const unsigned long   last       ) 
+( const RooAbsData*        data       , 
+  Ostap::Math::WStatistic& moment     , 
+  const std::string&       expression , 
+  const std::string&       selection  , 
+  const std::string&       cutrange   ,      
+  const unsigned long      first      ,
+  const unsigned long      last       ) 
 {
   if ( nullptr == data ) { return Ostap::StatusCode ( INVALID_DATA       ) ; }
   //
@@ -4707,12 +4707,12 @@ Ostap::StatVar::the_moment
 // ========================================================================
 Ostap::StatusCode 
 Ostap::StatVar::the_moment
-( const RooAbsData*     data       , 
-  Ostap::Math::WMoment& moment     , 
-  const std::string&    expression , 
-  const std::string&    selection  , 
-  const unsigned long   first      ,
-  const unsigned long   last       ) 
+( const RooAbsData*        data       , 
+  Ostap::Math::WStatistic& moment     , 
+  const std::string&       expression , 
+  const std::string&       selection  , 
+  const unsigned long      first      ,
+  const unsigned long      last       ) 
 {
   return the_moment ( data       , 
                       moment     , 
@@ -4730,11 +4730,11 @@ Ostap::StatVar::the_moment
 // ========================================================================
 Ostap::StatusCode 
 Ostap::StatVar::the_moment
-( const RooAbsData*     data       , 
-  Ostap::Math::WMoment& moment     , 
-  const std::string&    expression , 
-  const unsigned long   first      ,
-  const unsigned long   last       ) 
+( const RooAbsData*        data       , 
+  Ostap::Math::WStatistic& moment     , 
+  const std::string&       expression , 
+  const unsigned long      first      ,
+  const unsigned long      last       ) 
 {
   return the_moment ( data       , 
                       moment     , 

@@ -27,8 +27,8 @@ class RooAbsData ; // RooFit
 // ============================================================================
 template <class SCALAR> class TMatrixTSym ; // ROOT 
 // ============================================================================
-namespace Ostap { namespace Math { class Moment  ; } }
-namespace Ostap { namespace Math { class WMoment ; } }
+namespace Ostap { namespace Math { class  Statistic ; } }
+namespace Ostap { namespace Math { class WStatistic ; } }
 // ============================================================================
 namespace Ostap
 {
@@ -804,7 +804,7 @@ namespace Ostap
      *  @date   2023-02-28
      */
     static unsigned long statCov 
-    ( const RooAbsData*    tree             , 
+    ( const RooAbsData*               tree           , 
       const std::vector<std::string>& vars           ,  
       std::vector<Statistic>&         stats          ,  
       TMatrixTSym<double>&            cov2           , 
@@ -1522,59 +1522,59 @@ namespace Ostap
      *  @see Ostap::Math::Moment
      */
     static Ostap::StatusCode the_moment
-    ( TTree*               tree          , 
-      Ostap::Math::Moment& moment        , 
-      const std::string&   expression    , 
-      const unsigned long  first  = 0    ,
-      const unsigned long  last   = LAST ) ;
+    ( TTree*                  tree          , 
+      Ostap::Math::Statistic& moment        , 
+      const std::string&      expression    , 
+      const unsigned long     first  = 0    ,
+      const unsigned long     last   = LAST ) ;
     // ========================================================================    
     /** get the moment as Ostap::Math::WMoment_<N>
      *  @see Ostap::Math::WMoment_
      *  @see Ostap::Math::WMoment
      */
     static Ostap::StatusCode the_moment
-    ( TTree*                tree          , 
-      Ostap::Math::WMoment& moment        , 
-      const std::string&    expression    , 
-      const std::string&    selection     , 
-      const unsigned long   first  = 0    ,
-      const unsigned long   last   = LAST ) ;
+    ( TTree*                   tree          , 
+      Ostap::Math::WStatistic& moment        , 
+      const std::string&       expression    , 
+      const std::string&       selection     , 
+      const unsigned long      first  = 0    ,
+      const unsigned long      last   = LAST ) ;
     // ========================================================================    
     /** get the moment as Ostap::Math::WMoment_<N>
      *  @see Ostap::Math::WMoment_
      *  @see Ostap::Math::WMoment
      */
     static Ostap::StatusCode the_moment
-    ( const RooAbsData*     data , 
-      Ostap::Math::WMoment& moment              , 
-      const std::string&    expression          , 
-      const std::string&    selection = ""      , 
-      const std::string&    cutrange  = ""      ,      
-      const unsigned long   first     = 0       ,
-      const unsigned long   last      = LAST    ) ;
+    ( const RooAbsData*        data , 
+      Ostap::Math::WStatistic& moment              , 
+      const std::string&       expression          , 
+      const std::string&       selection = ""      , 
+      const std::string&       cutrange  = ""      ,      
+      const unsigned long      first     = 0       ,
+      const unsigned long      last      = LAST    ) ;
     // ========================================================================
     /** get the moment as Ostap::Math::WMoment_<N>
      *  @see Ostap::Math::WMoment_
      *  @see Ostap::Math::WMoment
      */
     static Ostap::StatusCode the_moment
-    ( const RooAbsData*     data , 
-      Ostap::Math::WMoment& moment              , 
-      const std::string&    expression          , 
-      const std::string&    selection           , 
-      const unsigned long   first               ,
-      const unsigned long   last      = LAST    ) ;
+    ( const RooAbsData*        data                , 
+      Ostap::Math::WStatistic& moment              , 
+      const std::string&       expression          , 
+      const std::string&       selection           , 
+      const unsigned long      first               ,
+      const unsigned long      last      = LAST    ) ;
     // ========================================================================
     /** get the moment as Ostap::Math::WMoment_<N>
      *  @see Ostap::Math::WMoment_
      *  @see Ostap::Math::WMoment
      */
     static Ostap::StatusCode the_moment
-    ( const RooAbsData*     data , 
-      Ostap::Math::WMoment& moment              , 
-      const std::string&    expression          , 
-      const unsigned long   first               ,
-      const unsigned long   last      = LAST    ) ;
+    ( const RooAbsData*        data                , 
+      Ostap::Math::WStatistic& moment              , 
+      const std::string&       expression          , 
+      const unsigned long      first               ,
+      const unsigned long      last      = LAST    ) ;
     // ========================================================================
   public:
     // ========================================================================
