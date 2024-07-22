@@ -3559,16 +3559,18 @@ Ostap::StatVar::statVar
     .Define ( weight , no_cuts ? "1.0"  : "1.0*(" + cuts + ")" ) ;
   //
   const unsigned int nSlots =
+    std::max ( 1u , 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-  ROOT::GetThreadPoolSize     () ;
+	       ROOT::GetThreadPoolSize     () 
 #else 
-  ROOT::GetImplicitMTPoolSize () ;
+	       ROOT::GetImplicitMTPoolSize () 
 #endif
+	       ) ;
   //
   std::vector<Statistic> _stat ( nSlots ? nSlots : 1 ) ;
   //
-  auto fun = [&_stat] ( unsigned int slot , double v , double w ) 
-    { _stat[slot].add ( v , w ) ; } ;
+  auto fun = [&_stat,nSlots] ( unsigned int slot , double v , double w ) 
+    { _stat [ slot % nSlots ].add ( v , w ) ; } ;
   t.ForeachSlot ( fun ,  { var , weight } ) ; 
   //
   Statistic stat ; for ( const auto& s : _stat ) { stat += s ; }
@@ -3634,27 +3636,28 @@ unsigned long Ostap::StatVar::statCov
     .Define ( var2   ,                   "1.0*(" + exp2 + ")" ) 
     .Define ( weight , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) ;
   ///
-  const unsigned int nSlots =
+  const unsigned int nSlots = std::max ( 1u , 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-  ROOT::GetThreadPoolSize     () ;
+					 ROOT::GetThreadPoolSize     () 
 #else 
-  ROOT::GetImplicitMTPoolSize () ;
+					 ROOT::GetImplicitMTPoolSize () 
 #endif
+					 ); 
   //
   std::vector<Statistic>           _sta1 ( nSlots ? nSlots : 1 ) ;
   std::vector<Statistic>           _sta2 ( nSlots ? nSlots : 1 ) ;
   std::vector<Ostap::SymMatrix2x2> _cov2 ( nSlots ? nSlots : 1 ) ;
   //
-  auto fun = [&_sta1,&_sta2,&_cov2] 
+  auto fun = [&_sta1,&_sta2,&_cov2,nSlots] 
     ( unsigned int slot , double v1 , double v2 , double w )  { 
     if ( w ) 
     {
-      _sta1[slot].add ( v1 , w ) ; 
-      _sta2[slot].add ( v2 , w ) ; 
-      _cov2[slot]( 0 , 0 ) += w * v1 * v1 ;
-      _cov2[slot]( 0 , 1 ) += w * v1 * v2 ;
-      _cov2[slot]( 1 , 1 ) += w * v2 * v2 ;        
-    }
+      _sta1 [ slot % nSlots ].add ( v1 , w ) ; 
+      _sta2 [ slot % nSlots ].add ( v2 , w ) ; 
+      _cov2 [ slot % nSlots ]( 0 , 0 ) += w * v1 * v1 ;
+      _cov2 [ slot % nSlots ]( 0 , 1 ) += w * v1 * v2 ;
+      _cov2 [ slot % nSlots ]( 1 , 1 ) += w * v2 * v2 ;        
+     }
   } ;
   t.ForeachSlot ( fun , { var1 , var2 , weight } ); 
   // 
