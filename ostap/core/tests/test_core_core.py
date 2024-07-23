@@ -52,8 +52,11 @@ def test_core_core1() :
         
         a = strings ( 'a','b','c' )
         logger.info ( 'Strings  :%s' % a )
-        a = split_string ( "a,b;c,b:e" )
-        logger.info ( 'Split    :%s' % a )
+        a = split_string ( "a,b;c,b:e" )        
+        logger.info ( 'Split    :%s' % str ( a ) ) 
+        a = split_string ( "atan2(a,b);atan2(c,b):e" )        
+        logger.info ( 'Split    :%s' % str ( a ) ) 
+        
 
 def test_core_core2() :
     
