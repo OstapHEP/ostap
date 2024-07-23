@@ -1866,8 +1866,8 @@ def _ds_table_0_ ( dataset           ,
         logger.error('Invalid dataset')
         return ''
     
-    if variables : vars , cuts = vars_and_cuts ( variables , cuts ) 
-    else         : vars , cuts = [ v.name for v in varset ] , str ( cuts ).strip() 
+    if variables : vars , cuts , _ = vars_and_cuts ( variables , cuts ) 
+    else         : vars , cuts     = [ v.name for v in varset ] , str ( cuts ).strip() 
     
     vars = [ i.GetName() for i in varset if i.GetName() in vars ]
         
@@ -2068,8 +2068,8 @@ def _ds_table_1_ ( dataset           ,
     """
 
     
-    if variables : vars , cuts = vars_and_cuts ( variables , cuts ) 
-    else         : vars , cuts = [ v.name for v in varset ] , str ( cuts ).strip() 
+    if variables : vars , cuts , _ = vars_and_cuts ( variables , cuts ) 
+    else         : vars , cuts     = [ v.name for v in varset ] , str ( cuts ).strip() 
     
     _vars = []    
     vvars = tuple ( sorted ( vars ) )
