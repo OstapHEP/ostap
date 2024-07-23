@@ -1058,7 +1058,7 @@ def split_string_respect  ( text , separators = ',;:' , strip = True ) :
     ## strip items if required 
     if strip : items = [ item.strip() for item in items ] 
     ## remove empty items 
-    return  [ item for item in items if item ]
+    return tuple ( item for item in items if item  )
 
 # =============================================================================
 ## split string using separators:
@@ -1088,7 +1088,7 @@ def split_string ( line                            ,
     ## strip items if required 
     if strip : items = [ i.strip() for i in items ] 
     ## remove empty items 
-    return [ item for item in items if item ]
+    return tuple ( item for item in items if item )
 
 
 

@@ -12,13 +12,14 @@
 // =============================================================================
 class TTree      ; // ROOT 
 class TChain     ; // ROOT 
-class TCut       ; // ROOT 
 class RooAbsData ; // RooFit
 // =============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/StatEntity.h"
 #include "Ostap/WStatEntity.h"
 #include "Ostap/ValueWithError.h"
+#include "Ostap/Covariance.h"
 #include "Ostap/SymmetricMatrixTypes.h"
 #include "Ostap/DataFrame.h"
 #include "Ostap/StatusCode.h"
@@ -27,8 +28,8 @@ class RooAbsData ; // RooFit
 // ============================================================================
 template <class SCALAR> class TMatrixTSym ; // ROOT 
 // ============================================================================
-namespace Ostap { namespace Math { class  Statistic ; } }
-namespace Ostap { namespace Math { class WStatistic ; } }
+namespace Ostap { namespace Math { class  Statistic  ; } }
+namespace Ostap { namespace Math { class WStatistic  ; } }
 // ============================================================================
 namespace Ostap
 {
@@ -36,7 +37,6 @@ namespace Ostap
   /** @class StatVar Ostap/StatVar.h
    *  Helper class to get statistical 
    *  infomation  about the variable/expression 
-   *
    *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
    *  @date   2013-10-13
    */
@@ -45,11 +45,15 @@ namespace Ostap
   public:
     // ========================================================================
     /// the actual type for statistic 
-    typedef Ostap::WStatEntity       Statistic  ;
+    typedef Ostap::WStatEntity        Statistic   ;
     /// the actual type for vector of statistic 
-    typedef std::vector<Statistic>   Statistics ;
+    typedef std::vector<Statistic>    Statistics  ;
     /// variable names 
-    typedef std::vector<std::string> Names      ;
+    typedef std::vector<std::string>  Names       ;
+    /// covariance
+    typedef Ostap::Math::Covariance   Covariance  ; 
+    /// (weighted) covariance
+    typedef Ostap::Math::WCovariance  WCovariance ; 
     // ========================================================================
   public:
     // ========================================================================
@@ -58,7 +62,9 @@ namespace Ostap
      */
     struct Interval
     {
-      Interval (  const double l = 0 , const double h = 0  )
+      Interval
+      (  const double l = 0 ,
+	 const double h = 0 )
         : low  ( std::min ( l , h ) )
         , high ( std::max ( l , h ) )
       {}
@@ -75,7 +81,9 @@ namespace Ostap
      */    
     struct Quantile 
     {
-      Quantile ( const double q = 0 , const unsigned long n = 0  )
+      Quantile
+      ( const double        q = 0 ,
+	const unsigned long n = 0 )
         : quantile ( q ) 
         , nevents  ( n ) 
       {}
@@ -92,8 +100,9 @@ namespace Ostap
      */    
     struct Quantiles 
     {
-      Quantiles ( const std::vector<double>& q = std::vector<double>() , 
-                  const unsigned long        n = 0  )
+      Quantiles
+      ( const std::vector<double>& q = std::vector<double>() , 
+	const unsigned long        n = 0  )
         : quantiles ( q ) 
         , nevents   ( n ) 
       {}
@@ -110,8 +119,9 @@ namespace Ostap
      */    
     struct QInterval    
     {
-      QInterval ( const Interval&     i  = Interval() ,
-                  const unsigned long n = 0           )
+      QInterval
+      ( const Interval&     i = Interval () ,
+	const unsigned long n = 0           )
         : interval ( i ) 
         , nevents  ( n ) 
       {}
@@ -132,22 +142,23 @@ namespace Ostap
   public:
     // ========================================================================
     /** build statistic for the <code>expression</code>
-     *  @param tree (INPUT) the tree 
+     *  @param tree       (INPUT) the tree 
      *  @param expression (INPUT) the expression
+     *  @param cuts       (INPUT) the selection criteria 
      *  @param first      (INPUT) the first entry 
-     *  @param last       (INPUT) the last entry      
-     *     
+     *  @param last       (INPUT) the last entry      *
+     *
      *  @code
      *  tree = ... 
-     *  stat = tree.statVar ( 'S_sw' ) 
+     *  stat = tree.statVar( 'S_sw' ) 
      *  @endcode 
      *
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2013-10-13
      */
-    static Statistic statVar
+    static Ostap::StatEntity statVar
     ( TTree*              tree              , 
-      const std::string&  expression        ,
+      const std::string&  expression        , 
       const unsigned long first      = 0    ,
       const unsigned long last       = LAST ) ;
     // ========================================================================
@@ -173,28 +184,6 @@ namespace Ostap
       const unsigned long first      = 0    ,
       const unsigned long last       = LAST ) ;
     // ========================================================================
-    /** build statistic for the <code>expression</code>
-     *  @param tree       (INPUT) the tree 
-     *  @param expression (INPUT) the expression
-     *  @param cuts       (INPUT) the selection criteria 
-     *  @param first      (INPUT) the first entry 
-     *  @param last       (INPUT) the last entry      *
-     *
-     *  @code
-     *  tree = ... 
-     *  stat = tree.statVar( 'S_sw' ,'pt>1000') 
-     *  @endcode 
-     *
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2013-10-13
-     */
-    static Statistic statVar
-    ( TTree*              tree              , 
-      const std::string&  expression        , 
-      const TCut&         cuts              ,
-      const unsigned long first      = 0    ,
-      const unsigned long last       = LAST ) ;
-    // ========================================================================
   public:
     // ========================================================================
     /** check if there is at least one entry that satisfies criteria 
@@ -211,19 +200,6 @@ namespace Ostap
       const unsigned long last       = LAST ) ;      
     // ========================================================================
     /** check if there is at least one entry that satisfies criteria 
-     *  @param tree       (INPUT) the tree 
-     *  @param cuts       (INPUT) criteria 
-     *  @param first      (INPUT) the first entry 
-     *  @param last       (INPUT) the last entry
-     *  @return true if there exist at leats one entry 
-     */
-    static bool hasEntry 
-    ( TTree*              tree              , 
-      const TCut&         cuts              ,   
-      const unsigned long first      = 0    ,
-      const unsigned long last       = LAST ) ;      
-    // ========================================================================
-    /** check if there is at least one entry that satisfies criteria 
      *  @param data       (INPUT) data 
      *  @param cuts       (INPUT) criteria 
      *  @param first      (INPUT) the first entry 
@@ -239,19 +215,6 @@ namespace Ostap
     /** check if there is at least one entry that satisfies criteria 
      *  @param data       (INPUT) data 
      *  @param cuts       (INPUT) criteria 
-     *  @param first      (INPUT) the first entry 
-     *  @param last       (INPUT) the last entry
-     *  @return true if there exist at leats one entry 
-     */
-    static bool hasEntry 
-    ( const RooAbsData*   data               , 
-      const TCut&         cuts               , 
-      const unsigned long first      = 0     ,
-      const unsigned long last       = LAST  ) ;
-    // ========================================================================
-    /** check if there is at least one entry that satisfies criteria 
-     *  @param data       (INPUT) data 
-     *  @param cuts       (INPUT) criteria 
      *  @param cut_range  (INPUT) cut range 
      *  @param first      (INPUT) the first entry 
      *  @param last       (INPUT) the last entry
@@ -260,21 +223,6 @@ namespace Ostap
     static bool hasEntry 
     ( const RooAbsData*   data               , 
       const std::string&  cuts               , 
-      const std::string&  cut_range          , 
-      const unsigned long first      = 0     ,
-      const unsigned long last       = LAST  ) ;
-    // ========================================================================
-    /** check if there is at least one entry that satisfies criteria 
-     *  @param data       (INPUT) data 
-     *  @param cuts       (INPUT) criteria 
-     *  @param cut_range  (INPUT) cut range 
-     *  @param first      (INPUT) the first entry 
-     *  @param last       (INPUT) the last entry
-     *  @return true if there exist at leats one entry 
-     */
-    static bool hasEntry 
-    ( const RooAbsData*   data               , 
-      const TCut&         cuts               , 
       const std::string&  cut_range          , 
       const unsigned long first      = 0     ,
       const unsigned long last       = LAST  ) ;
@@ -317,25 +265,6 @@ namespace Ostap
       const unsigned long             first       = 0    ,
       const unsigned long             last        = LAST ) ;
     // ========================================================================    
-    /** build statistic for the <code>expressions</code>
-     *  @param tree        (INPUT)  the tree 
-     *  @param result      (UPDATE) the output statistics for specified expressions 
-     *  @param expressions (INPUT)  the list of  expressions
-     *  @param cuts        (INPUT)  the selection criteria 
-     *  @param first       (INPUT)  the first entry to process 
-     *  @param last        (INPUT)  the last entry to process (not including!)
-     *  @return number of processed entries 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2018-11-04
-     */
-    static unsigned long statVars
-    ( TTree*                          tree               ,       
-      std::vector<Statistic>&         result             , 
-      const Names&                    expressions        ,
-      const TCut&                     cuts               ,
-      const unsigned long             first       = 0    ,
-      const unsigned long             last        = LAST ) ;
-    // ========================================================================
   public:
     // ========================================================================
     /** build statistic for the <code>expression</code>
@@ -386,28 +315,6 @@ namespace Ostap
      *  @param data       (INPUT) the data 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection
-     *  @param first      (INPUT) the frist event to process
-     *  @param last       (INPUT) process till "last"-event
-     *
-     *  @code
-     *  data = ... 
-     *  stat = data.statVar( 'S_sw' , 'pt>10') 
-     *  @endcode 
-     *
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2015-02-15
-     */
-    static Statistic statVar 
-    ( const RooAbsData*   data               , 
-      const std::string&  expression         , 
-      const TCut&         cuts               , 
-      const unsigned long first      = 0     ,
-      const unsigned long last       = LAST  ) ;
-    // ========================================================================  
-    /** build statistic for the <code>expression</code>
-     *  @param data       (INPUT) the data 
-     *  @param expression (INPUT) the expression
-     *  @param cuts       (INPUT) the selection
      *  @param cutrange   (INPUT) the cut-range
      *  @param first      (INPUT) the frist event to process
      *  @param last       (INPUT) process till "last"-event
@@ -425,31 +332,6 @@ namespace Ostap
     ( const RooAbsData*   data              , 
       const std::string&  expression        , 
       const std::string&  cuts              , 
-      const std::string&  cut_range         ,
-      const unsigned long first      = 0    ,
-      const unsigned long last       = LAST ) ;
-    // ========================================================================
-    /** build statistic for the <code>expression</code>
-     *  @param data       (INPUT) the data 
-     *  @param expression (INPUT) the expression
-     *  @param cuts       (INPUT) the selection
-     *  @param cutrange   (INPUT) the cut-range
-     *  @param first      (INPUT) the frist event to process
-     *  @param last       (INPUT) process till "last"-event
-     *
-     *  @code
-     *  data = ... 
-     *  cut  = TCut ( ... ) 
-     *  stat = data.statVar( 'S_sw' , cut ) 
-     *  @endcode 
-     *
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2015-02-15
-     */
-    static Statistic statVar 
-    ( const RooAbsData*   data              , 
-      const std::string&  expression        , 
-      const TCut&         cuts              , 
       const std::string&  cut_range         ,
       const unsigned long first      = 0    ,
       const unsigned long last       = LAST ) ;
@@ -498,25 +380,6 @@ namespace Ostap
      *  @param data        (INPUT)  input data 
      *  @param result      (UPDATE) the output statistics for specified expressions 
      *  @param expressions (INPUT)  the list of  expressions
-     *  @param cuts        (INPUT)  the selection  
-     *  @param first       (INPUT)  the first entry to process 
-     *  @param last        (INPUT)  the last entry to process (not including!)
-     *  @return number of processed entries 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2021-06-04
-     */
-    static unsigned long statVars
-    ( const RooAbsData*               data              , 
-      std::vector<Statistic>&         result            , 
-      const Names&                    expressions       ,
-      const TCut&                     cuts              ,
-      const unsigned long             first      = 0    ,
-      const unsigned long             last       = LAST ) ;
-    // ========================================================================    
-    /** build statistic for the <code>expressions</code>
-     *  @param data        (INPUT)  input data 
-     *  @param result      (UPDATE) the output statistics for specified expressions 
-     *  @param expressions (INPUT)  the list of  expressions
      *  @param cuts        (INPUT)  the selection 
      *  @param cut_range   (INPUT)  cut range  
      *  @param first       (INPUT)  the first entry to process 
@@ -530,26 +393,6 @@ namespace Ostap
       std::vector<Statistic>&         result            , 
       const std::vector<std::string>& expressions       ,
       const std::string&              cuts              ,
-      const std::string&              cut_range         ,
-      const unsigned long             first      = 0    ,
-      const unsigned long             last       = LAST ) ;
-    // ========================================================================
-    /** build statistic for the <code>expressions</code>
-     *  @param data        (INPUT)  input data 
-     *  @param result      (UPDATE) the output statistics for specified expressions 
-     *  @param expressions (INPUT)  the list of  expressions
-     #  @param cuts        (INPUT)  the selection  
-     *  @param first       (INPUT)  the first entry to process 
-     *  @param last        (INPUT)  the last entry to process (not including!)
-     *  @return number of processed entries 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2021-06-04
-     */
-    static unsigned long statVars
-    ( const RooAbsData*               data              , 
-      std::vector<Statistic>&         result            , 
-      const Names&                    expressions       ,
-      const TCut&                     cuts              ,
       const std::string&              cut_range         ,
       const unsigned long             first      = 0    ,
       const unsigned long             last       = LAST ) ;
@@ -573,288 +416,6 @@ namespace Ostap
     ( FrameNode           frame           , 
       const std::string&  expression      , 
       const std::string&  cuts       = "" ) ;
-    // ========================================================================
-  public:
-    // ========================================================================
-    /** calculate the covariance of two expressions 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param exp1  (INPUT)  the first  expresiion
-     *  @param exp2  (INPUT)  the second expresiion
-     *  @param stat1 (UPDATE) the statistic for the first  expression
-     *  @param stat2 (UPDATE) the statistic for the second expression
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @return number of processed events 
-     *  
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2014-03-27
-     */
-    static unsigned long statCov 
-    ( TTree*               tree          , 
-      const std::string&   exp1          , 
-      const std::string&   exp2          , 
-      Statistic&           stat1         ,  
-      Statistic&           stat2         ,  
-      Ostap::SymMatrix2x2& cov2          , 
-      const unsigned long  first  = 0    ,
-      const unsigned long  last   = LAST ) ;
-    // ========================================================================
-    /** calculate the covariance of two expressions 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param exp1  (INPUT)  the first  expresiion
-     *  @param exp2  (INPUT)  the second expresiion
-     *  @param cuts  (INPUT)  the selection criteria 
-     *  @param stat1 (UPDATE) the statistic for the first  expression
-     *  @param stat2 (UPDATE) the statistic for the second expression
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @return number of processed events 
-     *  
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2014-03-27
-     */
-    static unsigned long statCov 
-    ( TTree*               tree         ,
-      const std::string&   exp1         , 
-      const std::string&   exp2         , 
-      const std::string&   cuts         ,
-      Statistic&           stat1        ,   
-      Statistic&           stat2        ,  
-      Ostap::SymMatrix2x2& cov2         , 
-      const unsigned long  first = 0    ,
-      const unsigned long  last  = LAST ) ;
-    // ========================================================================
-    /** calculate the covariance of two expressions 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param exp1  (INPUT)  the first  expresiion
-     *  @param exp2  (INPUT)  the second expresiion
-     *  @param cuts  (INPUT)  the selection criteria 
-     *  @param stat1 (UPDATE) the statistic for the first  expression
-     *  @param stat2 (UPDATE) the statistic for the second expression
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @return number of processed events 
-     *  
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2014-03-27
-     */
-    static unsigned long statCov 
-    ( TTree*               tree         ,
-      const std::string&   exp1         , 
-      const std::string&   exp2         , 
-      const TCut&          cuts         ,
-      Statistic&           stat1        ,  
-      Statistic&           stat2        ,  
-      Ostap::SymMatrix2x2& cov2         , 
-      const unsigned long  first = 0    ,
-      const unsigned long  last  = LAST ) ;
-    // ========================================================================
-    /** calculate the covariance of several expressions 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param vars  (INPUT)  expressions 
-     *  @param cuts  (INPUT)  the selection criteria 
-     *  @param stats (UPDATE) the statistics 
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2023-02-28
-     */
-    static unsigned long statCov 
-    ( TTree*                          tree         ,
-      const std::vector<std::string>& vars         , 
-      const std::string&              cuts         ,
-      std::vector<Statistic>&         stats        ,  
-      TMatrixTSym<double>&            cov2         , 
-      const unsigned long             first = 0    ,
-      const unsigned long             last  = LAST ) ;
-    // ========================================================================
-    /** calculate the covariance of several expressions 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param vars  (INPUT)  expressions 
-     *  @param cuts  (INPUT)  the selection criteria 
-     *  @param stats (UPDATE) the statistics 
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2023-02-28
-     */
-    static unsigned long statCov 
-    ( TTree*                          tree         ,
-      const std::vector<std::string>& vars         , 
-      const TCut&                     cuts         ,
-      std::vector<Statistic>&         stats        ,  
-      TMatrixTSym<double>&            cov2         , 
-      const unsigned long             first = 0    ,
-      const unsigned long             last  = LAST ) ;
-    // ========================================================================
-    /** calculate the covariance of several expressions 
-     *  @param tree  (INPUT)  the inpout tree 
-     *  @param vars  (INPUT)  expressions 
-     *  @param stats (UPDATE) the statistics 
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2023-02-28
-     */
-    static unsigned long statCov 
-    ( TTree*                          tree         ,
-      const std::vector<std::string>& vars         , 
-      std::vector<Statistic>&         stats        ,  
-      TMatrixTSym<double>&            cov2         , 
-      const unsigned long             first = 0    ,
-      const unsigned long             last  = LAST ) ;
-    // ========================================================================
-  public:
-    // ========================================================================
-    /** calculate the covariance of two expressions 
-     *  @param tree  (INPUT)  the input  tree 
-     *  @param exp1  (INPUT)  the first  expresiion
-     *  @param exp2  (INPUT)  the second expresiion
-     *  @param stat1 (UPDATE) the statistic for the first  expression
-     *  @param stat2 (UPDATE) the statistic for the second expression
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @return number of processed events 
-     *  
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2014-03-27
-     */
-    static unsigned long statCov
-    ( const RooAbsData*    tree             , 
-      const std::string&   exp1             , 
-      const std::string&   exp2             , 
-      Statistic&           stat1            ,  
-      Statistic&           stat2            ,  
-      Ostap::SymMatrix2x2& cov2             , 
-      const std::string&   cut_range = ""   ,
-      const unsigned long  first     = 0    ,
-      const unsigned long  last      = LAST ) ;
-    // ========================================================================
-    /** calculate the covariance of two expressions 
-     *  @param tree  (INPUT)  the input  tree 
-     *  @param exp1  (INPUT)  the first  expresiion
-     *  @param exp2  (INPUT)  the second expresiion
-     *  @param cuts  (INPUT)  the selection 
-     *  @param stat1 (UPDATE) the statistic for the first  expression
-     *  @param stat2 (UPDATE) the statistic for the second expression
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @return number of processed events 
-     *  
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2014-03-27
-     */
-    static unsigned long statCov
-    ( const RooAbsData*    tree             , 
-      const std::string&   exp1             , 
-      const std::string&   exp2             , 
-      const std::string&   cuts             , 
-      Statistic&           stat1            ,  
-      Statistic&           stat2            ,  
-      Ostap::SymMatrix2x2& cov2             , 
-      const std::string&   cut_range = ""   ,
-      const unsigned long  first     = 0    ,
-      const unsigned long  last      = LAST ) ;
-    // ========================================================================
-    /** calculate the covariance of several expressions 
-     *  @param tree      (INPUT)  the inpout tree 
-     *  @param vars      (INPUT)  expressions 
-     *  @param cuts      (INPUT)  the selection criteria 
-     *  @param stats     (UPDATE) the statistics 
-     *  @param cov2      (UPDATE) the covariance matrix 
-     *  @param cut_range (INPUT)  range  
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2023-02-28
-     */
-    static unsigned long statCov 
-    ( const RooAbsData*    tree             , 
-      const std::vector<std::string>& vars           ,  
-      const std::string&              cuts           ,
-      std::vector<Statistic>&         stats          ,  
-      TMatrixTSym<double>&            cov2           , 
-      const std::string&              cut_range = "" ,
-      const unsigned long             first = 0      ,
-      const unsigned long             last  = LAST   ) ;
-    // ========================================================================
-    /** calculate the covariance of several expressions 
-     *  @param tree      (INPUT)  the inpout tree 
-     *  @param vars      (INPUT)  expressions 
-     *  @param cuts      (INPUT)  the selection criteria 
-     *  @param stats     (UPDATE) the statistics 
-     *  @param cov2      (UPDATE) the covariance matrix 
-     *  @param cut_range (INPUT)  range  
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2023-02-28
-     */
-    static unsigned long statCov 
-    ( const RooAbsData*               tree           , 
-      const std::vector<std::string>& vars           ,  
-      const TCut&                     cuts           ,
-      std::vector<Statistic>&         stats          ,  
-      TMatrixTSym<double>&            cov2           , 
-      const std::string&              cut_range = "" ,
-      const unsigned long             first = 0      ,
-      const unsigned long             last  = LAST   ) ;
-    // ========================================================================
-    /** calculate the covariance of several expressions 
-     *  @param tree      (INPUT)  the inpout tree 
-     *  @param vars      (INPUT)  expressions 
-     *  @param stats     (UPDATE) the statistics 
-     *  @param cov2      (UPDATE) the covariance matrix 
-     *  @param cut_range (INPUT)  range  
-     *  @return number of processed events 
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2023-02-28
-     */
-    static unsigned long statCov 
-    ( const RooAbsData*               tree           , 
-      const std::vector<std::string>& vars           ,  
-      std::vector<Statistic>&         stats          ,  
-      TMatrixTSym<double>&            cov2           , 
-      const std::string&              cut_range = "" ,
-      const unsigned long             first = 0      ,
-      const unsigned long             last  = LAST   ) ;
-    // ========================================================================
-  public:
-    // ========================================================================
-    /** calculate the covariance of two expressions 
-     *  @param frame (INPUT)  data frame 
-     *  @param exp1  (INPUT)  the first  expresiion
-     *  @param exp2  (INPUT)  the second expresiion
-     *  @param stat1 (UPDATE) the statistic for the first  expression
-     *  @param stat2 (UPDATE) the statistic for the second expression
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @return number of processed events 
-     *  
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2018-06-18
-     */
-    static unsigned long statCov
-    ( FrameNode            data             , 
-      const std::string&   exp1             , 
-      const std::string&   exp2             , 
-      Statistic&           stat1            ,  
-      Statistic&           stat2            ,  
-      Ostap::SymMatrix2x2& cov2             ) ;
-    // ========================================================================
-    /** calculate the covariance of two expressions 
-     *  @param frame (INPUT)  data frame 
-     *  @param exp1  (INPUT)  the first  expresiion
-     *  @param exp2  (INPUT)  the second expresiion
-     *  @param cuts  (INPUT)  the selection/weight 
-     *  @param stat1 (UPDATE) the statistic for the first  expression
-     *  @param stat2 (UPDATE) the statistic for the second expression
-     *  @param cov2  (UPDATE) the covariance matrix 
-     *  @return number of processed events 
-     *  
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2018-06-18
-     */
-    static unsigned long statCov
-    ( FrameNode            data             , 
-      const std::string&   exp1             , 
-      const std::string&   exp2             , 
-      const std::string&   cuts             , 
-      Statistic&           stat1            ,  
-      Statistic&           stat2            ,  
-      Ostap::SymMatrix2x2& cov2             ) ;    
     // ========================================================================    
   public:
     // ========================================================================
@@ -899,6 +460,173 @@ namespace Ostap
     static double nEff 
     ( FrameNode            frame            ,
       const std::string&   cuts      = ""   ) ;
+    // ========================================================================
+  public: 
+    // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param vars  (INPUT)  expressions 
+     *  @param cuts  (INPUT)  the selection criteria 
+     *  @param stats (UPDATE) the statistics 
+     *  @param cov2  (UPDATE) the covariance matrix 
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    static unsigned long statCov 
+    ( TTree*                          tree         ,
+      const std::vector<std::string>& vars         , 
+      const std::string&              cuts         ,
+      std::vector<Statistic>&         stats        ,  
+      TMatrixTSym<double>&            cov2         , 
+      const unsigned long             first = 0    ,
+      const unsigned long             last  = LAST ) ;
+    // ========================================================================
+ public:  // new methods 
+    // ========================================================================
+    /** calculate the covariance of two expressions 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param exp1  (INPUT)  the first  expression
+     *  @param exp2  (INPUT)  the second expression
+     *  @return Covariance 
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     *  @date   2024-07-22-
+     */
+    static Covariance statCov 
+    ( TTree*               tree          , 
+      const std::string&   exp1          , 
+      const std::string&   exp2          , 
+      const unsigned long  first  = 0    ,
+      const unsigned long  last   = LAST ) ;
+    // ========================================================================
+    /** calculate the covariance of two expressions 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param exp1  (INPUT)  the first  expression
+     *  @param exp2  (INPUT)  the second expression
+     *  @param cuts  (INPUT)  cuts/weigths expression 
+     *  @return Covariance 
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     *  @date   2024-07-22
+     */
+    static WCovariance statCov 
+    ( TTree*               tree          , 
+      const std::string&   exp1          , 
+      const std::string&   exp2          ,
+      const std::string&   cuts          ,      
+      const unsigned long  first  = 0    ,
+      const unsigned long  last   = LAST ) ;
+    // ========================================================================
+  public: 
+    // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param tree  (INPUT)  the inpout tree 
+     *  @param vars  (INPUT)  expressions 
+     *  @param stats (UPDATE) the statistics 
+     *  @param cov2  (UPDATE) the covariance matrix 
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    static unsigned long statCov 
+    ( TTree*                          tree         ,
+      const std::vector<std::string>& vars         , 
+      std::vector<Statistic>&         stats        ,  
+      TMatrixTSym<double>&            cov2         , 
+      const unsigned long             first = 0    ,
+      const unsigned long             last  = LAST ) ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param tree      (INPUT)  the inpout tree 
+     *  @param vars      (INPUT)  expressions 
+     *  @param cuts      (INPUT)  the selection criteria 
+     *  @param stats     (UPDATE) the statistics 
+     *  @param cov2      (UPDATE) the covariance matrix 
+     *  @param cut_range (INPUT)  range  
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    static unsigned long statCov 
+    ( const RooAbsData*    tree             , 
+      const std::vector<std::string>& vars           ,  
+      const std::string&              cuts           ,
+      std::vector<Statistic>&         stats          ,  
+      TMatrixTSym<double>&            cov2           , 
+      const std::string&              cut_range = "" ,
+      const unsigned long             first = 0      ,
+      const unsigned long             last  = LAST   ) ;
+    // ========================================================================
+    /** calculate the covariance of several expressions 
+     *  @param tree      (INPUT)  the inpout tree 
+     *  @param vars      (INPUT)  expressions 
+     *  @param stats     (UPDATE) the statistics 
+     *  @param cov2      (UPDATE) the covariance matrix 
+     *  @param cut_range (INPUT)  range  
+     *  @return number of processed events 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2023-02-28
+     */
+    static unsigned long statCov 
+    ( const RooAbsData*               tree           , 
+      const std::vector<std::string>& vars           ,  
+      std::vector<Statistic>&         stats          ,  
+      TMatrixTSym<double>&            cov2           , 
+      const std::string&              cut_range = "" ,
+      const unsigned long             first = 0      ,
+      const unsigned long             last  = LAST   ) ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /** calculate the covariance of two expressions 
+     *  @param tree  (INPUT)  the input  tree 
+     *  @param exp1  (INPUT)  the first  expresiion
+     *  @param exp2  (INPUT)  the second expresiion
+     *  @param cuts  (INPUT)  selection/weight expression 
+     *  @return number of processed events 
+     *  
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2014-03-27
+     */
+    static WCovariance statCov
+    ( const RooAbsData*    tree             , 
+      const std::string&   exp1             , 
+      const std::string&   exp2             , 
+      const std::string&   cuts             , 
+      const std::string&   cut_range = ""   ,
+      const unsigned long  first     = 0    ,
+      const unsigned long  last      = LAST ) ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /** calculate the covariance of two expressions 
+     *  @param frame (INPUT)  data frame 
+     *  @param exp1  (INPUT)  the first  expresiion
+     *  @param exp2  (INPUT)  the second expresiion
+     *  @return Covariancce
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2024-07-22
+     */
+    static Covariance statCov
+    ( FrameNode            data , 
+      const std::string&   exp1 , 
+      const std::string&   exp2 ) ; 
+    // ========================================================================
+    /** calculate the covariance of two expressions 
+     *  @param frame (INPUT)  data frame 
+     *  @param exp1  (INPUT)  the first  expresiion
+     *  @param exp2  (INPUT)  the second expresiion
+     *  @param cuts  (INPUT)  selection/weight expresiion
+     *  @return Covariancce
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2024-07-22
+     */
+    static WCovariance statCov
+    ( FrameNode            data , 
+      const std::string&   exp1 , 
+      const std::string&   exp2 , 
+      const std::string&   cuts ) ; 
     // ========================================================================
   public:
     // ========================================================================
@@ -1607,25 +1335,6 @@ namespace Ostap
     /** get variables from dataset in form of the table 
      *  @param data input dataset
      *  @param vars list of variables
-     *  @param cuts selection criteria 
-     *  @param table output table
-     *  @param weights column of weigths (empty for non-weighted data) 
-     *  @param first first entry 
-     *  @param last  last entry 
-     */
-    static unsigned long 
-    get_table
-    ( const RooAbsData*                  data         ,  
-      const Names&                       vars         , 
-      const TCut&                        cuts         , 
-      Table&                             table        ,
-      Column&                            weights      , 
-      const unsigned long                first = 0    ,
-      const unsigned long                last  = LAST ) ;
-    // ========================================================================
-    /** get variables from dataset in form of the table 
-     *  @param data input dataset
-     *  @param vars list of variables
      *  @param table output table
      *  @param weights column of weigths (empty for non-weighted data) 
      *  @param first first entry 
@@ -1657,27 +1366,6 @@ namespace Ostap
     ( const RooAbsData*                  data         , 
       const Names&                       vars         , 
       const std::string&                 cuts         , 
-      Table&                             table        ,
-      Column&                            weights      , 
-      const std::string&                 cutrange     ,
-      const unsigned long                first = 0    ,
-      const unsigned long                last  = LAST ) ;
-    // ========================================================================
-    /** get variables from dataset in form of the table 
-     *  @param data input dataset
-     *  @param vars list of variables
-     *  @param cuts selection criteria 
-     *  @param table output table
-     *  @param weights column of weigths (empty for non-weighted data) 
-     *  @param cutrange cut range 
-     *  @param first first entry 
-     *  @param last  last entry 
-     */
-    static unsigned long 
-    get_table
-    ( const RooAbsData*                  data         ,  
-      const Names&                       vars         , 
-      const TCut&                        cuts         , 
       Table&                             table        ,
       Column&                            weights      , 
       const std::string&                 cutrange     ,

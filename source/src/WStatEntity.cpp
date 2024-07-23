@@ -199,5 +199,15 @@ bool Ostap::WStatEntity::operator==( const Ostap::WStatEntity& right ) const
     std::tie ( right.m_mu , right.m_mu2 , right.m_values, right.m_weights ) ;
 }
 // ============================================================================
+// swap two counters
+// ============================================================================
+void Ostap::WStatEntity::swap ( Ostap::WStatEntity& right )
+{
+  std::swap   ( m_mu      , right.m_mu      ) ;
+  std::swap   ( m_mu2     , right.m_mu2     ) ;
+  Ostap::swap ( m_values  , right.m_values  ) ;
+  Ostap::swap ( m_weights , right.m_weights ) ;
+}
+// ============================================================================
 //                                                                      The END 
 // ============================================================================

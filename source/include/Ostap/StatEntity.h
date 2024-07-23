@@ -70,6 +70,8 @@ namespace Ostap
     // ======================================================================
     /// number of entries 
     unsigned long long   n          () const { return m_n    ; }
+    /// effective number of entries 
+    unsigned long long   nEff       () const { return m_n    ; }
     /// mean value 
     double               mu         () const { return m_mu   ; }
     /// the second central moment/dispersion/variance  
@@ -81,6 +83,8 @@ namespace Ostap
     // ======================================================================
   public: // derived quantities & aliases  
     // ======================================================================
+    /// empty ?
+    bool                 empty      () const { return 0 == m_n ; }
     /// number of entries 
     unsigned long long   nEntries   () const { return m_n    ; }
     /// variance
@@ -313,6 +317,8 @@ namespace Ostap
     // ========================================================================
     /// reset the counters
     void reset () ;
+    /// swap two counters
+    void swap ( StatEntity& right ) ;
     /// representation as string
     std::string   toString   () const;
     /// printout  to std::ostream
@@ -348,7 +354,10 @@ namespace Ostap
   // ==========================================================================
   /// conversion to string 
   inline std::string to_string ( const StatEntity& s ) { return s.toString() ; }
-  // ==========================================================================  
+  // ==========================================================================
+  /// swap two counters 
+  inline void swap ( StatEntity&  a , StatEntity&  b  ) { a.swap( b ) ; }
+  // =========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================
 //                                                                      The END

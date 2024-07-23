@@ -13,10 +13,13 @@
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
-__all__     = () ## nothing to import 
+__all__     = (
+    'expression_types' , ## valid types for expressions/selections/weights
+    'vars_and_cuts'    , ## helper routibe to treat expressions
+)
 # =============================================================================
-from   ostap.core.core        import cpp, VE, hID, dsID
 from   ostap.core.ostap_types import num_types, string_types
+from   ostap.core.core        import cpp, VE, hID, dsID, split_string 
 from   ostap.utils.utils      import balanced 
 import ROOT
 # =============================================================================
@@ -27,6 +30,42 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.cuts' )
 else                       : logger = getLogger( __name__           )
 # =============================================================================
 logger.debug( 'Some useful decorations for ROOT.TCut objects')
+# =============================================================================
+## types for expressions and cuts 
+expression_types  = string_types +  ( ROOT.TCut , )
+# =============================================================================
+## Prepare the arguments: variable names and cuts 
+#  @code
+#  vars_lst, cuts, input_string = vars_and_cuts ( 'x', 'y<0' )
+#  vars_lst, cuts, input_string = vars_and_cuts ( ('x','y','z') , 'y<0' )
+#  @endcode
+def vars_and_cuts ( expressions , cuts ) :
+    """Prepare the arguments: variable names and cuts 
+    >>> vars_lst, cuts, input_string = vars_and_cuts ( 'x', 'y<0' )
+    >>> vars_lst, cuts, input_string = vars_and_cuts ( ('x','y','z') , 'y<0' )
+    """
+    
+    ## single string as input 
+    input_string = False 
+    if isinstance ( expressions , expression_types ) :
+        expressions  = split_string ( str ( expressions ) , strip = True , respect_groups = True )
+        input_string = 1 == len ( expressions )
+        
+    assert expressions and all ( s and isinstance ( s , expression_types ) for s in expressions ) , \
+        "Invalid expression(s) : %s" % str ( expressions )
+    
+    exprs = tuple ( str(s).strip() for s in expressions )
+    exprs = tuple ( s for s in expressions if s ) 
+    assert exprs and all ( exprs ) , "Invalid expression(s): %s" % str ( exprs )
+    
+    assert isinstance ( cuts , expression_types ) or not cuts , \
+        'Invaild type of cuts: %s' % str ( cuts ) 
+    
+    cuts = str ( cuts ).strip() if cuts else ''
+
+    return exprs , cuts, input_string 
+
+
 # =============================================================================
 # ROOT.TCut
 # =============================================================================

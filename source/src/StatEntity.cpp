@@ -219,6 +219,17 @@ void Ostap::StatEntity::reset()
   m_max = - std::numeric_limits<double>::max() ;
 }
 // ============================================================================
+// swap two counters
+// ============================================================================
+void Ostap::StatEntity::swap ( Ostap::StatEntity& right )
+{
+  std::swap ( m_n   , right.m_n   ) ;
+  std::swap ( m_mu  , right.m_mu  ) ;
+  std::swap ( m_mu2 , right.m_mu2 ) ;
+  std::swap ( m_min , right.m_min ) ;
+  std::swap ( m_max , right.m_max ) ;
+}
+// ============================================================================
 // representation as string
 // ============================================================================
 std::string Ostap::StatEntity::toString () const

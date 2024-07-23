@@ -57,6 +57,8 @@ _large = ROOT.TVirtualTreePlayer.kMaxEntries
 # =============================================================================
 
 
+
+
 # =============================================================================
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
@@ -827,6 +829,9 @@ def _stat_cov_ ( tree        ,
     Use only subset of events
     >>> stat1 , stat2 , cov2 , len = tree.statCov( 'x' , 'y' , 'z>0' , 100 , 10000 )
     """
+
+    
+    """ 
     import ostap.math.linalg 
     stat1  = Ostap.WStatEntity       ()
     stat2  = Ostap.WStatEntity       ()
@@ -850,7 +855,10 @@ def _stat_cov_ ( tree        ,
                                                    *args       )
         
     return stat1 , stat2 , cov2, length
+    """
 
+
+    
 ROOT.TTree     . statCov = _stat_cov_
 ROOT.TChain    . statCov = _stat_cov_
 

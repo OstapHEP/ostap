@@ -37,7 +37,7 @@ from   ostap.core.ostap_types    import ( integer_types , string_types   ,
                                           list_types    , sequence_types )
 from   ostap.math.base           import islong
 from   ostap.fitting.variables   import valid_formula, make_formula 
-import ostap.trees.cuts     
+from   ostap.trees.cuts          import expression_types, vars_and_cuts  
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ROOT, random, math, sys, ctypes  
@@ -1143,6 +1143,14 @@ def ds_var_minmax ( dataset , var , cuts = '' , delta = 0.0 )  :
     >>> mn,mx = data.vminmax('pt')
     >>> mn,mx = data.vminmax('pt','y>3')
     """
+
+    assert isinstance ( var  , expression_types ) , 'Invalid expression!'
+    assert isinstance ( cuts , expression_types ) , 'Invalid expression!'
+    
+    var  = str ( var  )
+    cuts = str ( cuts ).strip()
+    
+    
     if isinstance ( var , ROOT.RooAbsReal ) : var = var.GetName() 
     if cuts : s = dataset.statVar ( var , cuts )
     else    : s = dataset.statVar ( var )
@@ -1188,8 +1196,12 @@ def _ds_has_entry_ ( dataset , selection , *args ) :
     >>> dataset.hasEntry ( 'pt>100' , 0, 1000 ) ## 
     >>> dataset.hasEntry ( 'pt>100' , 'fit_range' ) ## 
     >>> dataset.hasEntry ( 'pt>100' , 'fit_range' , 0 , 1000 ) ## 
-    - see Ostap.StatVar.hasEntru
+    - see Ostap.StatVar.hasEntry
     """
+    
+    assert isinstance ( selection , expression_types ) , 'Invalid expression!'
+    selection  = str  ( selection ).strip() 
+
     result = Ostap.StatVar.hasEntry ( dataset , selection , *args ) 
     return True if result else False 
 
@@ -1853,24 +1865,12 @@ def _ds_table_0_ ( dataset           ,
     if not valid_pointer ( varset ) :
         logger.error('Invalid dataset')
         return ''
-
-    if isinstance ( variables ,  str ) :
-        variables = split_string ( variables , var_separators , strip = True , respect_groups = True ) 
+    
+    if variables : vars , cuts = vars_and_cuts ( variables , cuts ) 
+    else         : vars , cuts = [ v.name for v in varset ] , str ( cuts ).strip() 
+    
+    vars = [ i.GetName() for i in varset if i.GetName() in vars ]
         
-    if 1 == len ( variables ) : variables = variables [0]
-
-    if isinstance ( variables ,  str ) :
-        
-        if variables in varset :
-            vars = [ variables ]
-        else :
-            vars = list ( dataset.branches ( variables ) ) 
-            
-    elif variables : vars = [ i.GetName() for i in varset if i.GetName() in variables ]        
-    else           : vars = [ i.GetName() for i in varset ]
-        
-    #
-
     _vars = []
     
     stat = dataset.statVars ( vars , cuts , first , last ) 
@@ -2067,11 +2067,12 @@ def _ds_table_1_ ( dataset           ,
     """Print data set as table
     """
 
-    if isinstance ( variables ,  str ) :
-        variables = split_string ( variables , var_separators , strip = True , respect_groups = True ) 
-
+    
+    if variables : vars , cuts = vars_and_cuts ( variables , cuts ) 
+    else         : vars , cuts = [ v.name for v in varset ] , str ( cuts ).strip() 
+    
     _vars = []    
-    vvars = tuple ( sorted ( variables ) )
+    vvars = tuple ( sorted ( vars ) )
     stat = dataset.statVars ( vvars  , cuts , first , last ) 
     for v in  stat :
         s   = stat [ v ] 
@@ -2087,7 +2088,6 @@ def _ds_table_1_ ( dataset           ,
         _vars.append ( r )
     _vars.sort() 
         
-
     tt = dataset.GetTitle()
 
     if not title :

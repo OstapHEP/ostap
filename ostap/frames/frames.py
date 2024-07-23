@@ -345,37 +345,6 @@ def frame_statCov ( frame       ,
 ## possible types of expressions 
 expression_types = string_types + ( ROOT.TCut , )
 # ==============================================================================
-## Prepare the arguments: variable names and cuts 
-#  @code
-#  vars_lst, cuts, input_string = vars_and_cuts ( 'x', 'y<0' )
-#  vars_lst, cuts, input_string = vars_and_cuts ( ('x','y','z') , 'y<0' )
-#  @endcode
-def vars_and_cuts ( expressions , cuts ) :
-    """Prepare the arguments: variable names and cuts 
-    >>> vars_lst, cuts, input_string = vars_and_cuts ( 'x', 'y<0' )
-    >>> vars_lst, cuts, input_string = vars_and_cuts ( ('x','y','z') , 'y<0' )
-    """
-    
-    ## single string as input 
-    input_string = False 
-    if isinstance ( expressions , expression_types ) :
-        input_string = True 
-        expressions  = [ expressions ]
-
-    assert expressions and all ( s and isinstance ( s , expression_types ) for s in expressions ) , \
-        "Invalid expression(s) : %s" % str ( expressions )
-    
-    exprs = tuple ( str(s).strip() for s in expressions ) 
-    assert exprs and all ( exprs ) , "Invalid expression(s): %s" % str ( exprs )
-    
-    assert isinstance ( cuts , expression_types ) or not cuts , \
-        'Invaild type of cuts: %s' % str ( cuts ) 
-    
-    cuts = str ( cuts ) if cuts else ''
-
-    return exprs, cuts, input_string 
-       
-# ==================================================================================
 ## helper functionm that defines expression and cuts 
 #  @code
 #  frame = ...
@@ -387,7 +356,7 @@ def _fr_helper_ ( frame , expressions , cuts = '' ) :
     >>> current , vexpr , cexpr = _fr_helper_ ( frame , 'x*x' , 'z<0' )
     """
 
-    exprs, cuts, input_string = vars_and_cuts ( expressions , cuts ) 
+    exprs, cuts, input_string = SV.vars_and_cuts ( expressions , cuts ) 
 
     ## Frame/Tree ?
     if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )

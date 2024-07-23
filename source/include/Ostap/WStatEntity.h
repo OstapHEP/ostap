@@ -29,16 +29,18 @@ namespace Ostap
   public: // the basic getters 
     // ======================================================================
     /// total number of entries 
-    unsigned long long n   () const { return m_weights.n() ; }
+    unsigned long long       n   () const { return m_weights.n() ; }
     /// the first weighted moment/mean-value 
-    double             mu  () const { return m_mu  ; }
+    double                   mu  () const { return m_mu  ; }
     /// the second central weighted moment/dispersion/variance  
-    double             mu2 () const { return m_mu2 ; }
+    double                   mu2 () const { return m_mu2 ; }
     // ======================================================================
   public: // derived getters and aliases 
     // ======================================================================
+    /// empty ?
+    bool                     empty      () const { return m_weights.empty()  ; }
     /// get the actual number of entries 
-    unsigned long long       nEntries   () const { return n() ; }
+    unsigned long long       nEntries   () const { return n () ; }
     /// mean-value 
     double                   mean       () const { return m_mu  ; }
     /// error im mean-value 
@@ -100,6 +102,8 @@ namespace Ostap
     // ========================================================================
     /// reset the counters
     void reset () ;
+    /// swap two cunters
+    void swap ( WStatEntity& right ) ;
     /// representation as string
     std::string   toString   () const;
     /// printout  to std::ostream
@@ -171,6 +175,9 @@ namespace Ostap
   /// conversion to string 
   inline std::string to_string ( const WStatEntity& e ) { return e.toString() ;}
   // ==========================================================================
+  /// swap two counters 
+  inline void swap ( WStatEntity&  a , WStatEntity&  b  ) { a.swap( b ) ; }
+  // =========================================================================
 } //                                                 The end of namespace Ostap
 // ============================================================================
 // The END 

@@ -14,7 +14,6 @@
 // ============================================================================
 #include "RVersion.h"
 #include "TTree.h"
-#include "TCut.h"
 #include "TMatrixTSym.h"
 #include "RooDataSet.h"
 #include "RooAbsReal.h"
@@ -970,24 +969,6 @@ bool Ostap::StatVar::hasEntry
   return false ;
 }
 // ============================================================================
-/*  check if there is at least one entry that satisfies criteria 
- *  @param tree       (INPUT) the tree 
- *  @param cuts       (INPUT) criteria 
- *  @param first      (INPUT) the first entry 
- *  @param last       (INPUT) the last entry
- *  @return true if there exist at leats one entry 
- */
-// ============================================================================
-bool Ostap::StatVar::hasEntry 
-( TTree*              tree  , 
-  const TCut&         cuts  ,   
-  const unsigned long first ,
-  const unsigned long last  )
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  return hasEntry ( tree , _cuts , first , last ) ;
-}
-// ============================================================================
 /** check if there is at least one entry that satisfies criteria 
  *  @param data       (INPUT) data 
  *  @param cuts       (INPUT) criteria 
@@ -1044,45 +1025,6 @@ bool Ostap::StatVar::hasEntry
   const unsigned long last      ) 
 { return hasEntry ( data , cuts , "" , first , last ) ; }
 // ============================================================================
-/** check if there is at least one entry that satisfies criteria 
- *  @param data       (INPUT) data 
- *  @param cuts       (INPUT) criteria 
- *  @param cut_range  (INPUT) cut range 
- *  @param first      (INPUT) the first entry 
- *  @param last       (INPUT) the last entry
- *  @return true if there exist at leats one entry 
- */
-// ============================================================================
-bool Ostap::StatVar::hasEntry 
-( const RooAbsData*   data      , 
-  const TCut&         cuts      , 
-  const std::string&  cut_range , 
-  const unsigned long first     ,
-  const unsigned long last      ) 
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  return hasEntry ( data , _cuts , cut_range , first , last ) ;
-}
-// ============================================================================
-/** check if there is at least one entry that satisfies criteria 
- *  @param data       (INPUT) data 
- *  @param cuts       (INPUT) criteria 
- *  @param cut_range  (INPUT) cut range 
- *  @param first      (INPUT) the first entry 
- *  @param last       (INPUT) the last entry
- *  @return true if there exist at leats one entry 
- */
-// ============================================================================
-bool Ostap::StatVar::hasEntry 
-( const RooAbsData*   data      , 
-  const TCut&         cuts      , 
-  const unsigned long first     ,
-  const unsigned long last      ) 
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  return hasEntry ( data , _cuts , "" , first , last ) ;
-}
-// ============================================================================
 /*  build statistic for the <code>expression</code>
  *  @param tree (INPUT) the tree
  *  @param expression (INPUT) the expression
@@ -1096,14 +1038,14 @@ bool Ostap::StatVar::hasEntry
  *  @date   2013-10-13
  */
 // ============================================================================
-Ostap::StatVar::Statistic
+Ostap::StatEntity
 Ostap::StatVar::statVar
 ( TTree*              tree       ,
   const std::string&  expression ,
   const unsigned long first      ,
   const unsigned long last       )
 {
-  Statistic result ;
+  Ostap::StatEntity result {} ;
   if ( 0 == tree || last <= first ) { return result ; }  // RETURN
   Ostap::Formula formula ( expression , tree ) ;
   if ( !formula.GetNdim() )         { return result ; }  // RETURN
@@ -1187,32 +1129,6 @@ Ostap::StatVar::statVar
   }
   //
   return result ;
-}
-// ============================================================================
-/*  build statistic for the <code>expression</code>
- *  @param tree       (INPUT) the tree
- *  @param expression (INPUT) the expression
- *  @param cuts       (INPUT) the selection criteria
- *
- *  @code
- *  tree = ...
- *  stat = tree.statVar( 'S_sw' ,'pt>1000')
- *  @endcode
- *
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2013-10-13
- */
-// ============================================================================
-Ostap::StatVar::Statistic
-Ostap::StatVar::statVar
-( TTree*              tree       ,
-  const std::string&  expression ,
-  const TCut&         cuts       ,
-  const unsigned long first      ,
-  const unsigned long last       )
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  return statVar ( tree , expression , _cuts , first , last ) ;
 }
 // ============================================================================
 /*  build statistic for the <code>expressions</code>
@@ -1356,242 +1272,155 @@ unsigned long Ostap::StatVar::statVars
   return results.empty() ? 0 : result[0].nEntries() ;
 }
 // ============================================================================
-/** build statistic for the <code>expressions</code>
- *  @param tree        (INPUT)  the tree 
- *  @param result      (UPDATE) the output statistics for specified expressions 
- *  @param expressions (INPUT)  the list of  expressions
- *  @param cuts        (INPUT)  the selection criteria 
- *  @param first       (INPUT)  the first entry to process 
- *  @param last        (INPUT)  the last entry to process (not including!)
- *  @return number of processed entries 
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2018-11-04
- */
-// ============================================================================
-unsigned long Ostap::StatVar::statVars
-( TTree*                                  tree        ,  
-  std::vector<Ostap::StatVar::Statistic>& result      ,  
-  const Ostap::StatVar::Names&            expressions ,
-  const TCut&                             cuts        ,
-  const unsigned long                     first       ,
-  const unsigned long                     last        ) 
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  return statVars ( tree , result , expressions , _cuts , first , last ) ;
-}
-// ============================================================================
 /*  calculate the covariance of two expressions
  *  @param tree  (INPUT)  the input tree
- *  @param exp1  (INPUT)  the first  expresiion
- *  @param exp2  (INPUT)  the second expresiion
- *  @param stat1 (UPDATE) the statistic for the first  expression
- *  @param stat2 (UPDATE) the statistic for the second expression
- *  @param cov2  (UPDATE) the covariance matrix
- *  @return number of processed events
- *
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2014-03-27
+ *  @param exp1  (INPUT)  the first  expression
+ *  @param exp2  (INPUT)  the second expression
+ *  @return covariance
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date   2024-07-22
  */
 // ============================================================================
-unsigned long
+Ostap::StatVar::Covariance
 Ostap::StatVar::statCov
 ( TTree*                     tree    ,
   const std::string&         exp1    ,
   const std::string&         exp2    ,
-  Ostap::StatVar::Statistic& stat1   ,
-  Ostap::StatVar::Statistic& stat2   ,
-  Ostap::SymMatrix2x2&       cov2    ,
   const unsigned long        first   ,
   const unsigned long        last    )
 {
   //
-  stat1.reset () ;
-  stat2.reset () ;
-  Ostap::Math::setToScalar ( cov2 , 0.0 ) ;
-  //
-  if ( 0 == tree || last <= first ) { return 0 ; }         // RETURN
+  Ostap::Assert ( nullptr != tree           ,  
+		  "Invalid TTree"           , 
+		  "Ostap::StatVar::statCov" ) ;
+  // 
+  // prepare the result 
+  Ostap::StatVar::Covariance result {} ;
+  ///
+  if ( last <= first ) { return result ; }  // RETURN
+  
   Ostap::Formula formula1 ( exp1 , tree ) ;
-  if ( !formula1 .ok () ) { return 0 ; }                   // RETURN
+  Ostap::Assert ( formula1.ok()                                        ,
+		  std::string ( "Invalid first  expression: " ) + exp1  ,  
+		  "Ostap::StatVar::statCov"                            ) ;
   Ostap::Formula formula2 ( exp2 , tree ) ;
-  if ( !formula2 .ok () ) { return 0 ; }                   // RETURN
+  Ostap::Assert ( formula2.ok()                                        ,
+		  std::string ( "Invalid second expression: " ) + exp2  , 
+		  "Ostap::StatVar::statCov"                            ) ;
   //
   Ostap::Utils::Notifier notify ( tree , &formula1 , &formula2 ) ;
   //
-  const unsigned long nEntries =
-    std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  const unsigned long nEntries = std::min ( last , (unsigned long) tree->GetEntries() ) ;
   //
   std::vector<double> results1 {} ;
   std::vector<double> results2 {} ;
+  //
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )
-  {
-    //
-    long ievent = tree->GetEntryNumber ( entry ) ;
-    if ( 0 > ievent ) { break ; }                        // BREAK
-    //
-    ievent      = tree->LoadTree ( ievent ) ;
-    if ( 0 > ievent ) { break ; }                        // BREAK
-    //
-    formula1.evaluate ( results1 ) ;
-    formula2.evaluate ( results2 ) ;
-    //
-    for ( const long double v1 : results1 ) 
-    { 
-      for ( const long double v2 : results2 ) 
-      {
-        //
-        stat1 += v1 ;
-        stat2 += v2 ;
-        //
-        cov2 ( 0 , 0 ) += v1*v1 ;
-        cov2 ( 0 , 1 ) += v1*v2 ;
-        cov2 ( 1 , 1 ) += v2*v2 ;
-      }
+    {
+      //
+      long ievent = tree->GetEntryNumber ( entry ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      ievent      = tree->LoadTree ( ievent ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      formula1.evaluate ( results1 ) ;
+      formula2.evaluate ( results2 ) ;
+      //
+      for ( const long double v1 : results1 ) 
+	{ 
+	  for ( const long double v2 : results2 ) 
+	    { 
+	      result.add ( v1 , v2 ) ;
+	    }
+	}
+      //
     }
-    //
-  }
   //
-  if ( 0 == stat1.nEntries() ) { return 0 ; }          // RETURN
-  //
-  cov2 /= stat1.nEntries () ;
-  //
-  const double v1_mean = stat1.mean() ;
-  const double v2_mean = stat2.mean() ;
-  //
-  cov2 ( 0 , 0 ) -= v1_mean * v1_mean ;
-  cov2 ( 0 , 1 ) -= v1_mean * v2_mean ;
-  cov2 ( 1 , 1 ) -= v2_mean * v2_mean ;
-  //
-  return stat1.nEntries () ;
-}
-// ============================================================================
-/*  calculate the covariance of two expressions
- *  @param tree  (INPUT)  the inpout tree
- *  @param exp1  (INPUT)  the first  expresiion
- *  @param exp2  (INPUT)  the second expresiion
- *  @param cuts  (INPUT)  the selection criteria
- *  @param stat1 (UPDATE) the statistic for the first  expression
- *  @param stat2 (UPDATE) the statistic for the second expression
- *  @param cov2  (UPDATE) the covariance matrix
- *  @return number of processed events
- *
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2014-03-27
- */
-// ============================================================================
-unsigned long
-Ostap::StatVar::statCov
-( TTree*                     tree  ,
-  const std::string&         exp1  ,
-  const std::string&         exp2  , 
-  const std::string&         cuts  ,
-  Ostap::StatVar::Statistic& stat1 ,
-  Ostap::StatVar::Statistic& stat2 ,
-  Ostap::SymMatrix2x2&       cov2  ,
-  const unsigned long        first ,
-  const unsigned long        last  )
-{
-  if ( cuts.empty() ) 
-  { return statCov ( tree , exp1 , exp2 , stat1 , stat2 , cov2 , first , last ) ; }
-  //
-  stat1.reset () ;
-  stat2.reset () ;
-  Ostap::Math::setToScalar ( cov2 , 0.0 ) ;
-  //
-  if ( 0 == tree || last <= first ) { return 0 ; }              // RETURN
-  Ostap::Formula formula1 ( exp1 , tree ) ;
-  if ( !formula1 .ok () ) { return 0 ; }                        // RETURN
-  Ostap::Formula formula2 ( exp2 , tree ) ;
-  if ( !formula2 .ok () ) { return 0 ; }                        // RETURN
-  Ostap::Formula selection ( cuts      , tree ) ;
-  if ( !selection.ok () ) { return 0 ; }                        // RETURN
-  //
-  Ostap::Utils::Notifier notify ( tree , &formula1 , &formula2 ) ;
-  //
-  const unsigned long nEntries =
-    std::min ( last , (unsigned long) tree->GetEntries() ) ;
-  //
-  std::vector<double> results1 {} ;
-  std::vector<double> results2 {} ;
-  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
-  {
-    //
-    long ievent = tree->GetEntryNumber ( entry ) ;
-    if ( 0 > ievent ) { break ; }                              // RETURN
-    //
-    ievent      = tree->LoadTree ( ievent ) ;
-    if ( 0 > ievent ) { break ; }                              // RETURN
-    //
-    const double w = selection.evaluate() ;
-    //
-    if ( !w ) { continue ; }                                   // ATTENTION
-    //
-    formula1.evaluate ( results1 ) ;
-    formula2.evaluate ( results2 ) ;
-    //
-    for ( const long double v1 : results1 ) 
-    { 
-      for ( const long double v2 : results2 ) 
-      {
-        //
-        stat1.add ( v1 , w ) ;
-        stat2.add ( v2 , w ) ;
-        //
-        cov2 ( 0 , 0 ) += w*v1*v1 ;
-        cov2 ( 0 , 1 ) += w*v1*v2 ;
-        cov2 ( 1 , 1 ) += w*v2*v2 ;
-      }
-    }
-  }
-  //
-  if ( 0 == stat1.nEntries() || 0 == stat1.nEff () ) { return 0 ; }
-  //
-  cov2 /= stat1.weights().sum()  ;
-  //
-  const double v1_mean = stat1.mean() ;
-  const double v2_mean = stat2.mean() ;
-  //
-  cov2 ( 0 , 0 ) -= v1_mean * v1_mean ;
-  cov2 ( 0 , 1 ) -= v1_mean * v2_mean ;
-  cov2 ( 1 , 1 ) -= v2_mean * v2_mean ;
-  //
-  return stat1.nEntries() ;
-}
-// ============================================================================
-/*  calculate the covariance of two expressions
- *  @param tree  (INPUT)  the inpout tree
- *  @param exp1  (INPUT)  the first  expresiion
- *  @param exp2  (INPUT)  the second expresiion
- *  @param cuts  (INPUT)  the selection criteria
- *  @param stat1 (UPDATE) the statistic for the first  expression
- *  @param stat2 (UPDATE) the statistic for the second expression
- *  @param cov2  (UPDATE) the covariance matrix
- *  @return number of processed events
- *
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2014-03-27
- */
-// ============================================================================
-unsigned long
-Ostap::StatVar::statCov
-( TTree*               tree    ,
-  const std::string&   exp1    ,
-  const std::string&   exp2    ,
-  const TCut&          cuts    ,
-  Ostap::StatVar::Statistic& stat1 ,
-  Ostap::StatVar::Statistic& stat2 ,
-  Ostap::SymMatrix2x2& cov2    ,
-  const unsigned long  first   ,
-  const unsigned long  last    )
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  //
-  return statCov ( tree  ,
-                   exp1  , exp2    , _cuts ,
-                   stat1 , stat2   , cov2  ,
-                   first , last    ) ;
+  return result ;
 }
 // ============================================================================
 /*  calculate the covariance of two expressions 
+ *  @param tree  (INPUT)  the inpout tree 
+ *  @param exp1  (INPUT)  the first  expression
+ *  @param exp2  (INPUT)  the second expression
+ *  @param cuts  (INPUT)  cuts/weigths expression 
+ *  @return Covariance 
+ *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+ *  @date   2024-07-22
+ */
+// ============================================================================
+Ostap::StatVar::WCovariance
+Ostap::StatVar::statCov
+( TTree*                     tree    ,
+  const std::string&         exp1    ,
+  const std::string&         exp2    ,
+  const std::string&         cuts    ,
+  const unsigned long        first   ,
+  const unsigned long        last    )
+{
+  //
+  Ostap::Assert ( nullptr != tree           ,  
+		  "Invalid TTree"           , 
+		  "Ostap::StatVar::statCov" ) ;
+  // 
+  // prepare the result 
+  Ostap::StatVar::WCovariance result {} ;
+  ///
+  if ( last <= first ) { return result ; }
+  //
+  Ostap::Formula formula1 ( exp1 , tree ) ;
+  Ostap::Assert ( formula1.ok()                        ,
+		  std::string ( "Invalid first  expression: " ) + exp1  ,  
+		  "Ostap::StatVar::statCov"            ) ;
+  //
+  Ostap::Formula formula2 ( exp2 , tree ) ;
+  Ostap::Assert ( formula2.ok()                        ,
+		  std::string ( "Invalid second expression: " ) + exp2  , 
+		  "Ostap::StatVar::statCov"            ) ;
+  //
+  const std::unique_ptr<Ostap::Formula> selection { !cuts.empty() ? new Ostap::Formula ( cuts , tree ) : nullptr } ;
+  Ostap::Assert ( !selection || selection->ok ()       ,
+		  std::string ( "Invalid selection/weight: " ) + cuts , 
+		  "Ostap::StatVar::statCov"            ) ;
+  ///
+  Ostap::Utils::Notifier notify ( tree , &formula1 , selection.get() ) ;
+  //
+  const bool with_cuts = selection && selection->ok () ;
+  //
+  const unsigned long nEntries = std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  std::vector<double> results1 {} ;
+  std::vector<double> results2 {} ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
+    {
+      //
+      long ievent = tree->GetEntryNumber ( entry ) ;
+      if ( 0 > ievent ) { break ; }                              // RETURN
+      //
+      ievent      = tree->LoadTree ( ievent ) ;
+      if ( 0 > ievent ) { break ; }                              // RETURN
+      //
+      const double w = with_cuts ? selection->evaluate() : 1.0 ; 
+      //
+      if ( !w ) { continue ; }                                   // ATTENTION
+      //
+      formula1.evaluate ( results1 ) ;
+      formula2.evaluate ( results2 ) ;
+      //
+      for ( const long double v1 : results1 ) 
+	{ 
+	  for ( const long double v2 : results2 ) 
+	    {
+	      result.add ( v1 , v2 , w ) ;
+	    }
+	}
+    }
+  //
+  return result ;
+}
+// ============================================================================
+/*  calculate the covariance of several expressions 
  *  @param tree  (INPUT)  the inpout tree 
  *  @param vars  (INPUT)  expressions 
  *  @param cuts  (INPUT)  the selection criteria 
@@ -1712,31 +1541,6 @@ Ostap::StatVar::statCov
 /*  calculate the covariance of two expressions 
  *  @param tree  (INPUT)  the inpout tree 
  *  @param vars  (INPUT)  expressions 
- *  @param cuts  (INPUT)  the selection criteria 
- *  @param stats (UPDATE) the statistics 
- *  @param cov2  (UPDATE) the covariance matrix 
- *  @return number of processed events 
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2023-02-28
- */
-// ============================================================================
-unsigned long
-Ostap::StatVar::statCov
-( TTree*                          tree  , 
-  const std::vector<std::string>& vars  , 
-  const TCut&                     cuts  ,
-  std::vector<Statistic>&         stats ,  
-  TMatrixTSym<double>&            cov2  , 
-  const unsigned long             first ,
-  const unsigned long             last  ) 
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  return statCov ( tree , vars , _cuts , stats , cov2 , first , last  ) ;
-}
-// ============================================================================
-/*  calculate the covariance of two expressions 
- *  @param tree  (INPUT)  the inpout tree 
- *  @param vars  (INPUT)  expressions 
  *  @param stats (UPDATE) the statistics 
  *  @param cov2  (UPDATE) the covariance matrix 
  *  @return number of processed events 
@@ -1755,31 +1559,6 @@ Ostap::StatVar::statCov
 {
   static const std::string cuts{} ;
   return statCov ( tree , vars ,  cuts , stats , cov2 , first , last  ) ;
-}
-// ============================================================================
-Ostap::StatVar::Statistic
-Ostap::StatVar::statVar
-( const RooAbsData*   data        ,
-  const std::string&  expression  ,
-  const TCut&         cuts        ,
-  const std::string&  cut_range   ,
-  const unsigned long first       ,
-  const unsigned long last        )
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  return statVar ( data , expression , _cuts , cut_range , first , last ) ;
-}
-// ============================================================================
-Ostap::StatVar::Statistic
-Ostap::StatVar::statVar
-( const RooAbsData*   data        ,
-  const std::string&  expression  ,
-  const TCut&         cuts        ,
-  const unsigned long first       ,
-  const unsigned long last        )
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  return statVar ( data , expression , _cuts , "" , first , last ) ;
 }
 // ============================================================================
 Ostap::StatVar::Statistic
@@ -1826,58 +1605,6 @@ Ostap::StatVar::statVar
   }
   //
   return result ;
-}
-// ============================================================================
-/*  build statistic for the <code>expressions</code>
- *  @param data        (INPUT)  input data 
- *  @param result      (UPDATE) the output statistics for specified expressions 
- *  @param expressions (INPUT)  the list of  expressions
- *  @param cuts        (INPUT)  the selection  
- *  @param first       (INPUT)  the first entry to process 
- *  @param last        (INPUT)  the last entry to process (not including!)
- *  @return number of processed entries 
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2021-06-04
- */
-// ============================================================================
-unsigned long
-Ostap::StatVar::statVars
-( const RooAbsData*               data        , 
-  std::vector<Statistic>&         result      , 
-  const Ostap::StatVar::Names&    expressions ,
-  const TCut&                     cuts        ,
-  const unsigned long             first       ,
-  const unsigned long             last        ) 
-{
-  const std::string cuts_ = cuts.GetTitle() ;
-  return statVars ( data , result , expressions , cuts_ , "" , first , last ) ;
-}
-// ============================================================================
-/*  build statistic for the <code>expressions</code>
- *  @param data        (INPUT)  input data 
- *  @param result      (UPDATE) the output statistics for specified expressions 
- *  @param expressions (INPUT)  the list of  expressions
- *  @param cuts        (INPUT)  the selection  
- *  @param cut_range   (INPUT)  cut range  
- *  @param first       (INPUT)  the first entry to process 
- *  @param last        (INPUT)  the last entry to process (not including!)
- *  @return number of processed entries 
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2021-06-04
- */
-// ============================================================================
-unsigned long
-Ostap::StatVar::statVars
-( const RooAbsData*               data        , 
-  std::vector<Statistic>&         result      , 
-  const Ostap::StatVar::Names&    expressions ,
-  const TCut&                     cuts        ,
-  const std::string&              cut_range   ,
-  const unsigned long             first       ,
-  const unsigned long             last        ) 
-{
-  const std::string cuts_ = cuts.GetTitle() ;
-  return statVars ( data , result , expressions , cuts_ , cut_range , first , last ) ;
 }
 // ============================================================================
 /** build statistic for the <code>expressions</code>
@@ -1957,92 +1684,6 @@ Ostap::StatVar::statVars
   }
   //
   return result.empty() ? 0 : result[0].nEntries() ;
-}
-// ============================================================================
-/*  calculate the covariance of two expressions
- *  @param tree  (INPUT)  the input tree
- *  @param exp1  (INPUT)  the first  expresiion
- *  @param exp2  (INPUT)  the second expresiion
- *  @param cuts  (INPUT)  selection
- *  @param stat1 (UPDATE) the statistic for the first  expression
- *  @param stat2 (UPDATE) the statistic for the second expression
- *  @param cov2  (UPDATE) the covariance matrix
- *  @return number of processed events
- *
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2014-03-27
- */
-// ============================================================================
-unsigned long
-Ostap::StatVar::statCov
-( const RooAbsData*             data      ,
-  const std::string&            exp1      ,
-  const std::string&            exp2      ,
-  const std::string&            cuts      ,
-  Ostap::StatVar::Statistic& stat1     ,
-  Ostap::StatVar::Statistic& stat2     ,
-  Ostap::SymMatrix2x2&          cov2      ,
-  const std::string&            cut_range ,
-  const unsigned long           first     ,
-  const unsigned long           last      )
-{
-  //
-  stat1.reset () ;
-  stat2.reset () ;
-  Ostap::Math::setToScalar ( cov2 , 0.0 ) ;
-  //
-  if ( 0 == data || last <= first ) { return 0 ; }               // RETURN
-  //
-  const std::unique_ptr<Ostap::FormulaVar> formula1  { make_formula ( exp1 , *data         ) } ;
-  const std::unique_ptr<Ostap::FormulaVar> formula2  { make_formula ( exp2 , *data         ) } ;
-  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data ,  true ) } ;
-  //
-  const bool weighted = data->isWeighted() ;
-  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
- //
-  const unsigned long nEntries = std::min ( last , (unsigned long) data->numEntries() ) ;
-  //
-  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
-  {
-    //
-    const RooArgSet* vars = data->get( entry ) ;
-    if ( nullptr == vars  )                           { break    ; } // RETURN
-    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE    
-    //
-    // apply cuts:
-    const long double wc = selection ? selection -> getVal() : 1.0L ;
-    if ( !wc ) { continue ; }                                   // CONTINUE  
-    // apply weight:
-    const long double wd = weighted  ? data->weight()        : 1.0L ;
-    if ( !wd ) { continue ; }                                   // CONTINUE    
-    // cuts & weight:
-    const long double w  = wd *  wc ;
-    if ( !w  ) { continue ; }                                   // CONTINUE        
-    //
-    const double v1 = formula1->getVal() ;
-    const double v2 = formula2->getVal() ;
-    //
-    stat1.add ( v1 , w ) ;
-    stat2.add ( v2 , w ) ;
-    //
-    cov2 ( 0 , 0 ) += w * v1 * v1 ;
-    cov2 ( 0 , 1 ) += w * v1 * v2 ;
-    cov2 ( 1 , 1 ) += w * v2 * v2 ;
-    //
-  }
-  //
-  if ( 0 == stat1.nEntries() || 0 == stat1.nEff () ) { return 0 ; }
-  //
-  cov2 /= stat1.weights().sum()  ;
-  //
-  const double v1_mean = stat1.mean() ;
-  const double v2_mean = stat2.mean() ;
-  //
-  cov2 ( 0 , 0 ) -= v1_mean * v1_mean ;
-  cov2 ( 0 , 1 ) -= v1_mean * v2_mean ;
-  cov2 ( 1 , 1 ) -= v2_mean * v2_mean ;
-  //
-  return stat1.nEntries() ;
 }
 // ============================================================================
 /*  calculate the covariance of several expressions 
@@ -2141,33 +1782,6 @@ Ostap::StatVar::statCov
     { if ( !cov2 ( i , j ) ) { cov2 ( i , j ) = cov2 ( j , i ) ; } } }
   //
   return stats[0].nEntries() ;
-}
-// ============================================================================
-/*  calculate the covariance of several expressions 
- *  @param tree      (INPUT)  the inpout tree 
- *  @param vars      (INPUT)  expressions 
- *  @param cuts      (INPUT)  the selection criteria 
- *  @param stats     (UPDATE) the statistics 
- *  @param cov2      (UPDATE) the covariance matrix 
- *  @param cut_range (INPUT)  range  
- *  @return number of processed events 
- *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2023-02-28
- */
-// ============================================================================
-unsigned long
-Ostap::StatVar::statCov
-( const RooAbsData*               data      , 
-  const std::vector<std::string>& vars      ,  
-  const TCut&                     cuts      ,
-  std::vector<Statistic>&         stats     ,  
-  TMatrixTSym<double>&            cov2      ,  
-  const std::string&              cut_range ,
-  const unsigned long             first     ,
-  const unsigned long             last      )
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  return statCov ( data , vars , _cuts , stats , cov2 , cut_range , first , last ) ;  
 }
 // ============================================================================
 /*  calculate the covariance of several expressions 
@@ -3581,48 +3195,61 @@ Ostap::StatVar::statVar
  *  @param frame (INPUT)  data frame 
  *  @param exp1  (INPUT)  the first  expresiion
  *  @param exp2  (INPUT)  the second expresiion
- *  @param stat1 (UPDATE) the statistic for the first  expression
- *  @param stat2 (UPDATE) the statistic for the second expression
- *  @param cov2  (UPDATE) the covariance matrix 
- *  @return number of processed events 
- *  
+ *  @return covariance 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2018-06-18
+ *  @date   2024-07-22
  */
 // ============================================================================
-unsigned long Ostap::StatVar::statCov
-( Ostap::FrameNode     frame  , 
-  const std::string&   exp1   , 
-  const std::string&   exp2   , 
-  Statistic&           stat1  ,  
-  Statistic&           stat2  ,  
-  Ostap::SymMatrix2x2& cov2   ) 
-{ return statCov ( frame , exp1 , exp2 , "" , stat1 , stat2  ,  cov2 ) ; }
+Ostap::StatVar::Covariance
+Ostap::StatVar::statCov
+( Ostap::FrameNode     frame , 
+  const std::string&   exp1  , 
+  const std::string&   exp2  )  
+{
+  /// define the temporary columns 
+  const std::string var1   = Ostap::tmp_name ( "v_" , exp1 ) ;
+  const std::string var2   = Ostap::tmp_name ( "v_" , exp2 ) ;
+  auto t = frame
+    .Define ( var1   ,                   "1.0*(" + exp1 + ")" ) 
+    .Define ( var2   ,                   "1.0*(" + exp2 + ")" ) ;
+  ///
+  const unsigned int nSlots = std::max ( 1u , 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+					 ROOT::GetThreadPoolSize     () 
+#else 
+					 ROOT::GetImplicitMTPoolSize () 
+#endif
+					 ); 
+  //
+  std::vector<Covariance>           _covs ( nSlots ? nSlots : 1 ) ;
+  //
+  auto fun = [&_covs,nSlots] ( unsigned int slot , double v1 , double v2 )
+  { _covs [ slot % nSlots ].add ( v1 , v2 ) ; } ;
+  t.ForeachSlot ( fun , { var1 , var2 } ); 
+  //
+  Covariance result ;
+  for ( const auto& s : _covs ) { result += s ; }
+  //
+  return result ;
+}
 // ============================================================================
 /*  calculate the covariance of two expressions 
  *  @param frame (INPUT)  data frame 
  *  @param exp1  (INPUT)  the first  expresiion
  *  @param exp2  (INPUT)  the second expresiion
- *  @param cuts  (INPUT)  the selection 
- *  @param stat1 (UPDATE) the statistic for the first  expression
- *  @param stat2 (UPDATE) the statistic for the second expression
- *  @param cov2  (UPDATE) the covariance matrix 
- *  @return number of processed events 
- *  
+ *  @param cuts  (INPUT)  the selection/weight  
+ *  @return covariance 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
- *  @date   2018-06-18
+ *  @date   2024-07-22
  */
 // ============================================================================
-unsigned long Ostap::StatVar::statCov
+Ostap::StatVar::WCovariance
+Ostap::StatVar::statCov
 ( Ostap::FrameNode     frame , 
   const std::string&   exp1  , 
   const std::string&   exp2  , 
-  const std::string&   cuts  , 
-  Statistic&           stat1 ,  
-  Statistic&           stat2 ,  
-  Ostap::SymMatrix2x2& cov2  ) 
+  const std::string&   cuts  ) 
 {
-  //
   const bool no_cuts = trivial ( cuts ) ; 
   /// define the temporary columns 
   const std::string var1   = Ostap::tmp_name ( "v_" , exp1 ) ;
@@ -3644,39 +3271,16 @@ unsigned long Ostap::StatVar::statCov
 #endif
 					 ); 
   //
-  std::vector<Statistic>           _sta1 ( nSlots ? nSlots : 1 ) ;
-  std::vector<Statistic>           _sta2 ( nSlots ? nSlots : 1 ) ;
-  std::vector<Ostap::SymMatrix2x2> _cov2 ( nSlots ? nSlots : 1 ) ;
+  std::vector<WCovariance>           _covs ( nSlots ? nSlots : 1 ) ;
   //
-  auto fun = [&_sta1,&_sta2,&_cov2,nSlots] 
-    ( unsigned int slot , double v1 , double v2 , double w )  { 
-    if ( w ) 
-    {
-      _sta1 [ slot % nSlots ].add ( v1 , w ) ; 
-      _sta2 [ slot % nSlots ].add ( v2 , w ) ; 
-      _cov2 [ slot % nSlots ]( 0 , 0 ) += w * v1 * v1 ;
-      _cov2 [ slot % nSlots ]( 0 , 1 ) += w * v1 * v2 ;
-      _cov2 [ slot % nSlots ]( 1 , 1 ) += w * v2 * v2 ;        
-     }
-  } ;
+  auto fun = [&_covs,nSlots] ( unsigned int slot , double v1 , double v2 , double w )
+  { if ( w )  { _covs [ slot % nSlots ].add ( v1 , v2 , w ) ;  } } ;
   t.ForeachSlot ( fun , { var1 , var2 , weight } ); 
-  // 
-  for ( const auto& s : _sta1 ) { stat1 += s ; }
-  for ( const auto& s : _sta2 ) { stat2 += s ; }
-  for ( const auto& s : _cov2 ) { cov2  += s ; }
   //
-  if  ( 0 == stat1.nEntries() ) { return 0 ; }
+  WCovariance result ;
+  for ( const auto& s : _covs ) { result += s ; }
   //
-  cov2 /= stat1.nEntries() ;
-  //
-  const double v1_mean = stat1.mean() ;
-  const double v2_mean = stat2.mean() ;
-  //
-  cov2 ( 0 , 0 ) -= v1_mean * v1_mean ;
-  cov2 ( 0 , 1 ) -= v1_mean * v2_mean ;
-  cov2 ( 1 , 1 ) -= v2_mean * v2_mean ;
-  //
-  return stat1.nEntries () ;  
+  return result ;
 }
 // ============================================================================
 /*  calculate the moment of order "order" relative to the center "center"
@@ -4375,30 +3979,6 @@ Ostap::StatVar::get_table
 /*  get variables from dataset in form of the table 
  *  @param data input dataset
  *  @param vars list of variables
- *  @param cuts selection criteria 
- *  @param table output table
- *  @param weights column of weigths (empty for non-weighted data) 
- *  @param first first entry 
- *  @param last  last entry 
- */
-// ============================================================================
-unsigned long 
-Ostap::StatVar::get_table 
-( const RooAbsData*                  data    , 
-  const Ostap::StatVar::Names&       vars    , 
-  const TCut&                        cuts    , 
-  Ostap::StatVar::Table&             table   ,
-  Ostap::StatVar::Column&            weights ,
-  const unsigned long                first   ,
-  const unsigned long                last    )
-{ 
-  const std::string _cuts = cuts.GetTitle() ;
-  return get_table ( data , vars , _cuts , table , weights , ""  , first , last  ) ; 
-}
-// ============================================================================
-/*  get variables from dataset in form of the table 
- *  @param data input dataset
- *  @param vars list of variables
  *  @param table output table
  *  @param weights column of weigths (empty for non-weighted data) 
  *  @param first first entry 
@@ -4415,31 +3995,6 @@ Ostap::StatVar::get_table
   const unsigned long                last    )
 { return get_table ( data , vars , std::string("")  , table , weights , "" , first , last ) ; }
 // ============================================================================
-/** get variables from dataset in form of the table 
- *  @param data input dataset
- *  @param vars list of variables
- *  @param cut_range cut range 
- *  @param table output table
- *  @param weights column of weigths (empty for non-weighted data) 
- *  @param first first entry 
- *  @param last  last entry 
- */
-// ============================================================================
-unsigned long 
-Ostap::StatVar::get_table 
-( const RooAbsData*                  data      , 
-  const Ostap::StatVar::Names&       vars      , 
-  const TCut&                        cuts      ,
-  Ostap::StatVar::Table&             table     ,
-  Ostap::StatVar::Column&            weights   ,
-  const std::string&                 cut_range ,
-  const unsigned long                first     ,
-  const unsigned long                last      )
-{
-  const std::string _cuts = cuts.GetTitle() ;
-  return get_table ( data , vars , _cuts , table , weights , cut_range  , first , last  ) ; 
-}
-// =============================================================================
 /** get variables from dataset in form of the table 
  *  @param data input dataset
  *  @param vars list of variables
