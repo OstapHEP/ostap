@@ -763,10 +763,6 @@ ROOT.RooAbsData . __truediv__   = ROOT.RooAbsData . __div__
 ROOT.RooAbsData . sample        = _rad_sample_
 ROOT.RooAbsData . shuffle       = _rad_shuffle_
 
-from ostap.trees.trees import  _stat_covs_ 
-
-ROOT.RooAbsData . statCovs      = _stat_covs_ 
-
 from ostap.stats.statvars import data_the_moment
 ROOT.RooAbsData. the_moment = data_the_moment 
 
@@ -802,7 +798,6 @@ _new_methods_ += [
    ROOT.RooAbsData . sample        ,
    ROOT.RooAbsData . shuffle       ,
    #
-   ROOT.RooAbsData . statCovs      ,
    ]
 
 

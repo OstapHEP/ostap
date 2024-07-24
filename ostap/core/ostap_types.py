@@ -26,7 +26,8 @@ __all__     = (
     'sequence_types'  , ## sequence types
     'iterable_types'  , ## iterable 
     'sized_types'     , ## sized types
-    'path_types'      , ## path-like types     
+    'path_types'      , ## path-like types
+    'ordered_dict'    , ## normal/ordered dict 
     ##
     'is_integer'      , ## is a value of int-like type?
     'is_number'       , ## is a value of numeric  type?
@@ -76,11 +77,9 @@ else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
-
 iterable_types  = Iterable,
 num_types       = integer_types + ( float , ) 
 str_types       = str,
-
 list_types      = list , tuple
 import array 
 listlike_types  = list_types + ( set , C.Sequence , array.array )
@@ -99,7 +98,13 @@ path_types      = string_types
 if (3,6) <= python_version :
     path_types = string_types + ( os.PathLike , )
 # =============================================================================
-
+## sometimewe we need to ensure that dictionary is ordered 
+ordered_dict = dict 
+if python_version < ( 3 , 7 ) :
+    from collections import OrderedDict as ordered_dict 
+    dictlike_types += ( ordered_dict, )
+    dict_types     += ( ordered_dict, )
+    
 # =============================================================================
 ## Is this number of a proper integer?
 def is_integer ( v ) :

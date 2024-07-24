@@ -235,7 +235,7 @@ with ROOT.TFile.open ( testdata , 'r' ) as dbroot :
     
 datatree = ROOT.TChain ( 'DATA_tree' ) ; datatree.Add ( testdata ) 
 mctree   = ROOT.TChain ( tag_mc      ) ; mctree.Add   ( testdata ) 
-datastat = datatree.statCov('x','y')
+datastat = datatree.statCov ( 'x' , 'y' )        
 # =============================================================================
 ## prebook MC histograms
 # =============================================================================
@@ -405,8 +405,8 @@ for iter in range ( 1 , maxIter + 1 ) :
         title = tag + ': DATA(x,y) vs MC(x,y) difference'
         logger.info ( '%s:\n%s' % ( title , hdata .cmp_diff_prnt ( hmc  , density = True , title = title , prefix = '# ' ) ) )
         
-        ## 4e) 2D-statistics 
-        mcstat = mcds.statCov('x','y','weight')
+        ## 4e) 2D-statistics
+        mcstat = mcds    .statCov ( 'x' , 'y' , 'weight' )
         logger.info  ( tag + ': x/y correlation DATA (unbinned): %+.2f' % datastat.correlation () ) 
         logger.info  ( tag + ': x/y correlation MC   (unbinned): %+.2f' %   mcstat.correlation () )
 

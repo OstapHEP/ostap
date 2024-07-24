@@ -77,26 +77,25 @@ class StatVarTask(Task) :
         with logWarning() :
             import ostap.core.pyrouts 
             import ostap.trees.trees 
-
         chain   = item.chain 
         first   = item.first
         last    = min ( n_large , first + item.nevents if 0 < item.nevents else n_large )
         
-        from ostap.trees.trees  import _stat_vars_
-
-        self.__output = _stat_vars_ ( chain , self.what , self.cuts , first , last )
+        from   ostap.stats.starvrs import data_statistics 
+        self.__output = data_statistics ( chain , self.what , self.cuts , first , last )
 
         return self.__output 
         
     ## merge results 
     def merge_results ( self , result , jobid = -1 ) :
         
-        from ostap.stats.counters import WSE
+        from ostap.stats.counters   import WSE
+        from ostap.core.ostap_types import dictlike_types
         
         if not self.__output : self.__output = result
         else               :
             assert type( self.__output ) == type ( result ) , 'Invalid types for merging!'
-            if isinstance ( self.__output , dict ) :
+            if isinstance ( self.__output , dictlike_types ) :
                 for key in result : 
                     if    key in self.output : self.__output [ key ] += result [ key ]
                     else                     : self.__output [ key ]  = result [ key ] 
@@ -127,7 +126,7 @@ def pStatVar ( chain               ,
     """
     ## few special/trivial cases
 
-    from ostap.trees.trees  import _stat_vars_
+    import ostap.trees.trees
     last = min ( n_large , first + nevents if 0 < nevents else n_large )
 
     if 0 <= first and 0 < nevents < chunk_size :

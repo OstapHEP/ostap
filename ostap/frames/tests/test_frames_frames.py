@@ -462,7 +462,7 @@ def test_frame7 () :
     poll = rl.GetValue()
     polb = rb.GetValue()
 
-    with use_canvas ( 'test_frame5: b4,b5.b6 as polynomials' , wait = 2 ) :
+    with use_canvas ( 'test_frame7: b4,b5,b6 as polynomials' , wait = 2 ) :
         poll.draw (          linecolor = 2 ) 
         polc.draw ( 'same' , linecolor = 4 ) 
         polb.draw ( 'same' , linecolor = 8 ) 

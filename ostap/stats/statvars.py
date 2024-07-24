@@ -50,6 +50,10 @@ __all__     = (
     'data_central_moment'  , ## get the central moment    (with uncertainty)
     'data_nEff'            , ## get the effective number of entries 
     'data_sum'             , ## get the (weigted) sum
+    'data_statistics'      , ## get the statistics
+    'data_covariance'      , ## get the covariance
+    'data_covariances'     , ## get the covariances
+    'data_statvector'      , ## get the stat-vector    
     'data_mean'            , ## get the mean              (with uncertainty)
     'data_variance'        , ## get the variance          (with uncertainty)
     'data_dispersion'      , ## get the dispersion        (with uncertainty)
@@ -81,7 +85,7 @@ __all__     = (
 # =============================================================================
 from   builtins               import range
 from   ostap.math.base        import isequal, iszero 
-from   ostap.core.core        import Ostap, rootException, WSE   
+from   ostap.core.core        import Ostap, rootException, WSE, VE, std     
 from   ostap.core.ostap_types import ( string_types , integer_types  , 
                                        num_types    , dictlike_types )
 from   ostap.trees.cuts       import expression_types, vars_and_cuts
@@ -299,13 +303,93 @@ def data_covariance ( data , expression1 , expression2 , cuts = '' , *args ) :
     expression1 = str ( expression1 )
     expression2 = str ( expression2 )
     cuts        = str ( cuts        ).strip() 
-    
+
     with rootException() :
         if isinstance ( data , ROOT.TTree ) and not cuts : 
             return StatVar.statCov ( data , expression1 , expression2 ,        *args )
         else  :
             return StatVar.statCov ( data , expression1 , expression2 , cuts , *args )
 
+
+# =============================================================================
+## get the covariances for many varibales 
+#  @code
+#  tree  = ...
+#  stats , cov2 , len = data_covarinces  ( ['x' , 'y'] )
+#  # apply some cuts 
+#  stats , cov2 , len = data_covariances ( [ 'x' , 'y' , 'z'] , 'z>0' )
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2017-02-19
+def data_covariances ( tree        ,
+                       expressions ,
+                       cuts = ''   , *args  ) :
+    """Get the statistic for the list of expressions 
+    >>> tree  = ...
+    >>> stats , cov2 , len = data_covariances ( data , ['x' , 'y'] )
+    Apply some cuts 
+    >>> stats , cov2 , len = data_covariances ( data , [ 'x' , 'y' , 'z'] , 'z>0' )
+    Use only subset of events
+    >>> stats , cov2 , len = data_covariances ( data , [ 'x' , 'y' , 'z' ], 'z>0' , 100 , 10000 )
+    """
+    
+    ## decode expressions & cuts 
+    var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
+    
+    assert 2 <= len ( var_lst ) , 'Invalid number of varibales!'
+    
+    from ostap.core.core import strings 
+    vars   = strings ( var_lst ) 
+
+    WSE    = Ostap.WStatEntity
+    WV     = std.vector( WSE )
+    stats  = WV ()    
+
+    import ostap.math.linalg 
+    import ostap.math.linalgt 
+
+    N      = len  ( var_lst  )
+    cov2   = Ostap.TMatrixSymD  ( N ) 
+
+    with rootException() : 
+        length = Ostap.StatVar.statCov ( tree  ,
+                                         vars  ,
+                                         cuts  ,
+                                         stats , 
+                                         cov2  , *args )
+        
+    assert N == len ( stats )   , "Invalid size 'stats'   from 'Ostap.StatVar.statCov'"
+    assert cov2.IsValid()       , "Invalid 'cov2'         from 'Ostap.StatVar.statCov'"
+    assert N == cov2.GetNrows() , "Invalid size of 'cov2' from 'Ostap.StatVar.statCov'"
+    assert N == cov2.GetNcols() , "Invalid size of 'cov2' from 'Ostap.StatVar.statCov'"
+
+    ## covert to tuple 
+    stats = tuple ( WSE ( s ) for s in stats )
+    
+    ## convert to S-matrix
+    cov2 = cov2.smatrix()
+
+    return stats, cov2 , length
+
+# ============================================================================
+## get the effective vector of mean-values with covarinaces for the dataset
+#  @code
+#  vct = data_statvct ( data ,  'a,b,c' ) 
+#  @endcode 
+def data_statvector ( data        ,
+                      expressions , 
+                      cuts  = ''  ) :
+    """Get the effective vector of mean-values with covariances for the dataset
+    >>> vct = data_statvct ( data , 'a,y,z' ,'w' ) 
+    """
+    
+    stats , cov2, _  = data_covariances ( data , expressions , cuts = cuts )
+    
+    N  = len  ( stats )
+    v  = Ostap.Vector ( N ) ()
+    for i in range ( N ) : v[i] = stats[i].mean()
+    
+    return Ostap.VectorE ( N ) ( v , cov2 ) 
 
 # ==============================================================================
 ## Get the (weighted) sum over the variable(s)
@@ -325,7 +409,7 @@ def data_sum ( data , expressions , cuts = '' , *args ) :
 
     result = data_statistics ( data , expressions , cuts , *args )
     
-    if isinstance ( result , dictlike_type ) :
+    if isinstance ( result , dictlike_types ) :
         for k , r in loop_items ( result ) : 
             result [ key ] = VE ( r.sum() , r.sum2() )
     else :
@@ -334,7 +418,8 @@ def data_sum ( data , expressions , cuts = '' , *args ) :
     return result 
         
 # ==============================================================================
-## Get the effewctoevnumebr of etries in data 
+## Get the effective number of entries in data
+#  \f$ \frac{ (\sum w)^2}{\sum w^2}  \f$ 
 #  @code
 #  data    = ...
 #  result  = data_nEff ( data , 'x+y' ) 
@@ -350,7 +435,7 @@ def data_nEff ( data , expression = '' , *args ) :
     assert isinstance ( expression , expression_types ) , 'Invalid type of expression!'
     expression = str ( expression ).strip() 
 
-    return StatVar.nEff ( expression )
+    return StatVar.nEff ( data , expression )
         
 # =============================================================================
 ## Get harmonic mean over the data
@@ -1023,12 +1108,16 @@ def data_decorate ( klass ) :
     if hasattr ( klass , 'sumVar'          ) : klass.orig_sumVar          = klass.sumVar 
     if hasattr ( klass , 'sumVars'         ) : klass.orig_sumVars         = klass.sumVars
     if hasattr ( klass , 'statCov'         ) : klass.orig_statCov         = klass.statCov
+    if hasattr ( klass , 'statCovs'        ) : klass.orig_statCovs        = klass.statCovs
+    if hasattr ( klass , 'statVct'         ) : klass.orig_statVct         = klass.statVct
     
     klass.statVar  = data_statistics
     klass.statVars = data_statistics    
     klass.sumVar   = data_sum 
     klass.sumVars  = data_sum 
     klass.statCov  = data_covariance
+    klass.statCovs = data_covariances 
+    klass.statVct  = data_statvector
     
     if hasattr ( klass , 'the_moment'      ) : klass.orig_the_moment      = klass.the_moment
     if hasattr ( klass , 'the_mean'        ) : klass.orig_the_mean        = klass.the_mean
@@ -1081,6 +1170,7 @@ def data_decorate ( klass ) :
              klass.sumVar          ,
              klass.sumVars         ,
              klass.statCov         ,
+             klass.statCovs        ,
              klass.the_moment      ,
              klass.the_mean        ,
              klass.the_rms         ,

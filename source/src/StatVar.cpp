@@ -1570,6 +1570,11 @@ Ostap::StatVar::statVar
   const unsigned long first       ,
   const unsigned long last        )
 {
+  // ==========================================================================
+  Ostap::Assert ( nullptr != data           ,  
+		  "Invalid RotAbsData"      , 
+		  "Ostap::StatVar::statVar" ) ;
+  // ==========================================================================
   Statistic result ;
   if ( 0 == data || last <= first ) { return result ; }         // RETURN
   //
@@ -1684,6 +1689,72 @@ Ostap::StatVar::statVars
   }
   //
   return result.empty() ? 0 : result[0].nEntries() ;
+}
+// ============================================================================
+/*  calculate the covariance of two expressions 
+ *  @param tree  (INPUT)  the input  tree 
+ *  @param exp1  (INPUT)  the first  expresiion
+ *  @param exp2  (INPUT)  the second expresiion
+ *  @param cuts  (INPUT)  selection/weight expression 
+ *  @return number of processed events 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2014-03-27
+ */
+// ============================================================================
+Ostap::StatVar::WCovariance
+Ostap::StatVar::statCov
+( const RooAbsData*    data      , 
+  const std::string&   exp1      , 
+  const std::string&   exp2      , 
+  const std::string&   cuts      , 
+  const std::string&   cut_range ,
+  const unsigned long  first     ,
+  const unsigned long  last      )
+{
+  // ===========================================================================
+  Ostap::Assert ( nullptr != data           ,  
+		  "Invalid RotAbsData"      , 
+		  "Ostap::StatVar::statCov" ) ;
+  //
+  // prepare the result 
+  Ostap::StatVar::WCovariance result {} ;
+  //
+  if ( last <= first ) { return result ; }         // RETURN
+  //
+  const std::unique_ptr<Ostap::FormulaVar> formula1  { make_formula ( exp1 , *data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> formula2  { make_formula ( exp2 , *data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data , true ) } ;
+  //
+  const bool  weighted = data->isWeighted() ;
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  // start the loop
+  for ( unsigned long entry = first ; entry < the_last ; ++entry )
+    {
+      //
+      const RooArgSet* vars = data->get( entry ) ;
+      if ( nullptr == vars  )                           { break    ; } // RETURN
+      if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE    
+      //
+      // apply cuts:
+      const long double wc = selection ? selection -> getVal() : 1.0L ;
+      if ( !wc ) { continue ; }                                   // CONTINUE  
+      // apply weight:
+      const long double wd = weighted  ? data->weight()        : 1.0L ;
+      if ( !wd ) { continue ; }                                   // CONTINUE    
+      // cuts & weight:
+      const long double w  = wd *  wc ;
+      if ( !w  ) { continue ; }                                   // CONTINUE        
+      //
+      const double v1 = formula1->getVal () ;
+      const double v2 = formula2->getVal () ;
+      //
+      result.add ( v1 , v2  , w ) ;
+    }
+  //
+  return result ;
 }
 // ============================================================================
 /*  calculate the covariance of several expressions 

@@ -51,10 +51,11 @@ __all__     = (
 # =============================================================================
 from   ostap.core.core           import ( cpp     , Ostap        ,
                                           strings , split_string , var_separators )
-from   ostap.math.base        import isequal, iszero                            
+from   ostap.math.base           import isequal, iszero                            
 from   ostap.core.meta_info      import root_info 
 from   ostap.core.ostap_types    import ( integer_types , num_types      , 
-                                          string_types  , sequence_types )    
+                                          string_types  , sequence_types ,
+                                          ordered_dict  )    
 from   ostap.logger.utils        import multicolumn
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.basic         import isatty, loop_items
@@ -268,8 +269,7 @@ if ( 6 , 29 ) <= root_info :
         return frame
     
     __all__ = __all__  + ( 'frame_progress2', )
-    
-    
+        
 # =============================================================================
 ## Get the effective entries in data frame
 #  @code
@@ -359,8 +359,10 @@ def _fr_helper_ ( frame , expressions , cuts = '' ) :
     exprs, cuts, input_string = SV.vars_and_cuts ( expressions , cuts ) 
 
     ## Frame/Tree ?
-    if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )
-    node = as_rnode ( frame ) 
+    if   isinstance ( frame , ROOT.TTree ) : node = DataFrame ( frame )
+    elif isinstance ( frame , DataFrame  ) : node = frame 
+    elif isinstance ( frame , FrameNode  ) : node = frame 
+    else                                   : node = as_rnode ( frame ) 
     
     ## get the list of currently known names
     vars     = frame_columns ( node ) 
@@ -368,17 +370,22 @@ def _fr_helper_ ( frame , expressions , cuts = '' ) :
     
     current  = node
 
-    vnames = {} 
-    for i,expr in enumerate ( exprs ) :
+    vnames = ordered_dict()     
+    for i , expr in enumerate ( exprs , start = 1 ) :
         vname = expr
         if not expr in all_vars :
             used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
-            vn      = var_name ( 'var_' , used , expr , *vars )
+            vn      = var_name ( 'var%d_' % i , used , expr , *vars )
             all_vars.add ( vn )
             current = current.Define ( vn , expr )
             vname   = vn
         vnames [ expr ] = vname 
-    
+
+    ## Filter frame, if needed!
+    ## if cuts :
+    ##    ## add named filter 
+    ## current = current.Filter ( '(bool) (%s)' % cuts, 'FILTER: %s' % cuts )
+        
     cname = cuts
     if cuts and not cuts in all_vars :
         used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
@@ -387,8 +394,8 @@ def _fr_helper_ ( frame , expressions , cuts = '' ) :
         ncuts = '1.0*(%s)' % cuts 
         current = current.Define ( cn , ncuts )
         cname   = cn
-
-    return current, vnames  , cname, input_string
+        
+    return current, vnames, cname, input_string
 
 # ==================================================================================
 ## the second helper method to implement "statistics"-related actions  
@@ -414,7 +421,6 @@ def _fr_helper2_ ( frame , creator , expressions , cuts = '' , lazy = True  ) :
     
     return results 
 
-
 # ============================================================================
 _types_1D = Ostap.Math.LegendreSum  , Ostap.Math.Bernstein   , Ostap.Math.ChebyshevSum , 
 _types_2D = Ostap.Math.LegendreSum2 , Ostap.Math.Bernstein2D ,
@@ -422,7 +428,7 @@ _types_3D = Ostap.Math.LegendreSum3 , Ostap.Math.Bernstein3D ,
 _types_4D = Ostap.Math.LegendreSum4 ,
 _types_nD = _types_1D + _types_2D + _types_3D + _types_4D 
 # =============================================================================
-## "project/parameterise" frame into polynomial structures
+## "project/parameterise" frame into polynomial structures (lazy action)
 #  @code
 #  frame = ...
 #
@@ -439,111 +445,87 @@ _types_nD = _types_1D + _types_2D + _types_3D + _types_4D
 #  res   = frame_param ( frame , ls2 , 'y' , 'x' , 'z>0' )
 # 
 #  bs2   = Ostap.Math.Bernstein2D  ( ... )
-#  res   = frame_param ( frame , bs2 , 'y' , 'x' , 'z>0' )
+#  res   = frame_param ( frame , bs2 ,  ( 'y' , 'x' ) , 'z>0' )
 #
 #  ls3   = Ostap.Math.LegendreSum3 ( ... )
-#  res   = frame_param ( frame , ls3 , 'z' , 'y' , 'x' , 'z>0' )
+#  res   = frame_param ( frame , ls3 ,  ( 'z' , 'y' , 'x' ) , 'z>0' )
 # 
 #  bs2   = Ostap.Math.Bernstein2D  ( ... )
-#  res   = frame_param ( frame , bs2 , 'y' , 'x' , 'z>0' )
-# 
+#  res   = frame_param ( frame , bs2 , ( 'y' , 'x' ) , 'z>0' )
 #  @endcode
-def _fr_param_ ( frame , poly , *expressions ) :
+def _fr_param_ ( frame , poly , expressions , cuts = '' , lazy = True ) :
     """ `project/parameterise` frame into polynomial structures
+    
     >>> frame = ...
     
     >>> ls    = Ostap.Math.LegendreSum ( ... )
-    >>> res   = frame_param ( frame , ls , 'x' , 'y>0' )
+    >>> res   = frame_param_lazy ( frame , ls , 'x' , 'y>0' )
     
     >>> bs    = Ostap.Math.Bernstein   ( ... )
-    >>> res   = frame_param ( frame , bs , 'x' , 'y>0' )
+    >>> res   = frame_param_lazy ( frame , bs , 'x' , 'y>0' )
 
     >>> cs    = Ostap.Math.ChebyshevSum ( ... )
-    >>> res   = frame_param ( frame , cs , 'x' , 'y>0' )
+    >>> res   = frame_param_lazy( frame , cs , 'x' , 'y>0' )
 
     >>> ls2   = Ostap.Math.LegendreSum2 ( ... )
-    >>> res   = frame_param ( frame , ls2 , 'y' , 'x' , 'z>0' )
+    >>> res   = frame_param_lazy ( frame , ls2 , 'y,x' , 'z>0' )
 
     >>> bs2   = Ostap.Math.Bernstein2D  ( ... )
-    >>> res   = frame_param ( frame , bs2 , 'y' , 'x' , 'z>0' )
+    >>> res   = frame_param_lazy ( frame , bs2 , 'y,x' , 'z>0' )
 
     >>> ls3   = Ostap.Math.LegendreSum3 ( ... )
-    >>> res   = frame_param ( frame , ls3 , 'z' , 'y' , 'x' , 'z>0' )
+    >>> res   = frame_param_lazy ( frame , ls3 , 'z,y;z' , 'z>0' )
 
     >>> bs2   = Ostap.Math.Bernstein2D  ( ... )
-    >>> res   = frame_param ( frame , bs2 , 'y' , 'x' , 'z>0' )
+    >>> res   = frame_param_lazy ( frame , bs2 , 'y,x' , 'z>0' )
     """
-    
-    if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )
-    
-    node = as_rnode ( frame )
-    
-    items = []
-    for e in expressions :
-        items += split_string ( e , ',:;' , strip = True , respect_groups = True )
-        
-    ## get the list of currently known names
-    vars     = frame_columns ( node ) 
-    all_vars = set ( vars ) 
 
+    ## the histogram ? 
+    if isinstance ( poly , ROOT.TH1 ) :
+        return _fr_project_ ( frame , poly , expressions , cuts = cuts , lazy = lazy )
 
-    assert ( isinstance ( poly , _types_1D ) and 1 <= len ( items ) <= 2 ) or \
-           ( isinstance ( poly , _types_2D ) and 2 <= len ( items ) <= 3 ) or \
-           ( isinstance ( poly , _types_3D ) and 3 <= len ( items ) <= 4 ) or \
-           ( isinstance ( poly , _types_4D ) and 4 <= len ( items ) <= 5 ) , \
-           "Invalid structure of  polynomial and variables/cuts!"
+    ## 
+    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts )
     
-    current = node
+    nvars = len ( items )
     
-    ## actual variables 
-    uvars   = []   
-    for e in items :        
-        if e in all_vars :
-            uvars.append ( e )
-            continue
-        else :
-            used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
-            vn      = var_name ( 'var_' , used , e , *vars )
-            all_vars.add ( vn )
-            current = current.Define ( vn , e )        
-            uvars.append ( vn )
+    assert \
+        ( 1 == nvars and isinstance ( poly , _types_1D ) ) or \
+        ( 2 == nvars and isinstance ( poly , _types_2D ) ) or \
+        ( 3 == nvars and isinstance ( poly , _types_3D ) ) or \
+        ( 4 == nvars and isinstance ( poly , _types_4D ) ) ,  \
+        "Invalid structure of  polynomial and variables/cuts!"
 
-    if ( isinstance ( poly , _types_1D ) and 2 == len ( uvars ) ) or \
-       ( isinstance ( poly , _types_2D ) and 3 == len ( uvars ) ) or \
-       ( isinstance ( poly , _types_3D ) and 4 == len ( uvars ) ) or \
-       ( isinstance ( poly , _types_4D ) and 5 == len ( uvars ) ) :
-        
-        cuts    = uvars [ -1]        
-        current = current.Filter ( cuts )        
-        
-        wn      = var_name ( 'weight_' , used , cuts , *vars )
-        all_vars.add ( wn )
-        current = current.Define ( wn , '1.0*(%s)' % cuts )
-        
-        uvars   = [ u for u in reversed ( uvars [:-1] ) ] + [ wn ]    ## ATTENTION !! RESERSED HERE!
-        
-    else :
-        uvars   = [ u for u in reversed ( uvars ) ]             ## ATTENTION !! RESERSED HERE!
-
+    ## variables 
+    uvars = [ k for k in items.values() ]
+    if cuts : uvars.append ( cname )
+    uvars = CNT ( uvars )
     
     ## finally book the actions!
     if   isinstance ( poly , Ostap.Math.LegendreSum  ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly   ( poly ) ) , CNT ( uvars ) )
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly   ( poly ) ) , uvars )
     elif isinstance ( poly , Ostap.Math.LegendreSum2 ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly2  ( poly ) ) , CNT ( uvars ) )
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly2  ( poly ) ) , uvars )
     elif isinstance ( poly , Ostap.Math.LegendreSum3 ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly3  ( poly ) ) , CNT ( uvars ) )
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly3  ( poly ) ) , uvars )
     elif isinstance ( poly , Ostap.Math.LegendreSum4 ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly4  ( poly ) ) , CNT ( uvars ) )
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.LegendrePoly4  ( poly ) ) , uvars )
     elif isinstance ( poly , Ostap.Math.ChebyshevSum ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.ChebyshevPoly  ( poly ) ) , CNT ( uvars ) )
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.ChebyshevPoly  ( poly ) ) , uvars )
     elif isinstance ( poly , Ostap.Math.Bernstein    ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly  ( poly ) ) , CNT ( uvars ) )
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly  ( poly ) ) , uvars )
     elif isinstance ( poly , Ostap.Math.Bernstein2D  ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly2 ( poly ) ) , CNT ( uvars ) )
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly2 ( poly ) ) , uvars )
     elif isinstance ( poly , Ostap.Math.Bernstein3D  ) :
-        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly3 ( poly ) ) , CNT ( uvars ) )
+        result = current.Book ( ROOT.std.move ( Ostap.Actions.BernsteinPoly3 ( poly ) ) , uvars )
+
+    print ( 'I AM HERE/1' ) 
+    if not lazy :
+        result = result.GetValue() 
+        poly   = result
+        print ( 'I AM HERE/2' ) 
         
+    print ( 'I AM HERE/3', result  )     
     return result
 
 
@@ -617,8 +599,8 @@ def _fr_table_ ( frame , pattern = None ,  cuts = '' , more_vars = () , prefix =
         vcols = tuple ( [ v for v in vcols if cpat.match ( v ) ] ) 
 
     svars = vcols + tuple  ( more_vars ) 
-    stats = frame_statVars ( frame , svars , cuts = cuts , lazy = False ) 
-    
+    stats = _fr_statVar_   ( frame , svars , cuts = cuts , lazy = False ) 
+
     if   len ( vcols ) < 10    : ifmt = '%1d.'
     elif len ( vcols ) < 100   : ifmt = '%2d.'
     elif len ( vcols ) < 1000  : ifmt = '%3d.'
@@ -852,15 +834,15 @@ ROOT.TProfile2D.model = _p1_model_
     
 
 # ==============================================================================
-## 'Lazy' project of the frame
+## Project of the frame
 #  @code
 #  frame    = ...
 #  h1_model = ...
 #  h1       = frame_project ( frame , h1_model , 'pt' )
 #  h2_model = ...
-#  h2       = frame_project ( frame , h2_model , 'pt' , 'x' )
+#  h2       = frame_project ( frame , h2_model ,  ( 'pt' , 'x' ) )
 #  h3_model = ...
-#  h3       = frame_project ( frame , h3_model , 'pt' , 'x'  , 'y' )
+#  h3       = frame_project ( frame , h3_model , ( 'pt' , 'x'  , 'y' ) )
 #  ...
 #  @endcode
 #  Cuts/weigth are also can be specified
@@ -869,9 +851,9 @@ ROOT.TProfile2D.model = _p1_model_
 #  h1_model = ...
 #  h1       = frame_project ( frame , h1_model , 'pt' , 'w')
 #  h2_model = ...
-#  h2       = frame_project ( frame , h2_model , 'pt' , 'x' , 'w')
+#  h2       = frame_project ( frame , h2_model , 'pt,x' , 'w')
 #  h3_model = ...
-#  h3       = frame_project ( frame , h3_model , 'pt' , 'x'  , 'y' , 'w' )
+#  h3       = frame_project ( frame , h3_model , 'pt,x:y' , 'w' )
 #  ...
 #  @endcode
 # 
@@ -883,16 +865,19 @@ ROOT.TProfile2D.model = _p1_model_
 #  - <code>ROOT::RDF::TH3DModel</code>
 #  - anything that can be converted to <code>ROOT::RDF::TH1DModel</code>, 
 #    <code>ROOT::RDF::TH2DModel</code> or <code>ROOT::RDF::TH3DModel</code> objects 
-# 
-def frame_project ( frame , model , *what ) :
-    """ 'Lazy' project of the frame
+#  @attention: variables should be listed in reverse order!  
+def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
+    """ Project of the frame into histigram 
+
+    - attention: variables should be listed in reverse order! 
+    
     >>> frame    = ...
     >>> h1_model = ...
     >>> h1       = frame_project ( frame , h1_model , 'pt' )
     >>> h2_model = ...
-    >>> h2       = frame_project ( frame , h2_model , 'pt' , 'x' )
+    >>> h2       = frame_project ( frame , h2_model , 'pt,x' )
     >>> h3_model = ...
-    >>> h3       = frame_project ( frame , h3_model , 'pt' , 'x'  , 'y' )
+    >>> h3       = frame_project ( frame , h3_model ,  ( 'pt' , 'x'  , 'y' ) )
     >>> ...
     
     - Cuts/weigth are also can be specified
@@ -901,107 +886,59 @@ def frame_project ( frame , model , *what ) :
     >>> h1_model = ...
     >>> h1       = frame_project ( frame , h1_model , 'pt' , 'w')
     >>> h2_model = ...
-    >>> h2       = frame_project ( frame , h2_model , 'pt' , 'x' , 'w')
+    >>> h2       = frame_project ( frame , h2_model ,  ( 'pt' , 'x' ) , 'w')
     >>> h3_model = ...
-    >>> h3       = frame_project ( frame , h3_model , 'pt' , 'x'  , 'y' , 'w' )
+    >>> h3       = frame_project ( frame , h3_model , 'pt' , 'x,y,z' , 'w' )
     >>>...
     
     - If model is a real 1D/2D/3D-hstogram, action is *not* lazy, otherwise action *is* lazy
-
+    
     Model can be a real histogram or 
-    - `ROOT.ROOT.RDF.TH1DModel`
-    - `ROOT.ROOT.RDF.TH2DModel`
-    - `ROOT.ROOT.RDF.TH3DModel`
-    - anything that can be converted to `ROOT.ROOT.RDF.TH1DModel`, 
-    `ROOT.ROOT.RDF.TH2DModel` or `ROOT.ROOT.RDF.TH3DModel` objects 
+    -  `ROOT.ROOT.RDF.TH1DModel`
+    -  `ROOT.ROOT.RDF.TH2DModel`
+    -  `ROOT.ROOT.RDF.TH3DModel`
+    -   anything that can be converted to :
+    -- `ROOT.ROOT.RDF.TH1DModel`, 
+    -- `ROOT.ROOT.RDF.TH2DModel` or
+    -- `ROOT.ROOT.RDF.TH3DModel` objects 
+    
     """
-
-    if isinstance ( frame , ROOT.TTree ) : frame = DataFrame ( frame )
     
-    frame = as_rnode  ( frame )
+    if isinstance ( model , _types_nD ) :
+        return _fr_param_ ( frame , model , expression, cuts = cuts , laszy = lazy ) 
     
-    if ( 6 , 16 ) <= root_info and isinstance ( model , _types_nD ) :
-        return _fr_param_ ( frame , model , *what ) 
-       
-    if 1 <= len ( what ) <= 2 :
-        if   isinstance  ( what [ 0 ] , string_types ) :
-            ww = split_string ( what [ 0 ] , var_separators , strip = True, respect_groups = True  )
-            if 1 < len ( ww ) : ww.reverse()                ## ATTENTION HERE: REVERSE!! 
-            what = tuple ( ww ) + what [1:]                                              
-        elif isinstance ( what [ 0 ] , sequence_types ) :
-            what = tuple ( w for w in what [ 0 ] ) + what [1:] 
-
-    ## strip blanks
-    what = tuple ( w.strip() for w in what )
+    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts )
     
-    ## cuts are empty 
-    if 1 < len ( what ) and not what [ -1 ] : what = what [ :-1 ]
+    ## convert histogram-like objects into 'models'
 
     histo = None
-
-    #
-    ## convert histogram-like objects into 'models'
-    #
-    
-    if   isinstance ( model , ROOT.TProfile2D ) :        
-        histo = model
-        model = model.model ()        
-    elif isinstance ( model , ROOT.TProfile   ) :        
-        histo = model
-        model = model.model ()        
-    elif isinstance ( model , ROOT.TH3 ) and 3 == model.dim () :        
-        histo = model
-        model = model.model ()                
-    elif isinstance ( model , ROOT.TH2 ) and 2 == model.dim () :
-        histo = model
-        model = model.model ()
-    elif isinstance ( model , ROOT.TH1 ) and 1 == model.dim () :
-        histo = model
-        model = model.model ()
+    if   isinstance ( model , ROOT.TProfile2D )                : histo, model  = model, model.model ()        
+    elif isinstance ( model , ROOT.TProfile   )                : histo, model  = model, model.model ()        
+    elif isinstance ( model , ROOT.TH3 ) and 3 == model.dim () : histo, model  = model, model.model ()        
+    elif isinstance ( model , ROOT.TH2 ) and 2 == model.dim () : histo, model  = model, model.model ()        
+    elif isinstance ( model , ROOT.TH1 ) and 1 == model.dim () : histo, model  = model, model.model ()        
             
     if histo : histo.Reset()
 
-    ## get the list of currently known names
-    vars = frame_columns ( frame )
+    nvars = len ( items )
+    pvars = [ v for v in items.values() ] 
+    if cname : pvars.append ( cname )
     
-    pvars    = [] 
-    current  = frame 
-    all_vars = set ( vars )     
-    for ww in what :
-
-        w = ww
-        if isinstance ( ww , ROOT.TCut ) : w = str ( ww )
-
-        if not w : continue
-        
-        if   w in  vars : pvars.append ( w )
-        elif w in pvars : pvars.append ( w )
-        else :
-            used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
-            vname   = var_name ( 'var_' , used , *what )
-            current = current.Define ( vname , w )
-            all_vars.add ( vname ) 
-            pvars.append ( vname )
-
-            
-    numvars = len ( pvars ) 
-            
-    if   isinstance ( model , DF_P2Model ) and 3 <= numvars <= 4 : action = current.Profile2D ( model , *pvars )
-    elif isinstance ( model , DF_P1Model ) and 2 <= numvars <= 3 : action = current.Profiel1D ( model , *pvars )
-    elif isinstance ( model , DF_H3Model ) and 3 <= numvars <= 4 : action = current.Histo3D   ( model , *pvars )
-    elif isinstance ( model , DF_H2Model ) and 2 <= numvars <= 3 : action = current.Histo2D   ( model , *pvars )
-    elif isinstance ( model , DF_H1Model ) and 1 <= numvars <= 2 : action = current.Histo1D   ( model , *pvars )
+    if   3 == nvars and isinstance ( model , DF_P2Model ) : action = current.Profile2D ( model , *pvars )
+    elif 2 == nvars and isinstance ( model , DF_P1Model ) : action = current.Profiel1D ( model , *pvars )
+    elif 3 == nvars and isinstance ( model , DF_H3Model ) : action = current.Histo3D   ( model , *pvars )
+    elif 2 == nvars and isinstance ( model , DF_H2Model ) : action = current.Histo2D   ( model , *pvars )
+    elif 1 == nvars and isinstance ( model , DF_H1Model ) : action = current.Histo1D   ( model , *pvars )
     else :
-        raise TypeError ('Invalid model/what objects %s %s ' % ( type ( model ) , what ) ) 
+        raise TypeError ('Invalid model/what objects %s %s ' % ( type ( model ) , str ( pvars ) ) ) 
 
-    ## ATTENTION! lazy action!
-    if not histo :
-        return action
-
-    ## make a loop! 
-    histo += action.GetValue() 
     
-    return histo 
+    ## if true histo is specified, the aciton is NOT lazy!
+    if histo :
+        histo += action.GetValue() 
+        return histo 
+
+    return action if lazy else action.GetValue() 
 
 # ==============================================================================
 ## Prescale the frame
@@ -1245,8 +1182,6 @@ def frame_deciles  ( frame , expression , cuts = '' , exact = True ) :
     """
     return frame_quantiles ( frame , quantiles = 10 , expression = expression , cuts = cuts , exact = exact  )
 
-
-
 # ==============================================================================
 ## Get the mean for the frame object
 #  @code
@@ -1329,7 +1264,6 @@ def frame_kurtosis ( frame , expression , cuts = '' ) :
     node = as_rnode ( frame )
     return SV.data_kurtosis ( node , expression = expression , cuts = cuts )
 
-
 from ostap.fitting.dataset import ds_draw as _ds_draw
 # ==============================================================================
 ## draw for frame 
@@ -1341,13 +1275,17 @@ def frame_draw ( frame , *args , **kwargs ) :
 
 
 # ==================================================================================
+## Action-based methods
+# ==================================================================================
+
+# ==================================================================================
 ## get statistics of variable(s)
 #  @code
 #  frame = ....
 #  stat  = frame.statVar ( 'pt'           , lazy = True )
 #  stat  = frame.statVar ( 'pt' , 'eta>0' , lazy = True )
 #  @endcode
-def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
+def _fr_statVar_ ( frame , expressions , cuts = '' , lazy = True) :
     """Get statistics of variable(s)
     >>> frame = ....
     >>> stat  = frame.statVar ( 'pt'           , lazy = True )
@@ -1371,7 +1309,7 @@ def _fr_nEff_ ( frame , expressions , cuts = '' , lazy = False ) :
     >>> frame = ...
     >>> nEff = data_get_nEff ( 'x*x' , 'y>0' )
     """
-    return _fr_statVar_new_ ( frame , expressions , cuts = cuts , lazy = lazy )
+    return _fr_statVar_ ( frame , expressions , cuts = cuts , lazy = lazy )
 
 # ==================================================================================
 ## get statistics of variable(s)
@@ -1412,7 +1350,7 @@ def _fr_the_moment_ ( frame , N , expressions , cuts = '' , lazy = True ) :
 #  stat  = frame.the_mean ( 'x'x' ,  'y<0' )
 #  mean  = stat.mean() 
 #  @ndcode
-def _fr_the_mean_ ( frame , expressions , cuts , errors = True , lazy = True ) :
+def _fr_the_mean_ ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
     """ Get a mean via moment
     >>> frame = ...
     >>> stat  = frame.the_mean ( 'x'x' ,  'y<0' )
@@ -1427,7 +1365,7 @@ def _fr_the_mean_ ( frame , expressions , cuts , errors = True , lazy = True ) :
 #  stat  = frame.the_rms ( 'x'x' ,  'y<0' )
 #  value = stat.rms() 
 #  @ndcode
-def _fr_the_rms_ ( frame , expressions , cuts , errors = True , lazy = True ) :
+def _fr_the_rms_ ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
     """Get a rms via moment
     >>> frame = ...
     >>> stat  = frame.the_rms ( 'x'x' ,  'y<0' )
@@ -1442,7 +1380,7 @@ def _fr_the_rms_ ( frame , expressions , cuts , errors = True , lazy = True ) :
 #  stat  = frame.the_variance ( 'x'x' ,  'y<0' )
 #  value = stat.variance () 
 #  @ndcode
-def _fr_the_variance_ ( frame , expressions , cuts , errors = True , lazy = True ) :
+def _fr_the_variance_ ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
     """Get a variance via moment
     >>> frame  = ...
     >>> stat   = frame.the_variance( 'x'x' ,  'y<0' )
@@ -1457,7 +1395,7 @@ def _fr_the_variance_ ( frame , expressions , cuts , errors = True , lazy = True
 #  stat  = frame.the_skewness ( 'x'x' ,  'y<0' )
 #  mean  = stat.skewness  () 
 #  @ndcode
-def _fr_the_skewness_ ( frame , expressions , cuts , errors = True , lazy = True ) :
+def _fr_the_skewness_ ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
     """Get a variance via moment
     >>> frame = ...
     >>> stat  = frame.the_skewness ( 'x'x' ,  'y<0' )
@@ -1472,7 +1410,7 @@ def _fr_the_skewness_ ( frame , expressions , cuts , errors = True , lazy = True
 #  stat  = frame.the_kurtosis ( 'x'x' ,  'y<0' )
 #  value = stat.kurtosis   () 
 #  @ndcode
-def _fr_the_kurtosis_ ( frame , expressions , cuts , errors = True , lazy = True ) :
+def _fr_the_kurtosis_ ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
     """Get a kurtosis  via moment
     >>> frame = ...
     >>> stat  = frame.the_kurtosis ( 'x'x' ,  'y<0' )
@@ -1480,7 +1418,6 @@ def _fr_the_kurtosis_ ( frame , expressions , cuts , errors = True , lazy = True
     """
     return _fr_the_moment_ ( frame , 8 if errors else 4 , expressions , cuts = cuts , lazy = lazy )
 
-                    
 # ============================================================================
 ## Get an arithmetic mean
 #  @see Ostap::Math::ArithmeticMean
@@ -1695,14 +1632,18 @@ else                      : frames = DataFrame , FrameNode
 # ================================================================================
 
 if Frames_OK :
-    frame_statVar         = _fr_statVar_new_
-    frame_statVars        = _fr_statVar_new_
+    
     frame_table           = _fr_table_
+    
+    frame_the_statVar     = _fr_statVar_
+    frame_the_statVars    = _fr_statVar_
     frame_the_moment      = _fr_the_moment_
-
+    
+    frame_the_nEff        = _fr_nEff_ 
     frame_the_mean        = _fr_the_mean_
     frame_the_rms         = _fr_the_rms_
     frame_the_variance    = _fr_the_variance_
+    frame_the_dispersion  = _fr_the_variance_
     frame_the_skewness    = _fr_the_skewness_
     frame_the_kurtosis    = _fr_the_kurtosis_
     
@@ -1711,8 +1652,9 @@ if Frames_OK :
     frame_harmonic_mean   = _fr_harmonic_mean_
     frame_power_mean      = _fr_power_mean_
     frame_lehmer_mean     = _fr_lehmer_mean_
-    for f in frames : 
-        f.statVars        = frame_statVars  
+    
+    for f in frames :        
+        f.statVars        = frame_the_statVars 
         _new_methods_ .append ( f.statVars        )
         f.table           = frame_table   
         _new_methods_ .append ( f.table           )
@@ -1739,11 +1681,11 @@ if Frames_OK :
         f.lehmer_mean     = frame_lehmer_mean   
         _new_methods_ .append ( f.lehmer_mean     )
 
-    _new_methods_ .append ( frame_statVars   ) 
-    _new_methods_ .append ( frame_table      ) 
-    _new_methods_ .append ( frame_the_moment ) 
+    _new_methods_ .append ( frame_table       ) 
+    _new_methods_ .append ( frame_the_statVar ) 
+    _new_methods_ .append ( frame_the_moment  ) 
     _new_methods_ .append ( frame_arithmetic_mean ) 
-    __all__ = __all__ + ( 'frame_statVars'        ,
+    __all__ = __all__ + ( 'frame_the_statVar'     ,
                           'frame_table'           ,
                           'frame_the_moment'      ,
                           'frame_the_mean'        ,
@@ -1757,8 +1699,8 @@ if Frames_OK :
                           'frame_power_mean'      , 
                           'frame_lehmer_mean'     ) 
     
-    ROOT.TTree. fstatVars   = frame_statVars
-    ROOT.TTree. fthe_moment = frame_statVars
+    ROOT.TTree. fstatVars   = frame_the_statVar
+    ROOT.TTree. fthe_moment = frame_the_statVar
     
     _new_methods_ .append ( ROOT.TTree. fstatVars   ) 
     _new_methods_ .append ( ROOT.TTree. fthe_moment ) 
