@@ -134,7 +134,7 @@ import os , sys , zlib, collections, datetime
 import sqlite3
 from   ostap.io.sqlitedict  import SqliteDict
 from   ostap.io.dbase       import Item, TmpDB 
-from   ostap.core.meta_info import meta_info 
+from   ostap.core.meta_info import meta_info, python_info 
 from   ostap.io.pickling    import ( Pickler, Unpickler, BytesIO ,
                                      PROTOCOL,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
@@ -142,6 +142,11 @@ from   ostap.io.pickling    import ( Pickler, Unpickler, BytesIO ,
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.sqliteshelve' )
 else                      : logger = getLogger ( __name__ )
+# =============================================================================
+##  ordered dict type to be used 
+ordered_dict = dict
+if python_info < (3.7) :
+    from collections import OrderedDict as ordered_dict 
 # =============================================================================
 _modes_ = {
     # =========================================================================
@@ -291,7 +296,7 @@ class SQLiteShelf(SqliteDict):
         self.__sizes         = {}
 
         if self.flag in (  'w' , 'n' ) :
-            dct  = collections.OrderedDict() 
+            dct  = ordered_dict() 
             dct  [ 'Created by'                  ] = meta_info.User
             dct  [ 'Created at'                  ] = datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' )  
             dct  [ 'Created with Ostap version'  ] = meta_info.Ostap

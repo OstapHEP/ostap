@@ -54,10 +54,10 @@ __all__ = (
     'ENCODING'       
     )
 # =============================================================================
-import os, abc, shelve, shutil, glob, datetime, collections  
+import os, abc, shelve, shutil, glob, datetime
 from   sys                  import version_info           as python_version
 from   ostap.io.dbase       import dbopen, whichdb, Item 
-from   ostap.core.meta_info import meta_info
+from   ostap.core.meta_info import meta_info, 
 from   ostap.io.pickling    import ( Pickler , Unpickler, BytesIO,
                                      PROTOCOL,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
@@ -65,6 +65,11 @@ from   ostap.io.pickling    import ( Pickler , Unpickler, BytesIO,
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
 else                      : logger = getLogger ( __name__                   )
+# =============================================================================
+##  ordered dict type to be used a
+ordered_dict = dict
+if python_version < (3.7) :
+    from collections import OrderedDict as ordered_dict 
 # =============================================================================
 ## encoding 
 ENCODING = 'utf-8'
@@ -269,7 +274,7 @@ class CompressShelf(shelve.Shelf,object):
         elif  'sqlite3' != self.dbtype and self.mode in ( 'c' , 'n' ) : write = True
         else                                                          : write = False 
         if write :
-            dct  = collections.OrderedDict() 
+            dct  = ordered_dict()  
             dct  [ 'Created by'                  ] = meta_info.User
             dct  [ 'Created at'                  ] = datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' )  
             dct  [ 'Created with Ostap version'  ] = meta_info.Ostap

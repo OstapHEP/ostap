@@ -32,6 +32,7 @@ __all__     = (
     )
 # =============================================================================
 from   sys                     import version_info as python_version
+from   ostap.core.ostap_types  import ordered_dict 
 from   ostap.utils.cidict      import cidict
 from   ostap.utils.utils       import KeepCanvas, keepCanvas 
 from   ostap.core.core         import cidict_fun
@@ -668,11 +669,7 @@ def _cnv_pads_ ( self ) :
     """`pads' : get (an ordered) dict of pads for the given canvas partition (if prepared)
     """
     if not hasattr ( self , '__pads' ) :
-        if (3,7) <= python_version :
-            self.__pads = {}
-        else  : 
-            from collections import OrderedDict 
-            self.__pads  = OrderedDict ()
+        self.__pads  = ordered_dict ()
     return self.__pads
 # =============================================================================
 def _cnv_del_pads_ ( self ) :
