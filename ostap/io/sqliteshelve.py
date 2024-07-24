@@ -145,7 +145,7 @@ else                      : logger = getLogger ( __name__ )
 # =============================================================================
 ##  ordered dict type to be used 
 ordered_dict = dict
-if python_info < (3.7) :
+if python_info < (3,7) :
     from collections import OrderedDict as ordered_dict 
 # =============================================================================
 _modes_ = {
