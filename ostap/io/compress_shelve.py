@@ -57,7 +57,7 @@ __all__ = (
 import os, abc, shelve, shutil, glob, datetime
 from   sys                  import version_info           as python_version
 from   ostap.io.dbase       import dbopen, whichdb, Item 
-from   ostap.core.meta_info import meta_info, 
+from   ostap.core.meta_info import meta_info
 from   ostap.io.pickling    import ( Pickler , Unpickler, BytesIO,
                                      PROTOCOL,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
