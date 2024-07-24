@@ -37,7 +37,8 @@ from   ostap.core.ostap_types    import ( integer_types , string_types   ,
                                           list_types    , sequence_types )
 from   ostap.math.base           import islong
 from   ostap.fitting.variables   import valid_formula, make_formula 
-from   ostap.trees.cuts          import expression_types, vars_and_cuts  
+from   ostap.trees.cuts          import expression_types, vars_and_cuts 
+import ostap.trees.trees
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ROOT, random, math, sys, ctypes  
