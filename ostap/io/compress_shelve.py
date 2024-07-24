@@ -68,7 +68,7 @@ else                      : logger = getLogger ( __name__                   )
 # =============================================================================
 ##  ordered dict type to be used a
 ordered_dict = dict
-if python_version < (3.7) :
+if python_version < (3,7) :
     from collections import OrderedDict as ordered_dict 
 # =============================================================================
 ## encoding 
