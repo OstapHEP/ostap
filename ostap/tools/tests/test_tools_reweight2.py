@@ -407,8 +407,8 @@ for iter in range ( 1 , maxIter + 1 ) :
         
         ## 4e) 2D-statistics 
         mcstat = mcds.statCov('x','y','weight')
-        logger.info  ( tag + ': x/y covariance DATA (unbinned):\n# %s' % ( str ( datastat [2] ).replace ( '\n' , '\n# ' ) ) )
-        logger.info  ( tag + ': x/y covariance MC   (unbinned):\n# %s' % ( str (   mcstat [2] ).replace ( '\n' , '\n# ' ) ) )
+        logger.info  ( tag + ': x/y correlation DATA (unbinned): %+.2f' % datastat.correlation () ) 
+        logger.info  ( tag + ': x/y correlation MC   (unbinned): %+.2f' %   mcstat.correlation () )
 
     if not active and 3 < iter : 
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )

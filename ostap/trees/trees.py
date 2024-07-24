@@ -55,11 +55,6 @@ import ostap.trees.cuts
 # =============================================================================
 _large = ROOT.TVirtualTreePlayer.kMaxEntries
 # =============================================================================
-
-
-
-
-# =============================================================================
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
 def _tt_nonzero_ ( tree ) :
@@ -722,87 +717,6 @@ ROOT.TTree .__contains__ = _rt_contains_
 ROOT.TChain.__contains__ = _rt_contains_
 
 # =============================================================================
-## get the statistic for certain expression(s) in Tree/Dataset
-#  @code
-#  tree  = ... 
-#  stat1 = tree.statVar ( 'S_sw/effic' )
-#  stat2 = tree.statVar ( 'S_sw/effic' , 'pt>1000' )
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-09-15
-def _stat_var_ ( tree , expression , *cuts ) :
-    """Get a statistic for the  expression in Tree/Dataset
-    
-    >>> tree  = ... 
-    >>> stat1 = tree.statVar ( 'S_sw/effic' )
-    >>> stat2 = tree.statVar ( 'S_sw/effic' ,'pt>1000')
-    
-    """
-    
-    if isinstance ( expression , string_types ) :
-        
-        explist = split_string ( expression , var_separators , strip = True , respect_groups = True )
-        if 1 != len ( explist ) :
-            return _stat_vars_ ( tree , explist , *cuts )  ## RETURRN
-        
-    else :
-        
-        return _stat_vars_ ( tree ,  expression , *cuts ) ## RETURN 
-    
-    with rootException() : 
-        return Ostap.StatVar.statVar ( tree , expression , *cuts )
-    
-ROOT.TTree     . statVar = _stat_var_
-ROOT.TChain    . statVar = _stat_var_
-
-
-# =============================================================================
-## get the statistic for certain expressions in Tree/Dataset
-#  @code
-#  tree  = ... 
-#  stat1 = tree.statVars( [ 'S_sw/effic', 'pt1' , 'pt2' ] ) 
-#  stat2 = tree.statVars( [ 'S_sw/effic', 'pt1' , 'pt2' ] , 'mass>10') 
-#  @endcode
-#  It is more efficient than getting statistics individually for each expression
-#  @see Ostap::Math::StatVar 
-#  @see Ostap::Math::StatVar::statVars 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2018-11-03
-def _stat_vars_ ( tree , expressions , *cuts ) :
-    """Get the statistic for certain expressions in Tree/Dataset
-    >>> tree  = ... 
-    >>> stat1 = tree.statVars( [ 'S_sw/effic', 'pt1' , 'pt2' ] ) 
-    >>> stat2 = tree.statVars( [ 'S_sw/effic', 'pt1' , 'pt2' ] , 'mass>10') 
-    - It is more efficient than getting statistics individually for each expression
-    - see Ostap::Math::StatVar
-    - see Ostap::Math::StatVar::statVars 
-    """
-
-    if isinstance ( expressions , string_types ) :
-        return _stat_var_ ( tree , expressions , *cuts ) 
-    
-    if not expressions : return {}
-
-    vct = strings ( *expressions )
-    res = std.vector(WSE)() 
-
-    with rootException() : 
-        ll  = Ostap.StatVar.statVars ( tree , res , vct , *cuts )
-
-    assert res.size() == vct.size(), 'stat_vars: Invalid size of structures!'
-
-    N = res.size()
-    results = {} 
-
-    for i in range ( N ) :
-        results[ vct [ i ] ] = WSE ( res[i] ) 
-
-    return results 
-
-ROOT.TTree     . statVars = _stat_vars_
-ROOT.TChain    . statVars = _stat_vars_
-
-# =============================================================================
 ## get the statistic for pair of expressions in Tree/Dataset
 #  @code
 #  tree  = ...
@@ -929,36 +843,6 @@ ROOT.TTree     . statCovs = _stat_covs_
 ROOT.TChain    . statCovs = _stat_covs_
 
 
-# ============================================================================
-## get the effectove vector of mean-values with covarinaces for the dataset
-#  @code
-#  ds  =...
-#  vct = ds.statVct('a,b,c') 
-#  @endcode 
-def _stat_vct_ ( ds         ,
-                 variables  ,
-                 cuts  = '' ) :
-    """Get the effective vector of mean-values with covariances for the dataset
-    >>> ds =...
-    >>> vct = ds.statVct()
-    """
-    
-    if isinstance ( variables , string_types ) :
-        variables = split_string ( variables , strip = True , respect_groups = True )
-
-    stats, cov2, length  = ds.statCovs ( variables , cuts )
-    
-    N  = len ( stats )
-    v  = Ostap.Vector ( N ) ()
-    for i in range ( N ) : v[i] = stats[i].mean()
-    
-    return Ostap.VectorE ( N ) ( v , cov2 ) 
-
-
-ROOT.TTree     . statVct = _stat_vct_
-ROOT.TChain    . statVct = _stat_vct_
-
-
 # =============================================================================
 
 from ostap.stats.statvars import data_the_moment
@@ -999,75 +883,6 @@ def _tc_minmax_ ( tree , var , cuts = '' , delta = 0.0 )  :
 ROOT.TTree     . vminmax = _tc_minmax_
 ROOT.TChain    . vminmax = _tc_minmax_
 
-# =============================================================================
-## @var _h_one_
-#  special helper histogram for summation
-_h_one_ = ROOT.TH1D( hID() , '' , 3 , -1 , 2 ) ; _h_one_.Sumw2()
-# =============================================================================
-## make a sum over expression in Tree/Dataset
-#
-#  @code
-#
-#  >>> dataset = ...
-#  ## get corrected number of events 
-#  >>> n_corr  = dataset.sumVar ( "S_sw/effic" )
-#
-#  @endcode
-#
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-09-15
-def _sum_var_old_ ( tree , expression ) :
-    """Make a sum over expression in Tree/Dataset
-    
-    >>> dataset = ...
-    ## get corrected number of signal events  
-    >>> n_corr  = dataset.sumVar_( 'S_sw/effic' )
-    
-    """
-    _h_one_.Reset() 
-    tree.project ( _h_one_ , '1' , expression )
-    return _h_one_.accumulate()
-
-    
-ROOT.TTree      . sumVar_ = _sum_var_old_
-ROOT.TChain     . sumVar_ = _sum_var_old_
-
-# =============================================================================
-## make a sum over expression in Tree/Dataset
-#
-#  @code
-#
-#  >>> dataset = ...
-#
-#  ## get corrected number of events 
-#  >>> n_corr     = dataset.sumVar ( "S_sw/effic" )
-#
-#  ## get corrected number of events 
-#  >>> n_corr_pt  = dataset.sumVar ( "S_sw/effic" , 'pt>1')
-#
-#  @endcode
-#
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-09-15
-def _sum_var_ ( tree , expression , *cuts ) :
-    """Make a sum over expression in Tree/Dataset
-    
-    >>> dataset = ...
-    ## get corrected number of signal events  
-    >>> n_corr     = dataset.sumVar ( 'S_sw/effic' )
-    
-    ## get corrected number of signal events  
-    >>> n_corr_pt  = dataset.sumVar ( 'S_sw/effic' , 'pt>1')
-    
-    """
-    ## if hasattr ( tree , 'pStatVar' ) : w = tree.pStatVar ( expression , *cuts )
-    ## else                             : w = tree. statVar ( expression , *cuts )
-    w = tree. statVar ( expression , *cuts )
-    ##
-    return VE ( w.sum() , w.sum2() )
-
-ROOT.TTree      . sumVar = _sum_var_
-ROOT.TChain     . sumVar = _sum_var_
 
 # =============================================================================
 ## get the leaves for the given tree/chain
@@ -2669,27 +2484,6 @@ def add_new_branch ( tree           ,
 ROOT.TTree.add_new_branch = add_new_branch 
 
 # =============================================================================
-## Get the effective entries in data set 
-#  @code
-#  data = ...
-#  neff = data.nEff('b1*b1')
-#  @endcode
-def _stat_nEff_  ( self , cuts = '' , *args ) :
-    """Get the effective entries in data set 
-    >>> data = ...
-    >>> neff = data.nEff('b1*b1')
-    """
-    if isinstance ( cuts , ROOT.TCut ) : cuts = str ( cuts ) 
-    with rootException() : 
-        return Ostap.StatVar.nEff ( self , cuts , *args )
-
-ROOT.TTree.nEff = _stat_nEff_ 
-# =============================================================================
-
-from  ostap.stats.statvars import data_decorate as _dd
-_dd ( ROOT.TTree )
-
-# =============================================================================
 ## get all variables needed to evaluate the expressions for the given tree
 #  @code
 #  tree = 
@@ -3557,12 +3351,9 @@ def use_aliases ( tree , **aliases ) :
     return UseAliases ( tree , **aliases ) 
 
 # =============================================================================
-_decorated_classes_ = (
-    ROOT.TTree  ,
-    ROOT.TChain ,   
-    ROOT.TLeaf      
-    )
-_new_methods_       = (
+from  ostap.stats.statvars import data_decorate as _dd
+_new_methods_   = _dd ( ROOT.TTree ) 
+_new_methods_  += (
     #
     ROOT.TTree .withCuts  ,
     ROOT.TChain.withCuts  ,
@@ -3576,23 +3367,11 @@ _new_methods_       = (
     ROOT.TTree .project   ,
     ROOT.TChain.project   ,
     #
-    ROOT.TTree .statVar   ,
-    ROOT.TChain.statVar   ,
-    ROOT.TTree .statCov   ,
-    ROOT.TChain.statCov   ,
     ROOT.TTree .statCovs  ,
     ROOT.TChain.statCovs  ,
-    ROOT.TTree .statVct   ,
-    ROOT.TChain.statVct   ,
     #
     ROOT.TTree .vminmax   ,
     ROOT.TChain.vminmax   ,
-    #
-    ROOT.TTree .sumVar_   ,
-    ROOT.TChain.sumVar_   ,
-    #
-    ROOT.TTree .sumVar    ,
-    ROOT.TChain.sumVar    ,
     #
     ROOT.TTree .branches  , 
     ROOT.TTree .__repr__  , 
@@ -3610,29 +3389,20 @@ _new_methods_       = (
     ROOT.TTree.valid_formula    ,
     ROOT.TTree.valid_expression ,
     #
-    ROOT.TTree.nEff             , 
-    ROOT.TTree.get_moment       , 
-    ROOT.TTree.central_moment   , 
-    ROOT.TTree.mean             ,
-    ROOT.TTree.rms              ,
-    ROOT.TTree.skewness         ,
-    ROOT.TTree.kurtosis         ,
-    ROOT.TTree.quantile         ,
-    ROOT.TTree.median           ,
-    ROOT.TTree.quantiles        ,
-    ROOT.TTree.interval         ,
-    ROOT.TTree.terciles         ,
-    ROOT.TTree.quartiles        ,
-    ROOT.TTree.quintiles        ,
-    ROOT.TTree.deciles          ,
-    #
     ROOT.TTree.the_variables    ,
     ROOT.TTree.add_new_branch   ,
     ##
     ROOT.TLeaf.get_type         ,
     ROOT.TLeaf.get_type_short   ,
     ROOT.TLeaf.get_short_type   ,
-    )
+)
+
+
+_decorated_classes_ = (
+    ROOT.TTree  ,
+    ROOT.TChain ,   
+    ROOT.TLeaf      
+)
 # =============================================================================
 if '__main__' == __name__ :
     
