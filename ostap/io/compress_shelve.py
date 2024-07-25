@@ -56,8 +56,8 @@ __all__ = (
 # =============================================================================
 import os, abc, shelve, shutil, glob, datetime
 from   sys                  import version_info           as python_version
-from   ostap.io.dbase       import dbopen, whichdb, Item 
-from   ostap.core.meta_info import meta_info
+from   ostap.io.dbase       import dbopen, whichdb, Item, ordered_dict  
+from   ostap.core.meta_info import meta_info 
 from   ostap.io.pickling    import ( Pickler , Unpickler, BytesIO,
                                      PROTOCOL,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
@@ -65,11 +65,6 @@ from   ostap.io.pickling    import ( Pickler , Unpickler, BytesIO,
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
 else                      : logger = getLogger ( __name__                   )
-# =============================================================================
-##  ordered dict type to be used a
-ordered_dict = dict
-if python_version < (3,7) :
-    from collections import OrderedDict as ordered_dict 
 # =============================================================================
 ## encoding 
 ENCODING = 'utf-8'
@@ -442,7 +437,7 @@ class CompressShelf(shelve.Shelf,object):
 
         table = [ ( 'Key' , 'type',  '   size   ' , ' created/modified') ]
 
-        meta = self.get( '__metainfo__' , {} )
+        meta = self.get( '__metainfo__' , ordered_dict() )
         for k in meta :
             row = "META:%s" % k , '' , '' , str ( meta[k] )
             table.append ( row  ) 
@@ -545,7 +540,7 @@ class CompressShelf(shelve.Shelf,object):
         elif  'sqlite3' != self.dbtype and 'e' == self.mode : write = True
         else                                                : write = False 
         if write : 
-            dct  = self.get ( '__metainfo__' , {} )
+            dct  = self.get ( '__metainfo__' , ordered_dict () )
             dct  [ 'Updated at'                  ] = datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )   
             dct  [ 'Updated by'                  ] = meta_info.User 
             dct  [ 'Updated with Ostap version'  ] = meta_info.Ostap 

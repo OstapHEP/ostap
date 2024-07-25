@@ -130,11 +130,10 @@ __all__ = (
     'tmpdb'       ,   ## helper function to create the temporary database 
     )
 # =============================================================================
-import os , sys , zlib, collections, datetime   
-import sqlite3
+import sqlite3, os , sys , zlib, collections, datetime   
 from   ostap.io.sqlitedict  import SqliteDict
-from   ostap.io.dbase       import Item, TmpDB 
-from   ostap.core.meta_info import meta_info, python_info 
+from   ostap.io.dbase       import Item, TmpDB, ordered_dict 
+from   ostap.core.meta_info import meta_info
 from   ostap.io.pickling    import ( Pickler, Unpickler, BytesIO ,
                                      PROTOCOL,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
@@ -142,11 +141,6 @@ from   ostap.io.pickling    import ( Pickler, Unpickler, BytesIO ,
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.sqliteshelve' )
 else                      : logger = getLogger ( __name__ )
-# =============================================================================
-##  ordered dict type to be used 
-ordered_dict = dict
-if python_info < (3,7) :
-    from collections import OrderedDict as ordered_dict 
 # =============================================================================
 _modes_ = {
     # =========================================================================
@@ -405,7 +399,7 @@ class SQLiteShelf(SqliteDict):
 
         table = [ ( 'Key' , 'type' , '   size   ', ' created/modified ') ]
 
-        meta = self.get( '__metainfo__' , {} )
+        meta = self.get( '__metainfo__' , ordered_dict () )
         for k in meta :
             row = "META:%s" % k , '' , '' , str ( meta[k] )
             table.append ( row  ) 
@@ -524,7 +518,7 @@ class SQLiteShelf(SqliteDict):
         """
 
         if self.flag == 'c' : 
-            dct = self.get ( '__metainfo__' , {} )
+            dct = self.get ( '__metainfo__' , ordered_dict () )
             dct  [ 'Updated at'                  ] = datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )   
             dct  [ 'Updated by'                  ] = meta_info.User 
             dct  [ 'Updated with Ostap version'  ] = meta_info.Ostap 

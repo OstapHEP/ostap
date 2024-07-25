@@ -39,15 +39,21 @@ else :
     import dbm                      as std_db
     std_whichdb = std_db.whichdb
 # =============================================================================
+ordered_dict = dict
+if sys.version_info < ( 3, 7 ) :
+    ordered_dict = collections.OrderedDict
+# =============================================================================
 ## Check for Berkeley DB
 # =============================================================================
 use_bsddb3     = False
 use_berkeleydb = False
 
+# =============================================================================
 ## make a try to use berkeleydb
 if  ( 3 , 6 ) <= sys.version_info :
     
-    try :        
+    try :
+        
         import berkeleydb
         use_berkeleydb   = True
         
@@ -70,7 +76,7 @@ if  ( 3 , 6 ) <= sys.version_info :
             """ Open Berkeley DB
             """
             assert flags in berkeleydb_open_mode, \
-                   "berkeleydb_open: invali dpoe mode %s" % flags
+                   "berkeleydb_open: invalid open mode %s" % flags
             
             db = berkeleydb.db.DB ( dbenv )
             db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flags ]  , mode )
@@ -82,6 +88,7 @@ if  ( 3 , 6 ) <= sys.version_info :
             berkeleydb      = None 
             use_berkeleydb  = False 
 
+# =============================================================================
 ## make a try for dbddb3 
 if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) : 
     
@@ -179,7 +186,6 @@ def whichdb ( filename  ) :
     ## unknown 
     return ""
 
-
 # =====================================================================
 ## Open or create database at path given by *file*.
 # 
@@ -266,7 +272,6 @@ def dbsize  ( filename  ) :
             num  += 1
             
     return num, size 
-
 
 # ============================================================================
 ## @class TmpDB
