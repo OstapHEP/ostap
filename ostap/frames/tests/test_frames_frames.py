@@ -37,9 +37,10 @@ else :
     
     # A simple helper function to fill a test tree
     def fill_tree ( tname , fname ) :
-        
-        tdf  = DataFrame        ( 10000 )
-        a    = tdf.ProgressBar  ( 10000 )
+
+        N = 10000 
+        tdf      = DataFrame      ( N       )
+        tdf , pb = frame_progress ( tdf , N ) 
         tdf.Define   ("one", "1.0"                    )\
                    .Define   ("b1" , "tdfentry_ + 1000.0") \
                    .Define   ("b2" , "(1.0+b1)*(1.0+b1)"      ) \

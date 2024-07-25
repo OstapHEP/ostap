@@ -30,6 +30,7 @@
 #include "Ostap/Moments.h"
 #include "Ostap/GetWeight.h"
 #include "Ostap/Moments.h"
+#include "Ostap/DataFrameUtils.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -3243,14 +3244,7 @@ Ostap::StatVar::statVar
     .Define ( var    ,  "1.0*(" + expression + ")"   )
     .Define ( weight , no_cuts ? "1.0"  : "1.0*(" + cuts + ")" ) ;
   //
-  const unsigned int nSlots =
-    std::max ( 1u , 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-	       ROOT::GetThreadPoolSize     () 
-#else 
-	       ROOT::GetImplicitMTPoolSize () 
-#endif
-	       ) ;
+  const unsigned int nSlots = std::max ( 1u , Ostap::Utils::mt_pool_size() ) ;
   //
   std::vector<Statistic> _stat ( nSlots ? nSlots : 1 ) ;
   //
@@ -3284,13 +3278,7 @@ Ostap::StatVar::statCov
     .Define ( var1   ,                   "1.0*(" + exp1 + ")" ) 
     .Define ( var2   ,                   "1.0*(" + exp2 + ")" ) ;
   ///
-  const unsigned int nSlots = std::max ( 1u , 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-					 ROOT::GetThreadPoolSize     () 
-#else 
-					 ROOT::GetImplicitMTPoolSize () 
-#endif
-					 ); 
+  const unsigned int nSlots = std::max ( 1u , Ostap::Utils::mt_pool_size() ) ;
   //
   std::vector<Covariance>           _covs ( nSlots ? nSlots : 1 ) ;
   //
@@ -3334,13 +3322,7 @@ Ostap::StatVar::statCov
     .Define ( var2   ,                   "1.0*(" + exp2 + ")" ) 
     .Define ( weight , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) ;
   ///
-  const unsigned int nSlots = std::max ( 1u , 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-					 ROOT::GetThreadPoolSize     () 
-#else 
-					 ROOT::GetImplicitMTPoolSize () 
-#endif
-					 ); 
+  const unsigned int nSlots = std::max ( 1u , Ostap::Utils::mt_pool_size() ) ;
   //
   std::vector<WCovariance>           _covs ( nSlots ? nSlots : 1 ) ;
   //

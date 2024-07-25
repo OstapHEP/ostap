@@ -47,7 +47,6 @@ if sys.version_info < ( 3, 7 ) :
 # =============================================================================
 use_bsddb3     = False
 use_berkeleydb = False
-
 # =============================================================================
 ## make a try to use berkeleydb
 if  ( 3 , 6 ) <= sys.version_info :

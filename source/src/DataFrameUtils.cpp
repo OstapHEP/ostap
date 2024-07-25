@@ -60,9 +60,9 @@ namespace
     }
     // ========================================================================
     /// default move constructor
-    DataFrameProgress (       DataFrameProgress&& ) = default ;
+    // DataFrameProgress (       DataFrameProgress&& ) = default ;
     /// disabled copy constructir 
-    DataFrameProgress ( const DataFrameProgress&  ) = default ;
+    // DataFrameProgress ( const DataFrameProgress&  ) = default ;
     // ========================================================================
     /// destructor
     ~DataFrameProgress()
@@ -160,10 +160,10 @@ Ostap::Utils::frame_progress
   return DataFrameProgress 
     ( nchunks ,
       Ostap::Utils::ProgressConf ( width   , 
-                                   symbol  , 
-                                   blank   , 
-                                   left    , 
-                                   right   ) ) ; 
+				   symbol  , 
+				   blank   , 
+				   left    , 
+				   right   ) ) ; 
 }
 // ===========================================================================
 /*  helper function to create callable  for drawing of progress bar to the frame 
@@ -178,6 +178,25 @@ Ostap::Utils::frame_progress
 ( const unsigned short               nchunks  , 
   const Ostap::Utils::ProgressConf&  progress ) 
 { return DataFrameProgress ( nchunks , progress ) ; }
+// ============================================================================
+/*  get pool size 	      
+ *  @see ROOT::IsImplicitMTEnabled() 
+ *  @see ROOT::GetThreadPoolSize     () 
+ *  @see ROOT::GetImplicitMTPoolSize () 
+ */
+// ============================================================================
+unsigned int Ostap::Utils::mt_pool_size ()
+{
+  return std::max
+    ( 1u ,
+      ROOT::IsImplicitMTEnabled() ?  
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+      ROOT::GetThreadPoolSize     () : 1u  
+#else 
+      ROOT::GetImplicitMTPoolSize () : 1u 
+#endif
+      ) ;
+}
 // ============================================================================
 
 // ============================================================================

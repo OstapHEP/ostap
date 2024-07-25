@@ -54,6 +54,13 @@ namespace Ostap
     ( const unsigned short nchunks        , 
       const ProgressConf&  progress       ) ;
     // ========================================================================
+    /** get pool size 	      
+     *  @see ROOT::IsImplicitMTEnabled   () 
+     *  @see ROOT::GetThreadPoolSize     () 
+     *  @see ROOT::GetImplicitMTPoolSize () 
+     */
+    unsigned int mt_pool_size () ;
+    // ========================================================================
   } //                                        The end of namespace Ostap::Utils 
   // ==========================================================================
 } //                                                 The end of namespace Ostap

@@ -31,6 +31,8 @@
 // ============================================================================
 #if ROOT_VERSION(6,16,0) <= ROOT_VERSION_CODE
 // ============================================================================
+#include "Ostap/DataFrameUtils.h"
+// ============================================================================
 namespace ROOT 
 {
   // ==========================================================================
@@ -40,7 +42,7 @@ namespace ROOT
     namespace RDF 
     {
       // ======================================================================
-      /** @class StatAction
+      /** @class Stat1Action
        *  Helper class to get statitsics for the column in DataFrame 
        *  using soem COUNTER class
        *  Requirements for COUNTER:
@@ -50,7 +52,7 @@ namespace ROOT
        *  @see Ostap::Math::Moment_
        */
       template <class COUNTER> 
-      class StatAction : public RActionImpl< StatAction<COUNTER> > 
+      class Stat1Action : public RActionImpl< Stat1Action<COUNTER> > 
       {
       public:
         // ====================================================================
@@ -61,19 +63,15 @@ namespace ROOT
         // ====================================================================
         /// constructor 
 	template <typename ...Args>
-        StatAction ( const Args& ...args ) 
+        Stat1Action ( const Args& ...args ) 
           : m_result ( std::make_shared<Result_t>( args ... ) ) 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-          , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
-#else 
-          , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
-#endif
+          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
 	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
         {}
         /// Move constructor 
-        StatAction (       StatAction&& ) = default ;
+        Stat1Action (       Stat1Action&& ) = default ;
         /// Copy constructor is disabled 
-        StatAction ( const StatAction&  ) = delete ;
+        Stat1Action ( const Stat1Action&  ) = delete ;
         // ====================================================================
       public:
         // ====================================================================
@@ -89,7 +87,7 @@ namespace ROOT
           *m_result = sum ;
         }
         /// who am I ?
-        std::string GetActionName() { return "StatAction" ; }
+        std::string GetActionName() { return "Stat1Action" ; }
         // ====================================================================
       public:
         // ====================================================================
@@ -124,17 +122,18 @@ namespace ROOT
         // ====================================================================
       } ; //                    The end of class ROOT::Detail::RDF::StatCounter
       // ======================================================================
-      /** @class WStatAction
+      /** @class Stat2Action
        *  Helper class to get statitsics for the column in DataFrame 
        *  using soem COUNTER class
        *  Requirements for COUNTER:
        *  -  counter.add ( value , weight ) 
        *  -  counter += counter 
        *  @see Ostap::WStatEntity
+       *  @see Ostap::Math::Covariance
        *  @see Ostap::Math::WMoment_
        */
       template <class Counter>
-      class WStatAction : public RActionImpl< WStatAction<Counter> > 
+      class Stat2Action : public RActionImpl< Stat2Action<Counter> > 
       {
       public:
         // ====================================================================
@@ -145,19 +144,15 @@ namespace ROOT
         // ====================================================================
         /// default constructor 
 	template <typename ...Args>
-        WStatAction ( const Args& ...args ) 
+        Stat2Action ( const Args& ...args ) 
 	  : m_result ( std::make_shared<Result_t>( args ... ) ) 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
-#else 
-	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
-#endif
+          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
 	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
         {}
 	/// Move constructor 
-        WStatAction  (       WStatAction&& ) = default ;
+        Stat2Action  (       Stat2Action&& ) = default ;
         /// Copy constructor is disabled 
-        WStatAction  ( const WStatAction&   ) = delete ;
+        Stat2Action  ( const Stat2Action&   ) = delete ;
         // ====================================================================
       public:
         // ====================================================================
@@ -173,7 +168,7 @@ namespace ROOT
           *m_result = sum ;
         }
         /// who am I ?
-        std::string GetActionName() { return "WStatAction" ; }
+        std::string GetActionName() { return "Stat2Action" ; }
         // ====================================================================
       public:
         // ====================================================================
@@ -215,7 +210,120 @@ namespace ROOT
         /// (current) results per  slot 
         std::vector<Result_t>           m_slots  { 1 } ;
         // ====================================================================
-      } ; //                    The end of class ROOT::Detail::RDF::WStatAction
+      } ; //                    The end of class ROOT::Detail::RDF::Stat2Action
+      // ======================================================================      
+      /** @class Stat3Action
+       *  Helper class to get statitsics for the column in DataFrame 
+       *  using some COUNTER class
+       *  Requirements for COUNTER:
+       *  -  counter.add ( v1 , v2 , weight ) 
+       *  -  counter += counter 
+       *  @see Ostap::Math::WCovariance
+       */
+      template <class Counter>
+      class Stat3Action : public RActionImpl< Stat3Action<Counter> > 
+      {
+      public:
+        // ====================================================================
+        /// define the resutl type 
+        using Result_t = Counter ;
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// default constructor 
+	template <typename ...Args>
+        Stat3Action ( const Args& ...args ) 
+	  : m_result ( std::make_shared<Result_t>( args ... ) ) 
+          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
+	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
+        {}
+	/// Move constructor 
+        Stat3Action  (       Stat3Action&& ) = default ;
+        /// Copy constructor is disabled 
+        Stat3Action  ( const Stat3Action&   ) = delete ;
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// initialize (empty) 
+        void InitTask   ( TTreeReader * , unsigned int ) {} ;
+        /// initialize (empty) 
+        void Initialize () {} ;
+        /// finalize : sum over the slots 
+        void Finalize   () 
+        { 
+          Result_t sum { m_slots [ 0 ] } ;
+          for ( unsigned int i = 1 ; i < m_N ; ++i ) { sum += m_slots [ i ] ; }
+          *m_result = sum ;
+        }
+        /// who am I ?
+        std::string GetActionName() { return "Stat3Action" ; }
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// The basic method: increment the counter 
+        void Exec
+	( unsigned int slot   ,
+	  const double v1     ,
+	  const double v2     ,
+	  const double weight ) 
+        { m_slots [ slot % m_N ].add ( v1 , v2 , weight ) ; } 
+        // ====================================================================
+        /// The basic method: increment the counter for the vector-like columns       
+#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
+        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+#else 
+        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+#endif 
+        void Exec
+	( unsigned int slot       ,
+	  const T&     vs         ,
+	  const double v2         ,
+	  const double weight = 1 )
+        { Result_t& m = m_slots [ slot % m_N ] ; for ( const auto& v1 : vs ) { m.add ( v1 , v2  , weight ) ; } }
+        // ====================================================================
+        /// The basic method: increment the counter for the vector-like columns       
+#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
+        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+#else 
+        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+#endif 
+        void Exec
+	( unsigned int slot       ,
+	  const double v1         ,
+	  const T&     vs         ,
+	  const double weight = 1 )
+        { Result_t& m = m_slots [ slot % m_N ] ; for ( const auto& v2 : vs ) { m.add ( v1 , v2  , weight ) ; } }
+        // ====================================================================
+        /// The basic method: increment the counter for the vector-like column of weight 
+#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
+        template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+#else 
+        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+#endif
+        void Exec
+	( unsigned int slot ,
+	  const double v1   ,
+	  const double v2   ,		    
+	  const T&     ws   )
+        { Result_t& e = m_slots [ slot % m_N ] ; for ( const auto& w : ws ) { e.add ( v1 , v2  , w   ) ; } }
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// Get the result 
+        std::shared_ptr<Result_t> GetResultPtr () const { return m_result ; }
+        /// get partial result for the given slot 
+        Result_t& PartialUpdate ( unsigned int slot ) { return m_slots [ slot % m_N ] ; }
+        // ====================================================================
+      private:
+        // ====================================================================
+        /// the final result 
+        const std::shared_ptr<Result_t> m_result {   } ;
+        /// size of m_slots 
+        unsigned long                   m_N      { 1 } ;
+        /// (current) results per  slot 
+        std::vector<Result_t>           m_slots  { 1 } ;
+        // ====================================================================
+      } ; //                    The end of class ROOT::Detail::RDF::Stat2Action
       // ======================================================================
       /** @class Poly1Action
        *  Helper class to parameterise data as 1D polynomial
@@ -244,11 +352,7 @@ namespace ROOT
         Poly1Action 
         ( const Args& ...args )
 	  : m_result ( std::make_shared<Result_t>( args ... ) ) 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
-#else 
-	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
-#endif
+          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
 	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
 	{
 	  (*m_result) *= 0.0 ; // reset the polynomial
@@ -344,11 +448,7 @@ namespace ROOT
         Poly2Action 
         ( const Args& ...args )
 	  : m_result ( std::make_shared<Result_t>( args ... ) ) 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
-#else 
-	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
-#endif
+          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
 	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
 	{
 	  (*m_result) *= 0.0 ; // reset the polynomial
@@ -448,11 +548,7 @@ namespace ROOT
         Poly3Action 
         ( const Args& ...args )
 	  : m_result ( std::make_shared<Result_t>( args... ) ) 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
-#else 
-	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
-#endif
+          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
 	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
 	{
 	  (*m_result) *= 0.0 ; // reset the polynomial
@@ -563,11 +659,7 @@ namespace ROOT
         Poly4Action 
         ( const Args& ...args )
 	  : m_result ( std::make_shared<Result_t>( args ... ) ) 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
-	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
-#else 
-	  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
-#endif
+          , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
 	  , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
 	{
 	  (*m_result) *= 0.0 ; // reset the polynomial
@@ -678,29 +770,29 @@ namespace Ostap
     // ========================================================================
     
     template <class COUNTER>
-    using StatAction  = ROOT::Detail::RDF::StatAction<COUNTER>   ;    
+    using Stat1Action  = ROOT::Detail::RDF::Stat1Action<COUNTER>   ;    
     template <class COUNTER>
-    using WStatAction = ROOT::Detail::RDF::WStatAction<COUNTER>  ;
+    using Stat2Action = ROOT::Detail::RDF::Stat2Action<COUNTER>  ;
 
-    using StatVar  = StatAction <Ostap::StatEntity>  ;    
-    using WStatVar = WStatAction<Ostap::WStatEntity> ;
+    using StatVar  = Stat1Action <Ostap::StatEntity>  ;    
+    using WStatVar = Stat2Action<Ostap::WStatEntity> ;
 
     template <unsigned short N> 
-    using Moment_  = StatAction <typename Ostap::Math::Moment_<N>  > ;
+    using Moment_  = Stat1Action <typename Ostap::Math::Moment_<N>  > ;
     template <unsigned short N> 
-    using WMoment_ =  WStatAction<typename Ostap::Math::WMoment_<N> > ;
+    using WMoment_ =  Stat2Action<typename Ostap::Math::WMoment_<N> > ;
 
-    using GeometricMean   = StatAction<Ostap::Math::GeometricMean>    ;    
-    using ArithmeticMean  = StatAction<Ostap::Math::ArithmeticMean>   ;    
-    using HarmonicMean    = StatAction<Ostap::Math::HarmonicMean>     ;    
-    using PowerMean       = StatAction<Ostap::Math::PowerMean>        ;    
-    using LehmerMean      = StatAction<Ostap::Math::LehmerMean>       ;    
+    using GeometricMean   = Stat1Action<Ostap::Math::GeometricMean>    ;    
+    using ArithmeticMean  = Stat1Action<Ostap::Math::ArithmeticMean>   ;    
+    using HarmonicMean    = Stat1Action<Ostap::Math::HarmonicMean>     ;    
+    using PowerMean       = Stat1Action<Ostap::Math::PowerMean>        ;    
+    using LehmerMean      = Stat1Action<Ostap::Math::LehmerMean>       ;    
     
-    using WGeometricMean  = WStatAction<Ostap::Math::WGeometricMean>  ;    
-    using WArithmeticMean = WStatAction<Ostap::Math::WArithmeticMean> ;    
-    using WHarmonicMean   = WStatAction<Ostap::Math::WHarmonicMean>   ;    
-    using WPowerMean      = WStatAction<Ostap::Math::WPowerMean>      ;    
-    using WLehmerMean     = WStatAction<Ostap::Math::WLehmerMean>     ;    
+    using WGeometricMean  = Stat2Action<Ostap::Math::WGeometricMean>  ;    
+    using WArithmeticMean = Stat2Action<Ostap::Math::WArithmeticMean> ;    
+    using WHarmonicMean   = Stat2Action<Ostap::Math::WHarmonicMean>   ;    
+    using WPowerMean      = Stat2Action<Ostap::Math::WPowerMean>      ;    
+    using WLehmerMean     = Stat2Action<Ostap::Math::WLehmerMean>     ;    
     
     template <class POLYNOMIAL>
     using Poly1Action    = ROOT::Detail::RDF::Poly1Action<POLYNOMIAL> ;    
