@@ -885,6 +885,7 @@ def frame_nEff ( frame , cuts = '' ) :
     >>> data = ...
     >>> neff = data.nEff('b1*b1')
     """
+    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
     node  = as_rnode ( frame )    
     return SV.data_nEff ( node , cuts )
 
@@ -892,18 +893,18 @@ def frame_nEff ( frame , cuts = '' ) :
 ## Get statistics for the  given expression in data frame
 #  @code
 #  data = ...
-#  c1 = data.statVar( 'S_sw' , 'pt>10' ) 
-#  c2 = data.statVar( 'S_sw' , 'pt>0'  )
+#  c1 = frame_statVar ( 'S_sw' , 'pt>10' ) 
+#  c2 = frame_statVar ( 'S_sw' , 'pt>0'  )
 #  @endcode
 def frame_statVar ( frame , expression ,  cuts = '' ) :
     """Get statistics for the  given expression in data frame
     >>> data = ...
-    >>> c1 = data.statVar( 'S_sw' , 'pt>10' ) 
-    >>> c2 = data.statVar( 'S_sw' )
+    >>> c1 = frame_statVar( 'S_sw' , 'pt>10' ) 
+    >>> c2 = framestatVar( 'S_sw' )
     """
     if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
     node = as_rnode ( frame ) 
-    return SV.data_statVar ( node , str ( expression ) , str ( cuts )  )
+    return SV.data_statistics ( node , expression,  cuts = cuts )
 
 # =============================================================================
 ## get the statistic for pair of expressions in DataFrame
@@ -945,6 +946,7 @@ def frame_get_moment ( frame , order , center , expression , cuts = '' ) :
     >>> value = frame_get_moment ( 3 , 1.234 , 'b1*b2' , 'b3>0' )
     - see `Ostap.StatVar.get_moment` 
     """
+    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
     node = as_rnode ( frame )
     return SV.data_get_moment ( node , order = order , center = center , expression = expression , cuts = cuts )
 
@@ -977,6 +979,7 @@ def frame_central_moment ( frame , order , expression , cuts = '' ) :
     >>> value = frame_central_moment ( 3 , 'b1*b2' , 'b3>0' )
     - see `Ostap.StatVar.central_moment` 
     """
+    if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
     node = as_rnode ( frame )
     return SV.data_central_moment ( node , order = order , expression = expression , cuts = cuts )
 
@@ -1304,12 +1307,12 @@ def _fr_the_statVar_ ( frame , expressions , cuts = '' , lazy = True ) :
 #  frame = ...
 #  nEff = frame_the_nEff ( 'x*x' , 'y>0' )  
 #  @endcode 
-def _fr_the_nEff_ ( frame , expressions , cuts = '' , lazy = False ) :
+def _fr_the_nEff_ ( frame , cuts = '' , lazy = False ) :
     """Get nEff through action
     >>> frame = ...
     >>> nEff = frame_the_nEff ( 'x*x' , 'y>0' )
     """
-    return _fr_statVar_ ( frame , expressions , cuts = cuts , lazy = lazy )
+    return _fr_the_statVar_ ( frame , '1.0' , cuts = cuts , lazy = lazy )
 
 # ==================================================================================
 ## get statistics of variable(s)
@@ -1607,7 +1610,7 @@ if Frames_OK :
     #  stat  = frame_statVar ( frame , 'pt'           )
     #  stat  = frame_statVar ( frame , 'pt' , 'eta>0' )
     #  @endcode
-    def frame_statVar_ ( frame , expressions , cuts = ''  ) :
+    def frame_statVar ( frame , expressions , cuts = ''  ) :
         """Get statistics of variable(s)
         >>> frame = ....
         >>> stat  = frame.statVar ( 'pt'           )
@@ -1710,7 +1713,7 @@ if Frames_OK :
         >>> skew  = frame_skewness ( 'x'x' ,  'y<0' )
         >>> mean  = stat.skreness  () 
         """
-        return frame_the_skewness ( frame , expressions , cuts = cuts , errros = errors , lazy = lazy ).skewness()
+        return frame_the_skewness ( frame , expressions , cuts = cuts , errors = errors , lazy = False ).skewness()
     # ============================================================================
     ## Get a kurtosis via moment&actgions 
     #  @code
@@ -1858,6 +1861,15 @@ if Frames_OK :
         """
         return frame_the_param ( frame , poly , expressions , cuts = cuts , lazy = False ) 
 
+    __all__ += (
+        'frame_arithmetic_mean' ,
+        'frame_geometric_mean'  ,
+        'frame_harmonic_mean'   ,
+        'frame_power_mean'      ,
+        'frame_lehmer_mean'     ,
+        'frame_param'           ,
+    )
+    
         
 # ===============================================================================
 ## Print the frame report data

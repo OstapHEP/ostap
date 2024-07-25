@@ -236,100 +236,100 @@ def test_frame2 ( ) :
     row = 'StatVar    mean (b1,b1>0)' ,  s1.mean().toString ( '%+.2f +/- %-.2f' ) , s2.mean().toString ( '%+.2f +/- %-.2f' ) 
     rows.append ( row )
 
-    s1    = tree.arithmetic_mean  (         'b1' ) 
-    s2    = frame_arithmetic_mean ( frame , 'b1' ) 
+    if Frames_OK :
+        
+        s1    = tree.arithmetic_mean      (         'b1' ) 
+        s2    = frame_arithmetic_mean ( frame , 'b1' ) 
+        
+        row = 'Arithmetic mean (b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+        rows.append ( row )
+        
+        s1    = tree.arithmetic_mean  (         'b1' , '1/b1') 
+        s2    = frame_arithmetic_mean ( frame , 'b1' , '1/b1') 
+        
+        row = 'Arithmetic mean (b1,1/b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.value() 
+        rows.append ( row )
 
-    row = 'Arithmetic mean (b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
+        s1    = tree.arithmetic_mean  (         'b1' , 'b1>0') 
+        s2    = frame_arithmetic_mean ( frame , 'b1' , 'b1>0') 
+        row = 'Arithmetic mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+        rows.append ( row )
+        
+        s1    = tree.geometric_mean  (         'b1' ) 
+        s2    = frame_geometric_mean ( frame , 'b1' ) 
     
-    s1    = tree.arithmetic_mean  (         'b1' , '1/b1') 
-    s2    = frame_arithmetic_mean ( frame , 'b1' , '1/b1') 
-
-    row = 'Arithmetic mean (b1,1/b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
+        row = 'Geometric  mean (b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.value() 
+        rows.append ( row )
     
-    s1    = tree.arithmetic_mean  (         'b1' , 'b1>0') 
-    s2    = frame_arithmetic_mean ( frame , 'b1' , 'b1>0') 
-    row = 'Arithmetic mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
+        s1    = tree.geometric_mean  (         'b1' , '1/b1') 
+        s2    = frame_geometric_mean ( frame , 'b1' , '1/b1') 
+        
+        row = 'Geometric  mean (b1,1/b1)' , '%+.2f' % s1.mean()   , '%+.2f' % s2.value() 
+        rows.append ( row )
+        
+        s1    = tree.geometric_mean  (         'b1' , 'b1>0') 
+        s2    = frame_geometric_mean ( frame , 'b1' , 'b1>0') 
+        
+        row = 'Geometric  mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+        rows.append ( row )
 
-    s1    = tree.geometric_mean  (         'b1' ) 
-    s2    = frame_geometric_mean ( frame , 'b1' ) 
-
-    row = 'Geometric  mean (b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
+        s1    = tree.harmonic_mean  (         'b1' ) 
+        s2    = frame_harmonic_mean ( frame , 'b1' ) 
+        
+        row = 'Harmonic   mean (b1)' , '%+.2f' % s1.mean() , '%+.2f' %  s2.value() 
+        rows.append ( row )
+        
+        s1    = tree.harmonic_mean  (         'b1' , '1/b1') 
+        s2    = frame_harmonic_mean ( frame , 'b1' , '1/b1') 
+        
+        row = 'Harmonic   mean (b1,1/b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+        rows.append ( row )
+        
+        s1    = tree.harmonic_mean  (         'b1' , 'b1>0') 
+        s2    = frame_harmonic_mean ( frame , 'b1' , 'b1>0') 
+        
+        row = 'Harmonic   mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+        rows.append ( row )
+        
+        s1    = tree.power_mean  (         2 , 'b1' ) 
+        s2    = frame_power_mean ( frame , 2 , 'b1' ) 
+        
+        row = 'Power      mean (2,b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value()
+        rows.append ( row )
+        
+        s1    = tree.power_mean  (         2 , 'b1' , '1/b1') 
+        s2    = frame_power_mean ( frame , 2 , 'b1' , '1/b1') 
     
-    s1    = tree.geometric_mean  (         'b1' , '1/b1') 
-    s2    = frame_geometric_mean ( frame , 'b1' , '1/b1') 
-
-    row = 'Geometric  mean (b1,1/b1)' , '%+.2f' % s1.mean()   , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
-  
-    s1    = tree.geometric_mean  (         'b1' , 'b1>0') 
-    s2    = frame_geometric_mean ( frame , 'b1' , 'b1>0') 
-
-    row = 'Geometric  mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
-    
-    
-    s1    = tree.harmonic_mean  (         'b1' ) 
-    s2    = frame_harmonic_mean ( frame , 'b1' ) 
-
-    row = 'Harmonic   mean (b1)' , '%+.2f' % s1.mean() , '%+.2f' %  s2.GetValue().value() 
-    rows.append ( row )
-    
-    s1    = tree.harmonic_mean  (         'b1' , '1/b1') 
-    s2    = frame_harmonic_mean ( frame , 'b1' , '1/b1') 
-
-    row = 'Harmonic   mean (b1,1/b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
-
-    s1    = tree.harmonic_mean  (         'b1' , 'b1>0') 
-    s2    = frame_harmonic_mean ( frame , 'b1' , 'b1>0') 
-
-    row = 'Harmonic   mean (b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
-    
-    s1    = tree.power_mean  (         2 , 'b1' ) 
-    s2    = frame_power_mean ( frame , 2 , 'b1' ) 
-
-    row = 'Power      mean (2,b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value()
-    rows.append ( row )
-
-    s1    = tree.power_mean  (         2 , 'b1' , '1/b1') 
-    s2    = frame_power_mean ( frame , 2 , 'b1' , '1/b1') 
-
-    row = 'Power      mean (2,b1,1/b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
-   
-    s1    = tree.power_mean  (         2 , 'b1' , 'b1>0') 
-    s2    = frame_power_mean ( frame , 2 , 'b1' , 'b1>0') 
-
-    row = 'Power      mean (2,b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
-
-    s1    = tree.lehmer_mean  (         3 , 'b1' ) 
-    s2    = frame_lehmer_mean ( frame , 3 , 'b1' ) 
-
-    row = 'Lehmer     mean (3,b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
-    
-    s1    = tree.lehmer_mean  (         3 , 'b1' , '1/b1') 
-    s2    = frame_lehmer_mean ( frame , 3 , 'b1' , '1/b1') 
-
-    row = 'Lehmer     mean (3,b1,1/b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
-   
-    s1    = tree.lehmer_mean  (         3 , 'b1' , 'b1>0') 
-    s2    = frame_lehmer_mean ( frame , 3 , 'b1' , 'b1>0') 
-
-    row = 'Lehmer     mean (3,b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.GetValue().value() 
-    rows.append ( row )
-    
+        row = 'Power      mean (2,b1,1/b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.value() 
+        rows.append ( row )
+        
+        s1    = tree.power_mean  (         2 , 'b1' , 'b1>0') 
+        s2    = frame_power_mean ( frame , 2 , 'b1' , 'b1>0') 
+        
+        row = 'Power      mean (2,b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+        rows.append ( row )
+        
+        s1    = tree.lehmer_mean  (         3 , 'b1' ) 
+        s2    = frame_lehmer_mean ( frame , 3 , 'b1' ) 
+        
+        row = 'Lehmer     mean (3,b1)' , '%+.2f' % s1.mean()  , '%+.2f' % s2.value() 
+        rows.append ( row )
+        
+        s1    = tree.lehmer_mean  (         3 , 'b1' , '1/b1') 
+        s2    = frame_lehmer_mean ( frame , 3 , 'b1' , '1/b1') 
+        
+        row = 'Lehmer     mean (3,b1,1/b1)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+        rows.append ( row )
+        
+        s1    = tree.lehmer_mean  (         3 , 'b1' , 'b1>0') 
+        s2    = frame_lehmer_mean ( frame , 3 , 'b1' , 'b1>0') 
+        
+        row = 'Lehmer     mean (3,b1,b1>0)' , '%+.2f' % s1.mean() , '%+.2f' % s2.value() 
+        rows.append ( row )
+        
     title = 'Frame/Tree statistics' 
     logger.info ( '%s\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' , alignment = 'lcc' ) ) ) 
-  
-   
+        
 # =============================================================================
 def test_frame3 () :
 
@@ -348,8 +348,8 @@ def test_frame3 () :
 
     for i in range ( 5 ) :
         
-        frame = DataFrame ( tname       , fname        )
-        pb    = frame_progress ( frame  , len ( tree ) )
+        frame   = DataFrame ( tname       , fname        )
+        fr, pb  = frame_progress ( frame  , len ( tree ) )
         message = 'Value: %d %s' % ( i , pb.GetValue() )
         logger.info ( message ) 
         
