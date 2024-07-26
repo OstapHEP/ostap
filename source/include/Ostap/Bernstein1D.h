@@ -79,6 +79,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// dimension
+      unsigned short dim    () const { return 1 ; }
       /// the degree of polynomial
       unsigned short degree () const { return m_bernstein.degree ()     ; }
       /// number of parameters
@@ -431,8 +433,10 @@ namespace Ostap
       // ======================================================================
     public:  // some characteristics
       // ======================================================================
+      /// dimension
+      unsigned short dim     () const { return 1 ; }
       /// degree
-      unsigned short degree      () const { return m_bernstein.degree() ; }
+      unsigned short degree  () const { return m_bernstein.degree() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -635,25 +639,6 @@ namespace Ostap
         const double                xmin  =  0 ,
         const double                xmax  =  1 ) ;
       // =====================================================================
-      /** constructor from the sequence of   parameters 
-       *  @param begin  start-iterator for sequence of coefficients 
-       *  @param end     start-iterator for sequence of coefficients 
-       *  @param xmin low-edge 
-       *  @param xmax high-edge 
-       */
-      // template<typename ITERATOR,
-      //          typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
-      //          typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
-      // PositiveEven 
-      // ( ITERATOR     begin    , 
-      //   ITERATOR     end      , 
-      //   const double xmin = 0 ,
-      //   const double xmax = 1 ) 
-
-      //   ...
-
-
-      // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -688,8 +673,10 @@ namespace Ostap
       // ======================================================================
     public:  // some characteristics
       // ======================================================================
+      /// dimension
+      unsigned short dim     () const { return 1 ; }
       /// degree
-      unsigned short degree      () const { return m_even.degree() ; }
+      unsigned short degree  () const { return m_even.degree() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -954,6 +941,8 @@ namespace Ostap
       // ======================================================================
     public:  // some characteristics
       // ======================================================================
+      /// dimension
+      unsigned short dim         () const { return 1 ; }
       /// degree
       unsigned short degree      () const { return m_bernstein.degree() ; }
       // ======================================================================
@@ -1250,6 +1239,8 @@ namespace Ostap
       // ======================================================================
     public:  // some characteristics
       // ======================================================================
+      /// dimension
+      unsigned short dim         () const { return 1 ; }
       /// degree
       unsigned short degree      () const { return m_bernstein.degree() ; }
       // ======================================================================
@@ -1469,6 +1460,8 @@ namespace Ostap
       // ======================================================================
     public:  // some characteristics
       // ======================================================================
+      /// dimension
+      unsigned short dim         () const { return 1 ; }
       /// degree
       unsigned short degree      () const { return m_bernstein.degree() ; }
       // ======================================================================

@@ -63,10 +63,11 @@ namespace Ostap
      *  @param last       (INPUT) the last event to process 
      */
     static Ostap::StatusCode project
-    ( const RooAbsData*   data            , 
-      TH1*                histo           ,
-      const std::string&  expression      ,
-      const std::string&  selection  = "" ,
+    ( const RooAbsData*   data                 , 
+      TH1*                histo                ,
+      const std::string&  expression           ,
+      const std::string&  selection  = ""      ,
+      const char*         range      = nullptr , 
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================  
@@ -76,15 +77,17 @@ namespace Ostap
      *  @param histo      (UPDATE) histogram 
      *  @param expression (INPUT) expression
      *  @param selection  (INPUT) selection criteria/weight 
+     *  @param range      (INPUT) cut-range 
      *  @param first      (INPUT) the first event to process 
      *  @param last       (INPUT) the last event to process 
      */
     static Ostap::StatusCode project
-    ( const RooAbsData*                 data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH1*                              histo           ,
-      const std::string&                expression      ,
-      const std::string&                selection  = "" ,
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      TH1*                              histo                ,
+      const std::string&                expression           ,
+      const std::string&                selection  = ""      ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0                                         ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -98,11 +101,12 @@ namespace Ostap
      *  @param last        (INPUT) the last event to process 
      */
     static Ostap::StatusCode project2
-    ( const RooAbsData*   data            , 
-      TH2*                histo           ,
-      const std::string&  xexpression     ,
-      const std::string&  yexpression     ,
-      const std::string&  selection  = "" ,
+    ( const RooAbsData*   data                 , 
+      TH2*                histo                ,
+      const std::string&  xexpression          ,
+      const std::string&  yexpression          ,
+      const std::string&  selection  = ""      ,
+      const char*         range      = nullptr , 
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -117,12 +121,13 @@ namespace Ostap
      *  @param last        (INPUT) the last event to process 
      */
     static Ostap::StatusCode project2
-    ( const RooAbsData*                 data            ,  
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH2*                              histo           ,
-      const std::string&                xexpression     ,
-      const std::string&                yexpression     ,
-      const std::string&                selection  = "" ,
+    ( const RooAbsData*                 data                 ,  
+      const Ostap::Utils::ProgressConf& progress             ,
+      TH2*                              histo                ,
+      const std::string&                xexpression          ,
+      const std::string&                yexpression          ,
+      const std::string&                selection  = ""      ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0                                         ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -137,12 +142,13 @@ namespace Ostap
      *  @param last  (INPUT) the last event to process 
      */
     static Ostap::StatusCode project3
-    ( const RooAbsData*   data            , 
-      TH3*                histo           ,
-      const std::string&  xexpression     ,
-      const std::string&  yexpression     ,
-      const std::string&  zexpression     ,
-      const std::string&  selection  = "" ,
+    ( const RooAbsData*   data                 , 
+      TH3*                histo                ,
+      const std::string&  xexpression          ,
+      const std::string&  yexpression          ,
+      const std::string&  zexpression          ,
+      const std::string&  selection  = ""      ,
+      const char*         range      = nullptr , 
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
 
@@ -159,13 +165,14 @@ namespace Ostap
      *  @param last        (INPUT) the last event to process 
      */
     static Ostap::StatusCode project3
-    ( const RooAbsData*   data            , 
+    ( const RooAbsData*   data                 , 
       const Ostap::Utils::ProgressConf& progress        ,
-      TH3*                histo           ,
-      const std::string&  xexpression     ,
-      const std::string&  yexpression     ,
-      const std::string&  zexpression     ,
-      const std::string&  selection  = "" ,
+      TH3*                histo                ,
+      const std::string&  xexpression          ,
+      const std::string&  yexpression          ,
+      const std::string&  zexpression          ,
+      const std::string&  selection  = ""      ,
+      const char*         range      = nullptr , 
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -180,10 +187,11 @@ namespace Ostap
      *  @param last       (INPUT) the last event to process 
      */
     static Ostap::StatusCode project
-    ( const RooAbsData*   data            , 
-      TH1*                histo           ,
-      const RooAbsReal&   expression      ,
-      const RooAbsReal*   selection  = 0  ,
+    ( const RooAbsData*   data                 , 
+      TH1*                histo                ,
+      const RooAbsReal&   expression           ,
+      const RooAbsReal*   selection  = nullptr ,
+      const char*         range      = nullptr , 
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -197,11 +205,12 @@ namespace Ostap
      *  @param last        (INPUT)  the last event to process 
      */
     static Ostap::StatusCode project
-    ( const RooAbsData*                 data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH1*                              histo           ,
-      const RooAbsReal&                 expression      ,
-      const RooAbsReal*                 selection  = 0  ,
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      TH1*                              histo                ,
+      const RooAbsReal&                 expression           ,
+      const RooAbsReal*                 selection  = nullptr ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0                                         ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -215,11 +224,12 @@ namespace Ostap
      *  @param last        (INPUT) the last event to process 
      */
     static Ostap::StatusCode project2
-    ( const RooAbsData*   data            , 
-      TH2*                histo           ,
-      const RooAbsReal&   xexpression     ,
-      const RooAbsReal&   yexpression     ,
-      const RooAbsReal*   selection  = 0  ,
+    ( const RooAbsData*   data                 , 
+      TH2*                histo                ,
+      const RooAbsReal&   xexpression          ,
+      const RooAbsReal&   yexpression          ,
+      const RooAbsReal*   selection  = nullptr ,
+      const char*         range      = nullptr , 
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -234,12 +244,13 @@ namespace Ostap
      *  @param last        (INPUT) the last event to process 
      */
     static Ostap::StatusCode project2
-    ( const RooAbsData*                 data            , 
-      const Ostap::Utils::ProgressConf& progress        ,
-      TH2*                              histo           ,
-      const RooAbsReal&                 xexpression     ,
-      const RooAbsReal&                 yexpression     ,
-      const RooAbsReal*                 selection  = 0  ,
+    ( const RooAbsData*                 data                 , 
+      const Ostap::Utils::ProgressConf& progress             ,
+      TH2*                              histo                ,
+      const RooAbsReal&                 xexpression          ,
+      const RooAbsReal&                 yexpression          ,
+      const RooAbsReal*                 selection  = nullptr ,
+      const char*                       range      = nullptr ,       
       const unsigned long               first      = 0                                         ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -259,7 +270,8 @@ namespace Ostap
       const RooAbsReal&   xexpression     ,
       const RooAbsReal&   yexpression     ,
       const RooAbsReal&   zexpression     ,
-      const RooAbsReal*   selection  = 0  ,
+      const RooAbsReal*   selection  = nullptr ,
+      const char*         range      = nullptr ,       
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -277,11 +289,12 @@ namespace Ostap
     static Ostap::StatusCode project3
     ( const RooAbsData*   data            , 
       const Ostap::Utils::ProgressConf& progress        ,
-      TH3*                histo           ,
-      const RooAbsReal&   xexpression     ,
-      const RooAbsReal&   yexpression     ,
-      const RooAbsReal&   zexpression     ,
-      const RooAbsReal*   selection  = 0  ,
+      TH3*                histo                ,
+      const RooAbsReal&   xexpression          ,
+      const RooAbsReal&   yexpression          ,
+      const RooAbsReal&   zexpression          ,
+      const RooAbsReal*   selection  = nullptr ,
+      const char*         range      = nullptr ,       
       const unsigned long first      = 0                                         ,
       const unsigned long last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -419,6 +432,7 @@ namespace Ostap
       Ostap::Math::LegendreSum& object               ,
       const RooAbsReal&         expression           ,
       const RooAbsReal*         selection  = nullptr ,
+      const char*               range      = nullptr , 
       const unsigned long       first      = 0       ,
       const unsigned long       last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -437,6 +451,7 @@ namespace Ostap
       Ostap::Math::LegendreSum&         object               ,
       const RooAbsReal&                 expression           ,
       const RooAbsReal*                 selection  = nullptr ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -453,6 +468,7 @@ namespace Ostap
       Ostap::Math::ChebyshevSum& object               ,
       const RooAbsReal&          expression           ,
       const RooAbsReal*          selection  = nullptr ,
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -471,6 +487,7 @@ namespace Ostap
       Ostap::Math::ChebyshevSum&        object               ,
       const RooAbsReal&                 expression           ,
       const RooAbsReal*                 selection  = nullptr ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -487,6 +504,7 @@ namespace Ostap
       Ostap::Math::Bernstein&    object               ,
       const RooAbsReal&          expression           ,
       const RooAbsReal*          selection  = nullptr ,
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -505,6 +523,7 @@ namespace Ostap
       Ostap::Math::Bernstein&           object               ,
       const RooAbsReal&                 expression           ,
       const RooAbsReal*                 selection  = nullptr ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -523,6 +542,7 @@ namespace Ostap
       const RooAbsReal&          xexpression          ,
       const RooAbsReal&          yexpression          ,
       const RooAbsReal*          selection  = nullptr ,
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -544,6 +564,7 @@ namespace Ostap
       const RooAbsReal&                 xexpression          ,
       const RooAbsReal&                 yexpression          ,
       const RooAbsReal*                 selection  = nullptr ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -562,6 +583,7 @@ namespace Ostap
       const RooAbsReal&          xexpression          ,
       const RooAbsReal&          yexpression          ,
       const RooAbsReal*          selection  = nullptr ,
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -583,6 +605,7 @@ namespace Ostap
       const RooAbsReal&                 xexpression          ,
       const RooAbsReal&                 yexpression          ,
       const RooAbsReal*                 selection  = nullptr ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -603,6 +626,7 @@ namespace Ostap
       const RooAbsReal&          yexpression          ,
       const RooAbsReal&          zexpression          ,
       const RooAbsReal*          selection  = nullptr ,
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -626,6 +650,7 @@ namespace Ostap
       const RooAbsReal&                 yexpression          ,
       const RooAbsReal&                 zexpression          ,
       const RooAbsReal*                 selection  = nullptr ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -646,6 +671,7 @@ namespace Ostap
       const RooAbsReal&          yexpression          ,
       const RooAbsReal&          zexpression          ,
       const RooAbsReal*          selection  = nullptr ,
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -669,6 +695,7 @@ namespace Ostap
       const RooAbsReal&                 yexpression          ,
       const RooAbsReal&                 zexpression          ,
       const RooAbsReal*                 selection  = nullptr ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -691,6 +718,7 @@ namespace Ostap
       const RooAbsReal&          zexpression          ,
       const RooAbsReal&          uexpression          ,
       const RooAbsReal*          selection  = nullptr ,
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -716,6 +744,7 @@ namespace Ostap
       const RooAbsReal&                 zexpression          ,
       const RooAbsReal&                 uexpression          ,
       const RooAbsReal*                 selection  = nullptr ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -734,6 +763,7 @@ namespace Ostap
       Ostap::Math::LegendreSum& object               ,
       const std::string&        expression           , 
       const std::string&        selection  = ""      , 
+      const char*               range      = nullptr , 
       const unsigned long       first      = 0       ,
       const unsigned long       last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -752,6 +782,7 @@ namespace Ostap
       Ostap::Math::LegendreSum&         object               ,
       const std::string&                expression           , 
       const std::string&                selection  = ""      , 
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -767,7 +798,8 @@ namespace Ostap
     ( const RooAbsData*          data                 , 
       Ostap::Math::ChebyshevSum& object               ,
       const std::string&         expression           , 
-      const std::string&         selection  = ""      , 
+      const std::string&         selection  = ""      ,
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -786,6 +818,7 @@ namespace Ostap
       Ostap::Math::ChebyshevSum&        object               ,
       const std::string&                expression           , 
       const std::string&                selection  = ""      , 
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -802,6 +835,7 @@ namespace Ostap
       Ostap::Math::Bernstein&   object               ,
       const std::string&        expression           , 
       const std::string&        selection  = ""      , 
+      const char*               range      = nullptr , 
       const unsigned long       first      = 0       ,
       const unsigned long       last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -820,6 +854,7 @@ namespace Ostap
       Ostap::Math::Bernstein&           object               ,
       const std::string&                expression           , 
       const std::string&                selection  = ""      , 
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;    
     // ========================================================================
@@ -838,6 +873,7 @@ namespace Ostap
       const std::string&         xexpression           , 
       const std::string&         yexpression           , 
       const std::string&         selection  = ""      , 
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -857,6 +893,7 @@ namespace Ostap
       const std::string&                xexpression          , 
       const std::string&                yexpression          , 
       const std::string&                selection  = ""      , 
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -875,6 +912,7 @@ namespace Ostap
       const std::string&         xexpression          , 
       const std::string&         yexpression          , 
       const std::string&         selection  = ""      , 
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -894,6 +932,7 @@ namespace Ostap
       const std::string&                xexpression          , 
       const std::string&                yexpression          , 
       const std::string&                selection  = ""      , 
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================    
@@ -914,6 +953,7 @@ namespace Ostap
       const std::string&         yexpression          , 
       const std::string&         zexpression          , 
       const std::string&         selection  = ""      , 
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -936,6 +976,7 @@ namespace Ostap
       const std::string&                yexpression          , 
       const std::string&                zexpression          , 
       const std::string&                selection  = ""      , 
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -955,7 +996,8 @@ namespace Ostap
       const std::string&         xexpression          , 
       const std::string&         yexpression          , 
       const std::string&         zexpression          , 
-      const std::string&         selection  = ""      , 
+      const std::string&         selection  = ""      ,
+      const char*                range      = nullptr ,       
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -977,7 +1019,8 @@ namespace Ostap
       const std::string&                xexpression          , 
       const std::string&                yexpression          , 
       const std::string&                zexpression          , 
-      const std::string&                selection  = ""      , 
+      const std::string&                selection  = ""      ,
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================    
@@ -1000,6 +1043,7 @@ namespace Ostap
       const std::string&         zexpression          , 
       const std::string&         uexpression          , 
       const std::string&         selection  = ""      , 
+      const char*                range      = nullptr , 
       const unsigned long        first      = 0       ,
       const unsigned long        last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================
@@ -1023,6 +1067,7 @@ namespace Ostap
       const std::string&                zexpression          , 
       const std::string&                uexpression          , 
       const std::string&                selection  = ""      , 
+      const char*                       range      = nullptr , 
       const unsigned long               first      = 0       ,
       const unsigned long               last       = std::numeric_limits<unsigned long>::max() ) ;
     // ========================================================================

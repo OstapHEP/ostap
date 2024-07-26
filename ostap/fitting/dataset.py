@@ -824,165 +824,137 @@ _new_methods_ += [
 #    >>> dataset.project ( h1           , 'm', 'chi2<10' ) ## use histo
 #
 #  @endcode
-#  @attention For 2D&3D cases if varibales specifed as singel string, the order is Z,Y,X,
-#             Otherwide the natural order is used.
 #  @see RooDataSet 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def ds_project  ( dataset , histo , what , cuts = '' , first = 0 , last = -1 , progress = False ) :
+def ds_project  ( dataset           ,
+                  histo             ,
+                  what              ,
+                  cuts      = ''    ,
+                  cut_range = ''    , 
+                  first     =  0    ,
+                  last      = None  ,
+                  progress  = False ) :
     """Helper project method for RooDataSet/DataFrame/... and similar objects 
-    
+
     >>> h1   = ROOT.TH1D(... )
     >>> dataset.project ( h1.GetName() , 'm', 'chi2<10' ) ## project variable into histo
     
     >>> h1   = ROOT.TH1D(... )
     >>> dataset.project ( h1           , 'm', 'chi2<10' ) ## use histo
-
-    - For 2D&3D cases if variables specifed as singel string, the order is Z,Y,X,
-    - Otherwide the natural order is used.
     """
 
-    target = histo
+    ## 1) redirect to approproate methods
+    if isinstance ( dataset , ROOT.TTree ) :
+        assert not cut_range, "ds_project(tree,...) cannot be used with cut_range %s" % cut_range 
+        from ostap.trees.trees import tree_project
+        return tree_project ( datatet , histo ,
+                              what    = what   ,
+                              cuts    = cuts   ,
+                              first   = first  ,
+                              last    = last   )
+
+    ## 2) if the histogram is specified by the name, try to locate it ROOT memory  
+    if isinstance ( histo , string_types ) :
+        hname = histo
+        groot = ROOT.ROOT.GetROOT()
+        h     = groot.FindObject ( hname )
+        assert h , 'Cannot get locate histo by name %s' % histos        
+        assert isinstance ( h , ROOT.TH1 ) , 'the object %s i snot ROOT.TH1' % type ( h ) 
+        histo = h
+
+
+    target = histo 
     
-     ## input historgam? 
+    ## input historgam?
     input_histo = isinstance ( target , ROOT.TH1 )
+    from ostap.trees.param import param_types_nD
+    assert input_histo or isinstance ( target , param_types_nD ) , 'Invalid target/histo type %s' % type ( target ) 
+
+    ## (4) dimension of the target 
+    dim = target.dim ()
+    assert 1 <= dim <= 4 , 'Invalid dimension of target: %s' % dim  
+
+    ## (5) parse input expressions
+    varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
+
+    print ( 'VARIABLES/1', varlst, cuts ) 
+    nvars = len ( varlst ) 
+    assert ( 1 == dim and dim <= nvars ) or dim == nvars , \
+        'Mismatch between the target/histo dimension %d and input variables %s' % ( dim , varlst )
+ 
+    print ( 'PROJECT-7' )
+
+    if isinstance ( dataset , ROOT.RooAbsData ) :
+        ## 3) adjust the first/last 
+        length = len ( dataset )
+        if not last      : last   = length + 1
+        elif   last  < 0 : last  += length
+        if     first < 0 : first += length   
+        assert 0 <= first <= last , 'Invalid first/last setting %s/^s' % ( first , last )
+        tail = cuts , cut_range , first , last
+    else :
+        assert not cut_range , 'cut-range is not allowed!' 
+        logger.warning  ( 'ds_project(%s): ignored  first/last %s/%s ' % ( type ( dataset ) , first , last ) ) 
+        from ostap.frames.frames import as_rnode
+        frame   = as_rnode ( dataset )
+        dataset = frame 
+        tail    = ()
+
+        
+    args = ( target , ) + varlst + tail 
+
+    ## copy/clone the target 
+    def target_copy  ( t ) : return t.Clone() if isinstance ( t , ROOT.TH1 ) else type ( t ) ( t )
+    ## reset the target 
+    def target_reset ( t ) :
+        if isinstance ( t , ROOT.TH1 ) : t.Reset()
+        else                           : t *= 0.0
+        return t
     
-    from ostap.trees.param import ( param_types_1D , param_types_2D ,
-                                    param_types_3D , param_types_4D )
-    assert input_histo or \
-           isinstance ( target , param_types_1D ) or \
-           isinstance ( target , param_types_2D ) or \
-           isinstance ( target , param_types_3D ) or \
-           isinstance ( target , param_types_4D ) , "Invalid type of 'histo/target' %s" % type ( histo )
-
-    ## reset targer 
-    if input_histo : target.Reset()
-    else           : target *= 0.0
-
+    ## reset the target 
+    target = target_reset ( target ) 
+    
+    from ostap.utils.progress_conf import progress_conf
+    
     if   isinstance ( histo , ROOT.TProfile2D ) :
         histo.Reset() 
         logger.error ('ds_project: TProfile2D is not (yet) supported')
         return histo 
     elif isinstance ( histo , ROOT.TProfile  ) :
         logger.error ('ds_project: TProfile   is not (yet) supported')
-        return histo 
-    
-    assert not cuts or \
-           isinstance ( cuts , string_types    ) or \
-           isinstance ( cuts , ROOT.RooAbsReal ) or \
-           isinstance ( cuts , ROOT.TCut       ) ,  \
-           "Invalid 'cuts' %s" % type ( cuts ) 
-    
-    if isinstance ( dataset , ROOT.RooAbsData ) :
-        
-        first   = max ( first , 0 )
-        nevents = len ( dataset   )
-        last    = nevents if last < 0 else min ( nevents , last )
-        
-        # NO ACTION ?
-        if last <= first or nevents <= first : return histo ## NO ACTION
-        events = first , last
-        
-    else :
-        
-        if 0 != first or 0 < last :
-            logger.warning ( "ds_project: 'first' and 'last' arguments (%s/%s) are ignored " % ( first , last ) )
-        events = () 
-                             
-    if isinstance ( cuts , str ) : cuts = cuts.strip()
-    if isinstance ( what , str ) : what = what.strip()
-    
-    tail = first , last , progress 
-    
-    if isinstance ( what , string_types ) :
-
-        ## ATTENTION reverse here! 
-        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True , respect_groups = True ) ] ) ) 
-        return ds_project ( dataset , histo , what , cuts , *events , progress = progress  )
-    
-    elif isinstance ( what , ROOT.RooArgList ) and isinstance ( dataset , ROOT.RooAbsData ) :
-        
-        what = tuple ( v for v in what ) 
-        return ds_project ( dataset , histo , what , cuts , *events , progress = progress )
-
-    assert isinstance ( what , list_types ) and what , "ds_project: invalid 'what' %s" % what 
-
-    
-    if    input_histo : hdim = target.dim() 
-    elif  isinstance ( target , param_types_1D ) : hdim = 1
-    elif  isinstance ( target , param_types_2D ) : hdim = 2
-    elif  isinstance ( target , param_types_3D ) : hdim = 3
-    elif  isinstance ( target , param_types_4D ) : hdim = 4
-  
-    assert len ( what ) == hdim  or ( 1 == hdim and hdim < len ( what ) ) , \
-           "ds_project: invalid 'what' %s" % what 
-
-    ok1 = all ( isinstance ( v , string_types    ) for v in what )
-    ok2 = all ( isinstance ( v , ROOT.RooAbsReal ) for v in what )
-
-    assert ok1 or ok2 , "ds_project: Invalid 'what': %s/%s " % ( type ( what ) , what )
-    
-    what = tuple ( what )
-    
-    if ok2 : ## need to have RooFit version of cuts 
-        if  not cuts                               : vcuts = ROOT.nullptr
-        elif isinstance ( cuts , ROOT.RoOAbsReal ) : vcuts = cuts 
-        else                                       : vcuts = make_formula ( cuts , cuts , dataset.get() )
-        
-        cuts = vcuts 
-
-    ## special treatment for 1D histograms: several variables are summed/projected together 
-    if 1 == hdim and input_histo and isinstance ( histo , ROOT.TH1 ) and hdim < len ( what ) :
-        htmp  = histo.clone()
-        for w in what :
-            htmp = ds_project ( dataset             ,
-                                histo    = htmp     ,
-                                what     = w        ,
-                                cuts     = cuts     ,
-                                first    = first    ,
-                                last     = last     , 
-                                progress = progress )
-            histo += htmp 
-        del htmp
         return histo
-    elif 1 == hdim and hdim < len ( what ) :
-        tobj  = type ( target ) 
-        htmp  = tobj ( target )
-        for w in what :
-            htmp = ds_project ( dataset             ,
-                                histo    = htmp     ,
-                                what     = w        ,
-                                cuts     = cuts     ,
-                                first    = first    ,
-                                last     = last     , 
-                                progress = progress )
-            target += htmp 
-        del htmp
-        return target 
     
-
-    args = ( target , ) + what  + ( cuts , ) + events
-
-    from   ostap.utils.progress_conf import progress_conf
-
-    ## finally fill the histograms 
-    if   4 == hdim :
-        if progress : sc = Ostap.HistoProject.project4 ( dataset , progress_conf () , *args )
-        else        : sc = Ostap.HistoProject.project4 ( dataset ,                    *args )
-        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
-    elif   3 == hdim :
-        if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *args )
-        else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *args )
-        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
-    elif 2 == hdim :
-        if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf () , *args )
-        else        : sc = Ostap.HistoProject.project2 ( dataset ,                    *args )
-        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
-    elif 1 == hdim :        
+    ## very special case of projection several expressions into the same target 
+    if 1 == dim and dim < nvars : 
+        ## very special case of projection several expressions into the same target 
+        htmp  = target_copy ( target )  ## prepare temporary object 
+        for var in varlst :
+            htmp = target_reset ( htmp ) ## rest the temporary object 
+            args = ( htmp , var ) + tail 
+            if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *args )
+            else        : sc = Ostap.HistoProject.project  ( dataset ,                    *args )
+            if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project %s" % sc )
+            ## update results 
+            target += htmp
+            del htmp 
+    elif 1 == dim :
         if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *args )
         else        : sc = Ostap.HistoProject.project  ( dataset ,                    *args )
-        if not sc.isSuccess() :  logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
-
+        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project  %s" % sc )
+    elif 2 == dim : 
+        if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf () , *args )
+        else        : sc = Ostap.HistoProject.project2 ( dataset ,                    *args )
+        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
+    elif 3 == dim : 
+        if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *args )
+        else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *args )
+        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
+    elif 4 == dim : 
+        if progress : sc = Ostap.HistoProject.project4 ( dataset , progress_conf () , *args )
+        else        : sc = Ostap.HistoProject.project4 ( dataset ,                    *args )
+        if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
+        
     return target if sc.isSuccess() else None 
 
 # =============================================================================

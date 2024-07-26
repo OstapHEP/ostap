@@ -127,6 +127,8 @@ namespace Ostap
       inline unsigned short degree () const { return   order() ; }
       // number of inner knots
       inline unsigned short inner  () const { return m_inner   ; }
+      /// dimension
+      inline unsigned short  dim   () const { return 1 ; }
       // ======================================================================
     public: // technical: get the effective position for knot "index"
       // ======================================================================
@@ -381,8 +383,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 1 ; }
       /// get number of parameters
-      std::size_t npars  () const { return m_sphere.nPhi() ; }
+      std::size_t     npars  () const { return m_sphere.nPhi() ; }
       /// set k-parameter
       bool setPar        ( const unsigned short k , const double value ) ;
       /// set k-parameter
@@ -856,6 +860,11 @@ namespace Ostap
       double         xinner () const { return m_xspline.inner () ; }
       double         yinner () const { return m_yspline.inner () ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 2 ; }
+      // ======================================================================
     public: // few useful methdod 
       // ======================================================================
       /// simple  manipulations with polynoms: shift it!
@@ -1068,6 +1077,11 @@ namespace Ostap
       double         xinner () const { return m_spline.inner () ; }
       double         yinner () const { return m_spline.inner () ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 2 ; }
+      // ======================================================================
     public: // few useful methdod 
       // ======================================================================
       /// simple  manipulations with polynoms: shift it!
@@ -1243,6 +1257,11 @@ namespace Ostap
       double         xinner () const { return m_spline.xinner () ; }
       double         yinner () const { return m_spline.yinner () ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 2 ; }
+      // ======================================================================
     public: // generic integrals
       // ======================================================================
       /** get the integral over 2D-region
@@ -1372,6 +1391,11 @@ namespace Ostap
       double         xinner () const { return m_spline.xinner () ; }
       double         yinner () const { return m_spline.yinner () ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 2 ; }
+      // ======================================================================
     public: // generic integration
       // ======================================================================
       /** get the integral over 2D-region
@@ -1380,8 +1404,11 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ) const 
+      double integral
+      ( const double xlow  ,
+	const double xhigh ,
+	const double ylow  ,
+	const double yhigh ) const 
       { return m_spline.integral ( xlow , xhigh , ylow , yhigh ) ; }
       /** get the integral over X  for given Y
        *  @param y  (INPU) y-value

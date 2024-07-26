@@ -1309,6 +1309,8 @@ namespace Ostap
       unsigned short degree () const { return m_pars.empty() ? 0 : m_pars.size() - 1 ; }
       /// degree  of polynomial 
       unsigned short n      () const { return degree () ; }
+      /// dimension
+      unsigned short dim    () const { return 1 ; }
       // ======================================================================
     } ;  
     // ========================================================================    

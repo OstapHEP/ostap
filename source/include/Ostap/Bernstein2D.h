@@ -168,6 +168,11 @@ namespace Ostap
       /// get the polynomial order (Y)
       unsigned short nY () const { return m_ny ; }
       // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 2 ; }
+      // ======================================================================
     public:  // transformations
       // ======================================================================
       double x  ( const double tx ) const
@@ -504,6 +509,11 @@ namespace Ostap
       unsigned short nX   () const { return m_bernstein.nX   () ; }
       unsigned short nY   () const { return m_bernstein.nY   () ; }
       // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 2 ; }
+      // ======================================================================
     public:
       // ======================================================================
       // transform variables
@@ -734,6 +744,11 @@ namespace Ostap
       unsigned short n  () const { return m_n  ; }
       unsigned short nX () const { return n () ; }
       unsigned short nY () const { return n () ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 2 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -975,6 +990,11 @@ namespace Ostap
       unsigned short n    () const { return m_bernstein.n    () ; }
       unsigned short nX   () const { return m_bernstein.nX   () ; }
       unsigned short nY   () const { return m_bernstein.nY   () ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 2 ; }
       // ======================================================================
     public:
       // ======================================================================

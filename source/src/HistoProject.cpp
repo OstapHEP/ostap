@@ -914,6 +914,7 @@ Ostap::HistoProject::project
   TH1*                              histo      ,
   const RooAbsReal&                 expression ,
   const RooAbsReal*                 selection  ,
+  const char*                       range       , 
   const unsigned long               first      ,
   const unsigned long               last       ) 
 {
@@ -931,6 +932,7 @@ Ostap::HistoProject::project
   const double xmin = histo->GetXaxis()->GetXmin () ;
   const double xmax = histo->GetXaxis()->GetXmax () ;
   //
+  
   Ostap::Utils::ProgressBar bar ( nEntries - first , progress ) ;
   for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )   
   {
@@ -990,6 +992,7 @@ Ostap::HistoProject::project
   Ostap::Math::LegendreSum& object     ,
   const RooAbsReal&         expression ,
   const RooAbsReal*         selection  ,
+  const char*               range       , 
   const unsigned long       first      ,
   const unsigned long       last       ) 
 {
@@ -1000,6 +1003,7 @@ Ostap::HistoProject::project
                    object     , 
                    expression , 
                    selection  ,
+		   range      , 
                    first      ,
                    last       ) ;
 }
@@ -1021,6 +1025,7 @@ Ostap::HistoProject::project
   Ostap::Math::LegendreSum&         object     ,
   const RooAbsReal&                 expression ,
   const RooAbsReal*                 selection  ,
+  const char*                       range       , 
   const unsigned long               first      ,
   const unsigned long               last       ) 
 {
@@ -1031,7 +1036,7 @@ Ostap::HistoProject::project
                      object         ,   
                      expression     , 
                      selection      , 
-                     nullptr        , 
+                     range          , 
                      object.xmin () ,
                      object.xmax () , 
                      first          ,
@@ -1053,6 +1058,7 @@ Ostap::HistoProject::project
   Ostap::Math::ChebyshevSum& object     ,
   const RooAbsReal&          expression ,
   const RooAbsReal*          selection  ,
+  const char*                range       , 
   const unsigned long        first      ,
   const unsigned long        last       ) 
 {
@@ -1063,6 +1069,7 @@ Ostap::HistoProject::project
                    object     , 
                    expression , 
                    selection  ,
+		   range      , 
                    first      ,
                    last       ) ;
 }
@@ -1084,6 +1091,7 @@ Ostap::HistoProject::project
   Ostap::Math::ChebyshevSum&        object     ,
   const RooAbsReal&                 expression ,
   const RooAbsReal*                 selection  ,
+  const char*                       range      , 
   const unsigned long               first      ,
   const unsigned long               last       ) 
 {
@@ -1094,7 +1102,7 @@ Ostap::HistoProject::project
                      object         ,   
                      expression     , 
                      selection      , 
-                     nullptr        , 
+                     range          , 
                      object.xmin () ,
                      object.xmax () , 
                      first          ,
@@ -1116,6 +1124,7 @@ Ostap::HistoProject::project
   Ostap::Math::Bernstein&    object     ,
   const RooAbsReal&          expression ,
   const RooAbsReal*          selection  ,
+  const char*                range       , 
   const unsigned long        first      ,
   const unsigned long        last       ) 
 {
@@ -1126,6 +1135,7 @@ Ostap::HistoProject::project
                    object     , 
                    expression , 
                    selection  ,
+		   range      , 
                    first      ,
                    last       ) ;
 }
@@ -1147,6 +1157,7 @@ Ostap::HistoProject::project
   Ostap::Math::Bernstein&           object     ,
   const RooAbsReal&                 expression ,
   const RooAbsReal*                 selection  ,
+  const char*                       range       , 
   const unsigned long               first      ,
   const unsigned long               last       ) 
 {
@@ -1157,7 +1168,7 @@ Ostap::HistoProject::project
                      object         ,   
                      expression     , 
                      selection      , 
-                     nullptr        , 
+                     range          , 
                      object.xmin () ,
                      object.xmax () , 
                      first          ,
@@ -1181,6 +1192,7 @@ Ostap::HistoProject::project2
   const RooAbsReal&          xexpression ,
   const RooAbsReal&          yexpression ,
   const RooAbsReal*          selection   ,
+  const char*                range       , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
 {
@@ -1192,6 +1204,7 @@ Ostap::HistoProject::project2
                     xexpression , 
                     yexpression , 
                     selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -1214,6 +1227,7 @@ Ostap::HistoProject::project2
   const RooAbsReal&                 xexpression ,
   const RooAbsReal&                 yexpression ,
   const RooAbsReal*                 selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -1225,7 +1239,7 @@ Ostap::HistoProject::project2
                       xexpression    , 
                       yexpression    , 
                       selection      , 
-                      nullptr        , 
+                      range          , 
                       object.xmin () ,
                       object.xmax () , 
                       object.ymin () ,
@@ -1251,6 +1265,7 @@ Ostap::HistoProject::project2
   const RooAbsReal&          xexpression ,
   const RooAbsReal&          yexpression ,
   const RooAbsReal*          selection   ,
+  const char*                range       , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
 {
@@ -1262,6 +1277,7 @@ Ostap::HistoProject::project2
                     xexpression , 
                     yexpression , 
                     selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -1284,6 +1300,7 @@ Ostap::HistoProject::project2
   const RooAbsReal&                 xexpression ,
   const RooAbsReal&                 yexpression ,
   const RooAbsReal*                 selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -1295,7 +1312,7 @@ Ostap::HistoProject::project2
                       xexpression    , 
                       yexpression    , 
                       selection      , 
-                      nullptr        , 
+                      range          , 
                       object.xmin () ,
                       object.xmax () , 
                       object.ymin () ,
@@ -1323,6 +1340,7 @@ Ostap::HistoProject::project3
   const RooAbsReal&          yexpression ,
   const RooAbsReal&          zexpression ,
   const RooAbsReal*          selection   ,
+  const char*                range       , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
 {
@@ -1335,6 +1353,7 @@ Ostap::HistoProject::project3
                     yexpression , 
                     zexpression , 
                     selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -1360,6 +1379,7 @@ Ostap::HistoProject::project3
   const RooAbsReal&                 yexpression ,
   const RooAbsReal&                 zexpression ,
   const RooAbsReal*                 selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -1372,7 +1392,7 @@ Ostap::HistoProject::project3
                       yexpression    , 
                       zexpression    , 
                       selection      , 
-                      nullptr        , 
+                      range          , 
                       object.xmin () ,
                       object.xmax () , 
                       object.ymin () ,
@@ -1402,6 +1422,7 @@ Ostap::HistoProject::project3
   const RooAbsReal&          yexpression ,
   const RooAbsReal&          zexpression ,
   const RooAbsReal*          selection   ,
+  const char*                range       , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
 {
@@ -1414,6 +1435,7 @@ Ostap::HistoProject::project3
                     yexpression , 
                     zexpression , 
                     selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -1439,6 +1461,7 @@ Ostap::HistoProject::project3
   const RooAbsReal&                 yexpression ,
   const RooAbsReal&                 zexpression ,
   const RooAbsReal*                 selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -1451,7 +1474,7 @@ Ostap::HistoProject::project3
                       yexpression    , 
                       zexpression    , 
                       selection      , 
-                      nullptr        , 
+                      range          , 
                       object.xmin () ,
                       object.xmax () , 
                       object.ymin () ,
@@ -1483,6 +1506,7 @@ Ostap::HistoProject::project4
   const RooAbsReal&          zexpression ,
   const RooAbsReal&          uexpression ,
   const RooAbsReal*          selection   ,
+  const char*                range       , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
 {
@@ -1496,6 +1520,7 @@ Ostap::HistoProject::project4
                     zexpression , 
                     uexpression , 
                     selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -1522,6 +1547,7 @@ Ostap::HistoProject::project4
   const RooAbsReal&                 zexpression ,
   const RooAbsReal&                 uexpression ,
   const RooAbsReal*                 selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -1535,7 +1561,7 @@ Ostap::HistoProject::project4
                       zexpression    , 
                       uexpression    , 
                       selection      , 
-                      nullptr        , 
+                      range          , 
                       object.xmin () ,
                       object.xmax () , 
                       object.ymin () ,
@@ -1563,6 +1589,7 @@ Ostap::HistoProject::project
   Ostap::Math::LegendreSum& object     ,
   const std::string&        expression , 
   const std::string&        selection  , 
+  const char*               range      , 
   const unsigned long       first      ,
   const unsigned long       last       ) 
 {
@@ -1573,6 +1600,7 @@ Ostap::HistoProject::project
                    object      , 
                    expression  , 
                    selection   ,
+		   range       , 
                    first       ,
                    last        ) ;
 }
@@ -1594,6 +1622,7 @@ Ostap::HistoProject::project
   Ostap::Math::LegendreSum&         object     ,
   const std::string&                expression , 
   const std::string&                selection  , 
+  const char*                       range      , 
   const unsigned long               first      ,
   const unsigned long               last       ) 
 {
@@ -1604,7 +1633,7 @@ Ostap::HistoProject::project
                      object         ,   
                      expression     , 
                      selection      , 
-                     nullptr        , 
+                     range          , 
                      object.xmin () ,
                      object.xmax () , 
                      first          ,
@@ -1626,6 +1655,7 @@ Ostap::HistoProject::project
   Ostap::Math::ChebyshevSum& object     ,
   const std::string&         expression , 
   const std::string&         selection  , 
+  const char*                range      , 
   const unsigned long        first      ,
   const unsigned long        last       ) 
 {
@@ -1636,6 +1666,7 @@ Ostap::HistoProject::project
                    object      , 
                    expression  , 
                    selection   ,
+		   range       , 
                    first       ,
                    last        ) ;
 }
@@ -1657,6 +1688,7 @@ Ostap::HistoProject::project
   Ostap::Math::ChebyshevSum&        object     ,
   const std::string&                expression , 
   const std::string&                selection  , 
+  const char*                       range      , 
   const unsigned long               first      ,
   const unsigned long               last       ) 
 {
@@ -1667,7 +1699,7 @@ Ostap::HistoProject::project
                      object         ,   
                      expression     , 
                      selection      , 
-                     nullptr        , 
+                     range          , 
                      object.xmin () ,
                      object.xmax () , 
                      first          ,
@@ -1689,6 +1721,7 @@ Ostap::HistoProject::project
   Ostap::Math::Bernstein&   object     ,
   const std::string&        expression , 
   const std::string&        selection  , 
+  const char*               range      , 
   const unsigned long       first      ,
   const unsigned long       last       ) 
 {
@@ -1699,6 +1732,7 @@ Ostap::HistoProject::project
                    object      , 
                    expression  , 
                    selection   ,
+		   range       ,
                    first       ,
                    last        ) ;
 }
@@ -1719,7 +1753,8 @@ Ostap::HistoProject::project
   const Ostap::Utils::ProgressConf& progress   ,
   Ostap::Math::Bernstein&           object     ,
   const std::string&                expression , 
-  const std::string&                selection  , 
+  const std::string&                selection  ,
+  const char*                       range      , 
   const unsigned long               first      ,
   const unsigned long               last       ) 
 {
@@ -1730,7 +1765,7 @@ Ostap::HistoProject::project
                      object         ,   
                      expression     , 
                      selection      , 
-                     nullptr        , 
+		     range          , 
                      object.xmin () ,
                      object.xmax () , 
                      first          ,
@@ -1753,9 +1788,10 @@ Ostap::HistoProject::project2
   Ostap::Math::LegendreSum2& object      ,
   const std::string&         xexpression , 
   const std::string&         yexpression , 
-  const std::string&         selection  , 
-  const unsigned long        first      ,
-  const unsigned long        last       ) 
+  const std::string&         selection   ,
+  const char*                range       , 
+  const unsigned long        first       ,
+  const unsigned long        last        ) 
 {
   /// make a fake progress bar 
   Ostap::Utils::ProgressConf progress { 0 } ;
@@ -1765,6 +1801,7 @@ Ostap::HistoProject::project2
                     xexpression ,
                     yexpression , 
                     selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -1788,6 +1825,7 @@ Ostap::HistoProject::project2
   const std::string&                xexpression , 
   const std::string&                yexpression , 
   const std::string&                selection   , 
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -1799,7 +1837,7 @@ Ostap::HistoProject::project2
                       xexpression    , 
                       yexpression    , 
                       selection      , 
-                      nullptr        , 
+                      range          , 
                       object.xmin () ,
                       object.xmax () , 
                       object.ymin () ,
@@ -1824,9 +1862,10 @@ Ostap::HistoProject::project2
   Ostap::Math::Bernstein2D&  object      ,
   const std::string&         xexpression , 
   const std::string&         yexpression , 
-  const std::string&         selection  , 
-  const unsigned long        first      ,
-  const unsigned long        last       ) 
+  const std::string&         selection   ,
+  const char*                range       , 
+  const unsigned long        first       ,
+  const unsigned long        last        ) 
 {
   /// make a fake progress bar 
   Ostap::Utils::ProgressConf progress { 0 } ;
@@ -1836,6 +1875,7 @@ Ostap::HistoProject::project2
                     xexpression ,
                     yexpression , 
                     selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -1859,6 +1899,7 @@ Ostap::HistoProject::project2
   const std::string&                xexpression , 
   const std::string&                yexpression , 
   const std::string&                selection   , 
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -1870,7 +1911,7 @@ Ostap::HistoProject::project2
                       xexpression    , 
                       yexpression    , 
                       selection      , 
-                      nullptr        , 
+                      range          , 
                       object.xmin () ,
                       object.xmax () , 
                       object.ymin () ,
@@ -1897,9 +1938,10 @@ Ostap::HistoProject::project3
   const std::string&         xexpression , 
   const std::string&         yexpression , 
   const std::string&         zexpression , 
-  const std::string&         selection  , 
-  const unsigned long        first      ,
-  const unsigned long        last       ) 
+  const std::string&         selection   , 
+  const char*                range       , 
+  const unsigned long        first       ,
+  const unsigned long        last        ) 
 {
   /// make a fake progress bar 
   Ostap::Utils::ProgressConf progress { 0 } ;
@@ -1910,6 +1952,7 @@ Ostap::HistoProject::project3
                     yexpression , 
                     zexpression , 
                     selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -1935,6 +1978,7 @@ Ostap::HistoProject::project3
   const std::string&                yexpression , 
   const std::string&                zexpression , 
   const std::string&                selection   , 
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -1947,7 +1991,7 @@ Ostap::HistoProject::project3
                       yexpression    , 
                       zexpression    , 
                       selection      , 
-                      nullptr        , 
+                      range          , 
                       object.xmin () ,
                       object.xmax () , 
                       object.ymin () ,
@@ -1976,9 +2020,10 @@ Ostap::HistoProject::project3
   const std::string&         xexpression , 
   const std::string&         yexpression , 
   const std::string&         zexpression , 
-  const std::string&         selection  , 
-  const unsigned long        first      ,
-  const unsigned long        last       ) 
+  const std::string&         selection   , 
+  const char*                range       , 
+  const unsigned long        first       ,
+  const unsigned long        last        ) 
 {
   /// make a fake progress bar 
   Ostap::Utils::ProgressConf progress { 0 } ;
@@ -1989,6 +2034,7 @@ Ostap::HistoProject::project3
                     yexpression , 
                     zexpression , 
                     selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -2014,6 +2060,7 @@ Ostap::HistoProject::project3
   const std::string&                yexpression , 
   const std::string&                zexpression , 
   const std::string&                selection   , 
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -2026,7 +2073,7 @@ Ostap::HistoProject::project3
                       yexpression    , 
                       zexpression    , 
                       selection      , 
-                      nullptr        , 
+                      range          , 
                       object.xmin () ,
                       object.xmax () , 
                       object.ymin () ,
@@ -2058,6 +2105,7 @@ Ostap::HistoProject::project4
   const std::string&         zexpression , 
   const std::string&         uexpression , 
   const std::string&         selection   , 
+  const char*                range       , 
   const unsigned long        first       ,
   const unsigned long        last        ) 
 {
@@ -2071,6 +2119,7 @@ Ostap::HistoProject::project4
                     zexpression , 
                     uexpression , 
                     selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -2098,6 +2147,7 @@ Ostap::HistoProject::project4
   const std::string&                zexpression , 
   const std::string&                uexpression , 
   const std::string&                selection   , 
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -2111,7 +2161,7 @@ Ostap::HistoProject::project4
                       zexpression    , 
                       uexpression    , 
                       selection      , 
-                      nullptr        , 
+                      range          , 
                       object.xmin () ,
                       object.xmax () , 
                       object.ymin () ,
@@ -2139,6 +2189,7 @@ Ostap::HistoProject::project
   TH1*                histo      ,
   const RooAbsReal&   expression ,
   const RooAbsReal*   selection  ,
+  const char*         range      , 
   const unsigned long first      ,
   const unsigned long last       ) 
 {
@@ -2148,7 +2199,8 @@ Ostap::HistoProject::project
                    progress   , 
                    histo      , 
                    expression , 
-                   selection  , 
+                   selection  ,
+		   range      , 
                    first      ,
                    last       ) ;
 }
@@ -2172,6 +2224,7 @@ Ostap::HistoProject::project2
   const RooAbsReal&                 xexpression ,
   const RooAbsReal&                 yexpression ,
   const RooAbsReal*                 selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -2191,11 +2244,16 @@ Ostap::HistoProject::project2
   const double ymin = histo -> GetYaxis () -> GetXmin () ;
   const double ymax = histo -> GetYaxis () -> GetXmax () ;
   //
+  const bool has_range = range && 1 <= std::strlen ( range ) ;
+  //
   Ostap::Utils::ProgressBar bar ( nEntries - first , progress ) ;
   for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )   
   {
     //
-    if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars ) { break ; }                            // BREAK
+    //
+    if ( has_range && !vars->allInRange ( range ) ) { continue ; } // CONTINUE    
     //
     // data weight 
     const double dw = weighted  ? data      -> weight () : 1.0 ;
@@ -2255,6 +2313,7 @@ Ostap::HistoProject::project2
   const RooAbsReal&                 xexpression ,
   const RooAbsReal&                 yexpression ,
   const RooAbsReal*                 selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -2265,7 +2324,8 @@ Ostap::HistoProject::project2
                     histo       , 
                     xexpression , 
                     yexpression , 
-                    selection   , 
+                    selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -2291,6 +2351,7 @@ Ostap::HistoProject::project3
   const RooAbsReal&                 yexpression ,
   const RooAbsReal&                 zexpression ,
   const RooAbsReal*                 selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -2312,11 +2373,16 @@ Ostap::HistoProject::project3
   const double zmin = histo -> GetZaxis () -> GetXmin () ;
   const double zmax = histo -> GetZaxis () -> GetXmax () ;
   //
+  const bool has_range = range && 1 <= std::strlen ( range ) ;
+  //
   Ostap::Utils::ProgressBar bar ( nEntries - first , progress ) ;
   for ( unsigned long entry = first ; entry < nEntries ; ++entry , ++bar )   
   {
     //
-    if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr  == vars ) { break ; }                            // BREAK
+    //
+    if ( has_range && !vars->allInRange ( range ) ) { continue ; } // CONTINUE    
     //
     // data weight 
     const double dw = weighted  ? data      -> weight () : 1.0 ;
@@ -2379,6 +2445,7 @@ Ostap::HistoProject::project3
   const RooAbsReal&                 yexpression ,
   const RooAbsReal&                 zexpression ,
   const RooAbsReal*                 selection   ,
+  const char*                       range      , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -2390,7 +2457,8 @@ Ostap::HistoProject::project3
                     xexpression , 
                     yexpression , 
                     zexpression , 
-                    selection   , 
+                    selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -2412,6 +2480,7 @@ Ostap::HistoProject::project
   TH1*                              histo      ,
   const std::string&                expression ,
   const std::string&                selection  ,
+  const char*                       range      , 
   const unsigned long               first      ,                                          
   const unsigned long               last       ) 
 {
@@ -2443,16 +2512,17 @@ Ostap::HistoProject::project
   const RooAbsReal* x_var = get_var ( *aset , expression ) ;
   std::unique_ptr<Ostap::FormulaVar> xwhat ;
   if ( 0 == x_var ) 
-  {
-    xwhat.reset( new Ostap::FormulaVar( expression , alst , false ) ) ;
-    if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
+    {
+      xwhat.reset( new Ostap::FormulaVar( expression , alst , false ) ) ;
+      if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
   }
   //
   return project ( data                                  , 
                    progress                              ,
                    histo                                 , 
                    0 !=   x_var ?   *x_var : *xwhat      , 
-                   0 != cut_var ?  cut_var :  cuts.get() , first , last ) ;
+                   0 != cut_var ?  cut_var :  cuts.get() ,
+		   range , first , last ) ;
 }
 // ============================================================================
 /*  make a projection of RooDataSet into the histogram 
@@ -2470,6 +2540,7 @@ Ostap::HistoProject::project
   TH1*                              histo      ,
   const std::string&                expression ,
   const std::string&                selection  ,
+  const char*                       range       , 
   const unsigned long               first      ,                                          
   const unsigned long               last       ) 
 {
@@ -2479,7 +2550,8 @@ Ostap::HistoProject::project
                    progress    , 
                    histo       , 
                    expression  , 
-                   selection   , 
+                   selection   ,
+		   range       , 
                    first       ,
                    last        ) ;
 }
@@ -2503,6 +2575,7 @@ Ostap::HistoProject::project2
   const std::string&                xexpression ,
   const std::string&                yexpression ,
   const std::string&                selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -2552,7 +2625,8 @@ Ostap::HistoProject::project2
                     histo                                  , 
                     0 !=   x_var ?   *x_var : *xwhat       , 
                     0 !=   y_var ?   *y_var : *ywhat       , 
-                    0 != cut_var ?  cut_var :   cuts.get() , first , last ) ;
+                    0 != cut_var ?  cut_var :   cuts.get() ,
+		    range , first , last ) ;
 }
 // ============================================================================
 /*  make a projection of RooDataSet into the histogram 
@@ -2572,6 +2646,7 @@ Ostap::HistoProject::project2
   const std::string&                xexpression ,
   const std::string&                yexpression ,
   const std::string&                selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -2582,7 +2657,8 @@ Ostap::HistoProject::project2
                     histo       , 
                     xexpression , 
                     yexpression , 
-                    selection   , 
+                    selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -2608,6 +2684,7 @@ Ostap::HistoProject::project3
   const std::string&                yexpression ,
   const std::string&                zexpression ,
   const std::string&                selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -2666,7 +2743,8 @@ Ostap::HistoProject::project3
                     0 !=   x_var ?   *x_var : *xwhat       , 
                     0 !=   y_var ?   *y_var : *ywhat       , 
                     0 !=   z_var ?   *z_var : *zwhat       , 
-                    0 != cut_var ?  cut_var :   cuts.get() , first , last ) ;
+                    0 != cut_var ?  cut_var :   cuts.get() ,
+		    range , first , last ) ;
 }
 // ============================================================================
 /*  make a projection of RooDataSet into the histogram 
@@ -2689,6 +2767,7 @@ Ostap::HistoProject::project3
   const std::string&                yexpression ,
   const std::string&                zexpression ,
   const std::string&                selection   ,
+  const char*                       range       , 
   const unsigned long               first       ,
   const unsigned long               last        ) 
 {
@@ -2700,7 +2779,8 @@ Ostap::HistoProject::project3
                     xexpression , 
                     yexpression , 
                     zexpression , 
-                    selection   , 
+                    selection   ,
+		    range       , 
                     first       ,
                     last        ) ;
 }
@@ -2902,7 +2982,7 @@ Ostap::StatusCode Ostap::HistoProject::project3
 
 
 // ============================================================================
-//  TTree
+//  TTree -> histograms 
 // ============================================================================
 
 // ============================================================================
@@ -3194,6 +3274,7 @@ Ostap::StatusCode Ostap::HistoProject::project3
                     last        ) ;
 }
 // ============================================================================
+
 
 
 
@@ -3736,7 +3817,7 @@ Ostap::HistoProject::project4
                     yexpression , 
                     zexpression , 
                     uexpression , 
-                    selection   , 
+                    selection   ,
                     first       , 
                     last        ) ;
 }

@@ -194,6 +194,11 @@ namespace Ostap
       /// get the polynomial order (Y)
       unsigned short nZ () const { return m_nz ; }
       // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 3 ; }
+      // ======================================================================
     public:  // transformations
       // ======================================================================
       double x  ( const double tx ) const
@@ -775,6 +780,11 @@ namespace Ostap
       /// get the polynomial order (Y)
       unsigned short nZ () const { return nY() ; }
       // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 3 ; }
+      // ======================================================================
     public:  // transformations
       // ======================================================================
       double x  ( const double tx ) const
@@ -1182,6 +1192,11 @@ namespace Ostap
       /// get the polynomial order (Y)
       unsigned short nZ () const { return m_nz ; }
       // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 3 ; }
+      // ======================================================================
     public:  // transformations
       // ======================================================================
       double x  ( const double tx ) const
@@ -1556,6 +1571,11 @@ namespace Ostap
       unsigned short nY   () const { return m_bernstein.nY   () ; }
       unsigned short nZ   () const { return m_bernstein.nZ   () ; }
       // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 3 ; }
+      // ======================================================================
     public:
       // ======================================================================
       // transform variables
@@ -1841,6 +1861,11 @@ namespace Ostap
       unsigned short nX   () const { return m_bernstein.nX   () ; }
       unsigned short nY   () const { return m_bernstein.nY   () ; }
       unsigned short nZ   () const { return m_bernstein.nZ   () ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 3 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2134,6 +2159,11 @@ namespace Ostap
       unsigned short nX   () const { return m_bernstein.nX   () ; }
       unsigned short nY   () const { return m_bernstein.nY   () ; }
       unsigned short nZ   () const { return m_bernstein.nZ   () ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      unsigned short  dim   () const { return 3 ; }
       // ======================================================================
     public:
       // ======================================================================
