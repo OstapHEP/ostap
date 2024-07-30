@@ -1065,14 +1065,6 @@ def get_var ( self, aname ) :
     _vars = self.get()
     return getattr ( _vars , aname )  
 
-
-_new_methods_ += [
-    ROOT.RooDataSet .vminmax ,
-    ]
-
-
-
-
 # =============================================================================
 ## Is there at least one entry that satisfy selection criteria?
 #  @code
