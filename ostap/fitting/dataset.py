@@ -1058,60 +1058,13 @@ def _ds_getattr_ ( dataset , aname ) :
     """
     _vars = dataset.get()
     return getattr ( _vars , aname )  
+
 ## get the attibute for RooDataSet
 # =============================================================================
 def get_var ( self, aname ) :
     _vars = self.get()
     return getattr ( _vars , aname )  
 
-
-
-# =============================================================================
-## Get min/max for the certain variable/expression in dataset
-#  @code  
-#  data = ...
-#  mn,mx = data.vminmax('pt')
-#  mn,mx = data.vminmax('pt','y>3')
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2015-09-19
-def ds_var_minmax ( dataset , var , cuts = '' , delta = 0.0 )  :
-    """Get min/max for the certain variable in dataset
-    >>> data = ...
-    >>> mn,mx = data.vminmax('pt')
-    >>> mn,mx = data.vminmax('pt','y>3')
-    """
-
-    assert isinstance ( var  , expression_types ) , 'Invalid expression!'
-    assert isinstance ( cuts , expression_types ) , 'Invalid expression!'
-    
-    var  = str ( var  )
-    cuts = str ( cuts ).strip()
-    
-    
-    if isinstance ( var , ROOT.RooAbsReal ) : var = var.GetName() 
-    if cuts : s = dataset.statVar ( var , cuts )
-    else    : s = dataset.statVar ( var )
-    mn , mx = s.minmax()
-
-    ## if range is invalid, recalculate the range without cuts 
-    if mx < mn and cuts :
-        mn , mx = ds_var_minmax ( dataset , var )
-
-    ## if range is invalid and variable is in dataset, try to use the native range 
-    if mx < mn and var in dataset :
-        vv = getattr ( dataset , var ) 
-        mn, mx = vv.minmax ()
-        
-    if mn < mx and 0.0 < delta :
-        dx   = delta * 1.0 * ( mx - mn )  
-        mx  += dx   
-        mn  -= dx
-        
-    return mn , mx
-
-
-ROOT.RooDataSet .vminmax  = ds_var_minmax 
 
 _new_methods_ += [
     ROOT.RooDataSet .vminmax ,
@@ -1152,22 +1105,6 @@ ROOT.RooAbsData.has_entry = _ds_has_entry_
 _new_methods_ += [  ROOT.RooAbsData.hasEntry  , 
     ROOT.RooAbsData.has_entry , 
     ]
-
-# =============================================================================
-## find sutable range for drawing a variable
-#  @code
-#  data      = ...
-#  min . max = ds_var_range ( data , 'variname' , cuts = ... ) 
-#  @endcode
-def ds_var_range ( dataset , var , cuts = '' ) :
-    """Find suitable range for drawing a variable
-    >>> data      = ...
-    >>> min , max = ds_var_range ( data , 'variname' , cuts = ... ) 
-    """
-    ## min/max values
-    mn , mx = ds_var_minmax ( dataset , var , cuts )
-    return axis_range ( mn , mx , delta = 0.05 )
-
 
 # =============================================================================\
 ## Get suitable ranges for drawing expressions/variables
@@ -1226,16 +1163,15 @@ if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
 ROOT.RooDataSet.get_var       = get_var
 
 _new_methods_ += [
-    ROOT.RooDataSet .clear ,
-    ROOT.RooDataSet .erase ,
-    
+    ROOT.RooDataSet .clear   ,
+    ROOT.RooDataSet .erase   ,    
     ROOT.RooDataSet .get_var ,
     ]
 
 # =============================================================================
-ROOT.RooDataSet.draw         = ds_draw
-ROOT.RooAbsData.draw         = ds_draw
-ROOT.RooDataSet.project      = ds_project
+ROOT.RooDataSet.draw         =  ds_draw
+ROOT.RooAbsData.draw         =  ds_draw
+ROOT.RooDataSet.project      =  ds_project
 ROOT.RooDataSet .__getattr__ = _ds_getattr_
 ROOT.RooDataHist.__getattr__ = _ds_getattr_
 
