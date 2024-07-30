@@ -494,7 +494,7 @@ def slow ( iterable , wait = 0 ) :
         
 # =============================================================================
 ## the last index for laooping over TTRee/RooAbsData
-LAST_ENTRY  = ROOT.TVirtualTreePlayer.kMaxEntriesA
+LAST_ENTRY  = ROOT.TVirtualTreePlayer.kMaxEntries
 ## the last index for laooping over TTRee/RooAbsData
 ALL_ENTRIES = 0, LAST_ENTRY 
 # =============================================================================

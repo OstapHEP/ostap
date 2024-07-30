@@ -213,13 +213,11 @@ def _tc_call_ ( tree , first = 0 , last = LAST_ENTRY  , cuts = None , progress =
                     continue
                 
                 yield tree                     ## YIELD HERE 
-
             
     ## set the tree at the initial position 
     ievt = tree.GetEntryNumber ( 0 )
     if 0 <= ievt : tree.GetEntry ( ievt )
     
-
 ROOT.TTree .__call__  = _tc_call_ 
 ROOT.TChain.__call__  = _tc_call_
 
