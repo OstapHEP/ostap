@@ -303,7 +303,7 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
 plots  = [
     WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hxdata , hmcx ) ,  
     WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hydata , hmcy ) , 
-    WeightingPlot ( 'y:x'   , 'weight' , '2D-reweight' , hdata  , hmc  ) , 
+    WeightingPlot ( 'x:y'   , 'weight' , '2D-reweight' , hdata  , hmc  ) , 
     ]
 
 # ============================================================================
@@ -371,7 +371,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         ## 3) make MC-histograms  
         mcds .project  ( hmcx , 'x'   , 'weight'  )
         mcds .project  ( hmcy , 'y'   , 'weight'  )
-        mcds .project  ( hmc  , 'y:x' , 'weight'  )
+        mcds .project  ( hmc  , 'x:y' , 'weight'  )
         
         ## 3.1) compare control and signal samples  
         vct_i = mcds.statVct ( 'x,y' , 'weight' )

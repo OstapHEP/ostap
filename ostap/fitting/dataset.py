@@ -26,19 +26,19 @@ __all__     = (
 # =============================================================================
 from   builtins                  import range
 from   collections               import defaultdict
-from   ostap.core.meta_info      import root_info
+from   ostap.core.meta_info      import root_info, ostap_version 
 from   ostap.core.core           import ( Ostap, VE, SE ,
                                           hID  , dsID , strings , 
                                           valid_pointer , split_string   ,
                                           ROOTCWD       , var_separators ,
-                                          loop_items    )
+                                          loop_items    , cidict_fun     )
 from   ostap.core.ostap_types    import ( integer_types , string_types   ,
-                                          num_types     , 
+                                          num_types     , dictlike_types , 
                                           list_types    , sequence_types )
-from   ostap.math.base           import islong
+from   ostap.math.base           import islong, axis_range    
 from   ostap.fitting.variables   import valid_formula, make_formula 
-from   ostap.trees.cuts          import expression_types, vars_and_cuts 
-import ostap.trees.trees
+from   ostap.trees.cuts          import expression_types, vars_and_cuts
+from   ostap.utils.utils         import evt_range, LAST_ENTRY
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ROOT, random, math, sys, ctypes  
@@ -812,6 +812,9 @@ _new_methods_ += [
    ROOT.RooAbsDataStore . __iter__      , 
    ROOT.RooAbsDataStore . __contains__
    ]
+# =============================================================================\
+## number of warninf prints 
+_printed = 10 
 # =============================================================================
 ## Helper project method for RooDataSet/DataFrame/... and similar objects 
 #
@@ -827,14 +830,14 @@ _new_methods_ += [
 #  @see RooDataSet 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def ds_project  ( dataset           ,
-                  histo             ,
-                  what              ,
-                  cuts      = ''    ,
-                  cut_range = ''    , 
-                  first     =  0    ,
-                  last      = None  ,
-                  progress  = False ) :
+def ds_project  ( dataset                ,
+                  histo                   ,
+                  what                    ,
+                  cuts      = ''          ,
+                  cut_range = ''          , 
+                  first     =  0          ,
+                  last      = LAST_ENTRY  ,
+                  progress  = False       ) :
     """Helper project method for RooDataSet/DataFrame/... and similar objects 
 
     >>> h1   = ROOT.TH1D(... )
@@ -844,7 +847,8 @@ def ds_project  ( dataset           ,
     >>> dataset.project ( h1           , 'm', 'chi2<10' ) ## use histo
     """
 
-    ## 1) redirect to approproate methods
+    ## 1) redirect to approproate method
+    ## ROOT.Tree 
     if isinstance ( dataset , ROOT.TTree ) :
         assert not cut_range, "ds_project(tree,...) cannot be used with cut_range %s" % cut_range 
         from ostap.trees.trees import tree_project
@@ -853,56 +857,32 @@ def ds_project  ( dataset           ,
                               cuts    = cuts   ,
                               first   = first  ,
                               last    = last   )
+    target = histo
 
     ## 2) if the histogram is specified by the name, try to locate it ROOT memory  
-    if isinstance ( histo , string_types ) :
-        hname = histo
-        groot = ROOT.ROOT.GetROOT()
-        h     = groot.FindObject ( hname )
+    if isinstance ( target , string_types ) :
+        hname  = str ( target ) 
+        groot  = ROOT.ROOT.GetROOT()
+        h      = groot.FindObject ( hname )
         assert h , 'Cannot get locate histo by name %s' % histos        
         assert isinstance ( h , ROOT.TH1 ) , 'the object %s i snot ROOT.TH1' % type ( h ) 
-        histo = h
+        target = h
+        
 
-
-    target = histo 
-    
-    ## input historgam?
+    ## 3) input histogram?
     input_histo = isinstance ( target , ROOT.TH1 )
-    from ostap.trees.param import param_types_nD
+
+    ## 4) vali dtarget? 
+    from ostap.trees.param import param_types_nD    
     assert input_histo or isinstance ( target , param_types_nD ) , 'Invalid target/histo type %s' % type ( target ) 
 
-    ## (4) dimension of the target 
-    dim = target.dim ()
-    assert 1 <= dim <= 4 , 'Invalid dimension of target: %s' % dim  
-
-    ## (5) parse input expressions
-    varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
-
-    print ( 'VARIABLES/1', varlst, cuts ) 
-    nvars = len ( varlst ) 
-    assert ( 1 == dim and dim <= nvars ) or dim == nvars , \
-        'Mismatch between the target/histo dimension %d and input variables %s' % ( dim , varlst )
- 
-    print ( 'PROJECT-7' )
-
-    if isinstance ( dataset , ROOT.RooAbsData ) :
-        ## 3) adjust the first/last 
-        length = len ( dataset )
-        if not last      : last   = length + 1
-        elif   last  < 0 : last  += length
-        if     first < 0 : first += length   
-        assert 0 <= first <= last , 'Invalid first/last setting %s/^s' % ( first , last )
-        tail = cuts , cut_range , first , last
-    else :
-        assert not cut_range , 'cut-range is not allowed!' 
-        logger.warning  ( 'ds_project(%s): ignored  first/last %s/%s ' % ( type ( dataset ) , first , last ) ) 
-        from ostap.frames.frames import as_rnode
-        frame   = as_rnode ( dataset )
-        dataset = frame 
-        tail    = ()
-
-        
-    args = ( target , ) + varlst + tail 
+    if   isinstance ( histo , ROOT.TProfile2D ) :
+        histo.Reset() 
+        logger.error ('ds_project: TProfile2D is not (yet) supported')
+        return histo 
+    elif isinstance ( histo , ROOT.TProfile  ) :
+        logger.error ('ds_project: TProfile   is not (yet) supported')
+        return histo
 
     ## copy/clone the target 
     def target_copy  ( t ) : return t.Clone() if isinstance ( t , ROOT.TH1 ) else type ( t ) ( t )
@@ -912,21 +892,58 @@ def ds_project  ( dataset           ,
         else                           : t *= 0.0
         return t
     
-    ## reset the target 
+    ## 5) reset the target 
     target = target_reset ( target ) 
+
     
+    ## (5) dimension of the target 
+    dim = target.dim ()
+    assert 1 <= dim <= 4 , 'Invalid dimension of target: %s' % dim  
+
+    ## (6) parse input expressions
+    varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
+    if input_string and 2 <= len ( varlst ) and ostap_info < (1,11) : 
+        if 0 < _to_print  : 
+            logger.attention ("From ostap v1.10.1.9 variables are treted in natural order (no reverse!)")
+            _to_print -= 1 
+
+    print ( 'VARIABLES/1', varlst, cuts ) 
+    nvars = len ( varlst ) 
+    assert ( 1 == dim and dim <= nvars ) or dim == nvars , \
+        'Mismatch between the target/histo dimension %d and input variables %s' % ( dim , varlst )
+
+    
+    print ( 'PROJECT-7' )
+
+
+    ## RooAbsData 
+    if isinstance ( dataset , ROOT.RooAbsData ) :
+        
+        ## 3) adjust the first/last
+        first , last = evt_range ( len ( dataset ) , first , last )
+        
+        if not first < last : return target                             ## RETURN
+        
+        tail = cuts , cut_range , first , last
+
+    ## soemthinug convertibel to DataFrame/Frame/Node
+    else :
+        
+        assert not cut_range , 'cut-range is not allowed!'
+        if  ( firts, last ) != ( 0 , LAST_RNTRY ) : 
+            logger.warning  ( "ds_project(%s): ignored  `first'/`last' %s/%s " % ( type ( dataset ) , first , last ) ) 
+        from ostap.frames.frames import as_rnode
+        frame   = as_rnode ( dataset )
+        dataset = frame 
+        tail    = ()
+        
     from ostap.utils.progress_conf import progress_conf
     
-    if   isinstance ( histo , ROOT.TProfile2D ) :
-        histo.Reset() 
-        logger.error ('ds_project: TProfile2D is not (yet) supported')
-        return histo 
-    elif isinstance ( histo , ROOT.TProfile  ) :
-        logger.error ('ds_project: TProfile   is not (yet) supported')
-        return histo
-    
+    the_args = ( target , ) + varlst + tail 
+    print ( 'DS_PROJECT' , dim , nvars, varlst , the_args ) 
     ## very special case of projection several expressions into the same target 
     if 1 == dim and dim < nvars : 
+        print ( 'DS_PROJECT/1' , dim , nvars, varlst , tail ) 
         ## very special case of projection several expressions into the same target 
         htmp  = target_copy ( target )  ## prepare temporary object 
         for var in varlst :
@@ -939,20 +956,23 @@ def ds_project  ( dataset           ,
             target += htmp
             del htmp 
     elif 1 == dim :
-        if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *args )
-        else        : sc = Ostap.HistoProject.project  ( dataset ,                    *args )
+        print ( 'DS_PROJECT/2' , dim , nvars, varlst , tail ) 
+        if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *the_args )
+        else        : sc = Ostap.HistoProject.project  ( dataset ,                    *the_args )
         if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project  %s" % sc )
     elif 2 == dim : 
-        if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf () , *args )
-        else        : sc = Ostap.HistoProject.project2 ( dataset ,                    *args )
+        print ( 'DS_PROJECT/3' , dim , nvars, varlst , tail ) 
+        if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf () , *the_args )
+        else        : sc = Ostap.HistoProject.project2 ( dataset ,                    *the_args )
         if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
+        print ( 'DS_PROJECT/4' , dim , nvars, varlst , tail ) 
     elif 3 == dim : 
-        if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *args )
-        else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *args )
+        if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *the_args )
+        else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *the_args )
         if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
     elif 4 == dim : 
-        if progress : sc = Ostap.HistoProject.project4 ( dataset , progress_conf () , *args )
-        else        : sc = Ostap.HistoProject.project4 ( dataset ,                    *args )
+        if progress : sc = Ostap.HistoProject.project4 ( dataset , progress_conf () , *the_args )
+        else        : sc = Ostap.HistoProject.project4 ( dataset ,                    *the_args )
         if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
         
     return target if sc.isSuccess() else None 
@@ -969,100 +989,124 @@ def ds_project  ( dataset           ,
 #  @see RooDataSet 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def ds_draw ( dataset , what , cuts = '' , opts = '' , *args , **kwargs ) :
+def ds_draw ( dataset ,
+              what                    ,
+              cuts      = ''          ,
+              opts      = ''          ,
+              cut_range = ''          ,
+              first     =  0          ,
+              last      =  LAST_ENTRY ,
+              delta     = 0.05        , **kwargs ) :
     """Helper draw method for drawing of RooDataSet
     >>> dataset.draw ( 'm', 'chi2<10'                 )
     ## cuts & weight 
     >>> dataset.draw ( 'm', '(chi2<10)*weight'        )
     ## use drawing options 
     >>> dataset.draw ( 'm', '(chi2<10)*weight' , 'e1' )
-    ## start form event #1000 
-    >>> dataset.draw ( 'm', '(chi2<10)*weight' , 'e1' , 1000 ) 
+    ## start form event #1000     >>> dataset.draw ( 'm', '(chi2<10)*weight' , 'e1' , 1000 ) 
     ## for event in range 1000< i <10000
     >>> dataset.draw ( 'm', '(chi2<10)*weight' , 'e1' , 1000 , 100000 )
     """
-    if isinstance ( cuts , ROOT.TCut ) : cuts = str ( cuts ).strip()  
-    if isinstance ( what , str       ) : what = what.strip()
-    if isinstance ( cuts , str       ) : cuts = cuts.strip()
-    if isinstance ( opts , str       ) : opts = opts.strip()
 
-    ## delegate to TTree for non-weighted datasets with TTree-based storage type 
-    if hasattr ( dataset , 'isWeighted') and not dataset.isWeighted() \
-       and isinstance ( what , str ) \
-       and isinstance ( cuts , str ) \
-       and isinstance ( opts , str ) :
-        if hasattr ( dataset , 'store' ) : 
-            store = dataset.store()
-            if store : 
-                tree = store.tree()
-                if tree : return tree.Draw( what , cuts , opts  , *args )
-                
-    if isinstance ( what , string_types ) :
-        
-        ## ATTENTION reverse here! 
-        what = tuple ( reversed ( [ v.strip() for v in split_string ( what , var_separators , strip = True , respect_groups = True ) ] ) ) 
-        return ds_draw ( dataset , what , cuts , opts , *args , **kwargs )
-
-    elif isinstance ( what , ROOT.RooArgList ) :
-        
-        what = tuple ( v for v in what ) 
-        return ds_draw ( dataset , what , cuts , opts , *args , **kwargs )
-
-    assert isinstance ( what , list_types ) and 1 <= len ( what ) <=3 , \
-           "ds_draw: invalid 'what' %s" % what 
+    ## decode variables/cuts 
+    varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
     
-    if not args            : first, last = 0 , -1
-    elif  2<=  len ( args ) :
-        nentries , first  = args[0] , args[1] 
-        last = first + nentries if 0 < nentries  else len ( dataset )
-    elif  1<=  len ( args ) :
-        nentries = args[0]
-        last     = nentries if 0 < nentries else len ( dataset )
+    nvars = len ( varlst ) 
+    assert 1 <= nvars <= 3 , "Invalid number of variables: %s" % str ( varlst )
+    
+    ## get the suitable ranges for the variables 
+    ranges = ds_range ( dataset , varlst , cuts = cuts , cut_range = cut_range , first = first , last  = last , delta = delta )
+    for _, r in loop_items ( ranges ) :
+        mn , mx = r
+        ## no useful entries 
+        if mx < mn :
+            logger.warning ("No entries, no draw, return None" ) 
+            return None 
         
-    if 3 == len ( what )  :
-        w1        = what [ 0 ] 
-        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
-        w2        = what [ 1 ] 
-        mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
-        w3        = what [ 2 ] 
-        mn3 , mx3 = ds_var_range ( dataset , w3 , cuts )
-        nbinsx    = kwargs.pop ( 'nbinsx' , 20 )
-        nbinsy    = kwargs.pop ( 'nbinsy' , 20 )
-        nbinsz    = kwargs.pop ( 'nbinsz' , 20 )        
-        histo     = ROOT.TH3F  ( hID()  , "%s:%s:%s" % ( w3 , w2 , w1 ) ,
-                                 nbinsx , mn1 , mx1 ,
-                                 nbinsy , mn2 , mx2 ,
-                                 nbinsz , mn3 , mx3 )  ; histo.Sumw2()
-        
-        ds_project ( dataset , histo , what , cuts , first , last  )
-        histo.draw ( opts , **kwargs )
+    assert len ( ranges ) == nvars , 'Invalid ranges: %s' % str ( ranges )
+
+    print ('RANGES' , ranges )
+    
+    
+    from ostap.utils.cidict        import cidict
+    kw = cidict ( transform = cidict_fun , **kwargs )
+    
+    if 1 == nvars :
+        xvar       = varlst [ 0    ] 
+        xmin, xmax = ranges [ xvar ]
+        #
+        xmin       = kw.pop ( 'xmin' , xmin )
+        xmax       = kw.pop ( 'xmax' , xmax )
+        assert xmin < xmax , "Invalid xmin/xmax setting!"
+        #
+        xbins      = kw.pop ( 'xbins' , kw.pop ( 'bins' , kw.pop ( 'nbinsx' , kw.pop ( 'nbins' , kw.pop ( 'binsx' , 100 ) ) ) ) )
+        #
+        # book the histogram 
+        histo      = ROOT.TH1F  ( hID()  , "%s" % ( xvar ) , xbins  , xmin , xmax )  ; histo.Sumw2()
+        # 
+        ds_project ( dataset , histo , varlst , cuts = cuts , cut_range = cut_range , first = first , last = last )
+        histo.draw ( opts , **kw )
         return histo
     
-    elif 2 == len ( what )  :
-        w1        = what [ 0 ] 
-        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
-        w2        = what [ 1 ] 
-        mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
-        nbinsx    = kwargs.pop ( 'nbinsx' , 20 )
-        nbinsy    = kwargs.pop ( 'nbinsy' , 20 )
-        histo     = ROOT.TH2F  ( hID()  , "%s:%s" % ( w2 , w1 ) ,
-                                 nbinsx , mn1 , mx1 ,
-                                 nbinsy , mn2 , mx2 )  ; histo.Sumw2()        
-        ds_project ( dataset , histo , what , cuts , first , last  )
-        histo.draw ( opts , **kwargs )
-        return histo
-    
-    elif 1 == len ( what )  :
-        w1        = what [ 0 ] 
-        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
-        nbinsx    = kwargs.pop ( 'nbinsx' , 100 )
-        histo     = ROOT.TH1F  ( hID()  , "%s" % ( w1 ) ,
-                                 nbinsx , mn1 , mx1 )  ; histo.Sumw2()        
-        ds_project ( dataset , histo , what , cuts , first , last  )
-        histo.draw ( opts , **kwargs )
+    elif 2 == nvars :
+        
+        xvar       = varlst [ 0 ] 
+        yvar       = varlst [ 1 ] 
+        xmin, xmax = ranges [ xvar ] 
+        ymin, ymax = ranges [ yvar ]
+        #
+        xmin       = kw.pop ( 'xmin' , xmin )
+        xmax       = kw.pop ( 'xmax' , xmax )
+        assert xmin < xmax , "Invalid xmin/xmax setting!"
+        #
+        ymin       = kw.pop ( 'ymin' , ymin )
+        ymax       = kw.pop ( 'ymax' , ymax )
+        assert ymin < xmax , "Invalid ymin/ymax setting!"
+        #
+        xbins      = kw.pop ( 'xbins' , kw.pop ( 'nbinsx' ,kw.pop ( 'binsx' , 50 ) ) ) 
+        ybins      = kw.pop ( 'ybins' , kw.pop ( 'nbinsy' ,kw.pop ( 'binsy' , 50 ) ) )
+        #
+        histo      = ROOT.TH12  ( hID()  , "x = %s , y = %s" % ( xvar , yvar ) ,
+                                  xbins , xmin , xmax , 
+                                  ybins , ymin , ymax ) ; histo.Sumw2() 
+        ds_project ( dataset , histo , varlst , cuts = cuts , cut_range = cut_range , first = first , last = last )
+        histo.draw ( opts , **kw  )
         return histo
 
-    raise TypeError ( 'ds_draw, invalid case' )
+    elif 3 == nvars :
+        
+        xvar       = varlst [ 0 ] 
+        yvar       = varlst [ 1 ] 
+        zvar       = varlst [ 2 ]
+        #
+        xmin, xmax = ranges [ xvar ]
+        ymin, ymax = ranges [ yvar ]
+        zmin, zmax = ranges [ zvar ]
+        #
+        xmin       = kw.pop ( 'xmin' , xmin )
+        xmax       = kw.pop ( 'xmax' , xmax )
+        assert xmin < xmax , "Invalid xmin/xmax setting!"
+        #
+        ymin       = kw.pop ( 'ymin' , ymin )
+        ymax       = kw.pop ( 'ymax' , ymax )
+        assert ymin < xmax , "Invalid ymin/ymax setting!"
+        #
+        zmin       = kw.pop ( 'zmin' , zmin )
+        zmax       = kw.pop ( 'zmax' , zmax )
+        assert zmin < zmax , "Invalid zmin/zmax setting!"
+        #
+        #
+        xbins      = kw.pop ( 'xbins' , kw.pop ( 'nbinsx' , kw.pop ( 'binsx' , 20 ) ) ) 
+        ybins      = kw.pop ( 'ybins' , kw.pop ( 'nbinsy' , kw.pop ( 'binsy' , 20 ) ) ) 
+        zbins      = kw.pop ( 'zbins' , kw.pop ( 'nbinsz' , kw.pop ( 'binsz' , 20 ) ) )
+        #
+        histo      = ROOT.TH13  ( hID()  , "x = %s , y = %s , z = %s" % ( xvar , yvar , zvar ) ,
+                                  xbins , xmin , xmax , 
+                                  ybins , ymin , ymax ,
+                                  zbins , zmin , zmax ) ; histo.Sumw2() 
+        ds_project ( dataset , histo , varlst , cuts = cuts , cut_range = cut_range , first = first , last = last )
+        histo.draw ( opts , **kw )
+        return histo
 
 # =============================================================================
 ## get the attibute for RooDataSet
@@ -1077,10 +1121,11 @@ def _ds_getattr_ ( dataset , aname ) :
     return getattr ( _vars , aname )  
 ## get the attibute for RooDataSet
 # =============================================================================
-
-def get_var( self, aname ) :
+def get_var ( self, aname ) :
     _vars = self.get()
     return getattr ( _vars , aname )  
+
+
 
 # =============================================================================
 ## Get min/max for the certain variable/expression in dataset
@@ -1133,6 +1178,9 @@ _new_methods_ += [
     ROOT.RooDataSet .vminmax ,
     ]
 
+
+
+
 # =============================================================================
 ## Is there at least one entry that satisfy selection criteria?
 #  @code
@@ -1180,9 +1228,62 @@ def ds_var_range ( dataset , var , cuts = '' ) :
     """
     ## min/max values
     mn , mx = ds_var_minmax ( dataset , var , cuts )
-    from ostap.math.base import axis_range    
     return axis_range ( mn , mx , delta = 0.05 )
+
+
+# =============================================================================\
+## get min/max for the expressions/variables
+## @code
+#  dataset = ...
+#  result  = ds_minmax ( dataset , 'sin(x)*100*y' , 'x<0' )
+#  results = ds_minmax ( dataset , 'x,y,z,t,u,v'  , 'x<0' )
+#  @endcode 
+def ds_minmax ( dataset                ,
+                expressions            ,
+                cuts      = ''         ,
+                cut_range = ''         ,
+                first     = 0          , 
+                last      = LAST_ENTRY ) :
+
+    if isinstance ( dataset , ROOT.RooAbsData ) :
+        args = dataset , expressions , cuts , cut_range , first, last
+    elif not cut_range :
+        args = dataset , expressions , cuts             , first, last
+    else :
+        raise TypeError ( "dataset/cut_range : %s/`%s' are not consistent" % ( type ( dataset ), cut_range ) )
     
+    import ostap.stats.statvars as SV 
+    return SV.data_minmax ( *args ) 
+
+# =============================================================================\
+## Get suitable ranges for drawing expressions/variables
+## @code
+#  dataset = ...
+#  result  = ds_range ( dataset , 'sin(x)*100*y' , 'x<0' )
+#  results = ds_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' )
+#  @endcode 
+def ds_range  ( dataset                ,
+                expressions            ,
+                cuts      = ''         ,
+                cut_range = ''         ,
+                first     = 0          , 
+                last      = LAST_ENTRY ,
+                delta     = 0.05       ) :
+    
+    results = ds_minmax ( dataset               ,
+                          expressions           ,
+                          cuts      = cuts      ,
+                          cut_range = cut_range ,
+                          first     = first     ,
+                          last      = last      )
+    
+    if isinstance ( results , dictlike_types ) :
+        for k , r in loop_items ( results ) :
+            results [ k ] = axis_range ( *r , delta = delta ) 
+    else : results = axis_range ( *results , delta = delta )
+    ##
+    return results 
+
 # =============================================================================
 ## clear dataset storage
 if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :

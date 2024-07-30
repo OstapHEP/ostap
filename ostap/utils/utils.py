@@ -94,6 +94,8 @@ __all__     = (
     'random_name'        , ## get some random name
     'short_hash_name'    , ## get some short hash name
     ##
+    'evt_range'          , ## trivial function to adjut first/last indiced for collictios of given size
+    ##
     'choices'            , ## `random.choices` function
     ## 
     'memoize'            , ## Simple lightweight unbounded cache
@@ -489,7 +491,42 @@ def slow ( iterable , wait = 0 ) :
         if 0 < wait : time.sleep ( wait )
         yield r 
         
-    
+        
+# =============================================================================
+## the last index for laooping over TTRee/RooAbsData
+LAST_ENTRY = ROOT.TVirtualTreePlayer.kMaxEntries
+# =============================================================================
+### Get the event range from first/last
+#   @code
+#   data = ...
+#   first, last = ...
+#   first, last = evt_range ( len ( data ) , first ,  last ) 
+#   @endcode
+def evt_range ( size , first = 0  , last = LAST_ENTRY ) :
+    """ Get the event range from first/last
+    >>> data = ...
+    >>> first, last = ...
+    >>>  first, last = evt_range ( len ( data ) , first ,  last ) 
+    """
+    assert isinstance ( size  , integer_types ) and 0 <= size , "evt_range: Invalid type of `size'!"
+    assert isinstance ( first , integer_types ) , "evt_range: Invalid type of `first' : %s " % type ( first ) 
+    assert isinstance ( last  , integer_types ) , "evt_range: Invalid type of `last'  : %s " % type ( last  ) 
+    ## 
+    if not size : return 0, 0         ## empty contained
+    # 
+    if    0 <= first < size           : pass 
+    elif       first < 0 and 0 < size : first += size
+    ## 
+    if    first <= last               : pass 
+    elif  last  < 0 and 0 <= size     : last  += size
+    #+
+    assert 0 <= first <= last , 'evt_range(size=%d,first=%d,last=%d): invalid event range!' % ( size , first , last )
+    # 
+    return first, last 
+# =============================================================================
+
+
+
 # =============================================================================
 ## @class KeepCanvas
 #  helper class to keep the current canvas
@@ -883,7 +920,6 @@ def vrange ( vmin , vmax , n = 100 , edges = True ) :
     ...                print (v) 
     """
     return VRange ( vmin , vmax , n , edges )
-
 
 # =============================================================================
 ## @class LRange

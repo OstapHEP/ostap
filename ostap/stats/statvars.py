@@ -11,12 +11,12 @@
 - data_moment          - get the moment            (with uncertainty)
 - data_get_stat        - get the momentt-based statistics 
 - data_central_moment  - get the central moment    (with uncertainty)
-- data_mean            - get the mean              (with uncertainty)
 - data_nEff            - get the effective number of entries 
 - data_sum             - get the (weigted) sum
+- data_mean            - get the mean              (with uncertainty)
+- data_rms             - get the RMS               (with uncertainty)
 - data_variance        - get the variance          (with uncertainty)
 - data_dispersion      - get the dispersion        (with uncertainty)
-- data_rms             - get the RMS               (with uncertainty)
 - data_skewness        - get the skewness          (with uncertainty)
 - data_kurtosis        - get the (excess) kurtosis (with uncertainty)
 - data_quantile        - get the quantile 
@@ -38,6 +38,8 @@
 - data_arithmetic_mean - get the (weighted) geometric mean
 - data_power_mean      - get the (weighted) power     mean 
 - data_lehmer_mean     - get the (weighted) Lehmer    mean 
+- data_statistics      - get the statistics for variables 
+- data_minmax          - get the (min/max) for variables 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -51,6 +53,7 @@ __all__     = (
     'data_nEff'            , ## get the effective number of entries 
     'data_sum'             , ## get the (weigted) sum
     'data_statistics'      , ## get the statistics
+    'data_minmax'          , ## get min/max values for variables
     'data_covariance'      , ## get the covariance
     'data_covariances'     , ## get the covariances
     'data_statvector'      , ## get the stat-vector    
@@ -264,7 +267,7 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
         with rootException() :
             return StatVar.statVar ( data , var_lst[0] , cuts , *args )
 
-    ## several variables are specofied
+    ## several variables are specified
     from ostap.core.core import strings 
     names   = strings ( *var_lst )
     results = StatVar.Statistics()
@@ -277,6 +280,33 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     result = {}
     for v,r in zip ( var_lst , results ) : result [ v ] = r
     return result 
+
+# ==============================================================================
+## Get the minmax from data
+#  @code
+#  data    = ...
+#  result  = data_minmax ( data , 'x+y'   , 'pt>1' ) 
+#  results = data_minmax ( data , 'x;y;z' , 'pt>1' ) ## result is dictionary 
+#  @encode
+#  @see Ostap::StatEntity
+#  @see Ostap::WStatEntity
+#  @see Ostap::StatVar::statVar
+def data_minmax ( data , expressions , cuts = '' , *args ) :
+    """Get min/max from data 
+    >>> data    = ...
+    >>> result  = data_minmax ( data , 'x/y+z' , '0<qq' )
+    >>> results = data_minmax ( data , 'x/y;z' , '0<qq' ) ## result is dictionary
+    - see Ostap.Math.StatEntity
+    - see Ostap.Math.WStatEntity
+    - see Ostap.StatVar.statVar
+    """
+    results = data_statistics ( data , expressions , cuts , *args )
+    if isinstance ( results , dictlike_types ) :
+        for k, r in loop_items ( results ) :
+            results [ k ] = r.min() , r.max() 
+    else : results = results.min() , results.max()
+    ## 
+    return results 
 
 
 # ==============================================================================
@@ -1110,6 +1140,8 @@ def data_decorate ( klass ) :
     if hasattr ( klass , 'statCov'         ) : klass.orig_statCov         = klass.statCov
     if hasattr ( klass , 'statCovs'        ) : klass.orig_statCovs        = klass.statCovs
     if hasattr ( klass , 'statVct'         ) : klass.orig_statVct         = klass.statVct
+    if hasattr ( klass , 'var_minmax'      ) : klass.orig_var_minmax      = klass.var_minmax 
+    if hasattr ( klass , 'var_range'       ) : klass.orig_var_range       = klass.var_range 
     
     klass.statVar  = data_statistics
     klass.statVars = data_statistics    
@@ -1118,6 +1150,9 @@ def data_decorate ( klass ) :
     klass.statCov  = data_covariance
     klass.statCovs = data_covariances 
     klass.statVct  = data_statvector
+    
+    klass.var_minmax  = data_minmax 
+    klass.var_range   = data_range 
     
     if hasattr ( klass , 'the_moment'      ) : klass.orig_the_moment      = klass.the_moment
     if hasattr ( klass , 'the_mean'        ) : klass.orig_the_mean        = klass.the_mean

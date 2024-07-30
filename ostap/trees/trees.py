@@ -20,7 +20,7 @@ __all__     = (
     'use_aliases'     , ## context manager to redefine aliases 
   ) 
 # =============================================================================
-from   ostap.core.meta_info      import root_info
+from   ostap.core.meta_info      import root_info, ostap_version
 from   ostap.core.core           import ( std , Ostap , VE   , WSE ,
                                           hID , fID   , 
                                           rootException      , 
@@ -31,7 +31,7 @@ from   ostap.core.ostap_types    import ( integer_types  , long_type      ,
                                           string_types   , sequence_types ,
                                           sized_types    , num_types      ,
                                           dictlike_types , list_types     )
-from   ostap.utils.utils         import chunked
+from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY  
 from   ostap.utils.basic         import isatty, terminal_size, NoContext 
 from   ostap.utils.scp_copy      import scp_copy
 from   ostap.math.reduce         import root_factory
@@ -52,8 +52,6 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'Some useful decorations for Tree/Chain objects')
 # =============================================================================
 
-# =============================================================================
-_large = ROOT.TVirtualTreePlayer.kMaxEntries
 # =============================================================================
 ## check validity/emptiness  of TTree/TChain
 #  require non-zero poniter and non-empty Tree/Chain
@@ -89,7 +87,7 @@ ROOT.TChain.__bool__    = _tt_nonzero_
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
-def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = _large , progress = False , active = () ) :
+def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = LAST_ENTRY , progress = False , active = () ) :
     """Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
@@ -108,8 +106,8 @@ def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = _large , progress = Fals
     >>> for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
     """
     #
-    last  = min ( last , len ( tree ) )
-    first = max ( 0    , first        )
+    ## redefine first/last 
+    first, last = evt_range ( len ( tree ) , first , last ) 
     ##
     #
     if not cuts : cuts = '1'
@@ -122,7 +120,7 @@ def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = _large , progress = Fals
         
     else : context = NoContext () 
 
-    from   ostap.utils.progress_conf import progress_conf
+    from ostap.utils.progress_conf import progress_conf
     with context :
         
         if progress : pit = Ostap.PyIterator ( tree , progress_conf () , cuts , first , last )
@@ -150,7 +148,7 @@ ROOT.TTree. __len__   = lambda s : s.GetEntries()
 
 
 # =============================================================================
-## Iterator over ``good events'' in TTree/TChain:
+## Iterator over `good events' in TTree/TChain:
 #  @code 
 #    >>> tree = ... # get the tree
 #    >>> for i in tree( 0, 100, 'pt>5' ) : print i.y
@@ -159,18 +157,15 @@ ROOT.TTree. __len__   = lambda s : s.GetEntries()
 #  @see Ostap::Formula
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
-def _tc_call_ ( tree , first = 0 , last = -1  , cuts = None , progress = False , active = () ) :
+def _tc_call_ ( tree , first = 0 , last = LAST_ENTRY  , cuts = None , progress = False , active = () ) :
     """Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
     >>> for i in tree(0, 100 , 'pt>5' ) : print i.y
     
     """
-    #
-    if last < 0 : last = _large
-    
-    last  = min ( last , len ( tree ) )
-    first = max ( 0    , first        ) 
+
+    first, last = evt_range ( len ( tree ) , first , last )
     
     if active :
         
@@ -183,7 +178,7 @@ def _tc_call_ ( tree , first = 0 , last = -1  , cuts = None , progress = False ,
         from ostap.utils.basic import NoContext 
         context = NoContext () 
 
-    from   ostap.utils.progress_conf import progress_conf
+    from ostap.utils.progress_conf import progress_conf
     with context : 
         
         if cuts : ## use Ostap.PyIterator 
@@ -244,16 +239,14 @@ except ImportError :
 #   for row in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
 #      print ( row ) 
 #   @code 
-def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 , progress = False , active = () ) :
+def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , progress = False , active = () ) :
     """Iterate over tree entries and get a row/array of values for each good entry
     >>> tree = ...
     >>> for row in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
     >>>    print ( row ) 
     """
-    
-    if last < 0 : last = _large
-    last  = min ( last , len ( tree ) )
-    first = max ( 0    , first        ) 
+    ## redefine first/last 
+    first, last = evt_range ( len ( tree ) , first , last ) 
     
     if isinstance ( variables , string_types ) :
         variables = split_string ( variables , var_separators , strip = True , respect_groups = True )
@@ -334,6 +327,9 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 , progress 
 ROOT.TTree .rows  = _tt_rows_ 
 
 # =============================================================================
+## number of warning prints 
+_to_print = 10 
+# =============================================================================
 ## help project method for ROOT-trees and chains 
 #
 #  @code 
@@ -363,14 +359,14 @@ ROOT.TTree .rows  = _tt_rows_
 #  @see TTree::Project
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def tree_project ( tree               ,
-                   histo              ,
-                   what               ,
-                   cuts       = ''    ,
-                   first      =  0    , 
-                   last       = None  , 
-                   use_frame  = True  , ## use DataFrame ? 
-                   progress   = False ) :
+def tree_project ( tree                    ,
+                   histo                   ,
+                   what                    ,
+                   cuts       = ''         ,
+                   first      =  0         , 
+                   last       = LAST_ENTRY , 
+                   use_frame  = True       , ## use DataFrame ? 
+                   progress   = False      ) :
     """Helper project method
     
     >>> tree = ...
@@ -392,13 +388,8 @@ def tree_project ( tree               ,
 
     """
 
-    print ( 'PROJECT-0' )
-    ## 1) adjust the first/last 
-    length = len ( tree )
-    if not last      : last   = length + 1
-    elif   last  < 0 : last  += length
-    if     first < 0 : first += length   
-    assert 0 <= first <= last , 'Invalid first/last setting %s/^s' % ( first , last )
+    ## 1) adjust the first/last
+    first , last = evt_range ( len ( tree ) , first , last )
 
     print ( 'PROJECT-1' )
     ## 2) if the histogram is specified by the name, try to locate it ROOT memory  
@@ -438,12 +429,12 @@ def tree_project ( tree               ,
     print ( 'PROJECT-5' )
 
     ## use frame if requested and if/when possible 
-    if use_frame and input_histo and 0 == first and len ( tree ) <= last :
+    if False and use_frame and input_histo and 0 == first and len ( tree ) <= last :
         if ( 6 , 19 ) <= root_info : 
             import ostap.frames.frames as F 
             frame  = F.DataFrame ( tree )
-            if progress : frame , _ = frame_progress ( frame , len ( tree ) )            
-            result = frame_project ( frame , target , expressions = what , cuts = cuts , lazy = False  )
+            if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )            
+            result = F.frame_project ( frame , target , expressions = what , cuts = cuts , lazy = False  )
             return result  
 
     print ( 'PROJECT-6' )
@@ -454,7 +445,11 @@ def tree_project ( tree               ,
 
     ## 3) parse input expressions
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
-
+    if input_string and 2 <= len ( varlst ) and ostap_info < (1,11) :
+        if 0 < _to_print :
+            logger.attention ("From ostap v1.10.1.9 variables are trested in natural order (no reverse!)")
+            _to_print -= 1 
+            
     print ( 'VARIABLES/1', varlst, cuts ) 
     
     nvars = len ( varlst )
@@ -522,179 +517,117 @@ def tree_project ( tree               ,
 ROOT.TTree .project = tree_project
 ROOT.TChain.project = tree_project
 
-# =============================================================================
-## help project method for ROOT-trees and chains 
-#
-#  @code 
-#    >>> h1   = ROOT.TH1D(... )
-#    >>> tree.Project ( h1.GetName() , 'm', 'chi2<10' ) ## standart ROOT 
-#    
-#    >>> h1   = ROOT.TH1D(... )
-#    >>> tree.project ( h1.GetName() , 'm', 'chi2<10' ) ## ditto 
-#    
-#    >>> h1   = ROOT.TH1D(... )
-#    >>> tree.project ( h1           , 'm', 'chi2<10' ) ## use histo
-# 
-#  @endcode
-#
-#  @param tree       (INPUT) the tree
-#  @param histo      (INPUT/UPDATE) the histogram or histogram name 
-#  @param what       (INPUT) variable/expression to be projected.
-#                            It could be a list/tuple of variables/expressions
-#                            or just a comma or semicolumn-separated expression
-#  @param cuts       (INPUT) expression for cuts/weights
-#  @param options    (INPUT) options to be propagated to <code>TTree.Project</code>
-#  @param nentries   (INPUT) number of entries to process
-#  @param firstentry (INPUT) first entry to process
-#  @param use_frame  (INPUT) use DataFrame for processing?
-#  @param silent     (INPUT) silent processing?
-#  @see TTree::Project
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-07-06
-def tree_project_old ( tree               ,
-                       histo              ,
-                       what               ,
-                       cuts       = ''    ,
-                       options    = ''    ,
-                       nentries   = -1    ,
-                       firstentry =  0    ,
-                       use_frame  = False , ## use DataFrame ? 
-                       silent     = False ) :
-    """Helper project method
+
+
+def tree_draw ( tree                    , 
+                what                    ,
+                cuts       = ''         ,
+                first      =  0         , 
+                last       = LAST_ENTRY , 
+                use_frame  = False      ,
+                delta      = 0.05       , **kwargs ) :  ## use DataFrame ? 
     
-    >>> tree = ...
+    ## adjust first/last indices 
+    first , last = evt_range ( len ( tree ) , first , last )
     
-    >>> h1   = ROOT.TH1D(... )
-    >>> tree.Project ( h1.GetName() , 'm', 'chi2<10' ) ## standart ROOT 
+    ## decode variables/cuts 
+    varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
     
-    >>> h1   = ROOT.TH1D(... )
-    >>> tree.project ( h1.GetName() , 'm', 'chi2<10' ) ## ditto 
+    nvars = len ( varlst ) 
+    assert 1 <= nvars <= 3 , "Invalid number of variables: %s" % str ( varlst )
     
-    >>> h1   = ROOT.TH1D(... )
-    >>> tree.project ( h1           ,  'm', 'chi2<10' ) ## use histo
+    ## get the suitable ranges for the variables 
+    ranges = tree_range ( dataset , varlst , cuts = cuts , first = first , last  = last , delta = delta )
+    for _, r in loop_items ( ranges ) :
+        mn , mx = r
+        ## no useful entries 
+        if mx < mn :
+            logger.warning ("No entries, no draw, return None" ) 
+            return None 
 
-    - histo : the histogram (or histogram name)
-    - what  : variable/expression to project. It can be expression or list/tuple of expression or comma (or semicolumn) separated expression
-    - cuts  : selection criteria/weights 
-    """
-    #
+    assert len ( ranges ) == nvars , 'Invalid ranges: %s' % str ( ranges )
 
-    if nentries < 0 : nentries = _large
-
-    args = () 
-    if options or 0 < firstentry or 0 < nentries < _large :
-        args = options , nentries , firstentry
-
-
-    if   isinstance ( histo , ROOT.TH1     ) : hname = histo.GetName()
-    elif isinstance ( histo , string_types ) :
-        hname = histo
-        groot = ROOT.ROOT.GetROOT()
-        h     = groot.FindObject ( hname )
-        if h and isinstance ( h , ROOT.TH1 ) : histo = h
-        else                                 : histo = None
-        
-    assert histo and isinstance ( histo , ROOT.TH1 ) ,\
-           "project: invalid type of ``histo'': %s " % type ( histo )
-
-    ## reset the histogram 
-    histo.Reset() 
-
-    if isinstance ( cuts , ROOT.TCut ) : cuts = str ( cuts )
-
-    ## comma, column or semicolumn separated list
-    if isinstance ( what , string_types ) :
-        ## attention! note reversed here! 
-        what = [ w.strip() for w in reversed ( split_string ( what , var_separators , strip = True , respect_groups = True ) ) ] ## attention! 
-        
-    assert isinstance ( what , sequence_types  ) and \
-           isinstance ( what , sized_types     ) and 1 <= len ( what ) ,\
-           "project: invalid ``what''/1: %s" % str ( what )
+    print ('RANGES' , ranges )
     
-    what = [ w for w in what ]    
-    assert all ( isinstance ( w , string_types ) for w in what ) , \
-           "project: invalid ``what''/2: %s" % str ( what )
-    what = [ w.strip()  for w in what ]    
-
-
-    ## special treatment for 1D histograms 
-    if 1 == histo.dim() and 1 < len ( what ) :
-        nr = 0
-        hh = histo.clone() 
-        for i , w in enumerate ( what ) : 
-            n , h = tree_project_old ( tree , hh , w , cuts , *args , use_frame = use_frame , silent = silent )
-            histo += h
-            nr    += n 
-        del hh
-        return nr , histo 
-
-    ## number of variables must match the dimensionality of the histogram 
-    assert len ( what ) == histo.dim(), \
-           "project: dimension mismatch : ``what''/%d vs ``dim''/%d " % ( len ( what ) , histo.dim() ) 
-
-    ## use frame if requested and if possible 
-    if use_frame and isinstance ( tree , ROOT.TTree ) and not args :
+    from ostap.utils.cidict        import cidict
+    kw = cidict ( transform = cidict_fun , **kwargs )
+    
+    if 1 == nvars :
+        xvar       = varlst [ 0    ] 
+        xmin, xmax = ranges [ xvar ]
+        #
+        xmin       = kw.pop ( 'xmin' , xmin )
+        xmax       = kw.pop ( 'xmax' , xmax )
+        assert xmin < xmax , "Invalid xmin/xmax setting!"
+        #
+        xbins      = kw.pop ( 'xbins' , kw.pop ( 'bins' , kw.pop ( 'nbinsx' , kw.pop ( 'nbins' , kw.pop ( 'binsx' , 100 ) ) ) ) )
+        #
+        # book the histogram 
+        histo      = ROOT.TH1F  ( hID()  , "%s" % ( xvar ) , xbins  , xmin , xmax )  ; histo.Sumw2()
+        # 
+        tree_project ( dataset , histo , varlst , cuts = cuts , first = first , last = last )
+        histo.draw ( opts , **kw )
+        return histo
+    
+    elif 2 == nvars :
         
-        from ostap.frames.frames import DataFrame, frame_project
-        frame   = DataFrame ( tree , enable = False )
-        counter = frame.Filter( cuts ).Count()  if cuts else frame.Count() 
-        hh      = frame_project ( frame , histo , what , cuts )
-        return counter.GetValue () , hh 
+        xvar       = varlst [ 0 ] 
+        yvar       = varlst [ 1 ] 
+        xmin, xmax = ranges [ xvar ] 
+        ymin, ymax = ranges [ yvar ]
+        #
+        xmin       = kw.pop ( 'xmin' , xmin )
+        xmax       = kw.pop ( 'xmax' , xmax )
+        assert xmin < xmax , "Invalid xmin/xmax setting!"
+        #
+        ymin       = kw.pop ( 'ymin' , ymin )
+        ymax       = kw.pop ( 'ymax' , ymax )
+        assert ymin < xmax , "Invalid ymin/ymax setting!"
+        #
+        xbins      = kw.pop ( 'xbins' , kw.pop ( 'nbinsx' ,kw.pop ( 'binsx' , 50 ) ) ) 
+        ybins      = kw.pop ( 'ybins' , kw.pop ( 'nbinsy' ,kw.pop ( 'binsy' , 50 ) ) )
+        #
+        histo      = ROOT.TH12  ( hID()  , "x = %s , y = %s" % ( xvar , yvar ) ,
+                                  xbins , xmin , xmax , 
+                                  ybins , ymin , ymax ) ; histo.Sumw2() 
+        tree_project ( dataset , histo , varlst , cuts = cuts , first = first , last = last )
+        histo.draw ( opts , **kw  )
+        return histo
 
-    ## the basic case 
-    with ROOTCWD() :
+    elif 3 == nvars :
         
-        groot = ROOT.ROOT.GetROOT() 
-        groot.cd ()
-
-        ## attention! note reversed here! 
-        vars = ' : '.join ( ( '(%s)' % w for w in reversed ( what ) ) )  ## attention! note reversed here! 
-
-        ## make temporary histogram
-        uid   = vars , cuts , histo.GetName() , tree.GetName() , args , use_frame , silent 
-        
-        htemp = histo.clone ( prefix = 'htmp_%X_' % ( hash ( uid ) % 2**32 ) )
-        hname = htemp.GetName  () 
-
-        ## make projection to temporary histogram 
-        result = tree.Project ( hname , vars  , cuts , *args )
-
-        if   0 == result :
-            
-            del htemp
-            return result , histo
-        
-        elif 0 < result and result == htemp.GetEntries() :
-            
-            histo += htemp
-            
-            del htemp 
-            return result , histo 
-        
-        ## make a try extract the temporary histogram from ROOT memory 
-        hroot = groot.FindObject ( hname )
-        if hroot and ( hroot is htemp ) :
-            
-            histo += hroot 
-            
-            del hroot
-            del htemp
-            
-            return result, histo
-        
-        else :
-            
-            logger.error( "project: cannot  access temporary histo")
-            
-            histo += htemp
-            
-            del hroot
-            del htemp 
-            
-    return result, histo
-
-ROOT.TTree .project_old = tree_project_old
-ROOT.TChain.project_old = tree_project_old 
+        xvar       = varlst [ 0 ] 
+        yvar       = varlst [ 1 ] 
+        zvar       = varlst [ 2 ]
+        #
+        xmin, xmax = ranges [ xvar ]
+        ymin, ymax = ranges [ yvar ]
+        zmin, zmax = ranges [ zvar ]
+        #
+        xmin       = kw.pop ( 'xmin' , xmin )
+        xmax       = kw.pop ( 'xmax' , xmax )
+        assert xmin < xmax , "Invalid xmin/xmax setting!"
+        #
+        ymin       = kw.pop ( 'ymin' , ymin )
+        ymax       = kw.pop ( 'ymax' , ymax )
+        assert ymin < xmax , "Invalid ymin/ymax setting!"
+        #
+        zmin       = kw.pop ( 'zmin' , zmin )
+        zmax       = kw.pop ( 'zmax' , zmax )
+        assert zmin < zmax , "Invalid zmin/zmax setting!"
+        #
+        #
+        xbins      = kw.pop ( 'xbins' , kw.pop ( 'nbinsx' , kw.pop ( 'binsx' , 20 ) ) ) 
+        ybins      = kw.pop ( 'ybins' , kw.pop ( 'nbinsy' , kw.pop ( 'binsy' , 20 ) ) ) 
+        zbins      = kw.pop ( 'zbins' , kw.pop ( 'nbinsz' , kw.pop ( 'binsz' , 20 ) ) )
+        #
+        histo      = ROOT.TH13  ( hID()  , "x = %s , y = %s , z = %s" % ( xvar , yvar , zvar ) ,
+                                  xbins , xmin , xmax , 
+                                  ybins , ymin , ymax ,
+                                  zbins , zmin , zmax ) ; histo.Sumw2() 
+        tree_project ( dataset , histo , varlst , cuts = cuts , first = first , last = last )
+        histo.draw ( opts , **kw )
+        return histo
 
 
 # =============================================================================
@@ -1487,13 +1420,22 @@ ROOT.TChain.__getitem__ = _rc_getitem_
 #  @see numpy.array 
 #  @author Albert BURSCHE
 #  @date 2015-07-08
-def _rt_slice_ ( tree , varname , cut = '' , weight = '' , transpose = False , first = 0 , last = _large ) :
+def _rt_slice_ ( tree                   ,
+                 varname                ,
+                 cut       = ''         ,
+                 weight    = ''         ,
+                 transpose = False      ,
+                 first     = 0          ,
+                 last      = LAST_ENTRY ) :
     """ Get ``slice'' from TTree in a form of numpy.array
     ##
     >>> tree = ...
     >>> varr , _  = tree.slice('Pt','eta>3')
     >>> print ( varr )  
     """
+
+    ## adjust first/last indices 
+    first, last = evt_range ( len ( tree ) , first , last ) 
 
     if isinstance ( varname , string_types ) :
         varname = split_string ( varname , var_separators , strip = True , respect_groups = True )
@@ -1559,7 +1501,13 @@ def _rt_slice_ ( tree , varname , cut = '' , weight = '' , transpose = False , f
 #  @see numpy.array 
 #  @author Albert BURSCHE
 #  @date 2015-07-08  
-def _rt_slices_ ( tree , varnames , cut = '' , weight = '' , transpose = False  , first = 0 , last = _large ) :
+def _rt_slices_ ( tree                   ,
+                  varnames               ,
+                  cut       = ''         ,
+                  weight    = ''         ,
+                  transpose = False      ,
+                  first     = 0          ,
+                  last      = LAST_ENTRY ) :
     """ Get ``slices'' from TTree in a form of numpy.array
     
     >>> tree = ...
@@ -1574,6 +1522,7 @@ def _rt_slices_ ( tree , varnames , cut = '' , weight = '' , transpose = False  
     >>> print vars3
     """
     #
+    first , last = evt_range ( len ( tree ) , first , last ) 
     return tree.slice ( varnames , cut , weight , transpose , first , last )
 
 
@@ -2758,7 +2707,7 @@ class Chain(CleanUp) :
                "Invalid ``first'' %s/%s"                      % ( first , type ( first ) ) 
         
         self.__first   = int ( first )  
-        self.__nevents = nevents if 0 <= nevents < _large else -1 
+        self.__nevents = nevents if 0 <= nevents < LAST_ENTRY else -1 
         self.__chain   = None
         self.__name    = 'Unknown!'
         
@@ -2822,7 +2771,7 @@ class Chain(CleanUp) :
         # =====================================================================
         ## The final adjustment
         self.__lens = () 
-        if 0 < self.__first or 0 < nevents < _large :
+        if 0 < self.__first or 0 < nevents < LAST_ENTRY :
             
             _first = self.__first
             _files = []
@@ -2878,7 +2827,7 @@ class Chain(CleanUp) :
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """
 
-        if chunk_size <= 0 : chunk_size = _large 
+        if chunk_size <= 0 : chunk_size = LAST_ENTRY 
         
         trees = []
 
@@ -2922,7 +2871,7 @@ class Chain(CleanUp) :
         >>> tree = ....
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """
-        if chunk_size <= 0 : chunk_size = _large
+        if chunk_size <= 0 : chunk_size = LAST_ENTRY 
         if max_files  <= 0 : max_files  = 1 
         
         if 0 != self.first or 0 < self.__nevents :
@@ -3106,7 +3055,7 @@ class Tree(Chain) :
         if 0 >= chunk_size : return  self,
         
         ll   = len ( self )
-        last = min ( ll , self.first + self.nevents if 0 <= self.nevents else _large ) 
+        last = min ( ll , self.first + self.nevents if 0 <= self.nevents else LAST_ENTRY ) 
 
         result = [] 
         for s in self.get_slices ( self.first , last , chunk_size ) :

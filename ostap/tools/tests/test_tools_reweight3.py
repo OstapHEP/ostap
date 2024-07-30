@@ -334,10 +334,10 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
 ## Configuration of reweighting plots 
 # =============================================================================
 plots  = [
-    WeightingPlot ( 'z:y:x' , 'weight' , '3D-reweight' , h3d_data , mc_3d ) , 
-    WeightingPlot ( 'z:x'   , 'weight' , 'XZ-reweight' , hxz_data , mc_xz ) , 
-    WeightingPlot ( 'z:y'   , 'weight' , 'YZ-reweight' , hyz_data , mc_yz ) , 
-    WeightingPlot ( 'y:x'   , 'weight' , 'XY-reweight' , hxy_data , mc_xy ) , 
+    WeightingPlot ( 'x:y:z' , 'weight' , '3D-reweight' , h3d_data , mc_3d ) , 
+    WeightingPlot ( 'x:z'   , 'weight' , 'XZ-reweight' , hxz_data , mc_xz ) , 
+    WeightingPlot ( 'y:z'   , 'weight' , 'YZ-reweight' , hyz_data , mc_yz ) , 
+    WeightingPlot ( 'z:y'   , 'weight' , 'XY-reweight' , hxy_data , mc_xy ) , 
     WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hx_data  , mc_x  ) ,  
     WeightingPlot ( 'z'     , 'weight' , 'z-reweight'  , hz_data  , mc_z  ) ,  
     WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hy_data  , mc_y  ) ,  

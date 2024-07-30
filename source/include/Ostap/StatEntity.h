@@ -79,7 +79,9 @@ namespace Ostap
     /// minimal value
     double               min        () const { return m_min  ; }
     /// maximal valu e
-    double               max        () const { return m_max  ; }    
+    double               max        () const { return m_max  ; }
+    /// get number of "good" (mnon-zero) entriesn
+    unsigned long long   nGood      () const { return n   () ; }
     // ======================================================================
   public: // derived quantities & aliases  
     // ======================================================================

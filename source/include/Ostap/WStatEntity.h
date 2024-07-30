@@ -53,6 +53,12 @@ namespace Ostap
     double                   rms        () const ;
     /// get the effective number of entries 
     double                   nEff       () const ;
+    /// get number of "good" (mnon-zero) entriesn
+    unsigned long long       nGood      () const { return m_values. n   () ; }
+    /// minimal value (for non-zero weights) 
+    double                   min        () const { return m_values. min () ; }
+    /// maximal value (for non-zero weights) 
+    double                   max        () const { return m_values. max () ; }       
     // ======================================================================
   public: // helper sums 
     // ======================================================================
