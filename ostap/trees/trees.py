@@ -37,6 +37,7 @@ from   ostap.utils.scp_copy      import scp_copy
 from   ostap.math.reduce         import root_factory
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.trees.cuts          import vars_and_cuts 
+from   ostap.stats.statvars      import data_decorate , data_range 
 import ostap.trees.treereduce 
 import ostap.histos.histos
 import ostap.trees.param
@@ -517,8 +518,7 @@ def tree_project ( tree                    ,
 ROOT.TTree .project = tree_project
 ROOT.TChain.project = tree_project
 
-
-
+# ======================================================================
 def tree_draw ( tree                    , 
                 what                    ,
                 cuts       = ''         ,
@@ -526,7 +526,8 @@ def tree_draw ( tree                    ,
                 last       = LAST_ENTRY , 
                 use_frame  = False      ,
                 delta      = 0.05       , **kwargs ) :  ## use DataFrame ? 
-    
+
+
     ## adjust first/last indices 
     first , last = evt_range ( len ( tree ) , first , last )
     
@@ -537,7 +538,7 @@ def tree_draw ( tree                    ,
     assert 1 <= nvars <= 3 , "Invalid number of variables: %s" % str ( varlst )
     
     ## get the suitable ranges for the variables 
-    ranges = tree_range ( dataset , varlst , cuts = cuts , first = first , last  = last , delta = delta )
+    ranges = data_range ( tree , varlst , cuts , delta , first, last )
     for _, r in loop_items ( ranges ) :
         mn , mx = r
         ## no useful entries 
@@ -565,7 +566,7 @@ def tree_draw ( tree                    ,
         # book the histogram 
         histo      = ROOT.TH1F  ( hID()  , "%s" % ( xvar ) , xbins  , xmin , xmax )  ; histo.Sumw2()
         # 
-        tree_project ( dataset , histo , varlst , cuts = cuts , first = first , last = last )
+        tree_project ( tree , histo , varlst , cuts = cuts , first = first , last = last )
         histo.draw ( opts , **kw )
         return histo
     
@@ -630,6 +631,9 @@ def tree_draw ( tree                    ,
         return histo
 
 
+
+
+    
 # =============================================================================
 ## check if object is in tree/chain  :
 #  @code
@@ -662,11 +666,6 @@ ROOT.TTree .__contains__ = _rt_contains_
 ROOT.TChain.__contains__ = _rt_contains_
 
 # =============================================================================
-
-from ostap.stats.statvars import data_the_moment
-
-ROOT.TTree     . the_moment = data_the_moment 
-ROOT.TChain    . the_moment = data_the_moment 
 
 
 # =============================================================================
@@ -3185,8 +3184,8 @@ def use_aliases ( tree , **aliases ) :
     return UseAliases ( tree , **aliases ) 
 
 # =============================================================================
-from  ostap.stats.statvars import data_decorate as _dd
-_new_methods_   = _dd ( ROOT.TTree ) 
+_new_methods_   = data_decorate ( ROOT.TTree )
+del data_decorate 
 _new_methods_  += (
     #
     ROOT.TTree .withCuts  ,

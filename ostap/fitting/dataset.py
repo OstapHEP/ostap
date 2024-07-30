@@ -35,10 +35,13 @@ from   ostap.core.core           import ( Ostap, VE, SE ,
 from   ostap.core.ostap_types    import ( integer_types , string_types   ,
                                           num_types     , dictlike_types , 
                                           list_types    , sequence_types )
-from   ostap.math.base           import islong, axis_range    
+from   ostap.math.base           import islong
 from   ostap.fitting.variables   import valid_formula, make_formula 
 from   ostap.trees.cuts          import expression_types, vars_and_cuts
 from   ostap.utils.utils         import evt_range, LAST_ENTRY
+
+from   ostap.stats.statvars      import data_decorate, data_range 
+
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ROOT, random, math, sys, ctypes  
@@ -764,8 +767,6 @@ ROOT.RooAbsData . __truediv__   = ROOT.RooAbsData . __div__
 ROOT.RooAbsData . sample        = _rad_sample_
 ROOT.RooAbsData . shuffle       = _rad_shuffle_
 
-from ostap.stats.statvars import data_the_moment
-ROOT.RooAbsData. the_moment = data_the_moment 
 
 
 ROOT.RooDataSet . __sub__       = _rds_sub_
@@ -1232,30 +1233,6 @@ def ds_var_range ( dataset , var , cuts = '' ) :
 
 
 # =============================================================================\
-## get min/max for the expressions/variables
-## @code
-#  dataset = ...
-#  result  = ds_minmax ( dataset , 'sin(x)*100*y' , 'x<0' )
-#  results = ds_minmax ( dataset , 'x,y,z,t,u,v'  , 'x<0' )
-#  @endcode 
-def ds_minmax ( dataset                ,
-                expressions            ,
-                cuts      = ''         ,
-                cut_range = ''         ,
-                first     = 0          , 
-                last      = LAST_ENTRY ) :
-
-    if isinstance ( dataset , ROOT.RooAbsData ) :
-        args = dataset , expressions , cuts , cut_range , first, last
-    elif not cut_range :
-        args = dataset , expressions , cuts             , first, last
-    else :
-        raise TypeError ( "dataset/cut_range : %s/`%s' are not consistent" % ( type ( dataset ), cut_range ) )
-    
-    import ostap.stats.statvars as SV 
-    return SV.data_minmax ( *args ) 
-
-# =============================================================================\
 ## Get suitable ranges for drawing expressions/variables
 ## @code
 #  dataset = ...
@@ -1269,20 +1246,18 @@ def ds_range  ( dataset                ,
                 first     = 0          , 
                 last      = LAST_ENTRY ,
                 delta     = 0.05       ) :
-    
-    results = ds_minmax ( dataset               ,
-                          expressions           ,
-                          cuts      = cuts      ,
-                          cut_range = cut_range ,
-                          first     = first     ,
-                          last      = last      )
-    
-    if isinstance ( results , dictlike_types ) :
-        for k , r in loop_items ( results ) :
-            results [ k ] = axis_range ( *r , delta = delta ) 
-    else : results = axis_range ( *results , delta = delta )
-    ##
-    return results 
+    """ Get suitable ranges for drawing expressions/variables
+    >>> dataset = ...
+    >>> result  = ds_range ( dataset , 'sin(x)*100*y' , 'x<0' )
+    >>> results = ds_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' )
+    """
+    return data_range ( dataset     ,
+                        expressions ,
+                        cuts        ,
+                        delta       ,
+                        cut_range   ,
+                        first       ,
+                        last        )
 
 # =============================================================================
 ## clear dataset storage
@@ -3132,8 +3107,8 @@ _new_methods_ += [
     
 # ============================================================================
 
-from  ostap.stats.statvars import data_decorate as _dd
-_new_methods_ += list ( _dd ( ROOT.RooAbsData ) ) 
+_new_methods_ += list ( data_decorate ( ROOT.RooAbsData ) )
+del data_decorate
 
 _decorated_classes_ = (
     ROOT.RooAbsData ,

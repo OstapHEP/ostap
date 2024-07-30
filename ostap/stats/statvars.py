@@ -13,6 +13,7 @@
 - data_central_moment  - get the central moment    (with uncertainty)
 - data_nEff            - get the effective number of entries 
 - data_sum             - get the (weigted) sum
+- data_minmax          - get the (min/max) for variables 
 - data_mean            - get the mean              (with uncertainty)
 - data_rms             - get the RMS               (with uncertainty)
 - data_variance        - get the variance          (with uncertainty)
@@ -39,7 +40,7 @@
 - data_power_mean      - get the (weighted) power     mean 
 - data_lehmer_mean     - get the (weighted) Lehmer    mean 
 - data_statistics      - get the statistics for variables 
-- data_minmax          - get the (min/max) for variables 
+- data_range           - get the suitable ranged for drawing variables 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -81,13 +82,16 @@ __all__     = (
     'data_geometric_mean'  , ## get the (weighted) geometric  mean 
     'data_arithmetic_mean' , ## get the (weighted) arithmetic mean 
     'data_power_mean'      , ## get the (weighted) power      mean 
-    'data_lehmer_mean'     , ## get the (weighted) Lehmer     mean 
+    'data_lehmer_mean'     , ## get the (weighted) Lehmer     mean
+    ##
+    'data_range'           , ## get the suitable ranged for drawing variables 
+    ##
     'data_decorate'        , ## technical function to decorate the class
     'expression_types'     , ## valid types for expressions/cuts/weights
 )
 # =============================================================================
 from   builtins               import range
-from   ostap.math.base        import isequal, iszero 
+from   ostap.math.base        import isequal, iszero, axis_range  
 from   ostap.core.core        import Ostap, rootException, WSE, VE, std     
 from   ostap.core.ostap_types import ( string_types , integer_types  , 
                                        num_types    , dictlike_types )
@@ -308,6 +312,33 @@ def data_minmax ( data , expressions , cuts = '' , *args ) :
     ## 
     return results 
 
+# =============================================================================\
+## Get suitable ranges for drawing expressions/variables
+## @code
+#  dataset = ...
+#  result  = data_range ( dataset , 'sin(x)*100*y' , 'x<0' )
+#  results = data_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' ) ## as dictionary
+#  @endcode
+#  @see data_minmax
+#  @see data_statistics
+#  @see axis_range 
+def data_range ( data              ,
+                 expressions       ,
+                 cuts      = ''    ,
+                 delta     = 0.05  ,
+                 *args             ) : 
+    """Get suitable ranges for drawing expressions/variables
+    >>> data = ...
+    >>> result  = data_range ( data , 'sin(x)*100*y' , 'x<0' )
+    >>> results = data_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' ) ## as dictionary
+    """
+    results = data_minmax ( data, expressions , cuts , *args ) 
+    if isinstance ( results , dictlike_types ) :
+        for k , r in loop_items ( results ) :
+            results [ k ] = axis_range ( *r , delta = delta ) 
+    else : results = axis_range ( *results , delta = delta )
+    ##
+    return results 
 
 # ==============================================================================
 ## Get the covarince from dataxpressio
@@ -417,7 +448,7 @@ def data_statvector ( data        ,
     
     N  = len  ( stats )
     v  = Ostap.Vector ( N ) ()
-    for i in range ( N ) : v[i] = stats[i].mean()
+    for i in range ( N ) : v [ i ] = stats [ i ].mean()
     
     return Ostap.VectorE ( N ) ( v , cov2 ) 
 
