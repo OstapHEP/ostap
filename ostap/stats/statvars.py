@@ -262,15 +262,25 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     - see Ostap.Math.WStatEntity
     - see Ostap.StatVar.statVar
     """
+
+    print ('DATA-STATISTICS1' , expressions , cuts , args ) 
     
     ## decode expressions & cuts 
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
 
-    ## only one name is specified 
-    if input_string :         
+    print ('DATA-STATISTICS2' , var_lst , cuts , input_string ) 
+
+    ## only one name is specified as strnig 
+    if   input_string :         
         with rootException() :
             return StatVar.statVar ( data , var_lst[0] , cuts , *args )
-
+    elif 1 == len ( var_lst ) :
+        var    = var_lst [ 0 ]
+        with rootException() :
+            result = StatVar.statVar ( data , var , cuts , *args )
+        result = { var : result }
+        return result 
+        
     ## several variables are specified
     from ostap.core.core import strings 
     names   = strings ( *var_lst )
@@ -304,6 +314,7 @@ def data_minmax ( data , expressions , cuts = '' , *args ) :
     - see Ostap.Math.WStatEntity
     - see Ostap.StatVar.statVar
     """
+    print ('DATA-MINMAX' , expressions , cuts , args ) 
     results = data_statistics ( data , expressions , cuts , *args )
     if isinstance ( results , dictlike_types ) :
         for k, r in loop_items ( results ) :
@@ -314,6 +325,7 @@ def data_minmax ( data , expressions , cuts = '' , *args ) :
 
 # =============================================================================\
 ## Get suitable ranges for drawing expressions/variables
+#  - In case there is no suitable range None is returned 
 ## @code
 #  dataset = ...
 #  result  = data_range ( dataset , 'sin(x)*100*y' , 'x<0' )
@@ -328,14 +340,18 @@ def data_range ( data              ,
                  delta     = 0.05  ,
                  *args             ) : 
     """Get suitable ranges for drawing expressions/variables
+    - In case there is no suitable range None is returned 
     >>> data = ...
     >>> result  = data_range ( data , 'sin(x)*100*y' , 'x<0' )
     >>> results = data_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' ) ## as dictionary
     """
+    print ('DATA-RANGE' , expressions , cuts , delta , args ) 
     results = data_minmax ( data, expressions , cuts , *args ) 
     if isinstance ( results , dictlike_types ) :
         for k , r in loop_items ( results ) :
-            results [ k ] = axis_range ( *r , delta = delta ) 
+            mn, mx = r
+            if mx <= mn : return None                         ## ATTENTION!!
+            results [ k ] = axis_range ( mn , mx , delta = delta ) 
     else : results = axis_range ( *results , delta = delta )
     ##
     return results 

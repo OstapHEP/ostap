@@ -992,7 +992,7 @@ namespace  Ostap
     inline WMoment_<N>& WMoment_<N>::add ( const double  x , const double w )
     {
       //
-      if ( !w ) { return *this ; }
+      if ( !w ) { return *this ; }  // ZERO weights are ignored 
       //
       const long double wA    = this->w () ;
       const long double wB    =       w    ;
@@ -1105,7 +1105,7 @@ namespace  Ostap
       /// add a single value
       inline WMoment_& add ( const double /* x */ , const double w = 1 )
       { 
-        if ( !w ) { return *this ; }
+        if ( !w ) { return *this ; }  // ZERO weights are ignored 
         //
         ++m_size ; 
         m_w  += w     ; 
@@ -1241,7 +1241,7 @@ namespace  Ostap
       /// add single value 
       inline WMoment_& add ( const double x , const double w = 1 )
       {
-        if ( !w ) { return *this ; }
+        if ( !w ) { return *this ; }  // ZERO weights are ignored 
         //
         const long double wA = this -> w() ;
         const long double wB = w ;
@@ -1894,7 +1894,7 @@ namespace  Ostap
      *  Degenerate case of "mean" : minimal value 
      *  \f$ min ( x_1 , .. , x_n ) \f$
      */
-    class MinValue : public Moment 
+    class MinValue : public Statistic
     {
     public:
       // ======================================================================
@@ -1961,7 +1961,7 @@ namespace  Ostap
      *  Degenerate case of "mean" : maximal value 
      *  \f$ max ( x_1 , .. , x_n ) \f$
      */
-    class MaxValue : public Moment 
+    class MaxValue : public Statistic
     {
     public:
       // ======================================================================
@@ -2026,8 +2026,9 @@ namespace  Ostap
     // ========================================================================
     /** @class MinMaxValue 
      */
-    class MinMaxValue : public Moment 
+    class MinMaxValue : public Statistic 
     {
+      // ======================================================================
     public:
       // ======================================================================
       /// default constructor
@@ -2073,7 +2074,7 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// to use it as a WMoment 
+      /// to use it as a Moment 
       void update ( const double x ) override { add ( x ) ; }
       // ======================================================================
     public:
@@ -2095,7 +2096,91 @@ namespace  Ostap
       Moment_<0> m_cnt {} ;
       // ======================================================================
     } ;
-        
+    // ========================================================================
+    /** @class WMinMaxValue 
+     */
+    class WMinMaxValue : public WStatistic 
+    {
+      // ====================================================================== 
+    public:
+      // ======================================================================
+      /// default constructor
+      WMinMaxValue () ;
+      // ======================================================================
+   public:
+      // ======================================================================
+      /// get the min/max value  
+      inline std::pair<double,double> value () const
+      { return std::make_pair ( m_min , m_max ) ; }
+      /// get the minvalue  
+      inline double min  () const { return m_min ; }
+      /// get the max value  
+      inline double max  () const { return m_max ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline WMinMaxValue& operator+=( const WMinMaxValue& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// accumulate only positive entries 
+      inline WMinMaxValue& add
+      ( const double x     ,
+	const double w = 1 )
+      {
+	if ( !w ) { return *this ; }  // ZERO weights are ignored 
+	m_min = std::min ( m_min , x ) ;
+	m_max = std::max ( m_max , x ) ;
+	m_cnt.add ( x , w ) ;
+	return *this ;
+      }
+      inline WMinMaxValue& add ( const WMinMaxValue& x )
+      {
+	m_min = std::min ( m_min , x.m_min ) ;
+	m_max = std::max ( m_max , x.m_max ) ;
+	m_cnt.add ( x.m_cnt  ) ;
+	return *this ;
+      }
+      // ======================================================================
+      /// add sequence of values  
+      template <class ITERATOR>
+      inline void add ( ITERATOR begin , ITERATOR end   )
+      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// to use it as a WMoment 
+      void update
+      ( const double x      ,
+	const double w  = 1 ) override { add ( x , w ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// number of entries
+      inline unsigned long long size  () const { return m_cnt.size  () ; }
+      /// empty ?
+      inline bool               empty () const { return m_cnt.empty () ; } 
+      /// ok ?
+      inline bool               ok    () const { return m_cnt.ok    () ; }
+      /// get effective number of entries \f$  \frac{(\sum w_i)^2}{\sum w_i^2} \f$
+      inline long double        nEff  () const { return m_cnt.nEff  () ; }
+      /// get sum of weighes \f$  \sum_i w_i \f$ 
+      inline long double        w     () const { return m_cnt.w     () ; }
+      /// get sum of weights squared 
+      inline long double        w2    () const { return m_cnt.w2    () ; }
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// minimal value    ;
+      double      m_min    ; 
+      /// maximal value    ;
+      double      m_max    ; 
+      /// get the counter
+      WMoment_<0> m_cnt {} ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    // More decorations 
     // ========================================================================
     /**  @class Moments 
      *   Collection of static functions dealing with moments 

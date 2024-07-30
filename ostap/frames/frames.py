@@ -60,20 +60,18 @@ __all__     = (
     'frame_types'          , ## the basic DataFrame/FeameNode types 
     ) 
 # =============================================================================
-from   ostap.core.core           import ( cpp     , Ostap        ,
-                                          strings , split_string , var_separators )
-from   ostap.math.base           import isequal, iszero                            
+from   ostap.core.core           import cpp, Ostap, cidict_fun      
+from   ostap.math.base           import isequal, iszero, axis_range                             
 from   ostap.core.meta_info      import root_info 
-from   ostap.core.ostap_types    import ( integer_types , num_types      , 
-                                          string_types  , sequence_types ,
-                                          ordered_dict  )    
+from   ostap.core.ostap_types    import ( integer_types , dictlike_types , 
+                                          num_types     , ordered_dict   )    
 from   ostap.logger.utils        import multicolumn
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.basic         import isatty, loop_items
+from   ostap.histos.histos       import histo_book 
 import ostap.core.config         as     OCC 
 import ostap.stats.statvars      as     SV
 import ostap.logger.table        as     T 
-import ostap.histos.histos
 import ROOT, math
 # =============================================================================
 # logging 
@@ -173,16 +171,16 @@ def _fr_helper_ ( frame , expressions , cuts = '' ) :
         vnames [ expr ] = vname 
 
     ## Filter frame, if needed!
-    ## if cuts :
-    ##    ## add named filter 
-    ## current = current.Filter ( '(bool) (%s)' % cuts, 'FILTER: %s' % cuts )
+    if cuts :
+        ## add named filter 
+        current = current.Filter ( '(bool) (%s)' % cuts, 'FILTER: %s' % cuts )
         
     cname = cuts
     if cuts and not cuts in all_vars :
         used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
         cn      = var_name ( 'cut_' , used , cuts , *vars )
         all_vars.add ( cn )
-        ncuts = '1.0*(%s)' % cuts 
+        ncuts   = '1.0*(%s)' % cuts 
         current = current.Define ( cn , ncuts )
         cname   = cn
         
@@ -211,7 +209,6 @@ def _fr_helper2_ ( frame , creator , expressions , cuts = '' , lazy = True  ) :
         return r
     
     return results 
-
 
 # ==============================================================================
 ## modify constructor for RDataFrame to enable/disable Implicit multithreading
@@ -638,6 +635,12 @@ ROOT.TH3.model        = _h3_model_
 ROOT.TProfile  .model = _p1_model_
 ROOT.TProfile2D.model = _p1_model_
 # ==============================================================================
+_types_1D = Ostap.Math.LegendreSum  , Ostap.Math.Bernstein   , Ostap.Math.ChebyshevSum , 
+_types_2D = Ostap.Math.LegendreSum2 , Ostap.Math.Bernstein2D ,
+_types_3D = Ostap.Math.LegendreSum3 , Ostap.Math.Bernstein3D , 
+_types_4D = Ostap.Math.LegendreSum4 ,
+_types_nD = _types_1D + _types_2D + _types_3D + _types_4D 
+# ============================================================================
 ## Project of the frame
 #  @code
 #  frame    = ...
@@ -684,7 +687,7 @@ def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
     >>> h3       = frame_project ( frame , h3_model ,  ( 'pt' , 'x'  , 'y' ) )
     >>> ...
     
-    - Cuts/weigth are also can be specified
+    - Cuts/weight are also can be specified
     
     >>> frame    = ...
     >>> h1_model = ...
@@ -708,7 +711,8 @@ def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
     
     """
     
-    if isinstance ( model , _types_nD ) :
+    if isinstance ( model , _types_nD ) : 
+        assert ( 6,25 ) <= root_info, '6.25<=ROOT is required here!'
         return _fr_param_ ( frame , model , expression, cuts = cuts , laszy = lazy ) 
 
     ## decode expresisons & cuts 
@@ -716,18 +720,24 @@ def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
     
     ## convert histogram-like objects into 'models'
 
+    print ( 'FRAME PROJECT-BEFORE/1', type ( current ) , type ( model ) , items , cname  )
+
     histo = None
     if   isinstance ( model , ROOT.TProfile2D )                : histo, model  = model, model.model ()        
     elif isinstance ( model , ROOT.TProfile   )                : histo, model  = model, model.model ()        
     elif isinstance ( model , ROOT.TH3 ) and 3 == model.dim () : histo, model  = model, model.model ()        
     elif isinstance ( model , ROOT.TH2 ) and 2 == model.dim () : histo, model  = model, model.model ()        
     elif isinstance ( model , ROOT.TH1 ) and 1 == model.dim () : histo, model  = model, model.model ()        
-            
+
+    print ( 'FRAME PROJECT-BEFORE/2', type ( current ) , type ( model ) , items , cname  )
+
     if histo : histo.Reset()
 
     nvars = len ( items )
     pvars = [ v for v in items.values() ] 
     if cname : pvars.append ( cname )
+
+    print ( 'FRAME PROJECT-AFTER', type ( current ) , type ( model ) , pvars )
     
     if   3 == nvars and isinstance ( model , DF_P2Model ) : action = current.Profile2D ( model , *pvars )
     elif 2 == nvars and isinstance ( model , DF_P1Model ) : action = current.Profiel1D ( model , *pvars )
@@ -744,12 +754,6 @@ def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
 
     return action if lazy else action.GetValue() 
 
-# ============================================================================
-_types_1D = Ostap.Math.LegendreSum  , Ostap.Math.Bernstein   , Ostap.Math.ChebyshevSum , 
-_types_2D = Ostap.Math.LegendreSum2 , Ostap.Math.Bernstein2D ,
-_types_3D = Ostap.Math.LegendreSum3 , Ostap.Math.Bernstein3D , 
-_types_4D = Ostap.Math.LegendreSum4 ,
-_types_nD = _types_1D + _types_2D + _types_3D + _types_4D 
 # =============================================================================
 ## "project/parameterise" frame into polynomial structures (lazy action)
 #  @code
@@ -850,6 +854,45 @@ def _fr_param_ ( frame , poly , expressions , cuts = '' , lazy = True ) :
     return result
 
 
+# ==========================================================================
+def _fr_draw_ ( frame , expressions , cuts = '' , opts = '' , **kwargs ) :
+    
+    ## decode expressions & cuts 
+    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts )
+
+    nvars = len ( items )
+    assert 1 <= nvars <= 3 , 'Invalid expressions: %s' % str ( items ) 
+
+    cvars  = [ v for v in items.values() ]
+    uvars  = CNT ( cvars ) if not cname else CNT ( cvars + [ cname ] )
+
+    ## create the 
+    cache  = current.Cache ( uvars ) 
+    
+    ## get the ranges 
+    ranges = frame_range ( cache , cvars , cname )
+    if not ranges :
+        logger.warning ( 'frame_draw: nothing to draw, return None' )
+        return None
+
+    from ostap.utils.cidict        import cidict
+    kw = cidict ( transform = cidict_fun , **kwargs )
+
+    histos = [] 
+    for key, var in loop_items ( items ) :
+        mn , mx = ranges [ var ]
+        item = key , ( mn , mx ) 
+        histos.append ( item )
+
+    ## book the histogram 
+    histo = histo_book ( histos , kw )
+
+    ## fill the histogram 
+    histo = frame_project ( cache , histo , cvars , cname , lazy = False )
+    ## draw the histogram 
+    histo.draw ( opts , *kw )
+    return histo 
+
 # =============================================================================
 ## Get the length/size of the data frame
 #  @code
@@ -905,6 +948,7 @@ def frame_statVar ( frame , expression ,  cuts = '' ) :
     if isinstance ( frame  , ROOT.TTree ) : frame = DataFrame ( frame  )
     node = as_rnode ( frame ) 
     return SV.data_statistics ( node , expression,  cuts = cuts )
+
 
 # =============================================================================
 ## get the statistic for pair of expressions in DataFrame
@@ -1220,6 +1264,10 @@ def frame_deciles  ( frame , expression , cuts = '' , exact = True ) :
     - see `Ostap.StatVar.p2quantiles`
     """
     return frame_quantiles ( frame , quantiles = 10 , expression = expression , cuts = cuts , exact = exact  )
+
+# ==================================================================================
+
+
 
 # ==================================================================================
 ## Action-based methods
@@ -1561,6 +1609,33 @@ def _fr_the_lehmer_mean_ ( frame , p , expressions , cuts = '' , lazy = True ) :
         
     return _fr_helper2_ ( frame , lcreator , expressions , cuts , lazy = lazy )
 
+
+# ============================================================================
+## Get min/max for variables 
+#  @see Ostap::Math::MinMaxValue
+#  @see Ostap::Math::WMinMaxValue
+#  @code
+#  frame = ...
+#  mean = frame_the_minmax ( frame , 'x*x' , '0<y' ) 
+#  @endcode 
+def _fr_the_minmax_ ( frame , expressions , cuts = '' , lazy = True ) :
+    """Get min/max values for variables
+    >>> frame = ...
+    >>> mean = frame_the_minmax ( frame , 5 ,  'x*x' , '0<y' ) 
+    -  see `Ostap.Math.MinMaxValue`
+    -  see `Ostap.Math.WMinMaxValue`
+   """
+    def mcreator ( node , var_name , cut_name ) : 
+        if cut_name: 
+            TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.WMinMaxValue ) 
+            return node.Book( ROOT.std.move ( TT () ) , CNT ( [ var_name , cut_name ] ) )
+        else  :
+            TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.MinMaxValue  ) 
+            return node.Book( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) )     
+        
+    return _fr_helper2_ ( frame , mcreator , expressions , cuts , lazy = lazy )
+
+
 # ===============================================================================
 if Frames_OK :
     
@@ -1572,6 +1647,7 @@ if Frames_OK :
     frame_the_nEff            = _fr_the_nEff_  
     frame_the_moment          = _fr_the_moment_
     frame_the_mean            = _fr_the_mean_
+    frame_the_minmax          = _fr_the_minmax_
     frame_the_rms             = _fr_the_rms_
     frame_the_variance        = _fr_the_variance_
     frame_the_dispersion      = _fr_the_variance_
@@ -1590,6 +1666,7 @@ if Frames_OK :
         'frame_the_nEff'            ,
         'frame_the_moment'          ,
         'frame_the_mean'            ,
+        'frame_the_minmax'          ,
         'frame_the_rms'             ,
         'frame_the_variance'        ,
         'frame_the_dispersion'      ,
@@ -1861,6 +1938,30 @@ if Frames_OK :
         """
         return frame_the_param ( frame , poly , expressions , cuts = cuts , lazy = False ) 
 
+    
+    # ============================================================================
+    ## Get the approproate range  for drawing the variables 
+    #  In case there is no suitable range None is returned 
+    #  @code
+    #  frame = ...
+    #  mean = frame_range ( frame , 'x*x' , '0<y' ) 
+    #  @endcode 
+    def frame_range( frame , expressions , cuts = '' , delta = 0.05 ) :
+        """Get the approproavte range  values for variables
+         - In case there is no suitable range None is returned 
+        >>> frame = ...
+        >>> mean = frame_the_minmax ( frame , 5 ,  'x*x' , '0<y' ) 
+        """
+        ranges = frame_the_minmax ( frame , expressions , cuts = cuts , lazy = False )
+        if isinstance ( ranges , dictlike_types ) :
+            for k , r in loop_items ( ranges ) :
+                mn, mx = r.min () , r.max()
+                print ( 'RANGE', r, mn, mx ) 
+                if mx <= mn : return None                         ## ATTENTION!!
+                ranges [ k ] = axis_range ( mn , mx , delta = delta ) 
+        else : ranges = axis_range ( ranges.min() , ranges.max()  , delta = delta )
+        return ranges
+    
     __all__ += (
         'frame_arithmetic_mean' ,
         'frame_geometric_mean'  ,
@@ -1868,9 +1969,13 @@ if Frames_OK :
         'frame_power_mean'      ,
         'frame_lehmer_mean'     ,
         'frame_param'           ,
+        'frame_range'           ,
     )
     
-        
+
+# ===============================================================================
+frame_statistics = frame_statVar
+
 # ===============================================================================
 ## Print the frame report data
 def report_print_table ( report , title  = '' , prefix = '' , more_rows = [] ) :
@@ -1939,6 +2044,7 @@ def report_print ( report , title  = '' , prefix = '' , more_rows = [] ) :
     table = report_as_table ( report )    
     return report_print_table ( table , title, prefix , more_rows )
 
+
 # ==============================================================================
 # decorate 
 # ==============================================================================
@@ -1980,6 +2086,8 @@ _new_methods_ = [
     frame_quintiles      ,
     frame_deciles        ,
     ##
+    frame_statistics     , 
+    ## 
     report_print         ,
     report_print_table   ,
     report_as_table      ,    

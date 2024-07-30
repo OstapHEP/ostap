@@ -38,10 +38,9 @@ from   ostap.core.ostap_types    import ( integer_types , string_types   ,
 from   ostap.math.base           import islong
 from   ostap.fitting.variables   import valid_formula, make_formula 
 from   ostap.trees.cuts          import expression_types, vars_and_cuts
-from   ostap.utils.utils         import evt_range, LAST_ENTRY
-
+from   ostap.utils.utils         import evt_range, LAST_ENTRY, ALL_ENTRIES 
 from   ostap.stats.statvars      import data_decorate, data_range 
-
+from   ostap.histos.histos       import histo_book 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ROOT, random, math, sys, ctypes  
@@ -869,7 +868,6 @@ def ds_project  ( dataset                ,
         assert isinstance ( h , ROOT.TH1 ) , 'the object %s i snot ROOT.TH1' % type ( h ) 
         target = h
         
-
     ## 3) input histogram?
     input_histo = isinstance ( target , ROOT.TH1 )
 
@@ -896,7 +894,6 @@ def ds_project  ( dataset                ,
     ## 5) reset the target 
     target = target_reset ( target ) 
 
-    
     ## (5) dimension of the target 
     dim = target.dim ()
     assert 1 <= dim <= 4 , 'Invalid dimension of target: %s' % dim  
@@ -913,26 +910,20 @@ def ds_project  ( dataset                ,
     assert ( 1 == dim and dim <= nvars ) or dim == nvars , \
         'Mismatch between the target/histo dimension %d and input variables %s' % ( dim , varlst )
 
-    
-    print ( 'PROJECT-7' )
-
-
     ## RooAbsData 
     if isinstance ( dataset , ROOT.RooAbsData ) :
         
         ## 3) adjust the first/last
-        first , last = evt_range ( len ( dataset ) , first , last )
-        
-        if not first < last : return target                             ## RETURN
-        
+        first , last = evt_range ( len ( dataset ) , first , last )        
+        if not first < last : return target                             ## RETURN        
         tail = cuts , cut_range , first , last
 
-    ## soemthinug convertibel to DataFrame/Frame/Node
+    ## somethinug convertibel to DataFrame/Frame/Node
     else :
         
-        assert not cut_range , 'cut-range is not allowed!'
-        if  ( firts, last ) != ( 0 , LAST_RNTRY ) : 
-            logger.warning  ( "ds_project(%s): ignored  `first'/`last' %s/%s " % ( type ( dataset ) , first , last ) ) 
+        assert not cut_range                   , "ds_project: `cut-range' is not allowed!"
+        assert ( first , last ) == ALL_ENTRIES , "ds_project: `first'/`last' are not allowed!"
+        
         from ostap.frames.frames import as_rnode
         frame   = as_rnode ( dataset )
         dataset = frame 
@@ -941,7 +932,6 @@ def ds_project  ( dataset                ,
     from ostap.utils.progress_conf import progress_conf
     
     the_args = ( target , ) + varlst + tail 
-    print ( 'DS_PROJECT' , dim , nvars, varlst , the_args ) 
     ## very special case of projection several expressions into the same target 
     if 1 == dim and dim < nvars : 
         print ( 'DS_PROJECT/1' , dim , nvars, varlst , tail ) 
@@ -1009,105 +999,53 @@ def ds_draw ( dataset ,
     >>> dataset.draw ( 'm', '(chi2<10)*weight' , 'e1' , 1000 , 100000 )
     """
 
+    ## check type of opts 
+    assert isinstance ( opts , string_types ) , "Invalid type of `opts' : %s" % type ( opts ) 
+
     ## decode variables/cuts 
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
     
     nvars = len ( varlst ) 
     assert 1 <= nvars <= 3 , "Invalid number of variables: %s" % str ( varlst )
     
-    ## get the suitable ranges for the variables 
-    ranges = ds_range ( dataset , varlst , cuts = cuts , cut_range = cut_range , first = first , last  = last , delta = delta )
-    for _, r in loop_items ( ranges ) :
-        mn , mx = r
-        ## no useful entries 
-        if mx < mn :
-            logger.warning ("No entries, no draw, return None" ) 
-            return None 
+    ## get the suitable ranges for the variables
+    if isinstance ( dataset , ROOT.TTree ) :
+        assert not cut_range , "ds_draw(ROOT.TTree): cut_range `%s'is not allowed!" % cut_range 
+        from ostap.trees.trees import tree_draw 
+        return tree_draw ( dataset , what, cuts = cuts , opts = opts ,  first = first , last = last , delta = delta , **kwargs )
+    elif isinstance ( dataset , ROOT.RooAbsData ) : 
+        ranges = ds_range ( dataset , varlst , cuts = cuts , cut_range = cut_range , first = first , last  = last , delta = delta )
+    else :
+        ## something else ? e.g. DataFrame 
+        assert not cut_range                   , "ds_draw: `cut_range' is not allowed!"
+        assert ( first , last ) == ALL_ENTRIES , "ds_draw: `first'/`last' are not allowed!"
+        print ( 'DS_DRAW', type ( dataset ), varlst , cuts , delta ) 
+        ranges = data_range ( dataset , varlst , cuts = cuts , delta = delta )
+
+    if not ranges :
+        logger.warning ("ds_draw: nothning to draw, return None" ) 
+        return None 
         
     assert len ( ranges ) == nvars , 'Invalid ranges: %s' % str ( ranges )
 
     print ('RANGES' , ranges )
-    
-    
-    from ostap.utils.cidict        import cidict
+        
+    from ostap.utils.cidict import cidict
     kw = cidict ( transform = cidict_fun , **kwargs )
-    
-    if 1 == nvars :
-        xvar       = varlst [ 0    ] 
-        xmin, xmax = ranges [ xvar ]
-        #
-        xmin       = kw.pop ( 'xmin' , xmin )
-        xmax       = kw.pop ( 'xmax' , xmax )
-        assert xmin < xmax , "Invalid xmin/xmax setting!"
-        #
-        xbins      = kw.pop ( 'xbins' , kw.pop ( 'bins' , kw.pop ( 'nbinsx' , kw.pop ( 'nbins' , kw.pop ( 'binsx' , 100 ) ) ) ) )
-        #
-        # book the histogram 
-        histo      = ROOT.TH1F  ( hID()  , "%s" % ( xvar ) , xbins  , xmin , xmax )  ; histo.Sumw2()
-        # 
-        ds_project ( dataset , histo , varlst , cuts = cuts , cut_range = cut_range , first = first , last = last )
-        histo.draw ( opts , **kw )
-        return histo
-    
-    elif 2 == nvars :
-        
-        xvar       = varlst [ 0 ] 
-        yvar       = varlst [ 1 ] 
-        xmin, xmax = ranges [ xvar ] 
-        ymin, ymax = ranges [ yvar ]
-        #
-        xmin       = kw.pop ( 'xmin' , xmin )
-        xmax       = kw.pop ( 'xmax' , xmax )
-        assert xmin < xmax , "Invalid xmin/xmax setting!"
-        #
-        ymin       = kw.pop ( 'ymin' , ymin )
-        ymax       = kw.pop ( 'ymax' , ymax )
-        assert ymin < xmax , "Invalid ymin/ymax setting!"
-        #
-        xbins      = kw.pop ( 'xbins' , kw.pop ( 'nbinsx' ,kw.pop ( 'binsx' , 50 ) ) ) 
-        ybins      = kw.pop ( 'ybins' , kw.pop ( 'nbinsy' ,kw.pop ( 'binsy' , 50 ) ) )
-        #
-        histo      = ROOT.TH12  ( hID()  , "x = %s , y = %s" % ( xvar , yvar ) ,
-                                  xbins , xmin , xmax , 
-                                  ybins , ymin , ymax ) ; histo.Sumw2() 
-        ds_project ( dataset , histo , varlst , cuts = cuts , cut_range = cut_range , first = first , last = last )
-        histo.draw ( opts , **kw  )
-        return histo
 
-    elif 3 == nvars :
-        
-        xvar       = varlst [ 0 ] 
-        yvar       = varlst [ 1 ] 
-        zvar       = varlst [ 2 ]
-        #
-        xmin, xmax = ranges [ xvar ]
-        ymin, ymax = ranges [ yvar ]
-        zmin, zmax = ranges [ zvar ]
-        #
-        xmin       = kw.pop ( 'xmin' , xmin )
-        xmax       = kw.pop ( 'xmax' , xmax )
-        assert xmin < xmax , "Invalid xmin/xmax setting!"
-        #
-        ymin       = kw.pop ( 'ymin' , ymin )
-        ymax       = kw.pop ( 'ymax' , ymax )
-        assert ymin < xmax , "Invalid ymin/ymax setting!"
-        #
-        zmin       = kw.pop ( 'zmin' , zmin )
-        zmax       = kw.pop ( 'zmax' , zmax )
-        assert zmin < zmax , "Invalid zmin/zmax setting!"
-        #
-        #
-        xbins      = kw.pop ( 'xbins' , kw.pop ( 'nbinsx' , kw.pop ( 'binsx' , 20 ) ) ) 
-        ybins      = kw.pop ( 'ybins' , kw.pop ( 'nbinsy' , kw.pop ( 'binsy' , 20 ) ) ) 
-        zbins      = kw.pop ( 'zbins' , kw.pop ( 'nbinsz' , kw.pop ( 'binsz' , 20 ) ) )
-        #
-        histo      = ROOT.TH13  ( hID()  , "x = %s , y = %s , z = %s" % ( xvar , yvar , zvar ) ,
-                                  xbins , xmin , xmax , 
-                                  ybins , ymin , ymax ,
-                                  zbins , zmin , zmax ) ; histo.Sumw2() 
-        ds_project ( dataset , histo , varlst , cuts = cuts , cut_range = cut_range , first = first , last = last )
-        histo.draw ( opts , **kw )
-        return histo
+    histos = []
+    for var in varlst :
+        mn, mx = ranges [ var ]
+        item   = var, ( mn, mx) 
+        histos.append ( item ) 
+
+    ## book the histogram 
+    histo = histo_book ( histos , kw )
+    ## fill the histogram
+    histo = ds_project ( dataset , histo , varlst , cuts = cuts , cut_range = cut_range , first = first , last = last )
+    ## draw the histogram 
+    histo.draw ( opts , **kw )
+    return histo
 
 # =============================================================================
 ## get the attibute for RooDataSet
@@ -1211,8 +1149,7 @@ def _ds_has_entry_ ( dataset , selection , *args ) :
 ROOT.RooAbsData.hasEntry  = _ds_has_entry_
 ROOT.RooAbsData.has_entry = _ds_has_entry_
 
-_new_methods_ += [
-    ROOT.RooAbsData.hasEntry  , 
+_new_methods_ += [  ROOT.RooAbsData.hasEntry  , 
     ROOT.RooAbsData.has_entry , 
     ]
 
@@ -1882,13 +1819,13 @@ _new_methods_ += [
 
 # =============================================================================
 ## Print data set as table
-def _ds_table_0_ ( dataset           ,
-                   variables = []    ,
-                   cuts      = ''    ,
-                   first     = 0     ,
-                   last      = 2**62 ,
-                   prefix    = ''    ,
-                   title     = ''    ) :
+def _ds_table_0_ ( dataset                ,
+                   variables = []         ,
+                   cuts      = ''         ,
+                   first     = 0          ,
+                   last      = LAST_ENTRY ,
+                   prefix    = ''         ,
+                   title     = ''         ) :
     """Print data set as table
     """
     varset = dataset.get()
@@ -1898,6 +1835,9 @@ def _ds_table_0_ ( dataset           ,
     
     if variables : vars , cuts , _ = vars_and_cuts ( variables , cuts ) 
     else         : vars , cuts     = [ v.name for v in varset ] , str ( cuts ).strip() 
+
+    ## adjust first/last 
+    first, last = evt_Range ( len ( dataset ) , first , last )
     
     vars = [ i.GetName() for i in varset if i.GetName() in vars ]
         
@@ -2087,20 +2027,21 @@ def _ds_table_0_ ( dataset           ,
 
 # =============================================================================
 ## Print data set as table
-def _ds_table_1_ ( dataset           ,
-                   variables = []    ,
-                   cuts      = ''    ,
-                   first     = 0     ,
-                   last      = 2**62 ,
-                   prefix    = ''    ,
-                   title     = ''    ) :
+def _ds_table_1_ ( dataset                ,
+                   variables = []         ,
+                   cuts      = ''         ,
+                   first     = 0          ,
+                   last      = LAST_ENTRY ,
+                   prefix    = ''         ,
+                   title     = ''         ) :
     """Print data set as table
     """
-
+    
+    first ,last = evt_range ( len ( dataset ) , first , last ) 
     
     if variables : vars , cuts , _ = vars_and_cuts ( variables , cuts ) 
     else         : vars , cuts     = [ v.name for v in varset ] , str ( cuts ).strip() 
-    
+
     _vars = []    
     vvars = tuple ( sorted ( vars ) )
     stat = dataset.statVars ( vvars  , cuts , first , last ) 
@@ -3043,16 +2984,14 @@ except ImportError :
 #  for row , weight in dataset.rows ( 'pt, pt/p, mass ' , 'pt>1' ) :
 #     print (row, weight) 
 #  @endcode 
-def _rad_rows_ ( dataset , variables = [] , cuts = '' , cutrange = '' , first = 0 , last = -1 ) :
+def _rad_rows_ ( dataset , variables = [] , cuts = '' , cutrange = '' , first = 0 , last = LAST_ENTRY  ) :
     """Iterator for rows in dataset
     >>> dataset = ...
     >>> for row , weight in dataset.rows ( 'pt, pt/p, mass ' , 'pt>1' ) :
     >>>    print (row, weight) 
     """
-    
-    if last < 0 : last = ROOT.TTree.kMaxEntries    
-    last  = min ( last , len ( dataset ) )
-    first = max ( 0    , first           ) 
+
+    first, last = evt_range (  len ( dataset ) , first , last ) 
 
     if isinstance ( variables , string_types ) :
         variables = split_string ( variables , var_separators , strip = True , respect_groups = True )

@@ -24,22 +24,22 @@ from   ostap.core.meta_info      import root_info, ostap_version
 from   ostap.core.core           import ( std , Ostap , VE   , WSE ,
                                           hID , fID   , 
                                           rootException      , 
-                                          ROOTCWD , strings  ,
+                                          ROOTCWD , strings  , cidict_fun     , 
                                           split_string       , var_separators , 
                                           valid_pointer      , rootError  ) 
 from   ostap.core.ostap_types    import ( integer_types  , long_type      ,
                                           string_types   , sequence_types ,
                                           sized_types    , num_types      ,
                                           dictlike_types , list_types     )
-from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY  
-from   ostap.utils.basic         import isatty, terminal_size, NoContext 
+from   ostap.utils.utils         import chunked, evt_range, LAST_ENTRY
+from   ostap.utils.basic         import isatty, terminal_size, NoContext, loop_items  
 from   ostap.utils.scp_copy      import scp_copy
 from   ostap.math.reduce         import root_factory
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.trees.cuts          import vars_and_cuts 
 from   ostap.stats.statvars      import data_decorate , data_range 
+from   ostap.histos.histos       import histo_book, histo_keys  
 import ostap.trees.treereduce 
-import ostap.histos.histos
 import ostap.trees.param
 import ostap.io.root_file 
 import ROOT, os, math, array, sys  
@@ -392,7 +392,6 @@ def tree_project ( tree                    ,
     ## 1) adjust the first/last
     first , last = evt_range ( len ( tree ) , first , last )
 
-    print ( 'PROJECT-1' )
     ## 2) if the histogram is specified by the name, try to locate it ROOT memory  
     if isinstance ( histo , string_types ) :
         hname = histo
@@ -402,7 +401,6 @@ def tree_project ( tree                    ,
         assert isinstance ( h , ROOT.TH1 ) , 'the object %s i snot ROOT.TH1' % type ( h ) 
         histo = h
         
-    print ( 'PROJECT-2' )
     ## 3) redirect to the appropriate method
     
     ## chain helper object?
@@ -411,34 +409,24 @@ def tree_project ( tree                    ,
         from ostap.fitting.dataset import ds_project as _ds_project_
         return _ds_project_ ( tree , histo , what , cuts = cuts , first = first , last = last , progress = progress )
 
-    print ( 'PROJECT-3' )
     assert isinstance ( tree , ROOT.TTree ) , "Invalid type of 'tree': %s" % type ( tree ) 
 
     ## 3) target        
     target = histo    
-
-    print ( 'PROJECT-4' )
-
-    ## if isinsatnce ( target , param_types_nD ) :
-    ##    return tree_parameterize ( tree , targer , what = what , cuts = cuts , first = first , last = last , progress = progrees ) 
     
-    ## input historgam?
+    ## input histogram?
     input_histo = isinstance ( target , ROOT.TH1 )
     from ostap.trees.param import param_types_nD        
     assert input_histo or  isinstance ( target , param_types_nD ) , 'Invalid target/histo type %s' % type ( target ) 
-    
-    print ( 'PROJECT-5' )
 
     ## use frame if requested and if/when possible 
-    if False and use_frame and input_histo and 0 == first and len ( tree ) <= last :
-        if ( 6 , 19 ) <= root_info : 
+    if use_frame and 0 == first and len ( tree ) < last : 
+        if ( input_histo and ( 6 , 19 ) <= root_info ) or ( 6,25 ) <= root_info :
+            print ( 'go to frame' )
             import ostap.frames.frames as F 
             frame  = F.DataFrame ( tree )
             if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )            
-            result = F.frame_project ( frame , target , expressions = what , cuts = cuts , lazy = False  )
-            return result  
-
-    print ( 'PROJECT-6' )
+            return F.frame_project ( frame , target , expressions = what , cuts = cuts , lazy = False  )
 
     ## dimension of the target 
     dim = target.dim ()
@@ -450,18 +438,11 @@ def tree_project ( tree                    ,
         if 0 < _to_print :
             logger.attention ("From ostap v1.10.1.9 variables are trested in natural order (no reverse!)")
             _to_print -= 1 
-            
-    print ( 'VARIABLES/1', varlst, cuts ) 
     
     nvars = len ( varlst )
-
-    print ( 'VARIABLES/2', input_histo and 1 == dim and dim <= nvars , dim == nvars ) 
-
     assert ( 1 == dim and dim <= nvars ) or dim == nvars , \
         'Mismatch between the target/histo dimension %d and input variables %s' % ( dim , varlst )
  
-    print ( 'PROJECT-7' )
-    
     tail = cuts , first , last
     args = ( target , ) + varlst + tail 
 
@@ -522,12 +503,17 @@ ROOT.TChain.project = tree_project
 def tree_draw ( tree                    , 
                 what                    ,
                 cuts       = ''         ,
+                opts       = ''         , 
                 first      =  0         , 
                 last       = LAST_ENTRY , 
                 use_frame  = False      ,
-                delta      = 0.05       , **kwargs ) :  ## use DataFrame ? 
+                delta      = 0.05       ,
+                native     = False      , **kwargs ) :  ## use DataFrame ? 
 
-
+        
+    ## check type of opts 
+    assert isinstance ( opts , string_types ) , "Invalid type of `opts' : %s" % type ( opts )
+    
     ## adjust first/last indices 
     first , last = evt_range ( len ( tree ) , first , last )
     
@@ -537,102 +523,59 @@ def tree_draw ( tree                    ,
     nvars = len ( varlst ) 
     assert 1 <= nvars <= 3 , "Invalid number of variables: %s" % str ( varlst )
     
-    ## get the suitable ranges for the variables 
-    ranges = data_range ( tree , varlst , cuts , delta , first, last )
-    for _, r in loop_items ( ranges ) :
-        mn , mx = r
-        ## no useful entries 
-        if mx < mn :
-            logger.warning ("No entries, no draw, return None" ) 
-            return None 
-
-    assert len ( ranges ) == nvars , 'Invalid ranges: %s' % str ( ranges )
-
-    print ('RANGES' , ranges )
-    
     from ostap.utils.cidict        import cidict
     kw = cidict ( transform = cidict_fun , **kwargs )
-    
-    if 1 == nvars :
-        xvar       = varlst [ 0    ] 
-        xmin, xmax = ranges [ xvar ]
-        #
-        xmin       = kw.pop ( 'xmin' , xmin )
-        xmax       = kw.pop ( 'xmax' , xmax )
-        assert xmin < xmax , "Invalid xmin/xmax setting!"
-        #
-        xbins      = kw.pop ( 'xbins' , kw.pop ( 'bins' , kw.pop ( 'nbinsx' , kw.pop ( 'nbins' , kw.pop ( 'binsx' , 100 ) ) ) ) )
-        #
-        # book the histogram 
-        histo      = ROOT.TH1F  ( hID()  , "%s" % ( xvar ) , xbins  , xmin , xmax )  ; histo.Sumw2()
-        # 
-        tree_project ( tree , histo , varlst , cuts = cuts , first = first , last = last )
-        histo.draw ( opts , **kw )
-        return histo
-    
-    elif 2 == nvars :
         
-        xvar       = varlst [ 0 ] 
-        yvar       = varlst [ 1 ] 
-        xmin, xmax = ranges [ xvar ] 
-        ymin, ymax = ranges [ yvar ]
-        #
-        xmin       = kw.pop ( 'xmin' , xmin )
-        xmax       = kw.pop ( 'xmax' , xmax )
-        assert xmin < xmax , "Invalid xmin/xmax setting!"
-        #
-        ymin       = kw.pop ( 'ymin' , ymin )
-        ymax       = kw.pop ( 'ymax' , ymax )
-        assert ymin < xmax , "Invalid ymin/ymax setting!"
-        #
-        xbins      = kw.pop ( 'xbins' , kw.pop ( 'nbinsx' ,kw.pop ( 'binsx' , 50 ) ) ) 
-        ybins      = kw.pop ( 'ybins' , kw.pop ( 'nbinsy' ,kw.pop ( 'binsy' , 50 ) ) )
-        #
-        histo      = ROOT.TH12  ( hID()  , "x = %s , y = %s" % ( xvar , yvar ) ,
-                                  xbins , xmin , xmax , 
-                                  ybins , ymin , ymax ) ; histo.Sumw2() 
-        tree_project ( dataset , histo , varlst , cuts = cuts , first = first , last = last )
-        histo.draw ( opts , **kw  )
-        return histo
+    if native and 1 == nvars :
+        with ROOTCWD () :
+            groot  = ROOT.gROOT.GetROOT()
+            groot.cd()            
+            hname  = hID ()
+            varexp = '(%s) >> %s' % ( varlst [ 0 ] , hname )
+            tree.Draw ( varexpr , cuts , opts , last - first , first )
+            cdir   = ROOT.gDirectory()
+            histo  = cdir.Get ( hname )
+            assert histo and isinstance ( histo , ROOT.TH1 ) and histo.GetName() == hname , \
+                "Cannot retrive the histogram %s" % hname
+            ## remove keys related to the booking 
+            for k in histo_keys : kw.pop( k , None )
+            ## draw the histogram 
+            histo.draw ( opts , **kw ) 
+            return histo
+            
+    ## get the suitable ranges for the variables 
+    ranges = data_range ( tree , varlst , cuts , delta , first, last )
+    if not ranges :
+        logger.warning ( 'tree_draw: nothing to draw, return None' )
+        return None
+    
+    histos = []
+    for var in varlst :
+        mn, mx = ranges [ var ]
+        item   = var, ( mn, mx) 
+        histos.append ( item ) 
 
-    elif 3 == nvars :
-        
-        xvar       = varlst [ 0 ] 
-        yvar       = varlst [ 1 ] 
-        zvar       = varlst [ 2 ]
-        #
-        xmin, xmax = ranges [ xvar ]
-        ymin, ymax = ranges [ yvar ]
-        zmin, zmax = ranges [ zvar ]
-        #
-        xmin       = kw.pop ( 'xmin' , xmin )
-        xmax       = kw.pop ( 'xmax' , xmax )
-        assert xmin < xmax , "Invalid xmin/xmax setting!"
-        #
-        ymin       = kw.pop ( 'ymin' , ymin )
-        ymax       = kw.pop ( 'ymax' , ymax )
-        assert ymin < xmax , "Invalid ymin/ymax setting!"
-        #
-        zmin       = kw.pop ( 'zmin' , zmin )
-        zmax       = kw.pop ( 'zmax' , zmax )
-        assert zmin < zmax , "Invalid zmin/zmax setting!"
-        #
-        #
-        xbins      = kw.pop ( 'xbins' , kw.pop ( 'nbinsx' , kw.pop ( 'binsx' , 20 ) ) ) 
-        ybins      = kw.pop ( 'ybins' , kw.pop ( 'nbinsy' , kw.pop ( 'binsy' , 20 ) ) ) 
-        zbins      = kw.pop ( 'zbins' , kw.pop ( 'nbinsz' , kw.pop ( 'binsz' , 20 ) ) )
-        #
-        histo      = ROOT.TH13  ( hID()  , "x = %s , y = %s , z = %s" % ( xvar , yvar , zvar ) ,
-                                  xbins , xmin , xmax , 
-                                  ybins , ymin , ymax ,
-                                  zbins , zmin , zmax ) ; histo.Sumw2() 
-        tree_project ( dataset , histo , varlst , cuts = cuts , first = first , last = last )
+    ## book the histogram 
+    histo = histo_book ( histos , kw )
+
+    if not native :
+        ## fill the histoigram 
+        histo = tree_project ( tree , histo  , varlst , cuts = cuts , first = first , last = last , use_frame = use_frame )
+        ## draw the histogram 
         histo.draw ( opts , **kw )
         return histo
 
-
-
-
+    ## ROOT nativ eproject (a bit more efficient) 
+        
+    if   1 == nvars : varexp = varlst [ 0 ]
+    elif 2 == nvars : varexp = '%s vs %s ' % ( varlst [ 1 ] , varlst [ 0 ] ) 
+    elif 3 == nvars : varexp = '%s vs %s vs %s' % ( varlst [ 2 ] , varlst [ 1 ] , varlst [ 0 ] ) 
+    
+    ## fill the histoigram 
+    tree.Project ( histo.GetName() , varexp , cuts , ''   , last  - first , first       )
+    ## draw the histogram 
+    histo.draw ( opts , **kw  )
+    return histo
     
 # =============================================================================
 ## check if object is in tree/chain  :
@@ -1455,7 +1398,7 @@ def _rt_slice_ ( tree                   ,
         vars = ':'.join ( chunk )
 
         ge   = tree.GetEstimate() 
-        n    = tree.Draw ( vars , cut , "goff" , last , first )
+        n    = tree.Draw ( vars , cut , "goff" , last - first , first )
         n    = tree.GetSelectedRows () 
         if 0 <= ge <= n + 1 :
             tree.SetEstimate ( max ( n + 1 , ge ) )

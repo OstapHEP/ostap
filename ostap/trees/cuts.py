@@ -56,7 +56,7 @@ def vars_and_cuts ( expressions , cuts ) :
     
     exprs = tuple ( str(s).strip() for s in expressions )
     exprs = tuple ( s for s in expressions if s ) 
-    assert exprs and all ( exprs ) , "Invalid expression(s): %s" % str ( exprs )
+    assert exprs and all ( exprs ) , "Invalid expressions: %s" % str ( exprs )
     
     assert isinstance ( cuts , expression_types ) or not cuts , \
         'Invaild type of cuts: %s' % str ( cuts ) 

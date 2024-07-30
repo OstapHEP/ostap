@@ -654,8 +654,8 @@ namespace
       //
       xvar.evaluate ( results ) ;
       for ( double x : results ) 
-      { 
-        // check the x-range  & fill 
+	{ 
+	  // check the x-range  & fill 
         if ( xmin <= x && x <= xmax ) { obj.fill ( x , weight  ) ; }
       }
     }

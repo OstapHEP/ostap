@@ -189,7 +189,14 @@ Ostap::Math::MinMaxValue::MinMaxValue ()
   , m_max ( - std::numeric_limits<double>::max() ) 
   , m_cnt ()
 {}
-
+// ===========================================================================
+// default constructor
+// ===========================================================================
+Ostap::Math::WMinMaxValue::WMinMaxValue ()
+  : m_min (   std::numeric_limits<double>::max() ) 
+  , m_max ( - std::numeric_limits<double>::max() ) 
+  , m_cnt ()
+{}
 // ======================================================================
 
 

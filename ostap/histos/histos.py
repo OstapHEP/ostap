@@ -27,6 +27,7 @@ __all__     = (
     'Histo1DFun'      , ## 1D-histogram as function object 
     'Histo2DFun'      , ## 2D-histogram as function object 
     'Histo3DFun'      , ## 3D-histogram as function object
+    #
     )
 # =============================================================================
 from   ostap.core.core import ( cpp      , Ostap     , 
@@ -59,8 +60,6 @@ else                       : logger = getLogger( __name__          )
 # =============================================================================
 logger.debug ( 'Decoration of historams')
 # =============================================================================
-
-
 inf_pos =  float('Inf')
 inf_neg = -float('Inf')
 # =============================================================================
@@ -8164,7 +8163,94 @@ ROOT.TH3F. scale_axes = _h3_scale_axes_
 ROOT.TH3D. scale_axes = _h3_scale_axes_
 
 
+# =============================================================================
+## keys used for booing 1/2/3-dimensiona histograms via the `histo_book` method 
+histo_keys = ( 'xbins' , 'nbinsx' , 'binsx' , 'nbins' ,
+               'ybins' , 'nbinsy' , 'binsy' , 
+               'zbins' , 'nbinsz' , 'binsz' ,
+               'xmin'  , 'xmax'   ,
+               'ymin'  , 'ymax'   ,
+               'zmin'  , 'zmax'   ,
+               'title' ) 
+# =============================================================================
+## helper method to book/create 1/2/3-dimension histograms
+#  @code
+#  r1 = [  ('xvar', (0,1) } ]
+#  h1 = histo_book ( r1 , xmin = -1 , xbins =  100 )
+#
+#  r2 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) ] 
+#  h2 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 )
+# 
+#  r3 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) , ( 'z' , (0,100) ) ] 
+#  h3 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 , zbins = 10 )
+#  @endocode
+def histo_book ( ranges , kwargs , title = '' ) :
+    """Helper method to book/create 1/2/3-dimension histograms
+    >>> r1 = [  ('xvar', (0,1) } ]
+    >>> h1 = histo_book ( r1 , xmin = -1 , xbins =  100 )
+    
+    >>> r2 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) ] 
+    >>> h2 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 )
+    
+    >>> r3 = [  ('xvar', (0,1) } , ( 'yvar' , (10,20) ) , ( 'z' , (0,100) ) ] 
+    >>>h3 = histo_book ( r2 , xmin = -1 , xbins =  100 , ymax = 30 , zbins = 10 )
+    """
+    
+    nvars = len ( ranges  ) 
+    assert 1 <= nvars <= 3 , 'Invalid histigram dimension %s' % str ( items )
 
+    if 1 == nvars :
+        xbins = kwargs.pop ( 'xbins' , kwargs.pop ( 'nbinsx' , kwargs.pop ( 'binsx' , kwargs.pop ( 'nbins' , 100 ) ) ) )
+    elif 2 == nvars :
+        xbins = kwargs.pop ( 'xbins' , kwargs.pop ( 'nbinsx' , kwargs.pop ( 'binsx' , 50 ) ) ) 
+        ybins = kwargs.pop ( 'ybins' , kwargs.pop ( 'nbinsy' , kwargs.pop ( 'binsy' , 50 ) ) ) 
+    elif 3 == nvars :
+        xbins = kwargs.pop ( 'xbins' , kwargs.pop ( 'nbinsx' , kwargs.pop ( 'binsx' , 20 ) ) ) 
+        ybins = kwargs.pop ( 'ybins' , kwargs.pop ( 'nbinsy' , kwargs.pop ( 'binsy' , 20 ) ) ) 
+        zbins = kwargs.pop ( 'zbins' , kwargs.pop ( 'nbinsy' , kwargs.pop ( 'binsz' , 20 ) ) )
+        
+    assert isinstance ( xbins , integer_types ) and 0 < xbins , "Invalid xbins setting!"
+    if 2 <= nvars : assert isinstance ( ybins , integer_types ) and 0 < ybins , "Invalid ybins setting!"
+    if 3 <= nvars : assert isinstance ( zbins , integer_types ) and 0 < zbins , "Invalid zbins setting!"
+        
+    xvar , xrng = ranges [ 0 ]
+    xmin , xmax = xrng
+    xmin        = kwargs.pop ( 'xmin' , xmin )
+    xmax        = kwargs.pop ( 'xmax' , xmax )
+    assert xmin < xmax , "Invalid xmin/xmax setting!"
+
+    if 2 <= nvars:
+        yvar , yrng = ranges [ 1 ]
+        ymin , ymax = yrng
+        ymin        = kwargs.pop ( 'ymin' , ymin )
+        ymax        = kwargs.pop ( 'ymax' , ymax )
+        assert ymin < ymax , "Invalid ymin/ymax setting!"
+
+    if 3 <= nvars:
+        zvar , zrng = ranges [ 2 ]
+        zmin , zmax = zrng
+        zmin        = kwargs.pop ( 'zmin' , zmin )
+        zmax        = kwargs.pop ( 'zmax' , zmax )
+        assert zmin < zmax , "Invalid zmin/zmax setting!"
+
+    histo = None 
+    if   1 == nvars :
+        title  = kwargs.pop ( 'title' , 'x: %s' % xvar )
+        histo  = ROOT.TH1D  ( hID()   , title , xbins  , xmin , xmax )  ; histo.Sumw2()
+    elif 2 == nvars :
+        title  = kwargs.pop ( 'title' , 'x: %s ; y: %s' % ( xvar, yvar ) ) 
+        histo  = ROOT.TH2F  ( hID()   , title ,
+                              xbins   , xmin , xmax ,
+                              ybins   , ymin , ymax ) ; histo.Sumw2()
+    elif 3 == nvars :
+        title  = kwargs.pop ( 'title' , 'x: %s ; y: %s; z: %s' % ( xvar, yvar , zvar ) ) 
+        histo  = ROOT.TH3F  ( hID()   , title ,
+                              xbins   , xmin , xmax ,
+                              ybins   , ymin , ymax , 
+                              zbins   , zmin , zmax ) ; histo.Sumw2()
+        
+    return histo 
+# =============================================================================
 
 
 
@@ -8775,7 +8861,9 @@ _new_methods_   = (
     ROOT.TH2D. the_integral  ,
     #
     ROOT.TH3F. the_integral  , 
-    ROOT.TH3D. the_integral  , 
+    ROOT.TH3D. the_integral  ,
+    #
+    histo_book
     )
 
 # =============================================================================
