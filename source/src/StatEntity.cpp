@@ -56,7 +56,7 @@ Ostap::StatEntity::StatEntity
   , m_max ( maxv    )
 {
   // empty counter  (ignore min/max)
-  if ( 0 == m_n )
+  if ( empty () )
     {
       Ostap::Assert ( s_zero ( m_mu ) && s_zero ( m_mu2 ) , 
 		      "Ostap::StatEntity: invalid mu/mu2 for empty counter!" ,
@@ -76,7 +76,7 @@ Ostap::StatEntity::StatEntity
   //
   if ( s_zero ( m_mu2 ) ) { m_mu2 = 0 ; }
   //
-  Ostap::Assert ( ( empty() && !m_mu2 ) || ( !empty() && m_mu2 ) ,		  
+  Ostap::Assert ( ( !empty () ) || ( empty() && !m_mu2 )       ,		  
 		  "Ostap::StatEntity: inconsistent mu2/empty!" ,
 		  "Ostap::StatEntity" ) ;  
   //

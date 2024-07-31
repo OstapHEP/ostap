@@ -9,10 +9,19 @@
 #include <string>
 #include <functional>
 // ============================================================================
+// ROOT 
+// ============================================================================
+#include "RVersion.h"
+// ============================================================================
 // Ostap 
 // ============================================================================
 #include "Ostap/DataFrame.h"
 // ============================================================================
+#if ROOT_VERSION(6,32,0) <= ROOT_VERSION_CODE
+// ============================================================================
+namespace ROOT { namespace RDF { template <class T> class RResultPtr  ; } }
+// ============================================================================
+#endif
 namespace Ostap 
 {
   // ==========================================================================
@@ -60,6 +69,24 @@ namespace Ostap
      *  @see ROOT::GetImplicitMTPoolSize () 
      */
     unsigned int mt_pool_size () ;
+    // ========================================================================
+#if ROOT_VERSION(6,32,0) <= ROOT_VERSION_CODE
+    // ========================================================================
+    /** helper utility to add progress bar
+     *  to "Conut"-action 
+     *  @see https://root-forum.cern.ch/t/problems-with-onpartialresultslot-in-new-root-version-6-32-02/60257/3
+     *  @param count    input counter 
+     *  @param nchunks 
+     *  @param progress progress bar configuration      
+     */
+    ROOT::RDF::RResultPtr<ULong64_t>&
+    add_progress_bar
+    ( ROOT::RDF::RResultPtr<ULong64_t>& result      ,
+      const unsigned short             nchunks     ,
+      const unsigned long              how_often   , 
+      const ProgressConf&              progress    ) ;  
+    // ========================================================================
+#endif
     // ========================================================================
   } //                                        The end of namespace Ostap::Utils 
   // ==========================================================================

@@ -34,7 +34,7 @@ namespace
   std::mutex s_mutex_bar {} ;
   // ==========================================================================
   /** @class DataFrameProgress 
-   *  Helper class to show th eprogree bar for data frame 
+   *  Helper class to show the progrees bar for data frame 
    */
   class DataFrameProgress : public Ostap::Utils::ProgressConf 
   {
@@ -59,37 +59,24 @@ namespace
       if ( !m_nchunks ) { setWidth ( 0 ) ; }   // DISABLE IT!
     }
     // ========================================================================
-    /// default move constructor
-    // DataFrameProgress (       DataFrameProgress&& ) = default ;
-    /// disabled copy constructir 
-    // DataFrameProgress ( const DataFrameProgress&  ) = default ;
-    // ========================================================================
     /// destructor
     ~DataFrameProgress()
     {
-      // std::cout << "DESTRUCTOR1 " 
-      //           <<  ( m_done ? "DONE" : "NOT_YET" )
-      //           <<  "/" << m_chunks 
-      //           <<  "/" << m_nchunks 
-      //           << std::endl ;
       if ( m_nchunks && m_chunks && !m_done ) 
-      {
-        m_chunks = m_nchunks ;
-        ULong64_t dummy = 0 ;
-        (*this)( 0  , dummy ) ;
-      }
-      // std::cout << "DESTRUCTOR2 "
-      //           <<  ( m_done ? "DONE" : "NOT_YET" ) 
-      //           <<  "/" << m_chunks 
-      //           <<  "/" << m_nchunks
-      //           << std::endl ;
+	{
+	  m_chunks = m_nchunks ;
+	  ULong64_t dummy = 0 ;
+	  (*this)( 0  , dummy ) ;
+	}
     }
     // ========================================================================
   public:
     // ========================================================================
     // the main method 
     // ========================================================================
-    void operator() ( unsigned int islot ,  ULong64_t& /* u */ ) 
+    void operator()
+    ( unsigned int islot   ,
+      ULong64_t&   /* u */ ) 
     {
       std::lock_guard<std::mutex> lock ( s_mutex_bar ) ;
       ///
@@ -190,7 +177,7 @@ unsigned int Ostap::Utils::mt_pool_size ()
   return std::max
     ( 1u ,
       ROOT::IsImplicitMTEnabled() ?  
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+#if ROOT_VERSION(6,22,0) <= ROOT_VERSION_CODE
       ROOT::GetThreadPoolSize     () : 1u  
 #else 
       ROOT::GetImplicitMTPoolSize () : 1u 
@@ -198,6 +185,29 @@ unsigned int Ostap::Utils::mt_pool_size ()
       ) ;
 }
 // ============================================================================
+#if ROOT_VERSION(6,32,0) <= ROOT_VERSION_CODE
+// ============================================================================
+/*  helper utility to add progress bar
+ *  to "Conut"-action 
+ *  @see https://root-forum.cern.ch/t/problems-with-onpartialresultslot-in-new-root-version-6-32-02/60257/3
+ *  @param count input counter 
+ *  @param progress cporgress bar configuration      
+ */
+// ============================================================================
+ROOT::RDF::RResultPtr<ULong64_t>&
+Ostap::Utils::add_progress_bar
+( ROOT::RDF::RResultPtr<ULong64_t>&  result      ,
+  const unsigned short              nchunks     , 
+  const unsigned long               howoften    , 
+  const Ostap::Utils::ProgressConf& progress    )
+{
+  auto thefun = frame_progress ( nchunks , progress ) ;
+  return result.OnPartialResultSlot( howoften , thefun );
+}
+// ===========================================================================
+#endif
+
+
 
 // ============================================================================
 //                                                                      The END 

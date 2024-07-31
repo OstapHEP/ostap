@@ -55,18 +55,18 @@ Ostap::WStatEntity::WStatEntity
     {
       Ostap::Assert ( s_zero ( m_mu ) && s_zero  ( m_mu2 ) ,		      
 		      "Ostap::WStatWEntity: invalid mu/mu2 for empty counter!" ,
-		      "Ostap::WStatWEntity" ) ;
+		      "Ostap::WStatEntity" ) ;
       m_mu  = 0 ;
       m_mu2 = 0 ;
     }
   //
   Ostap::Assert ( m_values.n () <= m_weights.n () , 
 		  "Ostap::WStatWEntity: inconsistent values/weights counters!" ,
-		  "Ostap::WStatWEntity" ) ;
+		  "Ostap::WStatEntity" ) ;
   //
   if ( s_zero ( m_mu2 ) ) { m_mu2 = 0 ; }
   //
-  Ostap::Assert ( ( empty() && !m_mu2 ) || ( !empty() && m_mu2 ) ,		  
+  Ostap::Assert ( ( !empty () ) || ( empty() && !m_mu2 )  ,		  
 		  "Ostap::WStatEntity: inconsistent mu2/emptty!" ,
 		  "Ostap::WStatEntity" ) ;  
   //

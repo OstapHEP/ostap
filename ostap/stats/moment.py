@@ -827,6 +827,7 @@ Ostap.Math.WGeometricMean  . __reduce__ = _mn_reduce_
 Ostap.Math.WHarmonicMean   . __reduce__ = _mn_reduce_
 Ostap.Math.WArithmeticMean . __reduce__ = _mn_reduce_
 
+
 # =============================================================================
 ## serialization of Power means
 #  @see Ostap::Math::PoweMean
@@ -855,41 +856,64 @@ def _lm_reduce_ ( cnt ) :
 Ostap.Math.LehmerMean   . __reduce__ = _lm_reduce_
 Ostap.Math.WLehmerMean  . __reduce__ = _lm_reduce_
 
+# =============================================================================
+## serialization of MinMaxValues 
+#  @see Ostap::Math::MinMaxValue 
+#  @see Ostap::Math::WMinMaxValue
+def _nx_reduce_ ( cnt ) :
+    """Serialization of MinMax values 
+    - see Ostap::Math::MinMaxValue 
+    - see Ostap::Math::WMinMaxValue 
+    """
+    return root_factory , ( type ( cnt ) , cnt.min () , cnt.max() , cnt.conuter ())
+
+Ostap.Math.MinMaxValue  . __reduce__ = _nx_reduce_
+Ostap.Math.WMinMaxValue . __reduce__ = _nx_reduce_
+
 # ==============================================================================
 ## equality for the mean
 #  @see Ostap::Math::GeometricMean
 #  @see Ostap::Math::HarmonicMean
+#  @see Ostap::Math::ArithmeticMean
 #  @see Ostap::Math::WGeometricMean
 #  @see Ostap::Math::WHarmonicMean
+#  @see Ostap::Math::WArithmeticMean
 def _mn_eq_ ( cnt , another ) :
     """Equality Harmonic&Geometric means
     - see Ostap::Math::GeometricMean
     - see Ostap::Math::HarmonicMean
+    - see Ostap::Math::ArithmeticMean
     - see Ostap::Math::WGeometricMean
     - see Ostap::Math::WHarmonicMean
+    - see Ostap::Math::WArithmeticMean
     """
     if not type ( cnt ) is type ( another ) : return NotImplemented
     return isequal ( cnt.value() , another.value() ) and \
         cnt.counter() == another.counter()
 
-Ostap.Math.GeometricMean  . __eq__ = _mn_eq_
-Ostap.Math.HarmonicMean   . __eq__ = _mn_eq_
-Ostap.Math.WGeometricMean . __eq__ = _mn_eq_
-Ostap.Math.WHarmonicMean  . __eq__ = _mn_eq_
-    
+Ostap.Math.GeometricMean   . __eq__ = _mn_eq_
+Ostap.Math.HarmonicMean    . __eq__ = _mn_eq_
+Ostap.Math.ArithmeticMean  . __eq__ = _mn_eq_
+Ostap.Math.WGeometricMean  . __eq__ = _mn_eq_
+Ostap.Math.WHarmonicMean   . __eq__ = _mn_eq_
+Ostap.Math.WArithmeticMean . __eq__ = _mn_eq_
+
+
 _decorated_classes = (
-    Ostap.Math.Moment         ,
-    Ostap.Math.WMoment        ,
-    Ostap.Math.Moment_(0)     , 
-    Ostap.Math.Moment_(1)     ,
-    Ostap.Math.Moment_(0)     , 
-    Ostap.Math.Moment_(1)     ,
+    Ostap.Math.Moment          ,
+    Ostap.Math.WMoment         ,
+    Ostap.Math.Moment_(0)      , 
+    Ostap.Math.Moment_(1)      ,
+    Ostap.Math.Moment_(0)      , 
+    Ostap.Math.Moment_(1)      ,
     ##
-    Ostap.Math.GeometricMean  , 
-    Ostap.Math.HarmonicMean   , 
-    Ostap.Math.WGeometricMean ,
-    Ostap.Math.WHarmonicMean  ,    
-    )
+    Ostap.Math.GeometricMean   , 
+    Ostap.Math.HarmonicMean    , 
+    Ostap.Math.ArithmeticMean  , 
+    Ostap.Math.WGeometricMean  ,
+    Ostap.Math.WHarmonicMean   ,    
+    Ostap.Math.WArithmeticMean , 
+)
 
 _new_methods_ = (
     ##

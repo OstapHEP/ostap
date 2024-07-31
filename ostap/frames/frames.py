@@ -309,8 +309,8 @@ def frame_progress1 ( frame  , length ) :
     cnt = frame.Count ()
     
     ## commented out
-    if    not isatty ()           : return frame , cnt ## ATTENTION 
-    elif  ( 6 , 32 ) <= root_info : return frame , cnt ## ATTENTION
+    if    not isatty () : return frame , cnt ## ATTENTION 
+    elif  length <= 0   : return frame_progress2 ( frame , length ) 
         
     if   2048 < length  : nchunks = 2000 
     elif 1024 < length  : nchunks = 1000 
@@ -322,9 +322,12 @@ def frame_progress1 ( frame  , length ) :
     csize      = max    ( csize  , 1       )
     
     if rr : nchunks += 1 
-    
-    fun = Ostap.Utils.frame_progress ( nchunks , progress_conf () )
-    cnt.OnPartialResultSlot  ( csize , fun )
+
+    if (6,32 ) <= root_info :
+        cnt = Ostap.Utils.add_progress_bar ( cnt , nchunks , csize , progress_conf () ) 
+    else : 
+        fun = Ostap.Utils.frame_progress ( nchunks , progress_conf () )
+        cnt = cnt.OnPartialResultSlot  ( csize , fun )
         
     return frame , cnt
 
@@ -347,7 +350,7 @@ def frame_progress2 ( frame , length = -1 ) :
         
     cnt = frame.Count ()
     
-    if    not isatty ()         :return frame , cnt   ## ATTENTION 
+    if    not isatty ()         : return frame , cnt  ## ATTENTION 
     elif  root_info < ( 6, 30 ) : return frame , cnt  ## ATTENTION! 
 
     ## add progress bar 
@@ -355,8 +358,27 @@ def frame_progress2 ( frame , length = -1 ) :
     return frame, cnt 
 
 # =========================================================================
-if    ( 6,30 )  < root_info : frame_progress = frame_progress2
-else                        : frame_progress = frame_progress1
+## Add progress bar to the frame
+#  @code
+#  frame = ...
+#  frame , cnt = frame_progrees ( frame , nevents ) 
+#  @endcode 
+def frame_progress ( frame , length = -1 ) :
+    """Add progress bar to the frame
+    >>> frame = ...
+    >>> frame , cnt = frame_progrees ( frame , nevents ) 
+    """
+    
+    if   isinstance ( frame , frame_types ) : pass
+    elif isinstance ( frame , ROOT.TTree  ) :
+        length = len       ( frame )
+        frame  = DataFrame ( frame ) 
+    else                                    :
+        frame = as_rnode   ( frame )
+        
+    if 1 <= length : return frame_progress1 ( frame , length )
+    else           : return frame_progress2 ( frame , length )
+    
     
 # ==============================================================================
 ## Prescale the frame
@@ -396,14 +418,13 @@ def frame_prescale ( frame , prescale , name = '' ) :
     raise TypeError ( "Invalid type/value for 'prescale' %s/%s" %( prescale , type ( prescale ) ) )
 
 # ==============================================================================
-from ostap.fitting.dataset import ds_draw as _ds_draw
-# ==============================================================================
 ## Draw the variables for the frame 
 def frame_draw ( frame , *args , **kwargs ) :
-    """Draw the varibale (s) for the frames
+    """Draw the variable (s) for the frames
     """
     node = as_rnode ( frame )
-    return _ds_draw ( node , *args , **kwargs ) 
+    from ostap.fitting.dataset import ds_draw as _ds_draw_
+    return _ds_draw_ ( node , *args , **kwargs ) 
 
 # =============================================================================
 ## Simplified print out for the frame 
@@ -720,8 +741,6 @@ def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
     
     ## convert histogram-like objects into 'models'
 
-    print ( 'FRAME PROJECT-BEFORE/1', type ( current ) , type ( model ) , items , cname  )
-
     histo = None
     if   isinstance ( model , ROOT.TProfile2D )                : histo, model  = model, model.model ()        
     elif isinstance ( model , ROOT.TProfile   )                : histo, model  = model, model.model ()        
@@ -729,16 +748,12 @@ def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
     elif isinstance ( model , ROOT.TH2 ) and 2 == model.dim () : histo, model  = model, model.model ()        
     elif isinstance ( model , ROOT.TH1 ) and 1 == model.dim () : histo, model  = model, model.model ()        
 
-    print ( 'FRAME PROJECT-BEFORE/2', type ( current ) , type ( model ) , items , cname  )
-
     if histo : histo.Reset()
 
     nvars = len ( items )
     pvars = [ v for v in items.values() ] 
     if cname : pvars.append ( cname )
 
-    print ( 'FRAME PROJECT-AFTER', type ( current ) , type ( model ) , pvars )
-    
     if   3 == nvars and isinstance ( model , DF_P2Model ) : action = current.Profile2D ( model , *pvars )
     elif 2 == nvars and isinstance ( model , DF_P1Model ) : action = current.Profiel1D ( model , *pvars )
     elif 3 == nvars and isinstance ( model , DF_H3Model ) : action = current.Histo3D   ( model , *pvars )
@@ -855,7 +870,16 @@ def _fr_param_ ( frame , poly , expressions , cuts = '' , lazy = True ) :
 
 
 # ==========================================================================
+## draw the variable(s) from the frame
+#  @code
+#  frame = ...
+#  result = frame_draw ( frame , 'x+12/z' , cut = 'z>1' ) 
+## @endcode 
 def _fr_draw_ ( frame , expressions , cuts = '' , opts = '' , **kwargs ) :
+    """Draw the variable(s) from the frame
+    >>> frame = ...
+    >>> result = frame_draw ( frame , 'x+12/z' , cut = 'z>1' ) 
+    """
     
     ## decode expressions & cuts 
     current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts )
@@ -1946,7 +1970,7 @@ if Frames_OK :
     #  frame = ...
     #  mean = frame_range ( frame , 'x*x' , '0<y' ) 
     #  @endcode 
-    def frame_range( frame , expressions , cuts = '' , delta = 0.05 ) :
+    def frame_range ( frame , expressions , cuts = '' , delta = 0.05 ) :
         """Get the approproavte range  values for variables
          - In case there is no suitable range None is returned 
         >>> frame = ...
@@ -1961,6 +1985,10 @@ if Frames_OK :
                 ranges [ k ] = axis_range ( mn , mx , delta = delta ) 
         else : ranges = axis_range ( ranges.min() , ranges.max()  , delta = delta )
         return ranges
+
+
+    ## use more efficient drawing function 
+    frame_draw = _fr_draw_
     
     __all__ += (
         'frame_arithmetic_mean' ,
