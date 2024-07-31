@@ -1765,7 +1765,7 @@ def _ds_table_0_ ( dataset                ,
     else         : vars , cuts     = [ v.name for v in varset ] , str ( cuts ).strip() 
 
     ## adjust first/last 
-    first, last = evt_Range ( len ( dataset ) , first , last )
+    first, last = evt_range ( len ( dataset ) , first , last )
     
     vars = [ i.GetName() for i in varset if i.GetName() in vars ]
         
