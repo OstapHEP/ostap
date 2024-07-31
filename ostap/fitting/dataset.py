@@ -905,7 +905,6 @@ def ds_project  ( dataset                ,
             logger.attention ("From ostap v1.10.1.9 variables are treted in natural order (no reverse!)")
             _to_print -= 1 
 
-    print ( 'VARIABLES/1', varlst, cuts ) 
     nvars = len ( varlst ) 
     assert ( 1 == dim and dim <= nvars ) or dim == nvars , \
         'Mismatch between the target/histo dimension %d and input variables %s' % ( dim , varlst )
@@ -934,7 +933,6 @@ def ds_project  ( dataset                ,
     the_args = ( target , ) + varlst + tail 
     ## very special case of projection several expressions into the same target 
     if 1 == dim and dim < nvars : 
-        print ( 'DS_PROJECT/1' , dim , nvars, varlst , tail ) 
         ## very special case of projection several expressions into the same target 
         htmp  = target_copy ( target )  ## prepare temporary object 
         for var in varlst :
@@ -947,16 +945,13 @@ def ds_project  ( dataset                ,
             target += htmp
             del htmp 
     elif 1 == dim :
-        print ( 'DS_PROJECT/2' , dim , nvars, varlst , tail ) 
         if progress : sc = Ostap.HistoProject.project  ( dataset , progress_conf () , *the_args )
         else        : sc = Ostap.HistoProject.project  ( dataset ,                    *the_args )
         if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project  %s" % sc )
     elif 2 == dim : 
-        print ( 'DS_PROJECT/3' , dim , nvars, varlst , tail ) 
         if progress : sc = Ostap.HistoProject.project2 ( dataset , progress_conf () , *the_args )
         else        : sc = Ostap.HistoProject.project2 ( dataset ,                    *the_args )
         if not sc.isSuccess() : logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
-        print ( 'DS_PROJECT/4' , dim , nvars, varlst , tail ) 
     elif 3 == dim : 
         if progress : sc = Ostap.HistoProject.project3 ( dataset , progress_conf () , *the_args )
         else        : sc = Ostap.HistoProject.project3 ( dataset ,                    *the_args )

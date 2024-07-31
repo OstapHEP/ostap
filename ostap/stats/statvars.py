@@ -263,12 +263,8 @@ def data_statistics ( data , expressions , cuts = '' , *args ) :
     - see Ostap.StatVar.statVar
     """
 
-    print ('DATA-STATISTICS1' , expressions , cuts , args ) 
-    
     ## decode expressions & cuts 
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
-
-    print ('DATA-STATISTICS2' , var_lst , cuts , input_string ) 
 
     ## only one name is specified as strnig 
     if   input_string :         
@@ -314,7 +310,6 @@ def data_minmax ( data , expressions , cuts = '' , *args ) :
     - see Ostap.Math.WStatEntity
     - see Ostap.StatVar.statVar
     """
-    print ('DATA-MINMAX' , expressions , cuts , args ) 
     results = data_statistics ( data , expressions , cuts , *args )
     if isinstance ( results , dictlike_types ) :
         for k, r in loop_items ( results ) :
@@ -345,7 +340,6 @@ def data_range ( data              ,
     >>> result  = data_range ( data , 'sin(x)*100*y' , 'x<0' )
     >>> results = data_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' ) ## as dictionary
     """
-    print ('DATA-RANGE' , expressions , cuts , delta , args ) 
     results = data_minmax ( data, expressions , cuts , *args ) 
     if isinstance ( results , dictlike_types ) :
         for k , r in loop_items ( results ) :

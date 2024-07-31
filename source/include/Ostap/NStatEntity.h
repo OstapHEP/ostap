@@ -31,7 +31,14 @@ namespace Ostap
   public:
     // ======================================================================
     /// constructor with N-parameter  
-    NStatEntity ( const unsigned long N = 1000 ) ;
+    NStatEntity
+    ( const unsigned long N = 1000 ) ;
+    // ======================================================================
+    /// constructor from two counters and sliding window
+    NStatEntity
+    ( const unsigned long N    ,
+      const StatEntity&   cnt1 ,
+      const StatEntity&   cnt2 ) ;
     // ======================================================================
   public:
     // ======================================================================
@@ -120,11 +127,11 @@ namespace Ostap
   private:
     // ======================================================================
     /// the first  counter 
-    StatEntity    m_cnt1 ;                            // the first  counter 
+    StatEntity    m_cnt1 {} ;                          // the first  counter 
     /// the second counter 
-    StatEntity    m_cnt2 ;                            // the second counter 
+    StatEntity    m_cnt2 {} ;                          // the second counter 
     /// the sliding window 
-    unsigned long m_N    ;                            // the sliding window 
+    unsigned long m_N       ;                         // the sliding window 
     // ======================================================================
   };
   // ========================================================================

@@ -13,6 +13,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Math.h"
 #include "Ostap/StatEntity.h"
 // ============================================================================
 // Local 
@@ -25,6 +26,13 @@
  *  @date 26/06/2001
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  */
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  const Ostap::Math::Zero    <double> s_zero  {} ;
+  // ==========================================================================
+}
 // ============================================================================
 /* The full contructor from all important values
  * @see StatEntity::format
@@ -47,17 +55,34 @@ Ostap::StatEntity::StatEntity
   , m_min ( minv    )
   , m_max ( maxv    )
 {
-  // reset empty counter 
-  if ( 0 == m_n ) { reset() ; }
-  else 
-  {
-    Ostap::Assert ( m_min <= mu && mu <= m_max , 
-                    "Ostap::StatEntity: invalid minv/mu/maxv" ,
-                    "Ostap::StatEntity" ) ; 
-    Ostap::Assert ( 0 <= m_mu2 , 
-                    "Ostap::StatEntity: invalid second moment",
-                    "Ostap::StatEntity" ) ;
-  }
+  // empty counter  (ignore min/max)
+  if ( 0 == m_n )
+    {
+      Ostap::Assert ( s_zero ( m_mu ) && s_zero ( m_mu2 ) , 
+		      "Ostap::StatEntity: invalid mu/mu2 for empty counter!" ,
+		      "Ostap::StatEntity" ) ;
+      m_mu  = 0 ;
+      m_mu2 = 0 ;
+      /// redefine/ignore min/max 
+      m_min =   std::numeric_limits<double>::max() ;
+      m_max = - std::numeric_limits<double>::max() ;
+    }
+  else
+    {
+      Ostap::Assert ( m_min <= mu && mu <= m_max , 
+		      "Ostap::StatEntity: invalid minv/mu/maxv" ,
+		      "Ostap::StatEntity" ) ; 
+    }
+  //
+  if ( s_zero ( m_mu2 ) ) { m_mu2 = 0 ; }
+  //
+  Ostap::Assert ( ( empty() && !m_mu2 ) || ( !empty() && m_mu2 ) ,		  
+		  "Ostap::StatEntity: inconsistent mu2/empty!" ,
+		  "Ostap::StatEntity" ) ;  
+  //
+  Ostap::Assert ( 0 <= m_mu2 , 
+		  "Ostap::StatEntity: invalid second moment",
+		  "Ostap::StatEntity" ) ;
 }
 // ============================================================================
 /* add a value : the main method 

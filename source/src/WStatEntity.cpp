@@ -14,6 +14,7 @@
 // local
 // ============================================================================
 #include "format.h"
+#include "Exception.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::WStatEntity
@@ -38,6 +39,42 @@ Ostap::WStatEntity::WStatEntity ( const Ostap::StatEntity& values )
   , m_weights ( values.n () , 1 , 0 , 1 , 1 )  // weights are trivial 
 {}
 // ============================================================================
+// full constructor
+// ============================================================================
+Ostap::WStatEntity::WStatEntity
+( const double             mu      ,
+  const double             mu2     ,
+  const Ostap::StatEntity& values  ,
+  const Ostap::StatEntity& weights )
+  : m_mu      ( mu      )
+  , m_mu2     ( mu2     )
+  , m_values  ( values  ) 
+  , m_weights ( weights ) 
+{
+  if ( empty () )
+    {
+      Ostap::Assert ( s_zero ( m_mu ) && s_zero  ( m_mu2 ) ,		      
+		      "Ostap::WStatWEntity: invalid mu/mu2 for empty counter!" ,
+		      "Ostap::WStatWEntity" ) ;
+      m_mu  = 0 ;
+      m_mu2 = 0 ;
+    }
+  //
+  Ostap::Assert ( m_values.n () <= m_weights.n () , 
+		  "Ostap::WStatWEntity: inconsistent values/weights counters!" ,
+		  "Ostap::WStatWEntity" ) ;
+  //
+  if ( s_zero ( m_mu2 ) ) { m_mu2 = 0 ; }
+  //
+  Ostap::Assert ( ( empty() && !m_mu2 ) || ( !empty() && m_mu2 ) ,		  
+		  "Ostap::WStatEntity: inconsistent mu2/emptty!" ,
+		  "Ostap::WStatEntity" ) ;  
+  //
+  Ostap::Assert ( 0 <= m_mu2 , 
+		  "Ostap::WStatEntity: invalid second moment",
+		  "Ostap::WStatEntity" ) ;
+}
+// ============================================================================
 // update statistics 
 // ============================================================================
 Ostap::WStatEntity&
@@ -50,14 +87,14 @@ Ostap::WStatEntity::add
   if ( !std::isfinite ( value  ) || !std::isfinite ( weight ) ) { return *this ; }
   //
   if ( 0 == n() ) 
-  {
-    m_mu  = value ;
-    m_mu2 = 0     ;
-    if ( weight ) { m_values += value ; }
-    m_weights += weight ;    
-    //
-    return *this ;
-  }
+    {
+      m_mu  = value ;
+      m_mu2 = 0     ;
+      if ( weight ) { m_values += value ; }
+      m_weights += weight ;    
+      //
+      return *this ;
+    }
   //
   const long double wA    = n () * m_weights.mu() ;
   const long double wB    = weight                ; 

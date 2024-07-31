@@ -40,7 +40,7 @@ try :
         from scipy.optimize import minimize_scalar 
         scipy_OK = True 
 except ImportError :
-    from ostap.math.local_minimize import scalar_minimuze as minimize_scalar 
+    from ostap.math.local_minimize import scalar_minimize as minimize_scalar 
     scipy_OK = False 
 
 if scipy_OK : 
@@ -186,7 +186,6 @@ if scipy_OK :
         'sp_maximum_2D' ,
         'sp_maximum_3D' )
 
-    
 # =============================================================================
 if '__main__' == __name__ :
     

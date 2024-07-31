@@ -996,9 +996,13 @@ def _tf3_getattr_ ( self , attr ) :
     
     raise AttributeError("Can't get attribute: %s" % attr )
 
-
-from ostap.math.minimize   import sp_minimum_1D, sp_maximum_1D 
-from ostap.math.rootfinder import sp_solve 
+try : 
+    from ostap.math.minimize   import sp_minimum_1D, sp_maximum_1D 
+    from ostap.math.rootfinder import sp_solve 
+except ImportError :
+    sp_minimum_1D = None 
+    sp_maximum_1D = None 
+    sp_solve      = None 
 
 # =============================================================================
 ## decorate 1D-models/functions 
@@ -1365,7 +1369,12 @@ for t in ( Ostap.Math.BSpline          ,
 Ostap.Math.Spline2D    = Ostap.Math.PositiveSpline2D   
 Ostap.Math.Spline2DSym = Ostap.Math.PositiveSpline2DSym
 
-from ostap.math.minimize import sp_minimum_2D, sp_maximum_2D 
+try : 
+    from ostap.math.minimize import sp_minimum_2D, sp_maximum_2D 
+except ImportError :
+    sp_minimum_2D = None
+    sp_maximum_2D = None
+    
 
 for model in ( Ostap.Math.BSpline2D           ,
                Ostap.Math.BSpline2DSym        , 
@@ -1401,9 +1410,12 @@ for model in ( Ostap.Math.BSpline2D           ,
     if sp_minimum_2D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_2D
     if sp_maximum_2D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_2D
     
-
-from ostap.math.minimize import sp_minimum_3D, sp_maximum_3D 
-
+try :
+    from ostap.math.minimize import sp_minimum_3D, sp_maximum_3D 
+except ImportError :
+    sp_minimum_3D = None
+    sp_maximum_3D = None
+    
 # =============================================================================
 ## Decorate 3D models
 # ============================================================================= 

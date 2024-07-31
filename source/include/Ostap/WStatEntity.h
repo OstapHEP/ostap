@@ -24,12 +24,19 @@ namespace Ostap
     /// empty constructor 
     WStatEntity () = default ;
     /// constructor from StatEntity of values 
-    WStatEntity ( const StatEntity& values ) ;
+    WStatEntity					\
+    ( const StatEntity& values ) ;
+    /// full consrctor
+    WStatEntity
+    ( const double      mu      ,
+      const double      mu2     ,
+      const StatEntity& values  ,
+      const StatEntity& weights ) ;
     // ======================================================================
   public: // the basic getters 
     // ======================================================================
     /// total number of entries 
-    unsigned long long       n   () const { return m_weights.n() ; }
+    unsigned long long       n   () const { return m_weights.n () ; }
     /// the first weighted moment/mean-value 
     double                   mu  () const { return m_mu  ; }
     /// the second central weighted moment/dispersion/variance  

@@ -329,7 +329,6 @@ for iter in range ( 1 , maxIter + 1 ) :
     tag = 'Reweighting iteration #%d' % iter
     logger.info ( allright ( tag ) ) 
     
-
     with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
         # =========================================================================
         ## 0) The weighter object

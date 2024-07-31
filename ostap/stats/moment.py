@@ -33,7 +33,7 @@ __date__    = "2020-06-08"
 __all__     = ()
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types
-from   ostap.math.base        import isfinite 
+from   ostap.math.base        import isfinite, isequal  
 from   ostap.core.core        import Ostap, VE
 from   ostap.core.meta_info   import root_version_int, root_info 
 import ROOT 
@@ -648,8 +648,8 @@ for t in ( Ostap.Math.WMoment ,
 
 M0  = Ostap.Math.Moment_(0)
 M1  = Ostap.Math.Moment_(1)
-WM0 = Ostap.Math.Moment_(0)
-WM1 = Ostap.Math.Moment_(1)
+WM0 = Ostap.Math.WMoment_(0)
+WM1 = Ostap.Math.WMoment_(1)
 for m in ( M0 , M1 , WM0 , WM1 ) :
     m.mean  = _om_mean
     m.table = _om_table
@@ -659,13 +659,236 @@ if not hasattr (  M1 , 'order' ) :  M1.order = 1
 if not hasattr ( WM0 , 'order' ) : WM0.order = 0
 if not hasattr ( WM1 , 'order' ) : WM1.order = 1
 
+
+
+# ============================================================
+## equality for two counters  
+def _mom0_eq_  ( cnt , another ) :
+    """Equality for two Ostap.Math.Momemnt_<0> counters
+    """
+    ## The same base type
+    if not isinstance ( another , Ostap.Math.Moment ) : return NotImplemented
+    ## order is defined 
+    if not hasattr    ( another , 'order'           ) : return NotImplemented
+    ## the same order 
+    if cnt.order  !=  another.order                   : return NotImplemented
+    ### the same size 
+    return cnt.size() == another.size ()
+# ============================================================
+## equality for two counters  
+def _mom1_eq_  ( cnt , another ) :
+    """Equality for two Ostap.Math.Momemnt_<1> counters
+    """
+    ## The same base type
+    if not isinstance ( another , Ostap.Math.Moment ) : return NotImplemented
+    ## order is defined 
+    if not hasattr    ( another , 'order'           ) : return NotImplemented
+    ## the same order 
+    if cnt.order  !=  another.order                   : return NotImplemented
+    return isequal ( cnt.mu() , another.mu() ) and  cnt.previous() == another.previous() 
+# ============================================================
+## equality for two counters  
+def _momN_eq_  ( cnt , another ) :
+    """Equality for two Ostap.Math.Moment_<N> counters
+    """
+    ## The same base type
+    if not isinstance ( another , Ostap.Math.Moment ) : return NotImplemented
+    ## order is defined 
+    if not hasattr    ( another , 'order'           ) : return NotImplemented
+    ## the same order 
+    if cnt.order  !=  another.order                   : return NotImplemented
+    ## 
+    return isequal ( cnt.M () , another.M () ) and cnt.previous() == another.previous() 
+
+Ostap.Math.Moment . __eq__ = _momN_eq_ 
+M0                . __eq__ = _mom0_eq_
+M1                . __eq__ = _mom1_eq_
+
+# ============================================================
+## equality for two counters  
+def _wmom0_eq_  ( cnt , another ) :
+    """Equality for two Ostap.Math.Momemnt_<0> counters
+    """
+    ## The same base type
+    if not isinstance ( another , Ostap.Math.WMoment ) : return NotImplemented
+    ## order is defined 
+    if not hasattr    ( another , 'order'            ) : return NotImplemented
+    ## the same order 
+    if cnt.order  !=  another.order                    : return NotImplemented
+    ### the same size 
+    return \
+        cnt.size() == another.size ()         and \
+        isequal ( cnt.w  () , another.w  () ) and \
+        isequal ( cnt.w2 () , another.w2 () ) 
+
+
+# ============================================================
+## equality for two counters  
+def _wmom1_eq_  ( cnt , another ) :
+    """Equality for two Ostap.Math.WMomemnt_<1> counters
+    """
+    ## The same base type
+    if not isinstance ( another , Ostap.Math.WMoment ) : return NotImplemented
+    ## order is defined 
+    if not hasattr    ( another , 'order'            ) : return NotImplemented
+    ## the same order 
+    if cnt.order  !=  another.order                    : return NotImplemented
+    return isequal ( cnt.mu() , another.mu() ) and  cnt.previous() == another.previous() 
+# ============================================================
+## equality for two counters  
+def _wmomN_eq_  ( cnt , another ) :
+    """Equality for two Ostap.Math.WMoment_<N> counters
+    """
+    ## The same base type
+    if not isinstance ( another , Ostap.Math.WMoment ) : return NotImplemented
+    ## order is defined 
+    if not hasattr    ( another , 'order'            ) : return NotImplemented
+    ## the same order 
+    if cnt.order  !=  another.order                    : return NotImplemented
+    ## 
+    return isequal ( cnt.M () , another.M () ) and cnt.previous() == another.previous() 
+
+
+Ostap.Math.WMoment . __eq__ = _wmomN_eq_ 
+WM0                . __eq__ = _wmom0_eq_
+WM1                . __eq__ = _wmom1_eq_
+    
+
+# ==========================================================
+## REDUCE 
+from ostap.math.reduce import root_factory 
+# ==========================================================
+## Redude Ostap::Math::Moment_<0>
+def _mom0_reduce_ ( cnt ) :
+    """Redude Ostap::Math::Moment_<0>
+    """
+    return root_factory , ( type ( cnt ), cnt.size  () )
+# =========================================================
+## Redude Ostap::Math::Moment_<1>
+def _mom1_reduce_ ( cnt ) :
+    """Redude Ostap::Math::Moment_<1>
+    """
+    return root_factory , ( type ( cnt ), cnt.mu () , cnt.previous () )
+# ========================================================
+## Redude Ostap::Math::Moment_<N>
+def _momN_reduce_ ( cnt ) :
+    """Redude Ostap::Math::Moment_<N>
+    """
+    return root_factory , ( type ( cnt ), cnt.moment () , cnt.previous () )
+
+Ostap.Math.Moment . __reduce__ = _momN_reduce_
+M0                . __reduce__ = _mom0_reduce_
+M1                . __reduce__ = _mom1_reduce_
+
+# ==========================================================
+## Redude Ostap::Math::WMoment_<0>
+def _wmom0_reduce_ ( cnt ) :
+    """Redude Ostap::Math::WMoment_<0>
+    """
+    return root_factory , ( type ( cnt ), cnt.size  () , cnt.w() , cnt.w2 () )
+# =========================================================
+## Redude Ostap::Math::WMoment_<1>
+def _wmom1_reduce_ ( cnt ) :
+    """Redude Ostap::Math::WMoment_<1>
+    """
+    return root_factory , ( type ( cnt ), cnt.mu () , cnt.previous () )
+# ========================================================
+## Redude Ostap::Math::WMoment_<N>
+def _wmomN_reduce_ ( cnt ) :
+    """Redude Ostap::Math::WMoment_<N>
+    """
+    return root_factory , ( type ( cnt ), cnt.moment () , cnt.previous () )
+
+Ostap.Math.WMoment . __reduce__ = _wmomN_reduce_
+WM0                . __reduce__ = _wmom0_reduce_
+WM1                . __reduce__ = _wmom1_reduce_
+
+
+
+# =============================================================================
+## serialization of Harmonic&Geometric means
+#  @see Ostap::Math::GeometricMean
+#  @see Ostap::Math::HarmonicMean
+#  @see Ostap::Math::WGeometricMean
+#  @see Ostap::Math::WHarmonicMean
+def _mn_reduce_ ( cnt ) :
+    """Serialization of Harmonic&Geometric means
+    - see Ostap::Math::GeometricMean
+    - see Ostap::Math::HarmonicMean
+    - see Ostap::Math::WGeometricMean
+    - see Ostap::Math::WHarmonicMean
+    """
+    return root_factory , ( type ( cnt ) , cnt.counter() )
+
+Ostap.Math.GeometricMean   . __reduce__ = _mn_reduce_
+Ostap.Math.HarmonicMean    . __reduce__ = _mn_reduce_
+Ostap.Math.ArithmeticMean  . __reduce__ = _mn_reduce_
+Ostap.Math.WGeometricMean  . __reduce__ = _mn_reduce_
+Ostap.Math.WHarmonicMean   . __reduce__ = _mn_reduce_
+Ostap.Math.WArithmeticMean . __reduce__ = _mn_reduce_
+
+# =============================================================================
+## serialization of Power means
+#  @see Ostap::Math::PoweMean
+#  @see Ostap::Math::WPoweMean
+def _pm_reduce_ ( cnt ) :
+    """Serialization of Power means
+    - see Ostap::Math::PowerMean
+    - see Ostap::Math::WPowerMean
+    """
+    return root_factory , ( type ( cnt ) , cnt.p() , cnt.counter() )
+
+Ostap.Math.PowerMean   . __reduce__ = _pm_reduce_
+Ostap.Math.WPowerMean  . __reduce__ = _pm_reduce_
+
+# =============================================================================
+## serialization of Lehmermeans
+#  @see Ostap::Math::LehmerMean
+#  @see Ostap::Math::WLehmerMean
+def _lm_reduce_ ( cnt ) :
+    """Serialization of Lehmermeans
+    - see Ostap::Math::LehmerMean
+    - see Ostap::Math::WLehmerMean
+    """
+    return root_factory , ( type ( cnt ) , cnt.p() , cnt.counter1() , cnt.conuter2() )
+
+Ostap.Math.LehmerMean   . __reduce__ = _lm_reduce_
+Ostap.Math.WLehmerMean  . __reduce__ = _lm_reduce_
+
+# ==============================================================================
+## equality for the mean
+#  @see Ostap::Math::GeometricMean
+#  @see Ostap::Math::HarmonicMean
+#  @see Ostap::Math::WGeometricMean
+#  @see Ostap::Math::WHarmonicMean
+def _mn_eq_ ( cnt , another ) :
+    """Equality Harmonic&Geometric means
+    - see Ostap::Math::GeometricMean
+    - see Ostap::Math::HarmonicMean
+    - see Ostap::Math::WGeometricMean
+    - see Ostap::Math::WHarmonicMean
+    """
+    if not type ( cnt ) is type ( another ) : return NotImplemented
+    return isequal ( cnt.value() , another.value() ) and \
+        cnt.counter() == another.counter()
+
+Ostap.Math.GeometricMean  . __eq__ = _mn_eq_
+Ostap.Math.HarmonicMean   . __eq__ = _mn_eq_
+Ostap.Math.WGeometricMean . __eq__ = _mn_eq_
+Ostap.Math.WHarmonicMean  . __eq__ = _mn_eq_
+    
 _decorated_classes = (
-    Ostap.Math.Moment     ,
-    Ostap.Math.WMoment    ,
-    Ostap.Math.Moment_(0) , 
-    Ostap.Math.Moment_(1) ,
-    Ostap.Math.Moment_(0) , 
-    Ostap.Math.Moment_(1) , 
+    Ostap.Math.Moment         ,
+    Ostap.Math.WMoment        ,
+    Ostap.Math.Moment_(0)     , 
+    Ostap.Math.Moment_(1)     ,
+    Ostap.Math.Moment_(0)     , 
+    Ostap.Math.Moment_(1)     ,
+    ##
+    Ostap.Math.GeometricMean  , 
+    Ostap.Math.HarmonicMean   , 
+    Ostap.Math.WGeometricMean ,
+    Ostap.Math.WHarmonicMean  ,    
     )
 
 _new_methods_ = (

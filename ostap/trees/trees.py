@@ -420,7 +420,6 @@ def tree_project ( tree                    ,
     ## use frame if requested and if/when possible 
     if use_frame and 0 == first and len ( tree ) < last : 
         if ( input_histo and ( 6 , 19 ) <= root_info ) or ( 6,25 ) <= root_info :
-            print ( 'go to frame' )
             import ostap.frames.frames as F 
             frame  = F.DataFrame ( tree )
             if progress : frame , _ = F.frame_progress ( frame , len ( tree ) )            
@@ -2804,7 +2803,6 @@ class Chain(CleanUp) :
             ## yield lst [ i : min ( i + chunk_size , list_size ) ] 
             yield slice ( first + i , first + min ( i + chunk_size , last -first  ) ) 
 
-
     ## split the chain for several chains with at most chunk_size entries
     def split ( self , chunk_size = -1 , max_files = 10 ) :
         """Split the tree for several trees with chunk_size entries
@@ -3040,7 +3038,6 @@ class Tree(Chain) :
         return r + ")"
     __repr__ = __str__
 
-
     # =========================================================================
     ## delegate all other attributes to the underlying chain object 
     def __getattr__  ( self , attr ) :
@@ -3052,10 +3049,8 @@ class Tree(Chain) :
         """``tree'' : get the underlying tree/chain"""
         return self.chain
 
-
-
 # ==============================================================================
-## get a full path of the TTree obnject 
+## get a full path of the TTree object 
 #  @code
 #  rdir = ...
 #  path = rdirt.full_path 

@@ -23,8 +23,8 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.math.ve          import Ostap, VE
-from   ostap.math.base        import isequal, isequalf
-from   ostap.core.ostap_types import dictlike_types, sequence_types 
+from   ostap.math.base        import isequal, isequalf, iszero 
+from   ostap.core.ostap_types import dictlike_types, sequence_types
 import ROOT, cppyy
 # =============================================================================
 _new_methods_ = []
@@ -50,7 +50,6 @@ if not hasattr ( SE , '_orig_sum'  ) :
 if not hasattr ( SE , '_orig_mean' ) : 
     _orig_mean    = SE.mean
     SE._orig_mean = _orig_mean
-
 
 SE. sum     = lambda s : VE ( s._orig_sum  () , s.sum2 ()      )
 SE. minmax  = lambda s :    ( s.min        () , s.max  ()      ) 
@@ -289,7 +288,56 @@ _new_methods_ += [
     counters_table  
     ]
 
-                                       
+
+# ==============================================================================
+## REDUCE 
+# ==============================================================================
+from ostap.math.reduce import root_factory
+
+
+# =============================================================================
+## Reduce Ostap::StatEntity 
+def  _se_reduce_ ( cnt ) :
+    """Reduce `Ostap.StatEntity` object
+    """
+    return  root_factory , ( type ( cnt ) ,
+                             cnt.n   () ,
+                             cnt.mu  () ,
+                             cnt.mu2 () ,
+                             cnt.min () ,
+                             cnt.max () )
+
+# =============================================================================
+## Reduce Ostap::WStatEntity 
+def  _wse_reduce_ ( cnt ) :
+    """Reduce `Ostap.WStatEntity` object
+    """
+    return  root_factory , ( type ( cnt )   ,
+                             cnt.mu      () ,
+                             cnt.mu2     () ,
+                             cnt.values  () ,
+                             cnt.weights () )
+# =============================================================================
+## Reduce Ostap::NStatEntity 
+def  _nse_reduce_ ( cnt ) :
+    """Reduce `Ostap.NStatEntity` object
+    """
+    return  root_factory , ( type ( cnt ) ,
+                             cnt.N    ()  ,
+                             cnt.cnt1 ()  , 
+                             cnt.cnt2 () )
+
+SE .__reduce__ =  _se_reduce_
+WSE.__reduce__ = _wse_reduce_
+NSE.__reduce__ = _nse_reduce_
+
+_new_methods_ += [
+    SE .__reduce__ , 
+    WSE.__reduce__ , 
+    NSE.__reduce__ , 
+]
+
+# ==============================================================================
 _new_methods_ = tuple ( _new_methods_ )
 
 # =============================================================================

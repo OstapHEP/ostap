@@ -47,7 +47,7 @@ namespace  Ostap
     public :
       // ======================================================================
       virtual ~Moment() ;
-      // ======================================================================      
+      // ======================================================================
     } ;
     // ========================================================================
     /// forward declaration 
@@ -78,11 +78,23 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// default constructor 
+      Moment_ () = default ;
+      /// constructor from the value and previous moment 
+      Moment_
+      ( const double        mom  ,
+	const Moment_<N-1>& prev )
+	: m_prev ( prev              )
+	, m_M    ( mom * prev.size() )
+      {} 
+      // ======================================================================
+    public:
+      // ======================================================================
       /** get the value of the Nth moment 
        *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
        *  @return the value of the Nth central moment
        */
-      inline double moment () const { return this->M ( N ) / this->size () ; }
+      inline double moment () const { return this->ok () ? this->M ( N ) / this->size () : 0 ; }
       // ======================================================================
       /** get value of the kth moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
@@ -91,16 +103,21 @@ namespace  Ostap
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
       inline double moment ( const unsigned short k ) const
-      { return N <  k ? 0 : 0 == k ? 1 : 1 == k ? 0 : ( this->M ( k ) / this->size() ) ; }
+      { return 
+	  N <  k       ? 0 :
+	  0 == k       ? 1 :
+	  1 == k       ? 0 :
+	  !this->ok () ? 0 : ( this->M ( k ) / this->size() ) ; }
       // ======================================================================
       /// get value of the kth standartized moment for \f$  k \le N \f$
       inline double std_moment ( const unsigned short k ) const
       { 
         return 
-          N <  k ? 0 : 
-          0 == k ? 1 : 
-          1 == k ? 0 :
-          2 == k ? 1 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
+          N <  k    ? 0 : 
+          0 == k    ? 1 : 
+          1 == k    ? 0 :
+          2 == k    ? 1 :
+	  !this->ok ? 0 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
       }
       // ======================================================================
       /// get number of entries
@@ -159,7 +176,7 @@ namespace  Ostap
        *  @param k the order   \f$  0 \le k \le N \f$
        *  @return the value of \$ M_k \f$  if \f$  0 \le k \le N \f$, 0 otherwise 
        */   
-      inline long double M ( const unsigned short k ) const
+      inline long double M ( const unsigned short k = N ) const
       { return k >  N ? 0.0L : k == N ? this->m_M : this->m_prev.M( k ) ; }
       // ======================================================================
     public:
@@ -197,7 +214,7 @@ namespace  Ostap
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(2<=K)&&(K==N),int>::type = 0 >
       inline long double moment_ () const
-      { return this->empty () ? 0 : this->m_M / this->size  () ; }
+      { return !this->ok () ? 0 : this->m_M / this->size  () ; }
       // ======================================================================
       template <unsigned int K, typename std::enable_if<(N<2*K)&&(N>K),int>::type = 0 >
       inline long double moment_ () const
@@ -242,7 +259,8 @@ namespace  Ostap
       template <unsigned int K, typename std::enable_if<(2<K)&&(N>=K),int>::type = 0 >
       inline long double std_moment_ () const
       {
-        return this->empty () ? 0 :
+        return
+	  !this->ok () ? 0 :
           this->template moment_<K> () / std::pow ( this->moment_<2>() , 0.5 * K ) ;
       }      
       // ======================================================================
@@ -459,6 +477,14 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// (default) constructor 
+      Moment_
+      ( const unsigned long long size = 0 )
+	: m_size ( size )
+      {}
+      // ======================================================================
+    public:
+      // ======================================================================
       /** get the value of the Nth moment 
        *  \f[ \mu_N \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^N \f]
        *  @return the value of the Nth central moment
@@ -484,7 +510,7 @@ namespace  Ostap
       /// empty ?
       inline bool               empty () const { return 0 == m_size ; }
       /// ok ?
-      inline bool               ok    () const { return 0 != m_size ; }
+      inline bool               ok    () const { return      m_size ; }
       // ======================================================================
     public: // basic operations 
       // ======================================================================
@@ -526,7 +552,7 @@ namespace  Ostap
        *  @param k the order   \f$  0 \le k \le N \f$
        *  @return the value of \$ M_k \f$  if \f$  0 \le k \le  \f$, 0 otherwise 
        */   
-      inline long double M ( const unsigned short k ) const
+      inline long double M ( const unsigned short k = 0 ) const
       { return  0 < k ? 0 : m_size  ; }
       // ======================================================================
     public:
@@ -552,7 +578,7 @@ namespace  Ostap
       // ======================================================================      
     private:
       // ======================================================================
-      unsigned long long m_size ;
+      unsigned long long m_size { 0 } ;
       // ======================================================================
     private:
       // ======================================================================
@@ -569,6 +595,23 @@ namespace  Ostap
     public:
       // ======================================================================
       enum _ { order = 1 } ;
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// default constructor from mu and size 
+      Moment_
+      ( const double             mu   = 0 ,
+	const unsigned long long size = 0 ) 
+	: m_prev ( size ) 
+	, m_mu   ( mu   )
+      {}
+      /// constructor from mu and previous 
+      Moment_
+      ( const double      mu   ,
+	const Moment_<0>& prev ) 
+	: m_prev ( prev ) 
+	, m_mu   ( mu   )
+      {}
       // ======================================================================
     public: 
       // ======================================================================
@@ -590,11 +633,11 @@ namespace  Ostap
       { return 0 == k || 2 == k ? 1 : 0 ; }
       // ======================================================================
       /// get number of entries
-      inline unsigned long long size  () const { return m_prev.size () ; }
+      inline unsigned long long size  () const { return m_prev.size ()  ; }
       /// get effective number of entries 
-      inline unsigned long long nEff  () const { return m_prev.nEff () ; }
+      inline unsigned long long nEff  () const { return m_prev.nEff ()  ; }
       // get the mean value
-      inline long double        mu    () const { return m_mu ; } 
+      inline long double        mu    () const { return m_mu            ; } 
       /// empty ?
       inline bool               empty () const { return m_prev.empty () ; }
       /// ok ?
@@ -658,7 +701,7 @@ namespace  Ostap
       // ======================================================================
     public: 
       // ======================================================================
-      inline long double M ( const unsigned short k ) const
+      inline long double M ( const unsigned short k = 1 ) const
       { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
       // ======================================================================
     public:
@@ -801,13 +844,25 @@ namespace  Ostap
       // ======================================================================
       enum _ { order = N } ;
       // ======================================================================
+    public: 
+      // ======================================================================
+      /// default constructor 
+      WMoment_ () = default ;
+      /// constructor from the value and previous moment 
+      WMoment_
+      ( const double         mom  ,
+	const WMoment_<N-1>& prev )
+	: m_prev ( prev            )
+	, m_M    ( mom * prev.w () )
+      {} 
+      // ======================================================================
     public:
       // ======================================================================
       /** get the value of the Nth weighted  moment 
        *  \f[ \mu_N \equiv  \frac{1}{\sum w_i} \sum w_i \left( x_i - \bar{x} \right)^N \f]
        *  @return the value of the Nth central moment
        */
-      inline double moment () const { return this->M ( N ) / this-> w () ; }
+      inline double moment () const { return this-> ok () ? this->M ( N ) / this-> w () : 0.0 ; }
       // ======================================================================
       /** get value of the kth moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{\sum w_i} \sum w_i \left( x_i - \bar{x} \right)^k \f]
@@ -816,7 +871,11 @@ namespace  Ostap
        *  @return the value of the kth central moment if \f$  0 \le k \le N \f$, 0, otherwise 
        */
       inline double moment ( const unsigned short k ) const
-      { return N <  k ? 0 : 0 == k ? 1 : 1 == k ? 0 : ( this->M ( k ) / this-> w () ) ; }
+      { return
+	  N <  k       ? 0  :
+	  0 == k       ? 1  :
+	  1 == k       ? 0  :
+	  !this->ok () ? 0  : ( this->M ( k ) / this-> w () ) ; }
       // ======================================================================
       /** get value of the kth standartized moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
@@ -826,10 +885,11 @@ namespace  Ostap
        */
       inline double std_moment ( const unsigned short k ) const
       { return 
-          N <  k ? 0 : 
-          0 == k ? 1 : 
-          1 == k ? 0 :
-          2 == k ? 1 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
+          N <  k       ? 0 : 
+          0 == k       ? 1 : 
+          1 == k       ? 0 :
+          2 == k       ? 1 :
+	  !this->ok () ? 0 : this->moment ( k ) / std::pow ( this->moment ( 2 ) , 0.5 * k ) ;
       }
       // ======================================================================
       /// get number of entries
@@ -865,7 +925,7 @@ namespace  Ostap
       WMoment_  __radd__ ( const WMoment_& x ) const { return __add__ ( x ) ; }
       WMoment_& __iadd__ ( const WMoment_& x )       { return   add   ( x ) ; }
       // ======================================================================
-    public:      
+   public:      
       // ======================================================================
       /// update the counter 
       void update ( const double x , const double w = 1 ) override { add ( x , w ) ; }
@@ -882,7 +942,7 @@ namespace  Ostap
        *  @param k the order   \f$  0 \le k \le N \f$
        *  @return the value of \$ M_k \f$  if \f$  0 \le k \le N \f$, 0 otherwise 
        */   
-      inline long double M ( const unsigned short k ) const
+      inline long double M ( const unsigned short k = N ) const
       { return k >  N ? 0.0L : k == N ? this->m_M : this->m_prev.M( k ) ; }
       // ======================================================================
     public:
@@ -1064,6 +1124,20 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// default constructor
+      WMoment_ () = default ;
+      /** full constructor
+       *  @param size number of entries 
+       *  @param sumw sum of weights 
+       *  @param sumw sum of squared weights 
+       */
+      WMoment_
+      ( const unsigned long long size ,
+	const double             sumw  ,
+	const double             sumw2 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
       /** get the value of the 0th moment 
        *  \f[ \mu_N \equiv  \frac{1}{\sum w_i } \sum w_i \left( x_i - \bar{x} \right)^0 \f]
        *  @return the value of the 0th central moment
@@ -1093,7 +1167,7 @@ namespace  Ostap
       /// empty ?
       inline bool               empty () const { return 0 == m_size ; }
       /// ok ?
-      inline bool               ok    () const { return 0 != m_size && 0 != m_w && 0 < m_w2 ; }
+      inline bool               ok    () const { return m_size && m_w && ( 0 < m_w2 ) ; }
       // ======================================================================
     public: // basic operations 
       // ======================================================================
@@ -1143,7 +1217,7 @@ namespace  Ostap
        *  @param k the order   \f$  0 \le k \le N \f$
        *  @return the value of \$ M_k \f$  if \f$  0 \le k \le  \f$, 0 otherwise 
        */   
-      inline long double M ( const unsigned short k ) const
+      inline long double M ( const unsigned short k = 0 ) const
       { return  0 < k ? 0 : m_w ; }
       // ======================================================================
     public:
@@ -1174,11 +1248,11 @@ namespace  Ostap
     private:
       // ======================================================================
       /// number of entries 
-      unsigned long long m_size ; // number of entries
+      unsigned long long m_size { 0 } ; // number of entries
       /// sum of weights \f$  \sum w_i \f$ 
-      long double        m_w    ; // sum of weights
+      long double        m_w    { 0 } ; // sum of weights
       /// sum of weights squared \f$  \sum w_i^2 \f$ 
-      long double        m_w2   ; // sum of weights squared 
+      long double        m_w2   { 0 } ; // sum of weights squared 
       // ======================================================================
     private:
       // ======================================================================
@@ -1195,6 +1269,18 @@ namespace  Ostap
     public:
       // ======================================================================
       enum _ { order = 1 } ;
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// default constructor 
+      WMoment_ () = default ;
+      /// constructor from mu and previous moment 
+      WMoment_
+      ( const double       mu   ,
+	const WMoment_<0>& prev )
+	: m_prev ( prev )
+	, m_mu   ( mu   )
+      {} 
       // ======================================================================
     public :
       // ======================================================================
@@ -1268,14 +1354,14 @@ namespace  Ostap
         //
         return *this ;
       }
-      // ======================================================================
-    public: // python operations 
+      // ====================================================================== 
+   public: // python operations 
       // ======================================================================
       WMoment_   __add__ ( const WMoment_& x ) const { WMoment_ r (*this) ; r += x ; return r ; }
       WMoment_  __radd__ ( const WMoment_& x ) const { return __add__ ( x ) ; }
       WMoment_& __iadd__ ( const WMoment_& x )       { return   add   ( x ) ; }
       // ======================================================================
-    public:      
+   public:      
       // ======================================================================
       /// update the counter 
       void update ( const double x , const double w = 1 ) override { add ( x , w ) ; }
@@ -1287,7 +1373,7 @@ namespace  Ostap
       // ======================================================================
     public: 
       // ======================================================================
-      inline long double M ( const unsigned short k ) const
+      inline long double M ( const unsigned short k = 1 ) const
       { return 1 < k  ? 0 : 1 == k ? 0 : this->m_prev. M ( k ) ; }
       // ======================================================================
     public:
@@ -1335,9 +1421,9 @@ namespace  Ostap
       // =======================================================================
     private:
       // ======================================================================
-      WMoment_<0>  m_prev { } ;
+      WMoment_<0>  m_prev {   } ;
       /// mean value
-      long double m_mu   {0} ; // mean value
+      long double m_mu    { 0 } ; // mean value
       // ======================================================================
     private:
       // ======================================================================
@@ -1372,6 +1458,18 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      /// the actual underlying counter 
+      typedef Moment_<1> Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// default constructor 
+      GeometricMean () = default ;
+      /// constructor for the counters 
+      GeometricMean ( const Counter& cnt ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the geometric mean 
       inline double mean  () const { return value () ; }
       inline double value () const { return std::pow ( 2 , m_log.mean() ) ; }   
@@ -1382,6 +1480,11 @@ namespace  Ostap
       inline GeometricMean& operator+=( const GeometricMean& x ) { return add ( x ) ; }   
       inline GeometricMean& operator*=( const double         x ) { return add ( x ) ; }
       inline GeometricMean& operator*=( const GeometricMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the counter of log2 values 
+      const Counter& counter () const { return m_log ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1419,7 +1522,7 @@ namespace  Ostap
     private:
       // ======================================================================
       /// get the counter of log2(x) 
-      Moment_<1> m_log {} ;
+      Counter m_log {} ;
       // ======================================================================
     };
     // ========================================================================
@@ -1430,6 +1533,18 @@ namespace  Ostap
      */
     class HarmonicMean : public Statistic
     {
+    public:
+      // ======================================================================
+      /// the actual underlying counter 
+      typedef Moment_<1> Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// default construictor
+      HarmonicMean () = default ;
+      /// constructor for the counters 
+      HarmonicMean ( const Counter& cnt ) ;      
+      // ======================================================================
     public:
       // ======================================================================
       /// get the harmonic mean 
@@ -1459,6 +1574,11 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// the counter of 1/x values 
+      const Counter counter () const { return m_inv ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// to use it as a Moment 
       void update ( const double x ) override { add ( x ) ; }
       // ======================================================================
@@ -1474,7 +1594,7 @@ namespace  Ostap
     private:
       // ======================================================================
       /// get the counter of 1/x 
-      Moment_<1> m_inv {} ;
+      Counter m_inv {} ;
       // ======================================================================
     };
     // ========================================================================
@@ -1487,8 +1607,15 @@ namespace  Ostap
     {
     public:
       // ======================================================================
-      // constructir from the power 
-      PowerMean ( const double p = 1 ) ;
+      /// the actual underlying counter 
+      typedef Moment_<1> Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// defautl construictor
+      PowerMean ( const double = 1 ) ;
+      /// constructor for the counters 
+      PowerMean ( const double p , const Counter& cnt ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -1500,6 +1627,11 @@ namespace  Ostap
       // ======================================================================
       inline PowerMean& operator+=( const double     x ) { return add ( x ) ; }
       inline PowerMean& operator+=( const PowerMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the counter of x**p  values 
+      const Counter counter () const { return m_pow ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1536,9 +1668,9 @@ namespace  Ostap
     private:
       // ======================================================================
       /// the power
-      double m_p       {1} ;
+      double  m_p   {1} ;
       /// get the counter of x^p
-      Moment_<1> m_pow {}  ;
+      Counter m_pow {}  ;
       // ======================================================================
     };
     // ========================================================================
@@ -1557,8 +1689,19 @@ namespace  Ostap
     {
     public:
       // ======================================================================
-      // constructir from the power 
-      LehmerMean ( const double p = 1 ) ;
+      /// the actual underlying counter 
+      typedef Moment_<1> Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// defautl construictor
+      LehmerMean
+      ( const double = 1 ) ;
+      /// constructor for the counters 
+      LehmerMean
+      ( const double   p    ,
+	const Counter& cnt1 , 
+	const Counter& cnt2 ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -1570,6 +1713,13 @@ namespace  Ostap
       // ======================================================================
       inline LehmerMean& operator+=( const double      x ) { return add ( x ) ; }
       inline LehmerMean& operator+=( const LehmerMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the counter of x**p  values 
+      const Counter counter1 () const { return m_lp   ; }
+      /// the counter of x**(p-1)  values 
+      const Counter counter2 () const { return m_lpm1 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1626,6 +1776,18 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      /// the actual underlying counter 
+      typedef WMoment_<1> Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// default constructor 
+      WGeometricMean () = default ;
+      /// constructor for the counters 
+      WGeometricMean ( const Counter& cnt ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the geometric mean 
       inline double value () const { return std::pow ( 2 , m_log.mean() ) ; }
       inline double mean  () const { return value () ; }
@@ -1634,6 +1796,11 @@ namespace  Ostap
       // ======================================================================
       inline WGeometricMean& operator+=( const WGeometricMean& x ) { return add ( x ) ; }   
       inline WGeometricMean& operator*=( const WGeometricMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the counter of log2 values 
+      const Counter& counter () const { return m_log ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1675,7 +1842,7 @@ namespace  Ostap
     private:
       // ======================================================================
       /// get the counter of log2(x) 
-      WMoment_<1> m_log {} ;
+      Counter m_log {} ;
       // ======================================================================
     };
 
@@ -1690,6 +1857,18 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      /// the actual underlying counter 
+      typedef WMoment_<1> Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// default construictor
+      WHarmonicMean () = default ;
+      /// constructor for the counters 
+      WHarmonicMean ( const Counter& cnt ) ;      
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the harmonic mean 
       inline double value () const { return 1. / m_inv.mean() ; }
 	  inline double mean  () const { return value () ; }
@@ -1697,6 +1876,11 @@ namespace  Ostap
     public:
       // ======================================================================
       inline WHarmonicMean& operator+=( const WHarmonicMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the counter of 1/x values 
+      const Counter counter () const { return m_inv ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1736,7 +1920,7 @@ namespace  Ostap
     private:
       // ======================================================================
       /// get the counter of 1/x 
-      WMoment_<1> m_inv {} ;
+      Counter m_inv {} ;
       // ======================================================================
     };
     // ========================================================================
@@ -1748,8 +1932,15 @@ namespace  Ostap
     {
     public:
       // ======================================================================
-      // constructir from the power 
-      WPowerMean ( const double p = 1 ) ;
+      /// the actual underlying counter 
+      typedef WMoment_<1> Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// defautl construictor
+      WPowerMean ( const double = 1 ) ;
+      /// constructor for the counters 
+      WPowerMean ( const double p , const Counter& cnt ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -1760,6 +1951,11 @@ namespace  Ostap
     public:
       // ======================================================================
       inline WPowerMean& operator+=( const WPowerMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the counter of x**p  values 
+      const Counter counter () const { return m_pow ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1797,9 +1993,9 @@ namespace  Ostap
     private:
       // ======================================================================
       /// the power
-      double      m_p   {1} ;
+      double  m_p   {1} ;
       /// get the counter of x^p
-      WMoment_<1> m_pow {}  ;
+      Counter m_pow {}  ;
       // ======================================================================
     };
     // ========================================================================
@@ -1811,8 +2007,19 @@ namespace  Ostap
     {
     public:
       // ======================================================================
-      // constructir from the power 
-      WLehmerMean ( const double p = 1 ) ;
+      /// the actual underlying counter 
+      typedef WMoment_<1> Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// defautl construictor
+      WLehmerMean
+      ( const double = 1 ) ;
+      /// constructor for the counters 
+      WLehmerMean
+      ( const double   p    ,
+	const Counter& cnt1 , 
+	const Counter& cnt2 ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -1823,6 +2030,13 @@ namespace  Ostap
     public:
       // ======================================================================
       inline WLehmerMean& operator+=( const WLehmerMean& x ) { return add ( x ) ; }   
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the counter of x**p  values 
+      const Counter counter1 () const { return m_lp   ; }
+      /// the counter of x**(p-1)  values 
+      const Counter counter2 () const { return m_lpm1 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1860,11 +2074,11 @@ namespace  Ostap
     private:
       // ======================================================================
       /// the power
-      double m_p          {1} ;
+      double  m_p     {1} ;
       /// get the counter of x^p
-      WMoment_<1> m_lp    {}  ;
+      Counter m_lp    {}  ;
       /// get the counter of x^(p-1)
-      WMoment_<1> m_lpm1  {}  ;
+      Counter m_lpm1  {}  ;
       // ======================================================================
     };
     // ========================================================================
@@ -1875,7 +2089,20 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      typedef Moment_<1>  Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      ArithmeticMean() = default ;
+      ArithmeticMean ( const Counter& cnt ) ; 
+      // ======================================================================
+    public:
+      // ======================================================================
       inline double value() const { return this->mean () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      Counter counter() const { return *this ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -1886,143 +2113,22 @@ namespace  Ostap
     {
     public:
       // ======================================================================
+      typedef WMoment_<1>  Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      WArithmeticMean() = default ;
+      WArithmeticMean ( const Counter& cnt ) ; 
+      // ======================================================================
+    public:
+      // ======================================================================
       inline double value() const { return this->mean () ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      Counter counter() const { return *this ; }
+      // ======================================================================
     } ;       
-    // ========================================================================
-    /** @class MinMean 
-     *  Degenerate case of "mean" : minimal value 
-     *  \f$ min ( x_1 , .. , x_n ) \f$
-     */
-    class MinValue : public Statistic
-    {
-    public:
-      // ======================================================================
-      /// default constructor
-      MinValue () ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the min mean 
-      inline double value () const { return m_min ; }
-      /// get the min value  
-      inline double min   () const { return m_min ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      inline MinValue& operator+=( const double    x ) { return add ( x ) ; }
-      inline MinValue& operator+=( const MinValue& x ) { return add ( x ) ; }   
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// accumulate only positive entries 
-      inline MinValue& add ( const double x )
-      {
-	m_min = std::min ( m_min , x ) ;
-	m_cnt.add ( x ) ;
-	return *this ;
-      }
-      inline MinValue& add ( const MinValue& x )
-      {
-	m_min = std::min ( m_min , x.m_min ) ;
-	m_cnt.add ( x.m_cnt  ) ;
-	return *this ;
-      }
-      // ======================================================================
-      /// add sequence of values  
-      template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// to use it as a WMoment 
-      void update ( const double x ) override { add ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// number of entries
-      inline unsigned long long size  () const { return m_cnt.size  () ; }
-      /// empty ?
-      inline bool               empty () const { return m_cnt.empty () ; } 
-      /// ok ?
-      inline bool               ok    () const { return m_cnt.ok    () ; } 
-      // ======================================================================      
-    private:
-      // ======================================================================
-      /// minimal value   ;
-      double     m_min    ; 
-      /// get the counter
-      Moment_<0> m_cnt {} ;
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class MaxValue 
-     *  Degenerate case of "mean" : maximal value 
-     *  \f$ max ( x_1 , .. , x_n ) \f$
-     */
-    class MaxValue : public Statistic
-    {
-    public:
-      // ======================================================================
-      /// default constructor
-      MaxValue () ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the max value  
-      inline double value () const { return m_max ; }
-      /// get the max value  
-      inline double max   () const { return m_max ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      inline MaxValue& operator+=( const double    x ) { return add ( x ) ; }
-      inline MaxValue& operator+=( const MaxValue& x ) { return add ( x ) ; }   
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// accumulate only positive entries 
-      inline MaxValue& add ( const double x )
-      {
-	m_max = std::max ( m_max , x ) ;
-	m_cnt.add ( x ) ;
-	return *this ;
-      }
-      inline MaxValue& add ( const MaxValue& x )
-      {
-	m_max = std::max ( m_max , x.m_max ) ;
-	m_cnt.add ( x.m_cnt  ) ;
-	return *this ;
-      }
-      // ======================================================================
-      /// add sequence of values  
-      template <class ITERATOR>
-      inline void add ( ITERATOR begin , ITERATOR end   )
-      { for ( ; begin != end ; ++begin ) { this->add ( *begin ) ; } }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// to use it as a WMoment 
-      void update ( const double x ) override { add ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// number of entries
-      inline unsigned long long size  () const { return m_cnt.size  () ; }
-      /// empty ?
-      inline bool               empty () const { return m_cnt.empty () ; } 
-      /// ok ?
-      inline bool               ok    () const { return m_cnt.ok    () ; } 
-      // ======================================================================      
-    private:
-      // ======================================================================
-      /// maximal value   ;
-      double     m_max    ; 
-      /// get the counter
-      Moment_<0> m_cnt {} ;
-      // ======================================================================
-    } ;    
     // ========================================================================
     /** @class MinMaxValue 
      */
@@ -2031,8 +2137,17 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
+      typedef Moment_<0> Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /// default constructor
       MinMaxValue () ;
+      /// constructor from min/max & counter 
+      MinMaxValue
+      ( const double   min ,
+	const double   max ,
+	const Counter& cnt ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2074,6 +2189,10 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
+      const Counter& counter() const { return m_cnt ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// to use it as a Moment 
       void update ( const double x ) override { add ( x ) ; }
       // ======================================================================
@@ -2093,7 +2212,7 @@ namespace  Ostap
       /// maximal value   ;
       double     m_max    ; 
       /// get the counter
-      Moment_<0> m_cnt {} ;
+      Counter    m_cnt {} ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -2104,8 +2223,17 @@ namespace  Ostap
       // ====================================================================== 
     public:
       // ======================================================================
+      typedef WMoment_<0> Counter ;
+      // ======================================================================
+    public:
+      // ======================================================================
       /// default constructor
       WMinMaxValue () ;
+      /// constructor from min/max & counter 
+      WMinMaxValue
+      ( const double   min ,
+	const double   max ,
+	const Counter& cnt ) ;
       // ======================================================================
    public:
       // ======================================================================
@@ -2156,6 +2284,10 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
+      const Counter& counter() const { return m_cnt ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// number of entries
       inline unsigned long long size  () const { return m_cnt.size  () ; }
       /// empty ?
@@ -2176,7 +2308,7 @@ namespace  Ostap
       /// maximal value    ;
       double      m_max    ; 
       /// get the counter
-      WMoment_<0> m_cnt {} ;
+      Counter     m_cnt {} ;
       // ======================================================================
     } ;
     // ========================================================================

@@ -13,6 +13,10 @@
 #include "Ostap/StatEntity.h"
 #include "Ostap/NStatEntity.h"
 // ============================================================================
+// local
+// ============================================================================
+#include "Exception.h"
+// ============================================================================
 /** @file 
  *  Implementation file for class Ostap::NStatEntity
  *  @see Ostap::NStatEntity
@@ -20,10 +24,6 @@
  *  @see Ostap::StatEntity
  *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
  *  @date   2015-04-03
- *
- *                    $Revision$
- *  Last modification $Date$
- *                 by $Author$
  */
 // ===========================================================================
 namespace 
@@ -39,11 +39,41 @@ namespace
 // ===========================================================================
 // constructor with N-parameter  
 // ===========================================================================
-Ostap::NStatEntity::NStatEntity ( const unsigned long N ) 
-  : m_cnt1 () 
-  , m_cnt2 () 
-  , m_N    ( std::min ( std::max ( 1UL , N ) , s_max ) )
-{}
+Ostap::NStatEntity::NStatEntity
+( const unsigned long N ) 
+  : m_cnt1 (   ) 
+  , m_cnt2 (   ) 
+  , m_N    ( N ) 
+{
+  Ostap::Assert ( 2 <= m_N                ,
+		  "Invalid window size!" , 
+		  "Ostap::NstatEntity"   ) ;
+  
+}
+// ===========================================================================
+// constructor from two counters and sliding window
+// ===========================================================================
+Ostap::NStatEntity::NStatEntity
+( const unsigned long N    ,
+  const StatEntity&   cnt1 ,
+  const StatEntity&   cnt2 )
+  : m_cnt1 ( cnt1 )
+  , m_cnt2 ( cnt2 )
+  , m_N    ( N    ) 
+{
+  Ostap::Assert ( 2 <= m_N                ,
+		  "Invalid window size!" , 
+		  "Ostap::NStatEntity"   ) ;
+  Ostap::Assert ( m_cnt1.nEntries () <= 2 *  m_N ,
+		  "Invalid first counter!"  , 
+		  "Ostap::NstatEntity"   ) ;
+  Ostap::Assert ( m_cnt2.nEntries () <= 2 *  m_N ,
+		  "Invalid second counter!"  , 
+		  "Ostap::NStatEntity"   ) ;					  
+}
+// ======================================================================
+
+
 // ===========================================================================
 /*  printout  to std::ostream
  *  @param s the reference to the output stream
