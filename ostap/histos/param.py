@@ -752,9 +752,9 @@ def _h1_brational_  ( h1               ,
                             refit  = refit  )
 
 try :
-    
-    from ostap.math.param       import fourier_sum, cosine_sum
-    
+
+    # =============================================================================
+    from ostap.math.param       import fourier_sum    
     # =============================================================================
     ## make a histogram representation in terms of Fourier serie
     #  @code 
@@ -780,33 +780,7 @@ try :
         xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
         ##
         return fourier_sum ( h1 , N , xmin , xmax , fejer )
-    
-    # =============================================================================
-    ## make a histogram representation in terms of cosine Fourier serie
-    #  @code 
-    #  histo  = ...
-    #  fsum   = histo.cosine_sum ( 4 )
-    #  print fsum
-    #  x = ...
-    #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-    #  @endcode 
-    #  @see Ostap::Math::CosineSum
-    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-    #  @date 2015-07-26
-    def _h1_cosine_sum_ ( h1 , N , fejer = False , **kwargs ) :
-        """Make a histogram representation in terms of cosine Fourier serie
-        >>> histo  = ...
-        >>> fsum   = histo.cosine_sum ( 4 )
-        >>> print fsum
-        >>> x = ...
-        >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-        """
-        ##
-        xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
-        xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
-        ##
-        return cosine_sum ( h1 , N , xmin , xmax , fejer )
-    
+
     # =============================================================================
     ## represent 1D-histo as Fourier polynomial
     #  @code
@@ -869,7 +843,51 @@ try :
                                 params = params ,
                                 limits = limits ,
                                 refit  = refit  )
+
     
+    for t in ( ROOT.TH1F , ROOT.TH1D ) :
+        
+        t.fourier_sum    = _h1_fourier_sum_
+        t.fourier        = _h1_fourier_
+
+    _new_methods_ .append ( _h1_fourier_sum_  )
+    _new_methods_ .append ( _h1_fourier_      )
+        
+except ImportError :
+    pass
+
+
+# =================================================================================
+try :
+
+    # =============================================================================
+    from ostap.math.param       import cosine_sum    
+    # =============================================================================
+    ## make a histogram representation in terms of cosine Fourier serie
+    #  @code 
+    #  histo  = ...
+    #  fsum   = histo.cosine_sum ( 4 )
+    #  print fsum
+    #  x = ...
+    #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+    #  @endcode 
+    #  @see Ostap::Math::CosineSum
+    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+    #  @date 2015-07-26
+    def _h1_cosine_sum_ ( h1 , N , fejer = False , **kwargs ) :
+        """Make a histogram representation in terms of cosine Fourier serie
+        >>> histo  = ...
+        >>> fsum   = histo.cosine_sum ( 4 )
+        >>> print fsum
+        >>> x = ...
+        >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+        """
+        ##
+        xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
+        xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
+        ##
+        return cosine_sum ( h1 , N , xmin , xmax , fejer )
+        
     # =============================================================================
     ## represent 1D-histo as cosine Fourier polynomial
     #  @code
@@ -933,16 +951,13 @@ try :
                                 limits = limits , 
                                 refit  = refit  )
 
+    
     for t in ( ROOT.TH1F , ROOT.TH1D ) :
-        
-        t.fourier_sum    = _h1_fourier_sum_
+
         t.cosine_sum     = _h1_cosine_sum_
-        t.fourier        = _h1_fourier_
         t.cosine         = _h1_cosine_
 
-    _new_methods_ .append ( _h1_fourier_sum_  )
     _new_methods_ .append ( _h1_cosine_sum_   )
-    _new_methods_ .append ( _h1_fourier_      )
     _new_methods_ .append ( _h1_cosine_       )
         
 except ImportError :

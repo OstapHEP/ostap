@@ -240,9 +240,6 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
     return csum
 
 
-
-
-
 # =============================================================================
 try :
     # =========================================================================
@@ -323,7 +320,7 @@ except ImportError :
 try :
     # =========================================================================
     import numpy
-    import scipy 
+    import scipy.fftpack 
     # =========================================================================
 
     # =============================================================================
@@ -358,7 +355,6 @@ try :
         vfunc = numpy.vectorize ( lambda x : float ( func ( x ) ) )
         
         ## make cosine fourier transform 
-        import scipy.fftpack 
         r = scipy.fftpack.dct ( vfunc ( t ) , 1 ) / N 
         
         #

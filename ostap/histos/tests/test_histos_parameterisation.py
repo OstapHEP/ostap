@@ -640,7 +640,7 @@ if '__main__' == __name__ :
     logger.info ( 100*'*')
     logger.info ( 'Parameterizations techniques using histogram values only (in general fast)')
     logger.info ( 100*'*')
-    
+
     test_bernstein_sum_orig ()
     test_bernstein_sum_fill ()
     test_bernstein_sum      ()
@@ -665,7 +665,8 @@ if '__main__' == __name__ :
 
     test_legendre_3D        () 
     test_bernstein_3D       () 
-
+    """
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
