@@ -704,6 +704,7 @@ def _rt_leaf_ ( tree , leaf ) :
 
 ROOT.TTree.leaf   = _rt_leaf_
 
+
 # =============================================================================
 ## get the branches for the given tree/chain
 #  @see TTree
@@ -716,7 +717,7 @@ ROOT.TTree.leaf   = _rt_leaf_
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-02-04
-def _rt_branches_ ( t , pattern = '' , *args ) :
+def tree_branches ( t , pattern = '' , *args ) :
     """Get the list of branch names
     
     >>> tree = ...
@@ -744,7 +745,7 @@ def _rt_branches_ ( t , pattern = '' , *args ) :
     return tuple ( lst ) 
 
 
-ROOT.TTree.branches = _rt_branches_
+ROOT.TTree.branches = tree_branches
 
 # =============================================================================
 ## simplified printout for TTree/TChain

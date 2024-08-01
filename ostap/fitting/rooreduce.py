@@ -742,7 +742,9 @@ ROOT.RooFitResult.__reduce__  = _rrfr_reduce_
 def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items )  :
     """Reconstruct/deserialize `ROOT.RooPlot` object
     """
-    plot = klass  ( xmin , xmax , ymin , ymax )
+    plot = klass    ( xmin , xmax )
+    plot.SetMinimum ( ymin )
+    plot.SetMaximum ( ymax )
     ##
     for ( obj , options , invisible ) in items :
         if   isinstance ( obj  , ROOT.RooPlotable ) :            

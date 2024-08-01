@@ -107,7 +107,6 @@ def combined_data ( sample          ,
         ##       'Weighted data cannot be combined!'
 
         if not dset.isWeighted () :
-            print ( 'MPORT:', type ( label ) , type ( dset ) ) 
             largs.append (  ROOT.RooFit.Import ( str  ( label ) , dset ) )
         else :
             store_error      = dset.store_error      () 

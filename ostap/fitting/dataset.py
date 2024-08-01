@@ -40,7 +40,7 @@ from   ostap.fitting.variables   import valid_formula, make_formula
 from   ostap.trees.cuts          import expression_types, vars_and_cuts
 from   ostap.utils.utils         import evt_range, LAST_ENTRY, ALL_ENTRIES 
 from   ostap.stats.statvars      import data_decorate, data_range 
-from   ostap.histos.histos       import histo_book 
+from   ostap.histos.histos       import histo_book
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ROOT, random, math, sys, ctypes  
@@ -1825,8 +1825,10 @@ def _ds_table_0_ ( dataset                ,
 
         if store and hasattr ( store , 'tree' ) and valid_pointer ( store.tree() ) :
 
+            from ostap.trees.trees import tree_branches 
+                        
             tree = store.tree() 
-            branches = set ( tree.branches() )
+            branches = set ( tree_branches ( tree ) ) 
             vvars    = set ( [ i.GetName() for i in  varset ] )
             wvars    = branches - vvars
             
@@ -1862,9 +1864,12 @@ def _ds_table_0_ ( dataset                ,
                 store = dstmp.store()
                 cuts , first , last = '' , 0 , 2**62
                 
-            if hasattr ( store , 'tree' ) and valid_pointer ( store.tree() ) : 
+            if hasattr ( store , 'tree' ) and valid_pointer ( store.tree() ) :
+
+                from ostap.trees.trees import tree_branches 
+                
                 tree =  store.tree()
-                if wvar in tree.branches () : 
+                if wvar in tree_branches ( tree ) : 
                     s = tree.statVar ( wvar , cuts , first , last ) ## no cuts here... 
                     mnmx = s.minmax ()
                     mean = s.mean   ()

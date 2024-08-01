@@ -1980,7 +1980,6 @@ if Frames_OK :
         if isinstance ( ranges , dictlike_types ) :
             for k , r in loop_items ( ranges ) :
                 mn, mx = r.min () , r.max()
-                print ( 'RANGE', r, mn, mx ) 
                 if mx <= mn : return None                         ## ATTENTION!!
                 ranges [ k ] = axis_range ( mn , mx , delta = delta ) 
         else : ranges = axis_range ( ranges.min() , ranges.max()  , delta = delta )
