@@ -274,15 +274,11 @@ def interpolate ( func , abscissas , spline , *args ) :
 
 # =============================================================================
 ## For b-spline interpolation we need scipy!
-# ============================================================================
+# =============================================================================
 
 try :
-    import scipy
-except ImportError :
-    scipy = None
-
-if scipy :
-
+    # =========================================================================
+    import scipy.interpolate
     # =========================================================================
     ## create interpolation spline using scipy machinery
     #  @code
@@ -299,7 +295,7 @@ if scipy :
                         bc_type = None ) :
         """Create interpolation spline using scipy machinery
         >>> table = ... ## interpolation table
-        >>>  spline  = intepolation ( table , degree = 3 ) 
+        >>> spline  = intepolation ( table , degree = 3 ) 
         - see `scipy.interpolation.make_innterp_spline` 
         - see `Ostap.Math.Interpolaiton.Table` 
         """
@@ -323,6 +319,9 @@ if scipy :
         return Ostap.Math.BSpline ( knots , pars )
     
     __all__ = __all__ + ( 'interpolation', )
+
+except ImportError :
+    pass
 
 # =============================================================================    
 ## Construct the variation diminishing approximation 
