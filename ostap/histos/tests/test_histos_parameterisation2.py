@@ -328,12 +328,14 @@ def test_fourier () :
     if not use_scipy :
         logger.warning("No numpy/scipy is avilable, skip 'fourier' test")
         return
-
-    with timing ( 'Fourier [4]' , logger ) :
-        params = [ h5.fourier ( 4 ) , 
-                   h6.fourier ( 6 ) ] 
+    
+    my_histos  = [ h for h in histos if hasattr ( h , 'fourier' ) ]
+    with timing ( 'Fourier [6]' , logger ) :
+        params = [ h.fourier ( 6 ) for h in  my_histos ]
+        ## params = [ h5.fourier ( 4 ) , 
+        ##h6.fourier ( 6 ) ] 
         
-    for h , f in zip  ( ( h5 , h6 ) , params ) :
+    for h , f in zip  ( my_histos , params ) :
         with wait ( 2 ) , use_canvas ( 'test_fourier: %s' % h.GetTitle () ) : 
             h    .draw  ()
             f.tf1.draw  ('same')
@@ -347,10 +349,11 @@ def test_cosine() :
         logger.warning("No numpy/scipy is avilable, skip 'cosine' test")
         return
     
+    my_histos  = [ h for h in histos if hasattr ( h , 'cosine' ) ] 
     with timing ( 'Cosine [4]' , logger ) :
-        params = [ h.cosine ( 4 ) for h in  histos ]
+        params = [ h.cosine ( 4 ) for h in my_histos ]
         
-    for h , f in zip ( histos , params ) :
+    for h , f in zip ( my_histos , params ) :
         with wait ( 2 ) ,  use_canvas ( 'test_cosine: %s' % h.GetTitle()  ) : 
             h    .draw()
             f.tf1.draw('same')
@@ -521,7 +524,7 @@ if '__main__' == __name__ :
     logger.info ( 100*'*')
     logger.info ( 'Parameterizations techniques using ROOT::TH1::Fit (could be slow)')
     logger.info ( 100*'*')
-    
+
     test_bernstein              ()
     test_legendre               ()
     test_chebyshev              ()
@@ -537,7 +540,7 @@ if '__main__' == __name__ :
     
     test_fourier                ()
     test_cosine                 ()
-    
+
     test_positive_spline        ()
     test_monotonic_spline       ()
     test_convex_spline          ()
@@ -550,7 +553,7 @@ if '__main__' == __name__ :
     test_legendre_fast          ()
     test_legendre2_fast         ()
     test_legendre3_fast         ()
-
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
