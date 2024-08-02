@@ -476,6 +476,14 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             obj.SetFillColor   ( color )
         if 'FillStyle'   in kw and hasattr ( obj , 'SetFillStyle' ) :
             obj.SetFillStyle   ( kw.pop('FillStyle' ) )
+            
+        if 'Opacity' in kw and \
+           hasattr ( obj , 'SetFillColorAlpha' ) and \
+           hasattr ( obj , 'GetFillStyle'      ) :
+            fs = obj.GetFillStyle()
+            if 1001 == fs and hasattr ( obj , 'GetFillColor' ) :
+                fc = obj.GetFillColor()
+                if fc : obj.SetFillColorAlpha ( fc , kw.pop ('Opacity' ) ) 
 
 
         ## Min/max values  

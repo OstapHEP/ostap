@@ -50,7 +50,7 @@ from   ostap.core.meta_info     import root_info, python_info
 from   ostap.math.random_ext    import poisson
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
-import ROOT, sys, math, ctypes, array 
+import ROOT, sys, math, ctypes, array, itertools  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1565,6 +1565,26 @@ ROOT.TH1F  . iteritems     = _h1_iteritems_
 ROOT.TH1D  . iteritems     = _h1_iteritems_
 
 
+# =============================================================================
+## Iterate over the values
+#  @cdoe
+#  histo = ...
+#  for v in histo.values() : ...
+#  @endcode 
+def _h1_values_ ( h1 ) :
+    """Iterate over the values
+    >>> histo = ...
+    >>> for v in histo.values() : ...
+    """
+    for i , _ , y in h1.items() :
+        yield y  
+
+
+ROOT.TH1F  . itervalues    = _h1_values_
+ROOT.TH1D  . itervalues    = _h1_values_
+ROOT.TH1F  .     values    = _h1_values_
+ROOT.TH1D  .     values    = _h1_values_
+        
 # =============================================================================
 ## return information about the bin center and width
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4111,41 +4131,56 @@ def _h1_add_function_integral_ ( h1 , func ) :
 ROOT.TH1F.addFunctionIntegral = _h1_add_function_integral_
 ROOT.TH1D.addFunctionIntegral = _h1_add_function_integral_
 
-
 # =============================================================================
-## get the runnig sum over the histogram
+## get the running sum over the histogram bins
+#  @code
+#  h   = ...
+#  ht = h.sumv ( increasing = True  )
+#  hf = h.sumv ( increasing = False )
+#  @endcode
+#  It creates a new historgma with the same binning
+#  such that each bin<code>i</code> contains the sum over
+#  all bins `j` such as 
+#  - \f$ j\le i \f$ if <code>increasing=True</code>
+#  - \f$ j\ge i \f$ if <code>increasing=False</code>
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h1_sumv_ ( h , increasing = True ) :
-    """Create the ``runnig sum'' over the histogram 
+def h1_sumv ( histo , increasing = True ) :
+    """Create the `running sum' over the histogram bins 
     >>> h   = ...
-    >>> h1 = h.sumv()
+    >>> h1 = h.sumv( increasing = True  )
+    >>> h2 = h.sumv( increasing = False )        
+    It creates a new histogram with the same binning
+    such that each bin `i` contains the sum over all bins `j` such as 
+    - `j<=i`  if `increasing=True`
+    - `i<=j`  if `increasing=False`
     """
-    result = h.Clone ( hID() )
+    assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() , \
+        "Invalid `histo' type %s" % type ( histo ) 
+                        
+    result = histo.Clone ( hID () )
     result.Reset() 
     if not result.GetSumw2() : result.Sumw2()
-    
+
     if increasing :
         
-        _s = VE ( 0 , 0 ) 
-        for ibin in h :
-            _s            += h [ibin]
-            result [ibin]  = VE( _s ) 
-    else :
-        
-        for ibin in h :
-            _s  = VE(0,0) 
-            for jbin in h :
-                if jbin < ibin : continue
-                _s += h [jbin]
-                
-            result [ibin]  = VE( _s ) 
+        sumi = VE ( 0 , 0 ) 
+        for i , x , y  in histo.items()  :
+            sumi         += y 
+            result [ i ]  = sumi
+
+        return result
+
+    sumi = VE ( 0 , 0 ) 
+    for i in reversed ( histo ) :
+        sumi += histo [ i ]
+        result [ i ] = sumi 
         
     return result 
 
 # ==============================================================================
-for t in  (ROOT.TH1F , ROOT.TH1D ) : 
-    t . sumv   = _h1_sumv_ 
+for t in ( ROOT.TH1F , ROOT.TH1D ) : 
+    t . sumv   = h1_sumv 
 
 # =============================================================================
 ## Calculate the "cut-efficiency from the histogram
@@ -4187,8 +4222,8 @@ def _h1_effic2_ ( h , value , increasing = True ) :
     >>> he = h.efficiency ( 14.2 )
     """
 
-    s1 = VE(0,0)
-    s2 = VE(0,0)
+    s1 = VE ( 0 , 0 )
+    s2 = VE ( 0 , 0 )
 
     for i,x,y in h.iteritems () :
 
@@ -4201,13 +4236,13 @@ def _h1_effic2_ ( h , value , increasing = True ) :
 ## Convert historgam into "efficinecy" histogram
 #  @code
 #  histo = ...
-#  effic = histp.eff ( ... )
+#  effic = histo.eff ( ... )
 #  @endcode
 #  It adds two extra narrow fake bins!
 def _h1_effic3_ ( h1 , increasing = True ) :
     """Convert historgam into "efficinecy" histogram
     >>> histo = ...
-    >>> effic = histp.eff ( ... )
+    >>> effic = histo.eff ( ... )
     - It adds two extra narrow fake bins!
     """
 
@@ -4223,8 +4258,8 @@ def _h1_effic3_ ( h1 , increasing = True ) :
             bw = xa.GetBinUpEdge() - xa.GetBinLowEdge()
             if abs ( bw ) < minbin : minbin = abs ( bw )
     
-    xf = edges[ 0] + 0.001 * minbin
-    xl = edges[-1] - 0.001 * minbin
+    xf = edges [  0 ] + 0.001 * minbin
+    xl = edges [ -1 ] - 0.001 * minbin
     
     edges.insert (  1 , xf )
     edges.insert ( -1 , xl )
@@ -4273,13 +4308,61 @@ def _h1_effic3_ ( h1 , increasing = True ) :
     result [ -1 ] = VE ( 1.0 , 0.0 ) if increasing else VE ( 0.0 , 0.0 )
 
     return result 
+
+# ===============================================================================
+## Get the cut effciency in form of graph
+#  - useful for efficincy visualisation
+#  - a bit better treatment of binnig effects 
+#  @code
+#  histo     = ...
+#  eff_graph = histo.eff_graph ( increasing = True )  
+#  @endcode
+def _h1_effic4_ ( histo , increasing = True ) :
+    """Get the cut effciency in form fo graph
+    - useful for drawing,
+    - better treatment of binnig effects 
+    >>> histo     = ...
+    >>> eff_graph = histo.eff_graph ( increasing = True )  
+    """
+
+    c1 = [ histo [ i ] for i in histo ]
+    c2 = c1.copy()
+    c2.reverse  ()
      
+    s1 = [ VE () ] + [ s for s in itertools.accumulate ( c1 ) ]
+    s2 = [ VE () ] + [ s for s in itertools.accumulate ( c2 ) ]
+    s2.reverse  ()
+
+    import ostap.histos.graphs
+    
+    np    = len ( s1 )
+    graph = ROOT.TGraphErrors ( np  )
+
+    the_eff = lambda a,b : a.frac ( b ) 
+    
+    ## special treatment of the first point 
+    e0       =  the_eff ( s1 [ 0 ] , s2 [ 0 ] ) if increasing else the_eff ( s2 [ 0 ] , s1 [ 0 ] ) 
+    xmin , _ = histo.xminmax()
+    
+    graph.SetPoint      ( 0 , xmin , e0.value () )
+    graph.SetPointError ( 0 , 0    , e0.error () )
+
+    for i, x , _  in histo.items() :
+        xx = x.value() + x.error()
+        ei = the_eff ( s1 [ i ] , s2 [ i ] ) if increasing else the_eff ( s2 [ i ] , s1 [ i ] ) 
+        graph.SetPoint      ( i , xx , ei.value () )
+        graph.SetPointError ( i , 0  , ei.error () )
+        
+    return graph 
+    
 ROOT.TH1F.effic      = _h1_effic_ 
 ROOT.TH1D.effic      = _h1_effic_ 
 ROOT.TH1F.efficiency = _h1_effic2_ 
 ROOT.TH1D.efficiency = _h1_effic2_ 
 ROOT.TH1F.eff        = _h1_effic3_ 
 ROOT.TH1D.eff        = _h1_effic3_ 
+ROOT.TH1F.eff_graph  = _h1_effic4_
+ROOT.TH1D.eff_graph  = _h1_effic4_ 
 
 # ================================================================================
 if (2,7) <= python_info : _erfc_ = math.erfc 
@@ -8253,6 +8336,24 @@ def histo_book ( ranges , kwargs , title = '' ) :
 # =============================================================================
 
 
+# =============================================================================
+## Get a kind of ROC-like curve/graph from two histograms
+def _h1_roc_ ( h1 , h2 ) :
+
+    h1sum = h1.sumv ()
+    h2sum= h2.sumv ()
+
+    import ostap.histos.graphs
+    graph = ROOT.TGraphErrors ( len ( h1 ) + 2 )
+    
+    graph [  0 ] = h1sum [  0 ] , h2sum [ 0  ] 
+    graph [ -1 ] = h1sum [ -1 ] , h2sum [ -1 ] 
+    
+    for i , x , y1 in h1s.items() :        
+        y2 = h2s ( x.value () )        
+        graph [ i ] = y1 , y2 
+        
+    return graph 
 
 # =============================================================================
 _decorated_classes_ = (
@@ -8626,8 +8727,9 @@ _new_methods_   = (
     #    
     ROOT.TH1F.addFunctionIntegral ,
     ROOT.TH1D.addFunctionIntegral ,
-    #
-    _h1_sumv_            , 
+    ###
+    h1_sumv              ,
+    ## 
     ROOT.TH1F.eff        , 
     ROOT.TH1D.eff        ,
     ROOT.TH1F.effic      , 

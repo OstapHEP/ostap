@@ -861,9 +861,11 @@ def _gre_setitem_ ( graph , ipoint , point )  :
     if not ipoint in graph    : raise IndexError
     if not 2 == len ( point ) :
         raise AttributeError("Invalid dimension of 'point' %s" % str ( point ) ) 
+
+    x , y = point
     
-    x = VE ( point [ 0 ] ) 
-    v = VE ( point [ 1 ] ) 
+    x = VE ( x ) 
+    v = VE ( y ) 
 
     graph.SetPoint      ( ipoint , x . value () , v . value () )
     graph.SetPointError ( ipoint , x . error () , v . error () )
@@ -1731,16 +1733,36 @@ ROOT.TGraph.__pow__    = lambda g , *o : g.transform ( fun = lambda x, y : mve.p
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _color_ ( self , color = 2 , marker = 20 , size = -1 ) :
+def _color_ ( self ,
+              color     =  2 ,
+              marker    = 20 ,
+              size      = -1 ,
+              opacity   = -1 ,
+              fill      = -1 ) :
     """Set color attributes
 
     >>> h.color ( 3 ) 
     """
     #
-    if hasattr ( self , 'SetLineColor'   ) : self.SetLineColor   ( color  )
-    if hasattr ( self , 'SetFillColor'   ) : self.SetFillColor   ( color  )
-    if hasattr ( self , 'SetMarkerColor' ) : self.SetMarkerColor ( color  )
-    if hasattr ( self , 'SetMarkerStyle' ) : self.SetMarkerStyle ( marker )
+    if hasattr ( self , 'SetLineColor'      ) : self.SetLineColor   ( color  )
+    if hasattr ( self , 'SetFillColor'      ) : self.SetFillColor   ( color  )
+    if hasattr ( self , 'SetMarkerColor'    ) : self.SetMarkerColor ( color  )
+    if hasattr ( self , 'SetMarkerStyle'    ) : self.SetMarkerStyle ( marker )
+    
+    if hasattr ( self , 'SetFillStyle'      ) :
+        if   fill is True  : self.SetFillStyle ( 1001 )        
+        elif fill is False : self.SetFillStyle (    0 )        
+        elif insinstance ( fill , integer_types ) and 1000 < fill :
+            self.SetFillStyle ( fill )
+            
+    if hasattr ( self , 'SetFillColorAlpha' ) and isinstance ( opacity , num_types ) and 0 <= opacity <= 1  :
+        if hasattr ( self , 'GetFillStyle' ) :
+            fs = self.GetFillStyle()
+            if 1001 == fs :
+                if hasattr ( self , 'GetFillColor' ) :
+                    fc = self.GetFillColor () 
+                    if fc : self.SetFillColorAlpha ( fc  , opacity )
+                                                             
     ##
     if 0 > size and hasattr ( self , 'GetMarkerSize' ) and not marker in ( 1 , 6 , 7 ) :
         size = self.GetMarkerSize()
@@ -1756,32 +1778,62 @@ def _color_ ( self , color = 2 , marker = 20 , size = -1 ) :
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _red_     ( self , marker   = 20 ) : return _color_( self , 2 , marker ) 
+def _red_     ( self ,
+                marker   = 20    ,
+                size     = -1    ,
+                opacity  = -1    , 
+                fill     = False ) :
+    return _color_( self , color = 2 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
+# =============================================================================
+## set color attributes  
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-01-21
+def _blue_    ( self ,
+                marker   = 25     ,
+                size     = -1     ,
+                opacity  = -1     , 
+                fill     =  False ) :
+    return _color_( self , color = 4 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _blue_    ( self , marker   = 25 ) : return _color_( self , 4 , marker )
+def _magenta_ ( self ,
+                marker   = 22     ,
+                size     = -1     ,
+                opacity  = -1     , 
+                fill     =  False ) :
+    return _color_( self , color = 6 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _magenta_ ( self , marker   = 22 ) : return _color_( self , 6 , marker ) 
+def _cyan_    ( self ,
+                marker   = 23     , 
+                size     = -1     ,
+                opacity  = -1     , 
+                fill     =  False ) :
+    return _color_( self , color = 7 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _cyan_    ( self , marker   = 23 ) : return _color_( self , 7 , marker ) 
+def _green_   ( self ,
+                marker   = 33     ,
+                size     = -1     ,
+                opacity  = -1     , 
+                fill     =  False ) :
+    return _color_( self , color = 8 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _green_   ( self , marker = 33 ) : return _color_( self , 8 , marker ) 
-# =============================================================================
-## set color attributes  
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-01-21 
-def _yellow_  ( self , marker = 34 ) : return _color_( self , 92 , marker ) 
+def _yellow_  ( self              ,
+                marker   = 34     ,
+                size     = -1     ,
+                opacity  = -1     , 
+                fill     =  False ) :
+    return _color_( self , color = 92 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
 
 
 for _t in  ( ROOT.TH1D , ROOT.TH1F , ROOT.TGraph , ROOT.TGraphErrors ) :

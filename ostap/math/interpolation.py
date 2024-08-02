@@ -4,10 +4,10 @@
 ## @file ostap/math/interpolation.py
 #  Module with some useful utilities for dealing with interpolation.
 #
-#  It providesl follwoing interpolations (C++ fast)
-#  - Lagrange  polynomial interpolation                                 (relativelu slow)
+#  It provides following interpolations (C++/fast)
+#  - Lagrange  polynomial interpolation                                 (relatively slow)
 #  - Neville   polynomial interpolartion aka Nevile-Aitken interpolaton (slow)
-#  - Newton    polynimial interpolation                                 (fastest)
+#  - Newton    polynomial interpolation                                 (fastest)
 #  - True Barycentric polymomial interpolation                          (relatively fast)
 #  - Berrut's 1st rational interpoaltion                                (fast)
 #  - Berrut's 2nd rational interpoaltion                                (fast)
@@ -23,14 +23,14 @@
 #  @see Ostap::Math::FloaterHormann
 #
 #  Features 
-#  - Lagrange scheme allows to calcualet also the derivative with respect to \f$y_i\f$
+#  - Lagrange scheme allows to calculate also the derivative with respect to \f$y_i\f$
 #  - Neville scheme allows to calculate also the derivative with respect to \f$x\f$
 #  - Newton, Berrut 1st, Berrut's 2nd, true-Barycentric and Floater-Hormann are very fast,
-#    but they require some tiem for initialization adn thie time can be large.
+#    but they require some time for initialization and this time can be large.
 #  - All polymonial interpoaltion behaves badly for largde degrees and unform/random grids
-#  - Usage of dedicated Chebyshev and/or Lobatto grids partly solved this issue, butonly partly
-#  - For large nmber of pointes rational interpolants behaves more stable, particularly
-#    Floater-Hormann wwith relatively small value of parameter \f$d\f$ 
+#  - Usage of dedicated Chebyshev and/or Lobatto grids partly solves this issue, but only partly
+#  - For large number of pointes rational interpolants behave more stable, particularly
+#    Floater-Hormann with relatively small value of parameter \f$d\f$ 
 #
 #
 #  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
@@ -48,7 +48,7 @@
 #  - Lagrange algorithm is not stable numerically,  and Neville algorithm is more stable
 #
 #  For  completeness see also:
-#  - interpolation with Bersntein polynomials using on Newton-Bernstein algorithm
+#  - interpolation with Bersntein polynomials using Newton-Bernstein algorithm
 #  - interpolation with B-splines
 #
 #  In addition purely python interpolators are provided 
@@ -62,11 +62,11 @@
 # =============================================================================
 """Useful utilities for dealing with interpolation.
 
-  It providesl follwoing interpolations (C++ fast)
+  It provides following interpolations (C++, fast)
   - Lagrange  polynomial interpolation                                 (relativelu slow)
   - Neville   polynomial interpolartion aka Nevile-Aitken interpolaton (slow)
-  - Newton    polynimial interpolation                                 (fastest)
-  - True Barycentric polymomial interpolation                          (relatively fast)
+  - Newton    polynomial interpolation                                 (fastest)
+  - True Barycentric polynomial interpolation                          (relatively fast)
   - Berrut's 1st rational interpoaltion                                (fast)
   - Berrut's 2nd rational interpoaltion                                (fast)
   - Floater-Hormann rational interpolation                             (fast)
@@ -81,14 +81,14 @@
   - see Ostap.Math.FloaterHormann
 
   Features 
-  - Lagrange scheme allows to calcualet also the derivative with respect to \f$y_i\f$
+  - Lagrange scheme allows to calculate also the derivative with respect to \f$y_i\f$
   - Neville scheme allows to calculate also the derivative with respect to \f$x\f$
   - Newton, Berrut 1st, Berrut's 2nd, true-Barycentric and Floater-Hormann are very fast,
-  but they require some tiem for initialization adn thie time can be large.
-  - All polymonial interpoaltion behaves badly for largde degrees and unform/random grids
-  - Usage of dedicated Chebyshev and/or Lobatto grids partly solved this issue, butonly partly
-  - For large nmber of pointes rational interpolants behaves more stable, particularly
-  Floater-Hormann wwith relatively small value of parameter \f$d\f$ 
+  but they require some time for initialization adn this time can be large.
+  - All polynonial interpoaltion behaves badly for large degrees and unform/random grids
+  - Usage of dedicated Chebyshev and/or Lobatto grids partly solves this issue, but only partly
+  - For large number of points rational interpolants behave more stable, particularly
+  Floater-Hormann with relatively small value of parameter \f$d\f$ 
   
 
   - see Jean-Paul Berrut and Lloyd N. Trefethen, 
@@ -103,7 +103,7 @@
   - Lagrange algorithm is not stable numerically, while Neville algorithm is more stable
   
   For completeness see also:
-  - interpolation with bersntein polynomials using on Newton-Bernstein algorithm
+  - interpolation with bersntein polynomials using Newton-Bernstein algorithm
   - interpolation with B-splines
 
   In addition purely python interpolators are provided
@@ -1013,7 +1013,7 @@ class Berrut2nd(BaseInterpolant) :
 
 
 # =============================================================================
-## true Barycentric polymnomial interpolant
+## true Barycentric polynomial interpolant
 class Barycentric(BaseInterpolant) :
     """True barycentric polynomial interpolant
     """
@@ -1043,8 +1043,7 @@ class Barycentric(BaseInterpolant) :
         
     def weight ( self , index ) :
         """Get the weigth for the given interpolation node"""
-
-        return self.__weigths[index]
+        return self.__weigths [ index ]
     
     @property
     def weights ( self ) :
@@ -1052,9 +1051,9 @@ class Barycentric(BaseInterpolant) :
         return self.__weights
 
 # =============================================================================
-## FloaterHormann rational interpolant
+## Floater-Hormann rational interpolant
 class FloaterHormann(BaseInterpolant) :
-    """FloaterHormann rational interpolant
+    """Floater-Hormann rational interpolant
     """
     def __init__ ( self             ,
                    data             ,
@@ -1102,8 +1101,7 @@ class FloaterHormann(BaseInterpolant) :
 
     def weight ( self , index ) :
         """Get the weigth for the given interpolation node"""
-
-        return self.__weights[index]
+        return self.__weights [ index ]
     
     @property
     def weights ( self ) :
