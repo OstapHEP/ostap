@@ -128,7 +128,7 @@ def roc_curve ( signal                         ,
             es = VE ( sig_fun ( es ) )
             eb = VE ( bkg_fun ( eb ) )
             
-            if es.isgood () ) and eb.isgood() :
+            if es.isgood () and eb.isgood() :
                 graph [ ipoint ] = es , eb
             else :
                 bad_points.add ( ipoint )
