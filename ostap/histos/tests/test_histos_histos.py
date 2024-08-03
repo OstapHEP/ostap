@@ -32,7 +32,6 @@ else :
 # =============================================================================
 logger.info ( 'Test for basic operations with histograms')
 # =============================================================================
-# =============================================================================
 ## Test for very basic operations with 1D-histograms
 def test_basic_1D() :
 
@@ -86,17 +85,16 @@ def test_basic_1D() :
 
     ## running sum
     h1_d = h1.sumv()                     ## default 
-    h1_i = h1.sumv( increasing = True  ) ## ditto
-    h1_r = h1.sumv( increasing = False ) ## ditto
+    h1_i = h1.sumv( forward = True  ) ## ditto
+    h1_r = h1.sumv( forward = False ) ## ditto
 
-    ## histogram efficiney of cuts
-    eff_i = h1.effic( increasing = True   )
-    eff_r = h1.effic( increasing = False  )
+    ## histogram efficiemcy of cuts
+    eff_i = h1.effic( cut_low  = True   )
+    eff_r = h1.effic( cut_low = False   )
 
     ## efficiency of certaine value
-    e1_i  = h1.efficiency( 0.3 , increasing = True  )
-    e2_i  = h1.efficiency( 0.3 , increasing = False )
-
+    e1_i  = h1.efficiency( 0.3 , cut_low  = True  )
+    e2_i  = h1.efficiency( 0.3 , cut_low = False )
 
     ## smear the histogram
     h0    = ROOT.TH1F( hID() , '', 400 , -1 , 1 )

@@ -4135,25 +4135,25 @@ ROOT.TH1D.addFunctionIntegral = _h1_add_function_integral_
 ## get the running sum over the histogram bins
 #  @code
 #  h   = ...
-#  ht = h.sumv ( increasing = True  )
-#  hf = h.sumv ( increasing = False )
+#  ht = h.sumv ( forward = True  )
+#  hf = h.sumv ( forward = False )
 #  @endcode
 #  It creates a new historgma with the same binning
 #  such that each bin<code>i</code> contains the sum over
 #  all bins `j` such as 
-#  - \f$ j\le i \f$ if <code>increasing=True</code>
-#  - \f$ j\ge i \f$ if <code>increasing=False</code>
+#  - \f$ j\le i \f$ if <code>forward=True</code>
+#  - \f$ j\ge i \f$ if <code>forward=False</code>
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def h1_sumv ( histo , increasing = True ) :
+def h1_sumv ( histo , forward = True ) :
     """Create the `running sum' over the histogram bins 
     >>> h   = ...
-    >>> h1 = h.sumv( increasing = True  )
-    >>> h2 = h.sumv( increasing = False )        
+    >>> h1 = h.sumv( forward = True  )
+    >>> h2 = h.sumv( forward = False )        
     It creates a new histogram with the same binning
     such that each bin `i` contains the sum over all bins `j` such as 
-    - `j<=i`  if `increasing=True`
-    - `i<=j`  if `increasing=False`
+    - `j<=i`  if `forward=True`
+    - `i<=j`  if `forward=False`
     """
     assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() , \
         "Invalid `histo' type %s" % type ( histo ) 
@@ -4162,7 +4162,7 @@ def h1_sumv ( histo , increasing = True ) :
     result.Reset() 
     if not result.GetSumw2() : result.Sumw2()
 
-    if increasing :
+    if forward :
         
         sumi = VE ( 0 , 0 ) 
         for i , x , y  in histo.items()  :
@@ -4869,7 +4869,7 @@ def _fom_2_ ( h1 , increase = True ) :
     >>> f1 = h1.FoM2 () 
     """
     #
-    h = h1.sumv( increase )
+    h = h1.sumv( forward = increase )
     #
     return _h1_transform_ ( h , func = lambda x,y : y.precision() )
 
@@ -4914,8 +4914,8 @@ def _fom_1_ ( s , b , alpha = 1 , increase = True ) :
     h  = s.Clone( hID() )
     if not h.GetSumw2() : h.Sumw2()
     #
-    hs = s.sumv ( increase )
-    hb = b.sumv ( increase )
+    hs = s.sumv ( forward = increase )
+    hb = b.sumv ( forward = increase )
     #
     from math import sqrt, pow 
     #
@@ -8354,7 +8354,7 @@ def histo_book ( ranges , kwargs , title = '' ) :
 def _h1_roc_ ( h1 , h2 ) :
 
     h1sum = h1.sumv ()
-    h2sum= h2.sumv ()
+    h2sum = h2.sumv ()
 
     import ostap.histos.graphs
     graph = ROOT.TGraphErrors ( len ( h1 ) + 2 )

@@ -81,7 +81,7 @@ def test_roc () :
                       ( grs[-1][1].toString( '%+.3f +/- %-.3f' ) ,
                         grb[-1][1].toString( '%+.3f +/- %-.3f' ) ) )
                                 
-    ## make ROC corve
+    ## make ROC curve
     roc = roc_curve ( signal     = hs   ,
                       background = hb   ,
                       cut_low    = True )

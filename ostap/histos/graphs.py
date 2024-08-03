@@ -766,6 +766,24 @@ def _gr_setitem_ ( graph , ipoint , point )  :
 
 
 # ==============================================================================
+## Does the graph constain the point  with this index ?
+#  Negative indices are allowed
+#  @code
+#  graph = ..
+#  if  1 in graph : ...
+#  if -1 in graph : ...
+#  @endcode 
+def _gr_contains_ ( graph , index ) :
+    """Does the graph constain the point  with this index ?
+    - Negative indices are allowed
+    >>> graph = ..
+    >>> if  1 in graph : ...
+    >>> if -1 in graph : ...
+    """
+    size = len ( graph )
+    return 0 <= index < size or 0 <= index + size < size
+    
+# ==============================================================================
 ## remove the point from the graph
 #  @code
 #  graph = ...
@@ -779,12 +797,13 @@ def _gr_delitem_ ( graph, ipoint ) :
     """
     #
     if isinstance ( ipoint , slice ) :
-        points = sorted ( ( i for i in range ( *ipoint.indices ( len ( graph ) ) ) ) , reverse = True ) 
+        points = sorted ( ( i for i in range ( *ipoint.indices ( len ( graph ) ) ) ) ) 
         while points : graph.RemovePoint ( points.pop () )
-    elif not ipoint in graph : raise IndexError 
+    elif not ipoint in graph : raise IndexError
     #
-    d = graph.RemovePoint ( ipoint )
-
+    if ipoint < 0 : ipoint += len ( graph )  
+    graph.RemovePoint ( ipoint )
+    
 # =============================================================================
 ## iterate over the points in TGraph
 #  @code 
@@ -1644,7 +1663,7 @@ def _grae_transform_ ( graph , fun = lambda x , y : y ) :
 
 # =============================================================================
 ROOT.TGraph       . __len__       = ROOT.TGraph . GetN 
-ROOT.TGraph       . __contains__  = lambda s,i : i in range(0,len(s))
+ROOT.TGraph       . __contains__  = _gr_contains_ 
 ROOT.TGraph       . __iter__      = _gr_iter_ 
 ROOT.TGraph       . __call__      = _gr_call_
 
@@ -1676,7 +1695,6 @@ ROOT.TH1F.toGraph = hToGraph
 ROOT.TH1D.toGraph = hToGraph
 
 ROOT.TGraphAsymmErrors.__len__       = ROOT.TGraphAsymmErrors . GetN 
-ROOT.TGraphAsymmErrors.__contains__  = lambda s,i : i in range(0,len(s))
 ROOT.TGraphAsymmErrors.__iter__      = _gr_iter_ 
 ROOT.TGraphAsymmErrors.     items    = _grae_iteritems_
 ROOT.TGraphAsymmErrors. iteritems    = _grae_iteritems_ 
@@ -3657,7 +3675,6 @@ _new_methods_     += (
     ROOT.TGraphErrors . __irshift__   , 
     #
     ROOT.TGraphAsymmErrors.__len__       ,
-    ROOT.TGraphAsymmErrors.__contains__  ,
     ROOT.TGraphAsymmErrors.__iter__      ,
     ROOT.TGraphAsymmErrors.     items    ,
     ROOT.TGraphAsymmErrors. iteritems    ,

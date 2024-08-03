@@ -20,7 +20,8 @@ __all__     = (
     'roc_curve'   , # Make ROC curve form signal & backgrund distributions 
     ) 
 # =============================================================================
-from   ostap.core.ostap_types import string_types 
+from   ostap.core.ostap_types import string_types
+from   ostap.math.ve          import VE 
 import ostap.histos.histos
 import ostap.histos.graphs 
 import ROOT
@@ -35,6 +36,8 @@ else                       : logger = getLogger( __name__           )
 _effs = ( 'e' , 'eff' , 'effs'   , 'effic'     , 'efficiency' )
 ## symbols to indicate the rejection 
 _rejs = ( 'r' , 'rej' , 'reject' , 'rejection' )
+## symbols to indicate the suppression  
+_sups = ( 's' , 'sup' , 'supp' , 'suppress' , 'suppression' )
 # =============================================================================
 ## Build the ROC-curve from signal and background disctributuions
 #  @param signal    (histogram) of signal     distribution
@@ -46,7 +49,7 @@ _rejs = ( 'r' , 'rej' , 'reject' , 'rejection' )
 #  roc     = roc_curve ( signal         = hsig ,
 #                        backgrund      = hbkg ,
 #                        cut_low        = True , ## "keep valeus less than cut value"
-#                        show_sinal     = 'efficiency' ,
+#                        show_signal    = 'efficiency' ,
 #                        show_backgrund = 'rejection'  )
 # 
 #  import ostap.math,integral as I
@@ -78,6 +81,10 @@ def roc_curve ( signal                         ,
         "Invalid `signal' type: %s" % type ( signal )
     assert isinstance ( background , ROOT.TH1 ) and 1 == background.dim() , \
         "Invalid `background' type: %s" % type ( background )
+
+    if show_signal     is None : show_signal     = lambda e :     e
+    if show_background is None : show_background = lambda e : 1.0-e
+
     
     def _fun_ ( obj ) :
         if callable ( obj ) : return obj
@@ -85,14 +92,14 @@ def roc_curve ( signal                         ,
         obj  = str ( obj ).strip ().lower () 
         if   obj in _effs : return lambda e : e
         elif obj in _rejs : return lambda e : 1.0-e
+        elif obj in _sups : return lambda e : 1.0/e
         raise TypeError ( 'Invalid object: %s' % obj )
 
     ## transformations :
     
     sig_fun = _fun_ ( show_signal     )
     bkg_fun = _fun_ ( show_background )
-
-                                                                       
+                                                                   
     hs = signal
     hb = background 
     
@@ -106,19 +113,36 @@ def roc_curve ( signal                         ,
     np    = len ( hse ) 
     graph = ROOT.TGraphErrors ( np )
 
+    bad_points = set() 
     ## loop over signal efficiency 
     for i , xs , es in hse.items() :
 
         ## background efficiency
         eb = hbe ( xs.value() )
 
-        ## transform if requested:
-        
-        es = sig_fun ( es ) 
-        eb = bkg_fun ( eb )
-        
-        graph [ i - 1 ] = es , eb
+        ipoint = i - 1 
 
+        try :
+            
+            ## transform if requested:
+            es = VE ( sig_fun ( es ) )
+            eb = VE ( bkg_fun ( eb ) )
+            
+            if es.isgood () ) and eb.isgood() :
+                graph [ ipoint ] = es , eb
+            else :
+                bad_points.add ( ipoint )
+            
+        except ( ArithmeticError, ValueError ) : 
+            bad_points.add ( ipoint )
+
+    if bad_points :
+        logger.warning ( "%d bad points are removed" % len ( bad_points ) )
+        bad_points = sorted ( list ( bad_points ) ) 
+        while bad_points :
+            index = bad_points.pop()
+            del graph [ index ] 
+        
     return graph 
     
 
