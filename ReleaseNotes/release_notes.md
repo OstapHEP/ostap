@@ -1,8 +1,21 @@
 ## New features
 
-  1. Add estimators for haromins, geometic. power, Lehmer means and their weighted analogues
-  
+  1. Add estimators for harmonic, geometric, power &  Lehmer means and their weighted analogues
+  1. Reduce code duplication
+  1. Large redesign of staistics/projection& othe rmethids for RooAbdData/TTree/DataFrame
+  1. Large redesign if `statvars.py` module
+  1. Add `roc_curve` for making ROC curves, and corrresponsing test module 
+  1. Add `eff_graph` for 1D historgams for creation of the efficiency graph
+     from the 1D-distribution.
+
 ## Backward incompatible
+
+  1. `project`(&`draw`) for 2 and 3-dimession now follows the natural order of varibales:
+       `XX.project ( target , 'x,y,z' , ...) `
+  1. For `eff` & effic' and `efficinecy` methods fo r1D histograms
+     the confusing  optional argument `increasing=True` is replced by (less-confusin)
+     `cut_low` and the argument is not optionl anymore
+     
 
 ## Bug fixes
 

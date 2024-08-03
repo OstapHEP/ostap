@@ -4186,10 +4186,10 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
 ## Calculate the "cut-efficiency from the histogram
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h1_effic_ ( h , increasing = True ) :
+def _h1_effic_ ( h , cut_low ) :
     """Calculate the cut efficiency for the histogram
     >>> h  = ...
-    >>> he = h.effic ( 14.2 )    
+    >>> he = h.effic ( 14.2 , cut_low = True )    
     """
     
     result = h.Clone ( hID() )
@@ -4198,15 +4198,15 @@ def _h1_effic_ ( h , increasing = True ) :
 
     for ibin in h :
 
-        s1 = VE(0,0)
-        s2 = VE(0,0)
+        s1 = VE ( 0 , 0 )
+        s2 = VE ( 0 , 0 )
         
         for jbin in h :
             
             if jbin < ibin : s1 += h [ jbin ]
             else           : s2 += h [ jbin ]
 
-        result [ibin] = s1.frac( s2 ) if increasing else s2.frac( s1 ) 
+        result [ibin] = s2.frac ( s1 ) if cut_low else s1.frac ( s2 ) 
 
     result.ResetStats() 
     return result 
@@ -4216,10 +4216,10 @@ def _h1_effic_ ( h , increasing = True ) :
 ## Calculate the "cut-efficiency from the histogram
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h1_effic2_ ( h , value , increasing = True ) :
+def _h1_effic2_ ( h , value , cut_low ) :
     """Calculate the cut efficiency for the histogram
     >>> h  = ...
-    >>> he = h.efficiency ( 14.2 )
+    >>> he = h.efficiency ( 14.2 , cut_low = True )
     """
 
     s1 = VE ( 0 , 0 )
@@ -4230,7 +4230,7 @@ def _h1_effic2_ ( h , value , increasing = True ) :
         if x.value() < value : s1 += y 
         else                 : s2 += y 
         
-    return s1.frac( s2 ) if increasing else s2.frac ( s1 ) 
+    return s2.frac ( s1 ) if cut_low else s1.frac ( s2 ) 
 
 # =============================================================================
 ## Convert historgam into "efficinecy" histogram
@@ -4239,7 +4239,7 @@ def _h1_effic2_ ( h , value , increasing = True ) :
 #  effic = histo.eff ( ... )
 #  @endcode
 #  It adds two extra narrow fake bins!
-def _h1_effic3_ ( h1 , increasing = True ) :
+def _h1_effic3_ ( h1 , cut_low ) :
     """Convert historgam into "efficinecy" histogram
     >>> histo = ...
     >>> effic = histo.eff ( ... )
@@ -4263,7 +4263,7 @@ def _h1_effic3_ ( h1 , increasing = True ) :
     
     edges.insert (  1 , xf )
     edges.insert ( -1 , xl )
-    
+
     result = h1_axis ( edges , title = 'Efficiency histo for %s' % h1.title , double = type ( h1 ) )
 
     def _my_eff_ ( a , r , c ) :
@@ -4288,49 +4288,62 @@ def _h1_effic3_ ( h1 , increasing = True ) :
         
         return 1.0 / ( 1.0 + d )
     
-    N = len ( h1 ) 
-    sumi = VE(0,0)
+    N    = len ( h1 ) 
+    sumi = VE ( 0 , 0 ) 
     for i in h1 :        
 
         c = h1 [ i ]
         
-        rest     = VE(0,0) 
+        rest     = VE ( 0 , 0 ) 
         for j in range ( i + 1 , N + 1 ) : rest += h1 [ j ] 
 
         a  = sumi
         r  = rest
 
-        result [ i + 1 ] = _my_eff_ ( a , r , c ) if increasing else _my_eff_ ( r , a , c ) 
+        result [ i + 1 ] = _my_eff_ ( r , a , c ) if cut_low  else _my_eff_ ( a , r , c ) 
         
         sumi += c 
-
-    result [  1 ] = VE ( 0.0 , 0.0 ) if increasing else VE ( 1.0 , 0.0 )
-    result [ -1 ] = VE ( 1.0 , 0.0 ) if increasing else VE ( 0.0 , 0.0 )
-
+        
+    if h1.natural () :
+        nn = max ( 1 , math.ceil ( h1.Integral () ) ) 
+        e0 = binomEff ( 0  , nn )
+        e1 = binomEff ( nn , nn )
+    else :
+        e0 = VE ( 0 , 0 )
+        e1 = VE ( 1 , 0 ) 
+        
+    result [  1 ] = e1 if cut_low else e0 
+    result [ -1 ] = e0 if cut_low else e1 
+        
     return result 
 
 # ===============================================================================
-## Get the cut effciency in form of graph
+## Get the cut efficiency in graph form 
 #  - useful for efficincy visualisation
-#  - a bit better treatment of binnig effects 
+#  - a bit better treatment of binnig effects fo wide bins
 #  @code
 #  histo     = ...
-#  eff_graph = histo.eff_graph ( increasing = True )  
+#  eff_graph = histo.eff_graph ( cut_low )  
 #  @endcode
-def _h1_effic4_ ( histo , increasing = True ) :
-    """Get the cut effciency in form fo graph
+def _h1_effic4_ ( histo , cut_low  ) :
+    """Get the cut efficiency in graph forms 
     - useful for drawing,
-    - better treatment of binnig effects 
+    - a bit better treatment of binnig effects for wide bins 
     >>> histo     = ...
-    >>> eff_graph = histo.eff_graph ( increasing = True )  
+    >>> eff_graph = histo.eff_graph ( cut_low = True  ) 
+    >>> eff_graph = histo.eff_graph ( cut_low = False )    
     """
 
     c1 = [ histo [ i ] for i in histo ]
     c2 = c1.copy()
     c2.reverse  ()
-     
-    s1 = [ VE () ] + [ s for s in itertools.accumulate ( c1 ) ]
-    s2 = [ VE () ] + [ s for s in itertools.accumulate ( c2 ) ]
+
+    ## for "natural" histograms make better treatment of first/last uncertainties 
+    vz = VE ( 0 , 1 ) if histo.natural() else VE ( 0 , 0 )
+
+    s1 = [ vz ] + [ s for s in itertools.accumulate ( c1 ) ]
+    s2 = [ vz ] + [ s for s in itertools.accumulate ( c2 ) ]
+
     s2.reverse  ()
 
     import ostap.histos.graphs
@@ -4341,7 +4354,7 @@ def _h1_effic4_ ( histo , increasing = True ) :
     the_eff = lambda a,b : a.frac ( b ) 
     
     ## special treatment of the first point 
-    e0       =  the_eff ( s1 [ 0 ] , s2 [ 0 ] ) if increasing else the_eff ( s2 [ 0 ] , s1 [ 0 ] ) 
+    e0       = the_eff ( s2 [ 0 ] , s1 [ 0 ] ) if cut_low else the_eff ( s1 [ 0 ] , s2 [ 0 ] ) 
     xmin , _ = histo.xminmax()
     
     graph.SetPoint      ( 0 , xmin , e0.value () )
@@ -4349,7 +4362,7 @@ def _h1_effic4_ ( histo , increasing = True ) :
 
     for i, x , _  in histo.items() :
         xx = x.value() + x.error()
-        ei = the_eff ( s1 [ i ] , s2 [ i ] ) if increasing else the_eff ( s2 [ i ] , s1 [ i ] ) 
+        ei = the_eff ( s2 [ i ] , s1 [ i ] ) if cut_low else the_eff ( s1 [ i ] , s2 [ i ] ) 
         graph.SetPoint      ( i , xx , ei.value () )
         graph.SetPointError ( i , 0  , ei.error () )
         

@@ -17,7 +17,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-08-02"
 __all__     = (
-    'makeGraph'   , # make graph from primitive data
+    'roc_curve'   , # Make ROC curve form signal & backgrund distributions 
     ) 
 # =============================================================================
 from   ostap.core.ostap_types import string_types 
@@ -31,6 +31,11 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.roc' )
 else                       : logger = getLogger( __name__           )
 # =============================================================================
+## symbols to indicate the efficiency
+_effs = ( 'e' , 'eff' , 'effs'   , 'effic'     , 'efficiency' )
+## symbols to indicate the rejection 
+_rejs = ( 'r' , 'rej' , 'reject' , 'rejection' )
+# =============================================================================
 ## Build the ROC-curve from signal and background disctributuions
 #  @param signal    (histogram) of signal     distribution
 #  @param backgrund (histogram) of background distribution
@@ -40,30 +45,30 @@ else                       : logger = getLogger( __name__           )
 #  hbkg    = ... ## background distribution
 #  roc     = roc_curve ( signal         = hsig ,
 #                        backgrund      = hbkg ,
-#                        increasing     = True , ## "keep valeus less than cut value"
+#                        cut_low        = True , ## "keep valeus less than cut value"
 #                        show_sinal     = 'efficiency' ,
 #                        show_backgrund = 'rejection'  )
-#  ## get AUC
+# 
 #  import ostap.math,integral as I
 #  auc  = I.integral ( roc , xmin = 0 , xmax = 1.0 ) 
 #  @endcode 
 def roc_curve ( signal                         , 
                 background                     ,
-                increasing                     ,                
+                cut_low                        ,                
                 show_signal     = 'efficiency' , 
                 show_background = 'rejection'  ) :
 
     """Build the ROC-curve from signal and background disctributuions
     - signal    : (histogram) of signal     distribution
     - backgrund : (histogram) of background distribution
-
+    
     >>> hsignal = ... ## signal distribution 
     >>> hbkg    = ... ## background distribution
-    >>> roc     = roc_curve ( signal         = hsig ,
-    ...                       backgrund      = hbkg ,
-    ...                       increasing     = True , ## "keep vaues that are less than the cut value"
-    ...                       show_sinal     = 'efficiency' ,
-    ...                       show_backgrund = 'rejection'  )
+    >>> roc     = roc_curve ( signal          = hsig ,
+    ...                       backgrund       = hbkg ,
+    ...                       cut_low         = True , ## "keep vaues that are less than the cut value"
+    ...                       show_sinal      = 'efficiency' ,
+    ...                       show_background = 'rejection'  )
       
     >>> import ostap.math,integral as I
     >>> auc  = I.integral ( roc , xmin = 0 , xmax = 1.0 ) 
@@ -73,37 +78,30 @@ def roc_curve ( signal                         ,
         "Invalid `signal' type: %s" % type ( signal )
     assert isinstance ( background , ROOT.TH1 ) and 1 == background.dim() , \
         "Invalid `background' type: %s" % type ( background )
+    
+    def _fun_ ( obj ) :
+        if callable ( obj ) : return obj
+        assert isinstance ( obj , string_types ) , 'Invalid type: %s' % type ( obj )
+        obj  = str ( obj ).strip ().lower () 
+        if   obj in _effs : return lambda e : e
+        elif obj in _rejs : return lambda e : 1.0-e
+        raise TypeError ( 'Invalid object: %s' % obj )
 
-    sig_fun = show_signal
-    if callable ( sig_fun ) : pass
-    else :
-        assert isinstance ( sig_fun , string_types ) , "Invalid type of `show_signal' %s" % type ( sig_fun )
-        sig_fun = str(sig_fun).strip().lower()
-        if   sig_fun in ( 'e' , 'eff' , 'effic'   , 'efficiency'               ) : sig_fun = lambda s : s
-        elif sig_fun in ( 'r' , 'rej' , 'rejec'   , 'reject'   , 'rejection'   ) : sig_fun = lambda s : 1-s
-        else :
-            raise TypeError ("Unknown `show_signal' :%s" % show_signal ) 
-
-    bkg_fun = show_background
-    if callable ( bkg_fun ) : pass
-    else :
-        assert isinstance ( bkg_fun , string_types ) , "Invalid type of `show_background' %s" % type ( bkg_fun )
-        bkg_fun = str(bkg_fun).strip().lower()
-        if   bkg_fun in ( 'e' , 'eff' , 'effic'   , 'efficiency'               ) : bkg_fun = lambda s : s
-        elif bkg_fun in ( 'r' , 'rej' , 'rejec'   , 'reject'   , 'rejection'   ) : bkg_fun = lambda s : 1-s
-        else :
-            raise TypeError ("Unknown `show_background' :%s" % show_backgrund ) 
+    ## transformations :
+    
+    sig_fun = _fun_ ( show_signal     )
+    bkg_fun = _fun_ ( show_background )
 
                                                                        
     hs = signal
     hb = background 
     
-    a## signal efficiency
-    hse = hs.eff ( increasing = increasing )
+    ## signal efficiency histogram 
+    hse = hs.eff ( cut_low = cut_low  )
     
-    ## background efficiency
-    hbe = hb.eff ( increasing = increasing )
-
+    ## background efficiency histogram 
+    hbe = hb.eff ( cut_low = cut_low )
+    
     ## output graph: ROC curve
     np    = len ( hse ) 
     graph = ROOT.TGraphErrors ( np )
@@ -111,10 +109,10 @@ def roc_curve ( signal                         ,
     ## loop over signal efficiency 
     for i , xs , es in hse.items() :
 
-        ## backrgiund efficiency
+        ## background efficiency
         eb = hbe ( xs.value() )
 
-        ## tarnsform if requested:
+        ## transform if requested:
         
         es = sig_fun ( es ) 
         eb = bkg_fun ( eb )
