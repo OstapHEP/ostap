@@ -8339,7 +8339,7 @@ def histo_book ( ranges , kwargs , title = '' ) :
         title  = kwargs.pop ( 'title' , "x=`%s'" % xvar )
         histo  = ROOT.TH1D  ( hID()   , title , xbins  , xmin , xmax )  ; histo.Sumw2()
         
-        xtitle = kwargs.pop ( 'xtitle' , kw.pop ( 'titlex' , xvar ) )        
+        xtitle = kwargs.pop ( 'xtitle' , kwargs.pop ( 'titlex' , xvar ) )        
         histo.GetXaxis().SetTitle ( xtitle )
         
     elif 2 == nvars :
@@ -8349,8 +8349,8 @@ def histo_book ( ranges , kwargs , title = '' ) :
                               xbins   , xmin , xmax ,
                               ybins   , ymin , ymax ) ; histo.Sumw2()
         
-        xtitle = kwargs.pop ( 'xtitle' , kw.pop ( 'titlex' , xvar ) )
-        ytitle = kwargs.pop ( 'ytitle' , kw.pop ( 'titley' , yvar ) )
+        xtitle = kwargs.pop ( 'xtitle' , kwargs.pop ( 'titlex' , xvar ) )
+        ytitle = kwargs.pop ( 'ytitle' , kwargs.pop ( 'titley' , yvar ) )
         
         histo.GetXaxis().SetTitle ( xtitle )
         histo.GetYaxis().SetTitle ( ytitle )
@@ -8363,9 +8363,9 @@ def histo_book ( ranges , kwargs , title = '' ) :
                               ybins   , ymin , ymax , 
                               zbins   , zmin , zmax ) ; histo.Sumw2()
         
-        xtitle = kwargs.pop ( 'xtitle' , kw.pop ( 'titlex' , xvar ) )
-        ytitle = kwargs.pop ( 'ytitle' , kw.pop ( 'titley' , yvar ) )
-        ztitle = kwargs.pop ( 'ztitle' , kw.pop ( 'titlez' , zvar ) )
+        xtitle = kwargs.pop ( 'xtitle' , kwargs.pop ( 'titlex' , xvar ) )
+        ytitle = kwargs.pop ( 'ytitle' , kwargs.pop ( 'titley' , yvar ) )
+        ztitle = kwargs.pop ( 'ztitle' , kwargs.pop ( 'titlez' , zvar ) )
         
         histo.GetXaxis().SetTitle ( xtitle )
         histo.GetYaxis().SetTitle ( ytitle )        
