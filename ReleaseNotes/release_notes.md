@@ -10,7 +10,7 @@
   1. Some tweaks for moments & counters
   1. Activate a new `draw` method (via `tree_draw`) for `ROOT.TTree`
   1. add `progress` and `report` optioal argumens for (almost) all Frame-related functions 
-  1. Some tweaks for styel configuration 
+  1. Some tweaks for style configuration 
 
 ## Backward incompatible
 
