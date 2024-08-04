@@ -8267,7 +8267,11 @@ histo_keys = ( 'xbins' , 'nbinsx' , 'binsx' , 'nbins' ,
                'xmin'  , 'xmax'   ,
                'ymin'  , 'ymax'   ,
                'zmin'  , 'zmax'   ,
-               'title' ) 
+               'title' ,
+               'xtitle', 'titlex' ,
+               'ytitle', 'titley' ,
+               'ztitle', 'titlez' )
+               
 # =============================================================================
 ## helper method to book/create 1/2/3-dimension histograms
 #  @code
@@ -8331,19 +8335,41 @@ def histo_book ( ranges , kwargs , title = '' ) :
 
     histo = None 
     if   1 == nvars :
-        title  = kwargs.pop ( 'title' , 'x: %s' % xvar )
+        
+        title  = kwargs.pop ( 'title' , "x=`%s'" % xvar )
         histo  = ROOT.TH1D  ( hID()   , title , xbins  , xmin , xmax )  ; histo.Sumw2()
+        
+        xtitle = kwargs.pop ( 'xtitle' , kw.pop ( 'titlex' , xvar ) )        
+        histo.GetXaxis().SetTitle ( xtitle )
+        
     elif 2 == nvars :
-        title  = kwargs.pop ( 'title' , 'x: %s ; y: %s' % ( xvar, yvar ) ) 
+        
+        title  = kwargs.pop ( 'title' , "x=`%s' y=`%s' z=`%s'" % ( xvar, yvar ) ) 
         histo  = ROOT.TH2F  ( hID()   , title ,
                               xbins   , xmin , xmax ,
                               ybins   , ymin , ymax ) ; histo.Sumw2()
+        
+        xtitle = kwargs.pop ( 'xtitle' , kw.pop ( 'titlex' , xvar ) )
+        ytitle = kwargs.pop ( 'ytitle' , kw.pop ( 'titley' , yvar ) )
+        
+        histo.GetXaxis().SetTitle ( xtitle )
+        histo.GetYaxis().SetTitle ( ytitle )
+        
     elif 3 == nvars :
-        title  = kwargs.pop ( 'title' , 'x: %s ; y: %s; z: %s' % ( xvar, yvar , zvar ) ) 
+        
+        title  = kwargs.pop ( 'title' , "x=`%s' y=`%s' z=`%s'" % ( xvar, yvar , zvar ) ) 
         histo  = ROOT.TH3F  ( hID()   , title ,
                               xbins   , xmin , xmax ,
                               ybins   , ymin , ymax , 
                               zbins   , zmin , zmax ) ; histo.Sumw2()
+        
+        xtitle = kwargs.pop ( 'xtitle' , kw.pop ( 'titlex' , xvar ) )
+        ytitle = kwargs.pop ( 'ytitle' , kw.pop ( 'titley' , yvar ) )
+        ztitle = kwargs.pop ( 'ztitle' , kw.pop ( 'titlez' , zvar ) )
+        
+        histo.GetXaxis().SetTitle ( xtitle )
+        histo.GetYaxis().SetTitle ( ytitle )        
+        histo.GetZaxis().SetTitle ( ztitle )        
         
     return histo 
 # =============================================================================

@@ -48,58 +48,43 @@ def OstapStyle ( name                           ,
                  description                    ,
                  line_width  = ostap_line_width , 
                  font        = ostap_font       ,
-                 makeNew     = False            ,
                  force       = True             ,
                  scale       = 1.0              ,
                  colz        = False            ) :
     """Create Ostap-style for the plots    
     """
-    groot = ROOT.ROOT.GetROOT() 
-    obj   = groot.FindObject  ( name )
-    if obj and isinstance ( obj , ROOT.TStyle ) and not makeNew : 
-        logger.info               ('The style %s is reused' % obj.GetName() )
-        if force :
-            obj.cd                () 
-            logger.info           ('The style %s is forced' % obj.GetName() )
-            groot.SetStyle   ( obj.GetName()  )
-            groot.ForceStyle ( )
-        return obj
-
-    nam = name
-    i   = 1
-    while obj :
-        nam  = name + '_%d' % i
-        obj  = groot.FindObject ( nam )
-        i   += 1
 
     # ================================================================
     ## check the configuration 
     import ostap.core.config         as CONFIG
 
     config = {} 
+    n2     = name.strip()
+
+    ## Look for "[Style:Nick]" in configuration 
     for key in CONFIG.config :
         if not key.upper().startswith('STYLE') : continue
         s , c , n = key.partition(':')
         if not c : continue
         n1 = n.strip()
-        n2 = name.strip()
         if n1 == n2 :
             config = CONFIG.config[key]
             logger.info ( 'Use existing configuration style %s' % name )
             break
         
     import ostap.plotting.makestyles as MS 
-    style = MS.make_ostap_style ( name        = nam         ,
+    style = MS.make_ostap_style ( name        = name        ,
                                   description = description , 
                                   config      = config      ,
                                   colz        = colz        ,
                                   scale       = scale       ,
                                   font        = font        ,
                                   line_width  = line_width  )
-        
+    # =======================================================================
     if force : 
         style . cd() 
         logger.debug ('The style %s is forced' % style.GetName() )
+        groot = ROOT.ROOT.GetROOT() 
         groot.SetStyle   ( style.GetName()  )
         groot.ForceStyle ()
         
@@ -108,39 +93,40 @@ def OstapStyle ( name                           ,
 # =============================================================================
 ## style for half-page-width COLZ plots
 Style2Z = OstapStyle (
-    'Style2Z' ,
+    'Style2Z'   ,
     description = "Style, suitable to produce downscaled (2-in-row) plot with large right margin (COLZ)",
-    scale       =  1.41 , makeNew = True , colz = True )
+    scale       =  1.41 , colz = True )
 
 ## style for one-third-page-width COLZ plots 
 Style3Z = OstapStyle (
-    'Style3Z' ,
+    'Style3Z'   ,
     description = "Style, suitable to produce downscaled (3-in-row) plot with large right margin (COLZ)",
-    scale       =  1.71 , makeNew = True , colz = True )
+    scale       =  1.71 , colz = True )
 
 ## style for standard COLZ plots 
 StyleZ  = OstapStyle (
-    'Style1Z' ,
+    'Style1Z'   ,
     description = "Style, suitable to produce plot with large right margin (COLZ)",
-    makeNew     = True , colz = True )
+    colz = True )
 
 ## style for half-page-width plots 
 Style2  = OstapStyle (
-    'Style2' , 
+    'Style2'    , 
     description = "Style, suitable to produce downscaled (2-in-row) plots",
-    scale       =  1.41 , makeNew = True )
+    scale       =  1.41 )
 
 ## style for one-third-page-width plots 
 Style3  = OstapStyle (
-    'Style3' ,
+    'Style3'    ,
     description = "Style, suitable to produce downscaled (3-in-row) plots",
-    scale       =  1.71 , makeNew = True )
+    scale       =  1.71 )
 
 # ============================================================================
 ## default style 
 Style      = OstapStyle (
-    'Style' ,
-    'The basic Ostap style for plots' )
+    'Style'     ,
+    description = 'The basic/default Ostap style for plots'
+)
 
 # ============================================================================
 ## default style 
@@ -170,7 +156,7 @@ class UseStyle(object):
         if isinstance ( style , str ):
             
             import ostap.plotting.makestyles as MS            
-            if   style in MS.StyleStore.styles : style = MC.StyleStore.styles [ style ] 
+            if   style in MS.StyleStore.styles : style = MS.StyleStore.styles [ style ] 
             elif style.upper() in ( '' , '0' , '1' )    : style = Style 
             elif '2'  == style                          : style = Style2
             elif '3'  == style                          : style = Style3

@@ -116,8 +116,6 @@ ostap_latex . SetTextColor  ( 1           )
 ostap_latex . SetTextSize   ( 0.04        )
 ostap_latex . SetTextAlign  ( 12          )
 # ==============================================================================
-
-# ==============================================================================
 ## @class StyleStore
 #  Store for all created/configured styles
 class StyleStore(object) :
@@ -562,7 +560,7 @@ def make_styles ( config = None ) :
     if config is None : 
         import ostap.core.config as _CONFIG
         config = _CONFIG.config
-        
+
     for key in config :
         
         if not key.upper().startswith('STYLE') :  continue
@@ -572,14 +570,21 @@ def make_styles ( config = None ) :
         ## the style name 
         name        = n.strip ( )
         description = section.get        ( 'description' , fallback = 'The style %s' % name )
-        ok          = section.getboolean ( 'ostaplike'   , fallback = False )
+        ok          = section.getboolean ( 'ostaplike'   , fallback =  True )
 
         ## create ostap-like style 
-        if ok : make_ostap_style ( name , description , section ) 
-        else :
+        if ok :
+            make_ostap_style ( name , description , section ) 
+        else  :
             ## generic style 
-            logger.info ( 'Create Generic style  %s/%s' % ( name , description ) )             
-            style       = ROOT.TStyle ( name , description )
+            groot = ROOT.ROOT.GetROOT() 
+            obj   = groot.FindObject  ( name )
+            if obj and isinstance ( obj , ROOT.TStyle ) :
+                logger.info  ( 'Reuse  Generic style  %s/%s' % ( name , description ) )             
+                style = style 
+            else : 
+                logger.debug ( 'Create Generic style  %s/%s' % ( name , description ) )             
+                style       = ROOT.TStyle ( name , description )
             set_style ( style , section )
             if name in StyleStore.styles :
                 logger.warning ( "The configuration %s replaced" % name  ) 
@@ -630,18 +635,25 @@ def get_str    ( config , name , default ) :
 
 # ============================================================================
 ## make Ostap-like style
-def make_ostap_style ( name                           ,
-                       description = 'The Style'      , 
-                       config      = {}               ,
-                       colz        = False            ,
-                       scale       = 1.0              , 
-                       font        = ostap_font       ,
-                       line_width  = ostap_line_width ) :
+def make_ostap_style ( name                      ,
+                       description = 'The Style' ,   
+                       config      = {}          , **kwargs ) :
+    
 
-    description = config.get ( 'description' , 'The Style' )
+    kw = cidict ( transform = cidict_fun )
+    kw.update   ( kwargs ) 
+    
+    colz       = kw.pop ( 'colz'        , get_bool  ( config , 'colz'       , False            ) )
+    scale      = kw.pop ( 'scale'       , get_float ( config , 'scale'      , 1.0              ) )
+    font       = kw.pop ( 'font'        , get_int   ( config , 'font'       , ostap_font       ) )
+    line_width = kw.pop ( 'line_width'  , get_int   ( config , 'line_width' , ostap_line_width ) )    
+    if kw : logger.warning ("make_ostap_style: unprocessed keys: %s" % kw ) 
+    
+    description = config.get ( 'description' , "The Style '%s'" % name )
     
     conf  = {}
     conf.update ( config )
+    
 
     conf [ 'AxisColor_X'       ] = get_int   ( config , 'AxisColor_X'         , 1   )
     conf [ 'AxisColor_Y'       ] = get_int   ( config , 'AxisColor_Y'         , 1   )
@@ -664,7 +676,7 @@ def make_ostap_style ( name                           ,
 
     conf [ 'DrawBorder'        ] = get_int   ( config , 'DrawBorder'          , 0      ) 
 
-    conf [ 'EndErrorSize'      ] = get_float ( config , 'EndErrorSize'        , 2.0    )
+    conf [ 'EndErrorSize'      ] = get_float ( config , 'EndErrorSize'        , 2.0    * scale )
     conf [ 'ErrorX'            ] = get_float ( config , 'ErrorX'              , 0.5    )
 
     conf [ 'FitFormat'         ] = get_str   ( config , 'FitFormat'           , '5.4g' ) 
@@ -692,7 +704,7 @@ def make_ostap_style ( name                           ,
     conf [ 'HistFillStyle'     ] = get_int   ( config , 'HistFillStyle'       , 1001  )
     conf [ 'HistLineColor'     ] = get_int   ( config , 'HistLineColor'       , 1     )
     conf [ 'HistLineStyle'     ] = get_int   ( config , 'HistLineStyle'       , 1     )
-    conf [ 'HistLineWidth'     ] = get_int   ( config , 'HistLineStyle'       ,  line_width )
+    conf [ 'HistLineWidth'     ] = get_int   ( config , 'HistLineStyle'       , line_width )
 
     conf [ 'HistMinimumZero'   ] = get_bool  ( config , 'HistMinimumZero'     , False )
     conf [ 'HistTopMargin'     ] = get_float ( config , 'HistTopMargin'       , 0.05  )
@@ -711,9 +723,9 @@ def make_ostap_style ( name                           ,
     conf [ 'LabelOffset_Y'     ] = get_float ( config , 'LabelOffset_Y'       , 0.005 )
     conf [ 'LabelOffset_Z'     ] = get_float ( config , 'LabelOffset_Z'       , 0.005 ) 
 
-    conf [ 'LabelSize_X'       ] = get_float ( config , 'LabelSize_X'         , 0.05  )
-    conf [ 'LabelSize_Y'       ] = get_float ( config , 'LabelSize_Y'         , 0.05  )
-    conf [ 'LabelSize_Z'       ] = get_float ( config , 'LabelSize_Z'         , 0.05  )
+    conf [ 'LabelSize_X'       ] = get_float ( config , 'LabelSize_X'         , 0.05  * scale )
+    conf [ 'LabelSize_Y'       ] = get_float ( config , 'LabelSize_Y'         , 0.05  * scale )
+    conf [ 'LabelSize_Z'       ] = get_float ( config , 'LabelSize_Z'         , 0.05  * scale )
      
     conf [ 'LegendBorderSize'  ] = get_int   ( config , 'LegendBorderSize'    , 4    )
     conf [ 'LegendFillColor'   ] = get_int   ( config , 'LegendFillColor'     , 0    )
@@ -742,8 +754,8 @@ def make_ostap_style ( name                           ,
 
     conf [ 'NumberContours'    ] = get_int   ( config , 'NumberContours'     , 127  )
     
-    ## conf [ 'NumberOfColors'    ] = get_int   ( config , 'NumberOfColors'     , 255  )
-    
+    ## conf [ 'NumberOfColors'    ] = get_int   ( config , 'NumberOfColors'  , 255  )
+
     conf [ 'OptDate'           ] = get_int   ( config , 'OptDate'            , 0    )
     conf [ 'OptFile'           ] = get_int   ( config , 'OptFile'            , 0    )
     conf [ 'OptFit'            ] = get_int   ( config , 'OptFit'             , 0    )
@@ -789,7 +801,7 @@ def make_ostap_style ( name                           ,
     conf [ 'StatBorderSize'    ] = get_int   ( config , 'StatBorderSize'      , 0      ) 
     conf [ 'StatColor'         ] = get_int   ( config , 'StatColor'           , 0      ) 
     conf [ 'StatFont'          ] = get_int   ( config , 'StatFont'            , font   ) 
-    conf [ 'StatFontSize'      ] = get_float ( config , 'StatFontSize'        , 0.05   ) 
+    conf [ 'StatFontSize'      ] = get_float ( config , 'StatFontSize'        , 0.05   * scale ) 
     conf [ 'StatFormat'        ] = get_str   ( config , 'StatFormat'          , '6.3g' ) 
     conf [ 'StatH'             ] = get_float ( config , 'StatH'               , 0.15   ) ## ??? 
     conf [ 'StatStyle'         ] = get_int   ( config , 'StatStyle'           , 1001   )
@@ -819,7 +831,7 @@ def make_ostap_style ( name                           ,
     conf [ 'TitleFont_Y'       ] = get_int   ( config , 'TitleFont_Y'         , font   ) 
     conf [ 'TitleFont_Z'       ] = get_int   ( config , 'TitleFont_Z'         , font   ) 
 
-    conf [ 'TitleFontSize'     ] = get_int   ( config , 'TitleFontSize'       , 0.0    )
+    conf [ 'TitleFontSize'     ] = get_int   ( config , 'TitleFontSize'       , 0.0    * scale )
     
     conf [ 'TitleH'            ] = get_float ( config , 'TitleH'              , 0.0    )
     
@@ -829,9 +841,9 @@ def make_ostap_style ( name                           ,
 
     conf [ 'TitlePS'           ] = get_str   ( config , 'TitlePS'             , ''     ) 
 
-    conf [ 'TitleSize_X'       ] = get_float ( config , 'TitleSize_X'         , -1.0   ) 
-    conf [ 'TitleSize_Y'       ] = get_float ( config , 'TitleSize_Y'         ,  0.05  ) 
-    conf [ 'TitleSize_Z'       ] = get_float ( config , 'TitleSize_Z'         ,  0.05  ) 
+    conf [ 'TitleSize_X'       ] = get_float ( config , 'TitleSize_X'         , -1.0   * scale ) 
+    conf [ 'TitleSize_Y'       ] = get_float ( config , 'TitleSize_Y'         ,  0.05  * scale ) 
+    conf [ 'TitleSize_Z'       ] = get_float ( config , 'TitleSize_Z'         ,  0.05  * scale ) 
     
     conf [ 'TitleStyle'        ] = get_int   ( config , 'TitleStyle'          , 1001   ) 
     conf [ 'TitleTextColor'    ] = get_int   ( config , 'TitleTextColor'      , 1      ) 
@@ -839,10 +851,10 @@ def make_ostap_style ( name                           ,
     conf [ 'TitleW'            ] = get_float ( config , 'TitleW'              ,  0.0   )
     conf [ 'TitleX'            ] = get_float ( config , 'TitleX'              ,  0.01  )
     conf [ 'TitleXOffset'      ] = get_float ( config , 'TitleXOffset'        ,  1.0   )
-    conf [ 'TitleXSize'        ] = get_float ( config , 'TitleXSize'          , -1.0   )
-    conf [ 'TitleY'            ] = get_float ( config , 'TitleY'              ,  0.99  )
-    conf [ 'TitleYOffset'      ] = get_float ( config , 'TitleYOffset'        ,  0.0   )
-    conf [ 'TitleYSize'        ] = get_float ( config , 'TitleYSize'          ,  0.05  )
+    conf [ 'TitleXSize'        ] = get_float ( config , 'TitleXSize'          , -1.0   * scale )
+    conf [ 'TitleY'            ] = get_float ( config , 'TitleY'              ,  0.99  * scale )
+    conf [ 'TitleYOffset'      ] = get_float ( config , 'TitleYOffset'        ,  0.0   * scale )
+    conf [ 'TitleYSize'        ] = get_float ( config , 'TitleYSize'          ,  0.05  * scale )
 
     ##
     ## Line attributes 
@@ -864,7 +876,7 @@ def make_ostap_style ( name                           ,
     
     conf [ 'MarkerColor'       ] = get_int   ( config , 'MarkerColor'         , 1   ) 
     conf [ 'MarkerStyle'       ] = get_int   ( config , 'MarkerStyle'         , 20  ) 
-    conf [ 'MarkerSize'        ] = get_float ( config , 'MarkerSize'          , 1.0 )
+    conf [ 'MarkerSize'        ] = get_float ( config , 'MarkerSize'          , 1.0 * scale )
 
 
     ##
@@ -875,17 +887,22 @@ def make_ostap_style ( name                           ,
     conf [ 'TextAngle'         ] = get_float ( config , 'TextAngle'           , 0.0  )
     conf [ 'TextColor'         ] = get_int   ( config , 'TextColor'           , 1    )
     conf [ 'TextFont'          ] = get_int   ( config , 'TextFont'            , font )
-    conf [ 'TextSize'          ] = get_float ( config , 'TextSize'            , 0.08 )
+    conf [ 'TextSize'          ] = get_float ( config , 'TextSize'            , 0.08 * scale )
 
     ## maximal number of digits for the axis labels 
     conf [ 'TGaxisMaxDigits'   ] = 3
 
+    ## create the style
+    groot = ROOT.ROOT.GetROOT() 
+    obj   = groot.FindObject  ( name )
+    if obj and isinstance ( obj , ROOT.TStyle ) :
+        logger.info  ('Update existing Ostap style %s' % obj.GetName   () )
+        style = obj 
+    else : 
+        logger.debug ('Create new      Ostap style %s' % name )
+        style       = ROOT.TStyle ( name , description )
 
-    ## create the style 
-    style       = ROOT.TStyle ( name , description )
     set_style    ( style , conf ) 
-    logger.debug ('Create Ostap   style %s' % style.GetName() )
-
     if name in StyleStore.styles :
         logger.info ( "The configuration %s replaced" % name  ) 
     StyleStore.styles.update ( { name : style } ) 
