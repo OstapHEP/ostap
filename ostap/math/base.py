@@ -936,7 +936,7 @@ else :
     ## Least Common Multiple.
     def lcm ( a , b ) :    
         """ Least Common Multiple"""
-        return ( a * b ) // _gcd ( a , b )
+        return ( a * b ) // gcd ( a , b )
 
 # =============================================================================
 ## imports at the end of the module to avoid the circular dependency 
