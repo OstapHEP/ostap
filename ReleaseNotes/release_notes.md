@@ -7,7 +7,8 @@
   1. Add `roc_curve` for making ROC curves, and corrresponsing test module 
   1. Add `eff_graph` for 1D historgams for creation of the efficiency graph
      from the 1D-distribution.
-
+  1. Some tweaks for moments & counters
+  
 ## Backward incompatible
 
   1. `project`(&`draw`) for 2 and 3-dimession now follows the natural order of varibales:

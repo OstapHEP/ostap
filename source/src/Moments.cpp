@@ -192,8 +192,20 @@ Ostap::Math::WLehmerMean::WLehmerMean
 		   "Inconsistent structure of two conuters!" ,
 		   "Ostap::Math::WLehmerMean" ) ;
 }
+
+
 // ===========================================================================
-// HarmoinicMean:: accumulate only non-zero entries 
+// GeometricMean::accumulate only positive entries 
+// ===========================================================================
+Ostap::Math::GeometricMean&
+Ostap::Math::GeometricMean::add
+( const double         x )
+{
+  if ( 0 < x && !s_zero ( x ) ) { m_log.add ( std::log2 ( x ) ) ; }
+  return *this ;
+}
+// ===========================================================================
+// HarmonicMean:: accumulate only non-zero entries 
 // ===========================================================================
 Ostap::Math::HarmonicMean&
 Ostap::Math::HarmonicMean::add ( const double x )
@@ -202,7 +214,41 @@ Ostap::Math::HarmonicMean::add ( const double x )
   return *this ;
 }
 // ===========================================================================
-// WHarmoincMean:: accumulate only non-zero entries 
+// PowerMean::accumulate only positive entries 
+// ===========================================================================
+Ostap::Math::PowerMean&
+Ostap::Math::PowerMean::add
+( const double         x )
+{
+  if ( ( 0 < x ) && !s_zero ( x ) ) { m_pow.add ( std::pow ( x , m_p ) ) ; }
+  return *this ;
+}
+// ===========================================================================
+// LehmerMean: accumulate only positive entries
+// ===========================================================================
+Ostap::Math::LehmerMean&
+Ostap::Math::LehmerMean::add ( const double x )
+{
+  if ( ( 0 < x ) && !s_zero( x ) )
+    {
+      m_lp  .add ( std::pow ( x , m_p     ) ) ;
+      m_lpm1.add ( std::pow ( x , m_p - 1 ) ) ;	    
+    }
+  return *this ;
+}
+// ===========================================================================
+// WGeometricMean:: accumulate only positive entries 
+// ===========================================================================
+Ostap::Math::WGeometricMean&
+Ostap::Math::WGeometricMean::add
+( const double x ,
+  const double w ) 
+{
+  if ( ( 0 < x ) && !s_zero ( x ) ) { m_log.add ( std::log2 ( x ) , w ) ; }
+  return *this ;
+}
+// ===========================================================================
+// WHarmonicMean:: accumulate only non-zero entries 
 // ===========================================================================
 Ostap::Math::WHarmonicMean&
 Ostap::Math::WHarmonicMean::add
@@ -212,8 +258,32 @@ Ostap::Math::WHarmonicMean::add
   if ( !s_zero ( x ) ) { m_inv.add ( 1/x , w ) ; }
   return *this ;
 }
-
-
+// ===========================================================================
+// WPowerMean:: accumulate only positive entries 
+// ===========================================================================
+Ostap::Math::WPowerMean&
+Ostap::Math::WPowerMean::add
+( const double x  ,
+  const double w  )
+{
+  if ( ( 0 < x ) && !s_zero ( x ) ) { m_pow.add ( std::pow ( x , m_p ) , w ) ; }
+  return *this ;
+}
+// ===========================================================================
+// LehmerMean: accumulate only positive entries
+// ===========================================================================
+Ostap::Math::WLehmerMean&
+Ostap::Math::WLehmerMean::add
+( const double x ,
+  const double w ) 
+{
+  if ( ( 0 < x ) && !s_zero ( x ) )
+    {
+      m_lp  .add ( std::pow ( x , m_p     ) , w ) ;
+      m_lpm1.add ( std::pow ( x , m_p - 1 ) , w ) ;	    
+    }
+  return *this ;
+}
 // ===========================================================================
 // add two counters togather if p is common 
 // ===========================================================================
@@ -236,15 +306,6 @@ Ostap::Math::WPowerMean::add ( const Ostap::Math::WPowerMean& x )
 		  "Cannot add counters with non-eual values of 'p'" , 
 		  "Ostap::Math::WPowerMean"  ) ;
   m_pow.add ( x.m_pow ) ;
-  return *this ;
-}
-// ===========================================================================
-Ostap::Math::WPowerMean&
-Ostap::Math::WPowerMean::add
-( const double x  ,
-  const double w  )
-{
-  if ( 0 < x && !s_zero ( w ) ) { m_pow.add ( std::pow ( x , m_p ) , w ) ; }
   return *this ;
 }
 // ===========================================================================
@@ -273,20 +334,7 @@ Ostap::Math::WLehmerMean::add
   return *this ;
 }
 // ===========================================================================
-// accumulate only positive entries with non-zero weight 
-// ===========================================================================
-Ostap::Math::WLehmerMean&
-Ostap::Math::WLehmerMean::add
-( const double x ,
-  const double w ) 
-{
-  if ( ( 0 < x ) && !s_zero ( x ) && !s_zero ( w ) )
-    {
-      m_lp  .add ( std::pow ( x , m_p     ) , w ) ;
-      m_lpm1.add ( std::pow ( x , m_p - 1 ) , w ) ;	    
-    }
-  return *this ;
-}
+
 // ===========================================================================
 // default constructor
 // ===========================================================================

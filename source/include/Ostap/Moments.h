@@ -1177,7 +1177,9 @@ namespace  Ostap
     public:
       // ======================================================================
       /// add a single value
-      inline WMoment_& add ( const double /* x */ , const double w = 1 )
+      inline WMoment_& add
+      ( const double /* x     */ ,
+	const double    w = 1    )
       { 
         if ( !w ) { return *this ; }  // ZERO weights are ignored 
         //
@@ -1478,8 +1480,6 @@ namespace  Ostap
       // ======================================================================
       inline GeometricMean& operator+=( const double         x ) { return add ( x ) ; }
       inline GeometricMean& operator+=( const GeometricMean& x ) { return add ( x ) ; }   
-      inline GeometricMean& operator*=( const double         x ) { return add ( x ) ; }
-      inline GeometricMean& operator*=( const GeometricMean& x ) { return add ( x ) ; }   
       // ======================================================================
     public:
       // ======================================================================
@@ -1489,11 +1489,8 @@ namespace  Ostap
     public:
       // ======================================================================
       /// accumulate only positive entries 
-      inline GeometricMean& add ( const double         x )
-      {
-	if ( 0 < x ) { m_log.add ( std::log2 ( x ) ) ; }
-	return *this ;
-      }
+      GeometricMean&        add ( const double         x ) ;
+      /// sum of two counters 
       inline GeometricMean& add ( const GeometricMean& x )
       {
 	m_log.add ( x.m_log ) ;
@@ -1559,7 +1556,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// accumulate only non-zero entries 
-      HarmonicMean& add ( const double         x ) ;
+      HarmonicMean&        add ( const double        x ) ;
       /// add two counters togather 
       inline HarmonicMean& add ( const HarmonicMean& x )
       {
@@ -1636,11 +1633,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// accumulate only positive entries 
-      inline PowerMean& add ( const double         x )
-      {
-	if ( 0 < x ) { m_pow.add ( std::pow ( x , m_p ) ) ; }
-	return *this ;
-      }
+      PowerMean& add ( const double     x ) ;
       /// add two counters togather if p is common 
       PowerMean& add ( const PowerMean& x ) ;
       // ======================================================================
@@ -1724,15 +1717,7 @@ namespace  Ostap
     public:
       // ======================================================================
       /// accumulate only positive entries 
-      inline LehmerMean& add ( const double x )
-      {
-	if ( 0 < x )
-	  {
-	    m_lp  .add ( std::pow ( x , m_p     ) ) ;
-	    m_lpm1.add ( std::pow ( x , m_p - 1 ) ) ;	    
-	  }
-	return *this ;
-      }
+      LehmerMean& add ( const double      x ) ;
       /// add two counters togather if p is common 
       LehmerMean& add ( const LehmerMean& x ) ;
       // ======================================================================
@@ -1805,12 +1790,10 @@ namespace  Ostap
     public:
       // ======================================================================
       /// accumulate only positive entries 
-      inline WGeometricMean& add ( const double x      ,
-				   const double w  = 1 ) 			     
-      {
-	if ( 0 < x ) { m_log.add ( std::log2 ( x ) , w ) ; }
-	return *this ;
-      }
+      WGeometricMean& add
+      ( const double x      ,
+	const double w  = 1 ) ;
+      // sum of to counters 
       inline WGeometricMean& add ( const WGeometricMean& x )
       {
 	m_log.add ( x.m_log ) ;
@@ -1845,9 +1828,6 @@ namespace  Ostap
       Counter m_log {} ;
       // ======================================================================
     };
-
-    // ========================================================================    
-    
     // ========================================================================
     /** @class WHarmonicMean 
      *  Calcualet  the weighted harmonic mean 
@@ -2251,15 +2231,18 @@ namespace  Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// accumulate only positive entries 
+      /// accumulate only no-zero weights  
       inline WMinMaxValue& add
       ( const double x     ,
 	const double w = 1 )
       {
-	if ( !w ) { return *this ; }  // ZERO weights are ignored 
-	m_min = std::min ( m_min , x ) ;
-	m_max = std::max ( m_max , x ) ;
+	const unsigned long long sbefore = m_cnt.size() ;
 	m_cnt.add ( x , w ) ;
+	if ( m_cnt.size() != sbefore  )
+	  {
+	    m_min = std::min ( m_min , x ) ;
+	    m_max = std::max ( m_max , x ) ;
+	  }
 	return *this ;
       }
       inline WMinMaxValue& add ( const WMinMaxValue& x )
