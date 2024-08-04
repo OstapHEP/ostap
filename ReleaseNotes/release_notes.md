@@ -8,7 +8,9 @@
   1. Add `eff_graph` for 1D historgams for creation of the efficiency graph
      from the 1D-distribution.
   1. Some tweaks for moments & counters
-  
+  1. Activate a new `draw` method (via `tree_draw`) for `ROOT.TTree`
+  1. add `progress` and `report` optioal argumens for (almost) all Frame-related functions 
+
 ## Backward incompatible
 
   1. `project`(&`draw`) for 2 and 3-dimession now follows the natural order of varibales:

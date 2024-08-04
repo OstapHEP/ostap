@@ -497,6 +497,7 @@ ROOT.TTree .project = tree_project
 ROOT.TChain.project = tree_project
 
 # ======================================================================
+## Draw the variables/expressions fom TTree obnjetc
 def tree_draw ( tree                    , 
                 what                    ,
                 cuts       = ''         ,
@@ -562,7 +563,7 @@ def tree_draw ( tree                    ,
         histo.draw ( opts , **kw )
         return histo
 
-    ## ROOT nativ eproject (a bit more efficient) 
+    ## ROOT native project (a bit more efficient) 
         
     if   1 == nvars : varexp = varlst [ 0 ]
     elif 2 == nvars : varexp = '%s vs %s ' % ( varlst [ 1 ] , varlst [ 0 ] ) 
@@ -573,7 +574,11 @@ def tree_draw ( tree                    ,
     ## draw the histogram 
     histo.draw ( opts , **kw  )
     return histo
-    
+
+ROOT.TTree .draw = tree_draw 
+ROOT.TChain.draw = tree_draw 
+
+
 # =============================================================================
 ## check if object is in tree/chain  :
 #  @code

@@ -187,21 +187,30 @@ def test_frame1 ( ) :
     frame = DataFrame ( tname        , fname        )
     tree  = Tree      ( name = tname , file = fname ).chain
     
-    h1 = tree .draw ( 'b1' , '1/b1' )
-    h2 = frame.draw ( 'b1' , '1/b1' )
+    with use_canvas ( 'test_frame1/draw'   , wait = 2 ) : 
+        hh1 = tree .draw ( 'b1' , '1.0/b1' , color = 2                                       )
+        hh2 = frame.draw ( 'b1' , '1.0/b1' , color = 4 , opts  = 'same hist' , report = True )
 
-    h1 = ROOT.TH1D( hID() , '' , 100 , 0 , 1000 )
-    h2 = ROOT.TH1D( hID() , '' , 100 , 0 , 1000 )
-
-    tree.project  ( h1    , 'b1' , '1.0/b1' )
-    frame_project ( frame , h2 , 'b1' , '2.0/b1' )
     
-    with wait ( 3 ), use_canvas ( 'test_frame1' ) : 
+    xmnmx1 = hh1.xminmax()
+    xmnmx2 = hh2.xminmax()
+    
+    logger.info ( "Histo-draw/tree  : #bins=%3d min/max %+.3f/%+.3f " % ( hh1.nbins() , xmnmx1[0] , xmnmx1[1] ) )
+    logger.info ( "Histo-draw/frame : #bins=%3d min/max %+.3f/%+.3f " % ( hh2.nbins() , xmnmx2[0] , xmnmx2[1] ) )
+                      
+    h1 = ROOT.TH1D ( hID() , '' , 120 , 0 , 12000 )
+    h2 = ROOT.TH1D ( hID() , '' , 120 , 0 , 12000 )
+
+    tree.project  (         h1 , 'b1' , '1.0/b1' )
+    frame_project ( frame , h2 , 'b1' , '1.0/b1' , report = True , lazy = False )
+    
+    with use_canvas ( 'test_frame1/project' , wait = 2 ) : 
         h1.red  ()
         h2.blue ()    
         h1.draw ()
         h2.draw ( 'same hist' )
 
+        
 # =============================================================================
 def test_frame2 ( ) :
  
@@ -413,25 +422,14 @@ def test_frame6 () :
     
     pb    = frame_progress ( frame  , len ( tree ) )
     
-    bs = Ostap.Math.Bernstein    ( 10 , -3 , 3 )
-    ls = Ostap.Math.LegendreSum  ( 10 , -3 , 3 )
-    cs = Ostap.Math.ChebyshevSum ( 10 , -3 , 3 )
-
     from ostap.frames.frames import frame_project
-
+    
     h1 = ROOT.TH1D ( hID() , '' , 20 , -3, 3 )
     
-    rh = frame_project  ( frame , h1 , 'b6' )
+    rh = frame_project  ( frame , h1 , 'b4' , progress = True , report = True )
 
     with use_canvas ( 'test_frame6: b4' , wait = 2 ) :
         h1.draw () 
-
-
-    ## report = frame.Report()
-    ## from ostap.frames.frames import report_print, report_as_table
-    ## title = 'Params summary'
-    ## logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
-
 
 # =============================================================================
 def test_frame7 () :
@@ -450,24 +448,26 @@ def test_frame7 () :
     pb    = frame_progress ( frame  , len ( tree ) )
     
     bs = Ostap.Math.Bernstein    ( 10 , -3 , 3 )
-    ls = Ostap.Math.LegendreSum  ( 10 , -3 , 3 )
-    cs = Ostap.Math.ChebyshevSum ( 10 , -3 , 3 )
+    ls = Ostap.Math.LegendreSum  ( 12 , -3 , 3 )
+    cs = Ostap.Math.ChebyshevSum ( 15 , -3 , 3 )
 
     from ostap.frames.frames import frame_param
 
-    rb = frame_param ( frame , bs , 'b4' , '(b4>-1)*1.01' )
-    rl = frame_param ( frame , ls , 'b5' )
-    rc = frame_param ( frame , cs , 'b6' )
+    with timing ( 'param: Bernstein [12]' , logger = logger ) : 
+        rb = frame_param ( frame , bs , 'b4' , '(b4>-1)*1.01' )
+    with timing ( 'param: Legendre  [15]' , logger = logger ) :     
+        rl = frame_param ( frame , ls , 'b4' , '(b4>-1)*1.01' )
+    with timing ( 'param: Chebyshev [18]' , logger = logger ) :             
+        rc = frame_param ( frame , cs , 'b4' , '(b4>-1)*1.01' )
 
-    polc = rc.GetValue()
-    poll = rl.GetValue()
-    polb = rb.GetValue()
+    with timing ( 'run  : Bernstein [12]' , logger = logger ) : polb = rb.GetValue()
+    with timing ( 'run  : Legendre  [15]' , logger = logger ) : poll = rl.GetValue()
+    with timing ( 'run  : Chebyshev [18]' , logger = logger ) : polc = rc.GetValue()
 
-    with use_canvas ( 'test_frame7: b4,b5,b6 as polynomials' , wait = 2 ) :
-        poll.draw (          linecolor = 2 ) 
-        polc.draw ( 'same' , linecolor = 4 ) 
-        polb.draw ( 'same' , linecolor = 8 ) 
-
+    with use_canvas ( 'test_frame7: b4 as polynomials [12/15/18] ' , wait = 2 ) :
+        polb.draw (          linecolor = 2 , linewidth = 2 ) 
+        poll.draw ( 'same' , linecolor = 4 , linewidth = 2 ) 
+        polc.draw ( 'same' , linecolor = 8 , linewidth = 2 ) 
 
 # =============================================================================
 def test_frame8 () :

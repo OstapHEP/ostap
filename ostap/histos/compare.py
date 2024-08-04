@@ -31,7 +31,7 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some specific comparison of histo-objects')
 # =============================================================================
-## Can 1D-histogram can be considered as ``constant'' ?
+## Can 1D-histogram can be considered as `constant' ?
 #  @code
 #  histo = ...
 #  print 'Is constant? %s ' % histo.is_constant( prob = 0.01 )
@@ -1027,8 +1027,6 @@ def _h3_cmp_ddist_ ( h1              ,
 
 ROOT.TH3F.cmp_ddist = _h3_cmp_ddist_
 ROOT.TH3D.cmp_ddist = _h3_cmp_ddist_
-
-
 
 # =============================================================================
 ## compare two histograms and find the largest difference

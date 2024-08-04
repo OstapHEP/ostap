@@ -141,24 +141,38 @@ mt_global = OCC.general.getboolean ( 'ImplicitMT' , fallback = True )
 #  frame = ...
 #  currnt , vexpr , cexpr, input_string  = _fr_helper_ ( frame , 'x*x' , 'z<0' )
 #  #endcode 
-def _fr_helper_ ( frame , expressions , cuts = '' ) :
+def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
     """Helper function that defin4es expressions and cuts 
     >>> frame = ...
     >>> current, vexpr , cexpr = _fr_helper_ ( frame , 'x*x' , 'z<0' )
     """
+    
+    if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
 
     exprs, cuts, input_string = SV.vars_and_cuts ( expressions , cuts ) 
 
     ## Frame/Tree ?
-    if   isinstance ( frame , ROOT.TTree  ) : node = DataFrame ( frame )
+    lenght = -1
+    
+    if   isinstance ( frame , ROOT.TTree  ) : node , length = DataFrame ( frame , progress = progress ) , len ( frame ) 
     elif isinstance ( frame , frame_types ) : node = frame 
     else                                    : node = as_rnode  ( frame ) 
-    
+
     ## get the list of currently known names
     vars     = frame_columns ( node ) 
     all_vars = set ( vars ) 
     
     current  = node
+
+    ## progress ? 
+    if   progress is False               : pass
+    elif progress is True and 0 < lenght : 
+        current , cnt = frame_progress ( current , length ) 
+    elif isinstance ( progress , integer_types ) and 1 < progress :
+        current , cnt = frame_progress ( current , progress ) 
+    elif progress :
+        current , cnt = frame_progress ( current , lenght   ) 
+
     vnames   = ordered_dict()     
     for i , expr in enumerate ( exprs , start = 1 ) :
         vname = expr
@@ -173,7 +187,7 @@ def _fr_helper_ ( frame , expressions , cuts = '' ) :
     ## Filter frame, if needed!
     if cuts :
         ## add named filter 
-        current = current.Filter ( '(bool) (%s)' % cuts, 'FILTER: %s' % cuts )
+        current = current.Filter ( '(bool) (%s)' % cuts, 'FILTER/WEIGHT: %s' % cuts )
         
     cname = cuts
     if cuts and not cuts in all_vars :
@@ -188,11 +202,16 @@ def _fr_helper_ ( frame , expressions , cuts = '' ) :
 
 # ==================================================================================
 ## The second helper method to implement various "statistics"-related actions  
-def _fr_helper2_ ( frame , creator , expressions , cuts = '' , lazy = True  ) :
+def _fr_helper2_ ( frame            ,
+                   creator          ,
+                   expressions      ,
+                   cuts     = ''    ,
+                   progress = False ,
+                   report   = False ,
+                   lazy     = True  ) :
     """The seocnd helper method to implement various statitic-related actions  
     """
-    
-    current, var_names, cut_name, input_string = _fr_helper_ ( frame , expressions , cuts )
+    current, var_names, cut_name, input_string = _fr_helper_ ( frame , expressions , cuts , progress = progress )
 
     results = {}
     for expr, var_name in loop_items ( var_names ) : 
@@ -202,8 +221,13 @@ def _fr_helper2_ ( frame , creator , expressions , cuts = '' , lazy = True  ) :
     if not lazy :
         for expr, res  in loop_items ( results ) :
             results [ expr ] = res.GetValue()
-            rr = results [ expr ] 
-
+            rr = results [ expr ]
+            
+    if report and not lazy :
+        report = current.Report()
+        title  = 'DataFrame processing'
+        logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+        
     if input_string and 1 == len ( results ) :
         _ , r = results.popitem()
         return r
@@ -213,23 +237,24 @@ def _fr_helper2_ ( frame , creator , expressions , cuts = '' , lazy = True  ) :
 # ==============================================================================
 ## modify constructor for RDataFrame to enable/disable Implicit multithreading
 #  @code
-#  f1 = DataFrame ( ... , enable = True  ) ## default
-#  f2 = DataFrame ( ... , enable = False ) ## default
+#  f1 = DataFrame ( ... , enable = True  , progress = False ) ## default
+#  f2 = DataFrame ( ... , enable = False , progress = False ) ## default
 #  @endcode
 #  @see ROOT::EnableImplicitMT 
 #  @see ROOT::DisableImplicitMT
 #  @see ROOT::IsImplicitMTEnabled
-def _fr_new_init_ ( self , name , *args , **kwargs ) :
+def _fr_new_init_ ( self , *args , **kwargs ) :
     """Modify the DataFrame constuctor to allow (semi)automatic
     manipulations wth ROOT.ROOT.EnableImplicitMT/DisableImplicitMT
     - see ROOT.ROOT.EnableImplicitMT 
     - see ROOT.ROOT.DisableImplicitMT
     - see ROOT.ROOT.IsImplicitMTEnabled
-    >>> f = DataFrame ( .... , enable = True  ) ## default 
-    >>> f = DataFrame ( .... , enable = False )
+    >>> f = DataFrame ( ... , enable = True  , progress = False ) ## default 
+    >>> f = DataFrame ( ... , enable = False , progress = False )
     """
         
-    mt = kwargs.pop ( 'enable' , mt_global ) and mt_global 
+    mt        = kwargs.pop ( 'enable'   , mt_global ) and mt_global 
+    progress  = kwargs.pop ( 'progress' , False     )
     
     if       mt and not ROOT.ROOT.IsImplicitMTEnabled() :
         ROOT.ROOT.EnableImplicitMT  ()
@@ -238,8 +263,16 @@ def _fr_new_init_ ( self , name , *args , **kwargs ) :
         ROOT.ROOT.DisableImplicitMT ()
         logger.info  ( 'DataFrame:ImplicitMT is %s' % ( 'Enabled' if ROOT.ROOT.IsImplicitMTEnabled() else 'Disabled' ) ) 
         
-    self._fr_old_init_ ( name , *args , **kwargs ) 
+    self._fr_old_init_ ( *args , **kwargs ) 
 
+    if progress and args :
+        lenght = -1 
+        if   isinstance ( args [ 0 ] , integer_types ) and 1 < args [ 0 ] : lenght = args [ 0 ]
+        elif isinstance ( args [ 0 ] , ROOT.TTree    )                    : lenght = len ( args [ 0 ] )
+        elif isinstance ( progress   , inetger_types ) and 1 < progress   : lenght = progress         
+        _ , _ = frame_progress ( self , lenght ) 
+        
+    
 if not hasattr ( DataFrame , '_fr_old_init_' ) :
     DataFrame._fr_old_init_ = DataFrame.__init__
     DataFrame.__init__      = _fr_new_init_
@@ -286,15 +319,15 @@ frame_branches = frame_columns
 # =============================================================================
 ## Display the progress bar for the DataFrame:
 #  @code
-#  f = DataFrame ( ... )
-#  p = frame_progress1 ( f , 1000 ) ## number of elements!
+#  f     = DataFrame ( ... )
+#  f , c = frame_progress1 ( f , 1000 ) ## number of elements!
 #  ....
 #  @endcode 
 #  @attention  active only for ROOT < 6.32
 def frame_progress1 ( frame  , length ) :
     """ Draw (lazy) progress bar for the    DataFrame:
-    >>> f = DataFrame ( ... )
-    >>> p = frame_progress1 ( f , 1000 ) ## number of elements!
+    >>> f      = DataFrame ( ... )
+    >>> f , c  = frame_progress1 ( f , 1000 ) ## number of elements!
     >>> ....
     - active only for ROOT < 6.32
     """
@@ -418,9 +451,11 @@ def frame_prescale ( frame , prescale , name = '' ) :
     raise TypeError ( "Invalid type/value for 'prescale' %s/%s" %( prescale , type ( prescale ) ) )
 
 # ==============================================================================
-## Draw the variables for the frame 
+## Draw the variables for the frame
+#  - old variant 
 def frame_draw ( frame , *args , **kwargs ) :
     """Draw the variable (s) for the frames
+    - old variant
     """
     node = as_rnode ( frame )
     from ostap.fitting.dataset import ds_draw as _ds_draw_
@@ -694,7 +729,13 @@ _types_nD = _types_1D + _types_2D + _types_3D + _types_4D
 #  - anything that can be converted to <code>ROOT::RDF::TH1DModel</code>, 
 #    <code>ROOT::RDF::TH2DModel</code> or <code>ROOT::RDF::TH3DModel</code> objects 
 #  @attention: variables should be listed in reverse order!  
-def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
+def frame_project ( frame            , 
+                    model            ,
+                    expressions      ,
+                    cuts      = ''   ,
+                    progress = False , 
+                    report   = False ,
+                    lazy     = True  ) :
     """ Project of the frame into histigram 
 
     - attention: variables should be listed in reverse order! 
@@ -732,12 +773,14 @@ def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
     
     """
     
+    if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
+
     if isinstance ( model , _types_nD ) : 
         assert ( 6,25 ) <= root_info, '6.25<=ROOT is required here!'
-        return _fr_param_ ( frame , model , expression, cuts = cuts , laszy = lazy ) 
+        return _fr_param_ ( frame , model , expression, cuts = cuts , progress = progress , report = report , lazy = lazy ) 
 
-    ## decode expresisons & cuts 
-    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts )
+    ## decode expressons & cuts 
+    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
     
     ## convert histogram-like objects into 'models'
 
@@ -765,9 +808,17 @@ def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
     ## if true histo is specified, the aciton is NOT lazy!
     if histo :
         histo += action.GetValue() 
-        return histo 
+        result = histo 
+    else :        
+        result = action if lazy else action.GetValue()
 
-    return action if lazy else action.GetValue() 
+    if report and not lazy :
+         report = current.Report()
+         title = 'DataFrame project'
+         logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+         
+    return result 
+
 
 # =============================================================================
 ## "project/parameterise" frame into polynomial structures (lazy action)
@@ -795,7 +846,13 @@ def frame_project ( frame , model , expressions , cuts = '' , lazy = True  ) :
 #  bs2   = Ostap.Math.Bernstein2D  ( ... )
 #  res   = frame_the_param ( frame , bs2 , ( 'y' , 'x' ) , 'z>0' )
 #  @endcode
-def _fr_param_ ( frame , poly , expressions , cuts = '' , lazy = True ) :
+def _fr_param_ ( frame            ,
+                 poly             ,
+                 expressions      ,
+                 cuts     = ''    ,
+                 progress = False ,
+                 report   = False ,
+                 lazy     = True  ) :
     """ `project/parameterise` frame into polynomial structures
     
     >>> frame = ...
@@ -822,12 +879,14 @@ def _fr_param_ ( frame , poly , expressions , cuts = '' , lazy = True ) :
     >>> res   = frame_the_param ( frame , bs2 , 'y,x' , 'z>0' )
     """
     
+    if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
+
     ## the histogram ? 
     if isinstance ( poly , ROOT.TH1 ) :
-        return _fr_project_ ( frame , poly , expressions , cuts = cuts , lazy = lazy )
+        return _fr_project_ ( frame , poly , expressions , cuts = cuts , progress = progress , report = report , lazy = lazy )
 
     ## 
-    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts )
+    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
     
     nvars = len ( items )
     
@@ -866,6 +925,11 @@ def _fr_param_ ( frame , poly , expressions , cuts = '' , lazy = True ) :
         poly  *= 0.0 
         poly  += result
         
+    if report and not lazy :
+         report = current.Report()
+         title = 'DataFrame parameterisation'
+         logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+
     return result
 
 
@@ -875,14 +939,21 @@ def _fr_param_ ( frame , poly , expressions , cuts = '' , lazy = True ) :
 #  frame = ...
 #  result = frame_draw ( frame , 'x+12/z' , cut = 'z>1' ) 
 ## @endcode 
-def _fr_draw_ ( frame , expressions , cuts = '' , opts = '' , **kwargs ) :
+def _fr_draw_ ( frame            ,
+                expressions      ,
+                cuts     = ''    ,
+                opts     = ''    ,
+                progress = False ,
+                report   = False , **kwargs ) :
     """Draw the variable(s) from the frame
     >>> frame = ...
     >>> result = frame_draw ( frame , 'x+12/z' , cut = 'z>1' ) 
     """
-    
+
+    if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
+
     ## decode expressions & cuts 
-    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts )
+    current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
 
     nvars = len ( items )
     assert 1 <= nvars <= 3 , 'Invalid expressions: %s' % str ( items ) 
@@ -890,11 +961,12 @@ def _fr_draw_ ( frame , expressions , cuts = '' , opts = '' , **kwargs ) :
     cvars  = [ v for v in items.values() ]
     uvars  = CNT ( cvars ) if not cname else CNT ( cvars + [ cname ] )
 
-    ## create the 
-    cache  = current.Cache ( uvars ) 
+    ## create the cache ... needed ? 
+    ## cache   = current.Cache ( uvars )
+    cache   = current 
     
     ## get the ranges 
-    ranges = frame_range ( cache , cvars , cname )
+    ranges = frame_range ( cache , cvars , cname , report = report )
     if not ranges :
         logger.warning ( 'frame_draw: nothing to draw, return None' )
         return None
@@ -912,9 +984,16 @@ def _fr_draw_ ( frame , expressions , cuts = '' , opts = '' , **kwargs ) :
     histo = histo_book ( histos , kw )
 
     ## fill the histogram 
-    histo = frame_project ( cache , histo , cvars , cname , lazy = False )
-    ## draw the histogram 
-    histo.draw ( opts , *kw )
+    histo = frame_project ( cache , histo , cvars , cname , progress = progress , report = report , lazy = False )
+    
+    ## draw the histogram
+    histo.draw ( opts , **kw )
+
+##    if report :
+##        report = cache.Report()
+##        title = 'DataFrame draw'
+##        logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+    
     return histo 
 
 # =============================================================================
@@ -1304,7 +1383,12 @@ def frame_deciles  ( frame , expression , cuts = '' , exact = True ) :
 #  stat  = frame_the_tatVar  ( 'pt'           , lazy = True )
 #  stat  = frame_the_statVar ( 'pt' , 'eta>0' , lazy = True )
 #  @endcode
-def _fr_the_statVar_ ( frame , expressions , cuts = '' , lazy = True ) :
+def _fr_the_statVar_ ( frame            ,
+                       expressions      ,
+                       cuts = ''        ,
+                       progress = False ,
+                       report   = False , 
+                       lazy     = True  ) :
     """Get statistics of variable(s)
     >>> frame = ....
     >>> stat  = frame_the_statVar ( 'pt'           , lazy = True )
@@ -1315,7 +1399,13 @@ def _fr_the_statVar_ ( frame , expressions , cuts = '' , lazy = True ) :
         if   cut_name: return node.Book( ROOT.std.move ( Ostap.Actions.WStatVar() ) , CNT ( [ var_name , cut_name ] ) )
         else         : return node.Book( ROOT.std.move ( Ostap.Actions. StatVar() ) , CNT ( 1 , var_name ) )     
         
-    return _fr_helper2_ ( frame , screator , expressions , cuts , lazy = lazy )
+    return _fr_helper2_ ( frame               ,
+                          screator            ,
+                          expressions         ,
+                          cuts                ,
+                          progress = progress ,
+                          report   = report   ,  
+                          lazy     = lazy     )
 
 
 # ==================================================================================
@@ -1325,14 +1415,20 @@ def _fr_the_statVar_ ( frame , expressions , cuts = '' , lazy = True ) :
 #  stat  = frame_the_statCov ( 'pt1' , 'pt2' ,          lazy = True )
 #  stat  = frame_the_statCov ( 'pt1' , 'pt2' , 'z<0' ,  lazy = True )
 #  @endcode
-def _fr_the_statCov_ ( frame , expression1 , expression2 , cuts = '' , lazy = True ) :
+def _fr_the_statCov_ ( frame            ,
+                       expression1      ,
+                       expression2      ,
+                       cuts     = ''    ,
+                       progress = False ,
+                       rreport  = False ,                        
+                       lazy     = True  ) :
     """Get statistics of variable(s)
     >>> frame = ....
     >>> stat  = frame_the_statCov ( 'pt1' , 'pt2' ,          lazy = True )
     >>> stat  = frame_the_statCov ( 'pt1' , 'pt2' , 'z<0' ,  lazy = True )
     """
     
-    current , exprs1 , cut_name , input_string1 = _fr_helper_ ( frame   , expression1 , cuts     )
+    current , exprs1 , cut_name , input_string1 = _fr_helper_ ( frame   , expression1 , cuts     , progress = progress )
     assert exprs1 and input_string1, 'Invalid expression1: %s' % expression2
     
     current , exprs2 , cut_name , input_string2 = _fr_helper_ ( current , expression2 , cut_name )
@@ -1349,8 +1445,15 @@ def _fr_the_statCov_ ( frame , expression1 , expression2 , cuts = '' , lazy = Tr
     else         :
         TT = ROOT.Detail.RDF.Stat2Action ( Ostap.Math.Covariance  ) 
         action = node.Book( ROOT.std.move ( TT () ) , CNT ( uvars ) )     
-    
-    return action if lazy else action.GetValue()
+
+    result = action if lazy else action.GetValue()
+
+    if report and not lazy :
+         report = current.Report()
+         title = 'DataFrame processing'
+         logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+             
+    return result 
 
 # ==================================================================================
 ## get statistics of variable(s)
@@ -1359,7 +1462,12 @@ def _fr_the_statCov_ ( frame , expression1 , expression2 , cuts = '' , lazy = Tr
 #  stat  = frame.statVar ( 'pt'           , lazy = True )
 #  stat  = frame.statVar ( 'pt' , 'eta>0' , lazy = True )
 #  @endcode
-def _fr_the_statVar_ ( frame , expressions , cuts = '' , lazy = True ) :
+def _fr_the_statVar_ ( frame            ,
+                       expressions      ,
+                       cuts     = ''    ,
+                       progress = False ,
+                       report   = False , 
+                       lazy     = True  ) :
     """Get statistics of variable(s)
     >>> frame = ....
     >>> stat  = frame.statVar ( 'pt'           , lazy = True )
@@ -1370,7 +1478,13 @@ def _fr_the_statVar_ ( frame , expressions , cuts = '' , lazy = True ) :
         if   cut_name: return node.Book( ROOT.std.move ( Ostap.Actions.WStatVar() ) , CNT ( [ var_name , cut_name ] ) )
         else         : return node.Book( ROOT.std.move ( Ostap.Actions. StatVar() ) , CNT ( 1 , var_name ) )     
         
-    return _fr_helper2_ ( frame , screator , expressions , cuts , lazy = lazy )
+    return _fr_helper2_ ( frame               ,
+                          screator            ,
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     )
 
 
 # ==================================================================================
@@ -1379,12 +1493,21 @@ def _fr_the_statVar_ ( frame , expressions , cuts = '' , lazy = True ) :
 #  frame = ...
 #  nEff = frame_the_nEff ( 'x*x' , 'y>0' )  
 #  @endcode 
-def _fr_the_nEff_ ( frame , cuts = '' , lazy = False ) :
+def _fr_the_nEff_ ( frame            ,
+                    cuts     = ''    ,
+                    progress = False ,
+                    report   = False ,
+                    lazy     = True  ) :
     """Get nEff through action
     >>> frame = ...
     >>> nEff = frame_the_nEff ( 'x*x' , 'y>0' )
     """
-    return _fr_the_statVar_ ( frame , '1.0' , cuts = cuts , lazy = lazy )
+    return _fr_the_statVar_ ( frame               ,
+                              '1.0'               ,
+                              cuts      = cuts    ,
+                              progress = progress ,
+                              report   = report   ,
+                              lazy     = lazy     )
 
 # ==================================================================================
 ## get statistics of variable(s)
@@ -1395,7 +1518,12 @@ def _fr_the_nEff_ ( frame , cuts = '' , lazy = False ) :
 #  @endcode
 #  @see Ostap::Math::Moment_
 #  @see Ostap::Math::WMoment_
-def _fr_the_moment_ ( frame , N , expressions , cuts = '' , lazy = True ) :
+def _fr_the_moment_ ( frame , N        ,
+                      expressions      ,
+                      cuts     = ''    ,
+                      progress = False ,
+                      report   = False ,
+                      lazy     = True  ) :
     """Get statistics of variable(s)
     >>> frame = ....
     >>> stat  = frame_the_moment ( 5 , 'pt'           )
@@ -1413,7 +1541,13 @@ def _fr_the_moment_ ( frame , N , expressions , cuts = '' , lazy = True ) :
             TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.Moment_(N) ) 
             return current.Book ( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) ) 
 
-    return _fr_helper2_ ( frame , mcreator , expressions , cuts , lazy = lazy )
+    return _fr_helper2_ ( frame               , 
+                          mcreator            ,
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     )
 
 # ============================================================================
 ## Get a mean via moment
@@ -1422,13 +1556,25 @@ def _fr_the_moment_ ( frame , N , expressions , cuts = '' , lazy = True ) :
 #  stat  = frame.the_mean ( 'x'x' ,  'y<0' )
 #  mean  = stat.mean() 
 #  @ndcode
-def _fr_the_mean_ ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
+def _fr_the_mean_ ( frame            ,
+                    expressions      ,
+                    cuts     = ''    ,
+                    errors   = True  , 
+                    progress = False ,
+                    report   = False ,
+                    lazy     = True  ) :
     """ Get a mean via moment
     >>> frame = ...
     >>> stat  = frame.the_mean ( 'x'x' ,  'y<0' )
     >>> mean  = stat.mean() 
     """
-    return _fr_the_moment_ ( frame , 2 if errors else 1 , expressions , cuts = cuts , lazy = lazy )
+    return _fr_the_moment_ ( frame               ,
+                             2 if errors else 1  ,
+                             expressions         ,
+                             cuts     = cuts     ,
+                             progress = progress ,
+                             report   = report   ,
+                             lazy     = lazy     )
 
 # ============================================================================
 ## Get a rms via moment
@@ -1437,13 +1583,25 @@ def _fr_the_mean_ ( frame , expressions , cuts = '' , errors = True , lazy = Tru
 #  stat  = frame.the_rms ( 'x'x' ,  'y<0' )
 #  value = stat.rms() 
 #  @ndcode
-def _fr_the_rms_ ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
+def _fr_the_rms_ ( frame ,
+                   expressions      ,
+                   cuts     = ''    ,
+                   errors   = True  ,                    
+                   progress = False ,
+                   report   = False ,
+                   lazy     = True  ) :
     """Get a rms via moment
     >>> frame = ...
     >>> stat  = frame.the_rms ( 'x'x' ,  'y<0' )
     >>> value = stat.rms () 
     """
-    return _fr_the_moment_ ( frame , 4 if errors else 2 , expressions , cuts = cuts , lazy = lazy )
+    return _fr_the_moment_ ( frame               ,
+                             4 if errors else 2  , 
+                             expressions         ,
+                             cuts     = cuts     ,
+                             progress = progress ,
+                             report   = report   ,
+                             lazy     = lazy     )
 
 # ============================================================================
 ## Get a variance via moment
@@ -1452,13 +1610,25 @@ def _fr_the_rms_ ( frame , expressions , cuts = '' , errors = True , lazy = True
 #  stat  = frame.the_variance ( 'x'x' ,  'y<0' )
 #  value = stat.variance () 
 #  @ndcode
-def _fr_the_variance_ ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
+def _fr_the_variance_ ( frame            , 
+                        expressions      ,
+                        cuts     = ''    ,
+                        errors   = True  ,                    
+                        progress = False ,
+                        report   = False ,
+                        lazy     = True  ) :
     """Get a variance via moment
     >>> frame  = ...
     >>> stat   = frame.the_variance( 'x'x' ,  'y<0' )
     >>> value  = stat.variance () 
     """
-    return _fr_the_moment_ ( frame , 4 if errors else 2 , expressions , cuts = cuts , lazy = lazy )
+    return _fr_the_moment_ ( frame               ,
+                             4 if errors else 2  , 
+                             expressions         ,
+                             cuts     = cuts     ,
+                             progress = progress ,
+                             report   = report   ,
+                             lazy     = lazy     )
 
 # ============================================================================
 ## Get a skewness via moment
@@ -1467,13 +1637,25 @@ def _fr_the_variance_ ( frame , expressions , cuts = '' , errors = True , lazy =
 #  stat  = frame.the_skewness ( 'x'x' ,  'y<0' )
 #  mean  = stat.skewness  () 
 #  @ndcode
-def _fr_the_skewness_ ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
-    """Get a variance via moment
+def _fr_the_skewness_ ( frame ,
+                        expressions      ,
+                        cuts     = ''    ,
+                        errors   = True  ,                    
+                        progress = False ,
+                        report   = False ,
+                        lazy     = True  ) :
+    """Get a skewness via moment
     >>> frame = ...
     >>> stat  = frame.the_skewness ( 'x'x' ,  'y<0' )
     >>> mean  = stat.skreness  () 
     """
-    return _fr_the_moment_ ( frame , 6 if errors else 3 , expressions , cuts = cuts , lazy = lazy )
+    return _fr_the_moment_ ( frame               ,
+                             6 if errors else 3  , 
+                             expressions         ,
+                             cuts     = cuts     ,
+                             progress = progress ,
+                             report   = report   ,
+                             lazy     = lazy     )
 
 # ============================================================================
 ## Get a kurtosis via moment
@@ -1482,13 +1664,25 @@ def _fr_the_skewness_ ( frame , expressions , cuts = '' , errors = True , lazy =
 #  stat  = frame.the_kurtosis ( 'x'x' ,  'y<0' )
 #  value = stat.kurtosis   () 
 #  @ndcode
-def _fr_the_kurtosis_ ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
+def _fr_the_kurtosis_ ( frame            ,
+                        expressions      ,
+                        cuts     = ''    ,
+                        errors   = True  ,                    
+                        progress = False ,
+                        report   = False ,
+                        lazy     = True  ) :
     """Get a kurtosis  via moment
     >>> frame = ...
     >>> stat  = frame.the_kurtosis ( 'x'x' ,  'y<0' )
     >>> value = stat.kurtosis   () 
     """
-    return _fr_the_moment_ ( frame , 8 if errors else 4 , expressions , cuts = cuts , lazy = lazy )
+    return _fr_the_moment_ ( frame               ,
+                             8 if errors else 4  ,
+                             expressions         ,
+                             cuts     = cuts     ,
+                             progress = progress ,
+                             report   = report   ,
+                             lazy     = lazy     )
 
 # ============================================================================
 ## Get an arithmetic mean
@@ -1497,7 +1691,12 @@ def _fr_the_kurtosis_ ( frame , expressions , cuts = '' , errors = True , lazy =
 #  frame = ...
 #  mean = frame_the_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
 #  @endcode 
-def _fr_the_arithmetic_mean_ ( frame , expressions , cuts = '' , lazy = True ) :
+def _fr_the_arithmetic_mean_ ( frame ,
+                               expressions      ,
+                               cuts     = ''    ,
+                               progress = False ,
+                               report   = False ,
+                               lazy     = True  ) :
     """Get an arithmetic mean
     >>> frame = ...
     >>> mean = frame_the_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
@@ -1512,7 +1711,13 @@ def _fr_the_arithmetic_mean_ ( frame , expressions , cuts = '' , lazy = True ) :
             TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.ArithmeticMean ) 
             return node.Book( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) )     
         
-    return _fr_helper2_ ( frame , acreator , expressions , cuts , lazy = lazy )
+    return _fr_helper2_ ( frame               ,
+                          acreator            , 
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     )
     
 # ============================================================================
 ## Get a geometric mean
@@ -1521,7 +1726,12 @@ def _fr_the_arithmetic_mean_ ( frame , expressions , cuts = '' , lazy = True ) :
 #  frame = ...
 #  mean = frame_the_geometric_mean ( frame , 'x*x' , '0<y' ) 
 #  @endcode 
-def _fr_the_geometric_mean_ ( frame , expressions , cuts = '' , lazy = True ) :
+def _fr_the_geometric_mean_ ( frame ,
+                              expressions      ,
+                              cuts     = ''    ,
+                              progress = False ,
+                              report   = False ,
+                              lazy     = True  ) :
     """Get an geomentric mean
     >>> frame = ...
     >>> mean = frame_the_geometric_mean ( frame , 'x*x' , '0<y' ) 
@@ -1535,8 +1745,14 @@ def _fr_the_geometric_mean_ ( frame , expressions , cuts = '' , lazy = True ) :
             TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.GeometricMean ) 
             return node.Book( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) )     
         
-    return _fr_helper2_ ( frame , gcreator , expressions , cuts , lazy = lazy )
- 
+    return _fr_helper2_ ( frame               ,
+                          gcreator            ,
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     )
+
 # ============================================================================
 ## Get a harmonic mean
 #  @see Ostap::Math::HarmonicMean
@@ -1544,7 +1760,12 @@ def _fr_the_geometric_mean_ ( frame , expressions , cuts = '' , lazy = True ) :
 #  frame = ...
 #  mean = frame_the_harmonic_mean ( frame , 'x*x' , '0<y' ) 
 #  @endcode 
-def _fr_the_harmonic_mean_ ( frame , expressions , cuts = '' , lazy = True ) :
+def _fr_the_harmonic_mean_ ( frame            , 
+                             expressions      ,
+                             cuts     = ''    ,
+                             progress = False ,
+                             report   = False ,
+                             lazy     = True  ) :
     """Get a harmonic mean
     >>> frame = ...
     >>> mean = frame_the_harmonic_mean ( frame , 'x*x' , '0<y' ) 
@@ -1558,7 +1779,13 @@ def _fr_the_harmonic_mean_ ( frame , expressions , cuts = '' , lazy = True ) :
             TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.HarmonicMean ) 
             return node.Book( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) )     
         
-    return _fr_helper2_ ( frame , creator , expressions , cuts , lazy = lazy )
+    return _fr_helper2_ ( frame               ,
+                          creator             ,
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     )
  
 # ============================================================================
 ## Get a power mean
@@ -1570,7 +1797,12 @@ def _fr_the_harmonic_mean_ ( frame , expressions , cuts = '' , lazy = True ) :
 #  frame = ...
 #  mean = frame_the_power_mean ( frame , 3 , 'x*x' , '0<y' ) 
 #  @endcode 
-def _fr_the_power_mean_ ( frame , p , expressions , cuts = '' , lazy = True ) :
+def _fr_the_power_mean_ ( frame , p ,
+                          expressions      ,
+                          cuts     = ''    ,
+                          progress = False ,
+                          report   = False ,
+                          lazy     = True  ) :
     """Get a power mean
     >>> frame = ...
     >>> mean = frame_the_power_mean ( frame , 5 ,  'x*x' , '0<y' ) 
@@ -1596,8 +1828,13 @@ def _fr_the_power_mean_ ( frame , p , expressions , cuts = '' , lazy = True ) :
             TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.PowerMean ) 
             return node.Book( ROOT.std.move ( TT ( p ) ) , CNT ( 1 , var_name ) )
         
-    return _fr_helper2_ ( frame , pcreator , expressions , cuts , lazy = lazy )
-
+    return _fr_helper2_ ( frame               ,
+                          pcreator            ,
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     )
 
 # ============================================================================
 ## Get Lehmer mean
@@ -1608,8 +1845,13 @@ def _fr_the_power_mean_ ( frame , p , expressions , cuts = '' , lazy = True ) :
 #  frame = ...
 #  mean = frame_the_lehmer_mean ( frame , 3 , 'x*x' , '0<y' ) 
 #  @endcode 
-def _fr_the_lehmer_mean_ ( frame , p , expressions , cuts = '' , lazy = True ) :
-    """Get Lehmermean
+def _fr_the_lehmer_mean_ ( frame , p ,
+                           expressions      ,
+                           cuts     = ''    ,
+                           progress = False ,
+                           report   = False ,
+                           lazy     = True  ) :
+    """Get Lehmer mean
     >>> frame = ...
     >>> mean = frame_the_lehmer_mean ( frame , 5 ,  'x*x' , '0<y' ) 
     -  see `Ostap.Math.LehmerMean`
@@ -1631,8 +1873,13 @@ def _fr_the_lehmer_mean_ ( frame , p , expressions , cuts = '' , lazy = True ) :
             TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.LehmerMean ) 
             return node.Book( ROOT.std.move ( TT ( p ) ) , CNT ( 1 , var_name ) )     
         
-    return _fr_helper2_ ( frame , lcreator , expressions , cuts , lazy = lazy )
-
+    return _fr_helper2_ ( frame               ,
+                          lcreator            ,
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     )
 
 # ============================================================================
 ## Get min/max for variables 
@@ -1642,7 +1889,12 @@ def _fr_the_lehmer_mean_ ( frame , p , expressions , cuts = '' , lazy = True ) :
 #  frame = ...
 #  mean = frame_the_minmax ( frame , 'x*x' , '0<y' ) 
 #  @endcode 
-def _fr_the_minmax_ ( frame , expressions , cuts = '' , lazy = True ) :
+def _fr_the_minmax_ ( frame            ,
+                      expressions      ,
+                      cuts     = ''    ,
+                      progress = False ,
+                      report   = False ,
+                      lazy     = True  ) :
     """Get min/max values for variables
     >>> frame = ...
     >>> mean = frame_the_minmax ( frame , 5 ,  'x*x' , '0<y' ) 
@@ -1657,7 +1909,13 @@ def _fr_the_minmax_ ( frame , expressions , cuts = '' , lazy = True ) :
             TT = ROOT.Detail.RDF.Stat1Action ( Ostap.Math.MinMaxValue  ) 
             return node.Book( ROOT.std.move ( TT () ) , CNT ( 1 , var_name ) )     
         
-    return _fr_helper2_ ( frame , mcreator , expressions , cuts , lazy = lazy )
+    return _fr_helper2_ ( frame               ,
+                          mcreator            ,
+                          expressions         ,
+                          cuts     = cuts     ,
+                          progress = progress ,
+                          report   = report   ,
+                          lazy     = lazy     )
 
 
 # ===============================================================================
@@ -1711,13 +1969,13 @@ if Frames_OK :
     #  stat  = frame_statVar ( frame , 'pt'           )
     #  stat  = frame_statVar ( frame , 'pt' , 'eta>0' )
     #  @endcode
-    def frame_statVar ( frame , expressions , cuts = ''  ) :
+    def frame_statVar ( frame , expressions , cuts = ''  , progress = False , report = False ) :
         """Get statistics of variable(s)
         >>> frame = ....
         >>> stat  = frame.statVar ( 'pt'           )
         >>> stat  = frame.statVar ( 'pt' , 'eta>0' )
         """
-        return frame_the_statVar ( frame , expressions , cuts = cuts , lazy = False )
+        return frame_the_statVar ( frame , expressions , cuts = cuts , progress = progress , report = report , lazy = False )
     # ==================================================================================
     ## get covariance for variables via action 
     #  @code
@@ -1725,13 +1983,24 @@ if Frames_OK :
     #  stat  = frame_statCov ( 'pt1' , 'pt2' ,        )
     #  stat  = frame_statCov ( 'pt1' , 'pt2' , 'z<0'  )
     #  @endcode
-    def frame_statCov ( frame , expression1 , expression2 , cuts = '' ) :
+    def frame_statCov ( frame            ,
+                        expression1      ,
+                        expression2      ,
+                        cuts     = ''    ,
+                        progress = False ,
+                        report   = False ) :
         """Get statistics of variables via actions 
         >>> frame = ....
         >>> stat  = frame_statCov ( 'pt1' , 'pt2' ,        )
         >>> stat  = frame_statCov ( 'pt1' , 'pt2' , 'z<0'  )
         """
-        return frame_the_statCov ( frame , expression1 , expression2 , cuts = cuts , lazy = False )
+        return frame_the_statCov ( frame               ,
+                                   expression1         ,
+                                   expression2         ,
+                                   cuts     = cuts     , 
+                                   progress = progress ,
+                                   report   = report   ,
+                                   lazy     = False    )
 
     # =============================================================================
     ## Get the effective entries in data frame (via actions)
@@ -1739,12 +2008,19 @@ if Frames_OK :
     #  data = ...
     #  neff = data.nEff('b1*b1')
     #  @endcode
-    def frame_nEff ( frame , cuts = '' ) :
+    def frame_nEff ( frame            ,
+                     cuts     = ''    ,
+                     progress = False ,
+                     report   = False ) :
         """Get the effective entries in data frame 
         >>> data = ...
         >>> neff = frame_nEff('b1*b1')
         """
-        return frame_the_nEff ( frame , cuts = cuts , lazy = False ).nEff()         
+        return frame_the_nEff ( frame               ,
+                                cuts     = cuts     ,
+                                progress = progress ,
+                                report   = report   ,
+                                lazy     = False    ).nEff()         
     # ==================================================================================
     ## get statistics of variable(s)  (via actions)
     #  @code
@@ -1754,37 +2030,54 @@ if Frames_OK :
     #  @endcode
     #  @see Ostap::Math::Moment_
     #  @see Ostap::Math::WMoment_
-    def frame_moment ( frame , N , expressions , cuts = '' ) :
+    def frame_moment ( frame , N , expressions , cuts = '' , progress = False , report = False ) :
         """Get statistics of variable(s)  (via actions) 
         >>> frame = ....
         >>> stat  = frame_moment ( 5 , 'pt'           )
         >>> stat  = frame_moment ( 5 , 'pt' , 'eta>0' )
         """
-        return frame_the_moment ( frame , N , expressions , cuts = cuts , lazy = False )
+        return frame_the_moment ( frame , N           ,
+                                  expressions         ,
+                                  cuts     = cuts     ,
+                                  progress = progress ,
+                                  report   = report   , 
+                                  lazy     = False    )
     # ============================================================================
     ## Get a mean via moment&action
     #  @code
     #  frame = ...
     #  mean  = frame_mean ( 'x'x' ,  'y<0' )
     #  @ndcode
-    def frame_mean ( frame , expressions , cuts = '' , errors = True ) :
+    def frame_mean ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
         """ Get a mean via moment
         >>> frame = ...
         >>> mean = frame_mean ( 'x'x' ,  'y<0' )
         """
-        return frame_the_mean ( frame , expressions , cuts = cuts , errors = errors , lazy = False ).mean() 
+        return frame_the_mean ( frame               ,
+                                expressions         ,
+                                cuts     = cuts     ,
+                                errors   = errors   ,
+                                progress = progress ,
+                                report   = report   ,
+                                lazy     = False    ).mean() 
     # ============================================================================
     ## Get a rms via moment&action 
     #  @code
     #  frame = ...
     #  rms   = frame_rms ( 'x'x' ,  'y<0' )
     #  @ndcode
-    def frame_rms ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
+    def frame_rms ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
         """Get a rms via moment&action
         >>> frame = ...
         >>> rms   = frame_rms ( 'x'x' ,  'y<0' )
         """
-        return frame_the_rms ( frame , expressions , cuts = cuts , errors = errors , lazy = False ).rms() 
+        return frame_the_rms ( frame               ,
+                               expressions         ,
+                               cuts     = cuts     ,
+                               errors   = errors   ,
+                               progress = progress ,
+                               report   = report   ,
+                               lazy     = False    ).rms() 
     # ============================================================================
     ## Get a variance via moment&actions
     #  @code
@@ -1792,13 +2085,19 @@ if Frames_OK :
     #  variance  = frame_variance   ( 'x'x' ,  'y<0' )
     #  variance  = frame_dispersion ( 'x'x' ,  'y<0' )
     #  @ndcode
-    def frame_variance ( frame , expressions , cuts = '' , errors = True , lazy = True ) :
+    def frame_variance ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
         """Get a variance via moment&action
         >>> frame     = ...
         >>> variance  = frame_variance   ( 'x'x' ,  'y<0' )
         >>> variance  = frame_dispersion ( 'x'x' ,  'y<0' )        
         """
-        return frame_the_variance ( frame , expressions , cuts = cuts , errors = errors , lazy = False ).variance()
+        return frame_the_variance ( frame               ,
+                                    expressions         ,
+                                    cuts     = cuts     ,
+                                    errors   = errors   ,
+                                    progress = progress ,
+                                    report   = report   ,
+                                    lazy     = False    ).variance()
     # ============================================================================
     ## ditto 
     frame_dispersion = frame_variance 
@@ -1808,26 +2107,43 @@ if Frames_OK :
     #  frame = ...
     #  skew  = frame_skewness ( 'x'x' ,  'y<0' )
     #  @ndcode
-    def frame_skewness ( frame , expressions , cuts = '' , errors = True ) :
+    def frame_skewness ( frame , expressions , cuts = '' , errors = True , progress = False , report = False ) :
         """Get a variance via moment
         >>> frame = ...
         >>> skew  = frame_skewness ( 'x'x' ,  'y<0' )
         >>> mean  = stat.skreness  () 
         """
-        return frame_the_skewness ( frame , expressions , cuts = cuts , errors = errors , lazy = False ).skewness()
+        return frame_the_skewness ( frame               ,
+                                    expressions         ,
+                                    cuts     = cuts     ,
+                                    errors   = errors   ,
+                                    progress = progress ,
+                                    report   = report   ,                                     
+                                    lazy     = False    ).skewness()
     # ============================================================================
-    ## Get a kurtosis via moment&actgions 
+    ## Get a kurtosis via moment&actions 
     #  @code
     #  frame = ...
     #  kurt  = frame_kurtosis ( 'x'x' ,  'y<0' )
     #  @ndcode
-    def frame_kurtosis ( frame , expressions , cuts = '' , errors = True ) :
+    def frame_kurtosis ( frame            ,
+                         expressions      ,
+                         cuts     = ''    ,
+                         errors   = True  ,
+                         progress = False ,
+                         report   = False ) :
         """Get a kurtosis  via moment
         >>> frame = ...
         >>> stat  = frame.the_kurtosis ( 'x'x' ,  'y<0' )
         >>> value = stat.kurtosis   () 
         """
-        return frame_the_kurtosis ( frame , expressions , cuts = cuts , errors = True , lazy = False ).kurtosis()     
+        return frame_the_kurtosis ( frame               ,
+                                    expressions         , 
+                                    cuts     = cuts     ,
+                                    errors   = True     ,
+                                    progress = progress ,
+                                    report   = report   , 
+                                    lazy     = False    ).kurtosis()     
     # ============================================================================
     ## Get an arithmetic mean
     #  @see Ostap::Math::ArithmeticMean
@@ -1835,13 +2151,22 @@ if Frames_OK :
     #  frame = ...
     #  mean = frame_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
     #  @endcode 
-    def frame_arithmetic_mean ( frame , expressions , cuts = '' ) :
+    def frame_arithmetic_mean ( frame            ,
+                                expressions      ,
+                                cuts     = ''    ,  
+                                progress = False ,
+                                report   = False ) :
         """Get an arithmetic mean
         >>> frame = ...
         >>> mean = frame_arithmetic_mean ( frame , 'x*x' , '0<y' ) 
         -  see `Ostap.Math.ArithmeticMean`
         """
-        return frame_the_arithmetic_mean ( frame ,expressions , cuts = cuts , lazy = False )    
+        return frame_the_arithmetic_mean ( frame ,
+                                           expressions         ,
+                                           cuts     = cuts     ,
+                                           progress = progress ,
+                                           report   = report   , 
+                                           lazy     = False    )
     # ============================================================================
     ## Get a geometric mean
     #  @see Ostap::Math::GeometricMean&actions 
@@ -1849,13 +2174,22 @@ if Frames_OK :
     #  frame = ...
     #  mean = frame_geometric_mean ( frame , 'x*x' , '0<y' ) 
     #  @endcode 
-    def frame_geometric_mean ( frame , expressions , cuts = '' , lazy = True ) :
+    def frame_geometric_mean ( frame            ,
+                               expressions      ,
+                               cuts     = ''    ,  
+                               progress = False ,
+                               report   = False ) :
         """Get an geomentric mean
         >>> frame = ...
         >>> mean = frame_geometric_mean ( frame , 'x*x' , '0<y' ) 
         -  see `Ostap.Math.GeometricMean`
         """
-        return frame_the_geometric_mean ( frame ,expressions , cuts = cuts , lazy = False )
+        return frame_the_geometric_mean ( frame               ,
+                                          expressions         ,
+                                          cuts     = cuts     ,
+                                          progress = progress ,
+                                          report   = report   , 
+                                          lazy     = False    )
     # ============================================================================
     ## Get a harmonic mean
     #  @see Ostap::Math::HarmonicMean
@@ -1863,13 +2197,22 @@ if Frames_OK :
     #  frame = ...
     #  mean = frame_harmonic_mean ( frame , 'x*x' , '0<y' ) 
     #  @endcode 
-    def frame_harmonic_mean ( frame , expressions , cuts = '' , lazy = True ) :
+    def frame_harmonic_mean ( frame            ,
+                              expressions      ,
+                              cuts     = ''    ,
+                              progress = False ,
+                              report   = False ) :
         """Get a harmonic mean
         >>> frame = ...
         >>> mean = frame_harmonic_mean ( frame , 'x*x' , '0<y' ) 
         -  see `Ostap.Math.HarmonicMean`
         """
-        return frame_the_harmonic_mean ( frame ,expressions , cuts = cuts , lazy = False )
+        return frame_the_harmonic_mean ( frame ,
+                                         expressions         ,
+                                         cuts     = cuts     ,
+                                         progress = progress ,
+                                         report   = report   , 
+                                         lazy     = False    )
     # ============================================================================
     ## Get a power mean
     #  @see Ostap::Math::PowerMean
@@ -1880,7 +2223,11 @@ if Frames_OK :
     #  frame = ...
     #  mean = frame_power_mean ( frame , 3 , 'x*x' , '0<y' ) 
     #  @endcode 
-    def frame_power_mean ( frame , p , expressions , cuts = '' , lazy = True ) :
+    def frame_power_mean ( frame , p        ,
+                           expressions      ,
+                           cuts     = ''    ,
+                           progress = False ,
+                           report   = False ) :
         """Get a power mean
         >>> frame = ...
         >>> mean = frame_power_mean ( frame , 5 ,  'x*x' , '0<y' ) 
@@ -1889,7 +2236,12 @@ if Frames_OK :
         - p ==  0 : geometric mean
         - p == +1 : arithmetic mean 
         """
-        return frame_the_power_mean ( frame , p , expressions , cuts = cuts , lazy = False )
+        return frame_the_power_mean ( frame , p ,
+                                      expressions         ,
+                                      cuts     = cuts     ,
+                                      progress = progress ,
+                                      report   = report   , 
+                                      lazy     = False    )
     # ============================================================================
     ## Get Lehmer mean
     #  @see Ostap::Math::LehmerMean
@@ -1899,7 +2251,7 @@ if Frames_OK :
     #  frame = ...
     #  mean = frame_lehmer_mean ( frame , 3 , 'x*x' , '0<y' ) 
     #  @endcode 
-    def frame_lehmer_mean ( frame , p , expressions , cuts = '' , lazy = True ) :
+    def frame_lehmer_mean ( frame , p , expressions , cuts = '' , progress = False , report = False ) :
         """Get Lehmermean
         >>> frame = ...
         >>> mean  = frame_lehmer_mean ( frame , 5 ,  'x*x' , '0<y' ) 
@@ -1907,7 +2259,12 @@ if Frames_OK :
         - p ==  0 : harmonic mean 
         - p == +1 : arithmetic mean 
         """
-        return frame_the_lehmer_mean ( frame , p , expressions , cuts = cuts , lazy = False )
+        return frame_the_lehmer_mean ( frame , p  ,
+                                       expressions         ,
+                                       cuts     = cuts     ,
+                                       progress = progress ,
+                                       report   = report   ,
+                                       lazy     = False    )
     # ==============================================================================
     ## "project/parameterise" frame into polynomial structures 
     #  @code
@@ -1934,7 +2291,12 @@ if Frames_OK :
     #  bs2   = Ostap.Math.Bernstein2D  ( ... )
     #  res   = frame_param ( frame , bs2 , ( 'y' , 'x' ) , 'z>0' )
     #  @endcode
-    def frame_param ( frame , poly , expressions , cuts = ''  ) :
+    def frame_param ( frame            ,
+                      poly             ,
+                      expressions      ,
+                      cuts     = ''    ,
+                      progress = False ,
+                      report   = False ) :
         """ `project/parameterise` frame into polynomial structures
         
         >>> frame = ...
@@ -1960,8 +2322,12 @@ if Frames_OK :
         >>> bs2   = Ostap.Math.Bernstein2D  ( ... )
         >>> res   = frame_param ( frame , bs2 , 'y,x' , 'z>0' )
         """
-        return frame_the_param ( frame , poly , expressions , cuts = cuts , lazy = False ) 
-
+        return frame_the_param ( frame            ,
+                                 poly             ,
+                                 expressions      ,
+                                 cuts     = cuts  ,
+                                 progress = False ,
+                                 report   = False , lazy = False ) 
     
     # ============================================================================
     ## Get the approproate range  for drawing the variables 
@@ -1970,13 +2336,18 @@ if Frames_OK :
     #  frame = ...
     #  mean = frame_range ( frame , 'x*x' , '0<y' ) 
     #  @endcode 
-    def frame_range ( frame , expressions , cuts = '' , delta = 0.05 ) :
+    def frame_range ( frame            ,
+                      expressions      ,
+                      cuts     = ''    ,
+                      delta    = 0.05  ,
+                      progress = False ,
+                      report   = False ) :
         """Get the approproavte range  values for variables
          - In case there is no suitable range None is returned 
         >>> frame = ...
         >>> mean = frame_the_minmax ( frame , 5 ,  'x*x' , '0<y' ) 
         """
-        ranges = frame_the_minmax ( frame , expressions , cuts = cuts , lazy = False )
+        ranges = frame_the_minmax ( frame , expressions , cuts = cuts , progress = progress , report = report , lazy = False )
         if isinstance ( ranges , dictlike_types ) :
             for k , r in loop_items ( ranges ) :
                 mn, mx = r.min () , r.max()
@@ -2290,7 +2661,6 @@ _new_methods_ += [
     ROOT.TProfile  .model , 
     ROOT.TProfile2D.model ,
     ]
-
 
 # =============================================================================
 if ( 6 , 18 ) <= root_info :
