@@ -46,8 +46,8 @@ def test_roc () :
     hs.blue ( fill = True , opacity = 0.35 )
 
     for i in range ( 100 ) :
-        hs.Fill ( random.gauss ( +1 ) ) 
-        hb.Fill ( random.gauss ( -1 ) ) 
+        hs.Fill ( random.gauss ( +1. , 1. ) ) 
+        hb.Fill ( random.gauss ( -1. , 1. ) ) 
 
     with use_canvas  ( 'EFF-curves/graphs' , wait = 3 ) :
         
