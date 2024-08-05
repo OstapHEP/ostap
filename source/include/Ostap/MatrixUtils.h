@@ -166,7 +166,7 @@ namespace Ostap
      *  @date 2006-05-24
      */
     template <class T, unsigned int D>
-    inline size_t 
+    inline std::size_t 
     setToScalar
     ( ROOT::Math::SVector<T,D>& m , const T& value = T() ) 
     { 
@@ -195,7 +195,7 @@ namespace Ostap
      *  @date 2006-05-24
      */
     template <class T, unsigned int D1, unsigned int D2, class R>
-    inline size_t 
+    inline std::size_t 
     setToScalar
     ( ROOT::Math::SMatrix<T,D1,D2,R>& m , const T& value = T() ) 
     { 
@@ -222,7 +222,7 @@ namespace Ostap
      *  @date 2006-05-24
      */  
     template <class T, unsigned int D, class R>
-    inline size_t 
+    inline std::size_t 
     setToUnit
     ( ROOT::Math::SMatrix<T,D,D,R>& m , const T& value = T(1) ) 
     { 
@@ -255,7 +255,7 @@ namespace Ostap
      *  @date 2006-05-24
      */
     template <class T, unsigned int D1, unsigned int D2, class R>
-    inline size_t 
+    inline std::size_t 
     scale 
     ( ROOT::Math::SMatrix<T,D1,D2,R>& m , const T& value ) 
     { 
@@ -282,7 +282,7 @@ namespace Ostap
      *  @date 2006-05-24
      */
     template <class T, unsigned int D>
-    inline size_t 
+    inline std::size_t 
     scale 
     ( ROOT::Math::SVector<T,D>& m , const T& value ) 
     { 
@@ -876,17 +876,17 @@ namespace Ostap
      *  const Ostap::Matrix4x4 matrix = ... ;
      *  
      *  // number of NULL elements:
-     *  const size_t nulls = 
+     *  const std::size_t nulls = 
      *      Ostap::Math::count_if ( matrix , 
      *       std::bind2nd( std::equal_to<double>() , 0.0 ) ) ;
      *
      *  // number of elements in excess of 100.0 
-     *  const size_t large = 
+     *  const std::size_t large = 
      *      Ostap::Math::count_if ( matrix , 
      *       std::bind2nd( std::greater<double>() , 100.0 ) ) ;
      * 
      *  // number of elements which are less then 0.01 in absolute value 
-     *  const size_t small = 
+     *  const std::size_t small = 
      *      Ostap::Math::count_if ( matrix , 
      *       std::bind2nd( _AbsCompare<double>() , 0.01 ) ) ;
      *  
@@ -900,7 +900,7 @@ namespace Ostap
      *  @date 2006-04-24
      */
     template <class T, unsigned int D1, unsigned int D2, class R, class P>
-    inline size_t 
+    inline std::size_t 
     count_if 
     ( const ROOT::Math::SMatrix<T,D1,D2,R>& m , P pred )
     { return std::count_if ( m.begin() , m.end() , pred ) ; }
@@ -912,17 +912,17 @@ namespace Ostap
      *  const Ostap::SymMatrix4x4 matrix = ... ;
      *  
      *  // number of NULL elements:
-     *  const size_t nulls = 
+     *  const std::size_t nulls = 
      *      Ostap::Math::count_if ( matrix , 
      *       std::bind2nd( std::equal_to<double>() , 0.0 ) ) ;
      *
      *  // number of elements in excess of 100.0 
-     *  const size_t large = 
+     *  const std::size_t large = 
      *      Ostap::Math::count_if ( matrix , 
      *       std::bind2nd( std::greater<double>() , 100.0 ) ) ;
      * 
      *  // number of elements which are less then 0.01 in absolute value 
-     *  const size_t small = 
+     *  const std::size_t small = 
      *      Ostap::Math::count_if ( matrix , 
      *       std::bind2nd( Ostap::Math::_AbsCompare<double>() , 0.01 ) ) ;
      *  
@@ -940,11 +940,11 @@ namespace Ostap
      *  @date 2006-04-24
      */
     template <class T, unsigned int D, class P>
-    inline size_t 
+    inline std::size_t 
     count_if 
     ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& m , P pred )
     { 
-      size_t result = 0 ;
+      std::size_t result = 0 ;
       for ( unsigned int i = 0 ; i < D ; ++i ) 
       {
         if ( pred ( m ( i , i ) ) ) { result += 1 ; }
@@ -965,7 +965,7 @@ namespace Ostap
      *  const Ostap::SymMatrix3x3& covariance = v->covMatrix() ;
      *
      *  // count number of VERY small (and negative) diagonal elements:
-     *  const size_t bad = 
+     *  const std::size_t bad = 
      *   Ostap::Math::cound_diagonal( covariance , 
      *   std::bind2nd( std::less<double>() , 0.01 * Ostap::Units::micrometer ) ;
      *  if ( 0 != bad ) 
@@ -982,11 +982,11 @@ namespace Ostap
      *  @date 2006-04-24
      */
     template <class T, unsigned int D, class R, class P>
-    inline size_t 
+    inline std::size_t 
     count_diagonal
     ( const ROOT::Math::SMatrix<T,D,D,R>& m , P pred )
     {
-      size_t result = 0 ;
+      std::size_t result = 0 ;
       for ( unsigned int i = 0 ; i < D ; ++i ) 
       { if ( pred ( m ( i , i ) ) ) { result += 1 ; } }
       return result ;

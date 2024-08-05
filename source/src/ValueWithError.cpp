@@ -865,8 +865,8 @@ Ostap::Math::ValueWithError Ostap::Math::abs
  */
 // ============================================================================
 Ostap::Math::ValueWithError Ostap::Math::binomEff
-( const size_t n ,
-  const size_t N )
+( const std::size_t n ,
+  const std::size_t N )
 {
   if       ( n >  N ) { return binomEff       ( N , n ) ; }
   else if  ( 0 == N ) { return ValueWithError ( 1 , 1 ) ; }
@@ -887,8 +887,8 @@ Ostap::Math::ValueWithError Ostap::Math::binomEff
  */
 // ============================================================================
 Ostap::Math::ValueWithError Ostap::Math::wilsonEff
-( const size_t n ,
-  const size_t N )
+( const std::size_t n ,
+  const std::size_t N )
 {
   //
   if      ( n >  N ) { return wilsonEff      ( N , n ) ; }
@@ -919,8 +919,8 @@ Ostap::Math::ValueWithError Ostap::Math::wilsonEff
  */
 // ============================================================================
 Ostap::Math::ValueWithError Ostap::Math::agrestiCoullEff
-( const size_t n ,
-  const size_t N )
+( const std::size_t n ,
+  const std::size_t N )
 {
   //
   if      ( n >  N ) { return wilsonEff      ( N , n ) ; }

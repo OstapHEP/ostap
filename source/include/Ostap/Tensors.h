@@ -76,8 +76,8 @@ namespace Ostap
        *
        *   Delta delta ;
        *
-       *    const size_t i = ... ;
-       *    const size_t j = ... ;
+       *    const std::size_t i = ... ;
+       *    const std::size_t j = ... ;
        *
        *    int ij = delta( i , j ) ;
        *
@@ -91,12 +91,12 @@ namespace Ostap
         // ====================================================================
         /// Kroneker delta
         inline int delta
-        (  const  size_t i ,
-           const  size_t j ) const { return i == j ; }
+        (  const  std::size_t i ,
+           const  std::size_t j ) const { return i == j ; }
         /// Kroneker delta (functional form)
         inline int operator()
-        ( const size_t i ,
-          const size_t j ) const { return i == j ; }
+        ( const std::size_t i ,
+          const std::size_t j ) const { return i == j ; }
         // ====================================================================
       } ;
       // ======================================================================
@@ -166,12 +166,12 @@ namespace Ostap
         // ====================================================================
         /// the only one important function: get the metric
         inline int  operator ()
-        ( const size_t i ,
-          const size_t j ) const { return g( i, j ) ; }
+        ( const std::size_t i ,
+          const std::size_t j ) const { return g( i, j ) ; }
         /// the only one important function: get the metric
         inline int  g
-        ( const size_t i ,
-          const size_t j ) const
+        ( const std::size_t i ,
+          const std::size_t j ) const
         {
           return
             ( i    != j )  ?  0 :

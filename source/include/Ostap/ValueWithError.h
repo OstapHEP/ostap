@@ -482,8 +482,8 @@ namespace Ostap
      *  @return the binomial efficiency 
      */
     ValueWithError binomEff   
-    ( const size_t n_success , 
-      const size_t N_total   ) ;
+    ( const std::size_t n_success , 
+      const std::size_t N_total   ) ;
     // ========================================================================
     /** evaluate the binomial efficiency interval using Wilson's prescription
      *  @param n_success (INPUT) number of 'success' 
@@ -491,8 +491,8 @@ namespace Ostap
      *  @return the binomial efficiency 
      */
     ValueWithError wilsonEff   
-    ( const size_t n_success , 
-      const size_t N_total   ) ;
+    ( const std::size_t n_success , 
+      const std::size_t N_total   ) ;
     // ========================================================================
     /** evaluate the binomial efficiency interval 
      *  using Agresti-Coull's prescription
@@ -501,8 +501,8 @@ namespace Ostap
      *  @return the binomial efficiency 
      */
     ValueWithError agrestiCoullEff   
-    ( const size_t n_success , 
-      const size_t N_total   ) ;
+    ( const std::size_t n_success , 
+      const std::size_t N_total   ) ;
     // ========================================================================
     /** simple evaluation of efficiency from statistically independend
      * "exclusive" samples "accepted" and "rejected"
