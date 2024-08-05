@@ -4337,7 +4337,7 @@ def _h1_effic4_ ( histo , cut_low  ) :
     """
 
     c1 = [ histo [ i ] for i in histo ]
-    c2 = c1.copy()
+    c2 = c1 [ : ]
     c2.reverse  ()
 
     ## for "natural" histograms make better treatment of first/last uncertainties 
