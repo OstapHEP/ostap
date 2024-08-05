@@ -4307,7 +4307,7 @@ def _h1_effic3_ ( h1 , cut_low ) :
         sumi += c 
         
     if h1.natural () :
-        nn = max ( 1 , math.ceil ( h1.Integral () ) ) 
+        nn = max ( 1 , int ( math.ceil ( float ( h1.Integral () ) ) ) ) 
         e0 = binomEff ( 0  , nn )
         e1 = binomEff ( nn , nn )
     else :
