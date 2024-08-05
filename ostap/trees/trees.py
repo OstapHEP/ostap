@@ -505,7 +505,7 @@ def tree_draw ( tree                    ,
                 first      =  0         , 
                 last       = LAST_ENTRY , 
                 use_frame  = False      ,
-                delta      = 0.05       ,
+                delta      = 0.01       ,
                 native     = False      , **kwargs ) :  ## use DataFrame ? 
 
         

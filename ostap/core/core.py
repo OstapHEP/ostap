@@ -433,6 +433,21 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         >>> obj.draw ( minimal     = -1  )
         >>> obj.draw ( max         = 100 )
+        
+        - Combined FillStyle/FillColor optoios
+        
+        >> obj.draw ( fill = 29   ) ## Color if    0 < fill < 1000 
+        >> obj.draw ( fill = 2045 ) ## Style if 1000 < fill 
+
+        - LogX/logY options :
+
+        >>> obj.draw ( logx = True )
+        >>> obj.draw ( logy = True )
+
+        - Opacity/Opaque for TAttFill 
+
+        >>> obg.draw ( opacity = 0.45 ) 
+        >>> obg.draw ( opaque  = 0.45 ) 
 
         """
 
@@ -450,42 +465,48 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
                 obj.SetFillColor   ( color )
                 
         ## Line
-        
-        if 'LineColor'  in kw and hasattr ( obj , 'SetLineColor' ) :
-            color = check_color ( kw.pop('LineColor' ) ) 
-            obj.SetLineColor   ( color )
-        if 'LineStyle'  in kw and hasattr ( obj , 'SetLineStyle' ) :
-            obj.SetLineStyle   ( kw.pop('LineStyle' ) )
-        if 'LineWidth'  in kw and hasattr ( obj , 'SetLineWidth' ) :
-            obj.SetLineWidth   ( kw.pop('LineWidth' ) )
-
+        if isinstance ( obj , ROOT.TAttLine ) :
+            if 'LineColor' in kw : obj.SetLineColor ( check_color ( kw.pop('LineColor' ) ) ) 
+            if 'LineStyle' in kw : obj.SetLineStyle ( kw.pop('LineStyle' ) )
+            if 'LineWidth' in kw : obj.SetLineWidth ( kw.pop('LineWidth' ) ) 
+                                                    
         ## Marker
-            
-        if 'MarkerColor' in kw and hasattr ( obj , 'SetMarkerColor' ) :
-            color = check_color ( kw.pop('MarkerColor' ) ) 
-            obj.SetMarkerColor ( color )
-        if 'MarkerStyle' in kw and hasattr ( obj , 'SetMarkerStyle' ) :
-            obj.SetMarkerStyle ( kw.pop('MarkerStyle' ) )
-        if 'MarkerSize'  in kw and hasattr ( obj , 'SetMarkerSize'  ) :
-            obj.SetMarkerSize  ( kw.pop('MarkerSize'  ) )
+        if isinstance ( obj , ROOT.TAttMarker ) :               
+            if 'MarkerColor' in kw : obj.SetMarkerColor ( check_color ( kw.pop('MarkerColor' ) ) ) 
+            if 'MarkerStyle' in kw : obj.SetMarkerStyle ( kw.pop('MarkerStyle' ) )
+            if 'MarkerSize'  in kw : obj.SetMarkerSize  ( kw.pop('MarkerSize'  ) )
 
         ## Area
+        if isinstance ( obj , ROOT.TAttFill  ) :               
+            fcolor = False 
+            fstyle = False
+            if 'FillColor'   in kw :                
+                fcolor = True                            
+                obj.SetFillColor   ( check_color ( kw.pop('FillColor' ) ) ) 
+            if 'FillStyle'   in kw :
+                fstyle  = True  
+                obj.SetFillStyle   ( kw.pop('FillStyle' ) )
+                
+            if 'Fill' in kw :
+
+                fill = kw.pop ( 'Fill' )
             
-        if 'FillColor'   in kw and hasattr ( obj , 'SetFillColor' ) :
-            color = check_color ( kw.pop('FillColor' ) ) 
-            obj.SetFillColor   ( color )
-        if 'FillStyle'   in kw and hasattr ( obj , 'SetFillStyle' ) :
-            obj.SetFillStyle   ( kw.pop('FillStyle' ) )
+                if   fill is True  and ( not fstyle ) and has_style : obj.SetFillStyle ( 1001 )
+                elif fill is False and ( not fstyle ) and has_style : obj.SetFillStyle (    0 )
+                elif isinstance ( fill , integer_types ) :
+                    if      0 < fill < 1000 and not fcolor :
+                        obj.SetFillColor ( fill )
+                        if not fstyle : obj.SetFillStyle ( 1001 )
+                    elif 1000 < fill        and not fstyle :                        
+                        obj.SetFillStyle ( fill  )
             
-        if 'Opacity' in kw and \
-           hasattr ( obj , 'SetFillColorAlpha' ) and \
-           hasattr ( obj , 'GetFillStyle'      ) :
-            fs = obj.GetFillStyle()
-            if 1001 == fs and hasattr ( obj , 'GetFillColor' ) :
+            if ( ( 'Opacity' in kw ) or ( 'Opaque' in kw ) ) and 1001 == obj.GetFillStyle () :
                 fc = obj.GetFillColor()
-                if fc : obj.SetFillColorAlpha ( fc , kw.pop ('Opacity' ) ) 
+                if fc :
+                    if   'Opacity' in kw : obj.SetFillColorAlpha ( fc , kw.pop ('Opacity' ) ) 
+                    elif 'Opaque'  in kw : obj.SetFillColorAlpha ( fc , kw.pop ('Opaque'  ) ) 
 
-
+                    
         ## Min/max values  
 
         if   'Minimum'     in kw and hasattr ( obj , 'SetMinimum' ) :
@@ -548,18 +569,27 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             za = obj.GetZaxis() 
             if za : za.SetLabelOffset ( kw.pop  ( 'ZaxisLabelOffset' ) ) 
                                         
-        ## 
-        copy = kw.pop ( 'copy' , False )        
+        ##
+
+        copy = kw.pop ( 'copy' , False )
+
+
+        groot = ROOT.ROOT.GetROOT ()
+        pad   = groot.GetSelectedPad()
+        if not pad : pad = ROOT.gPad
+        if pad :
+            if 'LogX' in kw : pad.SetLogx ( kw.pop ( 'LogX' ) )
+            if 'LogY' in kw : pad.SetLogy ( kw.pop ( 'LogY' ) )
+        
         if kw : logger.warning('draw: unknown attributes: %s' % kw.keys() )
             
         with rootWarning() , rooSilent ( 2 )  :
             
             if copy and hasattr ( obj , 'DrawCopy' ): result = obj.DrawCopy ( option , *args )
             else                                    : result = obj.Draw     ( option , *args )
-            
-        groot = ROOT.ROOT.GetROOT ()
-        pad   = groot.GetSelectedPad()
-        if   pad and not ROOT.gPad :
+
+        
+        if pad and not ROOT.gPad :            
             c = pad.GetCanvas()
             if c : c.Update()
         elif ROOT.gPad :

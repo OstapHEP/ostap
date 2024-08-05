@@ -982,7 +982,7 @@ def ds_draw ( dataset ,
               cut_range = ''          ,
               first     =  0          ,
               last      =  LAST_ENTRY ,
-              delta     = 0.05        , **kwargs ) :
+              delta     = 0.01        , **kwargs ) :
     """Helper draw method for drawing of RooDataSet
     >>> dataset.draw ( 'm', 'chi2<10'                 )
     ## cuts & weight 
@@ -1023,8 +1023,6 @@ def ds_draw ( dataset ,
         
     assert len ( ranges ) == nvars , 'Invalid ranges: %s' % str ( ranges )
 
-    print ('RANGES' , ranges )
-        
     from ostap.utils.cidict import cidict
     kw = cidict ( transform = cidict_fun , **kwargs )
 

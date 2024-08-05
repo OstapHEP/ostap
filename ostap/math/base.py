@@ -860,57 +860,96 @@ def frexp10 ( value ) :
 
 
 # =============================================================================
+## Define some "range" for the given value:
+#  @code
+#  value = ...
+#  mn, mx = num_range ( value ) 
+#  @endcode 
+def num_range ( value , N = 1 ) : 
+    """ Define some "range" for the given value:
+    >>> value = ...
+    >>> mn, mx = num_range ( value ) 
+    """
+
+    if   iszero ( value ) : return ( -0.5 , 0.5 )
+    
+    a , b = frexp10 ( value )         
+    b  -= N 
+
+    NN = 10 ** N
+    
+    af = math.floor ( a * 2 * NN )
+    ac = math.ceil  ( a * 2 * NN )
+    
+    if isequal ( af , ac ) :
+        af, ac  = af - 0.5 , ac + 0.5
+        
+    xmin = af * ( 10 ** b ) * 0.5 
+    xmax = ac * ( 10 ** b ) * 0.5 
+
+    return xmin , xmax
+
+    
+# =============================================================================
 ## Find suitable range for histogram axis 
-def axis_range ( xmin , xmax , delta = 0.05 , log = False ) :
+def axis_range ( xmin , xmax , delta = 0.02 , log = False ) :
     """Find suitable range for histogram axis
     """
     xmn = min ( xmin , xmax )
     xmx = max ( xmin , xmax )
     
-    import math
-    
     ## 1) special case
-    if isequal ( xmn , xmx ) :
+    if iszero ( xmn ) and iszero ( xmn ) : return ( -1.0 , 1.0 )
+
+    ## 2) special case 
+    if isequal ( xmn , xmx ) : return num_range ( 0.5 * ( xmn + xmx ) ) 
+    
+
+    ## 3) special case
+    if islong ( xmn - 0.5 ) and islong ( xmx + 0.5 ) :
         return math.floor ( xmn - 0.1 ) , math.ceil ( xmx + 0.1 ) 
 
-    ## 2) special case
-    if islong ( xmn - 0.5 ) and islong ( xmn + 0.5 ) :
-        return math.floor ( xmn - 0.1 ) , math.ceil ( xmx + 0.1 ) 
 
     d = xmx - xmn
+
+    delta = abs ( delta        )
+    fr    = min ( delta , 0.9  ) 
     
-    if 0 <= xmn < xmx :
+    if iszero ( xmn ) and xmn < xmx :
         
-        xmin = max ( 0 , xmn - delta * d )
-        xmax =           xmx + delta * d 
+        xmin = 0 
+        xmax = xmx + delta * d 
+
+    elif iszero ( xmx ) and xmn < xmx :
         
-    elif xmn < xmx <= 0 :
-        
-        xmin =           xmn - delta * d 
-        xmax = max ( 0 , xmx + delta * d )
+        xmin = xmn - delta * d 
+        xmax = 0 
         
     elif xmn < 0 < xmx  :
         
         xmin = ( 1 + delta ) * xmn  
         xmax = ( 1 + delta ) * xmx
         
+    elif 0 < xmn < xmx :
+        
+        xmin = max ( xmn * ( 1 - fr ) , xmn - delta * d )
+        xmax =                          xmx + delta * d 
+        
+    elif xmn < xmx < 0 :
+        
+        xmin =                          xmn - delta * d 
+        xmax = min ( xmx * ( 1 - fr ) , xmx + delta * d )
+        
     else : 
     
         xmin = xmn - delta * d 
         xmax = xmx + delta * d 
 
-    N = 3
-    
-    a1 , b1 = frexp10 ( xmin )
-    a2 , b2 = frexp10 ( xmax )
 
-    b1  -= N 
-    b2  -= N 
+    xmin , _     = num_range ( xmin )
+    _    , xmax  = num_range ( xmax )
     
-    xmin = math.floor ( a1 * ( 10**N ) ) * ( 10 ** b1 )
-    xmax = math.ceil  ( a2 * ( 10**N ) ) * ( 10 ** b2 )
-    
-    return xmin , xmax
+    return xmin, xmax 
 
 # =============================================================================
 if   (3,9) <= sys.version_info :

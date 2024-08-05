@@ -154,7 +154,7 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
     ## Frame/Tree ?
     lenght = -1
     
-    if   isinstance ( frame , ROOT.TTree  ) : node , length = DataFrame ( frame , progress = progress ) , len ( frame ) 
+    if   isinstance ( frame , ROOT.TTree  ) : node , length = DataFrame ( frame ) , len ( frame ) 
     elif isinstance ( frame , frame_types ) : node = frame 
     else                                    : node = as_rnode  ( frame ) 
 
@@ -211,6 +211,7 @@ def _fr_helper2_ ( frame            ,
                    lazy     = True  ) :
     """The seocnd helper method to implement various statitic-related actions  
     """
+
     current, var_names, cut_name, input_string = _fr_helper_ ( frame , expressions , cuts , progress = progress )
 
     results = {}
@@ -222,7 +223,7 @@ def _fr_helper2_ ( frame            ,
         for expr, res  in loop_items ( results ) :
             results [ expr ] = res.GetValue()
             rr = results [ expr ]
-            
+
     if report and not lazy :
         report = current.Report()
         title  = 'DataFrame processing'
@@ -943,6 +944,7 @@ def _fr_draw_ ( frame            ,
                 expressions      ,
                 cuts     = ''    ,
                 opts     = ''    ,
+                delta    = 0.01  , 
                 progress = False ,
                 report   = False , **kwargs ) :
     """Draw the variable(s) from the frame
@@ -964,9 +966,9 @@ def _fr_draw_ ( frame            ,
     ## create the cache ... needed ? 
     ## cache   = current.Cache ( uvars )
     cache   = current 
-    
+
     ## get the ranges 
-    ranges = frame_range ( cache , cvars , cname , report = report )
+    ranges = frame_range ( cache , cvars , cname , delta = delta , report = report )
     if not ranges :
         logger.warning ( 'frame_draw: nothing to draw, return None' )
         return None
@@ -979,21 +981,16 @@ def _fr_draw_ ( frame            ,
         mn , mx = ranges [ var ]
         item = key , ( mn , mx ) 
         histos.append ( item )
-
+        
     ## book the histogram 
     histo = histo_book ( histos , kw )
 
     ## fill the histogram 
     histo = frame_project ( cache , histo , cvars , cname , progress = progress , report = report , lazy = False )
-    
+
     ## draw the histogram
     histo.draw ( opts , **kw )
 
-##    if report :
-##        report = cache.Report()
-##        title = 'DataFrame draw'
-##        logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
-    
     return histo 
 
 # =============================================================================
@@ -2339,7 +2336,7 @@ if Frames_OK :
     def frame_range ( frame            ,
                       expressions      ,
                       cuts     = ''    ,
-                      delta    = 0.05  ,
+                      delta    = 0.01  ,
                       progress = False ,
                       report   = False ) :
         """Get the approproavte range  values for variables
