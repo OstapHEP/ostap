@@ -4288,14 +4288,16 @@ def _h1_effic3_ ( h1 , cut_low ) :
         
         return 1.0 / ( 1.0 + d )
     
-    N    = len ( h1 ) 
+    N    = len ( h1 )
     sumi = VE ( 0 , 0 ) 
     for i in h1 :        
 
         c = h1 [ i ]
         
         rest     = VE ( 0 , 0 ) 
-        for j in range ( i + 1 , N + 1 ) : rest += h1 [ j ] 
+        for j in reversed ( h1 ) :
+            if i < j : rest += h1 [ j ]
+            else     : break 
 
         a  = sumi
         r  = rest
