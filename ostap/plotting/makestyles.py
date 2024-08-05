@@ -573,22 +573,32 @@ def make_styles ( config = None ) :
         ok          = section.getboolean ( 'ostaplike'   , fallback =  True )
 
         ## create ostap-like style 
-        if ok :
-            make_ostap_style ( name , description , section ) 
+        if ok : style = make_ostap_style ( name , description , section ) 
         else  :
-            ## generic style 
-            groot = ROOT.ROOT.GetROOT() 
-            obj   = groot.FindObject  ( name )
-            if obj and isinstance ( obj , ROOT.TStyle ) :
-                logger.info  ( 'Reuse  Generic style  %s/%s' % ( name , description ) )             
-                style = style 
-            else : 
-                logger.debug ( 'Create Generic style  %s/%s' % ( name , description ) )             
+            ## generic style
+
+            groot = ROOT.ROOT.GetROOT()
+            slst  = groot.GetListOfStyles()
+            for s in slst :
+                if s and s.GetName() == name :
+                    style = s
+                    break 
+            else :
+                logger.info ( 'Create new generic style  %s/%s' % ( name , description ) )             
                 style       = ROOT.TStyle ( name , description )
+                
             set_style ( style , section )
-            if name in StyleStore.styles :
-                logger.warning ( "The configuration %s replaced" % name  ) 
-            StyleStore.styles.update ( { name : style } ) 
+            
+        if name in StyleStore.styles :
+            logger.warning ( "The configuration %s replaced" % name  ) 
+        StyleStore.styles.update ( { name : style } )
+        
+        if  name.startswith('Style')  :
+            nname  = name[5:]
+            if nname in StyleStore.styles :
+                logger.info ( "The configuration %s replaced" % nname  ) 
+                StyleStore.styles.update ( { nname : style } )
+        
             
 # ==============================================================================
 def get_float ( config , name , default ) :
@@ -649,7 +659,7 @@ def make_ostap_style ( name                      ,
     line_width = kw.pop ( 'line_width'  , get_int   ( config , 'line_width' , ostap_line_width ) )    
     if kw : logger.warning ("make_ostap_style: unprocessed keys: %s" % kw ) 
     
-    description = config.get ( 'description' , "The Style '%s'" % name )
+    description = config.get ( 'description' , description )
     
     conf  = {}
     conf.update ( config )
@@ -876,8 +886,7 @@ def make_ostap_style ( name                      ,
     
     conf [ 'MarkerColor'       ] = get_int   ( config , 'MarkerColor'         , 1   ) 
     conf [ 'MarkerStyle'       ] = get_int   ( config , 'MarkerStyle'         , 20  ) 
-    conf [ 'MarkerSize'        ] = get_float ( config , 'MarkerSize'          , 1.0 * scale )
-
+    conf [ 'MarkerSize'        ] = get_float ( config , 'MarkerSize'          , 1.0 * ( 1 + ( scale - 1 ) * 0.5 ) )
 
     ##
     ## Text attributes
@@ -892,27 +901,20 @@ def make_ostap_style ( name                      ,
     ## maximal number of digits for the axis labels 
     conf [ 'TGaxisMaxDigits'   ] = 3
 
+    
     ## create the style
-    groot = ROOT.ROOT.GetROOT() 
-    obj   = groot.FindObject  ( name )
-    if obj and isinstance ( obj , ROOT.TStyle ) :
-        logger.info  ('Update existing Ostap style %s' % obj.GetName   () )
-        style = obj 
-    else : 
-        logger.debug ('Create new      Ostap style %s' % name )
-        style       = ROOT.TStyle ( name , description )
-
-    set_style    ( style , conf ) 
-    if name in StyleStore.styles :
-        logger.info ( "The configuration %s replaced" % name  ) 
-    StyleStore.styles.update ( { name : style } ) 
-
-    if  name.startswith('Style')  :
-        nname  = name[5:]
-        if nname in StyleStore.styles :
-            logger.info ( "The configuration %s replaced" % nname  ) 
-        StyleStore.styles.update ( { nname : style } )
+    groot = ROOT.ROOT.GetROOT()
+    slst  = groot.GetListOfStyles() 
+    for s in slst :
+        if s and s.GetName() == name :
+            style = s
+            break
+    else :         
+        logger.debug ( "Create new Ostap style `%s'" % name )
+        style = ROOT.TStyle ( name , description )
         
+    set_style    ( style , conf ) 
+
     return style
 
 # =============================================================================

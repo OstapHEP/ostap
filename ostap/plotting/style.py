@@ -18,8 +18,10 @@ __all__ = (
     'OstapStyle'       ,  ## the function to instantiate the style
     ## 
     'StyleZ'           ,  ## the style for COLZ plots
+    'Style1'           ,  ## the default Ostap style 
     'Style2'           ,  ## the style for downscaled 2-in-row plots
     'Style3'           ,  ## the style for downscaled 3-in-row plots
+    'Style1Z'          ,  ## the style for COLZ plots
     'Style2Z'          ,  ## the style for downscaled 2-in-row COLZ plots
     'Style3Z'          ,  ## the style for downscaled 3-in-row COLZ plots
     )
@@ -63,15 +65,17 @@ def OstapStyle ( name                           ,
 
     ## Look for "[Style:Nick]" in configuration 
     for key in CONFIG.config :
-        if not key.upper().startswith('STYLE') : continue
+        lkey = key.lower() 
+        if not lkey.startswith('style') : continue
         s , c , n = key.partition(':')
         if not c : continue
-        n1 = n.strip()
+        n1 = n.strip() if c else s.strip()
+
         if n1 == n2 :
             config = CONFIG.config[key]
             logger.info ( 'Use existing configuration style %s' % name )
             break
-        
+
     import ostap.plotting.makestyles as MS 
     style = MS.make_ostap_style ( name        = name        ,
                                   description = description , 
@@ -91,43 +95,48 @@ def OstapStyle ( name                           ,
     return style     
 
 # =============================================================================
+## style for standard COLZ plots 
+Style1Z = OstapStyle (
+    'Ostap1Z'   ,
+    description = "Ostap style, suitable to produce plots with large right margin (COLZ)",
+    colz        = True )
+## ditto 
+StyleZ  = Style1Z 
+# =============================================================================
 ## style for half-page-width COLZ plots
 Style2Z = OstapStyle (
-    'Style2Z'   ,
+    'Ostap2Z'   ,
     description = "Style, suitable to produce downscaled (2-in-row) plot with large right margin (COLZ)",
-    scale       =  1.41 , colz = True )
-
+    scale       = 1.41 ,
+    colz        = True )
+# =============================================================================
 ## style for one-third-page-width COLZ plots 
 Style3Z = OstapStyle (
-    'Style3Z'   ,
+    'Ostap3Z'   ,
     description = "Style, suitable to produce downscaled (3-in-row) plot with large right margin (COLZ)",
-    scale       =  1.71 , colz = True )
-
-## style for standard COLZ plots 
-StyleZ  = OstapStyle (
-    'Style1Z'   ,
-    description = "Style, suitable to produce plot with large right margin (COLZ)",
-    colz = True )
-
+    scale       = 1.71 ,
+    colz        = True )
+# ===========================================================================
 ## style for half-page-width plots 
 Style2  = OstapStyle (
-    'Style2'    , 
-    description = "Style, suitable to produce downscaled (2-in-row) plots",
+    'Ostap2'    , 
+    description = "Ostap style, suitable to produce downscaled (2-in-row) plots",
     scale       =  1.41 )
-
+# ============================================================================
 ## style for one-third-page-width plots 
 Style3  = OstapStyle (
-    'Style3'    ,
-    description = "Style, suitable to produce downscaled (3-in-row) plots",
+    'Ostap3'    ,
+    description = "Ostap style, suitable to produce downscaled (3-in-row) plots",
     scale       =  1.71 )
-
 # ============================================================================
-## default style 
-Style      = OstapStyle (
-    'Style'     ,
-    description = 'The basic/default Ostap style for plots'
+## default Ostap style 
+Style = OstapStyle (
+    'Ostap'     ,
+    description = 'The basic/default Ostap style for plots' ,
+    force       = True 
 )
-
+## ditto
+Style1 = Style 
 # ============================================================================
 ## default style 
 ostapStyle = Style
@@ -147,36 +156,36 @@ class UseStyle(object):
     """
     def __init__ ( self, style = None , **config ) :
         
-        if   isinstance ( style , int ):
+        if   style is None : style = ostapStyle 
+        elif isinstance ( style , int ):
             
-            if    1  == style : style = Style 
+            if    0  == style : style = ostapStyle
+            elif  1  == style : style = Style1
             elif  2  == style : style = Style2
             elif  3  == style : style = Style3
             
-        if isinstance ( style , str ):
+        elif isinstance ( style , str ):
             
             import ostap.plotting.makestyles as MS            
             if   style in MS.StyleStore.styles : style = MS.StyleStore.styles [ style ] 
-            elif style.upper() in ( '' , '0' , '1' )    : style = Style 
+            elif style.upper() in ( '' , '0' , '1' , 'def' , 'default') : style = ostapStyle
             elif '2'  == style                          : style = Style2
             elif '3'  == style                          : style = Style3
             elif style.upper() in ( 'Z' , '1Z' , 'Z1' ) : style = StyleZ 
             elif style.upper() in (       '2Z' , 'Z2' ) : style = Style2Z 
             elif style.upper() in (       '3Z' , 'Z3' ) : style = Style3Z 
-
-        ## use the style by name 
-        if isinstance   ( style , str ) :
-            groot  = ROOT.ROOT.GetROOT()
-            styles = groot.GetListOfStyles()
-            for s in styles :
-                if s.GetName() == style :
-                    style = s
-                    break
-                
-        if   style is None : style = ROOT.gStyle 
-        elif not isinstance  ( style , ROOT.TStyle ) :
-            logger.warning ( 'No valid style "%s" is found, use default style' % style )
-            style = ostapStyle
+            else :
+                groot = ROOT.ROOT.GetROOT ()        
+                slst  = groot.GetListOfStyles()
+                for s in slst :
+                    if s and s.GetName () == style :
+                        style = s
+                        break
+                    
+        if ( not style ) or ( not isinstance  ( style , ROOT.TStyle ) ) :
+            unknown = style 
+            style   = ostapStyle
+            logger.warning ( "No valid style `%s'is found, use default `%s' style" % ( str ( unknown ) , style.GetName() ) ) 
 
         self.__new_style = style
         self.__old_style = None 
@@ -192,45 +201,45 @@ class UseStyle(object):
         if self.__new_style : 
             self.__old_style = ROOT.gStyle 
             self.__new_style.cd   ()
-
             if self.__config :
                 self.__changed = set_style ( self.__new_style , self.__config ) 
-            
             groot.ForceStyle ( True )
             if ROOT.gPad : ROOT.gPad.UseCurrentStyle()
-            
+            logger.debug ( "Swith to `%s' style!" % self.__new_style.GetName() ) 
+                           
     ## context  manager: exit
     def __exit__  ( self , *_ ) :
 
         if self.__changed :
-            self.__changed = set_style ( self.__new_style , self.__changed ) 
+            set_style ( self.__new_style , self.__changed ) 
             
-        if self.__old_style: 
+        if self.__old_style : 
             self.__old_style.cd()
             groot = ROOT.ROOT.GetROOT()        
             groot.ForceStyle ( self.__force_style ) 
+            logger.debug ( "Swith to `%s' style!" % self.__old_style.GetName() ) 
 
         self.__new_style = None
         self.__old_style = None
 
     @property
     def new_style ( self ) :
-        "``new_style'' : new style"
+        "`new_style' : new style"
         return self.__new_style
     
     @property
     def old_style ( self ) :
-        "``old_style'' : old style"
+        "`old_style' : old style"
         return self.__old_style
 
     @property
     def config   ( self ) :
-        """``config'' : addtional configuration parameters """
+        """`config' : addtional configuration parameters """
         return self.__config
 
     @property
     def changed   ( self ) :
-        """``changed'' : changed configuration parameters """
+        """`changed' : changed configuration parameters """
         return self.__changed
     
 # =============================================================================
