@@ -45,7 +45,6 @@ __all__     = (
     'shoot'                , ## generate random numbers 
     )
 # =============================================================================
-import  ROOT, math  
 from    ostap.core.core        import Ostap, funID
 from    ostap.core.ostap_types import is_integer, integer_types
 from    ostap.math.base        import iszero, isequal, signum, doubles
@@ -53,7 +52,7 @@ from    ostap.core.meta_info   import root_info
 import  ostap.math.reduce 
 import  ostap.math.bernstein 
 import  ostap.math.polynomials
-
+import  ROOT, math, warnings 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -262,8 +261,6 @@ def interpolate ( func , abscissas , spline , *args ) :
     from ostap.math.interpolation import points 
     table = points ( func , abscissas )
 
-    ## print ( "Table", type ( table ) , table.size () ) 
-
     if root_info < (6 , 24 ) and 16 < len ( table ) and table.atype() < 0  : 
         logger.warning ('interpoalte: segmentation fault can occur for large number of points')
         
@@ -278,7 +275,9 @@ def interpolate ( func , abscissas , spline , *args ) :
 
 try :
     # =========================================================================
-    import scipy.interpolate
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        import scipy.interpolate
     # =========================================================================
     ## create interpolation spline using scipy machinery
     #  @code
