@@ -77,44 +77,62 @@ def _rad_iter_ ( self ) :
 # =============================================================================
 ## access to the entries in  RooAbsData
 #  @code
-#  dataset = ...
-#  event   = dataset[4]            ## index 
-#  events  = dataset[0:1000]       ## slice 
-#  events  = dataset[0:-1:10]      ## slice 
-#  events  = dataset[ (1,2,3,10) ] ## seqeucne of indices  
+#  dataset        = ...
+#  weighted       = ... ## weighte dataset
+#  event          = dataset  [4]            ## index
+#  event , weight = weighted [4]            ## index
+# 
+#  events         = dataset[0:1000]       ## slice 
+#  events         = dataset[0:-1:10]      ## slice 
+#  events         = dataset[ (1,2,3,10) ] ## sequence of indices  
 #  @eendcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-03-31
 def _rad_getitem_ ( data , index ) :
     """Get the entry from RooDataSet
-    >>> dataset = ...
-    >>> event  = dataset[4]                 ## index 
+
+    >>> dataset  = ... ## normal dataset 
+    >>> weighted = ... ## weighted dataset 
+    
+    >>> event          = dataset  [4]                 ## index 
+    >>> event, weight  = weighted [4]                 ## index 
+    
     >>> events = dataset[0:1000]            ## slice
     >>> events = dataset[0:-1:10]           ## slice 
-    >>> events = dataset[ (1,2,3,4,10) ]    ## sequnce of indices 
+    >>> events = dataset[ (1,2,3,4,10) ]    ## sequnce of indices
+ 
     """
 
     N = len ( data )
     
-    if isinstance ( index , integer_types ) and index < 0 :
-        index += N
+    if isinstance ( index , integer_types ) and index < 0 : index += N
 
     if isinstance ( index , integer_types ) and 0 <= index  < N :
+
+        entry = daat.get ( index )
+
+        if not data.isWeighted() : return entry 
+
+        weight = data.weight()
         
-        return data.get ( index )  ## should we add weight here? 
+        if   data.store_asym_error () : pass 
+        elif data.store_error      () :
+            we = data.weightError  ()
+            if 0 <= we : weight = VE ( weight , we * we ) 
+            
+        return entry, weight 
    
     elif isinstance ( index , range ) :
 
-        ## simpel case 
+        ## simple case 
         start , stop , step = index.start , index.stop , index.step
-        if 1 == step : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
-                
+        if 1 == step : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) )                
+        index = range ( start , stop , step ) 
+
     elif isinstance ( index , slice ) :
         
-        start , stop , step = index.indices ( N )
-                              
+        start , stop , step = index.indices ( N )                              
         if 1 == step : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
-
         index = range ( start , stop , step ) 
 
 
@@ -1781,27 +1799,24 @@ def _ds_table_0_ ( dataset                ,
         _vars.append ( r )
     _vars.sort() 
         
-
     tt = dataset.GetTitle()
-
-    if not title :
-        
+    if not title :        
         if  tt and tt != dataset.GetName()  : 
             title = '%s("%s","%s"):' % ( dataset.__class__.__name__ , dataset.GetName () , tt ) 
         else :
             title = '%s("%s"):'      % ( dataset.__class__.__name__ , dataset.GetName () )
+        title =  '%s %d entries' %  ( title , len ( dataset ) )
 
-        title =  '%s %d entries, %d variables' %  ( title , len ( dataset ) , len ( varset ) )
-        
     if not _vars :
         return title , 120 
         ## return report , 120 
 
-
     weight = None
     if   isinstance ( dataset , ROOT.RooDataHist ) :
+        
         if dataset.isNonPoissonWeighted() : title += ' Binned/Weighted' 
         else                              : title += ' Binned'
+        
     elif dataset.isWeighted () :
         
         if dataset.isNonPoissonWeighted() : title += ' Weighted' 
@@ -1945,8 +1960,11 @@ def _ds_table_0_ ( dataset                ,
         
         table_data.append ( tuple ( cols ) ) 
 
+
+    title = title 
+
     import ostap.logger.table as T
-    t  = T.table ( table_data , title , prefix =  prefix )
+    t  = T.table ( table_data , title = title , prefix =  prefix )
     w  = T.table_width ( t ) 
     return t , w 
 
@@ -1963,8 +1981,9 @@ def _ds_table_1_ ( dataset                ,
     """Print data set as table
     """
     
-    first ,last = evt_range ( len ( dataset ) , first , last ) 
+    first, last = evt_range ( len ( dataset ) , first , last ) 
     
+    varset = dataset.get() 
     if variables : vars , cuts , _ = vars_and_cuts ( variables , cuts ) 
     else         : vars , cuts     = [ v.name for v in varset ] , str ( cuts ).strip() 
 
@@ -1986,20 +2005,13 @@ def _ds_table_1_ ( dataset                ,
     _vars.sort() 
         
     tt = dataset.GetTitle()
+    if not title :        
+        title = '%s("%s"):'     % ( dataset.__class__.__name__ , dataset.GetName () )
+        title = '%s %d entries' % ( title , len ( dataset ) )
 
-    if not title :
-        
-        if  tt and tt != dataset.GetName()  : 
-            title = '%s("%s","%s"):' % ( dataset.__class__.__name__ , dataset.GetName () , tt ) 
-        else :
-            title = '%s("%s"):'      % ( dataset.__class__.__name__ , dataset.GetName () )
-
-        title =  '%s %d entries, %d variables' %  ( title , len ( dataset ) , len ( varset ) )
-        
     if not _vars :
         return title , 120 
         ## return report , 120 
-
 
     weight = None
 
@@ -2048,11 +2060,11 @@ def _ds_table_1_ ( dataset                ,
         
         table_data.append ( tuple ( cols ) ) 
 
+    title = title    
     import ostap.logger.table as T
-    t  = T.table ( table_data , title , prefix =  prefix )
+    t  = T.table ( table_data , title = title , prefix =  prefix )
     w  = T.table_width ( t ) 
     return t , w 
-
 
 # ==============================================================================
 ## print dataset in a form of the table
@@ -2073,7 +2085,7 @@ def _ds_table_ (  dataset ,  variables = [] , cuts = '' , prefix = '' , title = 
 #  dataset = ...
 #  print dataset.table2() 
 #  @endcode
-def _ds_table2_ (  dataset ,  variables , cuts = '' , prefix = '' , title = '' ) :
+def _ds_table2_ (  dataset , variables = [] , cuts = '' , prefix = '' , title = '' ) :
     """print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
