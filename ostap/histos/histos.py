@@ -48,9 +48,10 @@ from   ostap.core.ostap_types   import ( integer_types  , num_types    ,
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.core.meta_info     import root_info, python_info
 from   ostap.math.random_ext    import poisson
+from   ostap.utils.utils        import accumulate 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
-import ROOT, sys, math, ctypes, array, itertools  
+import ROOT, sys, math, ctypes, array  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -4343,8 +4344,8 @@ def _h1_effic4_ ( histo , cut_low  ) :
     ## for "natural" histograms make better treatment of first/last uncertainties 
     vz = VE ( 0 , 1 ) if histo.natural() else VE ( 0 , 0 )
 
-    s1 = [ vz ] + [ s for s in itertools.accumulate ( c1 ) ]
-    s2 = [ vz ] + [ s for s in itertools.accumulate ( c2 ) ]
+    s1 = [ vz ] + [ s for s in accumulate ( c1 ) ]
+    s2 = [ vz ] + [ s for s in accumulate ( c2 ) ]
 
     s2.reverse  ()
 

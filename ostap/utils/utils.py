@@ -1221,7 +1221,32 @@ def split_n_range ( low , high , num ) :
             yield low + nl , low + nh 
         yield low + num * newn - newn , high
         
-# =============================================================================
+
+        
+# ======================================================================================
+if (3,2) <= sys.version_info :
+    # ==================================================================================
+    ## use accumulae form itertools
+    from itertools import accumulate
+    # ==================================================================================
+else :
+    # ==================================================================================
+    import operator 
+    def accumulate(iterable, func=operator.add):
+        'Return running totals'
+        # accumulate([1,2,3,4,5]) --> 1 3 6 10 15
+        # accumulate([1,2,3,4,5], operator.mul) --> 1 2 6 24 120
+        it = iter(iterable)
+        try:
+            total = next(it)
+        except StopIteration:
+            return
+        yield total
+        for element in it:
+            total = func(total, element)
+            yield total
+
+# ======================================================================================
 if (3,6) <= sys.version_info :
     
     choices = random.choices
@@ -1296,14 +1321,13 @@ def gen_password ( size = 12 ) :
 # =============================================================================
 
 try :
-    
+    # =========================================================================
     from more_itertools import chunked, divide 
-    
+    # =========================================================================    
 except ImportError :
-    
+    # =========================================================================    
     from itertools import islice
     from functools import partial
-    
     # =========================================================================
     ## Return first *n* items of the iterable as a list
     #  @code 
