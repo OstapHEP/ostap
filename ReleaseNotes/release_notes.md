@@ -11,15 +11,17 @@
   1. Activate a new `draw` method (via `tree_draw`) for `ROOT.TTree`
   1. add `progress` and `report` optioal argumens for (almost) all Frame-related functions 
   1. Some tweaks for style configuration 
-
-## Backward incompatible
+  1. update `ostap.utils.valerrors` & and new test
+  
+## Backward incompatibl
 
   1. `project`(&`draw`) for 2 and 3-dimession now follows the natural order of varibales:
        `XX.project ( target , 'x,y,z' , ...) `
   1. For `eff` & effic' and `efficinecy` methods fo r1D histograms
      the confusing  optional argument `increasing=True` is replced by (less-confusin)
      `cut_low` and the argument is not optionl anymore
-     
+  1. From now for weighted datasets `dataset[i]` returns `(entry,weight)` tuple    
+  1. from now iteration over weighted dataset gives `(entry,weight)` tuple
 
 ## Bug fixes
 

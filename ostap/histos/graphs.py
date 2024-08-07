@@ -1021,8 +1021,7 @@ def _grae_setitem_ ( graph , ipoint , point ) :
     assert 2 <= n <= 6 , "Invalid lenght of 'point' object"
 
     pars = point
-    
-    
+        
     ## extract X
     p0 = pars [ 0 ]
     ## "ready-to-use" 
@@ -1093,8 +1092,7 @@ def _grae_iteritems_ ( graph ) :
 
 # =============================================================================
 
-
-if (6,20) <= root_info : 
+if ( 6 , 20 ) <= root_info : 
     # =============================================================================
     ## iterate over points in TGraphMultiErrors
     #  @code

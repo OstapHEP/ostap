@@ -41,6 +41,7 @@ from   ostap.trees.cuts          import expression_types, vars_and_cuts
 from   ostap.utils.utils         import evt_range, LAST_ENTRY, ALL_ENTRIES 
 from   ostap.stats.statvars      import data_decorate, data_range 
 from   ostap.histos.histos       import histo_book
+from   ostap.utils.valerrors     import VAE 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ROOT, random, math, sys, ctypes  
@@ -59,9 +60,7 @@ _new_methods_ = []
 _maxv =  0.99 * sys.float_info.max
 _minv = -0.99 * sys.float_info.max
 # =============================================================================
-
-# =============================================================================
-## iterator for RooAbsData
+## iterator for RooAbsData entries 
 #  - For unweighted dataset `entry` is a RooArsSet
 #  @cdoe
 #  dataset = ...
@@ -125,11 +124,11 @@ def _rad_getitem_ ( data , index ) :
 
         entry = data.get ( index )
         if not data.isWeighted() : return entry 
-
+        
         weight = data.weight()        
         if   data.store_asym_error () :
-            wel, weh = data.weightErrors ()
-            return entry, weight , wel, weh      ## RETURN 
+            wel , weh = data.weightErrors ()
+            weight    = VAE ( weight , wel , weh ) 
         elif data.store_error      () :
             we = data.weightError  ()
             if 0 <= we : weight = VE ( weight , we * we ) 
