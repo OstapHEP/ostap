@@ -44,14 +44,10 @@ try :
 except ImportError :
     np = None
 # =============================================================================
-_new_methods_ = [] 
-
-
+_new_methods_ = []
 
 # =============================================================================
-if   np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT 
-# =============================================================================
-
+if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT     
     # =========================================================================
     ## Convert dataset into numpy array using <code>ROOT.RooAbsData</code> interface 
     #  @see ROOT.RooAbsData.getBatches
@@ -176,7 +172,6 @@ if   np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                     if   dname in doubles :
                         part [ dname ] = d.second
 
-                        
                     elif dname == weight  :
                         part [ dname ] = d.second
                 del dpart
@@ -224,8 +219,6 @@ if   np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
     
 # =============================================================================
 elif   np  :  ## ROOT < 6.26 
-# =============================================================================
-
     # =========================================================================
     ## Convert dataset into numpy array using (slow) explicit loops 
     def ds2numpy ( dataset , var_lst , silent = False , more_vars = {} ) :
@@ -287,7 +280,8 @@ elif   np  :  ## ROOT < 6.26
         categories = [ v.name for v in vars if isinstance ( v , ROOT.RooAbsCategory ) ]
 
         ## name of weight variable 
-        weight = '' if not dataset.isWeighted() else dataset.wname () 
+        weighted = dataset.isWeighted ()
+        weight   = '' if not weighted else dataset.wname () 
 
         dtypes = [] 
         for v in vnames :
@@ -300,15 +294,19 @@ elif   np  :  ## ROOT < 6.26
         ## create data 
         data = np.zeros ( len ( dataset )  , dtype = dtypes )
 
+        
         ## make an explict loop:
-        for i , evt in enumerate ( progress_bar ( dataset , silent = silent ) ) :
+        for i , item in enumerate ( progress_bar ( dataset , silent = silent ) ) :
 
+            if weighted : evt, the_weight = item
+            else        : evt             = item 
+            
             for v in evt :
                 vname = v.name
                 if   vname in doubles    : data [ vname  ] [ i ] = float ( v  )
                 elif vname in categories : data [ vname  ] [ i ] = int   ( v  )
-                
-            if weight                    : data [ weight ] [ i ] = dataset.weight()  
+
+            if weighted and weight : data [ weight ] [ i ] = float ( the_weight ) 
 
             ## add PDF values
             for vname , func , obsvars in funcs :

@@ -2406,25 +2406,15 @@ def _ds_store_asym_error_ ( dataset ) :
     - see Ostap::Utils::storeAsymError
     """
     
-    print ( 'STORE_ASYM_ERROR/0' , dataset.isWeighted() ) 
-
     if not dataset.isWeighted() : return False ## UNWEIGHTED!
 
     attr = '_store_asym_weight_error_'
-    print ( 'STORE_ASYM_ERROR/1' , attr )
-    
     if not hasattr ( dataset , attr ) :
-        
-        print ( 'STORE_ASYM_ERROR/2' , attr ) 
-        
+        ## 
         wn = Ostap.Utils.storeAsymError  (  dataset )
         wn = True if wn else False
-        
-        print ( 'STORE_ASYM_ERROR/3' , attr , wn ) 
-                
+        ## 
         setattr ( dataset , attr , wn ) 
-
-    print ( 'STORE_ASYM_ERROR/4' , attr , hasattr ( dataset , attr ) ) 
                 
     return getattr ( dataset , attr , '' )
 
