@@ -206,7 +206,8 @@ def _ras_getattr_ ( self , aname ) :
     >>> print aset.pt    
     """
     _v = self.find ( aname )
-    if not _v : raise  AttributeError
+    if not _v :
+        raise  AttributeError("%s: invalid attribute `%s'" % ( type ( self ) , aname ) )
     return _v 
 
 # =============================================================================
