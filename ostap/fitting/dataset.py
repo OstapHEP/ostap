@@ -2657,7 +2657,6 @@ def _rda_slice_ ( dataset , variables , cuts = '' , transpose = False , cut_rang
 
     names = strings ( names )
     
-    
     tab = Ostap.StatVar.Table  ()
     col = Ostap.StatVar.Column ()
 
@@ -2671,7 +2670,7 @@ def _rda_slice_ ( dataset , variables , cuts = '' , transpose = False , cut_rang
                                     *args     )
     nc = len ( col )    
     assert ( dataset.isWeighted() and nc == n ) or ( 0 == nc and not dataset.isWeighted() ), \
-           'slide: invalid size of ``weights'' column! %s/%s/%s' % ( n , nc , dataset.isWeighted() ) 
+           "slice: invalid size of `weights' column! %s/%s/%s" % ( n , nc , dataset.isWeighted() ) 
     
     if 0 == n :
         return () , () 
@@ -2938,7 +2937,6 @@ def ds_equal ( ds1 , ds2 ) :
         logger.debug ("compare datasets: unbinned vs binned") 
         return False
 
-    
     ## both weighted or non-weighted?
     w1 = ds1.isWeighted ()
     w2 = ds2.isWeighted ()
@@ -3004,7 +3002,7 @@ def ds_equal ( ds1 , ds2 ) :
     return True
 
 # ============================================================================
-## Are two datastes non-equal by content?
+## Are two datasets non-equal by content?
 #  @code
 #  ds1 = ...
 #  ds2 = ...
@@ -3072,12 +3070,9 @@ def _rad_rows_ ( dataset , variables = [] , cuts = '' , cutrange = '' , first = 
 
     first, last = evt_range (  len ( dataset ) , first , last ) 
 
-    if isinstance ( variables , string_types ) :
-        variables = split_string ( variables , var_separators , strip = True , respect_groups = True )
-    vars = []
-    for v in variables :
-        vars += split_string ( v , var_separators , strip = True , respect_groups = True )
-    vars = strings ( vars ) 
+    varlst, cuts, _ = vars_and_cuts  ( variables , cuts )
+
+    vars = strings ( varlst ) 
 
     formulas = []
     varlist  = dataset.varlist () 
@@ -3088,31 +3083,34 @@ def _rad_rows_ ( dataset , variables = [] , cuts = '' , cutrange = '' , first = 
     fcuts = None 
     if cuts : fcuts = make_formula ( cuts , cuts , varlist  )
 
-    weighted = dataset.isWeighted()
-    
+    weighted          = dataset.isWeighted                     ()
+    store_errors      = weighted and daatset.store_errors      ()
+    store_asym_errors = weighted and daatset.store_asym_errors () 
+    simple_weight     = weighted and ( not srore_errors ) and ( not store_asym_errors ) 
     ## loop over dataset 
     for event in range ( first , last ) :
+
+        ww = None 
+        if weighted : vars, ww  = dataset [ event ] 
+        else        : vars      = dataset [ event ]
         
-        vars = dataset.get ( event ) 
         if not vars : break
 
         if cutrange and not vars.allInRange ( cutrange ) : continue
 
         wc = fcuts.getVal() if fcuts else 1.0 
-
         if not wc   : continue
 
-        wd = dataset.weight() if weighted else 1.0 
+        wd = ww if weighted and not ( ww is None ) else 1.0
         
         w  = wc * wd 
-        if not w    : continue
+        if simple_weight and not w : continue
 
         weight = w if weighted else None 
 
-        result = tuple ( tuple ( float(f) for f in formulas ) ) 
+        result = tuple ( tuple ( float ( f ) for f in formulas ) ) 
         yield  get_result ( result ) , weight 
         
-
     del fcuts
     del formulas
 

@@ -29,7 +29,7 @@ __all__     = (
 from   ostap.core.ostap_types import num_types, sized_types, sequence_types   
 from   ostap.core.core        import VE
 from   ostap.math.base        import iszero, isequal  
-import math 
+import math, copy  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -92,6 +92,12 @@ class AsymErrors (object) :
         return self.__positive
 
     # =========================================================================
+    ## make a copy 
+    def __copy__ ( self ) :
+        """Make a copy"""
+        return AsymErrors ( negative = self.__negative , positive = self.__positive )
+    
+    # =========================================================================
     ## An `effective error' (as split normal distribution)
     #  @see https://en.wikipedia.org/wiki/Split_normal_distribution
     @property
@@ -137,16 +143,54 @@ class AsymErrors (object) :
         elif pos                     : self.__positive =  pos 
         ##
         return self 
-
     # =========================================================================
     ## Quadratic sum of two AsymErrors object 
     def __add__ ( self , other ) :
         """Quadratic sum of two AsymErrors object"""
         if not isinstance ( other , AsymErrors ) : return NotImplemented
-        result = AsymErrors ( self.__negative , slef.__positive )
-        result += other
-        return result
+        r  = copy.copy ( self ) 
+        r += other
+        return r
 
+    # =========================================================================
+    ## self-scaling
+    def __imul__ ( self , other ) :
+        """Self-scaling"""
+        if not isinstance ( other , num_types ) : return NotImplemented
+        self.__negative *= other
+        self.__positive *= other
+        return self 
+    # =========================================================================
+    ## self-scaling
+    def __idiv__ ( self , other ) :
+        """Self-scaling"""
+        if not isinstance ( other , num_types ) : return NotImplemented
+        self.__negative /= other
+        self.__positive /= other
+        return self 
+    # ==========================================================================
+    ## Self-scaling
+    __itruediv__ = __idiv__    
+    # ==========================================================================
+    ## Multiplication/scaling
+    def __mul__ ( self , other ) :
+        """Multiplication/scaling"""
+        if not isinstance ( other , num_types ) : return NotImplemented
+        r  = copy.copy ( self ) 
+        r *= other
+        return r  
+    # ==========================================================================
+    ## division/scaling 
+    def __div__ ( self , other ) :
+        """Division/scaling"""
+        if not isinstance ( other , num_types ) : return NotImplemented
+        r  = copy.copy ( self ) 
+        r /= other
+        return r 
+    # ==========================================================================
+    ## right multuiplication 
+    __rmul__    = __mul__
+    __truediv__ = __div__ 
     # =========================================================================
     ## equality 
     def __eq__  ( self , other ) :
@@ -159,11 +203,9 @@ class AsymErrors (object) :
     def __ne__  ( self , other ) :
         if not isinstance ( other , AsymErrors ) : return NotImplememnted
         return not ( self == other )
-
     # =========================================================================
     ## tuple-like 
     def __len__ ( self ) : return 2
-
     # =========================================================================
     ## get the error by index
     #  0 : negative error
@@ -291,6 +333,82 @@ class ValWithErrors(object) :
         """'pos_error' : the positive (high) error"""
         return self.__errors.positive
 
+    # =========================================================================
+    ## make a copy 
+    def __copy__ ( self ) :
+        """Make a copy""" 
+        return ValWithErrors ( self ) 
+        
+    # =========================================================================
+    ## self-scaling
+    #  @code
+    #  vae = ...
+    #  vae *= 5 
+    #  @endcode 
+    def __imul__ ( self , other ) :
+        """Self-scaling
+        >>> vae = ...
+        >>> vae *= 5 
+        """
+        if not isinstance ( other , num_types ) : return NotImplemented
+        self.__value  *= other
+        self.__errors *= other
+        return self
+    # =========================================================================
+    ## self-scaling
+    #  @code
+    #  vae = ...
+    #  vae /= 5 
+    #  @endcode 
+    def __idiv__ ( self , other ) :
+        """Self-scaling
+        >>> vae = ...
+        >>> vae /= 5 
+        """
+        if not isinstance ( other , num_types ) : return NotImplemented
+        self.__value  /= other
+        self.__errors /= other
+        return self 
+    # =========================================================================
+    ## Self-scaling
+    __itruediv__ = __idiv__    
+    # ==========================================================================
+    ## Multiplication/scaling
+    #  @code
+    #  vae = ...
+    #  vae * 5
+    #  5 * vae 
+    #  @endcode
+    def __mul__ ( self , other ) :
+        """Multiplication/scaling
+        >>> vae = ...
+        >>> vae * 5
+        >>> 5 * vae 
+        """
+        if not isinstance ( other , num_types ) : return NotImplemented
+        r  = copy.copy ( self ) 
+        r *= other
+        return r 
+    # ==========================================================================
+    ## Division/scaling
+    #  @code
+    #  vae = ...
+    #  vae / 5
+    #  @endcode
+    def __div__ ( self , other ) :
+        """Division/scaling
+        >>> vae = ...
+        >>> vae * 5
+        >>> 5 * vae 
+        """
+        if not isinstance ( other , num_types ) : return NotImplemented
+        r  = copy.copy ( self ) 
+        r /= other
+        return r 
+    # ==========================================================================
+    __rmul__    = __mul__
+    __truediv__ = __div__ 
+    
     # ========================================================================
     ## conversion to float 
     def __float__ ( self ) :
@@ -448,6 +566,82 @@ class ValWithMultiErrors(object) :
         """'nerrors' : numer of associated asymmetrical errors (pairs)"""
         return len ( self.__errors ) 
     
+    # =========================================================================
+    ## make a copy 
+    def __copy__ ( self ) :
+        """Make a copy""" 
+        return ValWithMultiErrors ( self ) 
+        
+    # =========================================================================
+    ## self-scaling
+    #  @code
+    #  vae = ...
+    #  vae *= 5 
+    #  @endcode 
+    def __imul__ ( self , other ) :
+        """Self-scaling
+        >>> vae = ...
+        >>> vae *= 5 
+        """
+        if not isinstance ( other , num_types ) : return NotImplemented
+        self.__value  *= other
+        self.__errors  = tuple ( e*other for e in self.errors ) 
+        return self    
+    # =========================================================================
+    ## self-scaling
+    #  @code
+    #  vae = ...
+    #  vae /= 5 
+    #  @endcode 
+    def __idiv__ ( self , other ) :
+        """Self-scaling
+        >>> vae = ...
+        >>> vae /= 5 
+        """
+        if not isinstance ( other , num_types ) : return NotImplemented
+        self.__value  /= other
+        self.__errors  = tuple ( e/other for e in self.errors ) 
+        return self    
+    # =========================================================================
+    ## Self-scaling
+    __itruediv__ = __idiv__    
+    # ==========================================================================
+    ## Multiplication/scaling
+    #  @code
+    #  vae = ...
+    #  vae * 5
+    #  5 * vae 
+    #  @endcode
+    def __mul__ ( self , other ) :
+        """Multiplication/scaling
+        >>> vae = ...
+        >>> vae * 5
+        >>> 5 * vae 
+        """
+        if not isinstance ( other , num_types ) : return NotImplemented
+        r  = copy.copy ( self )
+        r *= other
+        return r 
+    # ==========================================================================
+    ## Division/scaling
+    #  @code
+    #  vae = ...
+    #  vae / 5
+    #  @endcode
+    def __div__ ( self , other ) :
+        """Division/scaling
+        >>> vae = ...
+        >>> vae * 5
+        >>> 5 * vae 
+        """
+        if not isinstance ( other , num_types ) : return NotImplemented
+        r  = copy.copy ( self )
+        r /= other
+        return r 
+    # ==========================================================================
+    __rmul__    = __mul__
+    __truediv__ = __div__ 
+    # ==========================================================================
     ## conversion to float 
     def __float__ ( self ) :
         """conversion to float"""
@@ -468,7 +662,6 @@ class ValWithMultiErrors(object) :
     def pos_error ( self ) :
         """'pos_error' : the effective (sum squared) positive (high) error"""
         return math.sqrt ( sum ( e.positive**2 for e in self.__errors ) ) 
-
 
     # ========================================================================
     ## (numerical) equality

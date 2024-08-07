@@ -51,6 +51,11 @@ def test_asymerr () :
     assert ae1_ == ae3 , ' %s != %s ' % ( ae1_ , ae3 )
     assert ae2_ == ae3 , ' %s != %s ' % ( ae2_ , ae3 )
 
+    logger.info ( 'Scale /1 : %s %s %s' % ( ae1/1 , ae2/1 , ae3/1 ) )
+    logger.info ( 'Scale *1 : %s %s %s' % ( ae1*1 , ae2*1 , ae3*1 ) )
+    logger.info ( 'Scale /2 : %s %s %s' % ( ae1/2 , ae2/2 , ae3/2 ) )
+    logger.info ( 'Scale *2 : %s %s %s' % ( ae1*2 , ae2*2 , ae3*2 ) )
+    logger.info ( 'Scale 2* : %s %s %s' % ( 2*ae1 , 2*ae2 , 2*ae3 ) )
     
 # =============================================================================
 ## test asymmetric errors:
@@ -59,9 +64,9 @@ def test_valasymerr () :
     logger = getLogger( 'test_valasymerr')
     logger.info ( 'Test ValWithErrors' )
 
-    ae1 = VAE ( 1.0              , -0.5 ,  1.0 )
-    ae2 = VAE ( VE ( 1.0 , 0.0 ) , -0.5 ,  1.0 )
-    ae3 = VAE ( VE ( 1.0 , 0.0 ) , AE ( -0.5 , 1.0 ) )
+    ae1 = VAE ( 10.0              , -0.5 ,  1.0 )
+    ae2 = VAE ( VE ( 10.0 , 0.0 ) , -0.5 ,  1.0 )
+    ae3 = VAE ( VE ( 10.0 , 0.0 ) , AE ( -0.5 , 1.0 ) )
     
     logger.info ( '%s %s %s' % ( ae1 , ae2 , ae3 ) )
 
@@ -76,12 +81,19 @@ def test_valasymerr () :
     assert ae1_ == ae2 , ' %s != %s ' % ( ae1_ , ae2 )
     assert ae1_ == ae3 , ' %s != %s ' % ( ae1_ , ae3 )
     assert ae2_ == ae3 , ' %s != %s ' % ( ae2_ , ae3 )
+    
+    logger.info ( 'Scale /1 : %s %s %s' % ( ae1/1 , ae2/1 , ae3/1 ) )
+    logger.info ( 'Scale *! : %s %s %s' % ( ae1*1 , ae2*1 , ae3*1 ) )
+    logger.info ( 'Scale /2 : %s %s %s' % ( ae1/2 , ae2/2 , ae3/2 ) )
+    logger.info ( 'Scale *2 : %s %s %s' % ( ae1*2 , ae2*2 , ae3*2 ) )
+    logger.info ( 'Scale 2* : %s %s %s' % ( 2*ae1 , 2*ae2 , 2*ae3 ) )
 
     ## conversion to VE without bias 
     ve1 = ae1.asVE ( bias = False ) 
     ve2 = ae2.asVE ( bias = False ) 
     ve3 = ae3.asVE ( bias = False ) 
 
+    logger.info ( '%s %s %s' % ( ae1 , ae2 , ae3 ) )
     logger.info ( 'asVE ( bias = False ) : %s %s %s' % ( ve1.toString ( '( %+-.3f +/- %-.3f )' ) ,
                                                          ve2.toString ( '( %+-.3f +/- %-.3f )' ) ,
                                                          ve3.toString ( '( %+-.3f +/- %-.3f )' ) ) )
@@ -102,9 +114,9 @@ def test_valmulterr () :
     logger = getLogger( 'test_valmulterr')
     logger.info ( 'Test ValWithMultiErrors' )
 
-    me1 = VME ( 1.0 ,     0.5 , 0.5   ,      -0.6 , 1.0   ,      0.7 , -0.3   ) 
-    me2 = VME ( 1.0 , AE( 0.5 , 0.5 ) , AE ( -0.6 , 1.0 ) , AE ( 0.7 , -0.3 ) ) 
-    me3 = VME ( VE ( 1 , 0.5 **2 )    , AE ( -0.6 , 1.0 ) , AE ( 0.7 , -0.3 ) ) 
+    me1 = VME ( 10.0 ,     0.5 , 0.5   ,      -0.6 , 1.0   ,      0.7 , -0.3   ) 
+    me2 = VME ( 10.0 , AE( 0.5 , 0.5 ) , AE ( -0.6 , 1.0 ) , AE ( 0.7 , -0.3 ) ) 
+    me3 = VME ( VE ( 10 , 0.5 **2 )    , AE ( -0.6 , 1.0 ) , AE ( 0.7 , -0.3 ) ) 
 
     ae1 = me1.asVAE()
 
@@ -122,10 +134,17 @@ def test_valmulterr () :
     assert me1_ == me3 , ' %s != %s ' % ( me1_ , me3 )
     assert me2_ == me3 , ' %s != %s ' % ( me2_ , me3 )
 
+    logger.info ( 'Scale /1 : %s %s %s' % ( me1/1 , me2/1 , me3/1 ) )
+    logger.info ( 'Scale *1 : %s %s %s' % ( me1*1 , me2*1 , me3*1 ) )
+    logger.info ( 'Scale /2 : %s %s %s' % ( me1/2 , me2/2 , me3/2 ) )
+    logger.info ( 'Scale *2 : %s %s %s' % ( me1*2 , me2*2 , me3*2 ) )
+    logger.info ( 'Scale 2* : %s %s %s' % ( 2*me1 , 2*me2 , 2*me3 ) )
+
     ae1 = me1.asVAE()
     ae2 = me2.asVAE()
     ae3 = me3.asVAE()
     
+    logger.info ( '%s %s %s' % ( me1 , me2 , me3 ) )
     logger.info ( 'as VAE                : %s %s %s' % ( ae1 , ae2 , ae3 ) )
     
     ## conversion to VE without bias 
