@@ -3101,12 +3101,10 @@ _new_methods_ += [
 # ============================================================================
 try : 
     from numpy import array as _array 
-    def get_result ( data ) :
-        return _array (  data , dtype = float ) 
+    def get_result ( data ) : return _array (  data , dtype = float ) 
 except ImportError :
     from array import array as _array 
     def get_result ( data ) : return _array ( 'd' , data )
-
 
 # ===========================================================================
 ## Iterator for rows in dataset
@@ -3124,8 +3122,8 @@ def _rad_rows_ ( dataset                ,
                  progress  = False      ) :
     """Iterator for rows in dataset
     >>> dataset = ...
-    >>> for row , weight in dataset.rows ( 'pt, pt/p, mass ' , 'pt>1' ) :
-    >>>    print (row, weight) 
+    >>> for index, row , weight in dataset.rows ( 'pt, pt/p, mass ' , 'pt>1' ) :
+    >>>    print (index, row, weight) 
     """
 
     first  , last    = evt_range      ( len ( dataset ) , first , last ) 
@@ -3145,7 +3143,7 @@ def _rad_rows_ ( dataset                ,
                                              last     = last     ,
                                              progress = progress ) :
         
-        result = tuple ( tuple ( float ( f ) for f in formulas ) ) 
+        result = tuple ( float ( f ) for f in formulas )
         yield index , get_result ( result ) , weight 
 
     del formulas
