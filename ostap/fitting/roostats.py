@@ -793,10 +793,7 @@ class FeldmanCousinsInterval(CLInterval) :
             gr2.blue ()
 
             ps  = fc.GetPointsToScan()
-
-            weighted = ps.isWeighted() 
-            for entry in ps :                
-                if weighted : entry , _ = entry
+            for entry, _  in ps :                
                 point = float ( entry[0] ) 
                 if fci.IsInInterval ( entry ) : gr1.append ( point , 1 )
                 else                          : gr2.append ( point , 0 )

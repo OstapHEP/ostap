@@ -15,14 +15,9 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ostap.fitting.roofit 
-import ostap.fitting.models     as     Models 
-from   ostap.core.core          import cpp, VE, dsID, rooSilent 
+from   ostap.core.core          import dsID
 from   ostap.utils.timing       import timing
 from   builtins                 import range
-from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait
-from   ostap.fitting.background import make_bkg
-from   ostap.logger.colorized   import attention
 import ostap.logger.table       as     T
 import ROOT, random
 # =============================================================================
@@ -36,19 +31,23 @@ else :
 # =============================================================================
 
 
-evt     = ROOT.RooRealVar ( 'Evt'  , '#event'        , 0 , 1000000 )
-run     = ROOT.RooRealVar ( 'Run'  , '#run'          , 0 , 1000000 )
-mass    = ROOT.RooRealVar ( 'Mass' , 'mass-variable' , 0 , 100     )
+evt     = ROOT.RooRealVar ( 'Evt'    , '#event'        , 0 , 1000000 )
+run     = ROOT.RooRealVar ( 'Run'    , '#run'          , 0 , 1000000 )
+mass    = ROOT.RooRealVar ( 'Mass'   , 'mass-variable' , 0 , 100     )
+weight  = ROOT.RooRealVar ( 'Weight' , 'some weight'   , 0 , 2       )
 
-varset  = ROOT.RooArgSet  ( evt , run , mass )
-dataset = ROOT.RooDataSet ( dsID() , 'Test Data set-0' , varset )  
+varset  = ROOT.RooArgSet  ( evt , run , mass , weight )
+dataset = ROOT.RooDataSet ( dsID () , 'Test Data set-0' , varset )  
 
 for r in range ( 5 ) :
-    run.setVal ( r ) 
+    
+    run.setVal ( r )
+    
     for e in range ( 5 ) :
         
-        evt .setVal ( e )
-        mass.setVal ( random.uniform ( 0 , 10 ) )
+        evt .setVal   ( e )
+        mass.setVal   ( random.uniform ( 0 , 10 ) )
+        weight.setVal ( random.uniform ( 0  , 2  ) )
         
         dataset.add ( varset )
         
@@ -56,14 +55,10 @@ for r in range ( 5 ) :
             
             mass.setVal ( random.uniform ( 0 , 10 ) )
             dataset.add ( varset )
-            
-            ## mass.setVal ( random.uniform ( 0 , 10 ) )
-            ## dataset.add ( varset ) 
-
 
 rows = [ ( '#' , 'Run' , 'Evt' , 'Mass' ) ] 
-for i, e in enumerate ( dataset ) :
-
+for i, item in enumerate ( dataset ) :
+    e , _ = item 
     row = '%3d' % i , \
           '%3d' % float ( e.Run  ) , \
           '%3d' % float ( e.Evt  ) , \
@@ -79,8 +74,8 @@ ds0 = dataset.make_unique ( event_tag , choice = 'first' )
 
 
 rows = [ ( '#' , 'Run' , 'Evt' , 'Mass' ) ] 
-for i, e in enumerate ( ds0 ) :
-
+for i, item in enumerate ( ds0 ) :
+    e , _ = item 
     row = '%3d' % i , \
           '%3d' % float ( e.Run  ) , \
           '%3d' % float ( e.Evt  ) , \
@@ -93,12 +88,12 @@ logger.info ( '%s:\n%s' % ( title , T.table ( rows ,title = title , prefix = '# 
 dscl = dataset.emptyClone()
 for dups in dataset.duplicates ( event_tag ) :
     for i in dups :
-        dscl.add ( dataset[i] )
-
+        entry , weight = dataset [ i ] 
+        dscl.add ( entry  )
 
 rows = [ ( '#' , 'Run' , 'Evt' , 'Mass' ) ] 
-for i, e in enumerate ( dscl ) :
-
+for i, item in enumerate ( dscl ) :
+    e, w = item     
     row = '%3d' % i , \
           '%3d' % float ( e.Run  ) , \
           '%3d' % float ( e.Evt  ) , \
@@ -106,6 +101,14 @@ for i, e in enumerate ( dscl ) :
     rows.append ( row ) 
 title = 'Dataset with duplicates'
 logger.info ( '%s:\n%s' % ( title , T.table ( rows ,title = title , prefix = '# ' ) ) ) 
+
+
+# =============================================================================
+## print first 20 rows 
+for row, weight in data.rows ( [ 'Evt'    , 'Run'    ,
+                                 'Mass'   , 'Mass*2' , 'Mass/2' ] ,
+                               cuts = 'Mass<5' , last = 20 ) :
+    print ( row , weight ) 
 
 
 

@@ -50,12 +50,23 @@ def vars_and_cuts ( expressions , cuts ) :
     if isinstance ( expressions , expression_types ) :
         expressions  = split_string ( str ( expressions ) , strip = True , respect_groups = True )
         input_string = 1 == len ( expressions )
-        
+
+    assert expressions and all ( s and isinstance ( s , expression_types ) for s in expressions ) , \
+        "Invalid expression(s) : %s" % str ( expressions )
+
+    full = []
+    for subexpr in expressions :
+        subexpr  = split_string ( str( subexpr ).strip()  , strip = True , respect_groups = True )
+        if subexpr : full    += subexpr
+    expressions  = tuple ( full ) 
+
     assert expressions and all ( s and isinstance ( s , expression_types ) for s in expressions ) , \
         "Invalid expression(s) : %s" % str ( expressions )
     
     exprs = tuple ( str(s).strip() for s in expressions )
-    exprs = tuple ( s for s in expressions if s ) 
+
+    exprs = tuple ( s for s in exprs if s )
+
     assert exprs and all ( exprs ) , "Invalid expressions: %s" % str ( exprs )
     
     assert isinstance ( cuts , expression_types ) or not cuts , \

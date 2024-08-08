@@ -197,7 +197,8 @@ if  np and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
 
         ## add PDF values
         if funcs :  
-            for i, entry in enumerate ( source ) :
+            for i, item  in enumerate ( source ) :
+                entry , weight = item 
                 for vname , func , obsvars in funcs :
                     obsvars.assign ( entry )
                     data [ vname ] [ i ] = func.getVal()   
@@ -298,15 +299,15 @@ elif   np  :  ## ROOT < 6.26
         ## make an explict loop:
         for i , item in enumerate ( progress_bar ( dataset , silent = silent ) ) :
 
-            if weighted : evt, the_weight = item
-            else        : evt             = item 
+            evt, the_weight = item
             
             for v in evt :
                 vname = v.name
                 if   vname in doubles    : data [ vname  ] [ i ] = float ( v  )
                 elif vname in categories : data [ vname  ] [ i ] = int   ( v  )
 
-            if weighted and weight : data [ weight ] [ i ] = float ( the_weight ) 
+            if weighted and weight  and not ( the_weigth is None ) :
+                data [ weight ] [ i ] = float ( the_weight ) 
 
             ## add PDF values
             for vname , func , obsvars in funcs :

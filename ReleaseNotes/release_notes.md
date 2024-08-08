@@ -13,6 +13,9 @@
   1. Some tweaks for style configuration 
   1. update `ostap.utils.valerrors` & and new test
   1. allow to use `width` keyword when `line_width` is not specified for `XXX.draw` method
+  1. add `loop` methdod for `RooAbsData` and implement `rows` in terms of `loop`
+  1. allow more recusion in `vars_and_cuts` function
+  1. add new test
   
 ## Backward incompatibl
 
@@ -23,7 +26,8 @@
      `cut_low` and the argument is not optionl anymore
   1. From now for weighted datasets `dataset[i]` returns `(entry,weight)` tuple    
   1. from now iteration over weighted dataset gives `(entry,weight)` tuple
-
+  1. change sinature of `dataset.loop` , `dataset.rows` methods to return triplets `index, entry, weight`
+ 
 ## Bug fixes
 
    1. fix a typo in `ostap.ploting.canvas`

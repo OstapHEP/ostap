@@ -35,7 +35,7 @@ def test_small_ds():
 
     # Заполняем датасет случайными данными
     random_generator = ROOT.TRandom3(42)  # устанавливаем seed
-    for e in range( NN ):
+    for e in range ( NN ):
         x_val = random_generator.Uniform(0, 10)
         y_val = random_generator.Uniform(0, 10)
         x.setVal   ( x_val )
@@ -44,6 +44,7 @@ def test_small_ds():
         i.setVal   ( f % 2  )  
         data.add   ( varset )
 
+
     g1 = Models.Gauss_pdf ( 'G1' , xvar = x  , mean = 5  , sigma = 1 )
     g2 = Models.Gauss_pdf ( 'G2' , xvar = y  , mean = 5  , sigma = 1 )
     
@@ -51,7 +52,7 @@ def test_small_ds():
                                                             'gaus2' : g2 } )
     
     print ( ws  )
-    
+
 # =============================================================================
 def test_small_ds_with_weights():
 
