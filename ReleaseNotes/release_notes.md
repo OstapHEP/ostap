@@ -26,6 +26,8 @@
 
 ## Bug fixes
 
+   1. fix a typo in `ostap.ploting.canvas`
+   
 # v1.10.1.8
 
 ## New features

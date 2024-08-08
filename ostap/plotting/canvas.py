@@ -977,7 +977,7 @@ def set_pad ( pad , **config ) :
         
     if 'bottom_margin' in conf or 'margin_bottom' in conf :            
         changed ['margin_bottom']  = pad.GetBottomMargin()
-        if 'bottom_margin' in con  : pad.SetBottomMargin ( conf.pop ( 'bottom_margin' ) )
+        if 'bottom_margin' in conf : pad.SetBottomMargin ( conf.pop ( 'bottom_margin' ) )
         else                       : pad.SetBottomMargin ( conf.pop ( 'margin_bottom' ) ) 
         
     if 'left_margin' in conf or 'margin_left' in conf :                
