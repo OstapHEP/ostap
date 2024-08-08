@@ -12,6 +12,7 @@
   1. add `progress` and `report` optioal argumens for (almost) all Frame-related functions 
   1. Some tweaks for style configuration 
   1. update `ostap.utils.valerrors` & and new test
+  1. allow to use `width` keyword when `line_width` is not specified for `XXX.draw` method
   
 ## Backward incompatibl
 

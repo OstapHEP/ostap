@@ -466,15 +466,17 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
                 
         ## Line
         if isinstance ( obj , ROOT.TAttLine ) :
-            if 'LineColor' in kw : obj.SetLineColor ( check_color ( kw.pop('LineColor' ) ) ) 
-            if 'LineStyle' in kw : obj.SetLineStyle ( kw.pop('LineStyle' ) )
-            if 'LineWidth' in kw : obj.SetLineWidth ( kw.pop('LineWidth' ) ) 
+            if   'LineColor' in kw : obj.SetLineColor ( check_color ( kw.pop('LineColor' ) ) ) 
+            if   'LineStyle' in kw : obj.SetLineStyle ( kw.pop('LineStyle' ) )
+            if   'LineWidth' in kw : obj.SetLineWidth ( kw.pop('LineWidth' ) ) 
+            elif 'Width'     in kw : obj.SetLineWidth ( kw.pop('Width'     ) ) 
                                                     
         ## Marker
         if isinstance ( obj , ROOT.TAttMarker ) :               
-            if 'MarkerColor' in kw : obj.SetMarkerColor ( check_color ( kw.pop('MarkerColor' ) ) ) 
-            if 'MarkerStyle' in kw : obj.SetMarkerStyle ( kw.pop('MarkerStyle' ) )
-            if 'MarkerSize'  in kw : obj.SetMarkerSize  ( kw.pop('MarkerSize'  ) )
+            if   'MarkerColor' in kw : obj.SetMarkerColor ( check_color ( kw.pop('MarkerColor' ) ) ) 
+            if   'MarkerSize'  in kw : obj.SetMarkerSize  ( kw.pop('MarkerSize'  ) )
+            if   'MarkerStyle' in kw : obj.SetMarkerStyle ( kw.pop('MarkerStyle' ) )
+            elif 'Marker'      in kw : obj.SetMarkerStyle ( kw.pop('Marker'      ) )
 
         ## Area
         if isinstance ( obj , ROOT.TAttFill  ) :               
