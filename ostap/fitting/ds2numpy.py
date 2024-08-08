@@ -306,7 +306,7 @@ elif   np  :  ## ROOT < 6.26
                 if   vname in doubles    : data [ vname  ] [ i ] = float ( v  )
                 elif vname in categories : data [ vname  ] [ i ] = int   ( v  )
 
-            if weighted and weight  and not ( the_weigth is None ) :
+            if weighted and weight  and not ( the_weight is None ) :
                 data [ weight ] [ i ] = float ( the_weight ) 
 
             ## add PDF values
