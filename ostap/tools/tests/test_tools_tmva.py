@@ -264,7 +264,7 @@ def test_tmva () :
         counters  = {}
         methods   = reader.methods[:] 
         for m in methods : counters[m] = SE() 
-        for evt in ds_S1 :
+        for evt , _  in ds_S1 :
             for method in methods : counters[method] += reader ( method , evt )
         title = 'Signal     response (RooDataSet)'
         table = counters_table ( counters , title = title , prefix = '# ' )
@@ -274,7 +274,7 @@ def test_tmva () :
         counters  = {}
         methods   = reader.methods[:] 
         for m in methods : counters[m] = SE() 
-        for evt in ds_B1 :
+        for evt, _ in ds_B1 :
             for method in methods : counters[method] += reader ( method , evt )
         title = 'Background response (RooDataSet)'
         table = counters_table ( counters , title = title , prefix = '# ' )
