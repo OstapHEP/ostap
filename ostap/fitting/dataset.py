@@ -709,7 +709,13 @@ def _rad_shuffle_ ( self ) :
 #  data =  data.subset ( ['a','b','c'] , 'a>0' )
 #  @endcode
 #  @see RooAbsData::reduce
-def _rad_subset_ ( dset , vars = [] , cuts = '' ) :
+def _rad_subset_ ( dataset                 ,
+                   variables  = []         ,
+                   cuts       = ''         ,
+                   cut_range  = ''         ,
+                   first      = 0          ,
+                   last       = LAST_ENTRY ) :
+
     """ Improved reduce
     >>> data = ...
     >>> data =  data.subset( RooArgSet( ... ) , 'a>0' )
@@ -717,29 +723,49 @@ def _rad_subset_ ( dset , vars = [] , cuts = '' ) :
     >>> data =  data.subset ( ['a','b','c'] , 'a>0' )
     - see ROOT.RooAbsData.reduce
     """
-
-    if ( not vars ) and ( not cuts ) : return dset.__class__ ( dset )  ##  return copy 
-    elif not vars : vars = dset.varset()
     
-    if   isinstance ( cuts , ROOT.TCut ) :   cuts = str ( cuts )
-
-    if cuts and isinstance ( cuts , string_types ) :
-        cuts  = make_formula ( cuts , cuts , dset.varlist() )
-
-    if   isinstance ( vars , ROOT.RooArgSet  ) : return dset.reduce ( vars , cuts )
-    elif isinstance ( vars , string_types    ) : vars = [ vars ]
-
+    assert isinstance ( cut_range , expression_types ) or not cut_range, \
+        "Invalid type of cutrange: %s" % type ( cut_range )
     
-    aset   = ROOT.RooArgSet()
-    varset = dset.get()
-    for v in vars :
-        if   isinstance ( v , ROOT.RooAbsArg ) : aset.add ( v )
-        elif isinstance ( v , string_types   ) and v in varset : aset.add ( varset[v] )
-        else :
-            raise TypeError("``subset'': unknown type %s/%s" % ( v , type(v) ) )
+    cut_range   = str(cut_range).strip() if cut_range else ''
 
-    return dset.reduce ( aset , cuts ) if aset else dset.reduce ( cuts )
+    ## variables in this dataset 
+    vset = dataset.get()
 
+    var_types   = ROOT.RooAbsReal , ROOT.RooAbsCategory 
+    vars        = variables 
+    if   isinstance ( variables , expression_types                    ) : vars = [ str ( variables ) ]
+    elif isinstance ( variables , ROOT.RooAbsCollection               ) : vars = [ str ( v.GetName() ) for v in variables ]
+    elif isinstance ( variables , var_types                           ) : vars = [ str ( variables.GetName() ) ]
+    elif all ( isinstance ( v , var_types        ) for v in variables ) : vars = [ str ( v.GetName() ) for v in variables ]
+    elif all ( isinstance ( v , expression_types ) for v in variables ) : vars = [ str ( v           ) for v in variables ]
+    elif not vars                                                       : vars = [ str ( v.GetName() ) for v in vset      ] 
+    ## 
+    ## decode list of variables 
+    varlst, cuts, _ = vars_and_cuts ( vars , cuts )
+    ## 
+    ## extra items? 
+    extra  = [ v for v in varlst if not v in dataset ]
+    assert varlst and not extra , 'Variables are not in dataset: %s' % str ( extra ) 
+    ## 
+    ## create cuts as RooFormulaVar 
+    if cuts : cuts = make_formula ( cuts , cuts , dataset.varlist() )
+    ## 
+    aset = ROOT.RooArgSet()
+    for v in varlst : aset.add ( vset [ v ] )
+    ##
+    args = []
+    ## 
+    if aset      : args.append ( ROOT.RooFit.SelectVars ( aset      ) ) 
+    if cuts      : args.append ( ROOT.RooFit.Cut        ( cuts      ) )
+    if cut_range : args.append ( ROOT.RooFit.CutRange   ( cut_range ) )
+    ## 
+    ## check the range:
+    if ( first, last ) != ALL_ENTRIES :
+        first, last = evt_range ( len ( dataset ) , first , last )
+        args.append           ( ROOT.RooFit.EventRange ( first , last ) )
+    ## 
+    return dataset.reduce ( *args ) 
 
 # =============================================================================
 ## helper technical method to seek for unique or duplicated entries
