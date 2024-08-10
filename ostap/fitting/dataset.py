@@ -1566,7 +1566,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 
     >>> dataset.addVar ( 'ratio' , 'pt/pz' )
     """
-    vcol = make_formula    ( vname , formula , dataset.get() )
+    vcol = make_formula ( vname , formula , dataset.get() )
     dataset.addColumn ( vcol )
     del vcol 
     #
@@ -1668,48 +1668,42 @@ _new_methods_ += [
 #  @param cuts     optional cuts to be applied 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def _rds_makeWeighted_ ( dataset       ,
-                         wvarname      ,
-                         varset = None ,
-                         cuts   = ''   ,
-                         wname  = ''   ) :
+def _rds_makeWeighted_ ( dataset           ,
+                         weightvar         ,
+                         cuts   = ''       ,
+                         wname  = 'Weight' ) :
     """Make weighted data set from unweighted dataset
     
     >>> dataset = ...
     >>> wdata   = dataset.makeWeighted ( 'S_sw' )    
     """
-    if dataset.isWeighted () : 
-        logger.warning ("Dataset '%s/%s' is already weighted!" % ( dataset.GetName  () ,
-                                                                   dataset.GetTitle () ) ) 
-
-    ##
-    formula =  0 <= wvarname.find ( '(' ) and wvarname.find( '(' ) < wvarname.find ( ')' )
-    formula = formula or 0 <= wvarname.find ( '*' ) 
-    formula = formula or 0 <= wvarname.find ( '/' )     
-    formula = formula or 0 <= wvarname.find ( '+' ) 
-    formula = formula or 0 <= wvarname.find ( '-' )     
-    formula = formula or 0 <= wvarname.find ( '&' )     
-    formula = formula or 0 <= wvarname.find ( '|' )     
-    formula = formula or 0 <= wvarname.find ( '^' )     
-    formula = formula or 0 <= wvarname.find ( '%' )
+    assert not dataset.isWeighted () , "Dataset '%s/%s' is already weighted!" % ( dataset.GetName  () ,
+                                                                                  dataset.GetTitle () )
     
-    if formula :
-        wname    = wnane or 'W' 
-        while wname in dataset : wname += 'W'
-        dataset.addVar ( wname , wvarname ) 
-        wvarname = wname  
+    assert isinstance ( weightvar , expression_types ) , \
+        "Invalid type of `weigthvar':%s" % type ( weightvar )
+    assert isinstance ( cuts      , expression_types ) or not cuts , \
+        "Invalid type of `cuts':%s" % type ( cuts )
+
+    ## 
+    cuts      = str ( cuts      ).strip()
+    weightvar = str ( weightvar ).strip()
+    
+    if not weightvar in dataset :
+        ## is it a formula ?
+        wname = wname or 'Weight'
+        while wname in dataset :  wname += 'W'
+        dataset.addVar ( wname , weightwar )
+        weightvar = wname
         
-    if not varset :
-        varset = dataset.get()  
-   
+    varset = dataset.get()      
     ## make weighted dataset 
     return ROOT.RooDataSet ( dsID()             ,
                              dataset.GetTitle() ,
                              dataset            ,
                              varset             , 
                              cuts               ,
-                             wvarname           )
-
+                             weightvar          )
 
 ROOT.RooDataSet.makeWeighted = _rds_makeWeighted_
 
