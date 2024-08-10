@@ -66,6 +66,8 @@ weighted = dataset.makeWeighted ( 'Weight' )
 logger.info ( 'Print         unweighted dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 logger.info ( 'Print           weighted dataset:\n%s' % weighted.table ( prefix = '# ' ) )
 
+""" 
+
 # =============================================================================
 ## (2) loop over some subset of entries 
 # =============================================================================
@@ -75,7 +77,6 @@ for index, entry , weight in dataset .loop ( '(Evt<10) && (Mass<10)' , first = 1
 logger.info  ('Loop over   weighted dataset') 
 for index, entry , weight in weighted.loop ( '(Evt<10) && (Mass<10)' , first = 100 , last = 1000 , progress = True ) : pass 
 
-""" 
 
 # =============================================================================
 ## (3) loop and get certain information as arrays/rows 

@@ -1661,7 +1661,11 @@ _new_methods_ += [
 #  @param cuts     optional cuts to be applied 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
-def _rds_makeWeighted_ ( dataset , wvarname , varset = None , cuts = '' , vname = '' ) :
+def _rds_makeWeighted_ ( dataset       ,
+                         wvarname      ,
+                         varset = None ,
+                         cuts   = ''   ,
+                         wname  = ''   ) :
     """Make weighted data set from unweighted dataset
     
     >>> dataset = ...
@@ -1683,7 +1687,7 @@ def _rds_makeWeighted_ ( dataset , wvarname , varset = None , cuts = '' , vname 
     formula = formula or 0 <= wvarname.find ( '%' )
     
     if formula :
-        wname    = 'W' or vname 
+        wname    = wnane or 'W' 
         while wname in dataset : wname += 'W'
         dataset.addVar ( wname , wvarname ) 
         wvarname = wname  
