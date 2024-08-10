@@ -56,6 +56,9 @@ for r in range ( 100 ) :
             
             mass.setVal ( random.uniform ( 0 , 10 ) )
             dataset.add ( varset )
+            
+
+""" 
 
 # =============================================================================
 weighted = dataset.makeWeighted ( 'Weight' )
@@ -66,7 +69,6 @@ weighted = dataset.makeWeighted ( 'Weight' )
 logger.info ( 'Print         unweighted dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 logger.info ( 'Print           weighted dataset:\n%s' % weighted.table ( prefix = '# ' ) )
 
-""" 
 
 # =============================================================================
 ## (2) loop over some subset of entries 
