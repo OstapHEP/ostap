@@ -1709,8 +1709,8 @@ def _rds_makeWeighted_ ( dataset           ,
     varset = dataset.get()
     if ( 6, 18 ) <= root_info < ( 6 , 20 ) :
         print ( 'SPECIAL TRATMENT!' , root_info ) 
-        args = dsID() , dataset.GetTitle() , varset, ROOT.Roofit.WeightVar ( weightvar ) 
-        if cuts : args + ( ROOT.RooFit.Cut ( cuts ) )
+        args = dsID() , dataset.GetTitle() , varset, ROOT.RooFit.WeightVar ( weightvar ) 
+        if cuts : args + ( ROOT.RooFit.Cut ( cuts ) , )
         result = ROOT.RooDataSet ( *args )
         for entry, w in dataset :
             weight = entry [ weightvar ]
