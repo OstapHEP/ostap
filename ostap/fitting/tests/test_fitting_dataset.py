@@ -99,16 +99,16 @@ logger.info ( 'Print small     weighted dataset:\n%s' % ws1.table ( prefix = '# 
 # =============================================================================
 ss2 = dataset  . sample ( 100 )
 ws2 = weighted . sample ( 100 ) 
-logger.info ( 'Print small   unweighted sample:\n%s' % ss2.table ( prefix = '# ' ) )
-logger.info ( 'Print small     weighted sample:\n%s' % ws2.table ( prefix = '# ' ) )
+logger.info ( 'Print small/1 unweighted sample:\n%s' % ss2.table ( prefix = '# ' ) )
+logger.info ( 'Print small/1   weighted sample:\n%s' % ws2.table ( prefix = '# ' ) )
 
 # =============================================================================
-## (6) subset/sample (wih r  
+## (6) subset/sample (wih replacement)   
 # =============================================================================
 ss3 = dataset  . choice ( 100 )
 ws3 = weighted . choice ( 100 ) 
-logger.info ( 'Print small   unweighted sample:\n%s' % ss3.table ( prefix = '# ' ) )
-logger.info ( 'Print small     weighted sample:\n%s' % ws3.table ( prefix = '# ' ) )
+logger.info ( 'Print small/2 unweighted sample:\n%s' % ss3.table ( prefix = '# ' ) )
+logger.info ( 'Print small/2   weighted sample:\n%s' % ws3.table ( prefix = '# ' ) )
 
 # =============================================================================
 ## (7) shuffle 
@@ -118,6 +118,8 @@ ws4 = ws3. shuffle ()
 logger.info ( 'Print shuffle unweighted sample:\n%s' % ss4.table ( prefix = '# ' ) )
 logger.info ( 'Print shuffle   weighted sample:\n%s' % ws4.table ( prefix = '# ' ) )
 
+""" 
+
 # =============================================================================
 ## (8) subset
 # =============================================================================
@@ -125,7 +127,6 @@ ss5 = dataset .subset ( 'Mass,Pt1,Pt2' , cuts = '(Evt<5) && (Mass<5)' , first = 
 ws5 = weighted.subset ( 'Mass,Pt1,Pt2' , cuts = '(Evt<5) && (Mass<5)' , first = 100 , last = 1000 )
 logger.info ( 'Print subset unweighted sample:\n%s' % ss5.table ( prefix = '# ' ) )
 logger.info ( 'Print subset   weighted sample:\n%s' % ws5.table ( prefix = '# ' ) )
-
 
 # =============================================================================
 ## (9) symmetrize
@@ -178,6 +179,8 @@ chd = dataset .asTree()
 chw = weighted.asTree()
 logger.info ( 'Print tree/chain unweighted sample:\n%s' % chd.table ( prefix = '# ' ) )
 logger.info ( 'Print tree/chain   weighted sample:\n%s' % chw.table ( prefix = '# ' ) )
+
+"""
 
 # =============================================================================
 ##                                                                      The END 
