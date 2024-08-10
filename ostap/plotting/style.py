@@ -48,8 +48,9 @@ styles = {}
 ## Create Ostap-style for the plots
 def OstapStyle ( name                           ,
                  description                    ,
-                 line_width  = ostap_line_width , 
-                 font        = ostap_font       ,
+                 base        = ''               , 
+                 line_width  = ostap_line_width ,
+                 font        = ostap_font       ,                 
                  force       = True             ,
                  scale       = 1.0              ,
                  colz        = False            ) :
@@ -63,6 +64,17 @@ def OstapStyle ( name                           ,
     config = {} 
     n2     = name.strip()
 
+    base_conf = {}
+    if base :
+        groot = ROOT.ROOT.GetROOT      ()
+        slst  = groot.GetListOfStyles  ()
+        for s in slst :
+            if base == s.GetName() :
+                base_config = dump_style ( s ) 
+                break
+        else :
+            logger.warning ( "OstapStyle: no base style `%s' is found! " % base )
+            
     ## Look for "[Style:Nick]" in configuration 
     for key in CONFIG.config :
         lkey = key.lower() 
@@ -77,7 +89,8 @@ def OstapStyle ( name                           ,
         
     import ostap.plotting.makestyles as MS 
     style = MS.make_ostap_style ( name        = name        ,
-                                  description = description , 
+                                  description = description ,
+                                  base        = base_conf   , 
                                   config      = config      ,
                                   colz        = colz        ,
                                   scale       = scale       ,

@@ -35,7 +35,6 @@ import configparser, os, sys
 import ostap.core.default_config as     default_config 
 from   ostap.utils.basic         import get_env        as ostap_getenv 
 # =============================================================================
-
 ## print for configparger 
 def _cp_str_ ( cp ) :
     """print for configparger"""

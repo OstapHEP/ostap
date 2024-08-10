@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
 # @file ostap/plotting/makestyles.py
@@ -291,7 +291,7 @@ ROOT.TStyle.table = table_style
 #  set_style ( style , config )
 #  style.set ( config ) ##   ditto 
 #  @endcode
-def set_style ( style , config ) :
+def set_style ( style , config , **kwargs ) :
     """Set the style from the configurtaion dictionary
     >>> config = ...
     >>> style  = ...
@@ -301,10 +301,11 @@ def set_style ( style , config ) :
 
     conf = cidict ( transform = cidict_fun )
     conf.update ( config ) 
+    conf.update ( kwargs ) 
           
     changed = {}
     
-    for attr in style_setters [0] :
+    for attr in style_setters  [ 0 ] :
         
         if not attr in conf : continue
 
@@ -571,9 +572,21 @@ def make_styles ( config = None ) :
         name        = n.strip ( )
         description = section.get        ( 'description' , fallback = 'The style %s' % name )
         ok          = section.getboolean ( 'ostaplike'   , fallback =  True )
+        base        = section.get        ( 'basestyle'   , fallback =  ''   )
 
+        base_config = {} 
+        if base :
+            groot = ROOT.ROOT.GetROOT      ()
+            slst  = groot.GetListOfStyles  ()
+            for s in slst :
+                if base == s.GetName() :
+                    base_config = dump_style ( s ) 
+                    break 
+            else :
+                logger.warning ( "makestyles: no base style `%s' is found! " % base )
+                
         ## create ostap-like style 
-        if ok : style = make_ostap_style ( name , description , section ) 
+        if ok : style = make_ostap_style ( name , description , section , base = base_conf )
         else  :
             ## generic style
 
@@ -586,7 +599,8 @@ def make_styles ( config = None ) :
             else :
                 logger.info ( 'Create new generic style  %s/%s' % ( name , description ) )             
                 style       = ROOT.TStyle ( name , description )
-                
+
+            if base_config : set_style ( style , base_config )
             set_style ( style , section )
             
         if name in StyleStore.styles :
@@ -647,7 +661,8 @@ def get_str    ( config , name , default ) :
 ## make Ostap-like style
 def make_ostap_style ( name                      ,
                        description = 'The Style' ,   
-                       config      = {}          , **kwargs ) :
+                       config      = {}          ,
+                       base        = {}          , **kwargs ) :
     
 
     kw = cidict ( transform = cidict_fun )
@@ -662,9 +677,11 @@ def make_ostap_style ( name                      ,
     description = config.get ( 'description' , description )
     
     conf  = {}
-    conf.update ( config )
-    
+    conf.update ( base   )  ## base style configuration
+    conf.update ( config )  ## own configuration 
 
+
+    
     conf [ 'AxisColor_X'       ] = get_int   ( config , 'AxisColor_X'         , 1   )
     conf [ 'AxisColor_Y'       ] = get_int   ( config , 'AxisColor_Y'         , 1   )
     conf [ 'AxisColor_Z'       ] = get_int   ( config , 'AxisColor_Z'         , 1   )
