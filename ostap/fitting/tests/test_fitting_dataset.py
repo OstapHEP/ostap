@@ -59,6 +59,7 @@ for r in range ( 100 ) :
             
 
 # =============================================================================
+logger.info ( 'Print         unweighted dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 weighted = dataset.makeWeighted ( 'Weight' )
 
 """ 

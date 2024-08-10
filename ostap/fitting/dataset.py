@@ -1677,34 +1677,47 @@ def _rds_makeWeighted_ ( dataset           ,
     >>> dataset = ...
     >>> wdata   = dataset.makeWeighted ( 'S_sw' )    
     """
+
+    print ( 'MAKE EI"GHOTED/0' ) 
     assert not dataset.isWeighted () , "Dataset '%s/%s' is already weighted!" % ( dataset.GetName  () ,
                                                                                   dataset.GetTitle () )
     
+    print ( 'MAKE EI"GHOTED/1' ) 
+
     assert isinstance ( weightvar , expression_types ) , \
         "Invalid type of `weigthvar':%s" % type ( weightvar )
     assert isinstance ( cuts      , expression_types ) or not cuts , \
         "Invalid type of `cuts':%s" % type ( cuts )
 
+    print ( 'MAKE EI"GHOTED/2' ) 
+
     ## 
     cuts      = str ( cuts      ).strip()
     weightvar = str ( weightvar ).strip()
     
+    print ( 'MAKE EI"GHOTED/3' ) 
+
     if not weightvar in dataset :
         ## is it a formula ?
         wname = wname or 'Weight'
         while wname in dataset :  wname += 'W'
         dataset.addVar ( wname , weightwar )
         weightvar = wname
+
+    print ( 'MAKE EI"GHOTED/4' ) 
         
     varset = dataset.get()      
     ## make weighted dataset 
-    return ROOT.RooDataSet ( dsID()             ,
-                             dataset.GetTitle() ,
-                             dataset            ,
-                             varset             , 
-                             cuts               ,
-                             weightvar          )
+    result = ROOT.RooDataSet ( dsID()             ,
+                               dataset.GetTitle() ,
+                               dataset            ,
+                               varset             , 
+                               cuts               ,
+                               weightvar          )
 
+    print ( 'MAKE EI"GHOTED/5' ) 
+    return result 
+    
 ROOT.RooDataSet.makeWeighted = _rds_makeWeighted_
 
 # =============================================================================
