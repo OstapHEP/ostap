@@ -86,7 +86,7 @@ def _rad_iter_ ( self ) :
 #  for index , entry, weight in dataset.loop ( 'pt>1' ) :
 #     print (index, entry, weight) 
 #  @endcode 
-def _rad_loop_ ( dataset , cuts = '' , cutrange = '' , first = 0 , last = LAST_ENTRY , progress = False ) :
+def _rad_loop_ ( dataset , cuts = '' , cut_range = '' , first = 0 , last = LAST_ENTRY , progress = False ) :
     """Iterator for `good' events  in dataset
     >>> dataset = ...
     >>> for index, entry, weight in dataset.loop ( ''pt>1' ) :
@@ -97,12 +97,11 @@ def _rad_loop_ ( dataset , cuts = '' , cutrange = '' , first = 0 , last = LAST_E
 
     assert isinstance ( cuts    , expression_types  ) or not cuts, \
         "Invalid type of cuts: %s" % type ( cuts )
-
-    assert isinstance ( cutrange , expression_types ) or not cutrange, \
-        "Invalid type of cutrange: %s" % type ( cutrange )
+    assert isinstance ( cut_range , expression_types ) or not cut_range, \
+        "Invalid type of cut_range: %s" % type ( cut_range )
     
-    cuts     = str(cuts).strip()     if cuts     else ''
-    cutrange = str(cutrange).strip() if cutrange else ''
+    cuts      = str(cuts).strip()      if cuts      else ''
+    cut_range = str(cut_range).strip() if cut_range else ''
 
     fcuts = None 
     if cuts : fcuts = make_formula ( cuts , cuts , dataset.varlist()   )
@@ -122,7 +121,7 @@ def _rad_loop_ ( dataset , cuts = '' , cutrange = '' , first = 0 , last = LAST_E
         vars , ww = dataset [ event ]        
         if not vars : break
 
-        if cutrange and not vars.allInRange ( cutrange ) : continue
+        if cut_range and not vars.allInRange ( cut_range ) : continue
 
         wc = fcuts.getVal() if fcuts else 1.0 
         if not wc  : continue
@@ -725,7 +724,7 @@ def _rad_subset_ ( dataset                 ,
     """
     
     assert isinstance ( cut_range , expression_types ) or not cut_range, \
-        "Invalid type of cutrange: %s" % type ( cut_range )
+        "Invalid type of cut_range: %s" % type ( cut_range )
     
     cut_range   = str(cut_range).strip() if cut_range else ''
 
@@ -964,9 +963,9 @@ def _rds_make_unique_ ( dataset          ,
         elif weighted          and isinstance ( weight , num_types ) : 
             ds.add ( entry , float ( weight ) )
         elif weighted : 
-                raise TypeError ( 'Inconsistent sae/se/w %s/%s/%s ' % ( store_asym_errors  ,
-                                                                        store_errors       ,
-                                                                        type ( weight )    ) ) 
+            raise TypeError ( 'Inconsistent sae/se/w %s/%s/%s ' % ( store_asym_errors  ,
+                                                                    store_errors       ,
+                                                                    type ( weight )    ) ) 
         else  :
             ds.add ( entry  )
 
@@ -1127,7 +1126,7 @@ def ds_project  ( dataset                ,
     ## 3) input histogram?
     input_histo = isinstance ( target , ROOT.TH1 )
 
-    ## 4) vali dtarget? 
+    ## 4) valid target? 
     from ostap.trees.param import param_types_nD    
     assert input_histo or isinstance ( target , param_types_nD ) , 'Invalid target/histo type %s' % type ( target ) 
 
@@ -1173,11 +1172,11 @@ def ds_project  ( dataset                ,
         if not first < last : return target                             ## RETURN        
         tail = cuts , cut_range , first , last
 
-    ## somethinug convertibel to DataFrame/Frame/Node
+    ## somethinug convertible to DataFrame/Frame/Node
     else :
         
         assert not cut_range                   , "ds_project: `cut-range' is not allowed!"
-        assert ( first , last ) == ALL_ENTRIES , "ds_project: `first'/`last' are not allowed!"
+        assert ( first , last ) == ALL_ENTRIES , "ds_project: `first&last' are not allowed!"
         
         from ostap.frames.frames import as_rnode
         frame   = as_rnode ( dataset )
@@ -1717,7 +1716,8 @@ def _rds_unWeighted_ ( dataset , weight = '' ) :
         logger.error ("unweight: dataset is not weighted!") 
         return dataset , ''
     
-    ds , w = Ostap.Utils.unweight ( dataset , weight )  
+    ds , w = Ostap.Utils.unweight ( dataset , weight )
+    
     return ds , w 
 
 # =============================================================================
@@ -1999,6 +1999,7 @@ _new_methods_ += [
 def _ds_table_0_ ( dataset                ,
                    variables = []         ,
                    cuts      = ''         ,
+                   cut_range = ''         , 
                    first     = 0          ,
                    last      = LAST_ENTRY ,
                    prefix    = ''         ,
@@ -2009,6 +2010,14 @@ def _ds_table_0_ ( dataset                ,
     if not valid_pointer ( varset ) :
         logger.error('Invalid dataset')
         return ''
+
+    assert isinstance ( cuts    , expression_types  ) or not cuts, \
+        "Invalid type of cuts: %s" % type ( cuts )
+    assert isinstance ( cut_range , expression_types ) or not cut_range, \
+        "Invalid type of cut_range: %s" % type ( cut_range )
+    
+    cuts      = str(cuts).strip()      if cuts      else ''
+    cut_range = str(cut_range).strip() if cut_range else ''
     
     if variables : vars , cuts , _ = vars_and_cuts ( variables , cuts ) 
     else         : vars , cuts     = [ v.name for v in varset ] , str ( cuts ).strip() 
@@ -2020,7 +2029,7 @@ def _ds_table_0_ ( dataset                ,
         
     _vars = []
     
-    stat = dataset.statVars ( vars , cuts , first , last ) 
+    stat = dataset.statVars ( vars , cuts , cut_range , first , last ) 
     for v in  stat :
         vv  = getattr ( varset , v )
         s   = stat [ v ] 
@@ -2060,86 +2069,18 @@ def _ds_table_0_ ( dataset                ,
         if dataset.isNonPoissonWeighted() : title += ' Weighted' 
         else :                              title += ' Weighted/Poisson'
 
-        dstmp = None 
-        wvar  = None
-
-        ## 1) try to get the name of the weight variable
-        store = dataset.store()
-        
-        if not valid_pointer ( store ) : store = None
-
-        if store and not isinstance ( store , ROOT.RooTreeDataStore ) :
-            dstmp = dataset.emptyClone ()
-            dstmp.convertToTreeStore   ()
-            store = dstmp.store        ()
-            if not valid_pointer ( store ) : store = None
-
-        if store and hasattr ( store , 'tree' ) and valid_pointer ( store.tree() ) :
-
-            from ostap.trees.trees import tree_branches 
-                        
-            tree = store.tree() 
-            branches = set ( tree_branches ( tree ) ) 
-            vvars    = set ( [ i.GetName() for i in  varset ] )
-            wvars    = branches - vvars
-            
-            if 1 == len ( wvars ):
-                wvar = wvars.pop()
-                
-        if not wvar : wvar   = Ostap.Utils.getWeight ( dataset )
-        if     wvar : title += ' with "%s"' % wvar
-                
-        store = None 
-        if dstmp :            
-            dstmp.reset()            
-            del dstmp
-            dstmp = None
-            
-        ## 2) if weight name is known, try to get information about the weight
-        if wvar :
-            store = dataset.store()
-            if not valid_pointer ( store ) : store = None
-            if store and not isinstance ( store , ROOT.RooTreeDataStore ) :
-
-                last  = min ( last , len ( dataset ) + 1 ) 
-                rargs = ROOT.RooFit.EventRange ( first , last ) , 
-                if cuts :
-                    ## need all variables 
-                    dstmp = dataset.reduce ( ROOT.RooFit.Cut  ( cuts ) , *rargs ) 
-                else    :
-                    ## enough to keep only 1 variable
-                    vvs   = ROOT.RooArgSet ( varset[vars[0]] )
-                    dstmp = dataset.reduce ( ROOT.RooFit.SelectVars ( vvs ) , *rargs )
-
-                dstmp.convertToTreeStore ()
-                store = dstmp.store()
-                cuts , first , last = '' , 0 , 2**62
-                
-            if hasattr ( store , 'tree' ) and valid_pointer ( store.tree() ) :
-
-                from ostap.trees.trees import tree_branches 
-                
-                tree =  store.tree()
-                if wvar in tree_branches ( tree ) : 
-                    s = tree.statVar ( wvar , cuts , first , last ) ## no cuts here... 
-                    mnmx = s.minmax ()
-                    mean = s.mean   ()
-                    rms  = s.rms    ()
-                    weight = '*%s*' % wvar
-                    r    = (  weight                            ,   ## 0 
-                              'Weight variable'                 ,   ## 1 
-                              ('%+.5g' % mean.value() ).strip() ,   ## 2
-                              ('%.5g'  % rms          ).strip() ,   ## 3 
-                              ('%+.5g' % mnmx[0]      ).strip() ,   ## 4
-                              ('%+.5g' % mnmx[1]      ).strip() )   ## 5
-                    _vars.append ( r ) 
-                    with_weight = True
-                
-            store = None 
-            if not dstmp is None :
-                dstmp.reset ()                
-                del dstmp
-                dstmp = None 
+        ## name of weigth variabe
+        weight = dataset.wname ()
+        wcnt   = dataset.statVar ( '1' , cuts , cut_range , first , last )
+        wcnt   = wcnt.weights ()            
+        r    = (  weight                            ,   ## 0 
+                  'Weight variable'                 ,   ## 1 
+                  ('%+.5g' % wcnt.mean().value() ).strip() ,   ## 2
+                  ('%.5g'  % wcnt.rms ()         ).strip() ,   ## 3 
+                  ('%+.5g' % wcnt.min ()         ).strip() ,   ## 4
+                  ('%+.5g' % wcnt.max ()         ).strip() )   ## 5
+        _vars.append ( r ) 
+        with_weight = True
 
     # ==============================================================================================
     # build the actual table 
@@ -2194,13 +2135,11 @@ def _ds_table_0_ ( dataset                ,
         if   weight and i + 1 == len ( _vars ) :
             cols.append ( 'W' )
             cols = [ allright (  c ) for c in cols ] 
-        elif weight                            : cols.append ( ' ' )
+        elif weight      : cols.append ( ' ' )
         
         table_data.append ( tuple ( cols ) ) 
 
-
     title = title 
-
     import ostap.logger.table as T
     t  = T.table ( table_data , title = title , prefix =  prefix )
     w  = T.table_width ( t ) 
@@ -2212,6 +2151,7 @@ def _ds_table_0_ ( dataset                ,
 def _ds_table_1_ ( dataset                ,
                    variables = []         ,
                    cuts      = ''         ,
+                   cut_range = ''         , 
                    first     = 0          ,
                    last      = LAST_ENTRY ,
                    prefix    = ''         ,
@@ -2221,13 +2161,21 @@ def _ds_table_1_ ( dataset                ,
     
     first, last = evt_range ( len ( dataset ) , first , last ) 
     
+    assert isinstance ( cuts    , expression_types  ) or not cuts, \
+        "Invalid type of cuts: %s" % type ( cuts )
+    assert isinstance ( cut_range , expression_types ) or not cut_range, \
+        "Invalid type of cut_range: %s" % type ( cut_range )
+    
+    cuts      = str(cuts).strip()      if cuts      else ''
+    cut_range = str(cut_range).strip() if cut_range else ''
+
     varset = dataset.get() 
-    if variables : vars , cuts , _ = vars_and_cuts ( variables , cuts ) 
-    else         : vars , cuts     = [ v.name for v in varset ] , str ( cuts ).strip() 
+    if variables : vars , cuts , _ = vars_and_cuts ( variables  , cuts ) 
+    else         : vars , cuts     = [ v.name for v in varset ] , cuts 
 
     _vars = []    
     vvars = tuple ( sorted ( vars ) )
-    stat = dataset.statVars ( vvars  , cuts , first , last ) 
+    stat = dataset.statVars ( vvars  , cuts , cut_range , first , last ) 
     for v in  stat :
         s   = stat [ v ] 
         mnmx = s.minmax ()
@@ -2310,12 +2258,26 @@ def _ds_table_1_ ( dataset                ,
 #  dataset = ...
 #  print dataset.table() 
 #  @endcode
-def _ds_table_ (  dataset ,  variables = [] , cuts = '' , prefix = '' , title = '' ) :
+def _ds_table_ (  dataset                ,
+                  variables = []         ,
+                  cuts      = ''         ,
+                  cut_range = ''         ,
+                  first     = 0          ,
+                  last      = LAST_ENTRY ,                 
+                  prefix    = ''         ,
+                  title     = ''         ) :
     """print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _ds_table_0_ ( dataset ,  variables , cuts = cuts , prefix = prefix , title = title )[0]
+    return _ds_table_0_ ( dataset               ,
+                          variables             ,
+                          cuts      = cuts      ,
+                          cut_range = cut_range ,
+                          first     = first     ,
+                          last      = last      , 
+                          prefix    = prefix    ,
+                          title     = title     ) [ 0 ]
 
 # ==============================================================================
 ## print dataset in a form of the table
@@ -2323,12 +2285,26 @@ def _ds_table_ (  dataset ,  variables = [] , cuts = '' , prefix = '' , title = 
 #  dataset = ...
 #  print dataset.table2() 
 #  @endcode
-def _ds_table2_ (  dataset , variables = [] , cuts = '' , prefix = '' , title = '' ) :
+def _ds_table2_ (  dataset                ,
+                   variables = []         ,
+                   cuts      = ''         ,
+                   cut_range = ''         ,
+                   first     = 0          ,
+                   last      = LAST_ENTRY ,                 
+                   prefix    = ''         ,
+                   title     = ''         ) :
     """print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _ds_table_1_ ( dataset ,  variables , cuts = cuts , prefix = prefix , title = title )[0]
+    return _ds_table_1_ ( dataset               ,
+                          variables             ,
+                          cuts      = cuts      ,
+                          cut_range = cut_range ,
+                          first     = first     ,
+                          last      = last      ,
+                          prefix    = prefix    ,
+                          title     = title     ) [ 0 ]
 
 # =============================================================================
 ##  print DataSet
@@ -2353,7 +2329,6 @@ for t in ( ROOT.RooDataSet , ROOT.RooDataHist ) :
     t.table2      = _ds_table2_
     t.pprint      = _ds_print_ 
 
-    
 _new_methods_ += [
     ROOT.RooDataSet.table    , 
     ROOT.RooDataSet.pprint   , 
@@ -2365,39 +2340,43 @@ _new_methods_ += [
 ## make symmetrization/randomization of the dataset
 #  @code
 #  ds     = ...
-#  ds_sym = ds.symmetrize ( 'var1' , 'var2' )
-#  ds_sym = ds.symmetrize ( 'var1' , 'var2' , 'var3')
+#  ds_sym = ds.symmetrize ( [ 'var1' , 'var2'  ] )
+#  ds_sym = ds.symmetrize ( [ 'var1' , 'var2' , 'var3' ] )
 #  @endcode
-def _ds_symmetrize_ ( ds , var1 , var2 , *vars ) :
+def _ds_symmetrize_ ( dataset , variables ) :
     """Make symmetrization/randomization of the dataset
     >>> ds     = ...
-    >>> ds_sym = ds.symmetrize ( 'var1' , 'var2' )
-    >>> ds_sym = ds.symmetrize ( 'var1' , 'var2' , 'var3')
+    >>> ds_sym = ds.symmetrize ( [ 'var1' , 'var2' ] )
+    >>> ds_sym = ds.symmetrize ( [ 'var1' , 'var2' , 'var3' [ )
     """
-    
-    varset = ds.varset() 
-    lvars  = [ var1 , var2 ] + list ( vars )
-    nvars  = [] 
-    for v in lvars :
-        if not v in varset : raise NameError ( "Variable %s not in dataset" % v )
-        if not isinstance ( v , ROOT.RooAbsReal ) : v = varset[ v ]
-        nvars.append ( v )
 
-    mnv = min ( [ v.getMin () for v in nvars if hasattr ( v , 'getMin' ) ] ) 
-    mxv = max ( [ v.getMax () for v in nvars if hasattr ( v , 'getMax' ) ] ) 
+    varlst , _ , _ = vars_and_cuts ( variables , '' )
+
+    varset = dataset.get() 
+    extra  = [ v for v in varlst if not v in varset ]
+    assert 2 <= len ( varlst ) and not extra , 'Variables are not in dataset: %s' % str ( extra ) 
+
+    
+    nvars  = [ varset [ v ] for v in varlst ]
+    
+    mnv    = min ( [ v.getMin () for v in nvars if hasattr ( v , 'getMin' ) ] ) 
+    mxv    = max ( [ v.getMax () for v in nvars if hasattr ( v , 'getMax' ) ] ) 
 
     names   = tuple ( v.name for v in nvars )
 
-    nds     = ds.emptyClone ()
-    nvarset = nds.varset    ()
+    weighted          = dataset.isWeighted                     () 
+    store_errors      = weighted and dataset.store_errors      ()
+    store_asym_errors = weighted and dataset.store_asym_errors ()
     
+    newds   = dataset.emptyClone ()
+    nvarset = newds.varset    ()    
     for v in nvarset :
-        if v.name in names : 
+        if v.name in varlst : 
             if hasattr ( v ,  'setMin' ) : v.setMin ( mnv )
             if hasattr ( v ,  'setMax' ) : v.setMax ( mxv )        
-    
+
     ## loop over the data set 
-    for entry in ds :
+    for entry , weight in dataset :
 
         values = [ v.getVal() for v in entry if v.name in names ]        
         random.shuffle ( values )
@@ -2406,10 +2385,21 @@ def _ds_symmetrize_ ( ds , var1 , var2 , *vars ) :
             n = v.name 
             if not n in names : v.setVal ( entry [ n ] .value )                
             else              : v.setVal ( values.pop()   )
-
-        nds.add ( nvarset )
+            
+        if   store_asym_errors and isinstance ( weight , VAE ) :
+            newds.add ( nvarset , weight.value , weight.neg_error , weight.pos_erroe )
+        elif store_errors      and isinstance ( weight , VE  ) :
+            newds.add ( nvarset , weight.value () ) 
+        elif weighted          and isinstance ( weight , num_types ) : 
+            newds.add ( nvarset , float ( weight ) )
+        elif weighted : 
+            raise TypeError ( 'Inconsistent sae/se/w %s/%s/%s ' % ( store_asym_errors  ,
+                                                                    store_errors       ,
+                                                                    type ( weight )    ) ) 
+        else  :
+            newds.add ( nvarset )
         
-    return nds
+    return newds
 
 
 ROOT.RooDataSet.symmetrize = _ds_symmetrize_
@@ -2442,7 +2432,6 @@ def _ds_wname_ ( dataset ) :
     return getattr ( dataset , attr , '' )
 # =============================================================================
 
-
 # =============================================================================
 ## Get the weight variable from the dataset
 #  @code
@@ -2458,7 +2447,6 @@ def _ds_weight_var_ ( dataset ) :
     """
     wvar = Ostap.Utils.getWeightVar ( dataset )
     return wvar 
-    ## return wvar if valid_pointer ( wvar ) else None
 
 # =============================================================================
 ## Are weight errors stored in dataset?
@@ -2528,7 +2516,6 @@ ROOT.RooAbsData.store_asym_errors = _ds_store_asym_error_
 
 if not hasattr ( ROOT.RooDataSet , 'weightVar' ) :
     ROOT.RooDataSet.weightVar = _ds_weight_var_ 
-
 
 _new_methods_ += [
     ROOT.RooDataSet.wname             , 
@@ -2645,7 +2632,7 @@ _new_methods_ += [
 #  dataset = ...
 #  tree    = dataset.asTree() 
 #  @endcode
-def ds_to_tree ( dataset , weight = '' , filename = '' ) :
+def ds_to_tree ( dataset , filename = '' ) :
     """Get dataset as `ROOT.TTree`
     - for Tree-based datasets gets the internal tree
     - otherwise tree will be created
@@ -2670,7 +2657,8 @@ def ds_to_tree ( dataset , weight = '' , filename = '' ) :
             with ROOT.TFile ( filename , 'u' ) as rfile :
                 
                 rfile.cd ()
-                uwds , wname = dataset.unweight ( weight )
+                weight       = dataset.wname() 
+                uwds , wname = dataset.unWeighted () ##  weight )
                 
                 tree = uwds.GetClonedTree()
                 
@@ -2678,7 +2666,8 @@ def ds_to_tree ( dataset , weight = '' , filename = '' ) :
                 tree .Write()
                 ## rfile.Write() 
                 tname = tree.GetName()
-            
+
+                uwds.clear() 
                 del uwds
                 logger.debug ( 'ROOT file %s\n%s' % ( filename , rfile.as_table ( prefix = '# ' ) ) ) 
                 
@@ -2686,7 +2675,6 @@ def ds_to_tree ( dataset , weight = '' , filename = '' ) :
             chain.AddFile ( filename )
             return chain 
 
-    
     store = dataset.store()
     if hasattr ( store , 'tree' ) :
         tree = store.tree()
@@ -3158,12 +3146,12 @@ except ImportError :
 #     print (index, row, weight) 
 #  @endcode 
 def _rad_rows_ ( dataset                ,
-                 variables = []         ,
-                 cuts      = ''         ,
-                 cutrange  = ''         ,
-                 first     = 0          ,
-                 last      = LAST_ENTRY ,
-                 progress  = False      ) :
+                 variables  = []         ,
+                 cuts       = ''         ,
+                 cut_range  = ''         ,
+                 first      = 0          ,
+                 last       = LAST_ENTRY ,
+                 progress   = False      ) :
     """Iterator for rows in dataset
     >>> dataset = ...
     >>> for index, row , weight in dataset.rows ( 'pt, pt/p, mass ' , 'pt>1' ) :
@@ -3180,12 +3168,12 @@ def _rad_rows_ ( dataset                ,
         formulas.append ( f0 ) 
 
     ## loop over dataset
-    for index, entry, weight in _rad_loop_ ( dataset             ,
-                                             cuts     = cuts     ,
-                                             cutrange = cutrange ,
-                                             first    = first    ,
-                                             last     = last     ,
-                                             progress = progress ) :
+    for index, entry, weight in _rad_loop_ ( dataset               ,
+                                             cuts      = cuts      ,
+                                             cut_range = cut_range ,
+                                             first     = first     ,
+                                             last      = last      ,
+                                             progress  = progress  ) :
         
         result = tuple ( float ( f ) for f in formulas )
         yield index , get_result ( result ) , weight 

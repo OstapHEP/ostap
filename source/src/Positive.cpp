@@ -514,8 +514,6 @@ void Ostap::Math::KarlinStudden::updateRoots()
  * \f$ f = \int^{x_{max}}_{x_{min}} P(x) dx \f$ 
  */
 // ============================================================================
-#include <iostream> 
-#include "Ostap/ToStream.h" 
 double Ostap::Math::KarlinStudden::integral 
 ( const double xmin , 
   const double xmax ) const 
@@ -542,20 +540,8 @@ double Ostap::Math::KarlinStudden::integral
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
-  if ( ierror ) 
-  {
-    std::cerr << " error:" << ierror << " troots: " ;
-    Ostap::Utils::toStream ( m_troots , std::cerr ) ;
-    std::cerr << std::endl ;
-  }
-  //
   return result ;
 }
-
-
-
-
-
 
 // ============================================================================
 //                                                                      The END 
