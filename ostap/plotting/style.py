@@ -70,12 +70,11 @@ def OstapStyle ( name                           ,
         s , c , n = key.partition(':')
         if not c : continue
         n1 = n.strip() if c else s.strip()
-
         if n1 == n2 :
             config = CONFIG.config[key]
-            logger.info ( 'Use existing configuration style %s' % name )
+            logger.debug ( 'Use existing configuration style %s' % name )
             break
-
+        
     import ostap.plotting.makestyles as MS 
     style = MS.make_ostap_style ( name        = name        ,
                                   description = description , 

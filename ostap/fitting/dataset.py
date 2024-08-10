@@ -1704,9 +1704,21 @@ def _rds_makeWeighted_ ( dataset           ,
         dataset.addVar ( wname , weightwar )
         weightvar = wname
 
-    print ( 'MAKE EI"GHOTED/4' ) 
-        
-    varset = dataset.get()      
+    print ( 'MAKE EI"GHOTED/4' , [ v.name for v in dataset.get() ] )
+
+    varset = dataset.get()
+    if ( 6, 18 ) <= root_info < ( 6 , 20 ) :
+        print ( 'SPECIAL TRATMENT!' , root_info ) 
+        args = dsID() , dataset.GetTile() , varset, ROOT.RoofitWeightVar ( weightvar ) 
+        if cuts : args + ( ROOT.RooFit.Cut ( cuts ) )
+        result = ROOT.RooDataSet ( *args )
+        for entry, w in dataset :
+            weight = entry [ weightvar ]
+            result.add ( entry , float ( weight ) )        
+        return result
+    
+    print ( 'MAKE EI"GHOTED/5' )
+    
     ## make weighted dataset 
     result = ROOT.RooDataSet ( dsID()             ,
                                dataset.GetTitle() ,
