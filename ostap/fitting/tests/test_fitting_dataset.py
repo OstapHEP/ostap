@@ -59,10 +59,7 @@ for r in range ( 100 ) :
             
 
 # =============================================================================
-logger.info ( 'Print         unweighted dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 weighted = dataset.makeWeighted ( 'Weight' )
-
-""" 
 
 # =============================================================================
 ## (1) print datasets
@@ -185,7 +182,6 @@ chw = weighted.asTree()
 logger.info ( 'Print tree/chain unweighted sample:\n%s' % chd.table ( prefix = '# ' ) )
 logger.info ( 'Print tree/chain   weighted sample:\n%s' % chw.table ( prefix = '# ' ) )
 
-"""
 
 # =============================================================================
 ##                                                                      The END 
