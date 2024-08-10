@@ -39,6 +39,7 @@ from ostap.plotting.makestyles import ( ostap_font       ,
                                         ostap_label      ,
                                         ostap_line_width ,
                                         ostap_latex      ,
+                                        root_style       , 
                                         set_style        )
 # =============================================================================
 ## the dictionary of known  styles 
@@ -48,7 +49,7 @@ styles = {}
 ## Create Ostap-style for the plots
 def OstapStyle ( name                           ,
                  description                    ,
-                 base        = ''               , 
+                 base_style  = None             , 
                  line_width  = ostap_line_width ,
                  font        = ostap_font       ,                 
                  force       = True             ,
@@ -64,17 +65,6 @@ def OstapStyle ( name                           ,
     config = {} 
     n2     = name.strip()
 
-    base_conf = {}
-    if base :
-        groot = ROOT.ROOT.GetROOT      ()
-        slst  = groot.GetListOfStyles  ()
-        for s in slst :
-            if base == s.GetName() :
-                base_config = dump_style ( s ) 
-                break
-        else :
-            logger.warning ( "OstapStyle: no base style `%s' is found! " % base )
-            
     ## Look for "[Style:Nick]" in configuration 
     for key in CONFIG.config :
         lkey = key.lower() 
@@ -90,7 +80,7 @@ def OstapStyle ( name                           ,
     import ostap.plotting.makestyles as MS 
     style = MS.make_ostap_style ( name        = name        ,
                                   description = description ,
-                                  base        = base_conf   , 
+                                  base_style  = base_style  , 
                                   config      = config      ,
                                   colz        = colz        ,
                                   scale       = scale       ,
@@ -187,13 +177,9 @@ class UseStyle(object):
             elif style.upper() in (       '2Z' , 'Z2' ) : style = Style2Z 
             elif style.upper() in (       '3Z' , 'Z3' ) : style = Style3Z 
             else :
-                groot = ROOT.ROOT.GetROOT ()        
-                slst  = groot.GetListOfStyles()
-                for s in slst :
-                    if s and s.GetName () == style :
-                        style = s
-                        break
-                    
+                style = root_style ( style ) 
+
+
         if ( not style ) or ( not isinstance  ( style , ROOT.TStyle ) ) :
             unknown = style 
             style   = ostapStyle

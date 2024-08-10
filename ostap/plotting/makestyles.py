@@ -1,4 +1,4 @@
-!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
 # @file ostap/plotting/makestyles.py
@@ -125,7 +125,23 @@ class StyleStore(object) :
     @classprop 
     def styles ( kls ) :
         return kls.__styles 
-    
+
+# =============================================================================
+## get the ROOT style by name
+#  @code
+#  style = root_style ( 'MyStyle' )
+#  if style : ...
+#  @endcode
+def root_style ( name ) :
+    """ Get the ROOT style by name
+    >>> style = root_style ( 'MyStyle' )
+    >>> if style : ...
+    """
+    groot      = ROOT.ROOT.GetROOT ()        
+    style_list = groot.GetListOfStyles()
+    for style in style_list :
+        if style and style.GetName () == name  : return style
+    return None 
 # =============================================================================
 ## get the essential methods of class ROOT.TStyle
 #  @code
@@ -156,7 +172,7 @@ def style_methods () :
     
     _style = ROOT.TStyle('tmp_style','Helper style')
     for s in _setters :
-
+        
         fun = getattr ( _style , 'Set' + s , None )
         if not fun : continue
         
@@ -191,7 +207,9 @@ def style_methods () :
         'PaperSize'          ,
         'ColorPalette'       ,
         'MarkerLineWidth'    , 
-        'MarkerStyleBase'    , 
+        'MarkerStyleBase'    ,
+        'ExponentOffset'     , ## new special stuff (August 2024)
+        'TextSizePercent'    , ## new special stuff (August 2024)
         ## not so special 
         'AxisColor'       ,
         'TickLength'      ,
@@ -222,7 +240,7 @@ def dump_style ( style ) :
     config = {} 
     ## regular attributes 
     for g in style_getters :
-        
+
         if g in style_special : continue
         
         fun = getattr ( style , 'Get' + g , None )
@@ -284,6 +302,9 @@ def table_style ( style , prefix = '' , title = '' ) :
 
 ROOT.TStyle.table = table_style
 # =============================================================================
+## extr aattribvutes 
+extra = 'NumberOfColors' , 'showeditor', 'showeventstatus', 'showtoolbar', 'basestyle', 'ostaplike'
+# =============================================================================
 ## Set the style from the configuration dictionary
 #  @code
 #  config = ...
@@ -291,7 +312,7 @@ ROOT.TStyle.table = table_style
 #  set_style ( style , config )
 #  style.set ( config ) ##   ditto 
 #  @endcode
-def set_style ( style , config , **kwargs ) :
+def set_style ( style , config , base_style = '' , **kwargs ) :
     """Set the style from the configurtaion dictionary
     >>> config = ...
     >>> style  = ...
@@ -299,14 +320,20 @@ def set_style ( style , config , **kwargs ) :
     >>> style.set ( config ) ## ditto 
     """
 
-    conf = cidict ( transform = cidict_fun )
-    conf.update ( config ) 
-    conf.update ( kwargs ) 
+    base_style  = base_style if base_style else config.get ( 'base_style' , base_style )
+    
+    base_style  = root_style ( base_style ) if base_style else None
+    base_config = dump_style ( base_style ) if base_style else {}  
+            
+    conf = cidict ( transform = cidict_fun )    
+    conf.update ( base_config ) ## the base configuration 
+    conf.update ( config      ) ## 
+    conf.update ( kwargs      ) 
           
     changed = {}
     
     for attr in style_setters  [ 0 ] :
-        
+
         if not attr in conf : continue
 
         try :
@@ -327,16 +354,19 @@ def set_style ( style , config , **kwargs ) :
             if not old_value is None :
                 changed [ attr ] = old_value 
                     
-            logger.debug  ("Set (float) attribute %s/%s/%s " %  ( attr , config[attr] , value ) ) 
+            logger.debug  ("Set (float) attribute `%s' to be %s " %  ( attr , value ) )
+            
         except :
-            logger.warning("Can't set (float) attribute %s/%s, skip " %  ( attr , config[attr] ) ) 
-            pass 
+            
+            logger.warning("Can't set (float) attribute %s, skip " %  attr  )
+            
 
-    for attr in style_setters [1] :  
+    for attr in style_setters [ 1 ] :  
         
-        if not attr in config : continue
+        if not attr in conf : continue
 
         try  :
+            
             value  = int ( conf.pop ( attr )  )
             setter = getattr ( style , 'Set' + attr )
             
@@ -353,12 +383,13 @@ def set_style ( style , config , **kwargs ) :
             if not old_value is None :
                 changed [ attr ] = old_value 
             
-            logger.debug  ("Set (int)   attribute %s/%s/%s " %  ( attr , config[attr] , value ) ) 
-        except:
-            logger.warning("Can't set (int)   attribute %s/%s, skip " %  ( attr , config[attr] ) ) 
-            pass 
+            logger.debug  ("Set (int)   attribute `%s' to %s " %  ( attr , value ) )
             
-    for attr in style_setters [2] :
+        except:
+            
+            logger.warning("Can't set (int)   attribute %s/%s, skip " %  attr )
+        
+    for attr in style_setters [ 2 ] :
         
         if not attr in conf : continue
 
@@ -380,10 +411,11 @@ def set_style ( style , config , **kwargs ) :
             if not old_value is None :
                 changed [ attr ] = old_value 
                         
-            logger.debug  ("Set (str)   attribute %s/%s/%s " %  ( attr , config[attr] , value ) ) 
+            logger.debug  ("Set (str)   attribute `%s; to `%s'" %  ( attr , value ) )
+            
         except :
-            logger.warning("Can't set (str)   attribute %s/%s, skip " %  ( attr , config[attr] ) ) 
-            pass 
+            
+            logger.warning("Can't set (str)   attribute `%s', skip " % attr  ) 
 
 
     ## half-special attributes 
@@ -540,6 +572,10 @@ def set_style ( style , config , **kwargs ) :
     if 'palette' in conf :
         style.SetPalette ( conf.pop ( 'palette' ) )
 
+    ## Extra attribtes 
+    for e in extra :
+        if e in conf : conf.pop ( e ) 
+        
     if conf :
         logger.warning ( "set_style: unprocessed parameters: %s" % list ( conf.keys() ) )
         
@@ -571,36 +607,17 @@ def make_styles ( config = None ) :
         ## the style name 
         name        = n.strip ( )
         description = section.get        ( 'description' , fallback = 'The style %s' % name )
-        ok          = section.getboolean ( 'ostaplike'   , fallback =  True )
-        base        = section.get        ( 'basestyle'   , fallback =  ''   )
+        ok          = section.getboolean ( 'ostap_like'  , fallback =  True )
 
-        base_config = {} 
-        if base :
-            groot = ROOT.ROOT.GetROOT      ()
-            slst  = groot.GetListOfStyles  ()
-            for s in slst :
-                if base == s.GetName() :
-                    base_config = dump_style ( s ) 
-                    break 
-            else :
-                logger.warning ( "makestyles: no base style `%s' is found! " % base )
-                
         ## create ostap-like style 
-        if ok : style = make_ostap_style ( name , description , section , base = base_conf )
+        if ok : style = make_ostap_style ( name , description , section )
         else  :
             ## generic style
-
-            groot = ROOT.ROOT.GetROOT()
-            slst  = groot.GetListOfStyles()
-            for s in slst :
-                if s and s.GetName() == name :
-                    style = s
-                    break 
-            else :
+            style = root_style ( name )
+            if not style : 
                 logger.info ( 'Create new generic style  %s/%s' % ( name , description ) )             
                 style       = ROOT.TStyle ( name , description )
-
-            if base_config : set_style ( style , base_config )
+                
             set_style ( style , section )
             
         if name in StyleStore.styles :
@@ -662,7 +679,7 @@ def get_str    ( config , name , default ) :
 def make_ostap_style ( name                      ,
                        description = 'The Style' ,   
                        config      = {}          ,
-                       base        = {}          , **kwargs ) :
+                       base_style  = ''          , **kwargs ) :
     
 
     kw = cidict ( transform = cidict_fun )
@@ -671,16 +688,14 @@ def make_ostap_style ( name                      ,
     colz       = kw.pop ( 'colz'        , get_bool  ( config , 'colz'       , False            ) )
     scale      = kw.pop ( 'scale'       , get_float ( config , 'scale'      , 1.0              ) )
     font       = kw.pop ( 'font'        , get_int   ( config , 'font'       , ostap_font       ) )
-    line_width = kw.pop ( 'line_width'  , get_int   ( config , 'line_width' , ostap_line_width ) )    
+    line_width = kw.pop ( 'line_width'  , get_int   ( config , 'line_width' , ostap_line_width ) )
+    
     if kw : logger.warning ("make_ostap_style: unprocessed keys: %s" % kw ) 
     
     description = config.get ( 'description' , description )
     
     conf  = {}
-    conf.update ( base   )  ## base style configuration
     conf.update ( config )  ## own configuration 
-
-
     
     conf [ 'AxisColor_X'       ] = get_int   ( config , 'AxisColor_X'         , 1   )
     conf [ 'AxisColor_Y'       ] = get_int   ( config , 'AxisColor_Y'         , 1   )
@@ -781,7 +796,7 @@ def make_ostap_style ( name                      ,
 
     conf [ 'NumberContours'    ] = get_int   ( config , 'NumberContours'     , 127  )
     
-    ## conf [ 'NumberOfColors'    ] = get_int   ( config , 'NumberOfColors'  , 255  )
+    conf [ 'NumberOfColors'    ] = get_int   ( config , 'NumberOfColors'     , 255  )
 
     conf [ 'OptDate'           ] = get_int   ( config , 'OptDate'            , 0    )
     conf [ 'OptFile'           ] = get_int   ( config , 'OptFile'            , 0    )
@@ -918,19 +933,13 @@ def make_ostap_style ( name                      ,
     ## maximal number of digits for the axis labels 
     conf [ 'TGaxisMaxDigits'   ] = 3
 
-    
     ## create the style
-    groot = ROOT.ROOT.GetROOT()
-    slst  = groot.GetListOfStyles() 
-    for s in slst :
-        if s and s.GetName() == name :
-            style = s
-            break
-    else :         
+    style = root_style ( name )
+    if not style : 
         logger.debug ( "Create new Ostap style `%s'" % name )
         style = ROOT.TStyle ( name , description )
         
-    set_style    ( style , conf ) 
+    set_style  ( style , conf , base_style = base_style ) 
 
     return style
 
