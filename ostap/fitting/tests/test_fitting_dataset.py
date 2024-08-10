@@ -96,11 +96,7 @@ ss1 = dataset  [ 1:500:10 ]
 ws1 = weighted [ 1:500:10 ]
 logger.info ( 'Print small   unweighted dataset:\n%s' % ws1.table ( prefix = '# ' ) )
 logger.info ( 'Print small     weighted dataset:\n%s' % ws1.table ( prefix = '# ' ) )
-
-
-
-raise RuntimeError ( 'QUQU!' )
-
+ 
 # =============================================================================
 ## (5) subset/sample (unique) 
 # =============================================================================

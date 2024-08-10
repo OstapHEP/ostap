@@ -1677,26 +1677,18 @@ def _rds_makeWeighted_ ( dataset           ,
     >>> dataset = ...
     >>> wdata   = dataset.makeWeighted ( 'S_sw' )    
     """
-
-    print ( 'MAKE EI"GHOTED/0' ) 
     assert not dataset.isWeighted () , "Dataset '%s/%s' is already weighted!" % ( dataset.GetName  () ,
                                                                                   dataset.GetTitle () )
     
-    print ( 'MAKE EI"GHOTED/1' ) 
-
     assert isinstance ( weightvar , expression_types ) , \
         "Invalid type of `weigthvar':%s" % type ( weightvar )
     assert isinstance ( cuts      , expression_types ) or not cuts , \
         "Invalid type of `cuts':%s" % type ( cuts )
 
-    print ( 'MAKE EI"GHOTED/2' ) 
-
     ## 
-    cuts      = str ( cuts      ).strip()
     weightvar = str ( weightvar ).strip()
+    cuts      = str ( cuts      ).strip()
     
-    print ( 'MAKE EI"GHOTED/3' ) 
-
     if not weightvar in dataset :
         ## is it a formula ?
         wname = wname or 'Weight'
@@ -1704,21 +1696,18 @@ def _rds_makeWeighted_ ( dataset           ,
         dataset.addVar ( wname , weightwar )
         weightvar = wname
 
-    print ( 'MAKE EI"GHOTED/4' , [ v.name for v in dataset.get() ] )
-
+    ## content
     varset = dataset.get()
+
+    ## special case 
     if ( 6, 18 ) <= root_info < ( 6 , 20 ) :
-        print ( 'SPECIAL TRATMENT!' , root_info ) 
         args = dsID() , dataset.GetTitle() , varset, ROOT.RooFit.WeightVar ( weightvar ) 
         if cuts : args + ( ROOT.RooFit.Cut ( cuts ) , )
         result = ROOT.RooDataSet ( *args )
         for entry, w in dataset :
             weight = entry [ weightvar ]
-            print ( 'add entry' , [ v.name for v in entry ] , weight )
             result.add ( entry , float ( weight ) )        
         return result
-    
-    print ( 'MAKE EI"GHOTED/5' )
     
     ## make weighted dataset 
     result = ROOT.RooDataSet ( dsID()             ,
@@ -1728,7 +1717,6 @@ def _rds_makeWeighted_ ( dataset           ,
                                cuts               ,
                                weightvar          )
 
-    print ( 'MAKE EI"GHOTED/5' ) 
     return result 
     
 ROOT.RooDataSet.makeWeighted = _rds_makeWeighted_
