@@ -32,11 +32,12 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 ## configuration of the progress bar
 #  @see Ostap::Utils::Pr
-def progress_conf ( show = True ) :
+def progress_conf ( show = True , timer = True ) :
     """configuration of the progress bar"""
     if not show : return Ostap.Utils.ProgressConf ( 0 )
 
-    if isatty () : 
+    tty = isatty () 
+    if tty : 
         twidth = terminal_size () [ 1 ]
         width  = twidth - 15 if 25 < twidth else 0  ## silent if is terminal is too narrow
     else :
@@ -47,9 +48,9 @@ def progress_conf ( show = True ) :
         ## twidth - 15 if 25 < twidth else 0  , ## silent if is terminal is too narrow
         allright ( '#'   ) if tty else '#'    , ## 'done' symbol 
         ' '                                   , ## 'not-yet' symbol 
-        allright ( ' [ ' ) if tty else ' { '  , ## left 
+        allright ( ' [ ' ) if tty else ' [ '  , ## left 
         allright ( '] '  ) if tty else '] '   , ## right 
-        True                                  ) ## use the timer 
+        timer                                 ) ## use the timer 
         
 # =============================================================================
 if '__main__' == __name__ :

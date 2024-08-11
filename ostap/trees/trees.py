@@ -106,7 +106,10 @@ def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = LAST_ENTRY , progress = 
     >>> sum_y = 0 
     >>> for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
     """
-    #
+
+    ## show progress obly for tty 
+    progress = progress and isatty()
+
     ## redefine first/last 
     first, last = evt_range ( len ( tree ) , first , last ) 
     ##
@@ -165,6 +168,9 @@ def _tc_call_ ( tree , first = 0 , last = LAST_ENTRY  , cuts = None , progress =
     >>> for i in tree(0, 100 , 'pt>5' ) : print i.y
     
     """
+
+    ## show progress obly for tty 
+    progress = progress and isatty()
 
     first, last = evt_range ( len ( tree ) , first , last )
     
@@ -244,6 +250,10 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
     >>> for row in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
     >>>    print ( row ) 
     """
+    
+    ## show progress obly for tty 
+    progress = progress and isatty()
+
     ## redefine first/last 
     first, last = evt_range ( len ( tree ) , first , last ) 
     
@@ -267,7 +277,7 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
         
     vars = strings ( vars ) 
 
-    from   ostap.utils.progress_conf import progress_conf
+    from ostap.utils.progress_conf import progress_conf
     with context :
         
         getter = Ostap.Trees.Getter ( tree , vars ) 
@@ -294,8 +304,11 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
             del pit
         
         else : ## trivial loop
-        
-            for event in progress_bar ( range ( first , last ) , silent = not progress ) :
+
+            source = range ( first , last )
+            if progress : source = progress_bar ( source ) 
+            
+            for event in source :
                 
                 tt      = getter.tree()
                 
@@ -386,7 +399,10 @@ def tree_project ( tree                    ,
     - for 2D&3D cases the natural order of varibales is used.
 
     """
-
+    
+    ## 0) show progress only for tty 
+    progress = progress and isatty ()
+    
     ## 1) adjust the first/last
     first , last = evt_range ( len ( tree ) , first , last )
 
@@ -506,9 +522,12 @@ def tree_draw ( tree                    ,
                 last       = LAST_ENTRY , 
                 use_frame  = False      ,
                 delta      = 0.01       ,
-                native     = False      , **kwargs ) :  ## use DataFrame ? 
+                native     = False      ,
+                progress   = False      , **kwargs ) :  ## use DataFrame ? 
 
-        
+    ## show progress obly for tty 
+    progress = progress and isatty()
+    
     ## check type of opts 
     assert isinstance ( opts , string_types ) , "Invalid type of `opts' : %s" % type ( opts )
     
@@ -558,7 +577,7 @@ def tree_draw ( tree                    ,
 
     if not native :
         ## fill the histoigram 
-        histo = tree_project ( tree , histo  , varlst , cuts = cuts , first = first , last = last , use_frame = use_frame )
+        histo = tree_project ( tree , histo  , varlst , cuts = cuts , first = first , last = last , use_frame = use_frame , progress = progress )
         ## draw the histogram 
         histo.draw ( opts , **kw )
         return histo

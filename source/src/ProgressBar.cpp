@@ -80,11 +80,11 @@ void Ostap::Utils::ProgressConf::setWidth
  */
 // ==========================================================================
 Ostap::Utils::ProgressBar::ProgressBar 
-( const ProgressConf&     conf      , 
+( const ProgressConf&      conf     , 
   const unsigned long long maxcount )
-  : ProgressConf ( conf )  
-  , m_maxcount  ( maxcount ) 
-  , m_start     ( 0        )
+  : ProgressConf ( conf     )  
+  , m_maxcount   ( maxcount ) 
+  , m_start      ( 0        )
     // ==========================================================================
 {
   m_wtot = ( left().length() + right().length () + 

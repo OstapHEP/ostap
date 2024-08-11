@@ -332,7 +332,7 @@ def data_minmax ( data , expressions , cuts = '' , *args ) :
 def data_range ( data              ,
                  expressions       ,
                  cuts      = ''    ,
-                 delta     = 0.05  ,
+                 delta     = 0.01  ,
                  *args             ) : 
     """Get suitable ranges for drawing expressions/variables
     - In case there is no suitable range None is returned 
