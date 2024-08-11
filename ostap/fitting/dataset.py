@@ -221,8 +221,8 @@ def _rad_getitem_ ( data , index ) :
     ## the actual loop over set of entries 
     for i , j in enumerate ( index ) :
 
-        if not isinstance ( j , integer_types ) :
-            raise IndexError ( 'Invalid index [%s]=%s,' % ( i , j ) )
+        ## if not isinstance ( j , integer_types ) :
+        ##    raise IndexError ( 'Invalid index [%s]=%s/%s' % ( i , j , type ( j ) ) )
         
         j = int ( j )            ## the content must be convertible to integers 
         if j < 0 : j += N        ## allow `slightly-negative' indices             
@@ -1693,7 +1693,7 @@ def _rds_makeWeighted_ ( dataset           ,
         ## is it a formula ?
         wname = wname or 'Weight'
         while wname in dataset :  wname += 'W'
-        dataset.addVar ( wname , weightwar )
+        dataset.addVar ( wname , weightvar )
         weightvar = wname
 
     ## content
@@ -1704,7 +1704,7 @@ def _rds_makeWeighted_ ( dataset           ,
         args = dsID() , dataset.GetTitle() , varset, ROOT.RooFit.WeightVar ( weightvar ) 
         if cuts : args + ( ROOT.RooFit.Cut ( cuts ) , )
         result = ROOT.RooDataSet ( *args )
-        for entry, w in dataset :
+        for entry , _ in dataset :
             weight = entry [ weightvar ]
             result.add ( entry , float ( weight ) )        
         return result
