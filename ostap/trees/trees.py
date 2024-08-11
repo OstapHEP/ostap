@@ -305,10 +305,8 @@ def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = LAST_ENTRY , p
         
         else : ## trivial loop
 
-            source = range ( first , last )
-            if progress : source = progress_bar ( source ) 
-            
-            for event in source :
+          
+            for event in progress_bar ( range ( first, last ) , silent = not progress ) : 
                 
                 tt      = getter.tree()
                 
@@ -401,7 +399,7 @@ def tree_project ( tree                    ,
     """
     
     ## 0) show progress only for tty 
-    progress = progress and isatty ()
+    progress = progress ## and isatty ()
     
     ## 1) adjust the first/last
     first , last = evt_range ( len ( tree ) , first , last )
@@ -526,7 +524,7 @@ def tree_draw ( tree                    ,
                 progress   = False      , **kwargs ) :  ## use DataFrame ? 
 
     ## show progress obly for tty 
-    progress = progress and isatty()
+    progress = progress ## and isatty()
     
     ## check type of opts 
     assert isinstance ( opts , string_types ) , "Invalid type of `opts' : %s" % type ( opts )

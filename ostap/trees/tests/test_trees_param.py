@@ -29,7 +29,7 @@ from   ostap.core.core          import hID, SE, Ostap
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait
 from   ostap.utils.timing       import timing
-from   ostap.utils.progress_bar import progress_bar, ProgressBar 
+from   ostap.utils.progress_bar import progress_bar
 import ostap.logger.table       as     T 
 import ROOT, os,  random
 # =============================================================================
@@ -74,9 +74,7 @@ if not os.path.exists( data_file ) :
             tree .Branch ( 'u' , var4 , 'u/D' )
             tree .Branch ( 'v' , var5 , 'v/D' )
             
-            I   = 0
-            bar = ProgressBar ( N ) 
-            while bar : 
+            for i in progress_bar ( range ( N ) ) : 
                 
                 x =      random.uniform     ( xmin , xmax )
                 y = -5 + random.expovariate ( 1/5.0 )
@@ -99,11 +97,9 @@ if not os.path.exists( data_file ) :
                 if not zmin <= var3 [0] <= zmax : continue
                 if not umin <= var4 [0] <= umax : continue
 
-                bar += 1 
                 tree.Fill()
                 
             test_file.Write()
-            del bar 
             test_file.ls   ()
 
 def diff ( a , b ) :
@@ -125,6 +121,7 @@ def test_parameterize_1D () :
         tree = f.S
         N    = 6
         
+	
         with timing ( "Unbinned 1D-Legendre  parameterization" , logger = logger ) :
             
             lx = Ostap.Math.LegendreSum  ( N , xmin , xmax )
@@ -136,7 +133,7 @@ def test_parameterize_1D () :
             ly.parameterize ( tree , 'y' )
             lz.parameterize ( tree , 'z' )
             lu.parameterize ( tree , 'u' )
-            
+			
         with timing ( "Unbinned 1D-Chebyshev parameterization" , logger = logger ) :
             
             cx = Ostap.Math.ChebyshevSum ( N , xmin , xmax )
@@ -282,8 +279,7 @@ def test_parameterize_1D () :
 
         title = '1D parameterisation'
         table = T.table ( rows , title = title , prefix = '# ' , alignment =  'llcc' )
-        logger.info ( '%s\n%s' % ( title , table ) )
-        
+        logger.info ( '%s\n%s' % ( title , table ) )      
 
 # =============================================================================
 ## 2D parameterizations
@@ -614,13 +610,12 @@ def test_statistics_1D () :
 
 # =============================================================================
 if '__main__' == __name__ :
-
-    test_parameterize_1D () 
-    test_parameterize_2D () 
-    test_parameterize_3D () 
-    test_parameterize_4D () 
-    
-    test_statistics_1D () 
+	
+	test_parameterize_1D ()
+	test_parameterize_2D () 	
+	test_parameterize_3D ()
+	test_parameterize_4D ()
+	test_statistics_1D   () 
     
 # =============================================================================
 ##                                                                      The END 

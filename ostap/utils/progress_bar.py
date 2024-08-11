@@ -382,7 +382,7 @@ class ProgressBar(object):
         self.silent = True
         
     def __enter__ ( self      ) :
-        if not self.silent : self.show() 
+        self.show() 
         return self
     
     def __exit__  ( self , *_ ) : self.end ()
