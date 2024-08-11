@@ -104,7 +104,7 @@ __all__      = (
     )
 # =============================================================================
 from   builtins import range
-import sys , os, time 
+import sys , os, time
 # =============================================================================
 if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
 else                              : from collections     import Sized
@@ -224,7 +224,7 @@ class ProgressBar(object):
 
         tty = isatty()
         
-        self.silent   = kwargs.get ( 'silent' , not isatty() )
+        self.silent   = kwargs.get ( 'silent' , not tty )
         self.r        = '\r' if tty else '\n'
         
         self.char = kwargs.get ( 'char' , '#'       ) ##
@@ -268,32 +268,25 @@ class ProgressBar(object):
         return self.min <= self.amount < self.max
         
     def increment_amount(self, add_amount = 1):
-        return self if self.silent else self.update_amount ( self.amount + add_amount )
+        return self.update_amount ( self.amount + add_amount )
 
     def update_amount(self, new_amount = None ):
-        """Update self.amount with 'new_amount', and then rebuild& show the bar 
+        """Update self.amount with 'new_amount', and then rebuild& show the bar
         """
-        if self.silent : return self   ## REALLY SILENT 
-        ## 
-        if new_amount is None : new_amount = self.amount
-        if new_amount < self.min: new_amount = self.min
-        if new_amount > self.max: new_amount = self.max
-        self.amount = new_amount
+        if new_amount is None   : new_amount = self.amount
         ##
-        if not self.silent :
-            if self.max == self.amount and self.__end is None :
-                self.__end = time.time() 
-            if self.build_bar() : self.show()
+        self.amount = min ( max ( new_amount , self.min ) , self.max )
+        ##))
+        if self.silent : return self
         ##
-        if not self.silent :
-            
-            dmin = self.amount - self.min
-            dmax = self.max    - self.amount
-            
-            if   self.amount - self.min    < 10 : self.show ()
-            elif self.max    - self.amount < 10 : self.show ()
-
-            
+        if self.max == self.amount and self.__end is None :self.__end = time.time() 
+        ##  
+        if self.build_bar() : self.show()
+        else :
+            dmin  = self.amount - self.min
+            dmax  = self.max    - self.amount
+            dspan = max ( 20 , 0.001 * self.span ) 
+            if dmin < dspan or dmax < dspan : self.show ()
         ##
         return self
 
@@ -360,7 +353,7 @@ class ProgressBar(object):
         return True
 
     def __iadd__ ( self , i ) : 
-        return self if self.silent else self.increment_amount ( i )
+        return self.increment_amount ( i )
     
     def __str__(self):
         return str  ( self.bar )
