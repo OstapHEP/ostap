@@ -138,27 +138,58 @@ ws6 = weighted.symmetrize ( [ 'Pt1' , 'Pt2' ] )
 logger.info ( 'Print symmetrized unweighted sample:\n%s' % ss6.table ( prefix = '# ' ) )
 logger.info ( 'Print symmetrized   weighted sample:\n%s' % ws6.table ( prefix = '# ' ) )
 
+# =============================================================================
+## (10) remove entry 
+# =============================================================================
+ss7 = ss6 - 3 
+ws7 = ws6 - 3 
+logger.info ( 'Print remove#3 unweighted sample:\n%s' % ss7.table ( prefix = '# ' ) )
+logger.info ( 'Print remove#3   weighted sample:\n%s' % ws7.table ( prefix = '# ' ) )
 
 # =============================================================================
-## (10) project 
+## (11) remove variable 
+# =============================================================================
+ss8 = ss7 - 'Pt1' 
+ws8 = ws7 - 'Pt1'
+logger.info ( 'Print remove#Pt1 unweighted sample:\n%s' % ss8.table ( prefix = '# ' ) )
+logger.info ( 'Print remove#Pt1   weighted sample:\n%s' % ws8.table ( prefix = '# ' ) )
+
+# =============================================================================
+## (12) remove variables 
+# =============================================================================
+ss9 = ss7 - 'Pt1,Pt2' 
+ws9 = ws7 - 'Pt1,Pt2'
+logger.info ( 'Print remove#Pt  unweighted sample:\n%s' % ss9.table ( prefix = '# ' ) )
+logger.info ( 'Print remove#Pt    weighted sample:\n%s' % ws9.table ( prefix = '# ' ) )
+
+# =============================================================================
+## (13) remove variables 
+# =============================================================================
+ss10 = ss7 - ('Pt1','Pt2')
+ws10 = ws7 - ('Pt1','Pt2')
+logger.info ( 'Print remove#Pt1,Pt2 unweighted sample:\n%s' % ss10.table ( prefix = '# ' ) )
+logger.info ( 'Print remove#Pt1,Pt2   weighted sample:\n%s' % ws10.table ( prefix = '# ' ) )
+
+# =============================================================================
+## (14) project 
 # =============================================================================
 hd = ROOT.TH1D ( hID() , 'Pt projection' , 50 , 0 , 100 )
 hw = ROOT.TH1D ( hID() , 'Pt projection' , 50 , 0 , 100 )
 
-hd = dataset.project ( hd  , 'Pt1' , 'Mass<5' )
-hw = dataset.project ( hw  , 'Pt1' , 'Mass<5' )
+hd = dataset .project ( hd  , 'Pt1' , 'Mass<5' )
+hw = weighted.project ( hw  , 'Pt1' , 'Mass<5' )
 
 # =============================================================================
-## (11) parameterise (==project) 
+## (15) parameterise (==project) 
 # =============================================================================
 ld = Ostap.Math.LegendreSum ( 12 , 0 , 50 )
 lw = Ostap.Math.LegendreSum ( 12 , 0 , 50 )
 
-ld = dataset.project ( ld  , 'Pt1' , 'Mass<5' )
-lw = dataset.project ( lw  , 'Pt1' , 'Mass<5' )
+ld = dataset .project ( ld  , 'Pt1' , 'Mass<5' )
+lw = weighted.project ( lw  , 'Pt1' , 'Mass<5' )
 
 # =============================================================================
-## (12) plot 
+## (16) plot 
 # =============================================================================
 with use_canvas ( "test_fitting_datatset: dataset.draw" , wait = 2 ) :
     
@@ -169,13 +200,13 @@ with use_canvas ( "test_fitting_datatset: dataset.draw" , wait = 2 ) :
     
 with use_canvas ( "test_fitting_datatset: weighted.draw" , wait  =2 ) :
 
-    hw = dataset.draw ( 'Pt1' , 'Mass<5' , color = 4 , xmin = 0 , xmax = 100 )
+    hw = weighted.draw ( 'Pt1' , 'Mass<5' , color = 4 , xmin = 0 , xmax = 100 )
     
     hw.draw ( 'same' , color = 4 )
     lw.draw ( 'same' , color = 4 , width = 3 )
 
 # =============================================================================
-## (13) conversion to TTree/TChain 
+## (17) conversion to TTree/TChain 
 # =============================================================================
 chd = dataset .asTree()
 chw = weighted.asTree()

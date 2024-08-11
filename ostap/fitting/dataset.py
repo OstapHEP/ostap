@@ -551,7 +551,7 @@ def  _rad_mod_ ( self , fraction ) :
 #  for index in range ( N ) :
 #    ds_i = dataset - index
 #  @endcode 
-def _rds_sub_ ( dataset , index ) :
+def _rds_remevt_ ( dataset , index ) :
     """Make dataset with removed i-th element  (for Jackknife/bootstrapping)
     >>> dataset = ...
     >>> N = len ( dataset)
@@ -582,7 +582,59 @@ def _rds_sub_ ( dataset , index ) :
         return result
     
     return NotImplemented
-        
+
+# ============================================================================
+## Remove certain columns from dataset
+#  @code
+#  dataset  = ...
+#  another1 = dataset - 'pt'
+#  another2 = dataset - ( 'pt', 'mass' )
+#  another3 = dataset - ( 'pt,mass,z' )
+#  @endcode
+def _rds_remvar_ ( dataset , variables ) :
+    """ Remove certain columns from dataset
+    >>> dataset  = ...
+    >>> another1 = dataset - 'pt'
+    >>> another2 = dataset - ( 'pt', 'mass' )
+    >>> another3 = dataset - ( 'pt,mass,z' )
+    """
+    ## decode list of variables
+    try :
+        vars , _ , _ = vars_and_cuts ( variables , '' )
+        if not vars : return NotImplemented             ## RETURN 
+    except AssertionError :
+        return NotImplemented                           ## RETURN 
+    ##
+    if not all ( v in dataset for v in vars ) : return NotImplemented   
+    ## 
+    varset  = dataset.get() 
+    newvars = ROOT.RooArgSet()
+    for v in varset :
+        if not v.name in vars : newvars.add ( v )
+    ## 
+    return dataset.reduce (  ROOT.RooFit.SelectVars ( newvars ) )  
+
+# =============================================================================
+## remove entry or variable(s) from dataset
+#  @code
+#  dataset  = ...
+#  another- = dataset - 100   ## remove entry #100 
+#  another1 = dataset - 'pt'
+#  another2 = dataset - ( 'pt', 'mass' )
+#  another3 = dataset - ( 'pt,mass,z' )
+#  @endcode
+def _rds_sub_ ( dataset , what ) : 
+    """Remove entry or variable(s) from dataset
+    >>> dataset  = ...
+    >>> another- = dataset - 100   ## remove entry #100 
+    >>> another1 = dataset - 'pt'
+    >>> another2 = dataset - ( 'pt', 'mass' )
+    >>> another3 = dataset - ( 'pt,mass,z' )
+    """
+    if isinstance ( what , integer_types ) :
+        return _rds_remevt_ ( dataset , what )
+    return _rds_remvar_ ( dataset , what )
+    
 # ============================================================================
 ## Jackknife generator: generates data sets with removed i-th element
 #  @code
@@ -590,23 +642,18 @@ def _rds_sub_ ( dataset , index ) :
 #  for ds in ds.jackknife() :
 #  ...
 #  @endcode 
-def _rds_jackknife_ ( dataset , low = 0 , high = None ) :
+def _rds_jackknife_ ( dataset , first  , last = LAST_ENTRY ) :
     """Jacknife generator
     >>> dataset = ...
     >>> for ds in ds.jackknife() :
     >>> ...
     """
-    N = len ( dataset )
+    first , last = evt_range ( len ( dataset ) , first , last )
     
-    if high == None : high = N
-    
-    if 1 < N : 
-        for i in range ( low , high ) :
-            ds_i = dataset - i        ## this is the line 
-            yield ds_i               
-            ds_i.clear()             
-            del ds_i
-
+    for i in range ( first , last ) :
+        ds_i = dataset - i        ## this is the line 
+        yield ds_i               
+        
 # =============================================================================
 ## Boostrap generator
 #  @code
@@ -620,17 +667,14 @@ def _rds_bootstrap_ ( dataset , size = 100 , extended = False ) :
     >>> for ds in dataset.bootstrap ( 100 ) :
     >>> ...
     """
-
     from   ostap.stats.bootstrap  import bootstrap_indices, extended_bootstrap_indices 
 
     N    = len ( dataset )
-    bgen = bootstrap_indices ( N , size = size ) if not extended else extended_bootstrap_indices ( N , size = size ) 
+    bgen = bootstrap_indices ( N , size = size ) if not extended else extended_bootstrap_indices ( N , size = size )
     
-    for indices in bgen : 
+    for indices in bgen :
         ds = dataset [ indices ] 
         yield ds
-        ds.clear()
-        del ds
 
 # =============================================================================
 ## get (random) unique sub-sample from the dataset
