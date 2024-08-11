@@ -16,7 +16,8 @@
   1. add `loop` methdod for `RooAbsData` and implement `rows` in terms of `loop`
   1. allow more recusion in `vars_and_cuts` function
   1. add new test
-  
+  1. make progress bar silent if `not isatty()` unless explicitely set `silent=False`
+
 ## Backward incompatibl
 
   1. `project`(&`draw`) for 2 and 3-dimession now follows the natural order of varibales:

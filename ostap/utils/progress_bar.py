@@ -125,7 +125,6 @@ def columns () :
 ## is sys.stdout attached to terminal or not  ?
 from ostap.utils.basic      import isatty 
 from ostap.logger.colorized import allright, infostr 
-
 # =============================================================================
 ## @class ProgressBar
 #
@@ -225,7 +224,7 @@ class ProgressBar(object):
 
         tty = isatty()
         
-        self.silent   = kwargs.get( 'silent' , False ) ## or not isatty() 
+        self.silent   = kwargs.get ( 'silent' , not isatty() )
         self.r        = '\r' if tty else '\n'
         
         self.char = kwargs.get ( 'char' , '#'       ) ##
@@ -383,7 +382,7 @@ class ProgressBar(object):
         self.silent = True
         
     def __enter__ ( self      ) :
-        self.show() 
+        if not self.silent : self.show() 
         return self
     
     def __exit__  ( self , *_ ) : self.end ()
