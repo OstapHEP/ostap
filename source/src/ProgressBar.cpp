@@ -72,7 +72,7 @@ void Ostap::Utils::ProgressConf::setUseTimer ( const bool    value   )
 // width 
 // ==========================================================================
 void Ostap::Utils::ProgressConf::setWidth    
-( const unsigned short value ) { m_width  = std::min ( 512 , (int) value ) ; }
+( const unsigned short value ) { m_width  = value < 512 ? value : 512 ; }
 // ==========================================================================
 /*  Constructor from the configuration and maximal count
  *  @param maxcount   maximal count (==0 : no display bar)
