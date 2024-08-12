@@ -61,8 +61,11 @@ namespace Ostap
       public:
         // ====================================================================
         explicit
-        Basic ( const unsigned short k = 0 ,
-                const unsigned short N = 0 ) : m_k ( k ) , m_N ( N ) {}
+        Basic
+        ( const unsigned short k = 0 ,
+          const unsigned short N = 0 )
+          : m_k ( k )
+          , m_N ( N ) {}
         // ====================================================================
       public :
         // ====================================================================
@@ -996,7 +999,8 @@ namespace Ostap
      */
     double right_line_hull 
     ( const Ostap::Math::Bernstein& b ) ;
-  } 
+    // ========================================================================
+  } //                                         The end of namespace Ostap::Math
   // ==========================================================================
 } //                                                The end of namespace  Ostap 
 // ============================================================================

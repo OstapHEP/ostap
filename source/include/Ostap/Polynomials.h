@@ -1611,6 +1611,17 @@ namespace Ostap
         , m_xmax ( std::max ( xmin, xmax ) )
       {}
       // ======================================================================
+      /// constructor from template 
+      template <unsigned short N>
+      ChebyshevSum 
+      ( const Chebyshev_<N>& /* p */    ,
+        const double          xmin = -1 , 
+        const double          xmax =  1 )
+        : ChebyshevSum ( N , xmin , xmax )
+      {
+        setPar ( N , 1 ) ;
+      }
+      // ======================================================================
       /// copy 
       ChebyshevSum ( const ChebyshevSum&  ) = default ;
       /// move
@@ -1816,6 +1827,17 @@ namespace Ostap
         , m_xmin ( std::min ( xmin, xmax ) )
         , m_xmax ( std::max ( xmin, xmax ) )
       {}
+      // ======================================================================
+      /// constructor from template 
+      template <unsigned short N>
+      LegendreSum
+      ( const Legendre_<N>&  /* p */      ,
+        const double          xmin   = -1 , 
+        const double          xmax   =  1 )
+        : LegendreSum ( N , xmin , xmax )
+      {
+        setPar ( N , 1 ) ;
+      }
       // ======================================================================
       /// copy 
       LegendreSum  ( const LegendreSum&  ) = default ;

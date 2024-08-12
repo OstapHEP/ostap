@@ -1,3 +1,9 @@
+## New features
+
+## Backward incompatible
+
+## Bug fixes
+
 # v1.12.0.0
 
 ## New features
@@ -20,7 +26,7 @@
   1. add new test
   1. make progress bar silent if `not isatty()` unless explicitely set `silent=False`
 
-## Backward incompatibl
+## Backward incompatible
 
   1. `project`(&`draw`) for 2 and 3-dimession now follows the natural order of varibales:
        `XX.project ( target , 'x,y,z' , ...) `

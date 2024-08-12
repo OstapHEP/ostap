@@ -79,7 +79,7 @@ __all__     = (
     )
 # =============================================================================
 from    ostap.core.core        import Ostap , funID
-from    ostap.core.ostap_types import is_integer
+from    ostap.core.ostap_types import is_integer, sequence_types, num_types 
 from    ostap.math.base        import iszero, isequal, signum
 import  ostap.math.reduce 
 import  ROOT, math  
@@ -342,9 +342,8 @@ def _laguerre_ ( x , f , d1 = None , d2 = None ) :
         
         return ( p1 * xmin - p0 * xmax ) / ( p1 - p0) , 
         
-
     ## the convergency is cubic, therefore 16 is *very* larger number of iterations 
-    for i in  range(16) : 
+    for i in  range ( 16 ) : 
         
         if  not xmin <= x <= xmax :
             ## something goes wrong: multiple root? go to derivative
@@ -374,7 +373,7 @@ def _laguerre_ ( x , f , d1 = None , d2 = None ) :
 ## ============================================================================
 def _scale_ ( f ) :
     fn = f.norm()
-    sf = math.frexp ( fn )[1]
+    sf = math.frexp ( fn ) [ 1 ]
     if 1 !=  sf : f = f.ldexp ( 1  - sf )
     return f
 
@@ -439,22 +438,24 @@ def solve (  bp  , C = 0 , split = 2 ) :
 
     ## treat separetely roots at the left and right edges
     roots = []
+    ## Root at the left edge ? 
     while 1 <= bp.degree() and isequal ( bp[0] +  bn , bn ) :
         bp   -= bp[0]
         bp    = bp.deflate_left() 
         bp    = _scale_ ( bp ) 
         bn    = bp.norm ()
         roots.append ( bp.xmin() )        
-    if roots : return tuple(roots) + bp.solve ( split = split ) 
+    if roots : return tuple ( roots ) + bp.solve ( split = split ) 
     
     roots = []
+    ## Root at the right edge ? 
     while 1 <= bp.degree() and isequal ( bp[-1] +  bn , bn ) :
         bp -= bp[-1]
         bp  = bp.deflate_right() 
         bp  = _scale_ ( bp ) 
         bn  = bp.norm () 
         roots.append ( bp.xmax() )        
-    if roots : return bp.solve ( split = split ) + tuple(roots) 
+    if roots : return bp.solve ( split = split ) + tuple ( roots ) 
 
     ## check again number of roots
     nc = bp.sign_changes()
@@ -478,11 +479,14 @@ def solve (  bp  , C = 0 , split = 2 ) :
         # =====================================================================
         ## Two strategies for isolation of roots:
         #  - use control polygon 
-        #  - use the derivative 
-        #  For both cases, the zeros of contol-polygon and/or derivatives
+        #  - use the derivative
+        #
+        #  For both cases, the zeros of control-polygon and/or derivatives
         #  are tested to be the roots of  polynomial..
+        #
         #  If they corresponds to the roots, polinomial is properly deflated and
         #  deflated roots are collected
+        #
         #  Remaining points are used to (recursively) split interval into smaller
         #  intervals with presumably smaller number of roots 
         
@@ -523,12 +527,12 @@ def solve (  bp  , C = 0 , split = 2 ) :
         if 2 >= len ( splits ) :
             if xmin < xmax : splits =     xmin   , 0.5 * (    xmin   +    xmax    ) ,    xmax
             else           : splits =  bp.xmin() , 0.5 * ( bp.xmin() + bp.xmax () ) , bp.xmax ()
-            splits = list(splits) 
+            splits = list ( splits ) 
         
         roots = []
         for s in splits :
             
-            bv  = bp.evaluate ( s ) 
+            bv = bp.evaluate ( s ) 
             bn = bp.norm() 
             while 1 <= bp.degree() and isequal ( bv + bn , bn ) :
                 bp -= bv 
@@ -546,14 +550,14 @@ def solve (  bp  , C = 0 , split = 2 ) :
             roots.sort()
             return tuple ( roots )
 
-        if 2 == len(splits) :
+        if 2 == len ( splits ) :
             if isequal ( bp.xmin() , splits[0] ) and isequal ( bp.xmax() , splits[1] ) :
                 xmn    = splits[0]
                 xmx    = splits[1]
                 splits = [ xmn , 0.5 * ( xmn + xmx ) , xmx ] 
                 
-        ns = len(splits)
-        for i in range(1,ns) :
+        ns = len ( splits )
+        for i in range ( 1 , ns ) :
             xl = splits[i-1]
             xr = splits[i  ]            
             bb = _scale_ ( Bernstein ( bp , xl , xr ) )
@@ -600,15 +604,15 @@ def solve (  bp  , C = 0 , split = 2 ) :
             xmax = min ( xmax , rcp )
 
         ## 
-        if isequal ( xmin , xmax ) : return 0.5*(xmin+xmax),               ## RETURN
+        if isequal ( xmin , xmax ) : return 0.5 * ( xmin + xmax ) ,         ## RETURN
 
         if xmin >= xmax : break                             ## BREAK
         
-        ## avoid too iterations - it decreased the precision 
+        ## avoid too many iterations - it decreased the precision 
         if 10 * ( xmax - xmin )  < l0  : break              ## BREAK  
         
-        s0  =  signum ( bp[ 0] )
-        s1  =  signum ( bp[-1] )
+        s0  =  signum ( bp [  0 ] )
+        s1  =  signum ( bp [ -1 ] )
         
         smn =  signum ( bp.evaluate ( xmin ) )
         smx =  signum ( bp.evaluate ( xmax ) )
@@ -637,14 +641,13 @@ def solve (  bp  , C = 0 , split = 2 ) :
     d2 = d1.derivative ()
     
     cps = bp.crossing_points()
-    if cps : x = cps[0]
-    else   : x = 0.5*(bp.xmin()+bp.xmax()) 
+    if cps : x = cps [ 0 ]
+    else   : x = 0.5 * ( bp.xmin() + bp.xmax() ) 
 
     ##  use Laguerre's method to refine the isolated root 
     l = _laguerre_ ( x , f , d1 , d2 )
 
     return l 
-
 
 # =============================================================================    
 ## Find the greatest common divisor for two bernstein polynomials 
@@ -933,18 +936,26 @@ def _p_new_init_ ( t ,  *args )  :
     from ostap.math.base        import doubles , complexes, VCT_TYPES 
     from ostap.core.ostap_types import Generator, Sequence, list_types  
     
-    largs = list (  args )
+    largs = list ( args )
 
     for i , arg in enumerate ( largs ) :
         
-        if   isinstance  ( arg , VCT_TYPES )  : continue 
+        print ( 'PROCESSING/1:', i, arg, type(arg ) , largs ) 
+
+        if       isinstance ( arg , num_types             ) : continue 
+        elif     isinstance ( arg , VCT_TYPES             ) : continue 
+        elif     isinstance ( arg , Ostap.Math.PolySum    ) : continue
+        elif     isinstance ( arg , Ostap.Math.Parameters ) : continue
+        elif     isinstance ( arg , Ostap.Math.NSphere    ) : continue
+        elif not isinstance ( arg , sequence_types        ) : continue
         
-        if   isinstance ( arg , Generator  ) : pass
-        elif isinstance ( arg , Sequence   ) : pass
-        elif isinstance ( arg , list_types ) : pass
-        else :
-            continue
-        
+        ## if       isinstance ( arg , Generator             ) : pass
+        ## elif     isinstance ( arg , Sequence              ) : pass
+        ## elif     isinstance ( arg , list_types            ) : pass        
+        ## elif not isinstance ( arg , sequence_types        ) : continue
+        ## else :
+        ##     continue
+
         try: 
             _arg = doubles  ( arg  )
             largs [ i ] = _arg
@@ -956,10 +967,11 @@ def _p_new_init_ ( t ,  *args )  :
             largs [ i ] = _arg
             continue 
         except TypeError : pass
+
         
-    targs = tuple ( largs )
-        
-    ## use old constructor 
+    targs = tuple ( largs )    
+    ## use "old" constructor
+    
     return t._old_init_ ( *targs ) 
 
 # =============================================================================
