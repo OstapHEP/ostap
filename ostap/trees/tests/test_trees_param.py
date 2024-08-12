@@ -121,7 +121,6 @@ def test_parameterize_1D () :
         tree = f.S
         N    = 6
         
-	
         with timing ( "Unbinned 1D-Legendre  parameterization" , logger = logger ) :
             
             lx = Ostap.Math.LegendreSum  ( N , xmin , xmax )
@@ -166,10 +165,10 @@ def test_parameterize_1D () :
             hz = ROOT.TH1D ( hID() , '' , NZ , zmin , zmax )
             hu = ROOT.TH1D ( hID() , '' , NU , umin , umax )
             
-            tree.project ( hx , 'x' )
-            tree.project ( hy , 'y' )
-            tree.project ( hz , 'z' )
-            tree.project ( hu , 'u' )
+            tree.project ( hx , 'x' , progress = True )
+            tree.project ( hy , 'y' , progress = True )
+            tree.project ( hz , 'z' , progress = True )
+            tree.project ( hu , 'u' , progress = True )
 
             for fx in ( lx, cx, bx ) : fx *= (xmax-xmin)/NX 
             for fy in ( ly, cy, by ) : fy *= (ymax-ymin)/NY
@@ -321,9 +320,9 @@ def test_parameterize_2D () :
             hzu = ROOT.TH2F(hID() , '', N1 , zmin , zmax , N2 , umin , umax )
             hxu = ROOT.TH2F(hID() , '', N1 , xmin , xmax , N2 , umin , umax )
             
-            tree.project ( hxy , 'y:x' )
-            tree.project ( hzu , 'u:z' )
-            tree.project ( hxu , 'u:x' )
+            tree.project ( hxy , 'y:x' , progress = True )
+            tree.project ( hzu , 'u:z' , progress = True )
+            tree.project ( hxu , 'u:x' , progress = True )
 
         lxy *= ( xmax - xmin ) * ( ymax - ymin ) / ( N1 * N2 ) 
         lzu *= ( zmax - zmin ) * ( umax - umin ) / ( N1 * N2 ) 
@@ -418,10 +417,10 @@ def test_parameterize_3D () :
             hz = ROOT.TH3F ( hID() , '' , N1 , xmin , xmax , N2 , ymin, ymax , N3 , umin, umax )
             hu = ROOT.TH3F ( hID() , '' , N1 , xmin , xmax , N2 , ymin, ymax , N3 , zmin, zmax )
             
-            tree.project ( hx , 'u:z:y' )
-            tree.project ( hy , 'u:z:x' )
-            tree.project ( hz , 'u:y:x' )
-            tree.project ( hu , 'z:y:x' )
+            tree.project ( hx , 'u:z:y' , progress = True )
+            tree.project ( hy , 'u:z:x' , progress = True )
+            tree.project ( hz , 'u:y:x' , progress = True )
+            tree.project ( hu , 'z:y:x' , progress = True )
             
             lx *= ( ymax - ymin ) * ( zmax - zmin ) * ( umax - umin ) / ( N1 * N2 * N3 )
             ly *= ( xmax - xmin ) * ( zmax - zmin ) * ( umax - umin ) / ( N1 * N2 * N3 )
@@ -474,8 +473,6 @@ def test_parameterize_3D () :
         table = T.table ( rows , title = title , prefix = '# ' , alignment =  'llcc' )
         logger.info ( '%s\n%s' % ( title , table ) )
         
-
-
 # =============================================================================
 ## 4D parameterizations
 # =============================================================================
@@ -506,9 +503,9 @@ def test_parameterize_4D () :
         hxu = ROOT.TH2F(hID() , '', 20 , xmin , xmax , 20 , umin , umax )
         
         with timing ( "Histogram projections" , logger = logger ) :
-            tree.project ( hxy , 'y:x' )
-            tree.project ( hzu , 'u:z' )
-            tree.project ( hxu , 'u:x' )
+            tree.project ( hxy , 'y:x' , progress = True )
+            tree.project ( hzu , 'u:z' , progress = True )
+            tree.project ( hxu , 'u:x' , progress = True )
         
         lxy *= ( ( xmax - xmin ) / 20 ) * ( ( ymax - ymin ) / 20 ) 
         lzu *= ( ( zmax - zmin ) / 20 ) * ( ( umax - umin ) / 20 ) 
@@ -541,8 +538,7 @@ def test_parameterize_4D () :
             
         title = '4D parameterisation+projections'
         table = T.table ( rows , title = title , prefix = '# ' , alignment =  'llcc' )
-        logger.info ( '%s\n%s' % ( title , table ) )
-        
+        logger.info ( '%s\n%s' % ( title , table ) )        
 # =============================================================================
 
 # =============================================================================
@@ -599,23 +595,19 @@ def test_statistics_1D () :
             row = 'Lehmer[%+d] mean' % p , '%+.6f' % v.value() 
             rows.append ( row )
             
-        
-            
+                    
         title = '1D statistics'
         table = T.table ( rows , title = title , prefix = '# ' , alignment =  'lc' )
-        logger.info ( '%s\n%s' % ( title , table ) )
-
-        print ( tree.statVar ( 'v' ) ) 
-        
-
+        logger.info ( '%s\n%s' % ( title , table ) )        
+                                   
 # =============================================================================
 if '__main__' == __name__ :
-	
-	test_parameterize_1D ()
-	test_parameterize_2D () 	
-	test_parameterize_3D ()
-	test_parameterize_4D ()
-	test_statistics_1D   () 
+                                   
+    test_parameterize_1D ()
+    test_parameterize_2D () 	
+    test_parameterize_3D ()
+    test_parameterize_4D ()
+    test_statistics_1D   () 
     
 # =============================================================================
 ##                                                                      The END 

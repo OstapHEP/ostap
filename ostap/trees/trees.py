@@ -107,7 +107,7 @@ def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = LAST_ENTRY , progress = 
     >>> for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
     """
 
-    ## show progress obly for tty 
+    ## show progress only for tty 
     progress = progress and isatty()
 
     ## redefine first/last 
@@ -397,9 +397,9 @@ def tree_project ( tree                    ,
     - for 2D&3D cases the natural order of varibales is used.
 
     """
-    
+
     ## 0) show progress only for tty 
-    progress = progress ## and isatty ()
+    progress = progress and isatty ()
     
     ## 1) adjust the first/last
     first , last = evt_range ( len ( tree ) , first , last )

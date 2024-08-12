@@ -2040,14 +2040,13 @@ def copy_with_progress ( source  , destination ) :
                     read  += len ( block )
                     pbar.update_amount ( read )
                     if not block : break             ## BREAK
-                
+
     assert os.path.exists ( destination ) and \
-           os.path.isfile ( destination ) and \
-           os.stat ( destination ).st_size == total, \
-           "Invalid ``destination'' %s " % destination
+        os.path.isfile ( destination ) and \
+        os.stat ( destination ).st_size == total, \
+        "Invalid ``destination'' %s " % destination
     
     return os.path.realpath ( destination )
-
 
 # =========================================================================
 ## Has any of the symbols?

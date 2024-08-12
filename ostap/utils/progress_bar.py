@@ -225,7 +225,7 @@ class ProgressBar(object):
         tty = isatty()
         
         self.silent   = kwargs.get ( 'silent' , not tty )
-        self.r        = '\r' if tty else '\n'
+        self.r        = '\r' ## '\r' if tty else '\n'
         
         self.char = kwargs.get ( 'char' , '#'       ) ##
         self.mode = kwargs.get ( 'mode' , 'fixed'   ) ## fixed or dynamic
