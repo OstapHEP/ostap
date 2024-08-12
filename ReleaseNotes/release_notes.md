@@ -1,3 +1,5 @@
+# v1.12.0.0
+
 ## New features
 
   1. Add estimators for harmonic, geometric, power &  Lehmer means and their weighted analogues
