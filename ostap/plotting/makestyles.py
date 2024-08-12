@@ -615,7 +615,7 @@ def make_styles ( config = None ) :
             ## generic style
             style = root_style ( name )
             if not style : 
-                logger.info ( 'Create new generic style  %s/%s' % ( name , description ) )             
+                logger.debug ( 'Create new generic style  %s/%s' % ( name , description ) )             
                 style       = ROOT.TStyle ( name , description )
                 
             set_style ( style , section )
