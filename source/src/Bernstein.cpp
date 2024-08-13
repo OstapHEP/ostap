@@ -1990,103 +1990,106 @@ Ostap::Math::sign_changes ( const Ostap::Math::Bernstein& b )
   return Ostap::Math::sign_changes ( bpars.begin() , bpars.end() , s_tiny ) ;
 }
 // ============================================================================
+namespace
+{
+  // =========================================================================
+  /*  get the most left crossing  point of convex hull with  x-axis 
+   *  (it is a step  towards finding the most left root, if any 
+   *  if convex hull does not cross the x-axis, large number is returned      
+   *  @param vector of Bernstein parameters 
+   *  @param bnorm  scale of Bernstein polynomianl 
+   *  @return left crossing point of convex hull, large number outside (0,1) interval otherwise 
+   */
+  // ============================================================================
+  template <class ITERATOR> 
+  inline double left_hull
+  ( ITERATOR     first , 
+    ITERATOR     last  , 
+    const double bnorm ) 
+  {
+    //
+    const double         b0 = *first ;
+    // left point is already zero 
+    if ( s_zero ( b0 ) || s_equal ( b0 + bnorm , bnorm ) ) { return 0 ; } // left point 
+    //
+    const signed  char   s0 = Ostap::Math::signum ( b0 ) ;
+    const bool           up = 0 > b0          ;
+    //
+    typedef typename std::iterator_traits<ITERATOR>::difference_type SIZE ;
+
+    const SIZE N = std::distance ( first , last ) ;
+    //
+    
+    // find the first element with the opposite sign
+    SIZE i = 1 ;
+    for ( ; i < N ; ++i ) 
+      { 
+        const double bbi = *( first + i ) ;
+        if ( s_zero  ( bbi ) || s_equal ( bbi + bnorm , bnorm ) ||  
+             0 >= s0 * Ostap::Math::signum ( bbi ) ) { break ; }
+      }
+    // point is found?  
+    if ( N <= i ) {  return 1 + 10 ;  } //  large number outside the range
+    //
+    const double bi = *(first + i ) ;
+    double si =  ( bi - b0 ) / i ;
+    for ( SIZE j = i + 1 ;  j < N ;  ++j ) 
+      {
+        const double bj = *( first + j ) ;
+        const double sj = ( bj - b0 ) / j ;
+        if ( ( up && sj >= si ) || ( !up && sj <= si ) )
+          {
+            i  = j ;
+            si = sj ;  
+          }
+      }
+    //
+    const double xi = double ( i ) /  ( N - 1 );
+    const double yi = *(first + i ) ;
+    //
+    return - xi * b0 / ( yi - b0 ) ;
+  }
+  // ==========================================================================
+}
+// ============================================================================
 /*  get the most left crossing  point of convex hull with  x-axis 
  *  (it is a step  towards finding the most left root, if any 
  *  if convex hull does not cross the x-axis, xmax is returned      
  */
 // ============================================================================
-double Ostap::Math::left_line_hull ( const Ostap::Math::Bernstein& b  ) 
+double
+Ostap::Math::left_line_hull
+( const Ostap::Math::Bernstein& b  ) 
 {
-  const double        bn = b.norm  () ;
   //
-  const std::vector<double>& bpars = b.pars()      ;
-  const double               p0    = bpars.front() ;
+  const std::vector<double>& bpars = b.pars () ;
+  const double               bnorm = b.norm () ;
   //
-  // left point is already zero 
-  if ( s_zero ( p0 ) || s_equal ( p0 + bn , bn ) ) { return b.xmin() ; }
+  const double t = left_hull ( bpars.begin () ,
+                               bpars.end   () ,
+                               bnorm          ) ;
   //
-  const signed  char s0 = Ostap::Math::signum ( p0 ) ;
-  const bool         up = 0 > p0 ;
-  //
-  const unsigned short N  = b.npars () ;
-  //
-  // find the first element with the opposite sign
-  unsigned short i = 1 ;
-  for ( ;  i < N ; ++i ) 
-  { 
-    const double pi = bpars[i] ;
-    if ( s_zero  ( pi ) || s_equal ( pi +  bn , bn ) ||  
-         0 >= s0 * Ostap::Math::signum ( bpars [i] ) ) { break ; }
-  }
-  //
-  // no  good points are found, 
-  if ( i == N ) { return b.xmax() + 10 * ( b.xmax() - b.xmin() ) ; } // RETURN
-  //
-  double         si =  ( bpars[i] - p0 ) / i ;
-  for (  unsigned short j = i + 1 ;  j < N ;  ++j ) 
-  {
-    const double sj = ( bpars[j] - p0 ) / j ;
-    if ( ( up && sj >= si ) || ( !up && sj <= si ) )
-    {
-      i  = j ;
-      si = sj ;  
-    }
-  }
-  //
-  const double xi = double(i) /  ( N - 1 );
-  const double yi = bpars[i] ;
-  //
-  return b.x ( - xi * p0 / ( yi - p0 ) ) ;
+  return b.x ( t ) ;
 }
 // ============================================================================
-/*  get the most right rossing  point of convex hull with  x-axis 
+/*  get the most right crossing  point of convex hull with  x-axis 
  *  (it is a step  towards finding the most right root, if any 
  *  if convex hull does not cross the x-axis, xmin is returned      
  */
 // ============================================================================
-double Ostap::Math::right_line_hull ( const Ostap::Math::Bernstein& b ) 
-{  
-  const double        bn = b.norm  () ;
+double
+Ostap::Math::right_line_hull
+( const Ostap::Math::Bernstein& b ) 
+{
   //
-  const std::vector<double>& bpars = b.pars()      ;
-  const double               p0    = bpars.back()  ; //  ATTENTION!
+  const std::vector<double>& bpars = b.pars     () ;
+  const double               bnorm = b.norm     () ;
   //
-  // right point is already zero 
-  if ( s_zero ( p0 ) || s_equal ( p0 + bn , bn ) ) { return b.xmax () ; }
+  const double t = left_hull ( bpars.rbegin () ,
+                               bpars.rend   () ,  
+                               bnorm           ) ;
   //
-  const signed  char s0 = Ostap::Math::signum ( p0 ) ;
-  const bool         up = 0 > p0 ;
-  //
-  const unsigned short N  = b.npars () ;
-  //
-  // find the first element with the opposite sign
-  unsigned short i = 0 ;
-  for ( ;  i < N - 1  ; ++i ) 
-  {
-    const double pi = bpars[i] ;
-    if ( s_zero  ( pi ) || s_equal ( pi +  bn , bn ) ||  
-         0 >= s0 * Ostap::Math::signum ( bpars [i] ) ) { break ; }
-  }
-  //
-  // no  good points are found, 
-  if ( i == N - 1 ) 
-  { return b.xmin() - 10 * ( b.xmax() - b.xmin() ) ; } // RETURN
-  //
-  double         si =  ( bpars[i] - p0 ) / ( N - i ) ;
-  for (  unsigned short j = i + 1 ;  j < N ;  ++j ) 
-  {
-    const double sj = ( bpars[j] - p0 ) /  ( N - j  )  ;
-    if ( ( up && sj >= si ) || ( !up && sj <= si ) )
-    {
-      i  = j ;
-      si = sj ;  
-    }
-  }
-  //
-  const double xi = double(i) /  ( N - 1 );
-  const double yi = bpars[i] ;
-  //
-  return b.x ( ( yi - xi * p0 ) / ( yi - p0 ) ) ;
+  return b.x ( 1 - t ) ;
 }  
 // ============================================================================
 //  BERNSTEIN DUAL 

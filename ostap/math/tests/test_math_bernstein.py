@@ -12,10 +12,12 @@
 import random  
 import ostap.math.models 
 import ostap.math.bernstein
-from   ostap.core.core       import Ostap, SE, isequal
-from   ostap.plotting.canvas import use_canvas
-from   ostap.utils.utils     import vrange, crange  
-from   ostap.utils.timing    import timing 
+from   ostap.core.core        import Ostap, SE, isequal
+from   ostap.plotting.canvas  import use_canvas
+from   ostap.utils.utils      import vrange, crange  
+from   ostap.utils.timing     import timing
+import ostap.logger.table     as     T
+from   ostap.logger.colorized import allright , attention 
 # ============================================================================
 # logging 
 # =============================================================================
@@ -34,11 +36,10 @@ def test_solve ():
     # 1) construct function with known roots
 
     ## roots in [0,1]
-    troots = [ r for r in crange ( 0.05 , 0.95 , 5 ) ]
+    troots = [ r for r in crange ( 0.05 , 0.95 , 8 ) ]
     
     ## roots in [2,10]  
-    roots   = troots + [  random.uniform(2,10) for i in  range ( 2 ) ]
-
+    roots   = troots + [  random.uniform(2,10) for i in  range ( 3 ) ]
     roots.sort ()
     
     ## complex roots  
@@ -71,6 +72,7 @@ def test_solve ():
 
     functions.add ( bs ) 
 
+
 # ============================================================================
 ##  check number of roots using Sturm' sequence 
 def test_nroots ():
@@ -82,10 +84,10 @@ def test_nroots ():
     # 1) construct function with known roots
 
     ## roots in [0,1]
-    troots = [ r for r in crange ( 0.05 , 0.95 , 5 ) ]
+    troots = [ r for r in crange ( 0.05 , 0.95 , 8 ) ]
     
     ## roots in [2,10]  
-    roots   = troots + [  random.uniform(2,10) for i in  range ( 2 ) ]
+    roots   = troots + [  random.uniform(2,10) for i in  range ( 3 ) ]
 
     roots.sort ()
     
@@ -108,7 +110,8 @@ def test_nroots ():
         troots.sort() 
         logger.info ('Roots true  : [%s]' %  ( ', '.join ( "%.6f" % r for r in troots )  ) )
         
-        delta = 1.e-4 * ( bs.xmax() - bs.xmin() )  
+        delta = 1.e-4 * ( bs.xmax() - bs.xmin() )
+        
         for i in  range( 20 )  :
             
             while True :            
@@ -122,13 +125,36 @@ def test_nroots ():
             for r in  troots :
                 if x1 <= r < x2 :  nt += 1
 
-            if nr != nt : 
-                logger.error ('Roots between [%.6f, %.6f) : %d [true is %d]'  % ( x1  , x2 , nr , nt ) )
-            else : 
-                logger.info  ('Roots between [%.6f, %.6f) : %d [true is %d]'  % ( x1  , x2 , nr , nt ) )
+            if nr != nt : logger.error ('Roots between [%.6f, %.6f) : %d [true is %d]'  % ( x1  , x2 , nr , nt ) )
+            else        : logger.info  ('Roots between [%.6f, %.6f) : %d [true is %d]'  % ( x1  , x2 , nr , nt ) )
         
     functions.add ( bs ) 
-       
+
+
+# ============================================================================
+##  Roots of Wilkinson's polynomial(s)
+def test_wilkinson_roots ():
+    """Roots of Wlkinson's polynomials 
+    """
+    logger = getLogger("test_wilkinson_roots")
+
+    rows = [ ( 'degree' , '#roots' , '' ) ] 
+    for N in range ( 5 , 26 ) :
+        
+        ## polynomial 
+        b = Ostap.Math.Bernstein ( 0 , N + 1 , range ( 1 , N + 1 ) )
+
+        
+        roots  = b.solve ( )
+        nroots = len ( roots ) 
+        row = ( '%2d' % b.degree()  ,
+                '%2d' % nroots     ,
+                allright ( 'OK' ) if nroots == b.degree() else attention ('%d!=%d' % ( b.degree() , nroots ) ) )
+        rows.append ( row )
+
+    title = "Wilkinson's roots"
+    logger.info ( '%s:\n%s' % ( title , T.table ( rows, title = title , prefix = '# ' ) ) ) 
+
 # ============================================================================
 ##  test Bernstein interpolation 
 def test_interpolation ():
@@ -593,18 +619,19 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_solve          ()
-    test_nroots         ()
-    test_interpolation  ()
-    test_division       ()
-    test_elevatereduce  ()
-    test_poly           ()
-    test_even           ()
-    test_monotonic      ()
-    test_convex         () 
-    test_convexonly     ()
-    test_integration    ()
-    test_transformation ()
+    test_solve           ()
+    test_nroots          ()
+    test_wilkinson_roots () 
+    # test_interpolation   ()
+    #test_division        ()
+    #test_elevatereduce   ()
+    #test_poly            ()
+    #test_even            ()
+    #test_monotonic       ()
+    #test_convex          () 
+    #test_convexonly      ()
+    #test_integration     ()
+    #test_transformation  ()
 
     ## check finally that everything is serializeable:
     test_pickle () 

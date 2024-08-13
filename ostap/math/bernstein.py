@@ -138,7 +138,7 @@ def sturm_sequence ( bp ) :
             for j in range (  b.npars() ) : b.setPar( j , 0.0 ) 
         ss.append  ( -b ) 
 
-    return tuple(ss)
+    return tuple ( ss )
 
 # ============================================================================
 ## get number of unique real roots between xmin and xmax
@@ -163,9 +163,9 @@ def nroots ( bp , xmin =  None , xmax = None ) :
     ncmx  = 0
     nss   = len(ss)
     
-    for  i in range(1,nss) :
-        if 0 > smn[i]*smn[i-1] : ncmn +=1
-        if 0 > smx[i]*smx[i-1] : ncmx +=1
+    for  i in range ( 1 , nss ) :
+        if 0 > smn [ i ] * smn [ i - 1 ] : ncmn += 1
+        if 0 > smx [ i ] * smx [ i - 1 ] : ncmx += 1
 
     return ( ncmn - ncmx ) if xmin < xmax else ( ncmx - ncmn )  
 
@@ -269,10 +269,9 @@ def left_line_hull ( bp  ) :
     >>> lcp = bernstein.left_line_hull() 
     >>> lcp = left_line_hull( bernstein ) ##  ditto 
     """
-    lcp = Ostap.Math.left_line_hull ( bp.bernstein() )
-    ##
-    if not bp.xmin() <= lcp <= bp.xmax() :
-        return None
+    lcp  = Ostap.Math.left_line_hull ( bp.bernstein() )
+    
+    if not bp.xmin() <= lcp <= bp.xmax() : return None 
     
     return lcp 
 
@@ -290,8 +289,7 @@ def right_line_hull ( bp  ) :
     """
     rcp = Ostap.Math.right_line_hull ( bp.bernstein() )
     ##
-    if not bp.xmin() <= rcp <= bp.xmax() :
-        return None
+    if not bp.xmin() <= rcp <= bp.xmax() : return None
     #
     return rcp 
 
@@ -393,15 +391,20 @@ def solve (  bp  , C = 0 , split = 2 ) :
     >>> roots = bernstein.solve ()
     >>> roots = solve ( bernstein , C = 0 ) ## ditto
     """
-    
-    ## construct the equation  b'(x)=0:
-    bp = bp.bernstein() 
-    if C : bp = bp - C
-    
-    ## 1) zero-degree polynomial
-    if   0 == bp.degree() :
 
-        if iszero ( bp[0] ) : return bp.xmin(),
+    ## construct the equation  b'(x)=0:
+    bp = bp.bernstein()
+    
+    if   C and isinstance ( C , num_types   ) : bp = _scale_ ( bp - C ) 
+    elif C and hasattr    ( C , 'bernstein' ) : bp = _scale_ ( bp - C.bernstein() )
+    elif 0 != bp.degree()                     : bp = _scale_ ( bp + 0 ) 
+
+    ##  norm of polynomial 
+    bn = bp.norm()
+
+    ## 1) zero-degree polynomial, convention return xmin if polynomial is zero 
+    if   0 == bp.degree() :
+        if iszero ( bp [ 0 ] ) : return bp.xmin(),
         return () 
     
     ## 2) linear polynomial
@@ -410,28 +413,55 @@ def solve (  bp  , C = 0 , split = 2 ) :
         x0 = bp.xmin()
         x1 = bp.xmax()
         
-        p0 = bp[0]
-        p1 = bp[1]
+        p0 = bp [ 0 ]
+        if iszero ( p0 ) or isequal ( p0 + nb , bp ) : return x0 ,
+                
+        p1 = bp [ 1 ]
+        if iszero ( p1 ) or isequal ( p1 + nb , bp ) : return x1 ,
 
         s0 = signum ( p0 )
         s1 = signum ( p1 )
 
-        bn = bp.norm() 
-        if  iszero ( p0 ) or isequal ( p0 + bn , bn ) : s0 = 0
-        if  iszero ( p1 ) or isequal ( p1 + bn , bn ) : s1 = 0
-        
-        if   s0 ==     0 : return x0,  ## 
-        elif s1 ==     0 : return x1,  ##
-        elif s0 * s1 > 0 : return ()   ## no roots
+        if 0 < s0 * s1 : return ()   ## no roots
         #
-        return ( p1 * x0 - p0 * x1 ) / ( p1 - p0) , 
+        return ( p1 * x0 - p0 * x1 ) / ( p1 - p0) ,
 
-    ## make a copy & scale is needed 
-    bp  = _scale_ ( bp + 0 ) 
+    ## 3) quadratic polynomial
+    elif 2 == bp.degree () : 
 
-    ##  norm of polynomial 
-    bn = bp.norm()
+        a0, a1, a2 = bp [ 0 ] , bp [ 1 ] , bp [ 2 ] 
+        A = a0 + a2 - 2 * a1
+        
+        if iszero ( A ) :
+            bp = bp.reduce ( 1 )
+            return solve ( bp )
 
+        B2 = a1 - a0 
+        C  = a0
+        D2 = B2 * B2 - A * C
+
+        xmin = bp.xmin ()
+        xmax = bp.xmax ()
+
+        if iszero ( D2 ) :            
+            t  = - B2 / A
+            xx = bp.x ( t )
+            if    xmin <= xx <= xmax    : return xx , xx      ## double root 
+            elif  isequal ( xmin , xx ) : return xmin, xmin   ## double root on left edge 
+            elif  isequal ( xmax , xx ) : return xmax, xmax   ## double root on rigth edge 
+            else                        : return ()           ## no roots 
+        elif D2 < 0                     : return ()           ## no roots 
+        else :
+            SD = math.sqrt ( D2 )
+            x1 = bp.x ( ( - B2 - SD ) / A ) 
+            x2 = bp.x ( ( - B2 + SD ) / A )
+            roots = [] 
+            for x in  ( x1 , x2 ) :
+                if   xmin <= x <= xmax    : roots.append ( x    )  ## root in the interval
+                elif isequal ( xmin , x ) : roots.append ( xmin )  ## root on left  edge 
+                elif isequal ( xmax , x ) : roots.append ( xmax )  ## root on right edge 
+            return tuple ( roots ) 
+                
     ## check number of roots
     nc = bp.sign_changes()
     if not nc : return ()      ## no roots !   RETURN
@@ -439,7 +469,7 @@ def solve (  bp  , C = 0 , split = 2 ) :
     ## treat separetely roots at the left and right edges
     roots = []
     ## Root at the left edge ? 
-    while 1 <= bp.degree() and isequal ( bp[0] +  bn , bn ) :
+    while 1 <= bp.degree() and ( iszero ( bp [ 0 ] ) or isequal ( bp [ 0 ] +  bn , bn ) ) :
         bp   -= bp[0]
         bp    = bp.deflate_left() 
         bp    = _scale_ ( bp ) 
@@ -449,7 +479,7 @@ def solve (  bp  , C = 0 , split = 2 ) :
     
     roots = []
     ## Root at the right edge ? 
-    while 1 <= bp.degree() and isequal ( bp[-1] +  bn , bn ) :
+    while 1 <= bp.degree() and ( iszero ( bp [ -1 ] ) or isequal ( bp [ -1 ] +  bn , bn ) ) :
         bp -= bp[-1]
         bp  = bp.deflate_right() 
         bp  = _scale_ ( bp ) 
@@ -490,17 +520,19 @@ def solve (  bp  , C = 0 , split = 2 ) :
         #  Remaining points are used to (recursively) split interval into smaller
         #  intervals with presumably smaller number of roots 
         
-        #
         if 0 < split :
 
-            cps = bp.crossing_points()
-            splits = [ xmin ]
+            cps    = bp.crossing_points()
+            xmn    = xmin 
+            xmx    = xmax
+            
+            splits = [ xmn ]
             for xp in cps :
-                if xmin < xp < xmax : splits.append ( xp )
-            splits.append ( xmax ) 
+                if xmn < xp < xmx : splits.append ( xp )
+            splits.append ( xmx ) 
 
             split -= 1
-            
+
         else :
             
             ## use the roots of derivative 
@@ -521,7 +553,7 @@ def solve (  bp  , C = 0 , split = 2 ) :
                                 break 
                         if not found : nrd.append ( r )
                 nrd.sort()                
-            splits =  list(nrd)
+            splits =  list ( nrd )
             
         ## use simple bisection
         if 2 >= len ( splits ) :
@@ -533,8 +565,8 @@ def solve (  bp  , C = 0 , split = 2 ) :
         for s in splits :
             
             bv = bp.evaluate ( s ) 
-            bn = bp.norm() 
-            while 1 <= bp.degree() and isequal ( bv + bn , bn ) :
+            bn = bp.norm     () 
+            while 1 <= bp.degree() and ( iszero ( bv ) or isequal ( bv + bn , bn ) ) :
                 bp -= bv 
                 bp  = bp.deflate  ( s  )
                 bp  = _scale_     ( bp ) 
@@ -544,23 +576,23 @@ def solve (  bp  , C = 0 , split = 2 ) :
                 for q in splits :
                     if  isequal ( q , s ) :
                         splits.remove ( q )
-                
+
         if roots :
-            roots += list ( bp.solve ( split =  ( split - 1 ) ) )
+            roots += bp.solve ( split = split ) 
             roots.sort()
             return tuple ( roots )
 
         if 2 == len ( splits ) :
-            if isequal ( bp.xmin() , splits[0] ) and isequal ( bp.xmax() , splits[1] ) :
-                xmn    = splits[0]
-                xmx    = splits[1]
+            if isequal ( bp.xmin() , splits [ 0 ] ) and isequal ( bp.xmax() , splits [ -1 ] ) :
+                xmn    = splits [  0 ]
+                xmx    = splits [ -1 ]
                 splits = [ xmn , 0.5 * ( xmn + xmx ) , xmx ] 
                 
         ns = len ( splits )
         for i in range ( 1 , ns ) :
-            xl = splits[i-1]
-            xr = splits[i  ]            
-            bb = _scale_ ( Bernstein ( bp , xl , xr ) )
+            xl     = splits [ i - 1 ]
+            xr     = splits [ i     ]            
+            bb     = _scale_ ( Bernstein ( bp , xl , xr ) )
             roots += bb.solve ( split = ( split - 1 ) )
 
         roots.sort()
@@ -608,7 +640,7 @@ def solve (  bp  , C = 0 , split = 2 ) :
 
         if xmin >= xmax : break                             ## BREAK
         
-        ## avoid too many iterations - it decreased the precision 
+        ## avoid too many iterations - it degrades the precision 
         if 10 * ( xmax - xmin )  < l0  : break              ## BREAK  
         
         s0  =  signum ( bp [  0 ] )
@@ -633,7 +665,7 @@ def solve (  bp  , C = 0 , split = 2 ) :
 
     # =========================================================================
     ## start the of root-polishing machinery
-    # ========================================================================= 
+    # =========================================================================
 
     f = bp
 
@@ -940,8 +972,6 @@ def _p_new_init_ ( t ,  *args )  :
 
     for i , arg in enumerate ( largs ) :
         
-        print ( 'PROCESSING/1:', i, arg, type(arg ) , largs ) 
-
         if       isinstance ( arg , num_types             ) : continue 
         elif     isinstance ( arg , VCT_TYPES             ) : continue 
         elif     isinstance ( arg , Ostap.Math.PolySum    ) : continue

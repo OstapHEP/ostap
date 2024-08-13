@@ -1,8 +1,13 @@
 ## New features
 
+ 1. sight improvements for `bernstein`
+    
 ## Backward incompatible
 
 ## Bug fixes
+
+  1. fix a minor bug in `bernstein.solve`
+    `
 
 # v1.12.0.0
 
