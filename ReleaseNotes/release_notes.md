@@ -1,7 +1,8 @@
 ## New features
 
  1. sight improvements for `bernstein`
-    
+ 1. disable Thiele rational interpoliton from tests. sometnjug wrong with the code.
+        
 ## Backward incompatible
 
 ## Bug fixes

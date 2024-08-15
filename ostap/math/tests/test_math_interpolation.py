@@ -110,8 +110,8 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
         item = ( 'Barycentric' , t[0] )  , Ostap.Math.Barycentric ( t[1] ) 
         interpolants.append ( item )
         
-        item = ( 'Thiele'      , t[0] )  , Ostap.Math.Thiele      ( t[1] ) 
-        interpolants.append ( item )
+        ## item = ( 'Thiele'      , t[0] )  , Ostap.Math.Thiele      ( t[1] ) 
+        ## interpolants.append ( item )
 
         for d in range ( 0 , 9 ) :
             item = ( 'FloaterHormann%d' % d , t[0] ) , Ostap.Math.FloaterHormann ( t[1] , d )
@@ -261,8 +261,8 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
     ## 2nd Berrut interpolant 
     interpolants.append ( ( 'Berrut 2nd'  , Ostap.Math.Berrut2nd    ( data ) ) ) 
 
-    ## Thiele rational interpolant 
-    interpolants.append ( ( 'Thiele'      , Ostap.Math.Thiele       ( data ) ) ) 
+    ## ## Thiele rational interpolant 
+    ## interpolants.append ( ( 'Thiele'      , Ostap.Math.Thiele       ( data ) ) ) 
 
 
     for d in range ( 10 ) :
