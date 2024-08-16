@@ -9,7 +9,7 @@
 ## Bug fixes
 
   1. fix a minor bug in `bernstein.solve`
-  1. fix couple of recent bugd in `histos.graphs`    `
+  1. fix couple of recent bugs in `histos.graphs`    `
 
 # v1.12.0.0
 
