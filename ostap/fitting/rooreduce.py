@@ -842,22 +842,16 @@ def _rhist_reduce_ ( graph ) :
     - see `ROOT.TGraphAsymmErrors`
     """
     _ , content = GR.graph_asymerrors_reduce ( graph )
-    
+
     rplotatts   = graph.getYAxisLabel () , \
                   graph.getYAxisMin   () , \
                   graph.getYAxisMax   () , \
                   graph.getNominalBinWidth() ## new! 
-    
+
     payload     = content + ( rplotatts , ) 
     return _rhist_factory_ , payload 
 
 ROOT.RooHist.__reduce__ = _rhist_reduce_
-
-
-
-
-
-
 
 # =============================================================================
 ## Reduce <code>Ostap::MoreRooFit::TwoVars</code> objects
