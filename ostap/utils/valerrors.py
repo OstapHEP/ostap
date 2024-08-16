@@ -144,7 +144,7 @@ class AsymErrors (object) :
         ##
         return self 
     # =========================================================================
-    ## Quadratic sum of two AsymErrors object 
+    ## Quadratic sum of two AsymErrors objects 
     def __add__ ( self , other ) :
         """Quadratic sum of two AsymErrors object"""
         if not isinstance ( other , AsymErrors ) : return NotImplemented
@@ -157,16 +157,22 @@ class AsymErrors (object) :
     def __imul__ ( self , other ) :
         """Self-scaling"""
         if not isinstance ( other , num_types ) : return NotImplemented
-        self.__negative *= other
-        self.__positive *= other
+        ## 
+        a = self.__negative * other
+        b = self.__positive * other
+        self.__negative = min ( a , b )
+        self.__positive = max ( a , b )        
         return self 
     # =========================================================================
     ## self-scaling
     def __idiv__ ( self , other ) :
         """Self-scaling"""
         if not isinstance ( other , num_types ) : return NotImplemented
-        self.__negative /= other
-        self.__positive /= other
+        ##
+        a = self.__negative / other
+        b = self.__positive / other
+        self.__negative = min ( a , b )
+        self.__positive = max ( a , b )        
         return self 
     # ==========================================================================
     ## Self-scaling
@@ -228,6 +234,9 @@ class AsymErrors (object) :
     def __str__  ( self ) : return self.toString () 
     def __repr__ ( self ) : return self.__str__ () 
 
+
+# =============================================================================
+the_types = num_types + ( VE , ) 
 # =============================================================================
 ## @class ValWithErrors
 #  Value with asymmetric error
@@ -267,11 +276,11 @@ class ValWithErrors(object) :
         >>> value = ValWihErrors ( VE ( 1 , 0.5**2 ) , AsymErrors ( 0.5 ,0.7  ) 
         """            
         if   isinstance ( value , ValWithMultiErrors ) :
-            self.__value    = value.value
+            self.__value    = float ( value.value ) 
             self.__errors   = AsymErrors ( value.neg_error , value.pos_error )
         elif isinstance ( value , ValWithErrors ) :
-            self.__value    = value.value
-            self.__errors   = value.errors            
+            self.__value    = float ( value.value ) 
+            self.__errors   = AsymErrors ( value.neg_error , value.pos_error )
         elif isinstance ( value , VE ) :
             if 0 <= value.cov2() : error = value.error ()
             else                 : error = 0            
@@ -350,10 +359,24 @@ class ValWithErrors(object) :
         >>> vae = ...
         >>> vae *= 5 
         """
-        if not isinstance ( other , num_types ) : return NotImplemented
-        self.__value  *= other
-        self.__errors *= other
-        return self
+        if isinstance ( other , VE ) and other.cov2() <= 0 : other = float ( other ) 
+        ## 
+        if isinstance ( other , num_types ) :
+            self.__value  *= other
+            self.__errors *= other
+            return self
+        elif isinstance ( other , VE ) : 
+            a  = self.__value
+            ae = self.__errors
+            b  = other.value()
+            be = other.error() 
+            be = AE ( -be , be )
+            self.__value  = a  * b 
+            self.__errors = ae * b + be * a 
+            return self
+        
+        return NotImplemented
+    
     # =========================================================================
     ## self-scaling
     #  @code
@@ -365,10 +388,19 @@ class ValWithErrors(object) :
         >>> vae = ...
         >>> vae /= 5 
         """
-        if not isinstance ( other , num_types ) : return NotImplemented
-        self.__value  /= other
-        self.__errors /= other
-        return self 
+        if isinstance ( other , VE ) and other.cov2() <= 0 : other = float ( other )
+        ## 
+        if isinstance ( other , num_types ) :
+            if iszero ( other ) : return NotImplemented            
+            self.__value  /= other
+            self.__errors /= other
+            return self
+        elif isinstance ( other , VE ) :
+            if iszero ( other.value() ) : return NotImplemented
+            self *= ( 1.0 / other ) 
+            return self 
+        
+        return NotImplemented         
     # =========================================================================
     ## Self-scaling
     __itruediv__ = __idiv__    
@@ -385,10 +417,13 @@ class ValWithErrors(object) :
         >>> vae * 5
         >>> 5 * vae 
         """
-        if not isinstance ( other , num_types ) : return NotImplemented
-        r  = copy.copy ( self ) 
-        r *= other
-        return r 
+        if isinstance ( other , the_types ) :
+            r  = copy.copy ( self ) 
+            r *= other
+            return r
+        
+        return NotImplemented 
+            
     # ==========================================================================
     ## Division/scaling
     #  @code
@@ -401,13 +436,83 @@ class ValWithErrors(object) :
         >>> vae * 5
         >>> 5 * vae 
         """
-        if not isinstance ( other , num_types ) : return NotImplemented
+        if not isinstance ( other , the_types ) : return NotImplemented
         r  = copy.copy ( self ) 
         r /= other
         return r 
     # ==========================================================================
     __rmul__    = __mul__
     __truediv__ = __div__ 
+
+    # ==========================================================================
+    # add scalar
+    def __iadd__ ( self , other ) :
+        ## 
+        if   isinstance ( other , VAE       ) :
+            self.__value  += other.value
+            self.__errors += other.errors
+            return self
+        elif isinstance ( other , VE        ) : 
+            self.__value  += other.value() 
+            if 0 < other.cov2() : 
+                oe = other.error() 
+                self.__errors += AE ( -oe , oe )
+            return self
+        elif isinstance ( other , num_types ) : 
+            self.__value += other
+            return self
+            
+        return NotImplemented 
+
+    # ===========================================================================
+    # subtract scalar
+    def __isub__ ( self , other ) :
+        ##
+        if   isinstance ( other , VAE       ) :
+            self.__value  -=        other.value
+            self.__errors += ( -1 * other.errors )
+            return self
+        elif isinstance ( other , VE        ) : 
+            self.__value  -= other.value() 
+            if 0 < other.cov2() : 
+                oe = other.error() 
+                self.__errors += AE ( -oe , oe )
+            return self
+        elif isinstance ( other , num_types ) : 
+            self.__value -= other
+            return self
+
+        return NotImplemented 
+
+    # ==========================================================================
+    # add scalar
+    def __add__ ( self , other ) :
+        if not isinstance ( other , the_types ) : return NotImplemented        
+        r  = copy.copy ( self ) 
+        r += other
+        return r 
+    # ==========================================================================
+    # subract scalar
+    def __sub__ ( self , other ) :
+        if not isinstance ( other , the_types ) : return NotImplemented        
+        r  = copy.copy ( self ) 
+        r -= other
+        return r     
+    # ==========================================================================
+    # add scalar
+    def __radd__ ( self , other ) :
+        if not isinstance ( other , the_types ) : return NotImplemented        
+        r  = copy.copy ( self ) 
+        r += other
+        return r 
+    # ==========================================================================
+    # subtract scalar
+    def __rsub__ ( self , other ) :
+        if not isinstance ( other , the_types ) : return NotImplemented        
+        r  = copy.copy ( self )
+        r *= -1
+        r += other 
+        return r 
     
     # ========================================================================
     ## conversion to float 
@@ -504,12 +609,12 @@ class ValWithMultiErrors(object) :
         self.__errors = [] 
         if   isinstance ( value , ValWithMultiErrors ) :
             
-            self.__value   = value.value
-            self.__errors += list ( value.errors )
+            self.__value   = float ( value.value  ) 
+            self.__errors += list  ( value.errors )
             
         elif   isinstance ( value , ValWithErrors ) :
             
-            self.__value   = value.value
+            self.__value   = flaot ( value.value  ) 
             self.__errors  .append ( value.errors )
             
         elif isinstance ( value , VE ) :
@@ -637,7 +742,50 @@ class ValWithMultiErrors(object) :
         if not isinstance ( other , num_types ) : return NotImplemented
         r  = copy.copy ( self )
         r /= other
+        return r
+    
+    # ==========================================================================
+    # add scalar
+    def __iadd__ ( self , other ) :
+        if not isinstance ( other , num_types ) : return NotImplemented
+        self.__value += other
+        return self
+    # ===========================================================================
+    # subtract scalar
+    def __isub__ ( self , other ) :
+        if not isinstance ( other , num_types ) : return NotImplemented
+        self.__value -= other
+        return self
+    # ==========================================================================
+    # add scalar
+    def __add__ ( self , other ) :
+        if not isinstance ( other , num_types ) : return NotImplemented        
+        r  = copy.copy ( self ) 
+        r += other
         return r 
+    # ==========================================================================
+    # subract scalar
+    def __sub__ ( self , other ) :
+        if not isinstance ( other , num_types ) : return NotImplemented        
+        r  = copy.copy ( self ) 
+        r -= other
+        return r     
+    # ==========================================================================
+    # add scalar
+    def __radd__ ( self , other ) :
+        if not isinstance ( other , num_types ) : return NotImplemented        
+        r  = copy.copy ( self ) 
+        r += other
+        return r 
+    # ==========================================================================
+    # subtract scalar
+    def __rsub__ ( self , other ) :
+        if not isinstance ( other , num_types ) : return NotImplemented        
+        r  = copy.copy ( self )
+        r *= -1
+        r += other 
+        return r 
+
     # ==========================================================================
     __rmul__    = __mul__
     __truediv__ = __div__ 

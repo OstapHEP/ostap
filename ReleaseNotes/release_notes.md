@@ -2,13 +2,14 @@
 
  1. sight improvements for `bernstein`
  1. disable Thiele rational interpoliton from tests. sometnjug wrong with the code.
-        
+ 1. extend a bit functionality of asymmetric errors (needed for graphs&plots)
+         
 ## Backward incompatible
 
 ## Bug fixes
 
   1. fix a minor bug in `bernstein.solve`
-    `
+  1. fix couple of recent bugd in `histos.graphs`    `
 
 # v1.12.0.0
 
