@@ -65,6 +65,73 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.utils' )
 else                       : logger = getLogger( __name__ )
 del getLogger 
 # =============================================================================
+## Formats for nice printout of the object with errors   ( string + exponent)
+#  @code
+#  fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 ) ) 
+#  @endcode
+#  @return formats for nice string and the separate exponent 
+def fmt_pretty_errs ( value              ,
+                      errors      = ()   , 
+                      width       = 8    ,
+                      precision   = 6    ) : 
+    """ Formats for nice printout of the object with errors  ( strings + exponent)
+    >>> fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 )  ) 
+    """
+    
+    assert isinstance ( width     , integer_types ) and \
+        isinstance ( precision , integer_types ) and 2 <= precision < width, \
+        "Invalid width/precision parameters %s/%s" % ( width , precision ) 
+    
+    v = value
+    e = max ( abs ( e ) for e in errors ) if errors else abs ( v ) 
+    
+    ## quantity that defines the format 
+    av    = max ( abs ( v ) , e )
+
+    if   100 <= av < 1000 :
+        
+        fmtv  = '%%+%d.%df' %  ( width , precision - 2 )
+        fmte  = '%%-%d.%df' %  ( width , precision - 2 )        
+        return fmtv, fmte , 0
+    
+    elif 10  <= av < 100  :
+        
+        fmtv  = '%%+%d.%df' %  ( width , precision - 1 )
+        fmte  = '%%-%d.%df' %  ( width , precision - 1 )
+        return fmtv  , fmte , 0
+    
+    elif 0.1 <= av < 10 :
+        
+        fmtv  = '%%+%d.%df' %  ( width , precision     )
+        fmte  = '%%-%d.%df' %  ( width , precision     )
+        return fmtv , fmte , 0
+
+    if iszero ( av ) :
+        fmtv  = '%%+%d.%df' %  ( width , precision     )
+        fmte  = '%%-%d.%df' %  ( width , precision     )
+        return fmtv , fmte , 0 
+
+    #
+    ## here we scale input data and try to get formats for scaled data
+    #
+    
+    v_a , v_e = frexp10 ( av )
+    v_ee  = v_e - 1
+    n , r  = divmod  ( v_ee , 3 )    
+
+    scale  = 10** ( r - v_ee  )    
+    v     *= scale
+    errs   = [ e*scale for e in errors ]  
+
+    #
+    ## get formats for scaled data
+    # 
+    fmtv , fmte , p = fmt_pretty_errs ( v , errs , width = width , precision = precision )
+    
+    return fmtv , fmte , p + 3 * n 
+
+
+# =============================================================================
 ## Format for nice printout of the floating number (string + exponent)
 #  @code
 #  fmt , expo = fmt_pretty_float ( number ) 
@@ -79,6 +146,8 @@ def fmt_pretty_float ( value , width = 8 , precision = 6 ) :
     assert isinstance ( value     , num_types     ),\
            'Invalid value parameter %s/%s'   % ( value , type ( value ) )
 
+    value = float ( value )
+    
     ## not finite?
     if not isfinite ( value ) : return "%s" , 0
 
@@ -281,70 +350,6 @@ def fmt_pretty_2ve ( value              ,
     fmt , fmtv  , fmte  , p = fmt_pretty_2ve ( v , eh , el , width , precision , parentheses )
     
     return fmt , fmtv , fmte  , p + 3 * n 
-
-
-
-# ===============================================================================
-## Formats for nice printout of the object with errors   ( string + exponent)
-#  @code
-#  fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3)   ) 
-#  @endcode
-#  @return formats for nice string and the separate exponent 
-def fmt_pretty_errs ( value              ,
-                      errors      = ()   , 
-                      width       = 8    ,
-                      precision   = 6    ) : 
-    """ Formats for nice printout of the object with errors  ( strings + exponent)
-    >>> fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 )  ) 
-    """
-    
-    assert isinstance ( width     , integer_types ) and \
-        isinstance ( precision , integer_types ) and 2 <= precision < width, \
-        "Invalid width/precision parameters %s/%s" % ( width , precision ) 
-    
-    v = value 
-    e = max ( abs ( e ) for e in errors ) if errors else abs ( v ) 
-    
-    ## quantity that defines the format 
-    av    = max ( abs ( v ) , e )
-
-    if   100 <= av < 1000 :
-        
-        fmtv  = '%%+%d.%df' %  ( width , precision - 2 )
-        fmte  = '%%-%d.%df' %  ( width , precision - 2 )        
-        return fmtv, fmte , 0
-    
-    elif 10  <= av < 100  :
-        
-        fmtv  = '%%+%d.%df' %  ( width , precision - 1 )
-        fmte  = '%%-%d.%df' %  ( width , precision - 1 )
-        return fmtv  , fmte , 0
-    
-    elif 0.1 <= av < 10 :
-        
-        fmtv  = '%%+%d.%df' %  ( width , precision     )
-        fmte  = '%%-%d.%df' %  ( width , precision     )
-        return fmtv , fmte , 0
-
-    if iszero ( av ) :
-        fmtv  = '%%+%d.%df' %  ( width , precision     )
-        fmte  = '%%-%d.%df' %  ( width , precision     )
-        return fmtv , fmte , 0 
-
-    v_a , v_e = frexp10 ( av )
-
-    v_ee  = v_e - 1
-    
-    n , r  = divmod  ( v_ee , 3 )    
-
-    
-    scale  = 10** ( r - v_ee  )    
-    v     *= scale
-    errs   = [ e*scale for e in errors ]  
-        
-    fmtv , fmte , p = fmt_pretty_errs ( v , errs , width = width , precision = precision )
-    
-    return fmtv   , fmte  , p + 3 * n 
 
 
 # =============================================================================
@@ -567,7 +572,7 @@ if '__main__' == __name__ :
     for i in range ( -10 , 20 ) :
         v = vv * ( 10**i )
         print ('VALUE' ,  v , pretty_float ( v ) )
-        print ('FMTS'  ,  fmt_pretty_errs  (  v , v, v ,  ) )
+        print ('FMTS'  ,  fmt_pretty_errs  (  v , ( v, v ) ) ) 
         
         
     
