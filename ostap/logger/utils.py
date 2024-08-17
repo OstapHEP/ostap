@@ -45,18 +45,18 @@ __all__     = (
     ##
     'multicolumn'        , ## format the list of strings into multicolumn block
     'DisplayTree'        , ## display tree-like structures 
-    )
+)
 # =============================================================================
-import time, os, sys, math  ## attention here!!
+from   ostap.core.ostap_types import integer_types, num_types  
 from   ostap.logger.logger    import logVerbose,  logDebug, logInfo, logWarning, logError
-from   ostap.math.base        import isfinite 
+from   ostap.math.base        import isfinite, iszero, frexp10
 from   ostap.logger.mute      import ( mute   , mute_py ,
                                        tee_py , tee_cpp ,
                                        output , silence , silence_py ,
                                        MuteC  , MutePy  ,
                                        TeeCpp , TeePy   , OutputC    )
 from   ostap.utils.basic      import NoContext
-import math 
+import time, os, sys, math  ## attention here!!
 # =============================================================================
 # logging 
 # =============================================================================
@@ -64,8 +64,6 @@ from   ostap.logger.logger    import getLogger, logColor, logNoColor
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.utils' )
 else                       : logger = getLogger( __name__ )
 del getLogger 
-# =============================================================================
-
 # =============================================================================
 ## Format for nice printout of the floating number (string + exponent)
 #  @code
@@ -77,15 +75,18 @@ def fmt_pretty_float ( value , width = 8 , precision = 6 ) :
     - return format for nice string and the separate exponent 
     >>> fmt , n = fmt_pretty_float ( number ) 
     """
-    from   ostap.core.ostap_types import integer_types, num_types  
-
+    
     assert isinstance ( value     , num_types     ),\
            'Invalid value parameter %s/%s'   % ( value , type ( value ) )
 
     ## not finite?
-    from ostap.math.base import isfinite 
     if not isfinite ( value ) : return "%s" , 0
+
+    fmtv , _ , expo = fmt_pretty_errs ( value , width = width , precision = precision ) 
     
+    return fmt, expo
+
+    """
     assert isinstance ( width     , integer_types ) and \
            isinstance ( precision , integer_types ) and 2 <= precision < width, \
            "Invalid width/precision parameters %s/%s" % ( width , precision )
@@ -98,14 +99,10 @@ def fmt_pretty_float ( value , width = 8 , precision = 6 ) :
     elif 10  <= av < 100  :
         fmt1 = '%%+%d.%df' % ( width , precision - 1 )
         return fmt1 , 0  
-    elif 1   <= av < 10   :
-        fmt0 = '%%+%d.%df' % ( width , precision     )
-        return fmt0 , 0  
-    elif 0.1 <= av < 1    :
+    elif 0.1 <= av < 10   :
         fmt0 = '%%+%d.%df' % ( width , precision     )
         return fmt0 , 0  
     
-    from  ostap.math.base        import frexp10, iszero    
     if iszero ( av ) :
         fmt0 = '%%+%d.%df' % ( width , precision )
         return fmt0 , 0  
@@ -125,7 +122,7 @@ def fmt_pretty_float ( value , width = 8 , precision = 6 ) :
     fmt , p = fmt_pretty_float ( ra , width , precision )
 
     return fmt , p + 3 * n
-
+    """
 
 # ===============================================================================
 ## Formats nice printout of the ValueWithError object  ( string + exponent)
@@ -140,7 +137,6 @@ def fmt_pretty_ve ( value , width = 8 , precision = 6 , parentheses = True ) :
     """
     
     from ostap.math.ve          import VE
-    from ostap.core.ostap_types import integer_types 
     
     v =           value.value ()
     e = max ( 0 , value.error () )
@@ -178,8 +174,6 @@ def fmt_pretty_ve ( value , width = 8 , precision = 6 , parentheses = True ) :
         if parentheses : fmt = '( ' + fmt + ' )'
         return fmt , fmtv , fmte , 0  
 
-
-    from  ostap.math.base        import frexp10, iszero 
     if iszero ( av ) :
         fmtv = '%%+%d.%df' % ( width , precision     )
         fmte = '%%-%d.%df' % ( width , precision     )
@@ -216,7 +210,6 @@ def fmt_pretty_2ve ( value              ,
                      parentheses = True ) :
     
     from ostap.math.ve          import VE
-    from ostap.core.ostap_types import integer_types, num_types  
 
     assert isinstance ( value     , num_types     ),\
            'Invalid value parameter %s/%s'   % ( value , type ( value ) )      
@@ -225,7 +218,7 @@ def fmt_pretty_2ve ( value              ,
     assert isinstance ( el       , num_types     ),\
            'Invalid el    parameter %s/%s'   % ( el    , type ( el    ) )      
 
-    v = value 
+    v = value
     e = max ( abs ( eh ), abs ( el ) )
 
     assert isinstance ( width     , integer_types ) and \
@@ -267,7 +260,6 @@ def fmt_pretty_2ve ( value              ,
         if parentheses : fmt = '( ' + fmt + ' )'        
         return fmt , fmtv , fmte , 0 
 
-    from  ostap.math.base        import frexp10, iszero
     if iszero ( av ) :
         fmtv  = '%%+%d.%df' %  ( width , precision     )
         fmte  = '%%-%d.%df' %  ( width , precision     )
@@ -276,21 +268,83 @@ def fmt_pretty_2ve ( value              ,
         return fmt , fmtv , fmte , 0 
                 
     v_a , v_e = frexp10 ( av )
-
-    v   /= 10**(v_e-1)
-    eh  /= 10**(v_e-1)
-    el  /= 10**(v_e-1)
-    v_e -= 1
+    v_a *= 10
+    v_e -= 1 
 
     n , r = divmod  ( v_e , 3 )    
 
-    v  *= 10**r
-    eh *= 10**r 
-    el *= 10**r 
+    scale = 10**r 
+    v    *= scale 
+    eh   *= scale 
+    el   *= scale 
 
     fmt , fmtv  , fmte  , p = fmt_pretty_2ve ( v , eh , el , width , precision , parentheses )
     
     return fmt , fmtv , fmte  , p + 3 * n 
+
+
+
+# ===============================================================================
+## Formats for nice printout of the object with errors   ( string + exponent)
+#  @code
+#  fmtv , fmte , expo = fmt_pretty_errs ( number , e1 , e2 , e3, ) 
+#  @endcode
+#  @return formats for nice string and the separate exponent 
+def fmt_pretty_errs ( value              ,
+                      *errors            , 
+                      width       = 8    ,
+                      precision   = 6    ) : 
+    """ Formats for nice printout of the object with errors  ( strings + exponent)
+    >>> fmtv , fmte , expo = fmt_pretty_errs ( number , e1 , e2 , e3, ) 
+    """
+    
+    assert isinstance ( width     , integer_types ) and \
+        isinstance ( precision , integer_types ) and 2 <= precision < width, \
+        "Invalid width/precision parameters %s/%s" % ( width , precision ) 
+    
+    v = value 
+    e = max ( abs ( e ) for e in errors ) if errors else abs ( v ) 
+    
+    ## quantity that defines the format 
+    av    = max ( abs ( v ) , e )
+
+    if   100 <= av < 1000 :
+        
+        fmtv  = '%%+%d.%df' %  ( width , precision - 2 )
+        fmte  = '%%-%d.%df' %  ( width , precision - 2 )        
+        return fmtv, fmte , 0
+    
+    elif 10  <= av < 100  :
+        
+        fmtv  = '%%+%d.%df' %  ( width , precision - 1 )
+        fmte  = '%%-%d.%df' %  ( width , precision - 1 )
+        return fmtv  , fmte , 0
+    
+    elif 0.1 <= av < 10 :
+        
+        fmtv  = '%%+%d.%df' %  ( width , precision     )
+        fmte  = '%%-%d.%df' %  ( width , precision     )
+        return fmtv , fmte , 0
+
+    if iszero ( av ) :
+        fmtv  = '%%+%d.%df' %  ( width , precision     )
+        fmte  = '%%-%d.%df' %  ( width , precision     )
+        return fmtv , fmte , 0 
+
+    v_a , v_e = frexp10 ( av )
+
+    v_ee  = v_e - 1
+    
+    n , r  = divmod  ( v_ee , 3 )    
+
+    
+    scale  = 10** ( r - v_ee  )    
+    v     *= scale
+    errs   = [ e*scale for e in errors ]  
+        
+    fmtv , fmte , p = fmt_pretty_errs ( v , *errs  , width = width , precision = precision )
+    
+    return fmtv   , fmte  , p + 3 * n 
 
 
 # =============================================================================
@@ -505,18 +559,18 @@ class DisplayTree ( object ) :
     
 # =============================================================================
 if '__main__' == __name__ :
-    
-    from ostap import banner
-    logger.info ( __file__  + '\n' + banner )
-    logger.info ( 80*'*'   )
-    logger.info ( __doc__  )
-    logger.info ( 80*'*' )
-    logger.info ( ' Author  : %s' %         __author__    ) 
-    logger.info ( ' Version : %s' %         __version__   ) 
-    logger.info ( ' Date    : %s' %         __date__      )
-    logger.info ( ' Symbols : %s' %  list ( __all__     ) )
-    logger.info ( 80*'*' ) 
+
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+
+    vv = 1./3.0 
+    for i in range ( -10 , 20 ) :
+        v = vv * ( 10**i )
+        print ('VALUE' ,  v , pretty_float ( v ) )
+        print ('FMTS'  ,  fmt_pretty_errs  (  v , v, v ,  ) )
+        
+        
     
 # =============================================================================
-# The END 
+##                                                                     The END 
 # =============================================================================

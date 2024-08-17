@@ -56,17 +56,19 @@ class ErrMode(enum.IntEnum):
     MIN        = 1  ## Use minimal uncertainty 
     MAX        = 2  ## Use maximal uncertainty 
     MEAN       = 3  ## Use mean
-    AVERAGE    = 3  ## Use mean 
+    AVERAGE    = 3  ## Use mean
     GEOMETRIC  = 4  ## Use geometric mean
+    QUADRATIC  = 5  ## USe quadratic (root mean sqaure) 
+    RMS        = 5  ## USe quadratic (root mean sqaure) 
 
 # =============================================================================
-## get the reference error from the list of uncertainties
+## get the `reference/representative error' from the list of uncertainties
 #  @code
 #  error = ref_error ( 'total'  , 0.1 , 0.2 , 0.3 ) 
 #  error = ref_error ( Mode.MIN , 0.1 , 0.2 , 0.3 ) 
 #  @endcode 
 def ref_error ( mode , error , *errors ) :
-    """Get the reference error from the list of uncertainties
+    """Get the `reference/representative error' from the list of uncertainties
     >>> error = ref_error ( 'total'  , 0.1 , 0.2 , 0.3 ) 
     >>> error = ref_error ( Mode.MIN , 0.1 , 0.2 , 0.3 ) 
     """
@@ -79,10 +81,13 @@ def ref_error ( mode , error , *errors ) :
         
         umode = model.upper()
         
-        if   umode in ( 'MIMIMAL' , 'MINIMUM' , 'MIN' , 'MN' ) : umode = ErrMode.MIN    .name 
-        elif umode in ( 'MAXIMAL' , 'MAXIMUM' , 'MAX' , 'MX' ) : umode = ErrMode.MAX    .name 
-        elif umode in ( 'A' , 'AV', 'AVE' , 'MEAN'           ) : umode = ErrMode.AVERAGE.name 
-        elif umode                                             : umode = ErrMode.TOTAL  .name 
+        if   umode in ( 'MIMIMAL'    , 'MINIMUM' , 'MIN'     , 'MN'        ) : umode = ErrMode.MIN      .name 
+        elif umode in ( 'MAXIMAL'    , 'MAXIMUM' , 'MAX'     , 'MX'        ) : umode = ErrMode.MAX      .name 
+        elif umode in ( 'A' , 'AV'   , 'AVE'     , 'MEAN'                  ) : umode = ErrMode.AVERAGE  .name        
+        elif umode in ( 'G' , 'GEO'  , 'GEOM'    , 'GEOMET'  , 'GEOMETRIC' ) : umode = ErrMode.QUADRATIC.name
+        elif umode in ( 'Q' , 'QUAD' , 'QUADR'   , 'QUADRAT' , 'QUADRATIC' ) : umode = ErrMode.QUADRATIC.name
+        elif umode in ( 'R' , 'RMS'                                        ) : umode = ErrMode.QUADRATIC.name
+        elif umode                                                           : umode = ErrMode.TOTAL    .name 
         
         assert umode in ErrMode.__members__ ,\
                'ref_error: Unknown string mode: %s' % mode 
@@ -101,22 +106,26 @@ def ref_error ( mode , error , *errors ) :
     assert isinstance ( umode , ErrMode ),\
            'ref_error: Unknown mode %s' % umode
 
-    if umode == ErrMode.TOTAL :        
+    if umode == ErrMode.TOTAL :
+        
         result = error * error 
-        for e in errors : result += e*e 
+        for e in errors : result +=  e * e 
         return math.sqrt ( result )
     
-    elif umode == ErrMode.MIN :        
+    elif umode == ErrMode.MIN :
+        
         result = abs ( error )  
         for e in errors : result = min ( result , abs ( e ) )            
         return result
     
-    elif umode == ErrMode.MAX :        
+    elif umode == ErrMode.MAX :
+        
         result = abs ( error )  
         for e in errors : result = max ( result , abs ( e ) )            
         return result
     
-    elif umode == ErrMode.GEOMETRIC :        
+    elif umode == ErrMode.GEOMETRIC :
+        
         result = abs ( error )
         ne     = 1 
         for e in errors :
@@ -126,11 +135,21 @@ def ref_error ( mode , error , *errors ) :
                 ne     += 1                 
         return result if 0 == result else pow ( result , 1.0 / ne )
     
-    else :
+    elif umode == ErrMode.QUADRATIC :
+        
         result = abs ( error )
         ne     = 1 
         for e in errors :
-            result += ae
+            result += e * e 
+            ne     += 1                 
+        return result if 0 == result else math.sqrt ( result / ne )
+    
+    else :
+        
+        result = abs ( error )
+        ne     = 1 
+        for e in errors :
+            result += abs ( e ) 
             ne     += 1                 
         return result  / float ( ne ) 
 
@@ -150,16 +169,13 @@ def ref_error ( mode , error , *errors ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20
 def round_N ( value , n ) :
-    """Round value to to N-digits
-    
+    """Round value to to N-digits    
     >>> new_value = round_N ( value , 3 )    
     """
     
     assert isinstance ( n , integer_types ) and 0 <= n,\
-           "round_N: invalid ``n'' %s (must be non-negative integer)" % n 
+           "round_N: invalid `n' %s (must be non-negative integer)" % n 
 
-    ## return cpp_round_N ( value , n )
-    
     v = float ( value )
     
     if 0 == v : return 0
