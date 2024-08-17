@@ -287,15 +287,15 @@ def fmt_pretty_2ve ( value              ,
 # ===============================================================================
 ## Formats for nice printout of the object with errors   ( string + exponent)
 #  @code
-#  fmtv , fmte , expo = fmt_pretty_errs ( number , e1 , e2 , e3, ) 
+#  fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3)   ) 
 #  @endcode
 #  @return formats for nice string and the separate exponent 
 def fmt_pretty_errs ( value              ,
-                      *errors            , 
+                      errors      = ()   , 
                       width       = 8    ,
                       precision   = 6    ) : 
     """ Formats for nice printout of the object with errors  ( strings + exponent)
-    >>> fmtv , fmte , expo = fmt_pretty_errs ( number , e1 , e2 , e3, ) 
+    >>> fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 )  ) 
     """
     
     assert isinstance ( width     , integer_types ) and \
@@ -342,7 +342,7 @@ def fmt_pretty_errs ( value              ,
     v     *= scale
     errs   = [ e*scale for e in errors ]  
         
-    fmtv , fmte , p = fmt_pretty_errs ( v , *errs  , width = width , precision = precision )
+    fmtv , fmte , p = fmt_pretty_errs ( v , errs , width = width , precision = precision )
     
     return fmtv   , fmte  , p + 3 * n 
 
