@@ -67,13 +67,13 @@ del getLogger
 # =============================================================================
 ## Format for nice printout of the floating number (string + exponent)
 #  @code
-#  fmt , n = fmt_pretty_float ( number ) 
+#  fmt , expo = fmt_pretty_float ( number ) 
 #  @endcode
 #  @return format for nice string and the separate exponent 
 def fmt_pretty_float ( value , width = 8 , precision = 6 ) :
     """Format for nice printout of the floating number
     - return format for nice string and the separate exponent 
-    >>> fmt , n = fmt_pretty_float ( number ) 
+    >>> fmt , expo = fmt_pretty_float ( number ) 
     """
     
     assert isinstance ( value     , num_types     ),\
@@ -84,7 +84,7 @@ def fmt_pretty_float ( value , width = 8 , precision = 6 ) :
 
     fmtv , _ , expo = fmt_pretty_errs ( value , width = width , precision = precision ) 
     
-    return fmt, expo
+    return fmtv, expo
 
     """
     assert isinstance ( width     , integer_types ) and \
