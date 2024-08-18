@@ -24,7 +24,7 @@ from   ostap.math.finitediffs import CentralRule, ForwardOpen, BackwardOpen
 from   ostap.stats.counters   import SE
 from   ostap.utils.timing     import timing
 import ostap.logger.table     as     T
-from   ostap.logger.utils     import pretty_ve
+from   ostap.logger.pretty    import pretty_ve
 from   ostap.utils.utils      import wait
 from   ostap.plotting.canvas  import use_canvas
 import ROOT, random, math 
