@@ -361,7 +361,7 @@ def pretty_err2 ( value              ,
                                            errhigh     = ehigh       ,
                                            width       = width       ,
                                            precision   = precision   ,
-                                           parenthesis = parentheses )
+                                           parentheses = parentheses )
 
     values = value , abs ( elow ) , ehigh    
     if expo :
