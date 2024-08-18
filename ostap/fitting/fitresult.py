@@ -58,7 +58,7 @@ def _fit_table_ ( rfit , title = '' , prefix = '' ) :
     """
     from  ostap.fitting.utils    import fit_status, cov_qual
     from ostap.logger.colorized  import attention, allright
-    from ostap.logger.utils      import pretty_float, pretty_ve, pretty_2ve, fmt_pretty_ve 
+    from ostap.logger.pretty     import pretty_float, pretty_ve, fmt_pretty_ve 
     
     header = ( '', 'Unit' , 'Value' )
 
@@ -161,7 +161,7 @@ def _fit_table_ ( rfit , title = '' , prefix = '' ) :
             v     = VE ( value , error * error )
             ##
             fmt , fmtv , fmte , n = fmt_pretty_ve  ( v )
-            s = fmt % ( value / 10**n , error / 10**n )
+            s  = fmt % ( value / 10**n , error / 10**n )
             nv = n 
         if n : n = '[10^%+d]' % n
         else : n = '' 

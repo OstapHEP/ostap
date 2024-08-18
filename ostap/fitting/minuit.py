@@ -773,7 +773,7 @@ def _mn_table_ ( self , title =  '' , prefix = '' ) :
     rows   = [] 
 
     from ostap.fitting.utils import fit_status  , cov_qual
-    from ostap.logger.utils  import pretty_float, pretty_ve, pretty_2ve 
+    from ostap.logger.pretty import pretty_float, pretty_ve
 
     status = self.GetStatus()
     if status :

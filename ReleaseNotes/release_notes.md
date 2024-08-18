@@ -3,7 +3,9 @@
  1. sight improvements for `bernstein`
  1. disable Thiele rational interpoliton from tests. sometnjug wrong with the code.
  1. extend a bit functionality of asymmetric errors (needed for graphs&plots)
-         
+ 1. collect pretty-print functions into new module `ostap.logger.pretty`
+ 1. extend and improve pretty-print stuff
+       
 ## Backward incompatible
 
 ## Bug fixes

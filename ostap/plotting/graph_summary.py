@@ -999,25 +999,6 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    conf  = { 'marker_style' : 20 , 'marker_size' : 2 , 'marker_color' : 1 , 'line_color' : 1 , 'label_position' : 4.0 }
-    aconf = {}
-    aconf.update ( conf )
-    aconf.update ( { 'marker_size' : 4 , 'marker_style' : 1 } )
-    
-    
-    data = [ Record (3 ,0.5,0.5 ,0.5, label = 'LHCb' , **conf ) ,
-             Record ( VE(2.5,0.3**3)  , (-0.8,0.1) ,0.5, label = 'LHCb-2' , **conf ) ,
-             Limit  ( 1.4 , 1.e-6 , label = 'BESIII' , **aconf )  
-             ]
-
-    ave = Average ( VE(2.0, 0.2**2 ) , (-0.3, 0.8) , label = 'PDG' , **conf )  
-
-    data.append ( ave  )
-    
-    result1 = draw_summary ( data , average = ave  , vmax = 6 )
-
-    result2 = draw_summary ( data , average = ave  , transpose = True , vmax = 6 )
-
     
 # =============================================================================
 ##                                                                     The END

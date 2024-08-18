@@ -21,6 +21,7 @@ import ostap.histos.histos
 import ostap.histos.param
 import ostap.fitting.param 
 from   ostap.logger.colorized import allright  
+from   ostap.logger.pretty    import pretty_float, pretty_ve
 import ROOT, math 
 # =============================================================================
 # logging 
@@ -1536,7 +1537,6 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
 
     histo2 = isinstance ( h2 , ROOT.TH1 ) and 1 == h2.dim() 
 
-    from   ostap.logger.utils import pretty_float, pretty_ve
     import ostap.math.math_ve as     ME
 
     if distance :
@@ -1718,7 +1718,6 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
 
     histo2 = isinstance ( h2 , ROOT.TH2 ) and 2 == h2.dim() 
 
-    from   ostap.logger.utils import pretty_float, pretty_ve
     import ostap.math.math_ve as     ME
 
     ## if distance :

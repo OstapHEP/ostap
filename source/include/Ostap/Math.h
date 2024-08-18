@@ -1294,7 +1294,7 @@ namespace Ostap
     template <class ITERATOR>
     void scale_exp2 ( ITERATOR    first ,
                       ITERATOR    last  , 
-                      const int   iexp  )
+                      const short iexp  )
     { 
       if ( 0 != iexp ) 
       { for ( ; first != last ; ++first ) { (*first) = std::ldexp ( *first , iexp ) ; } }

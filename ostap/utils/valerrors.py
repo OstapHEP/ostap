@@ -5,14 +5,14 @@
 #  Helper structures (point-with-errors) for (T)Graphs
 #
 #  - These objects are *NOT* for math! 
-#  - The objects are used for graphs 
+#  - The objects are used for graphs&plots only!  
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07 
 # =============================================================================
 """ Helper structures (point-with-erorrs) for (T)Graphs 
 - These objects are *NOT* for math!
-- The objects are used for graphs 
+- The objects are used for graphs&plots only! 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -21,14 +21,16 @@ __date__    = "2011-06-07"
 __all__     = (
     'AsymErrors'         ,
     'ValWithErrors'      ,
-    'ValWithMultiErrors' ,
+    'ValWithMultiErrors' ,    
+    'AE'                 , ## shortcut for AsymErrors 
     'VAE'                , ## shortcut for ValWithErrors 
     'VME'                , ## shortcut for ValWithMultiErrors     
-    ) 
+) 
 # =============================================================================
 from   ostap.core.ostap_types import num_types, sized_types, sequence_types   
 from   ostap.core.core        import VE
-from   ostap.math.base        import iszero, isequal  
+from   ostap.math.base        import iszero, isequal
+from   ostap.logger.utils     import fmt_pretty_errs, fmt_pretty_err2  
 import math, copy  
 # =============================================================================
 # logging 
@@ -107,7 +109,7 @@ class AsymErrors (object) :
         """
         s1 = abs ( self.negative )
         s2 = abs ( self.positive )
-        variance = _C1 * ( ( s2 - s1 )**2 ) + s1 * s2
+        variance = _C1 * ( ( s2 - s1 ) ** 2 ) + s1 * s2
         return math.sqrt ( variance )
     
     # =========================================================================
@@ -231,9 +233,27 @@ class AsymErrors (object) :
         """
         return format % ( abs ( self.__negative ) , self.__positive )
     
+    # =========================================================================
+    ## pretty print
+    #  @code
+    #  errors = ...
+    #  result, expo = errors.pretty_print () 
+    #  @endcode
+    def pretty_print  ( self               ,
+                        width       = 6    ,
+                        precision   = 4    ,
+                        parentheses = True ) : 
+        """ Pretty print
+        >>> errors = ...
+        >>> result, expo = errors.pretty_print () 
+        """
+        return pretty_ae ( self                      ,
+                           width       = width       ,
+                           precision   = precision   ,
+                           parentheses = parentheses )
+    
     def __str__  ( self ) : return self.toString () 
     def __repr__ ( self ) : return self.__str__ () 
-
 
 # =============================================================================
 the_types = num_types + ( VE , ) 
@@ -543,14 +563,54 @@ class ValWithErrors(object) :
         elif isinstance ( other , VE )            : return not ( self == other ) 
         return NotImplemented
     
+    # =========================================================================
+    ## An `effective error' (as split normal distribution)
+    #  @see https://en.wikipedia.org/wiki/Split_normal_distribution
+    @property
+    def eff_error ( self ) :
+        """ An `effective error' (as split normal distribution)
+        - see https://en.wikipedia.org/wiki/Split_normal_distribution
+        """
+        return self.__errors.eff_error
+    
+    # =========================================================================
+    ## An `effective bias' (as split normal distribution)
+    #  @see https://en.wikipedia.org/wiki/Split_normal_distribution
+    @property
+    def eff_bias ( self ) :
+        """ An `effective bias' (as split normal distribution)
+        - see https://en.wikipedia.org/wiki/Split_normal_distribution
+        """
+        return self.__errors.eff_bias 
+
+    # =========================================================================
+    ## An `effective value' == value + bias (as split normal distribution)
+    #  @see https://en.wikipedia.org/wiki/Split_normal_distribution
+    @property
+    def eff_value  ( self ) :
+        """ An `effective value' == value + bias (as split normal distribution)
+        - see https://en.wikipedia.org/wiki/Split_normal_distribution
+        """
+        return self.__value + self.__errors.eff_bias 
+    
+    # =========================================================================
+    ## An `effective error' (as split normal distribution)
+    #  @see https://en.wikipedia.org/wiki/Split_normal_distribution
+    @property
+    def eff_error ( self ) :
+        """ An `effective error' (as split normal distribution)
+        - see https://en.wikipedia.org/wiki/Split_normal_distribution
+        """
+        return self.__errors.eff_error 
+
     # ========================================================================
     ## Conversion to VE, as split normal distribution with optional bias 
     #  @see https://en.wikipedia.org/wiki/Split_normal_distribution
     def asVE ( self , bias = False ) :
-        """Conversion to VE with optional bias 
+        """Conversion to VE with optional bias
         - see https://en.wikipedia.org/wiki/Split_normal_distribution
         """
-        vv = self.value if not bias else self.value + self.__errors.eff_bias 
+        vv = self.value if not bias else self.eff_value 
         return VE ( vv , self.__errors.eff_error ** 2 )
 
     # ========================================================================
@@ -561,13 +621,31 @@ class ValWithErrors(object) :
         self.__value  = state [ 0 ]
         self.__errors = state [ 1 ]
 
-
     # ==========================================================================
     ## conversion to string 
     def toString ( self , format = '( %+.5g -/%.5g +/%-.5g ) ' ) :
         """Conversion to string
         """
         return format % ( self.value , abs ( self.neg_error ) , self.pos_error )
+
+    # =========================================================================
+    ## pretty print
+    #  @code
+    #  value = ...
+    #  result, expo = value.pretty_printt() 
+    #  @endcode
+    def pretty_print ( self               ,
+                       width       = 6    ,
+                       precision   = 4    ,
+                       parentheses = True ) :
+        """ Pretty print
+        >>> value = ...
+        >>> result, expo = value.pretty_print () 
+        """
+        return pretty_vae ( self                      ,
+                            width       = width       ,
+                            precision   = precision   ,
+                            parentheses = parentheses )
 
     def __str__  ( self ) : return self.toString () 
     def __repr__ ( self ) : return self.__str__  () 
@@ -804,12 +882,12 @@ class ValWithMultiErrors(object) :
 
     @property
     def neg_error ( self ) :
-        """'neg_error' : the effective (sum squared) negative (low)error """
-        return math.sqrt ( sum ( e.negative**2 for e in self.__errors ) ) 
+        """'neg_error' : the effective (sum squared) negative/low error """
+        return -math.sqrt ( sum ( e.negative**2 for e in self.__errors ) ) 
     @property
     def pos_error ( self ) :
-        """'pos_error' : the effective (sum squared) positive (high) error"""
-        return math.sqrt ( sum ( e.positive**2 for e in self.__errors ) ) 
+        """'pos_error' : the effective (sum squared) positive/high error"""
+        return  math.sqrt ( sum ( e.positive**2 for e in self.__errors ) ) 
 
     # ========================================================================
     ## (numerical) equality
@@ -877,8 +955,204 @@ class ValWithMultiErrors(object) :
         errs = ','.join ( errs ) 
         return format % ( self.value , errs )
 
+    # =========================================================================
+    ## pretty print
+    #  @code
+    #  value  = ...
+    #  result, expo = value.pretty_print () 
+    #  @endcode
+    def pretty_print   ( self               ,
+                         width       = 6    ,
+                         precision   = 4    ,
+                         parentheses = True ) :
+        """ Pretty print
+        >>> value = ...
+        >>> result, expo = value.pretty_print () 
+        """
+        return pretty_vme ( self                      ,
+                            width       = width       ,
+                            precision   = precision   ,
+                            parentheses = parentheses )
+    
     def __str__  ( self ) : return self.toString () 
     def __repr__ ( self ) : return self.__str__  () 
+
+
+# =============================================================================
+## Pretty prints
+# =============================================================================
+## Format for  pretty print of asymmetric errors
+#  @code
+#  ae = AsymErrors ( -5 , 10000 )
+#  fmte , expo = fmt_pretty_ae ( ae , width = 8, precision = 6 ) 
+#  @endcode
+def fmt_pretty_ae ( errors             ,
+                    width       = 6    ,
+                    precision   = 4    ,
+                    parentheses = True )  :
+    """ Format for  pretty print of asymmetric errors
+    >>> ae = AsymErrors ( -5 , 10000 )
+    >>> fmte , expo = fmt_pretty_ae ( ae , width = 8, precision = 6 ) 
+    """
+    assert isinstance ( errors , AsymErrors ), \
+        "Invalid type of `errors`: %s" % type ( errors )
+
+    errs = errors.negative , errors.positive 
+    _ , fmte , expo = fmt_pretty_errs ( value     = 0.0       ,
+                                        errors    = errs      ,
+                                        width     = width     ,
+                                       precision = precision )
+
+    fmt = '-/%s +/%s' % ( fmte , fmte )
+    ## 
+    if parentheses : fmt = '( ' + fmt + ' )'
+    return fmt , expo 
+
+# =============================================================================
+## Formats for  pretty print of value with asymmetric errors
+#  @code
+#  vae = ValWithErrors ( -5 , -1, 20 ) 
+#  fmt , fmtv , fmte , expo = fmt_pretty_vae ( vae , width = 8, precision = 6 ) 
+#  @endcode
+def fmt_pretty_vae (  value              ,
+                      width       = 6    ,
+                      precision   = 4    ,
+                      parentheses = True )  :
+    """Formats for  pretty print of value with asymmetric errors
+    >>> vae = ValWithErrors ( -5 , -1, 20 ) 
+    >>> fmt , fmtv , fmte , expo = fmt_pretty_vae ( vae , width = 8, precision = 6 ) 
+    """
+    assert isinstance ( value , ValWithErrors ), \
+        "Invalid type of `value`: %s" % type ( value)
+
+    v , errlow , errhigh = value.value , value.neg_error , value.pos_error
+    return fmt_pretty_err2 ( value       = v           ,
+                             errlow      = errlow      ,
+                             errhigh     = errhigh     ,
+                             width       = width       ,
+                             precision   = precision   ,
+                             parentheses = parentheses )
+
+# =============================================================================
+## Formats for  pretty print of value with multiple asymmetric errors
+#  @code
+#  vme = ValWithMultiErrors ( ... ) 
+#  fmt , fmtv , fmte , expo = fmt_pretty_vme ( vme , width = 8, precision = 6 ) 
+#  @endcode
+def fmt_pretty_vme ( value              ,
+                     width       = 6    ,
+                     precision   = 4    ,
+                     parentheses = True )  :
+    """Formats for  pretty print of value with multipl asymmetric errors
+    >>> vme = ValWithMultipliErrors ( ... ) 
+    >>> fmt , fmtv , fmte , expo = fmt_pretty_vme ( vme , width = 8, precision = 6 ) 
+    """
+    assert isinstance ( value , ValWithMultiErrors ), \
+        "Invalid type of `value`: %s" % type ( value )
+    
+    errors  = tuple ( e.negative for e in value.errors ) 
+    errors += tuple ( e.positive for e in value.errors ) 
+
+    fmtv , fmte , expo = fmt_pretty_errs ( value     = value.value ,
+                                           errors    = errors      , 
+                                           width     = width       ,
+                                           precision = precision   )
+    fmt = " %s" % fmtv
+    for e in value.errors : fmt += " -/%s +/%s"
+    if parentheses : fmt = '( ' + fmt + ' )'
+    return fmt , fmtv , fmte , expo
+
+# =============================================================================
+## pretty print for asymemtric errors
+#  @code
+#  ae = AsymErrors ( -5 , 10000 )
+#  s , expo = pretty_ae ( ae , width = 8, precision = 6 ) 
+#  @endcode
+def pretty_ae ( errors             ,
+                width       = 6    ,
+                precision   = 4    ,
+                parentheses = True )  :
+    """Pretty print for asymemtric errors
+    >>> ae = AsymErrors ( -5 , 10000 )
+    >>> s , expo = pretty_ae ( ae , width = 8, precision = 6 ) 
+    """
+    assert isinstance ( errors , AsymErrors ), \
+        "Invalid type of `errors`: %s" % type ( errors )
+    
+    fmt , expo = fmt_pretty_ae ( errors                    ,
+                                 width       = width       ,
+                                 precision   = precision   ,
+                                 parentheses = parentheses ) 
+
+    values = abs ( errors.negative )  , errors.positive
+    
+    if expo:
+        scale  = 10 ** expo 
+        values = tuple ( v / scale for v in values )
+
+    return fmt % values , expo 
+
+# =============================================================================
+## pretty print for value with asymmetric errors
+#  @code
+#  vae = ValWithErrors ( 1 , -5 , 10000 )
+#  s , expo = pretty_vae ( vae , width = 8, precision = 6 ) 
+#  @endcode
+def pretty_vae ( value              ,
+                 width       = 6    ,
+                 precision   = 4    ,
+                 parentheses = True )  :
+    """Pretty print for value  with asymemtric errors
+    >>> vae = ValWithErrors ( ... )
+    >>> s , expo = pretty_vae ( vae , width = 8, precision = 6 ) 
+    """    
+    assert isinstance ( value , ValWithErrors ), \
+        "Invalid type of `value`: %s" % type ( value )
+    
+    fmt, _ , _ , expo = fmt_pretty_vae ( value                     , 
+                                         width       = width       ,
+                                         precision   = precision   ,
+                                         parentheses = parentheses ) 
+    
+    values  = value.value , abs ( value.neg_error ) , value.pos_error    
+    if expo:
+        scale  = 10 ** expo 
+        values = tuple ( v / scale for v in values )
+
+    return fmt % values , expo 
+
+# =============================================================================
+## pretty print for value with multiple asymmetric errors
+#  @code
+#  vme = ValWithMltiErrors ( ... )
+#  s , expo = pretty_vme ( vme , width = 8, precision = 6 ) 
+#  @endcode
+def pretty_vme ( value              ,
+                 width       = 6    ,
+                 precision   = 4    ,
+                 parentheses = True )  :
+    """Pretty print for value  with multiple asymmetric errors
+    >>> vme = ValWithMultiErrors ( ... )
+    >>> s , expo = pretty_vme ( vme , width = 8, precision = 6 ) 
+    """    
+    assert isinstance ( value , ValWithErrors ), \
+        "Invalid type of `value`: %s" % type ( value)
+
+    fmt, _ , _ , expo = fmt_pretty_vme ( value                     , 
+                                         width       = width       ,
+                                         precision   = precision   ,
+                                         parentheses = parentheses ) 
+    
+    values = [ vme.value ]
+    for e in mve.errors :
+        values += [ abs ( e.negative ) , e.possitive ]
+        
+    values  = tuple ( values )
+    if expo:
+        scale  = 10 ** expo 
+        values = tuple ( v / scale for v in values )
+
+    return fmt % values , expo 
 
 # =============================================================================
 ## shortcut 

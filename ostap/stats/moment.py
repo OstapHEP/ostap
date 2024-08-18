@@ -36,6 +36,7 @@ from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.math.base        import isfinite, isequal  
 from   ostap.core.core        import Ostap, VE
 from   ostap.core.meta_info   import root_version_int, root_info 
+from   ostap.logger.pretty    import pretty_float, pretty_ve
 import ROOT 
 # =============================================================================
 # logging 
@@ -390,8 +391,6 @@ def _om_table ( obj , title = '' , prefix = '' , standard = False ) :
     >>> m = ...
     >>> t = m.table()
     """
-
-    from ostap.logger.utils import pretty_float, pretty_ve 
 
     IM = Ostap.Math.Moments.invalid_moment() 
     

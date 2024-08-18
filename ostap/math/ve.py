@@ -25,9 +25,11 @@ __all__     = (
     'VVE' ,  # vector of values with errors
     )
 # ============================================================================= 
-import ROOT
-from   ostap.math.base import Ostap, std , iszero, isequal
+from   ostap.math.base       import Ostap, std , iszero, isequal
+from   ostap.math.random_ext import poisson as _poisson 
+# =============================================================================
 from   builtins        import range
+import ROOT
 # ============================================================================= 
 # logging 
 # ============================================================================= 
@@ -48,7 +50,6 @@ VVE.Vector = VVVE
 VVE.Vector . __str__  = lambda s : str( [ i for i in s ] )
 VVE.Vector . __repr__ = lambda s : str( [ i for i in s ] )
 VVE.Vector . __len__  = lambda s : s.size ()
-
 
 # ============================================================================= 
 ## Sum the contents of the vector
@@ -339,8 +340,6 @@ def _ve_gauss_ ( s , accept = lambda a : True , nmax = 1000 ) :
     return v
 
 # =============================================================================
-from ostap.math.random_ext import poisson as _poisson 
-# =============================================================================
 ## generate poisson random number according to parameters 
 #  @code
 #    >>> v = ...  ## the number with error
@@ -388,6 +387,30 @@ def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :
 
 VE.gauss   = _ve_gauss_
 VE.poisson = _ve_poisson_ 
+
+# ==============================================================================
+## Pretty print of ValueWithError object
+#  @code
+#  value = VE ( ... )
+#  result, expo = value.pretty_print () 
+#  @endcode 
+def _ve_pretty_ ( value              ,
+                  width       = 6    ,
+                  precision   = 4    ,
+                  parentgeses = True ) :
+    """ Pretty print of ValueWithError object
+    >>> value = VE ( ... )
+    >>> result, expo = value.pretty () 
+    """
+    from ostap.logger.pretty import pretty_ve as _pretty_ve_
+    return _pretty_ve_ ( value       = value       ,
+                         width       = width       ,
+                         precision   = precision   ,
+                         parentheses = parentheses )
+
+# ==============================================================================
+
+Ostap.Math.ValueWithError.pretty_print = _ve_pretty_ 
 
 # ==============================================================================
 ## factory for unpickling of <code>Ostap::Math::ValueWithError</code>
@@ -441,10 +464,8 @@ _new_methods_ = (
     VE . gauss            , 
     VE . poisson          ,
     VE . __reduce__       ,
+    VE . pretty_print     ,
    )
-
-
-
 
 # =============================================================================
 if '__main__' == __name__ :

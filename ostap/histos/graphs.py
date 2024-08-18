@@ -2878,6 +2878,57 @@ def _gr_merge_ ( graph , graph2 , sort = False ) :
 ROOT.TGraph            .merge         = _gr_merge_
 
 
+# ===============================================================================
+## Graph as table
+#  @code
+#  graph = ...
+#  table = graph.table()
+#  @endcode 
+def _gr_table_ ( graph            ,
+                 title     = None ,
+                 prefix    = ''   ,
+                 width     = 6    ,
+                 precision = 4    ) :
+    
+    """ Graph as table
+    >>> graph = ...
+    >>> table = graph.table()
+    """
+
+    rows = [ ('#' , 'X' , '' , 'Y' , '' ) ]
+    for i, x , y in graph.iteritems () :
+
+        
+        if hasattr ( x , 'pretty_print' ) :
+            xx , xexpo = x.pretty_print (     width = width , precision = precision )
+        else :
+            xx , xexpo =   pretty_float ( x , width = width , precision = precision )
+
+        if hasattr ( y , 'pretty_print' ) :
+            yy , yexpo = y.pretty_print (     width = width , precision = precision )
+        else :
+            yy , yexpo =   pretty_float ( y , width = width , precision = precision )
+            
+        if xexpo : xexpo = '10^%+d' % xexpo
+        else     : xexpo = ''
+        
+        if yexpo : yexpo = '10^%+d' % yexpo
+        else     : yexpo = ''
+        
+        row = '%d' % i , xx , xexpo , yy , yexpo
+        rows.append ( row )
+
+    if title is None :
+        t = type(graph).__name__ 
+        title = "%s(%s,%s),#%d" % ( t , graph.GetName() , grpah.GetTitle() , len ( graph ) )
+
+    import ostap.logger.table as T
+    return T.table ( rows , title = title , prefix = prefix ) 
+
+
+ROOT.TGraph. table = _gr_table_ 
+# ===============================================================================
+
 
 # ===============================================================================
 ## get hash-value for the graph

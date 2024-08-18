@@ -25,7 +25,7 @@ import ostap.fitting.variables
 import ostap.fitting.printable
 import ostap.math.linalg        as     LA 
 from   ostap.logger.colorized   import allright, attention
-from   ostap.logger.utils       import pretty_float, pretty_ve, pretty_2ve 
+from   ostap.logger.pretty      import pretty_float, pretty_ve, pretty_err2 
 import ROOT, math, sys, ctypes  
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -687,9 +687,9 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
         v , a = pars_float [ p ]
 
         if not a.hasAsymError() :
-            s , n = pretty_ve  ( v ) 
+            s , n = pretty_ve   ( v ) 
         else :
-            s , n = pretty_2ve (  a.getVal() , a.getAsymErrorHi() , a.getAsymErrorLo() )
+            s , n = pretty_err2 (  a.getVal() , a.getAsymErrorHi() , a.getAsymErrorLo() )
 
         if n : n = '[10^%+d]' % n
         else : n = '' 
