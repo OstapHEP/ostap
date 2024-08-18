@@ -140,7 +140,7 @@ def test_summary3 ( ) :
     time.sleep (3)
 
 # ==============================================================================
-def test_smmary4() :
+def test_summary4() :
 
     conf  = { 'marker_style' : 20 , 'marker_size' : 2 , 'marker_color' : 1 , 'line_color' : 1 , 'label_position' : 4.0 }
     aconf = {}
