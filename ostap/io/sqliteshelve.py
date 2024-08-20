@@ -130,7 +130,7 @@ __all__ = (
     'tmpdb'       ,   ## helper function to create the temporary database 
     )
 # =============================================================================
-import sqlite3, os , sys , zlib, collections, datetime   
+import sqlite3, os , sys , zlib, collections, time, datetime   
 from   ostap.io.sqlitedict  import SqliteDict
 from   ostap.io.dbase       import Item, TmpDB, ordered_dict 
 from   ostap.core.meta_info import meta_info
@@ -232,21 +232,21 @@ class SQLiteShelf(SqliteDict):
                    journal_mode   = "DELETE"  ,
                    protocol       = PROTOCOL  ,
                    timeout        = 30        ) :
-        """Initialize a thread-safe sqlite-backed dictionary.
+        """ Initialize a thread-safe sqlite-backed dictionary.
         The dictionary will be a table ``tablename`` in database file
-        ``filename``. A single file (=database) may contain multiple tables.
+        `filename`. A single file (=database) may contain multiple tables.
         
-        If no ``filename`` is given, a random file in temp will be used
+        If no `filename` is given, a random file in temp will be used
         (and deleted from temp once the dict is closed/deleted).
         
-        If you enable ``writeback/autocommit`` changes will be committed
+        If you enable `writeback/autocommit` changes will be committed
         after each operation (more inefficient but safer).
         Otherwise, changes are committed on
-        ``self.commit()``,
-        ``self.clear()`` and
-        ``self.close()``.
+        `self.commit()`,
+        `self.clear()` and
+        `self.close()`.
         
-        Set ``journal_mode`` to ``OFF``
+        Set `journal_mode` to `OFF`
         if you're experiencing sqlite I/O problems
         or if you need performance and don't care about crash-consistency.
         
@@ -257,9 +257,9 @@ class SQLiteShelf(SqliteDict):
         
         Modes: %s 
         """ % _modes_ 
-        
+
         ## the mode 
-        mode = _modes_.get( mode.lower() , '' )
+        mode = _modes_.get ( mode.lower() , '' )
         if not mode :
             logger.warning("Unknown opening mode '%s', replace with 'c'")
             mode = 'c'
@@ -269,7 +269,6 @@ class SQLiteShelf(SqliteDict):
             protocol = PROTOCOL 
 
         if not filename is None :
-            import os 
             filename  = os.path.expandvars ( filename )
             filename  = os.path.expanduser ( filename )
             filename  = os.path.expandvars ( filename )
@@ -300,10 +299,9 @@ class SQLiteShelf(SqliteDict):
             dct  [ 'Compress level'              ] = self.__compresslevel 
             self [ '__metainfo__' ] = dct
 
-
     @property
     def  writeback  ( self ):
-        """``writeback'' : the same as ``autocommit'':
+        """`writeback' : the same as `autocommit':
         If one  enables `autocommit`, changes will be committed after each operation
         (more inefficient but safer).
         Otherwise, changes are committed on `self.commit()`,
@@ -317,7 +315,7 @@ class SQLiteShelf(SqliteDict):
     
     @property
     def compresslevel ( self ) :
-        "``compress level'' : compression level"
+        "`compress level' : compression level"
         return self.__compresslevel 
 
     @property
@@ -347,7 +345,8 @@ class SQLiteShelf(SqliteDict):
         for k in sorted ( keys_ ) :
             if good ( k , pattern ) : yield k
 
-    ## list the avilable keys 
+    # =========================================================================
+    ## list the available keys 
     def __dir ( self , pattern = '' ) :
         """ List the avilable keys (patterns included).
         Pattern matching is performed accoriding to
@@ -400,9 +399,10 @@ class SQLiteShelf(SqliteDict):
         table = [ ( 'Key' , 'type' , '   size   ', ' created/modified ') ]
 
         meta = self.get( '__metainfo__' , ordered_dict () )
-        for k in meta :
-            row = "META:%s" % k , '' , '' , str ( meta[k] )
-            table.append ( row  ) 
+        print ( 'META' , meta ) 
+        ## for k in meta :
+        ##    row = "META:%s" % k , '' , '' , str ( meta [ k ] )
+        ##    table.append ( row  ) 
         
         for k in keys :
             size = '' 
@@ -420,7 +420,12 @@ class SQLiteShelf(SqliteDict):
             otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__
 
             rawitem = self.__get_raw_item__ ( k )
-            if isinstance ( rawitem , Item ) : timetag = rawitem.time
+            if isinstance ( rawitem , Item ) :
+                timetag = rawitem.time
+                if isinstance ( timetag , float ) and 0 < timetag :
+                    timetag = datetime.datetime.fromtimestamp ( timetag  )
+                if isinstance ( timetag , datetime.datetime ) :
+                    timetag = timetag.strftime( '%Y-%m-%d %H:%M:%S' )
             else                             : timetag = '' 
 
             row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size , timetag 
@@ -441,7 +446,6 @@ class SQLiteShelf(SqliteDict):
         line  = 'Database %s:%s #keys: %d size: %s' % ( t , ap , len ( self ) , size )
         ll.info (  '%s\n%s' %  ( line , table ) )
  
-   
     # =========================================================================
     ## clone the database into new one
     #  @code
@@ -468,39 +472,38 @@ class SQLiteShelf(SqliteDict):
         return new_db 
 
     # =============================================================================
-    ## ``get-and-uncompress-item'' from dbase 
+    ## `get-and-uncompress-item' from dbase 
     def __get_raw_item__ ( self, key ):
-        """ ``get-and-uncompress-item'' from dbase 
+        """ `get-and-uncompress-item' from dbase 
         """
         GET_ITEM = 'SELECT value FROM %s WHERE key = ?' % self.tablename
         item = self.conn.select_one ( GET_ITEM , ( key , ) )
         if item is None: raise KeyError(key)
         
-        self.__sizes [ key ] = len ( item[0] ) 
+        self.__sizes [ key ] = len ( item [ 0 ] ) 
         f     = BytesIO ( zlib.decompress ( item [ 0 ] ) ) 
         value = Unpickler ( f ) . load ()
         
         return value
 
     # =============================================================================
-    ## ``get-and-uncompress-item'' from dbase 
+    ## `get-and-uncompress-item' from dbase 
     def __getitem__ ( self, key ):
-        """ ``get-and-uncompress-item'' from dbase 
+        """ `get-and-uncompress-item' from dbase 
         """
-
         value  = self.__get_raw_item__ ( key )
         if isinstance ( value , Item ) : value = value.payload 
         return value
 
     # =============================================================================
-    ## ``set-and-compress-item'' to dbase 
+    ## `set-and-compress-item' to dbase 
     def __setitem__ ( self , key , value ) :
-        """ ``set-and-compress-item'' to dbase 
+        """ `set-and-compress-item' to dbase 
         """
         ADD_ITEM = 'REPLACE INTO %s (key, value) VALUES (?,?)' % self.tablename
 
-        item = Item ( datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' ) , value )
-
+        item = Item ( time.time()  , value )
+        
         f     = BytesIO ()
         p     = Pickler ( f , self.protocol )
         p.dump ( item )
@@ -509,7 +512,6 @@ class SQLiteShelf(SqliteDict):
         
         self.__sizes [ key ] = len ( zblob )
         self.conn.execute ( ADD_ITEM, ( key , sqlite3.Binary ( zblob ) ) )
-
 
     # =========================================================================
     ## close and compress (if needed)
@@ -541,7 +543,6 @@ class SQLiteShelf(SqliteDict):
             self.close()
         except :
             pass
-
 
 # =============================================================================
 ## open new SQLiteShelve data base

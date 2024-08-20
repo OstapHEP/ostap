@@ -18,12 +18,12 @@
 #    with large amout of keys 
 #
 # The module has been developed and used with great success in
-# ``Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter''
+# `Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter'
 #
 # @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 # @date   2010-04-30
 # =============================================================================
-""" Abstract helper class for ``compressed'' version of of shelve database.
+""" Abstract helper class for `compressed' version of shelve database.
 
 Keeping the same interface and functionlity as shelve data base,
 it allows much more compact file size through the on-flight
@@ -38,7 +38,7 @@ However is contains several new features:
    with large amout of keys 
    
 The module has been developed and used with great success in
- ``Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter''
+ `Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter'
 
 """
 # =============================================================================
@@ -54,7 +54,7 @@ __all__ = (
     'ENCODING'       
     )
 # =============================================================================
-import os, abc, shelve, shutil, glob, datetime
+import os, abc, shelve, shutil, glob, time, datetime
 from   sys                  import version_info           as python_version
 from   ostap.io.dbase       import dbopen, whichdb, Item, ordered_dict  
 from   ostap.core.meta_info import meta_info 
@@ -76,27 +76,28 @@ _modes_ = {
     # 'c'	Open database for reading and writing, creating it if it doesn't exist
     # 'n'	Always create a new, empty database, open for reading and writing
     # =========================================================================
-    'n'        : 'c' ,
+    'n'        : 'n' ,
     'c'        : 'c' ,
     'r'        : 'r' ,
-    'u'        : 'w' ,
     'w'        : 'w' ,
-    'a'        : 'w' ,
+    'u'        : 'w' , ## update
+    'a'        : 'w' , ## update/appends 
     ##
-    '+'        : 'w' ,        
-    'w+'       : 'w' ,
-    'rw'       : 'w' ,
-    'new'      : 'c' ,
-    'create'   : 'c' ,
-    'recreate' : 'n' ,
-    'read'     : 'r' ,        
-    'write'    : 'w' ,        
-    'update'   : 'w' ,        
-    'append'   : 'w' ,        
+    '+'        : 'w' , ## update/append        
+    'w+'       : 'w' , ## update/append
+    'rw'       : 'w' , ## read/write 
+    'new'      : 'n' , ## new
+    'create'   : 'c' , ## create if needed  
+    'recreate' : 'n' , ## new 
+    'read'     : 'r' , ## read-only        
+    'write'    : 'w' , ## write/update/append        
+    'update'   : 'w' , ## write/update/append               
+    'append'   : 'w' , ## write/update/append               
     }
+
 # =============================================================================
 ## @class CompressShelf
-#  Abstract class for ``compressed'' version of ``shelve''-database.
+#  Abstract class for `compressed' version of `shelve'-database.
 #  It has four abstract methods:
 #  - <code>compress_item</code>
 #  - <code>uncompress_item</code>
@@ -105,7 +106,7 @@ _modes_ = {
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
 class CompressShelf(shelve.Shelf,object):
-    """ ``Compressed''-version of ``shelve''-database
+    """ `Compressed'-version of `shelve'-database
     It has four abstract methods:
     - compress_item
     - uncompress_item
@@ -116,16 +117,16 @@ class CompressShelf(shelve.Shelf,object):
     extensions    = ()
     
     def __init__(
-        self                   ,
-        dbname                 ,
-        mode        = 'c'      , 
-        protocol    = PROTOCOL ,
-        compress    = 0        , 
-        writeback   = False    ,
-        silent      = True     ,
-        keyencoding = ENCODING ) :
-
-
+            self                   ,
+            dbname                 ,
+            mode        = 'c'      ,
+            dbtype      = ''       , ## preferred data base 
+            protocol    = PROTOCOL , ## pickle protocol 
+            compress    = 0        , 
+            writeback   = False    ,
+            silent      = True     ,
+            keyencoding = ENCODING ) :
+        
         ## the mode 
         mode = _modes_.get( mode.lower() , '' )
         if not mode :
@@ -133,7 +134,7 @@ class CompressShelf(shelve.Shelf,object):
             mode = 'c'
 
         if not 0 <= protocol <= HIGHEST_PROTOCOL :
-            logger.warning ("Invalid protocol:%s" % protocol )
+            logger.warning ("Invalid pickle protocol:%s" % protocol )
             protocol = PROTOCOL 
 
         ## expand the actual file name 
@@ -151,6 +152,7 @@ class CompressShelf(shelve.Shelf,object):
         self.__silent          = silent
         self.__opened          = False 
         self.__files           = ()
+        self.__dbtype          = dbtype
         
         if not self.__silent :
             logger.info ( 'Open DB: %s' % dbname ) 
@@ -198,26 +200,20 @@ class CompressShelf(shelve.Shelf,object):
         afiles = tuple ( [ self.dbname + suffix for suffix in (  '' , ',db' , '.dir' , '.pag' , '.dat' ) ] )
         ofiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) 
         
-        if  3 <= python_version.major  :
-            
-            shelve.Shelf.__init__ (
-                self                          ,
-                dbopen ( self.dbname , flag = mode ) ,  ## decode = lambda s : s , encode = lambda s : c )  ,
-                
-                protocol                      ,
-                writeback                     ,
-                keyencoding                   )
-            
+        if  3 <= python_version.major  :            
+            shelve.Shelf.__init__ ( self                                 ,
+                                    dbopen ( self.dbname , flag = mode , dbtype = dbtype ) ,                 
+                                    protocol    = protocol               ,
+                                    writeback   = writeback              ,
+                                    keyencoding = keyencoding            )            
         else :
             
-            shelve.Shelf.__init__ (
-                self                          ,
-                dbopen ( self.dbname , flag = mode ) , ## decode = lambda s : s , encode = lambda s : c )  ,
-                protocol                      ,
-                writeback                     ) 
+            shelve.Shelf.__init__ ( self                                  ,
+                                    dbopen ( self.dbname , flag = mode  , dbtype = dbtype ) ,
+                                    protocol    = protocol                ,
+                                    writeback   = writeback               ) 
             self.keyencoding = keyencoding
-
-
+            
         self.__opened        = True
         self.__mode          = mode        
 
@@ -264,10 +260,10 @@ class CompressShelf(shelve.Shelf,object):
             self.__compress = self.files 
             self.__remove   = self.files 
         
-
         if    'sqlite3' == self.dbtype and self.mode in ( 'w' , 'n' ) : write = True
         elif  'sqlite3' != self.dbtype and self.mode in ( 'c' , 'n' ) : write = True
-        else                                                          : write = False 
+        else                                                          : write = False
+
         if write :
             dct  = ordered_dict()  
             dct  [ 'Created by'                  ] = meta_info.User
@@ -287,57 +283,57 @@ class CompressShelf(shelve.Shelf,object):
             
     @property
     def dbtype   ( self ) :
-        """``dbtype''  : the underlying type of database"""
+        """`dbtype'  : the underlying type of database"""
         return self.__dbtype
         
     @property
     def protocol ( self ) :
-        """``protocol'' : pickling protocol used in the shelve"""
+        """`protocol' : pickling protocol used in the shelve"""
         return self._protocol
     
     @property
     def compression ( self ) :
-        "``compression'' : compression level"
+        "`compression' : compression level"
         return self.__compresslevel
     
     @property
     def compresslevel ( self ) :
-        "``compress level'' : compression level"
+        "`compress level' : compression level"
         return self.__compresslevel 
 
     @property 
     def dbname ( self ) :
-        "``dbname'' :   the actual name for the database"
+        "`dbname' :   the actual name for the database"
         return self.__actual_dbname
 
     @property 
     def nominal_dbname ( self ) :
-        "``nominal_dbname'' :   the actual name for the database"
+        "`nominal_dbname' :   the actual name for the database"
         return self.__nominal_dbname
 
     @property 
     def opened   ( self ) :
-        "``open'' : is data base opened?"
+        "`open' : is data base opened?"
         return self.__opened
 
     @property
     def mode    ( self ) :
-        "``mode'' : the actual open-mode for the database"
+        "`mode' : the actual open-mode for the database"
         return self.__mode
     
     @property
     def silent ( self ) :
-        "``silent'' : silent actions?"
+        "`silent' : silent actions?"
         return self.__silent 
 
     @property
     def protocol( self ) :
-        "``protocol'' : pickling protocol"
+        "`protocol' : pickling protocol"
         return self._protocol
 
     @property
     def files  ( self ) :
-        """``files'' : the files assocated with the database"""
+        """`files' : the files assocated with the database"""
         return self.__files
 
     # =========================================================================
@@ -444,8 +440,6 @@ class CompressShelf(shelve.Shelf,object):
         
         for k in keys :
 
-            ## kk = key.encode ( self.keyencoding ) ] )            
-            ## ss = len ( self.dict [ k ] ) ##  compressed size 
             ss = len ( self.dict [ k.encode ( self.keyencoding ) ] )
             
             if    ss < 1024 : size = '%7d   ' % ss 
@@ -456,10 +450,13 @@ class CompressShelf(shelve.Shelf,object):
             else :
                 size = '%7.2f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
 
-
             rawitem = self.__get_raw_item__ ( k )
             if isinstance ( rawitem , Item ) :
                 timetag = rawitem.time
+                if isinstance ( timetag , float ) and 0 < timetag :
+                    timetag = datetime.datetime.fromtimestamp ( timetag  )
+                if isinstance ( timetag , datetime.datetime ) :
+                    timetag = timetag.strftime( '%Y-%m-%d %H:%M:%S' )
                 kobj    = rawitem.payload 
             else                             :
                 timetag = ''
@@ -545,8 +542,9 @@ class CompressShelf(shelve.Shelf,object):
             dct  [ 'Updated by'                  ] = meta_info.User 
             dct  [ 'Updated with Ostap version'  ] = meta_info.Ostap 
             dct  [ 'Updated with Python version' ] = meta_info.Python 
-            dct  [ 'Updated with ROOT version'   ] = meta_info.ROOT   
-            self [ '__metainfo__' ] = dct
+            dct  [ 'Updated with ROOT version'   ] = meta_info.ROOT
+            
+            ## self [ '__metainfo__'                ] = dct
 
         if not self.silent : self.ls ()
         
@@ -565,10 +563,10 @@ class CompressShelf(shelve.Shelf,object):
                     pass
                 
     # =========================================================================
-    ## compress the files (``in-place'') 
+    ## compress the files (`in-place') 
     def __in_place_compress   ( self , files  ) :
-        """Compress the file ``in-place''        
-        - It is better to use here ``os.system'' or ``popen''-family,
+        """Compress the file `in-place'        
+        - It is better to use here `os.system' or `popen'-family,
         but it does not work properly for multiprocessing environemnt        
         """
         output   = self.nominal_dbname 
@@ -589,10 +587,10 @@ class CompressShelf(shelve.Shelf,object):
         shutil.move ( compressed , output )
             
     # =========================================================================
-    ## uncompress the file (``in-place'') 
+    ## uncompress the file (`in-place') 
     def __in_place_uncompress   ( self , filein ) :
-        """Uncompress the file ``in-place''        
-        - It is better to use here ``os.system'' or ``popen''-family,
+        """Uncompress the file `in-place'        
+        - It is better to use here `os.system' or `popen'-family,
         but unfortunately it does not work properly for multithreaded environemnt        
         """
         _ , ext = os.path.splitext ( filein )
@@ -644,15 +642,14 @@ class CompressShelf(shelve.Shelf,object):
     __str__ = __repr__
 
     # =========================================================================
-    ## ``get-and-uncompress-item'' from dbase
+    ## `get-and-uncompress-item' from dbase
     #  @code
     #  value =   dbase ['item']
     #  @endcode 
     def __get_raw_item__ ( self , key ) : 
-        """ ``get-and-uncompress-item'' from dbase
+        """ `get-and-uncompress-item' from dbase
         >>> value = dbase['item'] 
         """
-
         try:            
             value = self.cache [ key ]
         except KeyError:            
@@ -662,12 +659,28 @@ class CompressShelf(shelve.Shelf,object):
         return value
     
     # =========================================================================
-    ## ``get-and-uncompress-item'' from dbase
+    ## `get-and-uncompress-item' from dbase
+    #  @code
+    #  value =   dbase.get ( 'item' , default ) 
+    #  @endcode 
+    def get  ( self , key , default = None ) : 
+        """ `get-and-uncompress-item' from dbase
+        >>> value =   dbase.get ( 'item' , default ) 
+        """
+        try : 
+            value = self.__get_raw_item__ ( key )
+            if isinstance ( value , Item ) : value = value.payload
+            return value 
+        except KeyError :
+            return default
+
+    # =========================================================================
+    ## `get-and-uncompress-item' from dbase
     #  @code
     #  value =   dbase ['item']
     #  @endcode 
     def __getitem__  ( self , key ) : 
-        """ ``get-and-uncompress-item'' from dbase
+        """ `get-and-uncompress-item' from dbase
         >>> value = dbase['item'] 
         """
         value = self.__get_raw_item__ ( key )        
@@ -675,22 +688,23 @@ class CompressShelf(shelve.Shelf,object):
         return value
     
     # =========================================================================
-    ## ``set-and-compress-item'' to dbase
+    ## `set-and-compress-item' to dbase
     #  @code
     #  dbase ['item'] = value 
     #  @endcode 
     def __setitem__  ( self , key , value ) :
-        """ ``get-and-uncompress-item'' from dbase 
+        """ `get-and-uncompress-item' from dbase 
         >>> dbase['item'] = value 
         """
-        
-        ## if self.writeback : self.cache [ key ] = value
-        ## self.dict [ key.encode ( self.keyencoding ) ] = self.compress_item ( value )
-        
-        item = Item ( datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' ) , value )
-        
+        item = Item ( time.time()  , value )
         if self.writeback : self.cache [ key ] = item
-        self.dict [ key.encode ( self.keyencoding ) ] = self.compress_item ( item ) 
+
+        
+        self.dict [ key.encode ( self.keyencoding ) ] = self.compress_item ( item )
+        
+        ## kk = key.encode ( self.keyencoding )
+        ## vv = self.compress_item ( item )
+        ## self.dict [ kk ] = vv 
 
     # =========================================================================
     ##  get the disk size of the db
@@ -710,11 +724,11 @@ class CompressShelf(shelve.Shelf,object):
         return size 
         
     # =========================================================================
-    ## Ccreate the temporary directory
+    ## Create the temporary directory
     #  The directory will be cleaned-up and deleted at-exit.
     @classmethod
     def tempdir ( cls , suffix = '=db-dir' , prefix = 'ostap-compress-shelve-dir-' , date = True  ) :
-        """Create the temporary directory
+        """ Create the temporary directory
         The directory will be cleaned-up and deleted at-exit.
         """
         from ostap.utils.cleanup import CleanUp as CU
@@ -725,7 +739,7 @@ class CompressShelf(shelve.Shelf,object):
     #  The file will be deleted at-axit 
     @classmethod
     def tempfile ( cls , suffix = '-db' , prefix = 'ostap-compress-shelve-' , dir = None , date = True  ) :
-        """Ccreate the name for the temproary file 
+        """ Create the name for the temporary file 
         The file will be deleted at-axit
         """
         from ostap.utils.cleanup import CleanUp as CU
@@ -811,12 +825,11 @@ class CompressShelf(shelve.Shelf,object):
         >>> new_db = new_db.clone ( 'new_file.db' )
         """
         return NotImplemented
-            
+
 # ============================================================================
 ## a bit more decorations for shelve  (optional)
 import ostap.io.shelve_ext
 
-    
 # =============================================================================
 if '__main__' == __name__ :
     

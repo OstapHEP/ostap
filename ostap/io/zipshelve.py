@@ -171,31 +171,33 @@ class ZipShelf(CompressShelf):
     def __init__(
         self                                   ,
         filename                               ,
-        mode        = 'c'                      , 
+        mode        = 'c'                      ,
+        dbtype      = ''                       , 
         protocol    = PROTOCOL                 , 
         compress    = zlib.Z_BEST_COMPRESSION  ,
         writeback   = False                    ,
         silent      = False                    ,
         keyencoding = ENCODING                 ) :
 
-
         ## save arguments for pickling....
         self.__init_args = ( filename  ,
                              mode      ,
+                             dbtype    , 
                              protocol  ,
                              compress  ,
                              writeback ,
                              silent    )
 
         ## initialize the base class 
-        CompressShelf.__init__ ( self        ,
-                                 filename    ,
-                                 mode        ,
-                                 protocol    ,
-                                 compress    , 
-                                 writeback   ,
-                                 silent      ,
-                                 keyencoding ) 
+        CompressShelf.__init__ ( self                      ,
+                                 filename                  ,
+                                 mode        = mode        , 
+                                 dbtype      = dbtype      , 
+                                 protocol    = protocol    ,
+                                 compress    = compress    ,   
+                                 writeback   = writeback   ,
+                                 silent      = silent      ,
+                                 keyencoding = keyencoding ) 
         
     ## needed for proper (un)pickling 
     def __getinitargs__ ( self ) :
@@ -216,7 +218,7 @@ class ZipShelf(CompressShelf):
     # =========================================================================
     ## compress the file into temporary location, keep original
     def compress_files   ( self , files ) :
-        """Compress the files into the temporary location, keep original
+        """ Compress the files into the temporary location, keep original
         """
         output = self.tempfile ()
         
@@ -235,7 +237,7 @@ class ZipShelf(CompressShelf):
     #  files = db.uncompress_file ( input_cmpressed_file )   
     #  @endcode 
     def uncompress_file ( self , filein ) :
-        """Uncompress (gunzip) the file into temporary location, keep original
+        """ Uncompress (gunzip) the file into temporary location, keep original
         >>> db    = ...
         >>> files = db.uncompress_file ( input_cmpressed_file )   
         """
@@ -276,10 +278,6 @@ class ZipShelf(CompressShelf):
         """Compress (zip) the item using ``zlib.compress''
         - see zlib.compress
         """
-        ## f = BytesIO ()
-        ## p = Pickler ( f , self.protocol )
-        ## p.dump ( value )
-        ## return zlib.compress ( f.getvalue() , self.compresslevel )
         return zlib.compress ( self.pickle ( value ) , self.compresslevel )
         
     # =========================================================================
@@ -288,8 +286,6 @@ class ZipShelf(CompressShelf):
         """Uncompress (nuzip) the item using ``zlib.decompress''
         -  see zlib.decompress
         """        
-        ## f = BytesIO ( zlib.decompress ( value ) )
-        ## return Unpickler ( f ) . load ( )
         return self.unpickle ( zlib.decompress ( value ) ) 
 
     # =========================================================================
@@ -305,6 +301,7 @@ class ZipShelf(CompressShelf):
         """
         new_db = ZipShelf ( new_name                         ,
                             mode        =  'c'               ,
+                            dbtype      = self.dbtype        , 
                             protocol    = self.protocol      ,
                             compress    = self.compresslevel , 
                             writeback   = self.writeback     ,
@@ -322,12 +319,13 @@ class ZipShelf(CompressShelf):
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
 def open ( filename                                 ,
-           mode          = 'c'                      ,
-           protocol      = PROTOCOL                 ,
-           compresslevel = zlib.Z_BEST_COMPRESSION  , 
-           writeback     = False                    ,
-           silent        = True                     ,
-           keyencoding   = ENCODING                 ) :
+           mode        = 'c'                      , ## mode/flag 
+           dbtype      = ''                       , ## preferred dbtype  
+           protocol    = PROTOCOL                 ,
+           compress    = zlib.Z_BEST_COMPRESSION  , 
+           writeback   = False                    ,
+           silent      = True                     ,
+           keyencoding = ENCODING                 ) :
     
     """Open a persistent dictionary for reading and writing.
     
@@ -341,13 +339,14 @@ def open ( filename                                 ,
     See the module's __doc__ string for an overview of the interface.
     """
     
-    return ZipShelf ( filename      ,
-                      mode          ,
-                      protocol      ,
-                      compresslevel ,
-                      writeback     ,
-                      silent        ,
-                      keyencoding   )
+    return ZipShelf ( filename                  ,
+                      mode        = mode        ,
+                      dbtype      = dbtype      , 
+                      protocol    = protocol    ,
+                      compress    = compress    ,
+                      writeback   = writeback   ,
+                      silent      = silent      ,
+                      keyencoding = keyencoding )
 
 # =============================================================================
 ## @class TmpZipShelf
@@ -358,6 +357,7 @@ class TmpZipShelf(ZipShelf,TmpDB):
     """TEMPORARY Zipped-version of ``shelve''-database     
     """    
     def __init__( self                                   ,
+                  dbtype      = ''                       , 
                   protocol    = HIGHEST_PROTOCOL         , 
                   compress    = zlib.Z_BEST_COMPRESSION  ,
                   silent      = False                    ,
@@ -366,16 +366,16 @@ class TmpZipShelf(ZipShelf,TmpDB):
                   keep        = False                    ) : ## keep it 
         
         ## initialize the base: generate the name 
-        TmpDB.__init__ ( self , suffix = '.zdb' , remove = remove , keep = keep ) 
-         
-        ZipShelf.__init__ ( self          ,  
-                            self.tmp_name ,
-                            'c'           ,
-                            protocol      ,
-                            compress      , 
-                            False         , ## writeback 
-                            silent        ,
-                            keyencoding   )
+        TmpDB    .__init__ ( self , suffix = '.zdb' , remove = remove , keep = keep )         
+        ZipShelf .__init__ ( self                      ,  
+                             self.tmp_name             ,
+                             mode        = 'c'         ,
+                             dbtype      = dbtype      ,
+                             protocol    = protocol    ,
+                             compress    = compress    , 
+                             writeback   = False       ,  
+                             silent      = silent      ,
+                             keyencoding = keyencoding )
         
     ## close and delete the file 
     def close ( self )  :
@@ -387,26 +387,28 @@ class TmpZipShelf(ZipShelf,TmpDB):
 ## helper function to open TEMPORARY ZipShelve data base#
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def tmpdb ( protocol      = HIGHEST_PROTOCOL        ,
-            compresslevel = zlib.Z_BEST_COMPRESSION , 
-            silent        = True                    ,
-            keyencoding   = ENCODING                ,
-            remove        = True                    ,    ## immediate remove 
-            keep          = False                   ) :  ## keep it 
-    """Open a TEMPORARY persistent dictionary for reading and writing.
+def tmpdb ( dbtype      = ''                      , 
+            protocol    = HIGHEST_PROTOCOL        ,
+            compress    = zlib.Z_BEST_COMPRESSION , 
+            silent      = True                    ,
+            keyencoding = ENCODING                ,
+            remove      = True                    ,    ## immediate remove 
+            keep        = False                   ) :  ## keep it 
+    """ Open a TEMPORARY persistent dictionary for reading and writing.
     
     The optional protocol parameter specifies the
     version of the pickle protocol (0, 1, or 2).
     
     See the module's __doc__ string for an overview of the interface.
     """
-    return TmpZipShelf ( protocol      ,
-                         compresslevel ,
-                         silent        ,
-                         keyencoding   ,
-                         remove        ,
-                         keep          ) 
-    
+    return TmpZipShelf ( dbtype      = dbtype      ,
+                         protocol    = protocol    ,
+                         compress    = compress    ,
+                         silent      = silent      ,
+                         keyencoding = keyencoding ,
+                         remove      = remove      ,
+                         keep        = keep        ) 
+
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -32,20 +32,20 @@ from ostap.io.sqlitedict import SqliteDict, issqlite3
 ## named tuple to DB-item: (time, payload)
 Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
 # =============================================================================
-if sys.version_info < ( 3, 0 ) :
-    import anydbm                   as std_db
-    from   whichdb import whichdb   as std_whichdb 
-else :
-    import dbm                      as std_db
+if ( 3 , 0 ) <= sys.version_info :
+    import dbm                    as std_db
     std_whichdb = std_db.whichdb
+else : 
+    import anydbm                 as std_db
+    from   whichdb import whichdb as std_whichdb 
 # =============================================================================
 ordered_dict = dict
 if sys.version_info < ( 3, 7 ) :
     ordered_dict = collections.OrderedDict
+
 # =============================================================================
 ## Check for Berkeley DB
 # =============================================================================
-use_bsddb3     = False
 use_berkeleydb = False
 # =============================================================================
 ## make a try to use berkeleydb
@@ -65,7 +65,7 @@ if  ( 3 , 6 ) <= sys.version_info :
         
         ## open Berkeley DB 
         def berkeleydb_open ( filename                          ,
-                              flags    = 'c'                    ,
+                              flag     = 'c'                    ,
                               mode     = 0o660                  ,
                               filetype = berkeleydb.db.DB_HASH  ,
                               dbenv    = None                   ,
@@ -74,30 +74,55 @@ if  ( 3 , 6 ) <= sys.version_info :
                               encode   = lambda s : s           ) :            
             """ Open Berkeley DB
             """
-            assert flags in berkeleydb_open_mode, \
-                   "berkeleydb_open: invalid open mode %s" % flags
+            assert flag in berkeleydb_open_mode, \
+                "berkeleydb_open: invalid open mode %s" % flag
             
             db = berkeleydb.db.DB ( dbenv )
-            db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flags ]  , mode )
+            db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flag ]  , mode )
             
             return db
                 
     except ImportError :
         
-            berkeleydb      = None 
-            use_berkeleydb  = False 
+        berkeleydb      = None
+        use_berkeleydb  = False 
 
+# =============================================================================
+## Check for BSDDB3 
+# =============================================================================
+use_bsddb3     = False
 # =============================================================================
 ## make a try for dbddb3 
 if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) : 
     
     try :        
         import bsddb3
+        ## open bsddb3 database 
+        def bsddb3_open ( filelame          ,
+                          flag    = 'c'     ,
+                          mode    = '0o660' , **kwargs ) :
+            """ Open `bsddb3` database """
+            return bsddb3.hasopen ( filename , flag , mode , **kwargs )
+        
         use_bsddb3  = True        
     except ImportError  :        
         bsddb3      = None 
         use_bsddb3  = False 
 
+
+# =============================================================================
+## make a try to us eLMDB
+use_lmdb = False
+# =============================================================================
+## make a try for LMDB 
+if ( 3 , 7 ) <= sys.version_info : 
+    try :        
+        import lmdb 
+        from ostap.io.lmdbdict import LmdbDict, islmdb 
+        use_lmdb = True
+    except ImportError  :        
+        lmdb     = None 
+        use_lmdb = False 
 
 # =============================================================================
 ##  Guess which db package to use to open a db file.
@@ -131,8 +156,15 @@ def whichdb ( filename  ) :
     ## use the standard function 
     tst = std_whichdb ( filename  )
 
-    ## identified or non-existing DB  ? 
-    if tst or tst is None     : return tst
+    ## dbase is identified 
+    if tst : return txt
+
+    ## make a try woth LMDB 
+    if use_lmdb and os.path.exists  ( filename ) and os.path.isdir ( filename ) :
+        if islmdb ( filename ) : return 'lmdb'
+    
+    ## non-existing DB  ? 
+    if tst is None     : return tst
     
     ## sqlite3 ?
     if issqlite3 ( filename ) : return 'sqlite3'
@@ -197,8 +229,13 @@ def whichdb ( filename  ) :
 #  only if it doesn't exist; and 'n' always creates a new database.
 # 
 #  - Actually it is a bit extended  form of <code>dbm.open</code>, that
-#    accounts for <code>bsbdb3</code> and <code>sqlite3</code>
-def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
+#    accounts for <code>bsbdb3</code>, <code>sqlite3</code> and <code>lmdbdict</code>
+def dbopen ( file               ,
+             flag       = 'r'   ,
+             mode       = 0o666 ,
+             concurrent = True  ,
+             dbtype     = ()    , ## preferred dbtype or list of preferences  
+             **kwargs           ) :
     """Open or create database at path given by *file*.
     
     Optional argument *flag* can be 'r' (default) for read-only access, 'w'
@@ -209,29 +246,49 @@ def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
     Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
     only if it doesn't exist; and 'n' always creates a new database.
     
-    - Actually it is a bit extended  form of `dbm.open` that  accounts for `bsddb3` and `sqlite3`
+    - Actually it is a bit extended  form of `dbm.open` that  accounts for `bsddb3`,`sqlite3` and `lmdb`
     """
 
-    if 'n' in flag and os.path.isfile ( file ) :
-        os.unlink ( file ) 
- 
+    if 'n' in flag and os.path.exists ( file ) and os.path.isfile ( file ) :
+        os.unlink ( file )
+        
     check = whichdb ( file ) if 'n' not in flag  else None
 
     if 'c' in flag and '' == check :
         check = None 
-        os.unlink ( file ) 
-        
+        if os.path.exists ( file ) and os.path.isfile ( file ) : os.unlink ( file ) 
+
     # 'n' flag is specified  or dbase does not exist and c flag is specified 
     if 'n' in flag or ( check is None and 'c' in flag ) : 
-                
+
+        if isinstance ( dbtype , str ) : db_types = [ dbtype              ]
+        else                           : db_types = [ db for db in dbtype ] 
+
+        print ( 'PREFERENCE1' , db_types )
+
+        for db in db_types :
+            if use_berkeleydb and 'berkeleydb' == db :
+                return berkeleydb_open ( file            , flag , mode , **kwargs ) 
+            if use_bsddb3     and 'bdsdb3'     == db :
+                return bsddb3_open     ( file            , flag , mode , **kwargs ) 
+            if use_lmdb       and 'lmdb'       == db :
+                return LmdbDict        ( path     = file , flag = flag , **kwargs )
+            if 'sqlite3' == db :
+                return SqliteDict      ( filename = file , flag = flag , **kwargs )
+
+        print ( 'PREFERENCE1' , db_types )
+    
         if concurrent and use_berkeleydb :
             return berkeleydb_open ( file , flag , mode , **kwargs ) 
 
         if concurrent and use_bsddb3     :
-            return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
+            return bsddb3_open     ( file , flag , mode , **kwargs ) 
 
+        if concurrent and use_lmdb       : 
+            return LmdbDict        ( path     = file , flag = flag , **kwargs )
+        
         if concurrent :
-            return SqliteDict ( filename = file , flag = flag , **kwargs )
+            return SqliteDict      ( filename = file , flag = flag , **kwargs )
 
         return std_db.open ( file , flag , mode ) 
 
@@ -241,6 +298,9 @@ def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
     if use_bsddb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
         return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
+    if use_lmdb       and check in ( 'lmdb' , ) :
+        return LmdbDict    ( path    = file , flag = flag , **kwargs )
+    
     if check == 'sqlite3' :
         return SqliteDict ( filename = file , flag = flag , **kwargs )
 

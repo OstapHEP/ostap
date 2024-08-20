@@ -177,32 +177,35 @@ class Bz2Shelf(CompressShelf):
     extensions = '.tbz' , '.tbz2' , '.bz2' 
     ## 
     def __init__(
-        self                                   ,
-        filename                               ,
-        mode        = 'c'                      , 
-        protocol    = PROTOCOL                 , 
-        compress    = 9                        ,
-        writeback   = False                    ,
-        silent      = False                    ,
-        keyencoding = ENCODING                 ) :
-
+            self                                   ,
+            filename                               ,
+            mode        = 'c'                      ,
+            dbtype      = ''                       , 
+            protocol    = PROTOCOL                 , 
+            compress    = 9                        ,
+            writeback   = False                    ,
+            silent      = False                    ,
+            keyencoding = ENCODING                 ) :
+        
         ## save arguments for pickling....
         self.__init_args = ( filename  ,
                              mode      ,
+                             dbtype    , 
                              protocol  ,
                              compress  ,
                              writeback ,
                              silent    )
 
         ## initialize the base class 
-        CompressShelf.__init__ ( self        ,
-                                 filename    ,
-                                 mode        ,
-                                 protocol    ,
-                                 compress    , 
-                                 writeback   ,
-                                 silent      ,
-                                 keyencoding ) 
+        CompressShelf.__init__ ( self                      ,
+                                 filename                  ,
+                                 mode        = mode        ,
+                                 dbtype      = dbtype      , 
+                                 protocol    = protocol    ,
+                                 compress    = compress    , 
+                                 writeback   = writeback   ,
+                                 silent      = silent      ,
+                                 keyencoding = keyencoding ) 
         
     ## needed for proper (un)pickling 
     def __getinitargs__ ( self ) :
@@ -266,10 +269,6 @@ class Bz2Shelf(CompressShelf):
         """Compress (zip) the item using ``bz2.compress''
         - see bz2.compress
         """
-        ## f = BytesIO ()
-        ## p = Pickler ( f , self.protocol )
-        ## p.dump ( value )
-        ## return bz2.compress ( f.getvalue() , self.compresslevel )
         return bz2.compress ( self.pickle ( value ) , self.compresslevel )
 
     # =========================================================================
@@ -278,8 +277,6 @@ class Bz2Shelf(CompressShelf):
         """Uncompress (bzip2) the item using ``bz2.decompress''
         -  see bz2.decompress
         """        
-        ## f = BytesIO ( bz2.decompress ( value ) )
-        ## return Unpickler ( f ) . load ( )
         return self.unpickle ( bz2.decompress ( value ) ) 
 
     # =========================================================================
@@ -295,6 +292,7 @@ class Bz2Shelf(CompressShelf):
         """
         new_db = Bz2Shelf ( new_name                         ,
                             mode        =  'c'               ,
+                            dbtype      = self.dbtype        , 
                             protocol    = self.protocol      ,
                             compress    = self.compresslevel , 
                             writeback   = self.writeback     ,
@@ -313,8 +311,9 @@ class Bz2Shelf(CompressShelf):
 #  @date   2010-04-30
 def open ( filename                  ,
            mode          = 'c'       ,
+           dbtype        = ''        , 
            protocol      = PROTOCOL  ,
-           compresslevel = 9         , 
+           compress      = 9         , 
            writeback     = False     ,
            silent        = True      ,
            keyencoding   = ENCODING  ) :
@@ -331,13 +330,14 @@ def open ( filename                  ,
     See the module's __doc__ string for an overview of the interface.
     """
     
-    return Bz2Shelf ( filename      ,
-                      mode          ,
-                      protocol      ,
-                      compresslevel ,
-                      writeback     ,
-                      silent        ,
-                      keyencoding   )
+    return Bz2Shelf ( filename                  ,
+                      mode        = mode        ,
+                      dbtype      = dbtype      ,  
+                      protocol    = protocol    ,
+                      compress    = compress    ,
+                      writeback   = writeback   ,
+                      silent      = silent      ,
+                      keyencoding = keyencoding )
 
 # =============================================================================
 ## @class TmpBz2Shelf
@@ -349,6 +349,7 @@ class TmpBz2Shelf(Bz2Shelf,TmpDB):
     TEMPORARY ``bzip2''-version of ``shelve''-database     
     """    
     def __init__( self                           ,
+                  dbtype      = ''               , 
                   protocol    = HIGHEST_PROTOCOL , 
                   compress    = 9                ,
                   silent      = False            ,
@@ -360,14 +361,15 @@ class TmpBz2Shelf(Bz2Shelf,TmpDB):
         TmpDB.__init__ ( self , suffix = '.bz2db' , remove = remove , keep = keep ) 
         
         ## open DB 
-        Bz2Shelf.__init__ ( self          ,  
-                            self.tmp_name ,
-                            'c'           ,
-                            protocol      ,
-                            compress      , 
-                            False         , ## writeback 
-                            silent        ,
-                            keyencoding   ) 
+        Bz2Shelf.__init__ ( self                      ,  
+                            self.tmp_name             ,
+                            dbtype      = dbtype      , 
+                            mode        = 'c'         ,
+                            protocol    = protocol    ,
+                            compress    = compress    , 
+                            writeback   = False       , ## writeback 
+                            silent      = silent      ,
+                            keyencoding = keyencoding ) 
         
     ## close and delete the file 
     def close ( self )  :
@@ -380,12 +382,13 @@ class TmpBz2Shelf(Bz2Shelf,TmpDB):
 ## helper function to open TEMPORARY ZipShelve data base#
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def tmpdb ( protocol      = HIGHEST_PROTOCOL ,
-            compresslevel = 9                , 
-            silent        = True             ,
-            keyencoding   = ENCODING         ,
-            remove        = True             ,   ## immediate remove 
-            keep          = False            ) : ## keep it 
+def tmpdb ( dbtype      = ''               ,
+            protocol    = HIGHEST_PROTOCOL ,
+            compress    = 9                , 
+            silent      = True             ,
+            keyencoding = ENCODING         ,
+            remove      = True             ,   ## immediate remove 
+            keep        = False            ) : ## keep it 
     """Open a TEMPORARY persistent dictionary for reading and writing.
     
     The optional protocol parameter specifies the
@@ -393,12 +396,13 @@ def tmpdb ( protocol      = HIGHEST_PROTOCOL ,
     
     See the module's __doc__ string for an overview of the interface.
     """
-    return TmpBz2Shelf ( protocol      ,
-                         compresslevel ,
-                         silent        ,
-                         keyencoding   ,
-                         remove        ,
-                         keep          ) 
+    return TmpBz2Shelf ( dbtype      = dbtype      ,
+                         protocol    = protocol    ,
+                         compress    = compress    ,
+                         silent      = silent      ,
+                         keyencoding = keyencoding ,
+                         remove      = remove      ,
+                         keep        = keep        ) 
     
 # =============================================================================
 if '__main__' == __name__ :

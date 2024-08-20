@@ -185,7 +185,8 @@ if lzma :
         ## 
         def __init__( self                                   ,
                       filename                               ,
-                      mode        = 'c'                      , 
+                      mode        = 'c'                      ,
+                      dbtype      = ''                       , 
                       protocol    = PROTOCOL                 , 
                       compress    = lzma.PRESET_DEFAULT      ,
                       writeback   = False                    ,
@@ -195,6 +196,7 @@ if lzma :
             ## save arguments for pickling....
             self.__init_args = ( filename  ,
                                  mode      ,
+                                 dbtype    , 
                                  protocol  ,
                                  compress  ,
                                  writeback ,
@@ -202,13 +204,14 @@ if lzma :
             
             ## initialize the base class 
             CompressShelf.__init__ ( self        ,
-                                     filename    ,
-                                     mode        ,
-                                     protocol    ,
-                                     compress    , 
-                                     writeback   ,
-                                     silent      ,
-                                     keyencoding ) 
+                                     filename                  ,
+                                     mode        = mode        ,
+                                     dbtype      = dbtype      , 
+                                     protocol    = protocol    ,
+                                     compress    = compress    , 
+                                     writeback   = writeback   ,
+                                     silent      = silent      ,
+                                     keyencoding = keyencoding ) 
             
         ## needed for proper (un)pickling 
         def __getinitargs__ ( self ) :
@@ -296,6 +299,7 @@ if lzma :
             """
             new_db = LzShelf ( new_name                         ,
                                mode        =  'c'               ,
+                               dbtype      = self.dbtype        , 
                                protocol    = self.protocol      ,
                                compress    = self.compresslevel , 
                                writeback   = self.writeback     ,
@@ -312,13 +316,14 @@ if lzma :
     ## helper function to access LzShelve data base
     #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
     #  @date   2010-04-30
-    def open ( filename                            ,
-               mode          = 'c'                 ,
-               protocol      = PROTOCOL            ,
-               compresslevel = lzma.PRESET_DEFAULT , 
-               writeback     = False               ,
-               silent        = True                ,
-               keyencoding   = ENCODING            ) :
+    def open ( filename                          ,
+               mode        = 'c'                 ,
+               dbtype      = ''                  ,
+               protocol    = PROTOCOL            ,
+               compress    = lzma.PRESET_DEFAULT , 
+               writeback   = False               ,
+               silent      = True                ,
+               keyencoding = ENCODING            ) :
         
         """Open a persistent dictionary for reading and writing.
         
@@ -332,13 +337,14 @@ if lzma :
         See the module's __doc__ string for an overview of the interface.
         """
         
-        return LzShelf ( filename      ,
-                         mode          ,
-                         protocol      ,
-                         compresslevel ,
-                         writeback     ,
-                         silent        ,
-                         keyencoding   )
+        return LzShelf ( filename                  ,
+                         mode        = mode        ,
+                         dbtype      = dbtype      , 
+                         protocol    = protocol    ,
+                         compress    = compress    ,
+                         writeback   = writeback   ,
+                         silent      = silent      ,
+                         keyencoding = keyencoding )
     
     # =============================================================================
     ## @class TmpLzShelf
@@ -350,6 +356,7 @@ if lzma :
         TEMPORARY ``LZMA''-version of ``shelve''-database     
         """    
         def __init__( self                              ,
+                      dbtype      = ''                  , 
                       protocol    = HIGHEST_PROTOCOL    , 
                       compress    = lzma.PRESET_DEFAULT ,
                       silent      = False               ,
@@ -361,14 +368,15 @@ if lzma :
             TmpDB.__init__ ( self , suffix = '.lzdb' , remove = remove , keep = keep ) 
             
             ## open DB 
-            LzShelf.__init__ ( self          ,  
-                               self.tmp_name ,
-                               'c'           ,
-                               protocol      ,
-                               compress      , 
-                               False         , ## writeback 
-                               silent        ,
-                               keyencoding   ) 
+            LzShelf.__init__ ( self                      ,  
+                               self.tmp_name             ,
+                               mode        = 'c'         ,
+                               dbtype      = dbtype      ,
+                               protocol    = protocol    ,
+                               compress    = compress    , 
+                               writeback   = False       , ## writeback 
+                               silent      = silent      ,
+                               keyencoding = keyencoding ) 
             
         ## close and delete the file 
         def close ( self )  :
@@ -381,12 +389,13 @@ if lzma :
     ## helper function to open TEMPORARY ZipShelve data base#
     #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
     #  @date   2010-04-30
-    def tmpdb ( protocol      = HIGHEST_PROTOCOL    ,
-                compresslevel = lzma.PRESET_DEFAULT , 
-                silent        = True                ,
-                keyencoding   = ENCODING            ,
-                remove        = True                ,   ## immediate remove 
-                keep          = False               ) : ## keep it 
+    def tmpdb ( dbtype      = ''                  , 
+                protocol    = HIGHEST_PROTOCOL    ,
+                compress    = lzma.PRESET_DEFAULT , 
+                silent      = True                ,
+                keyencoding = ENCODING            ,
+                remove      = True                ,   ## immediate remove 
+                keep        = False               ) : ## keep it 
         """Open a TEMPORARY persistent dictionary for reading and writing.
         
         The optional protocol parameter specifies the
@@ -394,12 +403,13 @@ if lzma :
         
         See the module's __doc__ string for an overview of the interface.
         """
-        return TmpLzShelf ( protocol      ,
-                            compresslevel ,
-                            silent        ,
-                            keyencoding   ,
-                            remove        ,
-                            keep          ) 
+        return TmpLzShelf ( dbtype      = dbtype      ,
+                            protocol    = protocol    ,
+                            compress    = compress    ,
+                            silent      = silent      ,
+                            keyencoding = keyencoding ,
+                            remove      = remove      ,
+                            keep        = keep        ) 
 
     # ==========================================================================
     __all__ = (

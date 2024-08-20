@@ -186,17 +186,19 @@ if zst :
         ## 
         def __init__( self                                   ,
                       filename                               ,
-                      mode        = 'c'                      , 
+                      mode        = 'c'                      ,
+                      dbtype      = ''                       , 
                       protocol    = PROTOCOL                 , 
                       compress    = 3                        , ## level in Zstandard 
                       writeback   = False                    ,
                       silent      = False                    ,
-                      keyencoding = 'utf-8'                  ,
+                      keyencoding = ENCODING                 ,
                       threads     = -1                       ) :
             
             ## save arguments for pickling....
             self.__init_args = ( filename  ,
                                  mode      ,
+                                 dbtype    , 
                                  protocol  ,
                                  compress  ,
                                  writeback ,
@@ -212,14 +214,15 @@ if zst :
             
             
             ## initialize the base class 
-            CompressShelf.__init__ ( self        ,
-                                     filename    ,
-                                     mode        ,
-                                     protocol    ,
-                                     compress    , 
-                                     writeback   ,
-                                     silent      ,
-                                     keyencoding ) 
+            CompressShelf.__init__ ( self                      ,
+                                     filename                  ,
+                                     mode        = mode        ,
+                                     dbtype      = dbtype      , 
+                                     protocol    = protocol    ,
+                                     compress    = compress    , 
+                                     writeback   = writeback   ,
+                                     silent      = silent      ,
+                                     keyencoding = keyencoding ) 
             
             
         @property
@@ -319,6 +322,7 @@ if zst :
             """
             new_db = ZstShelf ( new_name                         ,
                                 mode        =  'c'               ,
+                                dbtype      = self.dbtype        , 
                                 protocol    = self.protocol      ,
                                 compress    = self.compresslevel , 
                                 writeback   = self.writeback     ,
@@ -336,14 +340,15 @@ if zst :
     ## helper function to access ZstShelve data base
     #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
     #  @date   2023-02-17
-    def open ( filename                            ,
-               mode          = 'c'                 ,
-               protocol      = PROTOCOL            ,
-               compresslevel = 3                   , 
-               writeback     = False               ,
-               silent        = True                ,
-               keyencoding   = ENCODING            ,
-               threads       = -1                  ) :
+    def open ( filename                          ,
+               mode        = 'c'                 ,
+               dbtype      = ''                  , 
+               protocol    = PROTOCOL            ,
+               compress    = 3                   , 
+               writeback   = False               ,
+               silent      = True                ,
+               keyencoding = ENCODING            ,
+               threads     = -1                  ) :
         
         """Open a persistent dictionary for reading and writing.
         
@@ -357,14 +362,15 @@ if zst :
         See the module's __doc__ string for an overview of the interface.
         """
         
-        return ZstShelf ( filename      ,
-                          mode          ,
-                          protocol      ,
-                          compresslevel ,
-                          writeback     ,
-                          silent        ,
-                          keyencoding   ,
-                          threads       )
+        return ZstShelf ( filename                  ,
+                          mode        = mode        ,
+                          dbtype      = dbtype      , 
+                          protocol    = protocol    ,
+                          compress    = compress    ,
+                          writeback   = writeback   ,
+                          silent      = silent      ,
+                          keyencoding = keyencoding ,
+                          threads     = threads     )
     
     # =============================================================================
     ## @class TmpZstShelf
@@ -376,6 +382,7 @@ if zst :
         TEMPORARY `ZST'-version of `shelve'-database     
         """    
         def __init__( self                              ,
+                      dbtype      = ''                  , 
                       protocol    = HIGHEST_PROTOCOL    , 
                       compress    = 3                   ,
                       silent      = False               ,
@@ -388,15 +395,16 @@ if zst :
             TmpDB.__init__ ( self , suffix = '.zstdb' , remove = remove , keep = keep ) 
             
             ## open DB 
-            ZstShelf.__init__ ( self          ,  
-                                self.tmp_name ,
-                                'c'           ,
-                                protocol      ,
-                                compress      , 
-                                False         , ## writeback 
-                                silent        ,
-                                keyencoding   ,
-                                threads       ) 
+            ZstShelf.__init__ ( self                        ,  
+                                self.tmp_name               ,
+                                mode        = 'c'           ,
+                                dbtype      = dbtype        ,  
+                                protocol    = protocol      ,
+                                compress    = compress      , 
+                                writeback   = False         , ## writeback 
+                                silent      = silent        ,
+                                keyencoding = keyencoding   ,
+                                threads     = threads       ) 
             
         ## close and delete the file 
         def close ( self )  :
@@ -409,13 +417,14 @@ if zst :
     ## helper function to open TEMPORARY ZstShelve data base#
     #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
     #  @date   2023-02-17
-    def tmpdb ( protocol      = HIGHEST_PROTOCOL    ,
-                compresslevel = 3                   , 
-                silent        = True                ,
-                keyencoding   = ENCODING            ,
-                remove        = True                ,  ## immediate remove 
-                keep          = False               ,  ## keep it
-                threads       = -1                  ) : 
+    def tmpdb ( dbtype      = ''                  ,
+                protocol    = HIGHEST_PROTOCOL    ,
+                compress    = 3                   , 
+                silent      = True                ,
+                keyencoding = ENCODING            ,
+                remove      = True                ,  ## immediate remove 
+                keep        = False               ,  ## keep it
+                threads     = -1                  ) : 
         """Open a TEMPORARY persistent dictionary for reading and writing.
         
         The optional protocol parameter specifies the
@@ -423,13 +432,14 @@ if zst :
         
         See the module's __doc__ string for an overview of the interface.
         """
-        return TmpZstShelf ( protocol      ,
-                             compresslevel ,
-                             silent        ,
-                             keyencoding   ,
-                             remove        ,
-                             keep          ,
-                             threads       ) 
+        return TmpZstShelf ( dbtype      = dbtype      ,
+                             protocol    = protocol    ,
+                             compress    = compress    ,
+                             silent      = silent      ,
+                             keyencoding = keyencoding ,
+                             remove      = remove      ,
+                             keep        = keep        ,
+                             threads     = threads     ) 
 
     # ==========================================================================
     __all__ = (
