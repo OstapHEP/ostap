@@ -61,6 +61,8 @@ from   ostap.core.meta_info import meta_info
 from   ostap.io.pickling    import ( Pickler , Unpickler, BytesIO,
                                      PROTOCOL,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
+
+import pickle 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
@@ -125,7 +127,7 @@ class CompressShelf(shelve.Shelf,object):
             compress    = 0        , 
             writeback   = False    ,
             silent      = True     ,
-            keyencoding = ENCODING ) :
+            keyencoding = ENCODING , **kwargs ) :
         
         ## the mode 
         mode = _modes_.get( mode.lower() , '' )
@@ -199,34 +201,35 @@ class CompressShelf(shelve.Shelf,object):
 
         afiles = tuple ( [ self.dbname + suffix for suffix in (  '' , ',db' , '.dir' , '.pag' , '.dat' ) ] )
         ofiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) 
+
         
-        if  3 <= python_version.major  :            
-            shelve.Shelf.__init__ ( self                                 ,
-                                    dbopen ( self.dbname , flag = mode , dbtype = dbtype ) ,                 
-                                    protocol    = protocol               ,
-                                    writeback   = writeback              ,
-                                    keyencoding = keyencoding            )            
-        else :
-            
-            shelve.Shelf.__init__ ( self                                  ,
-                                    dbopen ( self.dbname , flag = mode  , dbtype = dbtype ) ,
-                                    protocol    = protocol                ,
-                                    writeback   = writeback               ) 
-            self.keyencoding = keyencoding
-            
+        self.__opened = False
+
+        ## actual database 
+        dbase = dbopen ( self.dbname , flag = mode , dbtype = dbtype , **kwargs )
+        conf  = { 'protocol' : protocol , 'writeback' : writeback }
+
+        if  3 <= python_version.major  : conf [ 'keyencoding'] = keyencoding
+        else                           : self.keyencoding      = keyencoding
+        
+        shelve.Shelf.__init__ ( self   , dbase  , **conf )
+
+
         self.__opened        = True
         self.__mode          = mode        
 
-        self.sync  ()
+        ### self.sync  ()
 
-        self.__dbtype        = whichdb ( self.dbname )
+        self.__dbtype        =  whichdb ( self.dbname )
+        if hasattr ( self.dict , 'reopen' ) : self.dict.reopen() 
+                             
         nfiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) - ofiles 
 
         if not self.__files :
             
             files = []
             f     = self.dbname
-            db    = self.dbtype            
+            db    = self.dbtype           
             if os.path.exists ( f ) and os.path.isfile ( f ) and \
                    db in ( 'dbm.gnu' , 'gdbm' , 'dbhash' , 'bsddb185' , 'bsddb' , 'bsddb3' , 'sqlite3' , 'berkeleydb') :  
                 files.append  ( f )
@@ -259,7 +262,8 @@ class CompressShelf(shelve.Shelf,object):
         if  self.__compress is True :
             self.__compress = self.files 
             self.__remove   = self.files 
-        
+
+            
         if    'sqlite3' == self.dbtype and self.mode in ( 'w' , 'n' ) : write = True
         elif  'sqlite3' != self.dbtype and self.mode in ( 'c' , 'n' ) : write = True
         else                                                          : write = False
@@ -274,13 +278,16 @@ class CompressShelf(shelve.Shelf,object):
             dct  [ 'Pickle protocol'             ] = protocol 
             dct  [ 'Compress level'              ] = self.__compresslevel 
             self [ '__metainfo__'                ] = dct
+
             
         if not self.silent :
             self.ls ()
             ff = [ os.path.basename ( f ) for f in self.files ]
             ff = ff [0] if 1 == len ( ff ) else ff              
             logger.info ( 'DB files are %s|%s' % ( ff, self.dbtype ) )
-            
+
+        self.sync ()
+        
     @property
     def dbtype   ( self ) :
         """`dbtype'  : the underlying type of database"""
@@ -356,7 +363,7 @@ class CompressShelf(shelve.Shelf,object):
         if self.opened : self.close ()  
 
     # =========================================================================
-    ##  Iterator over avilable keys (patterns included).
+    ##  Iterator over available keys (patterns included).
     #   Pattern matching is performed accoriding to
     #   fnmatch/glob/shell rules (default) or regex 
     #   @code  
@@ -372,8 +379,7 @@ class CompressShelf(shelve.Shelf,object):
         >>> for k in db.ikeys('*MC*') : print(k)
         
         """
-        keys_ = self.keys()
-        
+
         if not pattern :
             good = lambda k : True
         elif regex : 
@@ -384,9 +390,9 @@ class CompressShelf(shelve.Shelf,object):
             import fnmatch
             good = lambda s : fnmatch.fnmatchcase ( k , pattern  )
 
-        keys_ = self.keys()
-        for k in sorted ( keys_ ) :
-            if good ( k ) : yield k
+
+        for key in self.keys () :
+            if good ( key ) : yield key
 
     # =========================================================================
     ##  Build the table of content(patterns included).
@@ -412,22 +418,19 @@ class CompressShelf(shelve.Shelf,object):
         ap = os.path.abspath  ( self.nominal_dbname ) 
         
         self.sync() 
-        fs = self.disk_size()  
+        fs = float ( self.disk_size()  ) 
             
-        if    fs <= 0            : size = "???"
-        elif  fs <  1024         : size = str ( fs ) 
-        elif  fs <  1024  * 1024 :
-            size = '%.2fkB' % ( float ( fs ) / 1024 )
-        elif  fs <  1024  * 1024 * 1024 :
-            size = '%.2fMB' % ( float ( fs ) / ( 1024 * 1024 ) )
-        else :
-            size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
+        if    fs <= 0                   : size = "???"
+        elif  fs <  1024                : size = '%3d'    %  int ( fs )
+        elif  fs <  1024  * 1024        : size = '%.2fkB' % ( fs / 1024 )
+        elif  fs <  1024  * 1024 * 1024 : size = '%.2fMB' % ( fs / ( 1024 * 1024 ) )
+        else                            : size = '%.2fGB' % ( fs / ( 1024 * 1024 * 1024 ) )
 
         keys = [] 
         for k in self.ikeys ( pattern ): keys.append ( k )
         keys.sort()
 
-        if keys : mlen = max ( [ len(k) for k in keys] ) + 2 
+        if keys : mlen = max ( [ len ( k ) for k in keys ] ) + 2 
         else    : mlen = 2 
         fmt = ' --> %%-%ds : %%s' % mlen
 
@@ -531,6 +534,9 @@ class CompressShelf(shelve.Shelf,object):
     def close ( self ) :
         """ Close the file (and compress it if required) 
         """
+        
+        print ('CLOSE', self.opened )
+        
         if not self.opened : return 
         ##
         if    'sqlite3' == self.dbtype and 'c' == self.mode : write = True
@@ -616,11 +622,11 @@ class CompressShelf(shelve.Shelf,object):
         return tuple  ( ofiles ) 
     
     # =========================================================================
-    ## some context manager functionality : enter 
+    ## Context manager functionality : enter 
     def __enter__ ( self      ) : return self
     
     # =========================================================================
-    ## some context manager functionality : exit 
+    ## Context manager functionality : exit 
     def __exit__  ( self , *_ ) : self.close ()
 
     # =========================================================================
@@ -637,6 +643,7 @@ class CompressShelf(shelve.Shelf,object):
             return "%s('%s')|%s: %d object(s)" % ( kname , self.dbname , self.dbtype  , len ( self ) ) 
         elif self :
             return "%s('%s')|%s: empty"        % ( kname , self.dbname , self.dbtype  )
+        
         return "Invalid/Closed %s('%s')"       % ( kname , self.dbname )
     
     __str__ = __repr__
@@ -698,13 +705,8 @@ class CompressShelf(shelve.Shelf,object):
         """
         item = Item ( time.time()  , value )
         if self.writeback : self.cache [ key ] = item
-
-        
+        ##
         self.dict [ key.encode ( self.keyencoding ) ] = self.compress_item ( item )
-        
-        ## kk = key.encode ( self.keyencoding )
-        ## vv = self.compress_item ( item )
-        ## self.dict [ kk ] = vv 
 
     # =========================================================================
     ##  get the disk size of the db
@@ -754,7 +756,7 @@ class CompressShelf(shelve.Shelf,object):
         
         exts = set ( [ os.path.splitext ( f )[1] for f in files ] )
         
-        if   1 == len ( files ) and whichdb ( files[0] ) : return files[0]
+        if   1 == len ( files ) and whichdb ( files [ 0 ] ) : return files [ 0 ]
         elif 1 == len ( files ) and '.db' in exts :
             f , _ = os.path.splitext ( files [0] )
             if whichdb ( f  ) : return f

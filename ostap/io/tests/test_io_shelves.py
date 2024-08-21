@@ -44,7 +44,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_io_shelves' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
-if  (3,3) <= python_version :
+if  ( 3 , 3 ) <= python_version :
     import ostap.io.lzshelve  as lzshelve
 else :
     lzshelve = None
@@ -80,9 +80,11 @@ for i in range ( 5000 ) :
         hh.Fill ( random.gauss ( 50 , 10) )
 data['histos'][ht] = hh 
 
-
 # =============================================================================
-def test_shelves():
+def test_shelves1():
+
+    logger = getLogger ('Test shelves')
+    logger.info ( 'Test variosu shelves' ) 
     
     db_sql_name  = CU.CleanUp.tempfile ( suffix = '.sqldb'  )  
     db_zip_name  = CU.CleanUp.tempfile ( suffix = '.zipdb'  ) 
@@ -119,14 +121,14 @@ def test_shelves():
         db_root [ k ] = data[k]
         
         
-    logger.info('SQLiteShelve #keys: %s' % len ( list ( db_sql .keys() ) ) ) 
-    logger.info('ZipShelve    #keys: %s' % len ( db_zip .keys() ) )
-    logger.info('Bz2Shelve    #keys: %s' % len ( db_bz2 .keys() ) )
-    logger.info('RootShelve   #keys: %s' % len ( db_root.keys() ) )
+    logger.info('SQLiteShelve #keys: %s' % len ( db_sql  ) ) 
+    logger.info('ZipShelve    #keys: %s' % len ( db_zip  ) )
+    logger.info('Bz2Shelve    #keys: %s' % len ( db_bz2  ) )
+    logger.info('RootShelve   #keys: %s' % len ( db_root ) )
     if lzshelve :
-        logger.info('LzShelve     #keys: %s' % len ( db_lz .keys() ) )
+        logger.info('LzShelve     #keys: %s' % len ( db_lz  ) )
     if zstshelve :
-        logger.info('ZstShelve    #keys: %s' % len ( db_zst.keys() ) )
+        logger.info('ZstShelve    #keys: %s' % len ( db_zst ) )
 
     db_sql  .close() 
     db_zip  .close()
@@ -283,11 +285,45 @@ def test_shelves():
                 db [ 'data'  ] = data
                 db [ 'histos'] = data['histos']
                 db.ls()
+
+
+# =============================================================================
+
+def test_shelves2 () : 
+
+    shelves = [
+        zipshelve ,
+        bz2shelve , 
+    ]
+    if lzshelve  : shelves.append ( lzshelve  )
+    if zstshelve : shelves.append ( zstshelve )
+
+    backends  = [
+        'lmdb'      , 
+        'berkleydb' ,
+        'berkley'   ,
+        'bdsdb2'    ,
+        'sqlite'    ,
+        'sqlite3'   ,
+        ''
+    ]
+    
+    for sh in shelves :
+        
+        for b in backends :
+            db = sh.tmpdb ( dbtype = b )
+            db ['one'] = 1
+            db ['two'] = 2
+            print ( 'DB:' , db )
+            
+            
+        
     
 # =============================================================================
 if '__main__' == __name__ :
     
-    test_shelves()
+    test_shelves1 ()
+    test_shelves2 ()
 
 # =============================================================================
 ##                                                                      The END

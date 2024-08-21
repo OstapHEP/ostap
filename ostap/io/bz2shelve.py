@@ -185,7 +185,7 @@ class Bz2Shelf(CompressShelf):
             compress    = 9                        ,
             writeback   = False                    ,
             silent      = False                    ,
-            keyencoding = ENCODING                 ) :
+            keyencoding = ENCODING                 , **kwargs ) :
         
         ## save arguments for pickling....
         self.__init_args = ( filename  ,
@@ -205,7 +205,7 @@ class Bz2Shelf(CompressShelf):
                                  compress    = compress    , 
                                  writeback   = writeback   ,
                                  silent      = silent      ,
-                                 keyencoding = keyencoding ) 
+                                 keyencoding = keyencoding , **kwargs ) 
         
     ## needed for proper (un)pickling 
     def __getinitargs__ ( self ) :
@@ -316,7 +316,7 @@ def open ( filename                  ,
            compress      = 9         , 
            writeback     = False     ,
            silent        = True      ,
-           keyencoding   = ENCODING  ) :
+           keyencoding   = ENCODING  , **kwargs ) :
     
     """Open a persistent dictionary for reading and writing.
     
@@ -337,7 +337,7 @@ def open ( filename                  ,
                       compress    = compress    ,
                       writeback   = writeback   ,
                       silent      = silent      ,
-                      keyencoding = keyencoding )
+                      keyencoding = keyencoding , **kwargs )
 
 # =============================================================================
 ## @class TmpBz2Shelf
@@ -355,7 +355,7 @@ class TmpBz2Shelf(Bz2Shelf,TmpDB):
                   silent      = False            ,
                   keyencoding = ENCODING         ,
                   remove      = True             ,
-                  keep        = False            ) :
+                  keep        = False            , **kwargs ) :
 
         ## initialize the base: generate the name 
         TmpDB.__init__ ( self , suffix = '.bz2db' , remove = remove , keep = keep ) 
@@ -369,7 +369,7 @@ class TmpBz2Shelf(Bz2Shelf,TmpDB):
                             compress    = compress    , 
                             writeback   = False       , ## writeback 
                             silent      = silent      ,
-                            keyencoding = keyencoding ) 
+                            keyencoding = keyencoding , **kwargs ) 
         
     ## close and delete the file 
     def close ( self )  :
@@ -388,7 +388,7 @@ def tmpdb ( dbtype      = ''               ,
             silent      = True             ,
             keyencoding = ENCODING         ,
             remove      = True             ,   ## immediate remove 
-            keep        = False            ) : ## keep it 
+            keep        = False            , **kwargs ) : ## keep it 
     """Open a TEMPORARY persistent dictionary for reading and writing.
     
     The optional protocol parameter specifies the
@@ -402,7 +402,7 @@ def tmpdb ( dbtype      = ''               ,
                          silent      = silent      ,
                          keyencoding = keyencoding ,
                          remove      = remove      ,
-                         keep        = keep        ) 
+                         keep        = keep        , **kwargs ) 
     
 # =============================================================================
 if '__main__' == __name__ :

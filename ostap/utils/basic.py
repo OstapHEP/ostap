@@ -118,14 +118,12 @@ def make_dir ( bdir ) :
     >>> make_dir ( path )
     """
     try :
-
         if bdir : 
             os.mkdir ( bdir )
             if os.path.exists ( bdir ) and os.path.isdir ( bdir ) :
                 return os.path.abspath ( bdir)
             
-    except OSError :
-        
+    except OSError :        
         pass
     
     return ''
@@ -216,6 +214,7 @@ else :
             # could give priority to other errors like EACCES or EROFS
             if not exist_ok or not os.path.isdir ( name ) :
                 raise
+
 
 # =============================================================================
 ## @class NoContext

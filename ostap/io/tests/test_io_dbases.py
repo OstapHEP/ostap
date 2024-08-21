@@ -163,10 +163,10 @@ def test_dbases () :
                 value = pickle.dumps ( datum ) 
                 db [ key ] = value 
                 
-            ##for i in range ( 1000 ) :
-            ##    kk  = the_name ()
-            ##    key = the_key ( kk ) 
-            ##    db [ key ] = pickle.dumps ( hh ) 
+            for i in range ( 1000 ) :
+                kk  = the_name ()
+                key = the_key ( kk ) 
+                db [ key ] = pickle.dumps ( hh ) 
                 
             if hasattr ( db , 'sync' ) : db.sync  ()
             db.close ()

@@ -52,7 +52,7 @@ __all__     = (
     'LmdbDict' 
 )
 # =============================================================================
-import sys, os
+import sys, os, shutil 
 # =============================================================================
 if ( 3 , 5 ) <= sys.version_info : from collections.abc import MutableMapping
 else                             : from collections     import MutableMapping
@@ -72,6 +72,32 @@ if ( 3 , 7 ) <= sys.version_info :
         pass
     
 # =============================================================================
+def _qislmdb_ ( q , path ) :
+    """  Is it a lmdb subdir?
+    >>> ok = islmdb( 'mydbase' ) 
+    """
+    if   not os.path.exists  ( path ) : q.put ( False ) 
+    elif not os.path.isdir   ( path ) : q.put ( False ) 
+    else : 
+        
+        data = os.path.join    ( path , 'data.mdb' )
+        if   not os.path.exists ( data ) : q.put ( False ) 
+        elif not os.path.isfile ( data ) : q.put ( False ) 
+        else :
+            try :
+                if lmdb :
+                    db = lmdb.open ( path                ,
+                                     readonly    = True  ,
+                                     create      = False ,
+                                     subdir      = True  ,
+                                     max_readers = 127   , 
+                                     max_dbs     = 127   )
+                    db.close() 
+                    q.put ( True ) 
+            except :
+                    q.put ( True ) 
+
+# =============================================================================
 ## Is it a lmdb subdir?
 #  @code
 #  ok = islmdb( 'my_dbase' ) 
@@ -80,20 +106,39 @@ def islmdb ( path ) :
     """  Is it a lmdb subdir?
     >>> ok = islmdb( 'mydbase' ) 
     """
-    if not   os.path.exists  ( path ) : return False
-    if not   os.path.isdir   ( path ) : return False
-    data = os.path.join ( path , 'data.mdb')
-    if not   os.path.exists  ( data ) : return False
-    if not   os.path.isfile  ( data ) : return False
-    
+    if not os.path.exists  ( path ) : return False
+    if not os.path.isdir   ( path ) : return False
+    data = os.path.join    ( path , 'data.mdb' )
+    if not os.path.exists ( data ) : return False
+    if not os.path.isfile ( data ) : return False
+
+    try : 
+        import multiprocess    as MP 
+    except ImportError :
+        import multiprocessing as MP 
+
+    q = MP.Queue()
+    p = MP.Process( target = _qislmdb_ , args = ( q , path ) ) 
+    p.start()
+    p.join()
+    return q.get()
+
     try :
         if lmdb :
-            db = lmdb.open ( path , readonly = True , create = False )
+            db = lmdb.open ( path                ,
+                             readonly    = True  ,
+                             create      = False ,
+                             subdir      = True  ,
+                             max_readers = 127   , 
+                             max_dbs     = 127   )
+            print ( 'WHICH/3' , db.info() ) 
+            db.close() 
+            print ( 'WHICH/4' , db ) 
             return True 
-    except:
-        pass
+    except :
+        return False
 
-    return True 
+    return False 
 
 # =============================================================================
 ## @class LmdbDict
@@ -140,32 +185,44 @@ class LmdbDict ( MutableMapping ) :
         ## check presence of the lmdb module 
         assert lmdb , "`lmdb` module is not available!"
 
-        conf = { 'map_size'  : 2**24 ,
-                 'map_async' : True  ,
-                 'max_dbs'   : 1     , 
-                 'mode'      : 0o755 }
+        assert isinstance ( autogrow , int ) and  0 <= autogrow , "Invalid `autogrow` parameter: %s" % autogrow
+        self.__autogrow = min ( autogrow , 32 )        
+
+        conf = { 'map_size'    : 2**24 ,
+                 'map_async'   : True  ,
+                 'max_readers' : 127   , 
+                 'max_dbs'     : 127   , 
+                 'mode'        : 0o755 }
         
         conf.update ( kwargs )
-        
-        if   'r' == flag :
-            ## Open existing database for reading only (default)
-            env = lmdb.open ( path , readonly = True  , create = False , **conf )
-        elif 'w' == flag :
-            ## Open existing database for reading and writing
-            env = lmdb.open ( path , readonly = False , create = False , **conf )
-        elif 'c' == flag :
-            # Open database for reading and writing, creating it if it doesn't exist
-            env = lmdb.open ( path , readonly = False , create = True  , **conf )
-        elif 'n' == flag :
-            ## remove_lmdbm(file)
-            env = lmdb.open ( path , readonly = False , create = True , **conf  )
-        else :
-            raise ValueError ( "Invalid flag: %s" % flag )
 
-        assert isinstance ( autogrow , int ) and  0 <= autogrow , "Invalid `autogrow` parameter: %s" % autogrow
+        if   'r' == flag : cnf = { 'readonly' : True  , 'create' : False }
+        elif 'w' == flag : cnf = { 'readonly' : False , 'create' : False }
+        elif 'c' == flag : cnf = { 'readonly' : False , 'create' : True  }
+        elif 'n' == flag : cnf = { 'readonly' : False , 'create' : True  }
+        else : raise ValueError ( "Invalid flag: %s" % flag )
         
-        self.__autogrow = min ( autogrow , 32 )        
-        self.__db   = env 
+        if 'n' == flag and path and os.path.exists ( path ) :
+            if   os.path.isfile ( path ) :
+                try    : os.unlink ( path )
+                except : pass 
+            elif os.path.isdir  ( path ) :
+                try    : shutil.rmtree ( path )
+                except : pass                    
+            if os.path.exists ( path ) :
+                logger.warning ( 'path exists!' ) 
+
+        env = lmdb.open ( path , **conf  )
+
+        self.__path     = path
+        self.__conf     = conf
+        self.__db       = env 
+
+    # =========================================================================
+    ## reopen the database 
+    def reopen ( self ) :
+        if self.db : self.db.close()
+        self.__db = lmdb.open ( self.__path , **self.__conf )
         
     @property
     def db ( self ) :
@@ -230,18 +287,19 @@ class LmdbDict ( MutableMapping ) :
         >>> db = ...
         >>> db [ key ] = value 
         """
-        nn = max ( 1 , self.autogrow )
-        vv = self.encode_value ( value ) 
-        for i in range ( nn ):
+        vv = self.encode_value ( value )
+        ## 
+        while True : 
             try:
                 with self.db.begin ( write = True ) as txn:
-                    txn.put ( key , vv )
+                    txn.put ( key = key , value = vv , overwrite = True , append = False )
                     return
             except lmdb.MapFullError :
                 if not self.autogrow : raise
                 new_map_size  = self.map_size * 2
                 self.map_size = new_map_size
                 logger.info ( 'DBASE is resized to %s' % self.map_size )
+                self.__autogrow = self.autogrow - 1 
                 
         raise lmdb.MapFullError ("LmdbDict: Failure to autogrow!") 
 
@@ -333,7 +391,7 @@ class LmdbDict ( MutableMapping ) :
     def __delitem__( self , key ) :
         """ Delete certain key from the database
         >>> db = ...
-        >>> value = db.pop ( key ) 
+        >>> del db[ key ]
         """
         with self.db.begin ( write = True ) as txn:
             txn.delete ( key )
@@ -355,6 +413,8 @@ class LmdbDict ( MutableMapping ) :
         >>> db.close() 
         """
         self.db.close ()
+        del self.__db
+        self.__db = None 
 
     # =========================================================================
     ## context manager: ENTER 

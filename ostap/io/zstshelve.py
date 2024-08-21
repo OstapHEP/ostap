@@ -193,7 +193,7 @@ if zst :
                       writeback   = False                    ,
                       silent      = False                    ,
                       keyencoding = ENCODING                 ,
-                      threads     = -1                       ) :
+                      threads     = -1                       , **kwargs ) :
             
             ## save arguments for pickling....
             self.__init_args = ( filename  ,
@@ -212,7 +212,6 @@ if zst :
                                                          write_content_size = True     ) 
             self.__decompressor = zst.ZstdDecompressor ( )
             
-            
             ## initialize the base class 
             CompressShelf.__init__ ( self                      ,
                                      filename                  ,
@@ -222,7 +221,7 @@ if zst :
                                      compress    = compress    , 
                                      writeback   = writeback   ,
                                      silent      = silent      ,
-                                     keyencoding = keyencoding ) 
+                                     keyencoding = keyencoding , **kwargs ) 
             
             
         @property
@@ -348,7 +347,7 @@ if zst :
                writeback   = False               ,
                silent      = True                ,
                keyencoding = ENCODING            ,
-               threads     = -1                  ) :
+               threads     = -1                  , **kwargs ) :
         
         """Open a persistent dictionary for reading and writing.
         
@@ -360,8 +359,7 @@ if zst :
         version of the pickle protocol (0, 1, or 2).
         
         See the module's __doc__ string for an overview of the interface.
-        """
-        
+        """        
         return ZstShelf ( filename                  ,
                           mode        = mode        ,
                           dbtype      = dbtype      , 
@@ -370,7 +368,7 @@ if zst :
                           writeback   = writeback   ,
                           silent      = silent      ,
                           keyencoding = keyencoding ,
-                          threads     = threads     )
+                          threads     = threads     , **kwargs )
     
     # =============================================================================
     ## @class TmpZstShelf
@@ -389,7 +387,7 @@ if zst :
                       keyencoding = ENCODING            , 
                       remove      = True                ,
                       keep        = False               ,
-                      threads     = -1                  ) :
+                      threads     = -1                  , **kwargs ) :
             
             ## initialize the base: generate the name 
             TmpDB.__init__ ( self , suffix = '.zstdb' , remove = remove , keep = keep ) 
@@ -404,7 +402,7 @@ if zst :
                                 writeback   = False         , ## writeback 
                                 silent      = silent        ,
                                 keyencoding = keyencoding   ,
-                                threads     = threads       ) 
+                                threads     = threads       , **kwargs ) 
             
         ## close and delete the file 
         def close ( self )  :
@@ -424,7 +422,7 @@ if zst :
                 keyencoding = ENCODING            ,
                 remove      = True                ,  ## immediate remove 
                 keep        = False               ,  ## keep it
-                threads     = -1                  ) : 
+                threads     = -1                  , **kwargs ) : 
         """Open a TEMPORARY persistent dictionary for reading and writing.
         
         The optional protocol parameter specifies the
@@ -439,7 +437,7 @@ if zst :
                              keyencoding = keyencoding ,
                              remove      = remove      ,
                              keep        = keep        ,
-                             threads     = threads     ) 
+                             threads     = threads     , **kwargs ) 
 
     # ==========================================================================
     __all__ = (

@@ -257,27 +257,32 @@ def dbopen ( file               ,
     if 'c' in flag and '' == check :
         check = None 
         if os.path.exists ( file ) and os.path.isfile ( file ) : os.unlink ( file ) 
-
+        
+    if 'n' == flag and file and os.path.exists ( file ) :
+        if os.path.isfile ( file ) :
+            try    : os.unlink ( file )
+            except : pass 
+        elif os.path.isdir  ( file ) :
+            try    : shutil.rmtree ( file )
+            except : pass                    
+            
     # 'n' flag is specified  or dbase does not exist and c flag is specified 
     if 'n' in flag or ( check is None and 'c' in flag ) : 
 
-        if isinstance ( dbtype , str ) : db_types = [ dbtype              ]
-        else                           : db_types = [ db for db in dbtype ] 
-
-        print ( 'PREFERENCE1' , db_types )
+        if isinstance ( dbtype , str ) : db_types = [ dbtype.lower() ]
+        else                           : db_types = [ db.lower()  for db in dbtype ] 
 
         for db in db_types :
-            if use_berkeleydb and 'berkeleydb' == db :
+            
+            if use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' ) : 
                 return berkeleydb_open ( file            , flag , mode , **kwargs ) 
             if use_bsddb3     and 'bdsdb3'     == db :
                 return bsddb3_open     ( file            , flag , mode , **kwargs ) 
             if use_lmdb       and 'lmdb'       == db :
                 return LmdbDict        ( path     = file , flag = flag , **kwargs )
-            if 'sqlite3' == db :
+            if db in ( 'sqlite' , 'sqlite3' ) : 
                 return SqliteDict      ( filename = file , flag = flag , **kwargs )
 
-        print ( 'PREFERENCE1' , db_types )
-    
         if concurrent and use_berkeleydb :
             return berkeleydb_open ( file , flag , mode , **kwargs ) 
 
