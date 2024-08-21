@@ -24,14 +24,22 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_io_dbases' )
 else                       : logger = getLogger ( __name__         )
 # =============================================================================
-characters = "abcdefghijklmnopqrstuvwxyz0123456789_"
-# =============================================================================
-## generate random name 
-def the_name ():
-    """ Generate random name"""
-    return ''.join ( random.choices ( characters , k = 8 ) )
-# =============================================================================
-
+if (3,0) <= sys.version_info : 
+    characters = "abcdefghijklmnopqrstuvwxyz0123456789_"
+    # =============================================================================
+    ## generate random name 
+    def the_name ():
+        """ Generate random name"""
+        return ''.join ( random.choices ( characters , k = 8 ) )
+    # =============================================================================
+else :
+    # =============================================================================
+    index = 1
+    def _the_name () :
+        index += 1
+        return 'i%08d' % index 
+    # =============================================================================
+    
 dbases = []
 
 # ============================================================================
