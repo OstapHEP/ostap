@@ -93,8 +93,7 @@ if  ( 3 , 6 ) <= sys.version_info :
 use_bsddb3     = False
 # =============================================================================
 ## make a try for dbddb3 
-if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) : 
-    
+if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :     
     try :        
         import bsddb3
         ## open bsddb3 database 
@@ -289,8 +288,9 @@ def dbopen ( file               ,
         if concurrent and use_bsddb3     :
             return bsddb3_open     ( file , flag , mode , **kwargs ) 
 
-        if concurrent and use_lmdb       : 
-            return LmdbDict        ( path     = file , flag = flag , **kwargs )
+        ## temporarily disabled 
+        ## if concurrent and use_lmdb       : 
+        ##    return LmdbDict        ( path     = file , flag = flag , **kwargs )
         
         if concurrent :
             return SqliteDict      ( filename = file , flag = flag , **kwargs )

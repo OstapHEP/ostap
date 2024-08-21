@@ -4,7 +4,6 @@
 # @file ostap/io/tests/test_io_shelves.py
 # Test module for data storages, i.e. modules
 # @see rootshelve.py
-# @see sqliteshelve.py
 # @see zipshelve.py
 # @see bz2shelve.py
 # @see lzshelve.py
@@ -13,7 +12,6 @@
 # =============================================================================
 """ Test module for data storages, i.e. modules
   - ostap/io/rootshelve.py
-  - ostap/io/sqliteshelve.py
   - ostap/io/zipshelve.py
   - ostap/io/bzshelve.py  
   - ostap/io/lzshelve.py   (python3 only)
@@ -34,7 +32,6 @@ from   ostap.io.dbase        import dbsize
 import ostap.utils.cleanup   as     CU
 import ostap.io.zipshelve    as     zipshelve
 import ostap.io.bz2shelve    as     bz2shelve
-import ostap.io.sqliteshelve as     sqliteshelve
 import ostap.io.rootshelve   as     rootshelve
 import ROOT, os, random
 # =============================================================================
@@ -49,7 +46,7 @@ if  ( 3 , 3 ) <= python_version :
 else :
     lzshelve = None
 # =============================================================================
-if  (3,6) <= python_version :    
+if  ( 3 , 6 ) <= python_version :    
     import ostap.io.zstshelve as zstshelve 
     try : 
         import zstandard
@@ -97,8 +94,7 @@ def test_shelves1():
     
     from   ostap.io.dbase        import whichdb
 
-
-    db_sql  = sqliteshelve.open ( db_sql_name  , 'c' )
+    db_sql  = zipshelve.open    ( db_sql_name  , 'c' , dbtype = 'sqlite3' )
     db_zip  = zipshelve.open    ( db_zip_name  , 'c' )
     db_bz2  = bz2shelve.open    ( db_bz2_name  , 'c' )
     db_root = rootshelve.open   ( db_root_name , 'c' )
@@ -146,7 +142,7 @@ def test_shelves1():
     if zstshelve :
         logger.info('ZstShelve    size: %d|%d ' % dbsize ( db_zst_name   ) ) 
 
-    db_sql  = sqliteshelve.open    ( db_sql_name  , 'r' )
+    db_sql  = zipshelve.open       ( db_sql_name  , 'r' , dbtype = 'sqlite3')
     db_zip  = zipshelve.open       ( db_zip_name  , 'r' )
     db_bz2  = bz2shelve.open       ( db_bz2_name  , 'r' )
     if lzshelve  :
@@ -265,7 +261,7 @@ def test_shelves1():
         with timing('Close ZST'  ) : db_zst .close()
     with timing('Close ROOT' ) : db_root.close()
 
-    dbases = ( sqliteshelve . tmpdb () ,
+    dbases = ( zipshelve    . tmpdb ( dbtype = 'sqlite3' ) ,
                zipshelve    . tmpdb () ,
                bz2shelve    . tmpdb () ,
                rootshelve   . tmpdb () )

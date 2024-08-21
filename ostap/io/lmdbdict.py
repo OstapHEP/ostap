@@ -80,7 +80,7 @@ def _qislmdb_ ( q , path ) :
     elif not os.path.isdir   ( path ) : q.put ( False ) 
     else : 
         
-        data = os.path.join    ( path , 'data.mdb' )
+        data = os.path.join     ( path , 'data.mdb' )
         if   not os.path.exists ( data ) : q.put ( False ) 
         elif not os.path.isfile ( data ) : q.put ( False ) 
         else :
@@ -91,11 +91,11 @@ def _qislmdb_ ( q , path ) :
                                      create      = False ,
                                      subdir      = True  ,
                                      max_readers = 127   , 
-                                     max_dbs     = 127   )
+                                     max_dbs     = 0     )
                     db.close() 
-                    q.put ( True ) 
+                    q.put ( True  ) 
             except :
-                    q.put ( True ) 
+                    q.put ( False ) 
 
 # =============================================================================
 ## Is it a lmdb subdir?
@@ -109,36 +109,22 @@ def islmdb ( path ) :
     if not os.path.exists  ( path ) : return False
     if not os.path.isdir   ( path ) : return False
     data = os.path.join    ( path , 'data.mdb' )
-    if not os.path.exists ( data ) : return False
-    if not os.path.isfile ( data ) : return False
+    if not os.path.exists  ( data ) : return False
+    if not os.path.isfile  ( data ) : return False
 
+    # =========================================================================
+    ## the rest needs multiprocessing
+    # =========================================================================
     try : 
         import multiprocess    as MP 
     except ImportError :
         import multiprocessing as MP 
 
     q = MP.Queue()
-    p = MP.Process( target = _qislmdb_ , args = ( q , path ) ) 
+    p = MP.Process ( target = _qislmdb_ , args = ( q , path ) ) 
     p.start()
     p.join()
     return q.get()
-
-    try :
-        if lmdb :
-            db = lmdb.open ( path                ,
-                             readonly    = True  ,
-                             create      = False ,
-                             subdir      = True  ,
-                             max_readers = 127   , 
-                             max_dbs     = 127   )
-            print ( 'WHICH/3' , db.info() ) 
-            db.close() 
-            print ( 'WHICH/4' , db ) 
-            return True 
-    except :
-        return False
-
-    return False 
 
 # =============================================================================
 ## @class LmdbDict
@@ -191,7 +177,7 @@ class LmdbDict ( MutableMapping ) :
         conf = { 'map_size'    : 2**24 ,
                  'map_async'   : True  ,
                  'max_readers' : 127   , 
-                 'max_dbs'     : 127   , 
+                 'max_dbs'     : 0     , 
                  'mode'        : 0o755 }
         
         conf.update ( kwargs )

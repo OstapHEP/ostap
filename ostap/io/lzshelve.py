@@ -3,7 +3,7 @@
 # =============================================================================
 # @file lzshelve.py
 # 
-# This is ``LZMA''-version of shelve database.
+# This is `LZMA'-version of shelve database.
 # 
 # Keeping the same interface and functionlity as shelve data base,
 # LzmaShelf allows much more compact file size through the on-flight

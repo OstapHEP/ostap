@@ -56,13 +56,11 @@ __all__ = (
 # =============================================================================
 import os, abc, shelve, shutil, glob, time, datetime
 from   sys                  import version_info           as python_version
-from   ostap.io.dbase       import dbopen, whichdb, Item, ordered_dict  
+from   ostap.io.dbase       import dbopen , whichdb, Item, ordered_dict  
 from   ostap.core.meta_info import meta_info 
 from   ostap.io.pickling    import ( Pickler , Unpickler, BytesIO,
                                      PROTOCOL,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
-
-import pickle 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
@@ -96,7 +94,6 @@ _modes_ = {
     'update'   : 'w' , ## write/update/append               
     'append'   : 'w' , ## write/update/append               
     }
-
 # =============================================================================
 ## @class CompressShelf
 #  Abstract class for `compressed' version of `shelve'-database.
@@ -201,8 +198,7 @@ class CompressShelf(shelve.Shelf,object):
 
         afiles = tuple ( [ self.dbname + suffix for suffix in (  '' , ',db' , '.dir' , '.pag' , '.dat' ) ] )
         ofiles = set   ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) 
-
-        
+   
         self.__opened = False
 
         ## actual database 
@@ -263,12 +259,7 @@ class CompressShelf(shelve.Shelf,object):
             self.__compress = self.files 
             self.__remove   = self.files 
 
-            
-        if    'sqlite3' == self.dbtype and self.mode in ( 'w' , 'n' ) : write = True
-        elif  'sqlite3' != self.dbtype and self.mode in ( 'c' , 'n' ) : write = True
-        else                                                          : write = False
-
-        if write :
+        if 'n' == self.mode : 
             dct  = ordered_dict()  
             dct  [ 'Created by'                  ] = meta_info.User
             dct  [ 'Created at'                  ] = datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' )  
@@ -278,7 +269,6 @@ class CompressShelf(shelve.Shelf,object):
             dct  [ 'Pickle protocol'             ] = protocol 
             dct  [ 'Compress level'              ] = self.__compresslevel 
             self [ '__metainfo__'                ] = dct
-
             
         if not self.silent :
             self.ls ()
@@ -539,18 +529,14 @@ class CompressShelf(shelve.Shelf,object):
         
         if not self.opened : return 
         ##
-        if    'sqlite3' == self.dbtype and 'c' == self.mode : write = True
-        elif  'sqlite3' != self.dbtype and 'e' == self.mode : write = True
-        else                                                : write = False 
-        if write : 
+        if 'r' != self.mode and 'n' != self.mode :
             dct  = self.get ( '__metainfo__' , ordered_dict () )
             dct  [ 'Updated at'                  ] = datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )   
             dct  [ 'Updated by'                  ] = meta_info.User 
             dct  [ 'Updated with Ostap version'  ] = meta_info.Ostap 
             dct  [ 'Updated with Python version' ] = meta_info.Python 
             dct  [ 'Updated with ROOT version'   ] = meta_info.ROOT
-            
-            ## self [ '__metainfo__'                ] = dct
+            self [ '__metainfo__'                ] = dct
 
         if not self.silent : self.ls ()
         

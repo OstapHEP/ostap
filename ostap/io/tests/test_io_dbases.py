@@ -30,7 +30,7 @@ dbases = []
 # ============================================================================
 try :
     import lmdb 
-    from ostap.io.lmdbdict import lbdb, LmdbDict
+    from ostap.io.lmdbdict import islmdb, LmdbDict
     item = 'LmdbDict' , CleanUp.tempdir ( prefix = 'ostap-LMDB-' ) , LmdbDict
     dbases.append ( item )
 except ImportError:
@@ -136,7 +136,7 @@ else :
 
 dbases.reverse() 
 
-hh = ROOT.TH1D ( 'histp' , 'title' , 100 , 0 , 10 )
+hh = ROOT.TH1D ( 'histp' , 'title' , 500 , 0 , 10 )
 for i in range ( 1000 ) : hh.Fill ( random.gauss ( 5 , 1 ) ) 
 # =============================================================================
 ## test databases 
@@ -149,7 +149,6 @@ def test_dbases () :
         
         tag, filename, dbase = item
 
-        
         with timing () as tm : 
             db = dbase ( filename , flag = 'n'  )         
             for datum in data :
@@ -158,10 +157,13 @@ def test_dbases () :
                 value = pickle.dumps ( datum ) 
                 db [ key ] = value 
                 
-            for i in range ( 1000 ) :
+            for i in range ( 100 ) :
                 kk  = random_name ( 7 )
-                key = the_key ( kk ) 
-                db [ key ] = pickle.dumps ( hh ) 
+                key = the_key ( kk )
+                vv  = 500 * [ hh ]
+                for h in vv :
+                    for j in range ( 10 ) : h.Fill ( random.uniform ( 0 , 10 ) ) 
+                db [ key ] = pickle.dumps ( vv ) 
                 
             if hasattr ( db , 'sync' ) : db.sync  ()
             db.close ()
