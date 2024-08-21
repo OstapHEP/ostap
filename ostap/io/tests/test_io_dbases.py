@@ -36,10 +36,10 @@ dbases = []
 
 # ============================================================================
 try :
-    import lbdb 
+    import lmdb 
     from ostap.io.lmdbdict import lbdb, LmdbDict
     item = 'LmdbDict' , CleanUp.tempdir ( prefix = 'ostap-LMDB-' ) , LmdbDict
-        dbases.append ( item )
+    dbases.append ( item )
 except ImportError:
     logger.warning ( 'LmdbDict is not accessible!' )
 
