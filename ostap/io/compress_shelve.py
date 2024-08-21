@@ -159,7 +159,7 @@ class CompressShelf(shelve.Shelf,object):
         if not self.__silent :
             logger.info ( 'Open DB: %s' % dbname ) 
 
-        ## filename without extension and the extension  itself 
+        ## filename without extension and the extension itself 
         fname , ext = os.path.splitext ( dbname )
 
         self.__extension = ext
@@ -200,7 +200,7 @@ class CompressShelf(shelve.Shelf,object):
                 self.__actual_dbname = filename
 
         afiles = tuple ( [ self.dbname + suffix for suffix in (  '' , ',db' , '.dir' , '.pag' , '.dat' ) ] )
-        ofiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) 
+        ofiles = set   ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) 
 
         
         self.__opened = False

@@ -155,14 +155,14 @@ def test_shelves1():
         db_zst = zstshelve.open    ( db_zst_name  , 'r' )
     db_root = rootshelve.open      ( db_root_name , 'r' )
 
-    logger.info('SQLiteShelve #keys: %s' % len ( list ( db_sql .keys() ) ) ) 
-    logger.info('ZipShelve    #keys: %s' % len ( db_zip .keys() ) )
-    logger.info('Bz2Shelve    #keys: %s' % len ( db_bz2 .keys() ) )
+    logger.info('SQLiteShelve #keys: %s' % len ( db_sql ) ) 
+    logger.info('ZipShelve    #keys: %s' % len ( db_zip ) )
+    logger.info('Bz2Shelve    #keys: %s' % len ( db_bz2 ) )
     if lzshelve  :
-        logger.info('LzShelve     #keys: %s' % len ( db_lz  .keys() ) )
+        logger.info('LzShelve     #keys: %s' % len ( db_lz  ) )
     if zstshelve :
-        logger.info('ZstShelve    #keys: %s' % len ( db_zst .keys() ) )
-    logger.info('RootShelve   #keys: %s' % len ( db_root.keys() ) )
+        logger.info('ZstShelve    #keys: %s' % len ( db_zst ) )
+    logger.info('RootShelve   #keys: %s' % len ( db_root ) )
 
     with timing ( 'h2-read/SQL'  ) : h2_sql  = db_sql  [ 'histo-2D']
     with timing ( 'h2_read/ZIP'  ) : h2_zip  = db_zip  [ 'histo-2D']

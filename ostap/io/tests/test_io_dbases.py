@@ -41,7 +41,7 @@ try :
     item = 'LmdbDict' , CleanUp.tempdir ( prefix = 'ostap-LMDB-' ) , LmdbDict
     dbases.append ( item )
 except ImportError:
-    logger.warning ( 'LmdbDict is not accessible!' )
+    logger.warning ( 'LmdbDict    is not accessible!' )
 
 # ============================================================================
 try :
@@ -50,7 +50,7 @@ try :
     item = 'BerkeleyDB' , CleanUp.tempfile ( prefix = 'ostap-BerkeleyDB-' , suffix = '.db' ) , berkeleydb_open 
     dbases.append ( item )
 except ImportError:
-    logger.warning ( 'BerkeleyDB is not accessible!' )
+    logger.warning ( 'BerkeleyDB  is not accessible!' )
 
 # ============================================================================
 try :
@@ -59,7 +59,7 @@ try :
     item = 'BSDDB3' , CleanUp.tempfile ( prefix = 'ostap-BSDDB3-' , suffix = '.db'  ) , bsbdb3_open 
     dbases.append ( item )
 except ImportError:
-    logger.warning ( 'bsddb3 is not accessible!' )
+    logger.warning ( 'bsddb3      is not accessible!' )
    
 # ============================================================================
 try :
@@ -67,7 +67,7 @@ try :
     item = 'SqliteDict' , CleanUp.tempfile ( prefix = 'ostap-SqliteDB-' , suffix = '.sql') , SqliteDict
     dbases.append ( item )
 except ImportError:
-    logger.warning ( 'SQliteDict is not accessible!' )
+    logger.warning ( 'SQliteDict  is not accessible!' )
 
 # ============================================================================
 if ( 3,0 ) <= sys.version_info :
@@ -78,7 +78,7 @@ if ( 3,0 ) <= sys.version_info :
         item = 'dbm.gnu' , CleanUp.tempfile ( prefix = 'ostap-GNUDB-' , suffix = '.db' ) , gnu_open
         dbases.append ( item )
     except ImportError:
-        logger.warning ( 'dbm.gnuis not accessible!' )
+        logger.warning ( 'dbm.gnu   is not accessible!' )
     # ======================================================================
     try :
         from dbm.ndbm import open as _ndbm_open
@@ -86,7 +86,7 @@ if ( 3,0 ) <= sys.version_info :
         item = 'dbm.ndbm' , CleanUp.tempfile ( prefix = 'ostap-NDB-' , suffix = '.db' ) , ndbm_open
         dbases.append ( item )
     except ImportError:
-        logger.warning ( 'dbm.ndbm is not accessible!' )
+        logger.warning ( 'dbm.ndbm  is not accessible!' )
     # ======================================================================
     try :
         from dbm.dumb import open as dumb_open
