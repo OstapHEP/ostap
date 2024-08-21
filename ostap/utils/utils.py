@@ -1224,7 +1224,7 @@ def split_n_range ( low , high , num ) :
 
         
 # ======================================================================================
-if (3,2) <= sys.version_info :
+if  ( 3 , 2 ) <= python_version :
     # ==================================================================================
     ## use accumulae form itertools
     from itertools import accumulate
@@ -1247,7 +1247,7 @@ else :
             yield total
 
 # ======================================================================================
-if (3,6) <= sys.version_info :
+if  ( 3 , 6 ) <= python_version:
     
     choices = random.choices
     
@@ -1260,23 +1260,43 @@ else :
                "choices: Neither ``weigths'' nor ``cum_weights'' are supported!"
         
         return [ random.choice ( population ) for i in range ( k ) ] 
+
     
 # ========================================================================================
-## Generate some random name of given name
-#  @code
-#  name = random_name ( 5 ) 
-#  @endcode 
-def random_name ( size ) :
-    """Generate some random name of given name 
-    >>> name = random_name ( 5 )
-    """
-    assert 1 <= size , 'random_name: invalid size!'
-
-    first = random.choice  ( ascii_letters ) 
-    if 1 == size : return first
+if  ( 3 , 6 ) <= python_version : 
+    # ====================================================================================
+    ## Generate some random name of given name
+    #  @code
+    #  name = random_name ( 5 ) 
+    #  @endcode 
+    def random_name ( size ) :
+        """Generate some random name of given name 
+        >>> name = random_name ( 5 )
+        """
+        assert 1 <= size , 'random_name: invalid size!'
+        ## 
+        first = random.choice  ( ascii_letters ) 
+        if 1 == size : return first
+        ## 
+        return first  + ''.join ( random.choices ( all_symbols , k = size - 1 ) ) 
+    # ====================================================================================
+else :
+    # ====================================================================================
+    ## Generate some random name of given name
+    #  @code
+    #  name = random_name ( 5 ) 
+    #  @endcode 
+    def random_name ( size ) :
+        """Generate some random name of given name 
+        >>> name = random_name ( 5 )
+        """
+        assert 1 <= size , 'random_name: invalid size!'
+        ## 
+        first = random.choice  ( ascii_letters ) 
+        if 1 == size : return first
+        ## 
+        return first  + ''.join ( random.choice ( all_symbols ) for i in range ( size - 1  ) )
     
-    return first  + ''.join ( choices ( sll_symbols , k = size - 1 ) ) 
-
 # ========================================================================================
 ## generate some pseudo-random 6-symbol name from provided hash sources 
 def short_hash_name ( size , name , *names ) :
@@ -1559,8 +1579,8 @@ def  balanced ( expression , left = '([' , right = ')]' ) :
 
 
 # ============================================================================
-if   ( 3 , 9) <= sys.version_info : memoize = functools.cache 
-elif ( 3 , 2) <= sys.version_info : 
+if   ( 3 , 9 ) <= python_version : memoize = functools.cache 
+elif ( 3 , 2 ) <= python_version : 
     
     # =========================================================================
     ## Simple lightweight unbounded cache
@@ -1608,8 +1628,7 @@ else :
 #  @absproperty
 #  def A ( self ) : ...  
 #  @endcode
-if ( 3 , 3 ) <= sys.version_info  :
-    
+if ( 3 , 3 ) <= python_version :    
     # =========================================================================
     ## absract property decorator
     #  @code
@@ -1636,7 +1655,7 @@ else :
 
     
 # =============================================================================
-if  ( 3 , 9 ) <= sys.version_info :
+if  ( 3 , 9 ) <= python_version :
     
     # =========================================================================
     ## class property decorator
@@ -1651,7 +1670,7 @@ if  ( 3 , 9 ) <= sys.version_info :
         """
         return classmethod ( property ( func ) ) 
         
-elif ( 3 , 0 ) <= sys.version_info : 
+elif ( 3 , 0 ) <= python_version : 
 
     # =========================================================================
     ## class @classproperty

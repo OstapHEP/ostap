@@ -15,7 +15,8 @@
 # =============================================================================
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.utils.timing       import timing 
+from   ostap.utils.timing       import timing
+from   ostap.utils.utils        import random_name 
 import ROOT, sys, pickle, random  
 # =============================================================================
 # logging 
@@ -24,23 +25,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_io_dbases' )
 else                       : logger = getLogger ( __name__         )
 # =============================================================================
-if (3,0) <= sys.version_info : 
-    characters = "abcdefghijklmnopqrstuvwxyz0123456789_"
-    # =============================================================================
-    ## generate random name 
-    def the_name ():
-        """ Generate random name"""
-        return ''.join ( random.choices ( characters , k = 8 ) )
-    # =============================================================================
-else :
-    # =============================================================================
-    index = 1
-    def the_name () :
-        global index 
-        index += 1
-        return 'i%08d' % index 
-    # =============================================================================
-    
 dbases = []
 
 # ============================================================================
@@ -144,8 +128,7 @@ data = {
     'histo'   : ROOT.TH1D ( 'h1' , '' , 100 , 0, 1 )
 }
 
-
-if ( 3,0 ) <= sys.version_info : 
+if ( 3 , 0 ) <= sys.version_info : 
     def the_key ( key ) :  return key.encode ( 'utf-8' )
 else :
     def the_key ( key ) :  return key
@@ -176,7 +159,7 @@ def test_dbases () :
                 db [ key ] = value 
                 
             for i in range ( 1000 ) :
-                kk  = the_name ()
+                kk  = random_name ( 7 )
                 key = the_key ( kk ) 
                 db [ key ] = pickle.dumps ( hh ) 
                 

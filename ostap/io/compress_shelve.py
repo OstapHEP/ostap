@@ -832,6 +832,21 @@ class CompressShelf(shelve.Shelf,object):
 ## a bit more decorations for shelve  (optional)
 import ostap.io.shelve_ext
 
+
+# =============================================================================
+if python_version < ( 3 , 2 ) :
+    
+    def _arxiv_enter_ ( s ) : return s
+    def _arxiv_exit_  ( s , *_) : s.close() 
+    
+    import zipfile
+    if not hasattr ( zipfile.ZipFile , '__enter__' ) : zipfile.ZipFile . __enter__ = _arxiv_enter_
+    if not hasattr ( zipfile.ZipFile , '__exit__'  ) : zipfile.ZipFile . __exit__  = _arxiv_exit_
+    
+    import tarfile
+    if not hasattr ( tarfile.TarFile , '__enter__' ) : tarfile.TarFile . __enter__ = _arxiv_enter_
+    if not hasattr ( tarfile.TarFile , '__exit__'  ) : tarfile.TarFile . __exit__  = _arxiv_exit_
+    
 # =============================================================================
 if '__main__' == __name__ :
     
