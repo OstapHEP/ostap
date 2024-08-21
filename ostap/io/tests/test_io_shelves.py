@@ -49,7 +49,7 @@ if  ( 3 , 3 ) <= python_version :
 else :
     lzshelve = None
 # =============================================================================
-if  (3,6) <= python_version :
+if  (3,6) <= python_version :    
     import ostap.io.zstshelve as zstshelve 
     try : 
         import zstandard

@@ -36,14 +36,16 @@ dbases = []
 
 # ============================================================================
 try :
-    from ostap.io.lmdbdict import LmdbDict
+    import lbdb 
+    from ostap.io.lmdbdict import lbdb, LmdbDict
     item = 'LmdbDict' , CleanUp.tempdir ( prefix = 'ostap-LMDB-' ) , LmdbDict
-    dbases.append ( item )
+        dbases.append ( item )
 except ImportError:
     logger.warning ( 'LmdbDict is not accessible!' )
 
 # ============================================================================
 try :
+    import berkeleydb 
     from ostap.io.dbase import berkeleydb_open 
     item = 'BerkeleyDB' , CleanUp.tempfile ( prefix = 'ostap-BerkeleyDB-' , suffix = '.db' ) , berkeleydb_open 
     dbases.append ( item )
@@ -52,7 +54,8 @@ except ImportError:
 
 # ============================================================================
 try :
-    from ostap.io.dbase import bdsdb3_open 
+    import bsddb3 
+    from ostap.io.dbase import bsddb3_open 
     item = 'BSDDB3' , CleanUp.tempfile ( prefix = 'ostap-BSDDB3-' , suffix = '.db'  ) , bsbdb3_open 
     dbases.append ( item )
 except ImportError:
