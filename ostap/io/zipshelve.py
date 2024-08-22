@@ -145,7 +145,7 @@ logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database"   )
 # =============================================================================
 import os, sys, shelve, shutil
 import zlib ## use zlib to compress DB-content 
-from   ostap.io.compress_shelve import CompressShelf, ENCODING, PROTOCOL, HIGHEST_PROTOCOL
+from   ostap.io.compress_shelve import CompressShelf, HIGHEST_PROTOCOL
 from   ostap.io.dbase           import TmpDB 
 # =============================================================================
 ## @class ZipShelf
@@ -169,52 +169,21 @@ class ZipShelf(CompressShelf):
     extensions = '.zip' , '.tgz' , '.gz'  
     ## 
     def __init__(
-            self                                   ,
-            filename                               ,
-            mode        = 'c'                      ,
-            dbtype      = ''                       , 
-            protocol    = PROTOCOL                 , 
-            compress    = zlib.Z_BEST_COMPRESSION  ,
-            writeback   = False                    ,
-            silent      = False                    ,
-            keyencoding = ENCODING                 , **kwargs ) :
-        
-        ## save arguments for pickling....
-        self.__init_args = ( filename  ,
-                             mode      ,
-                             dbtype    , 
-                             protocol  ,
-                             compress  ,
-                             writeback ,
-                             silent    )
+            self                                  ,
+            dbname                                ,
+            mode     = 'c'                        ,
+            compress = zlib.Z_DEFAULT_COMPRESSION , **kwargs ) :
+
+        assert 0 <= compress <= zlib.Z_BEST_COMPRESSION or    \
+            compress in ( -1 , zlib.Z_DEFAULT_COMPRESSION )  ,\
+            "Invalid `compress` for `zlib`: %s" % compress  
 
         ## initialize the base class 
-        CompressShelf.__init__ ( self                      ,
-                                 filename                  ,
-                                 mode        = mode        , 
-                                 dbtype      = dbtype      , 
-                                 protocol    = protocol    ,
-                                 compress    = compress    ,   
-                                 writeback   = writeback   ,
-                                 silent      = silent      ,
-                                 keyencoding = keyencoding , **kwargs ) 
+        CompressShelf.__init__ ( self                   ,
+                                 dbname                 ,
+                                 mode        = mode     ,
+                                 compress    = compress , **kwargs ) 
         
-    ## needed for proper (un)pickling 
-    def __getinitargs__ ( self ) :
-        """for proper (un_pickling"""
-        return self.__init_args
-
-    ## needed for proper (un)pickling 
-    def __getstate__ ( self ) :
-        """for proper (un)pickling"""
-        self.sync() 
-        return {}
-    
-    ## needed for proper (un)pickling 
-    def __setstate__ ( self , dct ) :
-        """for proper (un)pickling"""
-        pass
-    
     # =========================================================================
     ## compress the file into temporary location, keep original
     def compress_files   ( self , files ) :
@@ -223,55 +192,13 @@ class ZipShelf(CompressShelf):
         output = self.tempfile ()
         
         import zipfile 
-        with zipfile.ZipFile( output , 'w' , allowZip64 = True ) as zfile :
+        with zipfile.ZipFile ( output , 'w' , allowZip64 = True ) as zfile :
             for file in files :
                 _ , name = os.path.split ( file )
                 zfile.write ( file  , name  )
                 
         return output 
 
-    # =========================================================================
-    ## uncompress (gunzip) the file into temporary location, keep original
-    #  @code
-    #  db    = ...
-    #  files = db.uncompress_file ( input_cmpressed_file )   
-    #  @endcode 
-    def uncompress_file ( self , filein ) :
-        """ Uncompress (gunzip) the file into temporary location, keep original
-        >>> db    = ...
-        >>> files = db.uncompress_file ( input_cmpressed_file )   
-        """
-        items  = []
-        tmpdir = self.tempdir ()
-        
-        ## 1) try zipfile 
-        import zipfile
-        if zipfile.is_zipfile ( filein ) :
-            with zipfile.ZipFile ( filein , 'r' , allowZip64 = True ) as zfile :
-                for item in zfile.filelist :
-                    zfile.extract ( item , path = tmpdir )
-                    items.append  ( os.path.join ( tmpdir , item.filename ) )
-            items.sort() 
-            return tuple  ( items ) 
-                    
-        ## 2) try compressed-tarfile 
-        import tarfile
-        if tarfile.is_tarfile ( filein ) :
-            with tarfile.open ( filein  , 'r:*' ) as tfile :
-                for item in tfile  :
-                    tfile.extract ( item , path = tmpdir )
-                    items.append  ( os.path.join ( tmpdir , item.name ) )
-            items.sort() 
-            return tuple ( items ) 
-
-        ## 3) try old good gzipped (single) file
-        import gzip , io, tempfile
-        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-zdb' )
-        with gzip.open ( filein  , 'rb' ) as fin : 
-            with io.open ( fileout , 'wb' ) as fout : 
-                shutil.copyfileobj ( fin , fout )            
-                return fileout , 
-            
     # ==========================================================================
     ## compress (zip)  the item  using <code>zlib.compress</code>
     def compress_item ( self , value ) :
@@ -288,44 +215,12 @@ class ZipShelf(CompressShelf):
         """        
         return self.unpickle ( zlib.decompress ( value ) ) 
 
-    # =========================================================================
-    ## clone the database into new one
-    #  @code
-    #  db  = ...
-    #  ndb = db.clone ( 'new_file.db' )
-    #  @endcode
-    def clone ( self , new_name , keys = () ) : 
-        """ Clone the database into new one
-        >>> old_db = ...
-        >>> new_db = new_db.clone ( 'new_file.db' )
-        """
-        new_db = ZipShelf ( new_name                         ,
-                            mode        =  'c'               ,
-                            dbtype      = self.dbtype        , 
-                            protocol    = self.protocol      ,
-                            compress    = self.compresslevel , 
-                            writeback   = self.writeback     ,
-                            silent      = self.silent        ,
-                            keyencoding = self.keyencoding   )
-        
-        ## copy the content
-        copy = keys if keys else self.keys()
-        for key in copy : new_db [ key ] = self [ key ]
-        new_db.sync ()  
-        return new_db 
-    
 # =============================================================================
 ## helper function to access ZipShelve data base
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def open ( filename                                 ,
-           mode        = 'c'                      , ## mode/flag 
-           dbtype      = ''                       , ## preferred dbtype  
-           protocol    = PROTOCOL                 ,
-           compress    = zlib.Z_BEST_COMPRESSION  , 
-           writeback   = False                    ,
-           silent      = True                     ,
-           keyencoding = ENCODING                 , **kwargs ) :
+def open ( dbname         ,
+           mode     = 'c' , **kwargs ) :
     
     """Open a persistent dictionary for reading and writing.
     
@@ -339,14 +234,7 @@ def open ( filename                                 ,
     See the module's __doc__ string for an overview of the interface.
     """
     
-    return ZipShelf ( filename                  ,
-                      mode        = mode        ,
-                      dbtype      = dbtype      , 
-                      protocol    = protocol    ,
-                      compress    = compress    ,
-                      writeback   = writeback   ,
-                      silent      = silent      ,
-                      keyencoding = keyencoding , **kwargs )
+    return ZipShelf ( dbname , mode = mode  , **kwargs )
 
 # =============================================================================
 ## @class TmpZipShelf
@@ -357,43 +245,33 @@ class TmpZipShelf(ZipShelf,TmpDB):
     """TEMPORARY Zipped-version of ``shelve''-database     
     """    
     def __init__( self                                   ,
-                  dbtype      = ''                       , 
                   protocol    = HIGHEST_PROTOCOL         , 
                   compress    = zlib.Z_BEST_COMPRESSION  ,
-                  silent      = False                    ,
-                  keyencoding = ENCODING                 , 
-                  remove      = True                     ,   ## immediate remove 
+                  remove      = True                     ,              ## immediate remove 
                   keep        = False                    , **kwargs ) : ## keep it 
         
         ## initialize the base: generate the name 
         TmpDB    .__init__ ( self , suffix = '.zdb' , remove = remove , keep = keep )         
-        ZipShelf .__init__ ( self                      ,  
-                             self.tmp_name             ,
-                             mode        = 'c'         ,
-                             dbtype      = dbtype      ,
-                             protocol    = protocol    ,
-                             compress    = compress    , 
-                             writeback   = False       ,  
-                             silent      = silent      ,
-                             keyencoding = keyencoding , **kwargs )
+        ZipShelf .__init__ ( self                        ,  
+                             self.tmp_name               ,
+                             mode        = 'c'           ,
+                             protocol    = protocol      ,
+                             compress    = compress      , 
+                             writeback   = False         , **kwargs )
+
+        conf = { 'remove' : remove , 'keep' : keep }
+        self.kwargs.update ( conf )
         
     ## close and delete the file 
     def close ( self )  :
         ZipShelf.close ( self )
         TmpDB.clean    ( self ) 
             
-            
 # =============================================================================
 ## helper function to open TEMPORARY ZipShelve data base#
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def tmpdb ( dbtype      = ''                      , 
-            protocol    = HIGHEST_PROTOCOL        ,
-            compress    = zlib.Z_BEST_COMPRESSION , 
-            silent      = True                    ,
-            keyencoding = ENCODING                ,
-            remove      = True                    ,    ## immediate remove 
-            keep        = False                   , **kwargs ) :  ## keep it 
+def tmpdb ( **kwargs ) :
     """ Open a TEMPORARY persistent dictionary for reading and writing.
     
     The optional protocol parameter specifies the
@@ -401,13 +279,8 @@ def tmpdb ( dbtype      = ''                      ,
     
     See the module's __doc__ string for an overview of the interface.
     """
-    return TmpZipShelf ( dbtype      = dbtype      ,
-                         protocol    = protocol    ,
-                         compress    = compress    ,
-                         silent      = silent      ,
-                         keyencoding = keyencoding ,
-                         remove      = remove      ,
-                         keep        = keep        , **kwargs ) 
+    return TmpZipShelf ( **kwargs )
+
 
 # =============================================================================
 if '__main__' == __name__ :

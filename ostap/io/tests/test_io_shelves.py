@@ -43,11 +43,13 @@ else                       : logger = getLogger ( __name__          )
 # =============================================================================
 if  ( 3 , 3 ) <= python_version :
     import ostap.io.lzshelve  as lzshelve
+    if not lzshelve.lzma : lzshelve = None 
 else :
     lzshelve = None
 # =============================================================================
 if  ( 3 , 6 ) <= python_version :    
     import ostap.io.zstshelve as zstshelve 
+    if not zstshelve.zst : zstshelve = None 
     try : 
         import zstandard
     except ImportError :
@@ -304,16 +306,13 @@ def test_shelves2 () :
         ''
     ]
     
-    for sh in shelves :
-        
-        for b in backends :
-            db = sh.tmpdb ( dbtype = b )
-            db ['one'] = 1
-            db ['two'] = 2
-            print ( 'DB:' , db )
-            
-            
-        
+    for sh in shelves :        
+        for b in backends :            
+            with sh.tmpdb ( dbtype = b ) as db :
+                
+                db ['one'] = 1
+                db ['two'] = 2                
+                db.ls() 
     
 # =============================================================================
 if '__main__' == __name__ :

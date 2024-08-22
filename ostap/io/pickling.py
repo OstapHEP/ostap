@@ -30,11 +30,11 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.pickling' )
 else                      : logger = getLogger ( __name__               )
 # =============================================================================
-if  (3, 0 ) <= sys.version_info :
+if  ( 3 , 0 ) <= sys.version_info :
     from pickle import ( Pickler, Unpickler, 
                          DEFAULT_PROTOCOL, HIGHEST_PROTOCOL,
                          dumps, loads,
-                        PicklingError, UnpicklingError ) 
+                         PicklingError, UnpicklingError ) 
 else : 
     DEFAULT_PROTOCOL = 2 
     try:

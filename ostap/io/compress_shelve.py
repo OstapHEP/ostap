@@ -54,7 +54,7 @@ __all__ = (
     'ENCODING'       
     )
 # =============================================================================
-import os, abc, shelve, shutil, glob, time, datetime
+import os, abc, shelve, shutil, glob, time, datetime, zipfile, tarfile 
 from   sys                  import version_info           as python_version
 from   ostap.io.dbase       import dbopen , whichdb, Item, ordered_dict  
 from   ostap.core.meta_info import meta_info 
@@ -119,9 +119,9 @@ class CompressShelf(shelve.Shelf,object):
             self                   ,
             dbname                 ,
             mode        = 'c'      ,
-            dbtype      = ''       , ## preferred data base 
-            protocol    = PROTOCOL , ## pickle protocol 
             compress    = 0        , 
+            protocol    = PROTOCOL , ## pickle protocol 
+            dbtype      = ''       , ## preferred data base type 
             writeback   = False    ,
             silent      = True     ,
             keyencoding = ENCODING , **kwargs ) :
@@ -133,7 +133,7 @@ class CompressShelf(shelve.Shelf,object):
             mode = 'c'
 
         if not 0 <= protocol <= HIGHEST_PROTOCOL :
-            logger.warning ("Invalid pickle protocol:%s" % protocol )
+            logger.warning ("Invalid pickle protocol:%s, replace with:%s" % ( protocol , PROTOCOL ) ) 
             protocol = PROTOCOL 
 
         ## expand the actual file name 
@@ -142,19 +142,36 @@ class CompressShelf(shelve.Shelf,object):
         dbname  = os.path.expandvars ( dbname )
         dbname  = os.path.expandvars ( dbname )
         
-        self.__compresslevel = compress
-
-        self.__nominal_dbname  = dbname 
-        self.__actual_dbname   = dbname 
-        self.__compress        = () 
-        self.__remove          = () 
+        self.__compresslevel   = compress
         self.__silent          = silent
-        self.__opened          = False 
-        self.__files           = ()
+        self.__protocol        = protocol
         self.__dbtype          = dbtype
         
-        if not self.__silent :
-            logger.info ( 'Open DB: %s' % dbname ) 
+        ## all arguments for constructor 
+        self.__kwargs = {
+            'dbname'      : dbname             ,
+            'mode'        : mode               ,
+            'compress'    : self.compresslevel ,
+            'protocol'    : protocol           , ## from shelve.Shelf  
+            'writeback'   : writeback          , ## from shelf.Shelf 
+            'dbtype'      : self.dbtype        , ## preferred dbtype 
+            'silent'      : self.silent        ,
+            'keyencoding' : keyencoding        ,   
+        }
+        self.__kwargs.update ( kwargs )
+
+        
+        
+        self.__nominal_dbname  = dbname 
+        self.__actual_dbname   = dbname
+        
+        self.__compress        = () 
+        self.__remove          = () 
+        
+        self.__opened          = False 
+        self.__files           = ()
+        
+        if not self.__silent : logger.info ( 'Open DB: %s' % dbname ) 
 
         ## filename without extension and the extension itself 
         fname , ext = os.path.splitext ( dbname )
@@ -216,8 +233,8 @@ class CompressShelf(shelve.Shelf,object):
 
         ### self.sync  ()
 
-        self.__dbtype        =  whichdb ( self.dbname )
-        if hasattr ( self.dict , 'reopen' ) : self.dict.reopen() 
+        self.__dbtype        =  whichdb ( self.dbname ) ## actual dbtype 
+        ## if hasattr ( self.dict , 'reopen' ) : self.dict.reopen() 
                              
         nfiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) - ofiles 
 
@@ -277,7 +294,8 @@ class CompressShelf(shelve.Shelf,object):
             logger.info ( 'DB files are %s|%s' % ( ff, self.dbtype ) )
 
         self.sync ()
-        
+
+    
     @property
     def dbtype   ( self ) :
         """`dbtype'  : the underlying type of database"""
@@ -286,7 +304,7 @@ class CompressShelf(shelve.Shelf,object):
     @property
     def protocol ( self ) :
         """`protocol' : pickling protocol used in the shelve"""
-        return self._protocol
+        return self.__protocol
     
     @property
     def compression ( self ) :
@@ -326,12 +344,17 @@ class CompressShelf(shelve.Shelf,object):
     @property
     def protocol( self ) :
         "`protocol' : pickling protocol"
-        return self._protocol
+        return self.__protocol
 
     @property
     def files  ( self ) :
         """`files' : the files assocated with the database"""
         return self.__files
+
+    @property
+    def kwargs ( self )  :
+        """`kwargs` : all constructor arguments"""
+        return self.__kwargs
 
     # =========================================================================
     ## valid, opened DB 
@@ -370,8 +393,7 @@ class CompressShelf(shelve.Shelf,object):
         
         """
 
-        if not pattern :
-            good = lambda k : True
+        if not pattern : good = lambda k : True
         elif regex : 
             import re
             re_cmp = re.compile ( pattern ) 
@@ -379,7 +401,6 @@ class CompressShelf(shelve.Shelf,object):
         else :
             import fnmatch
             good = lambda s : fnmatch.fnmatchcase ( k , pattern  )
-
 
         for key in self.keys () :
             if good ( key ) : yield key
@@ -525,8 +546,6 @@ class CompressShelf(shelve.Shelf,object):
         """ Close the file (and compress it if required) 
         """
         
-        print ('CLOSE', self.opened )
-        
         if not self.opened : return 
         ##
         if 'r' != self.mode and 'n' != self.mode :
@@ -541,7 +560,8 @@ class CompressShelf(shelve.Shelf,object):
         if not self.silent : self.ls ()
         
         shelve.Shelf.close ( self )
-        self.__opened = False  
+        self.__opened = False
+        
         ##
         if self.__compress :
             self.__in_place_compress ( self.__compress ) 
@@ -557,7 +577,7 @@ class CompressShelf(shelve.Shelf,object):
     # =========================================================================
     ## compress the files (`in-place') 
     def __in_place_compress   ( self , files  ) :
-        """Compress the file `in-place'        
+        """ Compress the file `in-place'        
         - It is better to use here `os.system' or `popen'-family,
         but it does not work properly for multiprocessing environemnt        
         """
@@ -581,7 +601,7 @@ class CompressShelf(shelve.Shelf,object):
     # =========================================================================
     ## uncompress the file (`in-place') 
     def __in_place_uncompress   ( self , filein ) :
-        """Uncompress the file `in-place'        
+        """ Uncompress the file `in-place'        
         - It is better to use here `os.system' or `popen'-family,
         but unfortunately it does not work properly for multithreaded environemnt        
         """
@@ -715,7 +735,7 @@ class CompressShelf(shelve.Shelf,object):
     ## Create the temporary directory
     #  The directory will be cleaned-up and deleted at-exit.
     @classmethod
-    def tempdir ( cls , suffix = '=db-dir' , prefix = 'ostap-compress-shelve-dir-' , date = True  ) :
+    def tempdir ( cls , suffix = '-db-dir' , prefix = 'ostap-compress-shelve-dir-' , date = True  ) :
         """ Create the temporary directory
         The directory will be cleaned-up and deleted at-exit.
         """
@@ -795,24 +815,75 @@ class CompressShelf(shelve.Shelf,object):
 
     # =========================================================================
     ## Uncompress the file into temporary location, keep original
-    @abc.abstractmethod 
     def uncompress_file ( self , filein ) :
-        """Uncompress the file into temporary location, keep the original"""
-        return NotImplemented
+        """ Uncompress the file into temporary location, keep the original """
 
+        assert os.path.exists ( filein ) and os.path.isfile ( filein ) , \
+            "Non existing/invalid file: %s" % filein
+        
+        items  = []
+        tmpdir = self.tempdir ()
+        
+        ## 1) zip-archive ? 
+        if zipfile.is_zipfile ( filein ) :
+            with zipfile.ZipFile ( filein , 'r' , allowZip64 = True ) as zfile :
+                for item in zfile.filelist :
+                    zfile.extract ( item , path = tmpdir )
+                    items.append  ( os.path.join ( tmpdir , item.filename ) )
+            items.sort() 
+            return tuple  ( items )
+        
+        ## 2) compressed-tar archive ?
+        if tarfile.is_tarfile ( filein ) :
+            with tarfile.open ( filein  , 'r:*' ) as tfile :
+                for item in tfile  :
+                    tfile.extract ( item , path = tmpdir )
+                    items.append  ( os.path.join ( tmpdir , item.name ) )
+            items.sort() 
+            return tuple ( items ) 
+
+        return None 
+        
     # =========================================================================
-    ## clone the database into new one
+    ## copy the database into new one
     #  @code
     #  db  = ...
-    #  ndb = db.clone ( 'new_file.db' )
+    #  ndb = db.copy ( 'new_file.db' , copykeys , **kwargs  )
     #  @endcode
-    @abc.abstractmethod
-    def clone ( self , filename , keys = () ) :
+    def copy ( self , dbname , copykeys = () , **kwargs ) :
         """ Clone the database into new one
         >>> old_db = ...
         >>> new_db = new_db.clone ( 'new_file.db' )
         """
-        return NotImplemented
+        klass = type ( self )
+        conf = {}
+        conf.update ( self.__kwargs ) ## use argument 
+        conf.update ( kwargs        ) ## redefine them
+        
+        conf [ 'mode'   ] = 'c'
+        conf [ 'dbname' ] = dbname
+        
+        ## create newdb
+        newdb = klass ( **conf )
+        
+        ## copy the required keys: 
+        for key in copykeys : newdb [ key  ] = self [ key ] 
+
+        newdb.sync()        
+        return newdb 
+    
+    # =========================================================================
+    ## clone the database into new one (copy all keys) 
+    #  @code
+    #  db  = ...
+    #  ndb = db.clone ( 'new_file.db' )
+    #  @endcode
+    def clone ( self , dbname , **kwargs ) :
+        """ Clone the database into new one (copy all keys) 
+        >>> old_db = ...
+        >>> new_db = new_db.clone ( 'new_file.db' )
+        """
+        return self.copy ( dbname , copykeys = self.keys ()  , **kwargs ) 
 
 # ============================================================================
 ## a bit more decorations for shelve  (optional)

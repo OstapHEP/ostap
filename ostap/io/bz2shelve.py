@@ -146,8 +146,8 @@ __all__ = (
 from sys import version_info as python_version 
 # =============================================================================
 import os, sys, shelve, shutil
-import bz2         ## use bz2 to compress DB-content 
-from   ostap.io.compress_shelve import CompressShelf, ENCODING, PROTOCOL, HIGHEST_PROTOCOL
+import bz2          ## use bz2 to compress DB-content 
+from   ostap.io.compress_shelve import CompressShelf, HIGHEST_PROTOCOL
 from   ostap.io.dbase           import TmpDB 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -176,36 +176,18 @@ class Bz2Shelf(CompressShelf):
     ## the known "standard" extensions: 
     extensions = '.tbz' , '.tbz2' , '.bz2' 
     ## 
-    def __init__(
-            self                                   ,
-            filename                               ,
-            mode        = 'c'                      ,
-            dbtype      = ''                       , 
-            protocol    = PROTOCOL                 , 
-            compress    = 9                        ,
-            writeback   = False                    ,
-            silent      = False                    ,
-            keyencoding = ENCODING                 , **kwargs ) :
-        
-        ## save arguments for pickling....
-        self.__init_args = ( filename  ,
-                             mode      ,
-                             dbtype    , 
-                             protocol  ,
-                             compress  ,
-                             writeback ,
-                             silent    )
+    def __init__( self               ,
+                  dbname             ,
+                  mode        = 'c'  ,
+                  compress    = 9    , **kwargs ) :
 
+        assert  1 <= compress <= 9 , 'Invalid `compress` for `bz2`-compression: %s' % compress 
+        
         ## initialize the base class 
-        CompressShelf.__init__ ( self                      ,
-                                 filename                  ,
-                                 mode        = mode        ,
-                                 dbtype      = dbtype      , 
-                                 protocol    = protocol    ,
-                                 compress    = compress    , 
-                                 writeback   = writeback   ,
-                                 silent      = silent      ,
-                                 keyencoding = keyencoding , **kwargs ) 
+        CompressShelf.__init__ ( self                   ,
+                                 dbname                 ,
+                                 mode        = mode     ,
+                                 compress    = compress , **kwargs )
         
     ## needed for proper (un)pickling 
     def __getinitargs__ ( self ) :
@@ -279,45 +261,12 @@ class Bz2Shelf(CompressShelf):
         """        
         return self.unpickle ( bz2.decompress ( value ) ) 
 
-    # =========================================================================
-    ## clone the database into new one
-    #  @code
-    #  db  = ...
-    #  ndb = db.clone ( 'new_file.db' )
-    #  @endcode
-    def clone ( self , new_name , keys = () ) :
-        """ Clone the database into new one
-        >>> old_db = ...
-        >>> new_db = new_db.clone ( 'new_file.db' )
-        """
-        new_db = Bz2Shelf ( new_name                         ,
-                            mode        =  'c'               ,
-                            dbtype      = self.dbtype        , 
-                            protocol    = self.protocol      ,
-                            compress    = self.compresslevel , 
-                            writeback   = self.writeback     ,
-                            silent      = self.silent        ,
-                            keyencoding = self.keyencoding   )
-        
-        ## copy the content
-        copy = keys if keys else self.keys()
-        for key in copy : new_db [ key ] = self [ key ]
-        new_db.sync ()  
-        return new_db 
                          
 # =============================================================================
 ## helper function to access Bz2Shelve data base
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def open ( filename                  ,
-           mode          = 'c'       ,
-           dbtype        = ''        , 
-           protocol      = PROTOCOL  ,
-           compress      = 9         , 
-           writeback     = False     ,
-           silent        = True      ,
-           keyencoding   = ENCODING  , **kwargs ) :
-    
+def open ( dbname , mode = 'c' , **kwargs ) :
     """Open a persistent dictionary for reading and writing.
     
     The filename parameter is the base filename for the underlying
@@ -330,14 +279,7 @@ def open ( filename                  ,
     See the module's __doc__ string for an overview of the interface.
     """
     
-    return Bz2Shelf ( filename                  ,
-                      mode        = mode        ,
-                      dbtype      = dbtype      ,  
-                      protocol    = protocol    ,
-                      compress    = compress    ,
-                      writeback   = writeback   ,
-                      silent      = silent      ,
-                      keyencoding = keyencoding , **kwargs )
+    return Bz2Shelf ( dbname , mode = mode , **kwargs )
 
 # =============================================================================
 ## @class TmpBz2Shelf
@@ -349,11 +291,7 @@ class TmpBz2Shelf(Bz2Shelf,TmpDB):
     TEMPORARY ``bzip2''-version of ``shelve''-database     
     """    
     def __init__( self                           ,
-                  dbtype      = ''               , 
                   protocol    = HIGHEST_PROTOCOL , 
-                  compress    = 9                ,
-                  silent      = False            ,
-                  keyencoding = ENCODING         ,
                   remove      = True             ,
                   keep        = False            , **kwargs ) :
 
@@ -363,13 +301,12 @@ class TmpBz2Shelf(Bz2Shelf,TmpDB):
         ## open DB 
         Bz2Shelf.__init__ ( self                      ,  
                             self.tmp_name             ,
-                            dbtype      = dbtype      , 
                             mode        = 'c'         ,
                             protocol    = protocol    ,
-                            compress    = compress    , 
-                            writeback   = False       , ## writeback 
-                            silent      = silent      ,
-                            keyencoding = keyencoding , **kwargs ) 
+                            writeback   = False       , **kwargs )
+        
+        conf = { 'remove' : remove , 'keep' : keep }
+        self.kwargs.update ( conf )
         
     ## close and delete the file 
     def close ( self )  :
@@ -382,27 +319,15 @@ class TmpBz2Shelf(Bz2Shelf,TmpDB):
 ## helper function to open TEMPORARY ZipShelve data base#
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def tmpdb ( dbtype      = ''               ,
-            protocol    = HIGHEST_PROTOCOL ,
-            compress    = 9                , 
-            silent      = True             ,
-            keyencoding = ENCODING         ,
-            remove      = True             ,   ## immediate remove 
-            keep        = False            , **kwargs ) : ## keep it 
-    """Open a TEMPORARY persistent dictionary for reading and writing.
+def tmpdb ( **kwargs ) :
+    """ Open a TEMPORARY persistent dictionary for reading and writing.
     
     The optional protocol parameter specifies the
     version of the pickle protocol (0, 1, or 2).
     
     See the module's __doc__ string for an overview of the interface.
     """
-    return TmpBz2Shelf ( dbtype      = dbtype      ,
-                         protocol    = protocol    ,
-                         compress    = compress    ,
-                         silent      = silent      ,
-                         keyencoding = keyencoding ,
-                         remove      = remove      ,
-                         keep        = keep        , **kwargs ) 
+    return TmpBz2Shelf ( **kwargs )
     
 # =============================================================================
 if '__main__' == __name__ :

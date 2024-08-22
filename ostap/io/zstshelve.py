@@ -137,11 +137,15 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2023-02-17"
 __version__ = "$Revision:$" 
 # =============================================================================
-__all__ = ()
+__all__ = (
+    'ZstShelf'    , ## database
+    'open'        , ## open the database 
+    'tmpdb'       , ## open the temporary database 
+)
 # =============================================================================
 from sys import version_info as python_version 
 # =============================================================================
-from   ostap.io.compress_shelve import CompressShelf, ENCODING, PROTOCOL, HIGHEST_PROTOCOL
+from   ostap.io.compress_shelve import CompressShelf, HIGHEST_PROTOCOL
 from   ostap.io.dbase           import TmpDB 
 import os, sys, shelve, shutil
 # =============================================================================
@@ -151,7 +155,7 @@ else                      : logger = getLogger ( __name__             )
 # =============================================================================
 logger.debug ( "Simple generic (c)Pickle-based `ZST'-database"    )
 # =============================================================================
-if ( 3 , 6 )<= python_version :
+if ( 3 , 6 ) <= python_version :
     try :
         import zstandard as zst
     except ImportError :
@@ -160,291 +164,189 @@ if ( 3 , 6 )<= python_version :
 else :
     logger.error ( 'zstshelve is disabled for python %s' % str ( python_version ) )
     zst = None
-
+    
 # =============================================================================
-if zst : 
-    # =============================================================================
-    ## @class ZstShelf
-    #  `ZST'-version of `shelve'-database
-    #    Modes: 
-    #    - 'r' Open existing database for reading only
-    #    - 'w' Open existing database for reading and writing
-    #    - 'c' Open database for reading and writing, creating if it does not  exist (default)
-    #    - 'n' Always create a new, empty database, open for reading and writing
-    #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    #  @date   2010-04-30
-    class ZstShelf(CompressShelf):
-        """ZST-version of `shelve'-database
-        Modes: 
-        - 'r'  Open existing database for reading only
-        - 'w'  Open existing database for reading and writing
-        - 'c'  Open database for reading and writing, creating if it does not exist
-        - 'n'  Always create a new, empty database, open for reading and writing
-        """ 
-        ## the known "standard" extensions: 
-        extensions =  '.zst', '.zstd' 
-        ## 
-        def __init__( self                                   ,
-                      filename                               ,
-                      mode        = 'c'                      ,
-                      dbtype      = ''                       , 
-                      protocol    = PROTOCOL                 , 
-                      compress    = 3                        , ## level in Zstandard 
-                      writeback   = False                    ,
-                      silent      = False                    ,
-                      keyencoding = ENCODING                 ,
-                      threads     = -1                       , **kwargs ) :
-            
-            ## save arguments for pickling....
-            self.__init_args = ( filename  ,
-                                 mode      ,
-                                 dbtype    , 
-                                 protocol  ,
-                                 compress  ,
-                                 writeback ,
-                                 silent    ,
-                                 threads   )
-            
-            self.__threads      = threads 
-            self.__compressor   = zst.ZstdCompressor   ( level              = compress ,
-                                                         threads            = threads  ,
-                                                         write_checksum     = True     ,
-                                                         write_content_size = True     ) 
-            self.__decompressor = zst.ZstdDecompressor ( )
-            
-            ## initialize the base class 
-            CompressShelf.__init__ ( self                      ,
-                                     filename                  ,
-                                     mode        = mode        ,
-                                     dbtype      = dbtype      , 
-                                     protocol    = protocol    ,
-                                     compress    = compress    , 
-                                     writeback   = writeback   ,
-                                     silent      = silent      ,
-                                     keyencoding = keyencoding , **kwargs ) 
-            
-            
-        @property
-        def threads ( self ) :
-            """'threads' : now many (C)-thread can be used for compression/decompression?"""
-            return self.__threads
-        @property
-        def compressor ( self ) :
-            """'compressor' : get the actual compressor object"""
-            return self.__compressor
-        @property
-        def decompressor ( self ) :
-            """'decompressor' : get the actual decompressor object"""
-            return self.__decompressor
+## @class ZstShelf
+#  `ZST'-version of `shelve'-database
+#    Modes: 
+#    - 'r' Open existing database for reading only
+#    - 'w' Open existing database for reading and writing
+#    - 'c' Open database for reading and writing, creating if it does not  exist (default)
+#    - 'n' Always create a new, empty database, open for reading and writing
+#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+#  @date   2010-04-30
+class ZstShelf(CompressShelf):
+    """ ZST-version of `shelve'-database
+     Modes: 
+    - 'r'  Open existing database for reading only
+    - 'w'  Open existing database for reading and writing
+    - 'c'  Open database for reading and writing, creating if it does not exist
+    - 'n'  Always create a new, empty database, open for reading and writing
+    """
+
+    extensions =  '.zst', '.zstd' 
+    ## 
+    def __init__( self                                   ,
+                  dbname                                 ,
+                  mode        = 'c'                      ,
+                  compress    = 22                       , ## level in Zstandard 
+                  threads     = -1                       , **kwargs ) :
         
-        ## needed for proper (un)pickling 
-        def __getinitargs__ ( self ) :
-            """for proper (un_pickling"""
-            return self.__init_args
+        assert zst , "`zstandard` module is not available!"
+        assert 1 <= compress <= 22 , 'Invalid `compress` for `zstandard`-compression: %s' % compress
         
-        ## needed for proper (un)pickling 
-        def __getstate__ ( self ) :
-            """for proper (un)pickling"""
-            self.sync() 
-            return {}
+        self.__threads      = threads 
+        self.__compressor   = zst.ZstdCompressor   ( level              = compress ,
+                                                     threads            = threads  ,
+                                                     write_checksum     = True     ,
+                                                     write_content_size = True     ) 
+        self.__decompressor = zst.ZstdDecompressor ( )
         
-        ## needed for proper (un)pickling 
-        def __setstate__ ( self , dct ) :
-            """for proper (un)pickling"""
-            pass
+        ## initialize the base class 
+        CompressShelf.__init__ ( self                   ,
+                                 dbname                 ,
+                                 mode        = mode     ,
+                                 compress    = compress , **kwargs ) 
         
-        # =========================================================================
-        ## compress (zstandard) the file into temporary location, keep original
-        def compress_files ( self , files ) :
-            """Compress (zstandard) the file into temporary location, keep original
-            """
-            output = self.tempfile()
-            import tarfile
-            with tarfile.open ( output , 'x:gz' ) as tfile :
-                for file in files  :
-                    _ , name = os.path.split ( file )
-                    tfile.add ( file , name  )
+        conf = { 'threads' : threads } 
+        self.kwargs.update ( conf )
+    
+    @property
+    def threads ( self ) :
+        """'threads' : now many (C)-thread can be used for compression/decompression?"""
+        return self.__threads
+    @property
+    def compressor ( self ) :
+        """'compressor' : get the actual compressor object"""
+        return self.__compressor
+    @property
+    def decompressor ( self ) :
+        """'decompressor' : get the actual decompressor object"""
+        return self.__decompressor        
+    
+    # =========================================================================
+    ## compress (zstandard) the file into temporary location, keep original
+    def compress_files ( self , files ) :
+        """ Compress (zstandard) the file into temporary location, keep original
+        """
+        output = self.tempfile()
+        import tarfile
+        with tarfile.open ( output , 'x:gz' ) as tfile :
+            for file in files  :
+                _ , name = os.path.split ( file )
+                tfile.add ( file , name  )
                 return output
             
-        # =========================================================================
-        ## uncompress (zstandard) the file into temporary location, keep original
-        def uncompress_file ( self , filein ) :
-            """Uncompress (zstandard) the file into temporary location, keep original
-            """
-            
-            items  = []
-            tmpdir = self.tempdir ()
-            
-            ## 1) try compressed-tarfile 
-            import tarfile
-            if tarfile.is_tarfile ( filein ) : 
-                with tarfile.open ( filein  , 'r:*' ) as tfile :
-                    for item in tfile  :
-                        tfile.extract ( item , path = tmpdir )
-                        items.append  ( os.path.join ( tmpdir , item.name ) )
-                        items.sort() 
-                    return tuple ( items )
+    # =========================================================================
+    ## uncompress (zstandard) the file into temporary location, keep original
+    def uncompress_file ( self , filein ) :
+        """ Uncompress (zstandard) the file into temporary location, keep original
+        """
+        
+        items  = []
+        tmpdir = self.tempdir ()
+        
+        ## 1) try compressed-tarfile 
+        import tarfile
+        if tarfile.is_tarfile ( filein ) : 
+            with tarfile.open ( filein  , 'r:*' ) as tfile :
+                for item in tfile  :
+                    tfile.extract ( item , path = tmpdir )
+                    items.append  ( os.path.join ( tmpdir , item.name ) )
+            items.sort() 
+            return tuple ( items )
                 
-            ## 2) single zst-file 
-            import tempfile , io   
-            fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-zstdb' )
-            
-            with io.open ( filein , 'rb' ) as fin :
-                with io.open ( fileout , 'wb' ) as fout :
-                    self.decompressor.copy_stream ( fin , fout )
-                    return fileout ,
-            
-        # ==========================================================================
-        ## compress (ZST)  the item  using compressor 
-        def compress_item ( self , value ) :
-            """Compress (ZST) the item using compressor 
-            """
-            return self.compressor.compress (  self.pickle ( value ) )
+        ## 2) single zst-file 
+        import tempfile , io   
+        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-zstdb' )
     
-        # =========================================================================
-        ## uncompres (ZST) the item using decompressor 
-        def uncompress_item ( self , value ) :
-            """Uncompress (ZST) the item using decompressor 
-            """        
-            return self.unpickle ( self.decompressor.decompress ( value ) ) 
-        
-        # =========================================================================
-        ## clone the database into new one
-        #  @code
-        #  db  = ...
-        #  ndb = db.clone ( 'new_file.db' )
-        #  @endcode
-        def clone ( self , new_name , keys = () ) :
-            """ Clone the database into new one
-            >>> old_db = ...
-            >>> new_db = new_db.clone ( 'new_file.db' )
-            """
-            new_db = ZstShelf ( new_name                         ,
-                                mode        =  'c'               ,
-                                dbtype      = self.dbtype        , 
-                                protocol    = self.protocol      ,
-                                compress    = self.compresslevel , 
-                                writeback   = self.writeback     ,
-                                silent      = self.silent        ,
-                                keyencoding = self.keyencoding   ,
-                                threads     = self.threads       )
+        with io.open ( filein , 'rb' ) as fin :
+            with io.open ( fileout , 'wb' ) as fout :
+                self.decompressor.copy_stream ( fin , fout )
+                return fileout ,
             
-            ## copy the content
-            copy = keys if keys else self.keys()
-            for key in copy : new_db [ key ] = self [ key ]            
-            new_db.sync ()  
-            return new_db 
-        
-    # =============================================================================
-    ## helper function to access ZstShelve data base
-    #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    #  @date   2023-02-17
-    def open ( filename                          ,
-               mode        = 'c'                 ,
-               dbtype      = ''                  , 
-               protocol    = PROTOCOL            ,
-               compress    = 3                   , 
-               writeback   = False               ,
-               silent      = True                ,
-               keyencoding = ENCODING            ,
-               threads     = -1                  , **kwargs ) :
-        
-        """Open a persistent dictionary for reading and writing.
-        
-        The filename parameter is the base filename for the underlying
-        database.  As a side-effect, an extension may be added to the
-        filename and more than one file may be created.  The optional flag
-        parameter has the same interpretation as the flag parameter of
-        anydbm.open(). The optional protocol parameter specifies the
-        version of the pickle protocol (0, 1, or 2).
-        
-        See the module's __doc__ string for an overview of the interface.
-        """        
-        return ZstShelf ( filename                  ,
-                          mode        = mode        ,
-                          dbtype      = dbtype      , 
-                          protocol    = protocol    ,
-                          compress    = compress    ,
-                          writeback   = writeback   ,
-                          silent      = silent      ,
-                          keyencoding = keyencoding ,
-                          threads     = threads     , **kwargs )
-    
-    # =============================================================================
-    ## @class TmpZstShelf
-    #  TEMPORARY zst-version of `shelve'-database
-    #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    #  @date   2023-02-17
-    class TmpZstShelf(ZstShelf,TmpDB):
-        """
-        TEMPORARY `ZST'-version of `shelve'-database     
-        """    
-        def __init__( self                              ,
-                      dbtype      = ''                  , 
-                      protocol    = HIGHEST_PROTOCOL    , 
-                      compress    = 3                   ,
-                      silent      = False               ,
-                      keyencoding = ENCODING            , 
-                      remove      = True                ,
-                      keep        = False               ,
-                      threads     = -1                  , **kwargs ) :
-            
-            ## initialize the base: generate the name 
-            TmpDB.__init__ ( self , suffix = '.zstdb' , remove = remove , keep = keep ) 
-            
-            ## open DB 
-            ZstShelf.__init__ ( self                        ,  
-                                self.tmp_name               ,
-                                mode        = 'c'           ,
-                                dbtype      = dbtype        ,  
-                                protocol    = protocol      ,
-                                compress    = compress      , 
-                                writeback   = False         , ## writeback 
-                                silent      = silent        ,
-                                keyencoding = keyencoding   ,
-                                threads     = threads       , **kwargs ) 
-            
-        ## close and delete the file 
-        def close ( self )  :
-            ## close the shelve file
-            ZstShelf.close ( self )
-            ## delete the file
-            TmpDB  .clean  ( self ) 
-            
-    # =============================================================================
-    ## helper function to open TEMPORARY ZstShelve data base#
-    #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-    #  @date   2023-02-17
-    def tmpdb ( dbtype      = ''                  ,
-                protocol    = HIGHEST_PROTOCOL    ,
-                compress    = 3                   , 
-                silent      = True                ,
-                keyencoding = ENCODING            ,
-                remove      = True                ,  ## immediate remove 
-                keep        = False               ,  ## keep it
-                threads     = -1                  , **kwargs ) : 
-        """Open a TEMPORARY persistent dictionary for reading and writing.
-        
-        The optional protocol parameter specifies the
-        version of the pickle protocol (0, 1, or 2).
-        
-        See the module's __doc__ string for an overview of the interface.
-        """
-        return TmpZstShelf ( dbtype      = dbtype      ,
-                             protocol    = protocol    ,
-                             compress    = compress    ,
-                             silent      = silent      ,
-                             keyencoding = keyencoding ,
-                             remove      = remove      ,
-                             keep        = keep        ,
-                             threads     = threads     , **kwargs ) 
-
     # ==========================================================================
-    __all__ = (
-        'ZstShelf'    , ## database
-        'open'        , ## open the database 
-        'tmpdb'       , ## open the temporary database 
-        )
+    ## compress (ZST)  the item  using compressor 
+    def compress_item ( self , value ) :
+        """ Compress (ZST) the item using compressor 
+        """
+        return self.compressor.compress (  self.pickle ( value ) )
+    
+    # =========================================================================
+    ## uncompres (ZST) the item using decompressor 
+    def uncompress_item ( self , value ) :
+        """ Uncompress (ZST) the item using decompressor 
+        """        
+        return self.unpickle ( self.decompressor.decompress ( value ) ) 
+
+# =============================================================================
+## helper function to access ZstShelve data base
+#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+#  @date   2023-02-17
+def open ( dbname , mode        = 'c' , **kwargs ) : 
+    """ Open a persistent dictionary for reading and writing.
+    
+    The filename parameter is the base filename for the underlying
+    database.  As a side-effect, an extension may be added to the
+    filename and more than one file may be created.  The optional flag
+    parameter has the same interpretation as the flag parameter of
+    anydbm.open(). The optional protocol parameter specifies the
+    version of the pickle protocol (0, 1, or 2).
+        
+    See the module's __doc__ string for an overview of the interface.
+    """        
+    return ZstShelf ( dbname , mode = mode  , **kwargs )
+    
+# =============================================================================
+## @class TmpZstShelf
+#  TEMPORARY zst-version of `shelve'-database
+#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+#  @date   2023-02-17
+class TmpZstShelf(ZstShelf,TmpDB):
+    """ TEMPORARY `ZST'-version of `shelve'-database     
+    """    
+    def __init__( self                              ,
+                  protocol    = HIGHEST_PROTOCOL    , 
+                  remove      = True                ,
+                  keep        = False               , **kwargs ) :
+        
+        ## initialize the base: generate the name 
+        TmpDB.__init__ ( self , suffix = '.zstdb' , remove = remove , keep = keep ) 
+        
+        ## open DB 
+        ZstShelf.__init__ ( self                        ,  
+                            self.tmp_name               ,
+                            mode        = 'c'           ,
+                            protocol    = protocol      ,
+                            writeback   = False         , **kwargs  ) 
+        
+        conf = { 'remove' : remove , 'keep' : keep }
+        self.kwargs.update ( conf )
+        
+    # =============================================================================
+    ## close and delete the file 
+    def close ( self )  :
+        ## close the shelve file
+        ZstShelf.close ( self )
+        ## delete the file
+        TmpDB  .clean  ( self ) 
+
+# =============================================================================
+## helper function to open TEMPORARY ZstShelve data base#
+#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+#  @date   2023-02-17
+def tmpdb ( **kwargs ) :
+    """ Open a TEMPORARY persistent dictionary for reading and writing.
+        
+    The optional protocol parameter specifies the
+    version of the pickle protocol (0, 1, or 2).
+    
+    See the module's __doc__ string for an overview of the interface.
+    """
+    return TmpZstShelf ( **kwargs ) 
+
+# ==========================================================================
+if  not zst : __all__ = ()
 
 # =============================================================================
 if '__main__' == __name__ :
