@@ -14,7 +14,7 @@
 # However is contains several new features:
 # 
 #  - Optionally it is possible to perform the compression
-#    of the whole data base, that can be rathe useful fo data base
+#    of the whole data base, that can be useful for data base
 #    with large amout of keys 
 #
 # The module has been developed and used with great success in
@@ -53,9 +53,6 @@
 # ...
 # >>> abcd = db['some_key']
 # @endcode 
-#
-# @attention: In case DB-name has extension ``.gz'', the whole data base
-#             will be ``gzip''-ed. 
 #
 # @attention: When one tries to read the database with pickled ROOT object using newer
 # version of ROOT, one could get a ROOT read error,
@@ -116,13 +113,12 @@ The module has been developed and used with great success in
  ...
  >>> abcd = db['some_key']
  
- In case DB-name has extension ``.gz'', the whole data base will be ``gzip''-ed
- 
  Attention: When one tries to read the database with pickled ROOT object using newer
  version of ROOT, one could get a ROOT read error,
  in case of evoltuion in ROOT streamers for some  classes, e.g. ROOT.TH1D
  > Error in <TBufferFile::ReadClassBuffer>: Could not find the StreamerInfo for version 2 of the class TH1D, object skipped at offset 19
  > Error in <TBufferFile::CheckByteCount>: object of class TH1D read too few bytes: 2 instead of 878
+
  The solution is simple and described in  file ostap.io.dump_root
  - see ostap.io.dump_root
 """
@@ -165,8 +161,6 @@ class ZipShelf(CompressShelf):
     - 'c'  Open database for reading and writing, creating if it does not exist
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
-    ## the known "standard" extensions: 
-    extensions = '.zip' , '.tgz' , '.gz'  
     ## 
     def __init__(
             self                                  ,
@@ -174,31 +168,18 @@ class ZipShelf(CompressShelf):
             mode     = 'c'                        ,
             compress = zlib.Z_DEFAULT_COMPRESSION , **kwargs ) :
 
+        ## check the compress level 
         assert 0 <= compress <= zlib.Z_BEST_COMPRESSION or    \
             compress in ( -1 , zlib.Z_DEFAULT_COMPRESSION )  ,\
             "Invalid `compress` for `zlib`: %s" % compress  
 
         ## initialize the base class 
-        CompressShelf.__init__ ( self                   ,
-                                 dbname                 ,
-                                 mode        = mode     ,
-                                 compress    = compress , **kwargs ) 
+        CompressShelf.__init__ ( self                    ,
+                                 dbname                  ,
+                                 mode         = mode     ,
+                                 compress     = compress ,
+                                 compresstype = 'zip'    , **kwargs ) 
         
-    # =========================================================================
-    ## compress the file into temporary location, keep original
-    def compress_files   ( self , files ) :
-        """ Compress the files into the temporary location, keep original
-        """
-        output = self.tempfile ()
-        
-        import zipfile 
-        with zipfile.ZipFile ( output , 'w' , allowZip64 = True ) as zfile :
-            for file in files :
-                _ , name = os.path.split ( file )
-                zfile.write ( file  , name  )
-                
-        return output 
-
     # ==========================================================================
     ## compress (zip)  the item  using <code>zlib.compress</code>
     def compress_item ( self , value ) :
@@ -214,6 +195,7 @@ class ZipShelf(CompressShelf):
         -  see zlib.decompress
         """        
         return self.unpickle ( zlib.decompress ( value ) ) 
+
 
 # =============================================================================
 ## helper function to access ZipShelve data base

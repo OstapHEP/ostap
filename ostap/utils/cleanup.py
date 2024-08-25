@@ -213,6 +213,7 @@ class  CleanUp(object) :
         if ( not self.__cleaner ) or self.__cleaner.detach () :
             self._clean_trash_ ( self.__trash  )             
 
+    # =========================================================================
     @staticmethod
     def tempdir ( suffix = '' , prefix = 'ostap-tmp-dir-' , date = True ) :
         """Get the name of the newly created temporary directory.
@@ -235,9 +236,10 @@ class  CleanUp(object) :
             logger.verbose ( 'temporary directory requested %s' % tmp   )
             return tmp        
 
+    # =========================================================================
     @staticmethod
     def get_temp_file ( suffix = '' , prefix = 'ostap-tmp-' , dir = None , date = True ) :
-        """Generate the name for the temporary file.
+        """ Generate the name for the temporary file.
         - the method should be  avoided in favour of `CleanUp.tempfile`
         >>> fname = CleanUp.get_temp_file () 
         """
@@ -262,30 +264,32 @@ class  CleanUp(object) :
             logger.verbose  ( 'temporary file      requested %s' % fname )
             return fname
 
+    # =========================================================================
     @staticmethod
     def tempfile ( suffix = '' , prefix = 'ostap-tmp-' , dir = None , date = True , keep = False ) :
-        """Get the name of the temporary file.
+        """ Get the name of the temporary file.
         - The file will be deleted at-exit
         >>> fname = CleanUp.tempfile() 
         """
         fname = CleanUp.get_temp_file ( suffix = suffix , prefix = prefix ,
                                         dir    = dir    , date   = date   )
-        assert not os.path.exists  ( fname )
+        assert not os.path.exists  ( fname ) 
         CleanUp._tmpfiles.add ( fname )
-        
         if keep : CleanUp._protected.add ( fname )
         return fname
 
+    # =========================================================================
     @staticmethod
     def protect_file ( fname ) :
-        """Protect the temporary from removal"""        
+        """ Protect the temporary from removal"""        
         if os.path.exists ( fname ) and os.path.isfile ( fname ) :
             CleanUp._protected.add ( fname ) 
             logger.verbose ( 'the file is protected: %s ' % fname )
             
+    # =========================================================================
     @staticmethod
     def remove_file ( fname ) :
-        """Remove the (temporary) file
+        """ Remove the (temporary) file
         """
         if os.path.exists ( fname ) and os.path.isfile ( fname ) :
 
@@ -293,7 +297,7 @@ class  CleanUp(object) :
                 logger.verbose ( 'do not remove the protected file : %s ' % fname )
                 return False
 
-            logger.verbose ( 'remove temporary file : %s' % fname )
+            logger.verbose ( 'remove the file : %s' % fname )
             try    : os.remove ( fname )
             except : pass
             
@@ -303,12 +307,13 @@ class  CleanUp(object) :
             return False 
         return True 
 
+    # =========================================================================
     @staticmethod
     def remove_dir ( fdir ) :
         """Remove the (temporary) directory
         """
         if os.path.exists ( fdir ) and os.path.isdir ( fdir ) :
-            logger.verbose ( 'remove temporary dir : %s' % fdir  )
+            logger.verbose ( 'remove the dir : %s' % fdir  )
             ## 1: collect all files & subdirectories 
             for root, subdirs, files in os.walk ( fdir  , topdown = False ):
                 ## 2: remove all files 
@@ -316,27 +321,87 @@ class  CleanUp(object) :
                 ## 3: remove all directories 
                 for dd in subdirs :
                     dd = os.path.join ( root , dd )
-                    logger.verbose ( 'remove subdirectory %s in temporary directory %s ' % ( dd , fdir ) )
+                    logger.verbose ( 'remove subdirectory %s in the directory %s ' % ( dd , fdir ) )
                     try    : os.rmdir   ( dd  )
                     except : pass
                     if os.path.exists ( dd ) and os.path.isdir ( dd )   :
                         CleanUp._failed.add ( dd  ) 
-                        logger.error ( 'failed to remove %s in temporary directory %s ' % ( dd , fdir ) )                        
+                        logger.error ( 'failed to remove %s in the directory %s ' % ( dd , fdir ) )                        
             ## 4: finally remove the root
-            try    : os.rmdir ( fdir )
-            except : pass 
+            try    :
+                os.rmdir ( fdir )
+                return True 
+            except :
+                pass
         if os.path.exists ( fdir ) and os.path.isdir ( fdir ) :
             CleanUp._failed.add ( fdir ) 
             logger.error ( 'failed to  remove : %s' % fdir  )
-            
+            return False        
+        return True
+        
+    # =========================================================================
     @staticmethod
     def remove ( fname ) :
-        """Remove temporary object (if any) 
+        """ Remove temporary object(file or directory) (if any) 
         """
-        if   os.path.exists ( fname ) and os.path.isdir  ( fname ) :
-            return CleanUp.remove_dir  ( fname )
-        elif os.path.exists ( fname ) and os.path.isfile ( fname ) :
-            return CleanUp.remove_file ( fname )
+        if os.path.exists ( fname ) :
+            if   os.path.isdir  ( fname ) : return CleanUp.remove_dir  ( fname )
+            elif os.path.isfile ( fname ) : return CleanUp.remove_file ( fname )
+            
+# ============================================================================
+## @class CUBase
+#  A ligth version of the CleanUp to bve used as helper base class
+class CUBase(object) :
+    """ A ligth version of the CleanUp to be used as helper base class
+    """
+    # ==========================================================================
+    ## expand the (file/dir)name 
+    @classmethod
+    def name_expand ( cls , name ) :
+        """ Expand the (file/dir)name """
+        thename  = os.path.expandvars ( name    )
+        thename  = os.path.expanduser ( thename )
+        thename  = os.path.expandvars ( thename )
+        thename  = os.path.expanduser ( thename )
+        return     os.path.expandvars ( thename )
+    # =========================================================================
+    ## remove the file 
+    @classmethod 
+    def remove_file ( cls , filename ) :
+        """ Remove the file """
+        return CleanUp.remove_file ( filename ) 
+    # =========================================================================
+    ## remove the directory 
+    @classmethod 
+    def remove_dir ( cls , dirname ) :
+        """ Remove the directory """
+        return CleanUp.remove_dir ( dirname ) 
+    # =========================================================================
+    ## remove the file or directory 
+    @classmethod 
+    def remove      ( cls , name ) :
+        """ Remove the directory """
+        return CleanUp.remove ( name ) 
+    
+    # =========================================================================
+    ## Create the temporary directory
+    #  The directory will be cleaned-up and deleted at-exit.
+    @classmethod
+    def tempdir ( cls , suffix = '-TMP-dir' , prefix = 'ostap-TMP-dir-' , date = True  ) :
+        """ Create the temporary directory
+        The directory will be cleaned-up and deleted at-exit.
+        """
+        return CleanUp.tempdir ( suffix = suffix , prefix = prefix, date = date )
+    
+    # =========================================================================
+    ## Ccreate the name for the temporary file 
+    #  The file will be deleted at-axit 
+    @classmethod
+    def tempfile ( cls , suffix = '-tmp' , prefix = 'ostap-TMP-' , dir = None , date = True  ) :
+        """ Create the name for the temporary file 
+        The file will be deleted at-axit
+        """
+        return CleanUp.tempfile ( suffix = suffix , prefix = prefix, dir = dir , date = date ) 
 
 # ============================================================================
 ## Context manager to cleanup PID-dependent directories 
@@ -522,35 +587,37 @@ class TempFile(object) :
             
     @property
     def filename ( self ) :
-        """`filename': the actual name of temporary file"""
+        """`filename' : the actual name of temporary file"""
         return self.__filename
 
+    # =========================================================================
     ## context  manager enter: no action 
     def __enter__ ( self      ) :
-        """Context  manager enter: no action"""
+        """ Context  manager enter: no action"""
         return self
 
+    # =========================================================================
     ## Context manager  exit: delete the file 
     def __exit__  ( self , *_ ) :
-        """Context manager  exit: delete the file
+        """ Context manager  exit: delete the file
         """
         self._remove_the_file_ ( self.__filename ) 
         self.__filename = ''
         
     ## delete the file 
     def __del__  ( self ) :
-        """Delete the temporary file
+        """ Delete the temporary file
         """
         if not self.__filename : return 
         if ( not self.__finalizer ) or self.__finalizer.detach () :
             self._remove_the_file_ ( self.__filename )             
             self.__filename = ''
             
+    # =========================================================================
     @classmethod
     def _remove_the_file_ ( cls , name ) :
         if name and os.path.exists ( name ) :
             CleanUp.remove_file ( name )
-
     
 # =============================================================================
 if '__main__' == __name__ :

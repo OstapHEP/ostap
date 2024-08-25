@@ -101,7 +101,9 @@ __all__     = (
     'memoize'            , ## Simple lightweight unbounded cache
     'absproperty'        , ## abstract property decorator
     'classprop'          , ## class property decorator
-    'numcalls'           , ## decoratro for #ncalls  
+    'numcalls'           , ## decorator for #ncalls
+    ##
+    'file_size'          , ## get cumulative size of files/directories 
     ##
     'hadd'               , ## merge ROOT files using command `hadd`
     'num_fds'            , ## get number of opened file descriptors 
@@ -1921,6 +1923,28 @@ class RootRandomSeed(object) :
         """
         return self.__seed 
 
+
+# ==============================================================================
+## get the total  size of files/directories
+#  @code
+#  size = file_size ( 'a.f' , 'b.f'  'c.dir' ) 
+#  @endfcode
+def file_size ( *files ) :
+    """ Get the total  size of files/directories
+    >>> size = file_size ( 'a.f' , 'b.f'  'c.dir' ) 
+    """
+    size = 0
+    for name in files :
+        if not os.path.exists ( name ) : continue 
+        elif   os.path.islink ( name ) : continue 
+        elif   os.path.isfile ( name ) : size += os.path.getsize ( name )
+        elif   os.path.isdir  ( name ) :
+            for dirpath , dirnames , filenames in os.walk ( name ) :
+                for f in filenames:
+                    fp = os.path.join ( dirpath , f )
+                    if not os.path.islink ( fp ):
+                        size += os.path.getsize ( fp )
+    return size
 
 # ==============================================================================
 ## Context manager to set/keep seed/state of ROOT random generator

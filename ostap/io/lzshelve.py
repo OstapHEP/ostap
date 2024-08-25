@@ -60,9 +60,6 @@
 #
 # @endcode 
 #
-# @attention: In case DB-name has extensions ``.lz'', ``.xz'', the whole data base
-#             will be ``LZMA''-ed ". 
-#
 # @attention: When one tries to read the database with pickled ROOT object using newer
 # version of ROOT, one could get a ROOT read error,
 # in case of evoltuion in ROOT streamers for some  classes, e.g. <code>ROOT.TH1D</code>>
@@ -121,8 +118,6 @@ The module has been developed and used with great success in
  ...
  >>> abcd = db['some_key']
  
- In case DB-name has extension ``.lz'', ``.xz'', the whole data base will be ``LZMA''-ed
-
  Attention: When one tries to read the database with pickled ROOT object using newer
  version of ROOT, one could get a ROOT read error,
  in case of evoltuion in ROOT streamers for some  classes, e.g. ROOT.TH1D
@@ -184,8 +179,6 @@ class LzShelf(CompressShelf):
     - 'c'  Open database for reading and writing, creating if it does not exist
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
-    ## the known "standard" extensions: 
-    extensions =  '.txz', '.tlz' , '.xz' , '.lz' , '.lzma'  
     ## 
     def __init__( self                              ,
                   dbname                            ,
@@ -195,51 +188,13 @@ class LzShelf(CompressShelf):
         assert lzma, "`lzma` module is not available!"
         
         ## initialize the base class 
-        CompressShelf.__init__ ( self                   ,
-                                 dbname                 ,
-                                 mode        = mode     ,
-                                 compress    = compress , **kwargs ) 
-        
-    # =========================================================================
-    ## compress (LZMA) the file into temporary location, keep original
-    def compress_files ( self , files ) :
-        """ Compress (LZMA) the file into temporary location, keep original
-        """
-        output = self.tempfile()
-        
-        import tarfile
-        with tarfile.open ( output , 'x:xz' ) as tfile :
-            for file in files  :
-                _ , name = os.path.split ( file )
-                tfile.add ( file , name  )
-            return output 
-            
-    # =========================================================================
-    ## uncompress (LZMA) the file into temporary location, keep original
-    def uncompress_file ( self , filein ) :
-        """ Uncompress (LZMA) the file into temporary location, keep original
-        """
-    
-        items  = []
-        tmpdir = self.tempdir ()
-        
-        ## 1) try compressed-tarfile 
-        import tarfile
-        if tarfile.is_tarfile ( filein ) : 
-            with tarfile.open ( filein  , 'r:*' ) as tfile :
-                for item in tfile  :
-                    tfile.extract ( item , path = tmpdir )
-                    items.append  ( os.path.join ( tmpdir , item.name ) )
-            items.sort() 
-            return tuple ( items )
-                
-        ## 2) try compressed file
-        import tempfile , io   
-        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-lzdb' )
-        with lzma.open ( filein  , 'rb' ) as fin : 
-            with io.open ( fileout , 'wb' ) as fout : 
-                shutil.copyfileobj ( fin , fout )                
-                return fileout , 
+        CompressShelf.__init__ ( self                    ,
+                                 dbname                  ,
+                                 mode         = mode     ,
+                                 compress     = compress ,
+                                 compresstype = 'lzma'   , **kwargs ) 
+
+        self.taropts = 'x:xz'
             
     # ==========================================================================
     ## compress (LZMA)  the item  using <code>lzma.compress</code>
@@ -255,8 +210,8 @@ class LzShelf(CompressShelf):
         """ Uncompress (LZMA) the item using ``lzma.decompress''
         -  see lzma.decompress
         """        
-        return self.unpickle ( lzma.decompress ( value ) ) 
-
+        return self.unpickle ( lzma.decompress ( value ) )
+    
 # =============================================================================
 ## helper function to access LzShelve data base
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch

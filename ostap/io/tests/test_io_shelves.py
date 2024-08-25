@@ -25,14 +25,15 @@
 ## ##  sys.modules['dbm'   ] = None
 # =============================================================================
 from   ostap.math.base       import iszero
-from   ostap.core.pyrouts    import VE
-from   ostap.utils.timing    import timing 
+from   ostap.core.pyrouts    import VE, hID 
+from   ostap.utils.timing    import timing
+from   ostap.utils.utils     import random_name 
 from   sys                   import version_info as python_version
-from   ostap.io.dbase        import dbsize 
 import ostap.utils.cleanup   as     CU
 import ostap.io.zipshelve    as     zipshelve
 import ostap.io.bz2shelve    as     bz2shelve
 import ostap.io.rootshelve   as     rootshelve
+import ostap.logger.table    as     T 
 import ROOT, os, random
 # =============================================================================
 # logging 
@@ -60,7 +61,7 @@ else :
 
 bins    = 1000
 data    = {}
-h1      = ROOT.TH1D('h1','1D-histogram',bins,-5,5) ; h1.Sumw2() 
+h1      = ROOT.TH1D( 'h1' ,'1D-histogram',bins,-5,5) ; h1.Sumw2() 
 m1      = VE(1,2)
 for i in range ( 0, 100000) : h1.Fill( m1.gauss() )
 
@@ -71,220 +72,145 @@ for i in range ( 0, 100000) : h2.Fill( m1.gauss() , m1.gauss() )
 data [ 'histo-1D' ] = h1
 data [ 'histo-2D' ] = h2
 data [ 'both'     ] = (123 , h1 , {'a':2}, h2,'comment',())
-data [ 'histos'   ] = {}
-for i in range ( 5000 ) : 
-    ht = 'histo#%d' % i
-    hh = ROOT.TH1D ( ht , '' , 500 , 0 , 100 )
-    for j in range ( 200 ) :
-        hh.Fill ( random.gauss ( 50 , 10) )
-data['histos'][ht] = hh 
 
+data [ 'histos'   ] = {}
+for i in range ( 1000 ) :
+    hn = hID() 
+    hh = ROOT.TH1D ( hn ,'1D-histogram' , 100 , -5, 5 )
+    for j in range ( 5000 ) :  hh.Fill ( random.gauss ( 0 , 1 ) ) 
+    if i < 100 : data [ hn         ] = hh
+    data [ 'histos'   ] [ hn ] = hh
+    
 # =============================================================================
 def test_shelves1():
 
     logger = getLogger ('Test shelves')
-    logger.info ( 'Test variosu shelves' ) 
-    
-    db_sql_name  = CU.CleanUp.tempfile ( suffix = '.sqldb'  )  
-    db_zip_name  = CU.CleanUp.tempfile ( suffix = '.zipdb'  ) 
-    db_bz2_name  = CU.CleanUp.tempfile ( suffix = '.bz2db'  )
-    db_root_name = CU.CleanUp.tempfile ( suffix = '.root'   )
-    db_lz_name   = CU.CleanUp.tempfile ( suffix = '.lzmadb' )
-    db_zst_name  = CU.CleanUp.tempfile ( suffix = '.zstdb'  )
-    
-    dbases = ( db_sql_name , db_zip_name , db_bz2_name , db_root_name )
-    
-    from   ostap.io.dbase        import whichdb
+    logger.info ( 'Test varioouts shelves' ) 
 
-    db_sql  = zipshelve.open    ( db_sql_name  , 'c' , dbtype = 'sqlite3' )
-    db_zip  = zipshelve.open    ( db_zip_name  , 'c' )
-    db_bz2  = bz2shelve.open    ( db_bz2_name  , 'c' )
-    db_root = rootshelve.open   ( db_root_name , 'c' )
+    names  = {} 
+    dbases = {}
+
+    names      [ 'db_sql'  ] = CU.CleanUp.tempfile ( suffix = '.sqlsh'  )
+    names      [ 'db_zip'  ] = CU.CleanUp.tempfile ( suffix = '.zipsh'  )
+    names      [ 'db_bz2'  ] = CU.CleanUp.tempfile ( suffix = '.bz2sh'  )
+    names      [ 'db_root' ] = CU.CleanUp.tempfile ( suffix = '.root'   )  
     
-    if lzshelve  : db_lz  = lzshelve.open  ( db_lz_name , 'c' )
-    else         : db_lz  = None
+    dbases     [ 'db_zip'  ] = zipshelve .open ( names [ 'db_zip'  ] , 'c' )
+    dbases     [ 'db_sql'  ] = zipshelve .open ( names [ 'db_sql'  ] , 'c' , dbtype = 'sqlite3' )
+    dbases     [ 'db_bz2'  ] = bz2shelve .open ( names [ 'db_bz2'  ] , 'c' )
+    dbases     [ 'db_root' ] = rootshelve.open ( names [ 'db_root' ] , 'c' )
     
-    if zstshelve : db_zst = zstshelve.open ( db_zst_name , 'c' )
-    else         : db_zst = None 
- 
+    if lzshelve :
+        names  [ 'db_lzma' ] = CU.CleanUp.tempfile ( suffix = '.lzsh'  ) 
+        dbases [ 'db_lzma' ] = lzshelve  .open ( names ['db_lzma'] , 'c' )
         
-    for k in data :
-        db_sql  [ k ] = data[k]
-        db_zip  [ k ] = data[k]
-        db_bz2  [ k ] = data[k]
-        if lzshelve :
-            db_lz  [ k ] = data[k]
-        if zstshelve :
-            db_zst [ k ] = data[k]
-        db_root [ k ] = data[k]
+    if zstshelve :
+        names  [ 'db_zstd' ] = CU.CleanUp.tempfile ( suffix = '.zstsh'  )
+        dbases [ 'db_zstd' ] = zstshelve .open ( names ['db_zstd'] , 'c' )
+
+    # ===================================================================================
+    ## test writing 
+    # ===================================================================================
+
+    rows = [  ( 'DBASE' , 'dbtype' , 'CPU [ms]' ) ] 
+    for dbname in dbases :
+        db = dbases [ dbname ]
+        with timing ( 'Write %10s' % dbname ) as tm : 
+            for key in data :
+                db [ key ] = data [ key ]    
+        logger.info ( 'DB %-25s #keys: %d' % ( dbname , len ( db  ) ) )
+        row = dbname , db.dbtype , '%.1f' % ( tm.delta * 1000 )
+        rows.append ( row ) 
+        db.close()
         
+    title = 'Write DB'
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'llr' )
+    logger.info ( '%s:\n%s' % ( title , table ) ) 
+
+    # ===================================================================================
+    ## test reading
+    # ===================================================================================
+    
+    dbases = {}
+
+    ## open for reading 
+    logger.info ( 'Reopen databases as read-only' ) 
+    
+    dbases     [ 'db_zip'  ] = zipshelve .open ( names [ 'db_zip'  ] , 'r' )
+    dbases     [ 'db_sql'  ] = zipshelve .open ( names [ 'db_sql'  ] , 'r' , dbtype = 'sqlite3' )
+    dbases     [ 'db_bz2'  ] = bz2shelve .open ( names [ 'db_bz2'  ] , 'r' )
+    dbases     [ 'db_root' ] = rootshelve.open ( names [ 'db_root' ] , 'r' )
+    
+    if lzshelve :
+        dbases [ 'db_lzma' ] = lzshelve  .open ( names ['db_lzma'] , 'r' )
+    if zstshelve :
+        dbases [ 'db_zstd' ] = zstshelve .open ( names ['db_zstd'] , 'r' )
+                  
+    rows = [  ( 'DBASE' , 'dbtype' , 'CPU [ms]' ) ] 
+    for dbname in dbases :
+        db = dbases [ dbname ]
+        with timing ( 'Read %10s' % dbname ) as tm : 
+            for key in db : value = db [ key ] 
+        logger.info ( 'DB %-25s #keys: %d' % ( dbname , len ( db  ) ) )
+        row = dbname , db.dbtype , '%.1f' % ( tm.delta * 1000 )
+        rows.append ( row ) 
+        db.close()
         
-    logger.info('SQLiteShelve #keys: %s' % len ( db_sql  ) ) 
-    logger.info('ZipShelve    #keys: %s' % len ( db_zip  ) )
-    logger.info('Bz2Shelve    #keys: %s' % len ( db_bz2  ) )
-    logger.info('RootShelve   #keys: %s' % len ( db_root ) )
-    if lzshelve :
-        logger.info('LzShelve     #keys: %s' % len ( db_lz  ) )
-    if zstshelve :
-        logger.info('ZstShelve    #keys: %s' % len ( db_zst ) )
+    title = 'Read DB'
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'llr' )
+    logger.info ( '%s:\n%s' % ( title , table ) ) 
+    
+    # ===================================================================================
+    ## test cloning 
+    # ===================================================================================
+    
+    backends  = [
+        'lmdb'      , 
+        'berkleydb' ,
+        'berkley'   ,
+        'bsddb3'    ,
+        'sqlite'    ,
+        'sqlite3'   ,
+        'dbm.gnu'   ,
+        'dumbdbm'   ,
+        'std'       ,
+    ]
 
-    db_sql  .close() 
-    db_zip  .close()
-    db_bz2  .close()
-    db_root .close()
-    if lzshelve  : db_lz .close()
-    if zstshelve : db_zst.close()
+    clones = {}
+    
+    with zipshelve .open ( names [ 'db_zip'  ] , 'r' ) as original : 
 
-    logger.info('SQLiteShelve size: %d|%d ' % dbsize ( db_sql_name  ) ) 
-    logger.info('ZipShelve    size: %d|%d ' % dbsize ( db_zip_name  ) )   
-    logger.info('Bz2Shelve    size: %d|%d ' % dbsize ( db_bz2_name  ) ) 
-    logger.info('RootShelve   size: %d|%d'  % dbsize ( db_root_name ) )  
-    if lzshelve :
-        logger.info('LzShelve     size: %d|%d ' % dbsize ( db_lz_name    ) ) 
-    if zstshelve :
-        logger.info('ZstShelve    size: %d|%d ' % dbsize ( db_zst_name   ) ) 
-
-    db_sql  = zipshelve.open       ( db_sql_name  , 'r' , dbtype = 'sqlite3')
-    db_zip  = zipshelve.open       ( db_zip_name  , 'r' )
-    db_bz2  = bz2shelve.open       ( db_bz2_name  , 'r' )
-    if lzshelve  :
-        db_lz  = lzshelve.open     ( db_lz_name   , 'r' )
-    if zstshelve :
-        db_zst = zstshelve.open    ( db_zst_name  , 'r' )
-    db_root = rootshelve.open      ( db_root_name , 'r' )
-
-    logger.info('SQLiteShelve #keys: %s' % len ( db_sql ) ) 
-    logger.info('ZipShelve    #keys: %s' % len ( db_zip ) )
-    logger.info('Bz2Shelve    #keys: %s' % len ( db_bz2 ) )
-    if lzshelve  :
-        logger.info('LzShelve     #keys: %s' % len ( db_lz  ) )
-    if zstshelve :
-        logger.info('ZstShelve    #keys: %s' % len ( db_zst ) )
-    logger.info('RootShelve   #keys: %s' % len ( db_root ) )
-
-    with timing ( 'h2-read/SQL'  ) : h2_sql  = db_sql  [ 'histo-2D']
-    with timing ( 'h2_read/ZIP'  ) : h2_zip  = db_zip  [ 'histo-2D']
-    with timing ( 'h2_read/BZ2'  ) : h2_bz2  = db_bz2  [ 'histo-2D']
-    if lzshelve :
-        with timing ( 'h2_read/LZ'  ) :
-            h2_lz  = db_lz  [ 'histo-2D']
-    if zstshelve :
-        with timing ( 'h2_read/Zst'  ) :
-            h2_zst = db_zst [ 'histo-2D']
-    with timing ( 'h2_read/ROOT' ) : h2_root = db_root [ 'histo-2D']
-
-    with timing ( 'tu-read/SQL'  ) : tu_sql  = db_sql  [ 'both'    ]
-    with timing ( 'tu_read/ZIP'  ) : tu_zip  = db_zip  [ 'both'    ] 
-    with timing ( 'tu_read/BZ2'  ) : tu_bz2  = db_bz2  [ 'both'    ] 
-    if lzshelve :
-        with timing ( 'tu_read/LZ'   ) :
-            tu_lz   = db_lz   [ 'both'    ] 
-    if zstshelve :
-        with timing ( 'tu_read/Zst'  ) :
-            tu_zst  = db_zst  [ 'both'    ] 
-    with timing ( 'tu_read/ROOT' ) : tu_root = db_root [ 'both'    ]
-
-    with timing ( 'h1-read/SQL'  ) : h1_sql  = db_sql  [ 'histo-1D']
-    with timing ( 'h1-read/ZIP'  ) : h1_zip  = db_zip  [ 'histo-1D']
-    with timing ( 'h1-read/BZ2'  ) : h1_bz2  = db_bz2  [ 'histo-1D']
-    if lzshelve : 
-        with timing ( 'h1-read/LZ'   ) :
-            h1_lz   = db_lz   [ 'histo-1D']
-    if zstshelve : 
-        with timing ( 'h1-read/Zst'   ) :
-            h1_zst  = db_zst  [ 'histo-1D']
-    with timing ( 'h1-read/ROOT' ) : h1_root = db_root [ 'histo-1D']
-
-    for i in h1_sql : 
-        v = h1_sql  [i] - h1_zip [i] 
-        if not iszero ( v.value() ) :
-            logger.error('Large difference for 1D histogram(1)!')
-        v = h1_sql  [i] - h1     [i] 
-        if not iszero ( v.value() ) :
-            logger.error('Large difference for 1D histogram(2)!')
-        v = h1_root [i] - h1     [i] 
-        if not iszero ( v.value() ) :
-            logger.error('Large difference for 1D histogram(3)!')
-        v = h1_bz2  [i] - h1     [i] 
-        if not iszero ( v.value() ) :
-            logger.error('Large difference for 1D histogram(4)!')
-        if lzshelve :
-            v = h1_lz  [i] - h1     [i] 
-            if not iszero ( v.value() ) :
-                logger.error('Large difference for 1D histogram(5)!')
-        if zstshelve :
-            v = h1_zst [i] - h1     [i] 
-            if not iszero ( v.value() ) :
-                logger.error('Large difference for 1D histogram(6)!')
-                
-    for i in h2_sql : 
-        v = h2_sql  [i] - h2_zip[i] 
-        if not iszero ( v.value() ) :
-            logger.error('Large difference for 2D histogram(1)!')
-        v = h2_sql  [i] - h2    [i] 
-        if not iszero ( v.value() ) :
-            logger.error('Large difference for 2D histogram(2)!')
-        v = h2_root [i] - h2    [i] 
-        if not iszero ( v.value() ) :
-            logger.error('Large difference for 2D histogram(3)!')
-        v = h2_bz2  [i] - h2    [i] 
-        if not iszero ( v.value() ) :
-            logger.error('Large difference for 2D histogram(4)!')
-        if lzshelve :
-            v = h2_lz  [i] - h2    [i] 
-            if not iszero ( v.value() ) :
-                logger.error('Large difference for 2D histogram(5)!')
-        if zstshelve :
-            v = h2_zst [i] - h2    [i] 
-            if not iszero ( v.value() ) :
-                logger.error('Large difference for 2D histogram(6)!')
+        for dbtype in backends :
             
-    h1tq = tu_sql [1]
-    h1tz = tu_zip [1]
-    h1tr = tu_root[1]
+            nz = CU.CleanUp.tempfile ( suffix = '.zip'    )
+            nt = CU.CleanUp.tempfile ( suffix = '.tar'    )
 
-    ## clone them 
-    dbs = [ db_sql , db_zip , db_bz2 , db_root ]
-    if lzshelve  : dbs.append ( db_lz  )
-    if zstshelve : dbs.append ( db_zst )
-    
-    for db in dbs :
-        cdb = db.clone ( CU.CleanUp.tempfile ( suffix = '.db'  ) )
-        logger.info('Cloned:')
-        cdb.ls()
-    del dbs 
-                         
-    with timing('Close SQL'  ) : db_sql .close() 
-    with timing('Close ZIP'  ) : db_zip .close()
-    with timing('Close BZ2'  ) : db_bz2 .close()
-    if lzshelve : 
-        with timing('Close LZ'   ) : db_lz  .close()
-    if zstshelve : 
-        with timing('Close ZST'  ) : db_zst .close()
-    with timing('Close ROOT' ) : db_root.close()
-
-    dbases = ( zipshelve    . tmpdb ( dbtype = 'sqlite3' ) ,
-               zipshelve    . tmpdb () ,
-               bz2shelve    . tmpdb () ,
-               rootshelve   . tmpdb () )
-    
-    if lzshelve  : dbases = dbases + ( lzshelve  . tmpdb () , )
-    if zstshelve : dbases = dbases + ( zstshelve . tmpdb () , )
-        
-    
-    for dbase in dbases :
-
-        with timing () :
+            tag1 = 'db_zip/%s' % dbtype 
+            nn = CU.CleanUp.tempfile ( suffix = '.zipsh'  )
+            clones [ tag1 ] = original.clone ( dbname = nn , dbtype = dbtype )
             
-            with dbase as db :
-                
-                db [ 'h1'    ] = h1
-                db [ 'h2'    ] = h2
-                db [ 'data'  ] = data
-                db [ 'histos'] = data['histos']
-                db.ls()
+            tagz = 'db_zip/%s/zip' % dbtype 
+            nz = CU.CleanUp.tempfile ( suffix = '.zip'  )
+            clones [ tagz ] = original.clone ( dbname = nz , dbtype = dbtype ) 
 
+            tagt = 'db_zip/%s/tar' % dbtype 
+            nt = CU.CleanUp.tempfile ( suffix = '.tar'  )
+            clones [ tagt ] = original.clone ( dbname = nt , dbtype = dbtype ) 
 
+    rows = [  ( 'DBASE' , 'dbtype' , 'CPU [ms]' ) ] 
+    for dbname in clones  :
+        db = clones [ dbname ]
+        with timing ( 'Read %10s' % dbname ) as tm : 
+            for key in db : value = db [ key ] 
+        logger.info ( 'DB %-25s #keys: %d' % ( dbname , len ( db  ) ) )
+        row = dbname , db.dbtype , '%.1f' % ( tm.delta * 1000 )
+        rows.append ( row ) 
+        db.close()
+        
+    title = 'Read clones '
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'llr' )
+    logger.info ( '%s:\n%s' % ( title , table ) ) 
+    
 # =============================================================================
 
 def test_shelves2 () : 

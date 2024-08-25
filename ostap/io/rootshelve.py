@@ -118,7 +118,7 @@ import ostap.io.root_file
 from   ostap.io.dbase          import TmpDB 
 from   ostap.io.pickling       import ( Pickler, Unpickler, BytesIO, 
                                         PROTOCOL,
-                                        HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
+                                        HIGHEST_PROTOCOL, DEFAULT_PROTOCOL )
 import ROOT, shelve, zlib, os 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -212,7 +212,6 @@ class RootOnlyShelf(shelve.Shelf):
         >>> for k in db.ikeys('*MC*') : print(k)
         
         """
-        keys_ = self.keys()
         
         if not pattern :
             good = lambda k : True
@@ -223,10 +222,9 @@ class RootOnlyShelf(shelve.Shelf):
         else :
             import fnmatch
             good = lambda s : fnmatch.fnmatchcase ( k , pattern  )
-        
-        keys_ = self.keys()
-        for k in sorted ( keys_ ) :
-            if good ( k ) : yield k
+
+        for key in self.keys() : 
+            if good ( key ) : yield key 
 
     @property
     def filename    ( self       ) :
@@ -239,10 +237,10 @@ class RootOnlyShelf(shelve.Shelf):
 
     # =============================================================================
     ## get the object from the ROOT file 
-    def get ( self , key , defval = None ) :
-        """Get the object from the ROOT file
+    def get ( self , key , default = None ) :
+        """ Get the object from the ROOT file
         """
-        return self.dict.get ( key , defval ) 
+        return self.dict.get ( key , default ) 
 
     # =============================================================================
     ## get item from ROOT-file
@@ -294,7 +292,11 @@ class RootOnlyShelf(shelve.Shelf):
         """
         return self.dict.ls_table( prefix = "# ")
 
-
+    @property
+    def dbtype ( self ) :
+        """`dbtype` : the acual type of DB: `root`"""
+        return 'root'
+    
 # =============================================================================
 ## need to disable endcode/decode for the keys 
 if python_version.major > 2 :

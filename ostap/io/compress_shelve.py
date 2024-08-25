@@ -14,8 +14,8 @@
 # However is contains several new features:
 # 
 #  - Optionally it is possible to perform the compression
-#    of the whole data base, that can be rather useful for data base
-#    with large amout of keys 
+#    of the whole data base, that can be useful for data base
+#    with large amout of keys
 #
 # The module has been developed and used with great success in
 # `Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter'
@@ -38,7 +38,7 @@ However is contains several new features:
    with large amout of keys 
    
 The module has been developed and used with great success in
- `Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter'
+ `Kali, framework for fine calibration of LHCb Electromagnetic Calorimeter'
 
 """
 # =============================================================================
@@ -56,11 +56,14 @@ __all__ = (
 # =============================================================================
 import os, abc, shelve, shutil, glob, time, datetime, zipfile, tarfile 
 from   sys                  import version_info           as python_version
-from   ostap.io.dbase       import dbopen , whichdb, Item, ordered_dict  
+from   ostap.io.dbase       import dbopen , whichdb, Item, ordered_dict, dbfiles   
 from   ostap.core.meta_info import meta_info 
 from   ostap.io.pickling    import ( Pickler , Unpickler, BytesIO,
                                      PROTOCOL,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
+from   ostap.utils.cleanup  import CUBase
+from   ostap.utils.utils    import file_size
+from   ostap.utils.basic    import writeable 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
@@ -104,8 +107,8 @@ _modes_ = {
 #  - <code>uncompress_file</code>
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-class CompressShelf(shelve.Shelf,object):
-    """ `Compressed'-version of `shelve'-database
+class CompressShelf (shelve.Shelf,CUBase) :
+    """ `Compressed' - version of `shelve'-database
     It has four abstract methods:
     - compress_item
     - uncompress_item
@@ -113,8 +116,9 @@ class CompressShelf(shelve.Shelf,object):
     - uncompress_file
     """
     __metaclass__ = abc.ABCMeta
-    extensions    = ()
-    
+    ZIP_EXTS      = ( '.zip' , '.zipdb' , '.dbzip' , '.zdb' , '.dbz' ) ## whole DB is in zip-archive 
+    TAR_EXTS      = ( '.tar' , '.tardb' , '.dbtar' , '.tdb' , '.dbt' ) ## whole DB is in tar-archive 
+
     def __init__(
             self                   ,
             dbname                 ,
@@ -135,13 +139,14 @@ class CompressShelf(shelve.Shelf,object):
         if not 0 <= protocol <= HIGHEST_PROTOCOL :
             logger.warning ("Invalid pickle protocol:%s, replace with:%s" % ( protocol , PROTOCOL ) ) 
             protocol = PROTOCOL 
-
-        ## expand the actual file name 
-        dbname  = os.path.expandvars ( dbname )
-        dbname  = os.path.expanduser ( dbname )
-        dbname  = os.path.expandvars ( dbname )
-        dbname  = os.path.expandvars ( dbname )
+            
+        self.__opened          = False        
         
+        ## expand the actual file name
+        dbname_ = dbname
+        dbname  = self.name_expand ( dbname ) ## from CUBase 
+        
+        self.__compresstype    = kwargs.pop ( 'compresstype' , '???' ) 
         self.__compresslevel   = compress
         self.__silent          = silent
         self.__protocol        = protocol
@@ -149,142 +154,154 @@ class CompressShelf(shelve.Shelf,object):
         
         ## all arguments for constructor 
         self.__kwargs = {
-            'dbname'      : dbname             ,
-            'mode'        : mode               ,
-            'compress'    : self.compresslevel ,
-            'protocol'    : protocol           , ## from shelve.Shelf  
-            'writeback'   : writeback          , ## from shelf.Shelf 
-            'dbtype'      : self.dbtype        , ## preferred dbtype 
-            'silent'      : self.silent        ,
-            'keyencoding' : keyencoding        ,   
+            'dbname'       : dbname              ,
+            'mode'         :  mode               ,
+            'compress'     :  self.compresslevel ,
+            'protocol'     : protocol            , ## from shelve.Shelf  
+            'writeback'    : writeback           , ## from shelf.Shelf 
+            'dbtype'       : self.dbtype         , ## preferred dbtype 
+            'silent'       : self.silent         ,
+            'keyencoding'  : keyencoding         ,   
         }
         self.__kwargs.update ( kwargs )
 
-        
-        
-        self.__nominal_dbname  = dbname 
-        self.__actual_dbname   = dbname
-        
+        self.__mode            = mode        
+        self.__nominal_dbname  = dbname
+
+        ## generic case 
+        self.__actual_dbname   = dbname        
         self.__compress        = () 
         self.__remove          = () 
-        
-        self.__opened          = False 
         self.__files           = ()
-        
+
         if not self.__silent : logger.info ( 'Open DB: %s' % dbname ) 
 
-        ## filename without extension and the extension itself 
+        ## filename without extension and the extension
         fname , ext = os.path.splitext ( dbname )
 
-        self.__extension = ext
-
-        ## predefined extension?
-        if ext.lower() in self.extensions :
-
-            fexists = os.path.exists ( dbname )
-            
-            if  fexists and 'r' == mode :
-                
-                ## uncompress into the temporary location 
-                tfiles   = self.uncompress_file       ( dbname )
-                filename = self.dbase_name            ( tfiles )
-                
-                self.__remove        = tfiles 
-                self.__compress      = ()                                
-                self.__actual_dbname = filename
-                self.__files         = tfiles
-                
-            elif fexists and 'r' != mode :
-                
-                ## uncompress locally 
-                tfiles   = self.__in_place_uncompress ( dbname )
-                filename = self.dbase_name            ( tfiles )
-
-                self.__compress      = tfiles 
-                self.__remove        = tfiles 
-                self.__files         = tfiles
-                self.__actual_dbname = filename
-
-            else :
-                
-                ## 
-                filename             = fname 
-                self.__compress      = True 
-                self.__remove        = ()
-                self.__actual_dbname = filename
-
-        afiles = tuple ( [ self.dbname + suffix for suffix in (  '' , ',db' , '.dir' , '.pag' , '.dat' ) ] )
-        ofiles = set   ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) 
-   
-        self.__opened = False
-
-        ## actual database 
-        dbase = dbopen ( self.dbname , flag = mode , dbtype = dbtype , **kwargs )
-        conf  = { 'protocol' : protocol , 'writeback' : writeback }
-
-        if  3 <= python_version.major  : conf [ 'keyencoding'] = keyencoding
-        else                           : self.keyencoding      = keyencoding
+        extlow = ext.lower ()
         
+        exists = os.path.exists            ( dbname ) 
+        fexist = exists and os.path.isfile ( dbname )
+        
+        ## use zip-compression of whole db 
+        zip = extlow in self.ZIP_EXTS 
+        
+        ## use tar-compression of whole db 
+        tar = extlow in self.TAR_EXTS 
+        
+        zipf   = zip and fexist and zipfile.is_zipfile ( dbname )
+        tarf   = tar and fexist and tarfile.is_tarfile ( dbname )
+                
+        self.__zip = zip
+        self.__tar = tar 
+    
+        if 'r' == mode and ( tarf or zipf ) : 
+            
+            ## uncompress into the temporary location
+            tmpdir   = self.tempdir () 
+            tfiles   = self.uncompress_file ( dbname , where = tmpdir )
+
+            self.__compress      = ()                                
+            self.__remove        = tfiles 
+            self.__files         = tfiles
+            self.__actual_dbname = os.path.join ( tmpdir , os.path.basename ( fname ) ) 
+
+        elif 'r' != mode and ( tarf or zipf ) :
+
+            ## uncompress locally
+            outdir , _ = os.path.split        ( os.path.abspath ( dbname ) ) 
+            tfiles     = self.uncompress_file ( dbname , where = outdir  )
+
+            self.__compress      = tuple ( sorted ( tfiles ) ) 
+            self.__remove        = tfiles 
+            self.__files         = tfiles
+            self.__actual_dbname = os.path.join ( outdir , os.path.basename ( fname ) ) 
+
+        elif ( zip or tar ) : 
+            
+            filename             = fname 
+            self.__compress      = True 
+            self.__remove        = ()
+            self.__actual_dbname = filename
+
+        else : 
+            
+            filename             = dbname 
+            self.__compress      = False  
+            self.__remove        = ()
+            self.__actual_dbname = filename
+
+        # =====================================================================
+        the_path = lambda s : os.path.normpath ( os.path.abspath ( s ) )
+        ## all files  before dbopen
+        ofiles  = set ( [ the_path ( i )  for i in glob.iglob  ( self.dbname + '*'  ) ] ) 
+        ofiles |= set ( [ the_path ( i ) for i in glob.iglob  ( self.dbname + '/*' ) ] )         
+        
+        self.__ofiles = tuple ( sorted ( ofiles ) ) 
+        
+        # =====================================================================
+        ## open/create the actual underlying database 
+        # =====================================================================
+        self.__opened = False        
+        dbase = dbopen ( self.dbname , flag = mode , dbtype = dbtype , **kwargs )
+        self.__opened        = True
+
+        # =======================================================================
+        ## all files after dbopen 
+        pfiles  = set ( [ the_path ( i ) for i in glob.iglob  ( self.dbname + '*'  ) ] ) 
+        pfiles |= set ( [ the_path ( i ) for i in glob.iglob  ( self.dbname + '/*' ) ] )
+        ## new files 
+        nfiles = pfiles - ofiles
+        
+        self.__pfiles = tuple ( sorted ( pfiles ) ) 
+        self.__nfiles = tuple ( sorted ( nfiles ) ) 
+
+        # =====================================================================
+        ## initialize the base class
+        # =====================================================================
+        conf  = { 'protocol' : protocol , 'writeback' : writeback }
+        if  3 <= python_version.major  : conf [ 'keyencoding'] = keyencoding
+        else                           : self.keyencoding      = keyencoding        
         shelve.Shelf.__init__ ( self   , dbase  , **conf )
 
-
-        self.__opened        = True
-        self.__mode          = mode        
-
-        ### self.sync  ()
-
+        # ======================================================================
+        ## actual type of underlying database 
         self.__dbtype        =  whichdb ( self.dbname ) ## actual dbtype 
-        ## if hasattr ( self.dict , 'reopen' ) : self.dict.reopen() 
-                             
-        nfiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) - ofiles 
+        
+        # ======================================================================
+        ## expected files for the given DB type 
+        efiles = set ( the_path ( f ) for f in dbfiles ( self.dbtype , self.dbname ) ) 
 
-        if not self.__files :
+        if  ( ofiles | efiles ) != pfiles :
+            logger.warning ( 'Some missing or unexpected files' )
             
-            files = []
-            f     = self.dbname
-            db    = self.dbtype           
-            if os.path.exists ( f ) and os.path.isfile ( f ) and \
-                   db in ( 'dbm.gnu' , 'gdbm' , 'dbhash' , 'bsddb185' , 'bsddb' , 'bsddb3' , 'sqlite3' , 'berkeleydb') :  
-                files.append  ( f )
-            elif   f + '.db'  in nfiles  and db in ( 'dbm.ndmb' , 'dbm' ) :
-                files.append  ( f + '.db'  )
-            elif   f + '.pag' in nfiles and f  + '.dir' in nfiles and db in ( 'dbm.ndbm' , 'dbm'     ) :
-                files.append  ( f + '.pag' )
-                files.append  ( f + '.dir' )
-            elif   f + '.dat' in nfiles and f  + '.dir' in nfiles and db in ( 'dbm.dumb' , 'dumbdbm' ) :
-                files.append  ( f + '.dat' )
-                files.append  ( f + '.dir' )
-            elif   f + '.pag' in nfiles                           and db in ( 'dbm.ndbm' , 'dbm'     ) :
-                files.append  ( f + '.pag' )
-            elif   f + '.db'  in ofiles  and db in ( 'dbm.ndmb' , 'dbm' ) :
-                files.append  ( f + '.db'  )
-            elif   f + '.pag' in ofiles and f  + '.dir' in ofiles and db in ( 'dbm.ndbm' , 'dbm'     ) :
-                files.append  ( f + '.pag' )
-                files.append  ( f + '.dir' )
-            elif   f + '.dat' in ofiles and f  + '.dir' in ofiles and db in ( 'dbm.dumb' , 'dumbdbm' ) :
-                files.append  ( f + '.dat' )
-                files.append  ( f + '.dir' )                
-            elif   f + '.pag' in ofiles                           and db in ( 'dbm.dumb' , 'dumbdbm' ) :
-                files.append  ( f + '.pag' )
-            ## else  :
-            ##    logger.error ( 'Cannot find DB for %s|%s' % ( self.dbname , self.dbtype ) ) 
+        files1 = pfiles & efiles ## expected and found 
+        files2 = efiles - pfiles ## expected but not found 
+        files3 = nfiles - efiles
 
-            files.sort ()
-            self.__files = tuple  ( files  )
+        if files2 : logger.warning ( 'Expected but not found %s/%d: %s' % ( self.dbtype , len ( files2 ) , list ( files2 ) ) )            
+        if files3 : logger.warning ( 'New but not expected   %s/%d: %s' % ( self.dbtype , len ( files3 ) , list ( files3 ) ) ) 
+
+        # =====================================================================
+        ## list of files (expected) 
+        self.__files = tuple ( sorted ( efiles ) ) 
         
         if  self.__compress is True :
             self.__compress = self.files 
             self.__remove   = self.files 
 
-        if 'n' == self.mode : 
+        if 'n' == self.mode or ( 'c' == mode and not '__metainfo__' in self ) : 
             dct  = ordered_dict()  
             dct  [ 'Created by'                  ] = meta_info.User
             dct  [ 'Created at'                  ] = datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' )  
             dct  [ 'Created with Ostap version'  ] = meta_info.Ostap
             dct  [ 'Created with Python version' ] = meta_info.Python
             dct  [ 'Created with ROOT version'   ] = meta_info.ROOT 
-            dct  [ 'Pickle protocol'             ] = protocol 
-            dct  [ 'Compress level'              ] = self.__compresslevel 
+            dct  [ 'Pickle protocol'             ] = protocol
+            dct  [ 'Compress level'              ] = self.compresslevel
+            dct  [ 'Compress type'               ] = self.compresstype 
+            dct  [ 'Underlying dbase type'       ] = self.dbtype 
             self [ '__metainfo__'                ] = dct
             
         if not self.silent :
@@ -295,7 +312,8 @@ class CompressShelf(shelve.Shelf,object):
 
         self.sync ()
 
-    
+        self.__taropts = 'x:gz'
+        
     @property
     def dbtype   ( self ) :
         """`dbtype'  : the underlying type of database"""
@@ -308,37 +326,47 @@ class CompressShelf(shelve.Shelf,object):
     
     @property
     def compression ( self ) :
-        "`compression' : compression level"
+        """`compression' : compression level"""
         return self.__compresslevel
     
     @property
     def compresslevel ( self ) :
-        "`compress level' : compression level"
+        """`compress level' : compression level"""
         return self.__compresslevel 
 
+    @property
+    def compresstype ( self ) :
+        """`compresstype' : type of compression"""
+        return self.__compresstype
+    
     @property 
     def dbname ( self ) :
-        "`dbname' :   the actual name for the database"
+        """`dbname' :   the actual name for the database"""
         return self.__actual_dbname
 
     @property 
     def nominal_dbname ( self ) :
-        "`nominal_dbname' :   the actual name for the database"
+        """`nominal_dbname' :   the actual name for the database"""
         return self.__nominal_dbname
 
     @property 
     def opened   ( self ) :
-        "`open' : is data base opened?"
+        """`opened' : is data base opened?"""        
         return self.__opened
+    
+    @property
+    def closed ( self  ) :
+        """`closed` : is database closed (==not-opened)? """
+        return not self.opened 
 
     @property
     def mode    ( self ) :
-        "`mode' : the actual open-mode for the database"
+        """`mode' : the actual open-mode for the database"""
         return self.__mode
     
     @property
     def silent ( self ) :
-        "`silent' : silent actions?"
+        """`silent' : silent actions?"""
         return self.__silent 
 
     @property
@@ -355,6 +383,24 @@ class CompressShelf(shelve.Shelf,object):
     def kwargs ( self )  :
         """`kwargs` : all constructor arguments"""
         return self.__kwargs
+
+    @property
+    def zip ( self ) :
+        """`zip` : use zip-archive """
+        return self.__zip
+
+    @property
+    def tar ( self ) :
+        """`tar` : use tar-archive """
+        return self.__tar
+
+    @property
+    def taropts ( self ) :
+        """`taropts` :  options for tar-archive compression"""
+        return self.__taropts
+    @taropts.setter
+    def taropts ( self , value ) :
+        self.__taropts = value 
 
     # =========================================================================
     ## valid, opened DB 
@@ -499,7 +545,7 @@ class CompressShelf(shelve.Shelf,object):
 
     # =========================================================================
     ## List the available keys (patterns included).
-    #   Pattern matching is performed according to
+    #  Pattern matching is performed according to
     #  fnmatch/glob/shell rules [it is not regex!] 
     #  @code  
     #  db = ...
@@ -544,17 +590,31 @@ class CompressShelf(shelve.Shelf,object):
     ## close and compress (if needed)
     def close ( self ) :
         """ Close the file (and compress it if required) 
-        """
-        
+        """        
         if not self.opened : return 
         ##
+        if  not self.silent : logger.info   ( 'Closing database %s' % self.dbname )
+        else                : logger.debug  ( 'Closing database %s' % self.dbname )
+        # 
         if 'r' != self.mode and 'n' != self.mode :
             dct  = self.get ( '__metainfo__' , ordered_dict () )
             dct  [ 'Updated at'                  ] = datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )   
-            dct  [ 'Updated by'                  ] = meta_info.User 
+            dct  [ 'Updated by'                  ] = meta_info.User
             dct  [ 'Updated with Ostap version'  ] = meta_info.Ostap 
             dct  [ 'Updated with Python version' ] = meta_info.Python 
             dct  [ 'Updated with ROOT version'   ] = meta_info.ROOT
+            ##
+            if self.protocol != dct.get ( 'Pickle protocol'            , 0  ) : 
+                dct  [ 'Pickle protocol'             ] = self.protocol                        
+            if self.compresslevel != dct.get ( 'Compress level'        , 0  ) : 
+                dct  [ 'Compress level'              ] = self.compresslevel
+            ## 
+            if self.compresstype  != dct.get ( 'Compress type'         , '' ) : 
+                dct  [ 'Compress type'               ] = self.compresstype
+            ## 
+            if self.dbtype        != dct.get ( 'Underlying dbase type' , '' ) : 
+                dct  [ 'Underlying dbase type'       ] = self.dbtype
+            ## 
             self [ '__metainfo__'                ] = dct
 
         if not self.silent : self.ls ()
@@ -564,69 +624,11 @@ class CompressShelf(shelve.Shelf,object):
         
         ##
         if self.__compress :
-            self.__in_place_compress ( self.__compress ) 
-
+            self.compress_files ( self.__compress , self.nominal_dbname ) 
+            
         ##  remove the intermediate files 
-        for f in self.__remove :
-            if os.path.exists ( f ) :
-                try  :
-                    os.remove ( f )
-                except OSError :
-                    pass
-                
-    # =========================================================================
-    ## compress the files (`in-place') 
-    def __in_place_compress   ( self , files  ) :
-        """ Compress the file `in-place'        
-        - It is better to use here `os.system' or `popen'-family,
-        but it does not work properly for multiprocessing environemnt        
-        """
-        output   = self.nominal_dbname 
-        out , _  = os.path.split ( output )
-        outdir   = out if out else  '.'
-        assert os.access ( outdir , os.W_OK  ) ,\
-               'The directory "%s" is not writeable!' % os.abspath ( outdir )
-        # 
-        # compress the file 
-        compressed = self.compress_files ( files )
-        # remove input files  
-        for f in files  :
-            try :
-                os.remove  ( f  )
-            except OSError :
-                pass
-            
-        shutil.move ( compressed , output )
-            
-    # =========================================================================
-    ## uncompress the file (`in-place') 
-    def __in_place_uncompress   ( self , filein ) :
-        """ Uncompress the file `in-place'        
-        - It is better to use here `os.system' or `popen'-family,
-        but unfortunately it does not work properly for multithreaded environemnt        
-        """
-        _ , ext = os.path.splitext ( filein )
-        if ( not ext ) or  ( ext not in self.extensions ) : 
-            logger.error ( 'Unknown extension for %s' % filein )
-        ##
-        out , _  = os.path.split   ( filein )
-        outdir   = out if out else  '.'
-        assert os.access ( outdir , os.W_OK  ) ,\
-               'The directory "%s" is not writeable!' % os.abspath ( outdir )
-        
-        ## uncompress the file
-        tfiles = self.uncompress_file ( filein )
-        # remove the original
-        os.remove     ( filein ) 
-        ofiles      = [] 
-        for f in tfiles :
-            _ , ff  = os.path.split ( f        )
-            ff      = os.path.join  ( out , ff )  
-            shutil.move   ( f   , ff   )
-            ofiles.append ( ff )
-            
-        return tuple  ( ofiles ) 
-    
+        for f in self.__remove : self.remove_file ( f )
+
     # =========================================================================
     ## Context manager functionality : enter 
     def __enter__ ( self      ) : return self
@@ -725,59 +727,8 @@ class CompressShelf(shelve.Shelf,object):
         >>> db = ...
         >>> ds = db.disk_size()   
         """
-        size  = 0 
-        for f in self.files  :
-            if os.path.exists ( f  ) and os.path.isfile ( f ) :
-                size  += os.path.getsize ( f )
-        return size 
+        return file_size ( *self.files )
         
-    # =========================================================================
-    ## Create the temporary directory
-    #  The directory will be cleaned-up and deleted at-exit.
-    @classmethod
-    def tempdir ( cls , suffix = '-db-dir' , prefix = 'ostap-compress-shelve-dir-' , date = True  ) :
-        """ Create the temporary directory
-        The directory will be cleaned-up and deleted at-exit.
-        """
-        from ostap.utils.cleanup import CleanUp as CU
-        return CU.tempdir ( suffix = suffix , prefix = prefix, date = date ) 
-
-    # =========================================================================
-    ## Ccreate the name for the temproary file 
-    #  The file will be deleted at-axit 
-    @classmethod
-    def tempfile ( cls , suffix = '-db' , prefix = 'ostap-compress-shelve-' , dir = None , date = True  ) :
-        """ Create the name for the temporary file 
-        The file will be deleted at-axit
-        """
-        from ostap.utils.cleanup import CleanUp as CU
-        return CU.tempfile ( suffix = suffix , prefix = prefix, dir = dir , date = date ) 
-
-    # ========================================================================
-    ## guess the name of the database from the list of (uncompressed files)
-    @classmethod
-    def dbase_name ( cls , files ) :
-        """ Guess the name of the database from the list of (uncompressed files)
-        """
-        
-        exts = set ( [ os.path.splitext ( f )[1] for f in files ] )
-        
-        if   1 == len ( files ) and whichdb ( files [ 0 ] ) : return files [ 0 ]
-        elif 1 == len ( files ) and '.db' in exts :
-            f , _ = os.path.splitext ( files [0] )
-            if whichdb ( f  ) : return f
-        elif 2 <= len ( files  ) and  '.dir' in exts and '.pag' in exts :
-            f , _ = os.path.splitext ( files [0] )
-            if whichdb ( f  ) : return f
-        elif 1 <= len ( files  )                     and '.pag' in exts :
-            f , _ = os.path.splitext ( files [0] )
-            if whichdb ( f  ) : return f
-        elif 2 <= len ( files  ) and  '.dir' in exts and '.dat' in exts :
-            f , _ = os.path.splitext ( files [0] )
-            if whichdb ( f  ) : return f
-
-        raise TypeErrro ('Cannot identify the database name: %s' % str ( files ) )  
-
     # =========================================================================
     ## Pickle/serialize compressed data 
     def pickle ( self , value ) :
@@ -803,47 +754,94 @@ class CompressShelf(shelve.Shelf,object):
     # =========================================================================
     @abc.abstractmethod
     def uncompress_item ( self , value ) :
-        """Uncompress the value  using the certain compressing engine"""
+        """ Uncompress the value  using the certain compressing engine"""
         return NotImplemented
 
     # =========================================================================
-    ## Compress the files into temporary location, keep original
-    @abc.abstractmethod 
-    def compress_files  ( self , files  ) :
-        """Compress the files into temporary location, keep the original """
-        return NotImplemented
+    ## Compress the files into specified location
+    def compress_files  ( self , files  , output  ) :
+        """ Compress the files into the specified location
+        """
+        if not self.silent : logger.info ( 'Compress %s into %s' % ( files , output ) )
 
+        fdir   = '' 
+        fdirs  = [ f for f in files if os.path.isdir ( f ) ]
+        if fdirs :
+            a , b = os.path.split ( fdirs  [ 0 ] )
+            if not b :
+                a , b = os.path.split ( a )
+            fdir = os.path.join ( b , '' ) 
+
+        if self.zip :
+            with zipfile.ZipFile ( output , 'w' , allowZip64 = True ) as zfile :
+                for f in sorted ( files ) :
+                    _ , name = os.path.split ( f  )
+                    if fdir : name = os.path.join ( fdir , name ) 
+                    zfile.write ( f  , name  )        
+                if not self.silent :
+                    logger.info ( "Zip-file `%s` content:" % output )  
+                    for f in zfile.infolist() :
+                        logger.info ( '%s' % f )                    
+                return output
+        
+        elif self.tar :
+            
+            with tarfile.open ( output , self.taropts ) as tfile :
+                for f in sorted ( files ) :
+                    _ , name = os.path.split ( f )
+                    if fdir : name = os.path.join ( fdir , name )                         
+                    tfile.add ( f  , name  )
+                if not self.silent :
+                    logger.info ( "Tar-file `%s` content:" % output )
+                    tfile.list()
+                return output
+            
+        return None  
+        
     # =========================================================================
-    ## Uncompress the file into temporary location, keep original
-    def uncompress_file ( self , filein ) :
-        """ Uncompress the file into temporary location, keep the original """
+    ## Uncompress the file into specified location, keep original
+    def uncompress_file ( self , filein , where ) :
+        """ Uncompress the file into specofed location, keep the original """
+
+        if not self.silent : logger.info ( 'Uncompress %s into %s' % ( filein , where ) ) 
 
         assert os.path.exists ( filein ) and os.path.isfile ( filein ) , \
-            "Non existing/invalid file: %s" % filein
-        
+            "Non existing/invalid file:`%s'" % filein
+
+        assert os.path.exists ( where ) and os.path.isdir ( where ) and writeable ( where ) ,\
+            "Invalid/nonwriteable  directory:`%s'" % where 
+
         items  = []
-        tmpdir = self.tempdir ()
         
         ## 1) zip-archive ? 
         if zipfile.is_zipfile ( filein ) :
             with zipfile.ZipFile ( filein , 'r' , allowZip64 = True ) as zfile :
+                if not self.silent :
+                    logger.info ( "Zip-file `%s` content:" % filein )  
+                    for f in zfile.infolist() :
+                        logger.info ( '%s' % f ) 
                 for item in zfile.filelist :
-                    zfile.extract ( item , path = tmpdir )
-                    items.append  ( os.path.join ( tmpdir , item.filename ) )
-            items.sort() 
-            return tuple  ( items )
+                    zfile.extract ( item , path = where )
+                    name = ( os.path.join ( where , item.filename ) )
+                    name = os.path.normpath  ( name ) 
+                    items.append  ( name )
+            return tuple  ( sorted ( items ) ) 
         
         ## 2) compressed-tar archive ?
         if tarfile.is_tarfile ( filein ) :
             with tarfile.open ( filein  , 'r:*' ) as tfile :
+                if not self.silent :
+                    logger.info ( "Tar-file `%s` content:" % filein )
+                    tfile.list()
                 for item in tfile  :
-                    tfile.extract ( item , path = tmpdir )
-                    items.append  ( os.path.join ( tmpdir , item.name ) )
-            items.sort() 
-            return tuple ( items ) 
+                    tfile.extract ( item , path = where  )
+                    name = ( os.path.join ( where , item.name ) )
+                    name = os.path.normpath  ( name ) 
+                    items.append  ( name )
+            return tuple ( sorted ( items ) ) 
 
-        return None 
-        
+        return () 
+
     # =========================================================================
     ## copy the database into new one
     #  @code
@@ -884,6 +882,7 @@ class CompressShelf(shelve.Shelf,object):
         >>> new_db = new_db.clone ( 'new_file.db' )
         """
         return self.copy ( dbname , copykeys = self.keys ()  , **kwargs ) 
+
 
 # ============================================================================
 ## a bit more decorations for shelve  (optional)

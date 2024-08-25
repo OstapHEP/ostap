@@ -22,7 +22,7 @@
 #
 # @endcode 
 #
-# @attention both keys and valeus are bytestrings!
+# @attention both keys and values are bytestrings!
 # 
 # @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 # @date   2024-08-19

@@ -108,7 +108,6 @@ if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :
         bsddb3      = None 
         use_bsddb3  = False 
 
-
 # =============================================================================
 ## make a try to us eLMDB
 use_lmdb = False
@@ -156,7 +155,7 @@ def whichdb ( filename  ) :
     tst = std_whichdb ( filename  )
 
     ## dbase is identified 
-    if tst : return txt
+    if tst : return tst 
 
     ## make a try woth LMDB 
     if use_lmdb and os.path.exists  ( filename ) and os.path.isdir ( filename ) :
@@ -245,7 +244,7 @@ def dbopen ( file               ,
     Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
     only if it doesn't exist; and 'n' always creates a new database.
     
-    - Actually it is a bit extended  form of `dbm.open` that  accounts for `bsddb3`,`sqlite3` and `lmdb`
+    - Actually it is a bit extended  form of `dbm.open` that  accounts for `bsddb3`,`sqlite3`,'berkeleydb' and `lmdb`
     """
 
     if 'n' in flag and os.path.exists ( file ) and os.path.isfile ( file ) :
@@ -256,31 +255,28 @@ def dbopen ( file               ,
     if 'c' in flag and '' == check :
         check = None 
         if os.path.exists ( file ) and os.path.isfile ( file ) : os.unlink ( file ) 
-        
-    if 'n' == flag and file and os.path.exists ( file ) :
-        if os.path.isfile ( file ) :
-            try    : os.unlink ( file )
-            except : pass 
-        elif os.path.isdir  ( file ) :
-            try    : shutil.rmtree ( file )
-            except : pass                    
-            
+
     # 'n' flag is specified  or dbase does not exist and c flag is specified 
     if 'n' in flag or ( check is None and 'c' in flag ) : 
 
         if isinstance ( dbtype , str ) : db_types = [ dbtype.lower() ]
         else                           : db_types = [ db.lower()  for db in dbtype ] 
 
+
+        ## check the preferred database type:
         for db in db_types :
             
             if use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' ) : 
                 return berkeleydb_open ( file            , flag , mode , **kwargs ) 
-            if use_bsddb3     and 'bdsdb3'     == db :
+            elif use_bsddb3     and 'bdsdb3'     == db :
                 return bsddb3_open     ( file            , flag , mode , **kwargs ) 
-            if use_lmdb       and 'lmdb'       == db :
+            elif use_lmdb       and 'lmdb'       == db :
                 return LmdbDict        ( path     = file , flag = flag , **kwargs )
-            if db in ( 'sqlite' , 'sqlite3' ) : 
+            elif db in ( 'sqlite' , 'sqlite3' ) : 
                 return SqliteDict      ( filename = file , flag = flag , **kwargs )
+            elif 'std' == db or db.startswith ( 'dbm.' ) or db.endswith ( 'dbm' ) :
+                if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
+                return std_db.open ( file , flag , mode )  
 
         if concurrent and use_berkeleydb :
             return berkeleydb_open ( file , flag , mode , **kwargs ) 
@@ -288,13 +284,10 @@ def dbopen ( file               ,
         if concurrent and use_bsddb3     :
             return bsddb3_open     ( file , flag , mode , **kwargs ) 
 
-        ## temporarily disabled 
-        ## if concurrent and use_lmdb       : 
-        ##    return LmdbDict        ( path     = file , flag = flag , **kwargs )
-        
         if concurrent :
             return SqliteDict      ( filename = file , flag = flag , **kwargs )
 
+        if kwargs : logger.warning ( 'Ignore extra %d arguments: %s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
         return std_db.open ( file , flag , mode ) 
 
     if use_berkeleydb and check in ( 'berkeleydb' , 'bsddb3' , 'dbhash' ) :
@@ -309,6 +302,7 @@ def dbopen ( file               ,
     if check == 'sqlite3' :
         return SqliteDict ( filename = file , flag = flag , **kwargs )
 
+    if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
     return std_db.open ( file , flag , mode )  
     
 # =============================================================================
@@ -317,7 +311,7 @@ def dbopen ( file               ,
 #  num, size = dbsize ( 'mydb' ) 
 #  @endcode  
 def dbsize  ( filename  ) :
-    """Get disk  size of data-base=like object
+    """ Get disk  size of data-base-like object
     >>> num, size = dbsize ( 'mydb' ) 
     """
     size = 0
@@ -338,12 +332,31 @@ def dbsize  ( filename  ) :
     return num, size 
 
 # ============================================================================
-## @class TmpDB
-#  Mixin class fo rtemporary databases
-class TmpDB(object) :
-    """Mixin class for temporary databases
+## Expected DB file names for the given basename 
+def dbfiles ( dbtype , basename ) :
+    """ Expected DB file names for the given basename
     """
+    if   dbtype in ( 'dbm.ndbm' , 'dbm'      ) : 
+        return '%s.pag' % basename , '%s.dir' % basename , 
+    elif dbtype in ( 'dbm.dump' , 'dumbdbm'  ) : 
+        return '%s.dat' % basename , '%s.dir' % basename , 
+    elif dbtype in ( 'lmdb', ) : 
+        return ( os.path.join ( basename , ''         ) , ## directory 
+                 os.path.join ( basename , 'data.mdb' ) ,
+                 os.path.join ( basename , 'lock.mdb' ) )
+    else :
+        return basename ,
 
+# ============================================================================
+## @class TmpDB
+#  Mixin class for temporary databases
+# - remove : remove the temporary file immediately (just after `close')
+# - keep   : keep the file and do not delete it
+class TmpDB(object) :
+    """ Mixin class for temporary databases
+    - remove : remove the temporary file immediately (just after `close')
+    - keep   : keep the file and do not delete it
+    """
     def __init__ ( self            ,
                    suffix          ,
                    remove  = True  ,
@@ -362,26 +375,26 @@ class TmpDB(object) :
         
     @property
     def tmp_name ( self ) :
-        """``tmp_name'' : get the generated temporary file name
+        """`tmp_name' : get the generated temporary file name
         """
         return self.__tmp_name
     
     @property
     def remove ( self ) :
-        """``remove'':  remove the temporary file immediately (just after``close''),
+        """`remove':  remove the temporary file immediately (just after `close'),
         otherwise remove it at the shutdown
         """
         return self.__remove
     
     @property
     def keep   ( self )  :
-        """``keep'' keep the file and do not delete it
+        """`keep': keep the file and do not delete it
         """
         return self.__keep 
     
     ## remove the file 
     def clean  ( self ) :
-        """remove the file
+        """ remove the file
         """
         fname = self.nominal_dbname 
         if self.remove and os.path.exists ( fname ) :

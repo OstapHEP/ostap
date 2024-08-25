@@ -121,8 +121,6 @@ The module has been developed and used with great success in
  ...
  >>> abcd = db['some_key']
  
- In case DB-name has extension `.zst' the whole data base will be `ZST'-ed
-
  Attention: When one tries to read the database with pickled ROOT object using newer
  version of ROOT, one could get a ROOT read error,
  in case of evolution in ROOT streamers for some  classes, e.g. ROOT.TH1D
@@ -183,8 +181,6 @@ class ZstShelf(CompressShelf):
     - 'c'  Open database for reading and writing, creating if it does not exist
     - 'n'  Always create a new, empty database, open for reading and writing
     """
-
-    extensions =  '.zst', '.zstd' 
     ## 
     def __init__( self                                   ,
                   dbname                                 ,
@@ -203,10 +199,11 @@ class ZstShelf(CompressShelf):
         self.__decompressor = zst.ZstdDecompressor ( )
         
         ## initialize the base class 
-        CompressShelf.__init__ ( self                   ,
-                                 dbname                 ,
-                                 mode        = mode     ,
-                                 compress    = compress , **kwargs ) 
+        CompressShelf.__init__ ( self                    ,
+                                 dbname                  ,
+                                 mode         = mode     ,
+                                 compress     = compress ,
+                                 compresstype = 'zstd'   , **kwargs ) 
         
         conf = { 'threads' : threads } 
         self.kwargs.update ( conf )
@@ -224,47 +221,6 @@ class ZstShelf(CompressShelf):
         """'decompressor' : get the actual decompressor object"""
         return self.__decompressor        
     
-    # =========================================================================
-    ## compress (zstandard) the file into temporary location, keep original
-    def compress_files ( self , files ) :
-        """ Compress (zstandard) the file into temporary location, keep original
-        """
-        output = self.tempfile()
-        import tarfile
-        with tarfile.open ( output , 'x:gz' ) as tfile :
-            for file in files  :
-                _ , name = os.path.split ( file )
-                tfile.add ( file , name  )
-                return output
-            
-    # =========================================================================
-    ## uncompress (zstandard) the file into temporary location, keep original
-    def uncompress_file ( self , filein ) :
-        """ Uncompress (zstandard) the file into temporary location, keep original
-        """
-        
-        items  = []
-        tmpdir = self.tempdir ()
-        
-        ## 1) try compressed-tarfile 
-        import tarfile
-        if tarfile.is_tarfile ( filein ) : 
-            with tarfile.open ( filein  , 'r:*' ) as tfile :
-                for item in tfile  :
-                    tfile.extract ( item , path = tmpdir )
-                    items.append  ( os.path.join ( tmpdir , item.name ) )
-            items.sort() 
-            return tuple ( items )
-                
-        ## 2) single zst-file 
-        import tempfile , io   
-        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-zstdb' )
-    
-        with io.open ( filein , 'rb' ) as fin :
-            with io.open ( fileout , 'wb' ) as fout :
-                self.decompressor.copy_stream ( fin , fout )
-                return fileout ,
-            
     # ==========================================================================
     ## compress (ZST)  the item  using compressor 
     def compress_item ( self , value ) :

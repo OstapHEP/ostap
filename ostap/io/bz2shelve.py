@@ -60,9 +60,6 @@
 #
 # @endcode 
 #
-# @attention: In case DB-name has extension ``.bz2'', the whole data base
-#             will be ``bzip2''-ed ". 
-#
 # @attention: When one tries to read the database with pickled ROOT object using newer
 # version of ROOT, one could get a ROOT read error,
 # in case of evoltuion in ROOT streamers for some  classes, e.g. <code>ROOT.TH1D</code>>
@@ -121,8 +118,6 @@ The module has been developed and used with great success in
  ...
  >>> abcd = db['some_key']
  
- In case DB-name has extension ``.bz2'', the whole data base will be ``bzip2''-ed
- 
  Attention: When one tries to read the database with pickled ROOT object using newer
  version of ROOT, one could get a ROOT read error,
  in case of evoltuion in ROOT streamers for some  classes, e.g. ROOT.TH1D
@@ -173,8 +168,6 @@ class Bz2Shelf(CompressShelf):
     - 'c'  Open database for reading and writing, creating if it does not exist
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
-    ## the known "standard" extensions: 
-    extensions = '.tbz' , '.tbz2' , '.bz2' 
     ## 
     def __init__( self               ,
                   dbname             ,
@@ -184,67 +177,14 @@ class Bz2Shelf(CompressShelf):
         assert  1 <= compress <= 9 , 'Invalid `compress` for `bz2`-compression: %s' % compress 
         
         ## initialize the base class 
-        CompressShelf.__init__ ( self                   ,
-                                 dbname                 ,
-                                 mode        = mode     ,
-                                 compress    = compress , **kwargs )
-        
-    ## needed for proper (un)pickling 
-    def __getinitargs__ ( self ) :
-        """for proper (un_pickling"""
-        return self.__init_args
+        CompressShelf.__init__ ( self                    ,
+                                 dbname                  ,
+                                 mode         = mode     ,
+                                 compress     = compress ,
+                                 compresstype = 'bz2'    , **kwargs )
 
-    ## needed for proper (un)pickling 
-    def __getstate__ ( self ) :
-        """for proper (un)pickling"""
-        self.sync() 
-        return {}
-    
-    ## needed for proper (un)pickling 
-    def __setstate__ ( self , dct ) :
-        """for proper (un)pickling"""
-        pass
-    
-    # =========================================================================
-    ## compress (bz2) the file into temporary location, keep original
-    def compress_files   ( self , files ) :
-        """Compress (bz2) the file into temporary location, keep original
-        """
-        output = self.tempfile()
+        self.taropts = "x:bz2"
         
-        import tarfile
-        with tarfile.open ( output , 'w:bz2' ) as tfile :
-            for file in files  :
-                _ , name = os.path.split ( file )
-                tfile.add ( file , name  )
-        ##
-        return output 
-
-    # =========================================================================
-    ## uncompress (bz2) the file into temporary location, keep original
-    def uncompress_file ( self , filein ) :
-        """Uncompress (bz2) the file into temporary location, keep original
-        """
-        items  = []
-        tmpdir = self.tempdir ()
-        
-        ## 2) try compressed-tarfile 
-        import tarfile
-        if tarfile.is_tarfile ( filein ) : 
-            with tarfile.open ( filein  , 'r:*' ) as tfile :
-                for item in tfile  :
-                    tfile.extract ( item , path = tmpdir )
-                    items.append  ( os.path.join ( tmpdir , item.name ) )
-                items.sort() 
-                return tuple ( items )
-            
-        import tempfile , io   
-        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-bz2db' )
-        with bz2.open ( filein  , 'rb' ) as fin : 
-            with io.open ( fileout , 'wb' ) as fout : 
-                shutil.copyfileobj ( fin , fout )                
-                return fileout , 
-            
     # ==========================================================================
     ## compress (bzip2)  the item  using <code>bz2.compress</code>
     def compress_item ( self , value ) :
@@ -260,7 +200,6 @@ class Bz2Shelf(CompressShelf):
         -  see bz2.decompress
         """        
         return self.unpickle ( bz2.decompress ( value ) ) 
-
                          
 # =============================================================================
 ## helper function to access Bz2Shelve data base
