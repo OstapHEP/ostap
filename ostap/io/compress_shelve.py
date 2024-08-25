@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#*- coding: utf-8 -*-
 # =============================================================================
 # @file compress_shelve.py
 # 
@@ -312,8 +312,9 @@ class CompressShelf (shelve.Shelf,CUBase) :
 
         self.sync ()
 
-        self.__taropts = 'x:gz'
-        
+        self.__taropts = 'x:gz' if (3,0)<= python_version else 'w:gz'
+	
+
     @property
     def dbtype   ( self ) :
         """`dbtype'  : the underlying type of database"""
@@ -396,12 +397,13 @@ class CompressShelf (shelve.Shelf,CUBase) :
 
     @property
     def taropts ( self ) :
-        """`taropts` :  options for tar-archive compression"""
+        """`taropts` : options to open tar-fiel for write"""
         return self.__taropts
     @taropts.setter
     def taropts ( self , value ) :
-        self.__taropts = value 
-
+        if python_version < (3,0) and value and 'x' == value[0] : value = 'w' + value[1:] 
+        self.__taropts = value
+        
     # =========================================================================
     ## valid, opened DB 
     def __nonzero__ ( self ) :
