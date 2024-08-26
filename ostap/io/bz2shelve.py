@@ -133,9 +133,10 @@ __date__    = "2010-04-30"
 __version__ = "$Revision$" 
 # =============================================================================
 __all__ = (
-    'Bz2Shelf' ,   ## The DB-itself
-    'open'     ,   ## helper function to hide the actual DB
-    'tmpdb'    ,   ## create TEMPORARY data base 
+    'Bz2Shelf'    ,   ## The DB
+    'TmpBz2Shelf' ,   ## The temporary DB
+    'open'        ,   ## helper function to hide the actual DB
+    'tmpdb'       ,   ## create TEMPORARY data base 
     )
 # =============================================================================
 from sys import version_info as python_version 
@@ -152,7 +153,7 @@ else                      : logger = getLogger ( __name__             )
 logger.debug ( "Simple generic (c)Pickle-based ``bzip2''-database"    )
 # =============================================================================
 ## @class Bz2Shelf
-#  ``Bzip2''-version of ``shelve''-database
+#   `Bzip2'-version of `shelve'-database
 #    Modes: 
 #    - 'r' Open existing database for reading only
 #    - 'w' Open existing database for reading and writing
@@ -161,7 +162,7 @@ logger.debug ( "Simple generic (c)Pickle-based ``bzip2''-database"    )
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
 class Bz2Shelf(CompressShelf):
-    """Zipped-version of ``shelve''-database
+    """  Bzip2-version of `shelve'-database
     Modes: 
     - 'r'  Open existing database for reading only
     - 'w'  Open existing database for reading and writing
@@ -172,7 +173,7 @@ class Bz2Shelf(CompressShelf):
     def __init__( self               ,
                   dbname             ,
                   mode        = 'c'  ,
-                  compress    = 9    , **kwargs ) :
+                  compress    =  9   , **kwargs ) :
 
         assert  1 <= compress <= 9 , 'Invalid `compress` for `bz2`-compression: %s' % compress 
         
@@ -216,8 +217,7 @@ def open ( dbname , mode = 'c' , **kwargs ) :
     version of the pickle protocol (0, 1, or 2).
     
     See the module's __doc__ string for an overview of the interface.
-    """
-    
+    """    
     return Bz2Shelf ( dbname , mode = mode , **kwargs )
 
 # =============================================================================
@@ -226,8 +226,7 @@ def open ( dbname , mode = 'c' , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
 class TmpBz2Shelf(Bz2Shelf,TmpDB):
-    """
-    TEMPORARY ``bzip2''-version of ``shelve''-database     
+    """ TEMPORARY `bzip2'-version of `shelve'-database     
     """    
     def __init__( self                           ,
                   protocol    = HIGHEST_PROTOCOL , 

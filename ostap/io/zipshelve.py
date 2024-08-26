@@ -66,7 +66,6 @@
 #
 # @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 # @date   2010-04-30
-# 
 # =============================================================================
 """This is zip-version of shelve database.
 

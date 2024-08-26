@@ -60,9 +60,6 @@
 #
 # @endcode 
 #
-# @attention: In case DB-name has extension `.zst'  the whole data base
-#             will be `ZST'-ed ". 
-#
 # @attention: When one tries to read the database with pickled ROOT object using newer
 # version of ROOT, one could get a ROOT read error,
 # in case of evoltuion in ROOT streamers for some  classes, e.g. <code>ROOT.TH1D</code>>
@@ -137,6 +134,7 @@ __version__ = "$Revision:$"
 # =============================================================================
 __all__ = (
     'ZstShelf'    , ## database
+    'TmpZstShelf' , ## database
     'open'        , ## open the database 
     'tmpdb'       , ## open the temporary database 
 )
@@ -285,7 +283,7 @@ class TmpZstShelf(ZstShelf,TmpDB):
         ## close the shelve file
         ZstShelf.close ( self )
         ## delete the file
-        TmpDB  .clean  ( self ) 
+        TmpDB   .clean ( self ) 
 
 # =============================================================================
 ## helper function to open TEMPORARY ZstShelve data base#

@@ -303,12 +303,20 @@ class CompressShelf (shelve.Shelf,CUBase) :
             dct  [ 'Compress type'               ] = self.compresstype 
             dct  [ 'Underlying dbase type'       ] = self.dbtype 
             self [ '__metainfo__'                ] = dct
-            
+
+        if 'r' != self.mode and 'n' != self.mode :            
+            dct  = self.get ( '__metainfo__' , ordered_dict () )
+            if self.protocol      != dct.get ( 'Pickle protocol'       , 0  ) : dct [ 'Pickle protocol'       ] = self.protocol            
+            if self.compresslevel != dct.get ( 'Compress level'        , 0  ) : dct [ 'Compress level'        ] = self.compresslevel
+            if self.compresstype  != dct.get ( 'Compress type'         , '' ) : dct [ 'Compress type'         ] = self.compresstype
+            if self.dbtype        != dct.get ( 'Underlying dbase type' , '' ) : dct [ 'Underlying dbase type' ] = self.dbtype
+            self [ '__metainfo__' ] = dct
+
         if not self.silent :
             self.ls ()
             ff = [ os.path.basename ( f ) for f in self.files ]
-            ff = ff [0] if 1 == len ( ff ) else ff              
-            logger.info ( 'DB files are %s|%s' % ( ff, self.dbtype ) )
+            ff = ff [ 0 ] if 1 == len ( ff ) else ff              
+            logger.info ( 'DB files are %s|%s' % ( ff , self.dbtype ) )
 
         self.sync ()
 

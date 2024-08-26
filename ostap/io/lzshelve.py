@@ -134,7 +134,7 @@ __version__ = "$Revision:$"
 # =============================================================================
 __all__ = (
     'LzShelf'     , ## database
-    'TMpLzShelf'  , ## database
+    'TmpLzShelf'  , ## database
     'open'        , ## open the database 
     'tmpdb'       , ## open the temporary database 
 )
@@ -163,7 +163,7 @@ else :
 
 # =============================================================================
 ## @class LzShelf
-#  ``LZMA''-version of ``shelve''-database
+#  `LZMA'-version of `shelve'-database
 #    Modes: 
 #    - 'r' Open existing database for reading only
 #    - 'w' Open existing database for reading and writing
@@ -172,7 +172,7 @@ else :
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
 class LzShelf(CompressShelf):
-    """ LZMA-version of ``shelve''-database
+    """ `LZMA`-version of `shelve'-database
     Modes: 
     - 'r'  Open existing database for reading only
     - 'w'  Open existing database for reading and writing
@@ -236,7 +236,7 @@ def open ( dbname , mode   = 'c' , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
 class TmpLzShelf(LzShelf,TmpDB):
-    """ TEMPORARY ``LZMA''-version of ``shelve''-database     
+    """ TEMPORARY `LZMA'-version of `shelve'-database     
     """    
     def __init__( self                              ,
                   protocol    = HIGHEST_PROTOCOL    , 
