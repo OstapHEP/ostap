@@ -1,3 +1,13 @@
+## New features
+
+   1. improve prettry-print for matrices
+   1. add `pretty_array` function for nice print of arrays/sequences
+   1. add some auxillary methods for matrices: `(min/max/minabs/maxabs)_element` and `(min/max)_diagonal` and `(min/max/minabs/maxabs)_element_index`
+
+## Backward incompatible
+
+## Bug fixes
+
 # v1.13.0.0
 
 ## New features
@@ -19,7 +29,6 @@
   1. fix a minor bug in `bernstein.solve`
   1. fix couple of recent bugs in `histos.graphs`    `
 
- 
 # v1.12.0.0
 
 ## New features

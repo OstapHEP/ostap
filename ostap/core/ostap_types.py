@@ -43,8 +43,9 @@ __all__     = (
     'all_strings'     , ## all argumets of string  types?
     )
 # =============================================================================
-import math, os 
-from   sys import version_info as python_version 
+import math, os, array  
+from   sys                 import version_info as python_version 
+# =============================================================================
 if ( 3 , 0 ) <= python_version :
     long           = int
     string_types   = bytes , str 
@@ -56,17 +57,17 @@ else :
     integer_types  = int   , long
     long_type      = long 
     python_version = 2 
-    import collections     as C
+    import collections     as     C
 # =============================================================================
 if   ( 3 , 5 ) <= python_version :
-    from collections.abc import Collection, Sequence, Iterable, Sized, Generator   
+    from collections.abc   import Collection, Sequence, Iterable, Sized, Generator   
 elif ( 3 , 3 ) <= python_version :
-    from collections.abc import Collection, Sequence, Iterable, Sized   
-    from types           import GeneratorType as Generator 
+    from collections.abc   import Collection, Sequence, Iterable, Sized   
+    from types             import GeneratorType as Generator 
 else :
-    from collections     import Sequence , Iterable , Sized            
-    from collections     import Container     as Collection
-    from types           import GeneratorType as Generator
+    from collections       import Sequence , Iterable , Sized            
+    from collections       import Container     as Collection
+    from types             import GeneratorType as Generator
     
 # =============================================================================
 # logging 
@@ -81,7 +82,6 @@ iterable_types  = Iterable,
 num_types       = integer_types + ( float , ) 
 str_types       = str,
 list_types      = list , tuple
-import array 
 listlike_types  = list_types + ( set , C.Sequence , array.array )
 # =============================================================================
 try :
@@ -95,10 +95,10 @@ dictlike_types  = dict ,  C.Mapping
 sequence_types  = listlike_types + ( Sequence , Collection , Iterable , Generator )
 sized_types     = Sized ,
 path_types      = string_types
-if (3,6) <= python_version :
+if ( 3 , 6 ) <= python_version :
     path_types = string_types + ( os.PathLike , )
 # =============================================================================
-## sometimewe we need to ensure that dictionary is ordered 
+## sometimes we need to ensure that dictionary is ordered 
 ordered_dict = dict 
 if python_version < ( 3 , 7 ) :
     from collections import OrderedDict as ordered_dict 
@@ -108,26 +108,35 @@ if python_version < ( 3 , 7 ) :
 # =============================================================================
 ## Is this number of a proper integer?
 def is_integer ( v ) :
-    """Is this number of a proper integer?"""
+    """ Is this number of a proper integer?"""
     return isinstance ( v , integer_types ) 
 
 # =============================================================================
 ## Is this number of a proper numeric type
 def is_number  ( v ) :
-    """Is this number of a proper numeric?"""
+    """ Is this number of a proper numeric?"""
     return isinstance ( v , num_types   ) 
 
 # =============================================================================
-## good numeric value 
-def is_good_number  ( v ) :
-    """Is numeric type and good value?"""
-    return isinstance ( v , num_types   ) and \
-           ( not math.isinf ( v ) ) and ( not math.isnan ( v ) )
+if ( 3 , 2 ) <= python_version :
+    # =========================================================================
+    ## good numeric value 
+    def is_good_number  ( v ) :
+        """ Is numeric type and good value?"""
+        return isinstance ( v , num_types   ) and math.isfinite ( v ) 
+    # =========================================================================
+else : 
+    # =========================================================================
+    ## good numeric value 
+    def is_good_number  ( v ) :
+        """ Is numeric type and good value?"""
+        return isinstance ( v , num_types   ) and \
+            ( not math.isinf ( v ) ) and ( not math.isnan ( v ) )
 
 # =============================================================================
 ## is  value of str-type?
 def is_string ( v ) :
-    """Is  value of str-type?"""
+    """ Is  value of str-type?"""
     return isinstance ( v , str_types )
 
 # =============================================================================
@@ -139,42 +148,35 @@ def is_string_like ( v ) :
 # =============================================================================
 ## is list type?
 def is_list  ( v ) :
-    """Is value of list type (list ot tuple)"""
+    """ Is value of list type (list ot tuple)"""
     return isinstance ( v , list_type )
 
 # =============================================================================
 ## is list-like type?
 def is_list_like  ( v ) :
-    """Is value of list-like type (list but not a string-like!)"""
+    """ Is value of list-like type (list but not a string-like!)"""
     return isinstance ( v , listlike_type ) and not isinstance ( v , string_types )
 
 # =============================================================================
 ## are all values of integer-line types?
 def all_integers ( *args ) :
-    """Are all value of integer-line types?
+    """ Are all value of integer-line types?
     """
-    for a in args :
-        if not isinstance ( a , integer_types ) : return False
-    return True
+    return all ( isinstance ( a , integer_types ) for a in args )
 
 # =============================================================================
 ## are all values of numeric types?
 def all_numerics ( *args ) :
-    """Are all values of numeric types?
+    """ Are all values of numeric types?
     """
-    for a in args :
-        if not isinstance ( a , num_types ) : return False
-    return True
+    return all ( isinstance ( a , num_types ) for a in args )
 
 # =============================================================================
 ## are all values of string types?
 def all_strings ( *args ) :
-    """Are all values of string types?
+    """ Are all values of string types?
     """
-    for a in args :
-        if not isinstance ( a , stgring_types ) : return False
-    return True
-
+    return all ( isinstance ( a , string_types ) for a in args )
     
 # =============================================================================
 if '__main__' == __name__ :

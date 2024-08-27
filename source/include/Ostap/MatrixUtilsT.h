@@ -317,7 +317,45 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    
+    template <class T>
+    inline T 
+    maxabs_element 
+    ( const TMatrixT<T>&    m )
+    {
+      if ( !m.IsValid() ) { return 0 ; }
+      T result = m ( 0 , 0 ) ;
+      const unsigned int rows = m.GetNrows () ;
+      const unsigned int cols = m.GetNrows () ;
+      for ( unsigned int i = 0 ; i < rows ; ++i )
+        {
+          for ( unsigned int j = 0 ; j < cols ; ++j )
+            {
+              const double value = m ( i , j ) ;
+              if ( std::abs ( result ) < std::abs ( value ) ) { result = value ; }
+            }
+        }
+      return result ;
+    }
+    // ========================================================================
+    template <class T>
+    inline T 
+    maxabs_element 
+    ( const TMatrixTSym<T>& m )
+    {
+      if ( !m.IsValid() ) { return 0 ; }
+      T result = m ( 0 , 0 ) ;
+      const unsigned int rows = m.GetNrows () ;
+      const unsigned int cols = m.GetNrows () ;
+      for ( unsigned int i = 0 ; i < rows ; ++i )
+        {
+          for ( unsigned int j = i ; j < cols ; ++j )
+            {
+              const double value = m ( i , j ) ;
+              if ( std::abs ( result ) < std::abs ( value ) ) { result = value ; }
+            }
+        }
+      return result ;
+    }
     // ========================================================================    
     namespace  Ops
     {      

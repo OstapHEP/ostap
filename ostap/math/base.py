@@ -34,7 +34,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
 #  @date 2009-09-12
 # =============================================================================
-"""Simple file to provide 'easy' access in python for the basic ROOT::Math classes
+""" Simple file to provide 'easy' access in python for the basic ROOT::Math classes
 
   see Ostap/Point3DTypes.h
   see Ostap/Vector3DTypes.h
@@ -112,7 +112,7 @@ __all__     = (
     'neg_infinity'   , ## negative infinity 
     ) 
 # =============================================================================
-from   ostap.core.meta_info    import root_version_int 
+from   ostap.core.meta_info    import root_info
 import ROOT, cppyy, sys, math 
 # =============================================================================
 # logging 
@@ -128,14 +128,18 @@ if ( 3 , 5 ) > sys.version_info  :
     import math
     if not hasattr ( math , 'inf' ) : math.inf = float('inf' )
     if not hasattr ( math , 'nan' ) : math.nan = float('nan' )
-    
+
+# =============================================================================
 ## get global C++ namespace
-cpp = cppyy.gbl
-## C++ namespace Gaudi
-std = cpp.std
+cpp   = cppyy.gbl
+# =============================================================================
+## C++ namespace std 
+std   = cpp.std
+# =============================================================================
 ## C++ namespace Ostap
 Ostap = cpp.Ostap 
 
+# =============================================================================
 ## positive and negative infinities 
 pos_infinity = float('+inf')
 neg_infinity = float('-inf')
@@ -144,12 +148,12 @@ neg_infinity = float('-inf')
 ## Get the type name
 #  @code
 #  obj = ...
-#  print ( 'Obnject type name is %s' % typename ( obj ) ) 
+#  print ( 'Object type name is %s' % typename ( obj ) ) 
 #  @endcode 
 def typename ( o ) :
     """Get the type name
     >>> obj = ...
-    >>> print ( 'Obnject type name is %s' % typename ( obj ) )
+    >>> print ( 'Object type name is %s' % typename ( obj ) )
     """
     return type ( o ) .__name__
 
@@ -212,7 +216,7 @@ vInts    = std.vector ( 'int'    )
 vLongs   = std.vector ( 'long'   )
 
 # =============================================================================
-if (3,2) <= sys.version_info :
+if ( 3 , 2 ) <= sys.version_info :
     ## local version of <code>isfinite</code>
     isfinite = math.isfinite 
 else :
@@ -224,17 +228,33 @@ else :
         return ( not math.isinf ( y ) ) and ( not math.isnan ( y ) )
     
 # =============================================================================
-if (3,5) <= sys.version_info :
-    ## local version of <code>isclose</code>
-    isclose = math.isclose 
-    ## def isclose  ( a , b , rel_tol = 1.e-9 , abs_tol = 0.0  ) :
-    ##    """Local version of `isclose`"""
-    ##    return math.isclose ( a , b , rel_tol = rel_tol, abs_tol = abs_tol )
-else :
+if ( 3 , 5 ) <= sys.version_info :
     # =========================================================================
     ## local version of <code>isclose</code>
+    isclose = math.isclose 
+else :
+    # =========================================================================
+    ## local version of <code>math.isclose</code>
     def isclose  ( a , b , rel_tol = 1.e-9 , abs_tol = 0.0  ) :
-        """Local version of `isclose`"""
+        """ Local version of `math.isclose`
+        Determine whether two floating point numbers are close in value.
+        
+        - rel_tol
+        maximum difference for being considered "close", relative to the
+        magnitude of the input values
+        - abs_tol
+        maximum difference for being considered "close", regardless of the
+        magnitude of the input values
+        
+        Return True if a is close in value to b, and False otherwise.
+        
+        For the values to be considered close, the difference between them
+        must be smaller than at least one of the tolerances.
+        
+        -inf, inf and NaN behave similarly to the IEEE 754 Standard.  That
+        is, NaN is not close to anything, even itself.  inf and -inf are
+        only close to themselves.
+        """
         return abs ( a - b ) <= max ( rel_tol * max ( abs ( a ) , abs ( b ) ) , abs_tol )
             
 # =============================================================================
@@ -259,6 +279,7 @@ def samesign ( a , b ) :
 # =============================================================================
 ## natural number ?
 natural_number = Ostap.Math.natural_number
+# =============================================================================
 ## natural etry in histo-bin ? 
 natural_entry  = Ostap.Math.natural_entry
 
@@ -270,7 +291,7 @@ natural_entry  = Ostap.Math.natural_entry
 #  print 'Is %s<=%s<=%s ? %s' % ( a , x , b , inrange ( a , x , b ) )
 #  @endcode 
 def inrange ( a , x , b ) :
-    """Is float value in range?
+    """ Is float value in range?
     >>> x   = 1.1
     >>> a,b = 1,2
     >>> print 'Is x between a and b? %s' % inrange ( a , x , b ) 
@@ -296,7 +317,7 @@ for t in ( 'int'                  ,
     v = std.vector( t )
     v.asList   = lambda s :       [ i for i in s ]   ## convert vector into list
     v.toList   = v.asList
-    v.asTuple  = lambda s : tuple ( s.asList() )
+    v.asTuple  = lambda s : tuple ( i for i in s ) 
     v.toTuple  = v.asTuple
     v.__repr__ = lambda s : str ( [ i for i in s ] ) ## print it !
     v.__str__  = lambda s : str ( [ i for i in s ] ) ## print it !
@@ -310,7 +331,7 @@ for t in ( 'int'                  ,
 # =============================================================================
 ## Convert vector of floating types to string 
 def float_vct_str ( vct , format = '%.5g' ) :
-    """Convert vector of floating types to string"""
+    """ Convert vector of floating types to string"""
     try :
         return '[ ' + ', '.join ( [ format % v for v in vct ] ) + ' ]'  
     except TypeError :
@@ -320,7 +341,7 @@ def float_vct_str ( vct , format = '%.5g' ) :
 # =============================================================================
 ## Convert vector of complex types to string 
 def complex_vct_str ( vct , format = '%.5g%-+.5gj' ) :
-    """Convert vector of complex types to string"""
+    """ Convert vector of complex types to string"""
     try :
         lst = [] 
         for c in vct :
@@ -345,9 +366,9 @@ for t in ( 'std::complex<double>' , 'std::complex<float>'  ) :
     v.__str__  = complex_vct_str    
     
 # =============================================================================
-## self-printout of TMaxtrix 
+## self-printout of <code>TMatrix</code>
 def _tmg_str_ ( self , fmt = ' %+11.4g') :
-    """Self-printout of TMatrix
+    """ Self-printout of `TMatrix`
     """
     _rows = self.GetNrows()
     _cols = self.GetNcols()
@@ -364,11 +385,10 @@ def _tmg_str_ ( self , fmt = ' %+11.4g') :
 ROOT.TMatrix.__repr__  = _tmg_str_
 ROOT.TMatrix.__str__   = _tmg_str_
 
-    
 # =============================================================================
-## add something to std::vector 
+## add something to <code>std::vector</code>
 def _add_to ( vct , cnv , arg1 , *args ) :
-    """Add something to std::vector 
+    """ Add something to `std.vector`
     """
     from ostap.core.ostap_types import sequence_types
     
@@ -431,7 +451,7 @@ def make_vector ( TYPE , cnv , *args ) :
 # =============================================================================
 ## construct std::vector<double> from the arguments
 def doubles ( arg1 , *args ) :
-    """Construct the std::vector<double> from the arguments
+    """ Construct the std::vector<double> from the arguments
     >>> v1 = doubles ( 1.01 )
     >>> v2 = doubles ( 1.01 , 1.02 , 1.03  )
     >>> v3 = doubles ( [ 1.01 , 1.02 , 1.03 ] )    
@@ -441,7 +461,7 @@ def doubles ( arg1 , *args ) :
 # =============================================================================
 ## construct std::vector<ints> from the arguments
 def ints ( arg1 , *args ) :
-    """Construct the std::vector<int> from the arguments    
+    """ Construct the std::vector<int> from the arguments    
     >>> v1 = ints ( 1 )
     >>> v2 = ints ( 1 , 1 , 1  )
     >>> v3 = ints ( [ 1 , 2 , 3 ] )    
@@ -451,7 +471,7 @@ def ints ( arg1 , *args ) :
 # =============================================================================
 ## construct std::vector<unsigned int> from the arguments
 def uints ( arg1 , *args ) :
-    """Construct the std::vector<unsigned int> from the arguments    
+    """ Construct the std::vector<unsigned int> from the arguments    
     >>> v1 = uints ( 1 )
     >>> v2 = uints ( 1 , 1 , 1  )
     >>> v3 = uints ( [ 1 , 2 , 3 ] )    
@@ -486,26 +506,22 @@ def strings ( *args ) :
     >>>  v2 = strings( ['a','b','c'] )
     >>>  v3 = strings( ['a','b'],'c',['d','e'] )
     """
-
     return make_vector ( 'std::string' , std.string , *args ) 
-    ##  VS = std.vector(std.string) 
-    ## vs = VS()
-    ## if not args :  return vs 
-    ## return _add_to ( vs , std.string , args[0] , *args[1:] )
 
-
-SPD = std.pair('double','double')
+# =============================================================================
+SPD = std.pair ( 'double' , 'double' )
 SPD.asTuple  = lambda s :       ( s.first , s.second )
 SPD.__str__  = lambda s : str(  ( s.first , s.second ) )
 SPD.__repr__ = SPD.__str__
 SPD.__len__  = lambda s : 2
 def _spd_getitem_ ( s ,  i ) :
-    """Get item form the pair:
+    """Get item from the pair:
     >>> p = ...
     >>> p[0], p[1]
     """
-    if   0 == i : return s.first 
-    elif 1 == i : return s.second
+    if    0 == i : return s.first  ## first 
+    elif  1 == i : return s.second ## second 
+    elif -1 == i : return s.second ## last 
     raise IndexError('Invalid index %s' % i )
 def _spd_setitem_ ( s ,  i , value ) :
     """Set item from the pair:
@@ -513,8 +529,9 @@ def _spd_setitem_ ( s ,  i , value ) :
     >>> p[0] = 1
     >>> p[1] = 2
     """
-    if   0 == i : s.first  = value 
-    elif 1 == i : s.second = value 
+    if    0 == i : s.first  = value ## first 
+    elif  1 == i : s.second = value ## second 
+    elif -1 == i : s.second = value ## last 
     raise IndexError('Invalid index %s' % i )
 SPD.__getitem__ = _spd_getitem_
 SPD.__setitem__ = _spd_setitem_
@@ -522,9 +539,9 @@ SPD.__setitem__ = _spd_setitem_
 # =============================================================================
 # Improve operations with std.complex 
 # =============================================================================
-COMPLEX  = cpp.std.complex ( 'double'      )
-COMPLEXf = cpp.std.complex ( 'float'       )
-COMPLEXl = cpp.std.complex ( 'long double' )
+COMPLEX    = cpp.std.complex ( 'double'      )
+COMPLEXf   = cpp.std.complex ( 'float'       )
+COMPLEXl   = cpp.std.complex ( 'long double' )
 
 VCOMPLEX   = cpp.std.vector ( COMPLEX )
 VDOUBLE    = cpp.std.vector ('double' )
@@ -533,25 +550,22 @@ VCT_TYPES  = VDOUBLE, VCOMPLEX
 ## list of complex types: native and X++
 complex_types = complex , COMPLEX, COMPLEXf, COMPLEXl
 # =============================================================================
-if root_version_int < 62200 : 
+if root_info < ( 6 , 22 ) : 
     def _real_ ( s ) : return s.real ()
     def _imag_ ( s ) : return s.imag ()
     def _cmplx_to_complex_ ( s ) :
-        """Convert C++ complex to Python's complex"""
+        """ Convert C++ complex to Python's complex"""
         return  complex    ( s.real () , s.imag () )
 else : 
     def _real_ ( s ) : return s.real 
     def _imag_ ( s ) : return s.imag 
     def _cmplx_to_complex_ ( s ) :
-        """Convert C++ complex to Python's complex"""
+        """ Convert C++ complex to Python's complex"""
         return  complex    ( s.real , s.imag  )
 
 # =============================================================================
-
-
-# =============================================================================
 def _cmplx_negate_     ( s ) :
-    """Negation:
+    """ Negation:
     >>> v  = ...
     >>> v1 = -v
     """
@@ -559,7 +573,7 @@ def _cmplx_negate_     ( s ) :
 
 # =============================================================================
 def _cmplx_abs_        ( s ) :
-    """Absolute value
+    """ Absolute value
     >>> print abs(v) 
     """
     import math 
@@ -567,7 +581,7 @@ def _cmplx_abs_        ( s ) :
 
 # =============================================================================
 def _cmplx_norm_       ( s ) :
-    """Norm (squared absolute value)
+    """ Norm ( squared absolute value )
     >>> print v.norm()
     """
     sr = _real_ ( s ) 
@@ -583,49 +597,49 @@ def _cmplx_conjugate_  ( s ) :
     
 # =============================================================================
 def _cmplx_add_        ( s , o ) :
-    """add complex values 
+    """ Add complex values 
     >>> r = v + other  
     """
     return o + complex ( s )
 
 # =============================================================================
 def _cmplx_mul_        ( s , o ) :
-    """multiply  complex values 
+    """ Multiply  complex values 
     >>> r = v * other  
     """
     return o * complex ( s  )
 
 # =============================================================================
 def _cmplx_div_        ( s , o ) :
-    """divide complex values 
+    """ Divide complex values 
     >>> r = v / other  
     """
     return ( 1.0 / o ) * complex ( s )
 
 # =============================================================================
 def _cmplx_rdiv_       ( s , o ) :
-    """divide complex values 
+    """ Divide complex values 
     >>> r = other / v 
     """
     return o           * ( 1.0 / complex ( s ) )
 
 # =============================================================================
 def _cmplx_sub_        ( s , o ) :
-    """subtract complex values 
+    """ Subtract complex values 
     >>> r = v - other 
     """
     return (-o   ) + complex ( s )
 
 # =============================================================================
 def _cmplx_rsub_       ( s , o ) :
-    """subtract complex values 
+    """ Subtract complex values 
     >>> r = other - v 
     """
     return   o     - complex ( s )
 
 # =============================================================================
 def _cmplx_pow_  ( s , o ) :
-    """power function 
+    """ Power function 
     >>> r = v ** other  
     """
     if isinstance ( o , COMPLEX ) : o = complex ( o ) 
@@ -633,15 +647,14 @@ def _cmplx_pow_  ( s , o ) :
 
 # =============================================================================
 def _cmplx_rpow_  ( s , o ) :
-    """power function 
-    >>> r = other **v  
+    """ Power function 
+    >>> r = other ** v  
     """
     return o ** complex ( s )
 
-
 # =============================================================================
 def _cmplx_eq_    ( s , o ) :
-    """equality:
+    """ Equality:
     >>> r = v == other  
     """
     if isinstance ( o, COMPLEX ) :
@@ -650,28 +663,27 @@ def _cmplx_eq_    ( s , o ) :
 
 # =============================================================================
 def _cmplx_ne_    ( s , o ) :
-    """non-equality:
+    """ Non-equality:
     >>> r = v != other  
     """
     if isinstance ( o, COMPLEX ) :
         return _real_ ( s ) != _real_ ( o ) or _imag_ ( s ) != _imag_ ( o )
     return complex ( s ) != o 
 
-
 # ==============================================================================
-## deserialize the complex numbers
+## Deserialize the complex numbers
 def _cmplx_factory_ ( cmplxt , re , im ) :
-    """Deserialize the complex numbers
+    """ Deserialize the complex numbers
     """
     return cmplxt ( re , im )
 # ==============================================================================
 ## reduce complex numbers 
 def _cmplx_reduce_ ( c ) :
-    """Reduce complex numbers"""
+    """ Reduce complex numbers"""
     return _cmplx_factory_ , ( type ( c ) , c.real , c.imag )
     
 # =============================================================================
-if root_version_int < 62200  :
+if root_info < ( 6 , 22 ) :
     # =========================================================================
     def _cmplx_iadd_ ( s , o ) :
         x = s + o
@@ -727,7 +739,6 @@ else :
         s.__assign__ ( t ) 
         return s
     # =========================================================================
-
         
 # =============================================================================
 for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
@@ -744,11 +755,11 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
             elif 1 != len( b ) :
                 raise TypeError("Can't create std::complex!")
             else :
-                b =   b[0]
+                b =   b [ 0 ]
             
             return s._old_init_ ( a , b )
                 
-        CMPLX.__init__    = _cmplx_new_init_
+        CMPLX.__init__ = _cmplx_new_init_
         
     CMPLX.__complex__  = _cmplx_to_complex_
     
@@ -835,7 +846,7 @@ cpp_frexp10 = Ostap.Math.frexp10
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20
 def frexp10 ( value ) :
-    """Get the mantissa (0.1<=m<1) and exponent for radix10
+    """ Get the mantissa (0.1<=m<1) and exponent for radix10
     (similar for frexp, but use radix=10)
     
     >>> a,b = frexp10 ( value ) 
@@ -850,7 +861,7 @@ def frexp10 ( value ) :
     q  = math.floor ( math.log10 ( float ( xv ) ) )
 
     if    0 < q : xv /= 10**q 
-    elif  0 > q : xv *= 10**abs(q) 
+    elif  0 > q : xv *= 10**abs ( q ) 
     
     if 1 <= xv :
         xv /= 10
@@ -866,12 +877,15 @@ def frexp10 ( value ) :
 #  mn, mx = num_range ( value ) 
 #  @endcode 
 def num_range ( value , N = 1 ) : 
-    """ Define some "range" for the given value:
+    """ Define some `range' for the given value:
     >>> value = ...
     >>> mn, mx = num_range ( value ) 
     """
-
+    
     if   iszero ( value ) : return ( -0.5 , 0.5 )
+    
+    assert isinstance ( N , int ) and 1 <= N , \
+        "Inavalid `N' parameter:%s" % N
     
     a , b = frexp10 ( value )         
     b  -= N 
@@ -888,7 +902,6 @@ def num_range ( value , N = 1 ) :
     xmax = ac * ( 10 ** b ) * 0.5 
 
     return xmin , xmax
-
     
 # =============================================================================
 ## Find suitable range for histogram axis 
@@ -904,11 +917,9 @@ def axis_range ( xmin , xmax , delta = 0.02 , log = False ) :
     ## 2) special case 
     if isequal ( xmn , xmx ) : return num_range ( 0.5 * ( xmn + xmx ) ) 
     
-
     ## 3) special case
     if islong ( xmn - 0.5 ) and islong ( xmx + 0.5 ) :
         return math.floor ( xmn - 0.1 ) , math.ceil ( xmx + 0.1 ) 
-
 
     d = xmx - xmn
 
@@ -952,22 +963,24 @@ def axis_range ( xmin , xmax , delta = 0.02 , log = False ) :
     return xmin, xmax 
 
 # =============================================================================
-if   (3,9) <= sys.version_info :
+if   ( 3 , 9 ) <= sys.version_info :
     # =========================================================================
     ## Least Common Multiple.
     lcm = math.lcm
     # =========================================================================
     ## Greatest Common Divisor 
-    gcd = math.gcd 
-elif (3,5) <= sys.version_info :
+    gcd = math.gcd
+    # =========================================================================
+elif ( 3 , 5 ) <= sys.version_info :
     # =========================================================================
     ## Greatest Common Divisor 
     gcd = math.gcd 
     ## Least Common Multiple.
     # =========================================================================
     def lcm ( a , b ) :
-        """ Least Common Multiple"""
+        """ Least Common Multiple """
         return abs ( a , b ) // gcd ( a , b )
+    # =========================================================================
 else :
     # =========================================================================
     ## Greatest Common Divisor 
@@ -976,6 +989,7 @@ else :
     def lcm ( a , b ) :    
         """ Least Common Multiple"""
         return ( a * b ) // gcd ( a , b )
+    # =========================================================================
 
 # =============================================================================
 ## imports at the end of the module to avoid the circular dependency 
@@ -984,7 +998,6 @@ else :
 import ostap.math.reduce  
 import ostap.math.polynomials 
 
-
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -992,12 +1005,12 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     _v = [ l for l in dir(Ostap     ) if 0 != l.find('__') ]
-    logger.info (' dir(Ostap)      : ')
+    logger.info ('dir(Ostap)      : ')
     _v.sort()
     for v in _v : logger.info ( v )
     
     _v = [ l for l in dir(Ostap.Math) if 0 != l.find('__') ]
-    logger.info (' dir(Ostap.Math) : ')
+    logger.info ('dir(Ostap.Math) : ')
     _v.sort()
     for v in _v : logger.info ( v )
 

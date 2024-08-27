@@ -190,7 +190,7 @@ namespace Ostap
      *  
      *  @param m      (input/output) matrix to be modified
      *  @param value  (input) new value for all matrix elements 
-     *  @return number of modified matrix elemenets 
+     *  @return number of modified matrix elements 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
@@ -221,15 +221,16 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */  
-    template <class T, unsigned int D, class R>
+    template <class T, unsigned int D1, unsigned int D2, class R>
     inline std::size_t 
     setToUnit
-    ( ROOT::Math::SMatrix<T,D,D,R>& m , const T& value = T(1) ) 
+    ( ROOT::Math::SMatrix<T,D1,D2,R>& m , const T& value = T ( 1 ) ) 
     { 
-      /// nullify the matrix:
-      std::fill ( m.begin() , m.end() , T(0.0) ) ; 
-      /// set diagonal elements 
-      for ( unsigned int i = 0 ; i < D ; ++i ) { m(i,i) = value ; }
+      /// nullify the whole matrix:
+      std::fill ( m.begin() , m.end() ,  T ( 0.0 ) ) ; 
+      /// set diagonal elements
+      const unsigned int D = std::min ( D1 , D2 ) ;
+      for ( unsigned int i = 0 ; i < D ; ++i ) { m ( i , i ) = value ; }
       return m.end() - m.begin() ;
     }
     // ========================================================================
@@ -693,12 +694,13 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
-    template <class T, unsigned int D, class R>
+    template <class T, unsigned int D1, unsigned int D2, class R>
     inline T 
     trace 
-    ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
     {
       T result = m ( 0 , 0 ) ;
+      const unsigned int D = std::min ( D1 , D2 ) ;
       for ( unsigned int i = 1 ; i < D ; ++i ) { result += m ( i , i ) ; }
       return result ;
     }
@@ -709,12 +711,13 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-24
      */
-    template <class A, class T, unsigned int D, class R>
+    template <class A, class T, unsigned int D1, unsigned int D2, class R>
     inline T
     trace
-    ( const ROOT::Math::Expr<A,T,D,D,R>& m ) 
+    ( const ROOT::Math::Expr<A,T,D1,D2,R>& m ) 
     {
       T result =  m ( 0 , 0 ) ;
+      const unsigned int D = std::min ( D1 , D2 ) ;
       for ( unsigned int i = 1 ; i < D ; ++i ) { result += m ( i , i ) ; }
       return result ; 
     }
@@ -724,36 +727,38 @@ namespace Ostap
      *  @param   cmp comparison criteria
      *  @return "min" diagonal element (in the sense of comparison criteria)
      */
-    template <class T, unsigned int D, class R, class CMP>
+    template <class T, unsigned int D1, unsigned int D2,  class R, class CMP>
     inline T 
     min_diagonal 
-    ( const ROOT::Math::SMatrix<T,D,D,R>& m , CMP cmp ) 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m , CMP cmp ) 
     {
       T result = m(0,0);
+      const unsigned int D = std::min ( D1 , D2 ) ;
       for ( unsigned int i = 1 ; i < D ; ++i ) 
-      { 
-        const T value = m(i,i) ;  
-        if ( cmp ( value , result ) ) { result = value ; }
-      }
+        { 
+          const T value = m ( i , i ) ;  
+          if ( cmp ( value , result ) ) { result = value ; }
+        }
       return result ;
     }
     // ========================================================================
     /** find the maximal diagonal element 
-     *  @param   m (input) square matrix to be studied 
+     *  @param   m (input) matrix to be studied 
      *  @param   cmp comparison criteria
      *  @return "max" diagonal element (in the sense of comparison criteria)
      */
-    template <class T, unsigned int D, class R, class CMP>
+    template <class T, unsigned int D1, unsigned int D2, class R, class CMP>
     inline T 
     max_diagonal 
-    ( const ROOT::Math::SMatrix<T,D,D,R>& m , CMP cmp ) 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m , CMP cmp ) 
     {
       T result = m(0,0);
+      const unsigned int D = std::min ( D1 , D2 ) ;      
       for ( unsigned int i = 1 ; i < D ; ++i ) 
-      { 
-        const T value = m(i,i) ;  
-        if ( cmp ( result , value ) ) { result = value ; }
-      }
+        { 
+          const T value = m ( i , i ) ;  
+          if ( cmp ( result , value ) ) { result = value ; }
+        }
       return result ;
     } 
     // ========================================================================
@@ -777,10 +782,10 @@ namespace Ostap
      *  @author Vanya BELYAEV ibelyaev@physics.cyr.edu
      *  @date 2006-05-24
      */
-    template <class T, unsigned int D, class R>
+    template <class T, unsigned int D1, unsigned int D2, class R>
     inline T 
     max_diagonal 
-    ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
     { return max_diagonal( m , std::less<T>() ) ; }
     // ========================================================================
     /** find the maximal diagonal element of the square matrix 
@@ -807,10 +812,10 @@ namespace Ostap
      *  @author Vanya BELYAEV ibelyaev@physics.cyr.edu
      *  @date 2006-05-24
      */
-    template <class T, unsigned int D, class R>
+    template <class T, unsigned int D1, unsigned int D2, class R>
     inline T 
     min_diagonal 
-    ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
     { return min_diagonal( m , std::less<T>() ) ; }
     // ========================================================================
     /** find the diagonal element of square matrix with maximal absolute value 
@@ -833,10 +838,10 @@ namespace Ostap
      *  @author Vanya BELYAEV ibelyaev@physics.cyr.edu
      *  @date 2006-05-24
      */
-    template <class T, unsigned int D, class R>
+    template <class T, unsigned int D1, unsigned int D2, class R>
     inline T 
     maxabs_diagonal 
-    ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
     { return max_diagonal( m , _AbsCompare<T>() ) ; }
     // ========================================================================
     /** find the diagonal element of the square matrix with 
@@ -863,12 +868,12 @@ namespace Ostap
      *  @author Vanya BELYAEV ibelyaev@physics.cyr.edu
      *  @date 2006-05-24
      */
-    template <class T, unsigned int D, class R>
+    template <class T, unsigned int D1, unsigned int D2, class R>
     inline T 
     minabs_diagonal 
-    ( const ROOT::Math::SMatrix<T,D,D,R>& m ) 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
     { return min_diagonal( m , _AbsCompare<T>() ) ; }
-    // ========================================================================
+    // ========================================================================    
     /** count the number of elements in matrix, which satisfy the certain criteria
      * 
      *  @code
@@ -946,13 +951,13 @@ namespace Ostap
     { 
       std::size_t result = 0 ;
       for ( unsigned int i = 0 ; i < D ; ++i ) 
-      {
-        if ( pred ( m ( i , i ) ) ) { result += 1 ; }
-        for ( unsigned int j = i + 1 ; j < D ; ++j ) 
         {
-          if ( pred (  m ( i , j ) ) ) { result +=2 ; }  // ATTENTION! 
+          if ( pred ( m ( i , i ) ) ) { result += 1 ; }
+          for ( unsigned int j = i + 1 ; j < D ; ++j ) 
+            {
+              if ( pred (  m ( i , j ) ) ) { result += 2 ; }  // ATTENTION! 
+            }
         }
-      }
       return result ;
     } 
     // ========================================================================
@@ -975,18 +980,19 @@ namespace Ostap
      *  
      *  @endcode 
      *  
-     *  @param m    (input) square matrix to be studied 
+     *  @param m    (input) matrix to be studied 
      *  @param pred (input) predicate to be tested 
      *  @return number of diagonal elements for which the predicate is valid 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-04-24
      */
-    template <class T, unsigned int D, class R, class P>
+    template <class T, unsigned int D1, unsigned int D2, class R, class P>
     inline std::size_t 
     count_diagonal
-    ( const ROOT::Math::SMatrix<T,D,D,R>& m , P pred )
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m , P pred )
     {
       std::size_t result = 0 ;
+      const unsigned int D = std::min ( D1 , D2 ) ;
       for ( unsigned int i = 0 ; i < D ; ++i ) 
       { if ( pred ( m ( i , i ) ) ) { result += 1 ; } }
       return result ;
@@ -1052,13 +1058,14 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-04-24
      */
-    template <class T, unsigned int D, class R, class P>
+    template <class T, unsigned int D1 , unsigned int D2, class R, class P>
     inline bool
     check_diagonal 
-    ( const ROOT::Math::SMatrix<T,D,D,R>& m , P pred )
-    { 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m , P pred )
+    {
+      const unsigned int D = std::min ( D1 , D2 ) ;
       for ( unsigned int i = 0 ; i < D ; ++i ) 
-      { if ( pred ( m ( i , i ) ) ) { return true ; } }
+        { if ( pred ( m ( i , i ) ) ) { return true ; } }
       return false ;
     } 
     // ========================================================================
@@ -1176,10 +1183,11 @@ namespace Ostap
       const double                                             scale ) 
     {
       for ( unsigned int i = 0 ; i < D ; ++i ) 
-      {
-        for ( unsigned int j = i ; j < D ; ++j ) 
-        { left ( i , j ) += scale * vect(i) * vect(j) ; }
-      }
+        {
+          const double vi = vect ( i ) ;
+          for ( unsigned int j = i ; j < D ; ++j ) 
+            { left ( i , j ) += scale * vi * vect(j) ; }
+        }
     }
     // =========================================================================
     /** update the symmetric matrix according to the rule m +=  s*v*v^T
@@ -1197,10 +1205,11 @@ namespace Ostap
       const double                                             scale ) 
     {
       for ( unsigned int i = 0 ; i < D ; ++i ) 
-      {
-        for ( unsigned int j = i ; j < D ; ++j ) 
-        { left ( i , j ) += scale * vect(i) * vect(j) ; }
-      }
+        {
+          const double vi = vect ( i ) ;
+          for ( unsigned int j = i ; j < D ; ++j ) 
+            { left ( i , j ) += scale * vi * vect(j) ; }
+        }
     }
     // =========================================================================
     /** update the matrix according to the rule m +=  s*v1*v2^T
@@ -1220,10 +1229,11 @@ namespace Ostap
       const double                      scale = 1.0 ) 
     {
       for ( unsigned int i = 0 ; i < D1 ; ++i ) 
-      {
-        for ( unsigned int j = 0 ; j < D2 ; ++j ) 
-        { left ( i , j ) += scale * vct1(i) * vct2(j) ; }
-      }
+        {
+          const double vi = vct1 ( i ) ;
+          for ( unsigned int j = 0 ; j < D2 ; ++j ) 
+            { left ( i , j ) += scale * vi * vct2(j) ; }
+        }
     }
     // =========================================================================
     /**  useful shortcut for product of vector, matrix and vector (v1^T*M*v2)
@@ -1258,10 +1268,10 @@ namespace Ostap
       const double                                              scale = 1.0 ) 
     {
       for ( unsigned int i = 0 ; i < D ; ++i ) 
-      {
-        for ( unsigned int j = i ; j < D ; ++j ) 
-        { left ( i , j ) += scale * ( right ( i , j ) + right ( j , i ) ) ; }
-      }
+        {
+          for ( unsigned int j = i ; j < D ; ++j ) 
+            { left ( i , j ) += scale * ( right ( i , j ) + right ( j , i ) ) ; }
+        }
     }
     // =========================================================================
     /** update the symmetric matrix according to the rule m +=  scale * ( m + m^T )  
@@ -1279,10 +1289,10 @@ namespace Ostap
       const double                                              scale = 1.0 ) 
     {
       for ( unsigned int i = 0 ; i < D ; ++i ) 
-      {
-        for ( unsigned int j = i ; j < D ; ++j ) 
-        { left ( i , j ) += scale * ( right ( i , j ) + right ( j , i ) ) ; }
-      }
+        {
+          for ( unsigned int j = i ; j < D ; ++j ) 
+            { left ( i , j ) += scale * ( right ( i , j ) + right ( j , i ) ) ; }
+        }
     }
     // ========================================================================
     /** inversion of symmetric positively defined matrices

@@ -35,12 +35,14 @@ __all__     = (
     'add_expo'           , ## add an exponetaion factor for sting representaion of the object
 ) 
 # =============================================================================
-from ostap.logger.utils import  ( pretty_float    ,
-                                  pretty_err1     ,
-                                  pretty_err2     ,
-                                  pretty_errs     ,
-                                  add_expo        , 
-                                  fmt_pretty_err1 )
+from ostap.core.ostap_types import num_types, sequence_types 
+from ostap.logger.utils     import ( pretty_float     ,
+                                     pretty_err1      ,
+                                     pretty_err2      ,
+                                     pretty_errs      ,
+                                     add_expo         , 
+                                     fmt_pretty_err1  , 
+                                     fmt_pretty_float ) 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -95,6 +97,79 @@ def pretty_ve ( value              ,
     ## delegate 
     return pretty_err1 ( v , e , width = width , precision = precision )
 
+# =======================================================================
+## nice printout of complex number ( string + exponent)
+#  @code
+#  ae = complex ( ... ) 
+#  s , expo = pretty_complex (  ae ) 
+#  @endcode
+#  @return nice string and the separate exponent 
+def pretty_complex ( value              ,
+                     width       = 6    ,
+                     precision   = 4    ,
+                     parentheses = True ) :
+    """ Nice printout of complex number ( string + exponent)
+    - return nice stirng and the separate exponent 
+    >>> s , expo = pretty_complex( number ) 
+    """
+    v  = complex ( value )
+    vv = max ( abs ( v.real() ) , abs ( v.imag ) )
+    ## 
+    fmtv , expo = fmt_pretty_float ( value       = vv        , 
+                                     width       = width     ,
+                                     precision   = precision ,
+                                     parentheses = False     )
+    ## 
+    fmt = '%s%sj' % ( fmtv , fmtv ) 
+    if parentheses : fmt = '(' + fmt + ')'
+    ##
+    if expo :
+        scale = 10 ** expo
+        v /= scale 
+    return fmt % ( v.real , v.imag ) , expo
+
+# =======================================================================
+## Nice pritout of arrays of numerical values
+#  @code
+#  array = ...
+#  result, expo = pretty_array ( array ) 
+#  @endcode 
+#  @return nice string and the separate exponent 
+def pretty_array ( value              ,
+                   width       = 6    ,
+                   precision   = 4    ,
+                   parentheses = True ) :
+    """ Nice pritout of arrays of numerical values
+    - return nice stirng and the separate exponent 
+    >>> array = ...
+    >>> result, expo = pretty_array ( array ) 
+    """
+    assert isinstance ( value , sequence_types ) , \
+        "Invalid type of `value':%s" % type ( value )
+    
+    if not value : return '' if not parentheses else []
+    
+    assert all ( isinstance ( v , num_types ) for v in value ) , \
+        "Invalid content of `value': %s" % str ( value ) 
+    
+    value1 = value [ 0 ]
+    value2 = max ( abs ( v ) for v in value )    
+    vv     = max ( abs ( value1 ) , abs ( value2 ) )
+    #
+    fmtv , expo = fmt_pretty_float ( value       = vv        ,
+                                     width       = width     ,
+                                     precision   = precision )
+
+    if expo : scale = 10 ** expo
+    else    : scale = 1
+    ## 
+    result = []
+    for v in value : result.append ( fmtv %  ( v / scale ) )
+    result = ', '.join ( result )
+    ## 
+    if parentheses : result = ' [ ' + result + ' ]'
+    return result, expo 
+    
 # =======================================================================
 ## nice printout of asymmetric errors ( string + exponent)
 #  @code

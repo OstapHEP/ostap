@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
 #  @date 2009-09-12
 # =============================================================================
-"""Few utilities to simplify linear algebra manipulations 
+""" Few utilities to simplify linear algebra manipulations 
 """
 # =============================================================================
 from   __future__  import print_function
@@ -21,8 +21,14 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-from   sys       import version_info as python_version
-from   builtins  import range
+from   sys                    import version_info as python_version
+from   builtins               import range
+from   ostap.math.base        import isequal   , iszero, std , Ostap, typename 
+from   ostap.core.ostap_types import num_types , integer_types
+from   ostap.utils.clsgetter  import classgetter
+from   ostap.logger.pretty    import pretty_array, fmt_pretty_float  
+import ostap.logger.table     as     T
+from   ostap.logger.colorized import infostr 
 import ROOT, math, re, ctypes, array, random 
 # =============================================================================
 # logging 
@@ -30,11 +36,6 @@ import ROOT, math, re, ctypes, array, random
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg2' )
 else                       : logger = getLogger ( __name__             )
-# =============================================================================
-from   ostap.math.base        import isequal   , iszero, std , Ostap, typename 
-from   ostap.core.ostap_types import num_types , integer_types
-from   ostap.utils.clsgetter  import classgetter
-import ostap.logger.table     as     T 
 # =============================================================================
 try :
     import numpy as np
@@ -991,7 +992,6 @@ class LinAlg(object) :
         
         raise NotImplementedError ( "No SIMT for %s/%s and %s/%s" % ( a , typename ( a ) , b , typename ( b ) ) )
 
-
     # =========================================================================
     ## power function for square matrices 
     #  @code
@@ -1073,7 +1073,192 @@ class LinAlg(object) :
             return result
         
         raise NotImplementedError ( "Cannot anti-symmetrise %s/%s" % ( a , typename ( a ) ) )
+
+
+    # =============================================================================
+    ## Get minimal element of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.min_element() 
+    #  @endcode
+    #  @see Ostap::Math::min_element 
+    @staticmethod
+    def M_MINELEMENT ( mtrx ) :
+        """ Get minimal element of the matrix
+        >>> mtrx = ...
+        >>> mtrx.min_element() 
+        """
+        return Ostap.Math.min_element ( mtrx )
+
+    # =============================================================================
+    ## Get maximal element of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.max_element() 
+    #  @endcode
+    #  @see Ostap::Math::max_element 
+    @staticmethod
+    def M_MAXELEMENT ( mtrx ) :
+        """ Get maximal element of the matrix
+        >>> mtrx = ...
+        >>> mtrx.max_element() 
+        """
+        return Ostap.Math.max_element ( mtrx )
+
+    # =============================================================================
+    ## Get element with the minimal absolute value of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.minabs_element() 
+    #  @endcode
+    #  @see Ostap::Math::minabs_element 
+    @staticmethod
+    def M_MINABSELEMENT ( mtrx ) :
+        """ Get element with the minimal absolute value of the matrix
+        >>> mtrx = ...
+        >>> mtrx.minabs_element() 
+        """
+        return Ostap.Math.minabs_element ( mtrx )
+
+    # =============================================================================
+    ## Get the element with the maximal absolute value of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.maxabs_element() 
+    #  @endcode
+    #  @see Ostap::Math::maxabs_element 
+    @staticmethod
+    def M_MAXABSELEMENT ( mtrx ) :
+        """ Get element with the maximal absoluye value of the matrix
+        >>> mtrx = ...
+        >>> mtrx.maxabs_element() 
+        """
+        return Ostap.Math.maxabs_element ( mtrx )
     
+    # =============================================================================
+    ## Get index of the minimal element of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.min_element_index () 
+    #  @endcode
+    #  @see Ostap::Math::ind_min_element 
+    @staticmethod
+    def M_MININDEX ( mtrx ) :
+        """ Get index of the minimal element of the matrix
+        >>> mtrx = ...
+        >>> mtrx.min_element_index () 
+        """
+        i , j = Ostap.Math.ind_min_element ( mtrx )
+        return i , j
+    
+    # =============================================================================
+    ## Get idnex of maximal element of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.max_element_index () 
+    #  @endcode
+    #  @see Ostap::Math::ind_max_element
+    @staticmethod
+    def M_MAXINDEX ( mtrx ) :
+        """ Get maximal element of the matrix
+        >>> mtrx = ...
+        >>> mtrx.max_element_index () 
+        """
+        i, j = Ostap.Math.ind_max_element ( mtrx )
+        return i, j 
+
+    # =============================================================================
+    ## Get index of the element with minial absolute value of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.minabs_element_index () 
+    #  @endcode
+    #  @see Ostap::Math::ind_minabs_element 
+    @staticmethod
+    def M_MINABSINDEX ( mtrx ) :
+        """ Get index of the element with minimal absoluet value of the matrix
+        >>> mtrx = ...
+        >>> mtrx.minabs_element_index () 
+        """
+        i , j = Ostap.Math.ind_minabs_element ( mtrx )
+        return i , j
+    
+    # =============================================================================
+    ## Get index of element with  maximal absolute value of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.maxabs_element_index () 
+    #  @endcode
+    #  @see Ostap::Math::ind_maxabs_element
+    @staticmethod
+    def M_MAXABSINDEX ( mtrx ) :
+        """ Get index of element with maximal absolute value of the matrix
+        >>> mtrx = ...
+        >>> mtrx.maxabs_element_index () 
+        """
+        i, j = Ostap.Math.ind_maxabs_element ( mtrx )
+        return i, j 
+
+    # =============================================================================
+    ## Get minimal diagonal element of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.min_diagnal() 
+    #  @endcode
+    #  @see Ostap::Math::min_diagonal 
+    @staticmethod
+    def M_MINDIAGONAL ( mtrx ) :
+        """ Get minimal diagonal element of the matrix
+        >>> mtrx = ...
+        >>> mtrx.min_diagonal () 
+        """
+        return Ostap.Math.min_diagonal( mtrx )
+
+    # =============================================================================
+    ## Get maximal diagonal element of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.max_diagnal() 
+    #  @endcode
+    #  @see Ostap::Math::max_diagonal 
+    @staticmethod
+    def M_MAXDIAGONAL ( mtrx ) :
+        """ Get maximal diagonal element of the matrix
+        >>> mtrx = ...
+        >>> mtrx.max_diagonal () 
+        """
+        return Ostap.Math.max_diagonal( mtrx )
+
+    # =============================================================================
+    ## Get diagonal element with minamal absoluite value  of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.minabs_diagnal() 
+    #  @endcode
+    #  @see Ostap::Math::minabs_diagonal 
+    @staticmethod
+    def M_MINABSDIAGONAL ( mtrx ) :
+        """ Get diagonal element with mininal diagoinal value of the matrix
+        >>> mtrx = ...
+        >>> mtrx.minabs_diagonal () 
+        """
+        return Ostap.Math.minabs_diagonal( mtrx )
+
+    # =============================================================================
+    ## Get diagonal element with maximal absolute value of the matrix
+    #  @code
+    #  mtrx = ...
+    #  mtrx.maxabs_diagnal() 
+    #  @endcode
+    #  @see Ostap::Math::maxabs_diagonal 
+    @staticmethod
+    def M_MAXABSDIAGONAL ( mtrx ) :
+        """ Get diagonal element with maximal diagonal value of the matrix
+        >>> mtrx = ...
+        >>> mtrx.maxabs_diagonal () 
+        """
+        return Ostap.Math.maxabs_diagonal( mtrx )
+
     
     # =============================================================================
     ##  get matrix shape
@@ -1124,7 +1309,7 @@ class LinAlg(object) :
     #  @endcode
     @staticmethod
     def V_KEYS ( vct ) :
-        """Iterator for SVector
+        """ Iterator for SVector
         >>> vct = ...
         >>> for i in vct.keys() : print i 
         """
@@ -1140,7 +1325,7 @@ class LinAlg(object) :
     #  @endcode
     @staticmethod
     def V_ITEMS ( vct ) :
-        """Iterator for SVector
+        """ Iterator for SVector
         >>> vct = ...
         >>> for i,v in vct.items    () : print i,v 
         >>> for i,v in vct.iteritems() : print i,v ## ditto
@@ -1155,9 +1340,8 @@ class LinAlg(object) :
     #  @date 2009-09-12
     @staticmethod
     def V_STR ( vct , fmt = ' %g' ) :
-        """Self-printout of SVectors: (...)
+        """ Self-printout of SVectors: (...)
         """
-
         result = '('
         for i , v in enumerate ( vct ) :
             if 0 != i : result += ', '
@@ -1170,13 +1354,11 @@ class LinAlg(object) :
     #  @date 2020-05-15
     @staticmethod
     def VE_STR ( vct , fmt = '' , prefix = '' , title = '' , correlations = False ) :
-        """Self-printout of SVectorWithError: (...)
+        """ Self-printout of SVectorWithError: (...)
         """
         
-        v = vct.value      ()
-    
+        v = vct.value      ()    
         c = vct.covariance ()
-
         if correlations :
             c   = c.correlations () 
             fmt = '%+.3f'
@@ -1357,35 +1539,39 @@ class LinAlg(object) :
     #   print matrix
     #   @endcode
     @staticmethod 
-    def M_STR ( mtrx , fmt = '' , prefix = '' , title = '' ) :
-        """Self-printout of matrices
+    def M_STR ( mtrx , fmt = '' , prefix = '' , title = '' , width = 6 , precision = 4 ) :
+        """ Self-printout of matrices
         >>> matrix = ...
-        >>> print matrix 
+        >>> print (matrix)
         """
         rows = mtrx.kRows
         cols = mtrx.kCols
 
-        if   fmt       : pass
-        elif cols <= 9 : fmt =  '%+.4g'
-        else           : fmt = ' %+11.4g'
-
-        if cols <= 9 :            
-            header = tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) 
-            table  = [ header ] 
-            for i in range ( rows ) :
-                row = [ '%d' % i ] + [ fmt % mtrx ( i , j ) for j in range ( cols ) ]
-                table.append ( row )
-            return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
+        mae = abs ( Ostap.Math.maxabs_element ( mtrx ) )
+        fmtv , expo = fmt_pretty_float ( mae , width = width , precision = precision )
+        
+        zeros = fmtv % ( +0.0 ) , fmtv % ( -0.0 )        
+        if expo :
+            scale  = 10 ** expo
+            title  = title + ( '[x10^%+d]' % expo ) 
+        else    :
+            scale = 1 
             
-        line = ''
+        table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]
+        
         for i in range ( rows ) :
-            line += ' |'
-            for j in range ( cols ) :
-                line += fmt % mtrx ( i , j )
-                line += ' |'
-                if ( rows - 1 )  != i : line += '\n'
-        return line
-
+            row = [ infostr ( '%d' % i )  ]
+            for j in range ( cols ) :                
+                value = mtrx ( i , j ) / scale 
+                if  iszero ( value ) : item = '0'
+                else :
+                    item = fmtv % value
+                    if item in zeros : item = '0'
+                row.append ( item ) 
+            table.append ( row )
+            
+        return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
+        
     # =============================================================================
     ##  Self-printout of symmetric matrices
     #   @code  
@@ -1393,38 +1579,39 @@ class LinAlg(object) :
     #   print matrix
     #   @endcode
     @staticmethod 
-    def MS_STR ( mtrx , fmt = '' , width = 12 , prefix = '' , title = '' ) :
-        """Self-printout of symmetric matrices
+    def MS_STR ( mtrx , fmt = '' , prefix = '' , title = '' , width = 6 , precision = 4 ) :
+        """ Self-printout of symmetric matrices
         >>> matrix = ...
-        >>> print matrix 
+        >>> print(matrix)
         """
         rows = mtrx.kRows
         cols = mtrx.kCols
 
-        if   fmt       : pass
-        elif cols <= 9 : fmt =  '%+.4g'
-        else           : fmt = ' %+11.4g'
+        mae = abs ( Ostap.Math.maxabs_element ( mtrx ) )
+        fmtv , expo = fmt_pretty_float ( mae , width = width , precision = precision )
 
-        if cols <= 9 :
-            header = tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) 
-            table  = [ header ] 
-            for i in range ( rows ) :
-                row = [ '%d' % i ]
-                for j in range ( cols ) : 
-                    if j < i : row.append ( '' )
-                    else     : row.append ( fmt % mtrx ( i , j ) )                    
-                table.append ( row )
-            return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
+        zeros = fmtv % ( +0.0 ) , fmtv % ( -0.0 )        
+        if expo :
+            scale  = 10 ** expo
+            title  = title + ( '[x10^%+d]' % expo ) 
+        else    :
+            scale = 1 
             
-        line = ''
+        table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]
         for i in range ( rows ) :
-            line += ' |'
-            for j in range ( cols  ) :
-                if    j < i : line += width*' '
-                else        : line += fmt % mtrx ( i , j )
-                line += ' |'
-                if ( rows - 1 ) != i : line += '\n'
-        return line
+            row = [ infostr ( '%d' % i ) ]
+            for j in range ( cols ) : 
+                if j < i : row.append ( '' )
+                else     :
+                    value = mtrx ( i , j ) / scale
+                    if iszero ( value ) : item = '0'
+                    else :
+                        item = fmtv % value
+                        if item in zeros : item = '0'
+                    row.append ( item )                     
+            table.append ( row )
+            
+        return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
 
     # =========================================================================
     ## get the correlation matrix
@@ -1802,7 +1989,7 @@ class LinAlg(object) :
     ## Decorate SMatrix 
     @staticmethod 
     def deco_matrix ( m  ) :
-        """Decorate SMatrix
+        """ Decorate SMatrix
         """
         
         if m in LinAlg.decorated_matrices : return m 
@@ -1857,6 +2044,21 @@ class LinAlg(object) :
 
         m.tmatrix       = LinAlg.M_TM 
 
+        m.min_element          = LinAlg.M_MINELEMENT
+        m.max_element          = LinAlg.M_MAXELEMENT
+        m.minabs_element       = LinAlg.M_MINABSELEMENT
+        m.maxabs_element       = LinAlg.M_MAXABSELEMENT
+        
+        m.min_diagonal         = LinAlg.M_MINDIAGONAL
+        m.max_diagonal         = LinAlg.M_MAXDIAGONAL
+        m.minabs_diagonal      = LinAlg.M_MINABSDIAGONAL
+        m.maxabs_diagonal      = LinAlg.M_MAXABSDIAGONAL
+        
+        m.min_element_index    = LinAlg.M_MININDEX
+        m.max_element_index    = LinAlg.M_MAXINDEX
+        m.minabs_element_index = LinAlg.M_MINABSINDEX
+        m.maxabs_element_index = LinAlg.M_MAXABSINDEX 
+        
         if m.kRows == m.kCols :
             m.inverse   = LinAlg.M_INVERSE            
 
@@ -1871,8 +2073,7 @@ class LinAlg(object) :
         m.sym           = LinAlg.M_SYM
         m.asym          = LinAlg.M_ASYM 
         m.skew          = LinAlg.M_ASYM 
-
-
+        
         m.__reduce__    = LinAlg.M_REDUCE 
         m.rep_size      = classgetter ( lambda cls : cls.rep_type.kSize ) 
 
@@ -1948,7 +2149,8 @@ class LinAlg(object) :
         t.__reduce__    = LinAlg.VE_REDUCE 
 
         t.random        = LinAlg.VE_RANDOM
-        
+
+        t.pretty_print  = pretty_array 
         return t
 
 
@@ -2378,8 +2580,6 @@ def checkops ( a , b , logger = logger ) :
         ( 'sym'  , LinAlg.methods_SYM   ) ,
         ( 'ssym' , LinAlg.methods_ASYM  ) ,
         )
-    
-    
     
     import ostap.logger.table as T
     title = 'Allowed binary operations'
