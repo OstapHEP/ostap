@@ -10,6 +10,7 @@
 ## Bug fixes
     
    1. fix the typo in `Ostap/MatrixUtilsT.h`
+   1. fix `ostap.utils.basic.mtime` 
     
 # v1.13.0.0
 

@@ -321,35 +321,42 @@ def get_env ( variable , default , silent = False ) :
 
 # =============================================================================
 ## Get the modification time for the path (including subdirectories)
-def mtime ( path ) :
-    """Get the last modification time for the path (including subdirectories)
+#  @code
+#  path = ...
+#  mdate = mtime ( path ) ## check file/directory
+#  mdate = mtime ( path , subdirs = True ) ## check file/directory including all subdirectoreis
+#  @endcode
+#  @attention for <cpde>subdirs=True</code> it could be very slow!
+def mtime ( path , subdirs = False ) :
+    """ Get the last modification time for the path (including subdirectories)
+    >>> path = ...
+    >>> mdate = mtime ( path ) ## check file/directory
+    >>> mdate = mtime ( path , subdirs = True ) ## check file/directory including all subdirectoreis
+    - attention: for `subdirs=True` it could be very slow! 
     """
-    
     assert os.path.exists ( path ) , "mtime: the path `%s' does not exist!" % path
 
     ## get the time of modification/creation 
-    _mtime_ = lambda p : max ( os.path.getmtime ( path ) , os.path.getctime ( path ) ) 
+    _mtime_ = lambda p : max ( os.path.getmtime ( p ) , os.path.getctime ( p ) ) 
 
     ## own/root  
-    mt      = datetime.datetime.fromtimestamp ( _mtime_ ( path ) )
+    tt = _mtime_ ( path ) 
     
-    if os.path.isfile ( path ) : return mt 
-
-    for root, dirs, files in os.walk ( path ) :
+    if subdirs and os.path.isdir ( path ) :
         
-        for d in dirs  :
-            entry = os.path.join ( root , d )
-            if os.path.exists ( entry ) : 
-                mt = max ( mt , mtime ( entry ) )
-                
-        for f in files :
-            entry = os.path.join ( root , f )
-            if os.path.exists ( entry ) : 
-                mt = max ( mt ,  datetime.datetime.fromtimestamp ( _mtime_ ( entry ) ) ) 
+        for root, dirs, files in os.walk ( path , topdown = False ) :
+            
+            if os.path.exists ( root ) : tt  = max ( tt , _mtime_ ( root ) ) 
 
-        break 
+            for d in dirs  :
+                entry = os.path.join ( root , d )
+                if os.path.exists ( entry ) : tt = max ( tt , _mtime_ ( entry ) )
                 
-    return mt  
+            for f in files :
+                entry = os.path.join ( root , f )
+                if os.path.exists ( entry ) : tt = max ( tt , _mtime_ ( entry ) ) 
+
+    return datetime.datetime.fromtimestamp ( tt )
 
 # =========================================================================
 ## copy source file into destination, creating intermediate directories
@@ -357,7 +364,7 @@ def mtime ( path ) :
 def copy_file ( source           ,
                 destination      ,
                 progress = False ) :
-    """Copy source file into destination, creating intermediate directories
+    """ Copy source file into destination, creating intermediate directories
     - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
     """
     assert os.path.exists ( source ) and os.path.isfile ( source ), \

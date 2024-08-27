@@ -488,7 +488,7 @@ def _cleanup_ () :
 
                 dd = os.path.join ( hd , entry )
                 if os.path.exists ( dd ) and os.path.isdir ( dd ) :
-                    mdate = mtime ( dd )                    
+                    mdate = mtime ( dd , subdirs = False )                    
                     if date <= mdate and mdate + time_delta < start :
                         entry = start - mdate , dd 
                         ddirs.add ( entry )
