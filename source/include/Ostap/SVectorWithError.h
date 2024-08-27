@@ -125,6 +125,29 @@ namespace Ostap
       inline SCALAR& operator() ( unsigned int i )       { return m_value(i) ; }
       const  SCALAR& operator[] ( unsigned int i ) const { return m_value[i] ; }
       inline SCALAR& operator[] ( unsigned int i )       { return m_value[i] ; }
+      const  SCALAR& operator() ( unsigned int i ,
+                                  unsigned int j ) const { return m_cov2(i,j) ; }
+      inline SCALAR& operator() ( unsigned int i ,
+                                  unsigned int j )       { return m_cov2(i,j) ; }      
+      // ======================================================================
+    public: // 
+      // ======================================================================
+      /// set value 
+      void setValue
+      ( const unsigned int i     ,
+        const SCALAR       value ) { m_value ( i )   = value ; }
+      void setCov2
+      ( const unsigned int i     ,
+        const unsigned int j     ,
+        const SCALAR       value ) { m_cov2 ( i , j ) = value ; }
+      /// set value 
+      void set
+      ( const unsigned int i     ,
+        const SCALAR       value ) { setValue ( i , value ) ; }
+      void set
+      ( const unsigned int i     ,
+        const unsigned int j     ,
+        const SCALAR       value ) { setCov2 ( i , j , value ) ; }
       // ======================================================================
     public: // correlations 
       // ======================================================================

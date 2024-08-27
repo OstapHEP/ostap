@@ -391,7 +391,31 @@ namespace Ostap
     ( const ROOT::Math::SMatrix<T,D1,D2,R>& m ) 
     { return *std::min_element ( m.begin() , m.end()  , _AbsCompare<T>() ) ; }
     // ========================================================================
-    /** find an index of the  maximal element in matrix 
+    /** find the elemet element with maximnal absolute value in vector 
+     *  @param m (input) vector to be studied
+     *  @return the maximal element 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D>
+    inline T 
+    maxabs_element 
+    ( const ROOT::Math::SVector<T,D>& m ) 
+    { return *std::max_element ( m.begin() , m.end() , _AbsCompare<T>() ) ; }
+    // ========================================================================
+    /** find the elemet element with minimal  absolute value in vector 
+     *  @param m (input) vector to be studied
+     *  @return the minimal element 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2006-05-24
+     */
+    template <class T,unsigned int D>
+    inline T 
+    minabs_element 
+    ( const ROOT::Math::SVector<T,D>& m ) 
+    { return *std::min_element ( m.begin() , m.end() , _AbsCompare<T>() ) ; }
+    // ========================================================================
+    /** find an index of the maximal element in matrix 
      *  @param m (input) matrix to be studied
      *  @param cmp comparison criteria
      *  @return the pair (i,j)-index of the maximal element 

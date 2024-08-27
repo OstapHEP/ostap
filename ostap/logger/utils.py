@@ -176,7 +176,7 @@ def fmt_pretty_err1 ( value              ,
                       width       = 6    ,
                       precision   = 4    ,
                       parentheses = True ) :
-    """Formats for nice printout of the vaoleu with error 
+    """Formats for nice printout of the value with error 
     - return formats for nice stirng and the separate exponent 
     >>> fmt , fmt_v , fmt_e , n = pretty_err1 ( value , error  ) 
     """    

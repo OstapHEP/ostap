@@ -3,7 +3,8 @@
    1. improve pretty-print for matrices
    1. add `pretty_array` function for nice print of arrays/sequences
    1. add some auxillary methods for matrices: `(min/max/minabs/maxabs)_element` and `(min/max)_diagonal` and `(min/max/minabs/maxabs)_element_index`
-
+   1. improve printout of `SVectorwithError`
+    
 ## Backward incompatible
 
 ## Bug fixes

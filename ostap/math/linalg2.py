@@ -26,7 +26,7 @@ from   builtins               import range
 from   ostap.math.base        import isequal   , iszero, std , Ostap, typename 
 from   ostap.core.ostap_types import num_types , integer_types
 from   ostap.utils.clsgetter  import classgetter
-from   ostap.logger.pretty    import pretty_array, fmt_pretty_float  
+from   ostap.logger.pretty    import pretty_array, fmt_pretty_float, fmt_pretty_err1   
 import ostap.logger.table     as     T
 from   ostap.logger.colorized import infostr 
 import ROOT, math, re, ctypes, array, random 
@@ -44,6 +44,7 @@ except ImportError :
 
 revct = re.compile ( r'SVector<(?P<TYPE>[^,>]+)' )
 remtx = re.compile ( r'SMatrix<(?P<TYPE>[^,>]+)' )
+NaN   = float('nan')
 
 # =============================================================================
 ## Helper method: get  i,j element from matrix-like object
@@ -52,9 +53,9 @@ remtx = re.compile ( r'SMatrix<(?P<TYPE>[^,>]+)' )
 #  value = matrix ( mgetter , 1 , 2 ) 
 #  @endcode 
 def mgetter ( mtrx , i , j ) :
-    """Helper method: get  i,j element from matrix-like object
+    """ Helper method: get  (i,j)  element from matrix-like object
     >>> mtrx  = ...
-    >>> value = mgetter ( m , 1 , 2 ) 
+    >>> value = mgetter ( mtrx , 1 , 2 ) 
     """
     
     if callable ( mtrx  ) :
@@ -62,18 +63,14 @@ def mgetter ( mtrx , i , j ) :
         kRows = getattr ( mtrx , 'kRows' , None )
         if kRows is None        :
             nRows = getattr ( mtrx , 'GetNrows' , None )
-            if nRows and not 0 <= i < nRows() :
-                raise IndexError  ( "Invalid row index %s" % i )            
-        elif not 0 <= i < kRows :
-            raise IndexError  ( "Invalid row index %s" % i )
+            if nRows and not 0 <= i < nRows() : raise IndexError  ( "Invalid row index %s" % i )            
+        elif not 0 <= i < kRows : raise IndexError  ( "Invalid row index %s" % i )
         
         kCols = getattr ( mtrx , 'kCols' , None )
         if kCols is None        :
             nCols = getattr ( mtrx , 'GetNcols' , None )
-            if nCols and not 0 <= i < nCols() :
-                raise IndexError  ( "Invalid column index %s" % i )
-        elif not 0 <= j < kCols :
-            raise IndexError  ( "Invalid column index %s" % j )
+            if nCols and not 0 <= i < nCols() : raise IndexError  ( "Invalid column index %s" % i )
+        elif not 0 <= j < kCols : raise IndexError  ( "Invalid column index %s" % j )
 
         return mtrx ( i , j )
     
@@ -1290,13 +1287,13 @@ class LinAlg(object) :
     ## iterator for SVector
     #  @code
     #  vct = ...
-    #  for i in vct : print i 
+    #  for i in vct : print ( i )
     #  @endcode
     @staticmethod
     def V_ITER ( vct ) :
-        """Iterator for SVector
+        """ Iterator for SVector
         >>> vct = ...
-        >>> for i in vct : print i 
+        >>> for i in vct : print ( i )
         """
         s = len ( vct )
         for i in range ( s ) : yield vct ( i )
@@ -1305,13 +1302,13 @@ class LinAlg(object) :
     ## iterator for SVector
     #  @code
     #  vct = ...
-    #  for i in vct.keys() : print i 
+    #  for i in vct.keys() : print ( i )  
     #  @endcode
     @staticmethod
     def V_KEYS ( vct ) :
         """ Iterator for SVector
         >>> vct = ...
-        >>> for i in vct.keys() : print i 
+        >>> for i in vct.keys() : print ( i ) 
         """
         s = len ( vct )
         for i in range ( s ) : yield i 
@@ -1320,15 +1317,15 @@ class LinAlg(object) :
     ## iterator for SVector
     #  @code
     #  vct = ...
-    #  for i,v in vct.items     () : print i,v 
-    #  for i,v in vct.iteritems () : print i,v ## ditto 
+    #  for i,v in vct.items     () : print ( i , v )  
+    #  for i,v in vct.iteritems () : print ( i , v ) ## ditto 
     #  @endcode
     @staticmethod
     def V_ITEMS ( vct ) :
         """ Iterator for SVector
         >>> vct = ...
-        >>> for i,v in vct.items    () : print i,v 
-        >>> for i,v in vct.iteritems() : print i,v ## ditto
+        >>> for i,v in vct.items    () : print ( i , v )  
+        >>> for i,v in vct.iteritems() : print ( i , v ) ## ditto
         """
         s = vct.kSize 
         for i in range ( s ) :
@@ -1353,45 +1350,99 @@ class LinAlg(object) :
     #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
     #  @date 2020-05-15
     @staticmethod
-    def VE_STR ( vct , fmt = '' , prefix = '' , title = '' , correlations = False ) :
+    def VE_STR ( vct , fmt = '' , prefix = '' , title = '' , correlations = False , width = 6 , precision = 4 ) :
         """ Self-printout of SVectorWithError: (...)
         """
         
-        v = vct.value      ()    
-        c = vct.covariance ()
-        if correlations :
-            c   = c.correlations () 
-            fmt = '%+.3f'
-            
-        N = len ( v )
-
-        ## no nice prins for huge vectors 
-        if 10 <= N :  return "%s\n%s" % ( v , c )
-
+        values = vct.value      ()    
+        cov2   = vct.covariance ()
+        
+        N    = len ( values )
         cols = N
         rows = N
                 
-        if   fmt       : pass
-        elif cols <= 9 : fmt =  '%+.4g'
-        else           : fmt = ' %+11.4g'
+        ## the maximal element 
+        maev = abs ( Ostap.Math.maxabs_element  ( values ) )
 
-        header = tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) 
-        table  = [ header ] 
+        if correlations :
+            maec   = abs ( Ostap.Math.maxabs_diagonal ( cov2   ) )
+            perror = math.sqrt ( maec )
+        else :
+            maec   = abs ( Ostap.Math.maxabs_element  ( cov2   ) )
+            perror = maec 
+            
+        _ , fmtv , fmte , expo = fmt_pretty_err1 ( value     = maev      ,
+                                                   error     = perror    , 
+                                                   width     = width     ,
+                                                   precision = precision )
+
+        if expo :
+            scale = 10 ** expo
+            title = title + ( '[x10^%+d]' % expo ) 
+        else    : scale = 1
+
+        if correlations :
+            title  = title + ' correlations' 
+            mtrx   = cov2.correlations ()
+            mscale = 0.01
+            fmtm   = '%+.1f%%'
+            fmte   = '+/-' + fmte 
+        else            :
+            mtrx   = cov2
+            mscale = scale
+            fmtm   = fmtv
+
+        zeros = [] 
+        for f in ( fmtv , fmte , fmtm ) :
+            zeros.append ( f % ( +0 ) )
+            zeros.append ( f % ( -0 ) )
+        zeros = tuple ( zeros )
+        
+        table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ] 
+
         ## 1st row : values
-        row    = [ 'V' ]
-        for i in range ( N ) :
-            value  = v [ i ]
-            cov2   = c ( i , i )
-            error  = math.sqrt ( cov2 ) if 0 <= cov2 else -math.sqrt ( abs ( cov2 ) )
-            row.append (  '%+.4g +/- %.4g' % ( value , error ) )
+        row    = [ infostr ( 'V' )  ] 
+        for v in values :
+            vv = v / scale 
+            if iszero ( v ) or iszero ( vv ) : item = '0'
+            else             :
+                item = fmtv % vv
+                if item in zeros : item = '0' 
+            row.append ( item )    
         table.append ( row )
-        for i in range ( rows ) :
-            row = [ '%d' % i ]
-            for j in range ( cols ) : 
-                if j < i : row.append ( '' )
-                else     : row.append ( fmt % c ( i , j ) )                    
+
+        ## for `correlation`: the 2nd row: errors 
+        if correlations :
+            row    = [ infostr ( 'e' )  ] 
+            for i in range  ( N ) :
+                v  = cov2 ( i , i )
+                if   iszero ( v )  : item = '+/-0'
+                elif v < 0         : item = '???'
+                else :
+                    vv = math.sqrt ( v ) / scale 
+                    if iszero ( vv ) :  item = '+/-0'
+                    else : 
+                        item = fmte % vv
+                        if item in zeros : item = '+/-0' 
+                row.append ( item )
             table.append ( row )
-        return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
+                
+        ## print the matrix (covariance or correlation )
+        for i in range ( rows ) :
+            row = [ infostr ( '%d' % i ) ]
+            for j in range ( cols ) : 
+                if j < i :  item = '' 
+                else     :
+                    v  = mtrx ( i , j )
+                    vv = v / mscale
+                    if    iszero ( vv ) : item = 0
+                    else:
+                        item = fmtm % vv
+                        if item in zeros : item = '0'
+                row.append ( item ) 
+            table.append ( row ) 
+
+        return T.table  ( table , alignment = 'r'+cols*'c' , prefix = prefix , title = title ) 
             
     # =============================================================================
     ## Transform vector-with-errors to another variable
@@ -1409,7 +1460,7 @@ class LinAlg(object) :
     #  @date 2020-05-15
     @staticmethod
     def VE_TRANSFORM ( vct , *Y ) :
-        """Transform vector-with-errors to another variable
+        """ Transform vector-with-errors to another variable
          - y = y ( x )
          - C(y) = J C(x) J^T
          where J = dy/dx
@@ -1469,7 +1520,7 @@ class LinAlg(object) :
     #  @endcode
     @staticmethod
     def V_ARRAY ( vct ) :
-        """Convert vector to plain array:
+        """ Convert vector to plain array:
         >>> vct = ...
         >>> na  = vct.to_array() 
         """
@@ -1480,13 +1531,13 @@ class LinAlg(object) :
     ## iterator for SMatrix
     #  @code
     #  matrix = ...
-    #  for i in matrix : print i 
+    #  for i in matrix : print ( i ) 
     #  @endcode
     @staticmethod 
     def M_ITER ( mtrx ) :
-        """Iterator for SMatrix
+        """ Iterator for SMatrix
         >>> matrix = ...
-        >>> for i in matrix : print i 
+        >>> for i in matrix : print ( i )
         """
         krows = mtrx.kRows
         kcols = mtrx.kCols
@@ -1498,11 +1549,11 @@ class LinAlg(object) :
     ## iterator for SMatrix
     #  @code
     #  matrix = ...
-    #  for i in matrix.keys() : print i 
+    #  for i in matrix.keys() : print ( i )
     #  @endcode
     @staticmethod 
     def M_KEYS ( mtrx ) :
-        """Iterator for SMatrix
+        """ Iterator for SMatrix
         >>> matrix = ...
         >>> for i in matrix.keys() : print i 
         """
@@ -1516,15 +1567,15 @@ class LinAlg(object) :
     ## iterator for SMatrix
     #  @code
     #  matrix = ...
-    #  for ij,v in matrix.items     () : print ij,v 
-    #  for ij,v in matrix.iteritems () : print ij,v ## ditto
+    #  for ij,v in matrix.items     () : print ( ij,v ) 
+    #  for ij,v in matrix.iteritems () : print ( ij,v ) ## ditto
     #  @endcode
     @staticmethod     
     def M_ITEMS  ( mtrx ) :
-        """Iterator for SMatrix
+        """ Iterator for SMatrix
         >>> matrix = ...
-        >>> for ij,v in matrix.items    () : print ij,v
-        >>> for ij,v in matrix.iteritems() : print ij,v ## ditto
+        >>> for ij,v in matrix.items    () : print ( ij,v ) 
+        >>> for ij,v in matrix.iteritems() : print ( ij,v ) ## ditto
         """
         krows = mtrx.kRows
         kcols = mtrx.kCols
@@ -1557,8 +1608,7 @@ class LinAlg(object) :
         else    :
             scale = 1 
             
-        table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]
-        
+        table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]        
         for i in range ( rows ) :
             row = [ infostr ( '%d' % i )  ]
             for j in range ( cols ) :                
@@ -1601,14 +1651,15 @@ class LinAlg(object) :
         for i in range ( rows ) :
             row = [ infostr ( '%d' % i ) ]
             for j in range ( cols ) : 
-                if j < i : row.append ( '' )
+                if j < i : item = '' 
                 else     :
-                    value = mtrx ( i , j ) / scale
+                    v     = mtrx ( i , j ) 
+                    value = v / scale
                     if iszero ( value ) : item = '0'
                     else :
                         item = fmtv % value
                         if item in zeros : item = '0'
-                    row.append ( item )                     
+                row.append ( item )                     
             table.append ( row )
             
         return T.table  ( table , alignment = 'r'+cols*'l' , prefix = prefix , title = title ) 
@@ -1617,7 +1668,7 @@ class LinAlg(object) :
     ## get the correlation matrix
     @staticmethod 
     def MS_CORR ( mtrx ) :
-        """Get the correlation matrix
+        """ Get the correlation matrix
         >>> mtrx = ...
         >>> corr = mtrx.correlations()
         """
@@ -1633,9 +1684,8 @@ class LinAlg(object) :
             
             ii  = mtrx  ( i , i )
             if 0 > ii or iszero ( ii ) :
-                ok1  = False 
-                nan = float('nan')
-                for j in range ( i , rows ) : _c [ i , j ] = nan 
+                ok1 = False 
+                for j in range ( i , rows ) : _c [ i , j ] = NaN 
                 continue
         
             sii = sqrt ( ii )
@@ -1644,11 +1694,14 @@ class LinAlg(object) :
             for j in range ( i + 1 , rows ) :            
                 jj  = mtrx ( j , j ) 
                 sjj = sqrt ( jj    )
-                ij  = mtrx ( i , j )
-                eij = ij / ( sii * sjj )
-                if  1 < abs ( eij ) : ok2 = False  
-                _c [ i , j ] = eij 
-                _c [ j , i ] = eij 
+                if 0 > sjj or iszero ( sjj ) :
+                    ok1 = False
+                    _c [ i , j ] = NaN
+                    _c [ j , i ] = NaN 
+                else : 
+                    ij  = mtrx ( i , j )
+                    eij = ij / ( sii * sjj )
+                    if  1 < abs ( eij ) : ok2 = False  
             
         if not ok1 : logger.error ( "correlations: zero or negative diagonal element" ) 
         if not ok2 : logger.error ( "correlations: invalid non-diagonal element"      ) 
@@ -1694,7 +1747,7 @@ class LinAlg(object) :
     #  @endcode
     @staticmethod
     def M_ROW ( mtrx  , index ) :
-        """Get row from the matrix
+        """ Get row from the matrix
         >>> mtrx = ...
         >>> row2 = mtrx.row ( 2 ) 
         """
@@ -1716,7 +1769,7 @@ class LinAlg(object) :
     #  @endcode
     @staticmethod
     def M_COLUMN ( mtrx  , index ) :
-        """Get column from the matrix
+        """ Get column from the matrix
         >>> mtrx = ...
         >>> c2 = mtrx.column ( 2 ) 
         """
@@ -1737,7 +1790,7 @@ class LinAlg(object) :
     #  @endcode
     @staticmethod
     def M_ROWS ( mtrx ) :
-        """Iterator over rows
+        """ Iterator over rows
         >>> for row in mtrx.rows () : ...
         """
         krows = mtrx.kRows
@@ -1751,7 +1804,7 @@ class LinAlg(object) :
     #  @endcode
     @staticmethod
     def M_COLUMNS ( mtrx ) :
-        """Iterator over columns
+        """ Iterator over columns
         >>> for col in mtrx.columns () : ...
         """
         kcols = mtrx.kCols
@@ -1766,7 +1819,7 @@ class LinAlg(object) :
     #  @endcode
     @staticmethod
     def MS_EIGENVALUES ( mtrx , sorted = True ) :
-        """Get the eigenvalues for symmetric matrices :
+        """ Get the eigenvalues for symmetric matrices :
         >>> mtrx = ...
         >>> values = mtrx.eigenValues ( sorted = True )
         """
@@ -1789,7 +1842,7 @@ class LinAlg(object) :
     #  @endcode
     @staticmethod
     def MS_EIGENVECTORS ( mtrx , sorted = True ) :
-        """Get the eigenvalues for symmetric matrices :
+        """ Get the eigenvalues for symmetric matrices :
         >>> mtrx = ...
         >>> values, vectors = mtrx.eigenVectors ( sorted = True )
         >>> vectors = [ vectors.column{i) for i in range ( mtrx.rCols ) ] 
@@ -1812,14 +1865,14 @@ class LinAlg(object) :
     ## reduce SVector
     @staticmethod
     def V_REDUCE ( vct ) :
-        """Reduce SVector"""
+        """ Reduce SVector"""
         return svct_factory, ( array.array ( 'd' , vct ) , )
 
     # =========================================================================
     ## reduce SMatrix 
     @staticmethod
     def M_REDUCE ( mtrx ) :
-        """Reduce SMatrix
+        """ Reduce SMatrix
         """
         NR   = mtrx.rep_size
         a    = mtrx.Array() 
@@ -1830,7 +1883,7 @@ class LinAlg(object) :
     ## reduce symmetric SMatrix 
     @staticmethod
     def MS_REDUCE ( mtrx ) :
-        """Reduce symmetric SMatrix
+        """ Reduce symmetric SMatrix
         """
         NR   = mtrx.rep_size 
         a    = mtrx.Array() 
@@ -1841,13 +1894,13 @@ class LinAlg(object) :
     ## reduce SVectorWithErrors 
     @staticmethod
     def VE_REDUCE ( vct ) :
-        """reduce SVectorWithErrors"""
+        """ Reduce SVectorWithErrors"""
         return svcte_factory , ( vct.value() , vct.cov2() ) 
 
     # =========================================================================
     @staticmethod
     def VE_RANDOM ( vct , N , use_numpy = True ) :
-        """Generate random numbers from the vector
+        """ Generate random numbers from the vector
         >>> vct = ...
         >>> for x in vct.random ( 1000 ) :
         >>> ... 
@@ -1859,7 +1912,7 @@ class LinAlg(object) :
         c2 = vct.cov2  ()
         n  = len ( v )
         
-        L  = Ostap.Matrix ( n , n , vct._scalar_)() 
+        L  = Ostap.Matrix ( n , n , vct._scalar_ )() 
         ok = Ostap.Math.cholesky ( vct , L )
         assert ok , 'random: Cholesky decomposition failed!'
 
@@ -1869,7 +1922,7 @@ class LinAlg(object) :
             v = v.to_numpy() 
             l = L.to_numpy()
             for i in range  ( N ) : 
-                u = np.random.normal ( loc=0 , scale=1, size = n) 
+                u = np.random.normal ( loc = 0 , scale = 1, size = n) 
                 yield v + np.dot ( l , u )
                 
         else :
