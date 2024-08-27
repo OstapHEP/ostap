@@ -7,7 +7,9 @@
 ## Backward incompatible
 
 ## Bug fixes
-
+    
+   1. fix the typo in `Ostap/MatrixUtilsT.h`
+    
 # v1.13.0.0
 
 ## New features

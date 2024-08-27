@@ -317,6 +317,7 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /// get element with maximal absoluet value        
     template <class T>
     inline T 
     maxabs_element 
@@ -325,7 +326,7 @@ namespace Ostap
       if ( !m.IsValid() ) { return 0 ; }
       T result = m ( 0 , 0 ) ;
       const unsigned int rows = m.GetNrows () ;
-      const unsigned int cols = m.GetNrows () ;
+      const unsigned int cols = m.GetNcols () ;
       for ( unsigned int i = 0 ; i < rows ; ++i )
         {
           for ( unsigned int j = 0 ; j < cols ; ++j )
@@ -337,6 +338,7 @@ namespace Ostap
       return result ;
     }
     // ========================================================================
+    /// get element with the maximal absoluet value        
     template <class T>
     inline T 
     maxabs_element 
@@ -345,7 +347,7 @@ namespace Ostap
       if ( !m.IsValid() ) { return 0 ; }
       T result = m ( 0 , 0 ) ;
       const unsigned int rows = m.GetNrows () ;
-      const unsigned int cols = m.GetNrows () ;
+      const unsigned int cols = m.GetNcols () ;
       for ( unsigned int i = 0 ; i < rows ; ++i )
         {
           for ( unsigned int j = i ; j < cols ; ++j )
@@ -353,6 +355,44 @@ namespace Ostap
               const double value = m ( i , j ) ;
               if ( std::abs ( result ) < std::abs ( value ) ) { result = value ; }
             }
+        }
+      return result ;
+    }
+    // ========================================================================
+    /// get element with the maximal absolute value        
+    template <class T>
+    inline T 
+    maxabs_diagonal
+    ( const TMatrixT<T>&    m )
+    {
+      if ( !m.IsValid() ) { return 0 ; }
+      T result = m ( 0 , 0 ) ;
+      const unsigned int rows = m.GetNrows () ;
+      const unsigned int cols = m.GetNcols () ;
+      const unsigned int D    = std::min ( rows , cols ) ; 
+      for ( unsigned int i = 0 ; i < D ; ++i )
+        {
+          const double value = m ( i , i ) ;
+          if ( std::abs ( result ) < std::abs ( value ) ) { result = value ; }
+        }
+      return result ;
+    }
+    // ========================================================================
+    /// get diaginal element with the maximal absoluet value        
+    template <class T>
+    inline T 
+    maxabs_diagonal 
+    ( const TMatrixTSym<T>& m )
+    {
+      if ( !m.IsValid() ) { return 0 ; }
+      T result = m ( 0 , 0 ) ;
+      const unsigned int rows = m.GetNrows () ;
+      const unsigned int cols = m.GetNcols () ;
+      const unsigned int D    = std::min ( rows , cols ) ; 
+      for ( unsigned int i = 0 ; i < D ; ++i )
+        {
+          const double value = m ( i , i ) ;
+          if ( std::abs ( result ) < std::abs ( value ) ) { result = value ; }
         }
       return result ;
     }
