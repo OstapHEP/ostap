@@ -69,11 +69,22 @@ message ( "----> (warning) (optional) ipyparallel is NOT found!" )
 endif()
 endif() 
 
+    
+if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.8" )
 find_python_module ( zstandard QUIET )
+if ( NOT ${PY_zstandard_FOUND} )
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install zstandard ${PIP_ARGS})    
+endif()
+find_python_module ( zstandard QUIET )
+if ( NOT ${PY_zstandard_FOUND} )
+message ( "----> (warning) (optional) zstandard   is NOT found!" ) 
+endif()    
+endif()
 
-##if  ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
+
+## ============================================================================
 ## Check for PATHOS & friends
-
+## ============================================================================
 
 find_python_module ( dill          QUIET )
 if ( NOT ${PY_dill_FOUND} )
@@ -115,7 +126,17 @@ if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${
 message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
 endif()
 
-## endif ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
+
+if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.7" )
+find_python_module ( lmdb        QUIET )
+if ( NOT ${PY_lmdb_FOUND} )
+find_program(MDB_STAT_EXECUTABLE NAMES mdb_stat)
+if ( $MDB_STAT_EXECUTABLE )
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lmdb ${PIP_ARGS})
+endif()
+endif()
+find_python_module ( lmdb        QUIET )
+endif()
 
 find_python_module ( terminaltables QUIET )
 if ( NOT ${PY_terminaltables_FOUND} )
