@@ -191,6 +191,11 @@ def test_gauss() :
 
     models.add     ( model   )
     results.append ( result  )
+
+    with rooSilent() : 
+        result, frame = model. fitTo ( dataset0 , silent = True , minos = ( signal.mean.name, ) ) 
+        
+    make_print ( model , result , 'Simple Gaussian model' , logger )
     
 # =============================================================================
 ## CrystalBall PDF
@@ -2000,10 +2005,11 @@ if '__main__' == __name__ :
     ## simple Gaussian PDF                       + background
     with timing ('test_gauss'          , logger ) :
         test_gauss          () 
-        
+
     ## Crystal Ball                              + background
     with timing ('test_crystalball'    , logger ) :
         test_crystalball    () 
+
         
     ## right-side Crystal Ball                   + background
     with timing ('test_crystalball_RS' , logger ) :
@@ -2184,7 +2190,7 @@ if '__main__' == __name__ :
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()
-
+    
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()

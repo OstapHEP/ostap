@@ -21,10 +21,11 @@ from   builtins import range
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
+from   ostap.utils.valerrors    import ValWithErrors, AsymErrors   
 import ostap.fitting.variables     
 import ostap.fitting.printable
 import ostap.math.linalg        as     LA 
-from   ostap.logger.colorized   import allright, attention
+from   ostap.logger.colorized   import allright, attention, attstr 
 from   ostap.logger.pretty      import pretty_float, pretty_ve, pretty_err2 
 import ROOT, math, sys, ctypes  
 # =============================================================================
@@ -593,7 +594,7 @@ def _rfr_evaluate_ ( self , func , args , partial = () ) :
 #  result.table() 
 #  @endcode 
 def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
-    """ print RooFitResult  as a table
+    """ Print RooFitResult  as a table
     >>> result = ...
     >>> result.table() 
     """
@@ -653,18 +654,63 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
         rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
 
 
-    with_globcorr = not ( (6,24) <= root_info < (6,28) )
-    with_globcorr = True or not ( (6,24) <= root_info < (6,28) )
-    with_globcorr = not ( (6,24) <= root_info < (6,26) )
+    with_globcorr =         not ( ( 6 , 24 ) <= root_info < ( 6 , 28 ) )
+    with_globcorr = True or not ( ( 6 , 24 ) <= root_info < ( 6 , 28 ) )
+    with_globcorr =         not ( ( 6 , 24 ) <= root_info < ( 6 , 26 ) )
 
     with_globcorr = True 
-
-    if with_globcorr : rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
-    else             : rows = [ ( '', 'Unit', 'Value' , 'Max correlation [%]') ] + rows
 
     pars_all   = r.params ( float_only = False )
     pars_float = r.params ( float_only = True  )
 
+    #
+    ## parameter close to the limits? 
+    # 
+    limits     = {}
+    threshold  = 10
+    for p in pars_float :
+        
+        v , a = pars_float [ p ]
+
+        has_min = hasattr ( a , 'hasMin' ) and a.hasMin()
+        has_max = hasattr ( a , 'hasMax' ) and a.hasMax()
+        
+        if has_min or has_max :
+            
+            value = v.value()
+            
+            if a.hasAsymError () : 
+                v = ValWithErrors ( a.getVal() , AsymErrors ( negative = a.getAsymErrorLo() , positive = a.getAsymErrorHi() ) )            
+
+            dmin , dmax  = -1, -1
+            if has_min and hasattr ( a , 'getMin' ) :
+                vmin = a.getMin()
+                verr = abs ( v.neg_error )
+                if   isequal ( vmin , value )  : dmin = 0   
+                elif vmin < value and 0 < verr : dmin = abs ( value - vmin ) / verr 
+                    
+            if has_max and hasattr ( a , 'getMax' ) :
+                vmax = a.getMax()
+                verr = abs ( v.pos_error )
+                if   isequal ( vmax , value )  : dmax = 0   
+                elif value < vmax and 0 < verr : dmax = abs ( value - vmax ) / verr 
+                
+            dmn = ( 0 <= dmin < threshold ) 
+            dmx = ( 0 <= dmax < threshold ) 
+            
+            if   dmn and dmx : limits [ a.name ] = min ( dmin , dmax ) 
+            elif dmn         : limits [ a.name ] = dmin
+            elif dmx         : limits [ a.name ] = dmax
+
+
+    if with_globcorr : header = ( '', 'Unit', 'Value' , 'Global/max correlation [%]') 
+    else             : header = ( '', 'Unit', 'Value' , 'Max correlation [%]') 
+    
+    if limits : header   +=  ( '@limit?', ) 
+
+    rows = [ header ] + rows
+    
+    
     ## constant/fix parameters 
     crows = [] 
     for p in pars_all :
@@ -686,7 +732,7 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
 
         v , a = pars_float [ p ]
 
-        if not a.hasAsymError() :
+        if not a.hasAsymError () :
             s , n = pretty_ve   ( v ) 
         else :
             s , n = pretty_err2 (  a.getVal() , a.getAsymErrorHi() , a.getAsymErrorLo() )
@@ -720,6 +766,13 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
         else :
             
             row = p , n , s
+
+        dist = limits.get ( a.name , None )
+        if not dist is None :
+            item = '%.1fs' % dist 
+            if   dist <= 3 : item = attention ( item )
+            elif dist <= 5 : item = attstr    ( item )
+            row += ( item , )
             
         frows.append ( row ) 
 
@@ -747,7 +800,7 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
 
     import ostap.logger.table as T
 
-    return T.table ( all , title = title if title else r.GetTitle() , prefix = prefix , alignment = 'llll' )
+    return T.table ( all , title = title if title else r.GetTitle() , prefix = prefix , alignment = 'llllc' )
 
 # =============================================================================
 ## 'easy' print of RooFitResult

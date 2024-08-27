@@ -624,7 +624,7 @@ class ValWithErrors(object) :
     # ==========================================================================
     ## conversion to string 
     def toString ( self , format = '( %+.5g -/%.5g +/%-.5g ) ' ) :
-        """Conversion to string
+        """ Conversion to string
         """
         return format % ( self.value , abs ( self.neg_error ) , self.pos_error )
 

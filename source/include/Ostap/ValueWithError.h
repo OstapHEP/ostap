@@ -48,8 +48,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the value and covariance 
-      ValueWithError ( const double value      = 0 , 
-                       const double covariance = 0 ) ;
+      ValueWithError
+      ( const double value      = 0 , 
+        const double covariance = 0 ) ;
       // ======================================================================
       /** constructor from the (value,error)-pair 
        *   - first  element is "value" 
@@ -331,9 +332,9 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual value 
-      double m_value ;                             //          the actual value 
+      double m_value { 0 } ;                       //          the actual value 
       /// the associated covariance
-      double m_cov2 ;                              // the associated covariance
+      double m_cov2  { 0 } ;                       // the associated covariance
       // ======================================================================
     } ;
     // ========================================================================

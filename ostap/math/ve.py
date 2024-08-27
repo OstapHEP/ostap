@@ -60,7 +60,6 @@ def _ve_sum_ ( s ) :
     """
     return Ostap.Math.sum ( s )
 
-
 # ============================================================================= 
 ## Sum the contents of the vector
 def _ve_asum_ ( s ) :
@@ -269,7 +268,7 @@ VE . __ne__ = _ve_ne_
 #  print ve.minmax(2)
 #  @endcode 
 def _ve_minmax_ ( s , n = 1 ) :
-    """Get an easy and coherent way to access ``min/max'' for
+    """ Get an easy and coherent way to access `min/max' for
     the value with error object:  (value-n*error,value+n*error)
     >>> ve = VE(2,2) 
     >>> print ve.minmax()
@@ -299,6 +298,52 @@ def _ve_hash_ ( v ) :
     return  hash ( ( v.value() , v.cov2() ) )
 
 VE.__hash__ = _ve_hash_
+
+# =============================================================================
+## Get the "positive" error
+#  @code
+#  ve = ...
+#  pos_error = ve.pos_error
+#  @endcode 
+def _ve_pos_error_ ( v ) :
+    """ Get the "positive" error
+    >>> ve = ...
+    >>> pos_error = ve.pos_error
+    """
+    err = v.error()
+    return err if 0 <= err else 0 
+
+# =============================================================================
+## Get the "negative" error
+#  @code
+#  ve = ...
+#  neg_error = ve.neg_error
+#  @endcode 
+def _ve_neg_error_ ( v ) :
+    """ Get the "negative" error
+    >>> ve = ...
+    >>> neg_error = ve.neg_error
+    """
+    err = v.error()
+    return -err if 0 <= err else 0 
+
+# =============================================================================
+## Get "negative&positive" errors
+#  @code
+#  ve = ...
+#  neg, pos = ve.errors () 
+#  @endcode  
+def _ve_errors_  ( v ) :
+    """ Get `negative&positive' errors
+    >>> ve = ...
+    >>> neg, pos = ve.errors () 
+    """
+    err = v.error()
+    return (-err,err) if 0 <= err else (0,0)
+
+VE.pos_error = property ( _ve_pos_error_ , None , None , _ve_pos_error_ .__doc__ ) 
+VE.neg_error = property ( _ve_neg_error_ , None , None , _ve_neg_error_ .__doc__ ) 
+VE.errors    = property ( _ve_errors_    , None , None , _ve_errors_    .__doc__ ) 
 
 # =============================================================================
 from random import gauss as _gauss     
