@@ -1,3 +1,5 @@
+# v1.13.0.2
+
 ## New features
 
    1. improve pretty-print for matrices
@@ -5,9 +7,8 @@
    1. add some auxillary methods for matrices: `(min/max/minabs/maxabs)_element` and `(min/max)_diagonal` and `(min/max/minabs/maxabs)_element_index`
    1. improve printout of `SVectorwithError`
    1. add `pos_error/neg_error/errors` properteis to `Ostap::Math::ValueWithError` object `
-   1. add column `@limit?` for printput of `RooFitResult` object to shwo the distance to the limits (if any). Distanc eof <3sigma, an d<5 sigma ar ecolored. Distances > 10sigma are omitted.
+   1. add column `@limit?` for printout of `RooFitResult` object to show the distance to the limit (if any). Distances of <3sigma, and <5 sigma are colored. Distances > 10sigma are omitted.
     
-    `   
 ## Backward incompatible
 
 ## Bug fixes
